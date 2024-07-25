@@ -1,0 +1,685 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "fullTextSearch"]
+  binaryTargets   = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [uuid_ossp(map: "uuid-ossp")]
+}
+
+/// This table has subclasses and requires additional setup for migrations. Visit https://pris.ly/d/table-inheritance for more info.
+model AbsTracability {
+  createdby String   @db.VarChar(200)
+  createdat DateTime @updatedAt
+  updatedby String   @db.VarChar(200)
+  updatedat DateTime @updatedAt
+  comments  String?
+  id        String   @id(map: "abs_tracability_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+
+  @@map("abs_tracability")
+}
+
+model ActActor {
+  createdby                  String                       @db.VarChar(200)
+  createdat                  DateTime                     @updatedAt
+  updatedby                  String                       @db.VarChar(200)
+  updatedat                  DateTime                     @updatedAt
+  comments                   String?
+  actorid                    String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                       String                       @db.VarChar(255)
+  email                      String                       @db.VarChar(255)
+  organisationunitid         String?                      @db.Uuid
+  validationdate             DateTime                     @db.Date
+  id                         String                       @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orgOrganisationunit        OrgOrganisationunit?         @relation(fields: [organisationunitid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  actActorcode               ActActorcode[]
+  prjApplicationrole         PrjApplicationrole[]
+  prjProjectresponsability   PrjProjectresponsability[]
+  ptfPortfolioresponsability PtfPortfolioresponsability[]
+
+  @@map("act_actor")
+}
+
+model ActActorcode {
+  createdby        String           @db.VarChar(200)
+  createdat        DateTime         @updatedAt
+  updatedby        String           @db.VarChar(200)
+  updatedat        DateTime         @updatedAt
+  comments         String?
+  actorid          String           @db.Uuid
+  actorcodetype    String           @db.Char(5)
+  actorcode        String           @db.VarChar(100)
+  id               String           @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  actActorcodetype ActActorcodetype @relation(fields: [actorcodetype], references: [actorcodetype], onDelete: NoAction, onUpdate: NoAction)
+  actActor         ActActor         @relation(fields: [actorid], references: [actorid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([actorid, actorcode], map: "act_actorcode_pk")
+  @@map("act_actorcode")
+}
+
+model ActActorcodetype {
+  actorcodetype String         @id @db.Char(5)
+  label         String         @db.VarChar(100)
+  actActorcode  ActActorcode[]
+
+  @@map("act_actorcodetype")
+}
+
+model Resource {
+  id       Int    @id(map: "newtable_pk") @default(autoincrement())
+  resource String @unique(map: "newtable_un") @db.VarChar
+  roles    Role[]
+
+  @@map("resources")
+}
+
+model Role {
+  roleid       String      @db.Char(5)
+  resourceid   Int
+  create_all   Boolean     @default(false)
+  create_own   Boolean     @default(false)
+  read_all     Boolean     @default(false)
+  read_own     Boolean     @default(false)
+  update_all   Boolean     @default(false)
+  update_own   Boolean     @default(false)
+  delete_all   Boolean     @default(false)
+  delete_own   Boolean     @default(false)
+  org_roletype OrgRoletype @relation(fields: [roleid], references: [roleid], onDelete: Cascade, map: "roles_fk")
+  resource     Resource    @relation(fields: [resourceid], references: [id], onDelete: Cascade, map: "roles_fk_1")
+
+  @@id([roleid, resourceid], map: "roles_pk")
+  @@map("roles")
+}
+
+model AppApplication {
+  createdby                                                       String                     @db.VarChar(200)
+  createdat                                                       DateTime                   @updatedAt
+  updatedby                                                       String                     @db.VarChar(200)
+  updatedat                                                       DateTime                   @updatedAt
+  comments                                                        String?
+  applicationid                                                   String                     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  parentid                                                        String?                    @db.Uuid
+  longname                                                        String                     @db.VarChar(100)
+  description                                                     String?
+  status                                                          String                     @db.Char(3)
+  organisationunitid                                              String                     @db.Uuid
+  sensitivity                                                     String                     @db.Char(2)
+  apptype                                                         String                     @db.Char(5)
+  appType                                                         AppType                    @relation(fields: [apptype], references: [applicationtypecode], onDelete: NoAction, onUpdate: NoAction)
+  orgOrganisationunit                                             OrgOrganisationunit        @relation(fields: [organisationunitid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  appApplication                                                  AppApplication?            @relation("app_applicationToapp_application", fields: [parentid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  otherAppApplication                                             AppApplication[]           @relation("app_applicationToapp_application")
+  refSensitivity                                                  RefSensitivity             @relation(fields: [sensitivity], references: [sensitivitycode], onDelete: NoAction, onUpdate: NoAction)
+  appStatus                                                       AppStatus                  @relation(fields: [status], references: [applicationstatuscode], onDelete: NoAction, onUpdate: NoAction)
+  appApplicationid                                                AppApplicationid[]
+  appCompliance                                                   AppCompliance[]
+  appFlowAppFlowApplicationsourceidToappApplication               AppFlow[]                  @relation("app_flow_applicationsourceidToapp_application")
+  appFlowAppFlowApplicationtargetidToappApplication               AppFlow[]                  @relation("app_flow_applicationtargetidToapp_application")
+  appInstance                                                     AppInstance[]
+  appInterfaceAppInterfaceApplicationdatasourceToappApplication   AppInterface[]             @relation("app_interface_applicationdatasourceToapp_application")
+  appInterfaceAppInterfaceApplicationdistributionToappApplication AppInterface[]             @relation("app_interface_applicationdistributionToapp_application")
+  fctCapabilityrealisation                                        FctCapabilityrealisation[]
+  fctUrbanzoneapplication                                         FctUrbanzoneapplication[]
+  prjApplicationrole                                              PrjApplicationrole[]
+  prjProjectapplication                                           PrjProjectapplication[]
+  ptfPortfolioapplication                                         PtfPortfolioapplication[]
+
+  @@map("app_application")
+}
+
+model AppApplicationid {
+  createdby             String         @db.VarChar(200)
+  createdat             DateTime       @updatedAt
+  updatedby             String         @db.VarChar(200)
+  updatedat             DateTime       @updatedAt
+  comments              String?
+  applicationid         String         @db.Uuid
+  applicationidtypecode String         @db.Char(5)
+  shortcode             String         @db.VarChar(20)
+  longcode              String?        @db.VarChar(200)
+  id                    String         @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplication        AppApplication @relation(fields: [applicationid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  appIdtype             AppIdtype      @relation(fields: [applicationidtypecode], references: [applicationidtypecode], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([shortcode, applicationidtypecode, applicationid], map: "app_applicationid_pk")
+  @@map("app_applicationid")
+}
+
+model AppCompliance {
+  createdby         String             @db.VarChar(200)
+  createdat         DateTime           @updatedAt
+  updatedby         String             @db.VarChar(200)
+  updatedat         DateTime           @updatedAt
+  comments          String?
+  applicationid     String             @db.Uuid
+  compliancetype    String             @db.Char(5)
+  compliancelevel   AppComplianceLevel @default(Non_pass_e) @map("compliancelevel")
+  decisiondate      DateTime?          @db.Date
+  validitydate      DateTime?          @db.Date
+  auditdate         DateTime?          @db.Date
+  description       String?
+  id                String             @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplication    AppApplication     @relation(fields: [applicationid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  appCompliancetype AppCompliancetype  @relation(fields: [compliancetype], references: [compliancetype], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([applicationid, compliancetype], map: "app_compliance_pk")
+  @@map("app_compliance")
+}
+
+model AppCompliancetype {
+  compliancetype String          @id @db.Char(5)
+  description    String?
+  referenceurl   String?
+  appCompliance  AppCompliance[]
+
+  @@map("app_compliancetype")
+}
+
+model AppFlow {
+  createdby                                                               String               @db.VarChar(200)
+  createdat                                                               DateTime             @updatedAt
+  updatedby                                                               String               @db.VarChar(200)
+  updatedat                                                               DateTime             @updatedAt
+  comments                                                                String?
+  flowid                                                                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  applicationsourceid                                                     String?              @db.Uuid
+  organisationunitsourceid                                                String?              @db.Uuid
+  applicationtargetid                                                     String?              @db.Uuid
+  organisationunittargetid                                                String?              @db.Uuid
+  middleware                                                              String?
+  flowtypeid                                                              String?              @db.VarChar(5)
+  flowprotocolid                                                          String?              @db.VarChar(5)
+  flowperiodid                                                            String?              @db.VarChar(5)
+  flowdataorientation                                                     AppDataFlowOrient    @map("flowdataorientation")
+  ports                                                                   String?              @db.VarChar(200)
+  id                                                                      String               @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplicationAppFlowApplicationsourceidToappApplication                AppApplication?      @relation("app_flow_applicationsourceidToapp_application", fields: [applicationsourceid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  appApplicationAppFlowApplicationtargetidToappApplication                AppApplication?      @relation("app_flow_applicationtargetidToapp_application", fields: [applicationtargetid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  appFlowperiod                                                           AppFlowperiod?       @relation(fields: [flowperiodid], references: [flowperiodid], onDelete: NoAction, onUpdate: NoAction)
+  appFlowprotocol                                                         AppFlowprotocol?     @relation(fields: [flowprotocolid], references: [flowprotocolid], onDelete: NoAction, onUpdate: NoAction)
+  appFlowtype                                                             AppFlowtype?         @relation(fields: [flowtypeid], references: [flowtypeid], onDelete: NoAction, onUpdate: NoAction)
+  orgOrganisationunitAppFlowOrganisationunitsourceidToorgOrganisationunit OrgOrganisationunit? @relation("app_flow_organisationunitsourceidToorg_organisationunit", fields: [organisationunitsourceid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  orgOrganisationunitAppFlowOrganisationunittargetidToorgOrganisationunit OrgOrganisationunit? @relation("app_flow_organisationunittargetidToorg_organisationunit", fields: [organisationunittargetid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  appFlowdata                                                             AppFlowdata[]
+
+  @@map("app_flow")
+}
+
+model AppFlowdata {
+  createdby       String   @db.VarChar(200)
+  createdat       DateTime @updatedAt
+  updatedby       String   @db.VarChar(200)
+  updatedat       DateTime @updatedAt
+  comments        String?
+  flowid          String   @db.Uuid
+  dataid          String   @db.VarChar(255)
+  datadescription String?
+  dataurl         String?
+  id              String   @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appFlow         AppFlow  @relation(fields: [flowid], references: [flowid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([flowid, dataid], map: "app_flowdata_pk")
+  @@map("app_flowdata")
+}
+
+model AppFlowperiod {
+  flowperiodid String    @id @db.VarChar(5)
+  label        String?   @db.VarChar(200)
+  appFlow      AppFlow[]
+
+  @@map("app_flowperiod")
+}
+
+model AppFlowprotocol {
+  flowprotocolid String    @id @db.VarChar(5)
+  label          String    @db.VarChar(200)
+  appFlow        AppFlow[]
+
+  @@map("app_flowprotocol")
+}
+
+model AppFlowtype {
+  flowtypeid String    @id @db.VarChar(5)
+  label      String    @db.VarChar(200)
+  appFlow    AppFlow[]
+
+  @@map("app_flowtype")
+}
+
+model AppIdtype {
+  applicationidtypecode String             @id @db.Char(6)
+  label                 String             @db.VarChar(100)
+  appApplicationid      AppApplicationid[]
+
+  @@map("app_idtype")
+}
+
+model AppInstance {
+  createdby         String            @db.VarChar(200)
+  createdat         DateTime          @updatedAt
+  updatedby         String            @db.VarChar(200)
+  updatedat         DateTime          @updatedAt
+  comments          String?
+  environmentid     String            @db.Uuid
+  applicationid     String            @db.Uuid
+  instancerole      String?           @default("E") @db.Char(1)
+  instancestatus    String            @default("PRD") @db.Char(3)
+  tenant            String?
+  fip               String?
+  url               String?
+  deploymentdate    DateTime?         @db.Date
+  id                String            @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplication    AppApplication    @relation(fields: [applicationid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  envEnvironment    EnvEnvironment    @relation(fields: [environmentid], references: [environmentid], onDelete: NoAction, onUpdate: NoAction)
+  appInstancerole   AppInstancerole?  @relation(fields: [instancerole], references: [instancerole], onDelete: NoAction, onUpdate: NoAction)
+  appInstancestatus AppInstancestatus @relation(fields: [instancestatus], references: [instancestatus], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id], map: "app_instance_pk")
+  @@map("app_instance")
+}
+
+model AppInstancerole {
+  instancerole String        @id @db.Char(1)
+  label        String
+  appInstance  AppInstance[]
+
+  @@map("app_instancerole")
+}
+
+model AppInstancestatus {
+  instancestatus String        @id @db.Char(3)
+  label          String
+  appInstance    AppInstance[]
+
+  @@map("app_instancestatus")
+}
+
+model AppInterface {
+  createdby                                                         String           @db.VarChar(200)
+  createdat                                                         DateTime         @updatedAt
+  updatedby                                                         String           @db.VarChar(200)
+  updatedat                                                         DateTime         @updatedAt
+  comments                                                          String?
+  interfaceid                                                       String           @id(map: "app_interface_pk") @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  interfacetypeid                                                   String           @db.Char(5)
+  applicationdatasource                                             String?          @db.Uuid
+  applicationdistribution                                           String?          @db.Uuid
+  id                                                                String           @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplicationAppInterfaceApplicationdatasourceToappApplication   AppApplication?  @relation("app_interface_applicationdatasourceToapp_application", fields: [applicationdatasource], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  appApplicationAppInterfaceApplicationdistributionToappApplication AppApplication?  @relation("app_interface_applicationdistributionToapp_application", fields: [applicationdistribution], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  appInterfacetype                                                  AppInterfacetype @relation(fields: [interfacetypeid], references: [interfacetypeid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("app_interface")
+}
+
+model AppInterfacetype {
+  interfacetypeid String         @id @db.Char(5)
+  description     String?
+  appInterface    AppInterface[]
+
+  @@map("app_interfacetype")
+}
+
+model AppStatus {
+  applicationstatuscode String           @id @db.Char(3)
+  label                 String           @db.VarChar(100)
+  appApplication        AppApplication[]
+
+  @@map("app_status")
+}
+
+model AppType {
+  applicationtypecode String           @id @db.Char(5)
+  label               String           @db.VarChar(100)
+  appApplication      AppApplication[]
+
+  @@map("app_type")
+}
+
+model EnvEnvironment {
+  createdby             String        @db.VarChar(200)
+  createdat             DateTime      @updatedAt
+  updatedby             String        @db.VarChar(200)
+  updatedat             DateTime      @updatedAt
+  comments              String?
+  environmentid         String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  label                 String
+  organisation          String
+  environmenttype       EnvType       @default(CaaS) @map("environmenttype")
+  environmentprotection EnvProtection @default(NP) @map("environmentprotection")
+  environmentstatus     EnvStatus     @default(Actif) @map("environmentstatus")
+  id                    String        @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appInstance           AppInstance[]
+
+  @@map("env_environment")
+}
+
+model FctCapability {
+  createdby                String                     @db.VarChar(200)
+  createdat                DateTime                   @updatedAt
+  updatedby                String                     @db.VarChar(200)
+  updatedat                DateTime                   @updatedAt
+  comments                 String?
+  capabilityid             String                     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  parentid                 String?                    @db.Uuid
+  label                    String
+  description              String?
+  id                       String                     @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  fctCapability            FctCapability?             @relation("fct_capabilityTofct_capability", fields: [parentid], references: [capabilityid], onDelete: NoAction, onUpdate: NoAction)
+  otherFctCapability       FctCapability[]            @relation("fct_capabilityTofct_capability")
+  fctCapabilityrealisation FctCapabilityrealisation[]
+
+  @@map("fct_capability")
+}
+
+model FctCapabilityrealisation {
+  createdby      String         @db.VarChar(200)
+  createdat      DateTime       @updatedAt
+  updatedby      String         @db.VarChar(200)
+  updatedat      DateTime       @updatedAt
+  comments       String?
+  applicationid  String         @db.Uuid
+  capabilityid   String         @db.Uuid
+  description    String?
+  id             String         @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplication AppApplication @relation(fields: [applicationid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  fctCapability  FctCapability  @relation(fields: [capabilityid], references: [capabilityid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([applicationid, capabilityid], map: "fct_capabilityrealisation_pk")
+  @@map("fct_capabilityrealisation")
+}
+
+model FctUrbanzone {
+  createdby                  String                       @db.VarChar(200)
+  createdat                  DateTime                     @updatedAt
+  updatedby                  String                       @db.VarChar(200)
+  updatedat                  DateTime                     @updatedAt
+  comments                   String?
+  urbanzoneid                String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  parentid                   String?                      @db.Uuid
+  label                      String
+  description                String?
+  id                         String                       @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  fctUrbanzone               FctUrbanzone?                @relation("fct_urbanzoneTofct_urbanzone", fields: [parentid], references: [urbanzoneid], onDelete: NoAction, onUpdate: NoAction)
+  otherFctUrbanzone          FctUrbanzone[]               @relation("fct_urbanzoneTofct_urbanzone")
+  fctUrbanzoneapplication    FctUrbanzoneapplication[]
+  fctUrbanzoneresponsability FctUrbanzoneresponsability[]
+
+  @@map("fct_urbanzone")
+}
+
+model FctUrbanzoneapplication {
+  createdby      String         @db.VarChar(200)
+  createdat      DateTime       @updatedAt
+  updatedby      String         @db.VarChar(200)
+  updatedat      DateTime       @updatedAt
+  comments       String?
+  urbanzoneid    String         @db.Uuid
+  applicationid  String         @db.Uuid
+  id             String         @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplication AppApplication @relation(fields: [applicationid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  fctUrbanzone   FctUrbanzone   @relation(fields: [urbanzoneid], references: [urbanzoneid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([urbanzoneid, applicationid], map: "fct_urbanzoneapplication_pk")
+  @@map("fct_urbanzoneapplication")
+}
+
+model FctUrbanzoneresponsability {
+  createdby           String              @db.VarChar(200)
+  createdat           DateTime            @updatedAt
+  updatedby           String              @db.VarChar(200)
+  updatedat           DateTime            @updatedAt
+  comments            String?
+  urbanzoneid         String              @db.Uuid
+  organisationunitid  String              @db.Uuid
+  roleid              String              @db.Char(5)
+  description         String?
+  id                  String              @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orgOrganisationunit OrgOrganisationunit @relation(fields: [organisationunitid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  orgRoletype         OrgRoletype         @relation(fields: [roleid], references: [roleid], onDelete: NoAction, onUpdate: NoAction)
+  fctUrbanzone        FctUrbanzone        @relation(fields: [urbanzoneid], references: [urbanzoneid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([urbanzoneid, organisationunitid, roleid], map: "fct_urbanzoneresponsability_pk")
+  @@map("fct_urbanzoneresponsability")
+}
+
+model OrgOrganisationunit {
+  createdby                                                   String                       @db.VarChar(200)
+  createdat                                                   DateTime                     @updatedAt
+  updatedby                                                   String                       @db.VarChar(200)
+  updatedat                                                   DateTime                     @updatedAt
+  comments                                                    String?
+  organisationunitid                                          String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  parentid                                                    String?                      @db.Uuid
+  organisationcode                                            String                       @db.Char(5)
+  label                                                       String
+  description                                                 String?
+  id                                                          String                       @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  actActor                                                    ActActor[]
+  appApplication                                              AppApplication[]
+  appFlowAppFlowOrganisationunitsourceidToorgOrganisationunit AppFlow[]                    @relation("app_flow_organisationunitsourceidToorg_organisationunit")
+  appFlowAppFlowOrganisationunittargetidToorgOrganisationunit AppFlow[]                    @relation("app_flow_organisationunittargetidToorg_organisationunit")
+  fctUrbanzoneresponsability                                  FctUrbanzoneresponsability[]
+  orgOrganisationunit                                         OrgOrganisationunit?         @relation("org_organisationunitToorg_organisationunit", fields: [parentid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  otherOrgOrganisationunit                                    OrgOrganisationunit[]        @relation("org_organisationunitToorg_organisationunit")
+  prjApplicationrole                                          PrjApplicationrole[]
+  prjProjectresponsability                                    PrjProjectresponsability[]
+  ptfPortfolioresponsability                                  PtfPortfolioresponsability[]
+
+  @@map("org_organisationunit")
+}
+
+model OrgRoletype {
+  roleid                     String                       @id @db.Char(5)
+  label                      String                       @db.VarChar(200)
+  fctUrbanzoneresponsability FctUrbanzoneresponsability[]
+  prjApplicationrole         PrjApplicationrole[]
+  prjProjectresponsability   PrjProjectresponsability[]
+  ptfPortfolioresponsability PtfPortfolioresponsability[]
+  Roles                      Role[]
+
+  @@map("org_roletype")
+}
+
+model PrjApplicationrole {
+  createdby           String              @db.VarChar(200)
+  createdat           DateTime            @updatedAt
+  updatedby           String              @db.VarChar(200)
+  updatedat           DateTime            @updatedAt
+  comments            String?
+  applicationid       String              @db.Uuid
+  actorid             String?             @db.Uuid
+  organisationunitid  String              @db.Uuid
+  roleid              String              @db.Char(5)
+  validationdate      DateTime            @db.Date
+  id                  String              @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  actActor            ActActor?           @relation(fields: [actorid], references: [actorid], onDelete: NoAction, onUpdate: NoAction)
+  appApplication      AppApplication      @relation(fields: [applicationid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  orgOrganisationunit OrgOrganisationunit @relation(fields: [organisationunitid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  orgRoletype         OrgRoletype         @relation(fields: [roleid], references: [roleid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([applicationid, organisationunitid], map: "prj_applicationrole_pk")
+  @@map("prj_applicationrole")
+}
+
+model PrjProject {
+  createdby                String                     @db.VarChar(200)
+  createdat                DateTime                   @updatedAt
+  updatedby                String                     @db.VarChar(200)
+  updatedat                DateTime                   @updatedAt
+  comments                 String?
+  projectid                String                     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  label                    String
+  description              String?
+  parentid                 String?                    @db.Uuid
+  id                       String                     @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  prjProject               PrjProject?                @relation("prj_projectToprj_project", fields: [parentid], references: [projectid], onDelete: NoAction, onUpdate: NoAction)
+  otherPrjProject          PrjProject[]               @relation("prj_projectToprj_project")
+  prjProjectapplication    PrjProjectapplication[]
+  prjProjectresponsability PrjProjectresponsability[]
+
+  @@map("prj_project")
+}
+
+model PrjProjectapplication {
+  createdby       String         @db.VarChar(200)
+  createdat       DateTime       @updatedAt
+  updatedby       String         @db.VarChar(200)
+  updatedat       DateTime       @updatedAt
+  comments        String?
+  projectid       String         @db.Uuid
+  applicationid   String         @db.Uuid
+  applicationrole PrjAppType     @default(Managed) @map("applicationrole")
+  id              String         @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplication  AppApplication @relation(fields: [applicationid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  prjProject      PrjProject     @relation(fields: [projectid], references: [projectid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([projectid, applicationid, applicationrole], map: "prj_projectapplication_pk")
+  @@map("prj_projectapplication")
+}
+
+model PrjProjectresponsability {
+  createdby           String              @db.VarChar(200)
+  createdat           DateTime            @updatedAt
+  updatedby           String              @db.VarChar(200)
+  updatedat           DateTime            @updatedAt
+  comments            String?
+  projectid           String              @db.Uuid
+  actorid             String              @db.Uuid
+  organisationunitid  String              @db.Uuid
+  roleid              String              @db.Char(5)
+  description         String?
+  id                  String              @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  actActor            ActActor            @relation(fields: [actorid], references: [actorid], onDelete: NoAction, onUpdate: NoAction)
+  orgOrganisationunit OrgOrganisationunit @relation(fields: [organisationunitid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  prjProject          PrjProject          @relation(fields: [projectid], references: [projectid], onDelete: NoAction, onUpdate: NoAction)
+  orgRoletype         OrgRoletype         @relation(fields: [roleid], references: [roleid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([roleid, organisationunitid, actorid, projectid], map: "prj_projectresponsability_pk")
+  @@map("prj_projectresponsability")
+}
+
+model PtfPortfolio {
+  createdby                  String                       @db.VarChar(200)
+  createdat                  DateTime                     @updatedAt
+  updatedby                  String                       @db.VarChar(200)
+  updatedat                  DateTime                     @updatedAt
+  comments                   String?
+  portfolioid                String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  label                      String
+  description                String?
+  parentid                   String?                      @db.Uuid
+  id                         String                       @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ptfPortfolio               PtfPortfolio?                @relation("ptf_portfolioToptf_portfolio", fields: [parentid], references: [portfolioid], onDelete: NoAction, onUpdate: NoAction)
+  otherPtfPortfolio          PtfPortfolio[]               @relation("ptf_portfolioToptf_portfolio")
+  ptfPortfolioapplication    PtfPortfolioapplication[]
+  ptfPortfolioresponsability PtfPortfolioresponsability[]
+
+  @@map("ptf_portfolio")
+}
+
+model PtfPortfolioapplication {
+  createdby      String         @db.VarChar(200)
+  createdat      DateTime       @updatedAt
+  updatedby      String         @db.VarChar(200)
+  updatedat      DateTime       @updatedAt
+  comments       String?
+  portfolioid    String         @db.Uuid
+  applicationid  String         @db.Uuid
+  id             String         @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  appApplication AppApplication @relation(fields: [applicationid], references: [applicationid], onDelete: NoAction, onUpdate: NoAction)
+  ptfPortfolio   PtfPortfolio   @relation(fields: [portfolioid], references: [portfolioid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([portfolioid, applicationid], map: "ptf_portfolioapplication_pk")
+  @@map("ptf_portfolioapplication")
+}
+
+model PtfPortfolioresponsability {
+  createdby           String              @db.VarChar(200)
+  createdat           DateTime            @updatedAt
+  updatedby           String              @db.VarChar(200)
+  updatedat           DateTime            @updatedAt
+  comments            String?
+  portfolioid         String              @db.Uuid
+  actorid             String              @db.Uuid
+  organisationunitid  String              @db.Uuid
+  roleid              String              @db.Char(5)
+  desription          String?
+  id                  String              @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  actActor            ActActor            @relation(fields: [actorid], references: [actorid], onDelete: NoAction, onUpdate: NoAction)
+  orgOrganisationunit OrgOrganisationunit @relation(fields: [organisationunitid], references: [organisationunitid], onDelete: NoAction, onUpdate: NoAction)
+  ptfPortfolio        PtfPortfolio        @relation(fields: [portfolioid], references: [portfolioid], onDelete: NoAction, onUpdate: NoAction)
+  orgRoletype         OrgRoletype         @relation(fields: [roleid], references: [roleid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([portfolioid, actorid, organisationunitid, roleid], map: "ptf_portfolioresponsability_pk")
+  @@map("ptf_portfolioresponsability")
+}
+
+model RefSensitivity {
+  sensitivitycode String           @id @db.Char(2)
+  label           String           @db.VarChar(200)
+  appApplication  AppApplication[]
+
+  @@map("ref_sensitivity")
+}
+
+enum AppComplianceLevel {
+  Dispens_e  @map("Dispensée")
+  Non_pass_e @map("Non passée")
+  Partielle
+  Compl_te   @map("Complète")
+  Obsol_te   @map("Obsolète")
+
+  @@map("app_compliance_level")
+}
+
+enum AppDataFlowOrient {
+  push
+  pull
+  bi_directional @map("bi-directional")
+
+  @@map("app_data_flow_orient")
+}
+
+enum AppFlowStatus {
+  actif
+  inactif
+
+  @@map("app_flow_status")
+}
+
+enum EnvProtection {
+  NP
+  DR
+  Secret
+  Tr_s_secret @map("Très secret")
+
+  @@map("env_protection")
+}
+
+enum EnvStatus {
+  En_construction @map("En construction")
+  Actif
+  Inactif
+
+  @@map("env_status")
+}
+
+enum EnvType {
+  CaaS
+  IaaS
+  VM
+  BarMetal
+
+  @@map("env_type")
+}
+
+enum PrjAppType {
+  Contributing
+  Managed
+
+  @@map("prj_app_type")
+}

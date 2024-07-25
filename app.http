@@ -1,0 +1,64 @@
+
+
+POST http://localhost:3000/api/applications
+content-type: application/json
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJBUFBMSSIsIm5hbWUiOiJEU08iLCJpYXQiOjE1MTYyMzkwMjJ9.hBob79fE97VlChR27KFFjTn22OEoEy202TotgfNvntZ
+
+{
+  "longname": "string",
+  "description": "string",
+  "typeApplication": "SVBUS",
+  "codeApplication": [
+    {
+      "typeCode": "string",
+      "codeCourt": "string",
+      "longcode": "string",
+      "comments": "string"
+    }
+  ],
+  "sensibilite": "S1",
+  "statut": "BLD",
+  "parent": "string",
+  "organisation": "string",
+  "organisationid": "string",
+  "acteurRoles": [
+    {
+      "acteur": {
+        "name": "string",
+        "email": "string"
+      },
+      "organisation": {
+        "label": "string",
+        "description": "string",
+        "organisationcode": "strin"
+      },
+      "role": "string"
+    }
+  ],
+  "instances": [
+    {
+      "comments": "string",
+      "role": "string",
+      "statut": "string",
+      "tenant": "string",
+      "fip": "string",
+      "url": "string",
+      "deploymentdate": {},
+      "environment": {
+        "environmentid": "string",
+        "label": "string"
+      }
+    }
+  ],
+  "conformite": [
+    {
+      "comments": "string",
+      "compliancetype": "string",
+      "compliancelevel": "Dispens_e",
+      "decisiondate": "2024-07-04T15:07:16.828Z",
+      "validitydate": "2024-07-04T15:07:16.828Z",
+      "auditdate": "2024-07-04T15:07:16.828Z",
+      "description": "string"
+    }
+  ]
+}

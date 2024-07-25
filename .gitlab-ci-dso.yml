@@ -1,0 +1,41 @@
+include:
+  - project: $CATALOG_PATH
+    file: vault-ci.yml
+    ref: main
+  - project: $CATALOG_PATH
+    file: kaniko-ci.yml
+    ref: main
+
+default:
+  image: alpine:latest
+
+variables:
+  REGISTRY_URL: ${REGISTRY_HOST}/${PROJECT_PATH}
+
+stages:
+  - read-secret
+  - docker-buildapp
+  - docker-builddb
+
+read_secret:
+  stage: read-secret
+  extends:
+    - .vault:read_secret
+
+docker-buildapp:
+  variables:
+    WORKING_DIR: ./
+    DOCKERFILE: ./Dockerfile.app
+    IMAGE_NAMES: canel2-back:0.0.1 canel2-back:latest
+  stage: docker-buildapp
+  extends:
+    - .kaniko:build-push
+
+docker-builddb:
+  variables:
+    WORKING_DIR: ./
+    DOCKERFILE: ./Dockerfile.postgres
+    IMAGE_NAMES: canel2-db:0.0.1 canel2-db:latest
+  stage: docker-builddb
+  extends:
+    - .kaniko:build-push
