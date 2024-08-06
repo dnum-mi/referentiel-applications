@@ -26,7 +26,7 @@ export class ApplicationsService {
       searchQuery?: string;
       currentPage: number;
       maxPerPage: number;
-      orderBy: Prisma.AppApplicationOrderByWithRelationAndSearchRelevanceInput;
+      // orderBy: Prisma.AppApplicationOrderByWithRelationAndSearchRelevanceInput;
       id: string;
       parentId: string;
       nom: string;
@@ -116,7 +116,7 @@ export class ApplicationsService {
         },
         skip,
         take: maxPerPage,
-        orderBy: filters.orderBy,
+        // orderBy: filters.orderBy,
         where,
       }),
     ]);

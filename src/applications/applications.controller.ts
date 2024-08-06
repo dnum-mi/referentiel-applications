@@ -133,7 +133,7 @@ export class ApplicationsController {
       searchQuery: filters.searchQuery,
       currentPage: filters.currentPage,
       maxPerPage: filters.maxPerPage,
-      orderBy,
+      // orderBy,
       nom: filters.nom,
       statut: filters.statut,
       sensibilite: filters.sensibilite,
