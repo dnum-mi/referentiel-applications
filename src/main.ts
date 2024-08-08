@@ -16,7 +16,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
-      'http://localhost:5173',
+      'http://localhost:8080',
       'http://localhost:3000',
       'https://canel2.apps.c4.numerique-interieur.com',
     ],
@@ -34,6 +34,7 @@ async function bootstrap() {
     .setTitle('Canel2.1')
     .setDescription('The Canel2.1 API description')
     .setVersion('1.0')
+    .setBasePath('/api')
     .addTag('Canel2.1')
     .addBearerAuth(
       {
@@ -50,8 +51,9 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   const theme = new SwaggerTheme('v3');
-  SwaggerModule.setup('api', app, document, {
+  SwaggerModule.setup('api/v1', app, document, {
     explorer: true,
+    jsonDocumentUrl: 'swagger/json',
     //customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
   });
 
