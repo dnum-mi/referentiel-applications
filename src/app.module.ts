@@ -1,4 +1,3 @@
-import { Module } from '@nestjs/common';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule } from '@nestjs/config';
 import { ActeursModule } from './acteurs/acteurs.module';
@@ -15,13 +14,29 @@ import { UsersModule } from './users/users.module';
 import { ApplicationRolesModule } from './application-roles/application-roles.module';
 import { EnvironmentVariablesModule } from './environment-variables/environment-variables.module';
 import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/jwt-auth-guard.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { CompliancesModule } from './compliances/compliances.module';
-import { PoliciesGuard } from './auth/policies-guard.guard';
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import {
+  KeycloakConnectModule,
+  ResourceGuard,
+  RoleGuard,
+  AuthGuard,
+} from 'nest-keycloak-connect';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { memoryStore } from './keycloak-config';
+import { KeycloakMiddleware } from './keycloak.middleware';
+import session from 'express-session';
 
 @Module({
   imports: [
+    KeycloakConnectModule.register({
+      authServerUrl: process.env.KEYCLOAK_SERVER_URL!,
+      realm: process.env.KEYCLOAK_REALM!,
+      clientId: process.env.KEYCLOAK_CLIENT_ID!,
+      secret: process.env.KEYCLOAK_CLIENT_SECRET!,
+    }),
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.register(),
     PrismaModule,
@@ -40,16 +55,38 @@ import { PoliciesGuard } from './auth/policies-guard.guard';
     AuthModule,
     CompliancesModule,
   ],
-  controllers: [GlobalSearchController],
+  controllers: [GlobalSearchController, AppController],
   providers: [
+    AppService,
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      useClass: AuthGuard,
     },
     {
       provide: APP_GUARD,
-      useClass: PoliciesGuard,
+      useClass: ResourceGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RoleGuard,
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(
+        session({
+          secret: process.env.SESSION_SECRET!,
+          resave: false,
+          saveUninitialized: true,
+          store: memoryStore,
+        })
+      )
+      .forRoutes('*');
+
+    consumer
+      .apply(KeycloakMiddleware)
+      .forRoutes({ path: '/secure', method: RequestMethod.ALL });
+  }
+}

@@ -6,7 +6,8 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerTheme } from 'swagger-themes';
-import { SwaggerThemeNameEnum } from 'swagger-themes/build/enums/swagger-theme-name';
+import session from 'express-session';
+import passport from 'passport';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -25,6 +26,16 @@ async function bootstrap() {
   app.use(compression());
   app.use(helmet());
   app.useGlobalPipes(new ValidationPipe());
+  app.use(
+    session({
+      secret: 'process.env.SESSION_SECRET',
+      resave: false,
+      saveUninitialized: false,
+      cookie: { maxAge: 36000000 },
+    }),
+  );
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   const logger = new Logger('NestApplication');
 

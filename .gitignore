@@ -37,3 +37,6 @@ lerna-debug.log*
 
 .env
 package-lock.json
+
+# keycloak
+keycloak/data
