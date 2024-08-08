@@ -13,7 +13,7 @@ export class InstancesService {
     take?: number;
     cursor?: Prisma.AppInstanceWhereUniqueInput;
     where?: Prisma.AppInstanceWhereInput;
-    orderBy?: Prisma.AppInstanceOrderByWithRelationAndSearchRelevanceInput;
+    // orderBy?: Prisma.AppInstanceOrderByWithRelationAndSearchRelevanceInput;
     include?: Prisma.AppInstanceInclude;
   }): Promise<AppInstance[]> {
     return this.prisma.appInstance.findMany({
@@ -21,7 +21,7 @@ export class InstancesService {
       take: params?.take,
       cursor: params?.cursor,
       where: params?.where,
-      orderBy: params?.orderBy,
+      // orderBy: params?.orderBy,
       include: params?.include,
     });
   }
