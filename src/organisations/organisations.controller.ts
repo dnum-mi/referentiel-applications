@@ -12,7 +12,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { OrganisationsService } from './organisations.service';
 import { CreateOrganisationDto } from './dto/create-organisation.dto';
-import { IDParam, UUIDParam } from '../global-dto/uuid-param.dto';
+import { UUIDParam } from '../global-dto/uuid-param.dto';
 import { FilterOrganisationsDto } from './dto/filter-organisations.dto';
 import { CurrentUser } from '../current-user/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -37,19 +37,13 @@ export class OrganisationsController {
   }
 
   @Get(':id')
-  async getOrganisation(
-    @Param() idOrCode: IDParam,
-  ): Promise<Organisation | null> {
-    const organisation = await this.organisationsService.getOneByCode(
-      idOrCode.id,
-    );
+  async findOne(@Param() params: UUIDParam) {
+    const res = await this.organisationsService.getOneById(params.id);
 
-    if (!organisation)
-      throw new NotFoundException(
-        `Resource with id-code ${idOrCode.id} not found`,
-      );
+    if (!res)
+      throw new NotFoundException(`Resource with id ${params.id} not found`);
 
-    return organisation;
+    return res;
   }
 
   @Post()

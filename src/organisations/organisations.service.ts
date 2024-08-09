@@ -100,6 +100,14 @@ export class OrganisationsService {
     });
   }
 
+  async getOneById(id: string): Promise<Organisation | null> {
+    return await this.prisma.orgOrganisationunit.findFirst({
+      where: {
+        id: id,
+      },
+    });
+  }
+
   async create(
     username: string,
     data: CreateOrganisationDto,
