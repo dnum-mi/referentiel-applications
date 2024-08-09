@@ -454,7 +454,7 @@ model OrgOrganisationunit {
   comments                                                    String?
   organisationunitid                                          String                       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   parentid                                                    String?                      @db.Uuid
-  organisationcode                                            String                       @db.Char(5)
+  organisationcode                                            String                       @db.VarChar(200)
   label                                                       String
   description                                                 String?
   id                                                          String                       @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
