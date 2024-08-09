@@ -96,7 +96,7 @@ model Role {
 
 model AppApplication {
   createdby                                                       String                     @db.VarChar(200)
-  createdat                                                       DateTime                   @updatedAt
+  createdat                                                       DateTime                   @default(now())
   updatedby                                                       String                     @db.VarChar(200)
   updatedat                                                       DateTime                   @updatedAt
   comments                                                        String?
