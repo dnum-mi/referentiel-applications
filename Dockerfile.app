@@ -10,8 +10,10 @@ COPY . .
 RUN npm install
 RUN npx prisma generate
 
+# Environment variables should be set via Kubernetes ConfigMaps/Secrets
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
+# Build app
 RUN npm run build
 
 # Expose the port that your NestJS application will run on
