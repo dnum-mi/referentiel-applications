@@ -26,7 +26,7 @@ docker-buildapp:
   variables:
     WORKING_DIR: ./
     DOCKERFILE: ./Dockerfile.app
-    IMAGE_NAMES: canel2-back:0.0.1 canel2-back:latest
+    IMAGE_NAMES: canel2-back:${CI_COMMIT_SHORT_SHA} canel2-back:${CI_COMMIT_BRANCH}
   stage: docker-buildapp
   extends:
     - .kaniko:build-push
@@ -35,7 +35,7 @@ docker-builddb:
   variables:
     WORKING_DIR: ./
     DOCKERFILE: ./Dockerfile.postgres
-    IMAGE_NAMES: canel2-db:0.0.1 canel2-db:latest
+    IMAGE_NAMES: canel2-db:${CI_COMMIT_SHORT_SHA} canel2-db:${CI_COMMIT_BRANCH}
   stage: docker-builddb
   extends:
     - .kaniko:build-push
