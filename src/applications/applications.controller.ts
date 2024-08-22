@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Logger,
   NotAcceptableException,
   NotFoundException,
   Param,
@@ -16,15 +17,12 @@ import { UUIDParam } from '../global-dto/uuid-param.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { FilterApplicationsDto } from './dto/filter-applications.dto';
 import { PrismaService } from '../prisma/prisma.service';
-
 import { ConfigService } from '@nestjs/config';
-
 import { CurrentUser } from '../current-user/current-user.decorator';
 import { User } from '../users/entities/user.entity';
-import { Application } from './entities/application.entity';
 import { Resource } from '../auth/policies-guard.guard';
+import _ from 'lodash';
 
-//TODO: Refactor clean the code!
 @Resource('Application')
 @ApiTags('Applications')
 @Controller('applications')
@@ -50,39 +48,27 @@ export class ApplicationsController {
     return this.prisma.appType.findMany();
   }
 
-  private async updateOrCreate(
-    user: User,
-    inputData: CreateApplicationDto | UpdateApplicationDto,
-    isCreating: boolean,
-    applicationId?: string,
+  @Post()
+  async create(
+    @CurrentUser() user: User,
+    @Body() createApplicationDto: CreateApplicationDto,
   ) {
-    const application: Application | null =
+    const application =
       await this.applicationsService.getOneByNameAndOrgnisation(
-        inputData.longname!,
-        inputData.organisation,
-        inputData.organisationid,
+        createApplicationDto.longname!,
+        createApplicationDto.organisation,
+        createApplicationDto.organisationid,
       );
 
-    if (application && application.applicationid !== applicationId) {
+    if (application) {
       throw new NotAcceptableException(
         `Le nom et l'organisation de l'application doivent être uniques!`,
       );
     }
 
-    // if (!isCreating && applicationId) {
-    //   // updating
-    //   application = await this.applicationsService.getOneById(applicationId);
-
-    // if (!application) {
-    //   throw new NotFoundException(`Application ${applicationId} doesn't exist`);
-    // }
-    //}
-
-    const result = await this.applicationsService.updateOrCreate(
+    const result = await this.applicationsService.createApplication(
       user.username,
-      inputData,
-      isCreating,
-      application ?? applicationId,
+      createApplicationDto,
     );
 
     if (typeof result === 'string') {
@@ -92,48 +78,15 @@ export class ApplicationsController {
     return result;
   }
 
-  @Post()
-  async create(
-    @CurrentUser() user: User,
-    @Body()
-    createApplicationDto: CreateApplicationDto,
-  ) {
-    return this.updateOrCreate(user, createApplicationDto, true);
-  }
-
   @Get()
   async getAll(
     @CurrentUser() user: User,
     @Query() filters: FilterApplicationsDto,
   ) {
-    const orderBy = {} as any;
-    for (const sort of filters.sort ?? []) {
-      orderBy[sort.key] = sort.order;
-      // switch (sort) {
-      //   case 'nom': {
-      //     orderBy['longname'] = 'asc';
-      //     break;
-      //   }
-      //   case 'statut': {
-      //     orderBy['appStatus'] = {
-      //       applicationstatuscode: 'asc',
-      //     };
-      //     break;
-      //   }
-      //   case 'sensibilite': {
-      //     orderBy['refSensitivity'] = {
-      //       sensitivitycode: 'asc',
-      //     };
-      //     break;
-      //   }
-      // }
-    }
-
     return await this.applicationsService.getAllBy({
       searchQuery: filters.searchQuery,
       currentPage: filters.currentPage,
       maxPerPage: filters.maxPerPage,
-      // orderBy,
       nom: filters.nom,
       statut: filters.statut,
       sensibilite: filters.sensibilite,
@@ -145,8 +98,9 @@ export class ApplicationsController {
   async findOne(@Param() params: UUIDParam) {
     const res = await this.applicationsService.getOneById(params.id);
 
-    if (!res)
+    if (!res) {
       throw new NotFoundException(`Resource with id ${params.id} not found`);
+    }
 
     return res;
   }
@@ -157,7 +111,33 @@ export class ApplicationsController {
     @Param() params: UUIDParam,
     @Body() updateApplicationDto: UpdateApplicationDto,
   ) {
-    return this.updateOrCreate(user, updateApplicationDto, false, params.id);
+    const application =
+      await this.applicationsService.getOneByNameAndOrgnisation(
+        updateApplicationDto.longname!,
+        updateApplicationDto.organisation,
+        updateApplicationDto.organisationid,
+      );
+
+    if (application && application.applicationid !== params.id) {
+      throw new NotAcceptableException(
+        `Le nom et l'organisation de l'application doivent être uniques!`,
+      );
+    }
+
+    const sanitizedUpdateDto = _.omit(updateApplicationDto, 'createdat');
+
+    const result = await this.applicationsService.updateApplication(
+      user.username,
+      params.id,
+      sanitizedUpdateDto,
+    );
+
+
+    if (typeof result === 'string') {
+      throw new NotFoundException(result);
+    }
+
+    return result;
   }
 
   @Get(':id/applications')
