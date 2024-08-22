@@ -16,7 +16,7 @@ import { FilterApplicationRolesDto } from './dto/filter-application-role.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EnvironmentVariablesService } from '../environment-variables/environment-variables.service';
 import { Resource } from '../auth/policies-guard.guard';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Resource('Role')
 @Controller('application-roles')
@@ -30,6 +30,21 @@ export class ApplicationRolesController {
   ) {}
 
   @Get('application/:id')
+  @ApiOperation({
+    summary: "Obtenir les rôles d'application par ID",
+    description:
+      'Récupère une liste de tous les rôles associés à une application spécifique, identifiée par son ID, avec des filtres optionnels.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Liste des rôles d'application récupérée avec succès.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Aucun rôle d'application trouvé pour l'ID spécifié.",
+  })
+  @ApiResponse({ status: 400, description: 'Requête invalide.' })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   async getApplicationRolesByAppId(
     @Param() params: UUIDParam,
     @Query() filters: FilterApplicationRolesDto,
@@ -41,6 +56,21 @@ export class ApplicationRolesController {
   }
 
   @Post(':id/application-roles')
+  @ApiOperation({
+    summary: "Mettre à jour ou créer un rôle d'application",
+    description:
+      'Met à jour un rôle existant ou en crée un nouveau pour une application spécifique, identifiée par son ID.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Rôle d'application mis à jour ou créé avec succès.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Aucun rôle d'application trouvé pour l'ID spécifié.",
+  })
+  @ApiResponse({ status: 400, description: 'Requête invalide.' })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   async updateOrCreateApplicationRoleByAppId(
     @CurrentUser() user: User,
     @Param() params: UUIDParam,
