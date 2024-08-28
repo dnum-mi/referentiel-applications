@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { SensibiliteEnum } from './enums/app-sensibilite';
@@ -20,13 +21,21 @@ export async function createApp(
     // autres propriétés
   };
 
-  if (applicationId) {
-    return await service.updateApplication(
-      'Testing',
-      applicationId,
-      applicationData,
+  try {
+    if (applicationId) {
+      return await service.updateApplication(
+        'Testing',
+        applicationId,
+        applicationData,
+      );
+    } else {
+      return await service.createApplication('Testing', applicationData);
+    }
+  } catch (error) {
+    Logger.error(
+      'Une erreur est intervenue pendant la création ou la mise à jour:',
+      error,
     );
-  } else {
-    return await service.createApplication('Testing', applicationData);
+    throw error;
   }
 }
