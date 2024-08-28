@@ -16,7 +16,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
-      'http://localhost:8080',
+      'http://localhost:8085',
       'http://localhost:3000',
       'https://canel2.apps.c4.numerique-interieur.com',
     ],
