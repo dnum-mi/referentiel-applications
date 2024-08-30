@@ -17,7 +17,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:8085',
       'http://localhost:3000',
-      'https://canel2.apps.c4.numerique-interieur.com',
+      'https://api-referentiel-applications.dev.numerique-interieur.com',
     ],
     credentials: true,
   });
