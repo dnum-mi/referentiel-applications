@@ -125,16 +125,27 @@ export class OrganisationsService {
 
   async updateOneById(
     username: string,
-    id: string,
+    id: string, // Cet 'id' vient du frontend
     data: UpdateOrganisationDto,
   ): Promise<OrgOrganisationunit> {
+    // Étape 1 : Rechercher l'organisation par son id
+    const orgUnit = await this.prisma.orgOrganisationunit.findFirst({
+      where: { id: id }, // Recherche l'organisation avec id dans la table
+      select: { organisationunitid: true }, // Ne récupère que organisationunitid
+    });
+
+    if (!orgUnit) {
+      throw new Error('Organisation unit not found');
+    }
+
+    // Étape 2 : Utiliser organisationunitid pour la mise à jour
     return this.prisma.orgOrganisationunit.update({
       data: {
         ...data,
-        ...{ updatedby: username },
+        updatedby: username,
       },
       where: {
-        organisationunitid: id,
+        organisationunitid: orgUnit.organisationunitid, // Utilise organisationunitid pour la mise à jour
       },
     });
   }
