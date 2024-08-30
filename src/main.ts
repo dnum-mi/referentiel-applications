@@ -6,13 +6,12 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { ConfigService } from '@nestjs/config';
 import { SwaggerTheme } from 'swagger-themes';
-import { SwaggerThemeNameEnum } from 'swagger-themes/build/enums/swagger-theme-name';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     // logger: ['log', 'error', 'warn', 'debug', 'verbose'] ,
   });
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1');
 
   app.enableCors({
     origin: [
@@ -34,7 +33,7 @@ async function bootstrap() {
     .setTitle('Canel2.1')
     .setDescription('The Canel2.1 API description')
     .setVersion('1.0')
-    .setBasePath('/api')
+    .setBasePath('/api/v1')
     .addTag('Canel2.1')
     .addBearerAuth(
       {
