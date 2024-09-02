@@ -16,7 +16,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:8085',
-      'http://localhost:3000',
+      'http://localhost:3500',
       'https://api-referentiel-applications.dev.numerique-interieur.com',
       'https://referentiel-applications.dev.numerique-interieur.com',
     ],
