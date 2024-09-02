@@ -16,7 +16,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:8085',
-      'http://localhost:3500',
+      'http://localhost:3000',
       'https://api-referentiel-applications.dev.numerique-interieur.com',
       'https://referentiel-applications.dev.numerique-interieur.com',
     ],
@@ -31,8 +31,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const config = new DocumentBuilder()
-    .setTitle('Canel2.1')
-    .setDescription('The Canel2.1 API description')
+    .setTitle('Référentiel des applications')
+    .setDescription('Référentiel des applications API description')
     .setVersion('1.0')
     .setBasePath('/api/v1')
     .addTag('Canel2.1')
@@ -58,7 +58,7 @@ async function bootstrap() {
   });
 
   const host = configService.get('HOST');
-  const port = parseInt(configService.get('PORT', '3500'));
+  const port = parseInt(configService.get('PORT', '3000'));
   const database = configService.get('DATABASE_URL');
 
   if (host) {

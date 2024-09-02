@@ -17,7 +17,7 @@ ENV DATABASE_URL=${DATABASE_URL}
 RUN npm run build
 
 # Expose the port that your NestJS application will run on
-ENV PORT=${PORT:-3500}
+ENV PORT=${PORT:-3000}
 EXPOSE ${PORT}
 
 # Start the NestJS application
