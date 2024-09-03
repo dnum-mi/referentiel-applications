@@ -16,6 +16,6 @@ export class CreateOrganisationDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  @MaxLength(5)
+  @MaxLength(6)
   organisationcode: string;
 }

@@ -30,32 +30,24 @@ export class OrganisationsService {
     const skip = (pageNumber - 1) * maxPerPage;
 
     const where: Prisma.OrgOrganisationunitWhereInput = {
-      OR: [
-        filters.parentId ? { parentId: filters.parentId } : undefined,
-        filters.label
-          ? { label: { contains: filters.label, mode: 'insensitive' } }
-          : undefined,
-        filters.searchQuery
-          ? {
-              OR: [
-                {
-                  label: {
-                    contains: filters.searchQuery,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            }
-          : undefined,
-        filters.code
-          ? {
-              organisationcode: {
-                contains: filters.code,
-                mode: 'insensitive',
-              },
-            }
-          : undefined,
-      ].filter(Boolean) as any, // Remove undefined values
+      parentid: filters.parentId,
+      label: filters.label
+        ? { contains: filters.label, mode: 'insensitive' }
+        : undefined,
+      organisationcode: filters.code
+        ? { contains: filters.code, mode: 'insensitive' }
+        : undefined,
+      ...(filters.searchQuery && {
+        OR: [
+          { label: { contains: filters.searchQuery, mode: 'insensitive' } },
+          {
+            organisationcode: {
+              contains: filters.searchQuery,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      }),
     };
 
     if (filters.parentOnly) {

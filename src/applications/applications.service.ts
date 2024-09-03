@@ -1,6 +1,6 @@
 import { excludes } from './../utilities/index';
 import { Organisation } from './../organisations/entities/organisation.entity';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CreateApplicationDto } from './dto/create-application.dto';
@@ -40,9 +40,35 @@ export class ApplicationsService {
     const maxPerPage = Math.min(filters.maxPerPage ?? this.env.MaxPerPage, 100);
     const pageNumber = Math.max(filters.currentPage ?? 1, 1);
     const skip = (pageNumber - 1) * maxPerPage;
-
-    const where: Prisma.AppApplicationWhereInput =
-      this.buildWhereClause(filters);
+    this.buildWhereClause(filters);
+    const where: Prisma.AppApplicationWhereInput = {
+      ...(filters.statut && { status: filters.statut }),
+      ...(filters.nom && {
+        longname: { contains: filters.nom, mode: 'insensitive' },
+      }),
+      ...(filters.sensibilite && { sensitivity: filters.sensibilite }),
+      ...(filters.parentOnly && { parentid: { not: null } }),
+      ...(filters.searchQuery && {
+        AND: [
+          {
+            OR: [
+              {
+                longname: {
+                  contains: filters.searchQuery,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                description: {
+                  contains: filters.searchQuery,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    };
 
     const [count, applications] = await this.prisma.$transaction([
       this.prisma.appApplication.count({ where }),
@@ -126,7 +152,6 @@ export class ApplicationsService {
     inputData: CreateApplicationDto | UpdateApplicationDto,
     application?: Application,
   ) {
-
     const sanitizedUpdateDto = _.omit(UpdateApplicationDto, 'createdAt');
 
     if (inputData.parent && inputData.parent === application?.applicationid) {
@@ -170,7 +195,6 @@ export class ApplicationsService {
     validationData: any,
     application: Application | null,
   ) {
-
     const input = {
       updatedby: username,
       longname: inputData.longname ?? application?.longname ?? '',
@@ -203,7 +227,6 @@ export class ApplicationsService {
         },
       },
     };
-
 
     application = await this.prisma.appApplication.upsert({
       where: {
@@ -418,13 +441,13 @@ export class ApplicationsService {
       orConditions.push({ parentid: filters.parentId });
     }
 
-    if (filters.nom) {
+    if (filters.longname) {
       orConditions.push({
         OR: [
-          { longname: { contains: filters.nom, mode: 'insensitive' } },
+          { longname: { contains: filters.longname, mode: 'insensitive' } },
           {
             orgOrganisationunit: {
-              label: { contains: filters.nom, mode: 'insensitive' },
+              label: { contains: filters.longname, mode: 'insensitive' },
             },
           },
         ],

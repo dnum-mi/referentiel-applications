@@ -44,7 +44,7 @@ export class PaginationQury {
 
   @ApiProperty({ default: 10, type: Number })
   @IsNumberString()
-  @Transform(({ value }) => value || 10)
+  @Transform(({ value }) => value || 5)
   @IsOptional()
   maxPerPage?: number;
 
