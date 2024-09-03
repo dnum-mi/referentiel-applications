@@ -35,7 +35,7 @@ async function bootstrap() {
     .setDescription('Référentiel des applications API description')
     .setVersion('1.0')
     .setBasePath('/api/v1')
-    .addTag('Canel2.1')
+    .addTag('Référentiel des applications')
     .addBearerAuth(
       {
         type: 'http',
@@ -58,7 +58,7 @@ async function bootstrap() {
   });
 
   const host = configService.get('HOST');
-  const port = parseInt(configService.get('PORT', '3000'));
+  const port = parseInt(configService.get('PORT', '3500'));
   const database = configService.get('DATABASE_URL');
 
   if (host) {

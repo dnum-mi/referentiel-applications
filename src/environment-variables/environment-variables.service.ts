@@ -13,7 +13,7 @@ export class EnvironmentVariablesService {
   }
 
   public get MaxPerPage(): number {
-    return +this.configService.get('MAX_PER_PAGE', 20);
+    return +this.configService.get('MAX_PER_PAGE', 5);
   }
 
   public get JWTSeceret(): string {
