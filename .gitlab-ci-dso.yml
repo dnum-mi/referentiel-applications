@@ -15,7 +15,7 @@ variables:
 stages:
   - read-secret
   - docker-buildapp
-  - docker-builddb
+  # - docker-builddb
 
 read_secret:
   stage: read-secret
@@ -26,16 +26,16 @@ docker-buildapp:
   variables:
     WORKING_DIR: ./
     DOCKERFILE: ./Dockerfile.app
-    IMAGE_NAMES: canel2-back:${CI_COMMIT_SHORT_SHA} canel2-back:${CI_COMMIT_BRANCH}
+    IMAGE_NAMES: ref-app-back:${CI_COMMIT_SHORT_SHA} ref-app-back:${CI_COMMIT_BRANCH}
   stage: docker-buildapp
   extends:
     - .kaniko:build-push
 
-docker-builddb:
-  variables:
-    WORKING_DIR: ./
-    DOCKERFILE: ./Dockerfile.postgres
-    IMAGE_NAMES: canel2-db:${CI_COMMIT_SHORT_SHA} canel2-db:${CI_COMMIT_BRANCH}
-  stage: docker-builddb
-  extends:
-    - .kaniko:build-push
+# docker-builddb:
+#   variables:
+#     WORKING_DIR: ./
+#     DOCKERFILE: ./Dockerfile.postgres
+#     IMAGE_NAMES: ref-app-db:${CI_COMMIT_SHORT_SHA} ref-app-db:${CI_COMMIT_BRANCH}
+#   stage: docker-builddb
+#   extends:
+#     - .kaniko:build-push
