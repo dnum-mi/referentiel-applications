@@ -2,7 +2,6 @@ import { Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 @Controller('auth')
-@ApiTags('Auth')
 @Controller()
 export class AuthController {
   // @Public()

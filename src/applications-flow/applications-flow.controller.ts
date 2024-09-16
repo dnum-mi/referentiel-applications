@@ -7,7 +7,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../current-user/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 
-@ApiTags('Applications')
 @Controller('flow')
 export class ApplicationsFlowController {
   constructor(

@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('Global')
@@ -8,6 +8,18 @@ export class GlobalSearchController {
   constructor(private prisma: PrismaService) {}
 
   @Get()
+  @ApiOperation({
+    summary: 'Recherche globale',
+    description:
+      'Effectue une recherche dans les applications, capacités et zones urbaines en fonction du terme de recherche fourni.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Recherche effectuée avec succès.',
+    type: Object,
+  })
+  @ApiResponse({ status: 400, description: 'Requête invalide.' })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   async search(@Query('query') query: string) {
     const take = 10;
 
