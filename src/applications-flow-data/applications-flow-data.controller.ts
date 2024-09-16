@@ -1,12 +1,11 @@
 import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { ApplicationsFlowDataService } from './applications-flow-data.service';
 import { CreateApplicationsFlowDataDto } from './dto/create-applications-flow-data.dto';
-import { ApiTags } from '@nestjs/swagger';
 import { UUIDParam } from '../global-dto/uuid-param.dto';
 import { CurrentUser } from '../current-user/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 
-@ApiTags('Applications')
+
 @Controller('flowdata')
 export class ApplicationsFlowDataController {
   constructor(

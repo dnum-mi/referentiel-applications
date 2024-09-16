@@ -9,7 +9,7 @@ import {
   Query,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OrganisationsService } from './organisations.service';
 import { CreateOrganisationDto } from './dto/create-organisation.dto';
 import { UUIDParam } from '../global-dto/uuid-param.dto';
@@ -25,6 +25,17 @@ export class OrganisationsController {
   constructor(private organisationsService: OrganisationsService) {}
 
   @Get()
+  @ApiOperation({
+    summary: 'Obtenir toutes les organisations',
+    description:
+      "Récupère une liste d'organisations avec des filtres optionnels.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des organisations récupérée avec succès.',
+  })
+  @ApiResponse({ status: 400, description: 'Requête invalide.' })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   async getAll(@Query() filters: FilterOrganisationsDto) {
     return await this.organisationsService.getAllBy({
       searchQuery: filters.searchQuery,
@@ -37,6 +48,18 @@ export class OrganisationsController {
   }
 
   @Get(':id')
+  @ApiOperation({
+    summary: 'Obtenir une organisation par ID',
+    description:
+      "Récupère les détails d'une organisation spécifique en utilisant son ID.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Organisation trouvée avec succès.',
+  })
+  @ApiResponse({ status: 404, description: 'Organisation non trouvée.' })
+  @ApiResponse({ status: 400, description: 'Requête invalide.' })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   async findOne(@Param() params: UUIDParam) {
     const res = await this.organisationsService.getOneById(params.id);
 
@@ -47,6 +70,18 @@ export class OrganisationsController {
   }
 
   @Post()
+  @ApiOperation({
+    summary: 'Créer une nouvelle organisation',
+    description:
+      'Crée une nouvelle organisation avec les informations fournies.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Organisation créée avec succès.',
+  })
+  @ApiResponse({ status: 422, description: 'Données non traitables.' })
+  @ApiResponse({ status: 400, description: 'Requête invalide.' })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   async createOrganisation(
     @CurrentUser() user: User,
     @Body() createOrganisationDto: CreateOrganisationDto,
@@ -62,6 +97,19 @@ export class OrganisationsController {
   }
 
   @Put(':id')
+  @ApiOperation({
+    summary: 'Mettre à jour une organisation',
+    description:
+      "Met à jour les détails d'une organisation existante en utilisant son ID.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Organisation mise à jour avec succès.',
+  })
+  @ApiResponse({ status: 404, description: 'Organisation non trouvée.' })
+  @ApiResponse({ status: 422, description: 'Données non traitables.' })
+  @ApiResponse({ status: 400, description: 'Requête invalide.' })
+  @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   async updateOrganisation(
     @CurrentUser() user: User,
     @Param() params: UUIDParam,

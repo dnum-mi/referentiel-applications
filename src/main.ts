@@ -35,7 +35,6 @@ async function bootstrap() {
     .setDescription('Référentiel des applications API description')
     .setVersion('1.0')
     .setBasePath('/api/v1')
-    .addTag('Référentiel des applications')
     .addBearerAuth(
       {
         type: 'http',
