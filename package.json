@@ -20,7 +20,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:script": "npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql",
-    "db:init": "npm run db:script && npx prisma migrate deploy"
+    "db:init": "npx prisma migrate deploy"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^2.2.0",
