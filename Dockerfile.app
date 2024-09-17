@@ -1,4 +1,4 @@
-FROM bitnami/node:latest
+FROM bitnami/node:22
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
@@ -10,9 +10,6 @@ COPY . .
 RUN npm install
 RUN npx prisma generate
 
-# Environment variables should be set via Kubernetes ConfigMaps/Secrets
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
 # Build app
 RUN npm run build
 
@@ -21,4 +18,4 @@ ENV PORT=${PORT:-3500}
 EXPOSE ${PORT}
 
 # Start the NestJS application
-CMD [ "node", "dist/main.js" ]
+CMD [ "npm", "run", "start:prod" ]
