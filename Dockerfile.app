@@ -19,6 +19,7 @@ RUN npm run build
 # Create prisma migration dir as root
 USER 0
 RUN mkdir -p prisma/migrations/0_init
+RUN chmod 777 prisma/migrations/0_init
 USER 1001
 
 EXPOSE 3500
