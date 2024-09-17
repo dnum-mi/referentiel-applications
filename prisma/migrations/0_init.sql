@@ -1,12 +1,12 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-DROP SEQUENCE IF EXISTS "public"."newtable_id_seq";
-CREATE SEQUENCE "newtable_id_seq" 
+CREATE SEQUENCE IF NOT EXISTS "newtable_id_seq" 
 INCREMENT 1
 MINVALUE  1
 MAXVALUE 2147483647
 START 1
 CACHE 1;
+ALTER SEQUENCE "newtable_id_seq" OWNER TO "postgres";
 
 CREATE TYPE "app_compliance_level" AS ENUM (
   'Dispensée',
@@ -673,7 +673,3 @@ ALTER TABLE "ptf_portfolioresponsability" ADD CONSTRAINT "ptf_portfolioresponsab
 ALTER TABLE "resources" ADD CONSTRAINT "newtable_un" UNIQUE ("resource");
 ALTER TABLE "roles" ADD CONSTRAINT "roles_fk" FOREIGN KEY ("roleid") REFERENCES "public"."org_roletype" ("roleid") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "roles" ADD CONSTRAINT "roles_fk_1" FOREIGN KEY ("resourceid") REFERENCES "public"."resources" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
-ALTER SEQUENCE "newtable_id_seq"
-OWNED BY "resources"."id";
-SELECT setval('"newtable_id_seq"', 7, true);
-ALTER SEQUENCE "newtable_id_seq" OWNER TO "postgres";
