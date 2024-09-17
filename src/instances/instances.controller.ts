@@ -3,10 +3,14 @@ import { InstancesService } from './instances.service';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Resource } from '../auth/policies-guard.guard';
 import { UUIDParam } from 'src/global-dto/uuid-param.dto';
+import { ApiExcludeController } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 
 @Resource('Instance')
-// @ApiTags('Instances')
+@ApiTags('Instances')
 @Controller('instances')
+@ApiExcludeController()
 export class InstancesController {
   constructor(private readonly instancesService: InstancesService) {}
 
@@ -20,6 +24,7 @@ export class InstancesController {
   // }
 
   @Get('/application/:id')
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: "Obtenir toutes les instances d'une application",
     description:
