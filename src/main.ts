@@ -49,7 +49,6 @@ async function bootstrap() {
     .addSecurityRequirements('token')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  const theme = new SwaggerTheme('v3');
   SwaggerModule.setup('api/v1', app, document, {
     explorer: true,
     jsonDocumentUrl: 'swagger/json',

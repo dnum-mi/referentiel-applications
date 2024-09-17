@@ -3,15 +3,19 @@ import { CompliancesService } from './compliances.service';
 
 import { Resource } from '../auth/policies-guard.guard';
 import { UUIDParam } from 'src/global-dto/uuid-param.dto';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiExcludeEndpoint } from '@nestjs/swagger';
+// import { ApiTags } from '@nestjs/swagger';
+import { ApiExcludeController } from '@nestjs/swagger';
 
 @Resource('Compliance')
 @Controller('compliances')
 // @ApiTags('Application-Compliances')
+// ApiExcludeController()
 export class CompliancesController {
   constructor(private readonly compliancesService: CompliancesService) {}
 
   @Get('/application/:id')
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: "Obtenir la conformité par ID d'application",
     description:

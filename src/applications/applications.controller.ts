@@ -13,7 +13,12 @@ import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { UUIDParam } from '../global-dto/uuid-param.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiExcludeEndpoint,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FilterApplicationsDto } from './dto/filter-applications.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
@@ -42,6 +47,7 @@ export class ApplicationsController {
     description: 'Liste des statuts récupérée avec succès.',
   })
   @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
+  @ApiExcludeEndpoint()
   @Get('/status')
   async getStatuses() {
     return this.prisma.appStatus.findMany();
@@ -58,6 +64,7 @@ export class ApplicationsController {
     description: 'Liste des sensibilités récupérée avec succès.',
   })
   @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
+  @ApiExcludeEndpoint()
   @Get('/sensibilites')
   async getSensibilites() {
     return this.prisma.refSensitivity.findMany();
@@ -145,6 +152,12 @@ export class ApplicationsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Récupère une application par son id' })
+  @ApiResponse({
+    status: 200,
+    description: 'Application récupérée avec succès',
+  })
+  @ApiResponse({ status: 404, description: 'Application introuvable' })
   async findOne(@Param() params: UUIDParam) {
     const res = await this.applicationsService.getOneById(params.id);
 
@@ -194,7 +207,6 @@ export class ApplicationsController {
       sanitizedUpdateDto,
     );
 
-
     if (typeof result === 'string') {
       throw new NotFoundException(result);
     }
@@ -203,6 +215,7 @@ export class ApplicationsController {
   }
 
   @Get(':id/applications')
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: "Obtenir les sous-applications d'une application",
     description:
