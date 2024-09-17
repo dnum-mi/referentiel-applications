@@ -10,12 +10,18 @@ COPY . .
 RUN npm install
 RUN npx prisma generate
 
+# Expose the port that your NestJS application will run on
+ENV PORT=3500
+
 # Build app
 RUN npm run build
 
-# Expose the port that your NestJS application will run on
-ENV PORT=${PORT:-3500}
-EXPOSE ${PORT}
+# Create prisma migration dir as root
+USER 0
+RUN mkdir -p prisma/migrations/0_init
+USER 1001
+
+EXPOSE 3500
 
 # Start the NestJS application
 CMD [ "npm", "run", "start:prod" ]
