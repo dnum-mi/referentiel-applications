@@ -1,7 +1,9 @@
 .idea/
 node_modules/
-.env
-.git/
+.env*
+.git*
 .github/
 .vscode/
-
+.*rc
+.*rc.*
+*.md
