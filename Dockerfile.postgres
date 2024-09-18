@@ -1,8 +1,8 @@
-FROM bitnami/postgresql:latest
+FROM bitnami/postgresql:15
 
 # Environment variables should be set via Kubernetes ConfigMaps/Secrets
 ENV POSTGRESQL_USERNAME=${POSTGRESQL_USER:-puser} \
     POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD:-ppassword} \
     POSTGRESQL_DATABASE=${POSTGRESQL_DB:-db}
 
-COPY schema.sql /docker-entrypoint-initdb.d/
+COPY --chmod=775 prisma/migrations/0_init/migration.sql /docker-entrypoint-initdb.d/
