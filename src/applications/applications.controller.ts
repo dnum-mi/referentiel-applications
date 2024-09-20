@@ -37,6 +37,7 @@ export class ApplicationsController {
     private readonly applicationsService: ApplicationsService,
   ) {}
 
+  @Get('/status')
   @ApiOperation({
     summary: 'Obtenir tous les statuts',
     description:
@@ -48,12 +49,11 @@ export class ApplicationsController {
   })
   @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   @ApiExcludeEndpoint()
-  @Get('/status')
   async getStatuses() {
     return this.prisma.appStatus.findMany();
   }
 
-  @Get('/app-types')
+  @Get('/sensibilites')
   @ApiOperation({
     summary: 'Obtenir toutes les sensibilités',
     description:
@@ -65,10 +65,12 @@ export class ApplicationsController {
   })
   @ApiResponse({ status: 500, description: 'Erreur interne du serveur.' })
   @ApiExcludeEndpoint()
-  @Get('/sensibilites')
   async getSensibilites() {
     return this.prisma.refSensitivity.findMany();
   }
+
+  @Get('/app-types')
+  @ApiExcludeEndpoint()
   @ApiOperation({
     summary: "Obtenir tous les types d'application",
     description:
