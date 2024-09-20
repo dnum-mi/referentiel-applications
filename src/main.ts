@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { ConfigService } from '@nestjs/config';
-import { SwaggerTheme } from 'swagger-themes';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -17,7 +16,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:8085',
       'http://localhost:3500',
-      'https://api-referentiel-applications.apps.app1.numerique-interieur.com/api/v1',
+      'https://api-referentiel-applications.apps.app1.numerique-interieur.com',
       'https://referentiel-applications.apps.app1.numerique-interieur.com/',
     ],
     credentials: true,
