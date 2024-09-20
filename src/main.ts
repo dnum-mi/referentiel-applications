@@ -17,8 +17,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:8085',
       'http://localhost:3500',
-      'https://api-referentiel-applications.dev.numerique-interieur.com',
-      'https://referentiel-applications.dev.numerique-interieur.com',
+      'https://api-referentiel-applications.apps.app1.numerique-interieur.com/api/v1',
+      'https://referentiel-applications.apps.app1.numerique-interieur.com/',
     ],
     credentials: true,
   });
