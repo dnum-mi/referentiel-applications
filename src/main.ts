@@ -17,8 +17,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:8085',
       'http://localhost:3500',
-      'https://api-referentiel-applications.dev.numerique-interieur.com',
-      'https://referentiel-applications.dev.numerique-interieur.com',
+      'https://api-referentiel-applications.apps.app1.numerique-interieur.com/api/v1',
+      'https://referentiel-applications.apps.app1.numerique-interieur.com/',
     ],
     credentials: true,
   });
@@ -35,7 +35,6 @@ async function bootstrap() {
     .setDescription('Référentiel des applications API description')
     .setVersion('1.0')
     .setBasePath('/api/v1')
-    .addTag('Référentiel des applications')
     .addBearerAuth(
       {
         type: 'http',
@@ -50,7 +49,6 @@ async function bootstrap() {
     .addSecurityRequirements('token')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  const theme = new SwaggerTheme('v3');
   SwaggerModule.setup('api/v1', app, document, {
     explorer: true,
     jsonDocumentUrl: 'swagger/json',

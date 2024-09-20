@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { ActeursService } from './acteurs.service';
 import { UpdateActeurDto } from './dto/update-acteur.dto';
-import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ActActor } from '@prisma/client';
 import { CurrentUser } from '../current-user/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -16,8 +15,6 @@ import { Resource } from '../auth/policies-guard.guard';
 
 @Resource('Actor')
 @Controller('acteurs')
-@ApiTags('Acteurs')
-@ApiExtraModels(UpdateActeurDto)
 export class ActeursController {
   constructor(private acteursService: ActeursService) {}
 

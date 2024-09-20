@@ -1,14 +1,14 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiHideProperty, PartialType } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { CreateActeurDto } from './create-acteur.dto';
 
 export class UpdateActeurDto extends PartialType(CreateActeurDto) {
-  @ApiProperty()
+  @ApiHideProperty()
   @IsNotEmpty()
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiHideProperty()
   @IsEmail()
   @IsNotEmpty()
   email: string;
