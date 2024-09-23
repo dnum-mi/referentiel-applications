@@ -19,6 +19,8 @@ async function bootstrap() {
       'https://api-referentiel-applications.apps.app1.numerique-interieur.com',
       'https://referentiel-applications.apps.app1.numerique-interieur.com',
     ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
     credentials: true,
   });
   app.use(compression());
