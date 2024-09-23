@@ -17,7 +17,7 @@ async function bootstrap() {
       'http://localhost:8085',
       'http://localhost:3500',
       'https://api-referentiel-applications.apps.app1.numerique-interieur.com',
-      'https://referentiel-applications.apps.app1.numerique-interieur.com/',
+      'https://referentiel-applications.apps.app1.numerique-interieur.com',
     ],
     credentials: true,
   });
