@@ -19,12 +19,18 @@ import { JwtAuthGuard } from './auth/jwt-auth-guard.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { CompliancesModule } from './compliances/compliances.module';
 import { PoliciesGuard } from './auth/policies-guard.guard';
+import { AppStatusModule } from './app-status/app-status.module';
+import { AppTypeModule } from './app-type/app-type.module';
+import { RefSensitivityModule } from './ref-sensitivity/ref-sensitivity.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.register(),
     PrismaModule,
+    AppStatusModule,
+    AppTypeModule,
+    RefSensitivityModule,
     // ActeursModule,
     OrganisationsModule,
     PrismaModule,
@@ -38,6 +44,9 @@ import { PoliciesGuard } from './auth/policies-guard.guard';
     // ApplicationRolesModule,
     EnvironmentVariablesModule,
     AuthModule,
+    AppStatusModule,
+    AppTypeModule,
+    RefSensitivityModule,
     // CompliancesModule,
   ],
   controllers: [GlobalSearchController],
