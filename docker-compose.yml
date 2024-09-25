@@ -13,6 +13,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - my-network
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -24,6 +26,8 @@ services:
       - "8081:80"
     depends_on:
       - postgres
+    networks:
+      - my-network
 
   backend:
     image: node:latest
@@ -43,6 +47,8 @@ services:
 >>>>>>> deaacbb (add prisma seed.ts)
     working_dir: /app
     entrypoint: sh -c "sleep 10 && npm install && npx prisma db push && npm run dev"
+    networks:
+      - my-network
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
