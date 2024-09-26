@@ -34,7 +34,6 @@ services:
     container_name: backend
     environment:
       DATABASE_URL: postgresql://myuser:mypassword@postgres:5432/canelbdd
-      VITE_CANEL_API_URL: http://backend:3500
     depends_on:
       - postgres
     ports:
@@ -46,7 +45,7 @@ services:
       - .:/app
 >>>>>>> deaacbb (add prisma seed.ts)
     working_dir: /app
-    entrypoint: sh -c "sleep 10 && npm install && npx prisma db push && npm run dev"
+    entrypoint: sh -c "sleep 10 && npm install && npm run start:dev"
     networks:
       - my-network
 

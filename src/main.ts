@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { ConfigService } from '@nestjs/config';
+import yn from 'yn';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -26,7 +27,13 @@ async function bootstrap() {
     credentials: true,
   });
   app.use(compression());
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: yn(process.env.RDA_CONTENT_SECURITY_POLICY, {
+        default: true,
+      }),
+    }),
+  );
   app.useGlobalPipes(new ValidationPipe());
 
   const logger = new Logger('NestApplication');
