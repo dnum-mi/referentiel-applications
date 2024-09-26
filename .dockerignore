@@ -7,4 +7,5 @@ node_modules/
 .*rc
 .*rc.*
 *.md
-migrations/
+Dockerfile*
+docker-compose*
