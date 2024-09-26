@@ -39,11 +39,7 @@ services:
     ports:
       - "3500:3500"
     volumes:
-<<<<<<< HEAD
-      - ./:/app
-=======
       - .:/app
->>>>>>> deaacbb (add prisma seed.ts)
     working_dir: /app
     entrypoint: sh -c "sleep 10 && npm install && npm run start:dev"
     networks:
