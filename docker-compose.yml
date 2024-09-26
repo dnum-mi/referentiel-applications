@@ -30,7 +30,7 @@ services:
       - my-network
 
   backend:
-    image: node:latest
+    image: bitnami/node:22
     container_name: backend
     environment:
       DATABASE_URL: postgresql://myuser:mypassword@postgres:5432/canelbdd
