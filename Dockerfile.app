@@ -1,7 +1,7 @@
 FROM bitnami/node:22
 
 # Set the working directory in the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Copy the application source code to the container
 COPY . .

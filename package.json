@@ -12,7 +12,7 @@
     "start": "nest start",
     "start:dev": "npx prisma db push && npm run db:seed && cross-env NODE_ENV=development nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "npm run db:init && npm run db:seed && node dist/main.js",
+    "start:prod": "npm run db:init && npm run db:seed && node dist/src/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -46,7 +46,7 @@
     "pg": "^8.11.3",
     "reflect-metadata": "^0.1.14",
     "rxjs": "^7.8.1",
-    "yn": "^5.0.0"
+    "yn": "^3.1.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.3.0",
