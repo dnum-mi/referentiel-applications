@@ -13,7 +13,14 @@ Fournir un point de vérité pour répertorier, catégoriser et gérer les méta
 
 ## Installation
 
+### Prérequis
+
+Liste des outils utilisés par le projet à installer :
+- [Docker](https://docs.docker.com/get-started/get-docker/)
+- [NodeJs](https://nodejs.org/en/download/package-manager)
+
 ### Étapes d'Installation
+
 1. **Installer les dépendances**
     ```bash
     npm install
@@ -297,3 +304,7 @@ Fournir un point de vérité pour répertorier, catégoriser et gérer les méta
   ]
 }
 ```
+
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
