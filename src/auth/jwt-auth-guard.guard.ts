@@ -34,9 +34,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
       const token = bearerToken.substring(7);
 
       const isDSO = token === this.env.DSOToken;
-      const isCDP =
-        token ===
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJBUFBMSSIsIm5hbWUiOiJEU08iLCJpYXQiOjE1MTYyMzkwMjJ9.hBob79fE97VlChR27KFFjTn22OEoEy202TotgfNvntZ';
+      const isCDP = token === this.env.CDPToken;
 
       if (isDSO || isCDP) {
         request.user = new User();
@@ -44,7 +42,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
         request.user.groups = isDSO ? ['Administrator'] : ['Direction'];
         request.user.actor = !isDSO
           ? await this.prisma.actActor.findFirst({
-              where: { email: 'testauth001.canel@interieur.gouv.fr' },
+              where: { email: this.env.Email },
             })
           : null;
         return true;
