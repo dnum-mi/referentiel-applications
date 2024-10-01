@@ -21,7 +21,9 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:script": "rm -f prisma/migrations/0_init/migration.sql && npx prisma generate && npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql",
     "db:init": "npx prisma migrate deploy",
-    "db:seed": "npx prisma db seed"
+    "db:seed": "npx prisma db seed",
+    "docker:start": "docker compose up --build",
+    "docker:stop": "docker compose down -v"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^2.2.0",

@@ -1,102 +1,299 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Référentiel des applications
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Introduction
+L'application "Référentiel des applications"   est  cataloguer et gérer les informations sur les applications utilisées au sein du ministère de l'intérieur
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### Objectif
+Fournir un point de vérité pour répertorier, catégoriser et gérer les métadonnées des applications.
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Technologies Utilisées
+- [NestJS](https://nestjs.com/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [PostgreSQL](https://www.postgresql.org/)
 
 ## Installation
 
+### Étapes d'Installation
+1. **Installer les dépendances**
+    ```bash
+    npm install
+    ```
+
+2. **Configurer les variables d'environnement**
+    ```bash
+    cp .env.example .env
+    # Modifier le fichier .env selon vos besoins
+    ```
+
+### Démarrage de l'API
+> L'API sera accessible a l'adresse [http://localhost:3500](http://localhost:3500/)
+
+> Le swagger de l'API sera accessible a l'adresse [http://localhost:3500/api/v1]()
 ```bash
-$ npm install
+  npm run docker:start
 ```
 
-## Running the app
-
+### Arret de l'API
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Running locally on you workstation
-```bash
-# Requirements
-## using a PostGreSQL instance locally
-### for example 
-$ docker run --rm -it --name canelbdd -p 5432:5432 -e POSTGRES_USER=user1 -e POSTGRES_PASSWORD=test123 -e POSTGRES_DB=canelbdd -d postgres
-
-## Prepare environment file 
-$ copy .env.example .env
-### modifiy your variables in the .env file
-#### for example on the file 
-> DATABASE_URL="postgresql://user1:test123@localhost:5432/postgres?schema=public"
-> TEST_DATABASE_URL="postgresql://user1:test123@localhost:5432/postgres?schema=public"
-> VALIDATION_DAYS=730
-> ROLE_VALIDATION_DAYS=730
-
-# launch the service API locally 
-$ npm install
-
-## Insert the DB schema
-$ npx prisma generate
-$ npx prisma db push    
-## Launch the service
-$ npm run dev
-
-# You can see the swagger on your navigator from url : http://localhost:3000/api
+  npm run docker:stop
 ```
 
 
-## Support
+## Endpoints de l'API
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Base URL
+```plaintext
+  http://localhost:3500
+```
 
-## Stay in touch
+### Liste des Endpoints
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### 1. Recherche Globale
 
-## License
+```http
+  GET /api/v1/global-search
+```
 
-Nest is [MIT licensed](LICENSE).
+| Parameter | Type      | Desciption                    |
+|:----------|:----------|:------------------------------|
+| `query`   | `string`  | **Requis**. Text a chercher   |
+
+---
+---
+
+### 2. Organisations
+
+>**Obtenir toutes les organisations**
+```http
+  GET /api/v1/organisations
+```
+
+| Parameter       | Type        | Desciption                                      |
+|:----------------|:------------|:------------------------------------------------|
+| `label`         | `string`    | Label de l'organisation recherché               |
+| `code`          | `string`    | Code de l'organisation recherché                |
+| `parent`        | `boolean`   | ...                                             |
+| `searchQuery`   | `string`    | Nombre                                          |
+| `currentPage`   | `number`    | Page actuelle                                   |
+| `maxPerPage`    | `string`    | Max d'organisation par page                     |
+| `key`           | `string`    | **Requis**. Clé de l'organisation recherché     |
+| `order`         | `string`    | **Requis**. Ordre de tri de la recherche        |
+
+---
+
+>**Créer une nouvelle organisation**
+```http
+  POST /api/v1/organisations
+```
+
+**Requis** - Request Body : `application/json`
+```json
+{
+  "label": "string",
+  "desciption": "string",
+  "organisationcode": "string"
+}
+```
+---
+
+>**Obtenir une organisation par ID**
+```http
+  GET /api/v1/organisations/
+```
+
+| Parameter | Type      | Desciption                        |
+|:----------|:----------|:----------------------------------|
+| `id`      | `string`  | **Requis**. ID de l'organisation  |
+
+---
+
+>**Mettre à jour une organisation**
+```http
+  PUT /api/v1/organisations/
+```
+
+| Parameter | Type      | Desciption                        |
+|:----------|:----------|:----------------------------------|
+| `id`      | `string`  | **Requis**. ID de l'organisation  |
+
+**Requis** - Request Body : `application/json`
+```json
+{
+  "label": "string",
+  "desciption": "string",
+  "organisationcode": "string"
+}
+```
+
+---
+---
+
+### 3. Applications
+
+>**Obtenir toutes les applications**
+```http
+  GET /api/v1/applications
+```
+
+| Parameter       | Type            | Desciption                                                        |
+|:----------------|:----------------|:------------------------------------------------------------------|
+| `nom`           | `string`        | Nom de/des l'application(s) recherché                             |
+| `organisation`  | `string`        | Nom de l'organisation a laquel l'application recherché appartient |
+| `sensibilite`    | `string / list` | Label de l'organisation recherché                                 |
+| `statut`        | `string / list` | Label de l'organisation recherché                                 |
+| `code`          | `string`        | Code de l'organisation recherché                                  |
+| `parent`        | `boolean`       | ...                                                               |
+| `searchQuery`   | `string`        | Nombre                                                            |
+| `currentPage`   | `number`        | Page actuelle                                                     |
+| `maxPerPage`    | `string`        | Max d'organisation par page                                       |
+| `key`           | `string`        | **Requis**. Clé de l'organisation recherché                       |
+| `order`         | `string`        | **Requis**. Ordre de tri de la recherche                          |
+
+---
+
+>**Créer une nouvelle application**
+```http
+  POST /api/v1/applications
+```
+
+**Requis** - Request Body : `application/json`
+```json
+{
+  "longname": "string",
+  "description": "string",
+  "typeApplication": "SVBUS",
+  "codeApplication": [
+    {
+      "typeCode": "string",
+      "codeCourt": "string",
+      "longcode": "string",
+      "comments": "string"
+    }
+  ],
+  "sensibilite": "S1",
+  "statut": "BLD",
+  "parent": "string",
+  "organisation": "string",
+  "organisationid": "string",
+  "acteurRoles": [
+    {
+      "acteur": {},
+      "organisation": {
+        "label": "string",
+        "description": "string",
+        "organisationcode": "string"
+      },
+      "role": "string"
+    }
+  ],
+  "instances": [
+    {
+      "comments": "string",
+      "role": "string",
+      "statut": "string",
+      "tenant": "string",
+      "fip": "string",
+      "url": "string",
+      "deploymentdate": {},
+      "environment": {
+        "environmentid": "string",
+        "label": "string"
+      }
+    }
+  ],
+  "conformite": [
+    {
+      "comments": "string",
+      "compliancetype": "string",
+      "compliancelevel": "Dispens_e",
+      "decisiondate": "2024-09-27T13:47:44.144Z",
+      "validitydate": "2024-09-27T13:47:44.144Z",
+      "auditdate": "2024-09-27T13:47:44.144Z",
+      "description": "string"
+    }
+  ]
+}
+```
+
+---
+
+>**Récupéré une application par son ID**
+
+```http
+  GET /api/v1/applications
+```
+
+| Parameter | Type      | Desciption                        |
+|:----------|:----------|:----------------------------------|
+| `id`      | `string`  | **Requis**. ID de l'application   |
+
+---
+
+>**Mettre à jour une applications par ID**
+
+```http
+  PUT /api/v1/applications
+```
+
+| Parameter | Type      | Desciption                        |
+|:----------|:----------|:----------------------------------|
+| `id`      | `string`  | **Requis**. ID de l'application   |
+
+**Requis** - Request Body : `application/json`
+```json
+{
+  "longname": "string",
+  "description": "string",
+  "typeApplication": "SVBUS",
+  "codeApplication": [
+    {
+      "typeCode": "string",
+      "codeCourt": "string",
+      "longcode": "string",
+      "comments": "string"
+    }
+  ],
+  "sensibilite": "S1",
+  "statut": "BLD",
+  "parent": "string",
+  "organisation": "string",
+  "organisationid": "string",
+  "acteurRoles": [
+    {
+      "acteur": {},
+      "organisation": {
+        "label": "string",
+        "description": "string",
+        "organisationcode": "string"
+      },
+      "role": "string"
+    }
+  ],
+  "instances": [
+    {
+      "comments": "string",
+      "role": "string",
+      "statut": "string",
+      "tenant": "string",
+      "fip": "string",
+      "url": "string",
+      "deploymentdate": {},
+      "environment": {
+        "environmentid": "string",
+        "label": "string"
+      }
+    }
+  ],
+  "conformite": [
+    {
+      "comments": "string",
+      "compliancetype": "string",
+      "compliancelevel": "Dispens_e",
+      "decisiondate": "2024-09-27T13:57:48.295Z",
+      "validitydate": "2024-09-27T13:57:48.295Z",
+      "auditdate": "2024-09-27T13:57:48.295Z",
+      "description": "string"
+    }
+  ]
+}
+```
