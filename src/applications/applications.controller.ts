@@ -153,6 +153,11 @@ export class ApplicationsController {
     });
   }
 
+  @Get('/all')
+  async getAllApplications() {
+    return await this.applicationsService.getAllApplications();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Récupère une application par son id' })
   @ApiResponse({

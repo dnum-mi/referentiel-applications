@@ -91,6 +91,12 @@ export class ApplicationsService {
     };
   }
 
+  public async getAllApplications(): Promise<Application[]> {
+    return await this.prisma.appApplication.findMany({
+      include: this.getApplicationIncludes(),
+    });
+  }
+
   public async getOneById(appId: string): Promise<Application | null> {
     return await this.prisma.appApplication.findFirst({
       include: this.getApplicationIncludes(),
