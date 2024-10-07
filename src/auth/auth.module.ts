@@ -11,10 +11,7 @@ import { AuthController } from './auth.controller';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>(
-          'JWT_SECRET',
-          '927a490dec58f0acd2dbe65d9140f5279036a40f52680126b9206cb814f88ff1',
-        ),
+        secret: configService.get<string>('RDA_JWT_SECRET', ''),
         signOptions: { expiresIn: '1h' },
       }),
       inject: [ConfigService],

@@ -16,11 +16,9 @@ import { FilterApplicationRolesDto } from './dto/filter-application-role.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EnvironmentVariablesService } from '../environment-variables/environment-variables.service';
 import { Resource } from '../auth/policies-guard.guard';
-import { ApiTags } from '@nestjs/swagger';
 
 @Resource('Role')
 @Controller('application-roles')
-@ApiTags('Application-Roles')
 export class ApplicationRolesController {
   constructor(
     private readonly env: EnvironmentVariablesService,

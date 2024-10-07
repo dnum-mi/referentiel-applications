@@ -30,32 +30,24 @@ export class OrganisationsService {
     const skip = (pageNumber - 1) * maxPerPage;
 
     const where: Prisma.OrgOrganisationunitWhereInput = {
-      OR: [
-        filters.parentId ? { parentId: filters.parentId } : undefined,
-        filters.label
-          ? { label: { contains: filters.label, mode: 'insensitive' } }
-          : undefined,
-        filters.searchQuery
-          ? {
-              OR: [
-                {
-                  label: {
-                    contains: filters.searchQuery,
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            }
-          : undefined,
-        filters.code
-          ? {
-              organisationcode: {
-                contains: filters.code,
-                mode: 'insensitive',
-              },
-            }
-          : undefined,
-      ].filter(Boolean) as any, // Remove undefined values
+      parentid: filters.parentId,
+      label: filters.label
+        ? { contains: filters.label, mode: 'insensitive' }
+        : undefined,
+      organisationcode: filters.code
+        ? { contains: filters.code, mode: 'insensitive' }
+        : undefined,
+      ...(filters.searchQuery && {
+        OR: [
+          { label: { contains: filters.searchQuery, mode: 'insensitive' } },
+          {
+            organisationcode: {
+              contains: filters.searchQuery,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      }),
     };
 
     if (filters.parentOnly) {
@@ -100,6 +92,14 @@ export class OrganisationsService {
     });
   }
 
+  async getOneById(id: string): Promise<Organisation | null> {
+    return await this.prisma.orgOrganisationunit.findFirst({
+      where: {
+        id: id,
+      },
+    });
+  }
+
   async create(
     username: string,
     data: CreateOrganisationDto,
@@ -117,16 +117,27 @@ export class OrganisationsService {
 
   async updateOneById(
     username: string,
-    id: string,
+    id: string, // Cet 'id' vient du frontend
     data: UpdateOrganisationDto,
   ): Promise<OrgOrganisationunit> {
+    // Étape 1 : Rechercher l'organisation par son id
+    const orgUnit = await this.prisma.orgOrganisationunit.findFirst({
+      where: { id: id }, // Recherche l'organisation avec id dans la table
+      select: { organisationunitid: true }, // Ne récupère que organisationunitid
+    });
+
+    if (!orgUnit) {
+      throw new Error('Organisation unit not found');
+    }
+
+    // Étape 2 : Utiliser organisationunitid pour la mise à jour
     return this.prisma.orgOrganisationunit.update({
       data: {
         ...data,
-        ...{ updatedby: username },
+        updatedby: username,
       },
       where: {
-        organisationunitid: id,
+        organisationunitid: orgUnit.organisationunitid, // Utilise organisationunitid pour la mise à jour
       },
     });
   }

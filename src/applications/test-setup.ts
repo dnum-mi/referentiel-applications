@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { SensibiliteEnum } from './enums/app-sensibilite';
@@ -7,21 +8,34 @@ export async function createApp(
   service: ApplicationsService,
   organisation: string = '612429c4-120d-47f2-9b49-0bec44780a51',
   overrides?: Partial<CreateApplicationDto>,
+  applicationId?: string,
 ) {
-  return await service.updateOrCreate(
-    'Testing',
-    {
-      ...{
-        longname: 'some name',
-        description: 'testdescription',
-        status: StatutEnum['En construction'],
-        apptype: 'WBEXT',
-        sensitivity: SensibiliteEnum.Sensible,
-        organisationunitid: organisation,
-      },
-      ...overrides,
-    },
-    true,
-    '97a5cf37-b5ac-4a2c-9a2a-6d567a80e544',
-  );
+  const applicationData: CreateApplicationDto = {
+    longname: overrides?.longname ?? 'default name',
+    description: overrides?.description ?? 'default description',
+    typeApplication: overrides?.typeApplication ?? 'WBEXT',
+    codeApplication: overrides?.codeApplication ?? [],
+    sensibilite: overrides?.sensibilite ?? SensibiliteEnum.Sensible,
+    statut: overrides?.statut ?? StatutEnum['En construction'],
+    organisationid: overrides?.organisationid ?? organisation,
+    // autres propriétés
+  };
+
+  try {
+    if (applicationId) {
+      return await service.updateApplication(
+        'Testing',
+        applicationId,
+        applicationData,
+      );
+    } else {
+      return await service.createApplication('Testing', applicationData);
+    }
+  } catch (error) {
+    Logger.error(
+      'Une erreur est intervenue pendant la création ou la mise à jour:',
+      error,
+    );
+    throw error;
+  }
 }

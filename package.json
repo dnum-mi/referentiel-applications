@@ -10,15 +10,20 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "cross-env NODE_ENV=development nest start --watch",
+    "start:dev": "npx prisma db push && npm run db:seed && cross-env NODE_ENV=development nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "npm run db:init && npm run db:seed && node dist/src/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "db:script": "rm -f prisma/migrations/0_init/migration.sql && npx prisma generate && npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/0_init/migration.sql",
+    "db:init": "npx prisma migrate deploy",
+    "db:seed": "npx prisma db seed",
+    "docker:start": "docker compose up --build",
+    "docker:stop": "docker compose down -v"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^2.2.0",
@@ -42,7 +47,8 @@
     "passport-jwt": "^4.0.1",
     "pg": "^8.11.3",
     "reflect-metadata": "^0.1.14",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "yn": "^3.1.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.3.0",
@@ -93,5 +99,8 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }

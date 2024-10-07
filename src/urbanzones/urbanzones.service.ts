@@ -11,7 +11,7 @@ export class UrbanzonesService {
     take?: number;
     cursor?: Prisma.FctUrbanzoneWhereUniqueInput;
     where?: Prisma.FctUrbanzoneWhereInput;
-    orderBy?: Prisma.FctUrbanzoneOrderByWithRelationAndSearchRelevanceInput;
+    // orderBy?: Prisma.FctUrbanzoneOrderByWithRelationAndSearchRelevanceInput;
     include?: Prisma.FctUrbanzoneInclude;
   }): Promise<FctUrbanzone[]> {
     return this.prisma.fctUrbanzone.findMany({
@@ -19,7 +19,7 @@ export class UrbanzonesService {
       take: params?.take,
       cursor: params?.cursor,
       where: params?.where,
-      orderBy: params?.orderBy,
+      // orderBy: params?.orderBy,
       include: params?.include,
     });
   }

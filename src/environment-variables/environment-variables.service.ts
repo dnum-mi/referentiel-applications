@@ -13,21 +13,23 @@ export class EnvironmentVariablesService {
   }
 
   public get MaxPerPage(): number {
-    return +this.configService.get('MAX_PER_PAGE', 20);
+    return +this.configService.get('MAX_PER_PAGE', 5);
   }
 
   public get JWTSeceret(): string {
-    return this.configService.get(
-      'JWT_SECERET',
-      '927a490dec58f0acd2dbe65d9140f5279036a40f52680126b9206cb814f88ff1',
-    );
+    return this.configService.get('RDA_JWT_SECRET', '');
   }
 
   public get DSOToken(): string {
-    return this.configService.get(
-      'DSO_SECERET',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJBUFBMSSIsIm5hbWUiOiJEU08iLCJpYXQiOjE1MTYyMzkwMjJ9.hBob79fE97VlChR27KFFjTn22OEoEy202TotgfNvntU',
-    );
+    return this.configService.get('RDA_DSO_SECRET', '');
+  }
+
+  public get CDPToken(): string {
+    return this.configService.get('RDA_CDP_SECRET', '');
+  }
+
+  public get Email(): string {
+    return this.configService.get('RDA_EMAIL', 'testauth001.canel@interieur.gouv.fr');
   }
 
   // public get Passage2Server(): string {

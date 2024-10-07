@@ -11,7 +11,7 @@ export class ApplicationsFlowService {
     take?: number;
     cursor?: Prisma.AppFlowWhereUniqueInput;
     where?: Prisma.AppFlowWhereInput;
-    orderBy?: Prisma.AppFlowOrderByWithRelationAndSearchRelevanceInput;
+    // orderBy?: Prisma.AppFlowOrderByWithRelationAndSearchRelevanceInput;
     include?: Prisma.AppFlowInclude;
   }): Promise<AppFlow[]> {
     return this.prisma.appFlow.findMany({
@@ -19,7 +19,7 @@ export class ApplicationsFlowService {
       take: params?.take,
       cursor: params?.cursor,
       where: params?.where,
-      orderBy: params?.orderBy,
+      // orderBy: params?.orderBy,
       include: params?.include,
     });
   }

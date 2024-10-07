@@ -1,7 +1,7 @@
-FROM bitnami/node:latest
+FROM bitnami/node:22
 
 # Set the working directory in the container
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Copy the application source code to the container
 COPY . .
@@ -10,13 +10,13 @@ COPY . .
 RUN npm install
 RUN npx prisma generate
 
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
+# Expose the port that your NestJS application will run on
+ENV PORT=3500
+
+# Build app
 RUN npm run build
 
-# Expose the port that your NestJS application will run on
-ENV PORT=${PORT:-3500}
-EXPOSE ${PORT}
+EXPOSE 3500
 
 # Start the NestJS application
-CMD [ "node", "dist/main.js" ]
+CMD [ "npm", "run", "start:prod" ]

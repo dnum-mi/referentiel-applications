@@ -1,13 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateActeurDto {
-  @ApiProperty()
+  @ApiHideProperty()
   @IsOptional()
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiHideProperty()
   @IsEmail()
   @IsNotEmpty()
   email: string;

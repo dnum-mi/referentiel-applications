@@ -5,25 +5,35 @@ import helmet from 'helmet';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import compression from 'compression';
 import { ConfigService } from '@nestjs/config';
-import { SwaggerTheme } from 'swagger-themes';
-import { SwaggerThemeNameEnum } from 'swagger-themes/build/enums/swagger-theme-name';
+import yn from 'yn';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     // logger: ['log', 'error', 'warn', 'debug', 'verbose'] ,
   });
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1');
 
   app.enableCors({
     origin: [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://canel2.apps.c4.numerique-interieur.com',
+      'http://localhost:8085',
+      'http://localhost:3500',
+      'https://api-referentiel-applications.apps.app1.numerique-interieur.com',
+      'https://referentiel-applications.apps.app1.numerique-interieur.com',
+      'http://integ-api-referentiel-applications.d284.dev.forge.minint.fr',
+      'http://integ-referentiel-applications.d284.dev.forge.minint.fr',
     ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization',
     credentials: true,
   });
   app.use(compression());
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: yn(process.env.RDA_CONTENT_SECURITY_POLICY, {
+        default: true,
+      }),
+    }),
+  );
   app.useGlobalPipes(new ValidationPipe());
 
   const logger = new Logger('NestApplication');
@@ -31,10 +41,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   const config = new DocumentBuilder()
-    .setTitle('Canel2.1')
-    .setDescription('The Canel2.1 API description')
+    .setTitle('Référentiel des applications')
+    .setDescription('Référentiel des applications API description')
     .setVersion('1.0')
-    .addTag('Canel2.1')
+    .setBasePath('/api/v1')
     .addBearerAuth(
       {
         type: 'http',
@@ -49,14 +59,14 @@ async function bootstrap() {
     .addSecurityRequirements('token')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  const theme = new SwaggerTheme('v3');
-  SwaggerModule.setup('api', app, document, {
+  SwaggerModule.setup('api/v1', app, document, {
     explorer: true,
+    jsonDocumentUrl: 'swagger/json',
     //customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
   });
 
   const host = configService.get('HOST');
-  const port = parseInt(configService.get('PORT', '3000'));
+  const port = parseInt(configService.get('PORT', '3500'));
   const database = configService.get('DATABASE_URL');
 
   if (host) {
