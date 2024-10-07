@@ -37,7 +37,10 @@ export class ApplicationsService {
       parentOnly?: boolean;
     }>,
   ): Promise<Pagination<Application>> {
-    const maxPerPage = Math.min(filters.maxPerPage ?? this.env.MaxPerPage, 100);
+    const maxPerPage = Math.min(
+      filters.maxPerPage ?? this.env.MaxPerPage,
+      10000,
+    );
     const pageNumber = Math.max(filters.currentPage ?? 1, 1);
     const skip = (pageNumber - 1) * maxPerPage;
     this.buildWhereClause(filters);
