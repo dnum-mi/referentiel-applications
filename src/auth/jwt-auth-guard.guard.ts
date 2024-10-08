@@ -38,7 +38,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
 
       if (isDSO || isCDP) {
         request.user = new User();
-        request.user.username = isDSO ? 'DSO' : 'CDP';
+        request.user.username = isDSO ? 'Administrateur' : 'CDP';
         request.user.groups = isDSO ? ['Administrator'] : ['Direction'];
         request.user.actor = !isDSO
           ? await this.prisma.actActor.findFirst({
