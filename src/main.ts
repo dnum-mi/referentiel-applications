@@ -21,6 +21,8 @@ async function bootstrap() {
       'https://referentiel-applications.apps.app1.numerique-interieur.com',
       'http://integ-api-referentiel-applications.d284.dev.forge.minint.fr',
       'http://integ-referentiel-applications.d284.dev.forge.minint.fr',
+      'http://api-referentiel-applications.d284.dev.forge.minint.fr/api/v1',
+      'http://referentiel-applications.d284.dev.forge.minint.fr',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: 'Content-Type, Authorization',
