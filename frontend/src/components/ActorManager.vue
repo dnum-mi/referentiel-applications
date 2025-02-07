@@ -168,10 +168,6 @@ async function saveAll() {
   border: 1px solid var(--dsfr-border, #ccc);
   overflow: hidden;
   background-color: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   font-family: var(--dsfr-font-family, Arial, sans-serif);
 }
 .actor-table thead {
