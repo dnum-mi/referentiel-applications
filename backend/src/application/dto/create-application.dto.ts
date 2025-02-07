@@ -590,7 +590,7 @@ export class PatchApplicationDto {
   @Type(() => UpdateComplianceDto)
   compliances?: UpdateComplianceDto[];
 
-  @ApiPropertyOptional({ type: [UpdateActorDto] })
+  @ApiPropertyOptional({ type: [UpdateExternalRessourceDto] })
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => UpdateExternalRessourceDto)
