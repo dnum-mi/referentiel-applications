@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { ApplicationService } from '../application/application.service';
 import { decodeJwt } from 'jose';
+import { ApplicationService } from 'src/product/application.service';
 
 @Injectable()
 export class CombinedInterceptor implements NestInterceptor {

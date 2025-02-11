@@ -7,7 +7,6 @@ export {};
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Acteurs: typeof import('./components/Acteurs.vue')['default']
     ActorActions: typeof import('./components/ActorActions.vue')['default']
     ActorManager: typeof import('./components/ActorManager.vue')['default']
     AppDate: typeof import('./components/AppDate.vue')['default']
@@ -17,11 +16,8 @@ declare module 'vue' {
     Compliances: typeof import('./components/Compliances.vue')['default']
     DsfrAlert: typeof import('@gouvminint/vue-dsfr')['DsfrAlert']
     DsfrBreadcrumb: typeof import('@gouvminint/vue-dsfr')['DsfrBreadcrumb']
-    Dsfrbutton: typeof import('@gouvminint/vue-dsfr')['Dsfrbutton']
     DsfrButton: typeof import('@gouvminint/vue-dsfr')['DsfrButton']
     DsfrCard: typeof import('@gouvminint/vue-dsfr')['DsfrCard']
-    DsfrDataTable: typeof import('@gouvminint/vue-dsfr')['DsfrDataTable']
-    DsfrFieldset: typeof import('@gouvminint/vue-dsfr')['DsfrFieldset']
     DsfrFooter: typeof import('@gouvminint/vue-dsfr')['DsfrFooter']
     DsfrHeader: typeof import('@gouvminint/vue-dsfr')['DsfrHeader']
     DsfrInput: typeof import('@gouvminint/vue-dsfr')['DsfrInput']
@@ -31,7 +27,6 @@ declare module 'vue' {
     DsfrSelect: typeof import('@gouvminint/vue-dsfr')['DsfrSelect']
     DsfrTabContent: typeof import('@gouvminint/vue-dsfr')['DsfrTabContent']
     DsfrTabItem: typeof import('@gouvminint/vue-dsfr')['DsfrTabItem']
-    DsfrTable: typeof import('@gouvminint/vue-dsfr')['DsfrTable']
     DsfrTabs: typeof import('@gouvminint/vue-dsfr')['DsfrTabs']
     DsfrTag: typeof import('@gouvminint/vue-dsfr')['DsfrTag']
     ExportApplications: typeof import('./components/ExportApplications.vue')['default']

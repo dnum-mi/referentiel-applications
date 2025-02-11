@@ -1,4 +1,3 @@
-import { CreateExternalDto } from '../../external/dto/create-external.dto';
 import {
   IsString,
   IsOptional,
@@ -15,12 +14,12 @@ import {
   ApiHideProperty,
 } from '@nestjs/swagger';
 import {
+  ActorType,
   ComplianceStatus,
   ComplianceType,
   ExternalRessourceType,
   LifecycleStatus,
-  ActorType,
-} from '../../enum';
+} from '../../../enum';
 
 export class CreateActorDto {
   @ApiProperty({
@@ -38,7 +37,7 @@ export class CreateActorDto {
   })
   @IsString()
   @IsOptional()
-  userId?: string; // Rendre `userId` facultatif
+  userId?: string;
 
   @ApiProperty({
     example: 'example@example.com',
@@ -462,39 +461,51 @@ export class CreateApplicationDto {
 
   @ApiProperty({
     type: [CreateActorDto],
-    description: 'List of actors associated with the application',
+    description: "Liste des acteurs associés à l'application",
+    example: [{ type: 'Responsable', email: 'exemple@exemple.fr' }],
   })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateActorDto)
-  actors: CreateActorDto[] = [];
+  actors: CreateActorDto[];
 
-  @ApiProperty({ type: [CreateComplianceDto] })
+  @ApiProperty({
+    type: [CreateComplianceDto],
+    description: 'Liste des conformités associées à l’application',
+    example: [
+      {
+        type: 'security',
+        name: 'ISO 27001',
+        status: 'compliant',
+        validityStart: '2024-01-01T00:00:00.000Z',
+        validityEnd: '2026-12-31T23:59:59.000Z',
+        scoreValue: '95',
+        scoreUnit: '%',
+        notes: 'Fully compliant with security standards.',
+      },
+    ],
+  })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateComplianceDto)
-  compliances: CreateComplianceDto[] = [];
+  compliances: CreateComplianceDto[];
 
-  @ApiProperty({
-    type: [CreateExternalDto],
-    description: 'External references associated with the application',
-    required: false,
-  })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateExternalDto)
-  externals: CreateExternalDto[] = [];
-
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: [CreateExternalRessourceDto],
-    description:
-      'External ressources references (links) associated with the application',
-    required: false,
+    description: "Ressources externes (liens) associées à l'application",
+    example: [
+      {
+        link: 'https://example.com/document.pdf',
+        description: "Documentation de l'application",
+        type: 'documentation',
+      },
+    ],
   })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateExternalRessourceDto)
-  externalRessource: CreateExternalRessourceDto[] = [];
+  externalRessource?: CreateExternalRessourceDto[];
 }
 
 export class PatchApplicationDto {

@@ -14,19 +14,28 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApplicationService } from './application.service';
-import {
-  CreateApplicationDto,
-  PatchApplicationDto,
-} from './dto/create-application.dto';
+
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiExcludeEndpoint,
+  ApiBody,
 } from '@nestjs/swagger';
-import { SearchApplicationDto } from './dto/search-application.dto';
-import { GetApplicationDto } from './dto/get-application.dto';
 import { ExportService } from './export.service';
+import {
+  CreateApplicationDto,
+  PatchApplicationDto,
+} from './application/dto/create-application.dto';
+import { SearchApplicationDto } from './application/dto/search-application.dto';
+import { GetApplicationDto } from './application/dto/get-application.dto';
+import {
+  ActorType,
+  ComplianceStatus,
+  ComplianceType,
+  ExternalRessourceType,
+  LifecycleStatus,
+} from 'src/enum';
 
 /**
  * Controller pour la gestion des applications.
@@ -56,7 +65,42 @@ export class ApplicationController {
 
    */
   @Post()
-  @ApiOperation({ summary: 'Créer une nouvelle application' })
+  @ApiBody({ type: CreateApplicationDto })
+  @ApiOperation({
+    summary: 'Créer une nouvelle application',
+    description: `
+**Ce endpoint permet de créer une application complète.**
+
+Vous devez fournir les informations suivantes :
+- **label**: Le libellé de l'application.
+- **shortName**: Le nom court de l'application.
+- **logo**: L'URL du logo (peut être vide).
+- **description**: Une description détaillée de l'application.
+- **purposes**: Les domaines d'activité (ex: finance, HR, operations).
+- **tags**: Des tags pour catégoriser l'application.
+- **parentId**: L'identifiant de l'application parente (ou null).
+- **lifecycle**: Un objet définissant le cycle de vie avec les champs :
+  - **status**: Le statut (Enum: ${Object.values(LifecycleStatus).join(', ')}).
+  - **firstProductionDate**: Date de première mise en production.
+  - **plannedDecommissioningDate**: Date prévue de déclassement.
+- **actors**: La liste des acteurs associés avec :
+  - **type**: Le type d'acteur (Enum: ${Object.values(ActorType).join(', ')}).
+  - **email**: L'adresse email de l'acteur.
+- **compliances**: La liste des conformités associées avec :
+  - **type**: Le type de conformité (Enum: ${Object.values(ComplianceType).join(', ')}).
+  - **name**: Le nom de la conformité.
+  - **status**: Le statut (Enum: ${Object.values(ComplianceStatus).join(', ')}).
+  - **validityStart**: Date de début de validité.
+  - **validityEnd**: Date de fin de validité.
+  - **scoreValue**: Valeur du score.
+  - **scoreUnit**: Unité du score.
+  - **notes**: Notes complémentaires.
+- **externalRessources**: Les liens externes associés avec :
+  - **link**: L'URL.
+  - **description**: La description.
+  - **type**: Le type de ressource (Enum: ${Object.values(ExternalRessourceType).join(', ')}).
+    `,
+  })
   @ApiResponse({ status: 201, description: 'Application créée avec succès.' })
   @ApiResponse({ status: 404, description: 'Metadata ou parent non trouvé.' })
   public async create(
@@ -153,7 +197,14 @@ export class ApplicationController {
    * @throws NotFoundException Si l'application n'est pas trouvée.
    */
   @Get(':id')
-  @ApiOperation({ summary: 'Récupérer une application spécifique par ID' })
+  @ApiOperation({
+    summary: 'Récupérer une application spécifique par ID',
+    description: `
+Ce endpoint permet de récupérer les détails complets d'une application en fonction de son identifiant unique.
+
+Le paramètre **id** doit être fourni dans l'URL.
+    `,
+  })
   async findOne(@Param('id') id: string): Promise<GetApplicationDto> {
     try {
       const application = await this.applicationService.getApplicationById(id);
@@ -174,7 +225,14 @@ export class ApplicationController {
    * @ApiResponse({ status: 200, description: 'Liste des applications' })
    */
   @Get()
-  @ApiOperation({ summary: 'Récupérer les applications' })
+  @ApiOperation({
+    summary: 'Récupérer les applications',
+    description: `
+Ce endpoint permet de récupérer la liste de toutes les applications existantes dans le système.
+
+Aucun paramètre n'est requis pour accéder à cette liste.
+    `,
+  })
   @ApiResponse({ status: 200, description: 'Liste des applications' })
   async findAll() {
     return await this.applicationService.getApplications();
@@ -189,7 +247,12 @@ export class ApplicationController {
    * @returns L'application mise à jour.
    */
   @Patch(':id')
-  @ApiOperation({ summary: 'Mettre à jour une applications' })
+  @ApiOperation({
+    summary: 'Mettre à jour une application',
+    description: ` Ce endpoint permet de mettre à jour une application existante. 
+    Vous devez fournir l'identifiant de l'application dans l'URL et les nouvelles données dans le corps de la requête. Les données de mise à jour doivent correspondre aux champs.
+    `,
+  })
   async update(
     @Param('id') id: string,
     @Body() applicationToUpdate: PatchApplicationDto,

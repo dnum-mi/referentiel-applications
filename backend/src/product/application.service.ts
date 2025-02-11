@@ -3,25 +3,29 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma, ActorType, Application } from '@prisma/client';
+import { IApplicationRepository } from './infrastructure/repository/application.repository.interface';
 import {
   CreateActorDto,
   CreateApplicationDto,
   PatchApplicationDto,
   UpdateActorDto,
-  UpdateExternalRessourceDto,
   UpdateComplianceDto,
-  CreateExternalRessourceDto,
-} from './dto/create-application.dto';
-import { SearchApplicationDto } from './dto/search-application.dto';
-import { Prisma, ActorType, Application } from '@prisma/client';
-import { ExternalRessourceType } from 'src/enum';
+  UpdateExternalRessourceDto,
+} from './application/dto/create-application.dto';
+import { SearchApplicationDto } from './application/dto/search-application.dto';
+import { ApplicationRepository } from './infrastructure/repository/application.repository';
 
 @Injectable()
 export class ApplicationService {
   applications: any;
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private applicationRepository: ApplicationRepository,
+  ) {}
 
   /**
    * Crée une nouvelle application.
@@ -112,7 +116,7 @@ export class ApplicationService {
       ...(label !== undefined && {
         label: {
           contains: label,
-          mode: Prisma.QueryMode.insensitive,
+          mode: 'insensitive',
         },
       }),
       ...(tag && {
@@ -194,12 +198,8 @@ export class ApplicationService {
    * @throws Error Si une erreur survient pendant la récupération des applications.
    */
   public async getApplications() {
-    try {
-      const applications = await this.prisma.application.findMany();
-      return applications;
-    } catch (error) {
-      throw error;
-    }
+    const applications = await this.applicationRepository.findAll();
+    return applications;
   }
 
   private async createApplicationMetadata(ownerId: string) {
@@ -233,81 +233,13 @@ export class ApplicationService {
       createApplicationDto.actors,
     );
 
-    const application = await this.prisma.application.create({
-      data: {
-        label: createApplicationDto.label,
-        shortName: createApplicationDto.shortName || null,
-        logo: createApplicationDto.logo || null,
-        description: createApplicationDto.description,
-        purposes: createApplicationDto.purposes,
-        tags: createApplicationDto.tags,
-        metadata: { connect: { id: applicationMetadataId } },
-        owner: { connect: { keycloakId: ownerId } },
-        lifecycle: {
-          create: {
-            status: createApplicationDto.lifecycle.status,
-            firstProductionDate: new Date(
-              createApplicationDto.lifecycle.firstProductionDate || null,
-            ),
-            plannedDecommissioningDate: createApplicationDto.lifecycle
-              .plannedDecommissioningDate
-              ? new Date(
-                  createApplicationDto.lifecycle.plannedDecommissioningDate,
-                )
-              : undefined,
-            metadata: { connect: { id: applicationMetadataId } },
-          },
-        },
-        actors: {
-          create: actorsToCreate,
-        },
-        compliances: {
-          create: createApplicationDto.compliances.map((compliance) => ({
-            ...compliance,
-            validityStart: compliance.validityStart
-              ? new Date(compliance.validityStart)
-              : undefined,
-            validityEnd: compliance.validityEnd
-              ? new Date(compliance.validityEnd)
-              : undefined,
-          })),
-        },
-        externals: {
-          create: createApplicationDto.externals.map((external) => ({
-            externalSource: { connect: { id: external.externalSourceId } },
-            value: external.value,
-            label: external.label,
-            shortName: external.shortName,
-            lastSourceUpdate: new Date(external.lastSourceUpdate),
-            metadata: { connect: { id: applicationMetadataId } },
-          })),
-        },
-        externalRessource: {
-          create: Array.isArray(createApplicationDto.externalRessource)
-            ? createApplicationDto.externalRessource.map(
-                (externalRessourceDto) => ({
-                  link: externalRessourceDto.link,
-                  description: externalRessourceDto.description,
-                  type: externalRessourceDto.type,
-                }),
-              )
-            : [],
-        },
-        parent: createApplicationDto.parentId
-          ? { connect: { id: createApplicationDto.parentId } }
-          : undefined,
-      },
-      include: {
-        lifecycle: { include: { metadata: true } },
-        metadata: true,
-        actors: {
-          include: { user: true },
-        },
-        compliances: true,
-        externals: true,
-        externalRessource: true,
-      },
-    });
+    const application = this.applicationRepository.create(
+      createApplicationDto,
+      applicationMetadataId,
+      ownerId,
+      actorsToCreate,
+    );
+
     return application;
   }
 
