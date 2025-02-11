@@ -52,11 +52,15 @@ function isValidEmail(email: string): boolean {
 
 const loading = ref(false);
 
+// Nouvelle computed pour détecter les modifications
 const hasChanges = computed(() => JSON.stringify(localActors.value) !== JSON.stringify(props.application.actors));
 
+// Nouvelle variable pour garder les IDs sélectionnés
 const selectedActorIds = ref<string[]>([]);
 
 function addActor() {
+  console.log("Nombre d'acteurs avant ajout :", localActors.value.length);
+  // Utilisation de Date.now() pour un identifiant unique
   localActors.value.push({
     id: Date.now().toString(),
     email: "",
@@ -70,6 +74,7 @@ function removeActor(actorId: string) {
   localActors.value = localActors.value.filter((actor) => actor.id !== actorId);
 }
 
+// Nouvelle fonction pour supprimer les acteurs sélectionnés
 function removeSelectedActors() {
   localActors.value = localActors.value.filter((actor) => !selectedActorIds.value.includes(actor.id));
   selectedActorIds.value = [];
@@ -80,6 +85,7 @@ function cancelChanges() {
 }
 
 async function saveAll() {
+  // Vérifier que tous les acteurs ont un email non vide et valide
   for (const actor of localActors.value) {
     if (!actor.email.trim()) {
       toaster.addErrorMessage("L'email est requis pour tous les acteurs.");
@@ -91,6 +97,7 @@ async function saveAll() {
     }
   }
 
+  // Préparer la liste des acteurs à sauvegarder
   const existingIds = new Set((props.application.actors || []).map((a: Actor) => a.id));
   const actorsToSave = localActors.value.map((actor) => (existingIds.has(actor.id) ? actor : { ...actor, id: undefined }));
 
@@ -116,12 +123,14 @@ async function saveAll() {
       <h2>Gestion des acteurs</h2>
     </div>
 
+    <!-- Bouton global de suppression -->
     <div class="global-delete">
       <DsfrButton type="button" tertiary @click="removeSelectedActors" :disabled="selectedActorIds.length === 0">
         Supprimer la sélection
       </DsfrButton>
     </div>
 
+    <!-- Tableau avec colonne de sélection -->
     <table class="actor-table">
       <thead>
         <tr>
@@ -145,6 +154,7 @@ async function saveAll() {
       </tbody>
     </table>
 
+    <!-- Boutons globaux -->
     <div class="actions">
       <DsfrButton type="button" class="add-btn" @click="addActor">Ajouter un acteur</DsfrButton>
       <DsfrButton type="button" class="cancel-btn" @click="cancelChanges" :disabled="!hasChanges"> Annuler </DsfrButton>
@@ -161,13 +171,16 @@ async function saveAll() {
   margin-bottom: 1rem;
 }
 
+/* Nouveau style du tableau */
 .actor-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--dsfr-border, #ccc);
+  border-radius: 8px;
   overflow: hidden;
   background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   font-family: var(--dsfr-font-family, Arial, sans-serif);
 }
 .actor-table thead {
@@ -194,18 +207,21 @@ async function saveAll() {
   background-color: var(--dsfr-gray-100, #f7f7f7);
 }
 
+/* Nouveau style pour la sélection (case à cocher) */
 .actor-table input[type="checkbox"] {
   width: 1.2rem;
   height: 1.2rem;
   cursor: pointer;
 }
 
+/* Zone de suppression globale au-dessus du tableau */
 .global-delete {
   margin-bottom: 1rem;
   display: flex;
   justify-content: flex-start;
 }
 .global-delete DsfrButton {
+  /* Si DSFR n'apporte pas le style souhaité, personnalisez ici */
   background-color: var(--dsfr-error, #d32f2f);
   color: #fff;
   padding: 0.75rem 1.5rem;
@@ -218,6 +234,7 @@ async function saveAll() {
   filter: brightness(0.9);
 }
 
+/* Boutons globaux repensés */
 .actions {
   margin-top: 1.5rem;
   display: flex;

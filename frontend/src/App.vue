@@ -9,6 +9,8 @@ const authenticated = ref(false);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
+const appVersion: string = import.meta.env.VITE_APP_VERSION ? `${import.meta.env.VITE_APP_VERSION}` : "VITE_APP_VERSION";
+
 interface QuickLink {
   label: string;
   to: { name: string } | string;
@@ -62,6 +64,7 @@ const mandatoryLinks = [
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
   },
+  { label: `${appVersion}`, href: `http://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion}` },
 ];
 
 const searchQuery = ref("");
