@@ -111,44 +111,44 @@ export class ApplicationService {
    */
   public async searchApplications(searchParams: SearchApplicationDto) {
     const { label, tag, page = 1, limit = 12 } = searchParams;
-
-    const whereClause: Prisma.ApplicationWhereInput = {
-      ...(label !== undefined && {
-        label: {
-          contains: label,
-          mode: 'insensitive',
-        },
-      }),
-      ...(tag && {
-        tags: {
-          hasEvery: tag,
-        },
-      }),
-    };
-
-    const orderByClause: Prisma.Enumerable<Prisma.ApplicationOrderByWithRelationInput> =
-      {
-        metadata: {
-          updatedAt: 'desc',
-        },
-      };
-
     const skip = (page - 1) * limit;
+    const accentFrom = 'àáâãäåèéêëìíîïòóôõöùúûüç';
+    const accentTo = 'aaaaaaeeeeiiiiooooouuuuc';
+    const conditions: string[] = [];
+
+    if (label) {
+      conditions.push(`
+          translate(lower(label), '${accentFrom}', '${accentTo}')
+          ILIKE translate(lower('%${label}%'), '${accentFrom}', '${accentTo}')
+        `);
+    }
+
+    if (tag && tag.length > 0) {
+      tag.forEach((t) => {
+        conditions.push(`
+            EXISTS (
+              SELECT 1 FROM unnest(tags) AS t
+              WHERE translate(lower(t), '${accentFrom}', '${accentTo}')
+                    ILIKE translate(lower('%${t}%'), '${accentFrom}', '${accentTo}')
+            )
+          `);
+      });
+    }
+
+    const whereClause = conditions.length
+      ? `WHERE ${conditions.join(' AND ')}`
+      : '';
+
+    const query = Prisma.raw(`
+        SELECT *
+        FROM public.applications
+        ${whereClause}
+        LIMIT ${limit} OFFSET ${skip}
+      `);
 
     try {
-      const applications = await this.prisma.application.findMany({
-        where: whereClause,
-        orderBy: orderByClause,
-        take: limit,
-        skip: skip,
-        include: {
-          lifecycle: true,
-          actors: true,
-          metadata: true,
-        },
-      });
-
-      return applications;
+      const applications = await this.prisma.$queryRaw(query);
+      return applications as any[];
     } catch (error) {
       throw error;
     }

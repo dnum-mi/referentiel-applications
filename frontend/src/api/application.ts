@@ -6,7 +6,7 @@ const Applications = {
   async getAllApplicationBySearch(searchParams?: string): Promise<Application[]> {
     let label = searchParams;
     let tag = [];
-    let regex = /tag:([A-Za-z0-9]+)/gi;
+    let regex = /tag:([A-Za-z0-9À-ÖØ-öø-ÿ]+)/gi;
     let match = null;
 
     while ((match = regex.exec(searchParams)) != null) {
