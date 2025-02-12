@@ -113,7 +113,6 @@ async function saveAll() {
   }
 }
 </script>
-
 <template>
   <div>
     <div class="header">
@@ -126,143 +125,57 @@ async function saveAll() {
       </DsfrButton>
     </div>
 
-    <table class="compliance-table">
-      <thead>
-        <tr>
-          <th>Sélection</th>
-          <th>Nom</th>
-          <th>Type de conformité</th>
-          <th>Statut</th>
-          <th>Notes</th>
-          <th>Date de début</th>
-          <th>Date de fin</th>
-          <th>Score</th>
-          <th>Unité de score</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="compliance in localCompliances" :key="compliance.id">
-          <td>
-            <input type="checkbox" :value="compliance.id" v-model="selectedComplianceIds" />
-          </td>
-          <td>
-            <DsfrInput v-model="compliance.name" placeholder="Nom de la conformité" />
-          </td>
-          <td>
-            <DsfrSelect v-model="compliance.type" :options="complianceTypes" />
-          </td>
-          <td>
-            <DsfrSelect v-model="compliance.status" :options="complianceStatuses" />
-          </td>
-          <td>
-            <DsfrInput v-model="compliance.notes" placeholder="Notes" isTextarea />
-          </td>
-          <td>
-            <AppDate v-model="compliance.validityStart" label="Date de début" />
-          </td>
-          <td>
-            <AppDate v-model="compliance.validityEnd" label="Date de fin" />
-          </td>
-          <td>
-            <DsfrInput v-model="compliance.scoreValue" placeholder="Score" />
-          </td>
-          <td>
-            <DsfrInput v-model="compliance.scoreUnit" placeholder="Unité" />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="compliance-cards">
+      <div v-for="compliance in localCompliances" :key="compliance.id" class="compliance-card">
+        <input type="checkbox" :value="compliance.id" v-model="selectedComplianceIds" class="select-checkbox" />
+        <div class="card-content">
+          <DsfrInput v-model="compliance.name" placeholder="Nom de la conformité" />
+          <DsfrSelect v-model="compliance.type" :options="complianceTypes" />
+          <DsfrSelect v-model="compliance.status" :options="complianceStatuses" />
+          <DsfrInput v-model="compliance.notes" placeholder="Notes" isTextarea />
+          <AppDate v-model="compliance.validityStart" label="Date de début" />
+          <AppDate v-model="compliance.validityEnd" label="Date de fin" />
+          <DsfrInput v-model="compliance.scoreValue" placeholder="Score" />
+          <DsfrInput v-model="compliance.scoreUnit" placeholder="Unité" />
+        </div>
+      </div>
+    </div>
 
     <div class="actions">
       <DsfrButton type="button" class="add-btn" @click="addCompliance">Ajouter une conformité</DsfrButton>
-      <DsfrButton type="button" class="cancel-btn" @click="cancelChanges" :disabled="!hasChanges"> Annuler </DsfrButton>
+      <DsfrButton type="button" class="cancel-btn" @click="cancelChanges" :disabled="!hasChanges">Annuler</DsfrButton>
       <DsfrButton type="button" class="save-btn" @click="saveAll" :loading="loading">Sauvegarder</DsfrButton>
     </div>
   </div>
 </template>
 
 <style scoped>
-.header {
+.compliance-cards {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.compliance-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border: 1px solid var(--dsfr-border, #ccc);
-  overflow: hidden;
-  background-color: #fff;
-  font-family: var(--dsfr-font-family, Arial, sans-serif);
-}
-.compliance-table thead {
-  background-color: var(--dsfr-gray-10, #f9f9f9);
-  color: #5a5959;
-}
-.compliance-table th,
-.compliance-table td {
+.compliance-card {
+  background: white;
   padding: 1rem;
-  border-bottom: 1px solid var(--dsfr-border, #ccc);
-  text-align: left;
-}
-.compliance-table th {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-.compliance-table tbody tr:last-child td {
-  border-bottom: none;
-}
-.compliance-table tbody tr:nth-child(even) {
-  background-color: var(--dsfr-gray-50, #fbfbfb);
-}
-.compliance-table tbody tr:hover {
-  background-color: var(--dsfr-gray-100, #f7f7f7);
-}
-
-.compliance-table input[type="checkbox"] {
-  width: 1.2rem;
-  height: 1.2rem;
-  cursor: pointer;
-}
-
-.global-delete {
-  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  width: calc(33.333% - 1rem);
   display: flex;
-  justify-content: flex-start;
+  flex-direction: column;
+  gap: 0.5rem;
 }
-.global-delete DsfrButton {
-  background-color: var(--dsfr-error, #d32f2f);
-  color: #fff;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: filter 0.3s;
-}
-.global-delete DsfrButton:hover:not(:disabled) {
-  filter: brightness(0.9);
+
+.select-checkbox {
+  align-self: flex-start;
+  margin-bottom: 0.5rem;
 }
 
 .actions {
-  margin-top: 1.5rem;
   display: flex;
   justify-content: flex-end;
+  margin-top: 1.5rem;
   gap: 1rem;
-}
-.actions DsfrButton {
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: filter 0.3s;
-}
-.actions DsfrButton:hover:not(:disabled) {
-  filter: brightness(0.95);
-}
-.cancel-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 </style>
