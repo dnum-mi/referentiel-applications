@@ -1,5 +1,3 @@
-import { UserService } from '../user/user.service';
-import { AuthUtils } from '../utils/helpers';
 import {
   Controller,
   Get,
@@ -23,6 +21,8 @@ import {
 import { GetAnomalyNotificationDto } from './dto/get-anomaly-notification.dto';
 import { UpdateAnomalyNotificationDto } from './dto/update-anomaly-notification.dto';
 import { AnomalyNotificationStatus } from 'src/enum';
+import { UserService } from '../user/user.service';
+import { AuthUtils } from 'src/utils/helpers';
 
 /**
  * Contrôleur pour la gestion des notifications d'anomalies.

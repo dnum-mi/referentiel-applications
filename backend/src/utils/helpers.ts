@@ -1,5 +1,5 @@
 import * as jose from 'jose';
-import { UserService } from '../user/user.service';
+import { UserService } from 'src/user/user.service';
 
 export class AuthUtils {
   static getDecodedToken(req: any): any {

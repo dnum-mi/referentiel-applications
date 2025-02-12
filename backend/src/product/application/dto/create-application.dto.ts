@@ -19,7 +19,7 @@ import {
   ComplianceType,
   ExternalRessourceType,
   LifecycleStatus,
-} from '../../../enum';
+} from 'src/enum';
 
 export class CreateActorDto {
   @ApiProperty({
@@ -583,7 +583,7 @@ export class PatchApplicationDto {
   @IsString()
   parentId?: string;
 
-  @ApiPropertyOptional({ type: [UpdateLifecycleDto] })
+  @ApiPropertyOptional({ type: UpdateLifecycleDto })
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => UpdateLifecycleDto)

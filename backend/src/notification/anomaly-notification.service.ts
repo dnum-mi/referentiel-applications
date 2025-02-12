@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateAnomalyNotificationDto } from './dto/create-anomaly-notification.dto';
 import { UpdateAnomalyNotificationDto } from './dto/update-anomaly-notification.dto';
 import { GetAnomalyNotificationDto } from './dto/get-anomaly-notification.dto';
-import { AuthUtils } from '../utils/helpers';
+import { AuthUtils } from 'src/utils/helpers';
 
 @Injectable()
 export class AnomalyNotificationService {

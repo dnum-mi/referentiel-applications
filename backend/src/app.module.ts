@@ -2,9 +2,7 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
-import { UserModule } from './user/user.module';
 import { UserController } from './user/user.controller';
-import { UserService } from './user/user.service';
 import { ConfigModule } from '@nestjs/config';
 import { ExportService } from './product/export.service';
 import { AnomalyNotificationModule } from './notification/anomaly-notification.module';
@@ -16,6 +14,9 @@ import { AuthMiddleware } from './middlewares/auth.middleware';
 import { ApplicationModule } from './product/application.module';
 import { ApplicationController } from './product/application.controller';
 import { ApplicationService } from './product/application.service';
+import { UserModule } from './user/user.module';
+import { UserService } from './user/user.service';
+import { HealthCheckModule } from './health/health-check.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ApplicationService } from './product/application.service';
     ApplicationModule,
     AnomalyNotificationModule,
     LoggerModule,
+    HealthCheckModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

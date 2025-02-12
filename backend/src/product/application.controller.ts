@@ -1,4 +1,3 @@
-import { UserService } from '../user/user.service';
 import {
   Controller,
   Post,
@@ -36,6 +35,7 @@ import {
   ExternalRessourceType,
   LifecycleStatus,
 } from 'src/enum';
+import { UserService } from '../user/user.service';
 
 /**
  * Controller pour la gestion des applications.

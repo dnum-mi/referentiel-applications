@@ -5,9 +5,7 @@ import {
   NotFoundException,
   Inject,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, ActorType, Application } from '@prisma/client';
-import { IApplicationRepository } from './infrastructure/repository/application.repository.interface';
 import {
   CreateActorDto,
   CreateApplicationDto,
@@ -18,6 +16,7 @@ import {
 } from './application/dto/create-application.dto';
 import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ApplicationService {
