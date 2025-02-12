@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import Applications from "@/api/application";
-import type { Application, ExternalRessource } from "@/models/Application";
+import type { ExternalRessource } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
 
@@ -26,6 +26,7 @@ watch(
   () => props.application.externalRessource,
   (newVal) => {
     localLinks.value = Array.isArray(newVal) ? [...newVal] : [];
+    editingRowIds.value = [];
   },
 );
 
@@ -49,14 +50,28 @@ const hasChanges = computed(() => JSON.stringify(localLinks.value) !== JSON.stri
 
 const selectedLinkIds = ref<string[]>([]);
 
+const editingRowIds = ref<string[]>([]);
+
+function isEditing(id: string): boolean {
+  return editingRowIds.value.includes(id);
+}
+
+function enableEdit(id: string) {
+  if (!editingRowIds.value.includes(id)) {
+    editingRowIds.value.push(id);
+  }
+}
+
 function addLink() {
-  localLinks.value.push({
+  const newLink: ExternalRessource = {
     id: Date.now().toString(),
     link: "",
     description: "",
     type: "",
     applicationId: props.application.id,
-  });
+  };
+  localLinks.value.push(newLink);
+  enableEdit(newLink.id);
 }
 
 function removeLink(linkId: string) {
@@ -70,6 +85,15 @@ function removeSelectedLinks() {
 
 function cancelChanges() {
   localLinks.value = Array.isArray(props.application.externalRessource) ? [...props.application.externalRessource] : [];
+  editingRowIds.value = [];
+}
+
+function formatLink(url: string): string {
+  return url.startsWith("http") ? url : "http://" + url;
+}
+
+function getTypeLabel(value: string): string {
+  return value ? linkTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
 }
 
 async function saveAll() {
@@ -91,6 +115,8 @@ async function saveAll() {
     });
     emit("update:application", updatedApplication);
     toaster.addSuccessMessage("Liens sauvegardés avec succès !");
+    // On quitte le mode édition après une sauvegarde réussie.
+    editingRowIds.value = [];
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde des liens.");
   } finally {
@@ -118,6 +144,7 @@ async function saveAll() {
           <th>Lien</th>
           <th>Description</th>
           <th>Type de lien</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -126,22 +153,42 @@ async function saveAll() {
             <input type="checkbox" :value="link.id" v-model="selectedLinkIds" />
           </td>
           <td>
-            <DsfrInput v-model="link.link" placeholder="Entrez le lien" />
+            <div v-if="isEditing(link.id)">
+              <DsfrInput v-model="link.link" placeholder="Entrez le lien" />
+            </div>
+            <div v-else>
+              <a :href="formatLink(link.link)" target="_blank" rel="noopener noreferrer">
+                {{ link.link || "Lien vide" }}
+              </a>
+            </div>
           </td>
           <td>
-            <DsfrInput v-model="link.description" placeholder="Entrez la description" />
+            <div v-if="isEditing(link.id)">
+              <DsfrInput v-model="link.description" placeholder="Entrez la description" />
+            </div>
+            <div v-else>
+              <span>{{ link.description || "Description vide" }}</span>
+            </div>
           </td>
           <td>
-            <DsfrSelect v-model="link.type" :options="linkTypes" />
+            <div v-if="isEditing(link.id)">
+              <DsfrSelect v-model="link.type" :options="linkTypes" />
+            </div>
+            <div v-else>
+              <span>{{ getTypeLabel(link.type) }}</span>
+            </div>
+          </td>
+          <td>
+            <DsfrButton v-if="!isEditing(link.id)" type="button" @click="enableEdit(link.id)" class="edit-btn"> Éditer </DsfrButton>
           </td>
         </tr>
       </tbody>
     </table>
 
     <div class="actions">
-      <DsfrButton type="button" class="add-btn" @click="addLink">Ajouter un lien</DsfrButton>
+      <DsfrButton type="button" class="add-btn" @click="addLink"> Ajouter un lien </DsfrButton>
       <DsfrButton type="button" class="cancel-btn" @click="cancelChanges" :disabled="!hasChanges"> Annuler </DsfrButton>
-      <DsfrButton type="button" class="save-btn" @click="saveAll" :loading="loading">Sauvegarder</DsfrButton>
+      <DsfrButton type="button" class="save-btn" @click="saveAll" :loading="loading"> Sauvegarder </DsfrButton>
     </div>
   </div>
 </template>
@@ -159,7 +206,6 @@ async function saveAll() {
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--dsfr-border, #ccc);
-  overflow: hidden;
   background-color: #fff;
   font-family: var(--dsfr-font-family, Arial, sans-serif);
 }
@@ -177,9 +223,6 @@ async function saveAll() {
   font-size: 0.95rem;
   font-weight: 600;
 }
-.link-table tbody tr:last-child td {
-  border-bottom: none;
-}
 .link-table tbody tr:nth-child(even) {
   background-color: var(--dsfr-gray-50, #fbfbfb);
 }
@@ -187,28 +230,10 @@ async function saveAll() {
   background-color: var(--dsfr-gray-100, #f7f7f7);
 }
 
-.link-table input[type="checkbox"] {
-  width: 1.2rem;
-  height: 1.2rem;
-  cursor: pointer;
-}
-
 .global-delete {
   margin-bottom: 1rem;
   display: flex;
   justify-content: flex-start;
-}
-.global-delete DsfrButton {
-  background-color: var(--dsfr-error, #d32f2f);
-  color: #fff;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: filter 0.3s;
-}
-.global-delete DsfrButton:hover:not(:disabled) {
-  filter: brightness(0.9);
 }
 
 .actions {
@@ -217,17 +242,8 @@ async function saveAll() {
   justify-content: flex-end;
   gap: 1rem;
 }
-.actions DsfrButton {
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: filter 0.3s;
-}
-.actions DsfrButton:hover:not(:disabled) {
-  filter: brightness(0.95);
-}
-.cancel-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+
+.edit-btn {
+  font-size: 0.85rem;
 }
 </style>
