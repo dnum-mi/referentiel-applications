@@ -4,6 +4,7 @@ import { useRegisterSW } from "virtual:pwa-register/vue";
 import useToaster from "./composables/use-toaster";
 import { routeNames } from "./router/route-names";
 import { authentication } from "./services/authentication";
+import Applications from "@/api/application";
 
 const authenticated = ref(false);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
@@ -69,6 +70,38 @@ const mandatoryLinks = [
 
 const searchQuery = ref("");
 
+const searchResults = ref<any[]>([]);
+const isLoading = ref(false);
+const errorMessage = ref("");
+let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+
+watch(searchQuery, (newVal) => {
+  if (debounceTimeout) {
+    clearTimeout(debounceTimeout);
+  }
+  if (newVal.trim() === "") {
+    searchResults.value = [];
+    return;
+  }
+  debounceTimeout = setTimeout(async () => {
+    try {
+      isLoading.value = true;
+      errorMessage.value = "";
+      const results = await Applications.getAllApplicationBySearch(newVal);
+      searchResults.value = results || [];
+    } catch (error) {
+      errorMessage.value = "Une erreur est survenue lors du chargement des applications.";
+    } finally {
+      isLoading.value = false;
+    }
+  }, 300);
+});
+
+const clearSearch = () => {
+  searchQuery.value = "";
+  searchResults.value = [];
+};
+
 const { setScheme, theme } = useScheme();
 function changeTheme() {
   setScheme(theme.value === "light" ? "dark" : "light");
@@ -89,10 +122,23 @@ function close() {
     :logo-text="logoText"
     :quick-links="quickLinks"
     show-beta
+    :showSearch="authenticated"
   />
 
+  <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown">
+    <div v-if="isLoading" class="loading-message">Chargement...</div>
+    <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+    <ul v-if="searchResults.length">
+      <li v-for="(app, index) in searchResults" @click="clearSearch" :key="index">
+        <router-link :to="{ name: 'application', params: { id: app.id } }">
+          {{ app.label || "Application" }}
+        </router-link>
+      </li>
+    </ul>
+  </div>
+
   <div class="fr-container fr-mt-3w fr-mt-md-5w fr-mb-5w">
-    <router-view />
+    <router-view :key="$route.fullPath" />
   </div>
 
   <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :operator-to />
@@ -111,3 +157,36 @@ function close() {
 
   <AppToaster :messages="toaster.messages" @close-message="toaster.removeMessage($event)" />
 </template>
+
+<style scoped>
+.search-results-dropdown {
+  position: absolute;
+  top: 112px;
+  left: 79%;
+  transform: translateX(-50%);
+  background-color: white;
+  width: 90%;
+  max-width: 384px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  z-index: 1000;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.search-results-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-results-dropdown li {
+  margin: 0.5rem 0;
+}
+
+.loading-message,
+.error-message {
+  padding: 0.5rem;
+  text-align: center;
+}
+</style>
