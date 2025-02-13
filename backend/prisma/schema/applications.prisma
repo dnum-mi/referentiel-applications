@@ -8,9 +8,6 @@ model Application {
   tags                String[]
   metadataId          String
   metadata            Metadata              @relation("ApplicationMetadata", fields: [metadataId], references: [id])
-  parentId            String?
-  parent              Application?          @relation("ApplicationParent", fields: [parentId], references: [id])
-  children            Application[]         @relation("ApplicationParent")
   actors              Actor[]               @relation("ApplicationActors")
   externals           External[]            @relation("ApplicationExternals")
   compliances         Compliance[]          @relation("ApplicationCompliances")
@@ -21,7 +18,29 @@ model Application {
   ownerId String
   owner   User   @relation("UserApplications", fields: [ownerId], references: [keycloakId])
 
+  relationsAsSource   Relation[]            @relation("SourceHasTarget")
+  relationsAsTarget   Relation[]            @relation("TargetHasSource")
+
   @@index([label])
   @@index([shortName])
   @@map("applications")
+}
+
+model Relation {
+  type_relation        RelationType
+  applicationSource   String
+  applicationTarget    String
+  sourceApplication    Application           @relation("SourceHasTarget", fields: [applicationSource], references: [id])
+  targetApplication    Application           @relation("TargetHasSource", fields: [applicationTarget], references: [id])
+
+  @@id([applicationSource, applicationTarget, type_relation])
+  @@map("relations")
+}
+
+
+enum RelationType {
+  is_part_of
+  in_replacement_of
+  is_service_user_of
+  is_data_user_of
 }

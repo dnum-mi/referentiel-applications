@@ -1,4 +1,3 @@
-import { ActorType } from "./../../../backend/src/enum";
 export interface Application {
   id: string;
   label: string;
@@ -10,7 +9,6 @@ export interface Application {
 
   purposes?: string[];
   tags?: string[];
-  parentId?: string;
   ownerId?: string;
   metadataId?: string;
 
