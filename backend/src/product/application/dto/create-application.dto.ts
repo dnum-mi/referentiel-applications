@@ -19,6 +19,8 @@ import {
   ComplianceType,
   ExternalRessourceType,
 } from 'src/enum';
+import { deprecate } from 'util';
+import { ApplicationRelationDto } from './relation-application.dto';
 
 export class CreateActorDto {
   @ApiProperty({
@@ -379,7 +381,22 @@ export class CreateApplicationDto {
   })
   @IsOptional()
   @IsString()
+  @ApiHideProperty() 
   parentId?: string;
+
+  @ApiProperty({
+    type: [ApplicationRelationDto],
+    description: 'Liste des relations avec d\'autres applications',
+    example: [{
+      type: 'is_part_of',
+      targetId: 'd4e5f6'
+    }]
+  })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ApplicationRelationDto)
+  relations?: ApplicationRelationDto[];
+
 
   @ApiProperty({
     type: [CreateActorDto],
@@ -503,7 +520,21 @@ export class PatchApplicationDto {
   })
   @IsOptional()
   @IsString()
+  @ApiHideProperty()
   parentId?: string;
+
+  @ApiProperty({
+    type: [ApplicationRelationDto],
+    description: 'Liste des relations avec d\'autres applications',
+    example: [{
+      type: 'is_part_of',
+      targetId: 'd4e5f6'
+    }]
+  })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ApplicationRelationDto)
+  relations?: ApplicationRelationDto[];
 
   @ApiPropertyOptional({ type: [UpdateActorDto] })
   @IsOptional()
