@@ -1,21 +1,27 @@
 import type { Application } from "@/models/Application";
 import requests from "./xhr-client";
 import axios from "axios";
+import { regexLink, regexTag } from "@/utils/regex";
 
 const Applications = {
   async getAllApplicationBySearch(searchParams?: string): Promise<Application[]> {
     let label = searchParams;
     let tag = [];
-    let regex = /tag:([A-Za-z0-9À-ÖØ-öø-ÿ]+)/gi;
+    let link = "";
     let match = null;
 
-    while ((match = regex.exec(searchParams)) != null) {
-      tag.push(match[1]);
-      label = label.replace(match[0], "").trim();
+    if ((match = regexLink.exec(searchParams)) != null) {
+      link = match[0];
+    } else {
+      while ((match = regexTag.exec(searchParams)) != null) {
+        tag.push(match[1]);
+        label = label.replace(match[0], "").trim();
+      }
     }
 
     return await requests.get<Application[]>("/applications/search", {
       params: {
+        link: link ? link : undefined,
         label: label ? label : undefined,
         tag: tag.length > 0 ? tag : [],
       },

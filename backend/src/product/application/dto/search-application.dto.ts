@@ -6,6 +6,14 @@ import { Type } from 'class-transformer';
 
 export class SearchApplicationDto {
   @ApiPropertyOptional({
+    description: "Filtrer par lien d'application",
+    example: 'https://example.com/',
+  })
+  @IsOptional()
+  @IsString()
+  link?: string;
+
+  @ApiPropertyOptional({
     description: "Filtrer par label de l'application",
     example: 'Mon Application',
   })

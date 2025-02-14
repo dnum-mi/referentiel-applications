@@ -9,6 +9,7 @@ import { Prisma, ActorType, Application } from '@prisma/client';
 import {
   CreateActorDto,
   CreateApplicationDto,
+  CreateExternalRessourceDto,
   PatchApplicationDto,
   UpdateActorDto,
   UpdateComplianceDto,
@@ -109,7 +110,7 @@ export class ApplicationService {
    * @throws Error Si une erreur survient pendant la recherche.
    */
   public async searchApplications(searchParams: SearchApplicationDto) {
-    const { label, tag, page = 1, limit = 12 } = searchParams;
+    const { link, label, tag, page = 1, limit = 12 } = searchParams;
     const skip = (page - 1) * limit;
     const accentFrom = 'àáâãäåèéêëìíîïòóôõöùúûüç';
     const accentTo = 'aaaaaaeeeeiiiiooooouuuuc';
@@ -146,7 +147,24 @@ export class ApplicationService {
       `);
 
     try {
-      const applications = await this.prisma.$queryRaw(query);
+      let applications = [];
+
+      if (link) {
+        const applicationsExternalRessource =
+          await this.prisma.externalRessource.findMany({
+            where: { link },
+            include: {
+              application: true,
+            },
+          });
+
+        applicationsExternalRessource.forEach((externalRessource) => {
+          applications.push(externalRessource.application);
+        });
+      } else {
+        applications = await this.prisma.$queryRaw(query);
+      }
+
       return applications as any[];
     } catch (error) {
       throw error;
