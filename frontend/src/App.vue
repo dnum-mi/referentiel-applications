@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, getCurrentInstance } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import useToaster from "./composables/use-toaster";
 import { routeNames } from "./router/route-names";
 import { authentication } from "./services/authentication";
 import Applications from "@/api/application";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const instance = getCurrentInstance();
+
+const trackSearch = () => {
+  if (searchQuery.value.trim()) {
+    instance?.proxy?.$matomo?.trackEvent("Search", "Performed", searchQuery.value);
+  }
+};
 
 const authenticated = ref(false);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
@@ -85,11 +95,13 @@ watch(searchQuery, (newVal) => {
   }
   debounceTimeout = setTimeout(async () => {
     try {
+      trackSearch();
       isLoading.value = true;
       errorMessage.value = "";
       const results = await Applications.getAllApplicationBySearch(newVal);
       searchResults.value = results || [];
     } catch (error) {
+      instance?.proxy?.$matomo?.trackEvent("Error", "Search Error", error.message);
       errorMessage.value = "Une erreur est survenue lors du chargement des applications.";
     } finally {
       isLoading.value = false;
@@ -97,9 +109,15 @@ watch(searchQuery, (newVal) => {
   }, 300);
 });
 
+const trackResultSelection = (appLabel: string) => {
+  instance?.proxy?.$matomo?.trackEvent("Search", "Result Selected", appLabel);
+  clearSearch();
+};
+
 const clearSearch = () => {
   searchQuery.value = "";
   searchResults.value = [];
+  instance?.proxy?.$matomo.trackEvent("search", "click", "search-result");
 };
 
 const { setScheme, theme } = useScheme();
@@ -115,28 +133,29 @@ function close() {
 </script>
 
 <template>
-  <DsfrHeader
-    v-model="searchQuery"
-    :service-description="serviceDescription"
-    :service-title="serviceTitle"
-    :logo-text="logoText"
-    :quick-links="quickLinks"
-    show-beta
-    :showSearch="authenticated"
-  />
+  <div class="header-container">
+    <DsfrHeader
+      v-model="searchQuery"
+      :service-description="serviceDescription"
+      :service-title="serviceTitle"
+      :logo-text="logoText"
+      :quick-links="quickLinks"
+      show-beta
+      :showSearch="authenticated"
+    />
 
-  <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown">
-    <div v-if="isLoading" class="loading-message">Chargement...</div>
-    <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-    <ul v-if="searchResults.length">
-      <li v-for="(app, index) in searchResults" @click="clearSearch" :key="index">
-        <router-link :to="{ name: 'application', params: { id: app.id } }">
-          {{ app.label || "Application" }}
-        </router-link>
-      </li>
-    </ul>
+    <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown">
+      <div v-if="isLoading" class="loading-message">Chargement...</div>
+      <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <ul v-if="searchResults.length">
+        <li v-for="(app, index) in searchResults" :key="index" @click="trackResultSelection(app.label)">
+          <router-link :to="{ name: 'application', params: { id: app.id } }">
+            {{ app.label || "Application" }}
+          </router-link>
+        </li>
+      </ul>
+    </div>
   </div>
-
   <div class="fr-container fr-mt-3w fr-mt-md-5w fr-mb-5w">
     <router-view :key="$route.fullPath" />
   </div>
@@ -159,19 +178,22 @@ function close() {
 </template>
 
 <style scoped>
+.header-container {
+  position: relative;
+}
 .search-results-dropdown {
   position: absolute;
-  top: 112px;
-  left: 79%;
-  transform: translateX(-50%);
+  top: 100%;
+  right: 0;
   background-color: white;
-  width: 90%;
+  width: 100%;
   max-width: 384px;
   border: 1px solid #ccc;
   border-radius: 4px;
   z-index: 1000;
-  padding: 1rem;
+  margin-top: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
 }
 
 .search-results-dropdown ul {
@@ -181,7 +203,14 @@ function close() {
 }
 
 .search-results-dropdown li {
-  margin: 0.5rem 0;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Ajout d'un effet survol */
+.search-results-dropdown li:hover {
+  background-color: #f0f0f0;
 }
 
 .loading-message,

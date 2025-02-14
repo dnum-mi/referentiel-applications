@@ -41,6 +41,9 @@ importers:
       vue:
         specifier: ^3.4.38
         version: 3.5.11(typescript@5.4.5)
+      vue-matomo:
+        specifier: ^4.2.0
+        version: 4.2.0
       vue-router:
         specifier: ^4.4.3
         version: 4.4.5(vue@3.5.11(typescript@5.4.5))
@@ -4172,6 +4175,10 @@ packages:
     engines: {node: ^14.17.0 || >=16.0.0}
     peerDependencies:
       eslint: '>=6.0.0'
+
+  vue-matomo@4.2.0:
+    resolution: {integrity: sha512-m5hCw7LH3wPDcERaF4sp/ojR9sEx7Rl8TpOyH/4jjQxMF2DuY/q5pO+i9o5Dx+BXLSa9+IQ0qhAbWYRyESQXmA==}
+    engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
 
   vue-router@4.4.5:
     resolution: {integrity: sha512-4fKZygS8cH1yCyuabAXGUAsyi1b2/o/OKgu/RUb+znIYOxPRxdkytJEx+0wGcpBE1pX6vUgh5jwWOKRGvuA/7Q==}
@@ -9031,6 +9038,8 @@ snapshots:
       semver: 7.6.3
     transitivePeerDependencies:
       - supports-color
+
+  vue-matomo@4.2.0: {}
 
   vue-router@4.4.5(vue@3.5.11(typescript@5.4.5)):
     dependencies:

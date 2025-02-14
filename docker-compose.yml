@@ -52,18 +52,12 @@ services:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=password
     ports:
-      - 8082:8080
+      - "8082:8080"
     healthcheck:
-      test:
-        "exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r
-
-        Host: localhost:9000\r
-
-        Connection: close\r
-
-        \r
-
-        ' >&3;cat <&3 | grep -q '\"status\": \"UP\"' && exit 0 || exit 1"
+      test: >
+        exec 3<>/dev/tcp/127.0.0.1/9000;
+        echo -e "GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n" >&3;
+        cat <&3 | grep -q '\"status\": \"UP\"' && exit 0 || exit 1
       interval: 5s
       timeout: 10s
       retries: 5
@@ -82,9 +76,43 @@ services:
     depends_on:
       - backend
 
+  # Ajout du service MySQL pour Matomo en local
+  db:
+    image: mariadb:10.5
+    container_name: matomo-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: matomo
+      MYSQL_DATABASE: matomo
+      MYSQL_USER: matomo
+      MYSQL_PASSWORD: matomo
+    volumes:
+      - db_data:/var/lib/mysql
+  matomo:
+    image: matomo
+    container_name: matomo
+    restart: always
+    ports:
+      - "8083:80"
+    environment:
+      MATOMO_DATABASE_HOST: db
+      MATOMO_DATABASE_ADAPTER: mysql
+      MATOMO_DATABASE_TABLES_PREFIX: matomo_
+      MATOMO_DATABASE_USERNAME: matomo
+      MATOMO_DATABASE_PASSWORD: matomo
+      MATOMO_DATABASE_DBNAME: matomo
+    depends_on:
+      - db
+    volumes:
+      - matomo_data:/var/www/html
+
   krakend:
     image: devopsfaith/krakend
     ports:
       - "8080:8080"
     volumes:
       - ./krakend.json:/etc/krakend/krakend.json
+
+volumes:
+  db_data:
+  matomo_data:
