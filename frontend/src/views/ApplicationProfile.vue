@@ -21,7 +21,7 @@ async function loadApplication() {
   try {
     application.value = await Applications.getApplicationById(id);
   } catch (error) {
-    errorMessage.value = "Une erreur est survenue lors de la récupération de l'application.";
+    errorMessage.value = `Une erreur est survenue lors de la récupération de l'application. (${error})`;
   } finally {
     isLoading.value = false;
   }
