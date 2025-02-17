@@ -5,8 +5,11 @@ import type { Application, Compliance } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import AppDate from "./AppDate.vue";
 import { defineProps, defineEmits } from "vue";
+import { routeNames } from "@/router/route-names";
+import { formatDate } from "@/composables/use-date";
 
 const toaster = useToaster();
+const currentPage = ref<number>(0);
 
 const props = defineProps({
   application: {
@@ -20,11 +23,14 @@ const props = defineProps({
 const emit = defineEmits(["update:application"]);
 
 const localCompliances = ref<Compliance[]>(Array.isArray(props.application.compliances) ? [...props.application.compliances] : []);
+const headers = ["Nom", "Type", "Statut", "Date de début", "Date de fin", "Score", "Notes", "Actions"];
 
 watch(
   () => props.application.compliances,
   (newVal) => {
-    localCompliances.value = Array.isArray(newVal) ? [...newVal] : [];
+    if (JSON.stringify(newVal) !== JSON.stringify(localCompliances.value)) {
+      localCompliances.value = Array.isArray(newVal) ? [...newVal] : [];
+    }
   },
 );
 
@@ -58,10 +64,24 @@ const loading = ref(false);
 const selectedComplianceIds = ref<string[]>([]);
 const hasChanges = computed(() => JSON.stringify(localCompliances.value) !== JSON.stringify(props.application.compliances));
 
+const rows = computed(() =>
+  localCompliances.value.map((compliance: any) => [
+    complianceTypesDict[compliance.type] || "Non défini",
+    compliance.name,
+    complianceStatusesDict[compliance.status] || "Non défini",
+    formatDate(compliance.validityStart),
+    formatDate(compliance.validityEnd),
+    compliance.scoreValue + compliance.scoreUnit,
+    compliance.notes,
+    compliance.id,
+  ]),
+);
+
 function addCompliance() {
   localCompliances.value.push({
     id: Date.now().toString(),
     name: "",
+    type: "",
     status: "",
     validityStart: "",
     validityEnd: "",
@@ -113,69 +133,96 @@ async function saveAll() {
   }
 }
 </script>
+
 <template>
-  <div>
-    <div class="header">
-      <h2>Gestion des Conformités</h2>
-    </div>
+  <div class="fr-grid-row fr-grid-row--gutters">
+    <div class="fr-col-12">
+      <div class="fr-card" :class="{ 'fr-card--no-border': noBorder }">
+        <div class="fr-card__body">
+          <div class="fr-card__content">
+            <slot>
+              <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+                <div class="fr-col">
+                  <h3 class="fr-mb-0">Conformités</h3>
+                </div>
+                <div class="fr-col-auto">
+                  <DsfrButton secondary icon="add-line" label="Ajouter une conformité" @click="$emit('add-compliance')" />
+                </div>
+              </div>
+              <div v-if="rows.length === 0" class="text-center">
+                <p>Aucune conformité trouvée.</p>
+              </div>
 
-    <div class="global-delete">
-      <DsfrButton type="button" tertiary @click="removeSelectedCompliances" :disabled="selectedComplianceIds.length === 0">
-        Supprimer la sélection
-      </DsfrButton>
-    </div>
-
-    <div class="compliance-cards">
-      <div v-for="compliance in localCompliances" :key="compliance.id" class="compliance-card">
-        <input type="checkbox" :value="compliance.id" v-model="selectedComplianceIds" class="select-checkbox" />
-        <div class="card-content">
-          <DsfrInput v-model="compliance.name" placeholder="Nom de la conformité" />
-          <DsfrSelect v-model="compliance.type" :options="complianceTypes" />
-          <DsfrSelect v-model="compliance.status" :options="complianceStatuses" />
-          <DsfrInput v-model="compliance.notes" placeholder="Notes" isTextarea />
-          <AppDate v-model="compliance.validityStart" label="Date de début" />
-          <AppDate v-model="compliance.validityEnd" label="Date de fin" />
-          <DsfrInput v-model="compliance.scoreValue" placeholder="Score" />
-          <DsfrInput v-model="compliance.scoreUnit" placeholder="Unité" />
+              <DsfrDataTable
+                v-else
+                v-model:selection="selectedComplianceIds"
+                v-model:current-page="currentPage"
+                :headers-row="headers"
+                :rows="rows"
+                selectable-rows
+                row-key="id"
+                :title="'Liste des conformités'"
+                pagination
+                :rows-per-page="10"
+                :pagination-options="[10, 20, 30]"
+                bottom-action-bar-class="bottom-action-bar-class"
+                pagination-wrapper-class="pagination-wrapper-class"
+                sorted="id"
+                :sortable-rows="['id']"
+              >
+                <template #cell="{ colKey, cell }">
+                  <template v-if="colKey === 'Nom'">
+                    {{ cell }}
+                  </template>
+                  <template v-if="colKey === 'Type'">
+                    {{ cell }}
+                  </template>
+                  <template v-if="colKey === 'Statut'">
+                    <DsfrTag :label="cell" />
+                  </template>
+                  <template v-if="colKey === 'Date de début' || colKey === 'Date de fin'">
+                    {{ cell }}
+                  </template>
+                  <template v-if="colKey === 'Score'">
+                    {{ cell }}
+                  </template>
+                  <template v-if="colKey === 'Notes'">
+                    {{ cell }}
+                  </template>
+                  <template v-if="colKey === 'Actions'">
+                    <DsfrButton secondary label="Modifier" @click="$emit('edit-compliance', cell)" />
+                    <DsfrButton tertiary label="Supprimer" @click="removeCompliance(cell)" />
+                  </template>
+                </template>
+              </DsfrDataTable>
+            </slot>
+          </div>
         </div>
       </div>
-    </div>
-
-    <div class="actions">
-      <DsfrButton type="button" class="add-btn" @click="addCompliance">Ajouter une conformité</DsfrButton>
-      <DsfrButton type="button" class="cancel-btn" @click="cancelChanges" :disabled="!hasChanges">Annuler</DsfrButton>
-      <DsfrButton type="button" class="save-btn" @click="saveAll" :loading="loading">Sauvegarder</DsfrButton>
     </div>
   </div>
 </template>
 
 <style scoped>
-.compliance-cards {
+.text-center {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.compliance-card {
-  background: white;
-  padding: 1rem;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #555;
+  font-size: 1.2rem;
+  font-weight: 500;
+  background-color: #f9f9f9;
+  border: 1px dashed #ccc;
   border-radius: 8px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  width: calc(33.333% - 1rem);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  padding: 20px;
+  margin: 20px auto;
+  width: 80%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.select-checkbox {
-  align-self: flex-start;
-  margin-bottom: 0.5rem;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-  gap: 1rem;
+.text-center p {
+  margin: 0;
+  text-align: center;
 }
 </style>
