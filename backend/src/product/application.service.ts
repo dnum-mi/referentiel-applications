@@ -189,7 +189,7 @@ export class ApplicationService {
         actors: {
           include: {
             user: true,
-            externalOrganization: true,
+            organization: true,
           },
         },
         compliances: true,
@@ -527,7 +527,7 @@ export class ApplicationService {
     const existingActors = await this.prisma.actor.findMany({
       where: { applicationId },
       include: {
-        externalOrganization: true,
+        organization: true,
       },
     });
 
@@ -560,22 +560,22 @@ export class ApplicationService {
           actorType: actor.actorType
             ? { set: actor.actorType as ActorType }
             : undefined,
-          // ...(actor.organizationId && {
-          //   externalOrganization: {
-          //     connect: { id: actor.organizationId },
-          //   },
-          // }),
+          ...(actor.organizationId && {
+            organization: {
+              connect: { id: actor.organizationId },
+            },
+          }),
         },
       })),
       create: actorsToCreate.map((actor) => ({
         role: actor.role ?? null,
         email: actor.email ?? null,
         actorType: (actor.actorType as ActorType) ?? null,
-        // ...(actor.organizationId && {
-        //   externalOrganization: {
-        //     connect: { id: actor.organizationId },
-        //   },
-        // }),
+        ...(actor.organizationId && {
+          organization: {
+            connect: { id: actor.organizationId },
+          },
+        }),
       })),
     };
   }

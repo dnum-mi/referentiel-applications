@@ -23,6 +23,9 @@ import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { HealthCheckModule } from './health/health-check.module';
 import { EventsModule } from './events/events.module';
+import { OrganizationModule } from './organization/organization.module';
+import { OrganizationController } from './organization/organization.controller';
+import { OrganizationService } from './organization/organization.service';
 
 @Module({
   imports: [
@@ -32,6 +35,7 @@ import { EventsModule } from './events/events.module';
     AnomalyNotificationModule,
     LoggerModule,
     HealthCheckModule,
+    OrganizationModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -42,6 +46,7 @@ import { EventsModule } from './events/events.module';
     ApplicationController,
     AnomalyNotificationController,
     UserController,
+    OrganizationController,
   ],
   providers: [
     AppService,
@@ -49,6 +54,7 @@ import { EventsModule } from './events/events.module';
     AnomalyNotificationService,
     ExportService,
     UserService,
+    OrganizationService,
     CombinedInterceptor,
     AuthMiddleware,
   ],
