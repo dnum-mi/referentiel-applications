@@ -47,13 +47,4 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = authentication.authenticated;
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: "accueil" });
-  } else {
-    next();
-  }
-});
-
 export default router;

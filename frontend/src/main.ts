@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { authentication } from "@/services/authentication";
 import App from "./App.vue";
 import { createPinia } from "pinia";
 import router from "./router/index";
@@ -28,7 +29,9 @@ app.use(createPinia());
 app.use(router);
 app.component("VIcon", VIcon);
 
-app.mount("#app");
+authentication.init({ onLoad: "check-sso" }).then(() => {
+  app.mount("#app");
+});
 
 router.afterEach((to) => {
   console.log("trackPageView", to.fullPath);

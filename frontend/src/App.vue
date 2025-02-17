@@ -7,7 +7,6 @@ import { authentication } from "./services/authentication";
 import Applications from "@/api/application";
 import { useRouter } from "vue-router";
 
-const router = useRouter();
 const instance = getCurrentInstance();
 
 const trackSearch = () => {
@@ -16,7 +15,7 @@ const trackSearch = () => {
   }
 };
 
-const authenticated = ref(false);
+const authenticated = ref(authentication.authenticated);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
@@ -30,7 +29,6 @@ interface QuickLink {
 }
 
 (async () => {
-  authenticated.value = await authentication.init({ onLoad: "check-sso" });
   const loginUrlLink = await authentication.createLoginUrl({ redirectUri: window.location.href });
   unauthenticatedQuickLinks.value = [
     {
