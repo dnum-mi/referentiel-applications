@@ -104,14 +104,14 @@ export class UpdateActorDto {
   @IsOptional()
   email?: string;
 
-  // @ApiProperty({
-  //   example: '',
-  //   description: '',
-  //   required: false,
-  // })
-  // @IsEmail()
-  // @IsOptional()
-  // organizationId?: string;
+  @ApiProperty({
+    example: 'f09ed26a-8415-476a-be3b-ada479291c34',
+    description: "L'identifiant de l'organisation",
+    required: false,
+  })
+  @IsEmail()
+  @IsOptional()
+  organizationId?: string;
 
   @ApiProperty({ enum: ActorType, required: false })
   @IsOptional()

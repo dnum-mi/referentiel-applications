@@ -8,10 +8,8 @@ model External {
   lastSourceUpdate DateTime
   metadataId       String
   metadata         Metadata       @relation("ExternalsMetadata", fields: [metadataId], references: [id])
-  actors           Actor[]        @relation("ActorOrganization")
   applicationId    String?
   application      Application?   @relation("ApplicationExternals", fields: [applicationId], references: [id])
-  user             User[]
 
   @@map("externals")
 }

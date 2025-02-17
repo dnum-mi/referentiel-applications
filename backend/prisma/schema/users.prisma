@@ -2,7 +2,7 @@ model User {
   keycloakId          String                @id
   email               String                @unique
   organizationId      String?
-  organization        External?             @relation(fields: [organizationId], references: [id])
+  organization        Organization?         @relation(fields: [organizationId], references: [id])
   createdSet          Metadata[]            @relation("MetadataCreatedBy")
   updatedSet          Metadata[]            @relation("MetadataUpdatedBy")
   applications        Application[]         @relation("UserApplications")
@@ -14,16 +14,18 @@ model User {
 }
 
 model Actor {
-  id                   String       @id @default(uuid())
-  role                 String?
-  actorType            ActorType?
-  email                String?
-  userId               String?
-  user                 User?        @relation("UserActors", fields: [userId], references: [keycloakId])
-  organizationId       String?
-  externalOrganization External?    @relation("ActorOrganization", fields: [organizationId], references: [id])
-  applicationId        String?
-  application          Application? @relation("ApplicationActors", fields: [applicationId], references: [id])
+  id             String        @id @default(uuid())
+  firstname      String?
+  lastname       String?
+  role           String?
+  actorType      ActorType?
+  email          String?
+  userId         String?
+  user           User?         @relation("UserActors", fields: [userId], references: [keycloakId])
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  applicationId  String?
+  application    Application?  @relation("ApplicationActors", fields: [applicationId], references: [id])
 
   @@index([userId])
   @@index([applicationId])
