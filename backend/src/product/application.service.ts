@@ -1,10 +1,5 @@
-// src/application/application.service.ts
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-  Inject,
-} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ActorType, Application } from '@prisma/client';
 import {
   CreateActorDto,
@@ -15,10 +10,8 @@ import {
   UpdateComplianceDto,
   UpdateExternalRessourceDto,
 } from './application/dto/create-application.dto';
-import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RelationType } from 'src/enum';
+import { SearchApplicationDto } from './application/dto/search-application.dto';
 
 @Injectable()
 export class ApplicationService {
@@ -47,17 +40,6 @@ export class ApplicationService {
       applicationMetadata.id,
       createApplicationDto,
     );
-
-    if (createApplicationDto.relations?.length) {
-      await this.prisma.relation.createMany({
-        data: createApplicationDto.relations.map(relation => ({
-          type_relation: relation.type,
-          applicationSource: application.id, // Nécessite l'ID généré
-          applicationTarget: relation.targetId,
-        }))
-      });
-    }
-  
 
     return application;
   }
@@ -105,40 +87,16 @@ export class ApplicationService {
           where,
           data: applicationUpdates,
         });
-  
-        // Gestion des relations parent
-        if (typeof data.parentId !== 'undefined') {
-          // Supprimer les anciennes relations
-          await tx.relation.deleteMany({
-            where: {
-              applicationSource: app.id,
-              type_relation: RelationType.is_part_of,
-            },
-          });
-  
-          // Créer la nouvelle relation si nécessaire
-          if (data.parentId) {
-            await tx.relation.create({
-              data: {
-                type_relation: RelationType.is_part_of,
-                applicationSource: app.id,
-                applicationTarget: data.parentId,
-              },
-            });
-          }
-        }
-  
+
         return app;
       });
-  
-      return updatedApplication;
 
-    return updatedApplication;
-  } catch (error) {
-    throw new NotFoundException(
-      `Application non trouvée pour l'ID: ${where.id}`,
-    );
-  }
+      return updatedApplication;
+    } catch (error) {
+      throw new NotFoundException(
+        `Application non trouvée pour l'ID: ${where.id}`,
+      );
+    }
   }
 
   /**
@@ -219,51 +177,15 @@ export class ApplicationService {
    * @returns L'application trouvée.
    * @throws NotFoundException Si l'application n'est pas trouvée.
    */
-  public async getApplicationById(id: string) {
-    const application = await this.prisma.application.findUnique({
-      where: { id },
-      include: {
-        actors: {
-          include: {
-            user: true,
-            organization: true,
-          },
-        },
-        compliances: true,
-        externals: {
-          include: { externalSource: true },
-        },
-        externalRessource: true,
-        relationsAsSource: {
-          include: {
-            targetApplication: {
-              select: {
-                id: true,
-                label: true,
-                shortName: true
-              }
-            }
-          }
-        },
-        relationsAsTarget: {
-          include: {
-            sourceApplication: {
-              select: {
-                id: true,
-                label: true,
-                shortName: true
-              }
-            }
-          }
-        }
-      },
-    });
 
-    const parent = application.relationsAsSource[0]?.targetApplication || null;
+  public async getApplicationById(applicationId: string) {
+    const application =
+      await this.applicationRepository.findById(applicationId);
 
-    if (!application) {
-      throw new NotFoundException('Application not found');
-    }
+    console.log(
+      "📌 Application récupérée depuis l'API :",
+      JSON.stringify(application, null, 2),
+    );
 
     return application;
   }
@@ -373,26 +295,6 @@ export class ApplicationService {
     }
     if (data.tags !== undefined) {
       applicationUpdates.tags = { set: data.tags };
-    }
-    if (data.parentId !== undefined) {
-      applicationUpdates.parent = data.parentId
-        ? { connect: { id: data.parentId } }
-        : { disconnect: true };
-    if (data.lifecycle !== undefined) {
-      applicationUpdates.lifecycle = {
-        update: {
-          ...(data.lifecycle.status !== undefined && {
-            status: data.lifecycle.status,
-          }),
-          ...(data.lifecycle.firstProductionDate !== undefined && {
-            firstProductionDate: data.lifecycle.firstProductionDate,
-          }),
-          ...(data.lifecycle.plannedDecommissioningDate !== undefined && {
-            plannedDecommissioningDate:
-              data.lifecycle.plannedDecommissioningDate,
-          }),
-        },
-      };
     }
   }
 

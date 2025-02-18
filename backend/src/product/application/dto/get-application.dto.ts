@@ -22,8 +22,4 @@ export class GetApplicationDto {
 
   @IsArray()
   tags: string[];
-
-  @IsOptional()
-  @IsString()
-  parentId?: string;
 }
