@@ -24,21 +24,14 @@ watch(
   },
 );
 
-// Gestion des modals pour chaque onglet
 const isEditModalOpen = ref(false);
-const currentEditTab = ref<number | null>(null);
 
-// Modal management
-// Fonction pour ouvrir la modal et définir l'onglet en cours d'édition
-const openEditModal = (tabIndex: number) => {
-  currentEditTab.value = tabIndex;
+const openEditModal = () => {
   isEditModalOpen.value = true;
 };
 
-// Fonction pour fermer la modal
 const closeEditModal = () => {
   isEditModalOpen.value = false;
-  currentEditTab.value = null;
 };
 
 async function updateApplication(updatedData) {
@@ -96,27 +89,26 @@ const tabTitles = [
     </template>
 
     <DsfrTabContent v-if="activeTab === 0" panel-id="tab-content-0" tab-id="tab-0">
-      <InformationsGenerales :application="application" @edit="openEditModal(0)" />
+      <InformationsGenerales :application="application" @edit="openEditModal()" />
     </DsfrTabContent>
 
     <DsfrTabContent v-if="activeTab === 1" panel-id="tab-content-1" tab-id="tab-1">
-      <Links :application="application" @edit="openEditModal(1)" />
+      <Links :application="application" />
     </DsfrTabContent>
 
     <DsfrTabContent v-if="activeTab === 2" panel-id="tab-content-2" tab-id="tab-2">
-      <Compliances :application="application" @edit="openEditModal(2)" />
+      <Compliances :application="application" />
     </DsfrTabContent>
 
     <DsfrTabContent v-if="activeTab === 3" panel-id="tab-content-3" tab-id="tab-3">
-      <ActorManager :application="application" @edit="openEditModal(3)" />
+      <ActorManager :application="application" />
     </DsfrTabContent>
 
     <DsfrTabContent v-if="activeTab === 4" panel-id="tab-content-4" tab-id="tab-4">
-      <NotificationsApplication :application="application" @edit="openEditModal(4)" />
+      <NotificationsApplication :application="application" />
     </DsfrTabContent>
   </DsfrTabs>
 
-  <!-- Modal unique réutilisable pour toutes les modifications -->
   <DsfrModal :opened="isEditModalOpen" title="Modifier l'application" size="lg" @close="closeEditModal">
     <ApplicationForm
       v-if="application"

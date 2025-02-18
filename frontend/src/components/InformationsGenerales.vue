@@ -4,6 +4,7 @@ import type { Application } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
 import AppDate from "./AppDate.vue";
+import { formatDate } from "@/composables/use-date";
 
 defineEmits<{
   (e: "edit"): void;
@@ -16,32 +17,19 @@ const props = defineProps<{
   small?: boolean;
 }>();
 const application = props.application;
-const loading = ref(false);
-const toaster = useToaster();
 
-const isAddingTag = ref(false);
-const newTag = ref("");
-
-const lifecycleStatusesDict = {
-  under_construction: " en construction",
-  in_production: "en production",
-  decommissioned: "décomissioné",
-  decommissioning: "en décomissionnement",
+const lifecycleStatusesDict: Record<string, string> = {
+  under_construction: "En construction",
+  in_production: "En production",
+  decommissioned: "Décomissioné",
+  decommissioning: "En décomissionnement",
 };
 
+// Calcul du statut du cycle de vie
+const lifecycleStatusLabel = computed(() => {
+  return lifecycleStatusesDict[application.lifecycle?.status] || "Statut inconnu";
+});
 const lifecycleStatuses = computed(() => Object.entries(lifecycleStatusesDict).map(([value, text]) => ({ value, text })));
-
-async function patchApplication() {
-  loading.value = true;
-  try {
-    await Applications.patchApplication(application);
-    toaster.addSuccessMessage("Application mise à jour avec succès");
-  } catch (error) {
-    toaster.addErrorMessage("Erreur lors de la mise à jour de l'application");
-  } finally {
-    loading.value = false;
-  }
-}
 </script>
 
 <template>
@@ -56,7 +44,7 @@ async function patchApplication() {
                   <h3 class="fr-mb-0">Informations générales</h3>
                 </div>
                 <div class="fr-col-auto">
-                  <DsfrButton tertiary size="sm" icon="edit-line" label="Modifier" @click="$emit('edit')" />
+                  <DsfrButton tertiary size="sm" class="fr-btn--icon-left fr-icon-edit-line" label="Modifier" @click="$emit('edit')" />
                 </div>
               </div>
 
@@ -69,6 +57,13 @@ async function patchApplication() {
                   {{ purpose }}
                 </li>
               </ul>
+
+              <h4 class="fr-mt-3w">Cycle de vie</h4>
+              <div class="lifecycle-info">
+                <p>Statut : {{ lifecycleStatusLabel }}</p>
+                <p>Date de première production : {{ formatDate(application.lifecycle.firstProductionDate) }}</p>
+                <p>Date de décommission prévue : {{ formatDate(application.lifecycle.plannedDecommissioningDate) }}</p>
+              </div>
 
               <h4 class="fr-mt-3w">Tags</h4>
               <ul class="fr-tags-group">
@@ -90,7 +85,7 @@ async function patchApplication() {
 }
 
 .fr-card__content {
-  height: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
 }
