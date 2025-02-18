@@ -54,8 +54,8 @@ export enum ActorType {
 }
 
 export enum RelationType {
-  is_part_of = 'is_part_of',
-  in_replacement_of =   'in_replacement_of',
-  is_service_user_of = 'is_service_user_of',
-  is_data_user_of = 'is_data_user_of',
+  is_part_of,
+  in_replacement_of,
+  is_service_user_of,
+  is_data_user_of,
 }

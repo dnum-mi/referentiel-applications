@@ -28,10 +28,12 @@ import { OrganizationController } from './organization/organization.controller';
 import { OrganizationService } from './organization/organization.service';
 import { MetadatasService } from './metadatas/metadatas.service';
 import { MetadatasModule } from './metadatas/metadatas.module';
+import { RelationModule } from './relationship/relation.module';
 
 @Module({
   imports: [
     PrismaModule,
+    RelationModule,
     UserModule,
     ApplicationModule,
     AnomalyNotificationModule,

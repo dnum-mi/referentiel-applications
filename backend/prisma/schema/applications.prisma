@@ -27,13 +27,13 @@ model Application {
 }
 
 model Relation {
-  type_relation        RelationType
+  type        RelationType
   applicationSource   String
   applicationTarget    String
   sourceApplication    Application           @relation("SourceHasTarget", fields: [applicationSource], references: [id])
   targetApplication    Application           @relation("TargetHasSource", fields: [applicationTarget], references: [id])
 
-  @@id([applicationSource, applicationTarget, type_relation])
+  @@id([applicationSource, applicationTarget, type])
   @@map("relations")
 }
 

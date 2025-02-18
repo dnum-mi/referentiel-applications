@@ -1,7 +1,7 @@
 // src/main.ts
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { Logger as PinoLogger, LoggerErrorInterceptor } from 'nestjs-pino';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { CombinedInterceptor } from './logger/combined.interceptor';
