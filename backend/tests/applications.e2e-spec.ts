@@ -49,6 +49,11 @@ describe('Applications', () => {
         purposes: ['finance', 'HR', 'operations'],
         tags: ['tag1', 'tag2', 'tag3'],
         parentId: null,
+        lifecycle: {
+          status: 'in_production',
+          firstProductionDate: '2025-01-06T10:34:25.061Z',
+          plannedDecommissioningDate: '2030-12-31T23:59:59.000Z',
+        },
         actors: [
           {
             role: 'dev',

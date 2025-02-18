@@ -7,6 +7,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    '(feat:': sparkles: Add relation ihm and api)
     ActorActions: typeof import('./components/ActorActions.vue')['default']
     ActorForm: typeof import('./components/form/ActorForm.vue')['default']
     ActorManager: typeof import('./components/ActorManager.vue')['default']
@@ -29,6 +30,13 @@ declare module 'vue' {
     DsfrFooter: typeof import('@gouvminint/vue-dsfr')['DsfrFooter']
     DsfrHeader: typeof import('@gouvminint/vue-dsfr')['DsfrHeader']
     DsfrSearchBar: typeof import('@gouvminint/vue-dsfr')['DsfrSearchBar']
+    DsfrSelect: typeof import('@gouvminint/vue-dsfr')['DsfrSelect']
+    DsfrTabContent: typeof import('@gouvminint/vue-dsfr')['DsfrTabContent']
+    DsfrTabItem: typeof import('@gouvminint/vue-dsfr')['DsfrTabItem']
+    DsfrTable: typeof import('@gouvminint/vue-dsfr')['DsfrTable']
+    DsfrTabPanel: typeof import('@gouvminint/vue-dsfr')['DsfrTabPanel']
+    DsfrTabs: typeof import('@gouvminint/vue-dsfr')['DsfrTabs']
+    DsfrTag: typeof import('@gouvminint/vue-dsfr')['DsfrTag']
     EditRelationModal: typeof import('./components/EditRelationModal.vue')['default']
     EventForm: typeof import('./components/form/EventForm.vue')['default']
     Events: typeof import('./components/Events.vue')['default']
@@ -38,9 +46,14 @@ declare module 'vue' {
     LinkForm: typeof import('./components/form/LinkForm.vue')['default']
     Links: typeof import('./components/Links.vue')['default']
     LinksTab: typeof import('./components/LinksTab.vue')['default']
+    MermaidDiagram: typeof import('./components/MermaidDiagram.vue')['default']
     MyIssues: typeof import('./components/MyIssues.vue')['default']
     NotificationsApplication: typeof import('./components/NotificationsApplication.vue')['default']
+    RelationForm: typeof import('./components/AddRelationModal.vue')['default']
+    Relationship: typeof import('./components/Relationships.vue')['default']
+    Relationships: typeof import('./components/Relationships.vue')['default']
     RelationshipsTab: typeof import('./components/RelationshipsTab.vue')['default']
+    RelationTree: typeof import('./components/RelationTree.vue')['default']
     ReloadPrompt: typeof import('./components/ReloadPrompt.vue')['default']
     ReportIssue: typeof import('./components/ReportIssue.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
