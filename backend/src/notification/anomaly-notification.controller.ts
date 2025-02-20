@@ -4,13 +4,10 @@ import {
   Post,
   Body,
   Patch,
-  Param,
   Delete,
-  Request,
-  NotFoundException,
-  BadRequestException,
+  Param,
   Query,
-  ParseEnumPipe,
+  Request,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AnomalyNotificationService } from './anomaly-notification.service';
@@ -20,9 +17,7 @@ import {
 } from './dto/create-anomaly-notification.dto';
 import { GetAnomalyNotificationDto } from './dto/get-anomaly-notification.dto';
 import { UpdateAnomalyNotificationDto } from './dto/update-anomaly-notification.dto';
-import { AnomalyNotificationStatus } from 'src/enum';
-import { UserService } from '../user/user.service';
-import { AuthUtils } from 'src/utils/helpers';
+import { FiltersDto } from 'src/notification/dto/filters.dto';
 
 /**
  * Contrôleur pour la gestion des notifications d'anomalies.
@@ -31,10 +26,7 @@ import { AuthUtils } from 'src/utils/helpers';
 @ApiTags('Notifications')
 @Controller('anomaly-notifications')
 export class AnomalyNotificationController {
-  constructor(
-    private readonly anomalyNotificationService: AnomalyNotificationService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(protected service: AnomalyNotificationService) {}
 
   /**
    * Crée une nouvelle notification d'anomalie.
@@ -52,19 +44,11 @@ export class AnomalyNotificationController {
     @Request() req,
     @Body() requestData: CreateAnomalyNotificationRequestDto,
   ) {
-    const decodedToken = AuthUtils.getDecodedToken(req);
-    if (typeof decodedToken.sub !== 'string') {
-      throw new BadRequestException(
-        'Token invalide : identifiant utilisateur manquant',
-      );
-    }
-    const currentNotifierId = decodedToken.sub;
-
     const data: CreateAnomalyNotificationDto = {
       ...requestData,
-      notifierId: currentNotifierId,
+      notifierId: req.user.keycloakId,
     };
-    return this.anomalyNotificationService.create(req, data);
+    return this.service.create(data);
   }
 
   /**
@@ -73,9 +57,9 @@ export class AnomalyNotificationController {
    * @returns La liste de toutes les notifications d'anomalie.
    */
   @Get()
-  @ApiOperation({ summary: 'Récupérer toutes les notifications' })
-  findAll() {
-    return this.anomalyNotificationService.findAll();
+  @ApiResponse({ status: 200 })
+  findAll(@Query() filters: FiltersDto) {
+    return this.service.findAll(filters);
   }
 
   /**
@@ -93,14 +77,11 @@ export class AnomalyNotificationController {
     status: 200,
     description: 'Liste des notifications de signalements retournée.',
   })
-  @ApiResponse({ status: 404, description: 'Aucune notification trouvée.' })
   @Get('user-notifications')
-  async getAnomalyNotificationsByUser(
+  async findByCurrentUser(
     @Request() req,
   ): Promise<GetAnomalyNotificationDto[]> {
-    return await this.anomalyNotificationService.getAnomalyNotificationByNotifierId(
-      req.user.keycloakId,
-    );
+    return await this.service.findAll({ notifierId: req.user.keycloakId });
   }
 
   /**
@@ -108,27 +89,11 @@ export class AnomalyNotificationController {
    *
    * @param id L'identifiant de la notification.
    * @returns La notification d'anomalie correspondant à l'ID.
-   * @throws NotFoundException Si aucune notification n'est trouvée pour cet ID.
    */
-  @Get('/:applicationId')
-  async getNotificationsByApplicationId(
-    @Param('applicationId') applicationId: string,
-  ): Promise<GetAnomalyNotificationDto[]> {
-    try {
-      return await this.anomalyNotificationService.getAnomalyNotificationByApplicationId(
-        applicationId,
-      );
-    } catch (error) {
-      throw new NotFoundException(
-        "Aucune notification trouvée pour l'application avec l'ID spécifié.",
-      );
-    }
-  }
-
   @Get(':id')
   @ApiOperation({ summary: 'Récupérer une notification spécifique par ID' })
   findOne(@Param('id') id: string) {
-    return this.anomalyNotificationService.findOne(id);
+    return this.service.findOne(id);
   }
 
   /**
@@ -144,23 +109,7 @@ export class AnomalyNotificationController {
     @Param('id') id: string,
     @Body() updateDto: UpdateAnomalyNotificationDto,
   ) {
-    return this.anomalyNotificationService.update(id, updateDto);
-  }
-
-  /**
-   * Met à jour une notification d'anomalie existante.
-   *
-   * @param id L'identifiant de la notification à mettre à jour.
-   * @param newStatus Les nouvelles données de la notification.
-   * @returns La notification d'anomalie mise à jour.
-   */
-  @Patch('update/:id')
-  @ApiOperation({ summary: "Mettre à jour le statut d'une notification" })
-  updateStatus(
-    @Param('id') id: string,
-    @Body() newStatus: UpdateAnomalyNotificationDto,
-  ) {
-    return this.anomalyNotificationService.updateStatus(id, newStatus);
+    return this.service.update(id, updateDto);
   }
 
   /**
@@ -173,6 +122,6 @@ export class AnomalyNotificationController {
   @Delete(':id')
   @ApiOperation({ summary: 'Supprimer une notification' })
   remove(@Param('id') id: string) {
-    return this.anomalyNotificationService.remove(id);
+    return this.service.delete(id);
   }
 }

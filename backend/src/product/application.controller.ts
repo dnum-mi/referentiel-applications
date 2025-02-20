@@ -7,7 +7,6 @@ import {
   Request,
   Get,
   Query,
-  NotFoundException,
   BadRequestException,
   Response,
   Logger,
@@ -35,7 +34,6 @@ import {
   ExternalRessourceType,
   LifecycleStatus,
 } from 'src/enum';
-import { UserService } from '../user/user.service';
 
 /**
  * Controller pour la gestion des applications.
@@ -48,7 +46,6 @@ export class ApplicationController {
 
   constructor(
     private readonly applicationService: ApplicationService,
-    private readonly userService: UserService,
     private readonly exportService: ExportService,
   ) {}
 
@@ -137,10 +134,7 @@ Vous devez fournir les informations suivantes :
       'Liste des applications correspondant aux critères de recherche.',
   })
   async searchApplications(@Query() searchParams: SearchApplicationDto) {
-    const applications =
-      await this.applicationService.searchApplications(searchParams);
-
-    return applications;
+    return this.applicationService.searchApplications(searchParams);
   }
 
   /**
@@ -206,13 +200,7 @@ Le paramètre **id** doit être fourni dans l'URL.
     `,
   })
   async findOne(@Param('id') id: string): Promise<GetApplicationDto> {
-    try {
-      const application = await this.applicationService.getApplicationById(id);
-
-      return application;
-    } catch (error) {
-      throw new NotFoundException('Application non trouvée');
-    }
+    return await this.applicationService.getApplicationById(id);
   }
 
   /**

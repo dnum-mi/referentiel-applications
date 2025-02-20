@@ -1,18 +1,19 @@
 model Metadata {
-  id                       String     @id @default(uuid())
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  createdById   String       
-  createdBy     User         @relation("MetadataCreatedBy", fields: [createdById], references: [keycloakId])
-  updatedById   String       
-  updatedBy     User         @relation("MetadataUpdatedBy", fields: [updatedById], references: [keycloakId])
-  dataOwnerId       String?      
-  dataOwner         User?        @relation("MetadataDataOwnerBy", fields: [dataOwnerId], references: [keycloakId])
-  externals      External[]  @relation("ExternalsMetadata")
+  id              String           @id @default(uuid())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  createdById     String
+  createdBy       User             @relation("MetadataCreatedBy", fields: [createdById], references: [keycloakId])
+  updatedById     String
+  updatedBy       User             @relation("MetadataUpdatedBy", fields: [updatedById], references: [keycloakId])
+  dataOwnerId     String?
+  dataOwner       User?            @relation("MetadataDataOwnerBy", fields: [dataOwnerId], references: [keycloakId])
+  externals       External[]       @relation("ExternalsMetadata")
   externalSources ExternalSource[] @relation("ExternalSourcesMetadata")
-  applications  Application[] @relation("ApplicationMetadata") 
-  lifecycles     Lifecycle[]   @relation("LifecycleMetadata")
-  compliances Compliance[] @relation("ComplianceMetadata")
+  applications    Application[]    @relation("ApplicationMetadata")
+  lifecycles      Lifecycle[]      @relation("LifecycleMetadata")
+  events          Event[]          @relation("EventMetadata")
+  compliances     Compliance[]     @relation("ComplianceMetadata")
 
   @@map("metadata")
 }

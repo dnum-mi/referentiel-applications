@@ -22,6 +22,7 @@ import { ApplicationService } from './product/application.service';
 import { UserModule } from './user/user.module';
 import { UserService } from './user/user.service';
 import { HealthCheckModule } from './health/health-check.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { HealthCheckModule } from './health/health-check.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    EventsModule,
   ],
   controllers: [
     AppController,

@@ -11,7 +11,7 @@ const reportIssue = {
   async getNotificationsByApplicationId(applicationId: string) {
     try {
       console.log("Requesting notifications for applicationId:", applicationId);
-      const response = await requests.get<ReportIssue[]>(`/anomaly-notifications/${applicationId}`);
+      const response = await requests.get<ReportIssue[]>(`/anomaly-notifications?applicationId=${applicationId}`);
       console.log(response);
       return response;
     } catch (error) {
@@ -21,15 +21,6 @@ const reportIssue = {
   },
   async getReportIssueByNotifierId(): Promise<ReportIssue[]> {
     return await requests.get<ReportIssue[]>("/anomaly-notifications/user-notifications");
-  },
-  async updateStatus(id: string, status: string) {
-    try {
-      console.log(status);
-      const response = await requests.patch(`/anomaly-notifications/update/${id}`, { status });
-      return response;
-    } catch (error) {
-      throw error;
-    }
   },
   async deleteReportIssue(id: string) {
     return await requests.del(`/anomaly-notifications/${id}`);
