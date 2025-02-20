@@ -18,8 +18,8 @@ import MatomoPlugin from "./plugins/MatomoPlugin";
 const app = createApp(App);
 
 // Needed for env variables substitution in production mode
-const MATOMO_URL = import.meta.env.VITE_MATOMO_URL ?? "VITE_MATOMO_URL";
-const MATOMO_SITE_ID = Number(import.meta.env.VITE_MATOMO_SITE_ID ?? "VITE_MATOMO_SITE_ID");
+const MATOMO_URL = import.meta.env.VITE_MATOMO_URL ?? "VITE_RDA_MATOMO_URL";
+const MATOMO_SITE_ID = Number(import.meta.env.VITE_MATOMO_SITE_ID ?? "VITE_RDA_MATOMO_SITE_ID");
 
 app.use(MatomoPlugin, {
   host: MATOMO_URL,
