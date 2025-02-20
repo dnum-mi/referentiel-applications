@@ -19,7 +19,7 @@ model Actor {
   actorType            ActorType?
   email                String?
   userId               String?
-  user                 User?         @relation("UserActors", fields: [userId], references: [keycloakId])
+  user                 User?        @relation("UserActors", fields: [userId], references: [keycloakId])
   organizationId       String?
   externalOrganization External?    @relation("ActorOrganization", fields: [organizationId], references: [id])
   applicationId        String?

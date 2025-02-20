@@ -1,15 +1,14 @@
 model Lifecycle {
-  id                       String     @id @default(uuid())
-  status                      LifecycleStatus
-  firstProductionDate         DateTime?
-  plannedDecommissioningDate  DateTime?
-  metadataId                  String            
-  metadata                    Metadata          @relation("LifecycleMetadata", fields: [metadataId], references: [id])
-  applications                Application[]     @relation("LifecycleApplications")
+  id                         String          @id @default(uuid())
+  status                     LifecycleStatus
+  firstProductionDate        DateTime?
+  plannedDecommissioningDate DateTime?
+  metadataId                 String
+  metadata                   Metadata        @relation("LifecycleMetadata", fields: [metadataId], references: [id])
+  applications               Application[]   @relation("LifecycleApplications")
 
   @@map("lifecycles")
 }
-
 
 enum LifecycleStatus {
   under_construction

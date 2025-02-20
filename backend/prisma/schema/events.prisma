@@ -1,0 +1,20 @@
+model Event {
+  id            String      @id @default(uuid())
+  start         DateTime?
+  end           DateTime?
+  type          EventType
+  description   String      @db.VarChar(255)
+  metadataId    String
+  metadata      Metadata    @relation("EventMetadata", fields: [metadataId], references: [id])
+  applicationId String
+  application   Application @relation("ApplicationEvents", fields: [applicationId], references: [id])
+
+  @@map("events")
+}
+
+enum EventType {
+  under_construction
+  in_production
+  decommissioned
+  decommissioning
+}
