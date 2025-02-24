@@ -6,16 +6,12 @@ import Links from "./Links.vue";
 import ActorManager from "./ActorManager.vue";
 import Compliances from "./Compliances.vue";
 import type { Application } from "@/models/Application";
-import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
 const application = ref<Application>(props.application);
 const activeTab = ref(0);
-
-const isSubmitting = ref(false);
-const toaster = useToaster();
 
 watch(
   () => props.application,
@@ -24,30 +20,10 @@ watch(
   },
 );
 
-const isEditModalOpen = ref(false);
-
-const openEditModal = () => {
-  isEditModalOpen.value = true;
+const updateApplication = (updatedApp: Application) => {
+  Object.assign(application.value, updatedApp);
+  console.log(updatedApp);
 };
-
-const closeEditModal = () => {
-  isEditModalOpen.value = false;
-};
-
-async function updateApplication(updatedData) {
-  if (!application.value) return;
-
-  isSubmitting.value = true;
-  try {
-    await Applications.patchApplication({ ...application.value, ...updatedData });
-    toaster.addSuccessMessage("Application mise à jour avec succès");
-    closeEditModal();
-  } catch (error) {
-    toaster.addErrorMessage("Erreur lors de la mise à jour de l'application");
-  } finally {
-    isSubmitting.value = false;
-  }
-}
 
 const applicationTabListName = "Informations sur l’application";
 const tabTitles = [
@@ -89,15 +65,15 @@ const tabTitles = [
     </template>
 
     <DsfrTabContent v-if="activeTab === 0" panel-id="tab-content-0" tab-id="tab-0">
-      <InformationsGenerales :application="application" @edit="openEditModal()" />
+      <InformationsGenerales :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
     <DsfrTabContent v-if="activeTab === 1" panel-id="tab-content-1" tab-id="tab-1">
-      <Links :application="application" />
+      <Links :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
     <DsfrTabContent v-if="activeTab === 2" panel-id="tab-content-2" tab-id="tab-2">
-      <Compliances :application="application" />
+      <Compliances :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
     <DsfrTabContent v-if="activeTab === 3" panel-id="tab-content-3" tab-id="tab-3">
@@ -108,14 +84,4 @@ const tabTitles = [
       <NotificationsApplication :application="application" />
     </DsfrTabContent>
   </DsfrTabs>
-
-  <DsfrModal :opened="isEditModalOpen" title="Modifier l'application" size="lg" @close="closeEditModal">
-    <ApplicationForm
-      v-if="application"
-      :initial-data="application"
-      :is-submitting="isSubmitting"
-      @submit="updateApplication"
-      @cancel="closeEditModal"
-    />
-  </DsfrModal>
 </template>

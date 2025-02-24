@@ -31,13 +31,11 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:application"]);
-
 const localLinks = ref<ExternalRessource[]>(
   Array.isArray(props.application?.externalRessource) ? [...props.application.externalRessource] : [],
 );
-const selectedLink = ref<ExternalRessource | null>(null); // pour gérer l'élément sélectionné pour l'édition
-const showModal = ref(false); // pour contrôler l'affichage du modal
+const selectedLink = ref<ExternalRessource | null>(null);
+const showModal = ref(false);
 const isLinkModalOpen = ref(false);
 const loading = ref(false);
 
@@ -62,13 +60,15 @@ const form = ref({
   description: props.initialData?.description ?? "",
 });
 
-const handleSubmit = () => {
-  saveAll();
-};
-
 function formatLink(url: string): string {
+  if (!url || typeof url !== "string") return "";
   return url.startsWith("http") ? url : "http://" + url;
 }
+const emit = defineEmits(["update:application", "submit"]);
+
+const handleSubmit = () => {
+  emit("submit", form.value);
+};
 
 function getTypeLabel(value: string): string {
   return value ? linkTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
@@ -81,13 +81,12 @@ async function saveAll() {
       return;
     }
   }
-  console.log(localLinks);
   if (form.value) {
     const index = localLinks.value.findIndex((link) => link.id === form.value?.id);
     if (index !== -1) {
-      localLinks.value[index] = { ...localLinks.value[index], ...form.value }; // Correction
+      localLinks.value[index] = { ...localLinks.value[index], ...form.value };
     } else {
-      localLinks.value.push({ ...form.value }); // Ajout si inexistant
+      localLinks.value.push({ ...form.value });
     }
   }
 

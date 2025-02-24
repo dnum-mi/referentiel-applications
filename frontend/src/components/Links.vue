@@ -14,7 +14,7 @@ const props = defineProps({
   },
   title: { type: String, default: "" },
   icon: { type: String, default: "" },
-  noBorder: { type: Boolean, default: false }, // Add this line
+  noBorder: { type: Boolean, default: false },
 });
 
 function handleApplicationUpdate(updatedApplication) {
@@ -50,20 +50,31 @@ const linkTypesDict = {
 const hasChanges = computed(() => JSON.stringify(localLinks.value) !== JSON.stringify(props.application.externalRessource));
 
 function formatLink(url: string): string {
+  if (!url || typeof url !== "string") return "";
   return url.startsWith("http") ? url : "http://" + url;
 }
-
 function getTypeLabel(value: string): string {
   return value ? linkTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
 }
 
+const handleSaveLinks = (newLink) => {
+  const index = localLinks.value.findIndex((link) => link.id === newLink.id);
+  if (index !== -1) {
+    localLinks.value[index] = { ...localLinks.value[index], ...newLink };
+  } else {
+    localLinks.value.push({ ...newLink });
+  }
+  saveAll();
+};
+
 async function saveAll() {
   for (const link of localLinks.value) {
-    if (!link.link.trim()) {
+    if (!link.link || typeof link.link !== "string" || !link.link.trim()) {
       toaster.addErrorMessage("Le lien est requis pour tous les liens.");
       return;
     }
   }
+
   const existingIds = new Set((props.application.externalRessource || []).map((l: ExternalRessource) => l.id));
   const linksToSave = localLinks.value.map((link) => (existingIds.has(link.id) ? link : { ...link, id: undefined }));
 
@@ -73,8 +84,14 @@ async function saveAll() {
       ...props.application,
       externalRessource: linksToSave,
     });
-    emit("update:application", updatedApplication);
+    console.log("Link.vue: ", linksToSave);
+    emit("update:application", {
+      ...props.application,
+      externalRessource: linksToSave,
+    });
     toaster.addSuccessMessage("Liens sauvegardés avec succès !");
+    closeLinkModal();
+    closeCreateLinkModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde des liens.");
   } finally {
@@ -141,6 +158,7 @@ watch(
   (newVal) => {
     localLinks.value = Array.isArray(newVal) ? [...newVal] : [];
   },
+  { deep: true, immediate: true },
 );
 </script>
 
@@ -202,8 +220,9 @@ watch(
                   v-if="application"
                   :application="application"
                   :is-submitting="isSubmitting"
-                  @submit="saveLinkChanges"
+                  @submit="handleSaveLinks"
                   @cancel="closeCreateLinkModal"
+                  @save-links="handleSaveLinks"
                 />
               </DsfrModal>
               <DsfrModal :opened="isLinkModalOpen" title="Modifier le lien" size="lg" @close="closeLinkModal">
@@ -212,9 +231,10 @@ watch(
                   :initial-data="selectedLink"
                   :application="application"
                   :is-submitting="isSubmitting"
-                  @submit="saveLinkChanges()"
+                  @submit="handleSaveLinks"
                   @update:application="handleApplicationUpdate"
                   @cancel="closeLinkModal"
+                  @save-links="handleSaveLinks"
                 />
               </DsfrModal>
 
@@ -240,32 +260,35 @@ watch(
   align-items: center;
   margin-bottom: 1rem;
 }
-
 .link-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border: 1px solid var(--dsfr-border, #ccc);
-  background-color: #fff;
-  font-family: var(--dsfr-font-family, Arial, sans-serif);
+  table-layout: fixed;
+  border-collapse: collapse;
 }
-.link-table thead {
-  background-color: var(--dsfr-gray-10, #f9f9f9);
-  color: #5a5959;
-}
+
 .link-table th,
 .link-table td {
   padding: 1rem;
   border-bottom: 1px solid var(--dsfr-border, #ccc);
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+.link-table td {
+  max-width: 200px;
+}
+
 .link-table th {
   font-size: 0.95rem;
   font-weight: 600;
 }
+
 .link-table tbody tr:nth-child(even) {
   background-color: var(--dsfr-gray-50, #fbfbfb);
 }
+
 .link-table tbody tr:hover {
   background-color: var(--dsfr-gray-100, #f7f7f7);
 }
@@ -287,7 +310,6 @@ watch(
   font-size: 0.85rem;
 }
 
-/* Pagination Wrapper */
 .pagination-wrapper {
   display: flex;
   justify-content: center;
@@ -297,7 +319,6 @@ watch(
   padding: 10px;
 }
 
-/* Pagination Buttons */
 .pagination-wrapper .fr-btn {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
@@ -305,20 +326,17 @@ watch(
   transition: background-color 0.3s ease;
 }
 
-/* Hover effect for pagination buttons */
 .pagination-wrapper .fr-btn:hover {
   background-color: var(--dsfr-primary-color, #0052cc);
   color: #fff;
 }
 
-/* Current page style */
 .pagination-wrapper .fr-btn--current {
   background-color: var(--dsfr-primary-color, #0052cc);
   color: #fff;
   font-weight: bold;
 }
 
-/* Style for the bottom action bar */
 .pagination-bottom-bar {
   display: flex;
   justify-content: space-between;
@@ -328,7 +346,6 @@ watch(
   border-radius: 0.375rem;
 }
 
-/* Make the entire table responsive */
 @media (max-width: 768px) {
   .pagination-wrapper {
     flex-direction: column;

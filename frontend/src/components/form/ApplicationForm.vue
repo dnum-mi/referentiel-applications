@@ -2,15 +2,25 @@
 import { ref } from "vue";
 
 const props = defineProps<{
-  initialData?: ApplicationDTO;
+  initialData?: Object;
   isSubmitting?: boolean;
 }>();
 
-const emit = defineEmits<{
-  (e: "submit", data: Omit<ApplicationDTO, "id" | "created_at" | "updated_at">): void;
-  (e: "cancel"): void;
-}>();
+const emit = defineEmits(["update:application", "submit"]);
 
+const handleSubmit = () => {
+  const purposes = form.value.purposes.filter((p) => p.trim() !== "");
+  const tags = form.value.tags.filter((t) => t.trim() !== "");
+
+  emit("submit", {
+    label: form.value.label,
+    shortName: form.value.shortName || null,
+    logo: form.value.logo || null,
+    description: form.value.description,
+    purposes,
+    tags,
+  });
+};
 const form = ref({
   label: props.initialData?.label ?? "",
   shortName: props.initialData?.shortName ?? "",
@@ -41,7 +51,7 @@ const removeTag = (index: number) => {
     form.value.tags.push("");
   }
 };
-
+/*
 const handleSubmit = () => {
   const purposes = form.value.purposes.filter((p) => p.trim() !== "");
   const tags = form.value.tags.filter((t) => t.trim() !== "");
@@ -54,7 +64,7 @@ const handleSubmit = () => {
     purposes,
     tags,
   });
-};
+};*/
 </script>
 
 <template>
