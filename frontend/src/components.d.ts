@@ -17,8 +17,6 @@ declare module 'vue' {
     AppToaster: typeof import('./components/AppToaster.vue')['default']
     ComplianceForm: typeof import('./components/form/ComplianceForm.vue')['default']
     Compliances: typeof import('./components/Compliances.vue')['default']
-    CompliancesForm: typeof import('./components/form/CompliancesForm.vue')['default']
-    copy: typeof import('./components/form/LinkForm copy.vue')['default']
     DsfrAlert: typeof import('@gouvminint/vue-dsfr')['DsfrAlert']
     DsfrBreadcrumb: typeof import('@gouvminint/vue-dsfr')['DsfrBreadcrumb']
     DsfrButton: typeof import('@gouvminint/vue-dsfr')['DsfrButton']
@@ -29,12 +27,10 @@ declare module 'vue' {
     DsfrInput: typeof import('@gouvminint/vue-dsfr')['DsfrInput']
     DsfrInputGroup: typeof import('@gouvminint/vue-dsfr')['DsfrInputGroup']
     DsfrModal: typeof import('@gouvminint/vue-dsfr')['DsfrModal']
-    DsfrPagination: typeof import('@gouvminint/vue-dsfr')['DsfrPagination']
     DsfrSearchBar: typeof import('@gouvminint/vue-dsfr')['DsfrSearchBar']
     DsfrSelect: typeof import('@gouvminint/vue-dsfr')['DsfrSelect']
     DsfrTabContent: typeof import('@gouvminint/vue-dsfr')['DsfrTabContent']
     DsfrTabItem: typeof import('@gouvminint/vue-dsfr')['DsfrTabItem']
-    DsfrTable: typeof import('@gouvminint/vue-dsfr')['DsfrTable']
     DsfrTabs: typeof import('@gouvminint/vue-dsfr')['DsfrTabs']
     DsfrTag: typeof import('@gouvminint/vue-dsfr')['DsfrTag']
     ExportApplications: typeof import('./components/ExportApplications.vue')['default']
@@ -47,6 +43,5 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchApplications: typeof import('./components/SearchApplications.vue')['default']
-    VIcon: typeof import('@gouvminint/vue-dsfr')['VIcon']
   }
 }

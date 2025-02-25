@@ -15,17 +15,25 @@ const props = defineProps({
   },
   title: { type: String, default: "" },
   icon: { type: String, default: "" },
-  noBorder: { type: Boolean, default: false },
+  noBorder: { type: Boolean, default: true },
 });
-
-function handleApplicationUpdate(updatedApplication) {
-  props.application.value = updatedApplication;
-  console.log("Application mise à jour:", updatedApplication);
-}
 
 const emit = defineEmits(["update:application"]);
 
 const localCompliances = ref<Compliance[]>(Array.isArray(props.application.compliances) ? [...props.application.compliances] : []);
+const selectedComplianceIds = ref<string[]>([]);
+const selectedCompliance = ref<Compliance | null>(null);
+
+const currentPage = ref<number>(0);
+const headers = ["Sélection", "Nom", "Type", "Statut", "Actions"];
+const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
+
+const isComplianceModalOpen = ref(false);
+const isCreateComplianceModalOpen = ref(false);
+const showDeleteConfirmation = ref(false);
+
+const loading = ref(false);
+const isSubmitting = ref(false);
 
 const complianceTypesDict = {
   regulation: "Réglementation",
@@ -35,27 +43,12 @@ const complianceTypesDict = {
   security: "Sécurité",
   privacy: "Confidentialité",
 };
-
 const complianceStatusesDict = {
   compliant: "Conforme",
   non_compliant: "Non conforme",
   partially_compliant: "Partiellement conforme",
   not_concerned: "Non concerné",
 };
-
-const selectedCompliance = ref<Compliance | null>(null);
-const isComplianceModalOpen = ref(false);
-const isCreateComplianceModalOpen = ref(false);
-const currentPage = ref<number>(1);
-
-const loading = ref(false);
-const isSubmitting = ref(false);
-
-const selectedComplianceIds = ref<string[]>([]);
-
-const showDeleteConfirmation = ref(false);
-
-const headers = ["Sélection", "Nom", "Type", "Statut", "Actions"];
 
 function getTypeLabel(value: string): string {
   return value ? complianceTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
@@ -127,20 +120,6 @@ const closeCreateComplianceModal = () => {
   isCreateComplianceModalOpen.value = false;
 };
 
-function saveComplianceChanges() {
-  if (selectedCompliance.value) {
-    const index = localCompliances.value.findIndex((Compliance) => Compliance.id === selectedCompliance.value?.id);
-    if (index !== -1) {
-      localCompliances.value[index] = { ...selectedCompliance.value };
-    }
-  }
-  if (isComplianceModalOpen.value) {
-    closeComplianceModal();
-  } else if (isCreateComplianceModalOpen.value) {
-    closeCreateComplianceModal();
-  }
-}
-
 function removeSelectedCompliances() {
   if (selectedComplianceIds.value.length === 0) {
     toaster.addErrorMessage("Aucune sélection.");
@@ -160,6 +139,18 @@ function cancelDelete() {
   showDeleteConfirmation.value = false;
 }
 
+rows.value = localCompliances.value.map((compliance: any) => [
+  compliance.id,
+  compliance.name,
+  getTypeLabel(compliance.type),
+  getStatusLabel(compliance.status),
+  {
+    component: "DsfrButton",
+    label: "Modifier",
+    onClick: () => openComplianceModal(compliance),
+  },
+]);
+
 watch(
   () => props.application.compliances,
   (newVal) => {
@@ -167,7 +158,25 @@ watch(
   },
   { deep: true, immediate: true },
 );
+watch(
+  localCompliances,
+  () => {
+    rows.value = localCompliances.value.map((compliance) => [
+      compliance.id,
+      compliance.name,
+      getTypeLabel(compliance.type),
+      getStatusLabel(compliance.status),
+      {
+        component: "DsfrButton",
+        label: "Modifier",
+        onClick: () => openComplianceModal(compliance),
+      },
+    ]);
+  },
+  { deep: true },
+);
 </script>
+
 <template>
   <div class="fr-grid-row fr-grid-row--gutters">
     <div class="fr-col-12">
@@ -189,98 +198,131 @@ watch(
                 </div>
               </div>
               <div class="global-delete">
-                <DsfrButton type="button" tertiary @click="removeSelectedCompliances" :disabled="selectedComplianceIds.length === 0">
+                <DsfrButton
+                  type="button"
+                  tertiary
+                  @click="removeSelectedCompliances"
+                  icon="fr-icon-delete-line"
+                  :disabled="selectedComplianceIds.length === 0"
+                >
                   Supprimer la sélection
                 </DsfrButton>
               </div>
-              <div class="fr-container fr-my-2v w-[800px]">
-                <DsfrTable
-                  v-model:current-page="currentPage"
-                  title="Liste des conformités associés"
-                  :headers="headers"
-                  pagination
-                  :rows-per-page="10"
-                  :pagination-options="[10, 20, 30]"
-                  bottom-action-bar-class="pagination-bottom-bar"
-                  pagination-wrapper-class="pagination-wrapper"
-                >
-                  <tr v-for="compliance in localCompliances" :key="compliance.id">
-                    <td>
-                      <input type="checkbox" :value="compliance.id" v-model="selectedComplianceIds" />
-                    </td>
-                    <td>{{ compliance.name }}</td>
-                    <td>{{ getTypeLabel(compliance.type) }}</td>
-                    <td>{{ getStatusLabel(compliance.status) }}</td>
-                    <td>
-                      <DsfrButton type="button" @click="openComplianceModal(compliance)">Éditer</DsfrButton>
-                    </td>
-                  </tr>
-                </DsfrTable>
-              </div>
-              <DsfrModal :opened="isCreateComplianceModalOpen" title="Ajouter un lien" size="lg" @close="closeCreateComplianceModal">
-                <ComplianceForm
-                  v-if="application"
-                  :application="application"
-                  :is-submitting="isSubmitting"
-                  @submit="handleSaveCompliances"
-                  @cancel="closeCreateComplianceModal"
-                  @save-Compliances="handleSaveCompliances"
-                />
-              </DsfrModal>
-              <DsfrModal :opened="isComplianceModalOpen" title="Modifier la conformité" size="lg" @close="closeComplianceModal">
-                <ComplianceForm
-                  v-if="application"
-                  :initial-data="selectedCompliance"
-                  :application="application"
-                  :is-submitting="isSubmitting"
-                  @submit="handleSaveCompliances"
-                  @update:application="handleApplicationUpdate"
-                  @cancel="closeComplianceModal"
-                />
-              </DsfrModal>
-
-              <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
-                <p>Êtes-vous sûr de vouloir supprimer les conformités sélectionnées ? Cette action est irréversible.</p>
-                <div class="actions">
-                  <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
-                  <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
+              <div class="fr-container fr-my-2v w-[100%]" style="height: auto">
+                <div v-if="rows.length === 0" class="text-center">
+                  <p>Aucune conformité enregistrée.</p>
                 </div>
-              </DsfrModal>
+                <DsfrDataTable
+                  v-else
+                  v-model:selection="selectedComplianceIds"
+                  v-model:current-page="currentPage"
+                  :headers-row="headers"
+                  :rows="rows"
+                  row-key="id"
+                  title="Liste des conformités associées"
+                  pagination
+                  :rows-per-page="5"
+                  :pagination-options="[5, 10, 20, 30]"
+                  bottom-action-bar-class="bottom-action-bar-class"
+                  pagination-wrapper-class="pagination-wrapper-class"
+                  sorted="id"
+                  :sortable-rows="['id']"
+                >
+                  <template #cell="{ colKey, cell }">
+                    <template v-if="colKey === 'Sélection'">
+                      <input type="checkbox" :value="cell" v-model="selectedComplianceIds" />
+                    </template>
+                    <template v-else-if="colKey === 'Actions'">
+                      <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+                    </template>
+                    <template v-else>
+                      {{ cell }}
+                    </template>
+                  </template>
+                </DsfrDataTable>
+              </div>
             </slot>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <DsfrModal :opened="isCreateComplianceModalOpen" title="Ajouter un lien" size="lg" @close="closeCreateComplianceModal">
+    <ComplianceForm
+      v-if="application"
+      :application="application"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveCompliances"
+      @cancel="closeCreateComplianceModal"
+    />
+  </DsfrModal>
+  <DsfrModal :opened="isComplianceModalOpen" title="Modifier la conformité" size="lg" @close="closeComplianceModal">
+    <ComplianceForm
+      v-if="application"
+      :initial-data="selectedCompliance"
+      :application="application"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveCompliances"
+      @cancel="closeComplianceModal"
+    />
+  </DsfrModal>
+  <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
+    <p>Êtes-vous sûr de vouloir supprimer les conformités sélectionnées ? Cette action est irréversible.</p>
+    <div class="actions">
+      <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
+      <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
+    </div>
+  </DsfrModal>
 </template>
 
 <style scoped>
-.compliance-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+.fr-container {
+  height: auto;
+  max-height: 100%;
+  overflow: auto;
 }
 
-.compliance-card {
-  background: white;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  width: calc(33.333% - 1rem);
+.fr-card {
+  height: 100%;
+}
+.fr-card__content {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
 }
 
-.select-checkbox {
-  align-self: flex-start;
-  margin-bottom: 0.5rem;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.global-delete {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .actions {
+  margin-top: 1.5rem;
   display: flex;
   justify-content: flex-end;
-  margin-top: 1.5rem;
   gap: 1rem;
+}
+
+.edit-btn {
+  font-size: 0.85rem;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid var(--dsfr-border, #ccc);
+  position: relative;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 </style>

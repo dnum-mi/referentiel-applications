@@ -4,6 +4,7 @@ import type { Application } from "@/models/Application";
 import { onMounted, ref } from "vue";
 import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
+import type { AnomalyNotificationStatus } from "../../../backend/src/enum";
 
 const props = defineProps<{ application: Application }>();
 
@@ -11,34 +12,31 @@ const notifications = ref<any[]>([]);
 
 const statuses = Object.keys(statusDictionary);
 
-const rowsPerPage = ref(10);
 const currentPage = ref(0);
-const totalNotifications = computed(() => notifications.value.length);
 
-const paginatedNotifications = computed(() => {
-  const start = currentPage.value * rowsPerPage.value;
-  const end = start + rowsPerPage.value;
-  return notifications.value.slice(start, end);
-});
-
-const pages = computed(() => {
-  const totalPages = Math.max(1, Math.ceil(totalNotifications.value / rowsPerPage.value));
-  return Array.from({ length: totalPages }, (_, i) => ({
-    title: `${i + 1}`,
-    href: `#${i + 1}`,
-    label: `${i + 1}`,
-  }));
-});
+const headers = ["Notifié par", "Description", "Date de création", "Statut"];
+const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
 
 const loadNotifications = async () => {
   try {
     const notificationList = await Issue.getNotificationsByApplicationId(props.application.id);
-    console.log("Notifications récupérées:", notificationList);
     notifications.value = notificationList;
 
     notifications.value.forEach((notification) => {
       notification.statu = statuses[0];
     });
+
+    rows.value = notificationList.map((report: any) => [
+      report.notifier.email,
+      { component: "div", class: "description-cell", content: report.description },
+      formatDate(report.createdAt),
+      {
+        component: "DsfrTag",
+        icon: statusIconClasses[report.status],
+        label: statusDictionary[report.status],
+        class: report.status,
+      },
+    ]);
   } catch (error) {
     console.error("Une erreur est survenue lors du chargement des notifications :", error);
   }
@@ -50,36 +48,37 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="fr-container fr-my-2v">
-    <div v-if="notifications && notifications.length > 0">
-      <ul class="fr-list fr-list--unstyled">
-        <li v-for="(notification, index) in paginatedNotifications" :key="index" class="bg-contrast-grey fr-mt-2w">
-          <header class="fr-grid-row fr-grid-row--middle fr-px-3w no-wrap">
-            <div class="fr-text--sm text-grey-380">
-              <strong>Notifié par:</strong> <span class="fr-text--bold">{{ notification.notifier.email }}</span>
-            </div>
-            <p class="fr-text--sm text-grey-380">
-              <DsfrTag
-                :label="statusDictionary[notification.status]"
-                :icon="statusIconClasses[notification.status]"
-                :class="notification.status"
-              />
-            </p>
-            <p class="fr-text--sm"><strong>Date de création:</strong> {{ formatDate(notification.createdAt) }}</p>
-          </header>
-          <div class="description-content">
-            <p class="">{{ notification.description }}</p>
-          </div>
-        </li>
-      </ul>
+  <div class="fr-container fr-my-2v w-[100%]" style="height: auto">
+    <div v-if="rows.length === 0" class="text-center">
+      <p>Aucun lien enregistré.</p>
     </div>
-
-    <div v-else>
-      <p>Aucune notification disponible.</p>
-    </div>
-  </section>
-  <div class="fr-flex-container">
-    <DsfrPagination v-model:current-page="currentPage" :pages="pages" />
+    <DsfrDataTable
+      v-else
+      v-model:current-page="currentPage"
+      :headers-row="headers"
+      :rows="rows"
+      row-key="id"
+      title="Liste des notifications associées"
+      pagination
+      :rows-per-page="5"
+      :pagination-options="[5, 10, 20, 30]"
+      bottom-action-bar-class="bottom-action-bar-class"
+      pagination-wrapper-class="pagination-wrapper-class"
+      sorted="id"
+      :sortable-rows="['id']"
+    >
+      <template #cell="{ colKey, cell }">
+        <template v-if="colKey === 'Statut'">
+          <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" />
+        </template>
+        <template v-else-if="colKey === 'Description'">
+          <div :class="cell.class">{{ cell.content }}</div>
+        </template>
+        <template v-else>
+          {{ cell }}
+        </template>
+      </template>
+    </DsfrDataTable>
   </div>
 </template>
 
@@ -97,14 +96,6 @@ onMounted(() => {
 :deep(.done) {
   color: var(--success-425-625);
   background-color: var(--success-950-100);
-}
-
-.fr-container {
-  padding: 1em;
-  margin: 1em;
-  background-color: #f9f9f9;
-  max-height: 500px;
-  overflow-y: auto;
 }
 
 .fr-list {
@@ -175,5 +166,11 @@ onMounted(() => {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
+}
+/* Permet d'afficher les retours à la ligne et d'ajuster la hauteur */
+.description-cell {
+  white-space: pre-wrap; /* Garde les sauts de ligne */
+  word-wrap: break-word; /* Coupe les mots longs */
+  max-width: 300px; /* Ajuste selon ton besoin */
 }
 </style>

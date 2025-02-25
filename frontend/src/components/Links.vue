@@ -14,13 +14,8 @@ const props = defineProps({
   },
   title: { type: String, default: "" },
   icon: { type: String, default: "" },
-  noBorder: { type: Boolean, default: false },
+  noBorder: { type: Boolean, default: true },
 });
-
-function handleApplicationUpdate(updatedApplication) {
-  props.application.value = updatedApplication;
-  console.log("Application mise à jour:", updatedApplication);
-}
 
 const emit = defineEmits(["update:application"]);
 
@@ -28,18 +23,18 @@ const localLinks = ref<ExternalRessource[]>(
   Array.isArray(props.application.externalRessource) ? [...props.application.externalRessource] : [],
 );
 const selectedLink = ref<ExternalRessource | null>(null);
+const selectedLinkIds = ref<string[]>([]);
+
 const isLinkModalOpen = ref(false);
 const isCreateLinkModalOpen = ref(false);
-const currentPage = ref<number>(1);
+const showDeleteConfirmation = ref(false);
 
 const loading = ref(false);
 const isSubmitting = ref(false);
 
-const selectedLinkIds = ref<string[]>([]);
-
-const showDeleteConfirmation = ref(false);
-
+const currentPage = ref<number>(0);
 const headers = ["Sélection", "Lien", "Description", "Type de lien", "Actions"];
+const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
 
 const linkTypesDict = {
   documentation: "Documentation",
@@ -47,14 +42,13 @@ const linkTypesDict = {
   service: "Service",
 };
 
-const hasChanges = computed(() => JSON.stringify(localLinks.value) !== JSON.stringify(props.application.externalRessource));
+function getTypeLabel(value: string): string {
+  return value ? linkTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
+}
 
 function formatLink(url: string): string {
   if (!url || typeof url !== "string") return "";
   return url.startsWith("http") ? url : "http://" + url;
-}
-function getTypeLabel(value: string): string {
-  return value ? linkTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
 }
 
 const handleSaveLinks = (newLink) => {
@@ -84,7 +78,6 @@ async function saveAll() {
       ...props.application,
       externalRessource: linksToSave,
     });
-    console.log("Link.vue: ", linksToSave);
     emit("update:application", {
       ...props.application,
       externalRessource: linksToSave,
@@ -120,20 +113,6 @@ const closeCreateLinkModal = () => {
   isCreateLinkModalOpen.value = false;
 };
 
-function saveLinkChanges() {
-  if (selectedLink.value) {
-    const index = localLinks.value.findIndex((link) => link.id === selectedLink.value?.id);
-    if (index !== -1) {
-      localLinks.value[index] = { ...selectedLink.value };
-    }
-  }
-  if (isLinkModalOpen.value) {
-    closeLinkModal();
-  } else if (isCreateLinkModalOpen.value) {
-    closeCreateLinkModal();
-  }
-}
-
 function removeSelectedLinks() {
   if (selectedLinkIds.value.length === 0) {
     toaster.addErrorMessage("Aucune sélection.");
@@ -153,12 +132,47 @@ function cancelDelete() {
   showDeleteConfirmation.value = false;
 }
 
+rows.value = localLinks.value.map((link: any) => [
+  link.id,
+  {
+    label: link.link || "Lien vide",
+    to: formatLink(link.link),
+  },
+  link.description || "Description vide",
+  getTypeLabel(link.type),
+  {
+    component: "DsfrButton",
+    label: "Modifier",
+    onClick: () => openLinkModal(link),
+  },
+]);
+
 watch(
   () => props.application.externalRessource,
   (newVal) => {
     localLinks.value = Array.isArray(newVal) ? [...newVal] : [];
   },
   { deep: true, immediate: true },
+);
+watch(
+  localLinks,
+  () => {
+    rows.value = localLinks.value.map((link) => [
+      link.id,
+      {
+        label: link.link || "Lien vide",
+        to: formatLink(link.link),
+      },
+      link.description || "Description vide",
+      getTypeLabel(link.type),
+      {
+        component: "DsfrButton",
+        label: "Modifier",
+        onClick: () => openLinkModal(link),
+      },
+    ]);
+  },
+  { deep: true },
 );
 </script>
 
@@ -183,114 +197,110 @@ watch(
                 </div>
               </div>
               <div class="global-delete">
-                <DsfrButton type="button" tertiary @click="removeSelectedLinks" :disabled="selectedLinkIds.length === 0">
+                <DsfrButton
+                  type="button"
+                  tertiary
+                  @click="removeSelectedLinks"
+                  icon="fr-icon-delete-line"
+                  :disabled="selectedLinkIds.length === 0"
+                >
                   Supprimer la sélection
                 </DsfrButton>
               </div>
-              <div class="fr-container fr-my-2v w-[800px]">
-                <DsfrTable
-                  v-model:current-page="currentPage"
-                  title="Liste des liens associés"
-                  :headers="headers"
-                  pagination
-                  :rows-per-page="10"
-                  :pagination-options="[10, 20, 30]"
-                  bottom-action-bar-class="pagination-bottom-bar"
-                  pagination-wrapper-class="pagination-wrapper"
-                >
-                  <tr v-for="link in localLinks" :key="link.id">
-                    <td>
-                      <input type="checkbox" :value="link.id" v-model="selectedLinkIds" />
-                    </td>
-                    <td>
-                      <a :href="formatLink(link.link)" target="_blank" rel="noopener noreferrer">
-                        {{ link.link || "Lien vide" }}
-                      </a>
-                    </td>
-                    <td>{{ link.description || "Description vide" }}</td>
-                    <td>{{ getTypeLabel(link.type) }}</td>
-                    <td>
-                      <DsfrButton type="button" @click="openLinkModal(link)">Éditer</DsfrButton>
-                    </td>
-                  </tr>
-                </DsfrTable>
-              </div>
-              <DsfrModal :opened="isCreateLinkModalOpen" title="Ajouter un lien" size="lg" @close="closeCreateLinkModal">
-                <LinkForm
-                  v-if="application"
-                  :application="application"
-                  :is-submitting="isSubmitting"
-                  @submit="handleSaveLinks"
-                  @cancel="closeCreateLinkModal"
-                  @save-links="handleSaveLinks"
-                />
-              </DsfrModal>
-              <DsfrModal :opened="isLinkModalOpen" title="Modifier le lien" size="lg" @close="closeLinkModal">
-                <LinkForm
-                  v-if="application"
-                  :initial-data="selectedLink"
-                  :application="application"
-                  :is-submitting="isSubmitting"
-                  @submit="handleSaveLinks"
-                  @update:application="handleApplicationUpdate"
-                  @cancel="closeLinkModal"
-                  @save-links="handleSaveLinks"
-                />
-              </DsfrModal>
-
-              <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
-                <p>Êtes-vous sûr de vouloir supprimer les liens sélectionnés ? Cette action est irréversible.</p>
-                <div class="actions">
-                  <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
-                  <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
+              <div class="fr-container fr-my-2v w-[100%]" style="height: auto">
+                <div v-if="rows.length === 0" class="text-center">
+                  <p>Aucun lien enregistré.</p>
                 </div>
-              </DsfrModal>
+                <DsfrDataTable
+                  v-else
+                  v-model:selection="selectedLinkIds"
+                  v-model:current-page="currentPage"
+                  :headers-row="headers"
+                  :rows="rows"
+                  row-key="id"
+                  title="Liste des liens associés"
+                  pagination
+                  :rows-per-page="5"
+                  :pagination-options="[5, 10, 20, 30]"
+                  bottom-action-bar-class="bottom-action-bar-class"
+                  pagination-wrapper-class="pagination-wrapper-class"
+                  sorted="id"
+                  :sortable-rows="['id']"
+                >
+                  <template #cell="{ colKey, cell }">
+                    <template v-if="colKey === 'Sélection'">
+                      <input type="checkbox" :value="cell" v-model="selectedLinkIds" />
+                    </template>
+                    <template v-else-if="colKey === 'Lien'">
+                      <a :href="cell.to" target="_blank" rel="noopener noreferrer">
+                        {{ cell.label }}
+                      </a>
+                    </template>
+                    <template v-else-if="colKey === 'Actions'">
+                      <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+                    </template>
+                    <template v-else>
+                      {{ cell }}
+                    </template>
+                  </template>
+                </DsfrDataTable>
+              </div>
             </slot>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <DsfrModal :opened="isCreateLinkModalOpen" title="Ajouter un lien" size="lg" @close="closeCreateLinkModal">
+    <LinkForm
+      v-if="application"
+      :application="application"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveLinks"
+      @cancel="closeCreateLinkModal"
+    />
+  </DsfrModal>
+  <DsfrModal :opened="isLinkModalOpen" title="Modifier le lien" size="lg" @close="closeLinkModal">
+    <LinkForm
+      v-if="application"
+      :initial-data="selectedLink"
+      :application="application"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveLinks"
+      @cancel="closeLinkModal"
+    />
+  </DsfrModal>
+
+  <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
+    <p>Êtes-vous sûr de vouloir supprimer les liens sélectionnés ? Cette action est irréversible.</p>
+    <div class="actions">
+      <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
+      <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
+    </div>
+  </DsfrModal>
 </template>
 
 <style scoped>
+.fr-container {
+  height: auto;
+  max-height: 100%;
+  overflow: auto;
+}
+
+.fr-card {
+  height: 100%;
+}
+.fr-card__content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-}
-.link-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
-
-.link-table th,
-.link-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--dsfr-border, #ccc);
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.link-table td {
-  max-width: 200px;
-}
-
-.link-table th {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.link-table tbody tr:nth-child(even) {
-  background-color: var(--dsfr-gray-50, #fbfbfb);
-}
-
-.link-table tbody tr:hover {
-  background-color: var(--dsfr-gray-100, #f7f7f7);
 }
 
 .global-delete {
@@ -310,46 +320,14 @@ watch(
   font-size: 0.85rem;
 }
 
-.pagination-wrapper {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  align-items: center;
-  margin-top: 20px;
-  padding: 10px;
-}
-
-.pagination-wrapper .fr-btn {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  border-radius: 0.375rem;
-  transition: background-color 0.3s ease;
-}
-
-.pagination-wrapper .fr-btn:hover {
-  background-color: var(--dsfr-primary-color, #0052cc);
-  color: #fff;
-}
-
-.pagination-wrapper .fr-btn--current {
-  background-color: var(--dsfr-primary-color, #0052cc);
-  color: #fff;
-  font-weight: bold;
-}
-
-.pagination-bottom-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  background-color: var(--dsfr-gray-10, #f9f9f9);
-  border-radius: 0.375rem;
-}
-
-@media (max-width: 768px) {
-  .pagination-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid var(--dsfr-border, #ccc);
+  position: relative;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 </style>

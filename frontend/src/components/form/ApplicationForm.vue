@@ -51,20 +51,6 @@ const removeTag = (index: number) => {
     form.value.tags.push("");
   }
 };
-/*
-const handleSubmit = () => {
-  const purposes = form.value.purposes.filter((p) => p.trim() !== "");
-  const tags = form.value.tags.filter((t) => t.trim() !== "");
-
-  emit("submit", {
-    label: form.value.label,
-    shortName: form.value.shortName || null,
-    logo: form.value.logo || null,
-    description: form.value.description,
-    purposes,
-    tags,
-  });
-};*/
 </script>
 
 <template>

@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { Link } from "@/core/application/dto/ApplicationDTO";
-import type { ExternalRessource } from "@/models/Application";
-import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
-import Applications from "@/api/application";
-
-const toaster = useToaster();
 
 const props = defineProps({
   application: {
@@ -31,14 +26,6 @@ const props = defineProps({
   },
 });
 
-const localLinks = ref<ExternalRessource[]>(
-  Array.isArray(props.application?.externalRessource) ? [...props.application.externalRessource] : [],
-);
-const selectedLink = ref<ExternalRessource | null>(null);
-const showModal = ref(false);
-const isLinkModalOpen = ref(false);
-const loading = ref(false);
-
 const linkTypesDict = {
   documentation: "Documentation",
   supervision: "Supervision",
@@ -60,53 +47,11 @@ const form = ref({
   description: props.initialData?.description ?? "",
 });
 
-function formatLink(url: string): string {
-  if (!url || typeof url !== "string") return "";
-  return url.startsWith("http") ? url : "http://" + url;
-}
 const emit = defineEmits(["update:application", "submit"]);
 
 const handleSubmit = () => {
   emit("submit", form.value);
 };
-
-function getTypeLabel(value: string): string {
-  return value ? linkTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
-}
-
-async function saveAll() {
-  for (const link of localLinks.value) {
-    if (!link.link.trim()) {
-      toaster.addErrorMessage("Le lien est requis pour tous les liens.");
-      return;
-    }
-  }
-  if (form.value) {
-    const index = localLinks.value.findIndex((link) => link.id === form.value?.id);
-    if (index !== -1) {
-      localLinks.value[index] = { ...localLinks.value[index], ...form.value };
-    } else {
-      localLinks.value.push({ ...form.value });
-    }
-  }
-
-  const existingIds = new Set((props.application.externalRessource || []).map((l: ExternalRessource) => l.id));
-  const linksToSave = localLinks.value.map((link) => (existingIds.has(link.id) ? link : { ...link, id: undefined }));
-
-  loading.value = true;
-  try {
-    const updatedApplication = await Applications.patchApplication({
-      ...props.application,
-      externalRessource: linksToSave,
-    });
-    emit("update:application", updatedApplication);
-    toaster.addSuccessMessage("Lien sauvegardé avec succès !");
-  } catch (error) {
-    toaster.addErrorMessage("Erreur lors de la sauvegarde des liens.");
-  } finally {
-    loading.value = false;
-  }
-}
 </script>
 <template>
   <form @submit.prevent="handleSubmit">

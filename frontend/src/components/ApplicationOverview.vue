@@ -6,7 +6,6 @@ import Links from "./Links.vue";
 import ActorManager from "./ActorManager.vue";
 import Compliances from "./Compliances.vue";
 import type { Application } from "@/models/Application";
-import Applications from "@/api/application";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
@@ -64,23 +63,23 @@ const tabTitles = [
       </DsfrTabItem>
     </template>
 
-    <DsfrTabContent v-if="activeTab === 0" panel-id="tab-content-0" tab-id="tab-0">
+    <DsfrTabContent v-show="activeTab === 0" panel-id="tab-content-0" tab-id="tab-0">
       <InformationsGenerales :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
-    <DsfrTabContent v-if="activeTab === 1" panel-id="tab-content-1" tab-id="tab-1">
+    <DsfrTabContent v-show="activeTab === 1" panel-id="tab-content-1" tab-id="tab-1">
       <Links :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
-    <DsfrTabContent v-if="activeTab === 2" panel-id="tab-content-2" tab-id="tab-2">
+    <DsfrTabContent v-show="activeTab === 2" panel-id="tab-content-2" tab-id="tab-2">
       <Compliances :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
-    <DsfrTabContent v-if="activeTab === 3" panel-id="tab-content-3" tab-id="tab-3">
-      <ActorManager :application="application" />
+    <DsfrTabContent v-show="activeTab === 3" panel-id="tab-content-3" tab-id="tab-3">
+      <ActorManager :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
-    <DsfrTabContent v-if="activeTab === 4" panel-id="tab-content-4" tab-id="tab-4">
+    <DsfrTabContent v-show="activeTab === 4" panel-id="tab-content-4" tab-id="tab-4">
       <NotificationsApplication :application="application" />
     </DsfrTabContent>
   </DsfrTabs>
