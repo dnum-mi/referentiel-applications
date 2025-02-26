@@ -14,7 +14,6 @@ const emit = defineEmits(["update:application"]);
 
 const props = defineProps<{
   application: Application;
-  noBorder?: boolean;
   tags: string[];
   small?: boolean;
 }>();
@@ -74,7 +73,7 @@ watch(
 <template>
   <div class="fr-grid-row fr-grid-row--gutters">
     <div class="fr-col-8">
-      <div class="fr-card" :class="{ 'fr-card--no-border': noBorder }">
+      <div class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content">
             <slot>
@@ -140,16 +139,6 @@ watch(
 </template>
 
 <style scoped>
-.fr-card {
-  height: 100%;
-}
-
-.fr-card__content {
-  height: auto;
-  display: flex;
-  flex-direction: column;
-}
-
 .fr-tags-group {
   display: flex;
   flex-wrap: wrap;

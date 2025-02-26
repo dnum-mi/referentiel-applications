@@ -4,18 +4,6 @@ import type { Link } from "@/core/application/dto/ApplicationDTO";
 import { defineProps, defineEmits } from "vue";
 
 const props = defineProps({
-  application: {
-    type: Object,
-    required: true,
-  },
-  title: {
-    type: String,
-    default: "",
-  },
-  icon: {
-    type: String,
-    default: "",
-  },
   initialData: {
     type: Object as PropType<Link>,
     required: false,

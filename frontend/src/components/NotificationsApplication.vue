@@ -48,38 +48,36 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fr-container fr-my-2v w-[100%]" style="height: auto">
-    <div v-if="rows.length === 0" class="text-center">
-      <p>Aucun lien enregistré.</p>
-    </div>
-    <DsfrDataTable
-      v-else
-      v-model:current-page="currentPage"
-      :headers-row="headers"
-      :rows="rows"
-      row-key="id"
-      title="Liste des notifications associées"
-      pagination
-      :rows-per-page="5"
-      :pagination-options="[5, 10, 20, 30]"
-      bottom-action-bar-class="bottom-action-bar-class"
-      pagination-wrapper-class="pagination-wrapper-class"
-      sorted="id"
-      :sortable-rows="['id']"
-    >
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Statut'">
-          <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" />
-        </template>
-        <template v-else-if="colKey === 'Description'">
-          <div :class="cell.class">{{ cell.content }}</div>
-        </template>
-        <template v-else>
-          {{ cell }}
-        </template>
-      </template>
-    </DsfrDataTable>
+  <div v-if="rows.length === 0" class="text-center">
+    <p>Aucun lien enregistré.</p>
   </div>
+  <DsfrDataTable
+    v-else
+    v-model:current-page="currentPage"
+    :headers-row="headers"
+    :rows="rows"
+    row-key="id"
+    title="Liste des notifications associées"
+    pagination
+    :rows-per-page="5"
+    :pagination-options="[5, 10, 20, 30]"
+    bottom-action-bar-class="bottom-action-bar-class"
+    pagination-wrapper-class="pagination-wrapper-class"
+    sorted="id"
+    :sortable-rows="['id']"
+  >
+    <template #cell="{ colKey, cell }">
+      <template v-if="colKey === 'Statut'">
+        <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" />
+      </template>
+      <template v-else-if="colKey === 'Description'">
+        <div :class="cell.class">{{ cell.content }}</div>
+      </template>
+      <template v-else>
+        {{ cell }}
+      </template>
+    </template>
+  </DsfrDataTable>
 </template>
 
 <style scoped>

@@ -4,18 +4,6 @@ import { defineProps, defineEmits } from "vue";
 import type { Actor } from "@/models/Application";
 
 const props = defineProps({
-  application: {
-    type: Object,
-    required: true,
-  },
-  title: {
-    type: String,
-    default: "",
-  },
-  icon: {
-    type: String,
-    default: "",
-  },
   initialData: {
     type: Object as PropType<Actor>,
     required: false,
