@@ -1,17 +1,15 @@
 import { exec } from 'child_process';
 import { PrismaClient } from '@prisma/client';
 
+const testDbName = 'test';
+const testDatabaseUrl = `postgresql://postgres:password@postgres:5432/${testDbName}`;
+
 export async function createTestDatabase() {
   const prisma = new PrismaClient();
-  const testDbName = `test`;
-
   await prisma.$executeRawUnsafe(`CREATE DATABASE ${testDbName};`);
   console.log(`Test database ${testDbName} created.`);
 
-  // Save the test database URL for Prisma
-  const testDatabaseUrl = `postgresql://postgres:password@postgres:5432/${testDbName}`;
   process.env.DATABASE_URL = testDatabaseUrl;
-
   console.log(`DATABASE_URL set to ${testDatabaseUrl}`);
 
   await prisma.$connect();
@@ -19,7 +17,6 @@ export async function createTestDatabase() {
 }
 
 export async function deleteTestDatabase() {
-  const testDbName = `test`;
   const prisma = new PrismaClient({
     datasources: {
       db: {
