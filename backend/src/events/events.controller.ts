@@ -28,8 +28,17 @@ export class EventsController {
   ) {
     return this.service.create({
       ...createEventDto,
-      applicationId,
-      createdBy: request.user.keycloakId,
+      metadata: {
+        create: {
+          createdById: request.user.keycloakId,
+          updatedById: request.user.keycloakId,
+        },
+      },
+      application: {
+        connect: {
+          id: applicationId,
+        },
+      },
     });
   }
 

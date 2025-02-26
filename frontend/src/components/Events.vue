@@ -20,7 +20,6 @@ const event = ref({
   end: undefined as string | undefined,
   type: "under_construction",
   description: "",
-  applicationId: props.application.id,
 });
 
 async function createEvent() {
