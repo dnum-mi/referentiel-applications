@@ -10,8 +10,13 @@
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "globals": "^16.0.0",
     "husky": "^8.0.0",
-    "prettier": "3.3.3"
+    "prettier": "3.3.3",
+    "typescript-eslint": "^8.25.0"
   },
   "dependencies": {
     "jose": "^5.9.6"

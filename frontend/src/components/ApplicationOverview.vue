@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import type { Application } from "@/models/Application";
 import { ref, watch } from "vue";
-import InformationsGenerales from "./InformationsGenerales.vue";
-import NotificationsApplication from "./NotificationsApplication.vue";
-import Links from "./Links.vue";
 import ActorManager from "./ActorManager.vue";
 import Compliances from "./Compliances.vue";
-import type { Application } from "@/models/Application";
+import Events from "./Events.vue";
+import InformationsGenerales from "./InformationsGenerales.vue";
+import Links from "./Links.vue";
+import NotificationsApplication from "./NotificationsApplication.vue";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
@@ -25,37 +26,39 @@ const updateApplication = (updatedApp: Application) => {
 };
 
 const applicationTabListName = "Informations sur l’application";
-const tabTitles = [
-  { title: "Informations générales", icon: "ri-checkbox-circle-line", tabId: "tab-0", panelId: "tab-content-0" },
+const tabs = [
+  { title: "Informations générales", icon: "ri-checkbox-circle-line", component: InformationsGenerales },
+  {
+    title: "Événements",
+    icon: "ri-links-line",
+    component: Events,
+  },
   {
     title: "Liens",
     icon: "ri-links-line",
-    tabId: "tab-1",
-    panelId: "tab-content-1",
+    component: Links,
   },
   {
     title: "Conformités",
     icon: "ri-shield-check-line",
-    tabId: "tab-2",
-    panelId: "tab-content-2",
+    component: Compliances,
   },
   {
     title: "Acteurs",
     icon: "ri-team-line",
-    tabId: "tab-3",
-    panelId: "tab-content-3",
+    component: ActorManager,
   },
-  { title: "Signalements", icon: "ri-alert-line", tabId: "tab-4", panelId: "tab-content-4" },
+  { title: "Signalements", icon: "ri-alert-line", component: NotificationsApplication },
 ];
 </script>
 <template>
   <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName">
     <template #tab-items>
       <DsfrTabItem
-        v-for="(tab, index) in tabTitles"
-        :key="tab.tabId"
-        :tab-id="tab.tabId"
-        :panel-id="tab.panelId"
+        v-for="(tab, index) in tabs"
+        :key="index"
+        :tab-id="`tab-${index}`"
+        :panel-id="`tab-content-${index}`"
         :icon="tab.icon"
         @click="activeTab = index"
       >
@@ -63,24 +66,10 @@ const tabTitles = [
       </DsfrTabItem>
     </template>
 
-    <DsfrTabContent v-show="activeTab === 0" panel-id="tab-content-0" tab-id="tab-0">
-      <InformationsGenerales :application="application" @update:application="updateApplication" />
-    </DsfrTabContent>
-
-    <DsfrTabContent v-show="activeTab === 1" panel-id="tab-content-1" tab-id="tab-1">
-      <Links :application="application" @update:application="updateApplication" />
-    </DsfrTabContent>
-
-    <DsfrTabContent v-show="activeTab === 2" panel-id="tab-content-2" tab-id="tab-2">
-      <Compliances :application="application" @update:application="updateApplication" />
-    </DsfrTabContent>
-
-    <DsfrTabContent v-show="activeTab === 3" panel-id="tab-content-3" tab-id="tab-3">
-      <ActorManager :application="application" @update:application="updateApplication" />
-    </DsfrTabContent>
-
-    <DsfrTabContent v-show="activeTab === 4" panel-id="tab-content-4" tab-id="tab-4">
-      <NotificationsApplication :application="application" />
-    </DsfrTabContent>
+    <template v-for="(tab, index) in tabs">
+      <DsfrTabContent v-show="activeTab === index" :panel-id="`tab-content-${index}`" :tab-id="`tab-${index}`">
+        <component :is="tab.component" :application="application" @update:application="updateApplication" />
+      </DsfrTabContent>
+    </template>
   </DsfrTabs>
 </template>

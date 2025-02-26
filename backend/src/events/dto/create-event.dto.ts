@@ -17,8 +17,5 @@ export class CreateEventDto {
   description: string;
 
   @IsString()
-  metadataId: string;
-
-  @IsString()
   applicationId: string;
 }
