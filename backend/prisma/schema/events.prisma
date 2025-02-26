@@ -1,7 +1,7 @@
 model Event {
   id            String      @id @default(uuid())
-  start         DateTime?
-  end           DateTime?
+  start         DateTime?       @db.Date
+  end           DateTime?       @db.Date
   type          EventType
   description   String      @db.VarChar(255)
   metadataId    String
@@ -17,4 +17,5 @@ enum EventType {
   in_production
   decommissioned
   decommissioning
+  highlight
 }

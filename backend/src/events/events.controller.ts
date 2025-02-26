@@ -1,5 +1,6 @@
 import {
   Controller,
+  Req,
   Get,
   Post,
   Patch,
@@ -20,8 +21,11 @@ export class EventsController {
 
   @Post()
   @ApiResponse({ status: 201, type: Event })
-  create(@Body() createEventDto: CreateEventDto) {
-    return this.service.create(createEventDto);
+  create(@Req() request, @Body() createEventDto: CreateEventDto) {
+    return this.service.create({
+      ...createEventDto,
+      createdBy: request.user.keycloakId,
+    });
   }
 
   @Get()

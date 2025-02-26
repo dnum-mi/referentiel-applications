@@ -26,6 +26,8 @@ import { EventsModule } from './events/events.module';
 import { OrganizationModule } from './organization/organization.module';
 import { OrganizationController } from './organization/organization.controller';
 import { OrganizationService } from './organization/organization.service';
+import { MetadatasService } from './metadatas/metadatas.service';
+import { MetadatasModule } from './metadatas/metadatas.module';
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { OrganizationService } from './organization/organization.service';
       isGlobal: true,
     }),
     EventsModule,
+    MetadatasModule,
   ],
   controllers: [
     AppController,
@@ -57,6 +60,7 @@ import { OrganizationService } from './organization/organization.service';
     OrganizationService,
     CombinedInterceptor,
     AuthMiddleware,
+    MetadatasService,
   ],
 })
 export class AppModule implements NestModule {
