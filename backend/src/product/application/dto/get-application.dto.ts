@@ -23,9 +23,6 @@ export class GetApplicationDto {
   @IsArray()
   tags: string[];
 
-  @IsString()
-  lifecycleId: string;
-
   @IsOptional()
   @IsString()
   parentId?: string;

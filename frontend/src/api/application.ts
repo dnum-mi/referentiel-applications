@@ -40,13 +40,6 @@ const Applications = {
         description: app.description,
         purposes: app.purposes,
         tags: app.tags,
-        lifecycle: app.lifecycle
-          ? {
-              status: app.lifecycle.status,
-              firstProductionDate: app.lifecycle.firstProductionDate,
-              plannedDecommissioningDate: app.lifecycle.plannedDecommissioningDate,
-            }
-          : null,
         compliances: app.compliances
           ? app.compliances.map((compliance) => ({
               id: compliance.id,

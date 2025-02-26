@@ -5,12 +5,6 @@ import path from 'path';
 
 // Définitions des énumérations
 const enums = {
-  LifecycleStatus: [
-    'UNDER_CONSTRUCTION = "under_construction"',
-    'IN_PRODUCTION = "in_production"',
-    'DECOMMISSIONED = "decommissioned"',
-    'RETIRED_FROM_SERVICE = "retired_from_service"',
-  ],
   ComplianceType: [
     'REGULATION = "regulation"',
     'STANDARD = "standard"',

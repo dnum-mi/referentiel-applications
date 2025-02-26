@@ -6,8 +6,6 @@ model Application {
   description         String
   purposes            String[]
   tags                String[]
-  lifecycleId         String
-  lifecycle           Lifecycle             @relation("LifecycleApplications", fields: [lifecycleId], references: [id])
   metadataId          String
   metadata            Metadata              @relation("ApplicationMetadata", fields: [metadataId], references: [id])
   parentId            String?

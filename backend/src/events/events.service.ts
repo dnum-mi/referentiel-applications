@@ -13,11 +13,14 @@ export class EventsService extends BaseService<Event> {
   }
 
   async create(data: any): Promise<Event> {
-    const metadata = await this.metadatasService.create({
-      createdBy: data.createdBy,
-      updatedBy: data.createdBy,
+    return super.create({
+      ...data,
+      metadata: {
+        create: {
+          createdById: data.createdBy,
+          updatedById: data.createdBy,
+        },
+      },
     });
-
-    return super.create({ ...data, metadataId: metadata.id });
   }
 }
