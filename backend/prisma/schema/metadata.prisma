@@ -11,7 +11,6 @@ model Metadata {
   externals       External[]       @relation("ExternalsMetadata")
   externalSources ExternalSource[] @relation("ExternalSourcesMetadata")
   applications    Application[]    @relation("ApplicationMetadata")
-  lifecycles      Lifecycle[]      @relation("LifecycleMetadata")
   events          Event[]          @relation("EventMetadata")
   compliances     Compliance[]     @relation("ComplianceMetadata")
 

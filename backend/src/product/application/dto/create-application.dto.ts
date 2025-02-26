@@ -18,7 +18,6 @@ import {
   ComplianceStatus,
   ComplianceType,
   ExternalRessourceType,
-  LifecycleStatus,
 } from 'src/enum';
 
 export class CreateActorDto {
@@ -255,75 +254,6 @@ export class UpdateComplianceDto {
   notes?: string | null;
 }
 
-export class UpdateLifecycleDto {
-  @ApiProperty({
-    enum: LifecycleStatus,
-    required: false,
-  })
-  @IsEnum(LifecycleStatus)
-  @IsOptional()
-  status?: LifecycleStatus;
-
-  @ApiProperty({
-    example: '2023-11-22',
-    required: false,
-  })
-  @IsDateString()
-  @IsOptional()
-  firstProductionDate?: string;
-
-  @ApiProperty({
-    example: '2025-12-31',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  plannedDecommissioningDate?: string;
-
-  @ApiProperty({
-    example: 'metadata123',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  metadataId?: string;
-}
-export class CreateLifecycleDto {
-  @ApiProperty({
-    enum: LifecycleStatus,
-    description: 'Status of the lifecycle (e.g., in_production)',
-  })
-  @IsEnum(LifecycleStatus)
-  @IsOptional()
-  status: LifecycleStatus;
-
-  @ApiProperty({
-    example: '2023-11-22',
-    description: 'First production date (ISO 8601)',
-  })
-  @IsDateString()
-  @IsOptional()
-  firstProductionDate?: string;
-
-  @ApiProperty({
-    example: '2025-12-31',
-    description: 'Planned decommissioning date (ISO 8601)',
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  plannedDecommissioningDate?: string;
-
-  @ApiProperty({
-    example: 'metadata123',
-    description: 'Associated metadata ID',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  metadataId?: string;
-}
-
 export class UpdateExternalRessourceDto {
   @ApiHideProperty()
   @IsOptional()
@@ -451,14 +381,6 @@ export class CreateApplicationDto {
   @IsString()
   parentId?: string;
 
-  @ApiProperty({ type: CreateLifecycleDto })
-  @ValidateNested()
-  @Type(() => CreateLifecycleDto)
-  lifecycle: CreateLifecycleDto = {
-    status: LifecycleStatus.UNDER_CONSTRUCTION,
-    firstProductionDate: new Date().toISOString(),
-  };
-
   @ApiProperty({
     type: [CreateActorDto],
     description: "Liste des acteurs associés à l'application",
@@ -582,12 +504,6 @@ export class PatchApplicationDto {
   @IsOptional()
   @IsString()
   parentId?: string;
-
-  @ApiPropertyOptional({ type: UpdateLifecycleDto })
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => UpdateLifecycleDto)
-  lifecycle?: UpdateLifecycleDto;
 
   @ApiPropertyOptional({ type: [UpdateActorDto] })
   @IsOptional()

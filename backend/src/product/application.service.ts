@@ -183,9 +183,6 @@ export class ApplicationService {
     const application = await this.prisma.application.findUnique({
       where: { id },
       include: {
-        lifecycle: {
-          include: { metadata: true },
-        },
         actors: {
           include: {
             user: true,
@@ -318,22 +315,6 @@ export class ApplicationService {
       applicationUpdates.parent = data.parentId
         ? { connect: { id: data.parentId } }
         : { disconnect: true };
-    }
-    if (data.lifecycle !== undefined) {
-      applicationUpdates.lifecycle = {
-        update: {
-          ...(data.lifecycle.status !== undefined && {
-            status: data.lifecycle.status,
-          }),
-          ...(data.lifecycle.firstProductionDate !== undefined && {
-            firstProductionDate: data.lifecycle.firstProductionDate,
-          }),
-          ...(data.lifecycle.plannedDecommissioningDate !== undefined && {
-            plannedDecommissioningDate:
-              data.lifecycle.plannedDecommissioningDate,
-          }),
-        },
-      };
     }
   }
 

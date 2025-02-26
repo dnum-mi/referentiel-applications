@@ -16,21 +16,6 @@ export const applicationMap = (
       tags: createApplicationDto.tags,
       metadata: { connect: { id: applicationMetadataId } },
       owner: { connect: { keycloakId: ownerId } },
-      lifecycle: {
-        create: {
-          status: createApplicationDto.lifecycle.status,
-          firstProductionDate: new Date(
-            createApplicationDto.lifecycle.firstProductionDate || null,
-          ),
-          plannedDecommissioningDate: createApplicationDto.lifecycle
-            .plannedDecommissioningDate
-            ? new Date(
-                createApplicationDto.lifecycle.plannedDecommissioningDate,
-              )
-            : undefined,
-          metadata: { connect: { id: applicationMetadataId } },
-        },
-      },
       actors: {
         create: actorsToCreate,
       },
@@ -61,7 +46,6 @@ export const applicationMap = (
         : undefined,
     },
     include: {
-      lifecycle: { include: { metadata: true } },
       metadata: true,
       actors: {
         include: { user: true },

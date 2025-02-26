@@ -9,6 +9,7 @@ const TOKEN =
 describe('Events', () => {
   const getApp = setupTestSuite();
   const keycloakId = uuidv4();
+  const applicationId = uuidv4();
 
   beforeAll(async () => {
     const prismaService = new PrismaService();
@@ -18,12 +19,30 @@ describe('Events', () => {
         keycloakId: keycloakId,
       },
     });
+    await prismaService.application.create({
+      data: {
+        id: applicationId,
+        label: 'Test Application',
+        description: 'Test Application Description',
+        owner: {
+          connect: {
+            keycloakId: keycloakId,
+          },
+        },
+        metadata: {
+          create: {
+            createdById: keycloakId,
+            updatedById: keycloakId,
+          },
+        },
+      },
+    });
   });
 
-  it(`/GET events`, () => {
+  it(`/GET applications/:applicationId/events`, () => {
     const app = getApp();
     return request(app.getHttpServer())
-      .get('/events')
+      .get(`/applications/${applicationId}/events`)
       .set('Authorization', TOKEN)
       .expect(200);
   });

@@ -12,23 +12,15 @@ export interface Application {
   tags?: string[];
   parentId?: string;
   ownerId?: string;
-  lifecycleId?: string;
   metadataId?: string;
 
-  lifecycle?: Lifecycle;
   actors?: Actor[];
   compliances?: Compliance[];
   externals?: External[];
   externalRessource?: ExternalRessource[];
   parent?: Application;
 }
-export interface Lifecycle {
-  id: string;
-  status: string;
-  firstProductionDate?: string;
-  plannedDecommissioningDate?: string;
-  metadataId?: string;
-}
+
 export interface Actor {
   id?: string;
   role?: string;

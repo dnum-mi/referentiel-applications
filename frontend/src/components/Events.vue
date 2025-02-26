@@ -27,7 +27,7 @@ async function createEvent() {
   try {
     event.value.start = event.value.start ? new Date(event.value.start).toISOString() : undefined;
     event.value.end = event.value.end ? new Date(event.value.end).toISOString() : undefined;
-    const response = await axios.post(`events`, event.value);
+    const response = await axios.post(`applications/${props.application.id}/events`, event.value);
     toaster.addSuccessMessage("Événement créé avec succès !");
     fetchEvents();
   } catch (error) {
@@ -37,7 +37,7 @@ async function createEvent() {
 
 async function fetchEvents() {
   try {
-    const response = await axios.get(`events?applicationId=${props.application.id}`);
+    const response = await axios.get(`applications/${props.application.id}/events`);
     events.value = response.data;
     console.log(events.value);
   } catch (error) {
@@ -48,7 +48,7 @@ async function fetchEvents() {
 async function deleteEvent(eventId: number) {
   try {
     console.log(eventId);
-    await axios.delete(`events/${eventId}`);
+    await axios.delete(`applications/${props.application.id}/events/${eventId}`);
     toaster.addSuccessMessage("Événement supprimé avec succès !");
     fetchEvents();
   } catch (error) {
