@@ -20,7 +20,9 @@ export function setupTestSuite() {
   });
 
   afterEach(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   return () => app;
