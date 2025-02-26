@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
 import { MetadatasService } from '../metadatas/metadatas.service';
+import { application } from 'express';
 
 @Injectable()
 export class EventsService extends BaseService<Event> {
@@ -10,17 +11,5 @@ export class EventsService extends BaseService<Event> {
     private readonly metadatasService: MetadatasService,
   ) {
     super(prisma.event);
-  }
-
-  async create(data: any): Promise<Event> {
-    return super.create({
-      ...data,
-      metadata: {
-        create: {
-          createdById: data.createdBy,
-          updatedById: data.createdBy,
-        },
-      },
-    });
   }
 }
