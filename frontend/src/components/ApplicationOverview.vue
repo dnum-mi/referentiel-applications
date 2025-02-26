@@ -19,6 +19,11 @@ watch(
   },
 );
 
+const updateApplication = (updatedApp: Application) => {
+  Object.assign(application.value, updatedApp);
+  console.log(updatedApp);
+};
+
 const applicationTabListName = "Informations sur l’application";
 const tabTitles = [
   { title: "Informations générales", icon: "ri-checkbox-circle-line", tabId: "tab-0", panelId: "tab-content-0" },
@@ -29,7 +34,7 @@ const tabTitles = [
     panelId: "tab-content-1",
   },
   {
-    title: "Conformité",
+    title: "Conformités",
     icon: "ri-shield-check-line",
     tabId: "tab-2",
     panelId: "tab-content-2",
@@ -43,7 +48,6 @@ const tabTitles = [
   { title: "Signalements", icon: "ri-alert-line", tabId: "tab-4", panelId: "tab-content-4" },
 ];
 </script>
-
 <template>
   <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName">
     <template #tab-items>
@@ -59,24 +63,23 @@ const tabTitles = [
       </DsfrTabItem>
     </template>
 
-    <DsfrTabContent v-if="activeTab === 0" panel-id="tab-content-0" tab-id="tab-0">
-      <InformationsGenerales :application="application" />
+    <DsfrTabContent v-show="activeTab === 0" panel-id="tab-content-0" tab-id="tab-0">
+      <InformationsGenerales :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
-    <DsfrTabContent v-if="activeTab === 1" panel-id="tab-content-1" tab-id="tab-1">
-      <!-- Utilisation de la variable réactive "application" pour la cohérence -->
-      <Links :application="application" />
+    <DsfrTabContent v-show="activeTab === 1" panel-id="tab-content-1" tab-id="tab-1">
+      <Links :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
-    <DsfrTabContent v-if="activeTab === 2" panel-id="tab-content-2" tab-id="tab-2">
-      <Compliances :application="application" />
+    <DsfrTabContent v-show="activeTab === 2" panel-id="tab-content-2" tab-id="tab-2">
+      <Compliances :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
-    <DsfrTabContent v-if="activeTab === 3" panel-id="tab-content-3" tab-id="tab-3">
-      <ActorManager :application="application" />
+    <DsfrTabContent v-show="activeTab === 3" panel-id="tab-content-3" tab-id="tab-3">
+      <ActorManager :application="application" @update:application="updateApplication" />
     </DsfrTabContent>
 
-    <DsfrTabContent v-if="activeTab === 4" panel-id="tab-content-4" tab-id="tab-4">
+    <DsfrTabContent v-show="activeTab === 4" panel-id="tab-content-4" tab-id="tab-4">
       <NotificationsApplication :application="application" />
     </DsfrTabContent>
   </DsfrTabs>

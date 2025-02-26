@@ -8,11 +8,14 @@ export {};
 declare module 'vue' {
   export interface GlobalComponents {
     ActorActions: typeof import('./components/ActorActions.vue')['default']
+    ActorForm: typeof import('./components/form/ActorForm.vue')['default']
     ActorManager: typeof import('./components/ActorManager.vue')['default']
     AppDate: typeof import('./components/AppDate.vue')['default']
+    ApplicationForm: typeof import('./components/form/ApplicationForm.vue')['default']
     ApplicationList: typeof import('./components/ApplicationList.vue')['default']
     ApplicationOverview: typeof import('./components/ApplicationOverview.vue')['default']
     AppToaster: typeof import('./components/AppToaster.vue')['default']
+    ComplianceForm: typeof import('./components/form/ComplianceForm.vue')['default']
     Compliances: typeof import('./components/Compliances.vue')['default']
     DsfrAlert: typeof import('@gouvminint/vue-dsfr')['DsfrAlert']
     DsfrBreadcrumb: typeof import('@gouvminint/vue-dsfr')['DsfrBreadcrumb']
@@ -22,8 +25,8 @@ declare module 'vue' {
     DsfrFooter: typeof import('@gouvminint/vue-dsfr')['DsfrFooter']
     DsfrHeader: typeof import('@gouvminint/vue-dsfr')['DsfrHeader']
     DsfrInput: typeof import('@gouvminint/vue-dsfr')['DsfrInput']
+    DsfrInputGroup: typeof import('@gouvminint/vue-dsfr')['DsfrInputGroup']
     DsfrModal: typeof import('@gouvminint/vue-dsfr')['DsfrModal']
-    DsfrPagination: typeof import('@gouvminint/vue-dsfr')['DsfrPagination']
     DsfrSearchBar: typeof import('@gouvminint/vue-dsfr')['DsfrSearchBar']
     DsfrSelect: typeof import('@gouvminint/vue-dsfr')['DsfrSelect']
     DsfrTabContent: typeof import('@gouvminint/vue-dsfr')['DsfrTabContent']
@@ -32,6 +35,7 @@ declare module 'vue' {
     DsfrTag: typeof import('@gouvminint/vue-dsfr')['DsfrTag']
     ExportApplications: typeof import('./components/ExportApplications.vue')['default']
     InformationsGenerales: typeof import('./components/InformationsGenerales.vue')['default']
+    LinkForm: typeof import('./components/form/LinkForm.vue')['default']
     Links: typeof import('./components/Links.vue')['default']
     NotificationsApplication: typeof import('./components/NotificationsApplication.vue')['default']
     ReloadPrompt: typeof import('./components/ReloadPrompt.vue')['default']
@@ -39,6 +43,5 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchApplications: typeof import('./components/SearchApplications.vue')['default']
-    VIcon: typeof import('@gouvminint/vue-dsfr')['VIcon']
   }
 }

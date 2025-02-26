@@ -12,20 +12,24 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  title: { type: String, default: "" },
-  icon: { type: String, default: "" },
 });
 
 const emit = defineEmits(["update:application"]);
 
 const localActors = ref<Actor[]>(Array.isArray(props.application.actors) ? [...props.application.actors] : []);
+const selectedActorIds = ref<string[]>([]);
+const selectedActor = ref<Actor | null>(null);
 
-watch(
-  () => props.application.actors,
-  (newVal) => {
-    localActors.value = Array.isArray(newVal) ? [...newVal] : [];
-  },
-);
+const currentPage = ref<number>(0);
+const headers = ["Sélection", "Email", "Type", "Actions"];
+const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
+
+const isActorModalOpen = ref(false);
+const isCreateActorModalOpen = ref(false);
+const showDeleteConfirmation = ref(false);
+
+const isSubmitting = ref(false);
+const loading = ref(false);
 
 const actorTypeMapping: Record<string, string> = {
   Responsable: "Responsable",
@@ -38,54 +42,25 @@ const actorTypeMapping: Record<string, string> = {
   Autre: "Autre",
 };
 
-const actorTypeOptions = computed(() => [
-  { value: "", text: "choisir un type d'acteur" },
-  ...Object.entries(actorTypeMapping).map(([key, label]) => ({
-    value: key,
-    text: label,
-  })),
-]);
+function getTypeLabel(value: string): string {
+  return value ? actorTypeMapping[value] || "Type inconnu" : "Aucun type sélectionné";
+}
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-const loading = ref(false);
-
-// Nouvelle computed pour détecter les modifications
-const hasChanges = computed(() => JSON.stringify(localActors.value) !== JSON.stringify(props.application.actors));
-
-// Nouvelle variable pour garder les IDs sélectionnés
-const selectedActorIds = ref<string[]>([]);
-
-function addActor() {
-  console.log("Nombre d'acteurs avant ajout :", localActors.value.length);
-  // Utilisation de Date.now() pour un identifiant unique
-  localActors.value.push({
-    id: Date.now().toString(),
-    email: "",
-    actorType: "",
-    applicationId: props.application.id,
-  });
-  console.log("Nombre d'acteurs après ajout :", localActors.value.length);
-}
-
-function removeActor(actorId: string) {
-  localActors.value = localActors.value.filter((actor) => actor.id !== actorId);
-}
-
-// Nouvelle fonction pour supprimer les acteurs sélectionnés
-function removeSelectedActors() {
-  localActors.value = localActors.value.filter((actor) => !selectedActorIds.value.includes(actor.id));
-  selectedActorIds.value = [];
-}
-
-function cancelChanges() {
-  localActors.value = Array.isArray(props.application.actors) ? [...props.application.actors] : [];
-}
+const handleSaveActors = (newActor) => {
+  const index = localActors.value.findIndex((actor) => actor.id === newActor.id);
+  if (index !== -1) {
+    localActors.value[index] = { ...localActors.value[index], ...newActor };
+  } else {
+    localActors.value.push({ ...newActor });
+  }
+  saveAll();
+};
 
 async function saveAll() {
-  // Vérifier que tous les acteurs ont un email non vide et valide
   for (const actor of localActors.value) {
     if (!actor.email.trim()) {
       toaster.addErrorMessage("L'email est requis pour tous les acteurs.");
@@ -97,161 +72,193 @@ async function saveAll() {
     }
   }
 
-  // Préparer la liste des acteurs à sauvegarder
   const existingIds = new Set((props.application.actors || []).map((a: Actor) => a.id));
-  const actorsToSave = localActors.value.map((actor) => (existingIds.has(actor.id) ? actor : { ...actor, id: undefined }));
+  const actorsToSave = localActors.value.map((actor) => (existingIds.has(actor.id) ? actor : { ...actor, id: actor.id ?? undefined }));
 
   loading.value = true;
   try {
-    const updatedApplication = await Applications.patchApplication({
+    await Applications.patchApplication({
       ...props.application,
       actors: actorsToSave,
     });
-    emit("update:application", updatedApplication);
+    emit("update:application", {
+      ...props.application,
+      actors: actorsToSave,
+    });
     toaster.addSuccessMessage("Acteurs sauvegardés avec succès !");
+    closeActorModal();
+    closeCreateActorModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde des acteurs.");
   } finally {
     loading.value = false;
   }
 }
+
+const toggleActorModal = (type, actor = null) => {
+  selectedActor.value = actor ? { ...actor, id: actor.id ?? selectedActor.value?.id } : null;
+
+  isActorModalOpen.value = type === "view";
+  isCreateActorModalOpen.value = type === "create";
+};
+
+const openActorModal = (actor) => toggleActorModal("view", actor);
+const openCreateActorModal = () => toggleActorModal("create");
+const closeActorModal = () => toggleActorModal("close");
+const closeCreateActorModal = () => toggleActorModal("close");
+
+function removeSelectedActors() {
+  if (selectedActorIds.value.length === 0) {
+    toaster.addErrorMessage("Aucune sélection.");
+    return;
+  }
+  showDeleteConfirmation.value = true;
+}
+
+function confirmDelete() {
+  localActors.value = localActors.value.filter((actor) => !selectedActorIds.value.includes(actor.id));
+  selectedActorIds.value = [];
+  saveAll();
+  showDeleteConfirmation.value = false;
+}
+
+function cancelDelete() {
+  showDeleteConfirmation.value = false;
+}
+
+rows.value = localActors.value.map((actor: any) => [
+  actor.id,
+  {
+    label: actor.email || "Email vide",
+    to: actor.email ? `mailto:${actor.email}` : "",
+  },
+  getTypeLabel(actor.actorType) || "Type inconnu",
+  {
+    component: "DsfrButton",
+    label: "Modifier",
+    onClick: () => openActorModal(actor),
+  },
+]);
+
+watch(
+  () => props.application.actors,
+  (newVal) => {
+    localActors.value = Array.isArray(newVal) ? [...newVal] : [];
+  },
+  { deep: true, immediate: true },
+);
+watch(
+  localActors,
+  () => {
+    rows.value = localActors.value.map((actor) => [
+      actor.id,
+      {
+        label: actor.email || "Email vide",
+        to: actor.email ? `mailto:${actor.email}` : "",
+      },
+      getTypeLabel(actor.actorType) || "Type inconnu",
+      {
+        component: "DsfrButton",
+        label: "Modifier",
+        onClick: () => openActorModal(actor),
+      },
+    ]);
+  },
+  { deep: true },
+);
 </script>
 
 <template>
-  <div>
-    <div class="header">
-      <h2>Gestion des acteurs</h2>
+  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+    <div class="fr-col">
+      <h3 class="fr-mb-0">Gestion des acteurs</h3>
     </div>
-
-    <!-- Bouton global de suppression -->
-    <div class="global-delete">
-      <DsfrButton type="button" tertiary @click="removeSelectedActors" :disabled="selectedActorIds.length === 0">
-        Supprimer la sélection
+    <div class="fr-col-auto">
+      <DsfrButton type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" @click="openCreateActorModal">
+        Ajouter un acteur
       </DsfrButton>
     </div>
-
-    <!-- Tableau avec colonne de sélection -->
-    <table class="actor-table">
-      <thead>
-        <tr>
-          <th>Sélection</th>
-          <th>Email</th>
-          <th>Type d'acteur</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="actor in localActors" :key="actor.id">
-          <td>
-            <input type="checkbox" :value="actor.id" v-model="selectedActorIds" />
-          </td>
-          <td>
-            <DsfrInput v-model="actor.email" placeholder="Entrez l'email" />
-          </td>
-          <td>
-            <DsfrSelect v-model="actor.actorType" :options="actorTypeOptions" />
-          </td>
-        </tr>
-      </tbody>
-    </table>
-
-    <!-- Boutons globaux -->
-    <div class="actions">
-      <DsfrButton type="button" class="add-btn" @click="addActor">Ajouter un acteur</DsfrButton>
-      <DsfrButton type="button" class="cancel-btn" @click="cancelChanges" :disabled="!hasChanges"> Annuler </DsfrButton>
-      <DsfrButton type="button" class="save-btn" @click="saveAll" :loading="loading">Sauvegarder</DsfrButton>
-    </div>
   </div>
+  <div class="global-delete">
+    <DsfrButton type="button" tertiary @click="removeSelectedActors" icon="fr-icon-delete-line" :disabled="selectedActorIds.length === 0">
+      Supprimer la sélection
+    </DsfrButton>
+  </div>
+  <div v-if="rows.length === 0" class="text-center">
+    <p>Aucun acteur enregistré.</p>
+  </div>
+  <DsfrDataTable
+    v-else
+    v-model:selection="selectedActorIds"
+    v-model:current-page="currentPage"
+    :headers-row="headers"
+    :rows="rows"
+    row-key="id"
+    title="Liste des acteurs associés"
+    pagination
+    :rows-per-page="5"
+    :pagination-options="[5, 10, 20, 30]"
+    bottom-action-bar-class="bottom-action-bar-class"
+    pagination-wrapper-class="pagination-wrapper-class"
+    sorted="id"
+    :sortable-rows="['id']"
+  >
+    <template #cell="{ colKey, cell }">
+      <template v-if="colKey === 'Sélection'">
+        <input type="checkbox" :value="cell" v-model="selectedActorIds" />
+      </template>
+      <template v-else-if="colKey === 'Email'">
+        <a :href="cell.to" target="_blank" rel="noopener noreferrer">
+          {{ cell.label }}
+        </a>
+      </template>
+      <template v-else-if="colKey === 'Actions'">
+        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+      </template>
+      <template v-else>
+        {{ cell }}
+      </template>
+    </template>
+  </DsfrDataTable>
+
+  <DsfrModal :opened="isCreateActorModalOpen" title="Ajouter un lien" size="lg" @close="closeCreateActorModal">
+    <ActorForm
+      v-if="application"
+      :application="application"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveActors"
+      @cancel="closeCreateActorModal"
+    />
+  </DsfrModal>
+  <DsfrModal :opened="isActorModalOpen" title="Modifier le lien" size="lg" @close="closeActorModal">
+    <ActorForm
+      v-if="application"
+      :initial-data="selectedActor"
+      :application="application"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveActors"
+      @cancel="closeActorModal"
+    />
+  </DsfrModal>
+
+  <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
+    <p>Êtes-vous sûr de vouloir supprimer les acteurs sélectionnés ? Cette action est irréversible.</p>
+    <div class="actions">
+      <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
+      <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
+    </div>
+  </DsfrModal>
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-/* Nouveau style du tableau */
-.actor-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border: 1px solid var(--dsfr-border, #ccc);
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  font-family: var(--dsfr-font-family, Arial, sans-serif);
-}
-.actor-table thead {
-  background-color: var(--dsfr-gray-10, #f9f9f9);
-  color: #5a5959;
-}
-.actor-table th,
-.actor-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--dsfr-border, #ccc);
-  text-align: left;
-}
-.actor-table th {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-.actor-table tbody tr:last-child td {
-  border-bottom: none;
-}
-.actor-table tbody tr:nth-child(even) {
-  background-color: var(--dsfr-gray-50, #fbfbfb);
-}
-.actor-table tbody tr:hover {
-  background-color: var(--dsfr-gray-100, #f7f7f7);
-}
-
-/* Nouveau style pour la sélection (case à cocher) */
-.actor-table input[type="checkbox"] {
-  width: 1.2rem;
-  height: 1.2rem;
-  cursor: pointer;
-}
-
-/* Zone de suppression globale au-dessus du tableau */
-.global-delete {
-  margin-bottom: 1rem;
-  display: flex;
-  justify-content: flex-start;
-}
-.global-delete DsfrButton {
-  /* Si DSFR n'apporte pas le style souhaité, personnalisez ici */
-  background-color: var(--dsfr-error, #d32f2f);
-  color: #fff;
-  padding: 0.75rem 1.5rem;
-  border: none;
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
   border-radius: 4px;
-  font-weight: 600;
-  transition: filter 0.3s;
-}
-.global-delete DsfrButton:hover:not(:disabled) {
-  filter: brightness(0.9);
-}
-
-/* Boutons globaux repensés */
-.actions {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-}
-.actions DsfrButton {
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-  font-weight: 600;
-  transition: filter 0.3s;
-}
-.actions DsfrButton:hover:not(:disabled) {
-  filter: brightness(0.95);
-}
-.cancel-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  border: 2px solid var(--dsfr-border, #ccc);
+  position: relative;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 </style>
