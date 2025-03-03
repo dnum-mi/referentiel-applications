@@ -59,11 +59,6 @@ export default defineConfig({
       ],
       vueTemplate: true,
       dts: "./src/auto-imports.d.ts",
-      eslintrc: {
-        enabled: true,
-        filepath: "./.eslintrc-auto-import.json",
-        globalsPropValue: true,
-      },
     }),
     Components({
       extensions: ["vue"],
