@@ -34,6 +34,7 @@ declare module 'vue' {
     DsfrTabItem: typeof import('@gouvminint/vue-dsfr')['DsfrTabItem']
     DsfrTabs: typeof import('@gouvminint/vue-dsfr')['DsfrTabs']
     DsfrTag: typeof import('@gouvminint/vue-dsfr')['DsfrTag']
+    EventForm: typeof import('./components/form/EventForm.vue')['default']
     Events: typeof import('./components/Events.vue')['default']
     ExportApplications: typeof import('./components/ExportApplications.vue')['default']
     InformationsGenerales: typeof import('./components/InformationsGenerales.vue')['default']
