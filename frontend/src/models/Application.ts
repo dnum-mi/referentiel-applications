@@ -69,6 +69,14 @@ export interface ExternalRessource {
   description: string;
   type: string;
 }
+export interface Event {
+  id: string;
+  start: string;
+  end: string;
+  type: string;
+  description: string;
+  metadataId?: string;
+}
 export interface User {
   keycloakId: string;
   email: string;
