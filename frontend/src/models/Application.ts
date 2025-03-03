@@ -20,17 +20,6 @@ export interface Application {
   relationsAsTarget?: Relation[];
 }
 
-export interface Actor {
-  id?: string;
-  role?: string;
-  email: string;
-  actorType: string;
-  userId?: string;
-  organizationId?: string | null;
-  applicationId?: string;
-  user?: User;
-  externalOrganization?: External;
-}
 export interface Compliance {
   id: string;
   type: string;

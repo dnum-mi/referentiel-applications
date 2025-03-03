@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { IOrganizationRepository } from './organization.repository.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateOrganizationDto } from 'src/organization/dto/create-organization.dto';
+import {
+  CreateOrganizationDto,
+  PatchOrganizationDto,
+} from 'src/organization/dto/organization.dto';
 import { organizationMap } from 'src/organization/map/organization.map';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrganizationRepository implements IOrganizationRepository {
@@ -15,5 +19,26 @@ export class OrganizationRepository implements IOrganizationRepository {
 
   public async findAll() {
     return await this.prisma.organization.findMany();
+  }
+
+  public async findById(id: string) {
+    return await this.prisma.organization.findUnique({
+      where: { id },
+      include: {
+        parent: true,
+        children: true,
+      },
+    });
+  }
+
+  public async update(
+    where: Prisma.OrganizationWhereUniqueInput,
+    data: PatchOrganizationDto,
+  ) {
+    return await this.prisma.organization.update({ where, data });
+  }
+
+  public async delete(id: string) {
+    return await this.prisma.organization.delete({ where: { id } });
   }
 }

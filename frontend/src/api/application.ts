@@ -53,15 +53,6 @@ const Applications = {
             notes: compliance.notes,
           }))
         : [],
-      actors: app.actors
-        ? app.actors.map((actor) => ({
-            id: actor.id,
-            role: actor.role,
-            email: actor.email,
-            actorType: actor.actorType,
-          }))
-        : [],
-
       externalRessource: app.externalRessource
         ? app.externalRessource.map((ressource) => ({
             id: ressource.id,

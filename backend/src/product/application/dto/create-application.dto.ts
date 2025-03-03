@@ -5,7 +5,6 @@ import {
   IsEnum,
   IsDateString,
   ValidateNested,
-  IsEmail,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import {
@@ -14,114 +13,10 @@ import {
   ApiHideProperty,
 } from '@nestjs/swagger';
 import {
-  ActorType,
   ComplianceStatus,
   ComplianceType,
   ExternalRessourceType,
 } from 'src/enum';
-
-export class CreateActorDto {
-  @ApiProperty({
-    example: '',
-    description: '',
-  })
-  @IsString()
-  @IsOptional()
-  role: string;
-
-  @ApiProperty({
-    example: 'user123',
-    description: '',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  userId?: string;
-
-  @ApiProperty({
-    example: 'example@example.com',
-    description: 'Email of the actor (optional)',
-    required: false,
-  })
-  @IsEmail()
-  @IsOptional()
-  email?: string;
-
-  @ApiProperty({ enum: ActorType, required: false })
-  @IsOptional()
-  @IsEnum(ActorType)
-  type?: ActorType;
-
-  @ApiProperty({
-    example: 'orgSource123',
-    description: 'ID of the organization source (optional)',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  organizationId?: string;
-
-  @ApiProperty({
-    example: 'app789',
-    description: 'ID of the associated application (optional)',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  applicationId?: string;
-}
-
-export class UpdateActorUserDto {
-  @IsOptional()
-  @IsString()
-  keycloakId?: string;
-
-  @IsOptional()
-  @IsString()
-  email?: string;
-}
-
-export class UpdateActorDto {
-  @IsOptional()
-  @ApiHideProperty()
-  id?: string;
-
-  @ApiProperty({
-    example: 'admin',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  role?: string;
-
-  @ApiProperty({
-    example: 'example@example.com',
-    description: 'Email of the actor (optional)',
-    required: false,
-  })
-  @IsEmail()
-  @IsOptional()
-  email?: string;
-
-  @ApiProperty({
-    example: 'f09ed26a-8415-476a-be3b-ada479291c34',
-    description: "L'identifiant de l'organisation",
-    required: false,
-  })
-  @IsEmail()
-  @IsOptional()
-  organizationId?: string;
-
-  @ApiProperty({ enum: ActorType, required: false })
-  @IsOptional()
-  @IsEnum(ActorType)
-  actorType?: ActorType;
-
-  // @IsOptional()
-  // @ValidateNested()
-  // @Type(() => UpdateActorUserDto)
-  // user?: UpdateActorUserDto;
-}
 
 export class CreateComplianceDto {
   @ApiProperty({
@@ -373,14 +268,13 @@ export class CreateApplicationDto {
   tags?: string[];
 
   @ApiProperty({
-    type: [CreateActorDto],
-    description: "Liste des acteurs associés à l'application",
-    example: [{ type: 'Responsable', email: 'exemple@exemple.fr' }],
+    example: 'parentApp123',
+    description: 'Parent application ID',
+    required: false,
   })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateActorDto)
-  actors: CreateActorDto[];
+  @IsOptional()
+  @IsString()
+  parentId?: string;
 
   @ApiProperty({
     type: [CreateComplianceDto],
@@ -487,11 +381,14 @@ export class PatchApplicationDto {
   @IsString({ each: true })
   tags?: string[];
 
-  @ApiPropertyOptional({ type: [UpdateActorDto] })
+  @ApiProperty({
+    example: 'parentApp123',
+    description: 'Parent application ID',
+    required: false,
+  })
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => UpdateActorDto)
-  actors?: UpdateActorDto[];
+  @IsString()
+  parentId?: string;
 
   @ApiPropertyOptional({ type: [UpdateComplianceDto] })
   @IsOptional()

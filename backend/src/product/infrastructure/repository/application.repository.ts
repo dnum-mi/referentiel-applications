@@ -13,13 +13,11 @@ export class ApplicationRepository implements IApplicationRepository {
     application: CreateApplicationDto,
     applicationMetadataId: string,
     ownerId: string,
-    actorsToCreate,
   ) {
     const mappedData = applicationMap(
       application,
       applicationMetadataId,
       ownerId,
-      actorsToCreate,
     );
     return await this.prisma.application.create(mappedData);
   }
