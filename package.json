@@ -1,9 +1,11 @@
 {
   "name": "referentiel-applications",
   "version": "1.1.4",
+  "type": "module",
   "scripts": {
     "format": "prettier . --write",
     "format-check": "prettier . --check",
+    "lint": "eslint .",
     "prepare": "husky && husky install",
     "commitlint": "commitlint --edit"
   },
