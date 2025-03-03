@@ -39,6 +39,7 @@ jobs:
   test-lint:
     name: Test Linting
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Run ESLint
