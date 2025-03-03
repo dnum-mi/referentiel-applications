@@ -2,7 +2,6 @@
 import useToaster from "@/composables/use-toaster";
 import axios from "axios";
 import { computed, defineProps, onMounted, ref } from "vue";
-import { formatDateWithoutHours } from "@/composables/use-date";
 
 const props = defineProps({
   application: {
@@ -86,8 +85,8 @@ const headers = [
 const rows = computed(() => {
   return events.value.map((event) => [
     event.id || "",
-    formatDateWithoutHours(event.start) || "",
-    formatDateWithoutHours(event.end) || "",
+    new Date(event.start).toLocaleDateString("fr-FR") || "",
+    new Date(event.end).toLocaleDateString("fr-FR") || "",
     event.type,
     event.description || "",
   ]);

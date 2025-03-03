@@ -8,11 +8,3 @@ export const formatDate = (isoDate: string): string => {
     minute: "2-digit",
   }).format(date);
 };
-export const formatDateWithoutHours = (isoDate: string): string => {
-  const date = new Date(isoDate);
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-};
