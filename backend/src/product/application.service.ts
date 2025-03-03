@@ -1,11 +1,10 @@
+// src/application/application.service.ts
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, ActorType, Application } from '@prisma/client';
+import { Prisma, Application } from '@prisma/client';
 import {
-  CreateActorDto,
   CreateApplicationDto,
   PatchApplicationDto,
-  UpdateActorDto,
   UpdateComplianceDto,
   UpdateExternalRessourceDto,
 } from './application/dto/create-application.dto';
@@ -66,10 +65,6 @@ export class ApplicationService {
         data.compliances,
         applicationUpdates,
       );
-    }
-
-    if (data.actors !== undefined) {
-      await this.applyActorUpdates(where.id, data.actors, applicationUpdates);
     }
 
     if (data.externalRessource !== undefined) {
@@ -172,7 +167,6 @@ export class ApplicationService {
    * @returns L'application trouvée.
    * @throws NotFoundException Si l'application n'est pas trouvée.
    */
-
   public async getApplicationById(applicationId: string) {
     const application =
       await this.applicationRepository.findById(applicationId);
@@ -221,55 +215,14 @@ export class ApplicationService {
     if (!user) {
       throw new NotFoundException(`User not found for keycloakId=${ownerId}`);
     }
-    const actorsToCreate = await this.prepareActorsData(
-      ownerId,
-      user.email,
-      createApplicationDto.actors,
-    );
 
     const application = this.applicationRepository.create(
       createApplicationDto,
       applicationMetadataId,
       ownerId,
-      actorsToCreate,
     );
 
     return application;
-  }
-
-  private async prepareActorsData(
-    ownerId: string,
-    ownerEmail: string,
-    actorsDto: CreateActorDto[],
-  ): Promise<Prisma.ActorCreateWithoutApplicationInput[]> {
-    const actorsToCreate: Prisma.ActorCreateWithoutApplicationInput[] = [
-      {
-        role: 'Owner',
-        email: ownerEmail,
-        user: {
-          connect: {
-            keycloakId: ownerId,
-          },
-        },
-        actorType: ActorType.Responsable,
-      },
-    ];
-
-    if (!Array.isArray(actorsDto) || actorsDto.length === 0) {
-      return actorsToCreate;
-    }
-
-    for (const actorDto of actorsDto) {
-      const actorToCreate: Prisma.ActorCreateWithoutApplicationInput = {
-        role: actorDto.role ?? null,
-        actorType: (actorDto.type as ActorType) ?? null,
-        email: actorDto.email ?? null,
-      };
-
-      actorsToCreate.push(actorToCreate);
-    }
-
-    return actorsToCreate;
   }
 
   private applyScalarAndSimpleRelationUpdates(
@@ -472,67 +425,5 @@ export class ApplicationService {
       description: dto.description,
       type: dto.type,
     }));
-  }
-
-  private async applyActorUpdates(
-    applicationId: string,
-    incomingActorDtos: UpdateActorDto[],
-    applicationUpdates: Prisma.ApplicationUpdateInput,
-  ): Promise<void> {
-    // Get existing actors for the application
-    const existingActors = await this.prisma.actor.findMany({
-      where: { applicationId },
-      include: {
-        organization: true,
-      },
-    });
-
-    // Extract IDs for comparison
-    const existingActorIds = existingActors.map((a) => a.id);
-    const incomingActorIds = incomingActorDtos
-      .filter((a) => a.id)
-      .map((a) => a.id as string);
-
-    // Determine actors to create, update, and delete
-    const actorsToCreate = incomingActorDtos.filter((a) => !a.id);
-    const actorsToUpdate = incomingActorDtos.filter(
-      (a) => a.id && existingActorIds.includes(a.id),
-    );
-    const actorIdsToDelete = existingActorIds.filter(
-      (id) => !incomingActorIds.includes(id),
-    );
-
-    // Build the update object for the application's actors
-    applicationUpdates.actors = {
-      // Delete actors that are no longer present
-      delete: actorIdsToDelete.map((id) => ({ id })),
-
-      // Update existing actors
-      update: actorsToUpdate.map((actor) => ({
-        where: { id: actor.id },
-        data: {
-          role: actor.role ?? null,
-          email: actor.email ?? null,
-          actorType: actor.actorType
-            ? { set: actor.actorType as ActorType }
-            : undefined,
-          ...(actor.organizationId && {
-            organization: {
-              connect: { id: actor.organizationId },
-            },
-          }),
-        },
-      })),
-      create: actorsToCreate.map((actor) => ({
-        role: actor.role ?? null,
-        email: actor.email ?? null,
-        actorType: (actor.actorType as ActorType) ?? null,
-        ...(actor.organizationId && {
-          organization: {
-            connect: { id: actor.organizationId },
-          },
-        }),
-      })),
-    };
   }
 }

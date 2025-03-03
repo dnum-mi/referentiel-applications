@@ -7,7 +7,6 @@ model User {
   updatedSet          Metadata[]            @relation("MetadataUpdatedBy")
   applications        Application[]         @relation("UserApplications")
   dataOwners          Metadata[]            @relation("MetadataDataOwnerBy")
-  actors              Actor[]               @relation("UserActors")
   AnomalyNotification AnomalyNotification[] @relation("UserAnomalyNotification")
 
   @@map("users")
@@ -18,16 +17,13 @@ model Actor {
   firstname      String?
   lastname       String?
   role           String?
-  actorType      ActorType?
+  type           ActorType?
   email          String?
-  userId         String?
-  user           User?         @relation("UserActors", fields: [userId], references: [keycloakId])
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   applicationId  String?
   application    Application?  @relation("ApplicationActors", fields: [applicationId], references: [id])
 
-  @@index([userId])
   @@index([applicationId])
   @@map("actors")
 }

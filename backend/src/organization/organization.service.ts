@@ -1,20 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma, Organization } from '@prisma/client';
 import { OrganizationRepository } from './infrastructure/repository/organization.repository';
 import {
   CreateOrganizationDto,
   PatchOrganizationDto,
-} from './dto/create-organization.dto';
+} from './dto/organization.dto';
 
 @Injectable()
 export class OrganizationService {
-  organisations: any;
-
-  constructor(
-    private prisma: PrismaService,
-    private OrganisationRepository: OrganizationRepository,
-  ) {}
+  constructor(private OrganisationRepository: OrganizationRepository) {}
 
   /**
    * Crée une nouvelle Organisation
@@ -31,10 +25,10 @@ export class OrganizationService {
   /**
    * Met à jour une organisation existante
    *
-   * @param params Contient l'ID de l'application et les données à mettre à jour
+   * @param params Contient l'ID de l'organisation et les données à mettre à jour
    *
    * @returns L'organisation mise à jour
-   * @throws NotFoundException Si l'application à mettre à jour n'est pas trouvée
+   * @throws NotFoundException Si l'organisation à mettre à jour n'est pas trouvée
    */
   public async updateOrganization(params: {
     where: Prisma.OrganizationWhereUniqueInput;
@@ -43,10 +37,7 @@ export class OrganizationService {
     const { where, data } = params;
 
     try {
-      return await this.prisma.organization.update({
-        where,
-        data,
-      });
+      return await this.OrganisationRepository.update(where, data);
     } catch {
       throw new NotFoundException(
         `Organisation non trouvée pour l'ID ${where.id}`,
@@ -63,16 +54,10 @@ export class OrganizationService {
    * @throws NotFoundException Si l'organisation n'est pas trouvée
    */
   public async getOrganizationById(id: string) {
-    const organization = await this.prisma.organization.findUnique({
-      where: { id },
-      include: {
-        parent: true,
-        children: true,
-      },
-    });
+    const organization = this.OrganisationRepository.findById(id);
 
     if (!organization) {
-      throw new NotFoundException('Organization not found');
+      throw new NotFoundException(`Organisation non trouvée pour l'ID ${id}`);
     }
 
     return organization;
@@ -86,5 +71,23 @@ export class OrganizationService {
    */
   public async getOrganizations() {
     return await this.OrganisationRepository.findAll();
+  }
+
+  /**
+   * Supprime une organisation
+   *
+   * @param id L'identifiant de l'organisation à supprimer
+   *
+   * @returns L'organisation supprimée
+   * @throws NotFoundException Si l'organisation à supprimer n'est pas trouvée
+   */
+  public async deleteOrganization(id: string) {
+    const organization = await this.OrganisationRepository.delete(id);
+
+    if (!organization) {
+      throw new NotFoundException(`Organisation non trouvée pour l'ID ${id}`);
+    }
+
+    return organization;
   }
 }

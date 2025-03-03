@@ -1,4 +1,4 @@
-import { CreateOrganizationDto } from '../dto/create-organization.dto.js';
+import { CreateOrganizationDto } from '../dto/organization.dto.js';
 
 export const organizationMap = (
   CreateOrganizationDto: CreateOrganizationDto,

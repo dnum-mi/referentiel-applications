@@ -28,7 +28,6 @@ import {
 import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import {
-  ActorType,
   ComplianceStatus,
   ComplianceType,
   ExternalRessourceType,
@@ -76,9 +75,6 @@ Vous devez fournir les informations suivantes :
 - **tags**: Des tags pour catégoriser l'application.
   - **firstProductionDate**: Date de première mise en production.
   - **plannedDecommissioningDate**: Date prévue de déclassement.
-- **actors**: La liste des acteurs associés avec :
-  - **type**: Le type d'acteur (Enum: ${Object.values(ActorType).join(', ')}).
-  - **email**: L'adresse email de l'acteur.
 - **compliances**: La liste des conformités associées avec :
   - **type**: Le type de conformité (Enum: ${Object.values(ComplianceType).join(', ')}).
   - **name**: Le nom de la conformité.
