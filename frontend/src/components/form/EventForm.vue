@@ -53,7 +53,7 @@ const handleSubmit = () => {
     <DsfrInput v-model="form.end" label="Date de fin" label-visible type="date" class="fr-mb-1w" required />
 
     <DsfrInputGroup class="fr-mt-3w" label="description" v-model="form.description">
-      <DsfrInput v-model="form.description" is-textarea />
+      <DsfrInput v-model="form.description" label="Description" label-visible is-textarea />
     </DsfrInputGroup>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
