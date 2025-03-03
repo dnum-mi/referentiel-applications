@@ -108,21 +108,21 @@ watch(
       </div>
     </div>
 
-    <div class="fr-col-4">
-      <div class="lifecycle-info">
-        <h4 class="fr-mt-3w">Statut</h4>
-        <DsfrTag :label="lifecycleStatus.label" :icon="lifecycleStatus.icon" :class="lifecycleStatus.color" />
-        <h4 class="fr-mt-3w">Dates clés</h4>
-        <p>
-          Date de première production :
-          {{ application.lifecycle?.firstProductionDate ? formatDate(application.lifecycle?.firstProductionDate) : "Non défini" }}
-        </p>
-        <p>
-          Date de décommission prévue :
-          {{
-            application.lifecycle?.plannedDecommissioningDate ? formatDate(application.lifecycle?.plannedDecommissioningDate) : "Non défini"
-          }}
-        </p>
+    <div v-if="application.parent" class="fr-col-4">
+      <div class="fr-card">
+        <div class="fr-card__body">
+          <div class="fr-card__content">
+            <h3 class="fr-card__title">Parent</h3>
+            <p class="fr-card__desc">
+              Nom :
+              <router-link :to="{ name: 'application', params: { id: application.parent?.id } }">{{
+                application.parent?.label
+              }}</router-link>
+              <br />
+              Description : {{ application.parent?.description }}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
