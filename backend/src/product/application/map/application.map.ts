@@ -4,7 +4,7 @@ export const applicationMap = (
   createApplicationDto: CreateApplicationDto,
   applicationMetadataId,
   ownerId,
-  actorsToCreate,
+  // actorsToCreate,
 ) => {
   return {
     data: {
@@ -16,9 +16,6 @@ export const applicationMap = (
       tags: createApplicationDto.tags,
       metadata: { connect: { id: applicationMetadataId } },
       owner: { connect: { keycloakId: ownerId } },
-      actors: {
-        create: actorsToCreate,
-      },
       compliances: {
         create: createApplicationDto.compliances.map((compliance) => ({
           ...compliance,
@@ -44,9 +41,6 @@ export const applicationMap = (
     },
     include: {
       metadata: true,
-      actors: {
-        include: { user: true },
-      },
       compliances: true,
       externalRessource: true,
     },

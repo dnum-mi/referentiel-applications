@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Patch,
+  Delete,
   Body,
   Request,
   Logger,
@@ -14,8 +15,8 @@ import { OrganizationService } from './organization.service';
 import {
   CreateOrganizationDto,
   PatchOrganizationDto,
-} from './dto/create-organization.dto';
-import { GetOrganizationDto } from './dto/get-organization.dto';
+} from './dto/organization.dto';
+import { Organization } from '@prisma/client';
 
 /**
  * Controller la gestion des organisations
@@ -34,7 +35,7 @@ export class OrganizationController {
    * @param req La requête contenant  le token de l'utilisateur authentifié
    *
    * @returns La nouvelle organisation créée
-   * @throws BoadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
+   * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
    */
   @Post()
   @ApiBody({ type: CreateOrganizationDto })
@@ -83,8 +84,12 @@ Ce endpoint permet de récupérer les détails complets d'une organisation en fo
 Le paramètre **id** doit être fourni dans l'URL
     `,
   })
-  async findOne(@Param('id') id: string): Promise<GetOrganizationDto> {
-    return await this.organizationService.getOrganizationById(id);
+  public async findOne(@Param('id') id: string): Promise<Organization> {
+    try {
+      return await this.organizationService.getOrganizationById(id);
+    } catch {
+      throw new NotFoundException('Organisation non trouvé');
+    }
   }
 
   /**
@@ -103,7 +108,7 @@ Aucun paramètre n'est requis pour accéder à cette liste
     `,
   })
   @ApiResponse({ status: 200, description: 'Liste des organisations' })
-  async findAll(): Promise<GetOrganizationDto[]> {
+  public async findAll(): Promise<Organization[]> {
     return await this.organizationService.getOrganizations();
   }
 
@@ -124,7 +129,7 @@ Vous devez fournir l'identifiant de l'organisation dans l'URL et les nouvelles d
 Les données de mise à jour doivent correspondre aux champs
     `,
   })
-  async udate(
+  public async udate(
     @Param('id') id: string,
     @Body() organisationToUpdate: PatchOrganizationDto,
   ): Promise<PatchOrganizationDto> {
@@ -138,5 +143,25 @@ Les données de mise à jour doivent correspondre aux champs
       where: { id: id },
       data: organisationToUpdate,
     });
+  }
+
+  /**
+   * Supprime une organisation
+   *
+   * @param id L'identifiant de l'organisation à supprimer
+   *
+   * @returns L'organisation supprimée
+   * @throws NotFoundException Si l'organisation à supprimer n'est pas trouvée
+   */
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Supprimer une organisation',
+    description: `
+Ce endpoint permet de supprimer une organisation existante
+Vous devez fournir l'identifiant de l'organisation dans l'URL
+    `,
+  })
+  public async delete(@Param('id') id: string) {
+    return await this.organizationService.deleteOrganization(id);
   }
 }

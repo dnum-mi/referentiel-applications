@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import Applications from "@/api/application";
-import type { Actor } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
 import { actorTypeMapping } from "@/composables/use-dictionary";
 import ActorForm from "./form/ActorForm.vue";
 import useModal from "@/composables/use-modal";
+import Organizations from "@/api/organization";
+import Actors from "@/api/actor";
+import { Actor } from "@/models/Actor.js";
+import { Organization } from "@/models/organization";
 
 const toaster = useToaster();
 
@@ -17,13 +19,13 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:application"]);
+const emit = defineEmits(["update:actor"]);
 
 const localActors = ref<Actor[]>(Array.isArray(props.application.actors) ? [...props.application.actors] : []);
 const selectedActorIds = ref<string[]>([]);
 
 const currentPage = ref(0);
-const headers = ["Sélection", "Email", "Type", "Actions"];
+const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
 
 const actorModal = useModal();
@@ -31,6 +33,8 @@ const showDeleteConfirmation = ref(false);
 
 const isSubmitting = ref(false);
 const loading = ref(false);
+
+const organizationsList = ref([]);
 
 function getTypeLabel(value: string): string {
   return value ? actorTypeMapping[value] || "Type inconnu" : "Aucun type sélectionné";
@@ -40,49 +44,24 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-const handleSaveActors = (newActor) => {
+async function handleSaveActors(newActor) {
   const index = localActors.value.findIndex((actor) => actor.id === newActor.id);
   if (index !== -1) {
     localActors.value[index] = { ...localActors.value[index], ...newActor };
   } else {
     localActors.value.push({ ...newActor });
   }
-  saveAll();
-};
-
-async function saveAll() {
-  for (const actor of localActors.value) {
-    if (!actor.email.trim()) {
-      toaster.addErrorMessage("L'email est requis pour tous les acteurs.");
-      return;
-    }
-    if (!isValidEmail(actor.email)) {
-      toaster.addErrorMessage("Veuillez entrer une adresse email valide pour tous les acteurs.");
-      return;
-    }
-  }
-  const existingIds = new Set((props.application.actors || []).map((a: Actor) => a.id));
-  const actorsToSave = localActors.value.map((actor) => (existingIds.has(actor.id) ? actor : { ...actor, id: actor.id ?? undefined }));
-  console.log(actorsToSave);
 
   loading.value = true;
-  try {
-    actorModal.closeModal();
+  actorModal.closeModal();
 
-    await Applications.patchApplication({
-      ...props.application,
-      actors: actorsToSave,
-    });
-    emit("update:application", {
-      ...props.application,
-      actors: actorsToSave,
-    });
-    toaster.addSuccessMessage("Acteurs sauvegardés avec succès !");
-  } catch (error) {
-    toaster.addErrorMessage("Erreur lors de la sauvegarde des acteurs.");
-  } finally {
-    loading.value = false;
+  if (newActor.id) {
+    await Actors.update(newActor);
+  } else {
+    await Actors.create(newActor, props.application.id);
   }
+  toaster.addSuccessMessage("Acteurs sauvegardés avec succès !");
+  loading.value = false;
 }
 
 function removeSelectedActors() {
@@ -93,10 +72,14 @@ function removeSelectedActors() {
   showDeleteConfirmation.value = true;
 }
 
-function confirmDelete() {
+async function confirmDelete() {
   localActors.value = localActors.value.filter((actor) => !selectedActorIds.value.includes(actor.id));
+
+  selectedActorIds.value.forEach((actor) => {
+    Actors.delete(actor);
+  });
+
   selectedActorIds.value = [];
-  saveAll();
   showDeleteConfirmation.value = false;
 }
 
@@ -104,19 +87,53 @@ function cancelDelete() {
   showDeleteConfirmation.value = false;
 }
 
-rows.value = localActors.value.map((actor: any) => [
+rows.value = localActors.value.map((actor) => [
   actor.id,
+  (() => {
+    const org = organizationsList.value.flat().find((o) => o.id === actor.organizationId);
+    return org ? org.label : "Organisation inconnue";
+  })(),
+  getTypeLabel(actor.type) || "Type inconnu",
   {
     label: actor.email || "Email vide",
     to: actor.email ? `mailto:${actor.email}` : "",
   },
-  getTypeLabel(actor.actorType) || "Type inconnu",
+  actor.firstname || "Prénom vide",
+  actor.lastname || "Nom vide",
   {
     component: "DsfrButton",
     label: "Modifier",
     onClick: () => actorModal.openModal(actor),
   },
 ]);
+
+async function loadOrganization() {
+  organizationsList.value = await Organizations.getOrganizations();
+
+  updateRows();
+}
+
+const updateRows = () => {
+  rows.value = localActors.value.map((actor) => [
+    actor.id,
+    (() => {
+      const org = organizationsList.value.flat().find((o) => o.id === actor.organizationId);
+      return org ? org.label : "Organisation inconnue";
+    })(),
+    getTypeLabel(actor.type) || "Type inconnu",
+    {
+      label: actor.email || "Email vide",
+      to: actor.email ? `mailto:${actor.email}` : "",
+    },
+    actor.firstname || "Prénom vide",
+    actor.lastname || "Nom vide",
+    {
+      component: "DsfrButton",
+      label: "Modifier",
+      onClick: () => actorModal.openModal(actor),
+    },
+  ]);
+};
 
 watch(
   () => props.application.actors,
@@ -128,22 +145,14 @@ watch(
 watch(
   localActors,
   () => {
-    rows.value = localActors.value.map((actor) => [
-      actor.id,
-      {
-        label: actor.email || "Email vide",
-        to: actor.email ? `mailto:${actor.email}` : "",
-      },
-      getTypeLabel(actor.actorType) || "Type inconnu",
-      {
-        component: "DsfrButton",
-        label: "Modifier",
-        onClick: () => actorModal.openModal(actor),
-      },
-    ]);
+    updateRows();
   },
   { deep: true },
 );
+
+onBeforeMount(() => {
+  loadOrganization();
+});
 </script>
 
 <template>
@@ -210,6 +219,7 @@ watch(
     <ActorForm
       v-bind="{ application, initialData: actorModal.selectedItem.value }"
       :is-submitting="isSubmitting"
+      :organizations="organizationsList"
       @submit="handleSaveActors"
       @cancel="actorModal.closeModal"
     />

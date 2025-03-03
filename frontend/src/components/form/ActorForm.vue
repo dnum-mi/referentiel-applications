@@ -4,6 +4,7 @@ import { defineProps, defineEmits, computed } from "vue";
 import type { PropType } from "vue";
 import type { Actor } from "@/models/Application";
 import { actorTypeMapping } from "@/composables/use-dictionary";
+import { Organization } from "@/models/organization";
 
 const props = defineProps({
   initialData: {
@@ -14,17 +15,25 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+  organizations: {
+    type: Object as PropType<Organization>,
+    required: false,
+  },
 });
 
 const form = ref({
   id: props.initialData?.id ?? "",
   role: props.initialData?.role ?? "",
-  actorType: props.initialData?.actorType ?? "",
+  type: props.initialData?.type ?? "",
   email: props.initialData?.email ?? "",
+  firstname: props.initialData?.firstname ?? "",
+  lastname: props.initialData?.lastname ?? "",
   userId: props.initialData?.userId ?? "",
   organizationId: props.initialData?.organizationId ?? "",
   applicationId: props.initialData?.applicationId ?? "",
 });
+
+let organizationsList = reactive({ value: "", text: "Choisir une organisation" });
 
 const actorTypes = computed(() => [
   { value: "", text: "Choisir un type d'acteur" },
@@ -36,9 +45,25 @@ const actorTypes = computed(() => [
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
 
+function loadOrganizations() {
+  const org = props.organizations.flat();
+
+  organizationsList.value = [
+    { value: "", text: "Choisir une organisation" },
+    ...org.map((organization: Organization) => ({
+      value: organization.id,
+      text: organization.label,
+    })),
+  ];
+}
+
 const handleSubmit = () => {
   emit("submit", form.value);
 };
+
+onMounted(() => {
+  loadOrganizations();
+});
 </script>
 
 <template>
@@ -50,12 +75,27 @@ const handleSubmit = () => {
 
     <div class="fr-input-group fr-mt-3w">
       <label class="fr-label" for="actorType">Type d'acteur</label>
-      <DsfrSelect v-model="form.actorType" :options="actorTypes" />
+      <DsfrSelect v-model="form.type" :options="actorTypes" />
+    </div>
+
+    <div class="fr-input-group fr-mt-3w">
+      <label class="fr-label" for="organizationId">Organisation</label>
+      <DsfrSelect v-model="form.organizationId" :options="organizationsList.value" />
     </div>
 
     <div class="fr-input-group fr-mt-3w">
       <label class="fr-label" for="email">Email</label>
       <input type="email" id="email" v-model="form.email" class="fr-input" required placeholder="exemple@domaine.com" />
+    </div>
+
+    <div class="fr-input-group fr-mt-3w">
+      <label class="fr-label" for="firstname">Prénom (Optionel)</label>
+      <input type="text" id="firstname" v-model="form.firstname" class="fr-input" placeholder="Prénom" />
+    </div>
+
+    <div class="fr-input-group fr-mt-3w">
+      <label class="fr-label" for="lastname">Nom (Optionel)</label>
+      <input type="text" id="lastname" v-model="form.lastname" class="fr-input" placeholder="Nom de Famille" />
     </div>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">

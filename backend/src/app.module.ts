@@ -20,6 +20,7 @@ import { UserModule } from './user/user.module';
 import { ApplicationModule } from './product/application.module';
 import { ApplicationService } from './product/application.service';
 import { AnomalyNotificationModule } from './notification/anomaly-notification.module';
+import { ActorModule } from './actor/actor.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AnomalyNotificationModule } from './notification/anomaly-notification.m
     LoggerModule,
     HealthCheckModule,
     OrganizationModule,
+    ActorModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
