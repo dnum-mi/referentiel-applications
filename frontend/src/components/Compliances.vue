@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, watch } from "vue";
 import Applications from "@/api/application";
-import type { Application, Compliance } from "@/models/Application";
+import type { Compliance } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
-import AppDate from "./AppDate.vue";
 import { defineProps, defineEmits } from "vue";
+import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-dictionary";
 
 const toaster = useToaster();
 
@@ -31,21 +31,6 @@ const showDeleteConfirmation = ref(false);
 
 const loading = ref(false);
 const isSubmitting = ref(false);
-
-const complianceTypesDict = {
-  regulation: "Réglementation",
-  standard: "Standard",
-  policy: "Politique",
-  contractual: "Contractuel",
-  security: "Sécurité",
-  privacy: "Confidentialité",
-};
-const complianceStatusesDict = {
-  compliant: "Conforme",
-  non_compliant: "Non conforme",
-  partially_compliant: "Partiellement conforme",
-  not_concerned: "Non concerné",
-};
 
 function getTypeLabel(value: string): string {
   return value ? complianceTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
@@ -238,13 +223,8 @@ watch(
       @cancel="closeComplianceModal"
     />
   </DsfrModal>
-  <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
-    <p>Êtes-vous sûr de vouloir supprimer les conformités sélectionnées ? Cette action est irréversible.</p>
-    <div class="actions">
-      <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
-      <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
-    </div>
-  </DsfrModal>
+
+  <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="confirmités" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
 
 <style scoped>

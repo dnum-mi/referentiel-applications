@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, watch } from "vue";
 import Applications from "@/api/application";
-import type { Application, Actor } from "@/models/Application";
+import type { Actor } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
+import { actorTypeMapping } from "@/composables/use-dictionary";
 
 const toaster = useToaster();
 
@@ -30,17 +31,6 @@ const showDeleteConfirmation = ref(false);
 
 const isSubmitting = ref(false);
 const loading = ref(false);
-
-const actorTypeMapping: Record<string, string> = {
-  Responsable: "Responsable",
-  Exploitation: "Exploitation",
-  ResponsableAutre: "Autre responsable",
-  Hebergement: "Hébergement",
-  ArchitecteApplicatif: "Architecte Applicatif",
-  ArchitecteInfra: "Architecte Infra",
-  RepresentantSSI: "Représentant SSI",
-  Autre: "Autre",
-};
 
 function getTypeLabel(value: string): string {
   return value ? actorTypeMapping[value] || "Type inconnu" : "Aucun type sélectionné";
@@ -71,9 +61,9 @@ async function saveAll() {
       return;
     }
   }
-
   const existingIds = new Set((props.application.actors || []).map((a: Actor) => a.id));
   const actorsToSave = localActors.value.map((actor) => (existingIds.has(actor.id) ? actor : { ...actor, id: actor.id ?? undefined }));
+  console.log(actorsToSave);
 
   loading.value = true;
   try {
@@ -241,13 +231,7 @@ watch(
     />
   </DsfrModal>
 
-  <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
-    <p>Êtes-vous sûr de vouloir supprimer les acteurs sélectionnés ? Cette action est irréversible.</p>
-    <div class="actions">
-      <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
-      <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
-    </div>
-  </DsfrModal>
+  <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="acteurs" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
 
 <style scoped>

@@ -4,7 +4,6 @@ import type { Application } from "@/models/Application";
 import { onMounted, ref } from "vue";
 import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
-import type { AnomalyNotificationStatus } from "../../../backend/src/enum";
 
 const props = defineProps<{ application: Application }>();
 

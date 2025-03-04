@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, watch } from "vue";
 import Applications from "@/api/application";
 import type { ExternalRessource } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
+import { linkTypesDict } from "@/composables/use-dictionary";
 
 const toaster = useToaster();
 
@@ -32,12 +33,6 @@ const isSubmitting = ref(false);
 const currentPage = ref<number>(0);
 const headers = ["Sélection", "Lien", "Description", "Type de lien", "Actions"];
 const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
-
-const linkTypesDict = {
-  documentation: "Documentation",
-  supervision: "Supervision",
-  service: "Service",
-};
 
 function getTypeLabel(value: string): string {
   return value ? linkTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
@@ -236,13 +231,7 @@ watch(
     />
   </DsfrModal>
 
-  <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
-    <p>Êtes-vous sûr de vouloir supprimer les liens sélectionnés ? Cette action est irréversible.</p>
-    <div class="actions">
-      <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
-      <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
-    </div>
-  </DsfrModal>
+  <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="liens" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
 
 <style scoped>

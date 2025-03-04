@@ -16,12 +16,45 @@ export const statusColors = {
   done: "bg-success",
 };
 
-export const ActorType = {
+export const actorTypeMapping: Record<string, string> = {
   Responsable: "Responsable",
   Exploitation: "Exploitation",
-  "Autre responsable": "Responsable_autre",
-  Hébergement: "Hebergement",
-  "Architecte Applicatif": "Architecte_applicatif",
-  "Architecte Infra": "Architecte_infra",
-  "Représentant SSI": "Representant_SSI",
+  ResponsableAutre: "Autre responsable",
+  Hebergement: "Hébergement",
+  ArchitecteApplicatif: "Architecte Applicatif",
+  ArchitecteInfra: "Architecte Infra",
+  RepresentantSSI: "Représentant SSI",
+  Autre: "Autre",
 };
+
+export const complianceTypesDict = {
+  regulation: "Réglementation",
+  standard: "Standard",
+  policy: "Politique",
+  contractual: "Contractuel",
+  security: "Sécurité",
+  privacy: "Confidentialité",
+};
+export const complianceStatusesDict = {
+  compliant: "Conforme",
+  non_compliant: "Non conforme",
+  partially_compliant: "Partiellement conforme",
+  not_concerned: "Non concerné",
+};
+
+export const linkTypesDict = {
+  documentation: "Documentation",
+  supervision: "Supervision",
+  service: "Service",
+};
+
+export const eventTypesArray = [
+  { value: "under_construction", text: "En construction" },
+  { value: "in_production", text: "En production" },
+  { value: "decommissioned", text: "Déclassé" },
+  { value: "decommissioning", text: "Déclassement" },
+  { value: "highlight", text: "Événement" },
+];
+
+// Génération automatique du dictionnaire
+export const eventTypesDict = Object.fromEntries(eventTypesArray.map(({ value, text }) => [value, text]));

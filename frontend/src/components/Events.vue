@@ -2,6 +2,7 @@
 import useToaster from "@/composables/use-toaster";
 import axios from "axios";
 import { computed, defineProps, onMounted, ref } from "vue";
+import { eventTypesDict } from "@/composables/use-dictionary";
 
 const props = defineProps({
   application: {
@@ -52,7 +53,6 @@ async function fetchEvents() {
   try {
     const response = await axios.get(`applications/${props.application.id}/events`);
     events.value = response.data;
-    console.log(events.value);
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la récupération des évenements.");
   }
@@ -60,9 +60,6 @@ async function fetchEvents() {
 
 async function deleteEvents(eventIds: String[]) {
   try {
-    console.log("Suppression des événements :", eventIds);
-
-    // Utilisation de Promise.all pour exécuter toutes les requêtes en parallèle
     await Promise.all(eventIds.map((eventId) => axios.delete(`applications/${props.application.id}/events/${eventId}`)));
 
     toaster.addSuccessMessage("Événements supprimés avec succès !");
@@ -95,14 +92,6 @@ const rows = computed(() => {
 function click(event: MouseEvent, key: string) {
   console.warn(event, key);
 }
-
-const eventTypes = [
-  { value: "under_construction", text: "En construction" },
-  { value: "in_production", text: "En production" },
-  { value: "decommissioned", text: "Déclassé" },
-  { value: "decommissioning", text: "Déclassement" },
-  { value: "highlight", text: "Évenement" },
-];
 
 const toggleEventModal = (type, event = null) => {
   selectedEvent.value = event ? { ...event } : null;
@@ -180,7 +169,7 @@ function cancelDelete() {
         <input type="checkbox" :value="cell" v-model="selectedEventIds" />
       </template>
       <template v-else-if="colKey === 'type'">
-        {{ eventTypes.find((type) => type.value === cell)?.text || cell }}
+        {{ eventTypesDict[cell] || cell }}
       </template>
       <template v-else>
         {{ cell }}
@@ -198,13 +187,7 @@ function cancelDelete() {
     />
   </DsfrModal>
 
-  <DsfrModal :opened="showDeleteConfirmation" title="Confirmation de suppression" size="sm" @close="cancelDelete">
-    <p>Êtes-vous sûr de vouloir supprimer l'événement sélectionné ? Cette action est irréversible.</p>
-    <div class="actions">
-      <DsfrButton type="button" @click="cancelDelete" tertiary>Annuler</DsfrButton>
-      <DsfrButton type="button" @click="confirmDelete" primary>Confirmer</DsfrButton>
-    </div>
-  </DsfrModal>
+  <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="événements" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
 
 <style scoped>
