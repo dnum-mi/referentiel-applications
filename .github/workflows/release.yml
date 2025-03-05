@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - fix-release-please
 
 jobs:
   release:
@@ -20,5 +21,5 @@ jobs:
         uses: googleapis/release-please-action@v4
         id: release
         with:
-          target-branch: main
+          target-branch: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
