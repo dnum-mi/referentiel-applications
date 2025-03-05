@@ -5,6 +5,8 @@ import type { Compliance } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
 import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-dictionary";
+import ComplianceForm from "./form/ComplianceForm.vue";
+import useModal from "@/composables/use-modal";
 
 const toaster = useToaster();
 
@@ -19,14 +21,12 @@ const emit = defineEmits(["update:application"]);
 
 const localCompliances = ref<Compliance[]>(Array.isArray(props.application.compliances) ? [...props.application.compliances] : []);
 const selectedComplianceIds = ref<string[]>([]);
-const selectedCompliance = ref<Compliance | null>(null);
 
 const currentPage = ref<number>(0);
 const headers = ["Sélection", "Nom", "Type", "Statut", "Actions"];
 const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
 
-const isComplianceModalOpen = ref(false);
-const isCreateComplianceModalOpen = ref(false);
+const complianceModal = useModal();
 const showDeleteConfirmation = ref(false);
 
 const loading = ref(false);
@@ -72,26 +72,13 @@ async function saveAll() {
       compliances: compliancesToSave,
     });
     toaster.addSuccessMessage("Conformités sauvegardées avec succès !");
-    closeComplianceModal();
-    closeCreateComplianceModal();
+    complianceModal.closeModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde des conformités.");
   } finally {
     loading.value = false;
   }
 }
-
-const toggleComplianceModal = (type, compliance = null) => {
-  selectedCompliance.value = compliance ? { ...compliance } : null;
-
-  isComplianceModalOpen.value = type === "view";
-  isCreateComplianceModalOpen.value = type === "create";
-};
-
-const openComplianceModal = (compliance) => toggleComplianceModal("view", compliance);
-const openCreateComplianceModal = () => toggleComplianceModal("create");
-const closeComplianceModal = () => toggleComplianceModal("close");
-const closeCreateComplianceModal = () => toggleComplianceModal("close");
 
 function removeSelectedCompliances() {
   if (selectedComplianceIds.value.length === 0) {
@@ -120,7 +107,7 @@ rows.value = localCompliances.value.map((compliance: any) => [
   {
     component: "DsfrButton",
     label: "Modifier",
-    onClick: () => openComplianceModal(compliance),
+    onClick: () => complianceModal.openModal(compliance),
   },
 ]);
 
@@ -142,7 +129,7 @@ watch(
       {
         component: "DsfrButton",
         label: "Modifier",
-        onClick: () => openComplianceModal(compliance),
+        onClick: () => complianceModal.openModal(compliance),
       },
     ]);
   },
@@ -156,73 +143,67 @@ watch(
       <h3 class="fr-mb-0">Gestions des conformités</h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" @click="openCreateComplianceModal()">
+      <DsfrButton
+        type="button"
+        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
+        @click="complianceModal.openCreateModal()"
+      >
         Ajouter une conformité
       </DsfrButton>
     </div>
   </div>
-  <div class="global-delete">
-    <DsfrButton
-      type="button"
-      tertiary
-      @click="removeSelectedCompliances"
-      icon="fr-icon-delete-line"
-      :disabled="selectedComplianceIds.length === 0"
-    >
-      Supprimer la sélection
-    </DsfrButton>
-  </div>
   <div v-if="rows.length === 0" class="text-center">
     <p>Aucune conformité enregistrée.</p>
   </div>
-  <DsfrDataTable
-    v-else
-    v-model:selection="selectedComplianceIds"
-    v-model:current-page="currentPage"
-    :headers-row="headers"
-    :rows="rows"
-    row-key="id"
-    title="Liste des conformités associées"
-    pagination
-    :rows-per-page="5"
-    :pagination-options="[5, 10, 20, 30]"
-    bottom-action-bar-class="bottom-action-bar-class"
-    pagination-wrapper-class="pagination-wrapper-class"
-    sorted="id"
-    :sortable-rows="['id']"
-  >
-    <template #cell="{ colKey, cell }">
-      <template v-if="colKey === 'Sélection'">
-        <input type="checkbox" :value="cell" v-model="selectedComplianceIds" />
+  <div v-else>
+    <div class="global-delete">
+      <DsfrButton
+        type="button"
+        tertiary
+        @click="removeSelectedCompliances"
+        icon="fr-icon-delete-line"
+        :disabled="selectedComplianceIds.length === 0"
+      >
+        Supprimer la sélection
+      </DsfrButton>
+    </div>
+    <DsfrDataTable
+      v-model:selection="selectedComplianceIds"
+      v-model:current-page="currentPage"
+      :headers-row="headers"
+      :rows="rows"
+      row-key="id"
+      title="Liste des conformités associées"
+      pagination
+      :rows-per-page="5"
+      :pagination-options="[5, 10, 20, 30]"
+      bottom-action-bar-class="bottom-action-bar-class"
+      pagination-wrapper-class="pagination-wrapper-class"
+      sorted="id"
+      :sortable-rows="['id']"
+    >
+      <template #cell="{ colKey, cell }">
+        <template v-if="colKey === 'Sélection'">
+          <input type="checkbox" :value="cell" v-model="selectedComplianceIds" />
+        </template>
+        <template v-else-if="colKey === 'Actions'">
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+        </template>
+        <template v-else>
+          {{ cell }}
+        </template>
       </template>
-      <template v-else-if="colKey === 'Actions'">
-        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
-      </template>
-      <template v-else>
-        {{ cell }}
-      </template>
-    </template>
-  </DsfrDataTable>
-
-  <DsfrModal :opened="isCreateComplianceModalOpen" title="Ajouter un lien" size="lg" @close="closeCreateComplianceModal">
-    <ComplianceForm
-      v-if="application"
-      :application="application"
-      :is-submitting="isSubmitting"
-      @submit="handleSaveCompliances"
-      @cancel="closeCreateComplianceModal"
-    />
-  </DsfrModal>
-  <DsfrModal :opened="isComplianceModalOpen" title="Modifier la conformité" size="lg" @close="closeComplianceModal">
-    <ComplianceForm
-      v-if="application"
-      :initial-data="selectedCompliance"
-      :application="application"
-      :is-submitting="isSubmitting"
-      @submit="handleSaveCompliances"
-      @cancel="closeComplianceModal"
-    />
-  </DsfrModal>
+    </DsfrDataTable>
+  </div>
+  <GenericModal
+    :opened="complianceModal.isModalOpen.value || complianceModal.isCreateModalOpen.value"
+    :title="complianceModal.isCreateModalOpen.value ? 'Ajouter une conformité' : 'Modifier la conformité'"
+    :formComponent="ComplianceForm"
+    :formProps="{ application, initialData: complianceModal.selectedItem.value }"
+    :is-submitting="isSubmitting"
+    @submit="handleSaveCompliances"
+    @cancel="complianceModal.closeModal"
+  />
 
   <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="confirmités" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>

@@ -3,9 +3,9 @@ import { ref } from "vue";
 import type { Application } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
-import AppDate from "./AppDate.vue";
-import { formatDate } from "@/composables/use-date";
 import { computed } from "vue";
+import ApplicationForm from "./form/ApplicationForm.vue";
+import useModal from "@/composables/use-modal";
 
 const isSubmitting = ref(false);
 const toaster = useToaster();
@@ -20,28 +20,7 @@ const props = defineProps<{
 
 const application = ref<Application>({ ...props.application });
 
-const lifecycleStatusesDict: Record<string, { label: string; icon: string; color: string }> = {
-  under_construction: { label: "En construction", icon: "fr-icon-info-line", color: "fr-tag--blue" },
-  in_production: { label: "En production", icon: "fr-icon-success-line", color: "fr-tag--green" },
-  decommissioned: { label: "Décommissioné", icon: "fr-icon-error-line", color: "fr-tag--grey" },
-  decommissioning: { label: "En décomissionnement", icon: "fr-icon-warning-line", color: "fr-tag--orange" },
-};
-
-const lifecycleStatus = computed(() => {
-  const status = application.value.lifecycle?.status;
-  const statusData = lifecycleStatusesDict[status] || { label: "Statut inconnu", icon: "fr-icon-alert-line", color: "fr-tag--grey" };
-  return statusData;
-});
-
-const isEditModalOpen = ref(false);
-
-const openEditModal = () => {
-  isEditModalOpen.value = true;
-};
-
-const closeEditModal = () => {
-  isEditModalOpen.value = false;
-};
+const applicationModal = useModal();
 
 async function updateApplication(updatedData) {
   isSubmitting.value = true;
@@ -54,7 +33,7 @@ async function updateApplication(updatedData) {
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
     toaster.addSuccessMessage("Application mise à jour avec succès");
-    closeEditModal();
+    applicationModal.closeModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la mise à jour de l'application");
   } finally {
@@ -82,7 +61,13 @@ watch(
                   <h3 class="fr-mb-0">Informations générales</h3>
                 </div>
                 <div class="fr-col-auto">
-                  <DsfrButton tertiary size="sm" class="fr-btn--icon-left fr-icon-edit-line" label="Modifier" @click="openEditModal" />
+                  <DsfrButton
+                    tertiary
+                    size="sm"
+                    class="fr-btn--icon-left fr-icon-edit-line"
+                    label="Modifier"
+                    @click="applicationModal.openModal()"
+                  />
                 </div>
               </div>
               <h4>ID de l'application</h4>
@@ -128,15 +113,15 @@ watch(
     </div>
   </div>
 
-  <DsfrModal :opened="isEditModalOpen" title="Modifier l'application" size="lg" @close="closeEditModal">
-    <ApplicationForm
-      v-if="application"
-      :initial-data="application"
-      :is-submitting="isSubmitting"
-      @submit="updateApplication"
-      @cancel="closeEditModal"
-    />
-  </DsfrModal>
+  <GenericModal
+    :opened="applicationModal.isModalOpen.value"
+    :title="'Modifier l\'application'"
+    :formComponent="ApplicationForm"
+    :formProps="{ initialData: application }"
+    :is-submitting="isSubmitting"
+    @submit="updateApplication"
+    @cancel="applicationModal.closeModal"
+  />
 </template>
 
 <style scoped>
@@ -147,27 +132,5 @@ watch(
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.lifecycle-info {
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-}
-
-.fr-tag--blue {
-  background-color: #007bff;
-}
-
-.fr-tag--green {
-  background-color: #28a745;
-}
-
-.fr-tag--orange {
-  background-color: #ff9800;
-}
-
-.fr-tag--grey {
-  background-color: #6c757d;
 }
 </style>

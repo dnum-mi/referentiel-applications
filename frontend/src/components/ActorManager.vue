@@ -5,6 +5,8 @@ import type { Actor } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
 import { actorTypeMapping } from "@/composables/use-dictionary";
+import ActorForm from "./form/ActorForm.vue";
+import useModal from "@/composables/use-modal";
 
 const toaster = useToaster();
 
@@ -19,14 +21,12 @@ const emit = defineEmits(["update:application"]);
 
 const localActors = ref<Actor[]>(Array.isArray(props.application.actors) ? [...props.application.actors] : []);
 const selectedActorIds = ref<string[]>([]);
-const selectedActor = ref<Actor | null>(null);
 
 const currentPage = ref<number>(0);
 const headers = ["Sélection", "Email", "Type", "Actions"];
 const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
 
-const isActorModalOpen = ref(false);
-const isCreateActorModalOpen = ref(false);
+const actorModal = useModal();
 const showDeleteConfirmation = ref(false);
 
 const isSubmitting = ref(false);
@@ -76,26 +76,13 @@ async function saveAll() {
       actors: actorsToSave,
     });
     toaster.addSuccessMessage("Acteurs sauvegardés avec succès !");
-    closeActorModal();
-    closeCreateActorModal();
+    actorModal.closeModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde des acteurs.");
   } finally {
     loading.value = false;
   }
 }
-
-const toggleActorModal = (type, actor = null) => {
-  selectedActor.value = actor ? { ...actor, id: actor.id ?? selectedActor.value?.id } : null;
-
-  isActorModalOpen.value = type === "view";
-  isCreateActorModalOpen.value = type === "create";
-};
-
-const openActorModal = (actor) => toggleActorModal("view", actor);
-const openCreateActorModal = () => toggleActorModal("create");
-const closeActorModal = () => toggleActorModal("close");
-const closeCreateActorModal = () => toggleActorModal("close");
 
 function removeSelectedActors() {
   if (selectedActorIds.value.length === 0) {
@@ -126,7 +113,7 @@ rows.value = localActors.value.map((actor: any) => [
   {
     component: "DsfrButton",
     label: "Modifier",
-    onClick: () => openActorModal(actor),
+    onClick: () => actorModal.openModal(actor),
   },
 ]);
 
@@ -150,7 +137,7 @@ watch(
       {
         component: "DsfrButton",
         label: "Modifier",
-        onClick: () => openActorModal(actor),
+        onClick: () => actorModal.openModal(actor),
       },
     ]);
   },
@@ -164,72 +151,63 @@ watch(
       <h3 class="fr-mb-0">Gestion des acteurs</h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" @click="openCreateActorModal">
+      <DsfrButton type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" @click="actorModal.openCreateModal()">
         Ajouter un acteur
       </DsfrButton>
     </div>
   </div>
-  <div class="global-delete">
-    <DsfrButton type="button" tertiary @click="removeSelectedActors" icon="fr-icon-delete-line" :disabled="selectedActorIds.length === 0">
-      Supprimer la sélection
-    </DsfrButton>
-  </div>
   <div v-if="rows.length === 0" class="text-center">
     <p>Aucun acteur enregistré.</p>
   </div>
-  <DsfrDataTable
-    v-else
-    v-model:selection="selectedActorIds"
-    v-model:current-page="currentPage"
-    :headers-row="headers"
-    :rows="rows"
-    row-key="id"
-    title="Liste des acteurs associés"
-    pagination
-    :rows-per-page="5"
-    :pagination-options="[5, 10, 20, 30]"
-    bottom-action-bar-class="bottom-action-bar-class"
-    pagination-wrapper-class="pagination-wrapper-class"
-    sorted="id"
-    :sortable-rows="['id']"
-  >
-    <template #cell="{ colKey, cell }">
-      <template v-if="colKey === 'Sélection'">
-        <input type="checkbox" :value="cell" v-model="selectedActorIds" />
+  <div v-else>
+    <div class="global-delete">
+      <DsfrButton type="button" tertiary @click="removeSelectedActors" icon="fr-icon-delete-line" :disabled="selectedActorIds.length === 0">
+        Supprimer la sélection
+      </DsfrButton>
+    </div>
+    <DsfrDataTable
+      v-model:selection="selectedActorIds"
+      v-model:current-page="currentPage"
+      :headers-row="headers"
+      :rows="rows"
+      row-key="id"
+      title="Liste des acteurs associés"
+      pagination
+      :rows-per-page="5"
+      :pagination-options="[5, 10, 20, 30]"
+      bottom-action-bar-class="bottom-action-bar-class"
+      pagination-wrapper-class="pagination-wrapper-class"
+      sorted="id"
+      :sortable-rows="['id']"
+    >
+      <template #cell="{ colKey, cell }">
+        <template v-if="colKey === 'Sélection'">
+          <input type="checkbox" :value="cell" v-model="selectedActorIds" />
+        </template>
+        <template v-else-if="colKey === 'Email'">
+          <a :href="cell.to" target="_blank" rel="noopener noreferrer">
+            {{ cell.label }}
+          </a>
+        </template>
+        <template v-else-if="colKey === 'Actions'">
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+        </template>
+        <template v-else>
+          {{ cell }}
+        </template>
       </template>
-      <template v-else-if="colKey === 'Email'">
-        <a :href="cell.to" target="_blank" rel="noopener noreferrer">
-          {{ cell.label }}
-        </a>
-      </template>
-      <template v-else-if="colKey === 'Actions'">
-        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
-      </template>
-      <template v-else>
-        {{ cell }}
-      </template>
-    </template>
-  </DsfrDataTable>
+    </DsfrDataTable>
+  </div>
 
-  <DsfrModal :opened="isCreateActorModalOpen" title="Ajouter un lien" size="lg" @close="closeCreateActorModal">
-    <ActorForm
-      v-if="application"
-      :application="application"
-      :is-submitting="isSubmitting"
-      @submit="handleSaveActors"
-      @cancel="closeCreateActorModal"
-    />
-  </DsfrModal>
-  <DsfrModal :opened="isActorModalOpen" title="Modifier le lien" size="lg" @close="closeActorModal">
-    <ActorForm
-      v-if="application"
-      :initial-data="selectedActor"
-      :application="application"
-      :is-submitting="isSubmitting"
-      @submit="handleSaveActors"
-      @cancel="closeActorModal"
-    />
-  </DsfrModal>
+  <GenericModal
+    :opened="actorModal.isModalOpen.value || actorModal.isCreateModalOpen.value"
+    :title="actorModal.isCreateModalOpen.value ? 'Ajouter un acteur' : 'Modifier l\'acteur'"
+    :formComponent="ActorForm"
+    :formProps="{ application, initialData: actorModal.selectedItem.value }"
+    :is-submitting="isSubmitting"
+    @submit="handleSaveActors"
+    @cancel="actorModal.closeModal"
+  />
 
   <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="acteurs" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>

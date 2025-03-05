@@ -56,5 +56,4 @@ export const eventTypesArray = [
   { value: "highlight", text: "Événement" },
 ];
 
-// Génération automatique du dictionnaire
 export const eventTypesDict = Object.fromEntries(eventTypesArray.map(({ value, text }) => [value, text]));

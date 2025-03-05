@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import type { Link } from "@/core/application/dto/ApplicationDTO";
 import { defineProps, defineEmits } from "vue";
+import { linkTypesDict } from "@/composables/use-dictionary";
 
 const props = defineProps({
   initialData: {
@@ -13,12 +14,6 @@ const props = defineProps({
     required: false,
   },
 });
-
-const linkTypesDict = {
-  documentation: "Documentation",
-  supervision: "Supervision",
-  service: "Service",
-};
 
 const linkTypes = computed(() => [
   { value: "", text: "choisir un type de lien" },
@@ -35,7 +30,7 @@ const form = ref({
   description: props.initialData?.description ?? "",
 });
 
-const emit = defineEmits(["update:application", "submit"]);
+const emit = defineEmits(["update:application", "submit", "cancel"]);
 
 const handleSubmit = () => {
   emit("submit", form.value);

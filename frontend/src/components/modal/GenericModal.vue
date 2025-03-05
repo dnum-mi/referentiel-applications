@@ -10,20 +10,18 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["submit", "cancel"]);
-
 const modalTitle = computed(() => props.title);
 
 function submit(data) {
   emit("submit", data);
 }
-
 function cancel() {
   emit("cancel");
 }
 </script>
 
 <template>
-  <DsfrModal :opened="opened" :title="modalTitle" size="lg" @close="cancel">
-    <component :is="formComponent" v-bind="formProps" :is-submitting="isSubmitting" @submit="submit" @cancel="cancel" />
+  <DsfrModal :opened="props.opened" :title="modalTitle" size="lg" @close="cancel">
+    <component :is="props.formComponent" v-bind="props.formProps" :is-submitting="props.isSubmitting" @submit="submit" @cancel="cancel" />
   </DsfrModal>
 </template>
