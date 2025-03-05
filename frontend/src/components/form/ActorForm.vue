@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { defineProps, defineEmits } from "vue";
 import type { Actor } from "@/models/Application";
+import { actorTypeMapping } from "@/composables/use-dictionary";
 
 const props = defineProps({
   initialData: {
@@ -32,17 +33,7 @@ const actorTypes = computed(() => [
   })),
 ]);
 
-const actorTypeMapping: Record<string, string> = {
-  Responsable: "Responsable",
-  Exploitation: "Exploitation",
-  ResponsableAutre: "Autre responsable",
-  Hebergement: "Hébergement",
-  ArchitecteApplicatif: "Architecte Applicatif",
-  ArchitecteInfra: "Architecte Infra",
-  RepresentantSSI: "Représentant SSI",
-  Autre: "Autre",
-};
-const emit = defineEmits(["update:application", "submit"]);
+const emit = defineEmits(["update:application", "submit", "cancel"]);
 
 const handleSubmit = () => {
   emit("submit", form.value);

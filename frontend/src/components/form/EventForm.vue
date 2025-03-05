@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import type { Event } from "@/models/Application";
 import { defineProps, defineEmits } from "vue";
+import { eventTypesArray } from "@/composables/use-dictionary";
 
 const props = defineProps({
   initialData: {
@@ -14,18 +15,7 @@ const props = defineProps({
   },
 });
 
-const eventTypesDict = {
-  under_construction: "En construction",
-  in_production: "En production",
-  decommissioned: "Décommissioné",
-  decommissioning: "En décomissionnement",
-  highlight: "Évenement",
-};
-
-const eventTypes = computed(() => [
-  { value: "", text: "Choisir un type d'événement" },
-  ...Object.entries(eventTypesDict).map(([value, text]) => ({ value, text })),
-]);
+const eventTypes = computed(() => [{ value: "", text: "Choisir un type d'événement" }, ...eventTypesArray]);
 
 const form = ref({
   id: props.initialData?.id ?? "",

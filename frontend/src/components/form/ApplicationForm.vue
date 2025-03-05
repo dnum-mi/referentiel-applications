@@ -6,7 +6,7 @@ const props = defineProps<{
   isSubmitting?: boolean;
 }>();
 
-const emit = defineEmits(["update:application", "submit"]);
+const emit = defineEmits(["update:application", "submit", "cancel"]);
 
 const handleSubmit = () => {
   const purposes = form.value.purposes.filter((p) => p.trim() !== "");
