@@ -85,7 +85,8 @@ watch(
                   <DsfrButton tertiary size="sm" class="fr-btn--icon-left fr-icon-edit-line" label="Modifier" @click="openEditModal" />
                 </div>
               </div>
-
+              <h4>ID de l'application</h4>
+              <p>{{ application.id }}</p>
               <h4>Description</h4>
               <p>{{ application.description }}</p>
 
