@@ -200,15 +200,18 @@ watch(
     </DsfrDataTable>
   </div>
 
-  <GenericModal
+  <DsfrModal
     :opened="linkModal.isModalOpen.value || linkModal.isCreateModalOpen.value"
     :title="linkModal.isCreateModalOpen.value ? 'Ajouter un lien' : 'Modifier le lien'"
-    :formComponent="LinkForm"
-    :formProps="{ application, initialData: linkModal.selectedItem.value }"
-    :is-submitting="isSubmitting"
-    @submit="handleSaveLinks"
-    @cancel="linkModal.closeModal"
-  />
+    @close="linkModal.closeModal"
+  >
+    <LinkForm
+      v-bind="{ application, initialData: linkModal.selectedItem.value }"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveLinks"
+      @cancel="linkModal.closeModal"
+    />
+  </DsfrModal>
 
   <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="liens" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>

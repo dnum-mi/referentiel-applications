@@ -164,15 +164,9 @@ function cancelDelete() {
     </DsfrDataTable>
   </div>
 
-  <GenericModal
-    :opened="eventModal.isCreateModalOpen.value"
-    :title="'Ajouter un événement'"
-    :formComponent="EventForm"
-    :formProps="{ application }"
-    :is-submitting="isSubmitting"
-    @submit="createEvent"
-    @cancel="eventModal.closeModal"
-  />
+  <DsfrModal :opened="eventModal.isCreateModalOpen.value" :title="'Ajouter un événement'" @close="eventModal.closeModal">
+    <EventForm v-bind="{ application }" :is-submitting="isSubmitting" @submit="createEvent" @cancel="eventModal.closeModal" />
+  </DsfrModal>
 
   <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="événements" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>

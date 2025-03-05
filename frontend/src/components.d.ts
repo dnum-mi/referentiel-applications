@@ -38,7 +38,6 @@ declare module 'vue' {
     EventForm: typeof import('./components/form/EventForm.vue')['default']
     Events: typeof import('./components/Events.vue')['default']
     ExportApplications: typeof import('./components/ExportApplications.vue')['default']
-    GenericModal: typeof import('./components/modal/GenericModal.vue')['default']
     InformationsGenerales: typeof import('./components/InformationsGenerales.vue')['default']
     LinkForm: typeof import('./components/form/LinkForm.vue')['default']
     Links: typeof import('./components/Links.vue')['default']

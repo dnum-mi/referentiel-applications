@@ -113,15 +113,14 @@ watch(
     </div>
   </div>
 
-  <GenericModal
-    :opened="applicationModal.isModalOpen.value"
-    :title="'Modifier l\'application'"
-    :formComponent="ApplicationForm"
-    :formProps="{ initialData: application }"
-    :is-submitting="isSubmitting"
-    @submit="updateApplication"
-    @cancel="applicationModal.closeModal"
-  />
+  <DsfrModal :opened="applicationModal.isModalOpen.value" :title="'Modifier l\'application'" @close="applicationModal.closeModal">
+    <ApplicationForm
+      v-bind="{ initialData: application }"
+      :is-submitting="isSubmitting"
+      @submit="updateApplication"
+      @cancel="applicationModal.closeModal"
+    />
+  </DsfrModal>
 </template>
 
 <style scoped>

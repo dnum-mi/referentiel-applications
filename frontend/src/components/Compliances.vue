@@ -195,17 +195,21 @@ watch(
       </template>
     </DsfrDataTable>
   </div>
-  <GenericModal
+
+  <DsfrModal
     :opened="complianceModal.isModalOpen.value || complianceModal.isCreateModalOpen.value"
     :title="complianceModal.isCreateModalOpen.value ? 'Ajouter une conformité' : 'Modifier la conformité'"
-    :formComponent="ComplianceForm"
-    :formProps="{ application, initialData: complianceModal.selectedItem.value }"
-    :is-submitting="isSubmitting"
-    @submit="handleSaveCompliances"
-    @cancel="complianceModal.closeModal"
-  />
+    @close="complianceModal.closeModal"
+  >
+    <ComplianceForm
+      v-bind="{ application, initialData: complianceModal.selectedItem.value }"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveCompliances"
+      @cancel="complianceModal.closeModal"
+    />
+  </DsfrModal>
 
-  <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="confirmités" @confirm="confirmDelete" @cancel="cancelDelete" />
+  <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="conformités" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
 
 <style scoped>

@@ -199,15 +199,18 @@ watch(
     </DsfrDataTable>
   </div>
 
-  <GenericModal
+  <DsfrModal
     :opened="actorModal.isModalOpen.value || actorModal.isCreateModalOpen.value"
     :title="actorModal.isCreateModalOpen.value ? 'Ajouter un acteur' : 'Modifier l\'acteur'"
-    :formComponent="ActorForm"
-    :formProps="{ application, initialData: actorModal.selectedItem.value }"
-    :is-submitting="isSubmitting"
-    @submit="handleSaveActors"
-    @cancel="actorModal.closeModal"
-  />
+    @close="actorModal.closeModal"
+  >
+    <ActorForm
+      v-bind="{ application, initialData: actorModal.selectedItem.value }"
+      :is-submitting="isSubmitting"
+      @submit="handleSaveActors"
+      @cancel="actorModal.closeModal"
+    />
+  </DsfrModal>
 
   <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="acteurs" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
