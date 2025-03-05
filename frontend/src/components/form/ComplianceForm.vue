@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import type { Compliance } from "@/models/Application";
 import { defineProps, defineEmits } from "vue";
+import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-dictionary";
 
 const props = defineProps({
   initialData: {
@@ -13,22 +14,6 @@ const props = defineProps({
     required: false,
   },
 });
-
-const complianceTypesDict = {
-  regulation: "Réglementation",
-  standard: "Standard",
-  policy: "Politique",
-  contractual: "Contractuel",
-  security: "Sécurité",
-  privacy: "Confidentialité",
-};
-
-const complianceStatusesDict = {
-  compliant: "Conforme",
-  non_compliant: "Non conforme",
-  partially_compliant: "Partiellement conforme",
-  not_concerned: "Non concerné",
-};
 
 const complianceTypes = computed(() => [
   { value: "", text: "Choisir un type de conformité" },
@@ -52,7 +37,7 @@ const form = ref({
   notes: props.initialData?.notes ?? "",
 });
 
-const emit = defineEmits(["update:application", "submit"]);
+const emit = defineEmits(["update:application", "submit", "cancel"]);
 
 const handleSubmit = () => {
   emit("submit", form.value);

@@ -18,6 +18,7 @@ declare module 'vue' {
     AppToaster: typeof import('./components/AppToaster.vue')['default']
     ComplianceForm: typeof import('./components/form/ComplianceForm.vue')['default']
     Compliances: typeof import('./components/Compliances.vue')['default']
+    DeleteConfirmationModal: typeof import('./components/modal/DeleteConfirmationModal.vue')['default']
     DsfrAlert: typeof import('@gouvminint/vue-dsfr')['DsfrAlert']
     DsfrBreadcrumb: typeof import('@gouvminint/vue-dsfr')['DsfrBreadcrumb']
     DsfrButton: typeof import('@gouvminint/vue-dsfr')['DsfrButton']
@@ -38,7 +39,6 @@ declare module 'vue' {
     Events: typeof import('./components/Events.vue')['default']
     ExportApplications: typeof import('./components/ExportApplications.vue')['default']
     InformationsGenerales: typeof import('./components/InformationsGenerales.vue')['default']
-    IssuePage: typeof import('./components/MyIssues.vue')['default']
     LinkForm: typeof import('./components/form/LinkForm.vue')['default']
     Links: typeof import('./components/Links.vue')['default']
     MyIssues: typeof import('./components/MyIssues.vue')['default']
@@ -48,5 +48,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchApplications: typeof import('./components/SearchApplications.vue')['default']
+    useModal: typeof import('./composables/use-modal')['default']
   }
 }
