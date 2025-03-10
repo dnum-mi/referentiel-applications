@@ -1,6 +1,5 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { CreateRelationDto } from './application/dto/relation-application.dto';
-import { Relation } from './domain/relation.entity';
 import { IRelationRepository } from './infrastructure/repository/relation.repository.interface';
 
 @Injectable()

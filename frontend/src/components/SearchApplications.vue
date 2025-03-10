@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import Applications from "@/api/application";
 import { onMounted, ref } from "vue";
+import useToaster from "@/composables/use-toaster";
 
+const toaster = useToaster;
 const searchTerm = ref<string>("");
 const searchResults = ref([]);
 const isLoading = ref(false);
@@ -19,7 +21,7 @@ async function doSearch() {
       const results = await Applications.getAllApplicationBySearch(searchTerm.value || "");
       searchResults.value = results || [];
     } catch (error) {
-      errorMessage.value = "Une erreur est survenue lors du chargement des applications.";
+      toaster.addErrorMessage(error, "Une erreur est survenue lors du chargement des applications.");
     } finally {
       isLoading.value = false;
     }

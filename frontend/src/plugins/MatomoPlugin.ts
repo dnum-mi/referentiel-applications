@@ -1,4 +1,4 @@
-import type { App, ComponentPublicInstance } from "vue";
+import type { App } from "vue";
 import type { Router } from "vue-router";
 
 declare global {
