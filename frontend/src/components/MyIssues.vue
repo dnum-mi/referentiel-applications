@@ -12,7 +12,6 @@ const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([])
 const selection = ref<string[]>([]);
 const currentPage = ref<number>(0);
 
-const dataLoaded = ref(false);
 const isLoading = ref(true);
 
 const skeletonRows = ref<Array<Array<any>>>(
@@ -44,7 +43,7 @@ onMounted(() => {
 
 <template>
   <div class="fr-container fr-my-2v w-[800px]">
-    <div v-if="dataLoaded && rows.length === 0" class="text-center">
+    <div v-if="!isLoading && rows.length === 0" class="text-center">
       <p>Aucun signalement recensé.</p>
     </div>
     <DsfrDataTable
