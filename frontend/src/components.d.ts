@@ -56,6 +56,5 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchApplications: typeof import('./components/SearchApplications.vue')['default']
-    useModal: typeof import('./composables/use-modal')['default']
   }
 }

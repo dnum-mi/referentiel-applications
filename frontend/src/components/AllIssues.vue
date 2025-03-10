@@ -12,6 +12,13 @@ const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([])
 const selection = ref<string[]>([]);
 const currentPage = ref<number>(0);
 
+const dataLoaded = ref(false);
+const isLoading = ref(true);
+
+const skeletonRows = ref<Array<Array<any>>>(
+  Array(5).fill([{ label: " ", to: "#" }, " ", " ", { component: "DsfrTag", label: " ", class: "skeleton-tag" }]),
+);
+
 const loadReports = async () => {
   const reportList = await Issues.getReportIssue();
 
@@ -39,7 +46,7 @@ onMounted(() => {
 
 <template>
   <div class="fr-container fr-my-2v w-[800px]">
-    <div v-if="rows.length === 0" class="text-center">
+    <div v-if="dataLoaded && rows.length === 0" class="text-center">
       <p>Aucun signalement recensé.</p>
     </div>
     <DsfrDataTable
@@ -47,7 +54,7 @@ onMounted(() => {
       v-model:selection="selection"
       v-model:current-page="currentPage"
       :headers-row="headers"
-      :rows="rows"
+      :rows="isLoading ? skeletonRows : rows"
       selectable-rows
       row-key="id"
       :title="title"
@@ -60,7 +67,10 @@ onMounted(() => {
       :sortable-rows="['id']"
     >
       <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Application'">
+        <template v-if="isLoading">
+          <div class="skeleton-cell"></div>
+        </template>
+        <template v-else-if="colKey === 'Application'">
           <router-link :to="cell.to">
             {{ cell.label }}
           </router-link>
@@ -111,5 +121,30 @@ onMounted(() => {
 .text-center p {
   margin: 0;
   text-align: center;
+}
+
+.skeleton-cell {
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-tag {
+  display: inline-block;
+  width: 60px;
+  height: 20px;
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 </style>
