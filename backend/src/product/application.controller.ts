@@ -74,7 +74,8 @@ Vous devez fournir les informations suivantes :
 - **description**: Une description détaillée de l'application.
 - **purposes**: Les domaines d'activité (ex: finance, HR, operations).
 - **tags**: Des tags pour catégoriser l'application.
-- **parentId**: L'identifiant de l'application parente (ou null).
+  - **firstProductionDate**: Date de première mise en production.
+  - **plannedDecommissioningDate**: Date prévue de déclassement.
 - **actors**: La liste des acteurs associés avec :
   - **type**: Le type d'acteur (Enum: ${Object.values(ActorType).join(', ')}).
   - **email**: L'adresse email de l'acteur.

@@ -7,6 +7,7 @@ import Events from "./Events.vue";
 import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./Links.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
+import Relationships from "./Relationships.vue";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
@@ -48,6 +49,8 @@ const tabs = [
     icon: "ri-team-line",
     component: ActorManager,
   },
+  { title: "Relations", icon: "ri-node-tree", component: Relationships },
+
   { title: "Signalements", icon: "ri-alert-line", component: NotificationsApplication },
 ];
 </script>

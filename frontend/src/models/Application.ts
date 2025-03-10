@@ -1,4 +1,3 @@
-import { ActorType } from "./../../../backend/src/enum";
 export interface Application {
   id: string;
   label: string;
@@ -10,7 +9,6 @@ export interface Application {
 
   purposes?: string[];
   tags?: string[];
-  parentId?: string;
   ownerId?: string;
   metadataId?: string;
 
@@ -18,7 +16,8 @@ export interface Application {
   compliances?: Compliance[];
   externals?: External[];
   externalRessource?: ExternalRessource[];
-  parent?: Application;
+  relationsAsSource?: Relation[];
+  relationsAsTarget?: Relation[];
 }
 
 export interface Actor {
@@ -76,6 +75,14 @@ export interface Event {
   type: string;
   description: string;
   metadataId?: string;
+}
+export interface Relation {
+  type: string;
+  applicationSource: string;
+  applicationTarget: string;
+
+  sourceApplication: Application;
+  targetApplication: Application;
 }
 export interface User {
   keycloakId: string;

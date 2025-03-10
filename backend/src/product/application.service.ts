@@ -1,10 +1,5 @@
-// src/application/application.service.ts
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-  Inject,
-} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, ActorType, Application } from '@prisma/client';
 import {
   CreateActorDto,
@@ -15,9 +10,8 @@ import {
   UpdateComplianceDto,
   UpdateExternalRessourceDto,
 } from './application/dto/create-application.dto';
-import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { SearchApplicationDto } from './application/dto/search-application.dto';
 
 @Injectable()
 export class ApplicationService {
@@ -88,9 +82,13 @@ export class ApplicationService {
     }
 
     try {
-      const updatedApplication = await this.prisma.application.update({
-        where,
-        data: applicationUpdates,
+      const updatedApplication = await this.prisma.$transaction(async (tx) => {
+        const app = await tx.application.update({
+          where,
+          data: applicationUpdates,
+        });
+
+        return app;
       });
 
       return updatedApplication;
@@ -179,28 +177,15 @@ export class ApplicationService {
    * @returns L'application trouvée.
    * @throws NotFoundException Si l'application n'est pas trouvée.
    */
-  public async getApplicationById(id: string) {
-    const application = await this.prisma.application.findUnique({
-      where: { id },
-      include: {
-        actors: {
-          include: {
-            user: true,
-            organization: true,
-          },
-        },
-        compliances: true,
-        externals: {
-          include: { externalSource: true },
-        },
-        externalRessource: true,
-        parent: true,
-      },
-    });
 
-    if (!application) {
-      throw new NotFoundException('Application not found');
-    }
+  public async getApplicationById(applicationId: string) {
+    const application =
+      await this.applicationRepository.findById(applicationId);
+
+    console.log(
+      "📌 Application récupérée depuis l'API :",
+      JSON.stringify(application, null, 2),
+    );
 
     return application;
   }
@@ -310,11 +295,6 @@ export class ApplicationService {
     }
     if (data.tags !== undefined) {
       applicationUpdates.tags = { set: data.tags };
-    }
-    if (data.parentId !== undefined) {
-      applicationUpdates.parent = data.parentId
-        ? { connect: { id: data.parentId } }
-        : { disconnect: true };
     }
   }
 

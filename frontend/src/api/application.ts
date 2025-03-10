@@ -61,6 +61,7 @@ const Applications = {
               actorType: actor.actorType,
             }))
           : [],
+
         externalRessource: app.externalRessource
           ? app.externalRessource.map((ressource) => ({
               id: ressource.id,
@@ -77,6 +78,15 @@ const Applications = {
     } catch (error) {
       throw error;
     }
+  },
+
+  async addRelationInApplication(applicationSourceId: string, applicationTargetId: string, type: string): Promise<void> {
+    const payload = {
+      applicationSource: applicationSourceId,
+      applicationTarget: applicationTargetId,
+      type: type,
+    };
+    return await requests.post("/relations", payload);
   },
 };
 

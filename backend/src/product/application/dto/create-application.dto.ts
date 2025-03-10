@@ -373,15 +373,6 @@ export class CreateApplicationDto {
   tags?: string[];
 
   @ApiProperty({
-    example: 'parentApp123',
-    description: 'Parent application ID',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  parentId?: string;
-
-  @ApiProperty({
     type: [CreateActorDto],
     description: "Liste des acteurs associés à l'application",
     example: [{ type: 'Responsable', email: 'exemple@exemple.fr' }],
@@ -495,15 +486,6 @@ export class PatchApplicationDto {
   @IsOptional()
   @IsString({ each: true })
   tags?: string[];
-
-  @ApiProperty({
-    example: 'parentApp123',
-    description: 'Parent application ID',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  parentId?: string;
 
   @ApiPropertyOptional({ type: [UpdateActorDto] })
   @IsOptional()
