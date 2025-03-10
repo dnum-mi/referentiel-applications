@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, getCurrentInstance } from "vue";
+import { ref, computed, watch, getCurrentInstance } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import useToaster from "./composables/use-toaster";
 import { routeNames } from "./router/route-names";
 import { authentication } from "./services/authentication";
 import Applications from "@/api/application";
-import { useRouter } from "vue-router";
 
 const instance = getCurrentInstance();
 
@@ -74,6 +73,15 @@ const mandatoryLinks = [
     target: "_blank",
   },
   { label: `${appVersion}`, href: `http://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion}` },
+];
+const afterMandatoryLinks = [
+  {
+    label: "Paramètres d’affichage",
+    button: true,
+    class: "fr-icon-theme-fill fr-link--icon-left fr-px-2v",
+    to: "/settings",
+    onclick: changeTheme,
+  },
 ];
 
 const searchQuery = ref("");
@@ -158,7 +166,7 @@ function close() {
     <router-view :key="$route.fullPath" />
   </div>
 
-  <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :operator-to />
+  <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :after-mandatory-links :operator-to />
 
   <!-- <DsfrConsent>
     <p>

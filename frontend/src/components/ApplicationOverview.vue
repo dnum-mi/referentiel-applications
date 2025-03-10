@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import type { Application } from "@/models/Application";
 import { ref, watch } from "vue";
-import ActorManager from "./ActorManager.vue";
-import Compliances from "./Compliances.vue";
-import Events from "./Events.vue";
+import ActorManager from "./ActorTab.vue";
+import Compliances from "./CompliancesTab.vue";
+import Events from "./EventsTab.vue";
 import InformationsGenerales from "./InformationsGenerales.vue";
-import Links from "./Links.vue";
+import Links from "./LinksTab.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
-import Relationships from "./Relationships.vue";
+import Relationships from "./RelationshipsTab.vue";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
