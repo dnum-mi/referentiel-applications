@@ -16,7 +16,6 @@ const currentPage = ref(0);
 
 const isLoading = ref(true);
 
-const dataLoaded = ref(false);
 const isLoading = ref(true);
 
 const skeletonRows = ref<Array<Array<any>>>(
