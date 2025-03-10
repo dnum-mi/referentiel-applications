@@ -91,9 +91,9 @@ export class ApplicationService {
       });
 
       return updatedApplication;
-    } catch (error) {
+    } catch {
       throw new NotFoundException(
-        `Application non trouvée pour l'ID: ${where.id}, ${error}`,
+        `Application non trouvée pour l'ID: ${where.id}`,
       );
     }
   }

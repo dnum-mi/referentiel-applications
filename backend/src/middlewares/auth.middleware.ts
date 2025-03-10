@@ -19,8 +19,8 @@ export class AuthMiddleware implements NestMiddleware {
         this.userService,
       );
       next();
-    } catch (error) {
-      throw new UnauthorizedException("L'authentification a échoué", error);
+    } catch {
+      throw new UnauthorizedException("L'authentification a échoué");
     }
   }
 }
