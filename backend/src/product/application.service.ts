@@ -4,7 +4,6 @@ import { Prisma, ActorType, Application } from '@prisma/client';
 import {
   CreateActorDto,
   CreateApplicationDto,
-  CreateExternalRessourceDto,
   PatchApplicationDto,
   UpdateActorDto,
   UpdateComplianceDto,
@@ -94,7 +93,7 @@ export class ApplicationService {
       return updatedApplication;
     } catch (error) {
       throw new NotFoundException(
-        `Application non trouvée pour l'ID: ${where.id}`,
+        `Application non trouvée pour l'ID: ${where.id}, ${error}`,
       );
     }
   }

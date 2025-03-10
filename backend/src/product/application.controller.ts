@@ -174,7 +174,7 @@ Vous devez fournir les informations suivantes :
       );
       res.status(200).send(csvContent);
     } catch (error) {
-      throw new BadRequestException("Erreur lors de l'exportation.");
+      throw new BadRequestException("Erreur lors de l'exportation.", error);
     }
   }
 

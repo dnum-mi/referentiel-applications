@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { Compliance } from "@/models/Application";
-import { defineProps, defineEmits } from "vue";
+import { defineProps, defineEmits, computed } from "vue";
+import type { PropType } from "vue";
 import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-dictionary";
 
 const props = defineProps({

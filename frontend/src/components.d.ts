@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     '(feat:': sparkles: Add relation ihm and api)
+    '(refactor:': recycle: fix code for linter)
     ActorActions: typeof import('./components/ActorActions.vue')['default']
     ActorForm: typeof import('./components/form/ActorForm.vue')['default']
     ActorManager: typeof import('./components/ActorManager.vue')['default']
@@ -50,7 +51,7 @@ declare module 'vue' {
     MyIssues: typeof import('./components/MyIssues.vue')['default']
     NotificationsApplication: typeof import('./components/NotificationsApplication.vue')['default']
     RelationForm: typeof import('./components/AddRelationModal.vue')['default']
-    Relationship: typeof import('./components/Relationships.vue')['default']
+    Relationship: typeof import('./components/RelationshipsTab.vue')['default']
     Relationships: typeof import('./components/Relationships.vue')['default']
     RelationshipsTab: typeof import('./components/RelationshipsTab.vue')['default']
     RelationTree: typeof import('./components/RelationTree.vue')['default']
@@ -59,5 +60,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchApplications: typeof import('./components/SearchApplications.vue')['default']
+    TabRelationships: typeof import('./components/TabRelationships.vue')['default']
+    useModal: typeof import('./composables/use-modal')['default']
   }
 }

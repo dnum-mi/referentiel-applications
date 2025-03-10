@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { Link } from "@/core/application/dto/ApplicationDTO";
-import { defineProps, defineEmits } from "vue";
+import { defineProps, defineEmits, computed, PropType } from "vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
 
 const props = defineProps({
