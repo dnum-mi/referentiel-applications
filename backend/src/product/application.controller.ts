@@ -173,8 +173,8 @@ Vous devez fournir les informations suivantes :
         'attachment; filename="applications.csv"',
       );
       res.status(200).send(csvContent);
-    } catch (error) {
-      throw new BadRequestException("Erreur lors de l'exportation.", error);
+    } catch {
+      throw new BadRequestException("Erreur lors de l'exportation.");
     }
   }
 
