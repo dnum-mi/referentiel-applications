@@ -2,6 +2,7 @@
 import { ref, computed, watch, reactive } from "vue";
 import type { Application, Relation } from "@/models/Application";
 import AddRelationModal from "@/components/AddRelationModal.vue";
+import useToaster from "@/composables/use-toaster";
 
 interface TableRow {
   id: string;
@@ -10,6 +11,7 @@ interface TableRow {
   Cible: string;
 }
 
+const toaster = useToaster();
 const emit = defineEmits<{
   (e: "update:application", updatedApp: Application): void;
 }>();
@@ -87,7 +89,7 @@ const handleAddRelation = (updatedApp: Application) => {
   emit("update:application", localApplication);
 };
 
-const handleAddRelationPayload = (payload: { target: any; relationType: string }) => {
+const handleAddRelationPayload = (payload: { target: Application; relationType: string }) => {
   const relationAlreadyExists =
     (localApplication.relationsAsSource ?? []).some(
       (rel) => rel.targetApplication?.id === payload.target.id && rel.type === payload.relationType,
@@ -98,7 +100,7 @@ const handleAddRelationPayload = (payload: { target: any; relationType: string }
 
   if (relationAlreadyExists) {
     toaster.addErrorMessage(
-      `La relation ${relationTypeDict[payload.relationType] || payload.relationType} avec ${payload.target.label} existe déjà.`,
+      `La relation ${relationTypes[payload.relationType]?.source || payload.relationType} avec ${payload.target.label} existe déjà.`,
     );
     return;
   }

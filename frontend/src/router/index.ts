@@ -17,7 +17,7 @@ const routes = [
   {
     path: "/accessibilite",
     name: "accessibilite",
-    component: () => import("@/views/Accessibility.vue"),
+    component: () => import("@/views/AppAccessibility.vue"),
     meta: { requiresAuth: false },
   },
   {

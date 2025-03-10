@@ -6,7 +6,7 @@ import { regexLink, regexTag } from "@/utils/regex";
 const Applications = {
   async getAllApplicationBySearch(searchParams?: string): Promise<Application[]> {
     let label = searchParams;
-    let tag = [];
+    const tag = [];
     let link = "";
     let match = null;
 

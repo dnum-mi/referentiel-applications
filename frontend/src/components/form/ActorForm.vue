@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { defineProps, defineEmits } from "vue";
+import { defineProps, defineEmits, computed } from "vue";
+import type { PropType } from "vue";
 import type { Actor } from "@/models/Application";
 import { actorTypeMapping } from "@/composables/use-dictionary";
 

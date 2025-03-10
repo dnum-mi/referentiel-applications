@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsEnum } from 'class-validator';
 import { AnomalyNotificationStatus } from '@prisma/client';
 
 export class CreateAnomalyNotificationDto {
