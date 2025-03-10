@@ -84,11 +84,7 @@ Le paramètre **id** doit être fourni dans l'URL
     `,
   })
   async findOne(@Param('id') id: string): Promise<GetOrganizationDto> {
-    try {
-      return await this.organizationService.getOrganizationById(id);
-    } catch (error) {
-      throw new NotFoundException('Organisation non trouvé', error);
-    }
+    return await this.organizationService.getOrganizationById(id);
   }
 
   /**

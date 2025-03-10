@@ -47,10 +47,9 @@ export class OrganizationService {
         where,
         data,
       });
-    } catch (error) {
+    } catch {
       throw new NotFoundException(
         `Organisation non trouvée pour l'ID ${where.id}`,
-        error,
       );
     }
   }

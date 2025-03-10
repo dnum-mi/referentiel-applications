@@ -5,7 +5,7 @@ const routes = [
   {
     path: "/",
     name: "accueil",
-    component: () => import("@/views/AppHome.vue"),
+    component: () => import("@/views/HomePage.vue"),
     meta: { requiresAuth: false },
   },
   {
