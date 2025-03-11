@@ -9,15 +9,10 @@ const reportIssue = {
     return await requests.get<ReportIssue[]>("/anomaly-notifications");
   },
   async getNotificationsByApplicationId(applicationId: string) {
-    try {
-      console.log("Requesting notifications for applicationId:", applicationId);
-      const response = await requests.get<ReportIssue[]>(`/anomaly-notifications?applicationId=${applicationId}`);
-      console.log(response);
-      return response;
-    } catch (error) {
-      console.error("Erreur lors de la récupération des notifications :", error.response || error);
-      throw error;
-    }
+    console.log("Requesting notifications for applicationId:", applicationId);
+    const response = await requests.get<ReportIssue[]>(`/anomaly-notifications?applicationId=${applicationId}`);
+    console.log(response);
+    return response;
   },
   async getReportIssueByNotifierId(): Promise<ReportIssue[]> {
     return await requests.get<ReportIssue[]>("/anomaly-notifications/user-notifications");
