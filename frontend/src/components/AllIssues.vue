@@ -13,32 +13,23 @@ const selection = ref<string[]>([]);
 const currentPage = ref<number>(0);
 
 const loadReports = async () => {
-  try {
-    const reportList = await Issues.getReportIssue();
+  const reportList = await Issues.getReportIssue();
 
-    rows.value = reportList.map((report: any) => [
-      {
-        label: report.application?.label,
-        to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
-      },
-      report.notifier?.email,
-      report.description,
-      formatDate(report.createdAt),
-      {
-        component: "DsfrTag",
-        icon: statusIconClasses[report.status],
-        label: statusDictionary[report.status],
-        class: report.status,
-      },
-    ]);
-  } catch (error) {
-    if (error.response?.status === 404) {
-      console.warn("Aucune notification trouvée.");
-      return [];
-    }
-    console.error("Une erreur est survenue lors du chargement des signalements :", error);
-    throw error;
-  }
+  rows.value = reportList.map((report: any) => [
+    {
+      label: report.application?.label,
+      to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
+    },
+    report.notifier?.email,
+    report.description,
+    formatDate(report.createdAt),
+    {
+      component: "DsfrTag",
+      icon: statusIconClasses[report.status],
+      label: statusDictionary[report.status],
+      class: report.status,
+    },
+  ]);
 };
 
 onMounted(() => {
