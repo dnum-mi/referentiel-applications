@@ -33,51 +33,47 @@ const Applications = {
   },
 
   async patchApplication(app: Application): Promise<Application> {
-    try {
-      const payload = {
-        label: app.label,
-        shortName: app.shortName,
-        description: app.description,
-        purposes: app.purposes,
-        tags: app.tags,
-        compliances: app.compliances
-          ? app.compliances.map((compliance) => ({
-              id: compliance.id,
-              type: compliance.type,
-              name: compliance.name,
-              status: compliance.status,
-              validityStart: compliance.validityStart,
-              validityEnd: compliance.validityEnd,
-              scoreValue: compliance.scoreValue,
-              scoreUnit: compliance.scoreUnit,
-              notes: compliance.notes,
-            }))
-          : [],
-        actors: app.actors
-          ? app.actors.map((actor) => ({
-              id: actor.id,
-              role: actor.role,
-              email: actor.email,
-              actorType: actor.actorType,
-            }))
-          : [],
+    const payload = {
+      label: app.label,
+      shortName: app.shortName,
+      description: app.description,
+      purposes: app.purposes,
+      tags: app.tags,
+      compliances: app.compliances
+        ? app.compliances.map((compliance) => ({
+            id: compliance.id,
+            type: compliance.type,
+            name: compliance.name,
+            status: compliance.status,
+            validityStart: compliance.validityStart,
+            validityEnd: compliance.validityEnd,
+            scoreValue: compliance.scoreValue,
+            scoreUnit: compliance.scoreUnit,
+            notes: compliance.notes,
+          }))
+        : [],
+      actors: app.actors
+        ? app.actors.map((actor) => ({
+            id: actor.id,
+            role: actor.role,
+            email: actor.email,
+            actorType: actor.actorType,
+          }))
+        : [],
 
-        externalRessource: app.externalRessource
-          ? app.externalRessource.map((ressource) => ({
-              id: ressource.id,
-              link: ressource.link,
-              description: ressource.description,
-              type: ressource.type,
-            }))
-          : [],
-      };
+      externalRessource: app.externalRessource
+        ? app.externalRessource.map((ressource) => ({
+            id: ressource.id,
+            link: ressource.link,
+            description: ressource.description,
+            type: ressource.type,
+          }))
+        : [],
+    };
 
-      const response = await axios.patch<Application>(`/applications/${app.id}`, payload);
-      console.log(response);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await axios.patch<Application>(`/applications/${app.id}`, payload);
+    console.log(response);
+    return response.data;
   },
 
   async addRelationInApplication(applicationSourceId: string, applicationTargetId: string, type: string): Promise<void> {

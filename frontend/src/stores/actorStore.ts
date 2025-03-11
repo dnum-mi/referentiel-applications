@@ -19,44 +19,28 @@ export const useActorStore = defineStore("actorStore", {
     },
 
     async saveActor(application: any, actor: any, isNew: boolean) {
-      try {
-        const updatedActors = isNew
-          ? [...(application.actors || []), actor]
-          : (application.actors || []).map((a: any) => (a.id === actor.id ? actor : a));
-        return await Applications.patchApplication({
-          ...application,
-          actors: updatedActors,
-        });
-      } catch (error) {
-        console.error("Erreur lors de la sauvegarde de l'acteur", error);
-        throw error;
-      }
+      const updatedActors = isNew
+        ? [...(application.actors || []), actor]
+        : (application.actors || []).map((a: any) => (a.id === actor.id ? actor : a));
+      return await Applications.patchApplication({
+        ...application,
+        actors: updatedActors,
+      });
     },
 
     async deleteActor(application: any, actorToDelete: any) {
-      try {
-        const updatedActors = (application.actors || []).filter((a: any) => a.id !== actorToDelete.id);
-        return await Applications.patchApplication({
-          ...application,
-          actors: updatedActors,
-        });
-      } catch (error) {
-        console.error("Erreur lors de la suppression de l'acteur", error);
-        throw error;
-      }
+      const updatedActors = (application.actors || []).filter((a: any) => a.id !== actorToDelete.id);
+      return await Applications.patchApplication({
+        ...application,
+        actors: updatedActors,
+      });
     },
 
     async updateActors(application: any, actors: Actor[]) {
-      try {
-        const updatedApp = await Applications.patchApplication({
-          ...application,
-          actors,
-        });
-        return updatedApp;
-      } catch (error) {
-        console.error("Erreur lors de la mise à jour des acteurs", error);
-        throw error;
-      }
+      return await Applications.patchApplication({
+        ...application,
+        actors,
+      });
     },
   },
 });

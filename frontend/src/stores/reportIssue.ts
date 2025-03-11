@@ -11,23 +11,18 @@ export const useReportIssueStore = defineStore("ReportIssueStore", {
 
   actions: {
     async proposeCorrection(applicationId: string, correctionText: string) {
-      try {
-        const payload: ReportIssue = {
-          applicationId,
-          description: correctionText,
-          status: "in_pending",
-        };
+      const payload: ReportIssue = {
+        applicationId,
+        description: correctionText,
+        status: "in_pending",
+      };
 
-        const response = await reportIssue.createReportIssue(payload);
-        console.log(response);
+      const response = await reportIssue.createReportIssue(payload);
+      console.log(response);
 
-        this.report = [...this.report, response.data];
+      this.report = [...this.report, response.data];
 
-        return response;
-      } catch (error) {
-        console.error("Erreur proposeCorrection :", error);
-        throw error;
-      }
+      return response;
     },
 
     // Option supplémentaire: Fonction pour re-fetcher les anomalies
