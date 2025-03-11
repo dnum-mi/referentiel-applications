@@ -144,29 +144,25 @@ export class ApplicationService {
         LIMIT ${limit} OFFSET ${skip}
       `);
 
-    try {
-      let applications = [];
+    let applications = [];
 
-      if (link) {
-        const applicationsExternalRessource =
-          await this.prisma.externalRessource.findMany({
-            where: { link },
-            include: {
-              application: true,
-            },
-          });
-
-        applicationsExternalRessource.forEach((externalRessource) => {
-          applications.push(externalRessource.application);
+    if (link) {
+      const applicationsExternalRessource =
+        await this.prisma.externalRessource.findMany({
+          where: { link },
+          include: {
+            application: true,
+          },
         });
-      } else {
-        applications = await this.prisma.$queryRaw(query);
-      }
 
-      return applications as any[];
-    } catch (error) {
-      throw error;
+      applicationsExternalRessource.forEach((externalRessource) => {
+        applications.push(externalRessource.application);
+      });
+    } else {
+      applications = await this.prisma.$queryRaw(query);
     }
+
+    return applications as any[];
   }
 
   /**
