@@ -22,7 +22,12 @@ const skeletonRows = ref<Array<Array<any>>>(
   Array(5).fill([{ label: " ", to: "#" }, " ", " ", { component: "DsfrTag", label: " ", class: "skeleton-tag" }]),
 );
 const loadReports = async () => {
+<<<<<<< HEAD
   const reportList = await Issues.getReportIssueByNotifierId();
+=======
+  try {
+    const reportList = await Issues.getReportIssueByNotifierId();
+>>>>>>> e6ab1ae (feat: :lipstick: delete useless variable)
 
   rows.value =
     reportList.map((report: ReportIssue) => ({
