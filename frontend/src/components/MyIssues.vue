@@ -4,41 +4,37 @@ import { onMounted, ref } from "vue";
 import { routeNames } from "@/router/route-names";
 import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
+import type { ReportIssue } from "@/models/ReportIssue";
 
 const title = "Liste de mes signalements";
 const headers = ["Application", "Description", "Date", "Statut"];
+type Status = "in_pending" | "in_progress" | "done";
 
-const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
+const rows = ref<Record<string, unknown>[]>([]);
 const selection = ref<string[]>([]);
 const currentPage = ref<number>(0);
 
 const isLoading = ref(true);
 
-const skeletonRows = ref<Array<Array<any>>>(
-  Array(5).fill([{ label: " ", to: "#" }, " ", " ", { component: "DsfrTag", label: " ", class: "skeleton-tag" }]),
-);
 const loadReports = async () => {
-<<<<<<< HEAD
   const reportList = await Issues.getReportIssueByNotifierId();
-=======
-  try {
-    const reportList = await Issues.getReportIssueByNotifierId();
->>>>>>> e6ab1ae (feat: :lipstick: delete useless variable)
 
-  rows.value = reportList.map((report: any) => [
-    {
-      label: report.application?.label,
-      to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
-    },
-    report.description,
-    formatDate(report.createdAt),
-    {
-      component: "DsfrTag",
-      icon: statusIconClasses[report.status],
-      label: statusDictionary[report.status],
-      class: report.status,
-    },
-  ]);
+    rows.value =
+      reportList.map((report: ReportIssue) => ({
+        Application: {
+          label: report.application?.label,
+          to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
+        },
+        Description: report.description,
+        Date: formatDate(report.createdAt),
+        Statut: {
+          component: "DsfrTag",
+          icon: statusIconClasses[report.status as Status],
+          label: statusDictionary[report.status as Status],
+          class: report.status,
+        },
+      })) || [];
+    isLoading.value = false;
 };
 
 onMounted(() => {
@@ -48,15 +44,16 @@ onMounted(() => {
 
 <template>
   <div class="fr-container fr-my-2v w-[800px]">
-    <div v-if="!isLoading && rows.length === 0" class="text-center">
+    <AppLoader v-if="isLoading"></AppLoader>
+    <div v-if="!isLoading && !rows.length" class="text-center">
       <p>Aucun signalement recensé.</p>
     </div>
     <DsfrDataTable
-      v-else
+      v-if="!isLoading && rows.length"
       v-model:selection="selection"
       v-model:current-page="currentPage"
       :headers-row="headers"
-      :rows="isLoading ? skeletonRows : rows"
+      :rows="rows"
       selectable-rows
       row-key="id"
       :title="title"
@@ -69,10 +66,7 @@ onMounted(() => {
       :sortable-rows="['id']"
     >
       <template #cell="{ colKey, cell }">
-        <template v-if="isLoading">
-          <div class="skeleton-cell"></div>
-        </template>
-        <template v-else-if="colKey === 'Application'">
+        <template v-if="colKey === 'Application'">
           <router-link :to="cell.to">
             {{ cell.label }}
           </router-link>
@@ -123,30 +117,5 @@ onMounted(() => {
 .text-center p {
   margin: 0;
   text-align: center;
-}
-
-.skeleton-cell {
-  height: 20px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  border-radius: 4px;
-}
-
-.skeleton-tag {
-  display: inline-block;
-  width: 60px;
-  height: 20px;
-  background: #e0e0e0;
-  border-radius: 4px;
-}
-
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
 }
 </style>

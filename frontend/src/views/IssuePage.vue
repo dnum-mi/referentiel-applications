@@ -33,7 +33,7 @@ const tabs = [
       </DsfrTabItem>
     </template>
 
-    <template v-for="(tab, index) in tabs">
+    <template v-for="(tab, index) in tabs" :key="tab.id">
       <DsfrTabContent v-show="activeTab === index" :panel-id="`tab-content-${index}`" :tab-id="`tab-${index}`">
         <component :is="tab.component" />
       </DsfrTabContent>
