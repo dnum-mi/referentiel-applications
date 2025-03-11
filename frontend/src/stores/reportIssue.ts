@@ -24,15 +24,5 @@ export const useReportIssueStore = defineStore("ReportIssueStore", {
 
       return response;
     },
-
-    // Option supplémentaire: Fonction pour re-fetcher les anomalies
-    async fetchAnomalies() {
-      try {
-        const response = await reportIssue.getAnomalies(); // Assurez-vous d'implémenter cette méthode
-        this.anomalies = response.data;
-      } catch (error) {
-        console.error("Erreur lors du fetch des anomalies :", error);
-      }
-    },
   },
 });
