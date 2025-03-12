@@ -51,7 +51,6 @@ async function fetchEvents() {
     loading.value = true;
     const response = await axios.get(`applications/${props.application.id}/events`);
     events.value = response.data;
-    loading.value = false;
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la récupération des évenements.");
   } finally {
