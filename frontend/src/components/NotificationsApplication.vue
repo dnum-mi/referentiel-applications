@@ -48,7 +48,7 @@ onMounted(() => {
 
 <template>
   <div v-if="rows.length === 0" class="text-center">
-    <p>Aucun lien enregistré.</p>
+    <p>Aucun signalement enregistré.</p>
   </div>
   <DsfrDataTable
     v-else

@@ -4,32 +4,38 @@ import { onMounted, ref } from "vue";
 import { routeNames } from "@/router/route-names";
 import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
+import type { ReportIssue } from "@/models/ReportIssue";
 
 const title = "Liste de tous les signalements";
 const headers = ["Application", "Signalant", "Description", "Date", "Statut"];
+type Status = "in_pending" | "in_progress" | "done";
 
-const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
+const rows = ref<Record<string, unknown>[]>([]);
 const selection = ref<string[]>([]);
-const currentPage = ref<number>(0);
+const currentPage = ref(0);
+
+const isLoading = ref(true);
 
 const loadReports = async () => {
   const reportList = await Issues.getReportIssue();
 
-  rows.value = reportList.map((report: any) => [
-    {
-      label: report.application?.label,
-      to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
-    },
-    report.notifier?.email,
-    report.description,
-    formatDate(report.createdAt),
-    {
-      component: "DsfrTag",
-      icon: statusIconClasses[report.status],
-      label: statusDictionary[report.status],
-      class: report.status,
-    },
-  ]);
+  rows.value =
+    reportList.map((report: ReportIssue) => ({
+      Application: {
+        label: report.application?.label,
+        to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
+      },
+      Signalant: report.notifier?.email,
+      Description: report.description,
+      Date: formatDate(report.createdAt),
+      Statut: {
+        component: "DsfrTag",
+        icon: statusIconClasses[report.status as Status],
+        label: statusDictionary[report.status as Status],
+        class: report.status,
+      },
+    })) || [];
+  isLoading.value = false;
 };
 
 onMounted(() => {
@@ -39,11 +45,12 @@ onMounted(() => {
 
 <template>
   <div class="fr-container fr-my-2v w-[800px]">
-    <div v-if="rows.length === 0" class="text-center">
+    <AppLoader v-if="isLoading"></AppLoader>
+    <div v-if="!isLoading && !rows.length" class="text-center">
       <p>Aucun signalement recensé.</p>
     </div>
     <DsfrDataTable
-      v-else
+      v-if="!isLoading && rows.length"
       v-model:selection="selection"
       v-model:current-page="currentPage"
       :headers-row="headers"
