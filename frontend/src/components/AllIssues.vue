@@ -8,12 +8,11 @@ import type { ReportIssue } from "@/models/ReportIssue";
 
 const title = "Liste de tous les signalements";
 const headers = ["Application", "Signalant", "Description", "Date", "Statut"];
+type Status = "in_pending" | "in_progress" | "done";
 
 const rows = ref<Record<string, unknown>[]>([]);
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
-
-const isLoading = ref(true);
 
 const isLoading = ref(true);
 
@@ -31,8 +30,8 @@ const loadReports = async () => {
       Date: formatDate(report.createdAt),
       Statut: {
         component: "DsfrTag",
-        icon: statusIconClasses[report.status],
-        label: statusDictionary[report.status],
+        icon: statusIconClasses[report.status as Status],
+        label: statusDictionary[report.status as Status],
         class: report.status,
       },
     })) || [];
