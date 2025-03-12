@@ -30,7 +30,7 @@ const showDeleteConfirmation = ref(false);
 const loading = ref(false);
 const isSubmitting = ref(false);
 
-const currentPage = ref<number>(0);
+const currentPage = ref(0);
 const headers = ["Sélection", "Lien", "Description", "Type de lien", "Actions"];
 const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
 
@@ -64,7 +64,10 @@ async function saveAll() {
   const existingIds = new Set((props.application.externalRessource || []).map((l: ExternalRessource) => l.id));
   const linksToSave = localLinks.value.map((link) => (existingIds.has(link.id) ? link : { ...link, id: link.id ?? undefined }));
   loading.value = true;
+
   try {
+    linkModal.closeModal();
+
     const e = await Applications.patchApplication({
       ...props.application,
       externalRessource: linksToSave,
@@ -76,7 +79,6 @@ async function saveAll() {
       externalRessource: linksToSave,
     });
     toaster.addSuccessMessage("Liens sauvegardés avec succès !");
-    linkModal.closeModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde des liens.");
   } finally {
@@ -157,7 +159,7 @@ watch(
       </DsfrButton>
     </div>
   </div>
-  <div v-if="rows.length === 0" class="text-center">
+  <div v-if="!loading && rows.length === 0" class="text-center">
     <p>Aucun lien enregistré.</p>
   </div>
   <div v-else>
@@ -166,7 +168,9 @@ watch(
         Supprimer la sélection
       </DsfrButton>
     </div>
+    <AppLoader v-if="loading"></AppLoader>
     <DsfrDataTable
+      v-else
       v-model:selection="selectedLinkIds"
       v-model:current-page="currentPage"
       :headers-row="headers"
