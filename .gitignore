@@ -367,3 +367,5 @@ auto-imports.d.ts
 .tmp
 
 .mongo-dev/
+
+components.d.ts
