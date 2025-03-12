@@ -12,6 +12,7 @@ const notifications = ref<any[]>([]);
 const statuses = Object.keys(statusDictionary);
 
 const currentPage = ref(0);
+const loading = ref(true);
 
 const headers = ["Notifié par", "Description", "Date de création", "Statut"];
 const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
@@ -36,6 +37,7 @@ const loadNotifications = async () => {
         class: report.status,
       },
     ]);
+    loading.value = false;
   } catch (error) {
     console.error("Une erreur est survenue lors du chargement des notifications :", error);
   }
@@ -47,7 +49,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-if="rows.length === 0" class="text-center">
+  <AppLoader v-if="loading"></AppLoader>
+  <div v-else-if="!loading && rows.length === 0" class="text-center">
     <p>Aucun signalement enregistré.</p>
   </div>
   <DsfrDataTable
