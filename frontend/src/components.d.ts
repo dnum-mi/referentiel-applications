@@ -16,6 +16,7 @@ declare module 'vue' {
     ApplicationForm: typeof import('./components/form/ApplicationForm.vue')['default']
     ApplicationList: typeof import('./components/ApplicationList.vue')['default']
     ApplicationOverview: typeof import('./components/ApplicationOverview.vue')['default']
+    AppLoader: typeof import('./components/AppLoader.vue')['default']
     AppToaster: typeof import('./components/AppToaster.vue')['default']
     ComplianceForm: typeof import('./components/form/ComplianceForm.vue')['default']
     Compliances: typeof import('./components/Compliances.vue')['default']
@@ -56,6 +57,5 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchApplications: typeof import('./components/SearchApplications.vue')['default']
-    useModal: typeof import('./composables/use-modal')['default']
   }
 }
