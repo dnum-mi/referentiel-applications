@@ -23,7 +23,9 @@ const eventModal = useModal();
 const showDeleteConfirmation = ref(false);
 
 const isSubmitting = ref(false);
-const currentPage = ref<number>(0);
+const currentPage = ref(0);
+
+const loading = ref(true);
 
 const events = ref([]);
 
@@ -35,10 +37,9 @@ async function createEvent(newEvent) {
       description: newEvent.description,
       type: newEvent.type,
     };
-
+    eventModal.closeModal();
     await axios.post(`applications/${props.application.id}/events`, eventToSend);
     toaster.addSuccessMessage("Événement créé avec succès !");
-    eventModal.closeModal();
     fetchEvents();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la création de l'événement.");
@@ -47,10 +48,13 @@ async function createEvent(newEvent) {
 
 async function fetchEvents() {
   try {
+    loading.value = true;
     const response = await axios.get(`applications/${props.application.id}/events`);
     events.value = response.data;
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la récupération des évenements.");
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -121,7 +125,7 @@ function cancelDelete() {
       </DsfrButton>
     </div>
   </div>
-  <div v-if="rows.length === 0" class="text-center">
+  <div v-if="!loading && rows.length === 0" class="text-center">
     <p>Aucun événement enregistré.</p>
   </div>
   <div v-else>
@@ -130,7 +134,9 @@ function cancelDelete() {
         Supprimer la sélection
       </DsfrButton>
     </div>
+    <AppLoader v-if="loading"></AppLoader>
     <DsfrDataTable
+      v-else
       v-model:selection="selectedEventIds"
       v-model:current-page="currentPage"
       title="Liste des événements associés"

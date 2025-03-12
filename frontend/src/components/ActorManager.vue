@@ -22,7 +22,7 @@ const emit = defineEmits(["update:application"]);
 const localActors = ref<Actor[]>(Array.isArray(props.application.actors) ? [...props.application.actors] : []);
 const selectedActorIds = ref<string[]>([]);
 
-const currentPage = ref<number>(0);
+const currentPage = ref(0);
 const headers = ["Sélection", "Email", "Type", "Actions"];
 const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
 
@@ -67,6 +67,8 @@ async function saveAll() {
 
   loading.value = true;
   try {
+    actorModal.closeModal();
+
     await Applications.patchApplication({
       ...props.application,
       actors: actorsToSave,
@@ -76,7 +78,6 @@ async function saveAll() {
       actors: actorsToSave,
     });
     toaster.addSuccessMessage("Acteurs sauvegardés avec succès !");
-    actorModal.closeModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde des acteurs.");
   } finally {
@@ -156,7 +157,7 @@ watch(
       </DsfrButton>
     </div>
   </div>
-  <div v-if="rows.length === 0" class="text-center">
+  <div v-if="!loading && rows.length === 0" class="text-center">
     <p>Aucun acteur enregistré.</p>
   </div>
   <div v-else>
@@ -165,7 +166,9 @@ watch(
         Supprimer la sélection
       </DsfrButton>
     </div>
+    <AppLoader v-if="loading"></AppLoader>
     <DsfrDataTable
+      v-else
       v-model:selection="selectedActorIds"
       v-model:current-page="currentPage"
       :headers-row="headers"
