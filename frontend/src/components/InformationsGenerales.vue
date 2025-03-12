@@ -3,7 +3,6 @@ import { ref } from "vue";
 import type { Application } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
-import { computed } from "vue";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
 
@@ -11,6 +10,7 @@ const isSubmitting = ref(false);
 const toaster = useToaster();
 
 const emit = defineEmits(["update:application"]);
+const loading = ref(false);
 
 const props = defineProps<{
   application: Application;
@@ -25,6 +25,9 @@ const applicationModal = useModal();
 async function updateApplication(updatedData) {
   isSubmitting.value = true;
   try {
+    loading.value = true;
+    applicationModal.closeModal();
+
     const updatedApplication = await Applications.patchApplication({
       ...props.application,
       ...updatedData,
@@ -33,11 +36,11 @@ async function updateApplication(updatedData) {
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
     toaster.addSuccessMessage("Application mise à jour avec succès");
-    applicationModal.closeModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la mise à jour de l'application");
   } finally {
     isSubmitting.value = false;
+    loading.value = false;
   }
 }
 
@@ -70,24 +73,27 @@ watch(
                   />
                 </div>
               </div>
-              <h4>ID de l'application</h4>
-              <p>{{ application.id }}</p>
-              <h4>Description</h4>
-              <p>{{ application.description }}</p>
+              <AppLoader v-if="loading"></AppLoader>
+              <div v-else>
+                <h4>ID de l'application</h4>
+                <p>{{ application.id }}</p>
+                <h4>Description</h4>
+                <p>{{ application.description }}</p>
 
-              <h4 class="fr-mt-3w">Objectifs</h4>
-              <ul>
-                <li v-for="purpose in application.purposes" :key="purpose">
-                  {{ purpose }}
-                </li>
-              </ul>
+                <h4 class="fr-mt-3w">Objectifs</h4>
+                <ul>
+                  <li v-for="purpose in application.purposes" :key="purpose">
+                    {{ purpose }}
+                  </li>
+                </ul>
 
-              <h4 class="fr-mt-3w">Tags</h4>
-              <ul class="fr-tags-group">
-                <li v-for="tag in application.tags" :key="tag">
-                  <DsfrTag :label="tag" :small="small" />
-                </li>
-              </ul>
+                <h4 class="fr-mt-3w">Tags</h4>
+                <ul class="fr-tags-group">
+                  <li v-for="tag in application.tags" :key="tag">
+                    <DsfrTag :label="tag" :small="small" />
+                  </li>
+                </ul>
+              </div>
             </slot>
           </div>
         </div>

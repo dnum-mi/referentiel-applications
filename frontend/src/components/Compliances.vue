@@ -22,7 +22,7 @@ const emit = defineEmits(["update:application"]);
 const localCompliances = ref<Compliance[]>(Array.isArray(props.application.compliances) ? [...props.application.compliances] : []);
 const selectedComplianceIds = ref<string[]>([]);
 
-const currentPage = ref<number>(0);
+const currentPage = ref(0);
 const headers = ["Sélection", "Nom", "Type", "Statut", "Actions"];
 const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
 
@@ -63,6 +63,8 @@ async function saveAll() {
   );
   loading.value = true;
   try {
+    complianceModal.closeModal();
+
     await Applications.patchApplication({
       ...props.application,
       compliances: compliancesToSave,
@@ -72,7 +74,6 @@ async function saveAll() {
       compliances: compliancesToSave,
     });
     toaster.addSuccessMessage("Conformités sauvegardées avec succès !");
-    complianceModal.closeModal();
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde des conformités.");
   } finally {
@@ -152,7 +153,7 @@ watch(
       </DsfrButton>
     </div>
   </div>
-  <div v-if="rows.length === 0" class="text-center">
+  <div v-if="!loading && rows.length === 0" class="text-center">
     <p>Aucune conformité enregistrée.</p>
   </div>
   <div v-else>
@@ -167,7 +168,9 @@ watch(
         Supprimer la sélection
       </DsfrButton>
     </div>
+    <AppLoader v-if="loading"></AppLoader>
     <DsfrDataTable
+      v-else
       v-model:selection="selectedComplianceIds"
       v-model:current-page="currentPage"
       :headers-row="headers"
