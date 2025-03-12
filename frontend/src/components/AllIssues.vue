@@ -69,10 +69,7 @@ onMounted(() => {
       :sortable-rows="['id']"
     >
       <template #cell="{ colKey, cell }">
-        <template v-if="isLoading">
-          <div class="skeleton-cell"></div>
-        </template>
-        <template v-else-if="colKey === 'Application'">
+        <template v-if="colKey === 'Application'">
           <router-link :to="cell.to">
             {{ cell.label }}
           </router-link>
