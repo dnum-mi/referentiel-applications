@@ -19,23 +19,23 @@ const isLoading = ref(true);
 const loadReports = async () => {
   const reportList = await Issues.getReportIssue();
 
-    rows.value =
-      reportList.map((report: ReportIssue) => ({
-        Application: {
-          label: report.application?.label,
-          to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
-        },
-        Signalant: report.notifier?.email,
-        Description: report.description,
-        Date: formatDate(report.createdAt),
-        Statut: {
-          component: "DsfrTag",
-          icon: statusIconClasses[report.status as Status],
-          label: statusDictionary[report.status as Status],
-          class: report.status,
-        },
-      })) || [];
-    isLoading.value = false;
+  rows.value =
+    reportList.map((report: ReportIssue) => ({
+      Application: {
+        label: report.application?.label,
+        to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
+      },
+      Signalant: report.notifier?.email,
+      Description: report.description,
+      Date: formatDate(report.createdAt),
+      Statut: {
+        component: "DsfrTag",
+        icon: statusIconClasses[report.status as Status],
+        label: statusDictionary[report.status as Status],
+        class: report.status,
+      },
+    })) || [];
+  isLoading.value = false;
 };
 
 onMounted(() => {
@@ -67,10 +67,7 @@ onMounted(() => {
       :sortable-rows="['id']"
     >
       <template #cell="{ colKey, cell }">
-        <template v-if="isLoading">
-          <div class="skeleton-cell"></div>
-        </template>
-        <template v-else-if="colKey === 'Application'">
+        <template v-if="colKey === 'Application'">
           <router-link :to="cell.to">
             {{ cell.label }}
           </router-link>

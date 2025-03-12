@@ -19,22 +19,22 @@ const isLoading = ref(true);
 const loadReports = async () => {
   const reportList = await Issues.getReportIssueByNotifierId();
 
-    rows.value =
-      reportList.map((report: ReportIssue) => ({
-        Application: {
-          label: report.application?.label,
-          to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
-        },
-        Description: report.description,
-        Date: formatDate(report.createdAt),
-        Statut: {
-          component: "DsfrTag",
-          icon: statusIconClasses[report.status as Status],
-          label: statusDictionary[report.status as Status],
-          class: report.status,
-        },
-      })) || [];
-    isLoading.value = false;
+  rows.value =
+    reportList.map((report: ReportIssue) => ({
+      Application: {
+        label: report.application?.label,
+        to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
+      },
+      Description: report.description,
+      Date: formatDate(report.createdAt),
+      Statut: {
+        component: "DsfrTag",
+        icon: statusIconClasses[report.status as Status],
+        label: statusDictionary[report.status as Status],
+        class: report.status,
+      },
+    })) || [];
+  isLoading.value = false;
 };
 
 onMounted(() => {
