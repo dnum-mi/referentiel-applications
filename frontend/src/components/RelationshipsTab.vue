@@ -32,10 +32,10 @@ watch(
 const headers = ["Source", "Relation", "Cible"];
 
 const relationTypes: Record<string, { source: string; target: string }> = {
-  is_part_of: { source: "Fait partie de", target: "Contient" },
+  is_part_of: { source: "Fait partie de", target: "A comme sous-élément" },
   in_replacement_of: { source: "Remplace", target: "Remplace" },
-  is_service_user_of: { source: "Utilise le service de", target: "Utilise le service à" },
-  is_data_user_of: { source: "Utilise la donnée de", target: "Utilise la donnée à" },
+  is_service_user_of: { source: "Utilise le service de", target: "Fournit le service à" },
+  is_data_user_of: { source: "Utilise la donnée de", target: "Fournit la donnée à" },
 };
 
 const getRelationLabelForSide = (type: string, isSource: boolean): string =>
@@ -43,21 +43,13 @@ const getRelationLabelForSide = (type: string, isSource: boolean): string =>
 
 const createRow = (rel: Relation, isSource: boolean): TableRow => {
   const label = getRelationLabelForSide(rel.type, isSource);
-  if (isSource) {
-    return {
-      id: rel.id,
-      Source: localApplication.label,
-      Relation: label,
-      Cible: rel.targetApplication?.label || "Label manquant",
-    };
-  } else {
-    return {
-      id: rel.id,
-      Source: rel.sourceApplication?.label || "Label manquant",
-      Relation: label,
-      Cible: localApplication.label,
-    };
-  }
+
+  return {
+    id: rel.id,
+    Source: isSource ? localApplication.label : rel.sourceApplication?.label || "Label manquant",
+    Relation: label,
+    Cible: isSource ? rel.targetApplication?.label || "Label manquant" : localApplication.label,
+  };
 };
 
 const allRelations = computed(() => [
