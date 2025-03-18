@@ -94,7 +94,8 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.(t|j)s",
+      "!dist/**"
     ],
     "coverageDirectory": "./coverage",
     "coverageReporters": [
@@ -108,6 +109,10 @@
     ],
     "modulePaths": [
       "<rootDir>"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/dist/"
     ]
   }
 }

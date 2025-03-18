@@ -113,7 +113,7 @@
       "authorizationServicesEnabled": false,
       "serviceAccountsEnabled": true,
       "webOrigins": ["+"],
-      "directAccessGrantsEnabled": false
+      "directAccessGrantsEnabled": true
     }
   ],
   "users": [
