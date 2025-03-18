@@ -55,22 +55,24 @@ const removeTag = (index: number) => {
 
 <template>
   <form @submit.prevent="handleSubmit">
-    <DsfrInputGroup label="Label" v-model="form.label" required />
+    <DsfrInputGroup label="Label" v-model="form.label" label-visible required />
 
     <DsfrInputGroup
       class="fr-mt-3w"
       label="Nom court"
+      label-visible
       v-model="form.shortName"
       hint="Optionnel - Un nom court pour identifier rapidement l'application"
     />
 
-    <DsfrInputGroup class="fr-mt-3w" label="Description" v-model="form.description" required>
-      <DsfrInput v-model="form.description" is-textarea required />
+    <DsfrInputGroup class="fr-mt-3w" v-model="form.description" required>
+      <DsfrInput v-model="form.description" class="fr-mt-3w" label="Description" label-visible is-textarea required />
     </DsfrInputGroup>
 
     <DsfrInputGroup
       class="fr-mt-3w"
       label="URL du logo"
+      label-visible
       v-model="form.logo"
       hint="Optionnel - URL d'une image représentant l'application"
     />
