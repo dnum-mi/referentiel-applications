@@ -2,9 +2,10 @@ import request from 'supertest';
 import { setupTestSuite } from './setup';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getToken } from './getToken';
 
 describe('AppController (e2e)', () => {
-  const getApp = setupTestSuite();
+  const app = setupTestSuite();
   const keycloakId = uuidv4();
 
   beforeAll(async () => {
@@ -17,14 +18,11 @@ describe('AppController (e2e)', () => {
     });
   });
 
-  it('/ (GET)', () => {
-    const app = getApp();
-    return request(app.getHttpServer())
+  it('/ (GET)', async () => {
+    const TOKEN = await getToken();
+    return request(app().getHttpServer())
       .get('/')
-      .set(
-        'Authorization',
-        'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwYXBzYjYxQzVFa2x6d2JjRUpXYXZPeXllMk5UQ29FRHpRb2lFdWFlTjJnIn0.eyJzdWIiOiI5OWZhNDE5ZS1mNGZiLTRlZDctOGIxMS1jNzIxMGIzMDkiLCAiZW1haWwiOiJ0aG9tYXMuYmVybmFyZC1lY29ub2NvbUBpbnRlcmlldXIuZ291di5mciJ9.',
-      )
+      .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200)
       .expect('Hello World!');
   });

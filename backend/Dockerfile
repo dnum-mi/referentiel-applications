@@ -9,7 +9,7 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-RUN npx prisma generate
+RUN pnpm prisma generate
 RUN pnpm run build
 
 ENV PORT=3500

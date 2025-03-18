@@ -2,12 +2,10 @@ import request from 'supertest';
 import { setupTestSuite } from './setup';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from 'src/prisma/prisma.service';
-
-const TOKEN =
-  'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwYXBzYjYxQzVFa2x6d2JjRUpXYXZPeXllMk5UQ29FRHpRb2lFdWFlTjJnIn0.eyJzdWIiOiI5OWZhNDE5ZS1mNGZiLTRlZDctOGIxMS1jNzIxMGIzMDkiLCAiZW1haWwiOiJ0aG9tYXMuYmVybmFyZC1lY29ub2NvbUBpbnRlcmlldXIuZ291di5mciJ9.';
+import { getToken } from './getToken';
 
 describe('Events', () => {
-  const getApp = setupTestSuite();
+  const app = setupTestSuite();
   const keycloakId = uuidv4();
   const applicationId = uuidv4();
 
@@ -39,11 +37,11 @@ describe('Events', () => {
     });
   });
 
-  it(`/GET applications/:applicationId/events`, () => {
-    const app = getApp();
-    return request(app.getHttpServer())
+  it(`/GET applications/:applicationId/events`, async () => {
+    const TOKEN = await getToken();
+    return request(app().getHttpServer())
       .get(`/applications/${applicationId}/events`)
-      .set('Authorization', TOKEN)
+      .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
   });
 });

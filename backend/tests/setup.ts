@@ -15,11 +15,11 @@ export async function setupApp(): Promise<INestApplication> {
 export function setupTestSuite() {
   let app: INestApplication;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     app = await setupApp();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     if (app) {
       await app.close();
     }

@@ -2,9 +2,7 @@ import request from 'supertest';
 import { setupTestSuite } from './setup';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from 'src/prisma/prisma.service';
-
-const TOKEN =
-  'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwYXBzYjYxQzVFa2x6d2JjRUpXYXZPeXllMk5UQ29FRHpRb2lFdWFlTjJnIn0.eyJzdWIiOiI5OWZhNDE5ZS1mNGZiLTRlZDctOGIxMS1jNzIxMGIzMDkiLCAiZW1haWwiOiJ0aG9tYXMuYmVybmFyZC1lY29ub2NvbUBpbnRlcmlldXIuZ291di5mciJ9.';
+import { getToken } from './getToken';
 
 describe('Anomaly Notifications', () => {
   const getApp = setupTestSuite();
@@ -20,11 +18,12 @@ describe('Anomaly Notifications', () => {
     });
   });
 
-  it(`/GET anomaly-notifications`, () => {
+  it(`/GET anomaly-notifications`, async () => {
     const app = getApp();
+    const TOKEN = await getToken();
     return request(app.getHttpServer())
       .get('/anomaly-notifications')
-      .set('Authorization', TOKEN)
+      .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
   });
 });
