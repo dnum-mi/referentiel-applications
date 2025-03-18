@@ -24,6 +24,7 @@ services:
       - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080,http://krakend:8080
       - KEYCLOAK_BASE_URL=http://localhost:8082
       - KEYCLOAK_REALM=referentiel-applications
+      - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
     depends_on:
       - postgres
     ports:
@@ -49,15 +50,14 @@ services:
     build:
       context: ./keycloak
     environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=password
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=password
     ports:
       - "8082:8080"
     healthcheck:
-      test: >
-        exec 3<>/dev/tcp/127.0.0.1/9000; echo -e "GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n" >&3; cat <&3 | grep -q '\"status\": \"UP\"' && exit 0 || exit 1
-      interval: 5s
-      timeout: 10s
+      test: "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3"
+      interval: 30s
+      timeout: 5s
       retries: 5
     depends_on:
       - postgres

@@ -58,8 +58,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Start stack using docker compose
-        run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend postgres -d
-      - run: docker compose exec backend npx prisma migrate deploy
+        run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up keycloak backend postgres -d
+      - name: Wait for Keycloak to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then
+              echo "Keycloak is ready"
+              exit 0
+            fi
+            echo "Waiting for Keycloak..."
+            sleep 5
+          done
+          echo "Keycloak did not become ready in time"
+          exit 1
+      - run: docker compose exec backend pnpm prisma migrate deploy
       - run: docker compose exec backend pnpm run test:cov
       - name: Produce the coverage report
         uses: insightsengineering/coverage-action@v2
