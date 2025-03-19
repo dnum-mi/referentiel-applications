@@ -1,26 +1,15 @@
 import request from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
 import { setupTestSuite } from './setup';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { getToken } from './getToken';
+import { UserFaker } from './fakers/user.faker';
 
 describe('Applications', () => {
   const app = setupTestSuite();
-  const keycloakId = uuidv4();
-
-  beforeAll(async () => {
-    const prismaService = new PrismaService();
-    await prismaService.user.create({
-      data: {
-        email: `${keycloakId}@test.fr`,
-        keycloakId: keycloakId,
-      },
-    });
-  });
 
   it(`/GET applications`, async () => {
     const TOKEN = await getToken();
-    return request(app().getHttpServer())
+    await request(app().getHttpServer())
       .get('/applications')
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
@@ -28,15 +17,16 @@ describe('Applications', () => {
 
   it(`/GET applications/search`, async () => {
     const TOKEN = await getToken();
-    return request(app().getHttpServer())
+    await request(app().getHttpServer())
       .get('/applications/search')
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
   });
 
   it(`/POST applications`, async () => {
+    const user = await UserFaker.create();
     const TOKEN = await getToken();
-    return request(app().getHttpServer())
+    await request(app().getHttpServer())
       .post('/applications')
       .send({
         label: 'My Complete Application',
@@ -54,7 +44,7 @@ describe('Applications', () => {
         actors: [
           {
             role: 'dev',
-            userId: keycloakId,
+            userId: user.keycloakId,
           },
         ],
         compliances: [],
