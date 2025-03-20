@@ -26,22 +26,10 @@ export const applicationMap = (
             : undefined,
         })),
       },
-      externalRessource: {
-        create: Array.isArray(createApplicationDto.externalRessource)
-          ? createApplicationDto.externalRessource.map(
-              (externalRessourceDto) => ({
-                link: externalRessourceDto.link,
-                description: externalRessourceDto.description,
-                type: externalRessourceDto.type,
-              }),
-            )
-          : [],
-      },
     },
     include: {
       metadata: true,
       compliances: true,
-      externalRessource: true,
     },
   };
 };

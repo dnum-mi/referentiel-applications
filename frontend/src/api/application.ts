@@ -53,14 +53,6 @@ const Applications = {
             notes: compliance.notes,
           }))
         : [],
-      externalRessource: app.externalRessource
-        ? app.externalRessource.map((ressource) => ({
-            id: ressource.id,
-            link: ressource.link,
-            description: ressource.description,
-            type: ressource.type,
-          }))
-        : [],
     };
 
     const response = await axios.patch<Application>(`/applications/${app.id}`, payload);

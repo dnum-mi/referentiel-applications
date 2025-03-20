@@ -5,14 +5,14 @@ import { Prisma, Actor } from '@prisma/client';
 
 @Injectable()
 export class ActorService {
-  constructor(private ActorRepository: ActorRepository) {}
+  constructor(private actorRepository: ActorRepository) {}
 
   public async create(createActor: CreateActorDto) {
-    return await this.ActorRepository.create(createActor);
+    return await this.actorRepository.create(createActor);
   }
 
   public async findOne(id: string) {
-    const actor = await this.ActorRepository.findById(id);
+    const actor = await this.actorRepository.findById(id);
     if (!actor) {
       throw new NotFoundException(`Acteur non trouvé pour l'ID ${id}`);
     }
@@ -20,7 +20,7 @@ export class ActorService {
   }
 
   public async findAll() {
-    return await this.ActorRepository.findAll();
+    return await this.actorRepository.findAll();
   }
 
   public async update(params: {
@@ -30,11 +30,11 @@ export class ActorService {
     const { where, data } = params;
 
     await this.findOne(where.id);
-    return await this.ActorRepository.update(where, data);
+    return await this.actorRepository.update(where, data);
   }
 
   public async delete(id: string) {
     await this.findOne(id);
-    return await this.ActorRepository.delete(id);
+    return await this.actorRepository.delete(id);
   }
 }

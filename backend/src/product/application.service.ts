@@ -6,7 +6,6 @@ import {
   CreateApplicationDto,
   PatchApplicationDto,
   UpdateComplianceDto,
-  UpdateExternalRessourceDto,
 } from './application/dto/create-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
 import { SearchApplicationDto } from './application/dto/search-application.dto';
@@ -63,14 +62,6 @@ export class ApplicationService {
       await this.applyComplianceUpdates(
         where.id,
         data.compliances,
-        applicationUpdates,
-      );
-    }
-
-    if (data.externalRessource !== undefined) {
-      await this.applyExternalRessourceUpdates(
-        where.id,
-        data.externalRessource,
         applicationUpdates,
       );
     }
@@ -338,92 +329,6 @@ export class ApplicationService {
       scoreValue: dto.scoreValue,
       scoreUnit: dto.scoreUnit,
       notes: dto.notes,
-    }));
-  }
-
-  private async applyExternalRessourceUpdates(
-    applicationId: string,
-    incomingExternalRessourceDtos: UpdateExternalRessourceDto[],
-    applicationUpdates: Prisma.ApplicationUpdateInput,
-  ): Promise<void> {
-    const existingExternalRessource =
-      await this.prisma.externalRessource.findMany({
-        where: { applicationId },
-        select: { id: true },
-      });
-
-    const existingExternalRessourceIds = existingExternalRessource.map(
-      (c) => c.id,
-    );
-    const incomingExternalRessourceIds = this.getIncomingExternalRessourceIds(
-      incomingExternalRessourceDtos,
-    );
-
-    const externalRessourceIdsToDelete = this.findExternalRessourceIdsToDelete(
-      existingExternalRessourceIds,
-      incomingExternalRessourceIds,
-    );
-    const externalRessourcesToCreate = this.findExternalRessourcesToCreate(
-      incomingExternalRessourceDtos,
-    );
-    const externalRessourcesToUpdate = this.findExternalRessourcesToUpdate(
-      incomingExternalRessourceDtos,
-      existingExternalRessourceIds,
-    );
-
-    applicationUpdates.externalRessource = {
-      delete: externalRessourceIdsToDelete.map((id) => ({ id })),
-      update: this.buildExternalRessourceUpdateList(externalRessourcesToUpdate),
-      create: this.buildExternalRessourceCreateList(externalRessourcesToCreate),
-    };
-  }
-
-  private getIncomingExternalRessourceIds(
-    dtos: UpdateExternalRessourceDto[],
-  ): string[] {
-    return dtos.filter((dto) => dto.id).map((dto) => dto.id as string);
-  }
-
-  private findExternalRessourceIdsToDelete(
-    existingIds: string[],
-    incomingIds: string[],
-  ): string[] {
-    return existingIds.filter((id) => !incomingIds.includes(id));
-  }
-
-  private findExternalRessourcesToCreate(
-    dtos: UpdateExternalRessourceDto[],
-  ): UpdateExternalRessourceDto[] {
-    return dtos.filter((dto) => !dto.id);
-  }
-
-  private findExternalRessourcesToUpdate(
-    dtos: UpdateExternalRessourceDto[],
-    existingIds: string[],
-  ): UpdateExternalRessourceDto[] {
-    return dtos.filter((dto) => dto.id && existingIds.includes(dto.id));
-  }
-
-  private buildExternalRessourceUpdateList(
-    dtos: UpdateExternalRessourceDto[],
-  ): Prisma.ExternalRessourceUpdateWithWhereUniqueWithoutApplicationInput[] {
-    return dtos.map((dto) => ({
-      where: { id: dto.id },
-      data: {
-        ...(dto.link !== undefined && { link: dto.link }),
-        ...(dto.description !== undefined && { description: dto.description }),
-        ...(dto.type !== undefined && { type: dto.type }),
-      },
-    }));
-  }
-
-  private buildExternalRessourceCreateList(
-    dtos: UpdateExternalRessourceDto[],
-  ): Prisma.ExternalRessourceCreateWithoutApplicationInput[] {
-    return dtos.map((dto) => ({
-      link: dto.link,
-      description: dto.description,
-      type: dto.type,
     }));
   }
 }

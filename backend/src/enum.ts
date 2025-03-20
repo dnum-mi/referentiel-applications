@@ -15,21 +15,6 @@ export enum ComplianceStatus {
   NOT_CONCERNED = 'not_concerned',
 }
 
-export enum ExternalSourceType {
-  ORGANIZATION = 'organization',
-  APPLICATION = 'application',
-  REGULATION = 'regulation',
-  FINANCIAL = 'financial',
-  POPULATION = 'population',
-}
-
-export enum ExternalSourceValueType {
-  URL = 'url',
-  URI = 'uri',
-  IDENTIFIER = 'identifier',
-  NAME = 'name',
-}
-
 export enum AnomalyNotificationStatus {
   PENDING = 'in_pending',
   INPROGRESS = 'in_progress',

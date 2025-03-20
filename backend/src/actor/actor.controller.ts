@@ -37,14 +37,14 @@ Informations requises :
     `,
   })
   @ApiResponse({ status: 201, description: 'Acteur créé avec succès' })
-  public async create(@Body() CreateActor: CreateActorDto, @Request() req) {
+  public async create(@Body() createActorDto: CreateActorDto, @Request() req) {
     Logger.log({
       message: "Début de la création de l'acteur",
       userId: req.user.keycloakId,
       action: 'create',
     });
 
-    return await this.actorService.create(CreateActor);
+    return await this.actorService.create(createActorDto);
   }
 
   @Get(':id')

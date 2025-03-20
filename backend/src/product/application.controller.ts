@@ -27,11 +27,7 @@ import {
 } from './application/dto/create-application.dto';
 import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
-import {
-  ComplianceStatus,
-  ComplianceType,
-  ExternalRessourceType,
-} from 'src/enum';
+import { ComplianceStatus, ComplianceType } from 'src/enum';
 
 /**
  * Controller pour la gestion des applications.
@@ -84,10 +80,6 @@ Vous devez fournir les informations suivantes :
   - **scoreValue**: Valeur du score.
   - **scoreUnit**: Unité du score.
   - **notes**: Notes complémentaires.
-- **externalRessources**: Les liens externes associés avec :
-  - **link**: L'URL.
-  - **description**: La description.
-  - **type**: Le type de ressource (Enum: ${Object.values(ExternalRessourceType).join(', ')}).
     `,
   })
   @ApiResponse({ status: 201, description: 'Application créée avec succès.' })
