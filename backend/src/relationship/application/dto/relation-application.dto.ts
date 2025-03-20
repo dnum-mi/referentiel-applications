@@ -2,7 +2,7 @@ import { IsEnum, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { RelationType } from '@prisma/client';
 
-export class CreateRelationDto {
+export class RelationApplicationDto {
   @ApiProperty()
   @IsString()
   applicationSource: string;
