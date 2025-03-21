@@ -1,0 +1,12 @@
+model Label {
+  id                  String       @id @default(uuid())
+  source              String
+  label               String?
+  shortname           String?
+  metadataId          String
+  metadata            Metadata    @relation("LabelMetadata", fields: [metadataId], references: [id])
+  applicationId       String
+  application         Application @relation("ApplicationLabels", fields: [applicationId], references: [id])
+
+  @@map("labels")
+}
