@@ -189,6 +189,17 @@ export class CreateApplicationDto {
 
   @ApiProperty({
     type: [String],
+    example: ['population 1', 'population 2'],
+    description: 'population associated with the application',
+    required: false,
+  })
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  targetPopulations?: string[];
+
+  @ApiProperty({
+    type: [String],
     example: ['finance', 'HR'],
     description: 'Purposes of the application',
     required: false,
@@ -294,6 +305,11 @@ export class PatchApplicationDto {
   @IsOptional()
   @IsString({ each: true })
   purposes?: string[];
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  targetPopulations?: string[];
 
   @ApiProperty({
     type: [String],

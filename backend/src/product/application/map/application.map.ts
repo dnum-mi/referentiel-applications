@@ -11,6 +11,7 @@ export const applicationMap = (
       shortName: createApplicationDto.shortName || null,
       logo: createApplicationDto.logo || null,
       description: createApplicationDto.description,
+      targetPopulations: createApplicationDto.targetPopulations,
       purposes: createApplicationDto.purposes,
       tags: createApplicationDto.tags,
       metadata: { connect: { id: applicationMetadataId } },
