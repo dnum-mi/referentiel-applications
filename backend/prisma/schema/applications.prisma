@@ -1,7 +1,5 @@
 model Application {
   id                  String                @id @default(uuid())
-  label               String
-  shortName           String?
   logo                String?
   description         String
   targetPopulations     String[]
@@ -20,10 +18,8 @@ model Application {
 
   relationsAsSource Relation[]         @relation("SourceHasTarget")
   relationsAsTarget Relation[]         @relation("TargetHasSource")
-  alternativeLabel  alternativeLabel[]
+  labels              Label[]          @relation("ApplicationLabels")
 
-  @@index([label])
-  @@index([shortName])
   @@map("applications")
 }
 
@@ -40,13 +36,15 @@ model Relation {
   @@map("relations")
 }
 
-model alternativeLabel {
+model Label {
   id                  String       @id @default(uuid())
-  alternativeLabel    String?
-  alternativeShotname String?
   source              String
+  label              String?
+  shortname          String?
   applicationId       String
-  application         Application? @relation(fields: [applicationId], references: [id])
+  application         Application @relation("ApplicationLabels", fields: [applicationId], references: [id])
+
+  @@map("labels")
 }
 
 enum RelationType {
