@@ -9,20 +9,14 @@ import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-  private static JWKS: ReturnType<typeof createRemoteJWKSet> | null = null;
+  private jwks = createRemoteJWKSet(new URL(process.env.KEYCLOAK_JWKS_URL));
 
-  constructor(private userService: UserService) {
-    if (!AuthMiddleware.JWKS) {
-      AuthMiddleware.JWKS = createRemoteJWKSet(
-        new URL(process.env.KEYCLOAK_JWKS_URL),
-      );
-    }
-  }
+  constructor(private userService: UserService) {}
 
   async use(req: Request, res: Response, next: NextFunction) {
     try {
       const token = req.headers['authorization'].split(' ')[1];
-      const { payload } = await jwtVerify(token, AuthMiddleware.JWKS);
+      const { payload } = await jwtVerify(token, this.jwks);
 
       req.user = await this.userService.findOrCreateByEmail(
         payload.email as string,
@@ -30,7 +24,8 @@ export class AuthMiddleware implements NestMiddleware {
       );
 
       next();
-    } catch {
+    } catch (error) {
+      console.error(error);
       throw new UnauthorizedException("L'authentification a échoué");
     }
   }
