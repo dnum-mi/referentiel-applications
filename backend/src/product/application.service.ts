@@ -232,6 +232,9 @@ export class ApplicationService {
     if (data.purposes !== undefined) {
       applicationUpdates.purposes = { set: data.purposes };
     }
+    if (data.targetPopulations !== undefined) {
+      applicationUpdates.targetPopulations = { set: data.targetPopulations };
+    }
     if (data.tags !== undefined) {
       applicationUpdates.tags = { set: data.tags };
     }

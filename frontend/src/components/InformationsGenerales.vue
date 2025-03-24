@@ -15,6 +15,7 @@ const loading = ref(false);
 const props = defineProps<{
   application: Application;
   tags: string[];
+  targetPopulations: string[];
   small?: boolean;
 }>();
 
@@ -100,19 +101,18 @@ watch(
       </div>
     </div>
 
-    <div v-if="application.parent" class="fr-col-4">
+    <div v-if="application.targetPopulations.length > 0" class="fr-col-4">
       <div class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <h3 class="fr-card__title">Parent</h3>
-            <p class="fr-card__desc">
-              Nom :
-              <router-link :to="{ name: 'application', params: { id: application.parent?.id } }">{{
-                application.parent?.label
-              }}</router-link>
-              <br />
-              Description : {{ application.parent?.description }}
-            </p>
+            <h3 class="fr-card__title">Population</h3>
+            <div class="fr-card__desc">
+              <ul class="fr-tags-group">
+                <li v-for="targetPopulation in application.targetPopulations" :key="targetPopulations">
+                  <DsfrTag :label="targetPopulation" :small="small" />
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

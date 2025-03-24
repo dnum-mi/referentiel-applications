@@ -4,6 +4,7 @@ model Application {
   shortName           String?
   logo                String?
   description         String
+  targetPopulations     String[]
   purposes            String[]
   tags                String[]
   metadataId          String

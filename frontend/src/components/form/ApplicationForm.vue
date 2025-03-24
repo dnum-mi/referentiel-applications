@@ -25,6 +25,16 @@ const handleSubmit = () => {
     shortName: form.value.shortName || null,
     logo: form.value.logo || null,
     description: form.value.description,
+    targetPopulations: form.value.targetPopulations,
+    purposes,
+    tags,
+  });
+  console.log("submit", {
+    label: form.value.label,
+    shortName: form.value.shortName || null,
+    logo: form.value.logo || null,
+    description: form.value.description,
+    targetPopulations: form.value.targetPopulations,
     purposes,
     tags,
   });
@@ -33,6 +43,7 @@ const form = ref({
   label: props.initialData?.label ?? "",
   shortName: props.initialData?.shortName ?? "",
   description: props.initialData?.description ?? "",
+  targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
   logo: props.initialData?.logo ?? "",
   purposes: [...(props.initialData?.purposes ?? [""])],
   tags: [...(props.initialData?.tags ?? [""])],
@@ -67,6 +78,14 @@ const removeTag = (index: number) => {
     form.value.tags.push("");
   }
 };
+
+const addPopulation = () => {
+  form.value.targetPopulations.push("");
+};
+
+const removePopulation = (index: number) => {
+  form.value.targetPopulations.splice(index, 1);
+};
 </script>
 
 <template>
@@ -84,6 +103,21 @@ const removeTag = (index: number) => {
     <DsfrInputGroup class="fr-mt-3w" v-model="form.description" required>
       <DsfrInput v-model="form.description" class="fr-mt-3w" label="Description" label-visible is-textarea required />
     </DsfrInputGroup>
+
+    <div class="fr-form-group fr-mt-3w">
+      <label class="fr-label">Population</label>
+      <div class="fr-mt-2w">
+        <div v-for="(targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+          <div class="fr-col">
+            <DsfrInput v-model="form.targetPopulations[index]" />
+          </div>
+          <div class="fr-col-auto">
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removePopulation(index)" />
+          </div>
+        </div>
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" @click="addPopulation" />
+      </div>
+    </div>
 
     <DsfrInputGroup
       class="fr-mt-3w"

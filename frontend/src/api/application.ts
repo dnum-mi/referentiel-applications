@@ -38,6 +38,7 @@ const Applications = {
       label: app.label,
       shortName: app.shortName,
       description: app.description,
+      targetPopulations: app.targetPopulations,
       purposes: app.purposes,
       tags: app.tags,
       compliances: app.compliances

@@ -3,6 +3,7 @@ export interface Application {
   label: string;
   shortName?: string;
   description?: string;
+  targetPopulations?: string[];
   organisationCode?: string;
   createdAt: string;
   updatedAt: string;
