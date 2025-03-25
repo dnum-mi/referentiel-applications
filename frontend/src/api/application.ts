@@ -29,7 +29,8 @@ const Applications = {
   },
 
   async getApplicationById(id: string): Promise<Application> {
-    return await axios.get(`/applications/${id}`);
+    const response = await axios.get(`/applications/${id}`);
+    return response.data;
   },
 
   async patchApplication(app: Application): Promise<Application> {
@@ -74,15 +75,6 @@ const Applications = {
     const response = await axios.patch<Application>(`/applications/${app.id}`, payload);
     console.log(response);
     return response.data;
-  },
-
-  async addRelationInApplication(applicationSourceId: string, applicationTargetId: string, type: string): Promise<void> {
-    const payload = {
-      applicationSource: applicationSourceId,
-      applicationTarget: applicationTargetId,
-      type: type,
-    };
-    return await requests.post("/relations", payload);
   },
 };
 
