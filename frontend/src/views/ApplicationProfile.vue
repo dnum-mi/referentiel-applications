@@ -37,10 +37,10 @@ onMounted(loadApplication);
     <div v-else-if="errorMessage">
       {{ errorMessage }}
     </div>
-    <div v-else-if="application && application.data">
-      <h2>{{ application.data.label }}</h2>
-      <ReportIssue class="button-right" :application="application.data" />
-      <ApplicationOverview :application="application.data" @update:application="handleApplicationUpdate" />
+    <div v-else-if="application">
+      <h2>{{ application.label }}</h2>
+      <ReportIssue class="button-right" :application="application" />
+      <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />
     </div>
   </div>
 </template>

@@ -77,12 +77,14 @@ export interface Event {
   metadataId?: string;
 }
 export interface Relation {
+  id: string;
   type: string;
+
   applicationSource: string;
   applicationTarget: string;
 
-  sourceApplication: Application;
-  targetApplication: Application;
+  sourceApplication?: Application;
+  targetApplication?: Application;
 }
 export interface User {
   keycloakId: string;
