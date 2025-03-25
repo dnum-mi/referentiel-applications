@@ -25,6 +25,7 @@ services:
       - KEYCLOAK_BASE_URL=http://localhost:8082
       - KEYCLOAK_REALM=referentiel-applications
       - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
+      - AUTH_VERIFY_JWT=true
     depends_on:
       - postgres
     ports:
