@@ -3,17 +3,13 @@ import { ref, watch } from "vue";
 import Applications from "@/api/application";
 import Relations from "@/api/relation";
 import useToaster from "@/composables/use-toaster";
-
-interface ApplicationSummary {
-  id: string;
-  label: string;
-}
+import type { Relation, Application } from "@/models/Application";
 
 const props = withDefaults(
   defineProps<{
     opened?: boolean;
     title: string;
-    applicationId: string;
+    relation: Relation | null;
   }>(),
   {
     opened: false,
@@ -23,13 +19,12 @@ const props = withDefaults(
 const toaster = useToaster();
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "add-relation", payload: { target: ApplicationSummary; relationType: string }): void;
-  (e: "update:application", payload: any): void;
+  (e: "update-relation", updatedRelation: Relation): void;
 }>();
 
 const searchText = ref("");
-const suggestions = ref<ApplicationSummary[]>([]);
-const selectedApplication = ref<ApplicationSummary | null>(null);
+const suggestions = ref<Application[]>([]);
+const selectedApplication = ref<Application | null>(null);
 const relationType = ref("is_part_of");
 const relationTypesForSelect = [
   { value: "is_part_of", text: "Fait partie de" },
@@ -72,13 +67,37 @@ watch(searchText, (newVal) => {
   debouncedSearch(newVal);
 });
 
-const selectApplication = (app: ApplicationSummary) => {
+watch(
+  () => props.relation,
+  (newRelation) => {
+    if (newRelation) {
+      relationType.value = newRelation.type;
+      if (newRelation.targetApplication) {
+        selectedApplication.value = {
+          id: newRelation.targetApplication.id,
+          label: newRelation.targetApplication.label,
+        };
+        searchText.value = newRelation.targetApplication.label;
+      } else {
+        selectedApplication.value = null;
+        searchText.value = "";
+      }
+    } else {
+      relationType.value = "is_part_of";
+      selectedApplication.value = null;
+      searchText.value = "";
+    }
+  },
+  { immediate: true },
+);
+
+const selectApplication = (app: Application) => {
   selectedApplication.value = app;
   searchText.value = app.label;
   suggestions.value = [];
 };
 
-const submitRelation = async () => {
+const submitRelationUpdate = async () => {
   if (!selectedApplication.value) {
     toaster.addErrorMessage("L'application cible est requise.");
     return;
@@ -87,25 +106,26 @@ const submitRelation = async () => {
     toaster.addErrorMessage("Le type de relation est requis.");
     return;
   }
-  const applicationSourceId = props.applicationId;
-  if (!applicationSourceId) {
-    toaster.addErrorMessage("L'application source est introuvable.");
+  if (!props.relation) {
+    toaster.addErrorMessage("La relation à mettre à jour est introuvable.");
     return;
   }
 
+  // Créer un payload conforme au DTO côté serveur (sans la propriété id)
+  const payload = {
+    applicationSource: props.relation.applicationSource,
+    applicationTarget: selectedApplication.value.id, // on envoie l'id de l'application cible
+    type: relationType.value,
+  };
+
   try {
-    await Relations.create(applicationSourceId, selectedApplication.value.id, relationType.value);
-    emit("add-relation", {
-      target: selectedApplication.value,
-      relationType: relationType.value,
-    });
-    const fetchApplication = await Applications.getApplicationById(props.applicationId);
-    emit("update:application", fetchApplication);
+    const result = await Relations.update(props.relation.id, payload);
+    emit("update-relation", result);
+    console.log(result);
     closeModal();
-    toaster.addSuccessMessage("Relation ajoutée avec succès !");
   } catch (error) {
     console.error(error);
-    toaster.addErrorMessage("Erreur lors de l'ajout de la relation.");
+    toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
   }
 };
 
@@ -126,9 +146,7 @@ const closeModal = () => {
         />
       </div>
       <DsfrInput label="Rechercher une application" v-model="searchText" placeholder="Tapez au moins 3 caractères" />
-
       <div v-if="isLoading">Chargement...</div>
-
       <ul v-if="suggestions.length" class="suggestions-list">
         <li v-for="app in suggestions" :key="app.id" class="suggestion-item">
           <button type="button" @click="selectApplication(app)" class="suggestion-button">
@@ -137,9 +155,8 @@ const closeModal = () => {
         </li>
       </ul>
     </template>
-
     <template #footer>
-      <DsfrButton label="Sauvegarder" @click="submitRelation" />
+      <DsfrButton label="Sauvegarder" @click="submitRelationUpdate" />
       <DsfrButton label="Annuler" secondary @click="closeModal" />
     </template>
   </DsfrModal>
