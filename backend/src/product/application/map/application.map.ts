@@ -4,7 +4,6 @@ export const applicationMap = (
   createApplicationDto: CreateApplicationDto,
   applicationMetadataId,
   ownerId,
-  // actorsToCreate,
 ) => {
   return {
     data: {
