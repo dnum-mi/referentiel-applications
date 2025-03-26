@@ -63,8 +63,10 @@ export class ApplicationController {
 **Ce endpoint permet de créer une application complète.**
 
 Vous devez fournir les informations suivantes :
-- **label**: Le libellé de l'application.
-- **shortName**: Le nom court de l'application.
+- **labels**: Les différents libellés de l'application.
+  - **source**: La source de l'application.
+  - **label**: Le libellé de l'application.
+  - **shortname**: Le nom court de l'application.
 - **logo**: L'URL du logo (peut être vide).
 - **description**: Une description détaillée de l'application.
 - **purposes**: Les domaines d'activité (ex: finance, HR, operations).

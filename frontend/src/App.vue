@@ -5,6 +5,7 @@ import useToaster from "./composables/use-toaster";
 import { routeNames } from "./router/route-names";
 import { authentication } from "./services/authentication";
 import Applications from "@/api/application";
+import axios from "axios";
 
 const instance = getCurrentInstance();
 
@@ -90,6 +91,7 @@ const searchResults = ref<any[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
 let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
+const currentLabels = ref(new Map());
 
 watch(searchQuery, (newVal) => {
   if (debounceTimeout) {
@@ -106,6 +108,18 @@ watch(searchQuery, (newVal) => {
       errorMessage.value = "";
       const results = await Applications.getAllApplicationBySearch(newVal);
       searchResults.value = results || [];
+
+      currentLabels.value.clear();
+      await Promise.all(
+        searchResults.value.map(async (app) => {
+          try {
+            const response = await axios.get(`applications/${app.id}/labels/current`);
+            currentLabels.value.set(app.id, response.data);
+          } catch (error) {
+            console.error(`Erreur récupération label pour app ${app.id}`, error);
+          }
+        }),
+      );
     } catch (error) {
       instance?.proxy?.$matomo?.trackEvent("Error", "Search Error", error.message);
       errorMessage.value = "Une erreur est survenue lors du chargement des applications.";
@@ -156,7 +170,7 @@ function close() {
       <ul v-if="searchResults.length">
         <li v-for="(app, index) in searchResults" :key="index" @click="trackResultSelection(app.label)">
           <router-link :to="{ name: 'application', params: { id: app.id } }">
-            {{ app.label || "Application" }}
+            {{ currentLabels.get(app.id)?.label || "Application" }}
           </router-link>
         </li>
       </ul>

@@ -5,6 +5,7 @@ import { routeNames } from "@/router/route-names";
 import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
 import type { ReportIssue } from "@/models/ReportIssue";
+import axios from "axios";
 
 const title = "Liste de tous les signalements";
 const headers = ["Application", "Signalant", "Description", "Date", "Statut"];
@@ -17,12 +18,25 @@ const currentPage = ref(0);
 const isLoading = ref(true);
 
 const loadReports = async () => {
-  const reportList = await Issues.getReportIssue();
+  isLoading.value = true;
 
-  rows.value =
-    reportList.map((report: ReportIssue) => ({
+  try {
+    const reportList = await Issues.getReportIssue();
+
+    // Récupérer les labels pour toutes les applications concernées
+    const labelsMap: Record<string, any> = {}; // Stockage des labels par application ID
+    await Promise.all(
+      reportList.map(async (report) => {
+        if (report.application?.id) {
+          const response = await axios.get(`applications/${report.application.id}/labels/current`);
+          labelsMap[report.application.id] = response.data;
+        }
+      }),
+    );
+
+    rows.value = reportList.map((report: ReportIssue) => ({
       Application: {
-        label: report.application?.label,
+        label: labelsMap[report.application?.id].label || "Aucun label",
         to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
       },
       Signalant: report.notifier?.email,
@@ -34,8 +48,12 @@ const loadReports = async () => {
         label: statusDictionary[report.status as Status],
         class: report.status,
       },
-    })) || [];
-  isLoading.value = false;
+    }));
+  } catch (error) {
+    console.error("Erreur lors du chargement des rapports :", error);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 onMounted(() => {

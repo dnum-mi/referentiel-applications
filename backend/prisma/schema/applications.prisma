@@ -35,17 +35,6 @@ model Relation {
   @@map("relations")
 }
 
-model Label {
-  id                  String       @id @default(uuid())
-  source              String
-  label              String?
-  shortname          String?
-  applicationId       String
-  application         Application @relation("ApplicationLabels", fields: [applicationId], references: [id])
-
-  @@map("labels")
-}
-
 enum RelationType {
   is_part_of
   in_replacement_of

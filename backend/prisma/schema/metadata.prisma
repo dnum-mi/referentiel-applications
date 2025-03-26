@@ -11,6 +11,7 @@ model Metadata {
   applications    Application[]    @relation("ApplicationMetadata")
   events          Event[]          @relation("EventMetadata")
   compliances     Compliance[]     @relation("ComplianceMetadata")
+  labels          Label[]          @relation("LabelMetadata")
 
   @@map("metadata")
 }

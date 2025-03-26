@@ -5,6 +5,7 @@ import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
+import axios from "axios";
 
 const isSubmitting = ref(false);
 const toaster = useToaster();
@@ -19,7 +20,7 @@ const props = defineProps<{
 }>();
 
 const application = ref<Application>({ ...props.application });
-
+const labels = ref([]);
 const applicationModal = useModal();
 
 async function updateApplication(updatedData) {
@@ -28,6 +29,14 @@ async function updateApplication(updatedData) {
     loading.value = true;
     applicationModal.closeModal();
 
+    if (updatedData.newLabels.length > 0) {
+      await createLabels(updatedData.newLabels);
+    }
+    if (updatedData.deletedLabels.length > 0) {
+      const labelIds = updatedData.deletedLabels.map((label) => label.id);
+      await deleteLabels(labelIds);
+    }
+
     const updatedApplication = await Applications.patchApplication({
       ...props.application,
       ...updatedData,
@@ -35,6 +44,7 @@ async function updateApplication(updatedData) {
 
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
+    await fetchLabels();
     toaster.addSuccessMessage("Application mise à jour avec succès");
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la mise à jour de l'application");
@@ -43,6 +53,36 @@ async function updateApplication(updatedData) {
     loading.value = false;
   }
 }
+
+async function createLabels(newLabels: any[]) {
+  await Promise.all(
+    newLabels.map((label) =>
+      axios.post(`applications/${props.application.id}/labels`, {
+        source: label.source,
+        label: label.label,
+        shortname: label.shortname,
+      }),
+    ),
+  );
+}
+
+async function deleteLabels(labels: any[]) {
+  await Promise.all(labels.map((labelId) => axios.delete(`applications/${props.application.id}/labels/${labelId}`)));
+}
+
+async function fetchLabels() {
+  try {
+    loading.value = true;
+    const response = await axios.get(`applications/${props.application.id}/labels`);
+    labels.value = response.data;
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors de la récupération des labels.");
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(fetchLabels);
 
 watch(
   () => props.application,
@@ -77,6 +117,15 @@ watch(
               <div v-else>
                 <h4>ID de l'application</h4>
                 <p>{{ application.id }}</p>
+                <div>
+                  <h4>Libellés (Noms courts)</h4>
+
+                  <div v-if="loading">Chargement des labels...</div>
+
+                  <div v-else>
+                    <p>{{ labels.map((label) => `${label.label} (${label.shortname})`).join(" ; ") }}</p>
+                  </div>
+                </div>
                 <h4>Description</h4>
                 <p>{{ application.description }}</p>
 

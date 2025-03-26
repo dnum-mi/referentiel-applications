@@ -99,18 +99,28 @@ export class ApplicationService {
     const accentTo = 'aaaaaaeeeeiiiiooooouuuuc';
     const conditions: string[] = [];
 
+    // label (inclut le label.label et le label.shortname)
     if (label) {
       conditions.push(`
-          translate(lower(label), '${accentFrom}', '${accentTo}')
-          ILIKE translate(lower('%${label}%'), '${accentFrom}', '${accentTo}')
-        `);
+        EXISTS (
+          SELECT 1
+          FROM public.labels l
+          WHERE (
+            translate(lower(l.label), '${accentFrom}', '${accentTo}') 
+              ILIKE translate(lower('%${label}%'), '${accentFrom}', '${accentTo}')
+            OR translate(lower(l.shortname), '${accentFrom}', '${accentTo}') 
+              ILIKE translate(lower('%${label}%'), '${accentFrom}', '${accentTo}')
+          )
+          AND l."applicationId" = a.id
+        )
+      `);
     }
 
     if (tag && tag.length > 0) {
       tag.forEach((t) => {
         conditions.push(`
             EXISTS (
-              SELECT 1 FROM unnest(tags) AS t
+              SELECT 1 FROM unnest(a.tags) AS t
               WHERE translate(lower(t), '${accentFrom}', '${accentTo}')
                     ILIKE translate(lower('%${t}%'), '${accentFrom}', '${accentTo}')
             )
@@ -123,8 +133,8 @@ export class ApplicationService {
       : '';
 
     const query = Prisma.raw(`
-        SELECT *
-        FROM public.applications
+        SELECT a.*
+        FROM public.applications a
         ${whereClause}
         LIMIT ${limit} OFFSET ${skip}
       `);
@@ -220,12 +230,6 @@ export class ApplicationService {
     data: PatchApplicationDto,
     applicationUpdates: Prisma.ApplicationUpdateInput,
   ): void {
-    if (data.label !== undefined) {
-      applicationUpdates.label = data.label;
-    }
-    if (data.shortName !== undefined) {
-      applicationUpdates.shortName = data.shortName;
-    }
     if (data.description !== undefined) {
       applicationUpdates.description = data.description;
     }
