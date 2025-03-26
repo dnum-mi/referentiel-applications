@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Application } from "@/models/Application";
 import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
@@ -6,7 +7,7 @@ import { regexFormatTag } from "@/utils/regex";
 const toaster = useToaster();
 
 const props = defineProps<{
-  initialData?: Object;
+  initialData?: Application;
   isSubmitting?: boolean;
 }>();
 
@@ -19,10 +20,25 @@ const handleSubmit = () => {
   }
   const purposes = form.value.purposes.filter((p) => p.trim() !== "");
   const tags = form.value.tags.filter((t) => t.trim() !== "");
+  const labels = form.value.labels.filter((l) => l.label.trim() !== "");
+
+  const initialLabels = props.initialData?.labels ?? [];
+  const currentLabels = form.value.labels;
+
+  // Labels supprimés
+  const deletedLabels = initialLabels.filter(
+    (initialLabel) => !currentLabels.some((label) => label.label === initialLabel.label && label.source === initialLabel.source),
+  );
+
+  // Labels créés
+  const newLabels = currentLabels.filter(
+    (label) => !initialLabels.some((initialLabel) => initialLabel.label === label.label && initialLabel.source === label.source),
+  );
 
   emit("submit", {
-    label: form.value.label,
-    shortName: form.value.shortName || null,
+    labels: currentLabels,
+    deletedLabels,
+    newLabels,
     logo: form.value.logo || null,
     description: form.value.description,
     targetPopulations: form.value.targetPopulations,
@@ -39,15 +55,28 @@ const handleSubmit = () => {
     tags,
   });
 };
+
 const form = ref({
-  label: props.initialData?.label ?? "",
-  shortName: props.initialData?.shortName ?? "",
+  labels: ref(props.initialData?.labels ? [...props.initialData.labels] : []),
   description: props.initialData?.description ?? "",
   targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
   logo: props.initialData?.logo ?? "",
   purposes: [...(props.initialData?.purposes ?? [""])],
   tags: [...(props.initialData?.tags ?? [""])],
 });
+
+const isExistingLabel = (index: number) => index < (props.initialData?.labels?.length ?? 0);
+
+const addLabel = () => {
+  form.value.labels.push({ source: "", label: "", shortname: "" });
+};
+
+const removeLabel = (index: number) => {
+  form.value.labels.splice(index, 1);
+  if (form.value.labels.length === 0) {
+    form.value.labels.push({ source: "", label: "", shortname: "" });
+  }
+};
 
 const addPurpose = () => {
   form.value.purposes.push("");
@@ -90,15 +119,31 @@ const removePopulation = (index: number) => {
 
 <template>
   <form @submit.prevent="handleSubmit">
-    <DsfrInputGroup label="Label" v-model="form.label" label-visible required />
-
-    <DsfrInputGroup
-      class="fr-mt-3w"
-      label="Nom court"
-      label-visible
-      v-model="form.shortName"
-      hint="Optionnel - Un nom court pour identifier rapidement l'application"
-    />
+    <div class="fr-form-group fr-mt-3w">
+      <label class="fr-label">Labels</label>
+      <div class="fr-mt-2w">
+        <div v-for="(label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+          <div class="fr-col">
+            <DsfrInput
+              v-model="form.labels[index].source"
+              :placeholder="`Source ${index + 1}`"
+              required
+              :disabled="isExistingLabel(index)"
+            />
+            <DsfrInput v-model="form.labels[index].label" :placeholder="`Label ${index + 1}`" required :disabled="isExistingLabel(index)" />
+            <DsfrInput
+              v-model="form.labels[index].shortname"
+              :placeholder="`Nom court (optionnel) ${index + 1}`"
+              :disabled="isExistingLabel(index)"
+            />
+          </div>
+          <div class="fr-col-auto">
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removeLabel(index)" />
+          </div>
+        </div>
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un label" @click="addLabel" />
+      </div>
+    </div>
 
     <DsfrInputGroup class="fr-mt-3w" v-model="form.description" required>
       <DsfrInput v-model="form.description" class="fr-mt-3w" label="Description" label-visible is-textarea required />

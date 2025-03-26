@@ -22,6 +22,7 @@ import { ApplicationService } from './product/application.service';
 import { AnomalyNotificationModule } from './notification/anomaly-notification.module';
 import { ActorModule } from './actor/actor.module';
 import { LinksModule } from './links/links.module';
+import { LabelsModule } from './labels/labels.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { LinksModule } from './links/links.module';
     EventsModule,
     MetadatasModule,
     LinksModule,
+    LabelsModule,
   ],
   controllers: [AppController],
   providers: [

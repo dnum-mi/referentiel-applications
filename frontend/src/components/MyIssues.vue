@@ -5,6 +5,7 @@ import { routeNames } from "@/router/route-names";
 import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
 import type { ReportIssue } from "@/models/ReportIssue";
+import axios from "axios";
 
 const title = "Liste de mes signalements";
 const headers = ["Application", "Description", "Date", "Statut"];
@@ -19,10 +20,20 @@ const isLoading = ref(true);
 const loadReports = async () => {
   const reportList = await Issues.getReportIssueByNotifierId();
 
+  const labelsMap: Record<string, any> = {};
+  await Promise.all(
+    reportList.map(async (report) => {
+      if (report.application?.id) {
+        const response = await axios.get(`applications/${report.application.id}/labels/current`);
+        labelsMap[report.application.id] = response.data;
+      }
+    }),
+  );
+
   rows.value =
     reportList.map((report: ReportIssue) => ({
       Application: {
-        label: report.application?.label,
+        label: labelsMap[report.application?.id].label || "Aucun label",
         to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
       },
       Description: report.description,

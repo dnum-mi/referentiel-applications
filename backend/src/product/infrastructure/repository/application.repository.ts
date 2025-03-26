@@ -25,6 +25,7 @@ export class ApplicationRepository implements IApplicationRepository {
   public async findAll() {
     return await this.prisma.application.findMany({
       include: {
+        labels: true,
         actors: true,
         relationsAsSource: {
           include: {
@@ -44,18 +45,19 @@ export class ApplicationRepository implements IApplicationRepository {
     return await this.prisma.application.findUnique({
       where: { id },
       include: {
+        labels: true,
         actors: true,
         relationsAsSource: {
           include: {
             targetApplication: {
-              select: { id: true, label: true },
+              select: { id: true },
             },
           },
         },
         relationsAsTarget: {
           include: {
             sourceApplication: {
-              select: { id: true, label: true },
+              select: { id: true },
             },
           },
         },

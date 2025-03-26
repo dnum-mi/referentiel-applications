@@ -6,9 +6,6 @@ export class ApplicationDto {
   id: string;
 
   @IsString()
-  label: string;
-
-  @IsString()
   ownerId: string;
 }
 

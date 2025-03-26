@@ -7,8 +7,14 @@ export const applicationMap = (
 ) => {
   return {
     data: {
-      label: createApplicationDto.label,
-      shortName: createApplicationDto.shortName || null,
+      labels: {
+        create: createApplicationDto.labels.map((label) => ({
+          source: label.source,
+          label: label.label,
+          shortname: label.shortname || null,
+          metadata: { connect: { id: applicationMetadataId } },
+        })),
+      },
       logo: createApplicationDto.logo || null,
       description: createApplicationDto.description,
       targetPopulations: createApplicationDto.targetPopulations,
@@ -29,6 +35,7 @@ export const applicationMap = (
       },
     },
     include: {
+      labels: true,
       metadata: true,
       compliances: true,
     },
