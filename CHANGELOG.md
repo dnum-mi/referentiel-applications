@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.2.0...v1.3.0) (2025-03-27)
+
+
+### Features
+
+* :sparkles: add tag validation on submit to prevent invalid entries ([949eb46](https://github.com/dnum-mi/referentiel-applications/commit/949eb46eee7eb2db903228b42cd8ab5e07953b80))
+* :sparkles: fix endpoint to retrieve all organizations ([#496](https://github.com/dnum-mi/referentiel-applications/issues/496)) ([2c29554](https://github.com/dnum-mi/referentiel-applications/commit/2c295547267d511a384dead0bb93ba14489bccd1))
+
 ## [1.2.0](https://github.com/dnum-mi/referentiel-applications/compare/1.1.4...v1.2.0) (2025-03-26)
 
 
