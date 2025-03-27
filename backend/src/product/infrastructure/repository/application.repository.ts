@@ -23,45 +23,106 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   public async findAll() {
-    return await this.prisma.application.findMany({
+    const applications = await this.prisma.application.findMany({
       include: {
-        labels: true,
+        labels: {
+          include: {
+            metadata: {
+              select: {
+                createdAt: true, // Sélectionne uniquement createdAt
+              },
+            },
+          }, // Inclure les métadonnées pour le tri
+        },
         actors: true,
-        relationsAsSource: {
-          include: {
-            targetApplication: true,
-          },
-        },
-        relationsAsTarget: {
-          include: {
-            sourceApplication: true,
-          },
-        },
+        relationsAsSource: { include: { targetApplication: true } },
+        relationsAsTarget: { include: { sourceApplication: true } },
       },
     });
+
+    // Appliquer le tri des labels après récupération
+    return applications.map((app) => ({
+      ...app,
+      labels: [
+        // Priorité aux labels avec la source spécifique
+        ...app.labels
+          .filter(
+            (label) =>
+              label.source ===
+              'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.metadata.createdAt).getTime() -
+              new Date(a.metadata.createdAt).getTime(),
+          ),
+        // Ensuite les autres labels
+        ...app.labels
+          .filter(
+            (label) =>
+              label.source !==
+              'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.metadata.createdAt).getTime() -
+              new Date(a.metadata.createdAt).getTime(),
+          ),
+      ],
+    }));
   }
 
   public async findById(id: string) {
-    return await this.prisma.application.findUnique({
+    const app = await this.prisma.application.findUnique({
       where: { id },
       include: {
-        labels: true,
+        labels: {
+          include: {
+            metadata: {
+              select: {
+                createdAt: true, // Sélectionne uniquement createdAt
+              },
+            },
+          }, // Inclure les métadonnées pour le tri
+        },
         actors: true,
         relationsAsSource: {
-          include: {
-            targetApplication: {
-              select: { id: true },
-            },
-          },
+          include: { targetApplication: { select: { id: true } } },
         },
         relationsAsTarget: {
-          include: {
-            sourceApplication: {
-              select: { id: true },
-            },
-          },
+          include: { sourceApplication: { select: { id: true } } },
         },
       },
     });
+
+    if (!app) return null;
+
+    return {
+      ...app,
+      labels: [
+        ...app.labels
+          .filter(
+            (label) =>
+              label.source ===
+              'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.metadata.createdAt).getTime() -
+              new Date(a.metadata.createdAt).getTime(),
+          ),
+        ...app.labels
+          .filter(
+            (label) =>
+              label.source !==
+              'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.metadata.createdAt).getTime() -
+              new Date(a.metadata.createdAt).getTime(),
+          ),
+      ],
+    };
   }
 }
