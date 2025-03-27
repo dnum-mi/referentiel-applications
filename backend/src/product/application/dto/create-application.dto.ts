@@ -12,11 +12,7 @@ import {
   ApiPropertyOptional,
   ApiHideProperty,
 } from '@nestjs/swagger';
-import {
-  ComplianceStatus,
-  ComplianceType,
-  ExternalRessourceType,
-} from 'src/enum';
+import { ComplianceStatus, ComplianceType } from 'src/enum';
 
 export class CreateComplianceDto {
   @ApiProperty({
@@ -149,60 +145,6 @@ export class UpdateComplianceDto {
   notes?: string | null;
 }
 
-export class UpdateExternalRessourceDto {
-  @ApiHideProperty()
-  @IsOptional()
-  id?: string;
-
-  @ApiProperty({
-    example: 'https://example.com/document.pdf',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  link?: string | null;
-
-  @ApiProperty({
-    example: 'Document example',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  description?: string | null;
-
-  @ApiProperty({ enum: ExternalRessourceType, required: false })
-  @IsOptional()
-  @IsEnum(ExternalRessourceType)
-  type?: ExternalRessourceType;
-}
-export class CreateExternalRessourceDto {
-  @ApiProperty({
-    example: 'https://doc.fr',
-    description: 'Link of the external ressource',
-  })
-  @IsString()
-  @IsOptional()
-  link: string | null;
-
-  @ApiProperty({
-    example: "documentation de l'application",
-    description: 'Description of the external ressource',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  description: string | null;
-
-  @ApiProperty({
-    enum: ExternalRessourceType,
-    description:
-      'Type of external ressource (service, documentation, supervision)',
-  })
-  @IsEnum(ExternalRessourceType)
-  @IsOptional()
-  type: ExternalRessourceType;
-}
-
 export class CreateApplicationDto {
   @ApiProperty({
     example: 'My Application',
@@ -296,23 +238,6 @@ export class CreateApplicationDto {
   @ValidateNested({ each: true })
   @Type(() => CreateComplianceDto)
   compliances: CreateComplianceDto[];
-
-  @ApiPropertyOptional({
-    type: [CreateExternalRessourceDto],
-    description: "Ressources externes (liens) associées à l'application",
-    example: [
-      {
-        link: 'https://example.com/document.pdf',
-        description: "Documentation de l'application",
-        type: 'documentation',
-      },
-    ],
-  })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateExternalRessourceDto)
-  externalRessource?: CreateExternalRessourceDto[];
 }
 
 export class PatchApplicationDto {
@@ -395,10 +320,4 @@ export class PatchApplicationDto {
   @ValidateNested({ each: true })
   @Type(() => UpdateComplianceDto)
   compliances?: UpdateComplianceDto[];
-
-  @ApiPropertyOptional({ type: [UpdateExternalRessourceDto] })
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => UpdateExternalRessourceDto)
-  externalRessource?: UpdateExternalRessourceDto[];
 }

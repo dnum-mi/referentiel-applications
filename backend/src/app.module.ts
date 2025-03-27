@@ -21,6 +21,7 @@ import { ApplicationModule } from './product/application.module';
 import { ApplicationService } from './product/application.service';
 import { AnomalyNotificationModule } from './notification/anomaly-notification.module';
 import { ActorModule } from './actor/actor.module';
+import { LinksModule } from './links/links.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ActorModule } from './actor/actor.module';
     }),
     EventsModule,
     MetadatasModule,
+    LinksModule,
   ],
   controllers: [AppController],
   providers: [

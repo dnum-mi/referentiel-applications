@@ -8,7 +8,9 @@ import { CombinedInterceptor } from './logger/combined.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
-  app.useLogger(app.get(PinoLogger));
+  if (process.env.DISABLE_PINO_LOGGER) {
+    app.useLogger(app.get(PinoLogger));
+  }
   app.setGlobalPrefix('api/v2');
 
   const combinedInterceptor = app.get(CombinedInterceptor);

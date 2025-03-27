@@ -3,8 +3,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
 
 @Injectable()
-export class EventsService extends BaseService<Event> {
+export class LinksService extends BaseService<Event> {
   constructor(prisma: PrismaService) {
-    super(prisma.event);
+    super(prisma.externalRessource);
   }
 }

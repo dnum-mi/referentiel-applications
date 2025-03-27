@@ -30,7 +30,7 @@ const form = ref({
   description: props.initialData?.description ?? "",
 });
 
-const emit = defineEmits(["update:application", "submit", "cancel"]);
+const emit = defineEmits(["submit", "cancel"]);
 
 const handleSubmit = () => {
   emit("submit", form.value);
