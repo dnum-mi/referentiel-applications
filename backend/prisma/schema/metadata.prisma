@@ -8,8 +8,6 @@ model Metadata {
   updatedBy       User             @relation("MetadataUpdatedBy", fields: [updatedById], references: [keycloakId])
   dataOwnerId     String?
   dataOwner       User?            @relation("MetadataDataOwnerBy", fields: [dataOwnerId], references: [keycloakId])
-  externals       External[]       @relation("ExternalsMetadata")
-  externalSources ExternalSource[] @relation("ExternalSourcesMetadata")
   applications    Application[]    @relation("ApplicationMetadata")
   events          Event[]          @relation("EventMetadata")
   compliances     Compliance[]     @relation("ComplianceMetadata")
