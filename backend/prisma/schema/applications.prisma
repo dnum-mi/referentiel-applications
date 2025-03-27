@@ -9,7 +9,6 @@ model Application {
   metadataId          String
   metadata            Metadata              @relation("ApplicationMetadata", fields: [metadataId], references: [id])
   actors              Actor[]               @relation("ApplicationActors")
-  externals           External[]            @relation("ApplicationExternals")
   compliances         Compliance[]          @relation("ApplicationCompliances")
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
