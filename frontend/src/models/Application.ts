@@ -14,7 +14,6 @@ export interface Application {
 
   actors?: Actor[];
   compliances?: Compliance[];
-  externals?: External[];
   externalRessource?: ExternalRessource[];
   relationsAsSource?: Relation[];
   relationsAsTarget?: Relation[];
@@ -32,24 +31,6 @@ export interface Compliance {
   notes?: string;
   metadataId?: string;
   applicationId?: string;
-}
-export interface External {
-  id: string;
-  externalSourceId: string;
-  value: string;
-  label: string;
-  shortName?: string;
-  lastSourceUpdate?: string;
-  metadataId?: string;
-  applicationId?: string;
-  externalSource?: ExternalSource;
-}
-export interface ExternalSource {
-  id: string;
-  type: string;
-  uri?: string;
-  valueType?: string;
-  metadataId?: string;
 }
 export interface ExternalRessource {
   id: string;
