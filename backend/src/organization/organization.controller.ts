@@ -82,6 +82,7 @@ Vous devez fournir les informations suivantes :
     return await this.organizationService.findOne(id);
   }
 
+  @Get()
   @ApiResponse({ status: 200, description: 'Liste les organisations' })
   public async findAll(): Promise<Organization[]> {
     return await this.organizationService.findAll();
