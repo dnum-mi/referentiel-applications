@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { Application } from "@/models/Application";
+import type { Application, Label } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
 import ApplicationForm from "./form/ApplicationForm.vue";
@@ -54,7 +54,7 @@ async function updateApplication(updatedData) {
   }
 }
 
-async function createLabels(newLabels: any[]) {
+async function createLabels(newLabels: Label[]) {
   await Promise.all(
     newLabels.map((label) =>
       axios.post(`applications/${props.application.id}/labels`, {
@@ -66,7 +66,7 @@ async function createLabels(newLabels: any[]) {
   );
 }
 
-async function deleteLabels(labels: any[]) {
+async function deleteLabels(labels: String[]) {
   await Promise.all(labels.map((labelId) => axios.delete(`applications/${props.application.id}/labels/${labelId}`)));
 }
 
@@ -170,7 +170,7 @@ watch(
 
   <DsfrModal :opened="applicationModal.isModalOpen.value" :title="'Modifier l\'application'" @close="applicationModal.closeModal">
     <ApplicationForm
-      v-bind="{ initialData: application }"
+      v-bind="{ initialData: application, labels }"
       :is-submitting="isSubmitting"
       @submit="updateApplication"
       @cancel="applicationModal.closeModal"

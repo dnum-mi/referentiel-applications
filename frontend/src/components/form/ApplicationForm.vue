@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Application } from "@/models/Application";
+import type { Application, Label } from "@/models/Application";
 import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
@@ -8,6 +8,7 @@ const toaster = useToaster();
 
 const props = defineProps<{
   initialData?: Application;
+  labels: Label[];
   isSubmitting?: boolean;
 }>();
 
@@ -18,10 +19,6 @@ const handleSubmit = () => {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
-  const purposes = form.value.purposes.filter((p) => p.trim() !== "");
-  const tags = form.value.tags.filter((t) => t.trim() !== "");
-  const labels = form.value.labels.filter((l) => l.label.trim() !== "");
-
   const initialLabels = props.initialData?.labels ?? [];
   const currentLabels = form.value.labels;
 
@@ -47,14 +44,14 @@ const handleSubmit = () => {
 };
 
 const form = ref({
-  labels: ref(props.initialData?.labels ? [...props.initialData.labels] : []),
+  labels: ref(props.labels ? [...props.labels] : []),
   description: props.initialData?.description ?? "",
   logo: props.initialData?.logo ?? "",
   purposes: [...(props.initialData?.purposes ?? [""])],
   tags: [...(props.initialData?.tags ?? [""])],
 });
 
-const isExistingLabel = (index: number) => index < (props.initialData?.labels?.length ?? 0);
+const isExistingLabel = (labelId: string | any) => props.labels?.some((label) => label.id === labelId) ?? false;
 
 const addLabel = () => {
   form.value.labels.push({ source: "", label: "", shortname: "" });
@@ -109,13 +106,18 @@ const removeTag = (index: number) => {
               v-model="form.labels[index].source"
               :placeholder="`Source ${index + 1}`"
               required
-              :disabled="isExistingLabel(index)"
+              :disabled="isExistingLabel(label.id)"
             />
-            <DsfrInput v-model="form.labels[index].label" :placeholder="`Label ${index + 1}`" required :disabled="isExistingLabel(index)" />
+            <DsfrInput
+              v-model="form.labels[index].label"
+              :placeholder="`Label ${index + 1}`"
+              required
+              :disabled="isExistingLabel(label.id)"
+            />
             <DsfrInput
               v-model="form.labels[index].shortname"
               :placeholder="`Nom court (optionnel) ${index + 1}`"
-              :disabled="isExistingLabel(index)"
+              :disabled="isExistingLabel(label.id)"
             />
           </div>
           <div class="fr-col-auto">

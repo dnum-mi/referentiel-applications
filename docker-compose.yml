@@ -73,17 +73,17 @@ services:
     depends_on:
       - postgres
 
-  # client:
-  #   image: node:22
-  #   working_dir: /app
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   ports:
-  #     - "5173:5173"
-  #   command: sh -c "npm install -g pnpm && pnpm install && pnpm dev"
-  #   depends_on:
-  #     - backend
+  client:
+    image: node:22
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm dev"
+    depends_on:
+      - backend
 
   # Ajout du service MySQL pour Matomo en local
   db:
