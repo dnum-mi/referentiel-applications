@@ -8,7 +8,7 @@ export const applicationMap = (
   return {
     data: {
       labels: {
-        create: createApplicationDto.labels.map((label) => ({
+        create: (createApplicationDto.labels || []).map((label) => ({
           source: label.source,
           label: label.label,
           shortname: label.shortname || null,
