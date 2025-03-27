@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import useToaster from "@/composables/use-toaster";
+import { regexFormatTag } from "@/utils/regex";
+
+const toaster = useToaster();
 
 const props = defineProps<{
   initialData?: Object;
@@ -9,6 +13,10 @@ const props = defineProps<{
 const emit = defineEmits(["update:application", "submit", "cancel"]);
 
 const handleSubmit = () => {
+  if (!validateAllTags()) {
+    toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
+    return;
+  }
   const purposes = form.value.purposes.filter((p) => p.trim() !== "");
   const tags = form.value.tags.filter((t) => t.trim() !== "");
 
@@ -43,6 +51,14 @@ const removePurpose = (index: number) => {
 
 const addTag = () => {
   form.value.tags.push("");
+};
+
+const isTagValid = (tag: string) => {
+  return regexFormatTag.test(tag);
+};
+
+const validateAllTags = (): boolean => {
+  return form.value.tags.every((tag) => isTagValid(tag));
 };
 
 const removeTag = (index: number) => {
