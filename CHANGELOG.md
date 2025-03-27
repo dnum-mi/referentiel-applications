@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.3.0...v1.4.0) (2025-03-27)
+
+
+### Features
+
+* :sparkles: add links module with CRUD operations and DTOs ([#479](https://github.com/dnum-mi/referentiel-applications/issues/479)) ([0e42779](https://github.com/dnum-mi/referentiel-applications/commit/0e42779ad2750501a9022cb5ddcbe3d407d4de6d))
+
 ## [1.3.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.2.0...v1.3.0) (2025-03-27)
 
 
