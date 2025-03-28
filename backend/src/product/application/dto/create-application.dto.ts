@@ -13,6 +13,7 @@ import {
   ApiHideProperty,
 } from '@nestjs/swagger';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
+import { priorityRestart } from '@prisma/client';
 
 export class CreateComplianceDto {
   @ApiProperty({
@@ -228,6 +229,11 @@ export class CreateApplicationDto {
   @IsString({ each: true })
   targetPopulations?: string[];
 
+  @ApiProperty({ enum: priorityRestart, required: false })
+  @IsOptional()
+  @IsEnum(priorityRestart)
+  priorityRestart?: priorityRestart;
+
   @ApiProperty({
     type: [String],
     example: ['finance', 'HR'],
@@ -357,6 +363,11 @@ export class PatchApplicationDto {
   @IsOptional()
   @IsString({ each: true })
   targetPopulations?: string[];
+
+  @ApiProperty({ enum: priorityRestart, required: false })
+  @IsOptional()
+  @IsEnum(priorityRestart)
+  priorityRestart?: priorityRestart;
 
   @ApiProperty({
     type: [String],

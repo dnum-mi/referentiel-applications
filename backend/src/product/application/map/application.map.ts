@@ -1,3 +1,4 @@
+import { priorityRestart } from '@prisma/client';
 import { CreateApplicationDto } from '../dto/create-application.dto';
 
 export const applicationMap = (
@@ -22,6 +23,7 @@ export const applicationMap = (
       targetPopulations: createApplicationDto.targetPopulations,
       purposes: createApplicationDto.purposes,
       tags: createApplicationDto.tags,
+      priorityRestart: createApplicationDto.priorityRestart || null,
       metadata: { connect: { id: applicationMetadataId } },
       owner: { connect: { keycloakId: ownerId } },
       compliances: {

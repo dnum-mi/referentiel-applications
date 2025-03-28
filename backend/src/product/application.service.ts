@@ -251,24 +251,25 @@ export class ApplicationService {
     data: PatchApplicationDto,
     applicationUpdates: Prisma.ApplicationUpdateInput,
   ): void {
-    if (data.label !== undefined) {
-      applicationUpdates.label = data.label;
-    }
-    if (data.shortName !== undefined) {
-      applicationUpdates.shortName = data.shortName;
-    }
-    if (data.description !== undefined) {
-      applicationUpdates.description = data.description;
-    }
-    if (data.purposes !== undefined) {
-      applicationUpdates.purposes = { set: data.purposes };
-    }
-    if (data.targetPopulations !== undefined) {
-      applicationUpdates.targetPopulations = { set: data.targetPopulations };
-    }
-    if (data.tags !== undefined) {
-      applicationUpdates.tags = { set: data.tags };
-    }
+    const scalarFields = [
+      'label',
+      'shortName',
+      'description',
+      'priorityRestart',
+    ] as const;
+    const arrayFields = ['purposes', 'targetPopulations', 'tags'] as const;
+
+    scalarFields.forEach((field) => {
+      if (data[field] !== undefined) {
+        applicationUpdates[field] = data[field];
+      }
+    });
+
+    arrayFields.forEach((field) => {
+      if (data[field] !== undefined) {
+        applicationUpdates[field] = { set: data[field] };
+      }
+    });
   }
 
   private async applyComplianceUpdates(

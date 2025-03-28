@@ -41,6 +41,7 @@ const Applications = {
       targetPopulations: app.targetPopulations,
       purposes: app.purposes,
       tags: app.tags,
+      priorityRestart: app.priorityRestart || null,
       compliances: app.compliances
         ? app.compliances.map((compliance) => ({
             id: compliance.id,
