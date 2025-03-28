@@ -1,5 +1,7 @@
 export interface Application {
   id: string;
+  label: string;
+  shortName?: string;
   labels?: Label[];
   description?: string;
   organisationCode?: string;
@@ -21,7 +23,7 @@ export interface Application {
 export interface Label {
   id?: string;
   source: string;
-  label: string;
+  value: string;
   shortname: string;
   metadataId?: string;
   applicationId?: string;

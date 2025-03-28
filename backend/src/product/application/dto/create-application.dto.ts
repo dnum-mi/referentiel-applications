@@ -154,10 +154,10 @@ export class CreateLabelDto {
   @IsString()
   source: string | null;
 
-  @ApiProperty({ example: 'My Application', description: 'Label of the label' })
+  @ApiProperty({ example: 'My Application', description: 'Value of the label' })
   @IsString()
   @IsOptional()
-  label: string | null;
+  value: string | null;
 
   @ApiProperty({
     example: 'short-app-name',
@@ -177,22 +177,11 @@ export class CreateLabelDto {
 
 export class CreateApplicationDto {
   @ApiProperty({
-    type: [CreateLabelDto],
-    description: 'Liste des labels associés à l’application',
-    example: [
-      {
-        source:
-          'https://referentiel-applications.interieur.rie.gouv.fr/applications',
-        label: 'My Application',
-        shortname: 'short-app-name',
-        metadataId: 'metadata456',
-      },
-    ],
+    example: 'My Application',
+    description: 'Label of the application',
   })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateLabelDto)
-  labels: CreateLabelDto[];
+  @IsString()
+  label: string;
 
   @ApiProperty({
     example: 'metadata456',
@@ -202,6 +191,15 @@ export class CreateApplicationDto {
   @IsOptional()
   @IsString()
   metadataId?: string;
+
+  @ApiProperty({
+    example: 'short-app-name',
+    description: 'Short name of the application',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  shortName: string;
 
   @ApiProperty({
     example: 'http://example.com/logo.png',
@@ -251,6 +249,24 @@ export class CreateApplicationDto {
   parentId?: string;
 
   @ApiProperty({
+    type: [CreateLabelDto],
+    description: 'Liste des labels alternatifs associés à l’application',
+    example: [
+      {
+        source:
+          'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+        value: 'My App',
+        shortname: 'short-name',
+        metadataId: 'metadata456',
+      },
+    ],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateLabelDto)
+  labels: CreateLabelDto[];
+
+  @ApiProperty({
     type: [CreateComplianceDto],
     description: 'Liste des conformités associées à l’application',
     example: [
@@ -274,6 +290,13 @@ export class CreateApplicationDto {
 
 export class PatchApplicationDto {
   @ApiProperty({
+    example: 'My Application',
+    description: 'Label of the application',
+  })
+  @IsString()
+  label: string;
+
+  @ApiProperty({
     example: 'metadata456',
     description: 'Metadata ID',
     required: false,
@@ -281,6 +304,15 @@ export class PatchApplicationDto {
   @IsOptional()
   @IsString()
   metadataId?: string;
+
+  @ApiProperty({
+    example: 'short-app-name',
+    description: 'Short name of the application',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  shortName: string;
 
   @ApiProperty({
     example: 'http://example.com/logo.png',

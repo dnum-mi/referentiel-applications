@@ -7,10 +7,12 @@ export const applicationMap = (
 ) => {
   return {
     data: {
+      label: createApplicationDto.label,
+      shortName: createApplicationDto.shortName || null,
       labels: {
         create: (createApplicationDto.labels || []).map((label) => ({
           source: label.source,
-          label: label.label,
+          value: label.value,
           shortname: label.shortname || null,
           metadata: { connect: { id: applicationMetadataId } },
         })),

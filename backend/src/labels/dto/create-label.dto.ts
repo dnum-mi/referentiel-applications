@@ -10,10 +10,10 @@ export class CreateLabelDto {
   @IsString()
   source: string | null;
 
-  @ApiProperty({ example: 'My Application', description: 'Label of the label' })
+  @ApiProperty({ example: 'My Application', description: 'Value of the label' })
   @IsString()
   @IsOptional()
-  label: string | null;
+  value: string | null;
 
   @ApiProperty({
     example: 'short-app-name',

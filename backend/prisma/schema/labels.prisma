@@ -1,7 +1,7 @@
 model Label {
   id                  String       @id @default(uuid())
   source              String
-  label               String?
+  value               String?
   shortname           String?
   metadataId          String
   metadata            Metadata    @relation("LabelMetadata", fields: [metadataId], references: [id])

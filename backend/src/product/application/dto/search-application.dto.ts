@@ -14,7 +14,7 @@ export class SearchApplicationDto {
   link?: string;
 
   @ApiPropertyOptional({
-    description: "Filtrer par label de l'application",
+    description: "Filtrer par label ou shortname de l'application",
     example: 'Mon Application',
   })
   @IsOptional()

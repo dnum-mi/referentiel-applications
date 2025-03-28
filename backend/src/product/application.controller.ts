@@ -63,16 +63,18 @@ export class ApplicationController {
 **Ce endpoint permet de créer une application complète.**
 
 Vous devez fournir les informations suivantes :
-- **labels**: Les différents libellés de l'application.
-  - **source**: La source de l'application.
-  - **label**: Le libellé de l'application.
-  - **shortname**: Le nom court de l'application.
+- **label**: Le libellé de l'application.
+- **shortName**: Le nom court de l'application.
 - **logo**: L'URL du logo (peut être vide).
 - **description**: Une description détaillée de l'application.
 - **purposes**: Les domaines d'activité (ex: finance, HR, operations).
 - **tags**: Des tags pour catégoriser l'application.
   - **firstProductionDate**: Date de première mise en production.
   - **plannedDecommissioningDate**: Date prévue de déclassement.
+- **labels**: Les différents libellés alternatifs de l'application.
+  - **source**: La source de l'application.
+  - **value**: Le libellé de l'application.
+  - **shortname**: Le nom court de l'application.
 - **compliances**: La liste des conformités associées avec :
   - **type**: Le type de conformité (Enum: ${Object.values(ComplianceType).join(', ')}).
   - **name**: Le nom de la conformité.

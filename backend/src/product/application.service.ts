@@ -9,6 +9,7 @@ import {
 } from './application/dto/create-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
 import { SearchApplicationDto } from './application/dto/search-application.dto';
+import { LabelsService } from 'src/labels/labels.service';
 
 @Injectable()
 export class ApplicationService {
@@ -16,6 +17,7 @@ export class ApplicationService {
   constructor(
     private prisma: PrismaService,
     private applicationRepository: ApplicationRepository,
+    private readonly labelsService: LabelsService,
   ) {}
 
   /**
@@ -38,6 +40,22 @@ export class ApplicationService {
       createApplicationDto,
     );
 
+    await this.labelsService.create({
+      source:
+        'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+      value: application.label,
+      shortname: application.shortName,
+      metadata: {
+        connect: {
+          id: applicationMetadata.id,
+        },
+      },
+      application: {
+        connect: {
+          id: application.id,
+        },
+      },
+    });
     return application;
   }
 
@@ -73,6 +91,10 @@ export class ApplicationService {
           data: applicationUpdates,
         });
 
+        if (data.label !== undefined || data.shortName !== undefined) {
+          await this.ensureLabelExists(tx, app);
+        }
+
         return app;
       });
 
@@ -99,14 +121,14 @@ export class ApplicationService {
     const accentTo = 'aaaaaaeeeeiiiiooooouuuuc';
     const conditions: string[] = [];
 
-    // label (inclut le label.label et le label.shortname)
+    // label (inclut le label.value et le label.shortname)
     if (label) {
       conditions.push(`
         EXISTS (
           SELECT 1
           FROM public.labels l
           WHERE (
-            translate(lower(l.label), '${accentFrom}', '${accentTo}') 
+            translate(lower(l.value), '${accentFrom}', '${accentTo}') 
               ILIKE translate(lower('%${label}%'), '${accentFrom}', '${accentTo}')
             OR translate(lower(l.shortname), '${accentFrom}', '${accentTo}') 
               ILIKE translate(lower('%${label}%'), '${accentFrom}', '${accentTo}')
@@ -230,6 +252,12 @@ export class ApplicationService {
     data: PatchApplicationDto,
     applicationUpdates: Prisma.ApplicationUpdateInput,
   ): void {
+    if (data.label !== undefined) {
+      applicationUpdates.label = data.label;
+    }
+    if (data.shortName !== undefined) {
+      applicationUpdates.shortName = data.shortName;
+    }
     if (data.description !== undefined) {
       applicationUpdates.description = data.description;
     }
@@ -334,5 +362,42 @@ export class ApplicationService {
       scoreUnit: dto.scoreUnit,
       notes: dto.notes,
     }));
+  }
+
+  private async ensureLabelExists(
+    tx: Prisma.TransactionClient,
+    application: Application,
+  ) {
+    const labelLower = application.label.toLowerCase();
+    const shortnameLower = application.shortName.toLowerCase();
+
+    const existingLabel = await tx.label.findFirst({
+      where: {
+        AND: [
+          { value: { equals: labelLower, mode: 'insensitive' } },
+          { shortname: { equals: shortnameLower, mode: 'insensitive' } },
+        ],
+      },
+    });
+
+    if (!existingLabel) {
+      await this.labelsService.create({
+        data: {
+          source:
+            'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+          value: application.label,
+          shortname: application.shortName,
+          metadata: {
+            create: {
+              createdById: application.ownerId,
+              updatedById: application.ownerId,
+            },
+          },
+          application: {
+            connect: { id: application.id },
+          },
+        },
+      });
+    }
   }
 }

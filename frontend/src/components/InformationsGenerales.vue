@@ -29,6 +29,11 @@ async function updateApplication(updatedData) {
     loading.value = true;
     applicationModal.closeModal();
 
+    const updatedApplication = await Applications.patchApplication({
+      ...props.application,
+      ...updatedData,
+    });
+
     if (updatedData.newLabels.length > 0) {
       await createLabels(updatedData.newLabels);
     }
@@ -36,11 +41,9 @@ async function updateApplication(updatedData) {
       const labelIds = updatedData.deletedLabels.map((label) => label.id);
       await deleteLabels(labelIds);
     }
-
-    const updatedApplication = await Applications.patchApplication({
-      ...props.application,
-      ...updatedData,
-    });
+    if (updatedData.labels.length > 0) {
+      await updateLabels(updatedData.labels);
+    }
 
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
@@ -59,11 +62,24 @@ async function createLabels(newLabels: Label[]) {
     newLabels.map((label) =>
       axios.post(`applications/${props.application.id}/labels`, {
         source: label.source,
-        label: label.label,
+        value: label.value,
         shortname: label.shortname,
       }),
     ),
   );
+}
+
+async function updateLabels(updatedLabels: Label[]) {
+  await Promise.all(
+    updatedLabels.map((label) =>
+      axios.patch(`applications/${props.application.id}/labels/${label.id}`, {
+        source: label.source,
+        value: label.value,
+        shortname: label.shortname,
+      }),
+    ),
+  );
+  console.log("update", updateLabels);
 }
 
 async function deleteLabels(labels: String[]) {
@@ -72,13 +88,10 @@ async function deleteLabels(labels: String[]) {
 
 async function fetchLabels() {
   try {
-    loading.value = true;
     const response = await axios.get(`applications/${props.application.id}/labels`);
     labels.value = response.data;
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la récupération des labels.");
-  } finally {
-    loading.value = false;
   }
 }
 
@@ -118,13 +131,19 @@ watch(
                 <h4>ID de l'application</h4>
                 <p>{{ application.id }}</p>
                 <div>
-                  <h4>Libellés (Noms courts)</h4>
-
-                  <div v-if="loading">Chargement des labels...</div>
-
-                  <div v-else>
-                    <p>{{ labels.map((label) => `${label.label} (${label.shortname})`).join(" ; ") }}</p>
-                  </div>
+                  <h4>Libellés Alternatifs (Noms courts)</h4>
+                  <p>
+                    {{
+                      labels
+                        .filter(
+                          (label) =>
+                            label.value.toLowerCase() !== application.label.toLowerCase() ||
+                            label.shortname.toLowerCase() !== application.shortName.toLowerCase(),
+                        )
+                        .map((label) => `${label.value} (${label.shortname})`)
+                        .join(" ; ")
+                    }}
+                  </p>
                 </div>
                 <h4>Description</h4>
                 <p>{{ application.description }}</p>

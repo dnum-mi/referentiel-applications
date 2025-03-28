@@ -1,5 +1,7 @@
 model Application {
   id                  String                @id @default(uuid())
+  label               String
+  shortName           String?
   logo                String?
   description         String
   purposes            String[]
@@ -19,6 +21,8 @@ model Application {
   relationsAsTarget Relation[]         @relation("TargetHasSource")
   labels              Label[]          @relation("ApplicationLabels")
 
+  @@index([label])
+  @@index([shortName])
   @@map("applications")
 }
 

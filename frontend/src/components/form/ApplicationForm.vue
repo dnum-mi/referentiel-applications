@@ -19,23 +19,19 @@ const handleSubmit = () => {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
-  const initialLabels = props.initialData?.labels ?? [];
+  const initialLabels = props.labels ?? [];
   const currentLabels = form.value.labels;
 
-  // Labels supprimés
-  const deletedLabels = initialLabels.filter(
-    (initialLabel) => !currentLabels.some((label) => label.label === initialLabel.label && label.source === initialLabel.source),
-  );
+  const deletedLabels = initialLabels.filter((initialLabel) => !currentLabels.some((label) => label.id === initialLabel.id));
 
-  // Labels créés
-  const newLabels = currentLabels.filter(
-    (label) => !initialLabels.some((initialLabel) => initialLabel.label === label.label && initialLabel.source === label.source),
-  );
+  const newLabels = currentLabels.filter((label) => !initialLabels.some((initialLabel) => label.id === initialLabel.id));
 
   emit("submit", {
     labels: currentLabels,
     deletedLabels,
     newLabels,
+    label: form.value.label,
+    shortName: form.value.shortName || null,
     logo: form.value.logo || null,
     description: form.value.description,
     purposes: form.value.purposes.filter((p) => p.trim() !== ""),
@@ -44,6 +40,8 @@ const handleSubmit = () => {
 };
 
 const form = ref({
+  label: props.initialData?.label ?? "",
+  shortName: props.initialData?.shortName ?? "",
   labels: ref(props.labels ? [...props.labels] : []),
   description: props.initialData?.description ?? "",
   logo: props.initialData?.logo ?? "",
@@ -51,16 +49,23 @@ const form = ref({
   tags: [...(props.initialData?.tags ?? [""])],
 });
 
-const isExistingLabel = (labelId: string | any) => props.labels?.some((label) => label.id === labelId) ?? false;
-
+const isCurrentLabel = (label: Label): boolean => {
+  return (
+    label.value.toLowerCase() === form.value.label.toLowerCase() && label.shortname.toLowerCase() === form.value.shortName.toLowerCase()
+  );
+};
 const addLabel = () => {
-  form.value.labels.push({ source: "", label: "", shortname: "" });
+  form.value.labels.push({ source: "", value: "", shortname: "" });
 };
 
 const removeLabel = (index: number) => {
-  form.value.labels.splice(index, 1);
-  if (form.value.labels.length === 0) {
-    form.value.labels.push({ source: "", label: "", shortname: "" });
+  const labelToRemove = form.value.labels[index];
+  // Si le label supprimé est celui principal, vous ne le supprimez pas
+  if (
+    labelToRemove.value.toLowerCase() !== form.value.label.toLowerCase() ||
+    labelToRemove.shortname.toLowerCase() !== form.value.shortName.toLowerCase()
+  ) {
+    form.value.labels.splice(index, 1);
   }
 };
 
@@ -97,27 +102,38 @@ const removeTag = (index: number) => {
 
 <template>
   <form @submit.prevent="handleSubmit">
+    <DsfrInputGroup label="Label" v-model="form.label" label-visible required />
+
+    <DsfrInputGroup
+      class="fr-mt-3w"
+      label="Nom court"
+      label-visible
+      v-model="form.shortName"
+      hint="Optionnel - Un nom court pour identifier rapidement l'application"
+    />
+
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Labels</label>
+      <label class="fr-label">Labels alternatifs</label>
       <div class="fr-mt-2w">
         <div v-for="(label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-          <div class="fr-col">
+          <div v-if="form.labels.length > 0" class="fr-col">
+            <p v-if="isCurrentLabel(label)">label principal</p>
             <DsfrInput
               v-model="form.labels[index].source"
               :placeholder="`Source ${index + 1}`"
-              required
-              :disabled="isExistingLabel(label.id)"
+              :required="form.labels.length > 0"
+              :disabled="isCurrentLabel(label)"
             />
             <DsfrInput
-              v-model="form.labels[index].label"
+              v-model="form.labels[index].value"
               :placeholder="`Label ${index + 1}`"
-              required
-              :disabled="isExistingLabel(label.id)"
+              :required="form.labels.length > 0"
+              :disabled="isCurrentLabel(label)"
             />
             <DsfrInput
               v-model="form.labels[index].shortname"
               :placeholder="`Nom court (optionnel) ${index + 1}`"
-              :disabled="isExistingLabel(label.id)"
+              :disabled="isCurrentLabel(label)"
             />
           </div>
           <div class="fr-col-auto">
@@ -127,7 +143,7 @@ const removeTag = (index: number) => {
         <DsfrButton type="button" secondary icon="add-line" label="Ajouter un label" @click="addLabel" />
       </div>
     </div>
-
+    <br />
     <DsfrInputGroup class="fr-mt-3w" v-model="form.description" required>
       <DsfrInput v-model="form.description" class="fr-mt-3w" label="Description" label-visible is-textarea required />
     </DsfrInputGroup>

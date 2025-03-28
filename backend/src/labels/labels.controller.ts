@@ -6,12 +6,17 @@ import {
   Delete,
   Body,
   Param,
-  Query,
+  Patch,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiOperation, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiResponse,
+  ApiOperation,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
 import { LabelsService } from './labels.service';
 import { CreateLabelDto } from './dto/create-label.dto';
-import { FiltersDto } from './dto/filters.dto';
 import { Label } from './entities/label.entity';
 
 @ApiTags('Labels')
@@ -28,7 +33,7 @@ export class LabelsController {
 
 Vous devez fournir les informations suivantes :
 - **source**: La source de l'application.
-- **label**: Le libellé de l'application.
+- **value**: Le libellé de l'application.
 - **shortname**: Le nom court de l'application (peut être vide).
     `,
   })
@@ -42,26 +47,21 @@ Vous devez fournir les informations suivantes :
     @Body() createLabelDto: CreateLabelDto,
     @Param('applicationId') applicationId: string,
   ) {
-    try {
-      const result = await this.service.create({
-        ...createLabelDto,
-        metadata: {
-          create: {
-            createdById: request.user.keycloakId,
-            updatedById: request.user.keycloakId,
-          },
+    const result = await this.service.create({
+      ...createLabelDto,
+      metadata: {
+        create: {
+          createdById: request.user.keycloakId,
+          updatedById: request.user.keycloakId,
         },
-        application: {
-          connect: {
-            id: applicationId,
-          },
+      },
+      application: {
+        connect: {
+          id: applicationId,
         },
-      });
-      return result;
-    } catch (error) {
-      console.error('Error creating label:', error);
-      throw error;
-    }
+      },
+    });
+    return result;
   }
 
   @Get()
@@ -69,8 +69,6 @@ Vous devez fournir les informations suivantes :
     summary: "Récupérer les labels par ID d'application",
     description: `
 Ce endpoint permet de récupérer la liste de tous les labels d'une application en fonction de son identifiant unique.
-
-Ils seront triés du plus récent au moins récent, priorisant la source refApp.
 
 Le paramètre **applicationId** doit être fourni dans l'URL.
     `,
@@ -80,18 +78,20 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     return this.service.findAllSorted(applicationId);
   }
 
-  @Get('current')
+  @Patch(':id')
   @ApiOperation({
-    summary: "Récupérer le label courant d'une application",
-    description: `
-Ce endpoint permet de récupérer les détails complets du label d'une application en fonction de son identifiant unique.
-
-Le paramètre **applicationId** doit être fourni dans l'URL.
-    `,
+    summary: 'Mettre à jour un label existant',
   })
-  @ApiResponse({ status: 200, description: 'Label courant' })
-  async findCurrentLabel(@Param('applicationId') applicationId: string) {
-    return this.service.findCurrentLabel(applicationId);
+  @ApiParam({ name: 'applicationId', description: "ID de l'application" })
+  @ApiParam({ name: 'id', description: 'ID du label' })
+  @ApiBody({ type: CreateLabelDto })
+  @ApiResponse({ status: 200, type: Label })
+  update(
+    @Param('applicationId') applicationId: string,
+    @Param('id') id: string,
+    @Body() updateLabelDto: CreateLabelDto,
+  ) {
+    return this.service.update(id, updateLabelDto);
   }
 
   @Delete(':id')
