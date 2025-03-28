@@ -23,12 +23,13 @@ const handleSubmit = () => {
   const currentLabels = form.value.labels;
 
   const deletedLabels = initialLabels.filter((initialLabel) => !currentLabels.some((label) => label.id === initialLabel.id));
-
   const newLabels = currentLabels.filter((label) => !initialLabels.some((initialLabel) => label.id === initialLabel.id));
+  const updatedLabels = currentLabels.filter((label) => label.id !== undefined);
 
   emit("submit", {
     labels: currentLabels,
     deletedLabels,
+    updatedLabels,
     newLabels,
     label: form.value.label,
     shortName: form.value.shortName || null,
@@ -60,7 +61,6 @@ const addLabel = () => {
 
 const removeLabel = (index: number) => {
   const labelToRemove = form.value.labels[index];
-  // Si le label supprimé est celui principal, vous ne le supprimez pas
   if (
     labelToRemove.value.toLowerCase() !== form.value.label.toLowerCase() ||
     labelToRemove.shortname.toLowerCase() !== form.value.shortName.toLowerCase()

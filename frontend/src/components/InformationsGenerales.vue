@@ -33,16 +33,15 @@ async function updateApplication(updatedData) {
       ...props.application,
       ...updatedData,
     });
-
-    if (updatedData.newLabels.length > 0) {
-      await createLabels(updatedData.newLabels);
-    }
     if (updatedData.deletedLabels.length > 0) {
       const labelIds = updatedData.deletedLabels.map((label) => label.id);
       await deleteLabels(labelIds);
     }
-    if (updatedData.labels.length > 0) {
-      await updateLabels(updatedData.labels);
+    if (updatedData.updatedLabels.length > 0) {
+      await updateLabels(updatedData.updatedLabels);
+    }
+    if (updatedData.newLabels.length > 0) {
+      await createLabels(updatedData.newLabels);
     }
 
     application.value = updatedApplication;
@@ -58,28 +57,31 @@ async function updateApplication(updatedData) {
 }
 
 async function createLabels(newLabels: Label[]) {
-  await Promise.all(
-    newLabels.map((label) =>
-      axios.post(`applications/${props.application.id}/labels`, {
+  for (const label of newLabels) {
+    try {
+      await axios.post(`applications/${props.application.id}/labels`, {
         source: label.source,
         value: label.value,
         shortname: label.shortname,
-      }),
-    ),
-  );
+      });
+    } catch (error) {
+      toaster.addErrorMessage(`Erreur lors de la création du label: ${label.value}`);
+    }
+  }
 }
 
 async function updateLabels(updatedLabels: Label[]) {
-  await Promise.all(
-    updatedLabels.map((label) =>
-      axios.patch(`applications/${props.application.id}/labels/${label.id}`, {
+  for (const label of updatedLabels) {
+    try {
+      await axios.patch(`applications/${props.application.id}/labels/${label.id}`, {
         source: label.source,
         value: label.value,
         shortname: label.shortname,
-      }),
-    ),
-  );
-  console.log("update", updateLabels);
+      });
+    } catch (error) {
+      toaster.addErrorMessage(`Erreur lors de la modification du label: ${label.value}`);
+    }
+  }
 }
 
 async function deleteLabels(labels: String[]) {
