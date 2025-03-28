@@ -11,12 +11,12 @@ describe('Hostings', () => {
   let user: { keycloakId: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create();
+    user = await UserFaker.create(['read', 'write']);
     application = await ApplicationFaker.create(user);
   });
 
   it(`/GET applications/:applicationId/hostings`, async () => {
-    const TOKEN = await getToken();
+    const TOKEN = await getToken(user);
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings`)
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -24,7 +24,7 @@ describe('Hostings', () => {
   });
 
   it(`/POST applications/:applicationId/hostings`, async () => {
-    const TOKEN = await getToken();
+    const TOKEN = await getToken(user);
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/hostings`)
       .send({
@@ -40,7 +40,7 @@ describe('Hostings', () => {
   });
 
   it(`/PATCH applications/:applicationId/hostings/:id`, async () => {
-    const TOKEN = await getToken();
+    const TOKEN = await getToken(user);
     const hosting = await HostingFaker.create(application);
 
     await request(app().getHttpServer())
@@ -53,7 +53,7 @@ describe('Hostings', () => {
   });
 
   it(`/DELETE applications/:applicationId/hostings/:id`, async () => {
-    const TOKEN = await getToken();
+    const TOKEN = await getToken(user);
     const hosting = await HostingFaker.create(application);
 
     await request(app().getHttpServer())

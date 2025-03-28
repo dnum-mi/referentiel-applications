@@ -1,14 +1,19 @@
 import request from 'supertest';
-import { v4 as uuidv4 } from 'uuid';
 import { setupTestSuite } from './setup';
 import { getToken } from './getToken';
 import { UserFaker } from './fakers/user.faker';
 
 describe('Applications', () => {
   const app = setupTestSuite();
+  let user: { keycloakId: string };
+  let TOKEN: string;
+
+  beforeAll(async () => {
+    user = await UserFaker.create(['read', 'write']);
+    TOKEN = await getToken(user);
+  });
 
   it(`/GET applications`, async () => {
-    const TOKEN = await getToken();
     await request(app().getHttpServer())
       .get('/applications')
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -16,7 +21,6 @@ describe('Applications', () => {
   });
 
   it(`/GET applications/search`, async () => {
-    const TOKEN = await getToken();
     await request(app().getHttpServer())
       .get('/applications/search')
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -24,8 +28,6 @@ describe('Applications', () => {
   });
 
   it(`/POST applications`, async () => {
-    const user = await UserFaker.create();
-    const TOKEN = await getToken();
     await request(app().getHttpServer())
       .post('/applications')
       .send({

@@ -10,12 +10,12 @@ describe('Labels', () => {
   let user: { keycloakId: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create();
+    user = await UserFaker.create(['read', 'write']);
     application = await ApplicationFaker.create(user);
   });
 
   it(`/GET applications/:applicationId/labels`, async () => {
-    const TOKEN = await getToken();
+    const TOKEN = await getToken(user);
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/labels`)
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -23,7 +23,7 @@ describe('Labels', () => {
   });
 
   it(`/POST applications/:applicationId/labels`, async () => {
-    const TOKEN = await getToken();
+    const TOKEN = await getToken(user);
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/labels`)
       .send({
