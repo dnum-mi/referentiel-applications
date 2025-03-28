@@ -384,7 +384,7 @@ export class ApplicationService {
     });
 
     if (!existingLabel) {
-      await this.labelsService.create({
+      await tx.label.create({
         data: {
           source:
             'https://referentiel-applications.interieur.rie.gouv.fr/applications',
