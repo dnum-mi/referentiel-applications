@@ -6,6 +6,7 @@ import { ExportService } from './export.service';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { UserModule } from '../user/user.module';
+import { LabelsService } from 'src/labels/labels.service';
 
 @Module({
   imports: [PrismaModule, UserModule],
@@ -14,6 +15,7 @@ import { UserModule } from '../user/user.module';
     ApplicationService,
     ExportService,
     PrismaService,
+    LabelsService,
     ApplicationRepository,
   ],
   exports: [ApplicationRepository],

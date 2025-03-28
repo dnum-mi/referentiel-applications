@@ -6,6 +6,7 @@ export class ApplicationFaker {
   static async create(user) {
     return await prisma.application.create({
       data: {
+        label: 'Test Application',
         description: 'Test Application Description',
         owner: {
           connect: {

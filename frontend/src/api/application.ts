@@ -35,6 +35,8 @@ const Applications = {
 
   async patchApplication(app: Application): Promise<Application> {
     const payload = {
+      label: app.label,
+      shortName: app.shortName,
       description: app.description,
       targetPopulations: app.targetPopulations,
       purposes: app.purposes,

@@ -2,7 +2,6 @@
 import Applications from "@/api/application";
 import { onMounted, ref } from "vue";
 import useToaster from "@/composables/use-toaster";
-import axios from "axios";
 
 const toaster = useToaster;
 const searchTerm = ref<string>("");
@@ -10,7 +9,6 @@ const searchResults = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
 const debounceTimeout = ref<NodeJS.Timeout | null>(null);
-const currentLabels = ref(new Map()); // Stocke les labels par application ID
 
 async function doSearch() {
   if (debounceTimeout.value) {
@@ -22,18 +20,6 @@ async function doSearch() {
       errorMessage.value = "";
       const results = await Applications.getAllApplicationBySearch(searchTerm.value || "");
       searchResults.value = results || [];
-
-      currentLabels.value.clear();
-      await Promise.all(
-        searchResults.value.map(async (app) => {
-          try {
-            const response = await axios.get(`applications/${app.id}/labels/current`);
-            currentLabels.value.set(app.id, response.data);
-          } catch (error) {
-            console.error(`Erreur récupération label pour app ${app.id}`, error);
-          }
-        }),
-      );
     } catch (error) {
       toaster.addErrorMessage(error, "Une erreur est survenue lors du chargement des applications.");
     } finally {
@@ -62,7 +48,7 @@ onMounted(async () => {
         class="fixed-card"
         v-for="(app, index) in searchResults"
         :key="index"
-        :title="currentLabels.get(app.id)?.label || 'Applications'"
+        :title="app.label || 'Applications'"
         :img-src="app.logo || ''"
         :link="{ name: 'application', params: { id: app.id } }"
       />
