@@ -1,0 +1,70 @@
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { PERMISSIONS_KEY } from '../decorators/permissions.decorator';
+
+@Injectable()
+export class PermissionsGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
+      PERMISSIONS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    const request = context.switchToHttp().getRequest();
+    const { user, method } = request;
+
+    if (!user || !user.permissions) {
+      throw new ForbiddenException('User permissions not found');
+    }
+
+    // If specific permissions are required, check them
+    if (requiredPermissions && requiredPermissions.length > 0) {
+      if (!this.hasPermission(user.permissions, requiredPermissions)) {
+        throw new ForbiddenException('Insufficient permissions');
+      }
+      return true;
+    }
+
+    // Apply default permission logic based on HTTP method
+    const isWriteOperation = ['POST', 'PATCH', 'PUT', 'DELETE'].includes(
+      method,
+    );
+
+    if (isWriteOperation && !this.hasPermission(user.permissions, ['write'])) {
+      throw new ForbiddenException(
+        'Write permission required for this operation',
+      );
+    }
+
+    return true;
+  }
+
+  private hasPermission(
+    userPermissions: string,
+    requiredPermissions: string[],
+  ): boolean {
+    // Handle comma-separated permissions
+    const permissions = userPermissions.includes(',')
+      ? userPermissions.split(',')
+      : [userPermissions];
+
+    // 'write' permission implies 'read' permission
+    if (permissions.includes('write')) {
+      return true;
+    }
+
+    // For read-only operations
+    if (permissions.includes('read') && requiredPermissions.includes('read')) {
+      return true;
+    }
+
+    return false;
+  }
+}

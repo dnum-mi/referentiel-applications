@@ -8,14 +8,12 @@ describe('Actor', () => {
   const app = setupTestSuite();
   let application: { id: string };
   let user: { keycloakId: string };
-
-  beforeAll(async () => {
-    user = await UserFaker.create();
-    application = await ApplicationFaker.create(user);
-  });
+  let TOKEN: string;
 
   it(`/GET actor`, async () => {
-    const TOKEN = await getToken();
+    user = await UserFaker.create(['read']);
+    application = await ApplicationFaker.create(user);
+    TOKEN = await getToken(user);
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/actors`)
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -23,7 +21,9 @@ describe('Actor', () => {
   });
 
   it(`/POST actor`, async () => {
-    const TOKEN = await getToken();
+    user = await UserFaker.create(['write']);
+    application = await ApplicationFaker.create(user);
+    TOKEN = await getToken(user);
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/actors`)
       .send({

@@ -1,5 +1,8 @@
 import { authentication } from "@/services/authentication";
 import axios, { type AxiosResponse } from "axios";
+import useToaster from "@/composables/use-toaster";
+
+const toaster = useToaster();
 
 axios.defaults.baseURL = `${import.meta.env.VITE_RDA_API_URL ?? "VITE_RDA_API_URL"}/api/v2`;
 axios.defaults.withCredentials = true;
@@ -16,6 +19,17 @@ axios.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  },
+);
+
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403) {
+      toaster.addErrorMessage("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
+      return Promise.reject(error);
+    }
     return Promise.reject(error);
   },
 );

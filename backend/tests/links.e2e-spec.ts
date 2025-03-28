@@ -9,14 +9,15 @@ describe('Links', () => {
   const app = setupTestSuite();
   let application: { id: string };
   let user: { keycloakId: string };
+  let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create();
+    user = await UserFaker.create(['read', 'write']);
+    TOKEN = await getToken(user);
     application = await ApplicationFaker.create(user);
   });
 
   it(`/GET applications/:applicationId/links`, async () => {
-    const TOKEN = await getToken();
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/links`)
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -24,7 +25,6 @@ describe('Links', () => {
   });
 
   it(`/POST applications/:applicationId/links`, async () => {
-    const TOKEN = await getToken();
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/links`)
       .send({
@@ -37,7 +37,6 @@ describe('Links', () => {
   });
 
   it(`/PATCH applications/:applicationId/links/:id`, async () => {
-    const TOKEN = await getToken();
     const link = await LinkFaker.create(application);
 
     await request(app().getHttpServer())
@@ -50,7 +49,6 @@ describe('Links', () => {
   });
 
   it(`/DELETE applications/:applicationId/links/:id`, async () => {
-    const TOKEN = await getToken();
     const link = await LinkFaker.create(application);
 
     await request(app().getHttpServer())

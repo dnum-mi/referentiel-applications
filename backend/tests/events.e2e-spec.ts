@@ -8,14 +8,15 @@ describe('Events', () => {
   const app = setupTestSuite();
   let application: { id: string };
   let user: { keycloakId: string };
+  let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create();
+    user = await UserFaker.create(['read', 'write']);
+    TOKEN = await getToken(user);
     application = await ApplicationFaker.create(user);
   });
 
   it(`/GET applications/:applicationId/events`, async () => {
-    const TOKEN = await getToken();
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/events`)
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -23,7 +24,6 @@ describe('Events', () => {
   });
 
   it(`/POST applications/:applicationId/events`, async () => {
-    const TOKEN = await getToken();
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/events`)
       .send({

@@ -12,6 +12,7 @@ describe('Relations End-to-End', () => {
   let applicationTarget: { id: string };
   let applicationUpdates: { id: string };
   let user: { keycloakId: string };
+  let TOKEN: string;
   let relation: {
     id: string;
     applicationSource: string;
@@ -21,7 +22,8 @@ describe('Relations End-to-End', () => {
 
   beforeAll(async () => {
     // Given
-    user = await UserFaker.create();
+    user = await UserFaker.create(['read', 'write']);
+    TOKEN = await getToken(user);
     applicationSource = await ApplicationFaker.create(user);
     applicationTarget = await ApplicationFaker.create(user);
     applicationUpdates = await ApplicationFaker.create(user);
@@ -29,7 +31,6 @@ describe('Relations End-to-End', () => {
 
   it('should create a relation when provided with a valid DTO', async () => {
     // Given
-    const TOKEN = await getToken();
     const dto = {
       applicationSource: applicationSource.id,
       applicationTarget: applicationTarget.id,
@@ -50,9 +51,6 @@ describe('Relations End-to-End', () => {
   });
 
   it('should retrieve all relations', async () => {
-    // Given
-    const TOKEN = await getToken();
-
     // When
     const response = await request(app().getHttpServer())
       .get('/relations')
@@ -64,9 +62,6 @@ describe('Relations End-to-End', () => {
   });
 
   it('should retrieve a relation by its id', async () => {
-    // Given
-    const TOKEN = await getToken();
-
     // When
     const response = await request(app().getHttpServer())
       .get(`/relations/${relation.id}`)
@@ -79,7 +74,6 @@ describe('Relations End-to-End', () => {
 
   it('should update a relation with valid data', async () => {
     // Given
-    const TOKEN = await getToken();
     const updatedDto = {
       applicationSource: applicationSource.id,
       applicationTarget: applicationUpdates.id,
@@ -99,9 +93,6 @@ describe('Relations End-to-End', () => {
   });
 
   it('should delete a relation', async () => {
-    // Given
-    const TOKEN = await getToken();
-
     // When
     await request(app().getHttpServer())
       .delete(`/relations/${relation.id}`)
@@ -110,9 +101,6 @@ describe('Relations End-to-End', () => {
   });
 
   it('should return 404 when retrieving a deleted relation', async () => {
-    // Given
-    const TOKEN = await getToken();
-
     // When
     await request(app().getHttpServer())
       .get(`/relations/${relation.id}`)

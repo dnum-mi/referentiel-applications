@@ -1,4 +1,4 @@
-export async function getToken() {
+export async function getToken(user) {
   const response = await fetch(
     'http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/token',
     {
@@ -9,8 +9,8 @@ export async function getToken() {
       body: new URLSearchParams({
         client_id: 'referentiel-applications',
         grant_type: 'password',
-        username: 'user',
-        password: 'password',
+        username: user.email,
+        password: 'password', // Assuming the password is the same for all test users
       }),
     },
   );

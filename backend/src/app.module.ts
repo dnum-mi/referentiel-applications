@@ -26,6 +26,8 @@ import { ActorModule } from './actor/actor.module';
 import { LinksModule } from './links/links.module';
 import { LabelsModule } from './labels/labels.module';
 import { ApplicationSearchModule } from './search/search.module';
+import { APP_GUARD } from '@nestjs/core';
+import { PermissionsGuard } from './common/guards/permissions.guard';
 
 @Module({
   imports: [
@@ -55,6 +57,10 @@ import { ApplicationSearchModule } from './search/search.module';
     ApplicationService,
     CombinedInterceptor,
     AuthMiddleware,
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {
