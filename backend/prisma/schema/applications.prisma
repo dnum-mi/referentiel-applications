@@ -22,10 +22,14 @@ model Application {
   relationsAsTarget Relation[]         @relation("TargetHasSource")
   labels              Label[]          @relation("ApplicationLabels")
 
+  priorityRestart     priorityRestart?
+
   @@index([label])
   @@index([shortName])
   @@map("applications")
 }
+
+
 
 
 model Relation {
@@ -45,4 +49,13 @@ enum RelationType {
   in_replacement_of
   is_service_user_of
   is_data_user_of
+}
+
+enum priorityRestart {
+  p0
+  p1
+  p2
+  p3
+  p4
+  p5
 }

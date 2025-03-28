@@ -5,6 +5,7 @@ export interface Application {
   labels?: Label[];
   description?: string;
   targetPopulations?: string[];
+  priorityRestart?: string;
   organisationCode?: string;
   createdAt: string;
   updatedAt: string;

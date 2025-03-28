@@ -14,6 +14,16 @@ const props = defineProps<{
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
 
+const priorityRestartOptions = [
+  { value: "", text: "Sélectionner une priorité" },
+  { value: "p0", text: "P0 - Critique" },
+  { value: "p1", text: "P1 - Haute" },
+  { value: "p2", text: "P2 - Moyenne" },
+  { value: "p3", text: "P3 - Normale" },
+  { value: "p4", text: "P4 - Faible" },
+  { value: "p5", text: "P5 - Très faible" },
+];
+
 const handleSubmit = () => {
   if (!validateAllTags()) {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
@@ -40,15 +50,7 @@ const handleSubmit = () => {
     targetPopulations: form.value.targetPopulations,
     purposes,
     tags,
-  });
-  console.log("submit", {
-    label: form.value.label,
-    shortName: form.value.shortName || null,
-    logo: form.value.logo || null,
-    description: form.value.description,
-    targetPopulations: form.value.targetPopulations,
-    purposes,
-    tags,
+    priorityRestart: form.value.priorityRestart || null,
   });
 };
 
@@ -61,6 +63,7 @@ const form = ref({
   logo: props.initialData?.logo ?? "",
   purposes: [...(props.initialData?.purposes ?? [""])],
   tags: [...(props.initialData?.tags ?? [""])],
+  priorityRestart: props.initialData?.priorityRestart ?? "",
 });
 
 const isCurrentLabel = (label: Label): boolean => {
@@ -169,6 +172,13 @@ const removePopulation = (index: number) => {
     <DsfrInputGroup class="fr-mt-3w" v-model="form.description" required>
       <DsfrInput v-model="form.description" class="fr-mt-3w" label="Description" label-visible is-textarea required />
     </DsfrInputGroup>
+
+    <DsfrSelect
+      v-model="form.priorityRestart"
+      :options="priorityRestartOptions"
+      label="Priorité de redémarrage"
+      default-unselected-text="Sélectionner une priorité"
+    />
 
     <div class="fr-form-group fr-mt-3w">
       <label class="fr-label">Population</label>
