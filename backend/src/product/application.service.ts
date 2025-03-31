@@ -121,7 +121,6 @@ export class ApplicationService {
     const accentTo = 'aaaaaaeeeeiiiiooooouuuuc';
     const conditions: string[] = [];
 
-    // label (inclut le label.value et le label.shortname)
     if (label) {
       conditions.push(`
         EXISTS (
