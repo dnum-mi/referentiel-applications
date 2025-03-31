@@ -38,7 +38,7 @@ export class ApplicationRepository implements IApplicationRepository {
       include: {
         actors: true,
         relationsAsSource: {
-          include: { targetApplication: { select: { id: true } } },
+          include: { targetApplication: { select: { id: true, label: true } } },
         },
         relationsAsTarget: {
           include: { sourceApplication: { select: { id: true } } },
