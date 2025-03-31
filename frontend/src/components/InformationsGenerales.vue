@@ -133,7 +133,7 @@ watch(
               <div v-else>
                 <h4>ID de l'application</h4>
                 <p>{{ application.id }}</p>
-                <div v-if="(application.labels ?? []).length > 0" class="fr-col-4">
+                <div v-if="labels && labels.length > 1" class="fr-col-4">
                   <h4>Libellés Alternatifs (Noms courts)</h4>
                   <p>
                     {{
