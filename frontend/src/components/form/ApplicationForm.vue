@@ -19,6 +19,8 @@ const handleSubmit = () => {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
+  const purposes = form.value.purposes.filter((p) => p.trim() !== "");
+  const tags = form.value.tags.filter((t) => t.trim() !== "");
   const initialLabels = props.labels ?? [];
   const currentLabels = form.value.labels;
 
