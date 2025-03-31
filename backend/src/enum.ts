@@ -25,6 +25,7 @@ export enum ExternalRessourceType {
   DOCUMENTATION = 'documentation',
   SUPERVISION = 'supervision',
   SERVICE = 'service',
+  AUDIENCE_METRICS = "Mesure d'audience",
 }
 
 export enum ActorType {
