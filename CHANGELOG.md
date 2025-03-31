@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.5.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.4.0...v1.5.0) (2025-03-31)
+
+
+### Features
+
+* :sparkles: add audience metrics as a link type ([e185c88](https://github.com/dnum-mi/referentiel-applications/commit/e185c88f619073dee1358b9766c820e1018a22bf))
+* :sparkles: Add field population cible ([6caf1a2](https://github.com/dnum-mi/referentiel-applications/commit/6caf1a2d14eb9afe68c00f03b9f6dbb435e18afc))
+* :sparkles: add priority restart enum ([782bb27](https://github.com/dnum-mi/referentiel-applications/commit/782bb271945cb8782ab4bbd1cec9ba096b6bfddf))
+* ✨ add alternative label ([#514](https://github.com/dnum-mi/referentiel-applications/issues/514)) ([cdbd2ae](https://github.com/dnum-mi/referentiel-applications/commit/cdbd2ae02fc2eb91d6755e998799e6088f18ca3f))
+
+
+### Bug Fixes
+
+* :bug: adding the target label in the include get relation ([8915303](https://github.com/dnum-mi/referentiel-applications/commit/8915303a45c10799503fa9249e0e738bed95084b))
+
 ## [1.4.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.3.0...v1.4.0) (2025-03-27)
 
 
