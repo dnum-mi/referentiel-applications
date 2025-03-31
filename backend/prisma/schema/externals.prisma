@@ -11,4 +11,5 @@ enum ExternalRessourceType {
   documentation
   supervision
   service
+  audience_metrics
 }

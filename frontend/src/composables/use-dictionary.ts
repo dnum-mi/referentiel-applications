@@ -46,6 +46,7 @@ export const linkTypesDict = {
   documentation: "Documentation",
   supervision: "Supervision",
   service: "Service",
+  audience_metrics: "Mesure d'audience",
 };
 
 export const eventTypesArray = [
