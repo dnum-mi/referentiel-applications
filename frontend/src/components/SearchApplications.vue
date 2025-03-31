@@ -4,14 +4,29 @@ import { onMounted, ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import type { Application } from "@/models/Application";
 import { getPriorityBadgeType } from "@/composables/use-dictionary";
+import Sites from "@/api/sites";
 
-const toaster = useToaster;
+const toaster = useToaster();
 const searchTerm = ref<string>("");
-const searchResults = ref([]);
+const searchResults = ref<any[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
 const debounceTimeout = ref<NodeJS.Timeout | null>(null);
-const displayMode = ref("table");
+const isTiles = ref(false);
+const updateMode = () => {
+  const mobile = window.matchMedia("(max-width: 768px)").matches;
+  isTiles.value = mobile;
+};
+
+onMounted(() => {
+  updateMode();
+  window.addEventListener("resize", updateMode);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", updateMode);
+});
+const displayMode = computed(() => (isTiles.value ? "tiles" : "table"));
 
 const headers = ["Label", "Description", "Priorité de redémarrage", "Tags"];
 
@@ -27,10 +42,26 @@ async function doSearch() {
       isLoading.value = true;
       errorMessage.value = "";
       currentPage.value = 0;
-      const results = await Applications.getAllApplicationBySearch(searchTerm.value || "", currentPage.value, rowsPerPage.value);
-      searchResults.value = results || [];
+
+      const searchValue = searchTerm.value || "";
+      const sitePrefix = "site:";
+
+      if (searchValue.toLowerCase().includes(sitePrefix)) {
+        const parts = searchValue.split(sitePrefix);
+        const site = parts[1].trim().split(" ")[0];
+        if (site) {
+          const hostings = await Sites.getApplications(site);
+          searchResults.value = hostings.map((h) => h.application);
+        } else {
+          searchResults.value = [];
+        }
+      } else {
+        const results = await Applications.getAllApplicationBySearch(searchValue, currentPage.value, rowsPerPage.value);
+        searchResults.value = results || [];
+      }
     } catch (error) {
-      toaster.addErrorMessage(error, "Une erreur est survenue lors du chargement des applications.");
+      console.error(error);
+      toaster.addErrorMessage("Une erreur est survenue lors du chargement des applications.");
     } finally {
       isLoading.value = false;
     }
@@ -63,8 +94,12 @@ onMounted(async () => {
         placeholder="Rechercher une application"
         @input="doSearch"
       />
-      <button @click="displayMode = 'table'">Mode Tableau</button>
-      <button @click="displayMode = 'tiles'">Mode Tuiles</button>
+      <div class="flex flex-col space-y-4 fr-m-3v">
+        <DsfrToggleSwitch v-model="isTiles" active-text="Mode Tuiles" inactive-text="Mode Tableau" />
+
+        <div v-if="displayMode === 'table'"></div>
+        <div v-else></div>
+      </div>
     </div>
 
     <div v-if="searchResults.length && displayMode === 'table'" class="table-container">

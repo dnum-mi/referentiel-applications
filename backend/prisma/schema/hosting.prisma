@@ -1,0 +1,20 @@
+model Hosting {
+  id              String   @id @default(cuid())
+  provider String?
+  label           String?
+  region          String?
+  site            String?
+  nature          Nature?
+  platform        String?
+  applicationId   String
+  application     Application @relation(fields: [applicationId], references: [id])
+}
+
+enum Nature {
+  NON_DEFINIE
+  PHYSIQUE
+  VIRTUEL
+  CLOUD
+  BARRE_METAL
+}
+

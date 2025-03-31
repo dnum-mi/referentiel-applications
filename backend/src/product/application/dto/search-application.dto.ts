@@ -1,8 +1,9 @@
+import { priorityRestart } from '@prisma/client';
 // src/application/dto/search-application.dto.ts
 
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString, IsArray, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class SearchApplicationDto {
   @ApiPropertyOptional({
@@ -21,13 +22,18 @@ export class SearchApplicationDto {
   @IsString()
   label?: string;
 
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  tag?: string[];
+
   @ApiPropertyOptional({
-    description: "Filtrer par tag d'application",
+    description: 'Filtrer par priorité de redemarrage',
     example: 'tag:ref',
   })
   @IsOptional()
-  @IsArray()
-  tag?: string[];
+  priorityRestart?: priorityRestart;
 
   @ApiPropertyOptional({
     description: 'Numéro de la page pour la pagination',
@@ -48,4 +54,8 @@ export class SearchApplicationDto {
   @IsNumber({}, { message: 'Le champ limit doit être un nombre valide.' })
   @Min(1, { message: 'Le champ limit doit être au moins 1.' })
   limit?: number;
+
+  @IsOptional()
+  @IsString()
+  shortName?: string;
 }
