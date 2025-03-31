@@ -63,7 +63,8 @@ const form = ref({
 
 const isCurrentLabel = (label: Label): boolean => {
   return (
-    label.value.toLowerCase() === form.value.label.toLowerCase() && label.shortname.toLowerCase() === form.value.shortName.toLowerCase()
+    label.value.toLowerCase() === form.value.label.toLowerCase() &&
+    (label.shortname ? label.shortname.toLowerCase() === form.value.shortName.toLowerCase() : !form.value.shortName)
   );
 };
 const addLabel = () => {

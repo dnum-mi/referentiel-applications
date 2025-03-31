@@ -141,9 +141,9 @@ watch(
                         .filter(
                           (label) =>
                             label.value.toLowerCase() !== application.label.toLowerCase() ||
-                            label.shortname.toLowerCase() !== application.shortName.toLowerCase(),
+                            (label.shortname && label.shortname.toLowerCase() !== application.shortName.toLowerCase()),
                         )
-                        .map((label) => `${label.value} (${label.shortname})`)
+                        .map((label) => `${label.value} (${label.shortname || ""})`)
                         .join(" ; ")
                     }}
                   </p>
