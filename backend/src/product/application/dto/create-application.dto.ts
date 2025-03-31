@@ -1,3 +1,4 @@
+import { priorityRestart } from '@prisma/client';
 import {
   IsString,
   IsOptional,
@@ -13,7 +14,6 @@ import {
   ApiHideProperty,
 } from '@nestjs/swagger';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
-import { priorityRestart } from '@prisma/client';
 
 export class CreateComplianceDto {
   @ApiProperty({

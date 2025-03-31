@@ -18,6 +18,7 @@ import { MetadatasModule } from './metadatas/metadatas.module';
 import { RelationModule } from './relationship/relation.module';
 import { UserModule } from './user/user.module';
 import { ApplicationModule } from './product/application.module';
+import { HostingModule } from './hosting/hosting.module';
 import { ApplicationService } from './product/application.service';
 import { AnomalyNotificationModule } from './notification/anomaly-notification.module';
 import { ActorModule } from './actor/actor.module';
@@ -30,6 +31,7 @@ import { LabelsModule } from './labels/labels.module';
     RelationModule,
     UserModule,
     ApplicationModule,
+    HostingModule,
     AnomalyNotificationModule,
     LoggerModule,
     HealthCheckModule,

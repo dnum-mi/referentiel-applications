@@ -114,71 +114,13 @@ export class ApplicationService {
    * @returns La liste des applications qui correspondent aux critères de recherche.
    * @throws Error Si une erreur survient pendant la recherche.
    */
-  public async searchApplications(searchParams: SearchApplicationDto) {
-    const { link, label, tag, page = 0, limit = 12 } = searchParams;
-    const skip = page * limit;
-    const accentFrom = 'àáâãäåèéêëìíîïòóôõöùúûüç';
-    const accentTo = 'aaaaaaeeeeiiiiooooouuuuc';
-    const conditions: string[] = [];
-
-    if (label) {
-      conditions.push(`
-        EXISTS (
-          SELECT 1
-          FROM public.labels l
-          WHERE (
-            translate(lower(l.value), '${accentFrom}', '${accentTo}') 
-              ILIKE translate(lower('%${label}%'), '${accentFrom}', '${accentTo}')
-            OR translate(lower(l.shortname), '${accentFrom}', '${accentTo}') 
-              ILIKE translate(lower('%${label}%'), '${accentFrom}', '${accentTo}')
-          )
-          AND l."applicationId" = a.id
-        )
-      `);
+  public async searchApplications(
+    searchParams: SearchApplicationDto,
+  ): Promise<any[]> {
+    if (searchParams.link) {
+      return this.applicationRepository.findByLink(searchParams.link);
     }
-
-    if (tag && tag.length > 0) {
-      tag.forEach((t) => {
-        conditions.push(`
-            EXISTS (
-              SELECT 1 FROM unnest(a.tags) AS t
-              WHERE translate(lower(t), '${accentFrom}', '${accentTo}')
-                    ILIKE translate(lower('%${t}%'), '${accentFrom}', '${accentTo}')
-            )
-          `);
-      });
-    }
-
-    const whereClause = conditions.length
-      ? `WHERE ${conditions.join(' AND ')}`
-      : '';
-
-    const query = Prisma.raw(`
-        SELECT a.*
-        FROM public.applications a
-        ${whereClause}
-        LIMIT ${limit} OFFSET ${skip}
-      `);
-
-    let applications = [];
-
-    if (link) {
-      const applicationsExternalRessource =
-        await this.prisma.externalRessource.findMany({
-          where: { link },
-          include: {
-            application: true,
-          },
-        });
-
-      applicationsExternalRessource.forEach((externalRessource) => {
-        applications.push(externalRessource.application);
-      });
-    } else {
-      applications = await this.prisma.$queryRaw(query);
-    }
-
-    return applications as any[];
+    return this.applicationRepository.searchApplications(searchParams);
   }
 
   /**
@@ -372,7 +314,7 @@ export class ApplicationService {
     application: Application,
   ) {
     const labelLower = application.label.toLowerCase();
-    const shortnameLower = application.shortName.toLowerCase();
+    const shortnameLower = (application.shortName || '').toLowerCase();
 
     const existingLabel = await tx.label.findFirst({
       where: {

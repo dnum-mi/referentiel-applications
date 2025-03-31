@@ -4,6 +4,15 @@ import { IApplicationRepository } from './application.repository.interface';
 import { Injectable } from '@nestjs/common';
 import { CreateApplicationDto } from '../../application/dto/create-application.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma, PrismaClient, priorityRestart } from '@prisma/client';
+
+import { SearchApplicationDto } from './../../application/dto/search-application.dto';
+import {
+  buildLabelFilter,
+  buildPriorityFilter,
+  buildShortNameFilter,
+  buildTagFilters,
+} from './search.utils';
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
@@ -45,5 +54,47 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
     });
+  }
+
+  async searchApplications(searchParams: SearchApplicationDto): Promise<any[]> {
+    const {
+      label,
+      tag,
+      priorityRestart,
+      shortName,
+      page = 0,
+      limit = 12,
+    } = searchParams;
+
+    const skip = page * limit;
+
+    const conditions: Prisma.Sql[] = [
+      ...buildLabelFilter(label),
+      ...buildTagFilters(tag),
+      ...buildPriorityFilter(priorityRestart),
+      ...buildShortNameFilter(shortName),
+    ];
+
+    const whereClause = conditions.length
+      ? Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
+      : Prisma.empty;
+
+    const query = Prisma.sql`
+      SELECT a.*
+      FROM public.applications a
+      ${whereClause}
+      LIMIT ${Prisma.raw(limit.toString())}
+      OFFSET ${Prisma.raw(skip.toString())}
+    `;
+
+    return this.prisma.$queryRaw(query);
+  }
+
+  async findByLink(link: string): Promise<any[]> {
+    const results = await this.prisma.externalRessource.findMany({
+      where: { link },
+      include: { application: true },
+    });
+    return results.map((r) => r.application);
   }
 }

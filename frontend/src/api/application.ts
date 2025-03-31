@@ -1,32 +1,44 @@
 import type { Application } from "@/models/Application";
 import requests from "./xhr-client";
 import axios from "axios";
-import { regexLink, regexTag } from "@/utils/regex";
+import { regexLink, regexPriority, regexTag } from "@/utils/regex";
 
 const Applications = {
   async getAllApplicationBySearch(searchParams?: string, page: number = 0, rowsPerPage: number = 12): Promise<Application[]> {
-    let label = searchParams;
-    const tag = [];
+    const raw = searchParams || "";
+    let label = raw;
+    const tag: string[] = [];
     let link = "";
-    let match = null;
+    let priorityRestart = "";
 
-    if ((match = regexLink.exec(searchParams)) != null) {
+    let match: RegExpExecArray | null;
+
+    if ((match = regexLink.exec(raw)) !== null) {
       link = match[0];
     } else {
-      while ((match = regexTag.exec(searchParams)) != null) {
+      while ((match = regexTag.exec(raw)) !== null) {
         tag.push(match[1]);
+        label = label.replace(match[0], "").trim();
+      }
+
+      if ((match = regexPriority.exec(raw)) !== null) {
+        priorityRestart = match[1];
         label = label.replace(match[0], "").trim();
       }
     }
 
+    const params: Record<string, any> = {
+      page,
+      limit: rowsPerPage,
+    };
+
+    if (label) params.label = label;
+    if (link) params.link = link;
+    if (tag.length) params.tag = tag;
+    if (priorityRestart) params.priorityRestart = priorityRestart;
+
     return await requests.get<Application[]>("/applications/search", {
-      params: {
-        link: link ? link : undefined,
-        label: label ? label : undefined,
-        tag: tag.length > 0 ? tag : [],
-        page: page,
-        limit: rowsPerPage,
-      },
+      params,
     });
   },
 
