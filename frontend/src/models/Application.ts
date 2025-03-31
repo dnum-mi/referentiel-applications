@@ -2,6 +2,7 @@ export interface Application {
   id: string;
   label: string;
   shortName?: string;
+  labels?: Label[];
   description?: string;
   targetPopulations?: string[];
   organisationCode?: string;
@@ -20,6 +21,25 @@ export interface Application {
   relationsAsTarget?: Relation[];
 }
 
+export interface Label {
+  id?: string;
+  source: string;
+  value: string;
+  shortname: string;
+  metadataId?: string;
+  applicationId?: string;
+}
+export interface Actor {
+  id?: string;
+  role?: string;
+  email: string;
+  actorType: string;
+  userId?: string;
+  organizationId?: string | null;
+  applicationId?: string;
+  user?: User;
+  externalOrganization?: External;
+}
 export interface Compliance {
   id: string;
   type: string;

@@ -26,16 +26,8 @@ export class ApplicationRepository implements IApplicationRepository {
     return await this.prisma.application.findMany({
       include: {
         actors: true,
-        relationsAsSource: {
-          include: {
-            targetApplication: true,
-          },
-        },
-        relationsAsTarget: {
-          include: {
-            sourceApplication: true,
-          },
-        },
+        relationsAsSource: { include: { targetApplication: true } },
+        relationsAsTarget: { include: { sourceApplication: true } },
       },
     });
   }
@@ -46,18 +38,10 @@ export class ApplicationRepository implements IApplicationRepository {
       include: {
         actors: true,
         relationsAsSource: {
-          include: {
-            targetApplication: {
-              select: { id: true, label: true },
-            },
-          },
+          include: { targetApplication: { select: { id: true } } },
         },
         relationsAsTarget: {
-          include: {
-            sourceApplication: {
-              select: { id: true, label: true },
-            },
-          },
+          include: { sourceApplication: { select: { id: true } } },
         },
       },
     });

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { Application } from "@/models/Application";
+import type { Application, Label } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
+import axios from "axios";
 
 const isSubmitting = ref(false);
 const toaster = useToaster();
@@ -20,7 +21,7 @@ const props = defineProps<{
 }>();
 
 const application = ref<Application>({ ...props.application });
-
+const labels = ref([]);
 const applicationModal = useModal();
 
 async function updateApplication(updatedData) {
@@ -33,9 +34,20 @@ async function updateApplication(updatedData) {
       ...props.application,
       ...updatedData,
     });
+    if (updatedData.deletedLabels.length > 0) {
+      const labelIds = updatedData.deletedLabels.map((label) => label.id);
+      await deleteLabels(labelIds);
+    }
+    if (updatedData.updatedLabels.length > 0) {
+      await updateLabels(updatedData.updatedLabels);
+    }
+    if (updatedData.newLabels.length > 0) {
+      await createLabels(updatedData.newLabels);
+    }
 
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
+    await fetchLabels();
     toaster.addSuccessMessage("Application mise à jour avec succès");
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la mise à jour de l'application");
@@ -44,6 +56,49 @@ async function updateApplication(updatedData) {
     loading.value = false;
   }
 }
+
+async function createLabels(newLabels: Label[]) {
+  for (const label of newLabels) {
+    try {
+      await axios.post(`applications/${props.application.id}/labels`, {
+        source: label.source,
+        value: label.value,
+        shortname: label.shortname,
+      });
+    } catch (error) {
+      toaster.addErrorMessage(`Erreur lors de la création du label: ${label.value}`);
+    }
+  }
+}
+
+async function updateLabels(updatedLabels: Label[]) {
+  for (const label of updatedLabels) {
+    try {
+      await axios.patch(`applications/${props.application.id}/labels/${label.id}`, {
+        source: label.source,
+        value: label.value,
+        shortname: label.shortname,
+      });
+    } catch (error) {
+      toaster.addErrorMessage(`Erreur lors de la modification du label: ${label.value}`);
+    }
+  }
+}
+
+async function deleteLabels(labels: String[]) {
+  await Promise.all(labels.map((labelId) => axios.delete(`applications/${props.application.id}/labels/${labelId}`)));
+}
+
+async function fetchLabels() {
+  try {
+    const response = await axios.get(`applications/${props.application.id}/labels`);
+    labels.value = response.data;
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors de la récupération des labels.");
+  }
+}
+
+onMounted(fetchLabels);
 
 watch(
   () => props.application,
@@ -78,6 +133,21 @@ watch(
               <div v-else>
                 <h4>ID de l'application</h4>
                 <p>{{ application.id }}</p>
+                <div v-if="labels && labels.length > 1" class="fr-col-4">
+                  <h4>Libellés Alternatifs (Noms courts)</h4>
+                  <p>
+                    {{
+                      labels
+                        .filter(
+                          (label) =>
+                            label.value.toLowerCase() !== application.label.toLowerCase() ||
+                            (label.shortname && label.shortname.toLowerCase() !== application.shortName.toLowerCase()),
+                        )
+                        .map((label) => `${label.value} (${label.shortname || ""})`)
+                        .join(" ; ")
+                    }}
+                  </p>
+                </div>
                 <h4>Description</h4>
                 <p>{{ application.description }}</p>
 
@@ -101,7 +171,7 @@ watch(
       </div>
     </div>
 
-    <div v-if="application.targetPopulations.length > 0" class="fr-col-4">
+    <div v-if="(application.targetPopulations ?? []).length > 0" class="fr-col-4">
       <div class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content">
@@ -121,7 +191,7 @@ watch(
 
   <DsfrModal :opened="applicationModal.isModalOpen.value" :title="'Modifier l\'application'" @close="applicationModal.closeModal">
     <ApplicationForm
-      v-bind="{ initialData: application }"
+      v-bind="{ initialData: application, labels }"
       :is-submitting="isSubmitting"
       @submit="updateApplication"
       @cancel="applicationModal.closeModal"

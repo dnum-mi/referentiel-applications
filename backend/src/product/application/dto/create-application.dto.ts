@@ -145,6 +145,36 @@ export class UpdateComplianceDto {
   notes?: string | null;
 }
 
+export class CreateLabelDto {
+  @ApiProperty({
+    example:
+      'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+    description: 'Source of the label',
+  })
+  @IsString()
+  source: string | null;
+
+  @ApiProperty({ example: 'My Application', description: 'Value of the label' })
+  @IsString()
+  @IsOptional()
+  value: string | null;
+
+  @ApiProperty({
+    example: 'short-app-name',
+    description: 'ShortName of the label',
+  })
+  @IsString()
+  @IsOptional()
+  shortname: string | null;
+
+  @ApiProperty({
+    example: 'metadata456',
+    description: 'Metadata ID',
+  })
+  @IsString()
+  metadataId?: string;
+}
+
 export class CreateApplicationDto {
   @ApiProperty({
     example: 'My Application',
@@ -230,6 +260,24 @@ export class CreateApplicationDto {
   parentId?: string;
 
   @ApiProperty({
+    type: [CreateLabelDto],
+    description: 'Liste des labels alternatifs associés à l’application',
+    example: [
+      {
+        source:
+          'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+        value: 'My App',
+        shortname: 'short-name',
+        metadataId: 'metadata456',
+      },
+    ],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateLabelDto)
+  labels: CreateLabelDto[];
+
+  @ApiProperty({
     type: [CreateComplianceDto],
     description: 'Liste des conformités associées à l’application',
     example: [
@@ -256,7 +304,6 @@ export class PatchApplicationDto {
     example: 'My Application',
     description: 'Label of the application',
   })
-  @IsOptional()
   @IsString()
   label: string;
 

@@ -18,8 +18,9 @@ model Application {
   ownerId String
   owner   User   @relation("UserApplications", fields: [ownerId], references: [keycloakId])
 
-  relationsAsSource   Relation[]            @relation("SourceHasTarget")
-  relationsAsTarget   Relation[]            @relation("TargetHasSource")
+  relationsAsSource Relation[]         @relation("SourceHasTarget")
+  relationsAsTarget Relation[]         @relation("TargetHasSource")
+  labels              Label[]          @relation("ApplicationLabels")
 
   @@index([label])
   @@index([shortName])
@@ -38,7 +39,6 @@ model Relation {
   @@unique([applicationSource, applicationTarget, type])
   @@map("relations")
 }
-
 
 enum RelationType {
   is_part_of

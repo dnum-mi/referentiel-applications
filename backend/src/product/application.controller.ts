@@ -71,6 +71,10 @@ Vous devez fournir les informations suivantes :
 - **tags**: Des tags pour catégoriser l'application.
   - **firstProductionDate**: Date de première mise en production.
   - **plannedDecommissioningDate**: Date prévue de déclassement.
+- **labels**: Les différents libellés alternatifs de l'application.
+  - **source**: La source de l'application.
+  - **value**: Le libellé de l'application.
+  - **shortname**: Le nom court de l'application.
 - **compliances**: La liste des conformités associées avec :
   - **type**: Le type de conformité (Enum: ${Object.values(ComplianceType).join(', ')}).
   - **name**: Le nom de la conformité.
