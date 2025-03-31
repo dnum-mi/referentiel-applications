@@ -133,7 +133,7 @@ watch(
               <div v-else>
                 <h4>ID de l'application</h4>
                 <p>{{ application.id }}</p>
-                <div>
+                <div v-if="(application.labels ?? []).length > 0" class="fr-col-4">
                   <h4>Libellés Alternatifs (Noms courts)</h4>
                   <p>
                     {{
@@ -171,7 +171,7 @@ watch(
       </div>
     </div>
 
-    <div v-if="application.targetPopulations.length > 0" class="fr-col-4">
+    <div v-if="(application.targetPopulations ?? []).length > 0" class="fr-col-4">
       <div class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content">
