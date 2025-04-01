@@ -115,8 +115,8 @@ export class ApplicationService {
    * @throws Error Si une erreur survient pendant la recherche.
    */
   public async searchApplications(searchParams: SearchApplicationDto) {
-    const { link, label, tag, page = 1, limit = 12 } = searchParams;
-    const skip = (page - 1) * limit;
+    const { link, label, tag, page, limit } = searchParams;
+    const skip = page * limit;
     const accentFrom = 'àáâãäåèéêëìíîïòóôõöùúûüç';
     const accentTo = 'aaaaaaeeeeiiiiooooouuuuc';
     const conditions: string[] = [];
