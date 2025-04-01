@@ -58,3 +58,19 @@ export const eventTypesArray = [
 ];
 
 export const eventTypesDict = Object.fromEntries(eventTypesArray.map(({ value, text }) => [value, text]));
+
+export const priorityConfig = new Map<string, { type: string; label: string; tooltip: string }>([
+  ["p0", { type: "error", label: "P0 – Critique", tooltip: "Service vital – doit redémarrer en priorité absolue" }],
+  ["p1", { type: "warning", label: "P1 – Haute", tooltip: "Important – redémarrage rapide nécessaire" }],
+  ["p2", { type: "info", label: "P2 – Moyenne", tooltip: "Peut attendre une reprise partielle" }],
+  ["p3", { type: "default", label: "P3 – Normale", tooltip: "Pas de contrainte forte de redémarrage" }],
+  ["p4", { type: "none", label: "P4 – Faible", tooltip: "Faible priorité – redémarrage après les autres" }],
+  ["p5", { type: "none", label: "P5 – Très faible", tooltip: "Dernier à redémarrer – peu critique" }],
+]);
+
+export const getPriorityBadgeType = (priority?: string) =>
+  priorityConfig.get(priority ?? "") ?? {
+    type: "none",
+    label: "Non définie",
+    tooltip: "Aucune priorité n’a été définie pour cette application",
+  };

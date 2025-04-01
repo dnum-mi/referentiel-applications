@@ -3,6 +3,7 @@ import Applications from "@/api/application";
 import { onMounted, ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import type { Application } from "@/models/Application";
+import { getPriorityBadgeType } from "@/composables/use-dictionary";
 
 const toaster = useToaster;
 const searchTerm = ref<string>("");
@@ -16,7 +17,6 @@ const headers = ["Label", "Description", "Priorité de redémarrage", "Tags"];
 
 const currentPage = ref(0);
 const rowsPerPage = ref(15);
-const totalApplications = ref(0);
 
 async function doSearch() {
   if (debounceTimeout.value) {
@@ -28,8 +28,6 @@ async function doSearch() {
       errorMessage.value = "";
       const results = await Applications.getAllApplicationBySearch(searchTerm.value || "", currentPage.value, rowsPerPage.value);
       searchResults.value = results || [];
-      totalApplications.value = results.length;
-      console.log("totalApp", totalApplications.value);
     } catch (error) {
       toaster.addErrorMessage(error, "Une erreur est survenue lors du chargement des applications.");
     } finally {
@@ -74,10 +72,10 @@ onMounted(async () => {
         :rows="rows"
         v-model:current-page="currentPage"
         v-model:rows-per-page="rowsPerPage"
-        :total-rows="totalApplications"
         pagination
         :pagination-options="[5, 15, 30, 50]"
         sortable-rows
+        sorted="Priorité de redémarrage"
         vertical-borders
       >
         <template #cell="{ colKey, cell }">
@@ -91,10 +89,15 @@ onMounted(async () => {
             <span class="truncate">{{ cell.description }}</span>
           </template>
           <template v-else-if="colKey === 'Priorité de redémarrage'">
-            {{ cell.priorityRestart }}
+            <DsfrBadge
+              :label="getPriorityBadgeType(cell.priorityRestart).label"
+              :type="getPriorityBadgeType(cell.priorityRestart).type"
+              :title="getPriorityBadgeType(cell.priorityRestart).tooltip"
+              :aria-label="`Priorité de redémarrage : ${getPriorityBadgeType(cell.priorityRestart).tooltip}`"
+            />
           </template>
           <template v-else-if="colKey === 'Tags'">
-            {{ cell.tags }}
+            <span class="truncate">{{ cell.tags }}</span>
           </template>
         </template>
       </DsfrDataTable>

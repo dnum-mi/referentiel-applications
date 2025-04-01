@@ -24,8 +24,8 @@ const Applications = {
         link: link ? link : undefined,
         label: label ? label : undefined,
         tag: tag.length > 0 ? tag : [],
-        page: page ?? undefined,
-        limit: rowsPerPage ?? undefined,
+        page: page ?? 0,
+        limit: rowsPerPage ?? 12,
       },
     });
   },
