@@ -104,7 +104,7 @@ watch(searchQuery, (newVal) => {
       trackSearch();
       isLoading.value = true;
       errorMessage.value = "";
-      const results = await Applications.getAllApplicationBySearch(newVal);
+      const results = await Applications.getAllApplicationBySearch(newVal, undefined, undefined);
       searchResults.value = results || [];
     } catch (error) {
       instance?.proxy?.$matomo?.trackEvent("Error", "Search Error", error.message);

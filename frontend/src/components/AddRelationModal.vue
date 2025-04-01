@@ -52,7 +52,7 @@ const performSearch = async (query: string) => {
   if (query && query.length >= 3) {
     isLoading.value = true;
     try {
-      const result = await Applications.getAllApplicationBySearch(query);
+      const result = await Applications.getAllApplicationBySearch(query, undefined, undefined);
       suggestions.value = result;
     } catch (error) {
       console.error(error);
