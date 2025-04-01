@@ -82,6 +82,11 @@ const {
       <template v-if="colKey === 'Sélection'">
         <input type="checkbox" :value="cell" v-model="selectedRelationIds" />
       </template>
+      <template v-else-if="colKey === 'Cible'">
+        <a :href="`/applications/${cell.id}`" class="fr-link">
+          {{ cell.label }}
+        </a>
+      </template>
       <template v-else-if="colKey === 'Actions'">
         <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.edit()">Modifier</DsfrButton>
       </template>

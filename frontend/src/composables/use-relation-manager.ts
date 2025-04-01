@@ -41,7 +41,10 @@ export function useRelationManager(application: Application, emit: (event: strin
       Sélection: rel.id,
       Source: rel.isSource ? sourceLabel : targetLabel,
       Relation: getRelationLabelForSide(rel.type, rel.isSource),
-      Cible: rel.isSource ? targetLabel : sourceLabel,
+      Cible: {
+        label: rel.isSource ? targetLabel : sourceLabel,
+        id: rel.isSource ? rel.applicationTarget : rel.applicationSource,
+      },
       Actions: { edit: () => editRelation(rel) },
     };
   }
