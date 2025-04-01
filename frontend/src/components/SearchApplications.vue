@@ -26,6 +26,7 @@ async function doSearch() {
     try {
       isLoading.value = true;
       errorMessage.value = "";
+      currentPage.value = 0;
       const results = await Applications.getAllApplicationBySearch(searchTerm.value || "", currentPage.value, rowsPerPage.value);
       searchResults.value = results || [];
     } catch (error) {
@@ -75,7 +76,6 @@ onMounted(async () => {
         pagination
         :pagination-options="[5, 15, 30, 50]"
         sortable-rows
-        sorted="Priorité de redémarrage"
         vertical-borders
       >
         <template #cell="{ colKey, cell }">

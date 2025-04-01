@@ -4,7 +4,7 @@ import axios from "axios";
 import { regexLink, regexTag } from "@/utils/regex";
 
 const Applications = {
-  async getAllApplicationBySearch(searchParams?: string, page?: number, rowsPerPage?: number): Promise<Application[]> {
+  async getAllApplicationBySearch(searchParams?: string, page: number = 0, rowsPerPage: number = 12): Promise<Application[]> {
     let label = searchParams;
     const tag = [];
     let link = "";
@@ -24,8 +24,8 @@ const Applications = {
         link: link ? link : undefined,
         label: label ? label : undefined,
         tag: tag.length > 0 ? tag : [],
-        page: page ?? 0,
-        limit: rowsPerPage ?? 12,
+        page: page,
+        limit: rowsPerPage,
       },
     });
   },
