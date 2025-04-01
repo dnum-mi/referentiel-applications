@@ -31,12 +31,12 @@ export class SearchApplicationDto {
 
   @ApiPropertyOptional({
     description: 'Numéro de la page pour la pagination',
-    example: 1,
+    example: 0,
   })
   @IsOptional()
   @Type(() => Number) // Transformation en nombre
   @IsNumber({}, { message: 'Le champ page doit être un nombre valide.' })
-  @Min(1, { message: 'Le champ page doit être au moins 1.' })
+  @Min(0, { message: 'Le champ page doit être au moins 0.' })
   page?: number;
 
   @ApiPropertyOptional({

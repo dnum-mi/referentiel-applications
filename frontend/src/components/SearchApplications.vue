@@ -2,6 +2,7 @@
 import Applications from "@/api/application";
 import { onMounted, ref } from "vue";
 import useToaster from "@/composables/use-toaster";
+import type { Application } from "@/models/Application";
 
 const toaster = useToaster;
 const searchTerm = ref<string>("");
@@ -9,6 +10,13 @@ const searchResults = ref([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
 const debounceTimeout = ref<NodeJS.Timeout | null>(null);
+const displayMode = ref("table");
+
+const headers = ["Label", "Description", "Priorité de redémarrage", "Tags"];
+
+const currentPage = ref(0);
+const rowsPerPage = ref(15);
+const totalApplications = ref(0);
 
 async function doSearch() {
   if (debounceTimeout.value) {
@@ -18,8 +26,10 @@ async function doSearch() {
     try {
       isLoading.value = true;
       errorMessage.value = "";
-      const results = await Applications.getAllApplicationBySearch(searchTerm.value || "");
+      const results = await Applications.getAllApplicationBySearch(searchTerm.value || "", currentPage.value, rowsPerPage.value);
       searchResults.value = results || [];
+      totalApplications.value = results.length;
+      console.log("totalApp", totalApplications.value);
     } catch (error) {
       toaster.addErrorMessage(error, "Une erreur est survenue lors du chargement des applications.");
     } finally {
@@ -28,6 +38,17 @@ async function doSearch() {
   }, 300);
 }
 
+const rows = computed(() => {
+  return searchResults.value.map((app) => ({
+    id: app.id,
+    label: app.label || "-",
+    description: app.description || "-",
+    tags: app.tags ? app.tags.join(", ") : "-",
+    shortName: app.shortName || "",
+    priorityRestart: app.priorityRestart || "-",
+  }));
+});
+
 onMounted(async () => {
   await doSearch();
 });
@@ -35,22 +56,57 @@ onMounted(async () => {
 
 <template>
   <div>
-    <DsfrSearchBar
-      v-model="searchTerm"
-      :hide-icon="true"
-      label="Rechercher une application"
-      placeholder="Rechercher une application"
-      @input="doSearch"
-    />
+    <div class="controls">
+      <DsfrSearchBar
+        v-model="searchTerm"
+        :hide-icon="true"
+        label="Rechercher une application"
+        placeholder="Rechercher une application"
+        @input="doSearch"
+      />
+      <button @click="displayMode = 'table'">Mode Tableau</button>
+      <button @click="displayMode = 'tiles'">Mode Tuiles</button>
+    </div>
 
-    <div v-if="searchResults.length" class="card-container">
+    <div v-if="searchResults.length && displayMode === 'table'" class="table-container">
+      <DsfrDataTable
+        :headers-row="headers"
+        :rows="rows"
+        v-model:current-page="currentPage"
+        v-model:rows-per-page="rowsPerPage"
+        :total-rows="totalApplications"
+        pagination
+        :pagination-options="[5, 15, 30, 50]"
+        sortable-rows
+        vertical-borders
+      >
+        <template #cell="{ colKey, cell }">
+          <template v-if="colKey === 'Label'">
+            <router-link :to="{ name: 'application', params: { id: cell.id } }">
+              {{ cell.label }}
+              <span v-if="cell.shortName" class="fr-text--sm fr-text--grey"> ({{ cell.shortName }}) </span>
+            </router-link>
+          </template>
+          <template v-else-if="colKey === 'Description'">
+            <span class="truncate">{{ cell.description }}</span>
+          </template>
+          <template v-else-if="colKey === 'Priorité de redémarrage'">
+            {{ cell.priorityRestart }}
+          </template>
+          <template v-else-if="colKey === 'Tags'">
+            {{ cell.tags }}
+          </template>
+        </template>
+      </DsfrDataTable>
+    </div>
+    <div v-else-if="searchResults.length && displayMode !== 'table'" class="card-container">
       <DsfrCard
         class="fixed-card"
         v-for="(app, index) in searchResults"
         :key="index"
-        :title="app.label || 'Applications'"
+        :title="app.label || 'Application'"
         :img-src="app.logo || ''"
-        :link="{ name: 'application', params: { id: app.id } }"
+        :to="{ name: 'application', params: { id: app.id } }"
       />
     </div>
 
@@ -85,5 +141,13 @@ onMounted(async () => {
   flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.truncate {
+  display: inline-block;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
