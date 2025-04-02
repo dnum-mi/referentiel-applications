@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref } from "vue";
 import Applications from "@/api/application";
 import Relations from "@/api/relation";
 import useToaster from "@/composables/use-toaster";
+import SuggestionsInput from "../SuggestionsInput.vue";
 
 interface ApplicationSummary {
   id: string;
@@ -27,8 +28,6 @@ const emit = defineEmits<{
   (e: "update:application", payload: any): void;
 }>();
 
-const searchText = ref("");
-const suggestions = ref<ApplicationSummary[]>([]);
 const selectedApplication = ref<ApplicationSummary | null>(null);
 const relationType = ref("is_part_of");
 const relationTypesForSelect = [
@@ -40,43 +39,20 @@ const relationTypesForSelect = [
 
 const isLoading = ref(false);
 
-function debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
-  let timeout: ReturnType<typeof setTimeout>;
-  return function (this: any, ...args: any[]) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), delay);
-  } as T;
-}
-
-const performSearch = async (query: string) => {
+async function performSearch(query: string) {
   if (query && query.length >= 3) {
-    isLoading.value = true;
+    isLoading!.value = true;
     try {
-      const result = await Applications.getAllApplicationBySearch(query);
-      suggestions.value = result;
+      return await Applications.getAllApplicationBySearch(query);
     } catch (error) {
       console.error(error);
       toaster.addErrorMessage("Erreur lors de la recherche d'applications.");
-      suggestions.value = [];
+      return [];
     } finally {
       isLoading.value = false;
     }
-  } else {
-    suggestions.value = [];
   }
-};
-
-const debouncedSearch = debounce(performSearch, 300);
-
-watch(searchText, (newVal) => {
-  debouncedSearch(newVal);
-});
-
-const selectApplication = (app: ApplicationSummary) => {
-  selectedApplication.value = app;
-  searchText.value = app.label;
-  suggestions.value = [];
-};
+}
 
 const submitRelation = async () => {
   if (!selectedApplication.value) {
@@ -94,7 +70,7 @@ const submitRelation = async () => {
   }
 
   try {
-    await Relations.create(applicationSourceId, selectedApplication.value.id, relationType.value);
+    await Relations.create(applicationSourceId, selectedApplication.value, relationType.value);
     emit("add-relation", {
       target: selectedApplication.value,
       relationType: relationType.value,
@@ -125,17 +101,14 @@ const closeModal = () => {
           default-unselected-text="Sélectionner une option"
         />
       </div>
-      <DsfrInput label="Rechercher une application" v-model="searchText" placeholder="Tapez au moins 3 caractères" />
 
-      <div v-if="isLoading">Chargement...</div>
-
-      <ul v-if="suggestions.length" class="suggestions-list">
-        <li v-for="app in suggestions" :key="app.id" class="suggestion-item">
-          <button type="button" @click="selectApplication(app)" class="suggestion-button">
-            {{ app.label }}
-          </button>
-        </li>
-      </ul>
+      <SuggestionsInput
+        v-model:returnData="selectedApplication"
+        :searchData="suggestions"
+        :searchDataFunction="performSearch"
+        label="Rechercher une application"
+        placeholder="Tapez au moins 3 caractères"
+      />
     </template>
 
     <template #footer>
@@ -154,10 +127,12 @@ const closeModal = () => {
   max-height: 200px;
   overflow-y: auto;
 }
+
 .suggestion-item {
   padding: 0.5rem;
   cursor: pointer;
 }
+
 .suggestion-item:hover {
   background-color: #f0f0f0;
 }
@@ -169,6 +144,7 @@ const closeModal = () => {
   padding: 0.5rem;
   cursor: pointer;
 }
+
 .suggestion-button:hover,
 .suggestion-button:focus {
   background-color: #f0f0f0;
