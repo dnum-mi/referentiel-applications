@@ -29,14 +29,19 @@ export enum ExternalRessourceType {
 }
 
 export enum ActorType {
-  RESPONSABLE = 'Responsable',
-  EXPLOITATION = 'Exploitation',
-  RESPONSABLE_AUTRE = 'ResponsableAutre',
-  HEBERGEMENT = 'Hebergement',
-  ARCHITECTE_APPLICATIF = 'ArchitecteApplicatif',
-  ARCHITECTE_INFRA = 'ArchitecteInfra',
-  REPRESENTANT_SSI = 'RepresentantSSI',
-  AUTRE = 'Autre',
+  MOA = 'MOA',
+  MOE = 'MOE',
+  RSSI = 'RSSI',
+  ArchitecteApplicatif = 'ArchitecteApplicatif',
+  ArchitecteTechnique = 'ArchitecteTechnique',
+  TMA = 'TMA',
+  Exploitation = 'Exploitation',
+  RSIMM = 'RSIMM',
+  CPD = 'CPD',
+  OrganismeBeneficiaire = 'OrganismeBeneficiaire',
+  ProductManager = 'ProductManager',
+  Hebergement = 'Hebergement',
+  Autre = 'Autre',
 }
 
 export enum RelationType {
