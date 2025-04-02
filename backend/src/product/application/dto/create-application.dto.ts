@@ -311,6 +311,7 @@ export class PatchApplicationDto {
     description: 'Label of the application',
   })
   @IsString()
+  @IsOptional()
   label: string;
 
   @ApiProperty({
