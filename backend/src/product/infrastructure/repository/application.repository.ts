@@ -97,4 +97,10 @@ export class ApplicationRepository implements IApplicationRepository {
     });
     return results.map((r) => r.application);
   }
+
+  public async delete(id: string): Promise<void> {
+    await this.prisma.application.delete({
+      where: { id },
+    });
+  }
 }

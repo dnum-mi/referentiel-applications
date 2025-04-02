@@ -22,7 +22,7 @@ model Actor {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   applicationId  String?
-  application    Application?  @relation("ApplicationActors", fields: [applicationId], references: [id])
+  application Application? @relation("ApplicationActors", fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
   @@map("actors")

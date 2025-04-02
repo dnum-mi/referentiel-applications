@@ -10,6 +10,7 @@ import {
   BadRequestException,
   Response,
   Logger,
+  Delete,
 } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 
@@ -242,5 +243,26 @@ Aucun paramètre n'est requis pour accéder à cette liste.
       where: { id: id },
       data: applicationToUpdate,
     });
+  }
+  /**
+   * Supprime une application par son ID.
+   *
+   * @param id L'identifiant de l'application à supprimer.
+   *
+   * @throws NotFoundException Si l'application n'est pas trouvée.
+   */
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Supprimer une application',
+    description: 'Supprime une application par son ID.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Application supprimée avec succès.',
+  })
+  @ApiResponse({ status: 404, description: 'Application non trouvée.' })
+  async remove(@Param('id') id: string) {
+    await this.applicationService.deleteApplication(id);
+    return { message: 'Application supprimée avec succès.' };
   }
 }
