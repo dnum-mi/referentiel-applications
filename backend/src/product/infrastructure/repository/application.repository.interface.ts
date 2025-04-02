@@ -8,4 +8,5 @@ export interface IApplicationRepository {
     ownerId: string,
     actorsToCreate,
   ): Promise<Application>;
+  delete(id: string): Promise<void>;
 }

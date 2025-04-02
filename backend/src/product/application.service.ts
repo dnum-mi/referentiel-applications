@@ -135,6 +135,12 @@ export class ApplicationService {
     const application =
       await this.applicationRepository.findById(applicationId);
 
+    if (!application) {
+      throw new NotFoundException(
+        `Application non trouvée pour l'ID: ${applicationId}`,
+      );
+    }
+
     console.log(
       "📌 Application récupérée depuis l'API :",
       JSON.stringify(application, null, 2),
@@ -152,6 +158,15 @@ export class ApplicationService {
   public async getApplications() {
     const applications = await this.applicationRepository.findAll();
     return applications;
+  }
+
+  public async deleteApplication(id: string): Promise<void> {
+    const existing = await this.applicationRepository.findById(id);
+    if (!existing) {
+      throw new NotFoundException(`Application non trouvée pour l'ID: ${id}`);
+    }
+
+    await this.applicationRepository.delete(id);
   }
 
   private async createApplicationMetadata(ownerId: string) {
@@ -314,7 +329,9 @@ export class ApplicationService {
     application: Application,
   ) {
     const labelLower = application.label.toLowerCase();
-    const shortnameLower = (application.shortName || '').toLowerCase();
+    const shortnameLower = application.shortName
+      ? application.shortName.toLowerCase()
+      : null;
 
     const existingLabel = await tx.label.findFirst({
       where: {
