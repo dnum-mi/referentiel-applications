@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { defineProps, defineEmits, computed } from "vue";
-import type { PropType } from "vue";
+import { defineEmits, computed, ref, PropType, reactive, onBeforeMount } from "vue";
 import type { Actor } from "@/models/Application";
 import { actorTypeMapping } from "@/composables/use-dictionary";
 import { Organization } from "@/models/organization";
+import SuggestionsInput from "../SuggestionsInput.vue";
 
 const props = defineProps({
   initialData: {
@@ -33,7 +32,7 @@ const form = ref({
   applicationId: props.initialData?.applicationId ?? "",
 });
 
-let organizationsList = reactive({ value: "", text: "Choisir une organisation" });
+let organizationsList = reactive([]);
 
 const actorTypes = computed(() => [
   { value: "", text: "Choisir un type d'acteur" },
@@ -48,20 +47,17 @@ const emit = defineEmits(["update:application", "submit", "cancel"]);
 function loadOrganizations() {
   const org = props.organizations.flat();
 
-  organizationsList.value = [
-    { value: "", text: "Choisir une organisation" },
-    ...org.map((organization: Organization) => ({
-      value: organization.id,
-      text: organization.label,
-    })),
-  ];
+  organizationsList = org.map((organization: Organization) => ({
+    id: organization.id,
+    label: organization.label,
+  }));
 }
 
 const handleSubmit = () => {
   emit("submit", form.value);
 };
 
-onMounted(() => {
+onBeforeMount(() => {
   loadOrganizations();
 });
 </script>
@@ -79,8 +75,7 @@ onMounted(() => {
     </div>
 
     <div class="fr-input-group fr-mt-3w">
-      <label class="fr-label" for="organizationId">Organisation</label>
-      <DsfrSelect v-model="form.organizationId" :options="organizationsList.value" />
+      <SuggestionsInput :searchData="organizationsList" v-model:returnData="form.organizationId" label="Organisation" />
     </div>
 
     <div class="fr-input-group fr-mt-3w">
