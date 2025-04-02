@@ -314,7 +314,9 @@ export class ApplicationService {
     application: Application,
   ) {
     const labelLower = application.label.toLowerCase();
-    const shortnameLower = (application.shortName || '').toLowerCase();
+    const shortnameLower = application.shortName
+      ? application.shortName.toLowerCase()
+      : null;
 
     const existingLabel = await tx.label.findFirst({
       where: {
