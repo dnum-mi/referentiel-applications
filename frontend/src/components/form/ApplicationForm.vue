@@ -80,8 +80,8 @@ const addLabel = () => {
 const removeLabel = (index: number) => {
   const labelToRemove = form.value.labels[index];
   if (
-    labelToRemove.value.toLowerCase() !== form.value.label.toLowerCase() ||
-    labelToRemove.shortname.toLowerCase() !== form.value.shortName.toLowerCase()
+    labelToRemove?.value?.toLowerCase() !== form.value.label.toLowerCase() ||
+    labelToRemove?.shortname?.toLowerCase() !== form.value.shortName.toLowerCase()
   ) {
     form.value.labels.splice(index, 1);
   }

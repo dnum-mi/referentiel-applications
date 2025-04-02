@@ -5,6 +5,7 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import SearchApplications from "./SearchApplications.vue";
 import type { Application } from "@/models/Application";
+import Applications from "@/api/application";
 
 const toaster = useToaster();
 const applicationModal = useModal();
@@ -13,7 +14,7 @@ const isSubmitting = ref(false);
 async function createApplication(newApplication: Application) {
   try {
     applicationModal.closeModal();
-    await axios.post(`applications`, newApplication);
+    await axios.post<Application>(`/applications/`, newApplication);
     toaster.addSuccessMessage("Application créée avec succès !");
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la création de l'application.");
