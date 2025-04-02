@@ -11,7 +11,7 @@ model Compliance {
   metadataId      String?         
   metadata        Metadata?       @relation("ComplianceMetadata", fields: [metadataId], references: [id])
   applicationId   String?         
-  application     Application?    @relation("ApplicationCompliances", fields: [applicationId], references: [id])
+  application   Application? @relation("ApplicationCompliances", fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@map("compliances")
 }

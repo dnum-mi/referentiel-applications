@@ -6,7 +6,7 @@ model Label {
   metadataId          String
   metadata            Metadata    @relation("LabelMetadata", fields: [metadataId], references: [id])
   applicationId       String
-  application         Application @relation("ApplicationLabels", fields: [applicationId], references: [id])
+  application         Application @relation("ApplicationLabels", fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@map("labels")
 }

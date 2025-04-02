@@ -38,8 +38,8 @@ model Relation {
   type              RelationType
   applicationSource String
   applicationTarget String
-  sourceApplication Application     @relation("SourceHasTarget", fields: [applicationSource], references: [id])
-  targetApplication Application     @relation("TargetHasSource", fields: [applicationTarget], references: [id])
+  sourceApplication Application @relation("SourceHasTarget", fields: [applicationSource], references: [id], onDelete: Cascade)
+  targetApplication Application @relation("TargetHasSource", fields: [applicationTarget], references: [id], onDelete: Cascade)
 
   @@unique([applicationSource, applicationTarget, type])
   @@map("relations")
