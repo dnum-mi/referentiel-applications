@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 export async function setupApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -14,12 +15,17 @@ export async function setupApp(): Promise<INestApplication> {
 
 export function setupTestSuite() {
   let app: INestApplication;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await setupApp();
+    prisma = app.get(PrismaService);
   });
 
   afterAll(async () => {
+    if (prisma) {
+      await prisma.$disconnect();
+    }
     if (app) {
       await app.close();
     }
