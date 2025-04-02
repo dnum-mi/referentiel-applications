@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.6.0...v1.6.1) (2025-04-02)
+
+
+### Bug Fixes
+
+* **applications:** :bug: make "label" optional in PATCH /api/v2/applications/{id} ([7654e36](https://github.com/dnum-mi/referentiel-applications/commit/7654e36fc9af37c0daca11389f8bec2b95571563))
+
 ## [1.6.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.5.0...v1.6.0) (2025-04-02)
 
 
