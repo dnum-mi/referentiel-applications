@@ -75,7 +75,7 @@ const applicationModal = useModal();
 const isModalOpened = computed(() => applicationModal.isModalOpen.value);
 
 const filteredAltLabels = computed(() =>
-  (application.value.labels || []).filter(
+  (labels.value || []).filter(
     (label) =>
       label.value.toLowerCase() !== application.value.label.toLowerCase() ||
       (label.shortname && label.shortname.toLowerCase() !== (application.value.shortName || "").toLowerCase()),
