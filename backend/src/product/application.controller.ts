@@ -7,10 +7,9 @@ import {
   Request,
   Get,
   Query,
-  BadRequestException,
-  Response,
   Logger,
   Delete,
+  Res,
 } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 
@@ -18,10 +17,10 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiExcludeEndpoint,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
-import { ExportService } from './export.service';
+import { ApplicationExportService } from './export.service';
 import {
   CreateApplicationDto,
   PatchApplicationDto,
@@ -29,11 +28,10 @@ import {
 import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
+import { getFullField } from './application/map/application-export.map';
+import { Response } from 'express';
+import { columnLabels } from './columnLabels/application-export.columnLabels';
 
-/**
- * Controller pour la gestion des applications.
- * Permet de créer, rechercher, mettre à jour, récupérer et exporter des applications.
- */
 @ApiTags('applications')
 @Controller('applications')
 export class ApplicationController {
@@ -41,21 +39,9 @@ export class ApplicationController {
 
   constructor(
     private readonly applicationService: ApplicationService,
-    private readonly exportService: ExportService,
+    private readonly applicationExportService: ApplicationExportService,
   ) {}
 
-  /**
-   * Crée une nouvelle application.
-   * Cette méthode permet de créer une application en utilisant les données fournies.
-   * 
-   * @param createApplicationDto Les données nécessaires pour créer une nouvelle application.
-   * @param req La requête contenant le token de l'utilisateur authentifié.
-   * 
-   * @returns La nouvelle application créée.
-   * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant.
-   * 
-
-   */
   @Post()
   @ApiBody({ type: CreateApplicationDto })
   @ApiOperation({
@@ -107,14 +93,6 @@ Vous devez fournir les informations suivantes :
     return newApplication;
   }
 
-  /**
-   * Recherche des applications en fonction des critères fournis.
-   *
-   * @param searchParams Paramètres de recherche des applications.
-   *
-   * @returns La liste des applications qui correspondent aux critères.
-   * @throws NotFoundException Si aucune application n'est trouvée.
-   */
   @Get('search')
   @ApiOperation({ summary: 'Rechercher des applications' })
   @ApiResponse({
@@ -126,59 +104,54 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.searchApplications(searchParams);
   }
 
-  /**
-   * Exporte les applications sous format CSV.
-   *
-   * @param query Les critères de recherche pour filtrer les applications à exporter.
-   * @param res La réponse HTTP utilisée pour envoyer le fichier CSV.
-   *
-   * @throws BadRequestException Si une erreur se produit lors de l'exportation.
-   *
-   * @operation { GET } /applications/export
-   */
   @Get('export')
-  @ApiOperation({ summary: 'Exporter les applications' })
-  @ApiResponse({ status: 200, description: 'Export réalisé avec succès.' })
-  @ApiResponse({ status: 400, description: "Erreur lors de l'exportation." })
-  @ApiExcludeEndpoint()
+  @ApiQuery({
+    name: 'columns',
+    required: false,
+    isArray: true,
+    type: String,
+    enum: Object.keys(columnLabels),
+    description:
+      'Colonnes à exporter. Utilisez Ctrl (ou Cmd sur Mac) + clic pour en sélectionner plusieurs',
+  })
+  @ApiOperation({
+    summary: 'Exporter les applications avec les colonnes choisies',
+    description: `Permet d’exporter les données applicatives au format CSV selon les colonnes sélectionnées.`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Fichier CSV généré avec succès',
+    content: {
+      'text/csv': {
+        schema: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   async exportApplications(
-    @Query() query: SearchApplicationDto,
-    @Response() res,
+    @Query('columns') columns: string[],
+    @Res() res: Response,
   ) {
-    try {
-      const applications =
-        await this.applicationService.searchApplications(query);
+    const { fileName, csv } =
+      await this.applicationExportService.exportApplications(columns);
 
-      const headers = ['id', 'label', 'description', 'createdBy', 'createdAt'];
-      const data = applications.map((app) => ({
-        id: app.id,
-        label: app.label,
-        description: app.description || '',
-        createdBy: app.metadata?.createdById || '',
-        createdAt: app.metadata?.createdAt?.toISOString() || '',
-      }));
-
-      const csvContent = this.exportService.generateCsv(data, headers);
-
-      res.setHeader('Content-Type', 'text/csv');
-      res.setHeader(
-        'Content-Disposition',
-        'attachment; filename="applications.csv"',
-      );
-      res.status(200).send(csvContent);
-    } catch {
-      throw new BadRequestException("Erreur lors de l'exportation.");
-    }
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.status(200).send(csv);
   }
 
-  /**
-   * Récupère une application spécifique par son ID.
-   *
-   * @param id L'identifiant de l'application à récupérer.
-   *
-   * @returns L'application correspondant à l'ID spécifié.
-   * @throws NotFoundException Si l'application n'est pas trouvée.
-   */
+  @Get('columns')
+  @ApiOperation({ summary: 'Lister les colonnes disponibles pour l’export' })
+  @ApiResponse({ status: 200, description: 'Liste des champs exportables' })
+  getExportableColumns() {
+    return Object.entries(columnLabels).map(([field, label]) => ({
+      field,
+      label,
+    }));
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Récupérer une application spécifique par ID',
@@ -192,15 +165,6 @@ Le paramètre **id** doit être fourni dans l'URL.
     return await this.applicationService.getApplicationById(id);
   }
 
-  /**
-   * Récupère toutes les applications.
-   *
-   * @returns La liste de toutes les applications.
-   *
-   * @operation { GET } /applications
-   * @ApiOperation({ summary: 'Récupérer les applications' })
-   * @ApiResponse({ status: 200, description: 'Liste des applications' })
-   */
   @Get()
   @ApiOperation({
     summary: 'Récupérer les applications',
@@ -215,14 +179,6 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     return await this.applicationService.getApplications();
   }
 
-  /**
-   * Met à jour les informations d'une application.
-   *
-   * @param id L'identifiant de l'application à mettre à jour.
-   * @param applicationToUpdate Les nouvelles données de l'application à mettre à jour.
-   *
-   * @returns L'application mise à jour.
-   */
   @Patch(':id')
   @ApiOperation({
     summary: 'Mettre à jour une application',
@@ -244,13 +200,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
       data: applicationToUpdate,
     });
   }
-  /**
-   * Supprime une application par son ID.
-   *
-   * @param id L'identifiant de l'application à supprimer.
-   *
-   * @throws NotFoundException Si l'application n'est pas trouvée.
-   */
+
   @Delete(':id')
   @ApiOperation({
     summary: 'Supprimer une application',

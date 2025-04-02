@@ -20,15 +20,6 @@ export class ApplicationService {
     private readonly labelsService: LabelsService,
   ) {}
 
-  /**
-   * Crée une nouvelle application.
-   *
-   * @param ownerId L'identifiant du propriétaire de l'application.
-   * @param createApplicationDto Les données nécessaires à la création de l'application.
-   *
-   * @returns L'application nouvellement créée.
-   * @throws BadRequestException Si un utilisateur référencé dans les acteurs n'existe pas.
-   */
   public async createApplication(
     ownerId: string,
     createApplicationDto: CreateApplicationDto,
@@ -59,14 +50,6 @@ export class ApplicationService {
     return application;
   }
 
-  /**
-   * Met à jour une application existante.
-   *
-   * @param params Contient l'ID de l'application et les données à mettre à jour.
-   *
-   * @returns L'application mise à jour.
-   * @throws NotFoundException Si l'application à mettre à jour n'est pas trouvée.
-   */
   public async update(params: {
     where: Prisma.ApplicationWhereUniqueInput;
     data: PatchApplicationDto;
@@ -106,14 +89,6 @@ export class ApplicationService {
     }
   }
 
-  /**
-   * Recherche des applications selon les critères fournis.
-   *
-   * @param searchParams Les paramètres de recherche.
-   *
-   * @returns La liste des applications qui correspondent aux critères de recherche.
-   * @throws Error Si une erreur survient pendant la recherche.
-   */
   public async searchApplications(
     searchParams: SearchApplicationDto,
   ): Promise<any[]> {
@@ -123,14 +98,10 @@ export class ApplicationService {
     return this.applicationRepository.searchApplications(searchParams);
   }
 
-  /**
-   * Récupère une application spécifique par son ID.
-   *
-   * @param id L'identifiant de l'application à récupérer.
-   *
-   * @returns L'application trouvée.
-   * @throws NotFoundException Si l'application n'est pas trouvée.
-   */
+  public async exportApplications(): Promise<any[]> {
+    return this.applicationRepository.exportAllApplicationsFull();
+  }
+
   public async getApplicationById(applicationId: string) {
     const application =
       await this.applicationRepository.findById(applicationId);
@@ -149,12 +120,6 @@ export class ApplicationService {
     return application;
   }
 
-  /**
-   * Récupère toutes les applications.
-   *
-   * @returns La liste de toutes les applications.
-   * @throws Error Si une erreur survient pendant la récupération des applications.
-   */
   public async getApplications() {
     const applications = await this.applicationRepository.findAll();
     return applications;

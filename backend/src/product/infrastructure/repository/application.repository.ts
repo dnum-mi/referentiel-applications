@@ -4,7 +4,7 @@ import { IApplicationRepository } from './application.repository.interface';
 import { Injectable } from '@nestjs/common';
 import { CreateApplicationDto } from '../../application/dto/create-application.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma, PrismaClient, priorityRestart } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import { SearchApplicationDto } from './../../application/dto/search-application.dto';
 import {
@@ -13,6 +13,7 @@ import {
   buildShortNameFilter,
   buildTagFilters,
 } from './search.utils';
+import { ApplicationWithAllRelations } from 'src/product/types/application.type';
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
@@ -88,6 +89,45 @@ export class ApplicationRepository implements IApplicationRepository {
     `;
 
     return this.prisma.$queryRaw(query);
+  }
+  async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
+    return this.prisma.application.findMany({
+      include: {
+        metadata: true, // ✅ OBLIGATOIRE
+        owner: true,
+        compliances: true,
+        labels: true,
+        actors: true,
+        events: true,
+        hostings: true,
+        relationsAsSource: {
+          include: { targetApplication: true },
+        },
+        relationsAsTarget: {
+          include: { sourceApplication: true },
+        },
+      },
+    });
+  }
+
+  async exportAllApplicationsFull(): Promise<any[]> {
+    return this.prisma.application.findMany({
+      include: {
+        metadata: true,
+        compliances: true,
+        labels: true,
+        actors: true,
+        relationsAsSource: {
+          include: { targetApplication: true },
+        },
+        relationsAsTarget: {
+          include: { sourceApplication: true },
+        },
+        events: true,
+        hostings: true,
+        owner: true,
+      },
+    });
   }
 
   async findByLink(link: string): Promise<any[]> {
