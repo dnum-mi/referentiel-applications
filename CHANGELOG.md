@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.6.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.5.0...v1.6.0) (2025-04-02)
+
+
+### Features
+
+* :lipstick: add application search table with pagination ([5b795a8](https://github.com/dnum-mi/referentiel-applications/commit/5b795a8217c61134a660fd5d921ada668cf053bc))
+* :lipstick: add pagination search ([aea3366](https://github.com/dnum-mi/referentiel-applications/commit/aea3366c0b330c95772aa646abdd57ed1eaad374))
+* :lipstick: remove useless undefined variable ([cb26090](https://github.com/dnum-mi/referentiel-applications/commit/cb26090f9ed095bdedf6e7de445a58dfac740db4))
+* :sparkles: Add hosting api and ihm ([109fb40](https://github.com/dnum-mi/referentiel-applications/commit/109fb4081c258285a9c02a525119bd24717544aa))
+* :sparkles: Add possibility to click on relation target to be redirected on the target ([30b140a](https://github.com/dnum-mi/referentiel-applications/commit/30b140a3fcc6fe4bff90edc1d321e14338104581))
+
 ## [1.5.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.4.0...v1.5.0) (2025-03-31)
 
 
