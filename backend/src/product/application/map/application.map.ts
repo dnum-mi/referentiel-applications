@@ -1,4 +1,3 @@
-import { priorityRestart } from '@prisma/client';
 import { CreateApplicationDto } from '../dto/create-application.dto';
 
 export const applicationMap = (
