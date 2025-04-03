@@ -17,13 +17,19 @@ export const statusColors = {
 };
 
 export const actorTypeMapping: Record<string, string> = {
-  Responsable: "Responsable",
-  Exploitation: "Exploitation",
-  ResponsableAutre: "Autre responsable",
-  Hebergement: "Hébergement",
-  ArchitecteApplicatif: "Architecte Applicatif",
-  ArchitecteInfra: "Architecte Infra",
-  RepresentantSSI: "Représentant SSI",
+  MOA: "Maîtrise d’Ouvrage (MOA)",
+  MOE: "Maîtrise d’Œuvre (MOE)",
+  RSSI: "Responsable de la Sécurité des Systèmes d’Information (RSSI)",
+  ArchitecteApplicatif: "Architecte applicatif",
+  ArchitecteTechnique: "Architecte technique",
+  TMA: "Tierce Maintenance Applicative (TMA)",
+  Exploitation: "Responsable d'exploitation opérationel",
+  RSIMM: "Responsables des SI Métier et de la Modernisation (RSIMM)",
+  CPD: "Correspondant à la protection des données (CPD)",
+  OrganismeBeneficiaire: "Correspondant Stratégique Métier (CSM)",
+  ProductOwner: "Product Owner (PO)",
+  ProductManager: "Product Manager (PM)",
+  Hebergement: "Responsable de l'hébergement",
   Autre: "Autre",
 };
 
@@ -52,8 +58,8 @@ export const linkTypesDict = {
 export const eventTypesArray = [
   { value: "under_construction", text: "En construction" },
   { value: "in_production", text: "En production" },
-  { value: "decommissioned", text: "Déclassé" },
-  { value: "decommissioning", text: "Déclassement" },
+  { value: "decommissioned", text: "Décommissionée" },
+  { value: "decommissioning", text: "En décommissionnement" },
   { value: "highlight", text: "Événement" },
 ];
 

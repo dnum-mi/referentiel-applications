@@ -19,7 +19,7 @@ const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
 const appVersion: string = import.meta.env.VITE_APP_VERSION ? `${import.meta.env.VITE_APP_VERSION}` : "VITE_APP_VERSION";
-
+console.info("Version de l’app :", import.meta.env.VITE_APP_VERSION);
 interface QuickLink {
   label: string;
   to: { name: string } | string;

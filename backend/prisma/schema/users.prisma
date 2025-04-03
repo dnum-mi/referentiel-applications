@@ -29,12 +29,18 @@ model Actor {
 }
 
 enum ActorType {
-  Responsable
-  Exploitation
-  ResponsableAutre
-  Hebergement
+  MOA
+  MOE
+  RSSI
   ArchitecteApplicatif
-  ArchitecteInfra
-  RepresentantSSI
+  ArchitecteTechnique
+  TMA
+  Exploitation
+  RSIMM
+  CPD
+  OrganismeBeneficiaire
+  ProductOwner
+  ProductManager
+  Hebergement
   Autre
 }
