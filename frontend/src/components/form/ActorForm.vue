@@ -64,11 +64,6 @@ onBeforeMount(() => {
 
 <template>
   <form @submit.prevent="handleSubmit">
-    <div class="fr-input-group">
-      <label class="fr-label" for="role">Rôle</label>
-      <input type="text" id="role" v-model="form.role" class="fr-input" required placeholder="Exemple : Responsable" />
-    </div>
-
     <div class="fr-input-group fr-mt-3w">
       <label class="fr-label" for="actorType">Type d'acteur</label>
       <DsfrSelect v-model="form.type" :options="actorTypes" />
