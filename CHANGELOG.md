@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.6.1...v1.7.0) (2025-04-03)
+
+
+### Features
+
+* **api:** :sparkles: add endpoint to delete application ([4dc9c42](https://github.com/dnum-mi/referentiel-applications/commit/4dc9c4234c25c1ee4df8c6d82ac844db440f2baf))
+* **front:** ✨ create application front ([#532](https://github.com/dnum-mi/referentiel-applications/issues/532)) ([52ed97c](https://github.com/dnum-mi/referentiel-applications/commit/52ed97cc621b3af78418ead8f6d99ebef993935a))
+
+
+### Bug Fixes
+
+* **ci:** :bug: add tag version in footer ([5fc9514](https://github.com/dnum-mi/referentiel-applications/commit/5fc95143443c093c216557ad2aeb52b88cad180f))
+
 ## [1.6.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.6.0...v1.6.1) (2025-04-02)
 
 
