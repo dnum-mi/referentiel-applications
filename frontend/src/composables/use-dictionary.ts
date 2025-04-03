@@ -58,8 +58,8 @@ export const linkTypesDict = {
 export const eventTypesArray = [
   { value: "under_construction", text: "En construction" },
   { value: "in_production", text: "En production" },
-  { value: "decommissioned", text: "Déclassé" },
-  { value: "decommissioning", text: "Déclassement" },
+  { value: "decommissioned", text: "Décommissionée" },
+  { value: "decommissioning", text: "En décommissionnement" },
   { value: "highlight", text: "Événement" },
 ];
 
