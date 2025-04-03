@@ -25,6 +25,7 @@ export class CreateHostingDto {
 
   @ApiProperty({ enum: Nature })
   @IsEnum(Nature)
+  @IsOptional()
   nature: Nature;
 
   @ApiProperty()
