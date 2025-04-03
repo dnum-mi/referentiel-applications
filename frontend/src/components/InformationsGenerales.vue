@@ -284,9 +284,7 @@ watch(
           <div class="fr-card__content">
             <ul class="hosting-list">
               <li v-for="(hosting, index) in hostings" :key="hosting.id || index" class="hosting-item">
-                <span class="hosting-label">
-                  {{ hosting?.provider }} {{ hosting.site }} ({{ hosting.region }}) - {{ hosting.nature }} - {{ hosting.platform }}
-                </span>
+                <span class="hosting-label"> {{ hosting.site }}- {{ hosting.region }} - {{ hosting.platform }} </span>
                 <!-- Boutons d'actions -->
                 <div class="hosting-actions">
                   <DsfrButton tertiary size="sm" @click="openEditHosting(hosting)" label="Modifier" />

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.7.0...v1.7.1) (2025-04-03)
+
+
+### Bug Fixes
+
+* **front:** :pencil2: fix wording in dictionnary event ([49fa89c](https://github.com/dnum-mi/referentiel-applications/commit/49fa89c30d5be77d8e4cce0f59b8249845c51a17))
+
 ## [1.7.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.6.1...v1.7.0) (2025-04-03)
 
 

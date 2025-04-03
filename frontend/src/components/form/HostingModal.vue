@@ -27,10 +27,8 @@ const natureOptions = [
 ];
 
 const hostingForm = ref({
-  provider: "",
   region: "",
   site: "",
-  nature: "",
   platform: "",
 });
 
@@ -39,10 +37,8 @@ watch(
   (newVal) => {
     if (newVal) {
       hostingForm.value = {
-        provider: newVal.provider,
         region: newVal.region,
         site: newVal.site,
-        nature: newVal.nature,
         platform: newVal.platform,
       };
     }
@@ -68,10 +64,8 @@ const handleSubmit = async () => {
       toaster.addSuccessMessage("Hébergement créé avec succès");
       // Réinitialisation du formulaire après création
       hostingForm.value = {
-        provider: "",
         region: "",
         site: "",
-        nature: "",
         platform: "",
       };
       emit("hosting-created", newHosting);
@@ -89,10 +83,8 @@ const handleSubmit = async () => {
 <template>
   <DsfrModal :opened="true" :title="props.initialHosting ? 'Modifier un hébergement' : 'Créer un hébergement'" @close="$emit('close')">
     <div class="fr-form-group">
-      <DsfrInput label-visible label="Fournisseur" v-model="hostingForm.provider" />
       <DsfrInput label-visible label="Région" v-model="hostingForm.region" />
       <DsfrInput label-visible label="Site" v-model="hostingForm.site" />
-      <DsfrSelect v-model="hostingForm.nature" :options="natureOptions" label="Nature" default-unselected-text="Sélectionner une option" />
       <DsfrInput label-visible label="Plateforme" v-model="hostingForm.platform" />
     </div>
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
