@@ -24,8 +24,6 @@ const props = defineProps({
   },
 });
 
-// pour que ceci fonctionne, il faut que le composant parent utilise le v-model
-// EXEMPLE : <SuggestionsInput v-model:returnData="variable" .../>
 const emit = defineEmits(["update:returnData"]);
 
 const searchSuggestion = ref("");
