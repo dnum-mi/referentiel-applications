@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.7.1...v1.8.0) (2025-04-03)
+
+
+### Features
+
+* :sparkles: replace input into suggestions list input for organization for actor ([220bc27](https://github.com/dnum-mi/referentiel-applications/commit/220bc27535d174e36fb3936fbd4315c768d34931))
+
 ## [1.7.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.7.0...v1.7.1) (2025-04-03)
 
 
