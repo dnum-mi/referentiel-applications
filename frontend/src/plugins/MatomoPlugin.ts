@@ -4,9 +4,6 @@ import type { Router } from "vue-router";
 declare global {
   interface Window {
     _paq: any[];
-    Piwik?: {
-      getAsyncTracker: () => MatomoInstance;
-    };
   }
 }
 
@@ -29,6 +26,7 @@ export interface MatomoOptions {
 interface MatomoInstance {
   trackPageView: (title?: string) => void;
   trackEvent: (category: string, action: string, name?: string, value?: number) => void;
+  trackSiteSearch: (keyword: string, category?: string, resultsCount?: number) => void;
   setCustomUrl: (url: string) => void;
   setReferrerUrl: (url: string) => void;
   enableLinkTracking: () => void;
@@ -82,7 +80,6 @@ export default {
       window._paq.push(["enableHeartBeatTimer", options.heartBeatTimerInterval]);
     }
 
-    // Chargement asynchrone du script
     const trackerScript = trackerScriptUrl || `${host}/${trackerFileName}.js`;
     const script = document.createElement("script");
     script.async = true;
@@ -90,37 +87,32 @@ export default {
     script.src = trackerScript;
 
     script.onload = () => {
-      if (!window.Piwik) {
-        console.error("Matomo n'a pas été chargé correctement");
-        return;
-      }
-
-      const matomo = window.Piwik.getAsyncTracker();
-
-      // Configuration des méthodes globales
       app.config.globalProperties.$matomo = {
         trackPageView(title?: string) {
           debug && console.log("[Matomo] Track page view:", title);
-          matomo.trackPageView(title);
+          window._paq.push(["trackPageView", title]);
         },
         trackEvent(category: string, action: string, name?: string, value?: number) {
           debug && console.log("[Matomo] Track event:", { category, action, name, value });
-          matomo.trackEvent(category, action, name, value);
+          window._paq.push(["trackEvent", category, action, name, value]);
+        },
+        trackSiteSearch(keyword: string, category?: string, resultsCount?: number) {
+          debug && console.log("[Matomo] Track site search:", { keyword, category, resultsCount });
+          window._paq.push(["trackSiteSearch", keyword, category, resultsCount]);
         },
         setCustomUrl(url: string) {
           debug && console.log("[Matomo] Set custom URL:", url);
-          matomo.setCustomUrl(url);
+          window._paq.push(["setCustomUrl", url]);
         },
         setReferrerUrl(url: string) {
           debug && console.log("[Matomo] Set referrer URL:", url);
-          matomo.setReferrerUrl(url);
+          window._paq.push(["setReferrerUrl", url]);
         },
         enableLinkTracking() {
-          matomo.enableLinkTracking();
+          window._paq.push(["enableLinkTracking"]);
         },
       };
 
-      // Intégration avec Vue Router
       if (router) {
         router.afterEach((to, from) => {
           const title = typeof to.meta.title === "string" ? to.meta.title : document.title;
@@ -135,10 +127,10 @@ export default {
           debug && console.log("[Matomo] Tracking route:", to.fullPath);
 
           if (referrerUrl) {
-            matomo.setReferrerUrl(referrerUrl);
+            window._paq.push(["setReferrerUrl", referrerUrl]);
           }
-          matomo.setCustomUrl(url);
-          matomo.trackPageView(title);
+          window._paq.push(["setCustomUrl", url]);
+          window._paq.push(["trackPageView", title]);
         });
       }
     };
