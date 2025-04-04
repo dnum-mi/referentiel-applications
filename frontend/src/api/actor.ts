@@ -13,7 +13,7 @@ const Actors = {
       applicationId: applicationId,
     };
 
-    const response = await axios.post<Actor>("/actor", payload);
+    const response = await axios.post<Actor>(`applications/${applicationId}/actors`, payload);
 
     console.log("response API");
     console.log(response);
@@ -31,15 +31,15 @@ const Actors = {
       applicationId: actor.applicationId,
     };
 
-    const response = await axios.patch<Actor>(`/actor/${actor.id}`, payload);
+    const response = await axios.patch<Actor>(`applications/${actor.applicationId}/actors/${actor.id}`, payload);
 
     console.log("response API");
     console.log(response);
     return response.data;
   },
 
-  async delete(actorId: string): Promise<Actor> {
-    const response = await axios.delete<Actor>(`/actor/${actorId}`);
+  async delete(applicationId: string, actorId: string): Promise<Actor> {
+    const response = await axios.delete<Actor>(`applications/${applicationId}/actors/${actorId}`);
 
     console.log("response API");
     console.log(response);
