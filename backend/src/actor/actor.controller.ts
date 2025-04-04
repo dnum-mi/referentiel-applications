@@ -9,13 +9,19 @@ import {
   Param,
   Logger,
 } from '@nestjs/common';
-import { ApiBody, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { CreateActorDto, UpdateActorDto } from './dto/actor.dto';
 import { ActorService } from './actor.service';
 import { Actor } from '@prisma/client';
 
-@ApiTags('actor')
-@Controller('actor')
+@ApiTags('Actors')
+@Controller('applications/:applicationId/actors')
 export class ActorController {
   constructor(private readonly actorService: ActorService) {}
 
@@ -36,6 +42,7 @@ Informations requises :
 - **applicationId** : ID de l'application liée à l'acteur
     `,
   })
+  @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiResponse({ status: 201, description: 'Acteur créé avec succès' })
   public async create(@Body() createActorDto: CreateActorDto, @Request() req) {
     Logger.log({
@@ -49,12 +56,18 @@ Informations requises :
 
   @Get(':id')
   @ApiOperation({ summary: 'Récupérer un acteur par ID' })
-  public async findOne(@Param('id') id: string): Promise<Actor> {
+  @ApiParam({ name: 'applicationId', description: "ID de l'application" })
+  @ApiParam({ name: 'id', description: "ID de l'acteur" })
+  public async findOne(
+    @Param('applicationId') applicationId: string,
+    @Param('id') id: string,
+  ): Promise<Actor> {
     return await this.actorService.findOne(id);
   }
 
   @Get()
   @ApiOperation({ summary: 'Récupérer tous les acteurs' })
+  @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiResponse({ status: 200, description: 'Liste des acteurs' })
   public async findAll(): Promise<Actor[]> {
     return await this.actorService.findAll();
@@ -62,7 +75,10 @@ Informations requises :
 
   @Patch(':id')
   @ApiOperation({ summary: 'Mettre à jour un acteur' })
+  @ApiParam({ name: 'applicationId', description: "ID de l'application" })
+  @ApiParam({ name: 'id', description: "ID de l'acteur" })
   public async updated(
+    @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() actorToUpdate: UpdateActorDto,
   ): Promise<Actor> {
@@ -80,7 +96,12 @@ Informations requises :
 
   @Delete(':id')
   @ApiOperation({ summary: 'Supprimer un acteur' })
-  public async delete(@Param('id') id: string): Promise<Actor> {
+  @ApiParam({ name: 'applicationId', description: "ID de l'application" })
+  @ApiParam({ name: 'id', description: "ID de l'acteur" })
+  public async delete(
+    @Param('applicationId') applicationId: string,
+    @Param('id') id: string,
+  ): Promise<Actor> {
     Logger.log({
       message: "Début de la suppression de l'acteur",
       actorId: id,

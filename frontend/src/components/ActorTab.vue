@@ -76,7 +76,7 @@ async function confirmDelete() {
   localActors.value = localActors.value.filter((actor) => !selectedActorIds.value.includes(actor.id));
 
   selectedActorIds.value.forEach((actor) => {
-    Actors.delete(actor);
+    Actors.delete(props.application.id, actor);
   });
 
   selectedActorIds.value = [];

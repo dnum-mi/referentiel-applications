@@ -17,7 +17,7 @@ describe('Actor', () => {
   it(`/GET actor`, async () => {
     const TOKEN = await getToken();
     await request(app().getHttpServer())
-      .get('/actor')
+      .get(`/applications/${application.id}/actors`)
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
   });
@@ -25,7 +25,7 @@ describe('Actor', () => {
   it(`/POST actor`, async () => {
     const TOKEN = await getToken();
     await request(app().getHttpServer())
-      .post('/actor')
+      .post(`/applications/${application.id}/actors`)
       .send({
         role: 'test',
         email: 'test@test.co',
