@@ -1,126 +1,42 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import useToaster from "@/composables/use-toaster";
+import { ref, computed, onBeforeMount } from "vue";
 import { defineProps, defineEmits } from "vue";
+import useToaster from "@/composables/use-toaster";
+import useModal from "@/composables/use-modal";
+import { useActorStore } from "@/stores/actorStore";
+import { useOrganizationStore } from "@/stores/organizationStore";
 import { actorTypeMapping } from "@/composables/use-dictionary";
 import ActorForm from "./form/ActorForm.vue";
-import useModal from "@/composables/use-modal";
-import Organizations from "@/api/organization";
-import Actors from "@/api/actor";
-import { Actor } from "@/models/Actor.js";
-import { Organization } from "@/models/organization";
 
+import type { Actor } from "@/models/Actor";
+import type { Application } from "@/models/Application";
+
+const props = defineProps<{ application: Application }>();
+const emit = defineEmits(["update:application"]);
+
+const actorStore = useActorStore();
+const orgStore = useOrganizationStore();
 const toaster = useToaster();
-
-const props = defineProps({
-  application: {
-    type: Object,
-    required: true,
-  },
-});
-
-const emit = defineEmits(["update:actor"]);
-
-const localActors = ref<Actor[]>(Array.isArray(props.application.actors) ? [...props.application.actors] : []);
-const selectedActorIds = ref<string[]>([]);
-
-const currentPage = ref(0);
-const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
-const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
-
 const actorModal = useModal();
-const showDeleteConfirmation = ref(false);
 
+const selectedActorIds = ref<string[]>([]);
+const currentPage = ref(0);
+const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const loading = ref(false);
 
-const organizationsList = ref([]);
+const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 
-function getTypeLabel(value: string): string {
-  return value ? actorTypeMapping[value] || "Type inconnu" : "Aucun type sélectionné";
-}
+const organizationsList = computed(() => orgStore.organizations);
 
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-async function handleSaveActors(newActor) {
-  const index = localActors.value.findIndex((actor) => actor.id === newActor.id);
-  if (index !== -1) {
-    localActors.value[index] = { ...localActors.value[index], ...newActor };
-  } else {
-    localActors.value.push({ ...newActor });
-  }
-
-  loading.value = true;
-  actorModal.closeModal();
-
-  if (newActor.id) {
-    await Actors.update(newActor);
-  } else {
-    await Actors.create(newActor, props.application.id);
-  }
-  toaster.addSuccessMessage("Acteurs sauvegardés avec succès !");
-  loading.value = false;
-}
-
-function removeSelectedActors() {
-  if (selectedActorIds.value.length === 0) {
-    toaster.addErrorMessage("Aucune sélection.");
-    return;
-  }
-  showDeleteConfirmation.value = true;
-}
-
-async function confirmDelete() {
-  localActors.value = localActors.value.filter((actor) => !selectedActorIds.value.includes(actor.id));
-
-  selectedActorIds.value.forEach((actor) => {
-    Actors.delete(props.application.id, actor);
-  });
-
-  selectedActorIds.value = [];
-  showDeleteConfirmation.value = false;
-}
-
-function cancelDelete() {
-  showDeleteConfirmation.value = false;
-}
-
-rows.value = localActors.value.map((actor) => [
-  actor.id,
-  (() => {
-    const org = organizationsList.value.flat().find((o) => o.id === actor.organizationId);
-    return org ? org.label : "Organisation inconnue";
-  })(),
-  getTypeLabel(actor.type) || "Type inconnu",
-  {
-    label: actor.email || "Email vide",
-    to: actor.email ? `mailto:${actor.email}` : "",
-  },
-  actor.firstname || "Prénom vide",
-  actor.lastname || "Nom vide",
-  {
-    component: "DsfrButton",
-    label: "Modifier",
-    onClick: () => actorModal.openModal(actor),
-  },
-]);
-
-async function loadOrganization() {
-  organizationsList.value = await Organizations.getOrganizations();
-
-  updateRows();
-}
-
-const updateRows = () => {
-  rows.value = localActors.value.map((actor) => [
+const tableRows = computed(() =>
+  actorStore.actors.map((actor) => [
     actor.id,
     (() => {
-      const org = organizationsList.value.flat().find((o) => o.id === actor.organizationId);
+      const org = organizationsList.value.find((o) => o.id === actor.organizationId);
       return org ? org.label : "Organisation inconnue";
     })(),
-    getTypeLabel(actor.type) || "Type inconnu",
+    actor.type ? actorTypeMapping[actor.type] || "Type inconnu" : "Aucun type sélectionné",
     {
       label: actor.email || "Email vide",
       to: actor.email ? `mailto:${actor.email}` : "",
@@ -132,27 +48,55 @@ const updateRows = () => {
       label: "Modifier",
       onClick: () => actorModal.openModal(actor),
     },
-  ]);
-};
-
-watch(
-  () => props.application.actors,
-  (newVal) => {
-    localActors.value = Array.isArray(newVal) ? [...newVal] : [];
-  },
-  { deep: true, immediate: true },
-);
-watch(
-  localActors,
-  () => {
-    updateRows();
-  },
-  { deep: true },
+  ]),
 );
 
-onBeforeMount(() => {
-  loadOrganization();
+onBeforeMount(async () => {
+  await orgStore.fetchAll();
+  await actorStore.fetchActorsByApplication(props.application.id);
 });
+
+async function handleSaveActors(newActor: Actor) {
+  const isNew = !newActor.id;
+  loading.value = true;
+  actorModal.closeModal();
+
+  try {
+    await actorStore.saveActor({ ...newActor, applicationId: props.application.id }, isNew);
+    await actorStore.fetchActorsByApplication(props.application.id);
+    toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
+    console.error("❌ Erreur handleSaveActors :", error.response?.data || error);
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function confirmDelete() {
+  const actorsToDelete = actorStore.actors.filter((actor) => selectedActorIds.value.includes(actor.id));
+
+  for (const actor of actorsToDelete) {
+    await actorStore.deleteActor(actor.id, props.application.id); // ✅ applicationId passé ici
+  }
+
+  await actorStore.fetchActorsByApplication(props.application.id);
+  selectedActorIds.value = [];
+  showDeleteConfirmation.value = false;
+  toaster.addSuccessMessage("Acteurs supprimés avec succès !");
+}
+
+function removeSelectedActors() {
+  if (selectedActorIds.value.length === 0) {
+    toaster.addErrorMessage("Aucune sélection.");
+    return;
+  }
+  showDeleteConfirmation.value = true;
+}
+
+function cancelDelete() {
+  showDeleteConfirmation.value = false;
+}
 </script>
 
 <template>
@@ -166,22 +110,26 @@ onBeforeMount(() => {
       </DsfrButton>
     </div>
   </div>
-  <div v-if="!loading && rows.length === 0" class="text-center">
+
+  <div v-if="!loading && tableRows.length === 0" class="text-center">
     <p>Aucun acteur enregistré.</p>
   </div>
+
   <div v-else>
     <div class="global-delete">
       <DsfrButton type="button" tertiary @click="removeSelectedActors" icon="fr-icon-delete-line" :disabled="selectedActorIds.length === 0">
         Supprimer la sélection
       </DsfrButton>
     </div>
-    <AppLoader v-if="loading"></AppLoader>
+
+    <AppLoader v-if="loading" />
+
     <DsfrDataTable
       v-else
       v-model:selection="selectedActorIds"
       v-model:current-page="currentPage"
       :headers-row="headers"
-      :rows="rows"
+      :rows="tableRows"
       row-key="id"
       title="Liste des acteurs associés"
       pagination

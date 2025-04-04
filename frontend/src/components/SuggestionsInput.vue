@@ -4,7 +4,8 @@ import { ref, watch, defineEmits, onBeforeMount } from "vue";
 const props = defineProps({
   searchData: {
     type: Array,
-    required: true,
+    required: false,
+    default: () => [],
   },
   searchDataFunction: {
     type: Function,
@@ -31,7 +32,7 @@ const isLoading = ref(false);
 const suggestions = ref([]);
 const defaultData = ref(props.returnData);
 
-function selectSuggestion(suggestion) {
+function selectSuggestion(suggestion: any) {
   searchSuggestion.value = suggestion.label;
   emit("update:returnData", suggestion.id);
   suggestions.value = [];
@@ -46,7 +47,7 @@ watch(searchSuggestion, (newValue) => {
         isLoading.value = false;
       });
     } else {
-      suggestions.value = props.searchData.filter((sug) => sug.label.toLowerCase().includes(newValue.toLowerCase()));
+      suggestions.value = (props.searchData || []).filter((sug) => sug?.label?.toLowerCase().includes(newValue.toLowerCase()));
       isLoading.value = false;
     }
   } else {
@@ -56,8 +57,7 @@ watch(searchSuggestion, (newValue) => {
 
 onBeforeMount(() => {
   if (defaultData.value) {
-    const foundSuggestion = props.searchData.find((sug) => sug.id === defaultData.value);
-
+    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === defaultData.value);
     if (foundSuggestion) {
       searchSuggestion.value = foundSuggestion.label;
     }
@@ -89,26 +89,11 @@ onBeforeMount(() => {
   max-height: 200px;
   overflow-y: auto;
 }
-
 .suggestion-item {
   padding: 0.5rem;
   cursor: pointer;
 }
-
 .suggestion-item:hover {
-  background-color: #f0f0f0;
-}
-
-.suggestion-button {
-  all: unset;
-  display: block;
-  width: 100%;
-  padding: 0.5rem;
-  cursor: pointer;
-}
-
-.suggestion-button:hover,
-.suggestion-button:focus {
   background-color: #f0f0f0;
 }
 </style>

@@ -1,26 +1,30 @@
 <script setup lang="ts">
-import { defineEmits, computed, ref, PropType, reactive, onBeforeMount } from "vue";
-import type { Actor } from "@/models/Application";
+import { ref, computed, onMounted } from "vue";
+import type { PropType } from "vue";
+import type { Actor, Application } from "@/models/Application";
+import type { Organization } from "@/models/organization";
+import { useActorStore } from "@/stores/actorStore";
 import { actorTypeMapping } from "@/composables/use-dictionary";
-import { Organization } from "@/models/organization";
 import SuggestionsInput from "../SuggestionsInput.vue";
 
 const props = defineProps({
-  initialData: {
-    type: Object as PropType<Actor>,
-    required: false,
-  },
-  isSubmitting: {
-    type: Boolean,
-    required: false,
+  initialData: Object as PropType<Actor>,
+  isSubmitting: Boolean,
+  application: {
+    type: Object as PropType<Application>,
+    required: true,
   },
   organizations: {
-    type: Object as PropType<Organization>,
-    required: false,
+    type: Array as PropType<Organization[]>,
+    required: true,
   },
 });
 
-const form = ref({
+const emit = defineEmits(["submit", "cancel"]);
+
+const store = useActorStore();
+
+const form = ref<Actor>({
   id: props.initialData?.id ?? "",
   role: props.initialData?.role ?? "",
   type: props.initialData?.type ?? "",
@@ -29,10 +33,8 @@ const form = ref({
   lastname: props.initialData?.lastname ?? "",
   userId: props.initialData?.userId ?? "",
   organizationId: props.initialData?.organizationId ?? "",
-  applicationId: props.initialData?.applicationId ?? "",
+  applicationId: props.application.id,
 });
-
-let organizationsList = reactive([]);
 
 const actorTypes = computed(() => [
   { value: "", text: "Choisir un type d'acteur" },
@@ -42,24 +44,12 @@ const actorTypes = computed(() => [
   })),
 ]);
 
-const emit = defineEmits(["update:application", "submit", "cancel"]);
-
-function loadOrganizations() {
-  const org = props.organizations.flat();
-
-  organizationsList = org.map((organization: Organization) => ({
-    id: organization.id,
-    label: organization.label,
-  }));
-}
-
 const handleSubmit = () => {
-  emit("submit", form.value);
+  const isNew = !form.value.id;
+  store.saveActor(form.value, isNew).then((savedActor) => {
+    emit("submit", savedActor);
+  });
 };
-
-onBeforeMount(() => {
-  loadOrganizations();
-});
 </script>
 
 <template>
@@ -70,7 +60,7 @@ onBeforeMount(() => {
     </div>
 
     <div class="fr-input-group fr-mt-3w">
-      <SuggestionsInput :searchData="organizationsList" v-model:returnData="form.organizationId" label="Organisation" />
+      <SuggestionsInput :searchData="props.organizations" v-model:returnData="form.organizationId" label="Organisation" />
     </div>
 
     <div class="fr-input-group fr-mt-3w">
@@ -79,13 +69,13 @@ onBeforeMount(() => {
     </div>
 
     <div class="fr-input-group fr-mt-3w">
-      <label class="fr-label" for="firstname">Prénom (Optionel)</label>
+      <label class="fr-label" for="firstname">Prénom (Optionnel)</label>
       <input type="text" id="firstname" v-model="form.firstname" class="fr-input" placeholder="Prénom" />
     </div>
 
     <div class="fr-input-group fr-mt-3w">
-      <label class="fr-label" for="lastname">Nom (Optionel)</label>
-      <input type="text" id="lastname" v-model="form.lastname" class="fr-input" placeholder="Nom de Famille" />
+      <label class="fr-label" for="lastname">Nom (Optionnel)</label>
+      <input type="text" id="lastname" v-model="form.lastname" class="fr-input" placeholder="Nom de famille" />
     </div>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
