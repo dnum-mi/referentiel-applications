@@ -1,11 +1,24 @@
 <script setup lang="ts">
 import Applications from "@/api/application";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, getCurrentInstance } from "vue";
 import useToaster from "@/composables/use-toaster";
-import type { Application } from "@/models/Application";
 import { getPriorityBadgeType } from "@/composables/use-dictionary";
 import Sites from "@/api/sites";
 
+const instance = getCurrentInstance();
+
+const trackSearch = (query: string, source: string, resultCount: number) => {
+  const matomo = instance?.proxy?.$matomo;
+  console.log(instance?.proxy?.$matomo);
+  if (!matomo) {
+    console.warn("Matomo non dispo");
+    return;
+  }
+  const encoded = encodeURIComponent(query.trim());
+  matomo.setCustomUrl(`/search?q=${encoded}`);
+  matomo.trackSiteSearch(query.trim(), "Applications", resultCount);
+  matomo.trackPageView(`Recherche depuis ${source} : ${query}`);
+};
 const toaster = useToaster();
 const searchTerm = ref<string>("");
 const searchResults = ref<any[]>([]);
@@ -58,6 +71,10 @@ async function doSearch() {
       } else {
         const results = await Applications.getAllApplicationBySearch(searchValue, currentPage.value, rowsPerPage.value);
         searchResults.value = results || [];
+        const query = searchTerm.value.trim();
+        const resultCount = searchResults.value.length;
+
+        trackSearch(query, "la liste", resultCount);
       }
     } catch (error) {
       console.error(error);

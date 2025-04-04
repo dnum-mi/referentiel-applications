@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, getCurrentInstance } from "vue";
+import { ref, computed, watch } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import useToaster from "./composables/use-toaster";
 import { routeNames } from "./router/route-names";
@@ -8,10 +8,17 @@ import Applications from "@/api/application";
 
 const instance = getCurrentInstance();
 
-const trackSearch = () => {
-  if (searchQuery.value.trim()) {
-    instance?.proxy?.$matomo?.trackEvent("Search", "Performed", searchQuery.value);
+const trackSearch = (query: string, source: string, resultCount: number) => {
+  const matomo = instance?.proxy?.$matomo;
+  if (!matomo) {
+    console.warn("Matomo non dispo");
+    return;
   }
+
+  const encoded = encodeURIComponent(query.trim());
+  matomo.setCustomUrl(`/search?q=${encoded}`);
+  matomo.trackSiteSearch(query.trim(), "Applications", resultCount);
+  matomo.trackPageView(`Recherche depuis ${source} : ${query}`);
 };
 
 const authenticated = ref(authentication.authenticated);
@@ -50,7 +57,7 @@ interface QuickLink {
   ];
   if (authenticated.value) {
     authenticatedQuickLinks.value = [
-      { label: "Rechercher une application", to: { name: routeNames.SEARCHAPP } },
+      { label: "Liste des applications", to: { name: routeNames.SEARCHAPP } },
       { label: "Signalements", to: { name: routeNames.ISSUELIST } },
       {
         label: "Déconnexion",
@@ -112,11 +119,15 @@ watch(searchQuery, (newVal) => {
   }
   debounceTimeout = setTimeout(async () => {
     try {
-      trackSearch();
       isLoading.value = true;
       errorMessage.value = "";
       const results = await Applications.getAllApplicationBySearch(newVal);
       searchResults.value = results || [];
+
+      const query = newVal.trim();
+      const resultCount = searchResults.value.length;
+      trackSearch(query, "le header", resultCount);
+      trackResultClick(app.label);
     } catch (error) {
       instance?.proxy?.$matomo?.trackEvent("Error", "Search Error", error.message);
       errorMessage.value = "Une erreur est survenue lors du chargement des applications.";
@@ -125,11 +136,6 @@ watch(searchQuery, (newVal) => {
     }
   }, 300);
 });
-
-const trackResultSelection = (appLabel: string) => {
-  instance?.proxy?.$matomo?.trackEvent("Search", "Result Selected", appLabel);
-  clearSearch();
-};
 
 const clearSearch = () => {
   searchQuery.value = "";
