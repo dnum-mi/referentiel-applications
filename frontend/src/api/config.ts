@@ -63,6 +63,21 @@ export const apiConfig = {
       url: "/organizations",
     },
   },
+  event: {
+    create: {
+      method: "POST",
+      url: "/applications/:applicationId/events",
+      payload: ["start", "end", "description", "type"],
+    },
+    delete: {
+      method: "DELETE",
+      url: "/applications/:applicationId/events/:eventId",
+    },
+    getByApplication: {
+      method: "GET",
+      url: "/applications/:applicationId/events",
+    },
+  },
 
   relation: {
     create: {

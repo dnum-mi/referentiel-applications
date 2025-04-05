@@ -3,7 +3,7 @@ import type { Application } from "@/models/Application";
 import { ref, watch } from "vue";
 import ActorManager from "./ActorTab.vue";
 import Compliances from "./CompliancesTab.vue";
-import Events from "./EventsTab.vue";
+import Events from "./evenement/EventsTab.vue";
 import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
