@@ -1,4 +1,5 @@
 name: Release
+
 on:
   push:
     branches:
@@ -16,9 +17,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Pre release new version
         uses: googleapis/release-please-action@v4
         id: release
         with:
           target-branch: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Générer public/version.json
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p public
+          echo "{\"version\": \"$VERSION\"}" > public/version.json

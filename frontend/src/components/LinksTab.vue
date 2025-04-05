@@ -1,38 +1,35 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
-import axios from "axios";
+import { ref, computed, onMounted } from "vue";
+import { defineProps } from "vue";
 import type { ExternalRessource } from "@/models/Application";
+import { useLinkStore } from "@/stores/linkStore";
 import useToaster from "@/composables/use-toaster";
-import { defineProps, defineEmits } from "vue";
-import { linkTypesDict } from "@/composables/use-dictionary";
-import LinkForm from "./form/LinkForm.vue";
 import useModal from "@/composables/use-modal";
+import LinkForm from "./form/LinkForm.vue";
+import { linkTypesDict } from "@/composables/use-dictionary";
+
+const props = defineProps<{
+  application: { id: string };
+}>();
 
 const toaster = useToaster();
+const linkStore = useLinkStore();
 const linkModal = useModal();
 
-const props = defineProps({
-  application: {
-    type: Object,
-    required: true,
-  },
-});
-
-const links = ref<ExternalRessource[]>([]);
 const selectedLinkIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
-const loading = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(0);
 
-const headers = ["Sélection", "Lien", "Description", "Type de lien", "Actions"];
-const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([]);
+const formatLink = (url: string) => (!url.startsWith("http") ? `http://${url}` : url);
+const getTypeLabel = (type: string) => linkTypesDict[type] || "Type inconnu";
 
-const getTypeLabel = (value: string): string => linkTypesDict[value] || "Type inconnu";
-const formatLink = (url: string): string => (!url || !url.startsWith("http") ? `http://${url}` : url);
+onMounted(() => {
+  linkStore.fetchLinks(props.application.id);
+});
 
-const updateRows = () => {
-  rows.value = links.value.map((link) => [
+const rows = computed(() =>
+  linkStore.links.map((link) => [
     link.id,
     { label: link.link || "Lien vide", to: formatLink(link.link) },
     link.description || "Description vide",
@@ -42,62 +39,39 @@ const updateRows = () => {
       label: "Modifier",
       onClick: () => linkModal.openModal(link),
     },
-  ]);
-};
+  ]),
+);
 
-const getLinks = async () => {
-  loading.value = true;
+const createLink = async (newLink: ExternalRessource) => {
   try {
-    const response = await axios.get(`applications/${props.application.id}/links`);
-    links.value = response.data;
-    updateRows();
-  } catch {
-    toaster.addErrorMessage("Erreur lors de la récupération des liens.");
+    isSubmitting.value = true;
+    await linkStore.createLink(props.application.id, {
+      ...newLink,
+      link: formatLink(newLink.link),
+    });
+    linkModal.closeModal();
   } finally {
-    loading.value = false;
+    isSubmitting.value = false;
   }
 };
 
-const createLink = async (newLink) => {
+const editLink = async (updatedLink: ExternalRessource) => {
   try {
-    const linkToSend = {
-      link: newLink.link ? formatLink(newLink.link) : undefined,
-      description: newLink.description,
-      type: newLink.type,
-    };
+    isSubmitting.value = true;
+    await linkStore.updateLink(props.application.id, {
+      ...updatedLink,
+      link: formatLink(updatedLink.link),
+    });
     linkModal.closeModal();
-    await axios.post(`applications/${props.application.id}/links`, linkToSend);
-    toaster.addSuccessMessage("Lien créé avec succès !");
-    getLinks();
-  } catch {
-    toaster.addErrorMessage("Erreur lors de la création du lien.");
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
-const editLink = async (updatedLink) => {
-  try {
-    const linkToSend = {
-      link: updatedLink.link ? formatLink(updatedLink.link) : undefined,
-      description: updatedLink.description,
-      type: updatedLink.type,
-    };
-    linkModal.closeModal();
-    await axios.patch(`applications/${props.application.id}/links/${updatedLink.id}`, linkToSend);
-    toaster.addSuccessMessage("Lien modifié avec succès !");
-    getLinks();
-  } catch {
-    toaster.addErrorMessage("Erreur lors de la modification du lien.");
-  }
-};
-
-const deleteLinks = async (linkIds: string[]) => {
-  try {
-    await Promise.all(linkIds.map((linkId) => axios.delete(`applications/${props.application.id}/links/${linkId}`)));
-    toaster.addSuccessMessage("Liens supprimés avec succès !");
-    getLinks();
-  } catch {
-    toaster.addErrorMessage("Erreur lors de la suppression des liens.");
-  }
+const confirmDelete = async () => {
+  await linkStore.deleteLinks(props.application.id, selectedLinkIds.value);
+  selectedLinkIds.value = [];
+  showDeleteConfirmation.value = false;
 };
 
 const removeSelectedLinks = () => {
@@ -107,49 +81,37 @@ const removeSelectedLinks = () => {
   }
   showDeleteConfirmation.value = true;
 };
-
-const confirmDelete = async () => {
-  if (selectedLinkIds.value.length) {
-    await deleteLinks(selectedLinkIds.value);
-    showDeleteConfirmation.value = false;
-    selectedLinkIds.value = [];
-  }
-};
-
-onMounted(getLinks);
-
-watch(links, updateRows, { deep: true });
 </script>
 
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
     <div class="fr-col">
-      <h3 class="fr-mb-0">Gestions des liens</h3>
+      <h3 class="fr-mb-0">Gestion des liens</h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" @click="linkModal.openCreateModal()">
-        Ajouter un lien
-      </DsfrButton>
+      <DsfrButton class="fr-btn--icon-left fr-icon-add-line" @click="linkModal.openCreateModal()"> Ajouter un lien </DsfrButton>
     </div>
   </div>
-  <div v-if="!loading && rows.length === 0" class="text-center">
+
+  <div v-if="!linkStore.isLoading && rows.length === 0" class="text-center">
     <p>Aucun lien enregistré.</p>
   </div>
+
   <div v-else>
     <div class="global-delete">
-      <DsfrButton type="button" tertiary @click="removeSelectedLinks" icon="fr-icon-delete-line" :disabled="!selectedLinkIds.length">
+      <DsfrButton type="button" tertiary icon="fr-icon-delete-line" :disabled="!selectedLinkIds.length" @click="removeSelectedLinks">
         Supprimer la sélection
       </DsfrButton>
     </div>
-    <AppLoader v-if="loading"></AppLoader>
+
+    <AppLoader v-if="linkStore.isLoading" />
     <DsfrDataTable
       v-else
       v-model:selection="selectedLinkIds"
       v-model:current-page="currentPage"
-      :headers-row="headers"
+      :headers-row="['Sélection', 'Lien', 'Description', 'Type de lien', 'Actions']"
       :rows="rows"
       row-key="id"
-      title="Liste des liens associés"
       pagination
       :rows-per-page="5"
       :pagination-options="[5, 10, 20, 30]"
@@ -162,7 +124,9 @@ watch(links, updateRows, { deep: true });
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">{{ cell.label }}</a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">
+            {{ cell.label }}
+          </DsfrButton>
         </template>
         <template v-else>
           {{ cell }}
@@ -171,13 +135,14 @@ watch(links, updateRows, { deep: true });
     </DsfrDataTable>
   </div>
 
+  <!-- Modals -->
   <DsfrModal
     :opened="linkModal.isModalOpen.value || linkModal.isCreateModalOpen.value"
     :title="linkModal.isCreateModalOpen.value ? 'Ajouter un lien' : 'Modifier le lien'"
     @close="linkModal.closeModal"
   >
     <LinkForm
-      v-bind="{ initialData: linkModal.selectedItem.value }"
+      :initialData="linkModal.selectedItem.value"
       :is-submitting="isSubmitting"
       @submit="(formData) => (linkModal.selectedItem.value ? editLink(formData) : createLink(formData))"
       @cancel="linkModal.closeModal"
@@ -198,9 +163,6 @@ input[type="checkbox"] {
   height: 16px;
   border-radius: 4px;
   border: 2px solid var(--dsfr-border, #ccc);
-  position: relative;
-  transition:
-    background-color 0.3s ease,
-    border-color 0.3s ease;
+  transition: all 0.3s ease;
 }
 </style>

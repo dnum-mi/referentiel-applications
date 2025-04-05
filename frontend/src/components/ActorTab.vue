@@ -77,7 +77,7 @@ async function confirmDelete() {
   const actorsToDelete = actorStore.actors.filter((actor) => selectedActorIds.value.includes(actor.id));
 
   for (const actor of actorsToDelete) {
-    await actorStore.deleteActor(actor.id, props.application.id); // ✅ applicationId passé ici
+    await actorStore.deleteActor(actor.id, props.application.id);
   }
 
   await actorStore.fetchActorsByApplication(props.application.id);

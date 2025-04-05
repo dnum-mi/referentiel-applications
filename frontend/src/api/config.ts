@@ -29,6 +29,7 @@ export const apiConfig = {
     search: {
       method: "GET",
       url: "/applications/search",
+      query: ["label", "tag", "shortName", "priorityRestart", "page", "limit"],
     },
   },
 
@@ -121,6 +122,26 @@ export const apiConfig = {
     delete: {
       method: "DELETE",
       url: "/anomaly-notifications/:id",
+    },
+  },
+  link: {
+    create: {
+      method: "POST",
+      url: "/applications/:applicationId/links",
+      payload: ["link", "description", "type"],
+    },
+    update: {
+      method: "PATCH",
+      url: "/applications/:applicationId/links/:linkId",
+      payload: ["link", "description", "type", "applicationId"],
+    },
+    delete: {
+      method: "DELETE",
+      url: "/applications/:applicationId/links/:linkId",
+    },
+    getByApplication: {
+      method: "GET",
+      url: "/applications/:applicationId/links",
     },
   },
 

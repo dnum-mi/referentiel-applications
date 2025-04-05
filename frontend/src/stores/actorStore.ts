@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Actor } from "@/models/Actor";
 import { call } from "@/api/callService";
-import useToaster from "@/composables/use-toaster"; // Si tu veux des toasts
+import useToaster from "@/composables/use-toaster";
 
 export const useActorStore = defineStore("actorStore", () => {
   const actors = ref<Actor[]>([]);
@@ -23,7 +23,7 @@ export const useActorStore = defineStore("actorStore", () => {
 
       const variables = {
         ...actor,
-        id: actor.id, // utile pour PATCH
+        id: actor.id,
         applicationId: actor.applicationId,
       };
 

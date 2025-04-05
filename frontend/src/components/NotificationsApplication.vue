@@ -10,15 +10,12 @@ const props = defineProps<{ application: Application }>();
 const reportStore = useReportIssueStore();
 const currentPage = ref(0);
 
-// ⚡ Charge les signalements à l'arrivée
 onMounted(() => {
   reportStore.fetchIssueByApplication(props.application.id);
 });
 
-// 💡 Liste des en-têtes
 const headers = ["Notifié par", "Description", "Date de création", "Statut"];
 
-// ✅ Réactif sur reportStore.issues
 const rows = computed(() =>
   (reportStore.issues || []).map((report: any) => [
     report.notifier.email,

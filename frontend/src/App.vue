@@ -18,8 +18,19 @@ const authenticated = ref(authentication.authenticated);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
-const appVersion: string = import.meta.env.VITE_APP_VERSION ? `${import.meta.env.VITE_APP_VERSION}` : "VITE_APP_VERSION";
-console.info("Version de l’app :", import.meta.env.VITE_APP_VERSION);
+const appVersion = ref<string>("chargement...");
+
+fetch("/version.json")
+  .then((res) => res.json())
+  .then((data) => {
+    appVersion.value = data.version ?? "version inconnue";
+    console.info("Version de l’app :", appVersion.value);
+  })
+  .catch(() => {
+    appVersion.value = "erreur lors du chargement";
+    console.warn("Impossible de charger la version.");
+  });
+
 interface QuickLink {
   label: string;
   to: { name: string } | string;
@@ -72,7 +83,7 @@ const mandatoryLinks = [
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
   },
-  { label: `${appVersion}`, href: `http://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion}` },
+  { label: appVersion.value, href: `http://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion.value}` },
 ];
 const afterMandatoryLinks = [
   {
