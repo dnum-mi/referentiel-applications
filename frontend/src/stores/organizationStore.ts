@@ -1,4 +1,3 @@
-// src/stores/organizationStore.ts
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Organization } from "@/models/organization";

@@ -1,4 +1,3 @@
-// composables/useRelationManager.ts
 import { ref, computed } from "vue";
 import { useRelationStore } from "@/stores/relationStore";
 import Applications from "@/api/application";

@@ -1,4 +1,3 @@
-// src/stores/hostingStore.ts
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Hosting } from "@/models/Hosting";
