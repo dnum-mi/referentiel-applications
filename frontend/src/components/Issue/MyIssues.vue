@@ -1,62 +1,61 @@
 <script setup lang="ts">
-import Issues from "@/api/reportIssue";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { routeNames } from "@/router/route-names";
 import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
-import type { ReportIssue } from "@/models/ReportIssue";
+import { useReportIssueStore } from "@/stores/reportIssueStore";
 
 const title = "Liste de mes signalements";
 const headers = ["Application", "Description", "Date", "Statut"];
 type Status = "in_pending" | "in_progress" | "done";
 
-const rows = ref<Record<string, unknown>[]>([]);
+const reportStore = useReportIssueStore();
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
-
 const isLoading = ref(true);
 
-const loadReports = async () => {
-  const reportList = await Issues.getReportIssueByNotifierId();
-
-  rows.value =
-    reportList.map((report: ReportIssue) => ({
-      Application: {
-        label: report.application?.label,
-        to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
-      },
-      Description: report.description,
-      Date: formatDate(report.createdAt),
-      Statut: {
-        component: "DsfrTag",
-        icon: statusIconClasses[report.status as Status],
-        label: statusDictionary[report.status as Status],
-        class: report.status,
-      },
-    })) || [];
+onMounted(async () => {
+  isLoading.value = true;
+  await reportStore.fetchMyReports();
   isLoading.value = false;
-};
-
-onMounted(() => {
-  loadReports();
 });
+
+const rows = computed(() =>
+  reportStore.myReports.map((report) => ({
+    Application: {
+      label: report.application?.label,
+      to: {
+        name: routeNames.PROFILEAPP,
+        params: { id: report.application?.id },
+      },
+    },
+    Description: report.description,
+    Date: formatDate(report.createdAt),
+    Statut: {
+      component: "DsfrTag",
+      icon: statusIconClasses[report.status as Status],
+      label: statusDictionary[report.status as Status],
+      class: report.status,
+    },
+  })),
+);
 </script>
 
 <template>
   <div class="fr-container fr-my-2v w-[800px]">
-    <AppLoader v-if="isLoading"></AppLoader>
-    <div v-if="!isLoading && !rows.length" class="text-center">
+    <AppLoader v-if="isLoading" />
+    <div v-else-if="!rows.length" class="text-center">
       <p>Aucun signalement recensé.</p>
     </div>
     <DsfrDataTable
-      v-if="!isLoading && rows.length"
+      v-else
       v-model:selection="selection"
       v-model:current-page="currentPage"
       :headers-row="headers"
       :rows="rows"
-      selectable-rows
       row-key="id"
       :title="title"
+      selectable-rows
       pagination
       :rows-per-page="10"
       :pagination-options="[10, 20, 30]"
@@ -67,9 +66,7 @@ onMounted(() => {
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Application'">
-          <router-link :to="cell.to">
-            {{ cell.label }}
-          </router-link>
+          <router-link :to="cell.to">{{ cell.label }}</router-link>
         </template>
         <template v-else-if="colKey === 'Statut'">
           <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" />
@@ -87,12 +84,10 @@ onMounted(() => {
   color: var(--info-425-625);
   background-color: var(--info-950-100);
 }
-
 :deep(.in_pending) {
   color: var(--error-425-625);
   background-color: var(--error-950-100);
 }
-
 :deep(.done) {
   color: var(--success-425-625);
   background-color: var(--success-950-100);
@@ -112,10 +107,5 @@ onMounted(() => {
   margin: 20px auto;
   width: 80%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.text-center p {
-  margin: 0;
-  text-align: center;
 }
 </style>
