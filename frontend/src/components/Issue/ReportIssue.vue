@@ -28,6 +28,7 @@ const submitCorrection = async () => {
     if (!applicationId) throw new Error("Application ID is undefined");
 
     await reportIssueStore.proposeCorrection(applicationId, correctionText.value);
+    await reportIssueStore.fetchIssueByApplication(applicationId);
 
     correctionText.value = "";
     opened.value = false;
