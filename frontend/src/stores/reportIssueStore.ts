@@ -1,4 +1,3 @@
-// src/stores/reportIssueStore.ts
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import type { ReportIssue } from "@/models/ReportIssue";
@@ -6,6 +5,7 @@ import { call } from "@/api/callService";
 
 export const useReportIssueStore = defineStore("reportIssueStore", () => {
   const reports = ref<ReportIssue[]>([]);
+  const issues = ref<ReportIssue[]>([]);
   const myReports = computed(() => reports.value);
   const isLoading = ref(false);
 
@@ -30,6 +30,18 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     }
   };
 
+  const fetchIssueByApplication = async (applicationId: string) => {
+    isLoading.value = true;
+    try {
+      const res = await call("reportIssue", "getByAppId", { applicationId });
+      issues.value = res || [];
+    } catch (error) {
+      console.error("❌ Erreur lors du chargement des signalements : ", error);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   const proposeCorrection = async (applicationId: string, description: string) => {
     const payload: ReportIssue = {
       applicationId,
@@ -49,10 +61,12 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
 
   return {
     reports,
+    issues,
     myReports,
     isLoading,
     fetchMyReports,
     fetchAllReports,
     proposeCorrection,
+    fetchIssueByApplication,
   };
 });

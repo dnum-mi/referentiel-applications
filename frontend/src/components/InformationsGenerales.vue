@@ -6,7 +6,9 @@ import Applications from "@/api/application";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
 import axios from "axios";
-import Hostings from "@/api/hosting";
+import HostingList from "./hosting/HostingList.vue";
+import HostingModal from "./hosting/HostingModal.vue";
+import { useHostingStore } from "@/stores/hostingStore";
 import type { Hosting } from "@/models/Hosting";
 
 const isSubmitting = ref(false);
@@ -21,49 +23,18 @@ const props = defineProps<{
   small?: boolean;
 }>();
 
-const hostings = ref<Hosting[]>([]);
 const isHostingModalOpen = ref(false);
 const hostingToEdit = ref<Hosting | null>(null);
 const hostingToDelete = ref<Hosting | null>(null);
 const isDeleteModalOpen = ref(false);
+const hostingStore = useHostingStore();
 
-function handleHostingCreated(newHosting: Hosting) {
-  hostings.value.push(newHosting);
-}
-function openEditHosting(hosting: Hosting) {
-  hostingToEdit.value = hosting;
-}
-function openDeleteModal(hosting: Hosting) {
-  hostingToDelete.value = hosting;
-  isDeleteModalOpen.value = true;
-}
-
-function handleHostingUpdated(updatedHosting: Hosting) {
-  const index = hostings.value.findIndex((h) => h.id === updatedHosting.id);
-  if (index !== -1) {
-    hostings.value[index] = updatedHosting;
+onMounted(async () => {
+  if (props.application?.id) {
+    await hostingStore.fetchHostings(props.application.id);
   }
-}
-
-async function confirmDeletionHosting() {
-  if (!hostingToDelete.value) return;
-  try {
-    await Hostings.delete(hostingToDelete.value.id, application.value.id);
-    hostings.value = hostings.value.filter((h) => h.id !== hostingToDelete.value!.id);
-    toaster.addSuccessMessage("Hébergement supprimé avec succès");
-  } catch (error) {
-    console.error(error);
-    toaster.addErrorMessage("Erreur lors de la suppression de l'hébergement");
-  } finally {
-    hostingToDelete.value = null;
-    isDeleteModalOpen.value = false;
-  }
-}
-
-function cancelDeletionHosting() {
-  hostingToDelete.value = null;
-  isDeleteModalOpen.value = false;
-}
+  await fetchLabels();
+});
 
 const application = ref<Application>({
   ...props.application,
@@ -98,13 +69,6 @@ const getPriorityBadgeType = (priority?: string) =>
     tooltip: "Aucune priorité n’a été définie pour cette application",
   };
 
-onMounted(async () => {
-  if (props.application?.id) {
-    hostings.value = await Hostings.getHostingsByApplicationId(props.application.id);
-  }
-  await fetchLabels();
-});
-
 async function updateApplication(updatedData: any) {
   isSubmitting.value = true;
   try {
@@ -116,7 +80,6 @@ async function updateApplication(updatedData: any) {
       ...updatedData,
     });
 
-    // Gestion des labels
     if (updatedData.deletedLabels.length > 0) {
       const labelIds = updatedData.deletedLabels.map((label: Label) => label.id);
       await deleteLabels(labelIds);
@@ -183,6 +146,33 @@ async function fetchLabels() {
     console.error(error);
     toaster.addErrorMessage("Erreur lors de la récupération des labels.");
   }
+}
+
+function openEditHosting(hosting: Hosting) {
+  hostingToEdit.value = hosting;
+}
+function openDeleteModal(hosting: Hosting) {
+  hostingToDelete.value = hosting;
+  isDeleteModalOpen.value = true;
+}
+
+async function confirmDeletionHosting() {
+  if (!hostingToDelete.value) return;
+  try {
+    await hostingStore.deleteHosting(application.value.id, hostingToDelete.value.id);
+    toaster.addSuccessMessage("Hébergement supprimé avec succès");
+  } catch (error) {
+    console.error(error);
+    toaster.addErrorMessage("Erreur lors de la suppression de l'hébergement");
+  } finally {
+    hostingToDelete.value = null;
+    isDeleteModalOpen.value = false;
+  }
+}
+
+function cancelDeletionHosting() {
+  hostingToDelete.value = null;
+  isDeleteModalOpen.value = false;
 }
 
 watch(
@@ -280,20 +270,7 @@ watch(
             <DsfrButton type="button" tertiary label="Ajouter un hébergement" @click="isHostingModalOpen = true" />
           </div>
         </div>
-        <div class="fr-card__body">
-          <div class="fr-card__content">
-            <ul class="hosting-list">
-              <li v-for="(hosting, index) in hostings" :key="hosting.id || index" class="hosting-item">
-                <span class="hosting-label"> {{ hosting.site }}- {{ hosting.region }} - {{ hosting.platform }} </span>
-                <!-- Boutons d'actions -->
-                <div class="hosting-actions">
-                  <DsfrButton tertiary size="sm" @click="openEditHosting(hosting)" label="Modifier" />
-                  <DsfrButton tertiary size="sm" class="fr-btn--icon-left" @click="openDeleteModal(hosting)" label="Supprimer" />
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
+        <HostingList :application-id="application.id" @edit="openEditHosting" @delete="openDeleteModal" />
       </div>
 
       <!-- Carte : Population -->
