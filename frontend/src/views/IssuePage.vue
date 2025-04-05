@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import allIssues from "@/components/AllIssues.vue";
-import MyIssues from "@/components/MyIssues.vue";
+import allIssues from "@/components/Issue/AllIssues.vue";
+import MyIssues from "@/components/Issue/MyIssues.vue";
 
 const activeTab = ref(0);
 const applicationTabListName = "Informations sur les signalements";

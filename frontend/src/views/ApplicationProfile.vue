@@ -4,7 +4,7 @@ import Applications from "@/api/application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import ReportIssue from "@/components/ReportIssue.vue";
+import ReportIssue from "@/components/Issue/ReportIssue.vue";
 
 const route = useRoute();
 const id = route.params.id as string;

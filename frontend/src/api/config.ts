@@ -89,6 +89,7 @@ export const apiConfig = {
     create: {
       method: "POST",
       url: "/anomaly-notifications",
+      payload: ["applicationId", "description", "status"],
     },
     getAll: {
       method: "GET",

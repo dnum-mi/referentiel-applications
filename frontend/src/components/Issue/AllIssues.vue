@@ -1,0 +1,80 @@
+<script setup lang="ts">
+import { onMounted, computed, ref } from "vue";
+import { routeNames } from "@/router/route-names";
+
+import { formatDate } from "@/composables/use-date";
+import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
+import type { ReportIssue } from "@/models/ReportIssue";
+import { useReportIssueStore } from "@/stores/reportIssueStore";
+
+const title = "Liste de tous les signalements";
+const headers = ["Application", "Signalant", "Description", "Date", "Statut"];
+type Status = "in_pending" | "in_progress" | "done";
+
+const selection = ref<string[]>([]);
+const currentPage = ref(0);
+
+const reportStore = useReportIssueStore();
+
+const isLoading = computed(() => reportStore.isLoading);
+
+const rows = computed(() =>
+  (reportStore.reports || []).map((report: ReportIssue) => ({
+    Application: {
+      label: report.application?.label,
+      to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
+    },
+    Signalant: report.notifier?.email || "Inconnu",
+    Description: report.description,
+    Date: formatDate(report.createdAt),
+    Statut: {
+      component: "DsfrTag",
+      icon: statusIconClasses[report.status as Status],
+      label: statusDictionary[report.status as Status],
+      class: report.status,
+    },
+  })),
+);
+
+onMounted(async () => {
+  await reportStore.fetchAllReports();
+});
+</script>
+
+<template>
+  <div class="fr-container fr-my-2v w-[800px]">
+    <AppLoader v-if="isLoading" />
+    <div v-else-if="!rows.length" class="text-center">
+      <p>Aucun signalement recensé.</p>
+    </div>
+    <DsfrDataTable
+      v-else
+      v-model:selection="selection"
+      v-model:current-page="currentPage"
+      :headers-row="headers"
+      :rows="rows"
+      selectable-rows
+      row-key="id"
+      :title="title"
+      pagination
+      :rows-per-page="10"
+      :pagination-options="[10, 20, 30]"
+      bottom-action-bar-class="bottom-action-bar-class"
+      pagination-wrapper-class="pagination-wrapper-class"
+      sorted="id"
+      :sortable-rows="['id']"
+    >
+      <template #cell="{ colKey, cell }">
+        <template v-if="colKey === 'Application'">
+          <router-link :to="cell.to">{{ cell.label }}</router-link>
+        </template>
+        <template v-else-if="colKey === 'Statut'">
+          <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" />
+        </template>
+        <template v-else>
+          {{ cell }}
+        </template>
+      </template>
+    </DsfrDataTable>
+  </div>
+</template>
