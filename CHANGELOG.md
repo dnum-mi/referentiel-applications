@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.8.0...v1.8.1) (2025-04-07)
+
+
+### Bug Fixes
+
+* :bug: rewriting endpoint api path for actors ([e8c9955](https://github.com/dnum-mi/referentiel-applications/commit/e8c9955085b28e194101e39119c9801e4246dc2b))
+* **front:** :bug: Improve matomo plugin for search ([81fc4ec](https://github.com/dnum-mi/referentiel-applications/commit/81fc4ecc349864baa92ca6dc4ebf08ffa23c1620))
+
 ## [1.8.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.7.1...v1.8.0) (2025-04-03)
 
 
