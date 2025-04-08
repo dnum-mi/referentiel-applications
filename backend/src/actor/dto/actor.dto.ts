@@ -1,7 +1,6 @@
-import { IsString, IsOptional, IsEnum, IsEmail } from 'class-validator';
+import { IsString, IsOptional, IsEmail } from 'class-validator';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
 import { PartialType } from '@nestjs/mapped-types';
-import { ActorType } from '@prisma/client';
 
 export class CreateActorDto {
   @ApiProperty({
@@ -40,10 +39,13 @@ export class CreateActorDto {
   @IsString()
   lastname?: string;
 
-  @ApiProperty({ enum: ActorType, required: false })
-  @IsOptional()
-  @IsEnum(ActorType)
-  type?: ActorType;
+  @ApiProperty({
+    example: '5708d232-8338-4abf-8f38-8370acc89497',
+    description: "ID du type d'acteur lié",
+    required: true,
+  })
+  @IsString()
+  actorTypeId?: string;
 
   @ApiProperty({
     example: '9965dc19-1c5a-472d-83e3-8bf65093c86c',

@@ -14,6 +14,7 @@ import { AuthMiddleware } from './middlewares/auth.middleware';
 import { HealthCheckModule } from './health/health-check.module';
 import { EventsModule } from './events/events.module';
 import { OrganizationModule } from './organization/organization.module';
+import { ActorTypeModule } from './actorType/actorType.module';
 import { MetadatasModule } from './metadatas/metadatas.module';
 import { RelationModule } from './relationship/relation.module';
 import { UserModule } from './user/user.module';
@@ -36,6 +37,7 @@ import { LabelsModule } from './labels/labels.module';
     LoggerModule,
     HealthCheckModule,
     OrganizationModule,
+    ActorTypeModule,
     ActorModule,
     ConfigModule.forRoot({
       isGlobal: true,
