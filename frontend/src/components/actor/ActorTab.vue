@@ -5,8 +5,8 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import { useActorStore } from "@/stores/actorStore";
 import { useOrganizationStore } from "@/stores/organizationStore";
-import { actorTypeMapping } from "@/composables/use-dictionary";
-import ActorForm from "./form/ActorForm.vue";
+import { useActorTypeStore } from "@/stores/actorTypeStore";
+import ActorForm from "./ActorForm.vue";
 
 import type { Actor } from "@/models/Actor";
 import type { Application } from "@/models/Application";
@@ -16,6 +16,7 @@ const emit = defineEmits(["update:application"]);
 
 const actorStore = useActorStore();
 const orgStore = useOrganizationStore();
+const actorTypeStore = useActorTypeStore();
 const toaster = useToaster();
 const actorModal = useModal();
 
@@ -28,6 +29,7 @@ const loading = ref(false);
 const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 
 const organizationsList = computed(() => orgStore.organizations);
+const actorTypesList = computed(() => actorTypeStore.actorTypes);
 
 const tableRows = computed(() =>
   actorStore.actors.map((actor) => [
@@ -36,7 +38,10 @@ const tableRows = computed(() =>
       const org = organizationsList.value.find((o) => o.id === actor.organizationId);
       return org ? org.label : "Organisation inconnue";
     })(),
-    actor.type ? actorTypeMapping[actor.type] || "Type inconnu" : "Aucun type sélectionné",
+    (() => {
+      const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
+      return type ? type.label : "Type inconnu";
+    })(),
     {
       label: actor.email || "Email vide",
       to: actor.email ? `mailto:${actor.email}` : "",
@@ -53,6 +58,7 @@ const tableRows = computed(() =>
 
 onBeforeMount(async () => {
   await orgStore.fetchAll();
+  await actorTypeStore.fetchAll();
   await actorStore.fetchActorsByApplication(props.application.id);
 });
 
@@ -152,6 +158,9 @@ function cancelDelete() {
         <template v-else-if="colKey === 'Actions'">
           <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
         </template>
+        <template v-else-if="colKey === 'Type' || colKey === 'Organisation'">
+          <span class="truncate" :title="cell">{{ cell }}</span>
+        </template>
         <template v-else>
           {{ cell }}
         </template>
@@ -168,6 +177,7 @@ function cancelDelete() {
       v-bind="{ application, initialData: actorModal.selectedItem.value }"
       :is-submitting="isSubmitting"
       :organizations="organizationsList"
+      :actorTypes="actorTypesList"
       @submit="handleSaveActors"
       @cancel="actorModal.closeModal"
     />
@@ -186,5 +196,13 @@ input[type="checkbox"] {
   transition:
     background-color 0.3s ease,
     border-color 0.3s ease;
+}
+
+.truncate {
+  display: inline-block;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

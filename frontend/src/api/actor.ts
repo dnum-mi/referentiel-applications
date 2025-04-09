@@ -8,7 +8,7 @@ const Actors = {
       email: actor.email,
       firstname: actor.firstname,
       lastname: actor.lastname,
-      type: actor.type,
+      actorTypeId: actor.actorTypeId,
       organizationId: actor.organizationId,
       applicationId: applicationId,
     };
@@ -26,7 +26,7 @@ const Actors = {
       email: actor.email,
       firstname: actor.firstname,
       lastname: actor.lastname,
-      type: actor.type,
+      actorTypeId: actor.actorTypeId,
       organizationId: actor.organizationId,
       applicationId: actor.applicationId,
     };
