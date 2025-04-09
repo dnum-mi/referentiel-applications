@@ -5,6 +5,7 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import { useEventStore } from "@/stores/EventStore";
 import EventForm from "./EventForm.vue";
+import { customSorter } from "@/utils/tableSort";
 
 const props = defineProps({
   application: {
@@ -24,6 +25,8 @@ const selectedEventIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(0);
+
+const currentSortedColumn = ref("");
 
 onMounted(() => {
   eventStore.fetchEvents(props.application.id);
@@ -69,6 +72,15 @@ function removeSelectedEvents() {
 function cancelDelete() {
   showDeleteConfirmation.value = false;
 }
+
+function customSort(a: unknown, b: unknown) {
+  const dict = headers.reduce((acc, header, index) => {
+    acc[index] = header.key;
+    return acc;
+  }, {});
+
+  return customSorter(a, b, currentSortedColumn.value, dict);
+}
 </script>
 
 <template>
@@ -110,6 +122,8 @@ function cancelDelete() {
       bottom-action-bar-class="bottom-action-bar-class"
       pagination-wrapper-class="pagination-wrapper-class"
       sortable-rows
+      :sortFn="customSort"
+      v-model:sortedBy="currentSortedColumn"
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'selection'">
