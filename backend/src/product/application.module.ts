@@ -1,23 +1,23 @@
 import { Module } from '@nestjs/common';
-import { ApplicationService } from './application.service';
 import { ApplicationController } from './application.controller';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import { PrismaModule } from 'src/prisma/prisma.module';
-import { UserModule } from '../user/user.module';
-import { LabelsService } from 'src/labels/labels.service';
+import { ApplicationService } from './application.service';
 import { ApplicationExportService } from './export.service';
+import { ExportApplicationsUseCase } from './application/usecases/application-export.usecase';
+import { ApplicationRepository } from './infrastructure/repository/application.repository';
+
+import { CommonModule } from 'src/common/common.module';
+import { PrismaModule } from 'src/prisma/prisma.module'; // ✅ ici !
+import { LabelsModule } from 'src/labels/labels.module';
 
 @Module({
-  imports: [PrismaModule, UserModule],
+  imports: [CommonModule, PrismaModule, LabelsModule],
   controllers: [ApplicationController],
   providers: [
     ApplicationService,
     ApplicationExportService,
-    PrismaService,
-    LabelsService,
+    ExportApplicationsUseCase,
     ApplicationRepository,
   ],
-  exports: [ApplicationRepository],
+  exports: [ApplicationExportService, ApplicationRepository],
 })
 export class ApplicationModule {}
