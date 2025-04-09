@@ -13,3 +13,11 @@ body,
   display: flex;
   justify-content: flex-end;
 }
+
+.truncate {
+  display: inline-block;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

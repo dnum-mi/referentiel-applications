@@ -40,7 +40,7 @@ const tableRows = computed(() =>
     })(),
     (() => {
       const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
-      return type ? type.code : "Type inconnu";
+      return type ? type.label : "Type inconnu";
     })(),
     {
       label: actor.email || "Email vide",
@@ -157,6 +157,9 @@ function cancelDelete() {
         </template>
         <template v-else-if="colKey === 'Actions'">
           <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+        </template>
+        <template v-else-if="colKey === 'Type' || colKey === 'Organisation'">
+          <span class="truncate">{{ cell }}</span>
         </template>
         <template v-else>
           {{ cell }}

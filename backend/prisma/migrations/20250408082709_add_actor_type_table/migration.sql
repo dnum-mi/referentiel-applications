@@ -38,7 +38,7 @@ VALUES
   (gen_random_uuid(), 'CPD', 'Correspondant à la Protection des Données', ''),
   (gen_random_uuid(), 'CSM', 'Correspondant Stratégique Métier', 'Organisme Bénéficiaire'),
   (gen_random_uuid(), 'PO', 'Product Owner', ''),
-  (gen_random_uuid(), 'PR', 'Product Manager', ''),
+  (gen_random_uuid(), 'PM', 'Product Manager', ''),
   (gen_random_uuid(), 'HEB', 'Responsable de l''hébergement', ''),
   (gen_random_uuid(), 'OTHER', 'Autre', 'Autre type d’acteur');
 
@@ -58,7 +58,7 @@ SET "actorTypeId" = (
     WHEN 'CPD' THEN 'CPD'
     WHEN 'OrganismeBeneficiaire' THEN 'CSM'
     WHEN 'ProductOwner' THEN 'PO'
-    WHEN 'ProductManager' THEN 'PR'
+    WHEN 'ProductManager' THEN 'PM'
     WHEN 'Hebergement' THEN 'HEB'
     WHEN 'Autre' THEN 'OTHER'
     ELSE NULL

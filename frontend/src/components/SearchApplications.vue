@@ -197,12 +197,4 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.truncate {
-  display: inline-block;
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 </style>
