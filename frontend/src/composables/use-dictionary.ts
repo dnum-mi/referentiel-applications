@@ -80,3 +80,66 @@ export const getPriorityBadgeType = (priority?: string) =>
     label: "Non définie",
     tooltip: "Aucune priorité n’a été définie pour cette application",
   };
+
+export const applicationFieldsDict = {
+  id: "Identifiant de l’application",
+  label: "Libellé de l’application",
+  shortName: "Nom court",
+  logo: "Logo",
+  description: "Description",
+  tags: "Tags",
+  purposes: "Finalités",
+  targetPopulations: "Populations ciblées",
+  priorityRestart: "Priorité de redémarrage",
+
+  relationsAsSource: "Relations sortantes",
+  "relationsAsSource.targetApplication.label": "Cibles liées (nom)",
+  relationsAsTarget: "Relations entrantes",
+  "relationsAsTarget.sourceApplication.label": "Sources liées (nom)",
+
+  labels: "Labels",
+  "labels.value": "Valeur du label",
+  "labels.source": "Source du label",
+  "labels.shortname": "Nom court du label",
+
+  hostings: "Hébergements",
+  "hostings.provider": "Fournisseur d’hébergement",
+  "hostings.label": "Label d’hébergement",
+  "hostings.region": "Région",
+  "hostings.site": "Site",
+  "hostings.nature": "Nature",
+  "hostings.platform": "Plateforme",
+
+  compliances: "Conformités",
+  "compliances.type": "Type de conformité",
+  "compliances.name": "Nom de la conformité",
+  "compliances.status": "Statut",
+  "compliances.validityStart": "Début de validité",
+  "compliances.validityEnd": "Fin de validité",
+  "compliances.scoreValue": "Score",
+  "compliances.scoreUnit": "Unité du score",
+  "compliances.notes": "Notes",
+
+  actors: "Acteurs",
+  "actors.firstname": "Prénom de l’acteur",
+  "actors.lastname": "Nom de l’acteur",
+  "actors.role": "Rôle",
+  "actors.type": "Type",
+  "actors.email": "Email",
+  "actors.organization.sigle": "Organisation",
+
+  events: "Événements",
+  "events.type": "Type d’événement",
+  "events.start": "Début",
+  "events.end": "Fin",
+  "events.description": "Description",
+
+  externalRessource: "Ressources externes",
+  "externalRessource.link": "Lien",
+  "externalRessource.description": "Description ressource",
+  "externalRessource.type": "Type de ressource",
+
+  anomalyNotification: "Notifications d’anomalie",
+  "anomalyNotification.description": "Description",
+  "anomalyNotification.status": "Statut de notification",
+};

@@ -4,6 +4,8 @@ import { onMounted, ref, getCurrentInstance } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { getPriorityBadgeType } from "@/composables/use-dictionary";
 import Sites from "@/api/sites";
+import { applicationFieldsDict } from "@/composables/use-dictionary";
+import { customSorter } from "@/utils/tableSort";
 
 const instance = getCurrentInstance();
 
@@ -31,6 +33,8 @@ const updateMode = () => {
   isTiles.value = mobile;
 };
 
+const currentSortedColumn = ref("");
+
 onMounted(() => {
   updateMode();
   window.addEventListener("resize", updateMode);
@@ -41,7 +45,7 @@ onBeforeUnmount(() => {
 });
 const displayMode = computed(() => (isTiles.value ? "tiles" : "table"));
 
-const headers = ["Label", "Description", "Priorité de redémarrage", "Tags"];
+const headers = ["Nom court", "Description", "Priorité de redémarrage", "Tags"];
 
 const currentPage = ref(0);
 const rowsPerPage = ref(15);
@@ -96,6 +100,10 @@ const rows = computed(() => {
   }));
 });
 
+function sorter(a: unknown, b: unknown) {
+  return customSorter(a, b, currentSortedColumn.value, applicationFieldsDict);
+}
+
 onMounted(async () => {
   await doSearch();
 });
@@ -128,13 +136,14 @@ onMounted(async () => {
         pagination
         :pagination-options="[5, 15, 30, 50]"
         sortable-rows
+        :sortFn="sorter"
+        v-model:sortedBy="currentSortedColumn"
         vertical-borders
       >
         <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'Label'">
-            <router-link :to="{ name: 'application', params: { id: cell.id } }">
-              {{ cell.label }}
-              <span v-if="cell.shortName" class="fr-text--sm fr-text--grey"> ({{ cell.shortName }}) </span>
+          <template v-if="colKey === 'Nom court'">
+            <router-link :to="{ name: 'application', params: { id: cell.id } }" class="truncate">
+              {{ cell.shortName.length ? cell.shortName : cell.label }}
             </router-link>
           </template>
           <template v-else-if="colKey === 'Description'">
