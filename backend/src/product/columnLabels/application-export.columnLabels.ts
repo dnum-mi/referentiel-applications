@@ -1,23 +1,18 @@
 export const columnLabels: Record<string, string> = {
-  id: 'Identifiant de l’application',
-  label: 'Libellé de l’application',
+  id: 'Identifiant',
+  label: 'Libellé',
   shortName: 'Nom court',
   logo: 'Logo',
   description: 'Description',
   tags: 'Tags',
   purposes: 'Finalités',
-  targetPopulations: 'Populations ciblées',
+  targetPopulations: 'Populations cibles',
   priorityRestart: 'Priorité de redémarrage',
 
   relationsAsSource: 'Relations sortantes',
   'relationsAsSource.targetApplication.label': 'Cibles liées (nom)',
   relationsAsTarget: 'Relations entrantes',
   'relationsAsTarget.sourceApplication.label': 'Sources liées (nom)',
-
-  'owner.keycloakId': 'ID du propriétaire',
-  'owner.firstname': 'Prénom du propriétaire',
-  'owner.lastname': 'Nom du propriétaire',
-  'owner.email': 'Email du propriétaire',
 
   labels: 'Labels',
   'labels.value': 'Valeur du label',

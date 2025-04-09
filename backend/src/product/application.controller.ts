@@ -1,3 +1,4 @@
+import { ExportApplicationsUseCase } from './application/usecases/application-export.usecase';
 import {
   Controller,
   Post,
@@ -36,9 +37,11 @@ import { columnLabels } from './columnLabels/application-export.columnLabels';
 @Controller('applications')
 export class ApplicationController {
   applicationsService: ApplicationService;
+  ExportApplicationsUseCase: any;
 
   constructor(
     private readonly applicationService: ApplicationService,
+    private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly applicationExportService: ApplicationExportService,
   ) {}
 
@@ -104,52 +107,18 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.searchApplications(searchParams);
   }
 
-  @Get('export')
-  @ApiQuery({
-    name: 'columns',
-    required: false,
-    isArray: true,
-    type: String,
-    enum: Object.keys(columnLabels),
-    description:
-      'Colonnes à exporter. Utilisez Ctrl (ou Cmd sur Mac) + clic pour en sélectionner plusieurs',
-  })
-  @ApiOperation({
-    summary: 'Exporter les applications avec les colonnes choisies',
-    description: `Permet d’exporter les données applicatives au format CSV selon les colonnes sélectionnées.`,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Fichier CSV généré avec succès',
-    content: {
-      'text/csv': {
-        schema: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  async exportApplications(
-    @Query('columns') columns: string[],
-    @Res() res: Response,
-  ) {
-    const { fileName, csv } =
-      await this.applicationExportService.exportApplications(columns);
-
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.status(200).send(csv);
-  }
-
-  @Get('columns')
-  @ApiOperation({ summary: 'Lister les colonnes disponibles pour l’export' })
-  @ApiResponse({ status: 200, description: 'Liste des champs exportables' })
-  getExportableColumns() {
-    return Object.entries(columnLabels).map(([field, label]) => ({
-      field,
-      label,
-    }));
+  @Get('export/excel')
+  async exportExcel(@Res() res: Response) {
+    const buffer = await this.exportApplicationsUseCase.execute();
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=applications_export.xlsx',
+    );
+    res.send(buffer);
   }
 
   @Get(':id')

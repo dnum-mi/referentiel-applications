@@ -93,11 +93,17 @@ export class ApplicationRepository implements IApplicationRepository {
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
     return this.prisma.application.findMany({
       include: {
-        metadata: true, // ✅ OBLIGATOIRE
+        metadata: true,
         owner: true,
         compliances: true,
         labels: true,
-        actors: true,
+        externalRessource: true,
+        anomalyNotification: true,
+        actors: {
+          include: {
+            actorType: true,
+          },
+        },
         events: true,
         hostings: true,
         relationsAsSource: {

@@ -5,7 +5,13 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
     metadata: true;
     compliances: true;
     labels: true;
-    actors: true;
+    actors: {
+      include: {
+        actorType: true;
+      };
+    };
+    externalRessource: true;
+    anomalyNotification: true;
     relationsAsSource: {
       include: { targetApplication: true };
     };
