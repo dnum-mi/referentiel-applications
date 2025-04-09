@@ -159,7 +159,7 @@ function cancelDelete() {
           <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
         </template>
         <template v-else-if="colKey === 'Type' || colKey === 'Organisation'">
-          <span class="truncate">{{ cell }}</span>
+          <span class="truncate" :title="cell">{{ cell }}</span>
         </template>
         <template v-else>
           {{ cell }}
@@ -196,5 +196,13 @@ input[type="checkbox"] {
   transition:
     background-color 0.3s ease,
     border-color 0.3s ease;
+}
+
+.truncate {
+  display: inline-block;
+  max-width: 230px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
