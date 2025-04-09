@@ -31,7 +31,7 @@ describe('Actor', () => {
         email: 'test@test.co',
         firstname: 'firstname',
         lastname: 'lastname',
-        type: 'Autre',
+        actorTypeId: '',
         organizationId: '',
         applicationId: application.id,
       })

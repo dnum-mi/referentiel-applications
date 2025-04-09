@@ -44,6 +44,7 @@ export class CreateActorDto {
     description: "ID du type d'acteur lié",
     required: true,
   })
+  @IsOptional()
   @IsString()
   actorTypeId?: string;
 
