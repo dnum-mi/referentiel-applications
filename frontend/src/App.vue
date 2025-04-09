@@ -25,13 +25,18 @@ const authenticated = ref(authentication.authenticated);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
-const appVersion = ref<string>("chargement...");
+const appVersion = import.meta.env.VITE_APP_VERSION || "version inconnue";
+
+const versionLink = computed(() => ({
+  label: `Version ${appVersion}`,
+  href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/v${appVersion}`,
+}));
 
 fetch("/version.json")
   .then((res) => res.json())
   .then((data) => {
+    console.log("Contenu de version.json :", data);
     appVersion.value = data.version ?? "version inconnue";
-    console.info("Version de l’app :", appVersion.value);
   })
   .catch(() => {
     appVersion.value = "erreur lors du chargement";
@@ -46,7 +51,9 @@ interface QuickLink {
 }
 
 (async () => {
-  const loginUrlLink = await authentication.createLoginUrl({ redirectUri: window.location.href });
+  const loginUrlLink = await authentication.createLoginUrl({
+    redirectUri: window.location.href,
+  });
   unauthenticatedQuickLinks.value = [
     {
       label: "Se connecter",
@@ -81,7 +88,10 @@ const operatorTo = "/applications";
 const ecosystemLinks = [
   { label: "CCT", href: "http://cct.sg.minint.fr/accueil/Accueil.html" },
   { label: "Code source", href: "http://github.com/dnum-mi/referentiel-applications" },
-  { label: "Api du référentiel", href: `${import.meta.env.VITE_RDA_API_URL ?? "VITE_RDA_API_URL"}/api/v2/` },
+  {
+    label: "Api du référentiel",
+    href: `${import.meta.env.VITE_RDA_API_URL ?? "VITE_RDA_API_URL"}/api/v2/`,
+  },
 ];
 const mandatoryLinks = [
   { label: "Accessibilité : non conforme", to: "accessibilite" },
@@ -90,7 +100,7 @@ const mandatoryLinks = [
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
   },
-  { label: appVersion.value, href: `http://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion.value}` },
+  versionLink.value,
 ];
 const afterMandatoryLinks = [
   {
