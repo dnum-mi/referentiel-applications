@@ -37,7 +37,7 @@ Informations requises :
 - **email** : Email de l'acteur
 - **firstname** : Prénom de l'acteur
 - **lastname** : Nom de l'acteur
-- **actorType** : Type d'acteur 
+- **actorTypeId** : ID du type d'acteur lié à l'acteur 
 - **organizationId** : ID de l'organisation liée à l'acteur
 - **applicationId** : ID de l'application liée à l'acteur
     `,

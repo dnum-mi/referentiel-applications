@@ -9,7 +9,7 @@ export class ActorRepository implements IActorRepository {
   constructor(private prisma: PrismaService) {}
 
   public async create(actor: CreateActorDto) {
-    const { organizationId, applicationId, ...rest } = actor;
+    const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
     const data: Prisma.ActorCreateInput = {
       ...rest,
@@ -21,6 +21,11 @@ export class ActorRepository implements IActorRepository {
       ...(applicationId && {
         application: {
           connect: { id: applicationId },
+        },
+      }),
+      ...(actorTypeId && {
+        actorType: {
+          connect: { id: actorTypeId },
         },
       }),
     };
@@ -38,6 +43,7 @@ export class ActorRepository implements IActorRepository {
       include: {
         organization: true,
         application: true,
+        actorType: true,
       },
     });
   }
@@ -46,7 +52,7 @@ export class ActorRepository implements IActorRepository {
     where: Prisma.ActorWhereUniqueInput,
     actor: UpdateActorDto,
   ) {
-    const { organizationId, applicationId, ...rest } = actor;
+    const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
     const data: Prisma.ActorUpdateInput = {
       ...rest,
@@ -58,6 +64,11 @@ export class ActorRepository implements IActorRepository {
       ...(applicationId && {
         application: {
           connect: { id: applicationId },
+        },
+      }),
+      ...(actorTypeId && {
+        actorType: {
+          connect: { id: actorTypeId },
         },
       }),
     };

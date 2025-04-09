@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref } from "vue";
 import type { PropType } from "vue";
 import type { Actor, Application } from "@/models/Application";
 import type { Organization } from "@/models/organization";
+import type { ActorType } from "@/models/ActorType";
 import { useActorStore } from "@/stores/actorStore";
-import { actorTypeMapping } from "@/composables/use-dictionary";
 import SuggestionsInput from "../SuggestionsInput.vue";
 
 const props = defineProps({
@@ -18,6 +18,10 @@ const props = defineProps({
     type: Array as PropType<Organization[]>,
     required: true,
   },
+  actorTypes: {
+    type: Array as PropType<ActorType[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits(["submit", "cancel"]);
@@ -27,22 +31,14 @@ const store = useActorStore();
 const form = ref<Actor>({
   id: props.initialData?.id ?? "",
   role: props.initialData?.role ?? "",
-  type: props.initialData?.type ?? "",
   email: props.initialData?.email ?? "",
   firstname: props.initialData?.firstname ?? "",
   lastname: props.initialData?.lastname ?? "",
   userId: props.initialData?.userId ?? "",
   organizationId: props.initialData?.organizationId ?? "",
+  actorTypeId: props.initialData?.actorTypeId ?? "",
   applicationId: props.application.id,
 });
-
-const actorTypes = computed(() => [
-  { value: "", text: "Choisir un type d'acteur" },
-  ...Object.entries(actorTypeMapping).map(([key, label]) => ({
-    value: key,
-    text: label,
-  })),
-]);
 
 const handleSubmit = () => {
   const isNew = !form.value.id;
@@ -55,8 +51,7 @@ const handleSubmit = () => {
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="fr-input-group fr-mt-3w">
-      <label class="fr-label" for="actorType">Type d'acteur</label>
-      <DsfrSelect v-model="form.type" :options="actorTypes" />
+      <SuggestionsInput :searchData="props.actorTypes" v-model:returnData="form.actorTypeId" label="Type d'acteur" />
     </div>
 
     <div class="fr-input-group fr-mt-3w">

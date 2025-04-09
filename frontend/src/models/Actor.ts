@@ -4,10 +4,10 @@ export interface Actor {
   email: string;
   firstname?: string;
   lastname?: string;
-  type?: string;
   userId?: string;
   organizationId?: string | null;
   applicationId?: string;
+  actorTypeId?: string | null;
   user?: User;
   externalOrganization?: External;
 }

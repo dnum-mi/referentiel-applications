@@ -28,22 +28,6 @@ export enum ExternalRessourceType {
   AUDIENCE_METRICS = "Mesure d'audience",
 }
 
-export enum ActorType {
-  MOA = 'MOA',
-  MOE = 'MOE',
-  RSSI = 'RSSI',
-  ArchitecteApplicatif = 'ArchitecteApplicatif',
-  ArchitecteTechnique = 'ArchitecteTechnique',
-  TMA = 'TMA',
-  Exploitation = 'Exploitation',
-  RSIMM = 'RSIMM',
-  CPD = 'CPD',
-  OrganismeBeneficiaire = 'OrganismeBeneficiaire',
-  ProductManager = 'ProductManager',
-  Hebergement = 'Hebergement',
-  Autre = 'Autre',
-}
-
 export enum RelationType {
   is_part_of,
   in_replacement_of,
