@@ -14,5 +14,6 @@ export interface IHostingRepository {
   findBySite(site: string): Promise<Hosting[]>;
   findApplicationsBySite(site: string): Promise<Hosting[]>;
   findDistinctSites(): Promise<string[]>;
+  findDistinctPlatforms(): Promise<string[]>;
   findByApplicationId(applicationId: string): Promise<Hosting[]>;
 }

@@ -160,8 +160,18 @@ export const apiConfig = {
       method: "GET",
       url: "/sites/:site/applications",
     },
+    list: {
+      method: "GET",
+      url: "/sites",
+    },
   },
 
+  platform: {
+    list: {
+      method: "GET",
+      url: "/platforms",
+    },
+  },
   user: {
     createOrUpdate: {
       method: "POST",

@@ -20,6 +20,13 @@ const hostingForm = ref({
 const isSubmitting = ref(false);
 const hostingStore = useHostingStore();
 const toaster = useToaster();
+const siteSuggestions = ref<{ id: string; label: string }[]>([]);
+const platformSuggestions = ref<{ id: string; label: string }[]>([]);
+
+onMounted(async () => {
+  siteSuggestions.value = await hostingStore.fetchSites();
+  platformSuggestions.value = await hostingStore.fetchPlatforms();
+});
 
 watch(
   () => props.initialHosting,
@@ -62,6 +69,9 @@ const handleSubmit = async () => {
       <DsfrInput label-visible label="Région" v-model="hostingForm.region" />
       <DsfrInput label-visible label="Site" v-model="hostingForm.site" />
       <DsfrInput label-visible label="Plateforme" v-model="hostingForm.platform" />
+      <SuggestionsInput label="Site" v-model:returnData="hostingForm.site" :searchData="siteSuggestions" />
+
+      <SuggestionsInput label="Plateforme" v-model:returnData="hostingForm.platform" :searchData="platformSuggestions" />
     </div>
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton secondary label="Annuler" @click="$emit('close')" />

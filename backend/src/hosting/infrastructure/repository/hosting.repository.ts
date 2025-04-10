@@ -69,12 +69,18 @@ export class HostingRepository implements IHostingRepository {
   }
 
   async findDistinctSites(): Promise<string[]> {
-    const results = await this.prisma.hosting.findMany({
+    const rows = await this.prisma.hosting.findMany({
       select: { site: true },
       distinct: ['site'],
-      orderBy: { site: 'asc' },
     });
+    return rows.map((r) => r.site);
+  }
 
-    return results.map((r) => r.site);
+  async findDistinctPlatforms(): Promise<string[]> {
+    const rows = await this.prisma.hosting.findMany({
+      select: { platform: true },
+      distinct: ['platform'],
+    });
+    return rows.map((r) => r.platform);
   }
 }

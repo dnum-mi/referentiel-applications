@@ -7,7 +7,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 export class SitesController {
   constructor(private readonly hostingService: HostingService) {}
 
-  @Get('distinct')
+  @Get()
   @ApiOperation({ summary: 'Liste des sites distincts existants' })
   @ApiResponse({ status: 200, description: 'Liste des sites', type: [String] })
   findDistinctSites(): Promise<string[]> {

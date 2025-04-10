@@ -39,6 +39,10 @@ export class HostingService {
     return this.repository.findApplicationsBySite(site);
   }
 
+  async findDistinctPlatforms(): Promise<string[]> {
+    return this.repository.findDistinctPlatforms();
+  }
+
   async findByApplicationId(applicationId: string): Promise<Hosting[]> {
     return this.repository.findByApplicationId(applicationId);
   }

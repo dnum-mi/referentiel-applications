@@ -21,6 +21,16 @@ export const useHostingStore = defineStore("hostingStore", () => {
     }
   };
 
+  const fetchSites = async (): Promise<{ id: string; label: string }[]> => {
+    const result = await call("site", "list");
+    return result.map((site: string) => ({ id: site, label: site }));
+  };
+
+  const fetchPlatforms = async (): Promise<{ id: string; label: string }[]> => {
+    const result = await call("platform", "list");
+    return result.map((platform: string) => ({ id: platform, label: platform }));
+  };
+
   const createHosting = async (applicationId: string, hosting: Hosting) => {
     const newHosting = await call("hosting", "create", { ...hosting, applicationId });
     hostings.value.push(newHosting);
@@ -46,6 +56,8 @@ export const useHostingStore = defineStore("hostingStore", () => {
     hostings,
     isLoading,
     fetchHostings,
+    fetchSites,
+    fetchPlatforms,
     createHosting,
     updateHosting,
     deleteHosting,
