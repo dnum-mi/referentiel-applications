@@ -14,37 +14,20 @@ jobs:
       major-tag: ${{ steps.release.outputs.major }}
       minor-tag: ${{ steps.release.outputs.minor }}
       patch-tag: ${{ steps.release.outputs.patch }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm install
-
       - name: Pre release new version
-        id: release
         uses: googleapis/release-please-action@v4
+        id: release
         with:
           target-branch: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Synchroniser la version vers client/package.json
+      - name: Générer public/version.json
         if: ${{ steps.release.outputs.release_created }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          echo "✅ Version release: $VERSION"
-
-          node -e "let pkg = require('./client/package.json'); pkg.version = '$VERSION'; require('fs').writeFileSync('./client/package.json', JSON.stringify(pkg, null, 2));"
-          echo "✅ client/package.json mis à jour avec la version $VERSION"
-
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add client/package.json
-          git commit -m 'chore: sync frontend version with release'
-          git push
+          mkdir -p public
+          echo "{\"version\": \"$VERSION\"}" > public/version.json
