@@ -47,12 +47,16 @@ async function bootstrap() {
     .addSecurityRequirements('oauth2')
     .build();
   const document = SwaggerModule.createDocument(app, config);
+
+  app.use('/api/v2/swagger/json', (_, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(document);
+  });
+
   SwaggerModule.setup('api/v2/', app, document, {
     explorer: true,
     jsonDocumentUrl: 'swagger/json',
-    //customCss: theme.getBuffer(SwaggerThemeNameEnum.DARK),
   });
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
