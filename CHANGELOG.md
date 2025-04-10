@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.10.0...v1.10.1) (2025-04-10)
+
+
+### Bug Fixes
+
+* **ci:** :wrench: rewrite code for tag version ([fa6ca87](https://github.com/dnum-mi/referentiel-applications/commit/fa6ca87dab7cc3a174a42af48f9c5a8afc794749))
+
 ## [1.10.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.9.2...v1.10.0) (2025-04-10)
 
 
