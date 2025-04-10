@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.9.2...v1.10.0) (2025-04-10)
+
+
+### Features
+
+* :sparkles: Add a new column that display Hosting data for application ([b5a7eae](https://github.com/dnum-mi/referentiel-applications/commit/b5a7eaea5c6dc490d14354460ba25932d85b68cf))
+
 ## [1.9.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.9.1...v1.9.2) (2025-04-10)
 
 
