@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.9.1...v1.9.2) (2025-04-10)
+
+
+### Bug Fixes
+
+* **ci:** :bug: Fix release because version in front is down ([a07f742](https://github.com/dnum-mi/referentiel-applications/commit/a07f74233c7523e5aa0b561c799dbbda2dc5b4d8))
+
 ## [1.9.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.9.0...v1.9.1) (2025-04-10)
 
 
