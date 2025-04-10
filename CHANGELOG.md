@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.9.0...v1.9.1) (2025-04-10)
+
+
+### Bug Fixes
+
+* **api:** :recycle: expose Swaggerjson ([b906951](https://github.com/dnum-mi/referentiel-applications/commit/b906951eb4c417f5a3d15e231fe52fbc76efd700))
+
 ## [1.9.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.8.1...v1.9.0) (2025-04-10)
 
 
