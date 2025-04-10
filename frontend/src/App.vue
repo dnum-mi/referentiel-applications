@@ -25,10 +25,10 @@ const authenticated = ref(authentication.authenticated);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
-const appVersion = import.meta.env.VITE_APP_VERSION || "version inconnue";
+const appVersion = import.meta.env.VITE_APP_VERSION;
 
 const versionLink = computed(() => ({
-  label: `Version ${appVersion}`,
+  label: `📦 ${appVersion}`,
   href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/v${appVersion}`,
 }));
 
@@ -82,7 +82,7 @@ const ecosystemLinks = [
     href: `${import.meta.env.VITE_RDA_API_URL ?? "VITE_RDA_API_URL"}/api/v2/`,
   },
 ];
-const mandatoryLinks = [
+const mandatoryLinks = computed(() => [
   { label: "Accessibilité : non conforme", to: "accessibilite" },
   {
     label: "Contact Tchap",
@@ -90,7 +90,7 @@ const mandatoryLinks = [
     target: "_blank",
   },
   versionLink.value,
-];
+]);
 const afterMandatoryLinks = [
   {
     label: "Paramètres d’affichage",

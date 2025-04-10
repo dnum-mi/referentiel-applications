@@ -72,9 +72,6 @@ export default defineConfig({
     }),
   ],
   base: process.env.BASE_URL || "/",
-  define: {
-    VITE_APP_VERSION: JSON.stringify(pkg.version),
-  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
