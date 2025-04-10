@@ -45,7 +45,7 @@ onBeforeUnmount(() => {
 });
 const displayMode = computed(() => (isTiles.value ? "tiles" : "table"));
 
-const headers = ["Nom court", "Description", "Priorité de redémarrage", "Tags"];
+const headers = ["Nom court", "Description", "Priorité de redémarrage", "Hébergement", "Tags"];
 
 const currentPage = ref(0);
 const rowsPerPage = ref(15);
@@ -78,6 +78,8 @@ async function doSearch() {
         const query = searchTerm.value.trim();
         const resultCount = searchResults.value.length;
 
+        console.log("Résultats de la recherche :", searchResults.value);
+
         trackSearch(query, "la liste", resultCount);
       }
     } catch (error) {
@@ -97,6 +99,7 @@ const rows = computed(() => {
     tags: app.tags ? app.tags.join(", ") : "-",
     shortName: app.shortName || "",
     priorityRestart: app.priorityRestart || "-",
+    hosting: app.hosting ? app.hosting.map((h) => `${h.site} - ${h.platform}`).join(", ") : "-",
   }));
 });
 
@@ -134,7 +137,7 @@ onMounted(async () => {
         v-model:current-page="currentPage"
         v-model:rows-per-page="rowsPerPage"
         pagination
-        :pagination-options="[5, 15, 30, 50]"
+        :pagination-options="[5, 15, 30, 50, 100, 200]"
         sortable-rows
         :sortFn="sorter"
         v-model:sortedBy="currentSortedColumn"
@@ -156,6 +159,9 @@ onMounted(async () => {
               :title="getPriorityBadgeType(cell.priorityRestart).tooltip"
               :aria-label="`Priorité de redémarrage : ${getPriorityBadgeType(cell.priorityRestart).tooltip}`"
             />
+          </template>
+          <template v-else-if="colKey === 'Hébergement'">
+            <span class="truncate">{{ cell.hosting }}</span>
           </template>
           <template v-else-if="colKey === 'Tags'">
             <span class="truncate">{{ cell.tags }}</span>

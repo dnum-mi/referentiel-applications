@@ -81,12 +81,25 @@ export class ApplicationRepository implements IApplicationRepository {
       : Prisma.empty;
 
     const query = Prisma.sql`
-      SELECT a.*
-      FROM public.applications a
-      ${whereClause}
-      LIMIT ${Prisma.raw(limit.toString())}
-      OFFSET ${Prisma.raw(skip.toString())}
-    `;
+  SELECT DISTINCT a.*,
+    COALESCE(
+      (
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'platform', host.platform,
+            'site', host.site
+          )
+        )
+        FROM "Hosting" host
+        WHERE host."applicationId" = a.id
+      ),
+      '[]'::jsonb
+    ) as hosting
+  FROM public.applications a
+  ${whereClause}
+  LIMIT ${Prisma.raw(limit.toString())}
+  OFFSET ${Prisma.raw(skip.toString())}
+`;
 
     return this.prisma.$queryRaw(query);
   }
