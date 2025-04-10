@@ -32,17 +32,6 @@ const versionLink = computed(() => ({
   href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/v${appVersion}`,
 }));
 
-fetch("/version.json")
-  .then((res) => res.json())
-  .then((data) => {
-    console.log("Contenu de version.json :", data);
-    appVersion.value = data.version ?? "version inconnue";
-  })
-  .catch(() => {
-    appVersion.value = "erreur lors du chargement";
-    console.warn("Impossible de charger la version.");
-  });
-
 interface QuickLink {
   label: string;
   to: { name: string } | string;
