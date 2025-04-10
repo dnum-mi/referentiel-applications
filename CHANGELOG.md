@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.9.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.8.1...v1.9.0) (2025-04-10)
+
+
+### Features
+
+* **api:** :sparkles: add endpoint for export application in excel ([037507c](https://github.com/dnum-mi/referentiel-applications/commit/037507ce990cf7e61d87605c0347a48e66ed74ae))
+* **applications:** :sparkles: allow complete CSV export including relations and arrays ([0cc8ef0](https://github.com/dnum-mi/referentiel-applications/commit/0cc8ef0e508b205d94c527260ed96ad93917f7d2))
+* **database:** ✨ create actorType table and update actor tab ([#561](https://github.com/dnum-mi/referentiel-applications/issues/561)) ([7855c59](https://github.com/dnum-mi/referentiel-applications/commit/7855c59f19b2ff951be784c20f80adedd9ca41c4))
+
+
+### Bug Fixes
+
+* :bug: fix sorting function with a custom function ([fbba2a8](https://github.com/dnum-mi/referentiel-applications/commit/fbba2a8e7855fda9b9b321a9b70b7d1ebb868975))
+* **front:** :bug: display version in footer ([8e5fa9c](https://github.com/dnum-mi/referentiel-applications/commit/8e5fa9cc3d3804c53c30dc591adabd0f1cf15968))
+
 ## [1.8.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.8.0...v1.8.1) (2025-04-07)
 
 
