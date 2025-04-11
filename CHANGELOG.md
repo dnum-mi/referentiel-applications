@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.10.1...v1.10.2) (2025-04-11)
+
+
+### Bug Fixes
+
+* **ci:** :bug: Display version in footer ([2d0e2aa](https://github.com/dnum-mi/referentiel-applications/commit/2d0e2aa5df74f8cc651ae3571e24623238450466))
+* **front:** :bug: delete matomo error ([c5872d9](https://github.com/dnum-mi/referentiel-applications/commit/c5872d9e9045504868d288c266a09d7a0a99b178))
+
 ## [1.10.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.10.0...v1.10.1) (2025-04-10)
 
 
