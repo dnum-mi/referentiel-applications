@@ -129,7 +129,6 @@ watch(searchQuery, (newVal) => {
       trackResultClick(app.label);
     } catch (error) {
       instance?.proxy?.$matomo?.trackEvent("Error", "Search Error", error.message);
-      errorMessage.value = "Une erreur est survenue lors du chargement des applications.";
     } finally {
       isLoading.value = false;
     }
@@ -170,7 +169,7 @@ function close() {
       <div v-if="isLoading" class="loading-message">Chargement...</div>
       <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
       <ul v-if="searchResults.length">
-        <li v-for="(app, index) in searchResults" :key="index" @click="trackResultSelection(app.label)">
+        <li v-for="(app, index) in searchResults" :key="index" @click="clearSearch">
           <router-link :to="{ name: 'application', params: { id: app.id } }">
             {{ app.label || "Application" }}
           </router-link>
