@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.10.2...v1.10.3) (2025-04-11)
+
+
+### Bug Fixes
+
+* :bug: Fix the display of the hosting column in the application table ([d5c9fa9](https://github.com/dnum-mi/referentiel-applications/commit/d5c9fa9fbbc408d06f41abb999e1e56b4870a2fd))
+
 ## [1.10.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.10.1...v1.10.2) (2025-04-11)
 
 
