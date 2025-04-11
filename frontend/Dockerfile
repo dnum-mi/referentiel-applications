@@ -2,6 +2,9 @@ FROM node:20-slim AS build
 
 WORKDIR /app
 
+ARG APP_VERSION
+ENV VITE_APP_VERSION=$APP_VERSION
+
 RUN npm install -g pnpm
 
 # Copy necessary files
