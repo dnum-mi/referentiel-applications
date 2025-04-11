@@ -48,7 +48,7 @@ const displayMode = computed(() => (isTiles.value ? "tiles" : "table"));
 const headers = ["Nom court", "Description", "Priorité de redémarrage", "Hébergement", "Tags"];
 
 const currentPage = ref(0);
-const rowsPerPage = ref(15);
+const rowsPerPage = ref(500);
 
 async function doSearch() {
   if (debounceTimeout.value) {
@@ -68,7 +68,14 @@ async function doSearch() {
         const site = parts[1].trim().split(" ")[0];
         if (site) {
           const hostings = await Sites.getApplications(site);
-          searchResults.value = hostings.map((h) => h.application);
+          searchResults.value = hostings.map((h) => {
+            if (typeof h.application.hosting === "object") {
+              h.application.hosting.push({ site: h.site, platform: h.platform });
+            } else {
+              h.application.hosting = [{ site: h.site, platform: h.platform }];
+            }
+            return h.application;
+          });
         } else {
           searchResults.value = [];
         }
@@ -99,7 +106,7 @@ const rows = computed(() => {
     tags: app.tags ? app.tags.join(", ") : "-",
     shortName: app.shortName || "",
     priorityRestart: app.priorityRestart || "-",
-    hosting: app.hosting ? app.hosting.map((h) => `${h.site} - ${h.platform}`).join(", ") : "-",
+    hosting: app.hosting?.length > 0 ? app.hosting.map((h) => `${h.site} - ${h.platform}`).join(", ") : "-",
   }));
 });
 

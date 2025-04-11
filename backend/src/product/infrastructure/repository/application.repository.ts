@@ -81,7 +81,7 @@ export class ApplicationRepository implements IApplicationRepository {
       : Prisma.empty;
 
     const query = Prisma.sql`
-  SELECT DISTINCT a.*,
+  SELECT a.*,
     COALESCE(
       (
         SELECT jsonb_agg(
