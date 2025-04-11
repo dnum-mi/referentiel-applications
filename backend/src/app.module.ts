@@ -25,6 +25,7 @@ import { AnomalyNotificationModule } from './notification/anomaly-notification.m
 import { ActorModule } from './actor/actor.module';
 import { LinksModule } from './links/links.module';
 import { LabelsModule } from './labels/labels.module';
+import { ApplicationSearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { LabelsModule } from './labels/labels.module';
     HealthCheckModule,
     OrganizationModule,
     ActorTypeModule,
+    ApplicationSearchModule,
     ActorModule,
     ConfigModule.forRoot({
       isGlobal: true,
