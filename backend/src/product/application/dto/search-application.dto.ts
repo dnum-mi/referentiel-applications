@@ -58,4 +58,20 @@ export class SearchApplicationDto {
   @IsOptional()
   @IsString()
   shortName?: string;
+
+  @ApiPropertyOptional({
+    description: 'Champ à utiliser pour le tri',
+    example: 'label',
+  })
+  @IsOptional()
+  @IsString()
+  sortBy?: string;
+
+  @ApiPropertyOptional({
+    description: "Ordre de tri : 'asc' ou 'desc'",
+    example: 'asc',
+  })
+  @IsOptional()
+  @IsString()
+  order?: 'asc' | 'desc';
 }
