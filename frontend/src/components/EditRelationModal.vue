@@ -111,10 +111,9 @@ const submitRelationUpdate = async () => {
     return;
   }
 
-  // Créer un payload conforme au DTO côté serveur (sans la propriété id)
   const payload = {
     applicationSource: props.relation.applicationSource,
-    applicationTarget: selectedApplication.value.id, // on envoie l'id de l'application cible
+    applicationTarget: selectedApplication.value.id,
     type: relationType.value,
   };
 
