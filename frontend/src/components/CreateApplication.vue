@@ -3,7 +3,7 @@ import { ref, watch, onMounted } from "vue";
 import axios from "axios";
 import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
-import SearchApplications from "./SearchApplications.vue";
+import SearchApplications from "./ApplicationTableView.vue";
 import type { Application } from "@/models/Application";
 import Applications from "@/api/application";
 

@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { ref } from "vue"
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore"
+import { ref } from "vue";
+import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 
-import ActorFilter from "@/components/search/ActorFilter.vue"
-import HostingFilter from "@/components/search/HostingFilter.vue"
-import ApplicationFilter from "@/components/search/ApplicationFilter.vue"
+import ActorFilter from "@/components/search/ActorFilter.vue";
+import HostingFilter from "@/components/search/HostingFilter.vue";
+import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 
-const sidebarOpen = ref(true)
-const searchStore = useApplicationSearchStore()
+const sidebarOpen = ref(true);
+const searchStore = useApplicationSearchStore();
 
 function toggleSidebar() {
-  sidebarOpen.value = !sidebarOpen.value
+  sidebarOpen.value = !sidebarOpen.value;
 }
 
 function resetAllFilters() {
-  searchStore.resetFilters()
-  searchStore.searchApplications()
+  searchStore.resetFilters();
+  searchStore.searchApplications();
 }
 </script>
 
@@ -23,9 +23,7 @@ function resetAllFilters() {
   <Transition name="sidebar-width">
     <aside class="sidebar" v-if="sidebarOpen">
       <div class="filters-wrapper">
-        <p class="reset-link" @click="resetAllFilters" title="Réinitialiser les filtres">
-          ✕ Réinitialiser
-        </p>
+        <p class="reset-link" @click="resetAllFilters" title="Réinitialiser les filtres">✕ Réinitialiser</p>
 
         <div class="filter-block">
           <ActorFilter />
@@ -41,15 +39,8 @@ function resetAllFilters() {
   </Transition>
 
   <!-- Toggle Button toujours visible -->
-  <button
-    class="sidebar-toggle"
-    @click="toggleSidebar"
-    :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'"
-  >
-    <VIcon
-      :name="sidebarOpen ? 'ri-arrow-left-s-line' : 'ri-arrow-right-s-line'"
-      class="sidebar-toggle-icon"
-    />
+  <button class="sidebar-toggle" @click="toggleSidebar" :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'">
+    <VIcon :name="sidebarOpen ? 'ri-arrow-left-s-line' : 'ri-arrow-right-s-line'" class="sidebar-toggle-icon" />
   </button>
 </template>
 
@@ -137,6 +128,4 @@ function resetAllFilters() {
   opacity: 0;
   transform: translateX(-20px);
 }
-
-
 </style>
