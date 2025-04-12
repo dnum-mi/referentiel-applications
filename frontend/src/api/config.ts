@@ -21,18 +21,35 @@ export const apiConfig = {
       method: "GET",
       url: "/applications/:id",
     },
+    list: {
+      method: "GET",
+      url: "/applications",
+    },
     patch: {
       method: "PATCH",
       url: "/applications/:id",
       payload: ["label", "shortName", "description", "targetPopulations", "purposes", "tags", "priorityRestart", "compliances", "actors"],
     },
-    search: {
-      method: "GET",
-      url: "/applications/search",
-      query: ["label", "tag", "shortName", "priorityRestart", "page", "limit"],
-    },
   },
-
+  applicationSearch: {
+    method: "GET",
+    url: "/search/applications",
+    query: [
+      "label",
+      "shortName",
+      "tag",
+      "priorityRestart",
+      "hostingSite",
+      "hostingPlatform",
+      "organizationLabel",
+      "actorType",
+      "link",
+      "page",
+      "limit",
+      "sortBy",
+      "order",
+    ],
+  },
   hosting: {
     create: {
       method: "POST",
@@ -156,6 +173,10 @@ export const apiConfig = {
   },
 
   site: {
+    listSites: {
+      method: "GET",
+      url: "/sites",
+    },
     getApplications: {
       method: "GET",
       url: "/sites/:site/applications",

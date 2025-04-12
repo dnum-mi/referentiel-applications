@@ -19,7 +19,6 @@ const selectedOrganization = computed(() => organizationStore.organizations.find
 onMounted(async () => {
   await organizationStore.fetchAll();
 
-  // Restaurer l'organisation à partir du filtre déjà présent (label)
   const currentLabel = searchStore.filters.organizationLabel;
   if (currentLabel) {
     const match = organizationStore.organizations.find((o) => o.label === currentLabel);
@@ -34,6 +33,7 @@ function onOrganizationUpdate(id: string) {
   const selected = organizationStore.organizations.find((o) => o.id === id);
   if (selected) {
     searchStore.setFilter("organizationLabel", selected.label);
+    searchStore.setFilter("page", 0);
     debouncedSearch();
   }
 }
@@ -41,14 +41,13 @@ function onOrganizationUpdate(id: string) {
 function clearOrganization() {
   selectedOrganizationId.value = "";
   searchStore.setFilter("organizationLabel", null);
+  searchStore.setFilter("page", 0);
   debouncedSearch();
 }
 </script>
 
 <template>
   <div class="filter-section">
-    <h4>Organisation</h4>
-
     <SuggestionsInput
       :returnData="selectedOrganizationId"
       @update:returnData="onOrganizationUpdate"
@@ -64,10 +63,6 @@ function clearOrganization() {
 </template>
 
 <style scoped>
-.filter-section {
-  margin-bottom: 2rem;
-}
-
 .selected-tag {
   margin-top: 0.5rem;
   background: #e5e5e5;

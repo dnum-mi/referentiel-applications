@@ -23,7 +23,6 @@ watch(
 
 const updateApplication = (updatedApp: Application) => {
   Object.assign(application.value, updatedApp);
-  console.log(updatedApp);
 };
 
 const applicationTabListName = "Informations sur l’application";

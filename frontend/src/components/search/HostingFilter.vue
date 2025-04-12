@@ -33,21 +33,20 @@ function updateSite(id: string) {
   selectedSiteId.value = id;
   const selected = siteStore.sites.find((s) => s.id === id);
   searchStore.setFilter("hostingSite", selected?.label || "");
+  searchStore.setFilter("page", 0);
   debouncedSearch();
 }
 
 function clearSite() {
   selectedSiteId.value = "";
   searchStore.setFilter("hostingSite", "");
+  searchStore.setFilter("page", 0);
   debouncedSearch();
 }
 </script>
 
 <template>
   <div class="filter-section">
-    <h4>Hébergement</h4>
-
-    <!-- 👉 On inclut ici PriorityRestartFilter -->
     <PriorityRestartFilter />
 
     <SuggestionsInput :returnData="selectedSiteId" @update:returnData="updateSite" :searchData="siteStore.sites" label="Site" />
@@ -60,10 +59,6 @@ function clearSite() {
 </template>
 
 <style scoped>
-.filter-section {
-  margin-bottom: 2rem;
-}
-
 .selected-tag {
   display: inline-flex;
   align-items: center;

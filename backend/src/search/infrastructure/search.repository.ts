@@ -112,11 +112,7 @@ export class ApplicationSearchRepository
         : {}),
     };
 
-    const sortableFields = ['label', 'shortName', 'priorityRestart'];
-    const safeSortBy = sortableFields.includes(sortBy) ? sortBy : 'label';
-    const safeOrder = order === 'desc' ? 'desc' : 'asc';
-
-    const results = await this.prisma.application.findMany({
+    const allResults = await this.prisma.application.findMany({
       where,
       include: {
         hostings: true,
@@ -131,15 +127,43 @@ export class ApplicationSearchRepository
           },
         },
       },
-      orderBy: {
-        [safeSortBy]: safeOrder,
-      },
-      skip: page * limit,
-      take: limit,
     });
 
-    const total = await this.prisma.application.count({ where });
+    const total = allResults.length;
+
+    const safeOrder = order === 'desc' ? 'desc' : 'asc';
+
+    const sorted = allResults.sort((a, b) => {
+      const aVal = getSortableValue(a, sortBy);
+      const bVal = getSortableValue(b, sortBy);
+
+      if (aVal === undefined || aVal === null) return 1;
+      if (bVal === undefined || bVal === null) return -1;
+
+      return safeOrder === 'asc'
+        ? String(aVal).localeCompare(String(bVal))
+        : String(bVal).localeCompare(String(aVal));
+    });
+
+    const results = sorted.slice(page * limit, (page + 1) * limit);
 
     return { results, total };
+  }
+}
+
+// 🧠 Utilisé pour le tri manuel en mémoire
+function getSortableValue(app: any, field: string): string | undefined {
+  switch (field) {
+    case 'label':
+    case 'shortName':
+    case 'priorityRestart':
+      return app[field];
+    case 'tag':
+    case 'tags':
+      return app.tags?.[0];
+    case 'hostingSite':
+      return app.hostings?.[0]?.site;
+    default:
+      return app.label;
   }
 }
