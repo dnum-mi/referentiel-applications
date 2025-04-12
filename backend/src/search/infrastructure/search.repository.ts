@@ -68,7 +68,7 @@ export class ApplicationSearchRepository
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN public.actors act ON act."applicationId" = a.id
-          JOIN public."ActorType" at ON act."actorTypeId" = at.id
+          JOIN public."actorTypes" at ON act."actorTypeId" = at.id 
           WHERE LOWER(at.code) = ${dto.actorType!.toLowerCase()}
         `,
       },
