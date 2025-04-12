@@ -11,7 +11,7 @@ const routes = [
   {
     name: routeNames.SEARCHAPP,
     path: "/recherche-application",
-    component: () => import("@/views/GlobalSearch.vue"),
+    component: () => import("@/views/ApplicationView.vue"),
     meta: { requiresAuth: true },
   },
   {
