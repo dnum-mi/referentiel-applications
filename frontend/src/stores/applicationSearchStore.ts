@@ -21,7 +21,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     hostingSite: "",
     hostingPlatform: "",
     organizationLabel: "",
-    actorType: "", // ✅ maintenant un tableau !
+    actorType: "",
   });
 
   const page = computed({
@@ -52,7 +52,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       hostingSite: "",
       hostingPlatform: "",
       organizationLabel: "",
-      actorType: [], // ✅ reset propre
+      actorType: [],
     });
   }
 
@@ -64,18 +64,19 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       const rawQuery = { ...filters, ...customFilters };
 
       const query = Object.fromEntries(
-        Object.entries(rawQuery).filter(
-          ([_, val]) => val !== "" && val !== null && val !== undefined && !(Array.isArray(val) && val.length === 0),
-        ),
+        Object.entries(rawQuery).filter(([key, val]) => {
+          if (["page", "limit", "sortBy", "order"].includes(key)) return true;
+          if (val === "" || val === null || val === undefined) return false;
+          if (Array.isArray(val) && val.length === 0) return false;
+          return true;
+        }),
       );
 
-      query.page ??= 0;
-      query.limit ??= 15;
-
-      console.log("🔍 [searchApplications] Filtres bruts:", rawQuery);
-      console.log("🧪 [searchApplications] Filtres envoyés (query):", query);
-
       const res = await call("applicationSearch", undefined, query);
+
+      console.log("🧾 Résultat API /search/applications →", res);
+      console.log("📊 Total applications retournées :", res.total);
+
       results.value = res.results;
       total.value = res.total;
     } catch (err: any) {

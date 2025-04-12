@@ -120,7 +120,6 @@ const submitRelationUpdate = async () => {
   try {
     const result = await Relations.update(props.relation.id, payload);
     emit("update-relation", result);
-    console.log(result);
     closeModal();
   } catch (error) {
     console.error(error);

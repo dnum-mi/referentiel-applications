@@ -4,7 +4,6 @@ import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 
 const searchStore = useApplicationSearchStore();
 
-// 🔁 Accès réactif au tableau dans `filters`
 const selectedPriorities = toRef(searchStore.filters, "priorityRestart");
 
 const priorityOptions = [
@@ -16,7 +15,6 @@ const priorityOptions = [
   { value: "p5", label: "P5 - Très faible" },
 ];
 
-// Gestion d’un clic sur une checkbox
 function togglePriority(value: string, event: Event) {
   const checked = (event.target as HTMLInputElement).checked;
   const current = selectedPriorities.value;
@@ -30,19 +28,19 @@ function togglePriority(value: string, event: Event) {
     }
   }
 
-  console.log("✅ Nouveau tableau priorities :", [...current]);
-  searchStore.searchApplications(); // ou un debounce si tu préfères
+  searchStore.setFilter("page", 0);
+  searchStore.searchApplications();
 }
 </script>
 
 <template>
   <div class="filter-section">
-    <h6>
+    <p>
       Priorité de redémarrage
       <small v-if="selectedPriorities.length > 0">
         ({{ selectedPriorities.length }} sélectionnée<span v-if="selectedPriorities.length > 1">s</span>)
       </small>
-    </h6>
+    </p>
 
     <div class="checkbox-list">
       <label v-for="option in priorityOptions" :key="option.value" class="checkbox-item">
@@ -59,10 +57,6 @@ function togglePriority(value: string, event: Event) {
 </template>
 
 <style scoped>
-.filter-section {
-  margin-bottom: 2rem;
-}
-
 .checkbox-list {
   display: flex;
   flex-direction: column;

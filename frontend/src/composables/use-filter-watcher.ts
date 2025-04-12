@@ -9,9 +9,8 @@ export function useFilterWatcher(filters: Record<string, any>, callback: () => v
     const isArray = Array.isArray(filters[key]) || Array.isArray(filters[key]?.value);
 
     watch(
-      () => filters[key], // ✅ on observe bien la propriété réactive
+      () => filters[key],
       () => {
-        console.log(`🌀 [Watcher] Changement sur "${key}" → appel API`);
         debounced.run();
       },
       { deep: isArray },
