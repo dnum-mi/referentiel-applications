@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.11.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.10.3...v1.11.0) (2025-04-14)
+
+
+### Features
+
+* :sparkles: add permissions field to User model and implement role-based access control ([3365d26](https://github.com/dnum-mi/referentiel-applications/commit/3365d26de6d48903f072d1fbd54d0c30430a6c42))
+* **api:** :sparkles: add module search filters ([179d0c0](https://github.com/dnum-mi/referentiel-applications/commit/179d0c0fed43a4ba73753e7ad38c82809fd246a4))
+* **front:** :lipstick: add dropbox for actorType list ([11322e1](https://github.com/dnum-mi/referentiel-applications/commit/11322e1def712b243a5ddc90795348701c0affb6))
+* **front:** :lipstick: use dsfrSelect ([6aaf50d](https://github.com/dnum-mi/referentiel-applications/commit/6aaf50dca1b764209687417424a19d8ec7caac67))
+
 ## [1.10.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.10.2...v1.10.3) (2025-04-11)
 
 
