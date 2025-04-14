@@ -16,6 +16,7 @@ export const useLinkStore = defineStore("linkStore", () => {
       links.value = result || [];
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la récupération des liens.");
+      throw error;
     } finally {
       isLoading.value = false;
     }

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Organization } from '@prisma/client';
+import { Organization } from '@prisma/client';
 import { OrganizationRepository } from './infrastructure/repository/organization.repository';
 import {
   CreateOrganizationDto,

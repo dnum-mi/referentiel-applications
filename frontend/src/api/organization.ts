@@ -1,5 +1,5 @@
 import type { Organization } from "../models/Organization";
-import requests, { get } from "./xhr-client";
+import { get } from "./xhr-client";
 
 const Organizations = {
   async getOrganizations(): Promise<Organization[]> {

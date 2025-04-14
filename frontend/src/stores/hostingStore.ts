@@ -14,7 +14,7 @@ export const useHostingStore = defineStore("hostingStore", () => {
       isLoading.value = true;
       const result = await call("hosting", "getByApplication", { applicationId });
       hostings.value = result;
-    } catch (err) {
+    } catch {
       toaster.addErrorMessage("Erreur lors de la récupération des hébergements");
     } finally {
       isLoading.value = false;

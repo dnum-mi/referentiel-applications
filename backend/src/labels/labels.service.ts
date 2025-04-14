@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
-import { MetadatasService } from '../metadatas/metadatas.service';
 import { Label } from './entities/label.entity';
 
 @Injectable()
@@ -35,7 +34,7 @@ export class LabelsService extends BaseService<Label> {
    * @throws NotFoundException Si aucun label n'est trouvé.
    */
   async findCurrentLabel(applicationId: string) {
-    let currentLabel = await this.prisma.label.findFirst({
+    const currentLabel = await this.prisma.label.findFirst({
       where: { applicationId },
       include: { metadata: true },
       orderBy: {

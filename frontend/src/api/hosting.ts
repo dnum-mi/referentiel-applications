@@ -1,4 +1,3 @@
-import axios from "axios";
 import type { Hosting } from "@/models/Hosting";
 import requests from "./xhr-client";
 
