@@ -36,7 +36,15 @@ const tableRows = computed(() =>
     actor.id,
     (() => {
       const org = organizationsList.value.find((o) => o.id === actor.organizationId);
-      return org ? org.label : "Organisation inconnue";
+      return org
+        ? {
+            label: org.label,
+            to: org.url || "#",
+          }
+        : {
+            label: "Organisation inconnue",
+            to: "#",
+          };
     })(),
     (() => {
       const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
@@ -149,6 +157,11 @@ function cancelDelete() {
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Sélection'">
           <input type="checkbox" :value="cell" v-model="selectedActorIds" />
+        </template>
+        <template v-else-if="colKey === 'Organisation'">
+          <a :href="cell.to" target="_blank" rel="noopener noreferrer">
+            {{ cell.label }}
+          </a>
         </template>
         <template v-else-if="colKey === 'Email'">
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">
