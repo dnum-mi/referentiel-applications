@@ -40,6 +40,11 @@ const form = ref<Actor>({
   applicationId: props.application.id,
 });
 
+const actorTypeOptions = props.actorTypes.map((type) => ({
+  text: type.label,
+  value: type.id,
+}));
+
 const handleSubmit = () => {
   const isNew = !form.value.id;
   store.saveActor(form.value, isNew).then((savedActor) => {
@@ -51,13 +56,7 @@ const handleSubmit = () => {
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="fr-input-group fr-mt-3w">
-      <label for="actorTypeId" class="fr-label">Type d'acteur</label>
-      <select id="actorTypeId" v-model="form.actorTypeId" class="fr-select" required>
-        <option value="" disabled>Sélectionner un type</option>
-        <option v-for="type in props.actorTypes" :key="type.id" :value="type.id">
-          {{ type.label }}
-        </option>
-      </select>
+      <DsfrSelect v-model="form.actorTypeId" label="Type d'acteur" required :options="actorTypeOptions" />
     </div>
 
     <div class="fr-input-group fr-mt-3w">
