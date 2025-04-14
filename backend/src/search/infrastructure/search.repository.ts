@@ -22,14 +22,10 @@ export class ApplicationSearchRepository
       sortBy = 'label',
       order = 'asc',
     } = dto;
-
-    const filteredIdsSets: string[][] = [];
-
     const filters = [
       {
-        key: 'label',
         enabled: !!dto.label,
-        query: () => Prisma.sql`
+        query: Prisma.sql`
           SELECT a.id
           FROM public.applications a
           WHERE EXISTS (
@@ -41,19 +37,18 @@ export class ApplicationSearchRepository
         `,
       },
       {
-        key: 'hosting',
         enabled: !!dto.hostingSite || !!dto.hostingPlatform,
-        query: () => Prisma.sql`
+        query: Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN public."Hosting" h ON h."applicationId" = a.id
-          WHERE ${Prisma.sql`LOWER(h.site) LIKE ${`%${dto.hostingSite?.toLowerCase() ?? ''}%`}`} AND ${Prisma.sql`LOWER(h.platform) LIKE ${`%${dto.hostingPlatform?.toLowerCase() ?? ''}%`}`}
+          WHERE ${Prisma.sql`LOWER(h.site) LIKE ${`%${dto.hostingSite?.toLowerCase() ?? ''}%`}`}
+            AND ${Prisma.sql`LOWER(h.platform) LIKE ${`%${dto.hostingPlatform?.toLowerCase() ?? ''}%`}`}
         `,
       },
       {
-        key: 'organizationLabel',
         enabled: !!dto.organizationLabel,
-        query: () => Prisma.sql`
+        query: Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN public.actors act ON act."applicationId" = a.id
@@ -62,9 +57,8 @@ export class ApplicationSearchRepository
         `,
       },
       {
-        key: 'actorType',
         enabled: !!dto.actorType,
-        query: () => Prisma.sql`
+        query: Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN public.actors act ON act."applicationId" = a.id
@@ -73,9 +67,8 @@ export class ApplicationSearchRepository
         `,
       },
       {
-        key: 'link',
         enabled: !!dto.link,
-        query: () => Prisma.sql`
+        query: Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN "ExternalRessource" er ON er."applicationId" = a.id
@@ -84,10 +77,11 @@ export class ApplicationSearchRepository
       },
     ];
 
+    const filteredIdsSets: string[][] = [];
     for (const filter of filters) {
       if (filter.enabled) {
         const result = await this.prisma.$queryRaw<Array<{ id: string }>>(
-          filter.query(),
+          filter.query,
         );
         filteredIdsSets.push(result.map((r) => r.id));
       }
@@ -112,57 +106,30 @@ export class ApplicationSearchRepository
         : {}),
     };
 
-    const allResults = await this.prisma.application.findMany({
+    const total = await this.prisma.application.count({ where });
+    const safeOrder = order === 'desc' ? 'desc' : 'asc';
+    const orderBy: Prisma.ApplicationOrderByWithRelationInput =
+      sortBy === 'hostingSite'
+        ? { label: safeOrder }
+        : ({
+            [sortBy]: safeOrder,
+          } as Prisma.ApplicationOrderByWithRelationInput);
+
+    const results = await this.prisma.application.findMany({
       where,
+      orderBy,
+      skip: page * limit,
+      take: limit,
       include: {
         hostings: true,
         actors: {
           include: {
-            organization: {
-              select: {
-                id: true,
-                label: true,
-              },
-            },
+            organization: { select: { id: true, label: true } },
           },
         },
       },
     });
 
-    const total = allResults.length;
-
-    const safeOrder = order === 'desc' ? 'desc' : 'asc';
-
-    const sorted = allResults.sort((a, b) => {
-      const aVal = getSortableValue(a, sortBy);
-      const bVal = getSortableValue(b, sortBy);
-
-      if (aVal === undefined || aVal === null) return 1;
-      if (bVal === undefined || bVal === null) return -1;
-
-      return safeOrder === 'asc'
-        ? String(aVal).localeCompare(String(bVal))
-        : String(bVal).localeCompare(String(aVal));
-    });
-
-    const results = sorted.slice(page * limit, (page + 1) * limit);
-
     return { results, total };
-  }
-}
-
-function getSortableValue(app: any, field: string): string | undefined {
-  switch (field) {
-    case 'label':
-    case 'shortName':
-    case 'priorityRestart':
-      return app[field];
-    case 'tag':
-    case 'tags':
-      return app.tags?.[0];
-    case 'hostingSite':
-      return app.hostings?.[0]?.site;
-    default:
-      return app.label;
   }
 }
