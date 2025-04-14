@@ -69,13 +69,6 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         <AppLoader />
       </div>
 
-      <div v-if="statsStore.totalApplications !== null" class="summary-box">
-        <p>
-          🔎 <strong>{{ statsStore.totalApplications }}</strong>
-          applications sont référencées dans le référentiel des applications.
-        </p>
-      </div>
-
       <div class="view-toggle">
         <DsfrToggleSwitch v-model="isMobile" active-text="Mode Tuiles" inactive-text="Mode Tableau" />
       </div>

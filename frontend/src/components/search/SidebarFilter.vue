@@ -7,9 +7,12 @@ import HostingFilter from "@/components/search/HostingFilter.vue";
 import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import OrganizationFilter from "@/components/search/OrganizationFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
+import { useStatisticsStore } from "@/stores/statisticsStore";
+import { routeNames } from "@/router/route-names";
 
 const sidebarOpen = ref(true);
 const searchStore = useApplicationSearchStore();
+const statsStore = useStatisticsStore();
 
 const { openAccordions, toggle } = useAccordionManager(3, true);
 
@@ -30,6 +33,7 @@ function resetAllFilters() {
         <p class="reset-link" @click="resetAllFilters" title="Réinitialiser les filtres">✕ Réinitialiser</p>
 
         <h5>Filtres</h5>
+        <p class="total-count">{{ searchStore.total }} application(s) trouvée(s) sur {{ statsStore.totalApplications }}</p>
 
         <DsfrAccordion :selected="openAccordions.includes(0)" @click="toggle(0)" title="Général">
           <ApplicationFilter />
@@ -136,5 +140,18 @@ function resetAllFilters() {
 }
 .reset-link:hover {
   text-decoration: underline;
+}
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.total-count {
+  font-size: 0.875rem;
+  color: #444;
+  margin: 0.25rem 0 0;
 }
 </style>
