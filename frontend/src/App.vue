@@ -177,7 +177,7 @@ function close() {
       </ul>
     </div>
   </div>
-  <div class="fr-container fr-mt-3w fr-mt-md-5w fr-mb-5w">
+  <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w">
     <router-view :key="$route.fullPath" />
   </div>
 

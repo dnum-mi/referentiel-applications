@@ -23,7 +23,7 @@ async function createApplication(newApplication: Application) {
 </script>
 
 <template>
-  <div class="fr-container fr-my-2v">
+  <div class="app-container fr-container fr-my-2v">
     <DsfrButton
       type="button"
       class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
@@ -37,3 +37,10 @@ async function createApplication(newApplication: Application) {
     </DsfrModal>
   </div>
 </template>
+
+<style scoped>
+.app-container {
+  display: flex;
+  justify-content: flex-end;
+}
+</style>
