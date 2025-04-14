@@ -151,7 +151,6 @@ export class ApplicationSearchRepository
   }
 }
 
-// 🧠 Utilisé pour le tri manuel en mémoire
 function getSortableValue(app: any, field: string): string | undefined {
   switch (field) {
     case 'label':

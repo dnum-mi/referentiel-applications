@@ -6,16 +6,11 @@ export const useSiteStore = defineStore("siteStore", () => {
   const sites = ref([]);
 
   async function fetchAll() {
-    try {
-      const result = await call("site", "listSites");
-
-      sites.value = result.map((site: string) => ({
-        id: site,
-        label: site,
-      }));
-    } catch (err) {
-      console.error(" Erreur lors du chargement des sites :", err);
-    }
+    const result = await call("site", "listSites");
+    sites.value = result.map((site: string) => ({
+      id: site,
+      label: site,
+    }));
   }
 
   return { sites, fetchAll };

@@ -29,7 +29,9 @@ function resetAllFilters() {
       <div class="filters-wrapper">
         <p class="reset-link" @click="resetAllFilters" title="Réinitialiser les filtres">✕ Réinitialiser</p>
 
-        <DsfrAccordion :selected="openAccordions.includes(0)" @click="toggle(0)" title="Application">
+        <h5>Filtres</h5>
+
+        <DsfrAccordion :selected="openAccordions.includes(0)" @click="toggle(0)" title="Général">
           <ApplicationFilter />
         </DsfrAccordion>
 
@@ -58,7 +60,6 @@ function resetAllFilters() {
   height: 100vh;
   position: relative;
   z-index: 5;
-  background-color: #fff;
   display: flex;
   flex-direction: column;
   padding: 1rem 0.5rem;
@@ -74,7 +75,6 @@ function resetAllFilters() {
     max-height: 100vh;
     height: 100vh;
     overflow-y: auto;
-    background-color: #fff;
     z-index: 1000;
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
@@ -133,7 +133,6 @@ function resetAllFilters() {
   cursor: pointer;
   user-select: none;
   align-self: flex-end;
-  color: #d60000;
 }
 .reset-link:hover {
   text-decoration: underline;
