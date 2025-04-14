@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.11.0...v1.12.0) (2025-04-14)
+
+
+### Features
+
+* **front:** :sparkles: enhance organization display with links in ActorTab ([2a2fb6a](https://github.com/dnum-mi/referentiel-applications/commit/2a2fb6ad2468d52e3a2c194a588193ad5adb6f3b))
+
 ## [1.11.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.10.3...v1.11.0) (2025-04-14)
 
 
