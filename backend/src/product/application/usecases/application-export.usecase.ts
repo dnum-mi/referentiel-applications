@@ -1,4 +1,3 @@
-import { Event } from './../../../events/entities/event.entity';
 import { Injectable } from '@nestjs/common';
 import { ApplicationRepository } from '../../infrastructure/repository/application.repository';
 import { columnLabels } from '../../columnLabels/application-export.columnLabels';

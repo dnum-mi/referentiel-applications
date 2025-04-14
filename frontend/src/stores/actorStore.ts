@@ -2,11 +2,9 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Actor } from "@/models/Actor";
 import { call } from "@/api/callService";
-import useToaster from "@/composables/use-toaster";
 
 export const useActorStore = defineStore("actorStore", () => {
   const actors = ref<Actor[]>([]);
-  const toaster = useToaster();
 
   async function fetchActorsByApplication(applicationId: string) {
     try {

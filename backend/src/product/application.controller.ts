@@ -14,13 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBody,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { ApplicationExportService } from './export.service';
 import {
   CreateApplicationDto,
@@ -29,9 +23,7 @@ import {
 import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
-import { getFullField } from './application/map/application-export.map';
 import { Response } from 'express';
-import { columnLabels } from './columnLabels/application-export.columnLabels';
 
 @ApiTags('applications')
 @Controller('applications')

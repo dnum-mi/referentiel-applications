@@ -8,7 +8,6 @@ import {
   Request,
   Logger,
   Param,
-  NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { OrganizationService } from './organization.service';

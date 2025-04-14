@@ -14,7 +14,7 @@ export const useEventStore = defineStore("eventStore", () => {
       isLoading.value = true;
       const res = await call("event", "getByApplication", { applicationId });
       events.value = res || [];
-    } catch (error) {
+    } catch {
       toaster.addErrorMessage("Erreur lors du chargement des événements.");
     } finally {
       isLoading.value = false;
@@ -32,7 +32,7 @@ export const useEventStore = defineStore("eventStore", () => {
       await call("event", "create", payload);
       toaster.addSuccessMessage("Événement créé avec succès !");
       await fetchEvents(applicationId);
-    } catch (error) {
+    } catch {
       toaster.addErrorMessage("Erreur lors de la création de l'événement.");
     }
   };
@@ -42,7 +42,7 @@ export const useEventStore = defineStore("eventStore", () => {
       await Promise.all(ids.map((id) => call("event", "delete", { applicationId, eventId: id })));
       toaster.addSuccessMessage("Événements supprimés avec succès !");
       await fetchEvents(applicationId);
-    } catch (error) {
+    } catch {
       toaster.addErrorMessage("Erreur lors de la suppression des événements.");
     }
   };

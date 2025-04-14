@@ -5,10 +5,21 @@ import pluginVue from "eslint-plugin-vue";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
+  { ignores: ["**/backend/dist/**"] },
   { files: ["**/*.{js,mjs,cjs,ts,vue}"] },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-empty-object-type": "warn",
+      "@typescript-eslint/no-unused-expressions": "warn",
+      "no-undef": "warn",
+      "no-useless-escape": "warn",
+    },
+  },
   ...pluginVue.configs["flat/essential"],
   {
     files: ["**/*.vue"],

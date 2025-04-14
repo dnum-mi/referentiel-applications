@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { Application, Label } from "@/models/Application";
 import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";

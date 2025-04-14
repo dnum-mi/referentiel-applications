@@ -1,4 +1,3 @@
-import { Application } from '@prisma/client';
 import { CreateHostingDto } from 'src/hosting/applications/dto/create-hosting.dto';
 import { UpdateHostingDto } from 'src/hosting/applications/dto/update-hosting.dto';
 import { Hosting } from 'src/hosting/domain/hosting.entity';

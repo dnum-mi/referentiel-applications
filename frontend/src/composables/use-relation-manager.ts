@@ -1,6 +1,5 @@
 import { ref, computed } from "vue";
 import { useRelationStore } from "@/stores/relationStore";
-import Applications from "@/api/application";
 import useToaster from "@/composables/use-toaster";
 import type { Application, Relation } from "@/models/Application";
 import Relations from "@/api/relation";
