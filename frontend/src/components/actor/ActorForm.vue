@@ -51,7 +51,13 @@ const handleSubmit = () => {
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="fr-input-group fr-mt-3w">
-      <SuggestionsInput :searchData="props.actorTypes" v-model:returnData="form.actorTypeId" label="Type d'acteur" />
+      <label for="actorTypeId" class="fr-label">Type d'acteur</label>
+      <select id="actorTypeId" v-model="form.actorTypeId" class="fr-select" required>
+        <option value="" disabled>Sélectionner un type</option>
+        <option v-for="type in props.actorTypes" :key="type.id" :value="type.id">
+          {{ type.label }}
+        </option>
+      </select>
     </div>
 
     <div class="fr-input-group fr-mt-3w">
