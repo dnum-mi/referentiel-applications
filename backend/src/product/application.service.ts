@@ -125,6 +125,10 @@ export class ApplicationService {
     await this.applicationRepository.delete(id);
   }
 
+  public async getMetadata(applicationId: string) {
+    return this.applicationRepository.findLatestMetadata(applicationId);
+  }
+
   private async createApplicationMetadata(ownerId: string) {
     const applicationMetadata = await this.prisma.metadata.create({
       data: {

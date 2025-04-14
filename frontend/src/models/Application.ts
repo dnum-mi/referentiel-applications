@@ -30,6 +30,16 @@ export interface Label {
   metadataId?: string;
   applicationId?: string;
 }
+
+export interface Metadata {
+  id?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdById?: string;
+  applicationId?: string;
+  updatedById?: string;
+}
+
 export interface Compliance {
   id: string;
   type: string;

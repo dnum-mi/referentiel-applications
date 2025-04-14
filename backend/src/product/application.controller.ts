@@ -99,6 +99,19 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.searchApplications(searchParams);
   }
 
+  @Get(':applicationId/metadatas/latest')
+  @ApiOperation({
+    summary: 'Récupérer une metadata spécifique par ID',
+    description: `
+Ce endpoint permet de récupérer les détails complets de la metadata la plus récente d'une application en fonction de son identifiant unique.
+
+Le paramètre **applicationId** doit être fourni dans l'URL.
+    `,
+  })
+  getLatestMetadata(@Param('applicationId') id: string) {
+    return this.applicationService.getMetadata(id);
+  }
+
   @Get('export/excel')
   async exportExcel(@Res() res: Response) {
     const buffer = await this.exportApplicationsUseCase.execute();

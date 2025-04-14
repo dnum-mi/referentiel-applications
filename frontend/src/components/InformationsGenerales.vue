@@ -237,14 +237,8 @@ watch(
                 <h3 class="fr-mb-0">Informations générales</h3>
               </div>
               <div class="fr-col-auto">
-                <DsfrButton
-                  tertiary
-                  size="sm"
-                  class="fr-btn--icon-left fr-icon-edit-line"
-                  label="Modifier"
-                  @click="applicationModal.openModal()"
-                  :disabled="!userPermissions?.includes('write')"
-                />
+                <DsfrButton tertiary size="sm" class="fr-btn--icon-left fr-icon-edit-line" label="Modifier"
+                  @click="applicationModal.openModal()" :disabled="!userPermissions?.includes('write')" />
               </div>
             </div>
 
@@ -257,7 +251,7 @@ watch(
               <div v-if="filteredAltLabels.length > 0">
                 <h4>Libellés Alternatifs (Noms courts)</h4>
                 <p>
-                  {{ filteredAltLabels.map((label) => `${label.value} (${label.shortname || ""})`).join(" ; ") }}
+                  {{filteredAltLabels.map((label) => `${label.value} (${label.shortname || ""})`).join(" ; ")}}
                 </p>
               </div>
 
@@ -288,13 +282,10 @@ watch(
             <h3 class="fr-card__title">Priorité de redémarrage</h3>
             <div class="fr-card__desc">
               <template v-if="application.priorityRestart">
-                <DsfrBadge
-                  :label="getPriorityBadgeType(application.priorityRestart).label"
-                  :type="getPriorityBadgeType(application.priorityRestart).type"
-                  :small="small"
+                <DsfrBadge :label="getPriorityBadgeType(application.priorityRestart).label"
+                  :type="getPriorityBadgeType(application.priorityRestart).type" :small="small"
                   :title="getPriorityBadgeType(application.priorityRestart).tooltip"
-                  :aria-label="`Priorité de redémarrage : ${getPriorityBadgeType(application.priorityRestart).tooltip}`"
-                />
+                  :aria-label="`Priorité de redémarrage : ${getPriorityBadgeType(application.priorityRestart).tooltip}`" />
               </template>
               <template v-else>
                 <p class="fr-text--sm fr-text--italic">Aucune priorité définie.</p>
@@ -312,14 +303,8 @@ watch(
                 <h3 class="fr-card__title">Sites d'hébergement</h3>
               </div>
               <div class="fr-col-auto">
-                <DsfrButton
-                  tertiary
-                  size="sm"
-                  class="fr-btn--icon-left fr-icon-add-line"
-                  label="Ajouter"
-                  @click="isHostingModalOpen = true"
-                  :disabled="!userPermissions?.includes('write')"
-                />
+                <DsfrButton tertiary size="sm" class="fr-btn--icon-left fr-icon-add-line" label="Ajouter"
+                  @click="isHostingModalOpen = true" :disabled="!userPermissions?.includes('write')" />
               </div>
             </div>
             <HostingList :application-id="application.id" @edit="openEditHosting" @delete="openDeleteModal" />
@@ -345,35 +330,17 @@ watch(
     </div>
   </div>
 
-  <HostingModal
-    v-if="isHostingModalOpen"
-    :applicationId="application.id"
-    @hosting-created="handleHostingCreated"
-    @close="isHostingModalOpen = false"
-  />
+  <HostingModal v-if="isHostingModalOpen" :applicationId="application.id" @hosting-created="handleHostingCreated"
+    @close="isHostingModalOpen = false" />
 
-  <HostingModal
-    v-if="hostingToEdit"
-    :applicationId="application.id"
-    :initialHosting="hostingToEdit"
-    @hosting-updated="handleHostingUpdated"
-    @close="hostingToEdit = null"
-  />
-  <DeleteConfirmationModal
-    v-if="isDeleteModalOpen"
-    :opened="isDeleteModalOpen"
-    itemName="l'hébergement"
-    @confirm="confirmDeletionHosting"
-    @cancel="cancelDeletionHosting"
-  />
+  <HostingModal v-if="hostingToEdit" :applicationId="application.id" :initialHosting="hostingToEdit"
+    @hosting-updated="handleHostingUpdated" @close="hostingToEdit = null" />
+  <DeleteConfirmationModal v-if="isDeleteModalOpen" :opened="isDeleteModalOpen" itemName="l'hébergement"
+    @confirm="confirmDeletionHosting" @cancel="cancelDeletionHosting" />
 
   <DsfrModal size="lg" :opened="isModalOpened" title="Modifier l'application" @close="applicationModal.closeModal">
-    <ApplicationForm
-      v-bind="{ initialData: application, labels }"
-      :is-submitting="isSubmitting"
-      @submit="updateApplication"
-      @cancel="applicationModal.closeModal"
-    />
+    <ApplicationForm v-bind="{ initialData: application, labels }" :is-submitting="isSubmitting"
+      @submit="updateApplication" @cancel="applicationModal.closeModal" />
   </DsfrModal>
 </template>
 

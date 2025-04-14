@@ -169,6 +169,21 @@ export class ApplicationRepository implements IApplicationRepository {
     return results.map((r) => r.application);
   }
 
+  async findLatestMetadata(applicationId: string) {
+    return this.prisma.metadata.findFirst({
+      where: {
+        applications: {
+          some: {
+            id: applicationId,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+  }
+
   public async delete(id: string): Promise<void> {
     await this.prisma.application.delete({
       where: { id },
