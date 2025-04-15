@@ -18,7 +18,11 @@ export class ActorTypeRepository implements IActorTypeRepository {
   }
 
   public async findAll() {
-    return await this.prisma.actorType.findMany();
+    return await this.prisma.actorType.findMany({
+      orderBy: {
+        label: 'asc',
+      },
+    });
   }
 
   public async findById(id: string) {
