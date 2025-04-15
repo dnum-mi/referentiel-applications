@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.12.0...v1.12.1) (2025-04-15)
+
+
+### Bug Fixes
+
+* **front:** :bug: fix app version env variable name ([#603](https://github.com/dnum-mi/referentiel-applications/issues/603)) ([78f2895](https://github.com/dnum-mi/referentiel-applications/commit/78f289515d9ad8e1056e86f24aa655f30da0812f))
+* **front:** :bug: fix delete-tag-input-when-empty ([c594e75](https://github.com/dnum-mi/referentiel-applications/commit/c594e759ef6364c41537e70a0e7a9e07ee559e1e))
+
 ## [1.12.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.11.0...v1.12.0) (2025-04-14)
 
 
