@@ -22,10 +22,15 @@ export class ApplicationSearchRepository
       sortBy = 'label',
       order = 'asc',
     } = dto;
+
+    const safeOrder = order === 'desc' ? 'desc' : 'asc';
+
     const filters = [
       {
+        key: 'label',
         enabled: !!dto.label,
-        query: Prisma.sql`
+        query: () =>
+          Prisma.sql`
           SELECT a.id
           FROM public.applications a
           WHERE EXISTS (
@@ -37,8 +42,10 @@ export class ApplicationSearchRepository
         `,
       },
       {
+        key: 'hosting',
         enabled: !!dto.hostingSite || !!dto.hostingPlatform,
-        query: Prisma.sql`
+        query: () =>
+          Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN public."Hosting" h ON h."applicationId" = a.id
@@ -47,8 +54,10 @@ export class ApplicationSearchRepository
         `,
       },
       {
+        key: 'organizationLabel',
         enabled: !!dto.organizationLabel,
-        query: Prisma.sql`
+        query: () =>
+          Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN public.actors act ON act."applicationId" = a.id
@@ -57,8 +66,10 @@ export class ApplicationSearchRepository
         `,
       },
       {
+        key: 'actorType',
         enabled: !!dto.actorType,
-        query: Prisma.sql`
+        query: () =>
+          Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN public.actors act ON act."applicationId" = a.id
@@ -67,8 +78,10 @@ export class ApplicationSearchRepository
         `,
       },
       {
+        key: 'link',
         enabled: !!dto.link,
-        query: Prisma.sql`
+        query: () =>
+          Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
           JOIN "ExternalRessource" er ON er."applicationId" = a.id
@@ -81,7 +94,7 @@ export class ApplicationSearchRepository
     for (const filter of filters) {
       if (filter.enabled) {
         const result = await this.prisma.$queryRaw<Array<{ id: string }>>(
-          filter.query,
+          filter.query(),
         );
         filteredIdsSets.push(result.map((r) => r.id));
       }
@@ -107,24 +120,67 @@ export class ApplicationSearchRepository
     };
 
     const total = await this.prisma.application.count({ where });
-    const safeOrder = order === 'desc' ? 'desc' : 'asc';
-    const orderBy: Prisma.ApplicationOrderByWithRelationInput =
-      sortBy === 'hostingSite'
-        ? { label: safeOrder }
-        : ({
-            [sortBy]: safeOrder,
-          } as Prisma.ApplicationOrderByWithRelationInput);
+
+    if (sortBy === 'hostingSite') {
+      const orderedIdsResult = await this.prisma.$queryRaw<
+        Array<{ id: string }>
+      >(
+        Prisma.sql`
+          SELECT a.id
+          FROM public.applications a
+          LEFT JOIN LATERAL (
+            SELECT h.site
+            FROM public."Hosting" h
+            WHERE h."applicationId" = a.id
+            ORDER BY h.site ASC
+            LIMIT 1
+          ) first_hosting ON true
+          ${finalIds ? Prisma.sql`WHERE a.id IN (${Prisma.join(finalIds)})` : Prisma.empty}
+          ORDER BY first_hosting.site ${Prisma.raw(safeOrder)}
+          OFFSET ${page * limit}
+          LIMIT ${limit}
+        `,
+      );
+      const orderedIds = orderedIdsResult.map((r) => r.id);
+
+      const results = await this.prisma.application.findMany({
+        where: { id: { in: orderedIds } },
+        include: {
+          hostings: true,
+          actors: {
+            include: {
+              organization: {
+                select: { id: true, label: true },
+              },
+            },
+          },
+        },
+      });
+
+      results.sort(
+        (a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id),
+      );
+
+      return { results, total };
+    }
+
+    const sortableFields = ['label', 'shortName', 'priorityRestart'];
+    const safeSortBy = sortableFields.includes(sortBy) ? sortBy : 'label';
 
     const results = await this.prisma.application.findMany({
       where,
-      orderBy,
+      orderBy: {
+        [safeSortBy]: safeOrder,
+      },
       skip: page * limit,
       take: limit,
       include: {
         hostings: true,
         actors: {
           include: {
-            organization: { select: { id: true, label: true } },
+            organization: {
+              select: { id: true, label: true },
+            },
           },
         },
       },
