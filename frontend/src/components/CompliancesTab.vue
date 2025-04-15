@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
-import Applications from "@/api/application";
+import { ref, watch, onMounted } from "vue";
 import type { Compliance } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
 import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-dictionary";
 import ComplianceForm from "./form/ComplianceForm.vue";
 import useModal from "@/composables/use-modal";
+import CompliancesApi from "@/api/compliance";
 
 const toaster = useToaster();
 
@@ -19,7 +19,7 @@ const props = defineProps({
 
 const emit = defineEmits(["update:application"]);
 
-const localCompliances = ref<Compliance[]>(Array.isArray(props.application.compliances) ? [...props.application.compliances] : []);
+const localCompliances = ref<Compliance[]>([]);
 const selectedComplianceIds = ref<string[]>([]);
 
 const currentPage = ref(0);
@@ -28,58 +28,38 @@ const rows = ref<(string | { component: string; [k: string]: unknown })[][]>([])
 
 const complianceModal = useModal();
 const showDeleteConfirmation = ref(false);
-
 const loading = ref(false);
 const isSubmitting = ref(false);
 
 function getTypeLabel(value: string): string {
   return value ? complianceTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
 }
+
 function getStatusLabel(value: string): string {
   return value ? complianceStatusesDict[value] || "Statut inconnu" : "Aucun Statut sélectionné";
 }
 
-const handleSaveCompliances = (newCompliance) => {
-  const index = localCompliances.value.findIndex((compliance) => compliance.id === newCompliance.id);
-  if (index !== -1) {
-    localCompliances.value[index] = { ...localCompliances.value[index], ...newCompliance };
-  } else {
-    localCompliances.value.push({ ...newCompliance });
-  }
-  saveAll();
-};
-
-async function saveAll() {
-  for (const compliance of localCompliances.value) {
-    if (!compliance.name.trim()) {
-      toaster.addErrorMessage("Le nom de la conformité est requis.");
-      return;
-    }
-  }
-
-  const existingIds = new Set((props.application.compliances || []).map((c: Compliance) => c.id));
-  const compliancesToSave = localCompliances.value.map((compliance) =>
-    existingIds.has(compliance.id) ? compliance : { ...compliance, id: compliance.id ?? undefined },
-  );
-  loading.value = true;
+const handleSaveCompliances = async (newCompliance) => {
+  isSubmitting.value = true;
   try {
-    complianceModal.closeModal();
+    if (newCompliance.id) {
+      // Update existing compliance
+      await CompliancesApi.updateCompliance(props.application.id, newCompliance.id, newCompliance);
+    } else {
+      // Create new compliance
+      await CompliancesApi.createCompliance(props.application.id, newCompliance);
+    }
 
-    await Applications.patchApplication({
-      ...props.application,
-      compliances: compliancesToSave,
-    });
-    emit("update:application", {
-      ...props.application,
-      compliances: compliancesToSave,
-    });
-    toaster.addSuccessMessage("Conformités sauvegardées avec succès !");
+    // Re-fetch all compliances to get the latest data
+    await fetchCompliances();
+    complianceModal.closeModal();
+    toaster.addSuccessMessage("Conformité sauvegardée avec succès !");
   } catch (error) {
-    toaster.addErrorMessage("Erreur lors de la sauvegarde des conformités.");
+    toaster.addErrorMessage("Erreur lors de la sauvegarde de la conformité.");
   } finally {
-    loading.value = false;
+    isSubmitting.value = false;
   }
-}
+};
 
 function removeSelectedCompliances() {
   if (selectedComplianceIds.value.length === 0) {
@@ -89,52 +69,69 @@ function removeSelectedCompliances() {
   showDeleteConfirmation.value = true;
 }
 
-function confirmDelete() {
-  localCompliances.value = localCompliances.value.filter((Compliance) => !selectedComplianceIds.value.includes(Compliance.id));
-  selectedComplianceIds.value = [];
-  saveAll();
-  showDeleteConfirmation.value = false;
+async function confirmDelete() {
+  loading.value = true;
+  try {
+    for (const id of selectedComplianceIds.value) {
+      await CompliancesApi.deleteCompliance(props.application.id, id);
+    }
+
+    localCompliances.value = localCompliances.value.filter((compliance) => !selectedComplianceIds.value.includes(compliance.id));
+
+    selectedComplianceIds.value = [];
+    updateRows();
+    showDeleteConfirmation.value = false;
+    toaster.addSuccessMessage("Conformités supprimées avec succès !");
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors de la suppression des conformités.");
+  } finally {
+    loading.value = false;
+  }
 }
 
 function cancelDelete() {
   showDeleteConfirmation.value = false;
 }
 
-rows.value = localCompliances.value.map((compliance: any) => [
-  compliance.id,
-  compliance.name,
-  getTypeLabel(compliance.type),
-  getStatusLabel(compliance.status),
-  {
-    component: "DsfrButton",
-    label: "Modifier",
-    onClick: () => complianceModal.openModal(compliance),
-  },
-]);
+function updateRows() {
+  rows.value = localCompliances.value.map((compliance) => [
+    compliance.id,
+    compliance.name,
+    getTypeLabel(compliance.type),
+    getStatusLabel(compliance.status),
+    {
+      component: "DsfrButton",
+      label: "Modifier",
+      onClick: () => complianceModal.openModal(compliance),
+    },
+  ]);
+}
 
+const fetchCompliances = async () => {
+  loading.value = true;
+  try {
+    const compliances = await CompliancesApi.getCompliances(props.application.id);
+    localCompliances.value = compliances;
+    updateRows();
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors du chargement des conformités.");
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchCompliances();
+});
+
+// Watch for application change (e.g., when switching between applications)
 watch(
-  () => props.application.compliances,
-  (newVal) => {
-    localCompliances.value = Array.isArray(newVal) ? [...newVal] : [];
+  () => props.application.id,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      fetchCompliances();
+    }
   },
-  { deep: true, immediate: true },
-);
-watch(
-  localCompliances,
-  () => {
-    rows.value = localCompliances.value.map((compliance) => [
-      compliance.id,
-      compliance.name,
-      getTypeLabel(compliance.type),
-      getStatusLabel(compliance.status),
-      {
-        component: "DsfrButton",
-        label: "Modifier",
-        onClick: () => complianceModal.openModal(compliance),
-      },
-    ]);
-  },
-  { deep: true },
 );
 </script>
 

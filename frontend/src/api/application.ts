@@ -56,19 +56,6 @@ const Applications = {
       purposes: app.purposes,
       tags: app.tags,
       priorityRestart: app.priorityRestart || null,
-      compliances: app.compliances
-        ? app.compliances.map((compliance) => ({
-            id: compliance.id,
-            type: compliance.type,
-            name: compliance.name,
-            status: compliance.status,
-            validityStart: compliance.validityStart,
-            validityEnd: compliance.validityEnd,
-            scoreValue: compliance.scoreValue,
-            scoreUnit: compliance.scoreUnit,
-            notes: compliance.notes,
-          }))
-        : [],
     };
 
     const response = await axios.patch<Application>(`/applications/${app.id}`, payload);
