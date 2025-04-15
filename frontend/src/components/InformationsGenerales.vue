@@ -219,7 +219,7 @@ watch(
               </div>
 
               <h4>Description</h4>
-              <p>{{ application.description }}</p>
+              <pre>{{ application.description }}</pre>
 
               <h4 class="fr-mt-3w">Objectifs</h4>
               <ul v-if="application.purposes?.length">
