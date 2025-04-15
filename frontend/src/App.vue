@@ -25,7 +25,7 @@ const authenticated = ref(authentication.authenticated);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
-const appVersion = import.meta.env.VITE_RDA_KEYCLOAK_AUTH_SERVER_URL ?? "VITE_RDA_KEYCLOAK_AUTH_SERVER_URL";
+const appVersion = import.meta.env.VITE_RDA_APP_VERSION ?? "VITE_RDA_APP_VERSION";
 
 const versionLink = computed(() => ({
   label: `📦 ${appVersion}`,
