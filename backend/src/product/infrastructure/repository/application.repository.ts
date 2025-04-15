@@ -172,11 +172,50 @@ export class ApplicationRepository implements IApplicationRepository {
   async findLatestMetadata(applicationId: string) {
     return this.prisma.metadata.findFirst({
       where: {
-        applications: {
-          some: {
-            id: applicationId,
+        OR: [
+          {
+            applications: {
+              some: {
+                id: applicationId,
+              },
+            },
           },
-        },
+          {
+            actors: {
+              some: {
+                applicationId,
+              },
+            },
+          },
+          {
+            events: {
+              some: {
+                applicationId,
+              },
+            },
+          },
+          {
+            labels: {
+              some: {
+                applicationId,
+              },
+            },
+          },
+          {
+            compliances: {
+              some: {
+                applicationId,
+              },
+            },
+          },
+          {
+            externalRessources: {
+              some: {
+                applicationId,
+              },
+            },
+          },
+        ],
       },
       orderBy: {
         updatedAt: 'desc',

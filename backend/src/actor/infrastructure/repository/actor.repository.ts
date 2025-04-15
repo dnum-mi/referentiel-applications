@@ -8,7 +8,7 @@ import { Prisma } from '@prisma/client';
 export class ActorRepository implements IActorRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(actor: CreateActorDto) {
+  public async create(actor: CreateActorDto, ownerId: string) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
     const data: Prisma.ActorCreateInput = {
@@ -28,6 +28,12 @@ export class ActorRepository implements IActorRepository {
           connect: { id: actorTypeId },
         },
       }),
+      metadata: {
+        create: {
+          createdById: ownerId,
+          updatedById: ownerId,
+        },
+      },
     };
 
     return await this.prisma.actor.create({ data });
@@ -53,6 +59,7 @@ export class ActorRepository implements IActorRepository {
   public async update(
     where: Prisma.ActorWhereUniqueInput,
     actor: UpdateActorDto,
+    ownerId: string,
   ) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
@@ -74,6 +81,35 @@ export class ActorRepository implements IActorRepository {
         },
       }),
     };
+
+    const existingActor = await this.prisma.actor.findUnique({
+      where,
+      include: { metadata: true },
+    });
+
+    let metadataId = existingActor?.metadata?.id;
+
+    if (metadataId) {
+      await this.prisma.metadata.update({
+        where: { id: metadataId },
+        data: {
+          updatedById: ownerId,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      const newMetadata = await this.prisma.metadata.create({
+        data: {
+          createdById: ownerId,
+          updatedById: ownerId,
+        },
+      });
+      metadataId = newMetadata.id;
+
+      data.metadata = {
+        connect: { id: metadataId },
+      };
+    }
 
     return await this.prisma.actor.update({ where, data });
   }

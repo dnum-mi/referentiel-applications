@@ -50,7 +50,7 @@ Informations requises :
       action: 'create',
     });
 
-    return await this.actorService.create(createActorDto);
+    return await this.actorService.create(createActorDto, req.user.keycloakId);
   }
 
   @Get(':id')
@@ -79,6 +79,7 @@ Informations requises :
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
   public async updated(
+    @Request() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() actorToUpdate: UpdateActorDto,
@@ -92,6 +93,7 @@ Informations requises :
     return this.actorService.update({
       where: { id: id },
       data: actorToUpdate,
+      ownerId: request.user.keycloakId,
     });
   }
 

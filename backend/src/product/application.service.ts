@@ -52,8 +52,9 @@ export class ApplicationService {
   public async update(params: {
     where: Prisma.ApplicationWhereUniqueInput;
     data: PatchApplicationDto;
+    ownerId: string;
   }): Promise<Application> {
-    const { where, data } = params;
+    const { where, data, ownerId } = params;
     const applicationUpdates: Prisma.ApplicationUpdateInput = {};
 
     this.applyScalarAndSimpleRelationUpdates(data, applicationUpdates);
@@ -64,6 +65,16 @@ export class ApplicationService {
           where,
           data: applicationUpdates,
         });
+
+        if (app.metadataId) {
+          await tx.metadata.update({
+            where: { id: app.metadataId },
+            data: {
+              updatedById: ownerId,
+              updatedAt: new Date(),
+            },
+          });
+        }
 
         if (data.label !== undefined || data.shortName !== undefined) {
           await this.ensureLabelExists(tx, app);

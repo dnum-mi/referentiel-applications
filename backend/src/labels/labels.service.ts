@@ -5,8 +5,8 @@ import { Label } from './entities/label.entity';
 
 @Injectable()
 export class LabelsService extends BaseService<Label> {
-  constructor(private readonly prisma: PrismaService) {
-    super(prisma.label);
+  constructor(protected readonly prisma: PrismaService) {
+    super(prisma.label, prisma);
   }
 
   /**

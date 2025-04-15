@@ -1,8 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class BaseService<T> {
-  constructor(private readonly model: any) {}
+  constructor(
+    private readonly model: any,
+    protected readonly prisma: PrismaService,
+  ) {}
 
   async findOne(id: string): Promise<T> {
     const object = await this.model.findUnique({ where: { id } });
@@ -20,8 +24,46 @@ export class BaseService<T> {
     return this.model.create({ data: createDto });
   }
 
-  async update(id: string, data: any): Promise<T> {
-    return this.model.update({ where: { id }, data });
+  async update(id: string, data: any, ownerId: string): Promise<T> {
+    const updated = await this.model.update({
+      where: { id },
+      data,
+      include: { metadata: true },
+    });
+
+    let metadataId = updated.metadata?.id;
+
+    if (metadataId) {
+      await this.prisma.metadata.update({
+        where: { id: metadataId },
+        data: {
+          updatedById: ownerId,
+          updatedAt: new Date(),
+        },
+      });
+    } else {
+      const newMetadata = await this.prisma.metadata.create({
+        data: {
+          createdById: ownerId,
+          updatedById: ownerId,
+          createdAt: new Date(),
+        },
+      });
+
+      metadataId = newMetadata.id;
+
+      await this.model.update({
+        where: { id },
+        data: {
+          metadata: {
+            connect: { id: metadataId },
+          },
+        },
+      });
+    }
+
+    const { metadata, ...rest } = updated;
+    return rest as T;
   }
 
   async delete(id: string): Promise<T> {

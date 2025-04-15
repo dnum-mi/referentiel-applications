@@ -7,8 +7,8 @@ import { Prisma, Actor } from '@prisma/client';
 export class ActorService {
   constructor(private actorRepository: ActorRepository) {}
 
-  public async create(createActor: CreateActorDto) {
-    return await this.actorRepository.create(createActor);
+  public async create(createActor: CreateActorDto, ownerId: string) {
+    return await this.actorRepository.create(createActor, ownerId);
   }
 
   public async findOne(id: string) {
@@ -26,11 +26,12 @@ export class ActorService {
   public async update(params: {
     where: Prisma.ActorWhereUniqueInput;
     data: UpdateActorDto;
+    ownerId: string;
   }): Promise<Actor> {
-    const { where, data } = params;
+    const { where, data, ownerId } = params;
 
     await this.findOne(where.id);
-    return await this.actorRepository.update(where, data);
+    return await this.actorRepository.update(where, data, ownerId);
   }
 
   public async delete(id: string) {

@@ -87,11 +87,12 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @ApiBody({ type: CreateLabelDto })
   @ApiResponse({ status: 200, type: Label })
   update(
+    @Req() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    return this.service.update(id, updateLabelDto);
+    return this.service.update(id, updateLabelDto, request.user.keycloakId);
   }
 
   @Delete(':id')

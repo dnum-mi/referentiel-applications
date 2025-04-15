@@ -6,6 +6,6 @@ import { Metadata } from '@prisma/client';
 @Injectable()
 export class MetadatasService extends BaseService<Metadata> {
   constructor(prisma: PrismaService) {
-    super(prisma.metadata);
+    super(prisma.metadata, prisma);
   }
 }

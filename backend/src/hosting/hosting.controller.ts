@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
 } from '@nestjs/common';
 import { HostingService } from './hosting.service';
 import { CreateHostingDto } from './applications/dto/create-hosting.dto';
@@ -21,11 +22,15 @@ export class HostingsController {
   @ApiOperation({ summary: 'Créer un hébergement pour une application' })
   @ApiResponse({ status: 201, description: 'Hébergement créé' })
   create(
+    @Req() req,
     @Param('applicationId') applicationId: string,
     @Body() dto: CreateHostingDto,
   ) {
     // Ajoute l'ID de l'application provenant de l'URL dans le DTO
-    return this.hostingService.create({ ...dto, applicationId });
+    return this.hostingService.create(
+      { ...dto, applicationId },
+      req.user.keycloakId,
+    );
   }
 
   @Get()
@@ -51,8 +56,8 @@ export class HostingsController {
     summary: 'Mettre à jour un hébergement pour une application',
   })
   @ApiResponse({ status: 200, description: 'Hébergement mis à jour' })
-  update(@Param('id') id: string, @Body() dto: UpdateHostingDto) {
-    return this.hostingService.update(id, dto);
+  update(@Req() req, @Param('id') id: string, @Body() dto: UpdateHostingDto) {
+    return this.hostingService.update(id, dto, req.user.keycloakId);
   }
 
   @Delete(':id')

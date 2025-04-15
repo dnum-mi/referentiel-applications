@@ -21,9 +21,11 @@ model Actor {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   applicationId  String?
-  application    Application?  @relation("ApplicationActors", fields: [applicationId], references: [id], onDelete: Cascade)
+  application Application? @relation("ApplicationActors", fields: [applicationId], references: [id], onDelete: Cascade)
   actorTypeId    String?
-  actorType      ActorType?    @relation(fields: [actorTypeId], references: [id])
+  actorType ActorType? @relation(fields: [actorTypeId], references: [id])
+  metadataId     String?
+  metadata       Metadata?    @relation("ActorMetadata", fields: [metadataId], references: [id])
 
   @@index([applicationId, actorTypeId])
   @@map("actors")

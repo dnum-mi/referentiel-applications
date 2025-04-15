@@ -161,6 +161,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     `,
   })
   async update(
+    @Request() req,
     @Param('id') id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
   ): Promise<PatchApplicationDto> {
@@ -172,6 +173,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     return this.applicationService.update({
       where: { id: id },
       data: applicationToUpdate,
+      ownerId: req.user.keycloakId,
     });
   }
 

@@ -11,8 +11,8 @@ export class HostingService {
     private readonly repository: IHostingRepository,
   ) {}
 
-  create(dto: CreateHostingDto) {
-    return this.repository.create(dto);
+  create(dto: CreateHostingDto, ownerId: string) {
+    return this.repository.create(dto, ownerId);
   }
 
   findAll() {
@@ -27,8 +27,8 @@ export class HostingService {
     return this.repository.findDistinctSites();
   }
 
-  update(id: string, dto: UpdateHostingDto) {
-    return this.repository.update(id, dto);
+  update(id: string, dto: UpdateHostingDto, ownerId: string) {
+    return this.repository.update(id, dto, ownerId);
   }
 
   remove(id: string) {

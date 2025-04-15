@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Delete,
+  Req,
 } from '@nestjs/common';
 import { RelationService } from './relation.service';
 import { RelationApplicationDto } from './application/dto/relation-application.dto';
@@ -19,8 +20,11 @@ export class RelationController {
 
   @Post()
   @ApiOperation({ summary: 'Créer une nouvelle relation' })
-  async create(@Body() dto: RelationApplicationDto): Promise<Relation> {
-    return this.relationService.create(dto);
+  async create(
+    @Body() dto: RelationApplicationDto,
+    @Req() request,
+  ): Promise<Relation> {
+    return this.relationService.create(dto, request.user.keycloakId);
   }
 
   @Get()
@@ -45,10 +49,11 @@ export class RelationController {
     description: 'Identifiant unique de la relation à mettre à jour',
   })
   async update(
+    @Req() request,
     @Param('id') id: string,
     @Body() dto: RelationApplicationDto,
   ): Promise<Relation> {
-    return this.relationService.update(id, dto);
+    return this.relationService.update(id, dto, request.user.keycloakId);
   }
 
   @Delete(':id')

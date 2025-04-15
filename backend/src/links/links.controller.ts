@@ -28,6 +28,12 @@ export class LinksController {
   ) {
     return this.service.create({
       ...createLinkDto,
+      metadata: {
+        create: {
+          createdById: request.user.keycloakId,
+          updatedById: request.user.keycloakId,
+        },
+      },
       application: {
         connect: {
           id: applicationId,
@@ -50,11 +56,12 @@ export class LinksController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the link to update' })
   update(
+    @Req() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateLinkDto: CreateLinkDto,
   ) {
-    return this.service.update(id, updateLinkDto);
+    return this.service.update(id, updateLinkDto, request.user.keycloakId);
   }
 
   @Delete(':id')

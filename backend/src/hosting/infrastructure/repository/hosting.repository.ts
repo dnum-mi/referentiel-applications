@@ -7,12 +7,12 @@ import { UpdateHostingDto } from 'src/hosting/applications/dto/update-hosting.dt
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
-  async create(data: CreateHostingDto): Promise<Hosting> {
+  async create(data: CreateHostingDto, ownerId: string): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
-    return this.prisma.hosting.create({
+    const createdHosting = await this.prisma.hosting.create({
       data: {
         ...rest,
         application: { connect: { id: applicationId } },
@@ -20,7 +20,28 @@ export class HostingRepository implements IHostingRepository {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
       },
+      include: {
+        application: {
+          select: {
+            metadata: {
+              select: { id: true },
+            },
+          },
+        },
+      },
     });
+
+    if (createdHosting?.application?.metadata?.id) {
+      await this.prisma.metadata.update({
+        where: { id: createdHosting.application.metadata.id },
+        data: {
+          updatedById: ownerId,
+          updatedAt: new Date(),
+        },
+      });
+    }
+
+    return createdHosting;
   }
 
   async findAll(): Promise<Hosting[]> {
@@ -36,10 +57,10 @@ export class HostingRepository implements IHostingRepository {
     });
   }
 
-  async update(id: string, data: UpdateHostingDto): Promise<Hosting> {
+  async update(id: string, data: UpdateHostingDto, ownerId: string): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
-    return this.prisma.hosting.update({
+    const updatedHosting = await this.prisma.hosting.update({
       where: { id },
       data: {
         ...rest,
@@ -50,7 +71,28 @@ export class HostingRepository implements IHostingRepository {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
       },
+      include: {
+        application: {
+          select: {
+            metadata: {
+              select: { id: true },
+            },
+          },
+        },
+      },
     });
+
+    if (updatedHosting.application?.metadata?.id) {
+      await this.prisma.metadata.update({
+        where: { id: updatedHosting.application.metadata.id },
+        data: {
+          updatedById: ownerId,
+          updatedAt: new Date(),
+        },
+      });
+    }
+
+    return updatedHosting;
   }
 
   async delete(id: string): Promise<void> {

@@ -7,8 +7,8 @@ import { AnomalyNotification } from './entities/anomaly-notification.entity';
 
 @Injectable()
 export class AnomalyNotificationService extends BaseService<AnomalyNotification> {
-  constructor(private readonly prisma: PrismaService) {
-    super(prisma.anomalyNotification);
+  constructor(protected readonly prisma: PrismaService) {
+    super(prisma.anomalyNotification, prisma);
   }
   /**
    * Crée une nouvelle notification d'anomalie.

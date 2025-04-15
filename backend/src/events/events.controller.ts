@@ -89,12 +89,13 @@ export class EventsController {
   @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiBody({ type: CreateEventDto })
   @ApiResponse({ status: 200, type: Event })
-  update(
+  async update(
+    @Req() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateEventDto: CreateEventDto,
   ) {
-    return this.service.update(id, updateEventDto);
+    return this.service.update(id, updateEventDto, request.user.keycloakId);
   }
 
   @Delete(':id')
