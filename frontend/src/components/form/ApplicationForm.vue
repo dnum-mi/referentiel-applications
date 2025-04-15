@@ -92,9 +92,6 @@ const addPurpose = () => {
 
 const removePurpose = (index: number) => {
   form.value.purposes.splice(index, 1);
-  if (form.value.purposes.length === 0) {
-    form.value.purposes.push("");
-  }
 };
 
 const addTag = () => {
@@ -111,9 +108,6 @@ const validateAllTags = (): boolean => {
 
 const removeTag = (index: number) => {
   form.value.tags.splice(index, 1);
-  if (form.value.tags.length === 0) {
-    form.value.tags.push("");
-  }
 };
 
 const addPopulation = () => {
