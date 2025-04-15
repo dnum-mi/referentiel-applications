@@ -1,9 +1,9 @@
-FROM node:20-slim AS build
+FROM node:23-slim AS build
 
 WORKDIR /app
 
 ARG APP_VERSION
-ENV VITE_APP_VERSION=$APP_VERSION
+ENV VITE_RDA_APP_VERSION=$APP_VERSION
 
 RUN npm install -g pnpm
 

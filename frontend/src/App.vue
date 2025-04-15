@@ -25,11 +25,11 @@ const authenticated = ref(authentication.authenticated);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
-const appVersion = import.meta.env.VITE_APP_VERSION;
+const appVersion = import.meta.env.VITE_RDA_KEYCLOAK_AUTH_SERVER_URL ?? "VITE_RDA_KEYCLOAK_AUTH_SERVER_URL";
 
 const versionLink = computed(() => ({
   label: `📦 ${appVersion}`,
-  href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/v${appVersion}`,
+  href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion}`,
 }));
 
 interface QuickLink {
