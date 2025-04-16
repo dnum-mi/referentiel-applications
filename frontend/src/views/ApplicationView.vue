@@ -63,14 +63,13 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
     <SidebarFilters />
 
     <main class="main-content">
-      <CreateApplication />
-
       <div v-if="showLoader" class="loader">
         <AppLoader />
       </div>
 
-      <div class="view-toggle">
+      <div class="toggle-and-create-container">
         <DsfrToggleSwitch v-model="isMobile" active-text="Mode Tuiles" inactive-text="Mode Tableau" />
+        <CreateApplication />
       </div>
 
       <ApplicationTableView v-if="displayMode === 'table'" v-model:sortedBy="currentSortedColumn" />
@@ -94,7 +93,7 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
   justify-content: center;
   margin-top: 3rem;
 }
-.view-toggle {
+.toggle-and-create-container {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 1.5rem;
