@@ -39,7 +39,7 @@ jobs:
         run: |
           echo "${{ steps.release.outputs }}"
           echo "${{ toJson(steps.release.outputs) }}"
-          export BRANCH=$(jq -r '.headBranchName' <<<'${{ steps.release.outputs.pr }}')
+          export BRANCH=$(jq -r '.headBranchName' <<<'release-please--branches--main--components--referentiel-applications')
           git fetch
           git checkout "$BRANCH"
           VERSION=$(jq -r '.version' package.json)
