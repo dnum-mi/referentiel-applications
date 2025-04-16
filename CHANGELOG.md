@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.13.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.12.1...v1.13.0) (2025-04-16)
+
+
+### Features
+
+* :lipstick: add preformatted description and sorted actor list ([#605](https://github.com/dnum-mi/referentiel-applications/issues/605)) ([efccad5](https://github.com/dnum-mi/referentiel-applications/commit/efccad5089e3b2ba3ca055a36d30cce73edaff6e))
+
+
+### Bug Fixes
+
+* **api:** :bug: fix filter query in search endpoint ([cfdc5d4](https://github.com/dnum-mi/referentiel-applications/commit/cfdc5d42dec7b1814dc45b611d7c34fcadc92948))
+* **front:** :bug: fix-version-in-footer ([00bb6f8](https://github.com/dnum-mi/referentiel-applications/commit/00bb6f89e71502a4a880aeb67cf877144a463a0b))
+
 ## [1.12.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.12.0...v1.12.1) (2025-04-15)
 
 
