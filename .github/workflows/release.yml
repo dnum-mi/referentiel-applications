@@ -33,22 +33,3 @@ jobs:
         with:
           target-branch: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Edit packages versions
-        if: ${{ ! steps.release.outputs.release_created }}
-        run: |
-          echo "${{ steps.release.outputs }}"
-          echo "${{ toJson(steps.release.outputs) }}"
-          export BRANCH=$(jq -r '.headBranchName' <<<'{"headBranchName": "release-please--branches--main--components--referentiel-applications"}')
-          git fetch
-          git checkout "$BRANCH"
-          VERSION=$(jq -r '.version' package.json)
-          yq e -i ".version |= \"$VERSION\"" ./frontend/package.json
-          yq e -i ".version |= \"$VERSION\"" ./backend/package.json
-          git add .
-          # Emulate the author of the existing commit (the bot).
-          git config user.email "$(git log -n 1 --format='%ae')"
-          git config user.name "$(git log -n 1 --format='%an')"
-          # Update the PR.
-          git commit --amend --no-edit
-          git push -f
