@@ -1,6 +1,6 @@
 {
   "name": "referentiel-applications",
-  "version": "1.12.1",
+  "version": "1.13.0",
   "type": "module",
   "scripts": {
     "format": "prettier . --write",
