@@ -2,8 +2,8 @@ FROM node:23-slim AS build
 
 WORKDIR /app
 
-ARG APP_VERSION
-ENV VITE_RDA_APP_VERSION=$APP_VERSION
+RUN apt-get update && apt-get install -y jq
+RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
 
 RUN npm install -g pnpm
 

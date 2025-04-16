@@ -2,6 +2,9 @@ FROM node:22
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y jq
+RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
+
 COPY package.json pnpm-lock.yaml ./
 
 RUN npm install -g pnpm
