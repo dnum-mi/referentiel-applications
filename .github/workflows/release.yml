@@ -33,10 +33,13 @@ jobs:
         with:
           target-branch: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Edit packages versions
         if: ${{ ! steps.release.outputs.release_created }}
         run: |
-          export BRANCH=$(jq -r '.headBranchName' <<< '${{ steps.release.outputs.pr }}')
+          echo "${{ steps.release.outputs }}"
+          echo "${{ toJson(steps.release.outputs) }}"
+          export BRANCH=$(jq -r '.headBranchName' <<<'${{ steps.release.outputs.pr }}')
           git fetch
           git checkout "$BRANCH"
           VERSION=$(jq -r '.version' package.json)
