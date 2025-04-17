@@ -25,22 +25,10 @@ export const applicationMap = (
       priorityRestart: createApplicationDto.priorityRestart || null,
       metadata: { connect: { id: applicationMetadataId } },
       owner: { connect: { keycloakId: ownerId } },
-      compliances: {
-        create: createApplicationDto.compliances.map((compliance) => ({
-          ...compliance,
-          validityStart: compliance.validityStart
-            ? new Date(compliance.validityStart)
-            : undefined,
-          validityEnd: compliance.validityEnd
-            ? new Date(compliance.validityEnd)
-            : undefined,
-        })),
-      },
     },
     include: {
       labels: true,
       metadata: true,
-      compliances: true,
     },
   };
 };

@@ -28,6 +28,7 @@ import { LabelsModule } from './labels/labels.module';
 import { ApplicationSearchModule } from './search/search.module';
 import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './common/guards/permissions.guard';
+import { CompliancesModule } from './compliances/compliances.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
     MetadatasModule,
     LinksModule,
     LabelsModule,
+    CompliancesModule,
   ],
   controllers: [AppController],
   providers: [
