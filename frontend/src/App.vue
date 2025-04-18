@@ -56,6 +56,12 @@ interface QuickLink {
       { label: "Liste des applications", to: { name: routeNames.SEARCHAPP } },
       { label: "Signalements", to: { name: routeNames.ISSUELIST } },
       {
+        label: "Mon profil",
+        to: { name: routeNames.PROFILE },
+        icon: "ri-user-line",
+        iconAttrs: { title: "Accéder à mon profil" },
+      },
+      {
         label: "Déconnexion",
         to: authentication.createLogoutUrl(),
         icon: "ri-logout-box-r-line",
