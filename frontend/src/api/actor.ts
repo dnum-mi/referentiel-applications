@@ -2,48 +2,24 @@ import type { Actor } from "@/models/Actor";
 import axios from "axios";
 
 const Actors = {
-  async create(actor: Actor, applicationId: string): Promise<Actor> {
-    const payload = {
-      role: actor.role,
-      email: actor.email,
-      firstname: actor.firstname,
-      lastname: actor.lastname,
-      actorTypeId: actor.actorTypeId,
-      organizationId: actor.organizationId,
-      applicationId: applicationId,
-    };
+  async create(actor: Actor): Promise<Actor> {
+    const { data } = await axios.post<Actor>(`applications/${actor.applicationId}/actors`, actor);
+    return data;
+  },
 
-    const response = await axios.post<Actor>(`applications/${applicationId}/actors`, payload);
-
-    console.log("response API");
-    console.log(response);
-    return response.data;
+  async findByApplicationId(applicationId: string): Promise<Actor[]> {
+    const { data } = await axios.get<Actor[]>(`applications/${applicationId}/actors`);
+    return data;
   },
 
   async update(actor: Actor): Promise<Actor> {
-    const payload = {
-      role: actor.role,
-      email: actor.email,
-      firstname: actor.firstname,
-      lastname: actor.lastname,
-      actorTypeId: actor.actorTypeId,
-      organizationId: actor.organizationId,
-      applicationId: actor.applicationId,
-    };
-
-    const response = await axios.patch<Actor>(`applications/${actor.applicationId}/actors/${actor.id}`, payload);
-
-    console.log("response API");
-    console.log(response);
-    return response.data;
+    const { data } = await axios.patch<Actor>(`applications/${actor.applicationId}/actors/${actor.id}`, actor);
+    return data;
   },
 
   async delete(applicationId: string, actorId: string): Promise<Actor> {
-    const response = await axios.delete<Actor>(`applications/${applicationId}/actors/${actorId}`);
-
-    console.log("response API");
-    console.log(response);
-    return response.data;
+    const { data } = await axios.delete<Actor>(`applications/${applicationId}/actors/${actorId}`);
+    return data;
   },
 };
 

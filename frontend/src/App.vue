@@ -53,7 +53,7 @@ interface QuickLink {
   ];
   if (authenticated.value) {
     authenticatedQuickLinks.value = [
-      { label: "Liste des applications", to: { name: routeNames.SEARCHAPP } },
+      { label: "Applications", to: { name: routeNames.SEARCHAPP } },
       { label: "Signalements", to: { name: routeNames.ISSUELIST } },
       {
         label: "Mon profil",

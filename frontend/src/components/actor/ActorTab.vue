@@ -70,13 +70,12 @@ onBeforeMount(async () => {
   await actorStore.fetchActorsByApplication(props.application.id);
 });
 
-async function handleSaveActors(newActor: Actor) {
-  const isNew = !newActor.id;
+async function handleSaveActors(actor: Actor) {
   loading.value = true;
   actorModal.closeModal();
 
   try {
-    await actorStore.saveActor({ ...newActor, applicationId: props.application.id }, isNew);
+    await actorStore.saveActor(actor);
     await actorStore.fetchActorsByApplication(props.application.id);
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
   } catch (error) {
