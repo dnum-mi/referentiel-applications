@@ -87,22 +87,9 @@ Vous devez fournir les informations suivantes :
     return await this.organizationService.findAll();
   }
 
-  /**
-   * Met à jour les informations d'une organisation
-   *
-   * @param id L'identifiant de l'organisation à mettre à jour
-   * @param organizationToUpdate Les nouvelles données de l'organisation à mettre à jour
-   *
-   * @returns L'organisation mise à jour
-   */
   @Patch(':id')
   @ApiOperation({
     summary: 'Mettre à jour une organisation',
-    description: `
-Ce endpoint permet de mettre à jour une organisation existante
-Vous devez fournir l'identifiant de l'organisation dans l'URL et les nouvelles données dans le corps de la requête
-Les données de mise à jour doivent correspondre aux champs
-    `,
   })
   public async update(
     @Param('id') id: string,
