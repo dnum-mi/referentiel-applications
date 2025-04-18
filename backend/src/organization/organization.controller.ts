@@ -93,15 +93,9 @@ Vous devez fournir les informations suivantes :
   })
   public async update(
     @Param('id') id: string,
-    @Body() organisationToUpdate: PatchOrganizationDto,
+    @Body() data: PatchOrganizationDto,
   ): Promise<PatchOrganizationDto> {
-    Logger.log({
-      message: "Début de la modification de l'organisation",
-      organisationToUpdate: organisationToUpdate,
-      action: 'patch',
-    });
-
-    return this.organizationService.update(id, organisationToUpdate);
+    return await this.organizationService.update(id, data);
   }
 
   @Delete(':id')
