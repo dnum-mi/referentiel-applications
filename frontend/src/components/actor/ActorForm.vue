@@ -4,7 +4,6 @@ import type { PropType } from "vue";
 import type { Actor, Application } from "@/models/Application";
 import type { Organization } from "@/models/organization";
 import type { ActorType } from "@/models/ActorType";
-import { useActorStore } from "@/stores/actorStore";
 import SuggestionsInput from "../SuggestionsInput.vue";
 
 const props = defineProps({
@@ -26,17 +25,8 @@ const props = defineProps({
 
 const emit = defineEmits(["submit", "cancel"]);
 
-const store = useActorStore();
-
 const form = ref<Actor>({
-  id: props.initialData?.id ?? "",
-  role: props.initialData?.role ?? "",
-  email: props.initialData?.email ?? "",
-  firstname: props.initialData?.firstname ?? "",
-  lastname: props.initialData?.lastname ?? "",
-  userId: props.initialData?.userId ?? "",
-  organizationId: props.initialData?.organizationId ?? "",
-  actorTypeId: props.initialData?.actorTypeId ?? "",
+  ...props.initialData,
   applicationId: props.application.id,
 });
 
@@ -46,10 +36,7 @@ const actorTypeOptions = props.actorTypes.map((type) => ({
 }));
 
 const handleSubmit = () => {
-  const isNew = !form.value.id;
-  store.saveActor(form.value, isNew).then((savedActor) => {
-    emit("submit", savedActor);
-  });
+  emit("submit", form.value);
 };
 </script>
 
