@@ -7,6 +7,7 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import LinkForm from "./form/LinkForm.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
+import Users from "@/api/user.js";
 
 const props = defineProps<{
   application: { id: string };
@@ -20,12 +21,16 @@ const selectedLinkIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(0);
+const userPermissions = ref(null);
 
 const formatLink = (url: string) => (!url.startsWith("http") ? `http://${url}` : url);
 const getTypeLabel = (type: string) => linkTypesDict[type] || "Type inconnu";
 
-onMounted(() => {
+onMounted(async () => {
   linkStore.fetchLinks(props.application.id);
+  userPermissions.value = await Users.getUser().then((response) => {
+    return response.permissions.split(",");
+  });
 });
 
 const rows = computed(() =>
@@ -89,7 +94,13 @@ const removeSelectedLinks = () => {
       <h3 class="fr-mb-0">Gestion des liens</h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton class="fr-btn--icon-left fr-icon-add-line" @click="linkModal.openCreateModal()"> Ajouter un lien </DsfrButton>
+      <DsfrButton
+        class="fr-btn--icon-left fr-icon-add-line"
+        @click="linkModal.openCreateModal()"
+        :disabled="!userPermissions?.includes('write')"
+      >
+        Ajouter un lien
+      </DsfrButton>
     </div>
   </div>
 
@@ -99,7 +110,13 @@ const removeSelectedLinks = () => {
 
   <div v-else>
     <div class="global-delete">
-      <DsfrButton type="button" tertiary icon="fr-icon-delete-line" :disabled="!selectedLinkIds.length" @click="removeSelectedLinks">
+      <DsfrButton
+        type="button"
+        tertiary
+        icon="fr-icon-delete-line"
+        :disabled="!selectedLinkIds.length || !userPermissions?.includes('write')"
+        @click="removeSelectedLinks"
+      >
         Supprimer la sélection
       </DsfrButton>
     </div>
@@ -124,7 +141,7 @@ const removeSelectedLinks = () => {
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">{{ cell.label }}</a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!userPermissions?.includes('write')">
             {{ cell.label }}
           </DsfrButton>
         </template>

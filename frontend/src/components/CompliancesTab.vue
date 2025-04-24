@@ -7,6 +7,7 @@ import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-d
 import ComplianceForm from "./form/ComplianceForm.vue";
 import useModal from "@/composables/use-modal";
 import CompliancesApi from "@/api/compliance";
+import Users from "@/api/user.js";
 
 const toaster = useToaster();
 
@@ -30,6 +31,7 @@ const complianceModal = useModal();
 const showDeleteConfirmation = ref(false);
 const loading = ref(false);
 const isSubmitting = ref(false);
+const userPermissions = ref(null);
 
 function getTypeLabel(value: string): string {
   return value ? complianceTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
@@ -120,8 +122,11 @@ const fetchCompliances = async () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   fetchCompliances();
+  userPermissions.value = await Users.getUser().then((response) => {
+    return response.permissions.split(",");
+  });
 });
 
 // Watch for application change (e.g., when switching between applications)
@@ -145,6 +150,7 @@ watch(
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         @click="complianceModal.openCreateModal()"
+        :disabled="!userPermissions?.includes('write')"
       >
         Ajouter une conformité
       </DsfrButton>
@@ -160,7 +166,7 @@ watch(
         tertiary
         @click="removeSelectedCompliances"
         icon="fr-icon-delete-line"
-        :disabled="selectedComplianceIds.length === 0"
+        :disabled="selectedComplianceIds.length === 0 || !userPermissions?.includes('write')"
       >
         Supprimer la sélection
       </DsfrButton>
@@ -187,7 +193,9 @@ watch(
           <input type="checkbox" :value="cell" v-model="selectedComplianceIds" />
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!userPermissions?.includes('write')">
+            {{ cell.label }}
+          </DsfrButton>
         </template>
         <template v-else>
           {{ cell }}
