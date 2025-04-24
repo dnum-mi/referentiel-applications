@@ -3,15 +3,12 @@ import { watchEffect, onMounted } from "vue";
 import { useRelationStore } from "@/stores/relationStore";
 import { useRelationManager } from "@/composables/use-relation-manager";
 import type { Application } from "@/models/Application";
-import { authentication } from "@/services/authentication.js";
-import useToaster from "@/composables/use-toaster";
 import Users from "@/api/user.js";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits<{ (e: "update:application", app: Application): void }>();
 
 const store = useRelationStore();
-const toaster = useToaster();
 const userPermissions = ref(null);
 
 watchEffect(() => {

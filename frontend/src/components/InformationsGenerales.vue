@@ -10,7 +10,6 @@ import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import type { Hosting } from "@/models/Hosting";
-import { authentication } from "@/services/authentication";
 import Users from "@/api/user.js";
 
 const isSubmitting = ref(false);

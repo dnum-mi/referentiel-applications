@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue";
-import axios from "axios";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 
