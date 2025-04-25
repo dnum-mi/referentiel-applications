@@ -1,6 +1,7 @@
 import { authentication } from "@/services/authentication";
 import axios, { type AxiosResponse } from "axios";
 import useToaster from "@/composables/use-toaster";
+import router from "@/router/index.js";
 
 const toaster = useToaster();
 
@@ -26,6 +27,12 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      authentication.login({ redirectUri: router.currentRoute.fullPath });
+
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 403) {
       toaster.addErrorMessage("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
       return Promise.reject(error);
