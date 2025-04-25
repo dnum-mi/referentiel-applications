@@ -4,7 +4,7 @@ model Application {
   shortName           String?
   logo                String?
   description         String
-  targetPopulations     String[]
+  targetPopulations   String[]
   purposes            String[]
   tags                String[]
   metadataId          String
@@ -25,6 +25,7 @@ model Application {
 
   priorityRestart     priorityRestart?
 
+  @@unique([label, description])
   @@index([label])
   @@index([shortName])
   @@map("applications")
