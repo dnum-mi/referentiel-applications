@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.14.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.13.0...v1.14.0) (2025-04-25)
+
+
+### Features
+
+* :sparkles: add organization CRUD tests and faker ([b92b364](https://github.com/dnum-mi/referentiel-applications/commit/b92b364864f527761276059eeefd4f1e5dbfbd40))
+* :sparkles: add user profile view and permissions display ([#621](https://github.com/dnum-mi/referentiel-applications/issues/621)) ([4a82cc9](https://github.com/dnum-mi/referentiel-applications/commit/4a82cc9177095f873d86209868e4532d9b225d63))
+* :sparkles: disable buttons for edit/add/delete if user doesn't have the permission ([#631](https://github.com/dnum-mi/referentiel-applications/issues/631)) ([02f3a7f](https://github.com/dnum-mi/referentiel-applications/commit/02f3a7fa732e0d775d78bdbf5875943672e771bf))
+* ✨ add unique constraint on label and description in Application model ([#633](https://github.com/dnum-mi/referentiel-applications/issues/633)) ([a57f6cf](https://github.com/dnum-mi/referentiel-applications/commit/a57f6cfee50dceddee2342bcff036eaae2fd36f2))
+
+
+### Bug Fixes
+
+* :bug: add a redirect to login page when 401 and then redirect to previous route targeted ([#632](https://github.com/dnum-mi/referentiel-applications/issues/632)) ([f291e0a](https://github.com/dnum-mi/referentiel-applications/commit/f291e0abbee5caa3a13492fa26c232304684f85a))
+* :bug: correct target label for 'in_replacement_of' relation type ([#629](https://github.com/dnum-mi/referentiel-applications/issues/629)) ([5777d0e](https://github.com/dnum-mi/referentiel-applications/commit/5777d0e57c748aa89d1ae872e87bdb655fe4f18f))
+* **ci:** :bug: Display version in footer frontend ([b498c4d](https://github.com/dnum-mi/referentiel-applications/commit/b498c4d62bdf95e04aedb26b246993e730b46e27))
+
 ## [1.13.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.12.1...v1.13.0) (2025-04-16)
 
 
