@@ -2,7 +2,7 @@
 const buttons = [
   {
     label: "Page d'accueil",
-    name: "/recherche-application",
+    name: "/",
   },
 ];
 </script>

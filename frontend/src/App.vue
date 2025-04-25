@@ -5,6 +5,7 @@ import useToaster from "./composables/use-toaster";
 import { routeNames } from "./router/route-names";
 import { authentication } from "./services/authentication";
 import Applications from "@/api/application";
+import router from "./router/index.js";
 
 const instance = getCurrentInstance();
 
@@ -63,7 +64,9 @@ interface QuickLink {
       },
       {
         label: "Déconnexion",
-        to: authentication.createLogoutUrl(),
+        to: authentication.createLogoutUrl({
+          redirectUri: window.location.origin + router.resolve({ name: "accueil" }).href,
+        }),
         icon: "ri-logout-box-r-line",
         iconAttrs: { title: "Déconnexion" },
       },
@@ -208,6 +211,7 @@ function close() {
 .header-container {
   position: relative;
 }
+
 .search-results-dropdown {
   position: absolute;
   top: 100%;
