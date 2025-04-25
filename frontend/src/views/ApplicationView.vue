@@ -48,7 +48,7 @@ watch([() => searchStore.page, () => searchStore.limit], () => {
 });
 
 // Init
-onMounted(() => {
+onMounted(async () => {
   updateMode();
   window.addEventListener("resize", updateMode);
   statsStore.fetchTotalApplications();
@@ -83,21 +83,25 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
   display: flex;
   min-height: 100vh;
 }
+
 .main-content {
   flex: 1;
   padding: 1rem 2rem;
   overflow-x: auto;
 }
+
 .loader {
   display: flex;
   justify-content: center;
   margin-top: 3rem;
 }
+
 .toggle-and-create-container {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 1.5rem;
 }
+
 .summary-box {
   background-color: #f1f5f9;
   border: 1px solid #cbd5e1;

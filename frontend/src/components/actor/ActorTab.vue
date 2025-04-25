@@ -10,6 +10,7 @@ import ActorForm from "./ActorForm.vue";
 
 import type { Actor } from "@/models/Actor";
 import type { Application } from "@/models/Application";
+import Users from "@/api/user.js";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
@@ -25,6 +26,7 @@ const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const loading = ref(false);
+const userPermissions = ref(null);
 
 const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 
@@ -68,6 +70,9 @@ onBeforeMount(async () => {
   await orgStore.fetchAll();
   await actorTypeStore.fetchAll();
   await actorStore.fetchActorsByApplication(props.application.id);
+  userPermissions.value = await Users.getUser().then((response) => {
+    return response.permissions.split(",");
+  });
 });
 
 async function handleSaveActors(actor: Actor) {
@@ -118,7 +123,12 @@ function cancelDelete() {
       <h3 class="fr-mb-0">Gestion des acteurs</h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" @click="actorModal.openCreateModal()">
+      <DsfrButton
+        type="button"
+        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
+        @click="actorModal.openCreateModal()"
+        :disabled="!userPermissions?.includes('write')"
+      >
         Ajouter un acteur
       </DsfrButton>
     </div>
@@ -130,7 +140,13 @@ function cancelDelete() {
 
   <div v-else>
     <div class="global-delete">
-      <DsfrButton type="button" tertiary @click="removeSelectedActors" icon="fr-icon-delete-line" :disabled="selectedActorIds.length === 0">
+      <DsfrButton
+        type="button"
+        tertiary
+        @click="removeSelectedActors"
+        icon="fr-icon-delete-line"
+        :disabled="selectedActorIds.length === 0 || !userPermissions?.includes('write')"
+      >
         Supprimer la sélection
       </DsfrButton>
     </div>
@@ -168,7 +184,9 @@ function cancelDelete() {
           </a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick">{{ cell.label }}</DsfrButton>
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!userPermissions?.includes('write')">
+            {{ cell.label }}
+          </DsfrButton>
         </template>
         <template v-else-if="colKey === 'Type' || colKey === 'Organisation'">
           <span class="truncate" :title="cell">{{ cell }}</span>

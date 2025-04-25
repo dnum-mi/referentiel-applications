@@ -6,6 +6,7 @@ import useModal from "@/composables/use-modal";
 import { useEventStore } from "@/stores/EventStore";
 import EventForm from "./EventForm.vue";
 import { customSorter } from "@/utils/tableSort";
+import Users from "@/api/user.js";
 
 const props = defineProps({
   application: {
@@ -25,11 +26,15 @@ const selectedEventIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(0);
+const userPermissions = ref(null);
 
 const currentSortedColumn = ref("");
 
-onMounted(() => {
+onMounted(async () => {
   eventStore.fetchEvents(props.application.id);
+  userPermissions.value = await Users.getUser().then((response) => {
+    return response.permissions.split(",");
+  });
 });
 
 const headers = [
@@ -89,7 +94,12 @@ function customSort(a: unknown, b: unknown) {
       <h3 class="fr-mb-0">Gestion des événements</h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton type="button" class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line" @click="eventModal.openCreateModal()">
+      <DsfrButton
+        type="button"
+        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
+        @click="eventModal.openCreateModal()"
+        :disabled="!userPermissions?.includes('write')"
+      >
         Ajouter un événement
       </DsfrButton>
     </div>
@@ -101,7 +111,13 @@ function customSort(a: unknown, b: unknown) {
 
   <div v-else>
     <div class="global-delete">
-      <DsfrButton type="button" tertiary icon="fr-icon-delete-line" @click="removeSelectedEvents" :disabled="selectedEventIds.length === 0">
+      <DsfrButton
+        type="button"
+        tertiary
+        icon="fr-icon-delete-line"
+        @click="removeSelectedEvents"
+        :disabled="selectedEventIds.length === 0 || !userPermissions?.includes('write')"
+      >
         Supprimer la sélection
       </DsfrButton>
     </div>
