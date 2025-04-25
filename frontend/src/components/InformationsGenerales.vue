@@ -10,6 +10,7 @@ import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import type { Hosting } from "@/models/Hosting";
+import Users from "@/api/user.js";
 
 const isSubmitting = ref(false);
 const toaster = useToaster();
@@ -28,12 +29,16 @@ const hostingToEdit = ref<Hosting | null>(null);
 const hostingToDelete = ref<Hosting | null>(null);
 const isDeleteModalOpen = ref(false);
 const hostingStore = useHostingStore();
+const userPermissions = ref(null);
 
 onMounted(async () => {
   if (props.application?.id) {
     await hostingStore.fetchHostings(props.application.id);
   }
   await fetchLabels();
+  userPermissions.value = await Users.getUser().then((response) => {
+    return response.permissions.split(",");
+  });
 });
 
 const application = ref<Application>({
@@ -201,6 +206,7 @@ watch(
                   class="fr-btn--icon-left fr-icon-edit-line"
                   label="Modifier"
                   @click="applicationModal.openModal()"
+                  :disabled="!userPermissions?.includes('write')"
                 />
               </div>
             </div>
@@ -267,7 +273,13 @@ watch(
             <h3 class="fr-card__title">Sites d’hébergement</h3>
           </div>
           <div class="header-button">
-            <DsfrButton type="button" tertiary label="Ajouter un hébergement" @click="isHostingModalOpen = true" />
+            <DsfrButton
+              type="button"
+              tertiary
+              label="Ajouter un hébergement"
+              @click="isHostingModalOpen = true"
+              :disabled="!userPermissions?.includes('write')"
+            />
           </div>
         </div>
         <HostingList :application-id="application.id" @edit="openEditHosting" @delete="openDeleteModal" />
@@ -337,6 +349,7 @@ watch(
   padding: 0;
   list-style: none;
 }
+
 .responsive-layout {
   display: flex;
   flex-wrap: wrap;
@@ -373,6 +386,7 @@ watch(
   margin: 1em;
   order: 0;
 }
+
 .header-button {
   margin: 1em;
   order: 1;

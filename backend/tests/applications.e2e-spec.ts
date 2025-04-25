@@ -2,6 +2,7 @@ import request from 'supertest';
 import { setupTestSuite } from './setup';
 import { getToken } from './getToken';
 import { UserFaker } from './fakers/user.faker';
+import { faker } from '@faker-js/faker';
 
 describe('Applications', () => {
   const app = setupTestSuite();
@@ -31,10 +32,9 @@ describe('Applications', () => {
     await request(app().getHttpServer())
       .post('/applications')
       .send({
-        label: 'My Complete Application',
+        label: faker.company.name(),
         shortName: 'complete-app',
-        description:
-          'A comprehensive application example with all data filled.',
+        description: faker.company.catchPhrase(),
         purposes: ['finance', 'HR', 'operations'],
         tags: ['tag1', 'tag2', 'tag3'],
         parentId: null,
