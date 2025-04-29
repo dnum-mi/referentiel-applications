@@ -29,6 +29,9 @@ import { ApplicationSearchModule } from './search/search.module';
 import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { CompliancesModule } from './compliances/compliances.module';
+import { ProviderModule } from './provider/provider.module';
+import { PlatformModule } from './platform/platform.module';
+import { HostingSiteModule } from './hosting-site/hosting-site.module';
 
 @Module({
   imports: [
@@ -44,6 +47,9 @@ import { CompliancesModule } from './compliances/compliances.module';
     ActorTypeModule,
     ApplicationSearchModule,
     ActorModule,
+    ProviderModule,
+    PlatformModule,
+    HostingSiteModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),

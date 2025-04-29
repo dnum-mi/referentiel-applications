@@ -33,6 +33,11 @@ export class CreateHostingDto {
   @IsString()
   platform?: string;
 
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUUID()
+  platformId?: string;
+
   @ApiProperty()
   @IsUUID()
   applicationId: string;
