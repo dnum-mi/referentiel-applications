@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.15.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.14.0...v1.15.0) (2025-05-02)
+
+
+### Features
+
+* :sparkles: add hosting management with new platform and provider entities ([#646](https://github.com/dnum-mi/referentiel-applications/issues/646)) ([dd445cd](https://github.com/dnum-mi/referentiel-applications/commit/dd445cde6a7ec374973d5667ebb55207def1e02d))
+* :sparkles: refactor compliance and event forms for improved data handling and UI consistency ([#652](https://github.com/dnum-mi/referentiel-applications/issues/652)) ([61ea0e1](https://github.com/dnum-mi/referentiel-applications/commit/61ea0e14398c28966cdb7f257cb44432a6c9d2e5))
+
 ## [1.14.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.13.0...v1.14.0) (2025-04-25)
 
 
