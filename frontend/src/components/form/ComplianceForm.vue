@@ -27,15 +27,9 @@ const complianceStatuses = computed(() => [
 ]);
 
 const form = ref({
-  id: props.initialData?.id ?? "",
-  type: props.initialData?.type ?? "",
-  name: props.initialData?.name ?? "",
-  status: props.initialData?.status ?? "",
-  validityStart: props.initialData?.validityStart ?? "",
-  validityEnd: props.initialData?.validityEnd ?? "",
-  scoreValue: props.initialData?.scoreValue ?? "",
-  scoreUnit: props.initialData?.scoreUnit ?? "",
-  notes: props.initialData?.notes ?? "",
+  ...props.initialData,
+  validityStart: props.initialData?.validityStart?.split("T")[0] || "",
+  validityEnd: props.initialData?.validityEnd?.split("T")[0] || "",
 });
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
@@ -46,38 +40,21 @@ const handleSubmit = () => {
 </script>
 <template>
   <form @submit.prevent="handleSubmit">
-    <DsfrInputGroup class="fr-mt-3w" label="nom" v-model="form.name" required>
-      <DsfrInput v-model="form.name" placeholder="Nom de la conformité" required />
-    </DsfrInputGroup>
-
-    <div class="fr-input-group">
-      <label class="fr-label" for="type">Type de conformité</label>
-      <DsfrSelect v-model="form.type" :options="complianceTypes" />
-    </div>
-
-    <div class="fr-input-group">
-      <label class="fr-label" for="type">Statut de la conformité</label>
-      <DsfrSelect v-model="form.status" :options="complianceStatuses" />
-    </div>
-
-    <DsfrInputGroup class="fr-mt-3w" label="Date de début" v-model="form.validityStart" required>
-      <AppDate v-model="form.validityStart" label="Date de début" />
-    </DsfrInputGroup>
-
-    <DsfrInputGroup class="fr-mt-3w" label="Date de fin" v-model="form.validityEnd" required>
-      <AppDate v-model="form.validityEnd" label="Date de fin" />
-    </DsfrInputGroup>
-
-    <DsfrInputGroup class="fr-mt-3w" label="Score" v-model="form.scoreValue" required>
-      <DsfrInput v-model="form.scoreValue" placeholder="Score" />
-    </DsfrInputGroup>
-    <DsfrInputGroup class="fr-mt-3w" label="Unité" v-model="form.scoreUnit" required>
-      <DsfrInput v-model="form.scoreUnit" placeholder="Unité" />
-    </DsfrInputGroup>
-
-    <DsfrInputGroup class="fr-mt-3w" label="notes" v-model="form.notes" required>
-      <DsfrInput v-model="form.notes" is-textarea required />
-    </DsfrInputGroup>
+    <DsfrInput class="fr-mb-3w" v-model="form.name" label="Nom de la conformité" label-visible required />
+    <DsfrSelect class="fr-mb-3w" v-model="form.type" :options="complianceTypes" label="Type de conformité" label-visible required />
+    <DsfrSelect
+      class="fr-mb-3w"
+      v-model="form.status"
+      :options="complianceStatuses"
+      label="Statut de la conformité"
+      label-visible
+      required
+    />
+    <DsfrInput class="fr-mb-3w" v-model="form.validityStart" label="Date de début" type="date" label-visible required />
+    <DsfrInput class="fr-mb-3w" v-model="form.validityEnd" label="Date de fin" type="date" label-visible required />
+    <DsfrInput class="fr-mb-3w" v-model="form.scoreValue" placeholder="Score" label="Score" label-visible required />
+    <DsfrInput class="fr-mb-3w" v-model="form.scoreUnit" placeholder="Unité" label="Unité" label-visible required />
+    <DsfrInput class="fr-mb-3w" v-model="form.notes" is-textarea label="Notes" label-visible required />
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton secondary label="Annuler" @click="$emit('cancel')" />
