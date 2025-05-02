@@ -1,13 +1,45 @@
+model Provider {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  url         String?
+  platforms   Platform[]
+}
+
+model Platform {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  providerId  String
+  provider    Provider     @relation(fields: [providerId], references: [id])
+  hostingSiteId String
+  hostingSite HostingSite  @relation(fields: [hostingSiteId], references: [id])
+  hostings    Hosting[]
+}
+
+model HostingSite {
+  id          String     @id @default(cuid())
+  name        String
+  building    String?
+  room        String?
+  description String?
+  platforms   Platform[]
+}
+
 model Hosting {
   id              String   @id @default(cuid())
-  provider String?
+  // Keep original fields for migration period
+  provider        String?
   label           String?
   region          String?
   site            String?
   nature          Nature?
   platform        String?
+  // Add references to new entities
+  platformId      String?
+  platformRef     Platform? @relation(fields: [platformId], references: [id])
   applicationId   String
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 enum Nature {
