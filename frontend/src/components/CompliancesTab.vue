@@ -41,15 +41,18 @@ function getStatusLabel(value: string): string {
   return value ? complianceStatusesDict[value] || "Statut inconnu" : "Aucun Statut sélectionné";
 }
 
-const handleSaveCompliances = async (newCompliance) => {
+const handleSaveCompliances = async (compliance) => {
   isSubmitting.value = true;
+  delete compliance.metadataId;
+  compliance.validityStart = compliance.validityStart ? new Date(compliance.validityStart).toISOString() : undefined;
+  compliance.validityEnd = compliance.validityEnd ? new Date(compliance.validityEnd).toISOString() : undefined;
   try {
-    if (newCompliance.id) {
+    if (compliance.id) {
       // Update existing compliance
-      await CompliancesApi.updateCompliance(props.application.id, newCompliance.id, newCompliance);
+      await CompliancesApi.updateCompliance(props.application.id, compliance.id, compliance);
     } else {
       // Create new compliance
-      await CompliancesApi.createCompliance(props.application.id, newCompliance);
+      await CompliancesApi.createCompliance(props.application.id, compliance);
     }
 
     // Re-fetch all compliances to get the latest data

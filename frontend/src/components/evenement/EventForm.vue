@@ -18,13 +18,7 @@ const props = defineProps({
 
 const eventTypes = computed(() => [{ value: "", text: "Choisir un type d'événement" }, ...eventTypesArray]);
 
-const form = ref({
-  id: props.initialData?.id ?? "",
-  start: props.initialData?.start ?? "",
-  end: props.initialData?.end ?? "",
-  type: props.initialData?.type ?? "",
-  description: props.initialData?.description ?? "",
-});
+const form = ref({ ...props.initialData });
 
 const emit = defineEmits(["update:application", "submit"]);
 
@@ -34,18 +28,10 @@ const handleSubmit = () => {
 </script>
 <template>
   <form @submit.prevent="handleSubmit">
-    <div class="fr-input-group">
-      <label class="fr-label" for="type">Type de l'événement</label>
-      <DsfrSelect v-model="form.type" :options="eventTypes" />
-    </div>
-
-    <DsfrInput v-model="form.start" label="Date de début" label-visible type="date" class="fr-mb-1w" required />
-
-    <DsfrInput v-model="form.end" label="Date de fin" label-visible type="date" class="fr-mb-1w" required />
-
-    <DsfrInputGroup class="fr-mt-3w" label="description" v-model="form.description">
-      <DsfrInput v-model="form.description" label="Description" label-visible is-textarea />
-    </DsfrInputGroup>
+    <DsfrSelect class="fr-mb-3w" v-model="form.type" :options="eventTypes" label="Type de l'événement" required />
+    <DsfrInput class="fr-mb-3w" v-model="form.start" label="Date de début" label-visible type="date" required />
+    <DsfrInput class="fr-mb-3w" v-model="form.end" label="Date de fin" label-visible type="date" required />
+    <DsfrInput class="fr-mb-3w" v-model="form.description" label="Description" label-visible is-textarea required />
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton secondary label="Annuler" @click="$emit('cancel')" />
