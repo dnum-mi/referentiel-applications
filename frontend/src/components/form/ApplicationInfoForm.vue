@@ -38,7 +38,6 @@ const handleSubmit = () => {
     tags,
     priorityRestart: form.value.priorityRestart || null,
     labels: [],
-    compliances: [],
   });
 };
 
