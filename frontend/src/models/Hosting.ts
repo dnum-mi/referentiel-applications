@@ -1,10 +1,18 @@
 export interface Hosting {
   id: string;
-  provider?: string;
   label?: string;
   region?: string;
-  site?: string;
   nature: string;
-  platform?: string;
+  hostingOptionId?: string;
+  hostingOption?: HostingOption;
   applicationId: string;
+}
+
+export interface HostingOption {
+  id: string;
+  site: string;
+  platform: string;
+  provider: string;
+  building?: string;
+  room?: string;
 }

@@ -4,7 +4,7 @@ model ExternalRessource {
   description   String?
   type          ExternalRessourceType
   applicationId String
-  application   Application @relation("ApplicationExternalsRessource", fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application           @relation("ApplicationExternalsRessource", fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
 enum ExternalRessourceType {

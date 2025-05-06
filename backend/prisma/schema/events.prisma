@@ -1,7 +1,7 @@
 model Event {
   id            String      @id @default(uuid())
-  start         DateTime?       @db.Date
-  end           DateTime?       @db.Date
+  start         DateTime?   @db.Date
+  end           DateTime?   @db.Date
   type          EventType
   description   String      @db.VarChar(255)
   metadataId    String
