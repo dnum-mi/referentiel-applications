@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.16.0...v1.16.1) (2025-05-06)
+
+
+### Bug Fixes
+
+* :bug: change description display from pre to paragraph ([67fa716](https://github.com/dnum-mi/referentiel-applications/commit/67fa71620a816ec713cd886a65cb035feeac2a5a))
+
 ## [1.16.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.15.0...v1.16.0) (2025-05-06)
 
 
