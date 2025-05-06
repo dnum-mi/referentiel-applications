@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.16.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.15.0...v1.16.0) (2025-05-06)
+
+
+### Features
+
+* :sparkles: refactor hosting management with new hosting options model ([#655](https://github.com/dnum-mi/referentiel-applications/issues/655)) ([a5f5f64](https://github.com/dnum-mi/referentiel-applications/commit/a5f5f64ca2cf322b8bf38b8d363d914f640f0275))
+
+
+### Bug Fixes
+
+* **front:** :bug: delete compliace key in create application ([0fafa33](https://github.com/dnum-mi/referentiel-applications/commit/0fafa334869d6d5860b1cf9cc5083c88bcce3d03))
+
 ## [1.15.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.14.0...v1.15.0) (2025-05-02)
 
 
