@@ -8,26 +8,22 @@ const Hostings = {
 
   async create(hosting: Hosting, applicationId: string): Promise<Hosting> {
     const payload = {
-      provider: hosting.provider,
       label: hosting.label,
       region: hosting.region,
-      site: hosting.site,
       nature: hosting.nature,
-      platform: hosting.platform,
       applicationId: applicationId,
+      hostingOptionId: hosting.hostingOptionId,
     };
     return await requests.post(`/applications/${applicationId}/hostings`, payload);
   },
 
   async update(hostingId: string, hosting: Hosting, applicationId: string): Promise<Hosting> {
     const payload = {
-      provider: hosting.provider,
       label: hosting.label,
       region: hosting.region,
-      site: hosting.site,
       nature: hosting.nature,
-      platform: hosting.platform,
       applicationId: applicationId,
+      hostingOptionId: hosting.hostingOptionId,
     };
     return await requests.patch(`/applications/${applicationId}/hostings/${hostingId}`, payload);
   },

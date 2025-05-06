@@ -22,21 +22,21 @@ model Actor {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
   applicationId  String?
-  application Application? @relation("ApplicationActors", fields: [applicationId], references: [id], onDelete: Cascade)
-  actorTypeId  String?
-  actorType ActorType? @relation(fields: [actorTypeId], references: [id])
+  application    Application?  @relation("ApplicationActors", fields: [applicationId], references: [id], onDelete: Cascade)
+  actorTypeId    String?
+  actorType      ActorType?    @relation(fields: [actorTypeId], references: [id])
 
   @@index([applicationId, actorTypeId])
   @@map("actors")
 }
 
 model ActorType {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   code        String?
-  label     String
+  label       String
   description String?
 
-  actors   Actor[]
+  actors Actor[]
 
   @@unique([code])
   @@map("actorTypes")

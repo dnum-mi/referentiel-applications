@@ -14,16 +14,16 @@ model Application {
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
   events              Event[]               @relation("ApplicationEvents")
-  hostings Hosting[]
+  hostings            Hosting[]
 
   ownerId String
   owner   User   @relation("UserApplications", fields: [ownerId], references: [keycloakId])
 
-  relationsAsSource Relation[]         @relation("SourceHasTarget")
-  relationsAsTarget Relation[]         @relation("TargetHasSource")
-  labels              Label[]          @relation("ApplicationLabels")
+  relationsAsSource Relation[] @relation("SourceHasTarget")
+  relationsAsTarget Relation[] @relation("TargetHasSource")
+  labels            Label[]    @relation("ApplicationLabels")
 
-  priorityRestart     priorityRestart?
+  priorityRestart priorityRestart?
 
   @@unique([label, description])
   @@index([label])
@@ -31,16 +31,13 @@ model Application {
   @@map("applications")
 }
 
-
-
-
 model Relation {
-  id                String          @id @default(uuid())
+  id                String       @id @default(uuid())
   type              RelationType
   applicationSource String
   applicationTarget String
-  sourceApplication Application @relation("SourceHasTarget", fields: [applicationSource], references: [id], onDelete: Cascade)
-  targetApplication Application @relation("TargetHasSource", fields: [applicationTarget], references: [id], onDelete: Cascade)
+  sourceApplication Application  @relation("SourceHasTarget", fields: [applicationSource], references: [id], onDelete: Cascade)
+  targetApplication Application  @relation("TargetHasSource", fields: [applicationTarget], references: [id], onDelete: Cascade)
 
   @@unique([applicationSource, applicationTarget, type])
   @@map("relations")

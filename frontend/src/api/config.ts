@@ -54,12 +54,12 @@ export const apiConfig = {
     create: {
       method: "POST",
       url: "/applications/:applicationId/hostings",
-      payload: ["provider", "label", "region", "site", "nature", "platform", "applicationId"],
+      payload: ["provider", "label", "region", "site", "nature", "platform", "applicationId", "hostingOptionId"],
     },
     update: {
       method: "PATCH",
       url: "/applications/:applicationId/hostings/:hostingId",
-      payload: ["provider", "label", "region", "site", "nature", "platform", "applicationId"],
+      payload: ["provider", "label", "region", "site", "nature", "platform", "applicationId", "hostingOptionId"],
     },
     delete: {
       method: "DELETE",

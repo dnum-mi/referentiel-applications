@@ -22,13 +22,20 @@ onMounted(() => {
           <div class="hosting-details">
             <h4 class="hosting-title">{{ hosting.label || "Hébergement" }}</h4>
             <div class="hosting-info-grid">
-              <p v-if="hosting.provider" class="hosting-info">
-                <span class="hosting-info-label">Fournisseur:</span> {{ hosting.provider }}
+              <p class="hosting-info">
+                <span class="hosting-info-label">Fournisseur:</span>
+                {{ hosting.hostingOption?.provider || "-" }}
               </p>
-              <p v-if="hosting.site" class="hosting-info"><span class="hosting-info-label">Site:</span> {{ hosting.site }}</p>
-              <p v-if="hosting.region" class="hosting-info"><span class="hosting-info-label">Région:</span> {{ hosting.region }}</p>
-              <p v-if="hosting.nature" class="hosting-info"><span class="hosting-info-label">Nature:</span> {{ hosting.nature }}</p>
-              <p v-if="hosting.platform" class="hosting-info"><span class="hosting-info-label">Plateforme:</span> {{ hosting.platform }}</p>
+              <p class="hosting-info">
+                <span class="hosting-info-label">Site:</span>
+                {{ hosting.hostingOption?.site || "-" }}
+                <span v-if="hosting.hostingOption?.building">, {{ hosting.hostingOption.building }}</span>
+                <span v-if="hosting.hostingOption?.room">, Salle {{ hosting.hostingOption.room }}</span>
+              </p>
+              <p class="hosting-info">
+                <span class="hosting-info-label">Plateforme:</span>
+                {{ hosting.hostingOption?.platform || "-" }}
+              </p>
             </div>
           </div>
           <div class="hosting-actions">

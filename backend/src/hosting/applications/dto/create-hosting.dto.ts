@@ -3,40 +3,40 @@ import { Nature } from '@prisma/client';
 import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateHostingDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   provider?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   label?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   region?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   site?: string;
 
-  @ApiProperty({ enum: Nature })
+  @ApiProperty({ enum: Nature, required: false })
   @IsEnum(Nature)
   @IsOptional()
-  nature: Nature;
+  nature?: Nature;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   platform?: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty({ required: false, description: 'ID of the hosting option' })
   @IsOptional()
-  @IsUUID()
-  platformId?: string;
+  @IsString()
+  hostingOptionId?: string;
 
   @ApiProperty()
   @IsUUID()

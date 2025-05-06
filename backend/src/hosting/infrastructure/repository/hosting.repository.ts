@@ -10,14 +10,14 @@ export class HostingRepository implements IHostingRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(data: CreateHostingDto): Promise<Hosting> {
-    const { applicationId, platformId, ...rest } = data;
+    const { applicationId, hostingOptionId, ...rest } = data;
 
     return this.prisma.hosting.create({
       data: {
         ...rest,
         application: { connect: { id: applicationId } },
-        ...(platformId && {
-          platformRef: { connect: { id: platformId } },
+        ...(hostingOptionId && {
+          hostingOption: { connect: { id: hostingOptionId } },
         }),
       },
     });
@@ -31,18 +31,13 @@ export class HostingRepository implements IHostingRepository {
     return this.prisma.hosting.findUnique({
       where: { id },
       include: {
-        platformRef: {
-          include: {
-            provider: true,
-            hostingSite: true,
-          },
-        },
+        hostingOption: true,
       },
     });
   }
 
   async update(id: string, data: UpdateHostingDto): Promise<Hosting> {
-    const { applicationId, platformId, ...rest } = data;
+    const { applicationId, hostingOptionId, ...rest } = data;
 
     return this.prisma.hosting.update({
       where: { id },
@@ -51,8 +46,8 @@ export class HostingRepository implements IHostingRepository {
         ...(applicationId && {
           application: { connect: { id: applicationId } },
         }),
-        ...(platformId && {
-          platformRef: { connect: { id: platformId } },
+        ...(hostingOptionId && {
+          hostingOption: { connect: { id: hostingOptionId } },
         }),
       },
     });
@@ -70,12 +65,7 @@ export class HostingRepository implements IHostingRepository {
     return this.prisma.hosting.findMany({
       where: { applicationId },
       include: {
-        platformRef: {
-          include: {
-            provider: true,
-            hostingSite: true,
-          },
-        },
+        hostingOption: true,
       },
     });
   }
@@ -83,10 +73,22 @@ export class HostingRepository implements IHostingRepository {
   async findApplicationsBySite(site: string): Promise<Hosting[]> {
     return this.prisma.hosting.findMany({
       where: {
-        site: {
-          equals: site,
-          mode: 'insensitive',
-        },
+        OR: [
+          {
+            site: {
+              equals: site,
+              mode: 'insensitive',
+            },
+          },
+          {
+            hostingOption: {
+              site: {
+                equals: site,
+                mode: 'insensitive',
+              },
+            },
+          },
+        ],
       },
       include: { application: true },
     });
@@ -99,6 +101,19 @@ export class HostingRepository implements IHostingRepository {
       orderBy: { site: 'asc' },
     });
 
-    return results.map((r) => r.site);
+    // Also get sites from HostingOption
+    const hostingOptionSites = await this.prisma.hostingOption.findMany({
+      select: { site: true },
+      distinct: ['site'],
+      orderBy: { site: 'asc' },
+    });
+
+    const allSites = [
+      ...results.map((r) => r.site).filter(Boolean),
+      ...hostingOptionSites.map((r) => r.site),
+    ];
+
+    // Deduplicate sites
+    return [...new Set(allSites)];
   }
 }

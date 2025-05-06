@@ -1,0 +1,169 @@
+import request from 'supertest';
+import { setupTestSuite } from './setup';
+import { getToken } from './getToken';
+import { UserFaker } from './fakers/user.faker';
+import { HostingOptionFaker } from './fakers/hosting-option.faker';
+
+describe('HostingOptions', () => {
+  const app = setupTestSuite();
+  let user: { keycloakId: string };
+
+  beforeAll(async () => {
+    user = await UserFaker.create(['read', 'write']);
+  });
+
+  it(`/GET hosting-options`, async () => {
+    const TOKEN = await getToken(user);
+    await request(app().getHttpServer())
+      .get('/hosting-options')
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+  });
+
+  it(`/POST hosting-options`, async () => {
+    const TOKEN = await getToken(user);
+    const newHostingOption = {
+      site: 'CER(RENNES)',
+      platform: 'VIRTUALISATION',
+      provider: 'DTNUM',
+      building: 'B15',
+      room: 'IT2',
+    };
+
+    const response = await request(app().getHttpServer())
+      .post('/hosting-options')
+      .send(newHostingOption)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(201);
+
+    expect(response.body.site).toBe(newHostingOption.site);
+    expect(response.body.platform).toBe(newHostingOption.platform);
+    expect(response.body.provider).toBe(newHostingOption.provider);
+    expect(response.body.building).toBe(newHostingOption.building);
+    expect(response.body.room).toBe(newHostingOption.room);
+  });
+
+  it(`/GET hosting-options/:id`, async () => {
+    const TOKEN = await getToken(user);
+    const hostingOption = await HostingOptionFaker.create();
+
+    const response = await request(app().getHttpServer())
+      .get(`/hosting-options/${hostingOption.id}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(response.body.id).toBe(hostingOption.id);
+    expect(response.body.site).toBe(hostingOption.site);
+    expect(response.body.platform).toBe(hostingOption.platform);
+    expect(response.body.provider).toBe(hostingOption.provider);
+  });
+
+  it(`/PATCH hosting-options/:id`, async () => {
+    const TOKEN = await getToken(user);
+    const hostingOption = await HostingOptionFaker.create();
+    const updateData = {
+      site: 'LOGNES(SIL)',
+      platform: 'ISOCELE',
+      provider: 'DTNUM',
+      building: 'B21',
+      room: 'IT5',
+    };
+
+    const response = await request(app().getHttpServer())
+      .patch(`/hosting-options/${hostingOption.id}`)
+      .send(updateData)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(response.body.site).toBe(updateData.site);
+    expect(response.body.platform).toBe(updateData.platform);
+    expect(response.body.provider).toBe(updateData.provider);
+    expect(response.body.building).toBe(updateData.building);
+    expect(response.body.room).toBe(updateData.room);
+  });
+
+  it(`/DELETE hosting-options/:id`, async () => {
+    const TOKEN = await getToken(user);
+    const hostingOption = await HostingOptionFaker.create();
+
+    await request(app().getHttpServer())
+      .delete(`/hosting-options/${hostingOption.id}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+  });
+
+  it(`/GET hosting-options/sites`, async () => {
+    const TOKEN = await getToken(user);
+    await HostingOptionFaker.create();
+
+    const response = await request(app().getHttpServer())
+      .get('/hosting-options/sites')
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body)).toBe(true);
+  });
+
+  it(`/GET hosting-options/platforms`, async () => {
+    const TOKEN = await getToken(user);
+    await HostingOptionFaker.create();
+
+    const response = await request(app().getHttpServer())
+      .get('/hosting-options/platforms')
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body)).toBe(true);
+  });
+
+  it(`/GET hosting-options/providers`, async () => {
+    const TOKEN = await getToken(user);
+    await HostingOptionFaker.create();
+
+    const response = await request(app().getHttpServer())
+      .get('/hosting-options/providers')
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body)).toBe(true);
+  });
+
+  it(`filters hosting-options by site`, async () => {
+    const TOKEN = await getToken(user);
+    const hostingOption = await HostingOptionFaker.create();
+
+    const response = await request(app().getHttpServer())
+      .get(`/hosting-options?site=${hostingOption.site}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body.some((ho) => ho.id === hostingOption.id)).toBe(true);
+  });
+
+  it(`filters hosting-options by platform`, async () => {
+    const TOKEN = await getToken(user);
+    const hostingOption = await HostingOptionFaker.create();
+
+    const response = await request(app().getHttpServer())
+      .get(`/hosting-options?platform=${hostingOption.platform}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body.some((ho) => ho.id === hostingOption.id)).toBe(true);
+  });
+
+  it(`filters hosting-options by provider`, async () => {
+    const TOKEN = await getToken(user);
+    const hostingOption = await HostingOptionFaker.create();
+
+    const response = await request(app().getHttpServer())
+      .get(`/hosting-options?provider=${hostingOption.provider}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body.some((ho) => ho.id === hostingOption.id)).toBe(true);
+  });
+});

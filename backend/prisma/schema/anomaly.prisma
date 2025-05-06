@@ -9,7 +9,7 @@ model AnomalyNotification {
   updatedAt     DateTime                  @updatedAt
 
   history     AnomalyNotificationHistory[]
-  application Application? @relation("ApplicationAnomalyNotification", fields: [applicationId], references: [id], onDelete: Cascade)
+  application Application?                 @relation("ApplicationAnomalyNotification", fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@map("anomalyNotification")
 }
