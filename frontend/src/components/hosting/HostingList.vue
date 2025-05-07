@@ -11,90 +11,51 @@ const hostings = computed(() => hostingStore.hostings);
 onMounted(() => {
   hostingStore.fetchHostings(props.applicationId);
 });
+
+const handleEdit = (hostingId) => {
+  const hosting = hostings.value.find((h) => h.id === hostingId);
+  if (hosting) {
+    emit("edit", hosting);
+  }
+};
+
+const handleDelete = (hostingId) => {
+  const hosting = hostings.value.find((h) => h.id === hostingId);
+  if (hosting) {
+    emit("delete", hosting);
+  }
+};
 </script>
 
 <template>
-  <div class="fr-card__body">
-    <div class="fr-card__content">
-      <div v-if="hostings.length === 0" class="fr-text--sm fr-text--italic">Aucun hébergement enregistré.</div>
-      <ul v-else class="hosting-list">
-        <li v-for="hosting in hostings" :key="hosting.id" class="hosting-item">
-          <div class="hosting-details">
-            <h4 class="hosting-title">{{ hosting.label || "Hébergement" }}</h4>
-            <div class="hosting-info-grid">
-              <p class="hosting-info">
-                <span class="hosting-info-label">Fournisseur:</span>
-                {{ hosting.hostingOption?.provider || "-" }}
-              </p>
-              <p class="hosting-info">
-                <span class="hosting-info-label">Site:</span>
-                {{ hosting.hostingOption?.site || "-" }}
-                <span v-if="hosting.hostingOption?.building">, {{ hosting.hostingOption.building }}</span>
-                <span v-if="hosting.hostingOption?.room">, Salle {{ hosting.hostingOption.room }}</span>
-              </p>
-              <p class="hosting-info">
-                <span class="hosting-info-label">Plateforme:</span>
-                {{ hosting.hostingOption?.platform || "-" }}
-              </p>
-            </div>
+  <div v-if="hostings.length === 0" class="fr-text--sm fr-text--italic">Aucun hébergement enregistré.</div>
+  <div v-else>
+    <div v-for="hosting in hostings" :key="hosting.id" class="fr-mb-2w fr-pb-1w fr-border--bottom">
+      <div class="fr-grid-row fr-grid-row--middle">
+        <div class="fr-col">
+          <p class="fr-mb-0">
+            <strong>{{ hosting.label || "Hébergement" }}</strong>
+          </p>
+          <div class="fr-text--sm fr-mt-1w">
+            <!-- Location info -->
+            <p class="fr-mb-0" v-if="hosting.hostingOption?.site || hosting.hostingOption?.building || hosting.hostingOption?.room">
+              <span class="fr-icon-map-pin-2-line fr-mr-1w" aria-hidden="true"></span>
+              {{ [hosting.hostingOption?.site, hosting.hostingOption?.building, hosting.hostingOption?.room].filter(Boolean).join(" - ") }}
+            </p>
+
+            <!-- Platform & Provider info -->
+            <p class="fr-mb-0" v-if="hosting.hostingOption?.platform || hosting.hostingOption?.provider">
+              <span class="fr-icon-server-line fr-mr-1w" aria-hidden="true"></span>
+              {{ hosting.hostingOption?.platform || "" }}
+              {{ hosting.hostingOption?.provider ? `(${hosting.hostingOption.provider})` : "" }}
+            </p>
           </div>
-          <div class="hosting-actions">
-            <DsfrButton tertiary size="sm" icon="ri-edit-line" label="Modifier" @click="$emit('edit', hosting)" />
-            <DsfrButton tertiary size="sm" icon="ri-delete-bin-line" label="Supprimer" @click="$emit('delete', hosting)" />
-          </div>
-        </li>
-      </ul>
+        </div>
+        <div class="fr-col-auto">
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" title="Modifier" @click="handleEdit(hosting.id)" class="fr-mr-1w" />
+          <DsfrButton tertiary size="sm" icon="fr-icon-delete-bin-line" title="Supprimer" @click="handleDelete(hosting.id)" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.hosting-list {
-  padding: 0;
-  list-style: none;
-}
-
-.hosting-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--grey-925-125);
-}
-
-.hosting-item:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-}
-
-.hosting-details {
-  flex: 1;
-}
-
-.hosting-title {
-  font-size: 1rem;
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-}
-
-.hosting-info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-}
-
-.hosting-info {
-  margin: 0;
-  font-size: 0.875rem;
-}
-
-.hosting-info-label {
-  font-weight: bold;
-}
-
-.hosting-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-</style>

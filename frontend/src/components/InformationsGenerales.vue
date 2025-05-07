@@ -268,21 +268,26 @@ watch(
       </div>
 
       <div class="fr-card">
-        <div class="fr-card__header header-flex">
-          <div class="header-title">
-            <h3 class="fr-card__title">Sites d’hébergement</h3>
-          </div>
-          <div class="header-button">
-            <DsfrButton
-              type="button"
-              tertiary
-              label="Ajouter un hébergement"
-              @click="isHostingModalOpen = true"
-              :disabled="!userPermissions?.includes('write')"
-            />
+        <div class="fr-card__body">
+          <div class="fr-card__content">
+            <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+              <div class="fr-col">
+                <h3 class="fr-card__title">Sites d'hébergement</h3>
+              </div>
+              <div class="fr-col-auto">
+                <DsfrButton
+                  tertiary
+                  size="sm"
+                  class="fr-btn--icon-left fr-icon-add-line"
+                  label="Ajouter"
+                  @click="isHostingModalOpen = true"
+                  :disabled="!userPermissions?.includes('write')"
+                />
+              </div>
+            </div>
+            <HostingList :application-id="application.id" @edit="openEditHosting" @delete="openDeleteModal" />
           </div>
         </div>
-        <HostingList :application-id="application.id" @edit="openEditHosting" @delete="openDeleteModal" />
       </div>
 
       <!-- Carte : Population -->
