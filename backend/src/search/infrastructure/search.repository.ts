@@ -43,14 +43,27 @@ export class ApplicationSearchRepository
       },
       {
         key: 'hosting',
-        enabled: !!dto.hostingSite || !!dto.hostingPlatform,
+        enabled:
+          !!dto.hostingSite ||
+          !!dto.hostingPlatform ||
+          !!dto.hostingProvider ||
+          !!dto.hostingBuilding ||
+          !!dto.hostingRoom,
         query: () =>
           Prisma.sql`
           SELECT DISTINCT a.id
           FROM public.applications a
-          JOIN public."Hosting" h ON h."applicationId" = a.id
-          WHERE ${Prisma.sql`LOWER(h.site) LIKE ${`%${dto.hostingSite?.toLowerCase() ?? ''}%`}`}
-            AND ${Prisma.sql`LOWER(h.platform) LIKE ${`%${dto.hostingPlatform?.toLowerCase() ?? ''}%`}`}
+          LEFT JOIN public."Hosting" h ON h."applicationId" = a.id
+          LEFT JOIN public."HostingOption" ho ON h."hostingOptionId" = ho.id
+          WHERE (
+            (
+              ${dto.hostingSite ? Prisma.sql`(LOWER(h.site) LIKE ${`%${dto.hostingSite?.toLowerCase() ?? ''}%`} OR LOWER(ho.site) LIKE ${`%${dto.hostingSite?.toLowerCase() ?? ''}%`})` : Prisma.sql`TRUE`}
+              AND ${dto.hostingPlatform ? Prisma.sql`(LOWER(h.platform) LIKE ${`%${dto.hostingPlatform?.toLowerCase() ?? ''}%`} OR LOWER(ho.platform) LIKE ${`%${dto.hostingPlatform?.toLowerCase() ?? ''}%`})` : Prisma.sql`TRUE`}
+              AND ${dto.hostingProvider ? Prisma.sql`(LOWER(h.provider) LIKE ${`%${dto.hostingProvider?.toLowerCase() ?? ''}%`} OR LOWER(ho.provider) LIKE ${`%${dto.hostingProvider?.toLowerCase() ?? ''}%`})` : Prisma.sql`TRUE`}
+              AND ${dto.hostingBuilding ? Prisma.sql`LOWER(ho.building) LIKE ${`%${dto.hostingBuilding?.toLowerCase() ?? ''}%`}` : Prisma.sql`TRUE`}
+              AND ${dto.hostingRoom ? Prisma.sql`LOWER(ho.room) LIKE ${`%${dto.hostingRoom?.toLowerCase() ?? ''}%`}` : Prisma.sql`TRUE`}
+            )
+          )
         `,
       },
       {
@@ -146,7 +159,11 @@ export class ApplicationSearchRepository
       const results = await this.prisma.application.findMany({
         where: { id: { in: orderedIds } },
         include: {
-          hostings: true,
+          hostings: {
+            include: {
+              hostingOption: true,
+            },
+          },
           actors: {
             include: {
               organization: {
@@ -175,7 +192,11 @@ export class ApplicationSearchRepository
       skip: page * limit,
       take: limit,
       include: {
-        hostings: true,
+        hostings: {
+          include: {
+            hostingOption: true,
+          },
+        },
         actors: {
           include: {
             organization: {
