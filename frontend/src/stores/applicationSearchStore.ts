@@ -20,6 +20,9 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     order: "asc",
     hostingSite: "",
     hostingPlatform: "",
+    hostingProvider: "",
+    hostingBuilding: "",
+    hostingRoom: "",
     organizationLabel: "",
     actorType: "",
   });
@@ -51,6 +54,9 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       order: "asc",
       hostingSite: "",
       hostingPlatform: "",
+      hostingProvider: "",
+      hostingBuilding: "",
+      hostingRoom: "",
       organizationLabel: "",
       actorType: [],
     });

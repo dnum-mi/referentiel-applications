@@ -70,7 +70,7 @@ export class SearchApplicationDto {
 
   @ApiPropertyOptional({
     description: 'Filtrer par site d’hébergement ',
-    example: '',
+    example: 'LOGNES(SIL)',
   })
   @IsOptional()
   @IsString()
@@ -78,11 +78,35 @@ export class SearchApplicationDto {
 
   @ApiPropertyOptional({
     description: 'Filtrer par plateforme d’hébergement',
-    example: '',
+    example: 'CLOUD PI NATIVE',
   })
   @IsOptional()
   @IsString()
   hostingPlatform?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrer par fournisseur d’hébergement',
+    example: 'DTNUM',
+  })
+  @IsOptional()
+  @IsString()
+  hostingProvider?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrer par bâtiment d’hébergement',
+    example: 'B21',
+  })
+  @IsOptional()
+  @IsString()
+  hostingBuilding?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filtrer par salle d’hébergement',
+    example: 'IT5',
+  })
+  @IsOptional()
+  @IsString()
+  hostingRoom?: string;
 
   @ApiPropertyOptional({
     description: 'Recherche par lien (ressource externe)',
