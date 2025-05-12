@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue";
 import type { Application, Label } from "@/models/Application";
+import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
 import ApplicationForm from "./form/ApplicationForm.vue";
@@ -261,7 +262,7 @@ watch(
               </div>
 
               <h4>Description</h4>
-              <p>{{ application.description }}</p>
+              <MarkdownDisplay :content="application.description" />
 
               <h4 class="fr-mt-3w">Objectifs</h4>
               <ul v-if="application.purposes?.length">
@@ -366,7 +367,7 @@ watch(
     @cancel="cancelDeletionHosting"
   />
 
-  <DsfrModal :opened="isModalOpened" title="Modifier l'application" @close="applicationModal.closeModal">
+  <DsfrModal size="lg" :opened="isModalOpened" title="Modifier l'application" @close="applicationModal.closeModal">
     <ApplicationForm
       v-bind="{ initialData: application, labels }"
       :is-submitting="isSubmitting"

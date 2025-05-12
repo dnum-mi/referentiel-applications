@@ -37,6 +37,7 @@ app.use(MatomoPlugin, {
 
 app.use(createPinia());
 app.use(router);
+
 app.component("VIcon", VIcon);
 
 authentication.init({ onLoad: "check-sso" }).then(() => {
