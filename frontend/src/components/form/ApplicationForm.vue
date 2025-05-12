@@ -162,8 +162,8 @@ const removePopulation = (index: number) => {
       </div>
     </div>
     <br />
-    <DsfrInputGroup class="fr-mt-3w" v-model="form.description" required>
-      <DsfrInput v-model="form.description" class="fr-mt-3w" label="Description" label-visible is-textarea required />
+    <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required>
+      <MarkdownEditor v-model="form.description" />
     </DsfrInputGroup>
 
     <DsfrSelect

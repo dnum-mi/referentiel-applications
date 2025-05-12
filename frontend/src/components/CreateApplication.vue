@@ -41,7 +41,12 @@ onMounted(async () => {
       Créer une application
     </DsfrButton>
 
-    <DsfrModal :opened="applicationModal.isCreateModalOpen.value" :title="'Créer une application'" @close="applicationModal.closeModal">
+    <DsfrModal
+      size="lg"
+      :opened="applicationModal.isCreateModalOpen.value"
+      :title="'Créer une application'"
+      @close="applicationModal.closeModal"
+    >
       <ApplicationInfoForm :is-submitting="isSubmitting" @submit="createApplication" @cancel="applicationModal.closeModal" />
     </DsfrModal>
   </div>

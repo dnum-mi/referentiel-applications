@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
+import MarkdownEditor from "@/components/MarkdownEditor.vue";
 
 const toaster = useToaster();
 
@@ -96,8 +97,8 @@ const removePopulation = (index: number) => {
       hint="Optionnel - Un nom court pour identifier rapidement l'application"
     />
 
-    <DsfrInputGroup class="fr-mt-3w" v-model="form.description" required>
-      <DsfrInput v-model="form.description" class="fr-mt-3w" label="Description" label-visible is-textarea required />
+    <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required>
+      <MarkdownEditor v-model="form.description" />
     </DsfrInputGroup>
 
     <DsfrSelect

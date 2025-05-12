@@ -19,7 +19,6 @@ const sortOrder = computed({
 
 const columnToFieldMap: Record<string, string> = {
   "Nom court": "shortName",
-  Description: "description",
   "Priorité de redémarrage": "priorityRestart",
   Hébergement: "hostingSite",
   Tags: "tag",
@@ -49,7 +48,6 @@ watch(sortOrder, () => {
 const rows = computed(() =>
   searchStore.results.map((app: any) => ({
     "Nom court": app,
-    Description: app,
     "Priorité de redémarrage": app,
     Hébergement: {
       hosting:
@@ -79,7 +77,7 @@ function sorter(a: any, b: any, columnIndex: number) {
 <template>
   <div>
     <DsfrDataTable
-      :headers-row="['Nom court', 'Description', 'Priorité de redémarrage', 'Hébergement', 'Tags']"
+      :headers-row="['Nom court', 'Priorité de redémarrage', 'Hébergement', 'Tags']"
       :rows="rows"
       :sortFn="sorter"
       sortable-rows
@@ -93,10 +91,6 @@ function sorter(a: any, b: any, columnIndex: number) {
           <router-link :to="{ name: 'application', params: { id: cell.id } }" class="truncate">
             {{ cell.shortName?.length ? cell.shortName : cell.label }}
           </router-link>
-        </template>
-
-        <template v-else-if="colKey === 'Description'">
-          <span class="truncate">{{ cell.description }}</span>
         </template>
 
         <template v-else-if="colKey === 'Priorité de redémarrage'">
