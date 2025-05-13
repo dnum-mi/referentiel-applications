@@ -69,7 +69,7 @@ const hostingOptionsFormatted = computed(() => {
     { value: "", text: "Sélectionner une option d'hébergement" },
     ...hostingOptionsList.value.map((option) => ({
       value: option.id,
-      text: `${option.provider} - ${option.platform} - ${option.site}${option.building ? ` - ${option.building}` : ""}`,
+      text: `${option.provider} - ${option.platform} - ${option.site}${option.building ? ` - ${option.building}` : ""}${option.room ? ` - ${option.room}` : ""}`,
     })),
   ];
 });

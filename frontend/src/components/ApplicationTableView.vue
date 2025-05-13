@@ -52,7 +52,17 @@ const rows = computed(() =>
     Description: app,
     "Priorité de redémarrage": app,
     Hébergement: {
-      hosting: (app.hostings || []).map((h: any) => h.site || "").join(", ") || "-",
+      hosting:
+        app.hostings
+          ?.map((h: any) => {
+            const site = h.hostingOption?.site || h.site || "";
+            const building = h.hostingOption?.building || "";
+            const room = h.hostingOption?.room || "";
+
+            const parts = [site, building, room].filter(Boolean);
+            return parts.length ? parts.join(" - ") : "-";
+          })
+          .join(", ") || "-",
     },
     Tags: {
       tags: app.tags?.join(", ") || "-",
