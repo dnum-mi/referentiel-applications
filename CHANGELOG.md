@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.17.0...v1.17.1) (2025-05-13)
+
+
+### Bug Fixes
+
+* :bug: update actor findAll method to filter actors by applicationId ([#666](https://github.com/dnum-mi/referentiel-applications/issues/666)) ([03c02da](https://github.com/dnum-mi/referentiel-applications/commit/03c02da1b0c01f8cb72d6d116928665f93609bc9))
+
 ## [1.17.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.16.1...v1.17.0) (2025-05-13)
 
 
