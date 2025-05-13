@@ -69,8 +69,10 @@ Informations requises :
   @ApiOperation({ summary: 'Récupérer tous les acteurs' })
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiResponse({ status: 200, description: 'Liste des acteurs' })
-  public async findAll(): Promise<Actor[]> {
-    return await this.actorService.findAll();
+  public async findAll(
+    @Param('applicationId') applicationId: string,
+  ): Promise<Actor[]> {
+    return await this.actorService.findAll(applicationId);
   }
 
   @Patch(':id')

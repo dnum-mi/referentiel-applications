@@ -33,8 +33,10 @@ export class ActorRepository implements IActorRepository {
     return await this.prisma.actor.create({ data });
   }
 
-  public async findAll() {
-    return await this.prisma.actor.findMany();
+  public async findAll(applicationId?: string) {
+    return await this.prisma.actor.findMany({
+      where: { applicationId: applicationId },
+    });
   }
 
   public async findById(id: string) {
