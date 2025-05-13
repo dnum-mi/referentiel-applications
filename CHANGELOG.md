@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.16.1...v1.17.0) (2025-05-13)
+
+
+### Features
+
+* :sparkles: enhance search functionality with additional hosting filters and options ([#657](https://github.com/dnum-mi/referentiel-applications/issues/657)) ([8c44276](https://github.com/dnum-mi/referentiel-applications/commit/8c442762f8cea29c2d2c3926f0c696fa782e1122))
+
 ## [1.16.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.16.0...v1.16.1) (2025-05-06)
 
 
