@@ -63,7 +63,7 @@ export class HostingsController {
   @Delete(':id')
   @ApiOperation({ summary: 'Supprimer un hébergement pour une application' })
   @ApiResponse({ status: 200, description: 'Hébergement supprimé' })
-  remove(@Param('id') id: string) {
-    return this.hostingService.remove(id);
+  remove(@Req() req, @Param('id') id: string) {
+    return this.hostingService.remove(id, req.user.keycloakId);
   }
 }

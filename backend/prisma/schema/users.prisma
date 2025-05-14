@@ -6,6 +6,7 @@ model User {
   organization        Organization?         @relation(fields: [organizationId], references: [id])
   createdSet          Metadata[]            @relation("MetadataCreatedBy")
   updatedSet          Metadata[]            @relation("MetadataUpdatedBy")
+  deletedSet          Metadata[]            @relation("MetadataDeletedBy")
   applications        Application[]         @relation("UserApplications")
   dataOwners          Metadata[]            @relation("MetadataDataOwnerBy")
   AnomalyNotification AnomalyNotification[] @relation("UserAnomalyNotification")

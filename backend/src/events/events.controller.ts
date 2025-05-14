@@ -44,6 +44,7 @@ export class EventsController {
       ...createEventDto,
       metadata: {
         create: {
+          applicationId: applicationId,
           createdById: request.user.keycloakId,
           updatedById: request.user.keycloakId,
         },
@@ -104,9 +105,10 @@ export class EventsController {
   @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiResponse({ status: 200 })
   delete(
+    @Req() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id);
+    return this.service.delete(id, request.user.keycloakId);
   }
 }

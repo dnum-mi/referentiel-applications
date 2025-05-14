@@ -31,8 +31,8 @@ export class HostingService {
     return this.repository.update(id, dto, ownerId);
   }
 
-  remove(id: string) {
-    return this.repository.delete(id);
+  remove(id: string, ownerId?: string) {
+    return this.repository.delete(id, ownerId);
   }
 
   findApplicationsBySite(site: string) {

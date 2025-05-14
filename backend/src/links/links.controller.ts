@@ -30,6 +30,7 @@ export class LinksController {
       ...createLinkDto,
       metadata: {
         create: {
+          applicationId: applicationId,
           createdById: request.user.keycloakId,
           updatedById: request.user.keycloakId,
         },
@@ -70,9 +71,10 @@ export class LinksController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the link to delete' })
   delete(
+    @Req() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id);
+    return this.service.delete(id, request.user.keycloakId);
   }
 }

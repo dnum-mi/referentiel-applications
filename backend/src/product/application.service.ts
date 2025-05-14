@@ -23,12 +23,48 @@ export class ApplicationService {
     ownerId: string,
     createApplicationDto: CreateApplicationDto,
   ) {
-    const applicationMetadata = await this.createApplicationMetadata(ownerId);
     const application = await this.persistApplication(
       ownerId,
-      applicationMetadata.id,
       createApplicationDto,
     );
+
+    await this.createApplicationMetadata(application.id, ownerId);
+
+    for (const labelDto of createApplicationDto.labels || []) {
+      const labelMetadata = await this.prisma.metadata.create({
+        data: {
+          applicationId: application.id,
+          createdById: ownerId,
+          updatedById: ownerId,
+          createdAt: new Date(),
+        },
+      });
+
+      await this.labelsService.create({
+        source: labelDto.source,
+        value: labelDto.value,
+        shortname: labelDto.shortname || null,
+        metadata: {
+          connect: {
+            id: labelMetadata.id,
+          },
+        },
+        application: {
+          connect: {
+            id: application.id,
+          },
+        },
+      });
+    }
+
+    const currentLabelMetadata = await this.prisma.metadata.create({
+      data: {
+        applicationId: application.id,
+        createdById: ownerId,
+        updatedById: ownerId,
+        createdAt: new Date(),
+      },
+    });
 
     await this.labelsService.create({
       source:
@@ -37,7 +73,7 @@ export class ApplicationService {
       shortname: application.shortName,
       metadata: {
         connect: {
-          id: applicationMetadata.id,
+          id: currentLabelMetadata.id,
         },
       },
       application: {
@@ -66,9 +102,14 @@ export class ApplicationService {
           data: applicationUpdates,
         });
 
-        if (app.metadataId) {
+        const oldestMetadata = await tx.metadata.findFirst({
+          where: { applicationId: app.id },
+          orderBy: { createdAt: 'asc' },
+        });
+
+        if (oldestMetadata) {
           await tx.metadata.update({
-            where: { id: app.metadataId },
+            where: { id: oldestMetadata.id },
             data: {
               updatedById: ownerId,
               updatedAt: new Date(),
@@ -136,13 +177,17 @@ export class ApplicationService {
     await this.applicationRepository.delete(id);
   }
 
-  public async getMetadata(applicationId: string) {
+  public async getLatestMetadata(applicationId: string) {
     return this.applicationRepository.findLatestMetadata(applicationId);
   }
 
-  private async createApplicationMetadata(ownerId: string) {
+  private async createApplicationMetadata(
+    applicationId: string,
+    ownerId: string,
+  ) {
     const applicationMetadata = await this.prisma.metadata.create({
       data: {
+        applicationId: applicationId,
         createdById: ownerId,
         updatedById: ownerId,
         createdAt: new Date(),
@@ -152,11 +197,7 @@ export class ApplicationService {
     return applicationMetadata;
   }
 
-  private async persistApplication(
-    ownerId: string,
-    applicationMetadataId: string,
-    createApplicationDto,
-  ) {
+  private async persistApplication(ownerId: string, createApplicationDto) {
     const user = await this.prisma.user.findUnique({
       where: { keycloakId: ownerId },
       select: { email: true, keycloakId: true },
@@ -168,7 +209,6 @@ export class ApplicationService {
 
     const application = this.applicationRepository.create(
       createApplicationDto,
-      applicationMetadataId,
       ownerId,
     );
 
@@ -227,6 +267,7 @@ export class ApplicationService {
           shortname: application.shortName,
           metadata: {
             create: {
+              applicationId: application.id,
               createdById: application.ownerId,
               updatedById: application.ownerId,
             },

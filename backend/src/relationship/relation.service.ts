@@ -37,7 +37,7 @@ export class RelationService {
     return this.relationRepository.update(id, dto, ownerId);
   }
 
-  async delete(id: string): Promise<void> {
-    return this.relationRepository.delete(id);
+  async delete(id: string, ownerId: string): Promise<void> {
+    return this.relationRepository.delete(id, ownerId);
   }
 }

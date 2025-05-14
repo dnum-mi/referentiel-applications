@@ -9,7 +9,7 @@ export interface IHostingRepository {
   findAll(): Promise<Hosting[]>;
   findById(id: string): Promise<Hosting | null>;
   update(id: string, data: UpdateHostingDto, ownerId: string): Promise<Hosting>;
-  delete(id: string): Promise<void>;
+  delete(id: string, ownerId: string): Promise<void>;
   findBySite(site: string): Promise<Hosting[]>;
   findApplicationsBySite(site: string): Promise<Hosting[]>;
   findDistinctSites(): Promise<string[]>;

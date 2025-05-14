@@ -20,16 +20,8 @@ import { ApplicationWithAllRelations } from 'src/product/types/application.type'
 export class ApplicationRepository implements IApplicationRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(
-    application: CreateApplicationDto,
-    applicationMetadataId: string,
-    ownerId: string,
-  ) {
-    const mappedData = applicationMap(
-      application,
-      applicationMetadataId,
-      ownerId,
-    );
+  public async create(application: CreateApplicationDto, ownerId: string) {
+    const mappedData = applicationMap(application, ownerId);
     return await this.prisma.application.create(mappedData);
   }
 
@@ -53,6 +45,9 @@ export class ApplicationRepository implements IApplicationRepository {
         },
         relationsAsTarget: {
           include: { sourceApplication: { select: { id: true, label: true } } },
+        },
+        metadatas: {
+          include: { createdBy: { select: { email: true } } },
         },
       },
     });
@@ -110,7 +105,7 @@ export class ApplicationRepository implements IApplicationRepository {
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
     return this.prisma.application.findMany({
       include: {
-        metadata: true,
+        metadatas: true,
         owner: true,
         compliances: true,
         labels: true,
@@ -140,7 +135,7 @@ export class ApplicationRepository implements IApplicationRepository {
   async exportAllApplicationsFull(): Promise<any[]> {
     return this.prisma.application.findMany({
       include: {
-        metadata: true,
+        metadatas: true,
         compliances: true,
         labels: true,
         actors: true,
@@ -169,58 +164,29 @@ export class ApplicationRepository implements IApplicationRepository {
     return results.map((r) => r.application);
   }
 
-  async findLatestMetadata(applicationId: string) {
-    return this.prisma.metadata.findFirst({
-      where: {
-        OR: [
-          {
-            applications: {
-              some: {
-                id: applicationId,
-              },
-            },
-          },
-          {
-            actors: {
-              some: {
-                applicationId,
-              },
-            },
-          },
-          {
-            events: {
-              some: {
-                applicationId,
-              },
-            },
-          },
-          {
-            labels: {
-              some: {
-                applicationId,
-              },
-            },
-          },
-          {
-            compliances: {
-              some: {
-                applicationId,
-              },
-            },
-          },
-          {
-            externalRessources: {
-              some: {
-                applicationId,
-              },
-            },
-          },
-        ],
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
+  async findLatestMetadata(applicationId: string): Promise<any | null> {
+    const result = await this.prisma.$queryRaw<
+      {
+        id: string;
+        effectiveDate: Date;
+        effectiveBy: string;
+      }[]
+    >(Prisma.sql`
+    SELECT m.id,
+           COALESCE(m."deletedAt", m."updatedAt") AS "effectiveDate",
+           CASE
+             WHEN m."deletedAt" IS NOT NULL THEN u_del."email"
+             ELSE u_upd."email"
+           END AS "effectiveBy"
+    FROM "metadata" m
+    LEFT JOIN "users" u_del ON m."deletedById" = u_del."keycloakId"
+    LEFT JOIN "users" u_upd ON m."updatedById" = u_upd."keycloakId"
+    WHERE m."applicationId" = ${applicationId}
+    ORDER BY COALESCE(m."deletedAt", m."updatedAt") DESC
+    LIMIT 1
+  `);
+
+    return result[0] || null;
   }
 
   public async delete(id: string): Promise<void> {

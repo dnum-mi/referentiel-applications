@@ -24,40 +24,19 @@ export class BaseService<T> {
     return this.model.create({ data: createDto });
   }
 
-  async update(id: string, data: any, ownerId: string): Promise<T> {
+  async update(id: string, data: any, ownerId?: string): Promise<T> {
     const updated = await this.model.update({
       where: { id },
       data,
       include: { metadata: true },
     });
 
-    let metadataId = updated.metadata?.id;
-
-    if (metadataId) {
+    if (updated.metadata?.id) {
       await this.prisma.metadata.update({
-        where: { id: metadataId },
+        where: { id: updated.metadata?.id },
         data: {
           updatedById: ownerId,
           updatedAt: new Date(),
-        },
-      });
-    } else {
-      const newMetadata = await this.prisma.metadata.create({
-        data: {
-          createdById: ownerId,
-          updatedById: ownerId,
-          createdAt: new Date(),
-        },
-      });
-
-      metadataId = newMetadata.id;
-
-      await this.model.update({
-        where: { id },
-        data: {
-          metadata: {
-            connect: { id: metadataId },
-          },
         },
       });
     }
@@ -66,8 +45,23 @@ export class BaseService<T> {
     return rest as T;
   }
 
-  async delete(id: string): Promise<T> {
+  async delete(id: string, ownerId?: string): Promise<T> {
     await this.findOne(id);
+
+    const item = await this.model.findUnique({
+      where: { id },
+      select: { metadataId: true },
+    });
+
+    if (item?.metadataId) {
+      await this.prisma.metadata.update({
+        where: { id: item.metadataId },
+        data: {
+          deletedById: ownerId,
+          deletedAt: new Date(),
+        },
+      });
+    }
     return this.model.delete({ where: { id } });
   }
 }

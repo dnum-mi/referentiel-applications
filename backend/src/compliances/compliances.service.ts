@@ -6,6 +6,6 @@ import { Compliance } from './entities/compliance.entity';
 @Injectable()
 export class CompliancesService extends BaseService<Compliance> {
   constructor(prisma: PrismaService) {
-    super(prisma.compliance);
+    super(prisma.compliance, prisma);
   }
 }

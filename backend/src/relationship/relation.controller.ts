@@ -62,7 +62,7 @@ export class RelationController {
     name: 'id',
     description: 'Identifiant unique de la relation à supprimer',
   })
-  async delete(@Param('id') id: string): Promise<void> {
-    return this.relationService.delete(id);
+  async delete(@Req() request, @Param('id') id: string): Promise<void> {
+    return this.relationService.delete(id, request.user.keycloakId);
   }
 }

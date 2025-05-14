@@ -4,10 +4,15 @@ import { Injectable } from '@nestjs/common';
 import { Hosting } from 'src/hosting/domain/hosting.entity';
 import { CreateHostingDto } from 'src/hosting/applications/dto/create-hosting.dto';
 import { UpdateHostingDto } from 'src/hosting/applications/dto/update-hosting.dto';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { application } from 'express';
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metadataService: MetadatasService,
+  ) {}
 
   async create(data: CreateHostingDto, ownerId: string): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
@@ -20,26 +25,12 @@ export class HostingRepository implements IHostingRepository {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
       },
-      include: {
-        application: {
-          select: {
-            metadata: {
-              select: { id: true },
-            },
-          },
-        },
-      },
     });
 
-    if (createdHosting?.application?.metadata?.id) {
-      await this.prisma.metadata.update({
-        where: { id: createdHosting.application.metadata.id },
-        data: {
-          updatedById: ownerId,
-          updatedAt: new Date(),
-        },
-      });
-    }
+    await this.metadataService.updateOldestMetadataForApplication(
+      applicationId,
+      ownerId,
+    );
 
     return createdHosting;
   }
@@ -57,7 +48,11 @@ export class HostingRepository implements IHostingRepository {
     });
   }
 
-  async update(id: string, data: UpdateHostingDto, ownerId: string): Promise<Hosting> {
+  async update(
+    id: string,
+    data: UpdateHostingDto,
+    ownerId: string,
+  ): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
     const updatedHosting = await this.prisma.hosting.update({
@@ -71,31 +66,24 @@ export class HostingRepository implements IHostingRepository {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
       },
-      include: {
-        application: {
-          select: {
-            metadata: {
-              select: { id: true },
-            },
-          },
-        },
-      },
     });
 
-    if (updatedHosting.application?.metadata?.id) {
-      await this.prisma.metadata.update({
-        where: { id: updatedHosting.application.metadata.id },
-        data: {
-          updatedById: ownerId,
-          updatedAt: new Date(),
-        },
-      });
-    }
+    await this.metadataService.updateOldestMetadataForApplication(
+      applicationId,
+      ownerId,
+    );
 
     return updatedHosting;
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, ownerId: string): Promise<void> {
+    const deletedHosting = await this.prisma.hosting.findFirst({
+      where: { id },
+    });
+    await this.metadataService.updateOldestMetadataForApplication(
+      deletedHosting.applicationId,
+      ownerId,
+    );
     await this.prisma.hosting.delete({ where: { id } });
   }
 

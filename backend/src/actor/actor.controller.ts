@@ -102,6 +102,7 @@ Informations requises :
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
   public async delete(
+    @Request() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ): Promise<Actor> {
@@ -111,6 +112,6 @@ Informations requises :
       action: 'delete',
     });
 
-    return this.actorService.delete(id);
+    return this.actorService.delete(id, request.user.keycloakId);
   }
 }

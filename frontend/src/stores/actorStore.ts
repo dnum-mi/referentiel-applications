@@ -11,7 +11,19 @@ export const useActorStore = defineStore("actorStore", () => {
   }
 
   async function saveActor(actor: Actor): Promise<Actor> {
-    return !actor.id ? await Actors.create(actor) : await Actors.update(actor);
+    const payload = {
+      id: actor.id,
+      role: actor.role,
+      email: actor.email,
+      firstname: actor.firstname,
+      lastname: actor.lastname,
+      userId: actor.userId,
+      organizationId: actor.organizationId,
+      applicationId: actor.applicationId,
+      actorTypeId: actor.actorTypeId,
+    };
+
+    return !actor.id ? await Actors.create(payload) : await Actors.update(payload);
   }
 
   async function deleteActor(actorId: string, applicationId: string) {

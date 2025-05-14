@@ -101,7 +101,7 @@ Vous devez fournir les informations suivantes :
 
   @Get(':applicationId/metadatas/latest')
   @ApiOperation({
-    summary: 'Récupérer une metadata spécifique par ID',
+    summary: 'Récupérer la dernière metadata par ID',
     description: `
 Ce endpoint permet de récupérer les détails complets de la metadata la plus récente d'une application en fonction de son identifiant unique.
 
@@ -109,7 +109,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     `,
   })
   getLatestMetadata(@Param('applicationId') id: string) {
-    return this.applicationService.getMetadata(id);
+    return this.applicationService.getLatestMetadata(id);
   }
 
   @Get('export/excel')

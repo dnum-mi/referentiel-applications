@@ -13,5 +13,5 @@ export interface IRelationRepository {
     dto: RelationApplicationDto,
     ownerId: any,
   ): Promise<Relation>;
-  delete(id: string): Promise<void>;
+  delete(id: string, ownerId: string): Promise<void>;
 }

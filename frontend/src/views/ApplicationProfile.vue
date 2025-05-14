@@ -11,6 +11,7 @@ const route = useRoute();
 const id = route.params.id as string;
 const application = ref<Application | null>(null);
 const metadata = ref<Metadata | null>(null);
+const firstMetadata = ref<Metadata | null>();
 const isLoading = ref(false);
 const errorMessage = ref("");
 
@@ -24,6 +25,7 @@ async function loadApplication() {
   try {
     application.value = await Applications.getApplicationById(id);
     metadata.value = await Applications.getLatestMetadata(id);
+    firstMetadata.value = application.value.metadatas?.[0] || null;
   } catch (error) {
     errorMessage.value = `Une erreur est survenue lors de la récupération de l'application. (${error})`;
   } finally {
@@ -44,8 +46,17 @@ onMounted(() => {
       {{ errorMessage }}
     </div>
     <div v-else-if="application">
-      <h2 class="fr-mt-4w fr-ml-4w">{{ application.label }}</h2>
-      <p v-if="metadata" class="subtitle">Dernière modification : {{ formatDate(metadata.updatedAt) || "inconnue" }}</p>
+      <h2 class="fr-mt-4w fr-ml-4w">
+        {{ application.label }}
+        <p v-if="firstMetadata?.createdAt" class="subtitle">
+          Date de création : {{ new Date(firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
+            firstMetadata.createdBy?.email
+          }})
+        </p>
+        <p v-if="metadata" class="subtitle">
+          Dernière modification : {{ formatDate(metadata.effectiveDate) || "inconnue" }} ({{ metadata.effectiveBy }})
+        </p>
+      </h2>
       <ReportIssue class="button-right" :application="application" />
       <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />
     </div>

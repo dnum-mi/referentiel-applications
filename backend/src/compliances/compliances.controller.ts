@@ -29,6 +29,13 @@ export class CompliancesController {
   ) {
     return this.compliancesService.create({
       ...createComplianceDto,
+      metadata: {
+        create: {
+          applicationId: applicationId,
+          createdById: request.user.keycloakId,
+          updatedById: request.user.keycloakId,
+        },
+      },
       application: {
         connect: {
           id: applicationId,
@@ -65,11 +72,16 @@ export class CompliancesController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the compliance to update' })
   update(
+    @Req() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
-    return this.compliancesService.update(id, updateComplianceDto);
+    return this.compliancesService.update(
+      id,
+      updateComplianceDto,
+      request.user.keycloakId,
+    );
   }
 
   @Delete(':id')
@@ -78,9 +90,10 @@ export class CompliancesController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the compliance to delete' })
   delete(
+    @Req() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.compliancesService.delete(id);
+    return this.compliancesService.delete(id, request.user.keycloakId);
   }
 }

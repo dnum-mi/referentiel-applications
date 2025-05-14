@@ -51,6 +51,7 @@ Vous devez fournir les informations suivantes :
       ...createLabelDto,
       metadata: {
         create: {
+          applicationId: applicationId,
           createdById: request.user.keycloakId,
           updatedById: request.user.keycloakId,
         },
@@ -104,9 +105,10 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   })
   @ApiResponse({ status: 200 })
   async delete(
+    @Req() request,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id);
+    return this.service.delete(id, request.user.keycloakId);
   }
 }

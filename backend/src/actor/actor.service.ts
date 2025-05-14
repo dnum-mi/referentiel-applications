@@ -34,8 +34,8 @@ export class ActorService {
     return await this.actorRepository.update(where, data, ownerId);
   }
 
-  public async delete(id: string) {
+  public async delete(id: string, ownerId: string) {
     await this.findOne(id);
-    return await this.actorRepository.delete(id);
+    return await this.actorRepository.delete(id, ownerId);
   }
 }

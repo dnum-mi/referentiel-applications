@@ -4,9 +4,14 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RelationApplicationDto } from '../../application/dto/relation-application.dto';
 import { Relation } from '../../domain/relation.entity';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
+
 @Injectable()
 export class RelationRepository implements IRelationRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metadataService: MetadatasService,
+  ) {}
 
   public async create({
     dto,
@@ -19,39 +24,23 @@ export class RelationRepository implements IRelationRepository {
       data: dto,
       include: {
         sourceApplication: {
-          select: {
-            id: true,
-            metadata: true,
-          },
+          select: { id: true },
         },
         targetApplication: {
-          select: {
-            id: true,
-            metadata: true,
-          },
+          select: { id: true },
         },
       },
     });
 
-    if (createdRelation.sourceApplication?.metadata?.id) {
-      await this.prisma.metadata.update({
-        where: { id: createdRelation.sourceApplication.metadata.id },
-        data: {
-          updatedById: ownerId,
-          updatedAt: new Date(),
-        },
-      });
-    }
+    await this.metadataService.updateOldestMetadataForApplication(
+      createdRelation.sourceApplication.id,
+      ownerId,
+    );
 
-    if (createdRelation.targetApplication?.metadata?.id) {
-      await this.prisma.metadata.update({
-        where: { id: createdRelation.targetApplication.metadata.id },
-        data: {
-          updatedById: ownerId,
-          updatedAt: new Date(),
-        },
-      });
-    }
+    await this.metadataService.updateOldestMetadataForApplication(
+      createdRelation.targetApplication.id,
+      ownerId,
+    );
 
     return createdRelation;
   }
@@ -76,44 +65,50 @@ export class RelationRepository implements IRelationRepository {
       data: dto,
       include: {
         sourceApplication: {
-          select: {
-            id: true,
-            metadata: true,
-          },
+          select: { id: true },
         },
         targetApplication: {
-          select: {
-            id: true,
-            metadata: true,
-          },
+          select: { id: true },
         },
       },
     });
 
-    if (updated.sourceApplication?.metadata?.id) {
-      await this.prisma.metadata.update({
-        where: { id: updated.sourceApplication.metadata.id },
-        data: {
-          updatedById: ownerId,
-          updatedAt: new Date(),
-        },
-      });
-    }
+    await this.metadataService.updateOldestMetadataForApplication(
+      updated.sourceApplication.id,
+      ownerId,
+    );
 
-    if (updated.targetApplication?.metadata?.id) {
-      await this.prisma.metadata.update({
-        where: { id: updated.targetApplication.metadata.id },
-        data: {
-          updatedById: ownerId,
-          updatedAt: new Date(),
-        },
-      });
-    }
+    await this.metadataService.updateOldestMetadataForApplication(
+      updated.targetApplication.id,
+      ownerId,
+    );
 
     return updated;
   }
 
-  public async delete(id: string): Promise<void> {
+  public async delete(id: string, ownerId: string): Promise<void> {
+    const deletedRelation = await this.prisma.relation.findFirst({
+      where: { id },
+      include: {
+        sourceApplication: {
+          select: { id: true },
+        },
+        targetApplication: {
+          select: { id: true },
+        },
+      },
+    });
+
+    await this.metadataService.updateOldestMetadataForApplication(
+      deletedRelation.sourceApplication.id,
+      ownerId,
+    );
+
+    await this.metadataService.updateOldestMetadataForApplication(
+      deletedRelation.targetApplication.id,
+      ownerId,
+    );
+
     await this.prisma.relation.delete({
       where: { id },
     });

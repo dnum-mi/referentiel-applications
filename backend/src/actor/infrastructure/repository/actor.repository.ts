@@ -30,6 +30,7 @@ export class ActorRepository implements IActorRepository {
       }),
       metadata: {
         create: {
+          applicationId: applicationId,
           createdById: ownerId,
           updatedById: ownerId,
         },
@@ -87,34 +88,34 @@ export class ActorRepository implements IActorRepository {
       include: { metadata: true },
     });
 
-    let metadataId = existingActor?.metadata?.id;
-
-    if (metadataId) {
-      await this.prisma.metadata.update({
-        where: { id: metadataId },
-        data: {
-          updatedById: ownerId,
-          updatedAt: new Date(),
-        },
-      });
-    } else {
-      const newMetadata = await this.prisma.metadata.create({
-        data: {
-          createdById: ownerId,
-          updatedById: ownerId,
-        },
-      });
-      metadataId = newMetadata.id;
-
-      data.metadata = {
-        connect: { id: metadataId },
-      };
-    }
+    await this.prisma.metadata.update({
+      where: { id: existingActor?.metadata?.id },
+      data: {
+        updatedById: ownerId,
+        updatedAt: new Date(),
+      },
+    });
 
     return await this.prisma.actor.update({ where, data });
   }
 
-  public async delete(id: string) {
-    return await this.prisma.actor.delete({ where: { id } });
+  public async delete(id: string, ownerId: string) {
+    const deletedActor = await this.prisma.$transaction(async (tx) => {
+      const updatedMetadata = await tx.metadata.updateMany({
+        where: { actors: { some: { id } } },
+        data: {
+          deletedById: ownerId,
+          deletedAt: new Date(),
+        },
+      });
+
+      const deletedActor = await tx.actor.delete({
+        where: { id },
+      });
+
+      return deletedActor;
+    });
+
+    return deletedActor;
   }
 }
