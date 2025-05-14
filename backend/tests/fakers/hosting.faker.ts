@@ -24,10 +24,6 @@ export class HostingFaker {
           },
         },
         label: faker.helpers.maybe(() => faker.commerce.productName()),
-        region: faker.helpers.maybe(() => faker.location.state()),
-        nature: faker.helpers.maybe(() =>
-          faker.helpers.arrayElement(Object.values(Nature)),
-        ),
         ...restOverride,
       },
     });

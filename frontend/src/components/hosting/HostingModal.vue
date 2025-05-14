@@ -115,8 +115,6 @@ const handleSubmit = async () => {
   try {
     const formData: Partial<Hosting> = {
       label: hostingForm.value.label,
-      region: props.initialHosting?.region || "Default",
-      nature: props.initialHosting?.nature || "NON_DEFINIE",
     };
 
     // Only include hostingOptionId if it's not empty

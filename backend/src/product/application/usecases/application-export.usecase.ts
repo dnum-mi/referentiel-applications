@@ -77,11 +77,12 @@ export class ExportApplicationsUseCase {
         rows: ensureSheetHasAtLeastOneRow(apps.flatMap(mapHostings), {
           applicationId: '',
           applicationLabel: 'Aucune application',
+          label: '',
           provider: 'Aucun hébergement',
-          region: '',
           site: '',
-          nature: '',
           platform: '',
+          building: '',
+          room: '',
         }),
       },
       {

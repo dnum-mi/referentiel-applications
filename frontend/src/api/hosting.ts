@@ -9,8 +9,6 @@ const Hostings = {
   async create(hosting: Hosting, applicationId: string): Promise<Hosting> {
     const payload = {
       label: hosting.label,
-      region: hosting.region,
-      nature: hosting.nature,
       applicationId: applicationId,
       hostingOptionId: hosting.hostingOptionId,
     };
@@ -20,8 +18,6 @@ const Hostings = {
   async update(hostingId: string, hosting: Hosting, applicationId: string): Promise<Hosting> {
     const payload = {
       label: hosting.label,
-      region: hosting.region,
-      nature: hosting.nature,
       applicationId: applicationId,
       hostingOptionId: hosting.hostingOptionId,
     };
