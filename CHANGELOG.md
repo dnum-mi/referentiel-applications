@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.17.1...v1.18.0) (2025-05-15)
+
+
+### Features
+
+* :sparkles: add URL handling for active tab in ApplicationOverview component ([#664](https://github.com/dnum-mi/referentiel-applications/issues/664)) ([66b1d75](https://github.com/dnum-mi/referentiel-applications/commit/66b1d75081a0393b79e505d0e7b71f07863557df))
+
 ## [1.17.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.17.0...v1.17.1) (2025-05-13)
 
 
