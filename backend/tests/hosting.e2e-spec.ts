@@ -30,32 +30,6 @@ describe('Hostings', () => {
       .expect(200);
   });
 
-  it(`/POST applications/:applicationId/hostings with legacy fields`, async () => {
-    const TOKEN = await getToken(user);
-    const newHosting = {
-      provider: 'DTNUM',
-      platform: 'VIRTUALISATION',
-      site: 'CER(RENNES)',
-      label: 'Test Hosting',
-      region: 'Europe',
-      nature: 'VIRTUEL',
-    };
-
-    const response = await request(app().getHttpServer())
-      .post(`/applications/${application.id}/hostings`)
-      .send(newHosting)
-      .set('Authorization', `Bearer ${TOKEN}`)
-      .expect(201);
-
-    expect(response.body.provider).toBe(newHosting.provider);
-    expect(response.body.platform).toBe(newHosting.platform);
-    expect(response.body.site).toBe(newHosting.site);
-    expect(response.body.label).toBe(newHosting.label);
-    expect(response.body.region).toBe(newHosting.region);
-    expect(response.body.nature).toBe(newHosting.nature);
-    expect(response.body.applicationId).toBe(application.id);
-  });
-
   it(`/POST applications/:applicationId/hostings with hostingOption reference`, async () => {
     const TOKEN = await getToken(user);
     const hostingOption = await HostingOptionFaker.create();
@@ -63,8 +37,6 @@ describe('Hostings', () => {
     const newHosting = {
       hostingOptionId: hostingOption.id,
       label: 'Test Hosting with Option',
-      region: 'Europe',
-      nature: 'VIRTUEL',
     };
 
     const response = await request(app().getHttpServer())
@@ -84,30 +56,6 @@ describe('Hostings', () => {
 
     const response = await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings/${hosting.id}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
-      .expect(200);
-  });
-
-  it(`/PATCH applications/:applicationId/hostings/:id with legacy fields`, async () => {
-    const TOKEN = await getToken(user);
-    const hostingOption = await HostingOptionFaker.create();
-    const hosting = await HostingFaker.create({
-      application: application,
-      hostingOption: hostingOption,
-    });
-
-    const updateData = {
-      provider: 'SCALEWAY',
-      platform: 'CLOUD PI NATIVE',
-      site: 'LOGNES(SIL)',
-      label: 'Updated Test Hosting',
-      region: 'Updated Region',
-      nature: 'CLOUD',
-    };
-
-    const response = await request(app().getHttpServer())
-      .patch(`/applications/${application.id}/hostings/${hosting.id}`)
-      .send(updateData)
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
   });

@@ -10,13 +10,7 @@ model HostingOption {
 
 model Hosting {
   id       String  @id @default(cuid())
-  // Keep original fields for migration period
-  provider String?
   label    String?
-  region   String?
-  site     String?
-  nature   Nature?
-  platform String?
 
   hostingOptionId String?
   hostingOption   HostingOption? @relation(fields: [hostingOptionId], references: [id])

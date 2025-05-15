@@ -26,9 +26,9 @@ export function getFullField(
   if (field === 'hostings' && Array.isArray(app.hostings)) {
     return app.hostings
       .map((h) => {
-        const provider = h.provider ?? '';
-        const region = h.region ?? '';
-        return `${provider}${region ? ` (${region})` : ''}`;
+        const provider = h.hostingOption?.provider ?? '';
+        const site = h.hostingOption?.site ?? '';
+        return `${provider}${site ? ` (${site})` : ''}`;
       })
       .join(', ');
   }
@@ -55,11 +55,12 @@ export function mapHostings(app: ApplicationWithAllRelations) {
     app.hostings?.map((h) => ({
       applicationId: app.id,
       applicationLabel: app.label,
-      provider: h.provider,
-      region: h.region,
-      site: h.site,
-      nature: h.nature,
-      platform: h.platform,
+      label: h.label || '',
+      provider: h.hostingOption?.provider || '',
+      site: h.hostingOption?.site || '',
+      platform: h.hostingOption?.platform || '',
+      building: h.hostingOption?.building || '',
+      room: h.hostingOption?.room || '',
     })) ?? []
   );
 }

@@ -1,8 +1,6 @@
 export interface Hosting {
   id: string;
   label?: string;
-  region?: string;
-  nature: string;
   hostingOptionId?: string;
   hostingOption?: HostingOption;
   applicationId: string;

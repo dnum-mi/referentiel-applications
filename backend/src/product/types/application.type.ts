@@ -19,7 +19,11 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
       include: { sourceApplication: true };
     };
     events: true;
-    hostings: true;
+    hostings: {
+      include: {
+        hostingOption: true;
+      };
+    };
     owner: true;
   };
 }>;

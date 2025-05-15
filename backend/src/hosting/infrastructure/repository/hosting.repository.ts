@@ -58,7 +58,19 @@ export class HostingRepository implements IHostingRepository {
   }
 
   async findBySite(site: string): Promise<Hosting[]> {
-    return this.prisma.hosting.findMany({ where: { site } });
+    return this.prisma.hosting.findMany({
+      where: {
+        hostingOption: {
+          site: {
+            equals: site,
+            mode: 'insensitive',
+          },
+        },
+      },
+      include: {
+        hostingOption: true,
+      },
+    });
   }
 
   async findByApplicationId(applicationId: string): Promise<Hosting[]> {
@@ -73,47 +85,27 @@ export class HostingRepository implements IHostingRepository {
   async findApplicationsBySite(site: string): Promise<Hosting[]> {
     return this.prisma.hosting.findMany({
       where: {
-        OR: [
-          {
-            site: {
-              equals: site,
-              mode: 'insensitive',
-            },
+        hostingOption: {
+          site: {
+            equals: site,
+            mode: 'insensitive',
           },
-          {
-            hostingOption: {
-              site: {
-                equals: site,
-                mode: 'insensitive',
-              },
-            },
-          },
-        ],
+        },
       },
-      include: { application: true },
+      include: {
+        application: true,
+        hostingOption: true,
+      },
     });
   }
 
   async findDistinctSites(): Promise<string[]> {
-    const results = await this.prisma.hosting.findMany({
-      select: { site: true },
-      distinct: ['site'],
-      orderBy: { site: 'asc' },
-    });
-
-    // Also get sites from HostingOption
     const hostingOptionSites = await this.prisma.hostingOption.findMany({
       select: { site: true },
       distinct: ['site'],
       orderBy: { site: 'asc' },
     });
 
-    const allSites = [
-      ...results.map((r) => r.site).filter(Boolean),
-      ...hostingOptionSites.map((r) => r.site),
-    ];
-
-    // Deduplicate sites
-    return [...new Set(allSites)];
+    return hostingOptionSites.map((r) => r.site);
   }
 }

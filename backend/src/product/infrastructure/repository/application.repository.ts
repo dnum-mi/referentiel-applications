@@ -86,11 +86,12 @@ export class ApplicationRepository implements IApplicationRepository {
       (
         SELECT jsonb_agg(
           jsonb_build_object(
-            'platform', host.platform,
-            'site', host.site
+            'platform', ho.platform,
+            'site', ho.site
           )
         )
         FROM "Hosting" host
+        LEFT JOIN "HostingOption" ho ON host."hostingOptionId" = ho.id
         WHERE host."applicationId" = a.id
       ),
       '[]'::jsonb
@@ -118,7 +119,11 @@ export class ApplicationRepository implements IApplicationRepository {
           },
         },
         events: true,
-        hostings: true,
+        hostings: {
+          include: {
+            hostingOption: true,
+          },
+        },
         relationsAsSource: {
           include: { targetApplication: true },
         },
@@ -143,7 +148,11 @@ export class ApplicationRepository implements IApplicationRepository {
           include: { sourceApplication: true },
         },
         events: true,
-        hostings: true,
+        hostings: {
+          include: {
+            hostingOption: true,
+          },
+        },
         owner: true,
       },
     });
