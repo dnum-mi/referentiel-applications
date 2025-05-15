@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Application } from "@/models/Application";
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import ActorManager from "./actor/ActorTab.vue";
 import Compliances from "./CompliancesTab.vue";
 import Events from "./evenement/EventsTab.vue";
@@ -13,6 +14,8 @@ const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
 const application = ref<Application>(props.application);
 const activeTab = ref(0);
+const router = useRouter();
+const route = useRoute();
 
 watch(
   () => props.application,
@@ -21,11 +24,31 @@ watch(
   },
 );
 
+// Watch for changes to the activeTab and update the URL
+watch(
+  () => activeTab.value,
+  (newTab) => {
+    router.replace({
+      query: { ...route.query, tab: newTab.toString() },
+    });
+  },
+);
+
+onMounted(() => {
+  // Read the tab from URL on component mount
+  const tabParam = route.query.tab;
+  if (tabParam && !isNaN(Number(tabParam))) {
+    const tabIndex = Number(tabParam);
+    if (tabIndex >= 0 && tabIndex < tabs.length) {
+      activeTab.value = tabIndex;
+    }
+  }
+});
+
 const updateApplication = (updatedApp: Application) => {
   Object.assign(application.value, updatedApp);
 };
 
-const applicationTabListName = "Informations sur l’application";
 const tabs = [
   { title: "Informations générales", icon: "ri-checkbox-circle-line", component: InformationsGenerales },
   {
@@ -54,7 +77,7 @@ const tabs = [
 ];
 </script>
 <template>
-  <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName">
+  <DsfrTabs v-model="activeTab" tab-list-name="Informations sur l'application">
     <template #tab-items>
       <DsfrTabItem
         v-for="(tab, index) in tabs"
