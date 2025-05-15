@@ -12,12 +12,11 @@ export const RelationTypeLabels: Record<string, string> = {
 };
 
 export const PriorityRestartLabels: Record<string, string> = {
-  p0: 'P0 - Critique',
-  p1: 'P1 - Très haute',
-  p2: 'P2 - Haute',
-  p3: 'P3 - Moyenne',
-  p4: 'P4 - Faible',
-  p5: 'P5 - Très faible',
+  R0: 'R0 - Immédiat (H24)',
+  R1: 'R1 - Dès que le socle technique est rétabli (H24)',
+  R1_STAR: "R1* - Selon période d'activité",
+  R2: 'R2 - Dès que possible (H24)',
+  R3: 'R3 - Quand le plus urgent est réalisé (H0)',
 };
 
 export const ComplianceTypeLabels: Record<string, string> = {
