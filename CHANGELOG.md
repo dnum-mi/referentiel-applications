@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.19.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.18.0...v1.19.0) (2025-05-19)
+
+
+### Features
+
+* **front:** :sparkles: Add editor markdown for description application ([138d530](https://github.com/dnum-mi/referentiel-applications/commit/138d53097d2076361d6bf108d7cd61872719aa84))
+
+
+### Bug Fixes
+
+* :bug: fix priority restart and hosting search filters ([#680](https://github.com/dnum-mi/referentiel-applications/issues/680)) ([81bd9ac](https://github.com/dnum-mi/referentiel-applications/commit/81bd9acefbf5a9fc89402d36e52b609253455aa8))
+
 ## [1.18.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.17.1...v1.18.0) (2025-05-15)
 
 
