@@ -7,12 +7,11 @@ const searchStore = useApplicationSearchStore();
 const selectedPriorities = toRef(searchStore.filters, "priorityRestart");
 
 const priorityOptions = [
-  { value: "p0", label: "P0 - Critique" },
-  { value: "p1", label: "P1 - Haute" },
-  { value: "p2", label: "P2 - Moyenne" },
-  { value: "p3", label: "P3 - Basse" },
-  { value: "p4", label: "P4 - Faible" },
-  { value: "p5", label: "P5 - Très faible" },
+  { value: "R0", label: "R0 - Immédiat (H24)" },
+  { value: "R1", label: "R1 - Dès que le socle technique est rétabli (H24)" },
+  { value: "R1_STAR", label: "R1* - Selon période d'activité" },
+  { value: "R2", label: "R2 - Dès que possible (H24)" },
+  { value: "R3", label: "R3 - Quand le plus urgent est réalisé (H0)" },
 ];
 
 function togglePriority(value: string, event: Event) {
