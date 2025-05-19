@@ -54,3 +54,37 @@ export function buildShortNameFilter(shortName?: string): Prisma.Sql[] {
   const pattern = `%${shortName.toLowerCase()}%`;
   return [Prisma.sql`lower(a."shortName") ILIKE ${pattern}`];
 }
+
+export function buildHostingSearchFilter(hostingSearch?: string): Prisma.Sql[] {
+  if (!hostingSearch) return [];
+
+  const pattern = `%${hostingSearch.toLowerCase()}%`;
+  return [
+    Prisma.sql`
+      EXISTS (
+        SELECT 1
+        FROM "Hosting" host
+        JOIN "HostingOption" ho ON host."hostingOptionId" = ho.id
+        WHERE (
+          translate(lower(ho.site), ${accentFrom}, ${accentTo}) 
+            ILIKE translate(${pattern}, ${accentFrom}, ${accentTo})
+          OR translate(lower(ho.platform), ${accentFrom}, ${accentTo}) 
+            ILIKE translate(${pattern}, ${accentFrom}, ${accentTo})
+          OR translate(lower(ho.provider), ${accentFrom}, ${accentTo}) 
+            ILIKE translate(${pattern}, ${accentFrom}, ${accentTo})
+          OR (
+            ho.building IS NOT NULL 
+            AND translate(lower(ho.building), ${accentFrom}, ${accentTo}) 
+              ILIKE translate(${pattern}, ${accentFrom}, ${accentTo})
+          )
+          OR (
+            ho.room IS NOT NULL 
+            AND translate(lower(ho.room), ${accentFrom}, ${accentTo}) 
+              ILIKE translate(${pattern}, ${accentFrom}, ${accentTo})
+          )
+        )
+        AND host."applicationId" = a.id
+      )
+    `,
+  ];
+}

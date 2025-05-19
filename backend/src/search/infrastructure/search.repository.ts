@@ -67,6 +67,24 @@ export class ApplicationSearchRepository
         `,
       },
       {
+        key: 'hostingSearch',
+        enabled: !!dto.hostingSearch,
+        query: () =>
+          Prisma.sql`
+          SELECT DISTINCT a.id
+          FROM public.applications a
+          LEFT JOIN public."Hosting" h ON h."applicationId" = a.id
+          LEFT JOIN public."HostingOption" ho ON h."hostingOptionId" = ho.id
+          WHERE (
+            LOWER(ho.site) LIKE ${`%${dto.hostingSearch?.toLowerCase() ?? ''}%`} OR
+            LOWER(ho.platform) LIKE ${`%${dto.hostingSearch?.toLowerCase() ?? ''}%`} OR
+            LOWER(ho.provider) LIKE ${`%${dto.hostingSearch?.toLowerCase() ?? ''}%`} OR
+            (ho.building IS NOT NULL AND LOWER(ho.building) LIKE ${`%${dto.hostingSearch?.toLowerCase() ?? ''}%`}) OR
+            (ho.room IS NOT NULL AND LOWER(ho.room) LIKE ${`%${dto.hostingSearch?.toLowerCase() ?? ''}%`})
+          )
+        `,
+      },
+      {
         key: 'organizationLabel',
         enabled: !!dto.organizationLabel,
         query: () =>

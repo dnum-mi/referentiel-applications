@@ -69,6 +69,15 @@ export class SearchApplicationDto {
   organizationLabel?: string;
 
   @ApiPropertyOptional({
+    description:
+      "Recherche unifiée sur tous les champs d'hébergement (site, plateforme, fournisseur, bâtiment, salle)",
+    example: 'Paris',
+  })
+  @IsOptional()
+  @IsString()
+  hostingSearch?: string;
+
+  @ApiPropertyOptional({
     description: 'Filtrer par site d’hébergement ',
     example: 'LOGNES(SIL)',
   })

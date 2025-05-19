@@ -33,15 +33,15 @@ function togglePriority(value: string, event: Event) {
 </script>
 
 <template>
-  <div class="filter-section">
-    <p>
+  <div>
+    <label class="fr-label fr-mb-2w">
       Priorité de redémarrage
       <small v-if="selectedPriorities.length > 0">
         ({{ selectedPriorities.length }} sélectionnée<span v-if="selectedPriorities.length > 1">s</span>)
       </small>
-    </p>
+    </label>
 
-    <div class="checkbox-list">
+    <div>
       <label v-for="option in priorityOptions" :key="option.value" class="checkbox-item">
         <input
           type="checkbox"
@@ -54,17 +54,3 @@ function togglePriority(value: string, event: Event) {
     </div>
   </div>
 </template>
-
-<style scoped>
-.checkbox-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-</style>

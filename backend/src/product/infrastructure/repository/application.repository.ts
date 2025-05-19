@@ -12,6 +12,7 @@ import {
   buildPriorityFilter,
   buildShortNameFilter,
   buildTagFilters,
+  buildHostingSearchFilter,
 } from './search.utils';
 import { ApplicationWithAllRelations } from 'src/product/types/application.type';
 
@@ -63,6 +64,7 @@ export class ApplicationRepository implements IApplicationRepository {
       tag,
       priorityRestart,
       shortName,
+      hostingSearch,
       page = 0,
       limit = 12,
     } = searchParams;
@@ -74,6 +76,7 @@ export class ApplicationRepository implements IApplicationRepository {
       ...buildTagFilters(tag),
       ...buildPriorityFilter(priorityRestart),
       ...buildShortNameFilter(shortName),
+      ...buildHostingSearchFilter(hostingSearch),
     ];
 
     const whereClause = conditions.length
