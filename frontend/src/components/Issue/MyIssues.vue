@@ -21,7 +21,7 @@ onMounted(async () => {
 });
 
 const rows = computed(() =>
-  reportStore.myReports.map((report) => ({
+  reportStore.userReports.map((report) => ({
     Application: {
       label: report.application?.label,
       to: {
@@ -84,14 +84,17 @@ const rows = computed(() =>
   color: var(--info-425-625);
   background-color: var(--info-950-100);
 }
+
 :deep(.in_pending) {
   color: var(--error-425-625);
   background-color: var(--error-950-100);
 }
+
 :deep(.done) {
   color: var(--success-425-625);
   background-color: var(--success-950-100);
 }
+
 .text-center {
   display: flex;
   justify-content: center;
