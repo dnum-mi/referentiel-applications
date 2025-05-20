@@ -52,7 +52,7 @@ const handleSubmit = () => {
 
     <div class="fr-input-group fr-mt-3w">
       <label class="fr-label" for="email">Email</label>
-      <input type="email" id="email" v-model="form.email" class="fr-input" required placeholder="exemple@domaine.com" />
+      <input type="email" id="email" v-model="form.email" class="fr-input" placeholder="exemple@domaine.com" />
     </div>
 
     <div class="fr-input-group fr-mt-3w">
