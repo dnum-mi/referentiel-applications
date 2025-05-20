@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.20.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.19.0...v1.20.0) (2025-05-20)
+
+
+### Features
+
+* **search:** :sparkles: use single hosting search filter to application search functionality ([#685](https://github.com/dnum-mi/referentiel-applications/issues/685)) ([432ec61](https://github.com/dnum-mi/referentiel-applications/commit/432ec6155e0123f5bb1bf3a362c49edd6b4ba5ac))
+
+
+### Bug Fixes
+
+* **front:** :bug: Fix my reports list and all reports list ([#684](https://github.com/dnum-mi/referentiel-applications/issues/684)) ([4fce899](https://github.com/dnum-mi/referentiel-applications/commit/4fce89993d2b52dd5adaec6f4f1f135a5ab358ef))
+* **front:** :bug: fix the fact that email should not be required when an actor is created ([#687](https://github.com/dnum-mi/referentiel-applications/issues/687)) ([984c6d0](https://github.com/dnum-mi/referentiel-applications/commit/984c6d05437b98ed98e6631a8ce722d4ab9a0fd3))
+
 ## [1.19.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.18.0...v1.19.0) (2025-05-19)
 
 
