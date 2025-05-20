@@ -74,4 +74,13 @@ export class SearchApplicationDto {
   @IsOptional()
   @IsString()
   order?: 'asc' | 'desc';
+
+  @ApiPropertyOptional({
+    description:
+      "Recherche sur tous les champs d'hébergement (site, plateforme, fournisseur, bâtiment, salle)",
+    example: 'Paris',
+  })
+  @IsOptional()
+  @IsString()
+  hostingSearch?: string;
 }
