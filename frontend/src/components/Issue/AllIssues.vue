@@ -19,7 +19,7 @@ const reportStore = useReportIssueStore();
 const isLoading = computed(() => reportStore.isLoading);
 
 const rows = computed(() =>
-  (reportStore.reports || []).map((report: ReportIssue) => ({
+  (reportStore.allReports || []).map((report: ReportIssue) => ({
     Application: {
       label: report.application?.label,
       to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },

@@ -4,15 +4,16 @@ import type { ReportIssue } from "@/models/ReportIssue";
 import { call } from "@/api/callService";
 
 export const useReportIssueStore = defineStore("reportIssueStore", () => {
+  const userReports = ref<ReportIssue[]>([]);
+  const allReports = ref<ReportIssue[]>([]);
   const reports = ref<ReportIssue[]>([]);
   const issues = ref<ReportIssue[]>([]);
-  const myReports = computed(() => reports.value);
   const isLoading = ref(false);
 
   const fetchMyReports = async () => {
     try {
       const res = await call("reportIssue", "getByNotifierId");
-      reports.value = res || [];
+      userReports.value = res || [];
     } catch (error) {
       console.error("❌ Erreur lors du chargement des signalements : ", error);
     }
@@ -22,7 +23,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     try {
       isLoading.value = true;
       const result = await call("reportIssue", "getAll");
-      reports.value = result;
+      allReports.value = result;
     } catch (err) {
       console.error("❌ Erreur lors du chargement des signalements :", err);
     } finally {
@@ -62,7 +63,8 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
   return {
     reports,
     issues,
-    myReports,
+    userReports,
+    allReports,
     isLoading,
     fetchMyReports,
     fetchAllReports,
