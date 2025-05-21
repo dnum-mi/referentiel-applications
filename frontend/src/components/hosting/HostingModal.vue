@@ -10,20 +10,26 @@
     <div v-else class="fr-form-group">
       <DsfrInput label-visible label="Label" v-model="hostingForm.label" class="fr-mb-3w" />
 
-      <!-- HostingOption selection -->
-      <DsfrSelect
-        v-model="hostingForm.hostingOptionId"
+      <DsfrInput
+        label-visible
         label="Option d'hébergement"
-        :options="hostingOptionsFormatted"
-        class="fr-mb-3w"
+        hint="Commencez à taper pour rechercher"
+        v-model="hostingOptionSearch"
+        list="hostingOptionsList"
         required
+        class="fr-mb-3w"
       />
+      <datalist id="hostingOptionsList">
+        <option v-for="option in hostingOptionsList" :key="option.id">
+          {{ formatOptionText(option) }}
+        </option>
+      </datalist>
     </div>
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton secondary label="Annuler" @click="$emit('close')" />
       <DsfrButton
         type="button"
-        :disabled="isSubmitting || isLoadingOptions"
+        :disabled="isSubmitting || isLoadingOptions || !isFormValid"
         :label="props.initialHosting ? 'Modifier' : 'Créer'"
         @click="handleSubmit"
       >
@@ -51,7 +57,6 @@ const props = defineProps<{
 
 const emit = defineEmits(["close", "hosting-created", "hosting-updated"]);
 
-// Form fields
 const hostingForm = ref({
   hostingOptionId: "",
   label: "",
@@ -59,19 +64,25 @@ const hostingForm = ref({
 
 const hostingOptionsList = ref<HostingOption[]>([]);
 const isLoadingOptions = ref(false);
-
+const hostingOptionSearch = ref("");
 const isSubmitting = ref(false);
 const hostingStore = useHostingStore();
 const toaster = useToaster();
 
-const hostingOptionsFormatted = computed(() => {
-  return [
-    { value: "", text: "Sélectionner une option d'hébergement" },
-    ...hostingOptionsList.value.map((option) => ({
-      value: option.id,
-      text: `${option.provider} - ${option.platform} - ${option.site}${option.building ? ` - ${option.building}` : ""}${option.room ? ` - ${option.room}` : ""}`,
-    })),
-  ];
+const formatOptionText = (option: HostingOption): string => {
+  return [option.provider, option.platform, option.site, option.building || "", option.room || ""].filter(Boolean).join(" - ");
+};
+
+const isFormValid = computed(() => {
+  const exactMatch = hostingOptionsList.value.some((option) => formatOptionText(option) === hostingOptionSearch.value);
+
+  return !!hostingForm.value.hostingOptionId && exactMatch;
+});
+
+watch(hostingOptionSearch, (newValue) => {
+  const matchedOption = hostingOptionsList.value.find((option) => formatOptionText(option) === newValue);
+
+  hostingForm.value.hostingOptionId = matchedOption?.id || "";
 });
 
 const fetchHostingOptions = async () => {
@@ -86,55 +97,48 @@ const fetchHostingOptions = async () => {
   }
 };
 
-onMounted(() => {
-  fetchHostingOptions();
-});
+onMounted(fetchHostingOptions);
 
-// Handle initial hosting data if provided for editing
-watch(
-  () => props.initialHosting,
-  (newVal) => {
-    if (newVal) {
-      hostingForm.value = {
-        hostingOptionId: newVal.hostingOptionId || "",
-        label: newVal.label || "",
-      };
-    } else {
-      // Reset for new hosting
-      hostingForm.value = {
-        hostingOptionId: "",
-        label: "",
-      };
+const setInitialValues = () => {
+  if (!props.initialHosting) {
+    hostingForm.value = { hostingOptionId: "", label: "" };
+    hostingOptionSearch.value = "";
+    return;
+  }
+
+  hostingForm.value = {
+    hostingOptionId: props.initialHosting.hostingOptionId || "",
+    label: props.initialHosting.label || "",
+  };
+
+  if (props.initialHosting.hostingOptionId && hostingOptionsList.value.length > 0) {
+    const selectedOption = hostingOptionsList.value.find((option) => option.id === props.initialHosting?.hostingOptionId);
+    if (selectedOption) {
+      hostingOptionSearch.value = formatOptionText(selectedOption);
     }
-  },
-  { immediate: true },
-);
+  }
+};
+
+watch(() => props.initialHosting, setInitialValues, { immediate: true });
+watch(hostingOptionsList, setInitialValues, { immediate: true });
 
 const handleSubmit = async () => {
   isSubmitting.value = true;
   try {
-    const formData: Partial<Hosting> = {
+    const formData = {
       label: hostingForm.value.label,
+      hostingOptionId: hostingForm.value.hostingOptionId,
+      applicationId: props.applicationId,
+      ...(props.initialHosting ? { id: props.initialHosting.id } : {}),
     };
 
-    // Only include hostingOptionId if it's not empty
-    if (hostingForm.value.hostingOptionId) {
-      formData.hostingOptionId = hostingForm.value.hostingOptionId;
-    }
-
+    let result;
     if (props.initialHosting) {
-      const updatedHosting = await hostingStore.updateHosting(props.applicationId, {
-        ...formData,
-        id: props.initialHosting.id,
-        applicationId: props.applicationId,
-      } as Hosting);
-      emit("hosting-updated", updatedHosting);
+      result = await hostingStore.updateHosting(props.applicationId, formData as Hosting);
+      emit("hosting-updated", result);
     } else {
-      const newHosting = await hostingStore.createHosting(props.applicationId, {
-        ...formData,
-        applicationId: props.applicationId,
-      } as Hosting);
-      emit("hosting-created", newHosting);
+      result = await hostingStore.createHosting(props.applicationId, formData as Hosting);
+      emit("hosting-created", result);
     }
     emit("close");
   } catch (err) {
