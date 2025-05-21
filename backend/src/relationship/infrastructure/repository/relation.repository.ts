@@ -52,6 +52,14 @@ export class RelationRepository implements IRelationRepository {
   public async findOne(id: string): Promise<Relation> {
     return await this.prisma.relation.findUnique({
       where: { id },
+      include: {
+        sourceApplication: {
+          select: { id: true },
+        },
+        targetApplication: {
+          select: { id: true },
+        },
+      },
     });
   }
 
