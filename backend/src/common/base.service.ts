@@ -3,10 +3,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class BaseService<T> {
+  modelName: any;
   constructor(
     private readonly model: any,
     protected readonly prisma: PrismaService,
-  ) {}
+  ) {
+    this.modelName = model.name ?? model.constructor.name;
+  }
 
   async findOne(id: string): Promise<T> {
     const object = await this.model.findUnique({ where: { id } });
@@ -25,15 +28,16 @@ export class BaseService<T> {
   }
 
   async update(id: string, data: any, ownerId?: string): Promise<T> {
+    const { metadata, ...rest } = data;
+
     const updated = await this.model.update({
       where: { id },
-      data,
-      include: { metadata: true },
+      data: rest,
     });
 
-    if (updated.metadata?.id) {
+    if (this.hasMetadata() && 'metadataId' in updated && updated.metadataId) {
       await this.prisma.metadata.update({
-        where: { id: updated.metadata?.id },
+        where: { id: updated.metadataId },
         data: {
           updatedById: ownerId,
           updatedAt: new Date(),
@@ -41,27 +45,41 @@ export class BaseService<T> {
       });
     }
 
-    const { metadata, ...rest } = updated;
-    return rest as T;
+    return updated;
   }
 
   async delete(id: string, ownerId?: string): Promise<T> {
     await this.findOne(id);
 
-    const item = await this.model.findUnique({
-      where: { id },
-      select: { metadataId: true },
-    });
-
-    if (item?.metadataId) {
-      await this.prisma.metadata.update({
-        where: { id: item.metadataId },
-        data: {
-          deletedById: ownerId,
-          deletedAt: new Date(),
-        },
+    if (this.hasMetadata()) {
+      const item = await this.model.findUnique({
+        where: { id },
+        select: { metadataId: true },
       });
+
+      if (item?.metadataId) {
+        await this.prisma.metadata.update({
+          where: { id: item.metadataId },
+          data: {
+            deletedById: ownerId,
+            deletedAt: new Date(),
+          },
+        });
+      }
     }
+
     return this.model.delete({ where: { id } });
+  }
+
+  private hasMetadata(): boolean {
+    const modelsWithMetadata = [
+      'Application',
+      'Actor',
+      'Compliance',
+      'Event',
+      'ExternalRessource',
+      'Label',
+    ];
+    return modelsWithMetadata.includes(this.modelName);
   }
 }
