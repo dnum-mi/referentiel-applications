@@ -86,6 +86,12 @@ const removePopulation = (index: number) => {
 </script>
 
 <template>
+  <DsfrAlert
+    title="Informations minimales"
+    description="Cette étape permet de saisir uniquement les informations essentielles. Les autres éléments seront à compléter directement depuis la fiche de l'application, une fois celle-ci créée."
+    type="info"
+    class="fr-mb-3w"
+  />
   <form @submit.prevent="handleSubmit">
     <DsfrInputGroup label="Label" v-model="form.label" label-visible required />
 
@@ -109,7 +115,8 @@ const removePopulation = (index: number) => {
     />
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Population</label>
+      <label class="fr-label">Populations</label>
+      <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
       <div class="fr-mt-2w">
         <div v-for="(targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">

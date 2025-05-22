@@ -175,6 +175,7 @@ const removePopulation = (index: number) => {
 
     <div class="fr-form-group fr-mt-3w">
       <label class="fr-label">Population</label>
+      <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
       <div class="fr-mt-2w">
         <div v-for="(targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
