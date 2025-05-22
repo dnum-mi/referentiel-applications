@@ -52,7 +52,7 @@ enum RelationType {
 
 enum priorityRestart {
   R0
-  R1 
+  R1
   R1_STAR
   R2
   R3
