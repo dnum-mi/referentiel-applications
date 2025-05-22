@@ -7,11 +7,17 @@ import PriorityRestartFilter from "./PriorityRestartFilter.vue";
 import HostingOptions from "@/api/hosting-options";
 import { DsfrInput } from "@gouvminint/vue-dsfr";
 
+import type { HostingOption } from "@/models/Hosting";
+
 const searchStore = useApplicationSearchStore();
 const siteStore = useSiteStore();
 
 const hostingSearchInput = ref(searchStore.filters.hostingSearch || "");
-const allHostingOptions = ref<{ site: string; platform: string; provider: string; building?: string; room?: string }[]>([]);
+const allHostingOptions = ref<[]>([]);
+
+const formatOptionText = (option: HostingOption): string => {
+  return [option.provider, option.platform, option.site, option.building || "", option.room || ""].filter(Boolean).join(" - ");
+};
 
 const { run: debouncedSearch } = useDebouncedFn(() => {
   searchStore.searchApplications();
@@ -27,7 +33,7 @@ onMounted(async () => {
   }
 });
 
-watch(hostingSearchInput, (value) => {
+watch(hostingSearchInput, (value: string) => {
   searchStore.setFilter("hostingSearch", value);
   searchStore.setFilter("page", 0);
   debouncedSearch();
@@ -45,15 +51,9 @@ watch(hostingSearchInput, (value) => {
       placeholder="Rechercher site, plateforme, fournisseur, etc."
     />
     <datalist id="hostingSuggestionsList">
-      <option v-for="option in allHostingOptions" :key="option.id" :value="option.site"></option>
-      <option v-for="option in allHostingOptions" :key="option.id + '-platform'" :value="option.platform"></option>
-      <option v-for="option in allHostingOptions" :key="option.id + '-provider'" :value="option.provider"></option>
-      <option
-        v-for="option in allHostingOptions.filter((o) => o.building)"
-        :key="option.id + '-building'"
-        :value="option.building"
-      ></option>
-      <option v-for="option in allHostingOptions.filter((o) => o.room)" :key="option.id + '-room'" :value="option.room"></option>
+      <option v-for="option in allHostingOptions" :key="`option-${option.site}-${option.platform}-${option.provider}`">
+        {{ formatOptionText(option) }}
+      </option>
     </datalist>
   </div>
 </template>

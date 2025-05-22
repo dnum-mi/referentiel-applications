@@ -9,8 +9,8 @@ model HostingOption {
 }
 
 model Hosting {
-  id       String  @id @default(cuid())
-  label    String?
+  id    String  @id @default(cuid())
+  label String?
 
   hostingOptionId String?
   hostingOption   HostingOption? @relation(fields: [hostingOptionId], references: [id])
