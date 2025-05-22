@@ -19,7 +19,7 @@ const correctionText = ref("");
 const opened = ref(false);
 
 const title = "Proposer une correction";
-const hint = `Veuillez renseigner votre signalement détecté pour l'application "${application.value?.label || ""}"`;
+const hint = `Veuillez renseigner votre correction détectée pour l'application "${application.value?.label || ""}"`;
 const label = "Proposition";
 
 const submitCorrection = async () => {

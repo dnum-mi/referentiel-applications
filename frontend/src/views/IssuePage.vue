@@ -4,15 +4,15 @@ import allIssues from "@/components/Issue/AllIssues.vue";
 import MyIssues from "@/components/Issue/MyIssues.vue";
 
 const activeTab = ref(0);
-const applicationTabListName = "Informations sur les signalements";
+const applicationTabListName = "Informations sur les corrections";
 const tabs = [
   {
-    title: "Mes signalements",
+    title: "Mes corrections",
     icon: "ri-check-line",
     component: MyIssues,
   },
   {
-    title: "Tous les signalements",
+    title: "Toutes les corrections",
     icon: "ri-links-line",
     component: allIssues,
   },

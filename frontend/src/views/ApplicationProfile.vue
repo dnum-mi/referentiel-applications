@@ -38,7 +38,7 @@ onMounted(loadApplication);
       {{ errorMessage }}
     </div>
     <div v-else-if="application">
-      <h2>{{ application.label }}</h2>
+      <h2 class="fr-mt-4w fr-ml-4w">{{ application.label }}</h2>
       <ReportIssue class="button-right" :application="application" />
       <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />
     </div>
