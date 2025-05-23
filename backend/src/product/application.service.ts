@@ -9,6 +9,7 @@ import {
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
 import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class ApplicationService {
@@ -17,6 +18,7 @@ export class ApplicationService {
     private prisma: PrismaService,
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
+    private readonly metadatasService: MetadatasService,
   ) {}
 
   public async createApplication(
@@ -28,25 +30,21 @@ export class ApplicationService {
       createApplicationDto,
     );
 
-    await this.createApplicationMetadata(application.id, ownerId);
+    await this.metadatasService.createApplicationMetadata(
+      application.id,
+      ownerId,
+    );
 
     for (const labelDto of createApplicationDto.labels || []) {
-      const labelMetadata = await this.prisma.metadata.create({
-        data: {
-          applicationId: application.id,
-          createdById: ownerId,
-          updatedById: ownerId,
-          createdAt: new Date(),
-        },
-      });
-
       await this.labelsService.create({
         source: labelDto.source,
         value: labelDto.value,
         shortname: labelDto.shortname || null,
         metadata: {
-          connect: {
-            id: labelMetadata.id,
+          create: {
+            applicationId: application.id,
+            createdById: ownerId,
+            updatedById: ownerId,
           },
         },
         application: {
@@ -57,23 +55,16 @@ export class ApplicationService {
       });
     }
 
-    const currentLabelMetadata = await this.prisma.metadata.create({
-      data: {
-        applicationId: application.id,
-        createdById: ownerId,
-        updatedById: ownerId,
-        createdAt: new Date(),
-      },
-    });
-
     await this.labelsService.create({
       source:
         'https://referentiel-applications.interieur.rie.gouv.fr/applications',
       value: application.label,
       shortname: application.shortName,
       metadata: {
-        connect: {
-          id: currentLabelMetadata.id,
+        create: {
+          applicationId: application.id,
+          createdById: ownerId,
+          updatedById: ownerId,
         },
       },
       application: {
@@ -102,20 +93,10 @@ export class ApplicationService {
           data: applicationUpdates,
         });
 
-        const oldestMetadata = await tx.metadata.findFirst({
-          where: { applicationId: app.id },
-          orderBy: { createdAt: 'asc' },
-        });
-
-        if (oldestMetadata) {
-          await tx.metadata.update({
-            where: { id: oldestMetadata.id },
-            data: {
-              updatedById: ownerId,
-              updatedAt: new Date(),
-            },
-          });
-        }
+        await this.metadatasService.updateOldestMetadataForApplication(
+          app.id,
+          ownerId,
+        );
 
         if (data.label !== undefined || data.shortName !== undefined) {
           await this.ensureLabelExists(tx, app);
@@ -130,6 +111,10 @@ export class ApplicationService {
         `Application non trouvée pour l'ID: ${where.id}`,
       );
     }
+  }
+
+  public async getLatestMetadata(applicationId: string) {
+    return this.applicationRepository.findLatestMetadata(applicationId);
   }
 
   public async searchApplications(
@@ -175,26 +160,6 @@ export class ApplicationService {
     }
 
     await this.applicationRepository.delete(id);
-  }
-
-  public async getLatestMetadata(applicationId: string) {
-    return this.applicationRepository.findLatestMetadata(applicationId);
-  }
-
-  private async createApplicationMetadata(
-    applicationId: string,
-    ownerId: string,
-  ) {
-    const applicationMetadata = await this.prisma.metadata.create({
-      data: {
-        applicationId: applicationId,
-        createdById: ownerId,
-        updatedById: ownerId,
-        createdAt: new Date(),
-      },
-    });
-
-    return applicationMetadata;
   }
 
   private async persistApplication(ownerId: string, createApplicationDto) {

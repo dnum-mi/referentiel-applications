@@ -1,6 +1,5 @@
 import {
   Controller,
-  Req,
   Get,
   Post,
   Delete,
@@ -18,6 +17,7 @@ import {
 import { LabelsService } from './labels.service';
 import { CreateLabelDto } from './dto/create-label.dto';
 import { Label } from './entities/label.entity';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Labels')
 @Controller('applications/:applicationId/labels')
@@ -43,7 +43,7 @@ Vous devez fournir les informations suivantes :
     description: 'Label créé avec succès.',
   })
   async create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createLabelDto: CreateLabelDto,
     @Param('applicationId') applicationId: string,
   ) {
@@ -52,8 +52,8 @@ Vous devez fournir les informations suivantes :
       metadata: {
         create: {
           applicationId: applicationId,
-          createdById: request.user.keycloakId,
-          updatedById: request.user.keycloakId,
+          createdById: userId,
+          updatedById: userId,
         },
       },
       application: {
@@ -88,12 +88,12 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @ApiBody({ type: CreateLabelDto })
   @ApiResponse({ status: 200, type: Label })
   update(
-    @Req() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    return this.service.update(id, updateLabelDto, request.user.keycloakId);
+    return this.service.update(id, updateLabelDto, userId);
   }
 
   @Delete(':id')
@@ -105,10 +105,10 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   })
   @ApiResponse({ status: 200 })
   async delete(
-    @Req() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id, request.user.keycloakId);
+    return this.service.delete(id, userId);
   }
 }

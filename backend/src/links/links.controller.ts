@@ -1,6 +1,5 @@
 import {
   Controller,
-  Req,
   Get,
   Post,
   Patch,
@@ -11,6 +10,7 @@ import {
 import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { LinksService } from './links.service';
 import { CreateLinkDto } from './dto/create-link.dto';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Links')
 @Controller('applications/:applicationId/links')
@@ -22,7 +22,7 @@ export class LinksController {
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createLinkDto: CreateLinkDto,
     @Param('applicationId') applicationId: string,
   ) {
@@ -31,8 +31,8 @@ export class LinksController {
       metadata: {
         create: {
           applicationId: applicationId,
-          createdById: request.user.keycloakId,
-          updatedById: request.user.keycloakId,
+          createdById: userId,
+          updatedById: userId,
         },
       },
       application: {
@@ -57,12 +57,12 @@ export class LinksController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the link to update' })
   update(
-    @Req() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateLinkDto: CreateLinkDto,
   ) {
-    return this.service.update(id, updateLinkDto, request.user.keycloakId);
+    return this.service.update(id, updateLinkDto, userId);
   }
 
   @Delete(':id')
@@ -71,10 +71,10 @@ export class LinksController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the link to delete' })
   delete(
-    @Req() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id, request.user.keycloakId);
+    return this.service.delete(id, userId);
   }
 }

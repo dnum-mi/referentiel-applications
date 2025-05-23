@@ -6,12 +6,12 @@ import {
   Patch,
   Param,
   Delete,
-  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { CompliancesService } from './compliances.service';
 import { CreateComplianceDto } from './dto/create-compliance.dto';
 import { UpdateComplianceDto } from './dto/update-compliance.dto';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Compliances')
 @Controller('applications/:applicationId/compliances')
@@ -23,7 +23,7 @@ export class CompliancesController {
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createComplianceDto: CreateComplianceDto,
     @Param('applicationId') applicationId: string,
   ) {
@@ -32,8 +32,8 @@ export class CompliancesController {
       metadata: {
         create: {
           applicationId: applicationId,
-          createdById: request.user.keycloakId,
-          updatedById: request.user.keycloakId,
+          createdById: userId,
+          updatedById: userId,
         },
       },
       application: {
@@ -72,16 +72,12 @@ export class CompliancesController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the compliance to update' })
   update(
-    @Req() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
-    return this.compliancesService.update(
-      id,
-      updateComplianceDto,
-      request.user.keycloakId,
-    );
+    return this.compliancesService.update(id, updateComplianceDto, userId);
   }
 
   @Delete(':id')
@@ -90,10 +86,10 @@ export class CompliancesController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the compliance to delete' })
   delete(
-    @Req() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.compliancesService.delete(id, request.user.keycloakId);
+    return this.compliancesService.delete(id, userId);
   }
 }

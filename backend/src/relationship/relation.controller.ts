@@ -6,12 +6,12 @@ import {
   Param,
   Patch,
   Delete,
-  Req,
 } from '@nestjs/common';
 import { RelationService } from './relation.service';
 import { RelationApplicationDto } from './application/dto/relation-application.dto';
 import { Relation } from './domain/relation.entity';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('relation')
 @Controller('relations')
@@ -22,9 +22,9 @@ export class RelationController {
   @ApiOperation({ summary: 'Créer une nouvelle relation' })
   async create(
     @Body() dto: RelationApplicationDto,
-    @Req() request,
+    @UserId() userId: string,
   ): Promise<Relation> {
-    return this.relationService.create(dto, request.user.keycloakId);
+    return this.relationService.create(dto, userId);
   }
 
   @Get()
@@ -49,11 +49,11 @@ export class RelationController {
     description: 'Identifiant unique de la relation à mettre à jour',
   })
   async update(
-    @Req() request,
+    @UserId() userId: string,
     @Param('id') id: string,
     @Body() dto: RelationApplicationDto,
   ): Promise<Relation> {
-    return this.relationService.update(id, dto, request.user.keycloakId);
+    return this.relationService.update(id, dto, userId);
   }
 
   @Delete(':id')
@@ -62,7 +62,10 @@ export class RelationController {
     name: 'id',
     description: 'Identifiant unique de la relation à supprimer',
   })
-  async delete(@Req() request, @Param('id') id: string): Promise<void> {
-    return this.relationService.delete(id, request.user.keycloakId);
+  async delete(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<void> {
+    return this.relationService.delete(id, userId);
   }
 }

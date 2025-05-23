@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Request,
   Get,
   Query,
   Logger,
@@ -24,6 +23,7 @@ import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
 import { Response } from 'express';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('applications')
 @Controller('applications')
@@ -72,17 +72,15 @@ Vous devez fournir les informations suivantes :
   @ApiResponse({ status: 404, description: 'Metadata ou parent non trouvé.' })
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
-    @Request() req,
+    @UserId() userId: string,
   ) {
-    const user = req.user;
-
     Logger.log({
       message: "Début de la création de l'application",
-      userId: user.keycloakId,
+      userId: userId,
       action: 'create',
     });
     const newApplication = await this.applicationService.createApplication(
-      user.keycloakId,
+      userId,
       createApplicationDto,
     );
     return newApplication;
@@ -161,7 +159,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     `,
   })
   async update(
-    @Request() req,
+    @UserId() userId: string,
     @Param('id') id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
   ): Promise<PatchApplicationDto> {
@@ -173,7 +171,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     return this.applicationService.update({
       where: { id: id },
       data: applicationToUpdate,
-      ownerId: req.user.keycloakId,
+      ownerId: userId,
     });
   }
 

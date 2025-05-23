@@ -1,6 +1,5 @@
 import {
   Controller,
-  Req,
   Get,
   Post,
   Patch,
@@ -21,6 +20,7 @@ import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { FiltersDto } from './dto/filters.dto';
 import { EventType } from '@prisma/client';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Events')
 @Controller('applications/:applicationId/events')
@@ -36,7 +36,7 @@ export class EventsController {
   @ApiBody({ type: CreateEventDto })
   @ApiResponse({ status: 201, type: Event })
   create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createEventDto: CreateEventDto,
     @Param('applicationId') applicationId: string,
   ) {
@@ -45,8 +45,8 @@ export class EventsController {
       metadata: {
         create: {
           applicationId: applicationId,
-          createdById: request.user.keycloakId,
-          updatedById: request.user.keycloakId,
+          createdById: userId,
+          updatedById: userId,
         },
       },
       application: {
@@ -91,12 +91,12 @@ export class EventsController {
   @ApiBody({ type: CreateEventDto })
   @ApiResponse({ status: 200, type: Event })
   async update(
-    @Req() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateEventDto: CreateEventDto,
   ) {
-    return this.service.update(id, updateEventDto, request.user.keycloakId);
+    return this.service.update(id, updateEventDto, userId);
   }
 
   @Delete(':id')
@@ -105,10 +105,10 @@ export class EventsController {
   @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiResponse({ status: 200 })
   delete(
-    @Req() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id, request.user.keycloakId);
+    return this.service.delete(id, userId);
   }
 }
