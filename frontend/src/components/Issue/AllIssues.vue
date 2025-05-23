@@ -7,7 +7,7 @@ import { statusDictionary, statusIconClasses } from "@/composables/use-dictionar
 import type { ReportIssue } from "@/models/ReportIssue";
 import { useReportIssueStore } from "@/stores/reportIssueStore";
 
-const title = "Liste de toutes les corrections";
+const title = "Liste de toutes les corrections d'applications";
 const headers = ["Application", "Signalant", "Description", "Date", "Statut"];
 type Status = "in_pending" | "in_progress" | "done";
 

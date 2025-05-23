@@ -8,12 +8,12 @@ const applicationTabListName = "Informations sur les corrections";
 const tabs = [
   {
     title: "Mes corrections",
-    icon: "ri-check-line",
+    icon: "ri-edit-line",
     component: MyIssues,
   },
   {
     title: "Toutes les corrections",
-    icon: "ri-links-line",
+    icon: "ri-edit-line",
     component: allIssues,
   },
 ];
