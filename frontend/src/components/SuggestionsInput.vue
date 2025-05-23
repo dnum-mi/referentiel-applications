@@ -55,6 +55,19 @@ watch(searchSuggestion, (newValue) => {
   }
 });
 
+watch(
+  () => props.returnData,
+  (newValue) => {
+    defaultData.value = newValue;
+    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === newValue);
+    if (foundSuggestion) {
+      searchSuggestion.value = foundSuggestion.label;
+    } else {
+      searchSuggestion.value = "";
+    }
+  },
+);
+
 onBeforeMount(() => {
   if (defaultData.value) {
     const foundSuggestion = (props.searchData || []).find((sug) => sug.id === defaultData.value);
@@ -89,10 +102,12 @@ onBeforeMount(() => {
   max-height: 200px;
   overflow-y: auto;
 }
+
 .suggestion-item {
   padding: 0.5rem;
   cursor: pointer;
 }
+
 .suggestion-item:hover {
   background-color: #f0f0f0;
 }
