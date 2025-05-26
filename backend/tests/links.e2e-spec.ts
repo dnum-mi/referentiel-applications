@@ -37,7 +37,7 @@ describe('Links', () => {
   });
 
   it(`/PATCH applications/:applicationId/links/:id`, async () => {
-    const link = await LinkFaker.create(application);
+    const link = await LinkFaker.create(application, user);
 
     await request(app().getHttpServer())
       .patch(`/applications/${application.id}/links/${link.id}`)
@@ -49,7 +49,7 @@ describe('Links', () => {
   });
 
   it(`/DELETE applications/:applicationId/links/:id`, async () => {
-    const link = await LinkFaker.create(application);
+    const link = await LinkFaker.create(application, user);
 
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/links/${link.id}`)

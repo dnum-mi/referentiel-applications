@@ -79,7 +79,7 @@ export class CompliancesController {
   ) {
     return this.compliancesService.update(id, {
       ...updateComplianceDto,
-      metadata: {
+      metadatas: {
         create: {
           applicationId,
           createdById: userId,

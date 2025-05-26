@@ -15,7 +15,7 @@ import {
   ApiResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { CreateActorDto } from './dto/actor.dto';
+import { CreateActorDto, UpdateActorDto } from './dto/actor.dto';
 import { ActorService } from './actor.service';
 import { Actor } from '@prisma/client';
 import { UserId } from '../common/decorators/user-id.decorator';
@@ -85,7 +85,7 @@ Informations requises :
     @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
-    @Body() actorToUpdate: CreateActorDto,
+    @Body() actorToUpdate: UpdateActorDto,
   ): Promise<Actor> {
     Logger.log({
       message: "Début de la modification de l'acteur",

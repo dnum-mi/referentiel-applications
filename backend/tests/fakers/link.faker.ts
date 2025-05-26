@@ -15,12 +15,12 @@ export class LinkFaker {
           },
         },
         metadatas: {
-          create: [
-            {
-              applicationId: application.id,
-              createdById: user.id,
+          create: {
+            createdById: user.id,
+            application: {
+              connect: { id: application.id },
             },
-          ],
+          },
         },
       },
     });

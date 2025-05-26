@@ -10,7 +10,7 @@ export class HostingFaker {
     user: { id: string };
     [key: string]: any;
   }) {
-    const { hostingOption, application, ...restOverride } = override;
+    const { hostingOption, application, user, ...restOverride } = override;
 
     return await prisma.hosting.create({
       data: {
@@ -22,6 +22,12 @@ export class HostingFaker {
         application: {
           connect: {
             id: application.id,
+          },
+        },
+        metadatas: {
+          create: {
+            createdById: user.id,
+            applicationId: application.id,
           },
         },
         label: faker.helpers.maybe(() => faker.commerce.productName()),
