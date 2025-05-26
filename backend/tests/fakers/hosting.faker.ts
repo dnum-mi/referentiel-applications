@@ -7,7 +7,7 @@ export class HostingFaker {
   static async create(override: {
     hostingOption: { id: string };
     application: { id: string };
-    user: { id: string };
+    user: { keycloakId: string };
     [key: string]: any;
   }) {
     const { hostingOption, application, user, ...restOverride } = override;
@@ -26,7 +26,7 @@ export class HostingFaker {
         },
         metadatas: {
           create: {
-            createdById: user.id,
+            createdById: user.keycloakId,
             applicationId: application.id,
           },
         },

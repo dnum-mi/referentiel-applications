@@ -72,6 +72,7 @@ describe('Hostings', () => {
     });
 
     const updateData = {
+      applicationId: application.id,
       hostingOptionId: hostingOption.id,
       label: 'Hosting with Updated Option',
     };

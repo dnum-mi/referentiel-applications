@@ -13,17 +13,14 @@
 
 */
 
--- 1. Add nullable applicationId column to metadata first
+-- 1. add applicationId
 ALTER TABLE "metadata" ADD COLUMN "applicationId" TEXT;
 
--- 2. Fill applicationId in metadata from applications table
+-- 2. Remplir les valeurs existantes à partir de la relation inversée
 UPDATE "metadata"
 SET "applicationId" = "applications"."id"
 FROM "applications"
-WHERE "applications"."metadataId" = "metadata"."id";
-
--- 3. Set applicationId NOT NULL only after update
-ALTER TABLE "metadata" ALTER COLUMN "applicationId" SET NOT NULL;
+WHERE "applications"."metadataId" = "metadata"."id" AND "applications"."id" IS NOT NULL;
 
 -- 4. Create enum type for action
 CREATE TYPE "MetadataAction" AS ENUM ('add', 'update', 'delete');
@@ -38,6 +35,10 @@ ALTER TABLE "labels" DROP CONSTRAINT "labels_metadataId_fkey";
 
 -- Drop foreign key on updatedById in metadata
 ALTER TABLE "metadata" DROP CONSTRAINT "metadata_updatedById_fkey";
+
+DELETE FROM "metadata" WHERE "applicationId" IS NULL;
+
+ALTER TABLE "metadata" ALTER COLUMN "applicationId" SET NOT NULL;
 
 -- 6. Drop metadataId columns in related tables
 ALTER TABLE "ExternalRessource" DROP COLUMN "metadataId";
