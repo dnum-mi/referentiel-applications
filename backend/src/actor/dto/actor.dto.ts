@@ -4,15 +4,6 @@ import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateActorDto {
   @ApiProperty({
-    example: 'Responsable',
-    description: "Rôle de l'acteur",
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  role: string;
-
-  @ApiProperty({
     example: 'example@example.com',
     description: "Email de l'acteur (Optionel)",
     required: false,
