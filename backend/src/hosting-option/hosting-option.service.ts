@@ -62,4 +62,9 @@ export class HostingOptionService extends BaseService<HostingOption> {
     });
     return results.map((r) => r.provider);
   }
+
+  async delete(id: string): Promise<HostingOption> {
+    await this.findOne(id);
+    return this.prisma.hostingOption.delete({ where: { id } });
+  }
 }
