@@ -164,31 +164,6 @@ export class ApplicationRepository implements IApplicationRepository {
     return results.map((r) => r.application);
   }
 
-  async findLatestMetadata(applicationId: string): Promise<any | null> {
-    const result = await this.prisma.$queryRaw<
-      {
-        id: string;
-        effectiveDate: Date;
-        effectiveBy: string;
-      }[]
-    >(Prisma.sql`
-    SELECT m.id,
-           COALESCE(m."deletedAt", m."updatedAt") AS "effectiveDate",
-           CASE
-             WHEN m."deletedAt" IS NOT NULL THEN u_del."email"
-             ELSE u_upd."email"
-           END AS "effectiveBy"
-    FROM "metadata" m
-    LEFT JOIN "users" u_del ON m."deletedById" = u_del."keycloakId"
-    LEFT JOIN "users" u_upd ON m."updatedById" = u_upd."keycloakId"
-    WHERE m."applicationId" = ${applicationId}
-    ORDER BY COALESCE(m."deletedAt", m."updatedAt") DESC
-    LIMIT 1
-  `);
-
-    return result[0] || null;
-  }
-
   public async delete(id: string): Promise<void> {
     await this.prisma.application.delete({
       where: { id },

@@ -24,13 +24,15 @@ export class HostingRepository implements IHostingRepository {
         ...(hostingOptionId && {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
+        metadatas: {
+          create: {
+            applicationId: applicationId,
+            createdById: ownerId,
+            description: `Création de l'hébergement : ${rest.label}`,
+          },
+        },
       },
     });
-
-    await this.metadataService.updateOldestMetadataForApplication(
-      applicationId,
-      ownerId,
-    );
 
     return createdHosting;
   }
@@ -65,13 +67,16 @@ export class HostingRepository implements IHostingRepository {
         ...(hostingOptionId && {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
+        metadatas: {
+          create: {
+            applicationId: applicationId,
+            createdById: ownerId,
+            action: 'update',
+            description: `Mise à jour de l'hébergement : ${rest.label}`,
+          },
+        },
       },
     });
-
-    await this.metadataService.updateOldestMetadataForApplication(
-      applicationId,
-      ownerId,
-    );
 
     return updatedHosting;
   }
@@ -79,11 +84,18 @@ export class HostingRepository implements IHostingRepository {
   async delete(id: string, ownerId: string): Promise<void> {
     const deletedHosting = await this.prisma.hosting.findFirst({
       where: { id },
+      select: { applicationId: true, label: true },
     });
-    await this.metadataService.updateOldestMetadataForApplication(
-      deletedHosting.applicationId,
-      ownerId,
-    );
+
+    await this.prisma.metadata.create({
+      data: {
+        action: 'delete',
+        applicationId: deletedHosting.applicationId,
+        description: "Suppression de l'hébergement " + deletedHosting.label,
+        createdById: ownerId,
+      },
+    });
+
     await this.prisma.hosting.delete({ where: { id } });
   }
 

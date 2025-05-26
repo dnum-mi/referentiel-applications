@@ -29,11 +29,11 @@ export class CompliancesController {
   ) {
     return this.compliancesService.create({
       ...createComplianceDto,
-      metadata: {
+      metadatas: {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          updatedById: userId,
+          description: `Création de la conformité : ${createComplianceDto.name}`,
         },
       },
       application: {
@@ -77,7 +77,17 @@ export class CompliancesController {
     @Param('id') id: string,
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
-    return this.compliancesService.update(id, updateComplianceDto, userId);
+    return this.compliancesService.update(id, {
+      ...updateComplianceDto,
+      metadata: {
+        create: {
+          applicationId,
+          createdById: userId,
+          action: 'update',
+          description: `Mise à jour de la conformité : ${updateComplianceDto.name}`,
+        },
+      },
+    });
   }
 
   @Delete(':id')

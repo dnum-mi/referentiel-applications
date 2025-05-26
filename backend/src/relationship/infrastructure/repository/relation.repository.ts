@@ -4,43 +4,43 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RelationApplicationDto } from '../../application/dto/relation-application.dto';
 import { Relation } from '../../domain/relation.entity';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class RelationRepository implements IRelationRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly metadataService: MetadatasService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  public async create({
-    dto,
-    ownerId,
-  }: {
-    dto: RelationApplicationDto;
-    ownerId: string;
-  }): Promise<Relation> {
+  public async create(
+    { dto }: { dto: RelationApplicationDto },
+    ownerId: string,
+  ): Promise<Relation> {
     const createdRelation = await this.prisma.relation.create({
       data: dto,
       include: {
         sourceApplication: {
-          select: { id: true },
+          select: { id: true, label: true },
         },
         targetApplication: {
-          select: { id: true },
+          select: { id: true, label: true },
         },
       },
     });
 
-    await this.metadataService.updateOldestMetadataForApplication(
-      createdRelation.sourceApplication.id,
-      ownerId,
-    );
+    const description = `Relation entre ${createdRelation.sourceApplication.label} et ${createdRelation.targetApplication.label} ajoutée`;
 
-    await this.metadataService.updateOldestMetadataForApplication(
-      createdRelation.targetApplication.id,
-      ownerId,
-    );
+    await this.prisma.metadata.createMany({
+      data: [
+        {
+          applicationId: createdRelation.sourceApplication.id,
+          description,
+          createdById: ownerId,
+        },
+        {
+          applicationId: createdRelation.targetApplication.id,
+          description,
+          createdById: ownerId,
+        },
+      ],
+    });
 
     return createdRelation;
   }
@@ -73,23 +73,32 @@ export class RelationRepository implements IRelationRepository {
       data: dto,
       include: {
         sourceApplication: {
-          select: { id: true },
+          select: { id: true, label: true },
         },
         targetApplication: {
-          select: { id: true },
+          select: { id: true, label: true },
         },
       },
     });
 
-    await this.metadataService.updateOldestMetadataForApplication(
-      updated.sourceApplication.id,
-      ownerId,
-    );
+    const description = `Relation entre ${updated.sourceApplication.label} et ${updated.targetApplication.label} mise à jour`;
 
-    await this.metadataService.updateOldestMetadataForApplication(
-      updated.targetApplication.id,
-      ownerId,
-    );
+    await this.prisma.metadata.createMany({
+      data: [
+        {
+          applicationId: updated.sourceApplication.id,
+          action: 'update',
+          description,
+          createdById: ownerId,
+        },
+        {
+          applicationId: updated.targetApplication.id,
+          action: 'update',
+          description,
+          createdById: ownerId,
+        },
+      ],
+    });
 
     return updated;
   }
@@ -99,23 +108,32 @@ export class RelationRepository implements IRelationRepository {
       where: { id },
       include: {
         sourceApplication: {
-          select: { id: true },
+          select: { id: true, label: true },
         },
         targetApplication: {
-          select: { id: true },
+          select: { id: true, label: true },
         },
       },
     });
 
-    await this.metadataService.updateOldestMetadataForApplication(
-      deletedRelation.sourceApplication.id,
-      ownerId,
-    );
+    const description = `Relation entre ${deletedRelation.sourceApplication.label} et ${deletedRelation.targetApplication.label} supprimée`;
 
-    await this.metadataService.updateOldestMetadataForApplication(
-      deletedRelation.targetApplication.id,
-      ownerId,
-    );
+    await this.prisma.metadata.createMany({
+      data: [
+        {
+          applicationId: deletedRelation.sourceApplication.id,
+          action: 'delete',
+          description,
+          createdById: ownerId,
+        },
+        {
+          applicationId: deletedRelation.targetApplication.id,
+          action: 'delete',
+          description,
+          createdById: ownerId,
+        },
+      ],
+    });
 
     await this.prisma.relation.delete({
       where: { id },

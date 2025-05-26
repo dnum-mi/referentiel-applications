@@ -5,7 +5,6 @@ import {
   Patch,
   Delete,
   Body,
-  Request,
   Param,
   Logger,
 } from '@nestjs/common';
@@ -16,9 +15,10 @@ import {
   ApiResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { CreateActorDto, UpdateActorDto } from './dto/actor.dto';
+import { CreateActorDto } from './dto/actor.dto';
 import { ActorService } from './actor.service';
 import { Actor } from '@prisma/client';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Actors')
 @Controller('applications/:applicationId/actors')
@@ -43,14 +43,17 @@ Informations requises :
   })
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiResponse({ status: 201, description: 'Acteur créé avec succès' })
-  public async create(@Body() createActorDto: CreateActorDto, @Request() req) {
+  public async create(
+    @Body() createActorDto: CreateActorDto,
+    @UserId() userId: string,
+  ) {
     Logger.log({
       message: "Début de la création de l'acteur",
-      userId: req.user.keycloakId,
+      userId: userId,
       action: 'create',
     });
 
-    return await this.actorService.create(createActorDto, req.user.keycloakId);
+    return await this.actorService.create(createActorDto, userId);
   }
 
   @Get(':id')
@@ -79,10 +82,10 @@ Informations requises :
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
   public async updated(
-    @Request() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
-    @Body() actorToUpdate: UpdateActorDto,
+    @Body() actorToUpdate: CreateActorDto,
   ): Promise<Actor> {
     Logger.log({
       message: "Début de la modification de l'acteur",
@@ -93,7 +96,7 @@ Informations requises :
     return this.actorService.update({
       where: { id: id },
       data: actorToUpdate,
-      ownerId: request.user.keycloakId,
+      ownerId: userId,
     });
   }
 
@@ -102,7 +105,7 @@ Informations requises :
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
   public async delete(
-    @Request() request,
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ): Promise<Actor> {
@@ -112,6 +115,6 @@ Informations requises :
       action: 'delete',
     });
 
-    return this.actorService.delete(id, request.user.keycloakId);
+    return this.actorService.delete(id, userId);
   }
 }

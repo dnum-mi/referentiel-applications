@@ -30,21 +30,16 @@ export class ApplicationService {
       createApplicationDto,
     );
 
-    await this.metadatasService.createApplicationMetadata(
-      application.id,
-      ownerId,
-    );
-
     for (const labelDto of createApplicationDto.labels || []) {
       await this.labelsService.create({
         source: labelDto.source,
         value: labelDto.value,
         shortname: labelDto.shortname || null,
-        metadata: {
+        metadatas: {
           create: {
             applicationId: application.id,
             createdById: ownerId,
-            updatedById: ownerId,
+            description: `Ajout du label "${labelDto.value}" à l'application`,
           },
         },
         application: {
@@ -60,11 +55,11 @@ export class ApplicationService {
         'https://referentiel-applications.interieur.rie.gouv.fr/applications',
       value: application.label,
       shortname: application.shortName,
-      metadata: {
+      metadatas: {
         create: {
           applicationId: application.id,
           createdById: ownerId,
-          updatedById: ownerId,
+          description: `Ajout du label principal "${application.label}" à l'application`,
         },
       },
       application: {
@@ -93,10 +88,14 @@ export class ApplicationService {
           data: applicationUpdates,
         });
 
-        await this.metadatasService.updateOldestMetadataForApplication(
-          app.id,
-          ownerId,
-        );
+        await tx.metadata.create({
+          data: {
+            applicationId: app.id,
+            createdById: ownerId,
+            action: 'update',
+            description: `Mise à jour de l’application`,
+          },
+        });
 
         if (data.label !== undefined || data.shortName !== undefined) {
           await this.ensureLabelExists(tx, app);
@@ -114,7 +113,7 @@ export class ApplicationService {
   }
 
   public async getLatestMetadata(applicationId: string) {
-    return this.applicationRepository.findLatestMetadata(applicationId);
+    return this.metadatasService.findLatestMetadata(applicationId);
   }
 
   public async searchApplications(
@@ -230,11 +229,11 @@ export class ApplicationService {
             'https://referentiel-applications.interieur.rie.gouv.fr/applications',
           value: application.label,
           shortname: application.shortName,
-          metadata: {
+          metadatas: {
             create: {
               applicationId: application.id,
               createdById: application.ownerId,
-              updatedById: application.ownerId,
+              description: `Ajout du label "${application.label}" à l'application`,
             },
           },
           application: {

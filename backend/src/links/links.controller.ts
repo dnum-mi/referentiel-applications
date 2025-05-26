@@ -11,6 +11,7 @@ import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { LinksService } from './links.service';
 import { CreateLinkDto } from './dto/create-link.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { UpdateLinkDto } from './dto/update-link.dto';
 
 @ApiTags('Links')
 @Controller('applications/:applicationId/links')
@@ -28,11 +29,11 @@ export class LinksController {
   ) {
     return this.service.create({
       ...createLinkDto,
-      metadata: {
+      metadatas: {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          updatedById: userId,
+          description: `Ajout du lien : ${createLinkDto.link}`,
         },
       },
       application: {
@@ -60,9 +61,19 @@ export class LinksController {
     @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
-    @Body() updateLinkDto: CreateLinkDto,
+    @Body() updateLinkDto: UpdateLinkDto,
   ) {
-    return this.service.update(id, updateLinkDto, userId);
+    return this.service.update(id, {
+      ...updateLinkDto,
+      metadatas: {
+        create: {
+          applicationId,
+          createdById: userId,
+          action: 'update',
+          description: `Ajout du lien : ${updateLinkDto.link}`,
+        },
+      },
+    });
   }
 
   @Delete(':id')

@@ -42,11 +42,11 @@ export class EventsController {
   ) {
     return this.service.create({
       ...createEventDto,
-      metadata: {
+      metadatas: {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          updatedById: userId,
+          description: `Ajout de l'événement : ${createEventDto.description}`,
         },
       },
       application: {
@@ -96,7 +96,17 @@ export class EventsController {
     @Param('id') id: string,
     @Body() updateEventDto: CreateEventDto,
   ) {
-    return this.service.update(id, updateEventDto, userId);
+    return this.service.update(id, {
+      ...updateEventDto,
+      metadatas: {
+        create: {
+          applicationId,
+          createdById: userId,
+          action: 'update',
+          description: `Mise à jour de l'événement : ${updateEventDto.description}`,
+        },
+      },
+    });
   }
 
   @Delete(':id')

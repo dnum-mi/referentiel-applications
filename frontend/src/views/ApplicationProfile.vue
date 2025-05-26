@@ -10,7 +10,7 @@ import { formatDate } from "@/composables/use-date";
 const route = useRoute();
 const id = route.params.id as string;
 const application = ref<Application | null>(null);
-const metadata = ref<Metadata | null>(null);
+const metadata = ref<Metadata | null>();
 const firstMetadata = ref<Metadata | null>();
 const isLoading = ref(false);
 const errorMessage = ref("");
@@ -48,13 +48,13 @@ onMounted(() => {
     <div v-else-if="application">
       <h2 class="fr-mt-4w fr-ml-4w">
         {{ application.label }}
-        <p v-if="firstMetadata?.createdAt" class="subtitle">
+        <p v-if="firstMetadata" class="subtitle">
           Date de création : {{ new Date(firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
             firstMetadata.createdBy?.email
           }})
         </p>
         <p v-if="metadata" class="subtitle">
-          Dernière modification : {{ formatDate(metadata.effectiveDate) || "inconnue" }} ({{ metadata.effectiveBy }})
+          Dernière modification : {{ formatDate(metadata.createdAt) || "inconnue" }} ({{ metadata.createdBy?.email }})
         </p>
       </h2>
       <ReportIssue class="button-right" :application="application" />

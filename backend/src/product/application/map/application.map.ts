@@ -15,6 +15,12 @@ export const applicationMap = (
       tags: createApplicationDto.tags,
       priorityRestart: createApplicationDto.priorityRestart || null,
       owner: { connect: { keycloakId: ownerId } },
+      metadatas: {
+        create: {
+          createdById: ownerId,
+          description: 'Création de l’application',
+        },
+      },
     },
   };
 };

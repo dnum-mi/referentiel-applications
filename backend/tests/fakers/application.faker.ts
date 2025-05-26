@@ -18,7 +18,6 @@ export class ApplicationFaker {
           create: [
             {
               createdById: user.keycloakId,
-              updatedById: user.keycloakId,
             },
           ],
         },

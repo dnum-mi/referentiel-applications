@@ -28,11 +28,11 @@ export class ActorRepository implements IActorRepository {
           connect: { id: actorTypeId },
         },
       }),
-      metadata: {
+      metadatas: {
         create: {
           applicationId: applicationId,
           createdById: ownerId,
-          updatedById: ownerId,
+          description: "Création de l'acteur " + actor.email,
         },
       },
     };
@@ -81,41 +81,36 @@ export class ActorRepository implements IActorRepository {
           connect: { id: actorTypeId },
         },
       }),
-    };
-
-    const existingActor = await this.prisma.actor.findUnique({
-      where,
-      include: { metadata: true },
-    });
-
-    await this.prisma.metadata.update({
-      where: { id: existingActor?.metadata?.id },
-      data: {
-        updatedById: ownerId,
-        updatedAt: new Date(),
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: ownerId,
+          action: 'update',
+          description: "Mise à jour de l'acteur " + actor.email,
+        },
       },
-    });
+    };
 
     return await this.prisma.actor.update({ where, data });
   }
 
   public async delete(id: string, ownerId: string) {
-    const deletedActor = await this.prisma.$transaction(async (tx) => {
-      const updatedMetadata = await tx.metadata.updateMany({
-        where: { actors: { some: { id } } },
+    return await this.prisma.$transaction(async (tx) => {
+      const actor = await tx.actor.findUniqueOrThrow({
+        where: { id },
+        select: { applicationId: true, email: true },
+      });
+
+      await tx.metadata.create({
         data: {
-          deletedById: ownerId,
-          deletedAt: new Date(),
+          action: 'delete',
+          applicationId: actor.applicationId,
+          description: "Suppression de l'acteur " + actor.email,
+          createdById: ownerId,
         },
       });
 
-      const deletedActor = await tx.actor.delete({
-        where: { id },
-      });
-
-      return deletedActor;
+      return tx.actor.delete({ where: { id } });
     });
-
-    return deletedActor;
   }
 }

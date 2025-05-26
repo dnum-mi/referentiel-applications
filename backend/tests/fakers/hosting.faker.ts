@@ -7,6 +7,7 @@ export class HostingFaker {
   static async create(override: {
     hostingOption: { id: string };
     application: { id: string };
+    user: { id: string };
     [key: string]: any;
   }) {
     const { hostingOption, application, ...restOverride } = override;

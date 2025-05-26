@@ -33,9 +33,7 @@ export interface Metadata {
   id?: string;
   applicationId?: string;
   createdAt: string;
-  effectiveDate: string;
   createdBy?: string;
-  effectiveBy?: string;
 }
 
 export interface Compliance {

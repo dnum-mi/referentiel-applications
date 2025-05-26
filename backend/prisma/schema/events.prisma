@@ -4,8 +4,7 @@ model Event {
   end           DateTime?   @db.Date
   type          EventType
   description   String      @db.VarChar(255)
-  metadataId    String
-  metadata      Metadata    @relation("EventMetadata", fields: [metadataId], references: [id])
+  metadatas     Metadata[]  @relation("EventMetadata")
   applicationId String
   application   Application @relation("ApplicationEvents", fields: [applicationId], references: [id], onDelete: Cascade)
 

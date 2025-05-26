@@ -3,13 +3,10 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class BaseService<T> {
-  modelName: any;
   constructor(
     private readonly model: any,
     protected readonly prisma: PrismaService,
-  ) {
-    this.modelName = model.name ?? model.constructor.name;
-  }
+  ) {}
 
   async findOne(id: string): Promise<T> {
     const object = await this.model.findUnique({ where: { id } });
@@ -27,59 +24,34 @@ export class BaseService<T> {
     return this.model.create({ data: createDto });
   }
 
-  async update(id: string, data: any, ownerId?: string): Promise<T> {
-    const { metadata, ...rest } = data;
-
-    const updated = await this.model.update({
+  async update(id: string, data: any): Promise<T> {
+    return this.model.update({
       where: { id },
-      data: rest,
+      data,
+    });
+  }
+
+  async delete(id: string, ownerId?: string): Promise<T> {
+    const item = await this.model.findUnique({
+      where: { id },
+      select: { applicationId: true, metadatas: true },
     });
 
-    if (this.hasMetadata() && 'metadataId' in updated && updated.metadataId) {
-      await this.prisma.metadata.update({
-        where: { id: updated.metadataId },
+    if (!item) {
+      throw new NotFoundException(`${this.model.name} with ID ${id} not found`);
+    }
+
+    if (item.metadatas) {
+      await this.prisma.metadata.create({
         data: {
-          updatedById: ownerId,
-          updatedAt: new Date(),
+          applicationId: item.applicationId,
+          createdById: ownerId,
+          action: 'delete',
+          description: `Suppression de : ${item.name || item.description || item.value || item.link}`,
         },
       });
     }
 
-    return updated;
-  }
-
-  async delete(id: string, ownerId?: string): Promise<T> {
-    await this.findOne(id);
-
-    if (this.hasMetadata()) {
-      const item = await this.model.findUnique({
-        where: { id },
-        select: { metadataId: true },
-      });
-
-      if (item?.metadataId) {
-        await this.prisma.metadata.update({
-          where: { id: item.metadataId },
-          data: {
-            deletedById: ownerId,
-            deletedAt: new Date(),
-          },
-        });
-      }
-    }
-
     return this.model.delete({ where: { id } });
-  }
-
-  private hasMetadata(): boolean {
-    const modelsWithMetadata = [
-      'Application',
-      'Actor',
-      'Compliance',
-      'Event',
-      'ExternalRessource',
-      'Label',
-    ];
-    return modelsWithMetadata.includes(this.modelName);
   }
 }

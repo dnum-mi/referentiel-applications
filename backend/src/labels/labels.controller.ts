@@ -49,11 +49,11 @@ Vous devez fournir les informations suivantes :
   ) {
     const result = await this.service.create({
       ...createLabelDto,
-      metadata: {
+      metadatas: {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          updatedById: userId,
+          description: `Création du label : ${createLabelDto.value}`,
         },
       },
       application: {
@@ -93,7 +93,17 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     @Param('id') id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    return this.service.update(id, updateLabelDto, userId);
+    return this.service.update(id, {
+      ...updateLabelDto,
+      metadatas: {
+        create: {
+          applicationId,
+          createdById: userId,
+          action: 'update',
+          description: `Mise à jour du label : ${updateLabelDto.value}`,
+        },
+      },
+    });
   }
 
   @Delete(':id')
