@@ -6,7 +6,7 @@ import useModal from "@/composables/use-modal";
 import { useEventStore } from "@/stores/EventStore";
 import EventForm from "./EventForm.vue";
 import { customSorter } from "@/utils/tableSort";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const props = defineProps({
   application: {

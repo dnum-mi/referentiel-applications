@@ -10,7 +10,7 @@ import ActorForm from "./ActorForm.vue";
 
 import type { Actor } from "@/models/Actor";
 import type { Application } from "@/models/Application";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);

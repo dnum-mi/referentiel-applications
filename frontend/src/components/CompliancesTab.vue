@@ -7,7 +7,7 @@ import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-d
 import ComplianceForm from "./form/ComplianceForm.vue";
 import useModal from "@/composables/use-modal";
 import CompliancesApi from "@/api/compliance";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const toaster = useToaster();
 
