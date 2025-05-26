@@ -16,10 +16,8 @@ export class LinkFaker {
         },
         metadatas: {
           create: {
-            createdById: user.id,
-            application: {
-              connect: { id: application.id },
-            },
+            applicationId: application.id,
+            createdById: user.keycloakId,
           },
         },
       },
