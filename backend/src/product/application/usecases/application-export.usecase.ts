@@ -109,7 +109,6 @@ export class ExportApplicationsUseCase {
           applicationLabel: 'Aucune application',
           firstname: 'Aucun acteur',
           lastname: '',
-          role: '',
           type: '',
           email: '',
         }),

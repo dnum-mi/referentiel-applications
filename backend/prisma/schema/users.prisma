@@ -17,7 +17,6 @@ model Actor {
   id             String        @id @default(uuid())
   firstname      String?
   lastname       String?
-  role           String?
   email          String?
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id])
