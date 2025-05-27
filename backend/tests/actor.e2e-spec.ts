@@ -27,7 +27,6 @@ describe('Actor', () => {
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/actors`)
       .send({
-        role: 'test',
         email: 'test@test.co',
         firstname: 'firstname',
         lastname: 'lastname',
