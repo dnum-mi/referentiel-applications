@@ -7,7 +7,7 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import LinkForm from "./form/LinkForm.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const props = defineProps<{
   application: { id: string };
