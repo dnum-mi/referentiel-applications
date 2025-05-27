@@ -53,7 +53,7 @@ const tabs = [
   { title: "Informations générales", icon: "ri-checkbox-circle-line", component: InformationsGenerales },
   {
     title: "Événements",
-    icon: "ri-links-line",
+    icon: "ri-time-line",
     component: Events,
   },
   {
@@ -73,7 +73,7 @@ const tabs = [
   },
   { title: "Relations", icon: "ri-node-tree", component: Relationships },
 
-  { title: "Signalements", icon: "ri-alert-line", component: NotificationsApplication },
+  { title: "Corrections", icon: "ri-edit-line", component: NotificationsApplication },
 ];
 </script>
 <template>

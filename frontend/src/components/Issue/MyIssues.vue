@@ -5,7 +5,7 @@ import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
 import { useReportIssueStore } from "@/stores/reportIssueStore";
 
-const title = "Liste de mes signalements";
+const title = "Liste de mes corrections d'applications";
 const headers = ["Application", "Description", "Date", "Statut"];
 type Status = "in_pending" | "in_progress" | "done";
 
@@ -45,7 +45,7 @@ const rows = computed(() =>
   <div class="fr-container fr-my-2v w-[800px]">
     <AppLoader v-if="isLoading" />
     <div v-else-if="!rows.length" class="text-center">
-      <p>Aucun signalement recensé.</p>
+      <p>Aucune correction recensée.</p>
     </div>
     <DsfrDataTable
       v-else

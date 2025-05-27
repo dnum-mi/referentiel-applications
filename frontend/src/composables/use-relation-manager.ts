@@ -16,7 +16,7 @@ export function useRelationManager(application: Application, emit: (event: strin
   const isEditRelationModalOpen = ref(false);
   const relationToEdit = ref<Relation | null>(null);
 
-  const headers = ["Sélection", "Source", "Relation", "Cible", "Actions"];
+  const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Actions"];
 
   const relationTypes: Record<string, { source: string; target: string }> = {
     is_part_of: { source: "Fait partie de", target: "A comme sous‑élément" },
@@ -37,9 +37,9 @@ export function useRelationManager(application: Application, emit: (event: strin
     return {
       id: rel.id,
       Sélection: rel.id,
-      Source: rel.isSource ? sourceLabel : targetLabel,
+      "Application Source": rel.isSource ? sourceLabel : targetLabel,
       Relation: getRelationLabelForSide(rel.type, rel.isSource),
-      Cible: {
+      "Application Cible": {
         label: rel.isSource ? targetLabel : sourceLabel,
         id: rel.isSource ? rel.applicationTarget : rel.applicationSource,
       },

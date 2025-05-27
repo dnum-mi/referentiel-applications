@@ -95,7 +95,7 @@ onMounted(async () => {
       <template v-if="colKey === 'Sélection'">
         <input type="checkbox" :value="cell" v-model="selectedRelationIds" />
       </template>
-      <template v-else-if="colKey === 'Cible'">
+      <template v-else-if="colKey === 'Application Cible'">
         <a :href="`/applications/${cell.id}`" class="fr-link">
           {{ cell.label }}
         </a>
