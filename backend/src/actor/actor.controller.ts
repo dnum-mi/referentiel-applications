@@ -33,7 +33,6 @@ export class ActorController {
 Ce endpoint permet de créer un acteur complet.
 
 Informations requises : 
-- **role** : Rôle de l'acteur
 - **email** : Email de l'acteur
 - **firstname** : Prénom de l'acteur
 - **lastname** : Nom de l'acteur

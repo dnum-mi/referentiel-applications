@@ -60,7 +60,7 @@ watch(
       selectedActorTypeId.value = "";
     }
   },
-  { immediate: true, deep: true },
+  { deep: true },
 );
 </script>
 

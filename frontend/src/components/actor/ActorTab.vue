@@ -53,11 +53,11 @@ const tableRows = computed(() =>
       return type ? type.label : "Type inconnu";
     })(),
     {
-      label: actor.email || "Email vide",
+      label: actor.email || "",
       to: actor.email ? `mailto:${actor.email}` : "",
     },
-    actor.firstname || "Prénom vide",
-    actor.lastname || "Nom vide",
+    actor.firstname || "",
+    actor.lastname || "",
     {
       component: "DsfrButton",
       label: "Modifier",

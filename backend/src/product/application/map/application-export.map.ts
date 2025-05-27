@@ -72,7 +72,6 @@ export function mapActors(app: ApplicationWithAllRelations) {
       applicationLabel: app.label,
       firstname: a.firstname,
       lastname: a.lastname,
-      role: a.role,
       type: a.actorType?.label || '',
       email: a.email,
     })) ?? []
