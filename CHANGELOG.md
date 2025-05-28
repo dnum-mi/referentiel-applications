@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.21.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.20.0...v1.21.0) (2025-05-28)
+
+
+### Features
+
+* **hosting:** enhance hosting modal with search functionality and form validation ([#696](https://github.com/dnum-mi/referentiel-applications/issues/696)) ([828e066](https://github.com/dnum-mi/referentiel-applications/commit/828e066b3b41a782d670a1c5f216ec05ec5ad313))
+
+
+### Bug Fixes
+
+* :bug: fix duplicated hosting search options ([#704](https://github.com/dnum-mi/referentiel-applications/issues/704)) ([d3b9d4b](https://github.com/dnum-mi/referentiel-applications/commit/d3b9d4b90efbbb8b0e1ddd393ea2a8ae42dbc502))
+* **actor:** remove default placeholder text for email, firstname, and lastname fields ([#708](https://github.com/dnum-mi/referentiel-applications/issues/708)) ([ba14e4c](https://github.com/dnum-mi/referentiel-applications/commit/ba14e4c633256691606d3c529e2fa7d6e64cb9c6))
+* **form:** :bug: use correct priority restart values (R0–R3) ([#728](https://github.com/dnum-mi/referentiel-applications/issues/728)) ([17d368b](https://github.com/dnum-mi/referentiel-applications/commit/17d368bcde7e4bfc22a00c01d5778a636b95fc24))
+* **front:** :bug: disable edit/delete buttons for hosting site when user doesn't have the permission ([#712](https://github.com/dnum-mi/referentiel-applications/issues/712)) ([fe2455d](https://github.com/dnum-mi/referentiel-applications/commit/fe2455dde20c6d5c03d152ed166c3a5507333e36))
+
 ## [1.20.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.19.0...v1.20.0) (2025-05-20)
 
 
