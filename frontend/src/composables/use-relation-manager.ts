@@ -69,6 +69,7 @@ export function useRelationManager(application: Application, emit: (event: strin
       selectedRelationIds.value = [];
       showDeleteConfirmation.value = false;
       toaster.addSuccessMessage("Relations supprimées avec succès !");
+      emit("update:application", application);
     } catch {
       toaster.addErrorMessage("Erreur lors de la suppression des relations.");
     }
@@ -100,6 +101,7 @@ export function useRelationManager(application: Application, emit: (event: strin
     store.updateRelation(updated);
     toaster.addSuccessMessage("Relation mise à jour avec succès !");
     closeEditRelationModal();
+    emit("update:application", application);
   }
 
   return {

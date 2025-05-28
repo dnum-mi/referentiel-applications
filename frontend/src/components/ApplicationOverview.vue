@@ -47,6 +47,8 @@ onMounted(() => {
 
 const updateApplication = (updatedApp: Application) => {
   Object.assign(application.value, updatedApp);
+  emit("update:application", updatedApp);
+  console.log(updatedApp);
 };
 
 const tabs = [

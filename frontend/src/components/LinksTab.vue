@@ -13,6 +13,7 @@ const props = defineProps<{
   application: { id: string };
 }>();
 
+const emit = defineEmits(["update:application"]);
 const toaster = useToaster();
 const linkStore = useLinkStore();
 const linkModal = useModal();
@@ -55,6 +56,7 @@ const createLink = async (newLink: ExternalRessource) => {
       link: formatLink(newLink.link),
     });
     linkModal.closeModal();
+    emit("update:application", props.application);
   } finally {
     isSubmitting.value = false;
   }
@@ -68,6 +70,7 @@ const editLink = async (updatedLink: ExternalRessource) => {
       link: formatLink(updatedLink.link),
     });
     linkModal.closeModal();
+    emit("update:application", props.application);
   } finally {
     isSubmitting.value = false;
   }
@@ -77,6 +80,7 @@ const confirmDelete = async () => {
   await linkStore.deleteLinks(props.application.id, selectedLinkIds.value);
   selectedLinkIds.value = [];
   showDeleteConfirmation.value = false;
+  emit("update:application", props.application);
 };
 
 const removeSelectedLinks = () => {

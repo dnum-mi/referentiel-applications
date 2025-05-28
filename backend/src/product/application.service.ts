@@ -9,6 +9,7 @@ import {
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
 import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class ApplicationService {
@@ -17,27 +18,48 @@ export class ApplicationService {
     private prisma: PrismaService,
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
+    private readonly metadatasService: MetadatasService,
   ) {}
 
   public async createApplication(
     ownerId: string,
     createApplicationDto: CreateApplicationDto,
   ) {
-    const applicationMetadata = await this.createApplicationMetadata(ownerId);
     const application = await this.persistApplication(
       ownerId,
-      applicationMetadata.id,
       createApplicationDto,
     );
+
+    for (const labelDto of createApplicationDto.labels || []) {
+      await this.labelsService.create({
+        source: labelDto.source,
+        value: labelDto.value,
+        shortname: labelDto.shortname || null,
+        metadatas: {
+          create: {
+            applicationId: application.id,
+            createdById: ownerId,
+            description: `Ajout du label "${labelDto.value}" à l'application`,
+          },
+        },
+        application: {
+          connect: {
+            id: application.id,
+          },
+        },
+      });
+    }
 
     await this.labelsService.create({
       source:
         'https://referentiel-applications.interieur.rie.gouv.fr/applications',
       value: application.label,
       shortname: application.shortName,
-      metadata: {
-        connect: {
-          id: applicationMetadata.id,
+      metadatas: {
+        create: {
+          applicationId: application.id,
+          createdById: ownerId,
+          description: `Ajout du label principal "${application.label}" à l'application`,
         },
       },
       application: {
@@ -52,8 +74,9 @@ export class ApplicationService {
   public async update(params: {
     where: Prisma.ApplicationWhereUniqueInput;
     data: PatchApplicationDto;
+    ownerId: string;
   }): Promise<Application> {
-    const { where, data } = params;
+    const { where, data, ownerId } = params;
     const applicationUpdates: Prisma.ApplicationUpdateInput = {};
 
     this.applyScalarAndSimpleRelationUpdates(data, applicationUpdates);
@@ -63,6 +86,15 @@ export class ApplicationService {
         const app = await tx.application.update({
           where,
           data: applicationUpdates,
+        });
+
+        await tx.metadata.create({
+          data: {
+            applicationId: app.id,
+            createdById: ownerId,
+            action: 'update',
+            description: `Mise à jour de l’application`,
+          },
         });
 
         if (data.label !== undefined || data.shortName !== undefined) {
@@ -78,6 +110,10 @@ export class ApplicationService {
         `Application non trouvée pour l'ID: ${where.id}`,
       );
     }
+  }
+
+  public async getLatestMetadata(applicationId: string) {
+    return this.metadatasService.findLatestMetadata(applicationId);
   }
 
   public async searchApplications(
@@ -125,23 +161,7 @@ export class ApplicationService {
     await this.applicationRepository.delete(id);
   }
 
-  private async createApplicationMetadata(ownerId: string) {
-    const applicationMetadata = await this.prisma.metadata.create({
-      data: {
-        createdById: ownerId,
-        updatedById: ownerId,
-        createdAt: new Date(),
-      },
-    });
-
-    return applicationMetadata;
-  }
-
-  private async persistApplication(
-    ownerId: string,
-    applicationMetadataId: string,
-    createApplicationDto,
-  ) {
+  private async persistApplication(ownerId: string, createApplicationDto) {
     const user = await this.prisma.user.findUnique({
       where: { keycloakId: ownerId },
       select: { email: true, keycloakId: true },
@@ -153,7 +173,6 @@ export class ApplicationService {
 
     const application = this.applicationRepository.create(
       createApplicationDto,
-      applicationMetadataId,
       ownerId,
     );
 
@@ -210,10 +229,11 @@ export class ApplicationService {
             'https://referentiel-applications.interieur.rie.gouv.fr/applications',
           value: application.label,
           shortname: application.shortName,
-          metadata: {
+          metadatas: {
             create: {
+              applicationId: application.id,
               createdById: application.ownerId,
-              updatedById: application.ownerId,
+              description: `Ajout du label "${application.label}" à l'application`,
             },
           },
           application: {

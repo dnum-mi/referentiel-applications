@@ -48,15 +48,6 @@ export class CreateApplicationDto {
   label: string;
 
   @ApiProperty({
-    example: 'metadata456',
-    description: 'Metadata ID',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  metadataId?: string;
-
-  @ApiProperty({
     example: 'short-app-name',
     description: 'Short name of the application',
     required: false,

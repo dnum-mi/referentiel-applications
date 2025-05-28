@@ -20,16 +20,8 @@ import { ApplicationWithAllRelations } from 'src/product/types/application.type'
 export class ApplicationRepository implements IApplicationRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(
-    application: CreateApplicationDto,
-    applicationMetadataId: string,
-    ownerId: string,
-  ) {
-    const mappedData = applicationMap(
-      application,
-      applicationMetadataId,
-      ownerId,
-    );
+  public async create(application: CreateApplicationDto, ownerId: string) {
+    const mappedData = applicationMap(application, ownerId);
     return await this.prisma.application.create(mappedData);
   }
 
@@ -53,6 +45,9 @@ export class ApplicationRepository implements IApplicationRepository {
         },
         relationsAsTarget: {
           include: { sourceApplication: { select: { id: true, label: true } } },
+        },
+        metadatas: {
+          include: { createdBy: { select: { email: true } } },
         },
       },
     });
@@ -110,7 +105,7 @@ export class ApplicationRepository implements IApplicationRepository {
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
     return this.prisma.application.findMany({
       include: {
-        metadata: true,
+        metadatas: true,
         owner: true,
         compliances: true,
         labels: true,
@@ -140,7 +135,7 @@ export class ApplicationRepository implements IApplicationRepository {
   async exportAllApplicationsFull(): Promise<any[]> {
     return this.prisma.application.findMany({
       include: {
-        metadata: true,
+        metadatas: true,
         compliances: true,
         labels: true,
         actors: true,

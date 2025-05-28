@@ -1,6 +1,5 @@
 import {
   Controller,
-  Req,
   Get,
   Post,
   Delete,
@@ -18,6 +17,7 @@ import {
 import { LabelsService } from './labels.service';
 import { CreateLabelDto } from './dto/create-label.dto';
 import { Label } from './entities/label.entity';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Labels')
 @Controller('applications/:applicationId/labels')
@@ -43,16 +43,17 @@ Vous devez fournir les informations suivantes :
     description: 'Label créé avec succès.',
   })
   async create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createLabelDto: CreateLabelDto,
     @Param('applicationId') applicationId: string,
   ) {
     const result = await this.service.create({
       ...createLabelDto,
-      metadata: {
+      metadatas: {
         create: {
-          createdById: request.user.keycloakId,
-          updatedById: request.user.keycloakId,
+          applicationId: applicationId,
+          createdById: userId,
+          description: `Création du label : ${createLabelDto.value}`,
         },
       },
       application: {
@@ -87,11 +88,22 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @ApiBody({ type: CreateLabelDto })
   @ApiResponse({ status: 200, type: Label })
   update(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    return this.service.update(id, updateLabelDto);
+    return this.service.update(id, {
+      ...updateLabelDto,
+      metadatas: {
+        create: {
+          applicationId,
+          createdById: userId,
+          action: 'update',
+          description: `Mise à jour du label : ${updateLabelDto.value}`,
+        },
+      },
+    });
   }
 
   @Delete(':id')
@@ -103,9 +115,10 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   })
   @ApiResponse({ status: 200 })
   async delete(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id);
+    return this.service.delete(id, userId);
   }
 }

@@ -5,8 +5,8 @@ import { Label } from './entities/label.entity';
 
 @Injectable()
 export class LabelsService extends BaseService<Label> {
-  constructor(private readonly prisma: PrismaService) {
-    super(prisma.label);
+  constructor(protected readonly prisma: PrismaService) {
+    super(prisma.label, prisma);
   }
 
   /**
@@ -15,12 +15,19 @@ export class LabelsService extends BaseService<Label> {
    * @returns Un tableau de labels triés.
    */
   async findAllSorted(applicationId: string) {
-    return await this.prisma.label.findMany({
+    const labels = await this.prisma.label.findMany({
       where: { applicationId },
-      include: { metadata: true },
-      orderBy: {
-        metadata: { updatedAt: 'desc' },
+      include: {
+        metadatas: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
+    });
+
+    return labels.sort((a, b) => {
+      const aDate = a.metadatas?.[0]?.createdAt?.getTime() ?? 0;
+      const bDate = b.metadatas?.[0]?.createdAt?.getTime() ?? 0;
+      return bDate - aDate;
     });
   }
 
@@ -34,20 +41,22 @@ export class LabelsService extends BaseService<Label> {
    * @throws NotFoundException Si aucun label n'est trouvé.
    */
   async findCurrentLabel(applicationId: string) {
-    const currentLabel = await this.prisma.label.findFirst({
+    const labels = await this.prisma.label.findMany({
       where: { applicationId },
-      include: { metadata: true },
-      orderBy: {
-        metadata: { updatedAt: 'desc' },
+      include: {
+        metadatas: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
       },
     });
 
-    if (!currentLabel) {
+    if (!labels.length) {
       throw new NotFoundException(
         `Aucun label trouvé pour l'application ${applicationId}.`,
       );
     }
 
-    return currentLabel;
+    return labels[0];
   }
 }

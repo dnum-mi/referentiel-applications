@@ -5,7 +5,6 @@ model User {
   organizationId      String?
   organization        Organization?         @relation(fields: [organizationId], references: [id])
   createdSet          Metadata[]            @relation("MetadataCreatedBy")
-  updatedSet          Metadata[]            @relation("MetadataUpdatedBy")
   applications        Application[]         @relation("UserApplications")
   dataOwners          Metadata[]            @relation("MetadataDataOwnerBy")
   AnomalyNotification AnomalyNotification[] @relation("UserAnomalyNotification")
@@ -24,6 +23,7 @@ model Actor {
   application    Application?  @relation("ApplicationActors", fields: [applicationId], references: [id], onDelete: Cascade)
   actorTypeId    String?
   actorType      ActorType?    @relation(fields: [actorTypeId], references: [id])
+  metadatas      Metadata[]    @relation("ActorMetadata")
 
   @@index([applicationId, actorTypeId])
   @@map("actors")
