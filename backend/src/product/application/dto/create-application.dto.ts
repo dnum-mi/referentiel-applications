@@ -30,13 +30,6 @@ export class CreateLabelDto {
   @IsString()
   @IsOptional()
   shortname: string | null;
-
-  @ApiProperty({
-    example: 'metadata456',
-    description: 'Metadata ID',
-  })
-  @IsString()
-  metadataId?: string;
 }
 
 export class CreateApplicationDto {
@@ -128,7 +121,6 @@ export class CreateApplicationDto {
           'https://referentiel-applications.interieur.rie.gouv.fr/applications',
         value: 'My App',
         shortname: 'short-name',
-        metadataId: 'metadata456',
       },
     ],
   })
