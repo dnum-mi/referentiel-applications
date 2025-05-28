@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.22.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.21.0...v1.22.0) (2025-05-28)
+
+
+### Features
+
+* **metadata:** :sparkles: refactor and add last update date ([#606](https://github.com/dnum-mi/referentiel-applications/issues/606)) ([1af7688](https://github.com/dnum-mi/referentiel-applications/commit/1af7688ba71f0fa51b71f8f19be2c489f9e20038))
+
+
+### Bug Fixes
+
+* **api:** :bug: delete metadata id from label dto ([#732](https://github.com/dnum-mi/referentiel-applications/issues/732)) ([8b9b688](https://github.com/dnum-mi/referentiel-applications/commit/8b9b688864b842e7e58ffe3965e68523c5a73703))
+
 ## [1.21.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.20.0...v1.21.0) (2025-05-28)
 
 
