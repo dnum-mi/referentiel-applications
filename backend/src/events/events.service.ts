@@ -5,6 +5,6 @@ import { BaseService } from '../common/base.service';
 @Injectable()
 export class EventsService extends BaseService<Event> {
   constructor(prisma: PrismaService) {
-    super(prisma.event);
+    super(prisma.event, prisma);
   }
 }

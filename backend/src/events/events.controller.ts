@@ -1,6 +1,5 @@
 import {
   Controller,
-  Req,
   Get,
   Post,
   Patch,
@@ -21,6 +20,7 @@ import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { FiltersDto } from './dto/filters.dto';
 import { EventType } from '@prisma/client';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Events')
 @Controller('applications/:applicationId/events')
@@ -36,16 +36,17 @@ export class EventsController {
   @ApiBody({ type: CreateEventDto })
   @ApiResponse({ status: 201, type: Event })
   create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createEventDto: CreateEventDto,
     @Param('applicationId') applicationId: string,
   ) {
     return this.service.create({
       ...createEventDto,
-      metadata: {
+      metadatas: {
         create: {
-          createdById: request.user.keycloakId,
-          updatedById: request.user.keycloakId,
+          applicationId: applicationId,
+          createdById: userId,
+          description: `Ajout de l'événement : ${createEventDto.description}`,
         },
       },
       application: {
@@ -89,12 +90,23 @@ export class EventsController {
   @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiBody({ type: CreateEventDto })
   @ApiResponse({ status: 200, type: Event })
-  update(
+  async update(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateEventDto: CreateEventDto,
   ) {
-    return this.service.update(id, updateEventDto);
+    return this.service.update(id, {
+      ...updateEventDto,
+      metadatas: {
+        create: {
+          applicationId,
+          createdById: userId,
+          action: 'update',
+          description: `Mise à jour de l'événement : ${updateEventDto.description}`,
+        },
+      },
+    });
   }
 
   @Delete(':id')
@@ -103,9 +115,10 @@ export class EventsController {
   @ApiParam({ name: 'id', description: "ID de l'événement" })
   @ApiResponse({ status: 200 })
   delete(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id);
+    return this.service.delete(id, userId);
   }
 }

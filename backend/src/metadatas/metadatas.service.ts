@@ -6,6 +6,16 @@ import { Metadata } from '@prisma/client';
 @Injectable()
 export class MetadatasService extends BaseService<Metadata> {
   constructor(prisma: PrismaService) {
-    super(prisma.metadata);
+    super(prisma.metadata, prisma);
+  }
+
+  public async findLatestMetadata(applicationId: string) {
+    return this.prisma.metadata.findFirst({
+      where: { applicationId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        createdBy: true,
+      },
+    });
   }
 }

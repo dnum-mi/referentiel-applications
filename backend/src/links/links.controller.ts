@@ -1,6 +1,5 @@
 import {
   Controller,
-  Req,
   Get,
   Post,
   Patch,
@@ -11,6 +10,8 @@ import {
 import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { LinksService } from './links.service';
 import { CreateLinkDto } from './dto/create-link.dto';
+import { UserId } from '../common/decorators/user-id.decorator';
+import { UpdateLinkDto } from './dto/update-link.dto';
 
 @ApiTags('Links')
 @Controller('applications/:applicationId/links')
@@ -22,12 +23,19 @@ export class LinksController {
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createLinkDto: CreateLinkDto,
     @Param('applicationId') applicationId: string,
   ) {
     return this.service.create({
       ...createLinkDto,
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: userId,
+          description: `Ajout du lien : ${createLinkDto.link}`,
+        },
+      },
       application: {
         connect: {
           id: applicationId,
@@ -50,11 +58,22 @@ export class LinksController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the link to update' })
   update(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
-    @Body() updateLinkDto: CreateLinkDto,
+    @Body() updateLinkDto: UpdateLinkDto,
   ) {
-    return this.service.update(id, updateLinkDto);
+    return this.service.update(id, {
+      ...updateLinkDto,
+      metadatas: {
+        create: {
+          applicationId,
+          createdById: userId,
+          action: 'update',
+          description: `Ajout du lien : ${updateLinkDto.link}`,
+        },
+      },
+    });
   }
 
   @Delete(':id')
@@ -63,9 +82,10 @@ export class LinksController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the link to delete' })
   delete(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id);
+    return this.service.delete(id, userId);
   }
 }

@@ -6,7 +6,7 @@ import useModal from "@/composables/use-modal";
 import { useEventStore } from "@/stores/EventStore";
 import EventForm from "./EventForm.vue";
 import { customSorter } from "@/utils/tableSort";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const props = defineProps({
   application: {
@@ -15,6 +15,7 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(["update:application"]);
 const eventStore = useEventStore();
 const events = computed(() => eventStore.events);
 const loading = computed(() => eventStore.isLoading);
@@ -58,12 +59,14 @@ const rows = computed(() =>
 async function handleCreateEvent(newEvent) {
   await eventStore.createEvent(props.application.id, newEvent);
   eventModal.closeModal();
+  emit("update:application", props.application);
 }
 
 async function confirmDelete() {
   await eventStore.deleteEvents(props.application.id, selectedEventIds.value);
   selectedEventIds.value = [];
   showDeleteConfirmation.value = false;
+  emit("update:application", props.application);
 }
 
 function removeSelectedEvents() {

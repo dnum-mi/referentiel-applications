@@ -69,7 +69,12 @@ describe('Relations End-to-End', () => {
       .expect(200);
 
     // Then
-    expect(response.body).toMatchObject(relation);
+    expect(response.body).toMatchObject({
+      id: relation.id,
+      applicationSource: relation.applicationSource,
+      applicationTarget: relation.applicationTarget,
+      type: relation.type,
+    });
   });
 
   it('should update a relation with valid data', async () => {

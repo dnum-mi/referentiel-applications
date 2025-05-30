@@ -6,7 +6,7 @@ import useModal from "@/composables/use-modal";
 import SearchApplications from "./ApplicationTableView.vue";
 import type { Application } from "@/models/Application";
 import Applications from "@/api/application";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const toaster = useToaster();
 const applicationModal = useModal();

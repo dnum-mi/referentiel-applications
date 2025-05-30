@@ -7,7 +7,7 @@ import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-d
 import ComplianceForm from "./form/ComplianceForm.vue";
 import useModal from "@/composables/use-modal";
 import CompliancesApi from "@/api/compliance";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const toaster = useToaster();
 
@@ -44,21 +44,30 @@ function getStatusLabel(value: string): string {
 const handleSaveCompliances = async (compliance) => {
   isSubmitting.value = true;
   delete compliance.metadataId;
-  compliance.validityStart = compliance.validityStart ? new Date(compliance.validityStart).toISOString() : undefined;
-  compliance.validityEnd = compliance.validityEnd ? new Date(compliance.validityEnd).toISOString() : undefined;
+  const payload: any = {
+    type: compliance.type,
+    name: compliance.name,
+    status: compliance.status,
+    validityStart: compliance.validityStart ? new Date(compliance.validityStart).toISOString() : undefined,
+    validityEnd: compliance.validityEnd ? new Date(compliance.validityEnd).toISOString() : undefined,
+    scoreValue: compliance.scoreValue,
+    scoreUnit: compliance.scoreUnit,
+    notes: compliance.notes,
+  };
   try {
     if (compliance.id) {
       // Update existing compliance
-      await CompliancesApi.updateCompliance(props.application.id, compliance.id, compliance);
+      await CompliancesApi.updateCompliance(props.application.id, compliance.id, payload);
     } else {
       // Create new compliance
-      await CompliancesApi.createCompliance(props.application.id, compliance);
+      await CompliancesApi.createCompliance(props.application.id, payload);
     }
 
     // Re-fetch all compliances to get the latest data
     await fetchCompliances();
     complianceModal.closeModal();
     toaster.addSuccessMessage("Conformité sauvegardée avec succès !");
+    emit("update:application", props.application);
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de la conformité.");
   } finally {
@@ -87,6 +96,7 @@ async function confirmDelete() {
     updateRows();
     showDeleteConfirmation.value = false;
     toaster.addSuccessMessage("Conformités supprimées avec succès !");
+    emit("update:application", props.application);
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la suppression des conformités.");
   } finally {

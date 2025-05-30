@@ -10,8 +10,11 @@ export class RelationService {
     private readonly relationRepository: IRelationRepository,
   ) {}
 
-  async create(dto: RelationApplicationDto): Promise<Relation> {
-    return this.relationRepository.create({ dto });
+  async create(
+    dto: RelationApplicationDto,
+    ownerId: string,
+  ): Promise<Relation> {
+    return this.relationRepository.create({ dto }, ownerId);
   }
 
   async findAll(): Promise<Relation[]> {
@@ -26,11 +29,15 @@ export class RelationService {
     return relation;
   }
 
-  async update(id: string, dto: RelationApplicationDto): Promise<Relation> {
-    return this.relationRepository.update(id, dto);
+  async update(
+    id: string,
+    dto: RelationApplicationDto,
+    ownerId: string,
+  ): Promise<Relation> {
+    return this.relationRepository.update(id, dto, ownerId);
   }
 
-  async delete(id: string): Promise<void> {
-    return this.relationRepository.delete(id);
+  async delete(id: string, ownerId: string): Promise<void> {
+    return this.relationRepository.delete(id, ownerId);
   }
 }

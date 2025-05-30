@@ -7,19 +7,17 @@ export interface Application {
   targetPopulations?: string[];
   priorityRestart?: string;
   organisationCode?: string;
-  createdAt: string;
-  updatedAt: string;
 
   purposes?: string[];
   tags?: string[];
   ownerId?: string;
-  metadataId?: string;
 
   actors?: Actor[];
   compliances?: Compliance[];
   externalRessource?: ExternalRessource[];
   relationsAsSource?: Relation[];
   relationsAsTarget?: Relation[];
+  metadatas?: Metadata;
 }
 
 export interface Label {
@@ -30,6 +28,14 @@ export interface Label {
   metadataId?: string;
   applicationId?: string;
 }
+
+export interface Metadata {
+  id?: string;
+  applicationId?: string;
+  createdAt: string;
+  createdBy?: string;
+}
+
 export interface Compliance {
   id: string;
   type: string;
