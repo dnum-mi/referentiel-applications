@@ -6,12 +6,12 @@ import {
   Patch,
   Param,
   Delete,
-  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { CompliancesService } from './compliances.service';
 import { CreateComplianceDto } from './dto/create-compliance.dto';
 import { UpdateComplianceDto } from './dto/update-compliance.dto';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Compliances')
 @Controller('applications/:applicationId/compliances')
@@ -23,12 +23,19 @@ export class CompliancesController {
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createComplianceDto: CreateComplianceDto,
     @Param('applicationId') applicationId: string,
   ) {
     return this.compliancesService.create({
       ...createComplianceDto,
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: userId,
+          description: `Création de la conformité : ${createComplianceDto.name}`,
+        },
+      },
       application: {
         connect: {
           id: applicationId,
@@ -65,11 +72,22 @@ export class CompliancesController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the compliance to update' })
   update(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
-    return this.compliancesService.update(id, updateComplianceDto);
+    return this.compliancesService.update(id, {
+      ...updateComplianceDto,
+      metadatas: {
+        create: {
+          applicationId,
+          createdById: userId,
+          action: 'update',
+          description: `Mise à jour de la conformité : ${updateComplianceDto.name}`,
+        },
+      },
+    });
   }
 
   @Delete(':id')
@@ -78,9 +96,10 @@ export class CompliancesController {
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the compliance to delete' })
   delete(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.compliancesService.delete(id);
+    return this.compliancesService.delete(id, userId);
   }
 }

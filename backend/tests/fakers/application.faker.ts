@@ -14,11 +14,12 @@ export class ApplicationFaker {
             keycloakId: user.keycloakId,
           },
         },
-        metadata: {
-          create: {
-            createdById: user.keycloakId,
-            updatedById: user.keycloakId,
-          },
+        metadatas: {
+          create: [
+            {
+              createdById: user.keycloakId,
+            },
+          ],
         },
       },
     });

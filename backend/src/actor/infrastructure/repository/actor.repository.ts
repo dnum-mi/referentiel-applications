@@ -8,7 +8,7 @@ import { Prisma } from '@prisma/client';
 export class ActorRepository implements IActorRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(actor: CreateActorDto) {
+  public async create(actor: CreateActorDto, ownerId: string) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
     const data: Prisma.ActorCreateInput = {
@@ -28,6 +28,13 @@ export class ActorRepository implements IActorRepository {
           connect: { id: actorTypeId },
         },
       }),
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: ownerId,
+          description: "Création de l'acteur " + actor.email,
+        },
+      },
     };
 
     return await this.prisma.actor.create({ data });
@@ -53,6 +60,7 @@ export class ActorRepository implements IActorRepository {
   public async update(
     where: Prisma.ActorWhereUniqueInput,
     actor: UpdateActorDto,
+    ownerId: string,
   ) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
@@ -73,12 +81,36 @@ export class ActorRepository implements IActorRepository {
           connect: { id: actorTypeId },
         },
       }),
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: ownerId,
+          action: 'update',
+          description: "Mise à jour de l'acteur " + actor.email,
+        },
+      },
     };
 
     return await this.prisma.actor.update({ where, data });
   }
 
-  public async delete(id: string) {
-    return await this.prisma.actor.delete({ where: { id } });
+  public async delete(id: string, ownerId: string) {
+    return await this.prisma.$transaction(async (tx) => {
+      const actor = await tx.actor.findUniqueOrThrow({
+        where: { id },
+        select: { applicationId: true, email: true },
+      });
+
+      await tx.metadata.create({
+        data: {
+          action: 'delete',
+          applicationId: actor.applicationId,
+          description: "Suppression de l'acteur " + actor.email,
+          createdById: ownerId,
+        },
+      });
+
+      return tx.actor.delete({ where: { id } });
+    });
   }
 }

@@ -22,6 +22,7 @@ describe('Hostings', () => {
     await HostingFaker.create({
       application: application,
       hostingOption: hostingOption,
+      user: user,
     });
 
     await request(app().getHttpServer())
@@ -52,6 +53,7 @@ describe('Hostings', () => {
     const hosting = await HostingFaker.create({
       application: application,
       hostingOption: hostingOption,
+      user: user,
     });
 
     const response = await request(app().getHttpServer())
@@ -66,9 +68,11 @@ describe('Hostings', () => {
     const hosting = await HostingFaker.create({
       application: application,
       hostingOption: hostingOption,
+      user: user,
     });
 
     const updateData = {
+      applicationId: application.id,
       hostingOptionId: hostingOption.id,
       label: 'Hosting with Updated Option',
     };
@@ -86,6 +90,7 @@ describe('Hostings', () => {
     const hosting = await HostingFaker.create({
       application: application,
       hostingOption: hostingOption,
+      user: user,
     });
 
     await request(app().getHttpServer())

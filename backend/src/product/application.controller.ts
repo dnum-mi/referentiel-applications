@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Request,
   Get,
   Query,
   Logger,
@@ -24,6 +23,7 @@ import { SearchApplicationDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
 import { Response } from 'express';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('applications')
 @Controller('applications')
@@ -72,17 +72,15 @@ Vous devez fournir les informations suivantes :
   @ApiResponse({ status: 404, description: 'Metadata ou parent non trouvé.' })
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
-    @Request() req,
+    @UserId() userId: string,
   ) {
-    const user = req.user;
-
     Logger.log({
       message: "Début de la création de l'application",
-      userId: user.keycloakId,
+      userId: userId,
       action: 'create',
     });
     const newApplication = await this.applicationService.createApplication(
-      user.keycloakId,
+      userId,
       createApplicationDto,
     );
     return newApplication;
@@ -97,6 +95,19 @@ Vous devez fournir les informations suivantes :
   })
   async searchApplications(@Query() searchParams: SearchApplicationDto) {
     return this.applicationService.searchApplications(searchParams);
+  }
+
+  @Get(':applicationId/metadatas/latest')
+  @ApiOperation({
+    summary: 'Récupérer la dernière metadata par ID',
+    description: `
+Ce endpoint permet de récupérer les détails complets de la metadata la plus récente d'une application en fonction de son identifiant unique.
+
+Le paramètre **applicationId** doit être fourni dans l'URL.
+    `,
+  })
+  getLatestMetadata(@Param('applicationId') id: string) {
+    return this.applicationService.getLatestMetadata(id);
   }
 
   @Get('export/excel')
@@ -148,6 +159,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     `,
   })
   async update(
+    @UserId() userId: string,
     @Param('id') id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
   ): Promise<PatchApplicationDto> {
@@ -159,6 +171,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     return this.applicationService.update({
       where: { id: id },
       data: applicationToUpdate,
+      ownerId: userId,
     });
   }
 

@@ -30,13 +30,6 @@ export class CreateLabelDto {
   @IsString()
   @IsOptional()
   shortname: string | null;
-
-  @ApiProperty({
-    example: 'metadata456',
-    description: 'Metadata ID',
-  })
-  @IsString()
-  metadataId?: string;
 }
 
 export class CreateApplicationDto {
@@ -46,15 +39,6 @@ export class CreateApplicationDto {
   })
   @IsString()
   label: string;
-
-  @ApiProperty({
-    example: 'metadata456',
-    description: 'Metadata ID',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  metadataId?: string;
 
   @ApiProperty({
     example: 'short-app-name',
@@ -117,6 +101,11 @@ export class CreateApplicationDto {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
+  @Transform((value) =>
+    value.forEach((element) => {
+      return element.toUpperCase();
+    }),
+  )
   tags?: string[];
 
   @ApiProperty({
@@ -137,7 +126,6 @@ export class CreateApplicationDto {
           'https://referentiel-applications.interieur.rie.gouv.fr/applications',
         value: 'My App',
         shortname: 'short-name',
-        metadataId: 'metadata456',
       },
     ],
   })

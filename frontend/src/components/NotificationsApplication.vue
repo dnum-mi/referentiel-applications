@@ -36,7 +36,7 @@ const loading = computed(() => reportStore.isLoading);
 <template>
   <AppLoader v-if="loading" />
   <div v-else-if="!loading && rows.length === 0" class="text-center">
-    <p>Aucun signalement enregistré.</p>
+    <p>Aucune correction proposée.</p>
   </div>
   <DsfrDataTable
     v-else
@@ -44,7 +44,7 @@ const loading = computed(() => reportStore.isLoading);
     :headers-row="headers"
     :rows="rows"
     row-key="id"
-    title="Liste des notifications associées"
+    title="Liste des corrections proposées"
     pagination
     :rows-per-page="5"
     :pagination-options="[5, 10, 20, 30]"
