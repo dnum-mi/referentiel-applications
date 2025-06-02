@@ -111,8 +111,27 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   }
 
   @Get('export/excel')
-  async exportExcel(@Res() res: Response) {
-    const buffer = await this.exportApplicationsUseCase.execute();
+  @ApiOperation({
+    summary: 'Exporter les applications en Excel',
+    description: `Permet d'exporter les applications en un fichier Excel.
+      Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
+      Si aucun filtre n'est appliqué, toutes les applications sont exportées.`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Export Excel des applications',
+  })
+  async exportExcel(
+    @Query() searchParams: SearchApplicationDto,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      Object.keys(searchParams).length > 0
+        ? await this.applicationExportService.exportSearchResultsToExcel(
+            searchParams,
+          )
+        : await this.exportApplicationsUseCase.execute();
+
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -122,6 +141,46 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
       'attachment; filename=applications_export.xlsx',
     );
     res.send(buffer);
+  }
+
+  @Get('export')
+  @ApiOperation({
+    summary: 'Exporter les applications en CSV',
+    description: `Permet d'exporter les applications en un fichier CSV.
+      Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
+      Si aucun filtre n'est appliqué, toutes les applications sont exportées.`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Export CSV des applications',
+  })
+  async exportCsv(
+    @Query() searchParams: SearchApplicationDto,
+    @Res() res: Response,
+  ) {
+    // Default columns to export if none specified
+    const columns = searchParams.columns || [
+      'id',
+      'label',
+      'shortName',
+      'description',
+      'tags',
+      'purposes',
+      'priorityRestart',
+    ];
+
+    // Generate the CSV
+    const result = await this.applicationExportService.exportApplications(
+      columns,
+      searchParams,
+    );
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${result.fileName}`,
+    );
+    res.send(result.csv);
   }
 
   @Get(':id')

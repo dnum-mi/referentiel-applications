@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed, watch, ref } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { getPriorityBadgeType } from "@/composables/use-dictionary";
 import { customSorter } from "@/utils/tableSort";
 import { applicationFieldsDict } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
+import ExportApi from "@/api/export";
 
 const searchStore = useApplicationSearchStore();
 const statsStore = useStatisticsStore();
@@ -72,10 +73,31 @@ function sorter(a: any, b: any, columnIndex: number) {
   const col = currentSortedColumn.value;
   return customSorter(a, b, col, applicationFieldsDict);
 }
+
+async function exportSearchResults() {
+  try {
+    // Use our API to download the CSV with the current filters
+    await ExportApi.downloadCsv(searchStore.filters);
+  } catch (error) {
+    console.error("Export error:", error);
+    alert("Une erreur est survenue lors de l'exportation CSV. Veuillez réessayer.");
+  }
+}
 </script>
 
 <template>
   <div>
+    <div class="flex justify-between mb-4">
+      <div class="export-button">
+        <DsfrButton
+          label="Exporter les résultats en CSV"
+          icon="ri-download-line"
+          @click="exportSearchResults"
+          secondary
+          icon-only-size="sm"
+        />
+      </div>
+    </div>
     <DsfrDataTable
       :headers-row="['Nom court', 'Priorité de redémarrage', 'Hébergement', 'Tags']"
       :rows="rows"
@@ -126,5 +148,8 @@ function sorter(a: any, b: any, columnIndex: number) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.export-button {
+  margin-bottom: 10px;
 }
 </style>
