@@ -19,7 +19,7 @@ export interface Application {
   externalRessource?: ExternalRessource[];
   relationsAsSource?: Relation[];
   relationsAsTarget?: Relation[];
-  metadatas?: Metadata;
+  metadatas: Metadata[];
 }
 
 export interface Label {
@@ -35,6 +35,8 @@ export interface Metadata {
   applicationId?: string;
   createdAt: string;
   createdBy?: string;
+  description?: string;
+  action?: string;
 }
 
 export interface Compliance {

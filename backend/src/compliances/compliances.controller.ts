@@ -12,11 +12,15 @@ import { CompliancesService } from './compliances.service';
 import { CreateComplianceDto } from './dto/create-compliance.dto';
 import { UpdateComplianceDto } from './dto/update-compliance.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @ApiTags('Compliances')
 @Controller('applications/:applicationId/compliances')
 export class CompliancesController {
-  constructor(private readonly compliancesService: CompliancesService) {}
+  constructor(
+    private readonly compliancesService: CompliancesService,
+    private readonly metadataService: MetadatasService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new compliance for an application' })
@@ -33,7 +37,7 @@ export class CompliancesController {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          description: `Création de la conformité : ${createComplianceDto.name}`,
+          description: `Ajout de la conformité : ${createComplianceDto.name}`,
         },
       },
       application: {
@@ -71,23 +75,48 @@ export class CompliancesController {
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the compliance to update' })
-  update(
+  async update(
     @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
-    return this.compliancesService.update(id, {
+    const oldCompliance = await this.compliancesService.findOne(id);
+
+    const updateCompliance = await this.compliancesService.update(id, {
       ...updateComplianceDto,
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          action: 'update',
-          description: `Mise à jour de la conformité : ${updateComplianceDto.name}`,
-        },
-      },
     });
+
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: userId,
+      entityLabel: `de la conformité ${updateCompliance.name ?? ''}`,
+      fields: [
+        'type',
+        'name',
+        'status',
+        'validityStart',
+        'validityEnd',
+        'scoreValue',
+        'scoreUnit',
+        'notes',
+      ],
+      fieldLabels: {
+        email: 'email',
+        type: 'type',
+        name: 'nom',
+        status: 'statut',
+        validityStart: 'date de valididté',
+        validityEnd: 'date de fin de validité',
+        scoreValue: 'score',
+        scoreUnit: 'unité',
+        notes: 'notes',
+      },
+      oldData: oldCompliance,
+      newData: updateCompliance,
+    });
+
+    return updateCompliance;
   }
 
   @Delete(':id')
@@ -100,6 +129,6 @@ export class CompliancesController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.compliancesService.delete(id, userId);
+    return this.compliancesService.deleteCompliance(id, userId);
   }
 }

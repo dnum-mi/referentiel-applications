@@ -3,41 +3,50 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { IActorRepository } from './actor.repository.interface';
 import { CreateActorDto, UpdateActorDto } from 'src/actor/dto/actor.dto';
 import { Prisma } from '@prisma/client';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class ActorRepository implements IActorRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private metadataService: MetadatasService,
+  ) {}
 
   public async create(actor: CreateActorDto, ownerId: string) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
-    const data: Prisma.ActorCreateInput = {
-      ...rest,
-      ...(organizationId && {
-        organization: {
-          connect: { id: organizationId },
-        },
-      }),
-      ...(applicationId && {
-        application: {
-          connect: { id: applicationId },
-        },
-      }),
-      ...(actorTypeId && {
-        actorType: {
-          connect: { id: actorTypeId },
-        },
-      }),
-      metadatas: {
-        create: {
-          applicationId: applicationId,
-          createdById: ownerId,
-          description: "Création de l'acteur " + actor.email,
-        },
+    const newActor = await this.prisma.actor.create({
+      data: {
+        ...rest,
+        ...(organizationId && {
+          organization: {
+            connect: { id: organizationId },
+          },
+        }),
+        ...(applicationId && {
+          application: {
+            connect: { id: applicationId },
+          },
+        }),
+        ...(actorTypeId && {
+          actorType: {
+            connect: { id: actorTypeId },
+          },
+        }),
       },
-    };
+    });
 
-    return await this.prisma.actor.create({ data });
+    const actorDatas = await this.findById(newActor.id);
+
+    await this.prisma.metadata.create({
+      data: {
+        applicationId: actorDatas.applicationId,
+        createdById: ownerId,
+        description: `Ajout de l'acteur ${actorDatas.actorType?.code} : ${actorDatas.email}`,
+      },
+    });
+
+    return actorDatas;
   }
 
   public async findAll(applicationId?: string) {
@@ -64,53 +73,69 @@ export class ActorRepository implements IActorRepository {
   ) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
-    const data: Prisma.ActorUpdateInput = {
-      ...rest,
-      ...(organizationId && {
-        organization: {
-          connect: { id: organizationId },
-        },
-      }),
-      ...(applicationId && {
-        application: {
-          connect: { id: applicationId },
-        },
-      }),
-      ...(actorTypeId && {
-        actorType: {
-          connect: { id: actorTypeId },
-        },
-      }),
-      metadatas: {
-        create: {
-          applicationId: applicationId,
-          createdById: ownerId,
-          action: 'update',
-          description: "Mise à jour de l'acteur " + actor.email,
-        },
-      },
-    };
+    const oldActor = await this.findById(where.id);
 
-    return await this.prisma.actor.update({ where, data });
+    await this.prisma.actor.update({
+      where,
+      data: {
+        ...rest,
+        ...(organizationId && {
+          organization: {
+            connect: { id: organizationId },
+          },
+        }),
+        ...(applicationId && {
+          application: {
+            connect: { id: applicationId },
+          },
+        }),
+        ...(actorTypeId && {
+          actorType: {
+            connect: { id: actorTypeId },
+          },
+        }),
+      },
+    });
+
+    const newActor = await this.findById(where.id);
+
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: ownerId,
+      entityLabel: `de l'acteur ${oldActor.actorType?.code}`,
+      fields: [
+        'lastname',
+        'firstname',
+        'email',
+        'organization.sigle',
+        'actorType.label',
+      ],
+      fieldLabels: {
+        lastname: 'nom',
+        firstname: 'prénom',
+        email: 'email',
+        'organization.sigle': 'organisation',
+        'actorType.label': 'rôle',
+      },
+      oldData: oldActor,
+      newData: newActor,
+    });
+
+    return newActor;
   }
 
   public async delete(id: string, ownerId: string) {
-    return await this.prisma.$transaction(async (tx) => {
-      const actor = await tx.actor.findUniqueOrThrow({
-        where: { id },
-        select: { applicationId: true, email: true },
-      });
+    const actor = await this.findById(id);
 
-      await tx.metadata.create({
-        data: {
-          action: 'delete',
-          applicationId: actor.applicationId,
-          description: "Suppression de l'acteur " + actor.email,
-          createdById: ownerId,
-        },
-      });
-
-      return tx.actor.delete({ where: { id } });
+    await this.prisma.metadata.create({
+      data: {
+        applicationId: actor.applicationId,
+        createdById: ownerId,
+        action: 'delete',
+        description: `Suppression de l'acteur ${actor.actorType.code} : ${actor.email}`,
+      },
     });
+
+    return await this.prisma.actor.delete({ where: { id } });
   }
 }

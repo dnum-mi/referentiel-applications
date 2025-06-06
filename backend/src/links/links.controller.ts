@@ -12,11 +12,15 @@ import { LinksService } from './links.service';
 import { CreateLinkDto } from './dto/create-link.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { UpdateLinkDto } from './dto/update-link.dto';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @ApiTags('Links')
 @Controller('applications/:applicationId/links')
 export class LinksController {
-  constructor(private service: LinksService) {}
+  constructor(
+    private service: LinksService,
+    private metadatasService: MetadatasService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new link for an application' })
@@ -57,23 +61,33 @@ export class LinksController {
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the link to update' })
-  update(
+  async update(
     @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateLinkDto: UpdateLinkDto,
   ) {
-    return this.service.update(id, {
+    const oldLink = await this.service.findOne(id);
+
+    const link = await this.service.update(id, {
       ...updateLinkDto,
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          action: 'update',
-          description: `Ajout du lien : ${updateLinkDto.link}`,
-        },
-      },
     });
+
+    await this.metadatasService.createMetadata({
+      applicationId,
+      createdById: userId,
+      entityLabel: `du lien ${oldLink.link}`,
+      fields: ['link', 'type', 'description'],
+      fieldLabels: {
+        link: 'lien',
+        type: 'type',
+        description: 'description',
+      },
+      oldData: oldLink,
+      newData: link,
+    });
+
+    return link;
   }
 
   @Delete(':id')
@@ -86,6 +100,6 @@ export class LinksController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id, userId);
+    return this.service.deleteLink(id, userId);
   }
 }

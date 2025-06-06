@@ -19,7 +19,7 @@ export class ApplicationService {
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
     private readonly metadatasService: MetadatasService,
-  ) {}
+  ) { }
 
   public async createApplication(
     ownerId: string,
@@ -62,23 +62,44 @@ export class ApplicationService {
     this.applyScalarAndSimpleRelationUpdates(data, applicationUpdates);
 
     try {
-      const updatedApplication = await this.prisma.$transaction(async (tx) => {
-        const app = await tx.application.update({
-          where,
-          data: applicationUpdates,
-        });
+      const oldApp = await this.applicationRepository.findById(where.id);
 
-        await tx.metadata.create({
-          data: {
-            applicationId: app.id,
-            createdById: ownerId,
-            action: 'update',
-            description: `Mise à jour de l’application`,
-          },
-        });
-
-        return app;
+      const updatedApplication = await this.prisma.application.update({
+        where,
+        data: applicationUpdates,
       });
+
+      await this.metadatasService.createMetadata({
+        applicationId: updatedApplication.id,
+        createdById: ownerId,
+        entityLabel: `des informations générales`,
+        fields: [
+          'label',
+          'shortName',
+          'logo',
+          'description',
+          'targetPopulations',
+          'priorityRestart',
+          'purposes',
+          'tags',
+        ],
+        fieldLabels: {
+          label: 'libellé',
+          shortName: 'nom court',
+          logo: 'logo',
+          description: 'description',
+          targetPopulations: 'populations cibles',
+          priorityRestart: 'priorité de redémarrage',
+          tags: 'tags',
+          purposes: 'objectifs',
+        },
+        oldData: oldApp,
+        newData: updatedApplication,
+      });
+
+      if (data.label !== undefined || data.shortName !== undefined) {
+        await this.ensureLabelExists(this.prisma, updatedApplication);
+      }
 
       return updatedApplication;
     } catch {

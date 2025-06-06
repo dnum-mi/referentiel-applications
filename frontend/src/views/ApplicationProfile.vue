@@ -4,7 +4,6 @@ import Applications from "@/api/application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import ReportIssue from "@/components/Issue/ReportIssue.vue";
 import { formatDate } from "@/composables/use-date";
 
 const route = useRoute();
@@ -62,7 +61,6 @@ onMounted(() => {
           Dernière modification : {{ formatDate(metadata.createdAt) || "inconnue" }} ({{ metadata.createdBy?.email }})
         </p>
       </h2>
-      <ReportIssue class="button-right" :application="application" />
       <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />
     </div>
   </div>

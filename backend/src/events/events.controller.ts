@@ -119,6 +119,6 @@ export class EventsController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id, userId);
+    return this.service.deleteEvent(id, userId);
   }
 }

@@ -59,4 +59,22 @@ export class LabelsService extends BaseService<Label> {
 
     return labels[0];
   }
+
+  public async deleteLabel(id: string, ownerId: string) {
+    const deletedLabel = await this.prisma.label.findFirst({
+      where: { id },
+      select: { applicationId: true, value: true },
+    });
+
+    await this.prisma.metadata.create({
+      data: {
+        action: 'delete',
+        applicationId: deletedLabel.applicationId,
+        description: 'Suppression du label : ' + deletedLabel.value,
+        createdById: ownerId,
+      },
+    });
+
+    await this.prisma.label.delete({ where: { id } });
+  }
 }

@@ -31,27 +31,8 @@ export class BaseService<T> {
     });
   }
 
-  async delete(id: string, ownerId?: string): Promise<T> {
-    const item = await this.model.findUnique({
-      where: { id },
-      select: { applicationId: true, metadatas: true },
-    });
-
-    if (!item) {
-      throw new NotFoundException(`${this.model.name} with ID ${id} not found`);
-    }
-
-    if (item.metadatas) {
-      await this.prisma.metadata.create({
-        data: {
-          applicationId: item.applicationId,
-          createdById: ownerId,
-          action: 'delete',
-          description: `Suppression de : ${item.name || item.description || item.value || item.link}`,
-        },
-      });
-    }
-
+  async delete(id: string): Promise<T> {
+    await this.findOne(id);
     return this.model.delete({ where: { id } });
   }
 }

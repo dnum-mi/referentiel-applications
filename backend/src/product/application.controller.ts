@@ -36,7 +36,7 @@ export class ApplicationController {
     private readonly applicationService: ApplicationService,
     private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly applicationExportService: ApplicationExportService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiBody({ type: CreateApplicationDto })
@@ -139,8 +139,8 @@ Vous devez fournir les informations suivantes :
     const buffer =
       Object.keys(searchParams).length > 0
         ? await this.applicationExportService.exportSearchResultsToExcel(
-            searchParams,
-          )
+          searchParams,
+        )
         : await this.exportApplicationsUseCase.execute();
 
     res.setHeader(
