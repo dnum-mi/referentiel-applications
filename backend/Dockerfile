@@ -1,16 +1,11 @@
-FROM node:22
+FROM node:22-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y jq
+RUN apt-get update && apt-get install -y jq libssl-dev
 RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
 
 COPY package.json pnpm-lock.yaml ./
-
-
-RUN apt-get update && apt-get install -y jq
-RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
-
 
 RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile
