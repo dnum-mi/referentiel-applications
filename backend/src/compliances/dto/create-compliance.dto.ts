@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
 import { IsString, IsOptional, IsEnum, IsDateString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateComplianceDto {
   @ApiProperty({
@@ -31,6 +32,7 @@ export class CreateComplianceDto {
   })
   @IsOptional()
   @IsDateString()
+  @Transform(({ value }) => new Date(value).toISOString())
   validityStart?: string | null;
 
   @ApiProperty({
@@ -40,6 +42,7 @@ export class CreateComplianceDto {
   })
   @IsOptional()
   @IsDateString()
+  @Transform(({ value }) => new Date(value).toISOString())
   validityEnd?: string | null;
 
   @ApiProperty({
