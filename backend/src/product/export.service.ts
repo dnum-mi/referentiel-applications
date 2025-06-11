@@ -4,6 +4,7 @@ import { ApplicationRepository } from './infrastructure/repository/application.r
 import { ApplicationWithAllRelations } from './types/application.type';
 import { getFullField } from './application/map/application-export.map';
 import { columnLabels } from './columnLabels/application-export.columnLabels';
+import { SearchApplicationDto } from './application/dto/search-application.dto';
 
 @Injectable()
 export class ApplicationExportService {
@@ -16,9 +17,30 @@ export class ApplicationExportService {
     return this.exportApplicationsUseCase.execute();
   }
 
+  async exportSearchResultsToExcel(
+    searchParams: SearchApplicationDto,
+  ): Promise<Buffer> {
+    const applications = await this.repository.searchApplications(searchParams);
+
+    // If applications have been returned as raw query results, fetch complete data for those applications
+    const applicationIds = applications.map((app) => app.id);
+
+    // Get full application data with all relations for the search results
+    const fullApplications =
+      applicationIds.length > 0
+        ? await this.repository
+            .findAllWithRelations()
+            .then((apps) =>
+              apps.filter((app) => applicationIds.includes(app.id)),
+            )
+        : await this.repository.findAllWithRelations(); // If no search results, return all apps
+
+    return this.exportApplicationsUseCase.executeWithApps(fullApplications);
+  }
+
   async exportApplications(
     columns: string[],
-    filters?: Record<string, string>,
+    filters?: Record<string, any>,
   ): Promise<{ fileName: string; csv: string }> {
     const apps = await this.repository.findAllWithRelations();
     const filteredApps = this.applyFilters(apps, filters);
@@ -27,13 +49,24 @@ export class ApplicationExportService {
 
   private applyFilters(
     apps: ApplicationWithAllRelations[],
-    filters?: Record<string, string>,
+    filters?: Record<string, any>,
   ): ApplicationWithAllRelations[] {
     if (!filters) return apps;
 
     return apps.filter((app) => {
       return Object.entries(filters).every(([field, rawValues]) => {
-        const values = rawValues.split(',').map((v) => v.trim().toLowerCase());
+        // Skip pagination, sorting, and column parameters
+        if (['page', 'limit', 'sortBy', 'order', 'columns'].includes(field)) {
+          return true;
+        }
+
+        // Handle different types of values
+        const values = Array.isArray(rawValues)
+          ? rawValues.map((v) => String(v).toLowerCase())
+          : typeof rawValues === 'string'
+            ? rawValues.split(',').map((v) => v.trim().toLowerCase())
+            : [String(rawValues).toLowerCase()];
+
         const actualValue = getFullField(app, field)?.toLowerCase() ?? '';
         return values.some((val) => actualValue.includes(val));
       });

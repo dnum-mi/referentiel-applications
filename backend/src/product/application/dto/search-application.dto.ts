@@ -83,4 +83,30 @@ export class SearchApplicationDto {
   @IsOptional()
   @IsString()
   hostingSearch?: string;
+
+  @ApiPropertyOptional({
+    description: "Colonnes à inclure dans l'export",
+    example: '["id", "label", "shortName", "description"]',
+    type: 'array',
+    items: {
+      type: 'string',
+    },
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      // Try to parse if it's a JSON string
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [value];
+      } catch (e) {
+        // If not valid JSON, treat as comma-separated values
+        return value.split(',').map((v) => v.trim());
+      }
+    }
+    return Array.isArray(value) ? value : [value];
+  })
+  columns?: string[];
 }

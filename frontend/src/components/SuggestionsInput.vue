@@ -60,20 +60,14 @@ watch(
   (newValue) => {
     defaultData.value = newValue;
     const foundSuggestion = (props.searchData || []).find((sug) => sug.id === newValue);
-    if (foundSuggestion) {
-      searchSuggestion.value = foundSuggestion.label;
-    } else {
-      searchSuggestion.value = "";
-    }
+    foundSuggestion ? (searchSuggestion.value = foundSuggestion.label) : (searchSuggestion.value = "");
   },
 );
 
 onBeforeMount(() => {
   if (defaultData.value) {
     const foundSuggestion = (props.searchData || []).find((sug) => sug.id === defaultData.value);
-    if (foundSuggestion) {
-      searchSuggestion.value = foundSuggestion.label;
-    }
+    foundSuggestion ? (searchSuggestion.value = foundSuggestion.label) : (searchSuggestion.value = "");
   }
 });
 </script>

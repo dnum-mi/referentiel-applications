@@ -49,11 +49,7 @@ watch(
   () => searchStore.filters.organizationLabel,
   (val) => {
     const match = organizationStore.organizations.find((o) => o.label === val);
-    if (match) {
-      selectedOrganizationId.value = match.id;
-    } else {
-      selectedOrganizationId.value = "";
-    }
+    match ? (selectedOrganizationId.value = match.id) : (selectedOrganizationId.value = "");
   },
 );
 </script>

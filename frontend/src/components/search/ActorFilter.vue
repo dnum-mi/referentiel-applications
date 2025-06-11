@@ -54,11 +54,7 @@ watch(
   () => searchStore.filters.actorType,
   (val) => {
     const match = actorTypeStore.actorTypes.find((actor) => actor.code === val);
-    if (match) {
-      selectedActorTypeId.value = match.id;
-    } else {
-      selectedActorTypeId.value = "";
-    }
+    match ? (selectedActorTypeId.value = match.id) : (selectedActorTypeId.value = "");
   },
   { deep: true },
 );
