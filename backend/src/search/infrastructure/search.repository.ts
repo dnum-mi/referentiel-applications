@@ -24,6 +24,7 @@ export class ApplicationSearchRepository
     } = dto;
 
     const safeOrder = order === 'desc' ? 'desc' : 'asc';
+    const upperCaseTags = tag?.map((t) => t.toUpperCase()) || [];
 
     const filters = [
       {
@@ -144,7 +145,7 @@ export class ApplicationSearchRepository
       ...(shortName
         ? { shortName: { contains: shortName, mode: 'insensitive' } }
         : {}),
-      ...(tag?.length ? { tags: { hasSome: tag } } : {}),
+      ...(tag?.length ? { tags: { hasSome: upperCaseTags } } : {}),
       ...(priorityRestart?.length
         ? { priorityRestart: { in: priorityRestart } }
         : {}),
@@ -165,7 +166,7 @@ export class ApplicationSearchRepository
           ORDER BY ho.site ${Prisma.raw(safeOrder)}
           OFFSET ${page * limit}
           LIMIT ${limit}
-        `,
+    `,
       );
       const orderedIds = orderedIdsResult.map((r) => r.id);
 
