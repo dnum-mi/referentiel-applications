@@ -112,8 +112,12 @@ export class ApplicationService {
     }
   }
 
-  public async getLatestMetadata(applicationId: string) {
-    return this.metadatasService.findLatestMetadata(applicationId);
+  public async getFirstMetadata(id: string) {
+    return this.metadatasService.findFirstMetadata(id);
+  }
+
+  public async getLatestMetadata(id: string) {
+    return this.metadatasService.findLatestMetadata(id);
   }
 
   public async searchApplications(

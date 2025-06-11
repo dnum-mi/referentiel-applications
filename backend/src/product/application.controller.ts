@@ -35,7 +35,7 @@ export class ApplicationController {
     private readonly applicationService: ApplicationService,
     private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly applicationExportService: ApplicationExportService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiBody({ type: CreateApplicationDto })
@@ -97,16 +97,29 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.searchApplications(searchParams);
   }
 
-  @Get(':applicationId/metadatas/latest')
+  @Get(':id/metadatas/first')
+  @ApiOperation({
+    summary: 'Récupérer la dernière metadata par ID',
+    description: `
+Ce endpoint permet de récupérer les détails complets de la metadata de création d'une application en fonction de son identifiant unique.
+
+Le paramètre **id** doit être fourni dans l'URL.
+    `,
+  })
+  getFirstMetadata(@Param('id') id: string) {
+    return this.applicationService.getFirstMetadata(id);
+  }
+
+  @Get(':id/metadatas/latest')
   @ApiOperation({
     summary: 'Récupérer la dernière metadata par ID',
     description: `
 Ce endpoint permet de récupérer les détails complets de la metadata la plus récente d'une application en fonction de son identifiant unique.
 
-Le paramètre **applicationId** doit être fourni dans l'URL.
+Le paramètre **id** doit être fourni dans l'URL.
     `,
   })
-  getLatestMetadata(@Param('applicationId') id: string) {
+  getLatestMetadata(@Param('id') id: string) {
     return this.applicationService.getLatestMetadata(id);
   }
 
@@ -128,8 +141,8 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     const buffer =
       Object.keys(searchParams).length > 0
         ? await this.applicationExportService.exportSearchResultsToExcel(
-            searchParams,
-          )
+          searchParams,
+        )
         : await this.exportApplicationsUseCase.execute();
 
     res.setHeader(

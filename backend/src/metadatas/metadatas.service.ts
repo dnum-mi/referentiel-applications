@@ -9,6 +9,16 @@ export class MetadatasService extends BaseService<Metadata> {
     super(prisma.metadata, prisma);
   }
 
+  public async findFirstMetadata(applicationId: string) {
+    return this.prisma.metadata.findFirst({
+      where: { applicationId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        createdBy: true,
+      },
+    });
+  }
+
   public async findLatestMetadata(applicationId: string) {
     return this.prisma.metadata.findFirst({
       where: { applicationId },

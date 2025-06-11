@@ -25,7 +25,7 @@ async function loadApplication() {
   try {
     application.value = await Applications.getApplicationById(id);
     metadata.value = await Applications.getLatestMetadata(id);
-    firstMetadata.value = application.value.metadatas?.[0] || null;
+    firstMetadata.value = await Applications.getFirstMetadata(id);
   } catch (error) {
     errorMessage.value = `Une erreur est survenue lors de la récupération de l'application. (${error})`;
   } finally {
