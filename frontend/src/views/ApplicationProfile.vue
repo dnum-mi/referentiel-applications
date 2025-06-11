@@ -15,17 +15,22 @@ const firstMetadata = ref<Metadata | null>();
 const isLoading = ref(false);
 const errorMessage = ref("");
 
+async function getMetadata(applicationId: string, order: "asc" | "desc") {
+  const result = await Applications.getSortedMetadata(applicationId, order);
+  return result[0] ?? null;
+}
+
 async function handleApplicationUpdate(updatedApplication: Application) {
   application.value = updatedApplication;
-  metadata.value = await Applications.getLatestMetadata(application.value.id);
+  metadata.value = await getMetadata(updatedApplication.id, "desc");
 }
 
 async function loadApplication() {
   isLoading.value = true;
   try {
     application.value = await Applications.getApplicationById(id);
-    metadata.value = await Applications.getLatestMetadata(id);
-    firstMetadata.value = application.value.metadatas?.[0] || null;
+    firstMetadata.value = await getMetadata(id, "asc");
+    metadata.value = await getMetadata(id, "desc");
   } catch (error) {
     errorMessage.value = `Une erreur est survenue lors de la récupération de l'application. (${error})`;
   } finally {
