@@ -21,6 +21,8 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { FiltersDto } from './dto/filters.dto';
 import { EventType } from '@prisma/client';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { EventTypeLabels } from 'src/product/constants/enum-label';
+import { translateEnum } from 'src/common/utils/enum.utils';
 
 @ApiTags('Events')
 @Controller('applications/:applicationId/events')
@@ -46,7 +48,7 @@ export class EventsController {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          description: `Ajout de l'événement : ${createEventDto.description}`,
+          description: `Ajout de l'événement : ${translateEnum(EventTypeLabels, createEventDto.type)}`,
         },
       },
       application: {
@@ -103,7 +105,7 @@ export class EventsController {
           applicationId,
           createdById: userId,
           action: 'update',
-          description: `Mise à jour de l'événement : ${updateEventDto.description}`,
+          description: `Mise à jour de l'événement : ${translateEnum(EventTypeLabels, updateEventDto.type)}`,
         },
       },
     });

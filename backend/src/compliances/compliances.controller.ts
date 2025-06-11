@@ -106,7 +106,7 @@ export class CompliancesController {
         type: 'type',
         name: 'nom',
         status: 'statut',
-        validityStart: 'date de valididté',
+        validityStart: 'date de validité',
         validityEnd: 'date de fin de validité',
         scoreValue: 'score',
         scoreUnit: 'unité',

@@ -15,6 +15,41 @@ const headers = ["Date", "Auteur", "Description"];
 const currentPage = ref(0);
 const activeAccordion = ref<number>();
 
+function formatDescription(description: string): { title: string; content: string } {
+  const oldMatch = description.match(/Ancienne\(s\) valeur\(s\):\s*(\{.*?\})/s);
+  const newMatch = description.match(/Nouvelle\(s\) valeur\(s\):\s*(\{.*\})/s);
+
+  const title = description.split("\n")[0];
+
+  if (!oldMatch && !newMatch) {
+    return { title, content: description };
+  }
+
+  try {
+    let formatted = "";
+
+    if (newMatch) {
+      const newObj = JSON.parse(newMatch[1]);
+      const newLine = Object.entries(newObj)
+        .map(([k, v]) => `${k}='${Array.isArray(v) ? v.join(", ") : v}'`)
+        .join(" ");
+      formatted += `Nouvelle(s) valeur(s): ${newLine}\n`;
+    }
+
+    if (oldMatch) {
+      const oldObj = JSON.parse(oldMatch[1]);
+      const oldLine = Object.entries(oldObj)
+        .map(([k, v]) => `${k}='${Array.isArray(v) ? v.join(", ") : v}'`)
+        .join(" ");
+      formatted += `Ancienne(s) valeur(s): ${oldLine}`;
+    }
+
+    return { title, content: formatted };
+  } catch (e) {
+    return { title, content: description };
+  }
+}
+
 const rows = computed(() => {
   const reports = (reportStore.issues || []).map((report: any) => ({
     sortKey: new Date(report.createdAt).getTime(),
@@ -23,12 +58,15 @@ const rows = computed(() => {
     Description: { content: "Signalement : \n" + report.description || "" },
   }));
 
-  const modifications = (props.application.metadatas || []).map((metadata: Metadata) => ({
-    sortKey: new Date(metadata.createdAt).getTime(),
-    Date: new Date(metadata.createdAt).toLocaleDateString("fr-FR"),
-    Auteur: metadata.createdBy?.email || "Inconnu",
-    Description: { content: metadata.description || "" },
-  }));
+  const modifications = (props.application.metadatas || []).map((metadata: Metadata) => {
+    const { title, content } = formatDescription(metadata.description || "");
+    return {
+      sortKey: new Date(metadata.createdAt).getTime(),
+      Date: new Date(metadata.createdAt).toLocaleDateString("fr-FR"),
+      Auteur: metadata.createdBy?.email || "Inconnu",
+      Description: { title, content },
+    };
+  });
 
   return [...reports, ...modifications].sort((a, b) => b.sortKey - a.sortKey).map((item, index) => ({ ...item, index }));
 });
@@ -54,13 +92,12 @@ const loading = computed(() => reportStore.isLoading);
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Description'">
-          <DsfrAccordion :id="cell.index" :title="cell.content.slice(0, 60) + (cell.content.length > 60 ? '...' : '')">
+          <DsfrAccordion :id="cell.index" :title="cell.title">
             <div class="full-description">
-              {{ cell.content }}
+              <pre class="formatted-description">{{ cell.content }}</pre>
             </div>
           </DsfrAccordion>
         </template>
-
         <template v-else>
           {{ cell }}
         </template>
@@ -75,5 +112,9 @@ const loading = computed(() => reportStore.isLoading);
   white-space: pre-wrap;
   word-wrap: break-word;
   margin-top: 0.5rem;
+}
+.formatted-description {
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 </style>
