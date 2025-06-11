@@ -19,7 +19,7 @@ export class ApplicationService {
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
     private readonly metadatasService: MetadatasService,
-  ) { }
+  ) {}
 
   public async createApplication(
     ownerId: string,
