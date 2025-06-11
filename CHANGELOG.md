@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.23.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.22.0...v1.23.0) (2025-06-11)
+
+
+### Features
+
+* **compliance:** enhance compliance date handling and streamline update logic ([#756](https://github.com/dnum-mi/referentiel-applications/issues/756)) ([5668451](https://github.com/dnum-mi/referentiel-applications/commit/566845147ea386063f10391cd47ff694725318f0))
+* **export:** :sparkles: add CSV export feature for application search ([#734](https://github.com/dnum-mi/referentiel-applications/issues/734)) ([f6b1ee9](https://github.com/dnum-mi/referentiel-applications/commit/f6b1ee9c3e658658a8844cf47bb0a96ee7286117))
+
+
+### Bug Fixes
+
+* :bug: add sort metadata endpoint ([#758](https://github.com/dnum-mi/referentiel-applications/issues/758)) ([691e884](https://github.com/dnum-mi/referentiel-applications/commit/691e8849212ea8976cf9be232554f2d4f20a6c99))
+* **api:** :bug: make tag search case-insensitive ([#726](https://github.com/dnum-mi/referentiel-applications/issues/726)) ([ca60cda](https://github.com/dnum-mi/referentiel-applications/commit/ca60cdad5e08ce1f739372b2fa26781dea733708))
+
 ## [1.22.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.21.0...v1.22.0) (2025-05-28)
 
 
