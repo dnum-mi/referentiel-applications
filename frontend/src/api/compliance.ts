@@ -19,6 +19,7 @@ export default class CompliancesApi {
 
   static async updateCompliance(applicationId: string, id: string, compliance: Partial<Compliance>): Promise<Compliance> {
     delete compliance.id;
+    delete compliance.applicationId;
     return await requests.patch(`${baseUrl(applicationId)}/${id}`, compliance);
   }
 
