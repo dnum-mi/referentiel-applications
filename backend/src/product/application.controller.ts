@@ -97,30 +97,22 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.searchApplications(searchParams);
   }
 
-  @Get(':id/metadatas/first')
+  @Get(':id/metadatas')
   @ApiOperation({
-    summary: 'Récupérer la dernière metadata par ID',
-    description: `
-Ce endpoint permet de récupérer les détails complets de la metadata de création d'une application en fonction de son identifiant unique.
-
-Le paramètre **id** doit être fourni dans l'URL.
-    `,
+    summary: 'Lister les metadatas d’une application avec pagination et tri',
   })
-  getFirstMetadata(@Param('id') id: string) {
-    return this.applicationService.getFirstMetadata(id);
-  }
-
-  @Get(':id/metadatas/latest')
-  @ApiOperation({
-    summary: 'Récupérer la dernière metadata par ID',
-    description: `
-Ce endpoint permet de récupérer les détails complets de la metadata la plus récente d'une application en fonction de son identifiant unique.
-
-Le paramètre **id** doit être fourni dans l'URL.
-    `,
-  })
-  getLatestMetadata(@Param('id') id: string) {
-    return this.applicationService.getLatestMetadata(id);
+  getMetadatas(
+    @Param('id') id: string,
+    @Query('offset') offset = 0,
+    @Query('limit') limit = 1,
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.applicationService.getSortedMetadatas(
+      id,
+      Number(offset),
+      Number(limit),
+      order,
+    );
   }
 
   @Get('export/excel')

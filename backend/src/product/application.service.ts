@@ -112,12 +112,21 @@ export class ApplicationService {
     }
   }
 
-  public async getFirstMetadata(id: string) {
-    return this.metadatasService.findFirstMetadata(id);
-  }
-
-  public async getLatestMetadata(id: string) {
-    return this.metadatasService.findLatestMetadata(id);
+  public async getSortedMetadatas(
+    applicationId: string,
+    offset = 0,
+    limit = 1,
+    order: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.prisma.metadata.findMany({
+      where: { applicationId },
+      orderBy: { createdAt: order },
+      skip: offset,
+      take: limit,
+      include: {
+        createdBy: true,
+      },
+    });
   }
 
   public async searchApplications(
