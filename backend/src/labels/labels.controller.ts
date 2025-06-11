@@ -52,19 +52,21 @@ Vous devez fournir les informations suivantes :
   ) {
     const result = await this.service.create({
       ...createLabelDto,
-      metadatas: {
-        create: {
-          applicationId: applicationId,
-          createdById: userId,
-          description: `Ajout du label : ${createLabelDto.value}`,
-        },
-      },
       application: {
         connect: {
           id: applicationId,
         },
       },
     });
+
+    await this.metadatasService.createMetadata({
+      applicationId,
+      createdById: userId,
+      entityLabel: `du libellé : ${createLabelDto.value}`,
+      entity: 'labelId',
+      entityId: result.id,
+    });
+
     return result;
   }
 
@@ -106,6 +108,8 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
       applicationId,
       createdById: userId,
       entityLabel: `du libellé ${oldLabel.value}`,
+      entity: 'labelId',
+      entityId: id,
       fields: ['source', 'value', 'shortname'],
       fieldLabels: {
         source: 'source',

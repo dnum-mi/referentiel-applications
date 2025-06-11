@@ -24,14 +24,15 @@ export class HostingRepository implements IHostingRepository {
         ...(hostingOptionId && {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
-        metadatas: {
-          create: {
-            applicationId: applicationId,
-            createdById: ownerId,
-            description: `Ajout de l'hébergement : ${rest.label}`,
-          },
-        },
       },
+    });
+
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: ownerId,
+      entityLabel: `de l'hébergement : ${rest.label}`,
+      entity: 'hostingId',
+      entityId: createdHosting.id,
     });
 
     return createdHosting;
@@ -78,6 +79,8 @@ export class HostingRepository implements IHostingRepository {
       applicationId,
       createdById: ownerId,
       entityLabel: `de l'hébergement ${oldHosting.label}`,
+      entity: 'hostingId',
+      entityId: id,
       fields: [
         'label',
         'hostingOption.site',

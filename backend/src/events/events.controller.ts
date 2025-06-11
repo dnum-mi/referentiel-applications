@@ -23,11 +23,15 @@ import { EventType } from '@prisma/client';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { EventTypeLabels } from 'src/product/constants/enum-label';
 import { translateEnum } from 'src/common/utils/enum.utils';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @ApiTags('Events')
 @Controller('applications/:applicationId/events')
 export class EventsController {
-  constructor(private service: EventsService) {}
+  constructor(
+    private service: EventsService,
+    private readonly metadataService: MetadatasService,
+  ) {}
 
   @Post()
   @ApiOperation({
@@ -37,26 +41,29 @@ export class EventsController {
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiBody({ type: CreateEventDto })
   @ApiResponse({ status: 201, type: Event })
-  create(
+  async create(
     @UserId() userId: string,
     @Body() createEventDto: CreateEventDto,
     @Param('applicationId') applicationId: string,
   ) {
-    return this.service.create({
+    const newEvent = await this.service.create({
       ...createEventDto,
-      metadatas: {
-        create: {
-          applicationId: applicationId,
-          createdById: userId,
-          description: `Ajout de l'événement : ${translateEnum(EventTypeLabels, createEventDto.type)}`,
-        },
-      },
       application: {
         connect: {
           id: applicationId,
         },
       },
     });
+
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: userId,
+      entityLabel: `de l'événement : ${translateEnum(EventTypeLabels, createEventDto.type)}`,
+      entity: 'eventId',
+      entityId: null,
+    });
+
+    return newEvent;
   }
 
   @Get()

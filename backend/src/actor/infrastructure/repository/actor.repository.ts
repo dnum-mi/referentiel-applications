@@ -38,15 +38,15 @@ export class ActorRepository implements IActorRepository {
 
     const actorDatas = await this.findById(newActor.id);
 
-    await this.prisma.metadata.create({
-      data: {
-        applicationId: actorDatas.applicationId,
-        createdById: ownerId,
-        description: `Ajout de l'acteur ${actorDatas.actorType?.code} : ${actorDatas.email}`,
-      },
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: ownerId,
+      entityLabel: `de l'acteur ${actorDatas.actorType?.code} : ${actorDatas.email}`,
+      entity: 'actorId',
+      entityId: actorDatas.id,
     });
 
-    return actorDatas;
+    return newActor;
   }
 
   public async findAll(applicationId?: string) {
@@ -103,6 +103,8 @@ export class ActorRepository implements IActorRepository {
       applicationId,
       createdById: ownerId,
       entityLabel: `de l'acteur ${oldActor.actorType?.code}`,
+      entity: 'actorId',
+      entityId: where.id,
       fields: [
         'lastname',
         'firstname',

@@ -13,15 +13,19 @@ export class MetadatasService extends BaseService<Metadata> {
     applicationId: string;
     createdById: string;
     entityLabel: string;
-    fields: string[];
+    entity?: string;
+    entityId?: string;
+    fields?: string[];
     fieldLabels?: Record<string, string>;
-    oldData: T;
-    newData: T;
+    oldData?: T;
+    newData?: T;
   }) {
     const {
       applicationId,
       createdById,
       entityLabel,
+      entity,
+      entityId,
       fields,
       fieldLabels = {},
       oldData,
@@ -44,21 +48,35 @@ export class MetadatasService extends BaseService<Metadata> {
     const oldValues = oldData ? buildValueMap(oldData) : undefined;
     const newValues = newData ? buildValueMap(newData) : undefined;
 
-    const descriptionLines = [`${'Modification'} ${entityLabel}`];
-    descriptionLines.push(
-      `Ancienne(s) valeur(s): ${JSON.stringify(oldValues)}`,
-    );
-    descriptionLines.push(
-      `Nouvelle(s) valeur(s): ${JSON.stringify(newValues)}`,
-    );
+    let action: 'add' | 'update' = 'update';
+    if (!oldData && !newData) action = 'add';
 
-    return this.prisma.metadata.create({
-      data: {
-        applicationId,
-        createdById,
-        action: 'update',
-        description: descriptionLines.join('\n'),
-      },
-    });
+    const actionLabels = {
+      add: 'Ajout',
+      update: 'Modification',
+    };
+
+    const descriptionLines = [`${actionLabels[action]} ${entityLabel}`];
+    if (fields) {
+      descriptionLines.push(
+        `Ancienne(s) valeur(s): ${JSON.stringify(oldValues)}`,
+      );
+      descriptionLines.push(
+        `Nouvelle(s) valeur(s): ${JSON.stringify(newValues)}`,
+      );
+    }
+
+    const prismaData: any = {
+      applicationId,
+      createdById,
+      action: fields ? 'update' : 'add',
+      description: descriptionLines.join('\n'),
+    };
+
+    if (entity && entityId) {
+      prismaData[entity] = entityId;
+    }
+
+    return this.prisma.metadata.create({ data: prismaData });
   }
 }

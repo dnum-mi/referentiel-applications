@@ -26,26 +26,29 @@ export class LinksController {
   @ApiOperation({ summary: 'Create a new link for an application' })
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
-  create(
+  async create(
     @UserId() userId: string,
     @Body() createLinkDto: CreateLinkDto,
     @Param('applicationId') applicationId: string,
   ) {
-    return this.service.create({
+    const newLink = await this.service.create({
       ...createLinkDto,
-      metadatas: {
-        create: {
-          applicationId: applicationId,
-          createdById: userId,
-          description: `Ajout du lien : ${createLinkDto.link}`,
-        },
-      },
       application: {
         connect: {
           id: applicationId,
         },
       },
     });
+
+    await this.metadatasService.createMetadata({
+      applicationId,
+      createdById: userId,
+      entityLabel: `du lien : ${createLinkDto.link}`,
+      entity: 'externalRessourceId',
+      entityId: newLink.id,
+    });
+
+    return newLink;
   }
 
   @Get()
@@ -77,6 +80,8 @@ export class LinksController {
       applicationId,
       createdById: userId,
       entityLabel: `du lien ${oldLink.link}`,
+      entity: 'externalRessourceId',
+      entityId: id,
       fields: ['link', 'type', 'description'],
       fieldLabels: {
         link: 'lien',

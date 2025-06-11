@@ -26,26 +26,29 @@ export class CompliancesController {
   @ApiOperation({ summary: 'Create a new compliance for an application' })
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
-  create(
+  async create(
     @UserId() userId: string,
     @Body() createComplianceDto: CreateComplianceDto,
     @Param('applicationId') applicationId: string,
   ) {
-    return this.compliancesService.create({
+    const newCompliance = await this.compliancesService.create({
       ...createComplianceDto,
-      metadatas: {
-        create: {
-          applicationId: applicationId,
-          createdById: userId,
-          description: `Ajout de la conformité : ${createComplianceDto.name}`,
-        },
-      },
       application: {
         connect: {
           id: applicationId,
         },
       },
     });
+
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: userId,
+      entityLabel: `de la conformité : ${createComplianceDto.name}`,
+      entity: 'complianceId',
+      entityId: newCompliance.id,
+    });
+
+    return newCompliance;
   }
 
   @Get()
@@ -91,6 +94,8 @@ export class CompliancesController {
       applicationId,
       createdById: userId,
       entityLabel: `de la conformité ${updateCompliance.name ?? ''}`,
+      entity: 'complianceId',
+      entityId: id,
       fields: [
         'type',
         'name',
