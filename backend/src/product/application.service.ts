@@ -112,8 +112,21 @@ export class ApplicationService {
     }
   }
 
-  public async getLatestMetadata(applicationId: string) {
-    return this.metadatasService.findLatestMetadata(applicationId);
+  public async getSortedMetadatas(
+    applicationId: string,
+    offset = 0,
+    limit = 1,
+    order: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.prisma.metadata.findMany({
+      where: { applicationId },
+      orderBy: { createdAt: order },
+      skip: offset,
+      take: limit,
+      include: {
+        createdBy: true,
+      },
+    });
   }
 
   public async searchApplications(

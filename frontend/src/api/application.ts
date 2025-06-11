@@ -47,13 +47,10 @@ const Applications = {
     return response.data;
   },
 
-  async getFirstMetadata(applicationId: string): Promise<Metadata> {
-    const response = await axios.get(`applications/${applicationId}/metadatas/first`);
-    return response.data;
-  },
-
-  async getLatestMetadata(applicationId: string): Promise<Metadata> {
-    const response = await axios.get(`applications/${applicationId}/metadatas/latest`);
+  async getSortedMetadata(applicationId: string, order: "asc" | "desc"): Promise<Metadata[]> {
+    const response = await axios.get(`applications/${applicationId}/metadatas`, {
+      params: { order },
+    });
     return response.data;
   },
 
