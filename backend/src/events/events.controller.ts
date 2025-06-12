@@ -46,24 +46,21 @@ export class EventsController {
     @Body() createEventDto: CreateEventDto,
     @Param('applicationId') applicationId: string,
   ) {
-    const newEvent = await this.service.create({
+    return await this.service.create({
       ...createEventDto,
       application: {
         connect: {
           id: applicationId,
         },
       },
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: userId,
+          description: `Ajout de l'événement : ${translateEnum(EventTypeLabels, createEventDto.type)}`,
+        },
+      },
     });
-
-    await this.metadataService.createMetadata({
-      applicationId,
-      createdById: userId,
-      entityLabel: `de l'événement : ${translateEnum(EventTypeLabels, createEventDto.type)}`,
-      entity: 'eventId',
-      entityId: null,
-    });
-
-    return newEvent;
   }
 
   @Get()

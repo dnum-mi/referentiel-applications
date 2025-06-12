@@ -31,24 +31,21 @@ export class CompliancesController {
     @Body() createComplianceDto: CreateComplianceDto,
     @Param('applicationId') applicationId: string,
   ) {
-    const newCompliance = await this.compliancesService.create({
+    return await this.compliancesService.create({
       ...createComplianceDto,
       application: {
         connect: {
           id: applicationId,
         },
       },
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: userId,
+          description: 'Ajout de la conformité : ' + createComplianceDto.name,
+        },
+      },
     });
-
-    await this.metadataService.createMetadata({
-      applicationId,
-      createdById: userId,
-      entityLabel: `de la conformité : ${createComplianceDto.name}`,
-      entity: 'complianceId',
-      entityId: newCompliance.id,
-    });
-
-    return newCompliance;
   }
 
   @Get()
@@ -93,20 +90,10 @@ export class CompliancesController {
     await this.metadataService.createMetadata({
       applicationId,
       createdById: userId,
-      entityLabel: `de la conformité ${updateCompliance.name ?? ''}`,
+      title: `de la conformité ${updateCompliance.name ?? ''}`,
       entity: 'complianceId',
       entityId: id,
-      fields: [
-        'type',
-        'name',
-        'status',
-        'validityStart',
-        'validityEnd',
-        'scoreValue',
-        'scoreUnit',
-        'notes',
-      ],
-      fieldLabels: {
+      fields: {
         email: 'email',
         type: 'type',
         name: 'nom',

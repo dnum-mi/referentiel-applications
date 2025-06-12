@@ -12,22 +12,20 @@ export class MetadatasService extends BaseService<Metadata> {
   public async createMetadata<T = any>(options: {
     applicationId: string;
     createdById: string;
-    entityLabel: string;
+    title: string;
     entity?: string;
     entityId?: string;
-    fields?: string[];
-    fieldLabels?: Record<string, string>;
-    oldData?: T;
-    newData?: T;
+    fields?: Record<string, string>;
+    oldData: T;
+    newData: T;
   }) {
     const {
       applicationId,
       createdById,
-      entityLabel,
+      title,
       entity,
       entityId,
-      fields,
-      fieldLabels = {},
+      fields = {},
       oldData,
       newData,
     } = options;
@@ -38,9 +36,9 @@ export class MetadatasService extends BaseService<Metadata> {
 
     const buildValueMap = (source: any) => {
       const result: Record<string, any> = {};
-      for (const field of fields) {
-        const label = fieldLabels[field] ?? field;
-        result[label] = extractValue(source, field);
+      for (const path in fields) {
+        const label = fields[path];
+        result[label] = extractValue(source, path);
       }
       return result;
     };
@@ -48,28 +46,18 @@ export class MetadatasService extends BaseService<Metadata> {
     const oldValues = oldData ? buildValueMap(oldData) : undefined;
     const newValues = newData ? buildValueMap(newData) : undefined;
 
-    let action: 'add' | 'update' = 'update';
-    if (!oldData && !newData) action = 'add';
-
-    const actionLabels = {
-      add: 'Ajout',
-      update: 'Modification',
-    };
-
-    const descriptionLines = [`${actionLabels[action]} ${entityLabel}`];
-    if (fields) {
-      descriptionLines.push(
-        `Ancienne(s) valeur(s): ${JSON.stringify(oldValues)}`,
-      );
-      descriptionLines.push(
-        `Nouvelle(s) valeur(s): ${JSON.stringify(newValues)}`,
-      );
-    }
+    const descriptionLines = [`Modification ${title}`];
+    descriptionLines.push(
+      `Ancienne(s) valeur(s): ${JSON.stringify(oldValues)}`,
+    );
+    descriptionLines.push(
+      `Nouvelle(s) valeur(s): ${JSON.stringify(newValues)}`,
+    );
 
     const prismaData: any = {
       applicationId,
       createdById,
-      action: fields ? 'update' : 'add',
+      action: 'update',
       description: descriptionLines.join('\n'),
     };
 

@@ -72,18 +72,8 @@ export class ApplicationService {
       await this.metadatasService.createMetadata({
         applicationId: updatedApplication.id,
         createdById: ownerId,
-        entityLabel: `des informations générales`,
-        fields: [
-          'label',
-          'shortName',
-          'logo',
-          'description',
-          'targetPopulations',
-          'priorityRestart',
-          'purposes',
-          'tags',
-        ],
-        fieldLabels: {
+        title: `des informations générales`,
+        fields: {
           label: 'libellé',
           shortName: 'nom court',
           logo: 'logo',

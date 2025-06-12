@@ -31,24 +31,21 @@ export class LinksController {
     @Body() createLinkDto: CreateLinkDto,
     @Param('applicationId') applicationId: string,
   ) {
-    const newLink = await this.service.create({
+    return await this.service.create({
       ...createLinkDto,
       application: {
         connect: {
           id: applicationId,
         },
       },
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: userId,
+          description: 'Ajout du lien : ' + createLinkDto.link,
+        },
+      },
     });
-
-    await this.metadatasService.createMetadata({
-      applicationId,
-      createdById: userId,
-      entityLabel: `du lien : ${createLinkDto.link}`,
-      entity: 'externalRessourceId',
-      entityId: newLink.id,
-    });
-
-    return newLink;
   }
 
   @Get()
@@ -79,11 +76,10 @@ export class LinksController {
     await this.metadatasService.createMetadata({
       applicationId,
       createdById: userId,
-      entityLabel: `du lien ${oldLink.link}`,
+      title: `du lien ${oldLink.link}`,
       entity: 'externalRessourceId',
       entityId: id,
-      fields: ['link', 'type', 'description'],
-      fieldLabels: {
+      fields: {
         link: 'lien',
         type: 'type',
         description: 'description',

@@ -87,9 +87,8 @@ export class RelationRepository implements IRelationRepository {
     await this.metadataService.createMetadata({
       applicationId: updated.sourceApplication.id,
       createdById: ownerId,
-      entityLabel: `de la relation avec ${updated.targetApplication.label}`,
-      fields: ['sourceApplication.label', 'targetApplication.label', 'type'],
-      fieldLabels: {
+      title: `de la relation avec ${updated.targetApplication.label}`,
+      fields: {
         'sourceApplication.label': 'application source',
         'targetApplication.label': 'application visée',
       },
@@ -100,9 +99,8 @@ export class RelationRepository implements IRelationRepository {
     await this.metadataService.createMetadata({
       applicationId: updated.targetApplication.id,
       createdById: ownerId,
-      entityLabel: `de la relation avec ${updated.sourceApplication.label}`,
-      fields: ['sourceApplication.label', 'targetApplication.label', 'type'],
-      fieldLabels: {
+      title: `de la relation avec ${updated.sourceApplication.label}`,
+      fields: {
         'sourceApplication.label': 'application source',
         'targetApplication.label': 'application visée',
       },
