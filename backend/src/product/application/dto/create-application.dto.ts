@@ -6,7 +6,7 @@ import {
   IsEnum,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 export class CreateLabelDto {
@@ -101,6 +101,7 @@ export class CreateApplicationDto {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
+  @Transform(({ value }) => value.map((v) => v.toUpperCase()))
   tags?: string[];
 
   @ApiProperty({

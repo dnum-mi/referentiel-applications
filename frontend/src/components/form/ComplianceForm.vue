@@ -28,8 +28,8 @@ const complianceStatuses = computed(() => [
 
 const form = ref({
   ...props.initialData,
-  validityStart: props.initialData?.validityStart?.split("T")[0] || "",
-  validityEnd: props.initialData?.validityEnd?.split("T")[0] || "",
+  validityStart: props.initialData?.validityStart?.split("T")[0] || undefined,
+  validityEnd: props.initialData?.validityEnd?.split("T")[0] || undefined,
 });
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
@@ -50,11 +50,11 @@ const handleSubmit = () => {
       label-visible
       required
     />
-    <DsfrInput class="fr-mb-3w" v-model="form.validityStart" label="Date de début" type="date" label-visible required />
-    <DsfrInput class="fr-mb-3w" v-model="form.validityEnd" label="Date de fin" type="date" label-visible required />
-    <DsfrInput class="fr-mb-3w" v-model="form.scoreValue" placeholder="Score" label="Score" label-visible required />
-    <DsfrInput class="fr-mb-3w" v-model="form.scoreUnit" placeholder="Unité" label="Unité" label-visible required />
-    <DsfrInput class="fr-mb-3w" v-model="form.notes" is-textarea label="Notes" label-visible required />
+    <DsfrInput class="fr-mb-3w" v-model="form.validityStart" label="Date de début" type="date" label-visible />
+    <DsfrInput class="fr-mb-3w" v-model="form.validityEnd" label="Date de fin" type="date" label-visible />
+    <DsfrInput class="fr-mb-3w" v-model="form.scoreValue" placeholder="Score" label="Score" label-visible />
+    <DsfrInput class="fr-mb-3w" v-model="form.scoreUnit" placeholder="Unité" label="Unité" label-visible />
+    <DsfrInput class="fr-mb-3w" v-model="form.notes" is-textarea label="Notes" label-visible />
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton secondary label="Annuler" @click="$emit('cancel')" />

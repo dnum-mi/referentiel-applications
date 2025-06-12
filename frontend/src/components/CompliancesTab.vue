@@ -44,26 +44,13 @@ function getStatusLabel(value: string): string {
 const handleSaveCompliances = async (compliance) => {
   isSubmitting.value = true;
   delete compliance.metadataId;
-  const payload: any = {
-    type: compliance.type,
-    name: compliance.name,
-    status: compliance.status,
-    validityStart: compliance.validityStart ? new Date(compliance.validityStart).toISOString() : undefined,
-    validityEnd: compliance.validityEnd ? new Date(compliance.validityEnd).toISOString() : undefined,
-    scoreValue: compliance.scoreValue,
-    scoreUnit: compliance.scoreUnit,
-    notes: compliance.notes,
-  };
   try {
     if (compliance.id) {
-      // Update existing compliance
-      await CompliancesApi.updateCompliance(props.application.id, compliance.id, payload);
+      await CompliancesApi.updateCompliance(props.application.id, compliance.id, compliance);
     } else {
-      // Create new compliance
-      await CompliancesApi.createCompliance(props.application.id, payload);
+      await CompliancesApi.createCompliance(props.application.id, compliance);
     }
 
-    // Re-fetch all compliances to get the latest data
     await fetchCompliances();
     complianceModal.closeModal();
     toaster.addSuccessMessage("Conformité sauvegardée avec succès !");
