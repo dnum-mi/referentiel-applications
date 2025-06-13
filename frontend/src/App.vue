@@ -5,6 +5,7 @@ import useToaster from "./composables/use-toaster";
 import { routeNames } from "./router/route-names";
 import { authentication } from "./services/authentication";
 import Applications from "@/api/application";
+import Users from "@/api/user";
 import router from "./router/index.js";
 
 const instance = getCurrentInstance();
@@ -23,6 +24,7 @@ const trackSearch = (query: string, source: string, resultCount: number) => {
 };
 
 const authenticated = ref(authentication.authenticated);
+const userPermissions = ref<string[]>([]);
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
@@ -53,9 +55,25 @@ interface QuickLink {
     },
   ];
   if (authenticated.value) {
-    authenticatedQuickLinks.value = [
+    userPermissions.value = await Users.getUser().then((response) => {
+      return response.permissions.split(",");
+    });
+
+    const baseLinks = [
       { label: "Applications", to: { name: routeNames.SEARCHAPP } },
       { label: "Corrections", to: { name: routeNames.ISSUELIST } },
+    ];
+
+    if (userPermissions.value.includes("admin")) {
+      baseLinks.push({
+        label: "Gestion des utilisateurs",
+        to: { name: routeNames.USERMANAGEMENT },
+        icon: "ri-user-settings-line",
+        iconAttrs: { title: "Gérer les utilisateurs" },
+      });
+    }
+
+    baseLinks.push(
       {
         label: "Mon profil",
         to: { name: routeNames.PROFILE },
@@ -70,7 +88,9 @@ interface QuickLink {
         icon: "ri-logout-box-r-line",
         iconAttrs: { title: "Déconnexion" },
       },
-    ];
+    );
+
+    authenticatedQuickLinks.value = baseLinks;
   }
 })();
 

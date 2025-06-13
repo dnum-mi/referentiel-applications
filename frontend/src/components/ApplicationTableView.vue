@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, ref } from "vue";
+import { computed, watch, ref, onMounted } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { getPriorityBadgeType } from "@/composables/use-dictionary";
@@ -7,9 +7,11 @@ import { customSorter } from "@/utils/tableSort";
 import { applicationFieldsDict } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
 import ExportApi from "@/api/export";
+import Users from "@/api/user";
 
 const searchStore = useApplicationSearchStore();
 const statsStore = useStatisticsStore();
+const userPermissions = ref<string[]>([]);
 
 const currentSortedColumn = defineModel("sortedBy", { default: "label" });
 
@@ -74,13 +76,27 @@ function sorter(a: any, b: any, columnIndex: number) {
   return customSorter(a, b, col, applicationFieldsDict);
 }
 
+onMounted(async () => {
+  userPermissions.value = await Users.getUser().then((response) => {
+    return response.permissions.split(",");
+  });
+});
+
 async function exportSearchResults() {
   try {
-    // Use our API to download the CSV with the current filters
     await ExportApi.downloadCsv(searchStore.filters);
   } catch (error) {
     console.error("Export error:", error);
     alert("Une erreur est survenue lors de l'exportation CSV. Veuillez réessayer.");
+  }
+}
+
+async function exportToExcel() {
+  try {
+    await ExportApi.downloadExcel(searchStore.filters);
+  } catch (error) {
+    console.error("Excel export error:", error);
+    alert("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }
 }
 </script>
@@ -90,9 +106,19 @@ async function exportSearchResults() {
     <div class="flex justify-between mb-4">
       <div class="export-button">
         <DsfrButton
-          label="Exporter les résultats en CSV"
+          v-if="userPermissions.includes('admin')"
+          label="Exporter en CSV"
           icon="ri-download-line"
           @click="exportSearchResults"
+          secondary
+          icon-only-size="sm"
+          class="fr-mr-2w"
+        />
+        <DsfrButton
+          v-if="userPermissions.includes('admin')"
+          label="Exporter en Excel"
+          icon="ri-file-excel-2-line"
+          @click="exportToExcel"
           secondary
           icon-only-size="sm"
         />
