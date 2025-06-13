@@ -26,7 +26,6 @@ export interface Label {
   id?: string;
   source: string;
   value: string;
-  shortname: string;
   metadataId?: string;
   applicationId?: string;
 }

@@ -32,9 +32,8 @@ export class LabelsController {
 **Ce endpoint permet de créer un label complet.**
 
 Vous devez fournir les informations suivantes :
-- **source**: La source de l'application.
+- **source**: La source de l'application (peut être vide).
 - **value**: Le libellé de l'application.
-- **shortname**: Le nom court de l'application (peut être vide).
     `,
   })
   @ApiResponse({

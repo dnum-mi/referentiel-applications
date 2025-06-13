@@ -65,24 +65,12 @@ const form = ref({
   priorityRestart: props.initialData?.priorityRestart ?? "",
 });
 
-const isCurrentLabel = (label: Label): boolean => {
-  return (
-    label.value.toLowerCase() === form.value.label.toLowerCase() &&
-    (label.shortname ? label.shortname.toLowerCase() === form.value.shortName.toLowerCase() : !form.value.shortName)
-  );
-};
 const addLabel = () => {
-  form.value.labels.push({ source: "", value: "", shortname: "" });
+  form.value.labels.push({ source: "", value: "" });
 };
 
 const removeLabel = (index: number) => {
-  const labelToRemove = form.value.labels[index];
-  if (
-    labelToRemove?.value?.toLowerCase() !== form.value.label.toLowerCase() ||
-    labelToRemove?.shortname?.toLowerCase() !== form.value.shortName.toLowerCase()
-  ) {
-    form.value.labels.splice(index, 1);
-  }
+  form.value.labels.splice(index, 1);
 };
 
 const addPurpose = () => {
@@ -131,34 +119,18 @@ const removePopulation = (index: number) => {
     />
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Labels alternatifs</label>
+      <label class="fr-label">Libellés alternatifs</label>
       <div class="fr-mt-2w">
         <div v-for="(label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div v-if="form.labels.length > 0" class="fr-col">
-            <p v-if="isCurrentLabel(label)">label principal</p>
-            <DsfrInput
-              v-model="form.labels[index].source"
-              :placeholder="`Source ${index + 1}`"
-              :required="form.labels.length > 0"
-              :disabled="isCurrentLabel(label)"
-            />
-            <DsfrInput
-              v-model="form.labels[index].value"
-              :placeholder="`Label ${index + 1}`"
-              :required="form.labels.length > 0"
-              :disabled="isCurrentLabel(label)"
-            />
-            <DsfrInput
-              v-model="form.labels[index].shortname"
-              :placeholder="`Nom court (optionnel) ${index + 1}`"
-              :disabled="isCurrentLabel(label)"
-            />
+            <DsfrInput v-model="form.labels[index].source" :placeholder="`Source ${index + 1}`" :required="form.labels.length > 0" />
+            <DsfrInput v-model="form.labels[index].value" :placeholder="`Valeur ${index + 1}`" />
           </div>
           <div class="fr-col-auto">
             <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removeLabel(index)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un label" @click="addLabel" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un libellé" @click="addLabel" />
       </div>
     </div>
     <br />
