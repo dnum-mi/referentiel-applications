@@ -24,6 +24,7 @@ import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
 import { Response } from 'express';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { Permissions } from '../common/decorators/permissions.decorator';
 
 @ApiTags('applications')
 @Controller('applications')
@@ -116,15 +117,21 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get('export/excel')
+  @Permissions('admin')
   @ApiOperation({
     summary: 'Exporter les applications en Excel',
     description: `Permet d'exporter les applications en un fichier Excel.
       Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
-      Si aucun filtre n'est appliqué, toutes les applications sont exportées.`,
+      Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+      Accès limité aux utilisateurs avec privilège admin.`,
   })
   @ApiResponse({
     status: 200,
     description: 'Export Excel des applications',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Privilège admin requis',
   })
   async exportExcel(
     @Query() searchParams: SearchApplicationDto,

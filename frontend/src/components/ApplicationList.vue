@@ -1,4 +1,3 @@
-<!-- src/components/ApplicationList.vue -->
 <script lang="ts" setup>
 import Applications from "@/api/application";
 import { computed, onMounted, ref } from "vue";

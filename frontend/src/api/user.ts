@@ -20,6 +20,12 @@ const Users = {
       toaster.addErrorMessage("Échec du chargement des informations de l'utilisateur");
     }
   },
+  getAllUsers: async () => {
+    return await requests.get<User[]>("/users");
+  },
+  updateUserPermissions: async (keycloakId: string, permissions: string) => {
+    return await requests.patch<User>(`/users/${keycloakId}`, { permissions });
+  },
 };
 
 export default Users;
