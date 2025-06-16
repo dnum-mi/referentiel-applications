@@ -1,3 +1,5 @@
+import type { Actor } from "./Actor";
+
 export interface Application {
   id: string;
   label: string;
@@ -77,4 +79,5 @@ export interface User {
   keycloakId: string;
   email: string;
   organizationId?: string | null;
+  permissions?: string;
 }

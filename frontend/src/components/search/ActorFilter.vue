@@ -54,7 +54,7 @@ watch(
   () => searchStore.filters.actorType,
   (val) => {
     const match = actorTypeStore.actorTypes.find((actor) => actor.code === val);
-    match ? (selectedActorTypeId.value = match.id) : (selectedActorTypeId.value = "");
+    selectedActorTypeId.value = match?.id ?? "";
   },
   { deep: true },
 );

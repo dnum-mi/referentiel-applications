@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.23.0...v1.24.0) (2025-06-13)
+
+
+### Features
+
+* **user-management:** add user management view and permissions handling ([#762](https://github.com/dnum-mi/referentiel-applications/issues/762)) ([c195640](https://github.com/dnum-mi/referentiel-applications/commit/c195640e1d36862c773027225c170dfe488b2903))
+
 ## [1.23.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.22.0...v1.23.0) (2025-06-11)
 
 

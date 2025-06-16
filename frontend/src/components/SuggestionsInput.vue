@@ -60,7 +60,7 @@ watch(
   (newValue) => {
     defaultData.value = newValue;
     const foundSuggestion = (props.searchData || []).find((sug) => sug.id === newValue);
-    foundSuggestion ? (searchSuggestion.value = foundSuggestion.label) : (searchSuggestion.value = "");
+    searchSuggestion.value = foundSuggestion?.label ?? "";
   },
 );
 
