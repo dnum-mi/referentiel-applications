@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.24.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.24.0...v1.24.1) (2025-06-16)
+
+
+### Bug Fixes
+
+* :bug: fixing sorting function for application ([#760](https://github.com/dnum-mi/referentiel-applications/issues/760)) ([2572bbe](https://github.com/dnum-mi/referentiel-applications/commit/2572bbe54c59e5e88d00ee61e7a133fd64c9e486))
+* **Dockerfile:** add procps package to fix hot reload issue ([6d99f27](https://github.com/dnum-mi/referentiel-applications/commit/6d99f27ab2e6858ab4389301a7b026c9e0baafaa))
+
 ## [1.24.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.23.0...v1.24.0) (2025-06-13)
 
 
