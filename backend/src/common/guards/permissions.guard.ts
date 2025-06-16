@@ -55,6 +55,11 @@ export class PermissionsGuard implements CanActivate {
       ? userPermissions.split(',')
       : [userPermissions];
 
+    // 'admin' permission implies all permissions
+    if (permissions.includes('admin')) {
+      return true;
+    }
+
     // 'write' permission implies 'read' permission
     if (permissions.includes('write')) {
       return true;
@@ -65,6 +70,8 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    return false;
+    return requiredPermissions.some((permission) =>
+      permissions.includes(permission),
+    );
   }
 }

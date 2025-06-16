@@ -1,7 +1,5 @@
-import { PrismaClient, Nature } from '@prisma/client';
 import { faker } from '@faker-js/faker';
-
-const prisma = new PrismaClient();
+import { prisma } from './prisma';
 
 export class HostingFaker {
   static async create(override: {

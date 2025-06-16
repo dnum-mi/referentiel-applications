@@ -7,4 +7,5 @@ export const routeNames = {
   SEARCHAPP: "recherche-application",
   ISSUELIST: "issue-list",
   PROFILE: "profile",
+  USERMANAGEMENT: "user-management",
 } as const;
