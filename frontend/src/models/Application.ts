@@ -24,7 +24,7 @@ export interface Application {
 
 export interface Label {
   id?: string;
-  source: string;
+  source?: string;
   value: string;
   metadataId?: string;
   applicationId?: string;

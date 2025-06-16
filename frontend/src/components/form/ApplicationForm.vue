@@ -36,7 +36,6 @@ const handleSubmit = () => {
   const deletedLabels = initialLabels.filter((initialLabel) => !currentLabels.some((label) => label.id === initialLabel.id));
   const newLabels = currentLabels.filter((label) => !initialLabels.some((initialLabel) => label.id === initialLabel.id));
   const updatedLabels = currentLabels.filter((label) => label.id !== undefined);
-
   emit("submit", {
     labels: currentLabels,
     deletedLabels,
@@ -108,7 +107,7 @@ const removePopulation = (index: number) => {
 
 <template>
   <form @submit.prevent="handleSubmit">
-    <DsfrInputGroup label="Label" v-model="form.label" label-visible required />
+    <DsfrInputGroup label="Nom de l'application" v-model="form.label" label-visible required />
 
     <DsfrInputGroup
       class="fr-mt-3w"
@@ -119,12 +118,12 @@ const removePopulation = (index: number) => {
     />
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Libellés alternatifs</label>
+      <label class="fr-label">Noms alternatifs</label>
       <div class="fr-mt-2w">
         <div v-for="(label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div v-if="form.labels.length > 0" class="fr-col">
-            <DsfrInput v-model="form.labels[index].source" :placeholder="`Source ${index + 1}`" :required="form.labels.length > 0" />
-            <DsfrInput v-model="form.labels[index].value" :placeholder="`Valeur ${index + 1}`" />
+            <DsfrInput v-model="form.labels[index].source" :placeholder="`Reférentiel externe ${index + 1} (optionnel)`" />
+            <DsfrInput v-model="form.labels[index].value" :placeholder="`Nom ou identifiant externe ${index + 1}`" />
           </div>
           <div class="fr-col-auto">
             <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removeLabel(index)" />

@@ -36,7 +36,7 @@ const userPermissions = ref(null);
 onMounted(async () => {
   if (props.application?.id) {
     await hostingStore.fetchHostings(props.application.id);
-    await Labels.fetch(props.application.id);
+    labels.value = await Labels.fetch(props.application.id);
   }
   userPermissions.value = await Users.getUser().then((response) => {
     return response.permissions.split(",");
@@ -114,7 +114,7 @@ async function updateApplication(updatedData: any) {
       ...props.application,
       ...updatedData,
     });
-
+    console.log(updatedData);
     if (updatedData.deletedLabels.length > 0) {
       const labelIds = updatedData.deletedLabels.map((label: Label) => label.id);
       await Labels.delete(labelIds, props.application.id);
@@ -128,7 +128,7 @@ async function updateApplication(updatedData: any) {
 
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
-    await Labels.fetch(props.application.id);
+    labels.value = await Labels.fetch(props.application.id);
     toaster.addSuccessMessage("Application mise à jour avec succès");
   } catch (error) {
     console.error(error);
@@ -204,9 +204,17 @@ watch(
               <p>{{ application.id }}</p>
 
               <div v-if="labels.length > 0">
-                <h4>Libellés Alternatifs</h4>
+                <h4>Noms Alternatifs</h4>
                 <p>
-                  {{ labels.map((label) => `${label.source} (${label.value || ""})`).join(" ; ") }}
+                  {{
+                    labels
+                      .map((label) => {
+                        const value = label.value || "";
+                        const source = label.source && label.source.trim() !== "" ? ` (${label.source})` : "";
+                        return `${value}${source}`;
+                      })
+                      .join(" ; ")
+                  }}
                 </p>
               </div>
 

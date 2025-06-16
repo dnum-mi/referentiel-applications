@@ -161,7 +161,7 @@ export class ExportApplicationsUseCase {
         rows: ensureSheetHasAtLeastOneRow(apps.flatMap(mapLabels), {
           applicationId: '',
           applicationLabel: 'Aucune application',
-          value: 'Aucun label',
+          value: 'Aucun nom alternatif',
           source: '',
         }),
       },
