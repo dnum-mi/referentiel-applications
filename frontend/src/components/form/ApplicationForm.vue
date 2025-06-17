@@ -14,8 +14,6 @@ const props = defineProps<{
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
 
-const initialLabels = ref<Label[]>([]);
-
 const priorityRestartOptions = [
   { value: "", text: "Sélectionner une priorité" },
   { value: "R0", text: "R0 - Immédiat (H24)" },
@@ -32,12 +30,14 @@ const handleSubmit = () => {
   }
   const purposes = form.value.purposes.filter((p) => p.trim() !== "");
   const tags = form.value.tags.filter((t) => t.trim() !== "");
+  const initialLabels = props.labels ?? [];
   const currentLabels = form.value.labels;
 
   const deletedLabels = initialLabels.filter((initialLabel) => !currentLabels.some((label) => label.id === initialLabel.id));
   const newLabels = currentLabels.filter((label) => !initialLabels.some((initialLabel) => label.id === initialLabel.id));
   const updatedLabels = currentLabels.filter((label) => label.id !== undefined);
   emit("submit", {
+    labels: currentLabels,
     deletedLabels,
     updatedLabels,
     newLabels,
@@ -103,10 +103,6 @@ const addPopulation = () => {
 const removePopulation = (index: number) => {
   form.value.targetPopulations.splice(index, 1);
 };
-
-onMounted(() => {
-  initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
-});
 </script>
 
 <template>
