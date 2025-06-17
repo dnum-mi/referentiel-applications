@@ -51,11 +51,12 @@ function formatDescription(description: string): { title: string; content: strin
 }
 
 const rows = computed(() => {
+  const title = "Signalement";
   const reports = (reportStore.issues || []).map((report: any) => ({
     sortKey: new Date(report.createdAt).getTime(),
     Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
     Auteur: report.notifier.email,
-    Description: { content: "Signalement : \n" + report.description || "" },
+    Description: { title, content: report.description || "" },
   }));
 
   const modifications = (props.application.metadatas || []).map((metadata: Metadata) => {
