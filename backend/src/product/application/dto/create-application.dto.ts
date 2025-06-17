@@ -11,25 +11,16 @@ import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 export class CreateLabelDto {
   @ApiProperty({
-    example:
-      'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+    example: 'CODE_PAI',
     description: 'Source of the label',
   })
   @IsString()
+  @IsOptional()
   source: string | null;
 
-  @ApiProperty({ example: 'My Application', description: 'Value of the label' })
+  @ApiProperty({ example: 'My App', description: 'Value of the label' })
   @IsString()
-  @IsOptional()
   value: string | null;
-
-  @ApiProperty({
-    example: 'short-app-name',
-    description: 'ShortName of the label',
-  })
-  @IsString()
-  @IsOptional()
-  shortname: string | null;
 }
 
 export class CreateApplicationDto {
@@ -118,13 +109,12 @@ export class CreateApplicationDto {
     description: 'Liste des labels alternatifs associés à l’application',
     example: [
       {
-        source:
-          'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+        source: '',
         value: 'My App',
-        shortname: 'short-name',
       },
     ],
   })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateLabelDto)

@@ -27,10 +27,8 @@ describe('Labels', () => {
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/labels`)
       .send({
-        source:
-          'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+        source: '',
         value: 'Test Application',
-        shortname: '',
       })
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(201);

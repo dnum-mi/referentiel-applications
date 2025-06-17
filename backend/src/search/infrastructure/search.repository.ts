@@ -37,7 +37,7 @@ export class ApplicationSearchRepository
           WHERE EXISTS (
             SELECT 1
             FROM public.labels l
-            WHERE (LOWER(l.value) LIKE ${`%${dto.label!.toLowerCase()}%`} OR LOWER(l.shortname) LIKE ${`%${dto.label!.toLowerCase()}%`})
+            WHERE (LOWER(l.value) LIKE ${`%${dto.label!.toLowerCase()}%`})
               AND l."applicationId" = a.id
           )
         `,

@@ -34,12 +34,11 @@ export class ApplicationService {
       await this.labelsService.create({
         source: labelDto.source,
         value: labelDto.value,
-        shortname: labelDto.shortname || null,
         metadatas: {
           create: {
             applicationId: application.id,
             createdById: ownerId,
-            description: `Ajout du label "${labelDto.value}" à l'application`,
+            description: `Ajout du libellé alternatif "${labelDto.value}" à l'application`,
           },
         },
         application: {
@@ -49,25 +48,6 @@ export class ApplicationService {
         },
       });
     }
-
-    await this.labelsService.create({
-      source:
-        'https://referentiel-applications.interieur.rie.gouv.fr/applications',
-      value: application.label,
-      shortname: application.shortName,
-      metadatas: {
-        create: {
-          applicationId: application.id,
-          createdById: ownerId,
-          description: `Ajout du label principal "${application.label}" à l'application`,
-        },
-      },
-      application: {
-        connect: {
-          id: application.id,
-        },
-      },
-    });
     return application;
   }
 
@@ -96,10 +76,6 @@ export class ApplicationService {
             description: `Mise à jour de l’application`,
           },
         });
-
-        if (data.label !== undefined || data.shortName !== undefined) {
-          await this.ensureLabelExists(tx, app);
-        }
 
         return app;
       });
@@ -215,45 +191,5 @@ export class ApplicationService {
         applicationUpdates[field] = { set: data[field] };
       }
     });
-  }
-
-  private async ensureLabelExists(
-    tx: Prisma.TransactionClient,
-    application: Application,
-  ) {
-    const labelLower = application.label.toLowerCase();
-    const shortnameLower = application.shortName
-      ? application.shortName.toLowerCase()
-      : null;
-
-    const existingLabel = await tx.label.findFirst({
-      where: {
-        AND: [
-          { value: { equals: labelLower, mode: 'insensitive' } },
-          { shortname: { equals: shortnameLower, mode: 'insensitive' } },
-        ],
-      },
-    });
-
-    if (!existingLabel) {
-      await tx.label.create({
-        data: {
-          source:
-            'https://referentiel-applications.interieur.rie.gouv.fr/applications',
-          value: application.label,
-          shortname: application.shortName,
-          metadatas: {
-            create: {
-              applicationId: application.id,
-              createdById: application.ownerId,
-              description: `Ajout du label "${application.label}" à l'application`,
-            },
-          },
-          application: {
-            connect: { id: application.id },
-          },
-        },
-      });
-    }
   }
 }
