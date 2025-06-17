@@ -11,7 +11,7 @@ import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 export class CreateLabelDto {
   @ApiProperty({
-    example: '',
+    example: 'CODE_PAI',
     description: 'Source of the label',
   })
   @IsString()
