@@ -7,7 +7,6 @@ import Applications from "@/api/application";
 import Labels from "@/api/label";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
-import axios from "axios";
 import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
@@ -36,7 +35,7 @@ const userPermissions = ref(null);
 onMounted(async () => {
   if (props.application?.id) {
     await hostingStore.fetchHostings(props.application.id);
-    labels.value = await Labels.fetch(props.application.id);
+    labels.value = await Labels.findByApplication(props.application.id);
   }
   userPermissions.value = await Users.getUser().then((response) => {
     return response.permissions.split(",");
@@ -128,7 +127,7 @@ async function updateApplication(updatedData: any) {
 
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
-    labels.value = await Labels.fetch(props.application.id);
+    labels.value = await Labels.findByApplication(props.application.id);
     toaster.addSuccessMessage("Application mise à jour avec succès");
   } catch (error) {
     console.error(error);

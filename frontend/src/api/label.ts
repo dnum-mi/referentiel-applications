@@ -21,7 +21,7 @@ const Labels = {
     return await Promise.all<Label>(labelIds.map((labelId) => axios.delete(`applications/${applicationId}/labels/${labelId}`)));
   },
 
-  async fetch(applicationId: string): Promise<Label[]> {
+  async findByApplication(applicationId: string): Promise<Label[]> {
     const response = await axios.get<Label[]>(`applications/${applicationId}/labels`);
     return response.data;
   },
