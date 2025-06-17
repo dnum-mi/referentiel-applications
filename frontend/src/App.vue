@@ -66,10 +66,10 @@ interface QuickLink {
 
     if (userPermissions.value.includes("admin")) {
       baseLinks.push({
-        label: "Gestion des utilisateurs",
+        label: "Admin",
         to: { name: routeNames.USERMANAGEMENT },
         icon: "ri-user-settings-line",
-        iconAttrs: { title: "Gérer les utilisateurs" },
+        iconAttrs: { title: "Admin" },
       });
     }
 
