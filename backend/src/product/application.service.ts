@@ -62,22 +62,29 @@ export class ApplicationService {
     this.applyScalarAndSimpleRelationUpdates(data, applicationUpdates);
 
     try {
-      const updatedApplication = await this.prisma.$transaction(async (tx) => {
-        const app = await tx.application.update({
-          where,
-          data: applicationUpdates,
-        });
+      const oldApp = await this.applicationRepository.findById(where.id);
 
-        await tx.metadata.create({
-          data: {
-            applicationId: app.id,
-            createdById: ownerId,
-            action: 'update',
-            description: `Mise à jour de l’application`,
-          },
-        });
+      const updatedApplication = await this.prisma.application.update({
+        where,
+        data: applicationUpdates,
+      });
 
-        return app;
+      await this.metadatasService.createMetadata({
+        applicationId: updatedApplication.id,
+        createdById: ownerId,
+        title: `des informations générales`,
+        fields: {
+          label: 'libellé',
+          shortName: 'nom court',
+          logo: 'logo',
+          description: 'description',
+          targetPopulations: 'populations cibles',
+          priorityRestart: 'priorité de redémarrage',
+          tags: 'tags',
+          purposes: 'objectifs',
+        },
+        oldData: oldApp,
+        newData: updatedApplication,
       });
 
       return updatedApplication;

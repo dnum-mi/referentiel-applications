@@ -21,6 +21,8 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { FiltersDto } from './dto/filters.dto';
 import { EventType } from '@prisma/client';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { EventTypeLabels } from 'src/product/constants/enum-label';
+import { translateEnum } from 'src/common/utils/enum.utils';
 
 @ApiTags('Events')
 @Controller('applications/:applicationId/events')
@@ -35,23 +37,23 @@ export class EventsController {
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiBody({ type: CreateEventDto })
   @ApiResponse({ status: 201, type: Event })
-  create(
+  async create(
     @UserId() userId: string,
     @Body() createEventDto: CreateEventDto,
     @Param('applicationId') applicationId: string,
   ) {
-    return this.service.create({
+    return await this.service.create({
       ...createEventDto,
+      application: {
+        connect: {
+          id: applicationId,
+        },
+      },
       metadatas: {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          description: `Ajout de l'événement : ${createEventDto.description}`,
-        },
-      },
-      application: {
-        connect: {
-          id: applicationId,
+          description: `Ajout de l'événement : ${translateEnum(EventTypeLabels, createEventDto.type)}`,
         },
       },
     });
@@ -103,7 +105,7 @@ export class EventsController {
           applicationId,
           createdById: userId,
           action: 'update',
-          description: `Mise à jour de l'événement : ${updateEventDto.description}`,
+          description: `Mise à jour de l'événement : ${translateEnum(EventTypeLabels, updateEventDto.type)}`,
         },
       },
     });
@@ -119,6 +121,13 @@ export class EventsController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id, userId);
+    return this.service.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: `de l'événement`,
+      name: 'type',
+      translateMap: EventTypeLabels,
+    });
   }
 }

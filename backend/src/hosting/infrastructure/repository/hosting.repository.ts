@@ -17,7 +17,7 @@ export class HostingRepository implements IHostingRepository {
   async create(data: CreateHostingDto, ownerId: string): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
-    const createdHosting = await this.prisma.hosting.create({
+    return await this.prisma.hosting.create({
       data: {
         ...rest,
         application: { connect: { id: applicationId } },
@@ -28,13 +28,11 @@ export class HostingRepository implements IHostingRepository {
           create: {
             applicationId: applicationId,
             createdById: ownerId,
-            description: `Création de l'hébergement : ${rest.label}`,
+            description: `Ajout de l'hébergement : ` + rest.label,
           },
         },
       },
     });
-
-    return createdHosting;
   }
 
   async findAll(): Promise<Hosting[]> {
@@ -57,6 +55,8 @@ export class HostingRepository implements IHostingRepository {
   ): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
+    const oldHosting = await this.findById(id);
+
     const updatedHosting = await this.prisma.hosting.update({
       where: { id },
       data: {
@@ -67,31 +67,40 @@ export class HostingRepository implements IHostingRepository {
         ...(hostingOptionId && {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
-        metadatas: {
-          create: {
-            applicationId: applicationId,
-            createdById: ownerId,
-            action: 'update',
-            description: `Mise à jour de l'hébergement : ${rest.label}`,
-          },
-        },
       },
+    });
+
+    const newHosting = await this.findById(id);
+
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: ownerId,
+      title: `de l'hébergement ${oldHosting.label}`,
+      entity: 'hostingId',
+      entityId: id,
+      fields: {
+        label: 'libellé',
+        'hostingOption.site': 'site',
+        'hostingOption.platform': 'plateforme',
+        'hostingOption.provider': 'fournisseur',
+        'hostingOption.building': 'bâtiment',
+        'hostingOption.room': 'pièce',
+      },
+      oldData: oldHosting,
+      newData: newHosting,
     });
 
     return updatedHosting;
   }
 
   async delete(id: string, ownerId: string): Promise<void> {
-    const deletedHosting = await this.prisma.hosting.findFirst({
-      where: { id },
-      select: { applicationId: true, label: true },
-    });
+    const hosting = await this.findById(id);
 
     await this.prisma.metadata.create({
       data: {
         action: 'delete',
-        applicationId: deletedHosting.applicationId,
-        description: "Suppression de l'hébergement " + deletedHosting.label,
+        applicationId: hosting.applicationId,
+        description: "Suppression de l'hébergement : " + hosting.label,
         createdById: ownerId,
       },
     });

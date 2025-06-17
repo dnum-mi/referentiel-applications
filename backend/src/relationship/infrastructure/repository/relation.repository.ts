@@ -4,10 +4,14 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RelationApplicationDto } from '../../application/dto/relation-application.dto';
 import { Relation } from '../../domain/relation.entity';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class RelationRepository implements IRelationRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metadataService: MetadatasService,
+  ) {}
 
   public async create(
     { dto }: { dto: RelationApplicationDto },
@@ -25,18 +29,16 @@ export class RelationRepository implements IRelationRepository {
       },
     });
 
-    const description = `Relation entre ${createdRelation.sourceApplication.label} et ${createdRelation.targetApplication.label} ajoutée`;
-
     await this.prisma.metadata.createMany({
       data: [
         {
           applicationId: createdRelation.sourceApplication.id,
-          description,
+          description: `Relation ajoutée avec ${createdRelation.targetApplication.label}`,
           createdById: ownerId,
         },
         {
           applicationId: createdRelation.targetApplication.id,
-          description,
+          description: `Relation ajoutée avec ${createdRelation.sourceApplication.label}`,
           createdById: ownerId,
         },
       ],
@@ -54,10 +56,10 @@ export class RelationRepository implements IRelationRepository {
       where: { id },
       include: {
         sourceApplication: {
-          select: { id: true },
+          select: { id: true, label: true },
         },
         targetApplication: {
-          select: { id: true },
+          select: { id: true, label: true },
         },
       },
     });
@@ -68,6 +70,7 @@ export class RelationRepository implements IRelationRepository {
     dto: RelationApplicationDto,
     ownerId: string,
   ): Promise<Relation> {
+    const oldRelation = await this.findOne(id);
     const updated = await this.prisma.relation.update({
       where: { id },
       data: dto,
@@ -81,23 +84,28 @@ export class RelationRepository implements IRelationRepository {
       },
     });
 
-    const description = `Relation entre ${updated.sourceApplication.label} et ${updated.targetApplication.label} mise à jour`;
+    await this.metadataService.createMetadata({
+      applicationId: updated.sourceApplication.id,
+      createdById: ownerId,
+      title: `de la relation avec ${updated.targetApplication.label}`,
+      fields: {
+        'sourceApplication.label': 'application source',
+        'targetApplication.label': 'application visée',
+      },
+      newData: updated,
+      oldData: oldRelation,
+    });
 
-    await this.prisma.metadata.createMany({
-      data: [
-        {
-          applicationId: updated.sourceApplication.id,
-          action: 'update',
-          description,
-          createdById: ownerId,
-        },
-        {
-          applicationId: updated.targetApplication.id,
-          action: 'update',
-          description,
-          createdById: ownerId,
-        },
-      ],
+    await this.metadataService.createMetadata({
+      applicationId: updated.targetApplication.id,
+      createdById: ownerId,
+      title: `de la relation avec ${updated.sourceApplication.label}`,
+      fields: {
+        'sourceApplication.label': 'application source',
+        'targetApplication.label': 'application visée',
+      },
+      newData: updated,
+      oldData: oldRelation,
     });
 
     return updated;
@@ -116,7 +124,7 @@ export class RelationRepository implements IRelationRepository {
       },
     });
 
-    const description = `Relation entre ${deletedRelation.sourceApplication.label} et ${deletedRelation.targetApplication.label} supprimée`;
+    const description = `Relation supprimée entre ${deletedRelation.sourceApplication.label} et ${deletedRelation.targetApplication.label}`;
 
     await this.prisma.metadata.createMany({
       data: [

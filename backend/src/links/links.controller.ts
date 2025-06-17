@@ -22,23 +22,23 @@ export class LinksController {
   @ApiOperation({ summary: 'Create a new link for an application' })
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
-  create(
+  async create(
     @UserId() userId: string,
     @Body() createLinkDto: CreateLinkDto,
     @Param('applicationId') applicationId: string,
   ) {
-    return this.service.create({
+    return await this.service.create({
       ...createLinkDto,
+      application: {
+        connect: {
+          id: applicationId,
+        },
+      },
       metadatas: {
         create: {
           applicationId: applicationId,
           createdById: userId,
           description: `Ajout du lien : ${createLinkDto.link}`,
-        },
-      },
-      application: {
-        connect: {
-          id: applicationId,
         },
       },
     });
@@ -63,16 +63,19 @@ export class LinksController {
     @Param('id') id: string,
     @Body() updateLinkDto: UpdateLinkDto,
   ) {
-    return this.service.update(id, {
-      ...updateLinkDto,
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          action: 'update',
-          description: `Ajout du lien : ${updateLinkDto.link}`,
-        },
+    return this.service.updateWithMetadata({
+      id,
+      data: updateLinkDto,
+      userId,
+      applicationId,
+      gender: 'du lien',
+      entityName: 'externalRessourceId',
+      metadataFields: {
+        link: 'lien',
+        type: 'type',
+        description: 'description',
       },
+      getName: (entity) => entity.link,
     });
   }
 
@@ -86,6 +89,12 @@ export class LinksController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id, userId);
+    return this.service.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: 'du lien',
+      name: 'link',
+    });
   }
 }
