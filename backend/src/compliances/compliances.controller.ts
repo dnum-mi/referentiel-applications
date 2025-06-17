@@ -12,15 +12,13 @@ import { CompliancesService } from './compliances.service';
 import { CreateComplianceDto } from './dto/create-compliance.dto';
 import { UpdateComplianceDto } from './dto/update-compliance.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @ApiTags('Compliances')
 @Controller('applications/:applicationId/compliances')
 export class CompliancesController {
   constructor(
     private readonly compliancesService: CompliancesService,
-    private readonly metadataService: MetadatasService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new compliance for an application' })
@@ -81,19 +79,14 @@ export class CompliancesController {
     @Param('id') id: string,
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
-    const oldCompliance = await this.compliancesService.findOne(id);
-
-    const updateCompliance = await this.compliancesService.update(id, {
-      ...updateComplianceDto,
-    });
-
-    await this.metadataService.createMetadata({
+    return this.compliancesService.updateWithMetadata({
+      id,
+      data: updateComplianceDto,
+      userId,
       applicationId,
-      createdById: userId,
-      title: `de la conformité ${updateCompliance.name ?? ''}`,
-      entity: 'complianceId',
-      entityId: id,
-      fields: {
+      gender: 'de la conformité',
+      entityName: 'complianceId',
+      metadataFields: {
         email: 'email',
         type: 'type',
         name: 'nom',
@@ -104,11 +97,8 @@ export class CompliancesController {
         scoreUnit: 'unité',
         notes: 'notes',
       },
-      oldData: oldCompliance,
-      newData: updateCompliance,
+      getName: (entity) => entity.name,
     });
-
-    return updateCompliance;
   }
 
   @Delete(':id')

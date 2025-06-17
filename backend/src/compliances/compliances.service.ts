@@ -2,11 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
 import { Compliance } from './entities/compliance.entity';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class CompliancesService extends BaseService<Compliance> {
-  constructor(prisma: PrismaService) {
-    super(prisma.compliance, prisma);
+  constructor(prisma: PrismaService, metadatasService: MetadatasService) {
+    super(prisma.compliance, prisma, metadatasService);
   }
 
   public async deleteCompliance(id: string, ownerId: string) {
@@ -14,6 +15,9 @@ export class CompliancesService extends BaseService<Compliance> {
       where: { id },
       select: { applicationId: true, name: true },
     });
+
+    await this.prisma.compliance.delete({ where: { id } });
+
 
     await this.prisma.metadata.create({
       data: {
@@ -23,7 +27,5 @@ export class CompliancesService extends BaseService<Compliance> {
         createdById: ownerId,
       },
     });
-
-    await this.prisma.compliance.delete({ where: { id } });
   }
 }

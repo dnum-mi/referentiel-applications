@@ -4,10 +4,10 @@ import { Injectable } from '@nestjs/common';
 import { Metadata } from '@prisma/client';
 
 @Injectable()
-export class MetadatasService extends BaseService<Metadata> {
-  constructor(prisma: PrismaService) {
-    super(prisma.metadata, prisma);
-  }
+export class MetadatasService {
+  constructor(
+    protected readonly prisma: PrismaService,
+  ) { }
 
   public async createMetadata<T = any>(options: {
     applicationId: string;
