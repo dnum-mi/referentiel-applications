@@ -57,7 +57,7 @@ Vous devez fournir les informations suivantes :
         create: {
           applicationId: applicationId,
           createdById: userId,
-          description: 'Ajout du libellé : ' + createLabelDto.value,
+          description: `Ajout du libellé : ${createLabelDto.value}`,
         },
       },
     });
@@ -85,7 +85,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @ApiParam({ name: 'id', description: 'ID du label' })
   @ApiBody({ type: CreateLabelDto })
   @ApiResponse({ status: 200, type: Label })
-  async update(
+  update(
     @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,

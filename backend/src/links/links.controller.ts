@@ -38,7 +38,7 @@ export class LinksController {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          description: 'Ajout du lien : ' + createLinkDto.link,
+          description: `Ajout du lien : ${createLinkDto.link}`,
         },
       },
     });
@@ -57,7 +57,7 @@ export class LinksController {
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the link to update' })
-  async update(
+  update(
     @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
