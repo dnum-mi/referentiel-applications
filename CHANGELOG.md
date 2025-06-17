@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.25.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.24.1...v1.25.0) (2025-06-17)
+
+
+### Features
+
+* :sparkles: create change history table ([#759](https://github.com/dnum-mi/referentiel-applications/issues/759)) ([825ebf2](https://github.com/dnum-mi/referentiel-applications/commit/825ebf2fe7f99e076b5eb1d222d98222979e9017))
+
+
+### Bug Fixes
+
+* **excel-export:** :bug: export all filtered apps instead of only the first 15 ([8531ace](https://github.com/dnum-mi/referentiel-applications/commit/8531aced4d28af8b5213cf65c927836f7a5c58a3))
+
 ## [1.24.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.24.0...v1.24.1) (2025-06-16)
 
 
