@@ -20,22 +20,12 @@ export class ApplicationExportService {
   async exportSearchResultsToExcel(
     searchParams: SearchApplicationDto,
   ): Promise<Buffer> {
-    const applications = await this.repository.searchApplications(searchParams);
-
-    // If applications have been returned as raw query results, fetch complete data for those applications
-    const applicationIds = applications.map((app) => app.id);
-
-    // Get full application data with all relations for the search results
-    const fullApplications =
-      applicationIds.length > 0
-        ? await this.repository
-            .findAllWithRelations()
-            .then((apps) =>
-              apps.filter((app) => applicationIds.includes(app.id)),
-            )
-        : await this.repository.findAllWithRelations(); // If no search results, return all apps
-
-    return this.exportApplicationsUseCase.executeWithApps(fullApplications);
+    const allApplications = await this.repository.findAllWithRelations();
+    const filteredApplications = this.applyFilters(
+      allApplications,
+      searchParams,
+    );
+    return this.exportApplicationsUseCase.executeWithApps(filteredApplications);
   }
 
   async exportApplications(
