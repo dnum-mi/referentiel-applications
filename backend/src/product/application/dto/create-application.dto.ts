@@ -121,4 +121,4 @@ export class CreateApplicationDto {
   labels: CreateLabelDto[];
 }
 
-export class PatchApplicationDto extends PartialType(CreateApplicationDto) { }
+export class PatchApplicationDto extends PartialType(CreateApplicationDto) {}
