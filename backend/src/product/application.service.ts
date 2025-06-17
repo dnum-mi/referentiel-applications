@@ -87,10 +87,6 @@ export class ApplicationService {
         newData: updatedApplication,
       });
 
-      if (data.label !== undefined || data.shortName !== undefined) {
-        await this.ensureLabelExists(this.prisma, updatedApplication);
-      }
-
       return updatedApplication;
     } catch {
       throw new NotFoundException(

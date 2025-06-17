@@ -101,7 +101,6 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
       metadataFields: {
         source: 'source',
         value: 'valeur',
-        shortname: 'nom court',
       },
       getName: (entity) => entity.value,
     });
