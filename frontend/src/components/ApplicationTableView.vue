@@ -13,7 +13,7 @@ const searchStore = useApplicationSearchStore();
 const statsStore = useStatisticsStore();
 const userPermissions = ref<string[]>([]);
 
-const currentSortedColumn = defineModel("sortedBy", { default: "label" });
+const currentSortedColumn = defineModel("sortedBy", { default: "shortName" });
 
 const sortOrder = computed({
   get: () => searchStore.filters.order,
@@ -37,7 +37,7 @@ const pages = computed(() => {
 });
 
 watch(currentSortedColumn, (col) => {
-  const sortField = columnToFieldMap[col] || "label";
+  const sortField = columnToFieldMap[col] || "shortName";
   searchStore.setFilter("sortBy", sortField);
   searchStore.setFilter("page", 0);
   searchStore.searchApplications();
@@ -175,6 +175,7 @@ async function exportToExcel() {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .export-button {
   margin-bottom: 10px;
 }

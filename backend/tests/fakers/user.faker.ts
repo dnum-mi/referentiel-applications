@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import { KeycloakService } from '../../src/services/keycloak.service';
 import { faker } from '@faker-js/faker';
+import { prisma } from './prisma';
 
-const prisma = new PrismaClient();
 const keycloakService = new KeycloakService();
 
 export class UserFaker {

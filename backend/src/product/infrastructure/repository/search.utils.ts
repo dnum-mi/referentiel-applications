@@ -16,8 +16,6 @@ export function buildLabelFilter(label?: string): Prisma.Sql[] {
         WHERE (
           translate(lower(l.value), ${accentFrom}, ${accentTo}) 
             ILIKE translate(${pattern}, ${accentFrom}, ${accentTo})
-          OR translate(lower(l.shortname), ${accentFrom}, ${accentTo}) 
-            ILIKE translate(${pattern}, ${accentFrom}, ${accentTo})
         )
         AND l."applicationId" = a.id
       )

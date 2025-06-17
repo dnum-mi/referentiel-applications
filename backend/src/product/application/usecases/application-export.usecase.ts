@@ -157,18 +157,12 @@ export class ExportApplicationsUseCase {
           { header: 'Application', key: 'applicationLabel', width: 30 },
           { header: columnLabels['labels.value'], key: 'value', width: 30 },
           { header: columnLabels['labels.source'], key: 'source', width: 30 },
-          {
-            header: columnLabels['labels.shortname'],
-            key: 'shortname',
-            width: 30,
-          },
         ],
         rows: ensureSheetHasAtLeastOneRow(apps.flatMap(mapLabels), {
           applicationId: '',
           applicationLabel: 'Aucune application',
-          value: 'Aucun label',
+          value: 'Aucun nom alternatif',
           source: '',
-          shortname: '',
         }),
       },
       {

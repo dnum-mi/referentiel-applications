@@ -97,9 +97,8 @@ export function mapLabels(app: ApplicationWithAllRelations) {
     app.labels?.map((l) => ({
       applicationId: app.id,
       applicationLabel: app.label,
-      value: l.value,
       source: l.source,
-      shortname: l.shortname,
+      value: l.value,
     })) ?? []
   );
 }

@@ -19,7 +19,7 @@ export class ApplicationSearchRepository
       priorityRestart,
       page = 0,
       limit = 15,
-      sortBy = 'label',
+      sortBy = 'shortName',
       order = 'asc',
     } = dto;
 
@@ -37,7 +37,7 @@ export class ApplicationSearchRepository
           WHERE EXISTS (
             SELECT 1
             FROM public.labels l
-            WHERE (LOWER(l.value) LIKE ${`%${dto.label!.toLowerCase()}%`} OR LOWER(l.shortname) LIKE ${`%${dto.label!.toLowerCase()}%`})
+            WHERE (LOWER(l.value) LIKE ${`%${dto.label!.toLowerCase()}%`})
               AND l."applicationId" = a.id
           )
         `,
@@ -195,8 +195,46 @@ export class ApplicationSearchRepository
       return { results, total };
     }
 
-    const sortableFields = ['label', 'shortName', 'priorityRestart'];
-    const safeSortBy = sortableFields.includes(sortBy) ? sortBy : 'label';
+    const sortableFields = ['shortName', 'priorityRestart'];
+    const safeSortBy = sortableFields.includes(sortBy) ? sortBy : 'shortName';
+
+    if (safeSortBy === 'shortName') {
+      const orderedIdsResult = await this.prisma.$queryRaw<
+        Array<{ id: string }>
+      >(
+        Prisma.sql`
+          SELECT a.id
+          FROM public.applications a
+          ${finalIds ? Prisma.sql`WHERE a.id IN (${Prisma.join(finalIds)})` : Prisma.empty}
+          ORDER BY COALESCE(a."shortName", a."label") ${Prisma.raw(safeOrder)}
+          OFFSET ${page * limit}
+          LIMIT ${limit}
+        `,
+      );
+      const orderedIds = orderedIdsResult.map((r) => r.id);
+      const results = await this.prisma.application.findMany({
+        where,
+        include: {
+          hostings: {
+            include: {
+              hostingOption: true,
+            },
+          },
+          actors: {
+            include: {
+              organization: {
+                select: { id: true, label: true },
+              },
+            },
+          },
+        },
+      });
+
+      results.sort(
+        (a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id),
+      );
+      return { results, total };
+    }
 
     const results = await this.prisma.application.findMany({
       where,
