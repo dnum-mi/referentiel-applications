@@ -12,15 +12,11 @@ import { LinksService } from './links.service';
 import { CreateLinkDto } from './dto/create-link.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { UpdateLinkDto } from './dto/update-link.dto';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @ApiTags('Links')
 @Controller('applications/:applicationId/links')
 export class LinksController {
-  constructor(
-    private service: LinksService,
-    private metadatasService: MetadatasService,
-  ) {}
+  constructor(private service: LinksService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new link for an application' })
@@ -67,28 +63,20 @@ export class LinksController {
     @Param('id') id: string,
     @Body() updateLinkDto: UpdateLinkDto,
   ) {
-    const oldLink = await this.service.findOne(id);
-
-    const link = await this.service.update(id, {
-      ...updateLinkDto,
-    });
-
-    await this.metadatasService.createMetadata({
+    return this.service.updateWithMetadata({
+      id,
+      data: updateLinkDto,
+      userId,
       applicationId,
-      createdById: userId,
-      title: `du lien ${oldLink.link}`,
-      entity: 'externalRessourceId',
-      entityId: id,
-      fields: {
+      gender: 'du lien',
+      entityName: 'externalRessourceId',
+      metadataFields: {
         link: 'lien',
         type: 'type',
         description: 'description',
       },
-      oldData: oldLink,
-      newData: link,
+      getName: (entity) => entity.link,
     });
-
-    return link;
   }
 
   @Delete(':id')
@@ -101,6 +89,12 @@ export class LinksController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.deleteLink(id, userId);
+    return this.service.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: 'du lien',
+      name: 'link',
+    });
   }
 }

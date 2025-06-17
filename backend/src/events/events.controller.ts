@@ -23,15 +23,11 @@ import { EventType } from '@prisma/client';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { EventTypeLabels } from 'src/product/constants/enum-label';
 import { translateEnum } from 'src/common/utils/enum.utils';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @ApiTags('Events')
 @Controller('applications/:applicationId/events')
 export class EventsController {
-  constructor(
-    private service: EventsService,
-    private readonly metadataService: MetadatasService,
-  ) {}
+  constructor(private service: EventsService) {}
 
   @Post()
   @ApiOperation({
@@ -125,6 +121,13 @@ export class EventsController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.deleteEvent(id, userId);
+    return this.service.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: `de l'événement`,
+      name: 'type',
+      translateMap: EventTypeLabels,
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { translateEnum } from './utils/enum.utils';
 
 @Injectable()
 export class BaseService<T> {
@@ -8,7 +9,7 @@ export class BaseService<T> {
     private readonly model: any,
     protected readonly prisma: PrismaService,
     private readonly metadatasService?: MetadatasService,
-  ) { }
+  ) {}
 
   async findOne(id: string): Promise<T> {
     const object = await this.model.findUnique({ where: { id } });
@@ -39,30 +40,74 @@ export class BaseService<T> {
   }
 
   async updateWithMetadata(options: {
-    id: string,
-    data: any,
-    userId: string,
-    applicationId: string,
-    gender: string,
-    entityName: string,
-    metadataFields: Record<string, string>,
-    getName?: (entity: T) => string,
+    id: string;
+    data: any;
+    userId: string;
+    applicationId: string;
+    gender: string;
+    entityName: string;
+    metadataFields: Record<string, string>;
+    getName?: (entity: T) => string;
   }): Promise<T> {
     const oldEntity = await this.findOne(options.id);
 
     const updatedEntity = await this.update(options.id, options.data);
 
-    await this.metadatasService.createMetadata({
-      applicationId: options.applicationId,
-      createdById: options.userId,
-      title: `${options.gender} ${options.getName?.(updatedEntity) ?? ''}`,
-      entity: options.entityName,
-      entityId: options.id,
-      fields: options.metadataFields,
-      oldData: oldEntity,
-      newData: updatedEntity,
-    });
+    try {
+      await this.metadatasService.createMetadata({
+        applicationId: options.applicationId,
+        createdById: options.userId,
+        title: `${options.gender} ${options.getName?.(updatedEntity) ?? ''}`,
+        entity: options.entityName,
+        entityId: options.id,
+        fields: options.metadataFields,
+        oldData: oldEntity,
+        newData: updatedEntity,
+      });
+    } catch (err) {
+      console.error(
+        'Erreur lors de la création des métadonnées (update):',
+        err,
+      );
+    }
 
     return updatedEntity;
+  }
+
+  async deleteWithMetadata(options: {
+    id: string;
+    userId: string;
+    applicationId: string;
+    name: string;
+    gender?: string;
+    translateMap?: Record<string, string>;
+  }): Promise<void> {
+    const entity = await this.findOne(options.id);
+    if (!entity) {
+      throw new NotFoundException(`${options.id ?? 'Élément'} introuvable`);
+    }
+    await this.model.delete({ where: { id: options.id } });
+
+    const entityNameValue = (entity as any)[options.name] ?? '';
+
+    const value = options.translateMap
+      ? translateEnum(options.translateMap, entityNameValue)
+      : entityNameValue;
+
+    try {
+      await this.prisma.metadata.create({
+        data: {
+          applicationId: options.applicationId,
+          createdById: options.userId,
+          action: 'delete',
+          description: `Suppression ${options.gender} ${value}`,
+        },
+      });
+    } catch (err) {
+      console.error(
+        'Erreur lors de la création des métadonnées (delete):',
+        err,
+      );
+    }
   }
 }

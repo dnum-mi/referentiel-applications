@@ -5,9 +5,7 @@ import { Metadata } from '@prisma/client';
 
 @Injectable()
 export class MetadatasService {
-  constructor(
-    protected readonly prisma: PrismaService,
-  ) { }
+  constructor(protected readonly prisma: PrismaService) {}
 
   public async createMetadata<T = any>(options: {
     applicationId: string;

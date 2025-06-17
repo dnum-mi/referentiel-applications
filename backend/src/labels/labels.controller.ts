@@ -18,15 +18,11 @@ import { LabelsService } from './labels.service';
 import { CreateLabelDto } from './dto/create-label.dto';
 import { Label } from './entities/label.entity';
 import { UserId } from '../common/decorators/user-id.decorator';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @ApiTags('Labels')
 @Controller('applications/:applicationId/labels')
 export class LabelsController {
-  constructor(
-    private service: LabelsService,
-    private metadatasService: MetadatasService,
-  ) {}
+  constructor(private service: LabelsService) {}
 
   @Post()
   @ApiBody({ type: CreateLabelDto })
@@ -95,28 +91,20 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     @Param('id') id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    const oldLabel = await this.service.findOne(id);
-
-    const label = await this.service.update(id, {
-      ...updateLabelDto,
-    });
-
-    await this.metadatasService.createMetadata({
+    return this.service.updateWithMetadata({
+      id,
+      data: updateLabelDto,
+      userId,
       applicationId,
-      createdById: userId,
-      title: `du libellé ${oldLabel.value}`,
-      entity: 'labelId',
-      entityId: id,
-      fields: {
+      gender: 'du libellé alternatif',
+      entityName: 'labelId',
+      metadataFields: {
         source: 'source',
         value: 'valeur',
         shortname: 'nom court',
       },
-      oldData: oldLabel,
-      newData: label,
+      getName: (entity) => entity.value,
     });
-
-    return label;
   }
 
   @Delete(':id')
@@ -132,6 +120,12 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.deleteLabel(id, userId);
+    return this.service.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: 'du libellé alternatif',
+      name: 'value',
+    });
   }
 }

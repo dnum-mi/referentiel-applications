@@ -16,9 +16,7 @@ import { UserId } from '../common/decorators/user-id.decorator';
 @ApiTags('Compliances')
 @Controller('applications/:applicationId/compliances')
 export class CompliancesController {
-  constructor(
-    private readonly compliancesService: CompliancesService,
-  ) { }
+  constructor(private readonly compliancesService: CompliancesService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new compliance for an application' })
@@ -111,6 +109,12 @@ export class CompliancesController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.compliancesService.deleteCompliance(id, userId);
+    return this.compliancesService.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: 'de la conformité',
+      name: 'name',
+    });
   }
 }

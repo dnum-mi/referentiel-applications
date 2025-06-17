@@ -2,11 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
 import { Label } from './entities/label.entity';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class LabelsService extends BaseService<Label> {
-  constructor(protected readonly prisma: PrismaService) {
-    super(prisma.label, prisma);
+  constructor(prisma: PrismaService, metadatasService: MetadatasService) {
+    super(prisma.label, prisma, metadatasService);
   }
 
   /**
@@ -58,23 +59,5 @@ export class LabelsService extends BaseService<Label> {
     }
 
     return labels[0];
-  }
-
-  public async deleteLabel(id: string, ownerId: string) {
-    const deletedLabel = await this.prisma.label.findFirst({
-      where: { id },
-      select: { applicationId: true, value: true },
-    });
-
-    await this.prisma.metadata.create({
-      data: {
-        action: 'delete',
-        applicationId: deletedLabel.applicationId,
-        description: 'Suppression du label : ' + deletedLabel.value,
-        createdById: ownerId,
-      },
-    });
-
-    await this.prisma.label.delete({ where: { id } });
   }
 }

@@ -1,30 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
-import { EventTypeLabels } from 'src/product/constants/enum-label';
-import { translateEnum } from 'src/common/utils/enum.utils';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class EventsService extends BaseService<Event> {
-  constructor(prisma: PrismaService) {
-    super(prisma.event, prisma);
-  }
-
-  public async deleteEvent(id: string, ownerId: string) {
-    const deletedEvent = await this.prisma.event.findFirst({
-      where: { id },
-      select: { applicationId: true, type: true },
-    });
-
-    await this.prisma.metadata.create({
-      data: {
-        action: 'delete',
-        applicationId: deletedEvent.applicationId,
-        description: `Suppression de l'événement : ${translateEnum(EventTypeLabels, deletedEvent.type)}`,
-        createdById: ownerId,
-      },
-    });
-
-    await this.prisma.event.delete({ where: { id } });
+  constructor(prisma: PrismaService, metadatasService: MetadatasService) {
+    super(prisma.event, prisma, metadatasService);
   }
 }
