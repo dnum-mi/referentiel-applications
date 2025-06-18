@@ -38,6 +38,17 @@ watch(link, (val) => {
   searchStore.setFilter("page", 0);
   debouncedSearch();
 });
+
+watch(
+  searchStore.filters,
+  () => {
+    label.value = searchStore.filters.label;
+    shortName.value = searchStore.filters.shortName;
+    tag.value = searchStore.filters.tag;
+    link.value = searchStore.filters.link;
+  },
+  { deep: true },
+);
 </script>
 
 <template>

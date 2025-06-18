@@ -55,12 +55,19 @@ watch(searchSuggestion, (newValue) => {
   }
 });
 
+watch(
+  () => props.returnData,
+  (newValue) => {
+    defaultData.value = newValue;
+    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === newValue);
+    searchSuggestion.value = foundSuggestion?.label ?? "";
+  },
+);
+
 onBeforeMount(() => {
   if (defaultData.value) {
     const foundSuggestion = (props.searchData || []).find((sug) => sug.id === defaultData.value);
-    if (foundSuggestion) {
-      searchSuggestion.value = foundSuggestion.label;
-    }
+    foundSuggestion ? (searchSuggestion.value = foundSuggestion.label) : (searchSuggestion.value = "");
   }
 });
 </script>
@@ -89,10 +96,12 @@ onBeforeMount(() => {
   max-height: 200px;
   overflow-y: auto;
 }
+
 .suggestion-item {
   padding: 0.5rem;
   cursor: pointer;
 }
+
 .suggestion-item:hover {
   background-color: #f0f0f0;
 }

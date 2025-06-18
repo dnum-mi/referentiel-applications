@@ -44,6 +44,14 @@ function clearOrganization() {
   searchStore.setFilter("page", 0);
   debouncedSearch();
 }
+
+watch(
+  () => searchStore.filters.organizationLabel,
+  (val) => {
+    const match = organizationStore.organizations.find((o) => o.label === val);
+    match ? (selectedOrganizationId.value = match.id) : (selectedOrganizationId.value = "");
+  },
+);
 </script>
 
 <template>
@@ -84,6 +92,7 @@ function clearOrganization() {
   cursor: pointer;
   color: #555;
 }
+
 .tag-remove:hover {
   color: #d60000;
 }

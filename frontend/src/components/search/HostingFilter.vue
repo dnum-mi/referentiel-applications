@@ -38,6 +38,14 @@ watch(hostingSearchInput, (value: string) => {
   searchStore.setFilter("page", 0);
   debouncedSearch();
 });
+
+watch(
+  searchStore.filters,
+  () => {
+    hostingSearchInput.value = searchStore.filters.hostingSearch;
+  },
+  { deep: true },
+);
 </script>
 
 <template>
