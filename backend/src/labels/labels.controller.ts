@@ -46,22 +46,21 @@ Vous devez fournir les informations suivantes :
     @Body() createLabelDto: CreateLabelDto,
     @Param('applicationId') applicationId: string,
   ) {
-    const result = await this.service.create({
+    return await this.service.create({
       ...createLabelDto,
-      metadatas: {
-        create: {
-          applicationId: applicationId,
-          createdById: userId,
-          description: `Création du label : ${createLabelDto.value}`,
-        },
-      },
       application: {
         connect: {
           id: applicationId,
         },
       },
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: userId,
+          description: `Ajout du libellé : ${createLabelDto.value}`,
+        },
+      },
     });
-    return result;
   }
 
   @Get()
@@ -92,16 +91,18 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     @Param('id') id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    return this.service.update(id, {
-      ...updateLabelDto,
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          action: 'update',
-          description: `Mise à jour du label : ${updateLabelDto.value}`,
-        },
+    return this.service.updateWithMetadata({
+      id,
+      data: updateLabelDto,
+      userId,
+      applicationId,
+      gender: 'du libellé alternatif',
+      entityName: 'labelId',
+      metadataFields: {
+        source: 'source',
+        value: 'valeur',
       },
+      getName: (entity) => entity.value,
     });
   }
 
@@ -113,11 +114,17 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     `,
   })
   @ApiResponse({ status: 200 })
-  async delete(
+  delete(
     @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id, userId);
+    return this.service.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: 'du libellé alternatif',
+      name: 'value',
+    });
   }
 }

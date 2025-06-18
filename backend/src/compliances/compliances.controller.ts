@@ -22,23 +22,23 @@ export class CompliancesController {
   @ApiOperation({ summary: 'Create a new compliance for an application' })
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
-  create(
+  async create(
     @UserId() userId: string,
     @Body() createComplianceDto: CreateComplianceDto,
     @Param('applicationId') applicationId: string,
   ) {
-    return this.compliancesService.create({
+    return await this.compliancesService.create({
       ...createComplianceDto,
+      application: {
+        connect: {
+          id: applicationId,
+        },
+      },
       metadatas: {
         create: {
           applicationId: applicationId,
           createdById: userId,
-          description: `Création de la conformité : ${createComplianceDto.name}`,
-        },
-      },
-      application: {
-        connect: {
-          id: applicationId,
+          description: `Ajout de la conformité : ${createComplianceDto.name}`,
         },
       },
     });
@@ -77,16 +77,25 @@ export class CompliancesController {
     @Param('id') id: string,
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
-    return this.compliancesService.update(id, {
-      ...updateComplianceDto,
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          action: 'update',
-          description: `Mise à jour de la conformité : ${updateComplianceDto.name}`,
-        },
+    return this.compliancesService.updateWithMetadata({
+      id,
+      data: updateComplianceDto,
+      userId,
+      applicationId,
+      gender: 'de la conformité',
+      entityName: 'complianceId',
+      metadataFields: {
+        email: 'email',
+        type: 'type',
+        name: 'nom',
+        status: 'statut',
+        validityStart: 'date de validité',
+        validityEnd: 'date de fin de validité',
+        scoreValue: 'score',
+        scoreUnit: 'unité',
+        notes: 'notes',
       },
+      getName: (entity) => entity.name,
     });
   }
 
@@ -100,6 +109,12 @@ export class CompliancesController {
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.compliancesService.delete(id, userId);
+    return this.compliancesService.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: 'de la conformité',
+      name: 'name',
+    });
   }
 }
