@@ -72,7 +72,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
 
       const res = await call("applicationSearch", undefined, query);
 
-      console.log("🧾 Résultat API /search/applications →", res);
+      console.log("🧾 Résultat API /applications/list →", res);
       console.log("📊 Total applications retournées :", res.total);
 
       results.value = res.results;

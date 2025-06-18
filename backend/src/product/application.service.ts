@@ -7,7 +7,10 @@ import {
   PatchApplicationDto,
 } from './application/dto/create-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import { SearchApplicationDto } from './application/dto/search-application.dto';
+import {
+  ListApplicationDto,
+  SearchApplicationDto,
+} from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
 
@@ -110,6 +113,10 @@ export class ApplicationService {
         createdBy: true,
       },
     });
+  }
+
+  public async search(dto: ListApplicationDto) {
+    return this.applicationRepository.findApplicationsBySearch(dto);
   }
 
   public async searchApplications(

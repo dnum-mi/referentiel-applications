@@ -28,6 +28,13 @@ describe('Applications', () => {
       .expect(200);
   });
 
+  it(`/GET applications/list`, async () => {
+    await request(app().getHttpServer())
+      .get('/applications/list')
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+  });
+
   it(`/POST applications`, async () => {
     await request(app().getHttpServer())
       .post('/applications')

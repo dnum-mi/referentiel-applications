@@ -21,7 +21,6 @@ import { ConfigModule } from '@nestjs/config';
 import { RelationModule } from './relationship/relation.module';
 import { EventsModule } from './events/events.module';
 import { MetadatasModule } from './metadatas/metadatas.module';
-import { ApplicationSearchModule } from './search/search.module';
 import { AnomalyNotificationModule } from './notification/anomaly-notification.module';
 import { ActorModule } from './actor/actor.module';
 import { LinksModule } from './links/links.module';
@@ -43,7 +42,6 @@ import { HostingOptionModule } from './hosting-option/hosting-option.module';
     HealthCheckModule,
     OrganizationModule,
     ActorTypeModule,
-    ApplicationSearchModule,
     ActorModule,
     HostingOptionModule,
     ConfigModule.forRoot({
