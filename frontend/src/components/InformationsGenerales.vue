@@ -109,11 +109,13 @@ async function updateApplication(updatedData: any) {
     loading.value = true;
     applicationModal.closeModal();
 
-    const updatedApplication = await Applications.patchApplication({
-      ...props.application,
-      ...updatedData,
-    });
-    console.log(updatedData);
+    let updatedApplication = props.application;
+    if (updatedData.updatedGeneralInfo) {
+      updatedApplication = await Applications.patchApplication({
+        ...props.application,
+        ...updatedData.updatedGeneralInfo,
+      });
+    }
     if (updatedData.deletedLabels.length > 0) {
       const labelIds = updatedData.deletedLabels.map((label: Label) => label.id);
       await Labels.delete(labelIds, props.application.id);

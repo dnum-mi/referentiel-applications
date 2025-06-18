@@ -3,6 +3,8 @@ import type { Application, Label } from "@/models/Application";
 import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
+import { areFieldsModified } from "@/utils/fieldComparison";
+import { addItem, removeItem } from "@/utils/arrayUtils";
 
 const toaster = useToaster();
 
@@ -13,6 +15,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
+
+const initialLabels = ref<Label[]>([]);
 
 const priorityRestartOptions = [
   { value: "", text: "Sélectionner une priorité" },
@@ -28,27 +32,46 @@ const handleSubmit = () => {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
+
   const purposes = form.value.purposes.filter((p) => p.trim() !== "");
   const tags = form.value.tags.filter((t) => t.trim() !== "");
-  const initialLabels = props.labels ?? [];
   const currentLabels = form.value.labels;
 
-  const deletedLabels = initialLabels.filter((initialLabel) => !currentLabels.some((label) => label.id === initialLabel.id));
-  const newLabels = currentLabels.filter((label) => !initialLabels.some((initialLabel) => label.id === initialLabel.id));
-  const updatedLabels = currentLabels.filter((label) => label.id !== undefined);
+  const deletedLabels = initialLabels.value.filter((initialLabel) => !currentLabels.some((label) => label.id === initialLabel.id));
+  const newLabels = currentLabels.filter((label) => !initialLabels.value.some((initialLabel) => label.id === initialLabel.id));
+  const updatedLabels = currentLabels.filter((currentLabel) => {
+    const initial = initialLabels.value.find((initialLabel) => initialLabel.id === currentLabel.id);
+    return initial && areFieldsModified(initial, currentLabel, ["value", "source"]);
+  });
+
+  const isModified = areFieldsModified(
+    props.initialData ?? {},
+    {
+      ...form.value,
+      purposes,
+      tags,
+    },
+    ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"],
+  );
+
+  const updatedGeneralInfo = isModified
+    ? {
+        label: form.value.label,
+        shortName: form.value.shortName || null,
+        logo: form.value.logo || null,
+        description: form.value.description,
+        targetPopulations: form.value.targetPopulations,
+        purposes,
+        tags,
+        priorityRestart: form.value.priorityRestart || null,
+      }
+    : null;
+
   emit("submit", {
-    labels: currentLabels,
     deletedLabels,
     updatedLabels,
     newLabels,
-    label: form.value.label,
-    shortName: form.value.shortName || null,
-    logo: form.value.logo || null,
-    description: form.value.description,
-    targetPopulations: form.value.targetPopulations,
-    purposes,
-    tags,
-    priorityRestart: form.value.priorityRestart || null,
+    updatedGeneralInfo,
   });
 };
 
@@ -64,26 +87,6 @@ const form = ref({
   priorityRestart: props.initialData?.priorityRestart ?? "",
 });
 
-const addLabel = () => {
-  form.value.labels.push({ source: "", value: "" });
-};
-
-const removeLabel = (index: number) => {
-  form.value.labels.splice(index, 1);
-};
-
-const addPurpose = () => {
-  form.value.purposes.push("");
-};
-
-const removePurpose = (index: number) => {
-  form.value.purposes.splice(index, 1);
-};
-
-const addTag = () => {
-  form.value.tags.push("");
-};
-
 const isTagValid = (tag: string) => {
   return regexFormatTag.test(tag);
 };
@@ -92,17 +95,21 @@ const validateAllTags = (): boolean => {
   return form.value.tags.every((tag) => isTagValid(tag));
 };
 
-const removeTag = (index: number) => {
-  form.value.tags.splice(index, 1);
-};
+const addLabel = () => addItem(form.value.labels, { source: "", value: "" });
+const removeLabel = (index: number) => removeItem(form.value.labels, index);
 
-const addPopulation = () => {
-  form.value.targetPopulations.push("");
-};
+const addPurpose = () => addItem(form.value.purposes, "");
+const removePurpose = (index: number) => removeItem(form.value.purposes, index);
 
-const removePopulation = (index: number) => {
-  form.value.targetPopulations.splice(index, 1);
-};
+const addTag = () => addItem(form.value.tags, "");
+const removeTag = (index: number) => removeItem(form.value.tags, index);
+
+const addPopulation = () => addItem(form.value.targetPopulations, "");
+const removePopulation = (index: number) => removeItem(form.value.targetPopulations, index);
+
+onMounted(() => {
+  initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
+});
 </script>
 
 <template>
