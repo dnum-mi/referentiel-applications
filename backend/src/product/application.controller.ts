@@ -19,7 +19,10 @@ import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from './application/dto/create-application.dto';
-import { SearchApplicationDto } from './application/dto/search-application.dto';
+import {
+  ListApplicationDto,
+  SearchApplicationDto,
+} from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
 import { Response } from 'express';
@@ -95,6 +98,16 @@ Vous devez fournir les informations suivantes :
   })
   async searchApplications(@Query() searchParams: SearchApplicationDto) {
     return this.applicationService.searchApplications(searchParams);
+  }
+
+  @Get('list')
+  @ApiOperation({ summary: 'Lister les applications avec filtres' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des applications filtrées.',
+  })
+  async search(@Query() dto: ListApplicationDto) {
+    return this.applicationService.search(dto);
   }
 
   @Get(':id/metadatas')
