@@ -110,10 +110,10 @@ async function updateApplication(updatedData: any) {
     applicationModal.closeModal();
 
     let updatedApplication = props.application;
-    if (updatedData.updatedGeneralInfo) {
+    if (updatedData.updatedInfo) {
       updatedApplication = await Applications.patchApplication({
         ...props.application,
-        ...updatedData.updatedGeneralInfo,
+        ...updatedData.updatedInfo,
       });
     }
     if (updatedData.deletedLabels.length > 0) {

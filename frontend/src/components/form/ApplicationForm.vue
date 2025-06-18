@@ -33,45 +33,37 @@ const handleSubmit = () => {
     return;
   }
 
-  const purposes = form.value.purposes.filter((p) => p.trim() !== "");
-  const tags = form.value.tags.filter((t) => t.trim() !== "");
+  const cleanedForm = {
+    ...form.value,
+    purposes: form.value.purposes.filter((p) => p.trim() !== ""),
+    tags: form.value.tags.filter((t) => t.trim() !== ""),
+  };
+
+  const generalFields = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"];
+
+  const isModified = areFieldsModified(props.initialData ?? {}, cleanedForm, generalFields);
+
   const currentLabels = form.value.labels;
 
-  const deletedLabels = initialLabels.value.filter((initialLabel) => !currentLabels.some((label) => label.id === initialLabel.id));
-  const newLabels = currentLabels.filter((label) => !initialLabels.value.some((initialLabel) => label.id === initialLabel.id));
-  const updatedLabels = currentLabels.filter((currentLabel) => {
-    const initial = initialLabels.value.find((initialLabel) => initialLabel.id === currentLabel.id);
-    return initial && areFieldsModified(initial, currentLabel, ["value", "source"]);
+  const deletedLabels = initialLabels.value.filter((initial) => !currentLabels.some((label) => label.id === initial.id));
+  const newLabels = currentLabels.filter((label) => !initialLabels.value.some((initial) => initial.id === label.id));
+  const updatedLabels = currentLabels.filter((label) => {
+    const initial = initialLabels.value.find((i) => i.id === label.id);
+    return initial && areFieldsModified(initial, label, ["value", "source"]);
   });
-
-  const isModified = areFieldsModified(
-    props.initialData ?? {},
-    {
-      ...form.value,
-      purposes,
-      tags,
-    },
-    ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"],
-  );
-
-  const updatedGeneralInfo = isModified
-    ? {
-        label: form.value.label,
-        shortName: form.value.shortName || null,
-        logo: form.value.logo || null,
-        description: form.value.description,
-        targetPopulations: form.value.targetPopulations,
-        purposes,
-        tags,
-        priorityRestart: form.value.priorityRestart || null,
-      }
-    : null;
 
   emit("submit", {
     deletedLabels,
     updatedLabels,
     newLabels,
-    updatedGeneralInfo,
+    updatedInfo: isModified
+      ? {
+          ...cleanedForm,
+          shortName: cleanedForm.shortName || null,
+          logo: cleanedForm.logo || null,
+          priorityRestart: cleanedForm.priorityRestart || null,
+        }
+      : null,
   });
 };
 
