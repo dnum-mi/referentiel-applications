@@ -4,7 +4,6 @@ import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
-import { addItem, removeItem } from "@/utils/arrayUtils";
 
 const toaster = useToaster();
 
