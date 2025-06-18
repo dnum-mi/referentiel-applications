@@ -87,18 +87,6 @@ const validateAllTags = (): boolean => {
   return form.value.tags.every((tag) => isTagValid(tag));
 };
 
-const addLabel = () => addItem(form.value.labels, { source: "", value: "" });
-const removeLabel = (index: number) => removeItem(form.value.labels, index);
-
-const addPurpose = () => addItem(form.value.purposes, "");
-const removePurpose = (index: number) => removeItem(form.value.purposes, index);
-
-const addTag = () => addItem(form.value.tags, "");
-const removeTag = (index: number) => removeItem(form.value.tags, index);
-
-const addPopulation = () => addItem(form.value.targetPopulations, "");
-const removePopulation = (index: number) => removeItem(form.value.targetPopulations, index);
-
 onMounted(() => {
   initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
 });
@@ -125,10 +113,16 @@ onMounted(() => {
             <DsfrInput v-model="form.labels[index].value" :placeholder="`Nom ou identifiant externe ${index + 1}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removeLabel(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.labels.splice(index, 1)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un libellé" @click="addLabel" />
+        <DsfrButton
+          type="button"
+          secondary
+          icon="add-line"
+          label="Ajouter un libellé"
+          @click="form.labels.push({ source: '', value: '' })"
+        />
       </div>
     </div>
     <br />
@@ -152,10 +146,17 @@ onMounted(() => {
             <DsfrInput v-model="form.targetPopulations[index]" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removePopulation(index)" />
+            <DsfrButton
+              type="button"
+              tertiary
+              size="sm"
+              icon="delete-line"
+              label="Supprimer"
+              @click="form.targetPopulations.splice(index, 1)"
+            />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" @click="addPopulation" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" @click="form.targetPopulations.push('')" />
       </div>
     </div>
 
@@ -175,10 +176,10 @@ onMounted(() => {
             <DsfrInput v-model="form.purposes[index]" :placeholder="`Objectif ${index + 1}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removePurpose(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.purposes.splice(index, 1)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" @click="addPurpose" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" @click="form.purposes.push('')" />
       </div>
     </div>
 
@@ -190,10 +191,10 @@ onMounted(() => {
             <DsfrInput v-model="form.tags[index]" :placeholder="`Tag ${index + 1}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removeTag(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.tags.splice(index, 1)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" @click="addTag" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" @click="form.tags.push('')" />
       </div>
     </div>
 
