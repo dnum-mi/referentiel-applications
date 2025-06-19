@@ -23,6 +23,7 @@ model Application {
   labels            Label[]    @relation("ApplicationLabels")
 
   priorityRestart priorityRestart?
+  quality             Int?
 
   @@unique([label, description])
   @@index([label])

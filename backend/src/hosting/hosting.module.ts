@@ -5,6 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { HostingsController } from './hosting.controller';
 import { SitesController } from './site.controller';
 import { MetadatasModule } from 'src/metadatas/metadatas.module';
+import { ApplicationQualityService } from 'src/product/quality.service';
 
 @Module({
   imports: [PrismaModule, MetadatasModule],
@@ -15,6 +16,7 @@ import { MetadatasModule } from 'src/metadatas/metadatas.module';
       provide: 'IHostingRepository',
       useClass: HostingRepository,
     },
+    ApplicationQualityService,
   ],
   exports: ['IHostingRepository'],
 })

@@ -1,6 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Application } from '@prisma/client';
+import { Prisma, Application, PrismaClient } from '@prisma/client';
 import {
   CreateApplicationDto,
   PatchApplicationDto,
@@ -9,6 +9,7 @@ import { ApplicationRepository } from './infrastructure/repository/application.r
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { ApplicationQualityService } from './quality.service';
 
 @Injectable()
 export class ApplicationService {
@@ -17,6 +18,7 @@ export class ApplicationService {
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
     private readonly metadatasService: MetadatasService,
+    private readonly applicationQualityService: ApplicationQualityService,
   ) {}
 
   public async createApplication(
@@ -26,6 +28,10 @@ export class ApplicationService {
     const application = await this.persistApplication(
       ownerId,
       createApplicationDto,
+    );
+
+    await this.applicationQualityService.updateApplicationQuality(
+      application.id,
     );
 
     for (const labelDto of createApplicationDto.labels || []) {
@@ -66,6 +72,10 @@ export class ApplicationService {
         where,
         data: applicationUpdates,
       });
+
+      await this.applicationQualityService.updateApplicationQuality(
+        updatedApplication.id,
+      );
 
       await this.metadatasService.createMetadata({
         applicationId: updatedApplication.id,

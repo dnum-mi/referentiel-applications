@@ -9,6 +9,7 @@ import { CommonModule } from 'src/common/common.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { LabelsModule } from 'src/labels/labels.module';
 import { MetadatasModule } from 'src/metadatas/metadatas.module';
+import { ApplicationQualityService } from './quality.service';
 
 @Module({
   imports: [CommonModule, PrismaModule, LabelsModule, MetadatasModule],
@@ -18,7 +19,12 @@ import { MetadatasModule } from 'src/metadatas/metadatas.module';
     ApplicationExportService,
     ExportApplicationsUseCase,
     ApplicationRepository,
+    ApplicationQualityService,
   ],
-  exports: [ApplicationExportService, ApplicationRepository],
+  exports: [
+    ApplicationExportService,
+    ApplicationRepository,
+    ApplicationQualityService,
+  ],
 })
 export class ApplicationModule {}

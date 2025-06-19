@@ -115,6 +115,7 @@ export class CompliancesController {
       applicationId,
       gender: 'de la conformité',
       name: 'name',
+      entityName: 'complianceId',
     });
   }
 }
