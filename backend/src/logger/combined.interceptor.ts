@@ -27,7 +27,7 @@ export class CombinedInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse();
     const { method, url, headers, query, params, ip, body } = request;
     const correlationId = headers['x-correlation-id'] || uuidv4();
-    const { user, loginTime } = this.extractUserFromToken(
+    const { user, email, loginTime } = this.extractUserFromToken(
       headers,
       correlationId,
     );
@@ -49,6 +49,7 @@ export class CombinedInterceptor implements NestInterceptor {
       data: body,
       correlationId,
       user,
+      email,
       userAgent,
       entityType,
       loginTime,
@@ -239,16 +240,21 @@ export class CombinedInterceptor implements NestInterceptor {
   private extractUserFromToken(
     headers: any,
     correlationId: string,
-  ): { user: any; loginTime?: string } {
+  ): { user: any; email: any; loginTime?: string } {
     if (headers.authorization && headers.authorization.startsWith('Bearer ')) {
       const token = headers.authorization.split(' ')[1];
       try {
         const decodedToken = decodeJwt(token);
+
         if (decodedToken && decodedToken.sub) {
           const loginTime = decodedToken.iat
             ? new Date(decodedToken.iat * 1000).toISOString()
             : undefined;
-          return { user: decodedToken.sub, loginTime };
+          return {
+            user: decodedToken.sub,
+            email: decodedToken.email,
+            loginTime,
+          };
         }
         this.logger.error(
           `[${correlationId}] La claim "sub" est absente du token décodé.`,
@@ -269,7 +275,7 @@ export class CombinedInterceptor implements NestInterceptor {
         });
       }
     }
-    return { user: null };
+    return { user: null, email: null };
   }
 
   private getEntityType(url: string): string {
@@ -321,6 +327,7 @@ type LogObjectParams = {
   ip: string;
   headers: any;
   user: any;
+  email: any;
   userAgent: string;
   label?: string;
   extra?: any;

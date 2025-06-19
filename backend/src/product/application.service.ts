@@ -1,5 +1,5 @@
 // src/application/application.service.ts
-import { PrismaService } from 'src/prisma/prisma.service';
+import prisma from 'src/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Application } from '@prisma/client';
 import {
@@ -67,7 +67,7 @@ export class ApplicationService {
     try {
       const oldApp = await this.applicationRepository.findById(where.id);
 
-      const updatedApplication = await this.prisma.application.update({
+      const updatedApplication = await prisma.application.update({
         where,
         data: applicationUpdates,
       });
@@ -104,7 +104,7 @@ export class ApplicationService {
     limit = 1,
     order: 'asc' | 'desc' = 'asc',
   ) {
-    return this.prisma.metadata.findMany({
+    return prisma.metadata.findMany({
       where: { applicationId },
       orderBy: { createdAt: order },
       skip: offset,
@@ -165,7 +165,7 @@ export class ApplicationService {
   }
 
   private async persistApplication(ownerId: string, createApplicationDto) {
-    const user = await this.prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { keycloakId: ownerId },
       select: { email: true, keycloakId: true },
     });

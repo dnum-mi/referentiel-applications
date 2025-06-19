@@ -1,12 +1,10 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import prisma from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
 import { Injectable } from '@nestjs/common';
 import { Metadata } from '@prisma/client';
 
 @Injectable()
 export class MetadatasService {
-  constructor(protected readonly prisma: PrismaService) {}
-
   public async createMetadata<T = any>(options: {
     applicationId: string;
     createdById: string;
@@ -63,6 +61,6 @@ export class MetadatasService {
       prismaData[entity] = entityId;
     }
 
-    return this.prisma.metadata.create({ data: prismaData });
+    return prisma.metadata.create({ data: prismaData });
   }
 }

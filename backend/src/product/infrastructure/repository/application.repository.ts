@@ -3,7 +3,7 @@ import { IApplicationRepository } from './application.repository.interface';
 
 import { Injectable } from '@nestjs/common';
 import { CreateApplicationDto } from '../../application/dto/create-application.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import prisma from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
 import {
@@ -25,11 +25,11 @@ export class ApplicationRepository implements IApplicationRepository {
 
   public async create(application: CreateApplicationDto, ownerId: string) {
     const mappedData = applicationMap(application, ownerId);
-    return await this.prisma.application.create(mappedData);
+    return await prisma.application.create(mappedData);
   }
 
   public async findAll() {
-    return await this.prisma.application.findMany({
+    return await prisma.application.findMany({
       include: {
         actors: true,
         relationsAsSource: { include: { targetApplication: true } },
@@ -39,7 +39,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   public async findById(id: string) {
-    return await this.prisma.application.findUnique({
+    return await prisma.application.findUnique({
       where: { id },
       include: {
         actors: true,
@@ -171,7 +171,7 @@ export class ApplicationRepository implements IApplicationRepository {
     const filteredIdsSets: string[][] = [];
     for (const filter of filters) {
       if (filter.enabled) {
-        const result = await this.prisma.$queryRaw<Array<{ id: string }>>(
+        const result = await prisma.$queryRaw<Array<{ id: string }>>(
           filter.query(),
         );
         filteredIdsSets.push(result.map((r) => r.id));
@@ -197,12 +197,10 @@ export class ApplicationRepository implements IApplicationRepository {
         : {}),
     };
 
-    const total = await this.prisma.application.count({ where });
+    const total = await prisma.application.count({ where });
 
     if (sortBy === 'hostingSite') {
-      const orderedIdsResult = await this.prisma.$queryRaw<
-        Array<{ id: string }>
-      >(
+      const orderedIdsResult = await prisma.$queryRaw<Array<{ id: string }>>(
         Prisma.sql`
           SELECT a.id
           FROM public.applications a
@@ -216,7 +214,7 @@ export class ApplicationRepository implements IApplicationRepository {
       );
       const orderedIds = orderedIdsResult.map((r) => r.id);
 
-      const results = await this.prisma.application.findMany({
+      const results = await prisma.application.findMany({
         where: { id: { in: orderedIds } },
         include: {
           hostings: {
@@ -245,9 +243,7 @@ export class ApplicationRepository implements IApplicationRepository {
     const safeSortBy = sortableFields.includes(sortBy) ? sortBy : 'shortName';
 
     if (safeSortBy === 'shortName') {
-      const orderedIdsResult = await this.prisma.$queryRaw<
-        Array<{ id: string }>
-      >(
+      const orderedIdsResult = await prisma.$queryRaw<Array<{ id: string }>>(
         Prisma.sql`
           SELECT a.id
           FROM public.applications a
@@ -258,7 +254,7 @@ export class ApplicationRepository implements IApplicationRepository {
         `,
       );
       const orderedIds = orderedIdsResult.map((r) => r.id);
-      const results = await this.prisma.application.findMany({
+      const results = await prisma.application.findMany({
         where,
         include: {
           hostings: {
@@ -282,7 +278,7 @@ export class ApplicationRepository implements IApplicationRepository {
       return { results, total };
     }
 
-    const results = await this.prisma.application.findMany({
+    const results = await prisma.application.findMany({
       where,
       orderBy: {
         [safeSortBy]: safeOrder,
@@ -355,10 +351,10 @@ export class ApplicationRepository implements IApplicationRepository {
   OFFSET ${Prisma.raw(skip.toString())}
 `;
 
-    return this.prisma.$queryRaw(query);
+    return prisma.$queryRaw(query);
   }
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
-    return this.prisma.application.findMany({
+    return prisma.application.findMany({
       include: {
         metadatas: true,
         owner: true,
@@ -388,7 +384,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async exportAllApplicationsFull(): Promise<any[]> {
-    return this.prisma.application.findMany({
+    return prisma.application.findMany({
       include: {
         metadatas: true,
         compliances: true,
@@ -412,7 +408,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async findByLink(link: string): Promise<any[]> {
-    const results = await this.prisma.externalRessource.findMany({
+    const results = await prisma.externalRessource.findMany({
       where: { link },
       include: { application: true },
     });
@@ -420,7 +416,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   public async delete(id: string): Promise<void> {
-    await this.prisma.application.delete({
+    await prisma.application.delete({
       where: { id },
     });
   }

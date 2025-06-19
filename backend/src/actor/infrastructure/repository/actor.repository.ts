@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import prisma from 'src/prisma/prisma.service';
 import { IActorRepository } from './actor.repository.interface';
 import { CreateActorDto, UpdateActorDto } from 'src/actor/dto/actor.dto';
 import { Prisma } from '@prisma/client';
@@ -7,15 +7,12 @@ import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class ActorRepository implements IActorRepository {
-  constructor(
-    private prisma: PrismaService,
-    private metadataService: MetadatasService,
-  ) {}
+  constructor(private metadataService: MetadatasService) {}
 
   public async create(actor: CreateActorDto, ownerId: string) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
-    const newActor = await this.prisma.actor.create({
+    const newActor = await prisma.actor.create({
       data: {
         ...rest,
         ...(organizationId && {
@@ -38,7 +35,7 @@ export class ActorRepository implements IActorRepository {
 
     const actorDatas = await this.findById(newActor.id);
 
-    await this.prisma.metadata.create({
+    await prisma.metadata.create({
       data: {
         applicationId: applicationId,
         actorId: actorDatas.id,
@@ -51,13 +48,13 @@ export class ActorRepository implements IActorRepository {
   }
 
   public async findAll(applicationId?: string) {
-    return await this.prisma.actor.findMany({
+    return await prisma.actor.findMany({
       where: { applicationId: applicationId },
     });
   }
 
   public async findById(id: string) {
-    return await this.prisma.actor.findUnique({
+    return await prisma.actor.findUnique({
       where: { id },
       include: {
         organization: true,
@@ -76,7 +73,7 @@ export class ActorRepository implements IActorRepository {
 
     const oldActor = await this.findById(where.id);
 
-    await this.prisma.actor.update({
+    await prisma.actor.update({
       where,
       data: {
         ...rest,
@@ -123,7 +120,7 @@ export class ActorRepository implements IActorRepository {
   public async delete(id: string, ownerId: string) {
     const actor = await this.findById(id);
 
-    await this.prisma.metadata.create({
+    await prisma.metadata.create({
       data: {
         applicationId: actor.applicationId,
         createdById: ownerId,
@@ -132,6 +129,6 @@ export class ActorRepository implements IActorRepository {
       },
     });
 
-    return await this.prisma.actor.delete({ where: { id } });
+    return await prisma.actor.delete({ where: { id } });
   }
 }

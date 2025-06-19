@@ -21,6 +21,7 @@
                   <tr>
                     <th scope="col">Email</th>
                     <th scope="col">ID Keycloak</th>
+                    <th scope="col">Derniere Connection</th>
                     <th scope="col">Permissions actuelles</th>
                     <th scope="col">Actions</th>
                   </tr>
@@ -30,6 +31,9 @@
                     <td>{{ user.email }}</td>
                     <td>
                       <code>{{ user.keycloakId }}</code>
+                    </td>
+                    <td>
+                      {{ new Date(user.lastLogin).toLocaleString() }}
                     </td>
                     <td>
                       <span
