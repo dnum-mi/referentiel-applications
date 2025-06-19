@@ -1,4 +1,3 @@
-// src/application/application.service.ts
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Application } from '@prisma/client';
@@ -7,16 +6,12 @@ import {
   PatchApplicationDto,
 } from './application/dto/create-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import {
-  ListApplicationDto,
-  SearchApplicationDto,
-} from './application/dto/search-application.dto';
+import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class ApplicationService {
-  applications: any;
   constructor(
     private prisma: PrismaService,
     private applicationRepository: ApplicationRepository,
@@ -115,17 +110,18 @@ export class ApplicationService {
     });
   }
 
-  public async search(dto: ListApplicationDto) {
-    return this.applicationRepository.findApplicationsBySearch(dto);
-  }
-
-  public async searchApplications(
-    searchParams: SearchApplicationDto,
-  ): Promise<any[]> {
-    if (searchParams.link) {
-      return this.applicationRepository.findByLink(searchParams.link);
+  public async search(
+    searchParams: ApplicationSearchDto,
+  ): Promise<{ results: any[]; total: number } | any[]> {
+    // Handle link-specific search (old SearchApplicationDto behavior)
+    if ('link' in searchParams && searchParams.link) {
+      const results = await this.applicationRepository.findByLink(
+        searchParams.link,
+      );
+      return Array.isArray(results) ? results : [results];
     }
-    return this.applicationRepository.searchApplications(searchParams);
+
+    return this.applicationRepository.findApplicationsBySearch(searchParams);
   }
 
   public async exportApplications(): Promise<any[]> {
