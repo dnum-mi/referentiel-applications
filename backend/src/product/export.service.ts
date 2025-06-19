@@ -4,7 +4,7 @@ import { ApplicationRepository } from './infrastructure/repository/application.r
 import { ApplicationWithAllRelations } from './types/application.type';
 import { getFullField } from './application/map/application-export.map';
 import { columnLabels } from './columnLabels/application-export.columnLabels';
-import { SearchApplicationDto } from './application/dto/search-application.dto';
+import { ApplicationSearchDto } from './application/dto/search-application.dto';
 
 @Injectable()
 export class ApplicationExportService {
@@ -18,49 +18,43 @@ export class ApplicationExportService {
   }
 
   async exportSearchResultsToExcel(
-    searchParams: SearchApplicationDto,
+    searchParams: ApplicationSearchDto,
   ): Promise<Buffer> {
-    const allApplications = await this.repository.findAllWithRelations();
-    const filteredApplications = this.applyFilters(
-      allApplications,
-      searchParams,
+    const searchResult =
+      await this.repository.findApplicationsBySearch(searchParams);
+
+    // Get full relations for the filtered applications
+    const filteredIds = searchResult.results.map((app) => app.id);
+    const applicationsWithRelations =
+      await this.repository.findAllWithRelations();
+    const filteredApplications = applicationsWithRelations.filter((app) =>
+      filteredIds.includes(app.id),
     );
+
     return this.exportApplicationsUseCase.executeWithApps(filteredApplications);
   }
 
   async exportApplications(
     columns: string[],
-    filters?: Record<string, any>,
+    filters?: ApplicationSearchDto,
   ): Promise<{ fileName: string; csv: string }> {
-    const apps = await this.repository.findAllWithRelations();
-    const filteredApps = this.applyFilters(apps, filters);
-    return this.generateExportCsv(filteredApps, columns);
-  }
+    let apps: ApplicationWithAllRelations[];
 
-  private applyFilters(
-    apps: ApplicationWithAllRelations[],
-    filters?: Record<string, any>,
-  ): ApplicationWithAllRelations[] {
-    if (!filters) return apps;
+    if (filters && Object.keys(filters).length > 0) {
+      const searchResult =
+        await this.repository.findApplicationsBySearch(filters);
 
-    return apps.filter((app) => {
-      return Object.entries(filters).every(([field, rawValues]) => {
-        // Skip pagination, sorting, and column parameters
-        if (['page', 'limit', 'sortBy', 'order', 'columns'].includes(field)) {
-          return true;
-        }
+      const filteredIds = searchResult.results.map((app) => app.id);
+      const applicationsWithRelations =
+        await this.repository.findAllWithRelations();
+      apps = applicationsWithRelations.filter((app) =>
+        filteredIds.includes(app.id),
+      );
+    } else {
+      apps = await this.repository.findAllWithRelations();
+    }
 
-        // Handle different types of values
-        const values = Array.isArray(rawValues)
-          ? rawValues.map((v) => String(v).toLowerCase())
-          : typeof rawValues === 'string'
-            ? rawValues.split(',').map((v) => v.trim().toLowerCase())
-            : [String(rawValues).toLowerCase()];
-
-        const actualValue = getFullField(app, field)?.toLowerCase() ?? '';
-        return values.some((val) => actualValue.includes(val));
-      });
-    });
+    return this.generateExportCsv(apps, columns);
   }
 
   public generateCsv(

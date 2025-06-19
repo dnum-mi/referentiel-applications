@@ -6,17 +6,7 @@ import { CreateApplicationDto } from '../../application/dto/create-application.d
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
-import {
-  ListApplicationDto,
-  SearchApplicationDto,
-} from './../../application/dto/search-application.dto';
-import {
-  buildLabelFilter,
-  buildPriorityFilter,
-  buildShortNameFilter,
-  buildTagFilters,
-  buildHostingSearchFilter,
-} from './search.utils';
+import { ApplicationSearchDto } from './../../application/dto/search-application.dto';
 import { ApplicationWithAllRelations } from 'src/product/types/application.type';
 
 @Injectable()
@@ -57,7 +47,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async findApplicationsBySearch(
-    dto: ListApplicationDto,
+    dto: ApplicationSearchDto,
   ): Promise<{ results: any[]; total: number }> {
     const {
       shortName,
@@ -308,55 +298,6 @@ export class ApplicationRepository implements IApplicationRepository {
     return { results, total };
   }
 
-  async searchApplications(searchParams: SearchApplicationDto): Promise<any[]> {
-    const {
-      label,
-      tag,
-      priorityRestart,
-      shortName,
-      hostingSearch,
-      page = 0,
-      limit = 12,
-    } = searchParams;
-
-    const skip = page * limit;
-
-    const conditions: Prisma.Sql[] = [
-      ...buildLabelFilter(label),
-      ...buildTagFilters(tag),
-      ...buildPriorityFilter(priorityRestart),
-      ...buildShortNameFilter(shortName),
-      ...buildHostingSearchFilter(hostingSearch),
-    ];
-
-    const whereClause = conditions.length
-      ? Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
-      : Prisma.empty;
-
-    const query = Prisma.sql`
-  SELECT a.*,
-    COALESCE(
-      (
-        SELECT jsonb_agg(
-          jsonb_build_object(
-            'platform', ho.platform,
-            'site', ho.site
-          )
-        )
-        FROM "Hosting" host
-        LEFT JOIN "HostingOption" ho ON host."hostingOptionId" = ho.id
-        WHERE host."applicationId" = a.id
-      ),
-      '[]'::jsonb
-    ) as hosting
-  FROM public.applications a
-  ${whereClause}
-  LIMIT ${Prisma.raw(limit.toString())}
-  OFFSET ${Prisma.raw(skip.toString())}
-`;
-
-    return this.prisma.$queryRaw(query);
-  }
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
     return this.prisma.application.findMany({
       include: {

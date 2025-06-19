@@ -19,10 +19,7 @@ import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from './application/dto/create-application.dto';
-import {
-  ListApplicationDto,
-  SearchApplicationDto,
-} from './application/dto/search-application.dto';
+import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
 import { Response } from 'express';
@@ -32,9 +29,6 @@ import { Permissions } from '../common/decorators/permissions.decorator';
 @ApiTags('applications')
 @Controller('applications')
 export class ApplicationController {
-  applicationsService: ApplicationService;
-  ExportApplicationsUseCase: any;
-
   constructor(
     private readonly applicationService: ApplicationService,
     private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
@@ -90,24 +84,19 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get('search')
-  @ApiOperation({ summary: 'Rechercher des applications' })
+  @ApiOperation({
+    summary: 'Rechercher et filtrer les applications',
+    description: `Endpoint unifié pour rechercher, filtrer et paginer les applications.
+      Supporte tous les types de filtres : label, shortName, tags, priorityRestart, hostingSearch, etc.
+      Inclut la pagination et le tri.`,
+  })
   @ApiResponse({
     status: 200,
     description:
-      'Liste des applications correspondant aux critères de recherche.',
+      'Liste des applications correspondant aux critères de recherche avec pagination.',
   })
-  async searchApplications(@Query() searchParams: SearchApplicationDto) {
-    return this.applicationService.searchApplications(searchParams);
-  }
-
-  @Get('list')
-  @ApiOperation({ summary: 'Lister les applications avec filtres' })
-  @ApiResponse({
-    status: 200,
-    description: 'Liste des applications filtrées.',
-  })
-  async search(@Query() dto: ListApplicationDto) {
-    return this.applicationService.search(dto);
+  async search(@Query() searchParams: ApplicationSearchDto) {
+    return this.applicationService.search(searchParams);
   }
 
   @Get(':id/metadatas')
@@ -146,7 +135,7 @@ Vous devez fournir les informations suivantes :
     description: 'Accès refusé - Privilège admin requis',
   })
   async exportExcel(
-    @Query() searchParams: SearchApplicationDto,
+    @Query() searchParams: ApplicationSearchDto,
     @Res() res: Response,
   ) {
     const buffer =
@@ -179,7 +168,7 @@ Vous devez fournir les informations suivantes :
     description: 'Export CSV des applications',
   })
   async exportCsv(
-    @Query() searchParams: SearchApplicationDto,
+    @Query() searchParams: ApplicationSearchDto,
     @Res() res: Response,
   ) {
     // Default columns to export if none specified

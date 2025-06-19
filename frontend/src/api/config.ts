@@ -33,7 +33,7 @@ export const apiConfig = {
   },
   applicationSearch: {
     method: "GET",
-    url: "/applications/list",
+    url: "/applications/search",
     query: [
       "label",
       "shortName",
