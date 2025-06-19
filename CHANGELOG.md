@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.0...v1.25.1) (2025-06-19)
+
+
+### Bug Fixes
+
+* **front:** :bug: fix comparison logic in application form ([#770](https://github.com/dnum-mi/referentiel-applications/issues/770)) ([6faf0da](https://github.com/dnum-mi/referentiel-applications/commit/6faf0da95ba3654851ebb94ecdd7ab4fcc02102c))
+* **front:** :bug: Make reset filters button clear applied filters ([#710](https://github.com/dnum-mi/referentiel-applications/issues/710)) ([b8f2dae](https://github.com/dnum-mi/referentiel-applications/commit/b8f2dae4bddccf98d542efa0ea525326dd20bd54))
+
 ## [1.25.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.24.1...v1.25.0) (2025-06-17)
 
 
