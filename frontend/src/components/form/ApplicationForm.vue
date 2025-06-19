@@ -3,6 +3,7 @@ import type { Application, Label } from "@/models/Application";
 import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
+import { areFieldsModified } from "@/utils/fieldComparison";
 
 const toaster = useToaster();
 
@@ -13,6 +14,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
+
+const initialLabels = ref<Label[]>([]);
 
 const priorityRestartOptions = [
   { value: "", text: "Sélectionner une priorité" },
@@ -28,27 +31,38 @@ const handleSubmit = () => {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
-  const purposes = form.value.purposes.filter((p) => p.trim() !== "");
-  const tags = form.value.tags.filter((t) => t.trim() !== "");
-  const initialLabels = props.labels ?? [];
+
+  const cleanedForm = {
+    ...form.value,
+    purposes: form.value.purposes.filter((p) => p.trim() !== ""),
+    tags: form.value.tags.filter((t) => t.trim() !== ""),
+  };
+
+  const generalFields = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"];
+
+  const isModified = areFieldsModified(props.initialData ?? {}, cleanedForm, generalFields);
+
   const currentLabels = form.value.labels;
 
-  const deletedLabels = initialLabels.filter((initialLabel) => !currentLabels.some((label) => label.id === initialLabel.id));
-  const newLabels = currentLabels.filter((label) => !initialLabels.some((initialLabel) => label.id === initialLabel.id));
-  const updatedLabels = currentLabels.filter((label) => label.id !== undefined);
+  const deletedLabels = initialLabels.value.filter((initial) => !currentLabels.some((label) => label.id === initial.id));
+  const newLabels = currentLabels.filter((label) => !initialLabels.value.some((initial) => initial.id === label.id));
+  const updatedLabels = currentLabels.filter((label) => {
+    const initial = initialLabels.value.find((i) => i.id === label.id);
+    return initial && areFieldsModified(initial, label, ["value", "source"]);
+  });
+
   emit("submit", {
-    labels: currentLabels,
     deletedLabels,
     updatedLabels,
     newLabels,
-    label: form.value.label,
-    shortName: form.value.shortName || null,
-    logo: form.value.logo || null,
-    description: form.value.description,
-    targetPopulations: form.value.targetPopulations,
-    purposes,
-    tags,
-    priorityRestart: form.value.priorityRestart || null,
+    updatedInfo: isModified
+      ? {
+          ...cleanedForm,
+          shortName: cleanedForm.shortName || null,
+          logo: cleanedForm.logo || null,
+          priorityRestart: cleanedForm.priorityRestart || null,
+        }
+      : null,
   });
 };
 
@@ -64,26 +78,6 @@ const form = ref({
   priorityRestart: props.initialData?.priorityRestart ?? "",
 });
 
-const addLabel = () => {
-  form.value.labels.push({ source: "", value: "" });
-};
-
-const removeLabel = (index: number) => {
-  form.value.labels.splice(index, 1);
-};
-
-const addPurpose = () => {
-  form.value.purposes.push("");
-};
-
-const removePurpose = (index: number) => {
-  form.value.purposes.splice(index, 1);
-};
-
-const addTag = () => {
-  form.value.tags.push("");
-};
-
 const isTagValid = (tag: string) => {
   return regexFormatTag.test(tag);
 };
@@ -92,17 +86,9 @@ const validateAllTags = (): boolean => {
   return form.value.tags.every((tag) => isTagValid(tag));
 };
 
-const removeTag = (index: number) => {
-  form.value.tags.splice(index, 1);
-};
-
-const addPopulation = () => {
-  form.value.targetPopulations.push("");
-};
-
-const removePopulation = (index: number) => {
-  form.value.targetPopulations.splice(index, 1);
-};
+onMounted(() => {
+  initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
+});
 </script>
 
 <template>
@@ -126,10 +112,16 @@ const removePopulation = (index: number) => {
             <DsfrInput v-model="form.labels[index].value" :placeholder="`Nom ou identifiant externe ${index + 1}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removeLabel(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.labels.splice(index, 1)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un libellé" @click="addLabel" />
+        <DsfrButton
+          type="button"
+          secondary
+          icon="add-line"
+          label="Ajouter un libellé"
+          @click="form.labels.push({ source: '', value: '' })"
+        />
       </div>
     </div>
     <br />
@@ -153,10 +145,17 @@ const removePopulation = (index: number) => {
             <DsfrInput v-model="form.targetPopulations[index]" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removePopulation(index)" />
+            <DsfrButton
+              type="button"
+              tertiary
+              size="sm"
+              icon="delete-line"
+              label="Supprimer"
+              @click="form.targetPopulations.splice(index, 1)"
+            />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" @click="addPopulation" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" @click="form.targetPopulations.push('')" />
       </div>
     </div>
 
@@ -176,10 +175,10 @@ const removePopulation = (index: number) => {
             <DsfrInput v-model="form.purposes[index]" :placeholder="`Objectif ${index + 1}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removePurpose(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.purposes.splice(index, 1)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" @click="addPurpose" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" @click="form.purposes.push('')" />
       </div>
     </div>
 
@@ -191,10 +190,10 @@ const removePopulation = (index: number) => {
             <DsfrInput v-model="form.tags[index]" :placeholder="`Tag ${index + 1}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="removeTag(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.tags.splice(index, 1)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" @click="addTag" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" @click="form.tags.push('')" />
       </div>
     </div>
 
