@@ -1,7 +1,7 @@
 import { PrismaService } from 'src/prisma/prisma.service';
-import { areEqual } from '../common/utils/comparison.util';
 import { Injectable } from '@nestjs/common';
 import { Metadata } from '@prisma/client';
+import isEqual from 'lodash-es/isEqual';
 
 @Injectable()
 export class MetadatasService {
@@ -48,7 +48,7 @@ export class MetadatasService {
     const changedNewValues: Record<string, any> = {};
 
     for (const key in newValues) {
-      if (!areEqual(oldValues[key], newValues[key])) {
+      if (!isEqual(oldValues[key], newValues[key])) {
         changedOldValues[key] = oldValues[key];
         changedNewValues[key] = newValues[key];
       }

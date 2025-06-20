@@ -21,6 +21,7 @@
     "typescript-eslint": "^8.25.0"
   },
   "dependencies": {
-    "jose": "^5.9.6"
+    "jose": "^5.9.6",
+    "lodash": "^4.17.21"
   }
 }
