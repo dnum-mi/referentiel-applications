@@ -3,20 +3,10 @@ import { IApplicationRepository } from './application.repository.interface';
 
 import { Injectable } from '@nestjs/common';
 import { CreateApplicationDto } from '../../application/dto/create-application.dto';
-import prisma from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
-import {
-  ListApplicationDto,
-  SearchApplicationDto,
-} from './../../application/dto/search-application.dto';
-import {
-  buildLabelFilter,
-  buildPriorityFilter,
-  buildShortNameFilter,
-  buildTagFilters,
-  buildHostingSearchFilter,
-} from './search.utils';
+import { ApplicationSearchDto } from './../../application/dto/search-application.dto';
 import { ApplicationWithAllRelations } from 'src/product/types/application.type';
 
 @Injectable()
@@ -25,11 +15,11 @@ export class ApplicationRepository implements IApplicationRepository {
 
   public async create(application: CreateApplicationDto, ownerId: string) {
     const mappedData = applicationMap(application, ownerId);
-    return await prisma.application.create(mappedData);
+    return await this.prisma.application.create(mappedData);
   }
 
   public async findAll() {
-    return await prisma.application.findMany({
+    return await this.prisma.application.findMany({
       include: {
         actors: true,
         relationsAsSource: { include: { targetApplication: true } },
@@ -39,7 +29,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   public async findById(id: string) {
-    return await prisma.application.findUnique({
+    return await this.prisma.application.findUnique({
       where: { id },
       include: {
         actors: true,
@@ -57,7 +47,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async findApplicationsBySearch(
-    dto: ListApplicationDto,
+    dto: ApplicationSearchDto,
   ): Promise<{ results: any[]; total: number }> {
     const {
       shortName,
@@ -171,7 +161,7 @@ export class ApplicationRepository implements IApplicationRepository {
     const filteredIdsSets: string[][] = [];
     for (const filter of filters) {
       if (filter.enabled) {
-        const result = await prisma.$queryRaw<Array<{ id: string }>>(
+        const result = await this.prisma.$queryRaw<Array<{ id: string }>>(
           filter.query(),
         );
         filteredIdsSets.push(result.map((r) => r.id));
@@ -197,10 +187,12 @@ export class ApplicationRepository implements IApplicationRepository {
         : {}),
     };
 
-    const total = await prisma.application.count({ where });
+    const total = await this.prisma.application.count({ where });
 
     if (sortBy === 'hostingSite') {
-      const orderedIdsResult = await prisma.$queryRaw<Array<{ id: string }>>(
+      const orderedIdsResult = await this.prisma.$queryRaw<
+        Array<{ id: string }>
+      >(
         Prisma.sql`
           SELECT a.id
           FROM public.applications a
@@ -214,7 +206,7 @@ export class ApplicationRepository implements IApplicationRepository {
       );
       const orderedIds = orderedIdsResult.map((r) => r.id);
 
-      const results = await prisma.application.findMany({
+      const results = await this.prisma.application.findMany({
         where: { id: { in: orderedIds } },
         include: {
           hostings: {
@@ -243,7 +235,9 @@ export class ApplicationRepository implements IApplicationRepository {
     const safeSortBy = sortableFields.includes(sortBy) ? sortBy : 'shortName';
 
     if (safeSortBy === 'shortName') {
-      const orderedIdsResult = await prisma.$queryRaw<Array<{ id: string }>>(
+      const orderedIdsResult = await this.prisma.$queryRaw<
+        Array<{ id: string }>
+      >(
         Prisma.sql`
           SELECT a.id
           FROM public.applications a
@@ -254,8 +248,8 @@ export class ApplicationRepository implements IApplicationRepository {
         `,
       );
       const orderedIds = orderedIdsResult.map((r) => r.id);
-      const results = await prisma.application.findMany({
-        where,
+      const results = await this.prisma.application.findMany({
+        where: { id: { in: orderedIds } },
         include: {
           hostings: {
             include: {
@@ -278,7 +272,7 @@ export class ApplicationRepository implements IApplicationRepository {
       return { results, total };
     }
 
-    const results = await prisma.application.findMany({
+    const results = await this.prisma.application.findMany({
       where,
       orderBy: {
         [safeSortBy]: safeOrder,
@@ -304,57 +298,8 @@ export class ApplicationRepository implements IApplicationRepository {
     return { results, total };
   }
 
-  async searchApplications(searchParams: SearchApplicationDto): Promise<any[]> {
-    const {
-      label,
-      tag,
-      priorityRestart,
-      shortName,
-      hostingSearch,
-      page = 0,
-      limit = 12,
-    } = searchParams;
-
-    const skip = page * limit;
-
-    const conditions: Prisma.Sql[] = [
-      ...buildLabelFilter(label),
-      ...buildTagFilters(tag),
-      ...buildPriorityFilter(priorityRestart),
-      ...buildShortNameFilter(shortName),
-      ...buildHostingSearchFilter(hostingSearch),
-    ];
-
-    const whereClause = conditions.length
-      ? Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
-      : Prisma.empty;
-
-    const query = Prisma.sql`
-  SELECT a.*,
-    COALESCE(
-      (
-        SELECT jsonb_agg(
-          jsonb_build_object(
-            'platform', ho.platform,
-            'site', ho.site
-          )
-        )
-        FROM "Hosting" host
-        LEFT JOIN "HostingOption" ho ON host."hostingOptionId" = ho.id
-        WHERE host."applicationId" = a.id
-      ),
-      '[]'::jsonb
-    ) as hosting
-  FROM public.applications a
-  ${whereClause}
-  LIMIT ${Prisma.raw(limit.toString())}
-  OFFSET ${Prisma.raw(skip.toString())}
-`;
-
-    return prisma.$queryRaw(query);
-  }
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
-    return prisma.application.findMany({
+    return this.prisma.application.findMany({
       include: {
         metadatas: true,
         owner: true,
@@ -384,7 +329,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async exportAllApplicationsFull(): Promise<any[]> {
-    return prisma.application.findMany({
+    return this.prisma.application.findMany({
       include: {
         metadatas: true,
         compliances: true,
@@ -408,7 +353,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   async findByLink(link: string): Promise<any[]> {
-    const results = await prisma.externalRessource.findMany({
+    const results = await this.prisma.externalRessource.findMany({
       where: { link },
       include: { application: true },
     });
@@ -416,7 +361,7 @@ export class ApplicationRepository implements IApplicationRepository {
   }
 
   public async delete(id: string): Promise<void> {
-    await prisma.application.delete({
+    await this.prisma.application.delete({
       where: { id },
     });
   }

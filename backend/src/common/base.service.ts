@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
-import prisma from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { translateEnum } from './utils/enum.utils';
 
 @Injectable()
 export class BaseService<T> {
   constructor(
     private readonly model: any,
+    protected readonly prisma: PrismaService,
     private readonly metadatasService?: MetadatasService,
   ) {}
 
@@ -94,7 +95,7 @@ export class BaseService<T> {
       : entityNameValue;
 
     try {
-      await prisma.metadata.create({
+      await this.prisma.metadata.create({
         data: {
           applicationId: options.applicationId,
           createdById: options.userId,

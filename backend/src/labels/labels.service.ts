@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import prisma from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
 import { Label } from './entities/label.entity';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class LabelsService extends BaseService<Label> {
-  constructor(metadatasService: MetadatasService) {
+  constructor(prisma: PrismaService, metadatasService: MetadatasService) {
     super(prisma.label, prisma, metadatasService);
   }
 
@@ -16,7 +16,7 @@ export class LabelsService extends BaseService<Label> {
    * @returns Un tableau de labels triés.
    */
   async findAllSorted(applicationId: string) {
-    const labels = await prisma.label.findMany({
+    const labels = await this.prisma.label.findMany({
       where: { applicationId },
       include: {
         metadatas: {
@@ -42,7 +42,7 @@ export class LabelsService extends BaseService<Label> {
    * @throws NotFoundException Si aucun label n'est trouvé.
    */
   async findCurrentLabel(applicationId: string) {
-    const labels = await prisma.label.findMany({
+    const labels = await this.prisma.label.findMany({
       where: { applicationId },
       include: {
         metadatas: {

@@ -1,5 +1,4 @@
-// src/application/application.service.ts
-import prisma from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Application } from '@prisma/client';
 import {
@@ -7,16 +6,12 @@ import {
   PatchApplicationDto,
 } from './application/dto/create-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import {
-  ListApplicationDto,
-  SearchApplicationDto,
-} from './application/dto/search-application.dto';
+import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class ApplicationService {
-  applications: any;
   constructor(
     private prisma: PrismaService,
     private applicationRepository: ApplicationRepository,
@@ -67,7 +62,7 @@ export class ApplicationService {
     try {
       const oldApp = await this.applicationRepository.findById(where.id);
 
-      const updatedApplication = await prisma.application.update({
+      const updatedApplication = await this.prisma.application.update({
         where,
         data: applicationUpdates,
       });
@@ -104,7 +99,7 @@ export class ApplicationService {
     limit = 1,
     order: 'asc' | 'desc' = 'asc',
   ) {
-    return prisma.metadata.findMany({
+    return this.prisma.metadata.findMany({
       where: { applicationId },
       orderBy: { createdAt: order },
       skip: offset,
@@ -115,17 +110,18 @@ export class ApplicationService {
     });
   }
 
-  public async search(dto: ListApplicationDto) {
-    return this.applicationRepository.findApplicationsBySearch(dto);
-  }
-
-  public async searchApplications(
-    searchParams: SearchApplicationDto,
-  ): Promise<any[]> {
-    if (searchParams.link) {
-      return this.applicationRepository.findByLink(searchParams.link);
+  public async search(
+    searchParams: ApplicationSearchDto,
+  ): Promise<{ results: any[]; total: number } | any[]> {
+    // Handle link-specific search (old SearchApplicationDto behavior)
+    if ('link' in searchParams && searchParams.link) {
+      const results = await this.applicationRepository.findByLink(
+        searchParams.link,
+      );
+      return Array.isArray(results) ? results : [results];
     }
-    return this.applicationRepository.searchApplications(searchParams);
+
+    return this.applicationRepository.findApplicationsBySearch(searchParams);
   }
 
   public async exportApplications(): Promise<any[]> {
@@ -165,7 +161,7 @@ export class ApplicationService {
   }
 
   private async persistApplication(ownerId: string, createApplicationDto) {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { keycloakId: ownerId },
       select: { email: true, keycloakId: true },
     });

@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.25.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.2...v1.25.3) (2025-06-20)
+
+
+### Bug Fixes
+
+* :bug: fix pagination not working in apps search ([f998ef4](https://github.com/dnum-mi/referentiel-applications/commit/f998ef4bfba17bcd5955f5829d69b677de96d827))
+
+## [1.25.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.1...v1.25.2) (2025-06-20)
+
+
+### Bug Fixes
+
+* trigger release ([1013516](https://github.com/dnum-mi/referentiel-applications/commit/10135166e0e2c01e4b0a487d696a3d7c1df6f8ce))
+
+## [1.25.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.0...v1.25.1) (2025-06-19)
+
+
+### Bug Fixes
+
+* **front:** :bug: fix comparison logic in application form ([#770](https://github.com/dnum-mi/referentiel-applications/issues/770)) ([6faf0da](https://github.com/dnum-mi/referentiel-applications/commit/6faf0da95ba3654851ebb94ecdd7ab4fcc02102c))
+* **front:** :bug: Make reset filters button clear applied filters ([#710](https://github.com/dnum-mi/referentiel-applications/issues/710)) ([b8f2dae](https://github.com/dnum-mi/referentiel-applications/commit/b8f2dae4bddccf98d542efa0ea525326dd20bd54))
+
 ## [1.25.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.24.1...v1.25.0) (2025-06-17)
 
 

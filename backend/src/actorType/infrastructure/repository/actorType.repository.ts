@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { IActorTypeRepository } from './actorType.repository.interface';
-import prisma from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import {
   CreateActorTypeDto,
   PatchActorTypeDto,
@@ -10,13 +10,15 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ActorTypeRepository implements IActorTypeRepository {
+  constructor(private prisma: PrismaService) {}
+
   public async create(actorType: CreateActorTypeDto) {
     const mappedData = actorTypeMap(actorType);
-    return await prisma.actorType.create(mappedData);
+    return await this.prisma.actorType.create(mappedData);
   }
 
   public async findAll() {
-    return await prisma.actorType.findMany({
+    return await this.prisma.actorType.findMany({
       orderBy: {
         label: 'asc',
       },
@@ -24,17 +26,17 @@ export class ActorTypeRepository implements IActorTypeRepository {
   }
 
   public async findById(id: string) {
-    return await prisma.actorType.findUnique({ where: { id } });
+    return await this.prisma.actorType.findUnique({ where: { id } });
   }
 
   public async update(
     where: Prisma.ActorTypeWhereUniqueInput,
     data: PatchActorTypeDto,
   ) {
-    return await prisma.actorType.update({ where, data });
+    return await this.prisma.actorType.update({ where, data });
   }
 
   public async delete(id: string) {
-    return await prisma.actorType.delete({ where: { id } });
+    return await this.prisma.actorType.delete({ where: { id } });
   }
 }

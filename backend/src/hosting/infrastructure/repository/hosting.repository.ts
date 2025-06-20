@@ -1,4 +1,4 @@
-import prisma from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { IHostingRepository } from './hosting.repository.interface';
 import { Injectable } from '@nestjs/common';
 import { Hosting } from 'src/hosting/domain/hosting.entity';
@@ -9,12 +9,15 @@ import { application } from 'express';
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {
-  constructor(private readonly metadataService: MetadatasService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metadataService: MetadatasService,
+  ) {}
 
   async create(data: CreateHostingDto, ownerId: string): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
-    return await prisma.hosting.create({
+    return await this.prisma.hosting.create({
       data: {
         ...rest,
         application: { connect: { id: applicationId } },
@@ -33,11 +36,11 @@ export class HostingRepository implements IHostingRepository {
   }
 
   async findAll(): Promise<Hosting[]> {
-    return prisma.hosting.findMany();
+    return this.prisma.hosting.findMany();
   }
 
   async findById(id: string): Promise<Hosting | null> {
-    return prisma.hosting.findUnique({
+    return this.prisma.hosting.findUnique({
       where: { id },
       include: {
         hostingOption: true,
@@ -54,7 +57,7 @@ export class HostingRepository implements IHostingRepository {
 
     const oldHosting = await this.findById(id);
 
-    const updatedHosting = await prisma.hosting.update({
+    const updatedHosting = await this.prisma.hosting.update({
       where: { id },
       data: {
         ...rest,
@@ -93,7 +96,7 @@ export class HostingRepository implements IHostingRepository {
   async delete(id: string, ownerId: string): Promise<void> {
     const hosting = await this.findById(id);
 
-    await prisma.metadata.create({
+    await this.prisma.metadata.create({
       data: {
         action: 'delete',
         applicationId: hosting.applicationId,
@@ -102,11 +105,11 @@ export class HostingRepository implements IHostingRepository {
       },
     });
 
-    await prisma.hosting.delete({ where: { id } });
+    await this.prisma.hosting.delete({ where: { id } });
   }
 
   async findBySite(site: string): Promise<Hosting[]> {
-    return prisma.hosting.findMany({
+    return this.prisma.hosting.findMany({
       where: {
         hostingOption: {
           site: {
@@ -122,7 +125,7 @@ export class HostingRepository implements IHostingRepository {
   }
 
   async findByApplicationId(applicationId: string): Promise<Hosting[]> {
-    return prisma.hosting.findMany({
+    return this.prisma.hosting.findMany({
       where: { applicationId },
       include: {
         hostingOption: true,
@@ -131,7 +134,7 @@ export class HostingRepository implements IHostingRepository {
   }
 
   async findApplicationsBySite(site: string): Promise<Hosting[]> {
-    return prisma.hosting.findMany({
+    return this.prisma.hosting.findMany({
       where: {
         hostingOption: {
           site: {
@@ -148,7 +151,7 @@ export class HostingRepository implements IHostingRepository {
   }
 
   async findDistinctSites(): Promise<string[]> {
-    const hostingOptionSites = await prisma.hostingOption.findMany({
+    const hostingOptionSites = await this.prisma.hostingOption.findMany({
       select: { site: true },
       distinct: ['site'],
       orderBy: { site: 'asc' },

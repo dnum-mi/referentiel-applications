@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
-import prisma from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async findUserByKeycloakId(keycloakId: string): Promise<User | null> {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { keycloakId },
     });
   }
@@ -18,7 +18,7 @@ export class UserService {
     keycloakId: string,
   ): Promise<User | null> {
     // Check if a user exists with the given keycloakId
-    const existingUserByKeycloakId = await prisma.user.findUnique({
+    const existingUserByKeycloakId = await this.prisma.user.findUnique({
       where: { keycloakId },
     });
 
@@ -27,20 +27,20 @@ export class UserService {
     }
 
     // Check if a user exists with the given email
-    const existingUserByEmail = await prisma.user.findUnique({
+    const existingUserByEmail = await this.prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUserByEmail) {
       // Update the keycloakId for the existing user
-      return prisma.user.update({
+      return this.prisma.user.update({
         where: { email },
         data: { keycloakId },
       });
     }
 
     // If no user exists, create a new one
-    return prisma.user.create({
+    return this.prisma.user.create({
       data: {
         email,
         keycloakId,
@@ -49,13 +49,13 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: { keycloakId: id },
       data: updateUserDto,
     });
   }
 
   async findAll() {
-    return prisma.user.findMany();
+    return this.prisma.user.findMany();
   }
 }
