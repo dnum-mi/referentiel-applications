@@ -1,7 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { Metadata } from '@prisma/client';
-import isEqual from 'lodash-es/isEqual';
+import isEqual from 'lodash/isEqual';
 
 @Injectable()
 export class MetadatasService {
