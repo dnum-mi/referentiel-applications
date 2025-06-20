@@ -1,7 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
-import { BaseService } from '../common/base.service';
 import { Injectable } from '@nestjs/common';
-import { Metadata } from '@prisma/client';
+import isEqual from 'lodash/isEqual';
 
 @Injectable()
 export class MetadatasService {
@@ -41,16 +40,31 @@ export class MetadatasService {
       return result;
     };
 
-    const oldValues = oldData ? buildValueMap(oldData) : undefined;
-    const newValues = newData ? buildValueMap(newData) : undefined;
+    const oldValues = oldData ? buildValueMap(oldData) : {};
+    const newValues = newData ? buildValueMap(newData) : {};
+
+    const changedOldValues: Record<string, any> = {};
+    const changedNewValues: Record<string, any> = {};
+
+    for (const key in newValues) {
+      if (!isEqual(oldValues[key], newValues[key])) {
+        changedOldValues[key] = oldValues[key];
+        changedNewValues[key] = newValues[key];
+      }
+    }
 
     const descriptionLines = [`Modification ${title}`];
-    descriptionLines.push(
-      `Ancienne(s) valeur(s): ${JSON.stringify(oldValues)}`,
-    );
-    descriptionLines.push(
-      `Nouvelle(s) valeur(s): ${JSON.stringify(newValues)}`,
-    );
+
+    if (Object.keys(changedOldValues).length === 0) {
+      descriptionLines.push(`Aucune modification détectée.`);
+    } else {
+      descriptionLines.push(
+        `Ancienne(s) valeur(s): ${JSON.stringify(changedOldValues)}`,
+      );
+      descriptionLines.push(
+        `Nouvelle(s) valeur(s): ${JSON.stringify(changedNewValues)}`,
+      );
+    }
 
     const prismaData: any = {
       applicationId,
