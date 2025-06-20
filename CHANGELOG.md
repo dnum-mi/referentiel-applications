@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.1...v1.25.2) (2025-06-20)
+
+
+### Bug Fixes
+
+* trigger release ([1013516](https://github.com/dnum-mi/referentiel-applications/commit/10135166e0e2c01e4b0a487d696a3d7c1df6f8ce))
+
 ## [1.25.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.0...v1.25.1) (2025-06-19)
 
 
