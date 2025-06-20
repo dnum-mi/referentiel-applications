@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.2...v1.25.3) (2025-06-20)
+
+
+### Bug Fixes
+
+* :bug: fix pagination not working in apps search ([f998ef4](https://github.com/dnum-mi/referentiel-applications/commit/f998ef4bfba17bcd5955f5829d69b677de96d827))
+
 ## [1.25.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.1...v1.25.2) (2025-06-20)
 
 
