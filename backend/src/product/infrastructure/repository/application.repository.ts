@@ -249,7 +249,7 @@ export class ApplicationRepository implements IApplicationRepository {
       );
       const orderedIds = orderedIdsResult.map((r) => r.id);
       const results = await this.prisma.application.findMany({
-        where,
+        where: { id: { in: orderedIds } },
         include: {
           hostings: {
             include: {
