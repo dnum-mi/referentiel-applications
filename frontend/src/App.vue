@@ -141,19 +141,15 @@ watch(searchQuery, (newVal) => {
   if (debounceTimeout) {
     clearTimeout(debounceTimeout);
   }
-  if (newVal.trim() === "") {
-    searchResults.value = [];
-    return;
-  }
   debounceTimeout = setTimeout(async () => {
     try {
       isLoading.value = true;
       errorMessage.value = "";
-      const results = await Applications.getAllApplicationBySearch(newVal);
-      searchResults.value = results || [];
+      const response = await Applications.getAllApplicationBySearch(newVal);
+      searchResults.value = response.results || [];
 
       const query = newVal.trim();
-      const resultCount = searchResults.value.length;
+      const resultCount = searchResults.value.total;
       trackSearch(query, "le header", resultCount);
       trackResultClick(app.label);
     } catch (error) {
