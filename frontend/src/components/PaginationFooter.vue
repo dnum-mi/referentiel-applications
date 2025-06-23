@@ -1,7 +1,6 @@
 <script setup lang="ts">
 defineProps<{
   totalFiltered: number;
-  totalAll?: number;
   pages: { label: string; title: string; href: string }[];
   limit: number;
   page: number;

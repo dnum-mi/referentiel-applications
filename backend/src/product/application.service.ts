@@ -121,7 +121,9 @@ export class ApplicationService {
       return Array.isArray(results) ? results : [results];
     }
 
-    return this.applicationRepository.findApplicationsBySearch(searchParams);
+    const searchResult =
+      await this.applicationRepository.findApplicationsBySearch(searchParams);
+    return searchResult;
   }
 
   public async exportApplications(): Promise<any[]> {

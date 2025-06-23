@@ -54,7 +54,6 @@ watch(
 <template>
   <div class="filter-section">
     <DsfrInput label-visible label="Nom de l'application" v-model="label" />
-    <DsfrInput label-visible label="Nom court" v-model="shortName" />
     <DsfrInput label-visible label="Tag" v-model="tag" />
     <DsfrInput label-visible label="Lien externe" v-model="link" />
   </div>
