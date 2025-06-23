@@ -5,7 +5,6 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import { useEventStore } from "@/stores/EventStore";
 import EventForm from "./EventForm.vue";
-import { customSorter } from "@/utils/tableSort";
 import Users from "@/api/user";
 
 const props = defineProps({
@@ -80,15 +79,6 @@ function removeSelectedEvents() {
 function cancelDelete() {
   showDeleteConfirmation.value = false;
 }
-
-function customSort(a: unknown, b: unknown) {
-  const dict = headers.reduce((acc, header, index) => {
-    acc[index] = header.key;
-    return acc;
-  }, {});
-
-  return customSorter(a, b, currentSortedColumn.value, dict);
-}
 </script>
 
 <template>
@@ -141,7 +131,6 @@ function customSort(a: unknown, b: unknown) {
       bottom-action-bar-class="bottom-action-bar-class"
       pagination-wrapper-class="pagination-wrapper-class"
       sortable-rows
-      :sortFn="customSort"
       v-model:sortedBy="currentSortedColumn"
     >
       <template #cell="{ colKey, cell }">

@@ -13,14 +13,6 @@ import { Transform, Type } from 'class-transformer';
 
 export class ApplicationSearchDto {
   @ApiPropertyOptional({
-    description: 'Recherche globale (sur label, description, tags, shortName)',
-    example: '',
-  })
-  @IsOptional()
-  @IsString()
-  query?: string;
-
-  @ApiPropertyOptional({
     description: 'Recherche par label',
     example: 'Mon Application',
   })
@@ -42,10 +34,10 @@ export class ApplicationSearchDto {
 
   @ApiPropertyOptional({
     description:
-      'Filtrer par une ou plusieurs priorités de redémarrage (p0 à p5)',
+      'Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)',
     enum: priorityRestart,
     isArray: true,
-    example: ['p1', 'p3'],
+    example: ['R1', 'R2'],
   })
   @IsOptional()
   @IsArray()
@@ -55,7 +47,7 @@ export class ApplicationSearchDto {
 
   @ApiPropertyOptional({
     description: "Type d'acteur. Utiliser les valeurs de /actorTypes",
-    example: '',
+    example: 'MOA',
   })
   @IsOptional()
   @IsString()
@@ -77,46 +69,6 @@ export class ApplicationSearchDto {
   @IsOptional()
   @IsString()
   hostingSearch?: string;
-
-  @ApiPropertyOptional({
-    description: "Filtrer par site d'hébergement",
-    example: 'LOGNES(SIL)',
-  })
-  @IsOptional()
-  @IsString()
-  hostingSite?: string;
-
-  @ApiPropertyOptional({
-    description: "Filtrer par plateforme d'hébergement",
-    example: 'CLOUD PI NATIVE',
-  })
-  @IsOptional()
-  @IsString()
-  hostingPlatform?: string;
-
-  @ApiPropertyOptional({
-    description: "Filtrer par fournisseur d'hébergement",
-    example: 'DTNUM',
-  })
-  @IsOptional()
-  @IsString()
-  hostingProvider?: string;
-
-  @ApiPropertyOptional({
-    description: "Filtrer par bâtiment d'hébergement",
-    example: 'B21',
-  })
-  @IsOptional()
-  @IsString()
-  hostingBuilding?: string;
-
-  @ApiPropertyOptional({
-    description: "Filtrer par salle d'hébergement",
-    example: 'IT5',
-  })
-  @IsOptional()
-  @IsString()
-  hostingRoom?: string;
 
   @ApiPropertyOptional({
     description: 'Recherche par lien (ressource externe)',
