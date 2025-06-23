@@ -81,7 +81,6 @@ export class BaseService<T> {
     name: string;
     gender?: string;
     translateMap?: Record<string, string>;
-    entityName?: string;
   }): Promise<void> {
     const entity = await this.findOne(options.id);
     if (!entity) {
