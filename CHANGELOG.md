@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.5](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.4...v1.25.5) (2025-06-23)
+
+
+### Bug Fixes
+
+* :bug: update search results handling to use total count and improve response structure ([2e4044a](https://github.com/dnum-mi/referentiel-applications/commit/2e4044abc0f65c7bf8b0204c2f68a90ef4861aaa))
+
 ## [1.25.4](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.3...v1.25.4) (2025-06-23)
 
 
