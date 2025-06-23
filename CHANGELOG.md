@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.4](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.3...v1.25.4) (2025-06-23)
+
+
+### Bug Fixes
+
+* :recycle: refactor application search functionality and remove unused sorting logic ([103d5c9](https://github.com/dnum-mi/referentiel-applications/commit/103d5c9d0d2e4e5558f59bfebf0c860c4305cad9))
+
 ## [1.25.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.2...v1.25.3) (2025-06-20)
 
 
