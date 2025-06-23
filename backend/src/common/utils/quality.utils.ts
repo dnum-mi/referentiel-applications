@@ -17,11 +17,11 @@ export async function calculateIQ(
   const rules = [
     { value: Boolean(application.description), importance: 1 },
     { value: Boolean(hosting), importance: 1 },
-    { value: actors.some((a) => a.actorType.code === 'MOA'), importance: 1 },
-    { value: actors.some((a) => a.actorType.code === 'MOE'), importance: 2 },
-    { value: actors.some((a) => a.actorType.code === 'TMA'), importance: 2 },
-    { value: actors.some((a) => a.actorType.code === 'HEB'), importance: 3 },
-    { value: actors.some((a) => a.actorType.code === 'REP'), importance: 3 },
+    { value: actors.some((a) => a.actorType?.code === 'MOA'), importance: 1 },
+    { value: actors.some((a) => a.actorType?.code === 'MOE'), importance: 2 },
+    { value: actors.some((a) => a.actorType?.code === 'TMA'), importance: 2 },
+    { value: actors.some((a) => a.actorType?.code === 'HEB'), importance: 3 },
+    { value: actors.some((a) => a.actorType?.code === 'REP'), importance: 3 },
     {
       value: compliances.some((c) => c.name.toLowerCase().includes('pdma')),
       importance: 3,
