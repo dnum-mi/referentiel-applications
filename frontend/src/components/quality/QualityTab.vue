@@ -92,7 +92,7 @@ onMounted(async () => {
     </div>
   </div>
 
-  <DsfrHighlight :large="true">INDICE QUALITE: {{ props.application.quality }}%</DsfrHighlight>
+  <DsfrHighlight :large="true">INDICE QUALITE: {{ props.application.quality ?? 0 }}%</DsfrHighlight>
 </template>
 
 <style scoped></style>
