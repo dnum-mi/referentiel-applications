@@ -9,7 +9,7 @@ import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
 import Relationships from "./RelationshipsTab.vue";
-import Quality from "./QualityTab.vue";
+import Quality from "./quality/QualityTab.vue";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
