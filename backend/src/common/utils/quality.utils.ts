@@ -37,9 +37,7 @@ export async function calculateIQ(
       importance: 3,
     },
     {
-      value: compliances.some((c) =>
-        c.name.toLowerCase().includes('snap visu'),
-      ),
+      value: compliances.some((c) => c.name.toLowerCase().includes('snapvisu')),
       importance: 3,
     },
   ];
@@ -51,15 +49,14 @@ export async function calculateIQ(
   });
 
   const positions = {
-    1: [50, 0, 0, 0, 0],
-    2: [30, 10, 0, 0, 0],
-    3: [20, 15, 10, 5, 0],
+    1: [50, 5, 3, 1, 1],
+    2: [30, 10, 5, 1, 1],
+    3: [20, 15, 10, 5, 1],
   };
 
-  const score =
-    positions[1][Math.min(noCounts[1], 4)] +
-    positions[2][Math.min(noCounts[2], 4)] +
-    positions[3][Math.min(noCounts[3], 4)];
+  const score1 = noCounts[1] > 4 ? 0 : positions[1][noCounts[1]];
+  const score2 = noCounts[2] > 4 ? 0 : positions[2][noCounts[2]];
+  const score3 = noCounts[3] > 4 ? 0 : positions[3][noCounts[3]];
 
-  return score;
+  return score1 + score2 + score3;
 }
