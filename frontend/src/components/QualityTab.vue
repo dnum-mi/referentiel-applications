@@ -8,7 +8,6 @@ import CompliancesApi from "@/api/compliance";
 import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useHostingStore } from "@/stores/hostingStore";
-import BooleanHighlight from "@/components/quality/BooleanHighlight.vue";
 import { useLinkStore } from "@/stores/linkStore";
 
 const toaster = useToaster();
@@ -72,25 +71,47 @@ onMounted(async () => {
   <div v-else class="fr-grid-row fr-grid-row--gutters">
     <div class="fr-col-12 fr-col-md-4">
       <h4>Général</h4>
-      <BooleanHighlight label="Description" :value="!!props.application.description" small />
-      <BooleanHighlight label="Hébergement" :value="hostings.length > 0" small />
-      <BooleanHighlight label="SnapVisu" :value="hasLink('snapvisu')" small />
+      <DsfrHighlight :color="!!props.application.description ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >Description : {{ !!props.application.description ? "oui" : "non" }}</DsfrHighlight
+      >
+      <DsfrHighlight :color="hostings.length > 0 ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >Hébergement : {{ hostings.length > 0 ? "oui" : "non" }}</DsfrHighlight
+      >
+      <DsfrHighlight :color="hasLink('snapvisu') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >SnapVisu : {{ hasLink("snapvisu") ? "oui" : "non" }}</DsfrHighlight
+      >
     </div>
 
     <div class="fr-col-12 fr-col-md-4">
       <h4>Acteurs</h4>
-      <BooleanHighlight label="MOA" :value="hasActorType('MOA')" small />
-      <BooleanHighlight label="MOE" :value="hasActorType('MOE')" small />
-      <BooleanHighlight label="Responsable Hébergement" :value="hasActorType('HEB')" small />
-      <BooleanHighlight label="Exploitation" :value="hasActorType('REP')" small />
-      <BooleanHighlight label="TMA" :value="hasActorType('TMA')" small />
+      <DsfrHighlight :color="hasActorType('MOA') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >MOA : {{ hasActorType("MOA") ? "oui" : "non" }}</DsfrHighlight
+      >
+      <DsfrHighlight :color="hasActorType('MOE') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >MOE : {{ hasActorType("MOE") ? "oui" : "non" }}</DsfrHighlight
+      >
+      <DsfrHighlight :color="hasActorType('HEB') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >Responsable hébergement : {{ hasActorType("HEB") ? "oui" : "non" }}</DsfrHighlight
+      >
+      <DsfrHighlight :color="hasActorType('REP') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >Exploitation : {{ hasActorType("REP") ? "oui" : "non" }}</DsfrHighlight
+      >
+      <DsfrHighlight :color="hasActorType('TMA') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >TMA : {{ hasActorType("TMA") ? "oui" : "non" }}</DsfrHighlight
+      >
     </div>
 
     <div class="fr-col-12 fr-col-md-4">
       <h4>Conformités</h4>
-      <BooleanHighlight label="PDMA" :value="hasCompliance('PDMA')" small />
-      <BooleanHighlight label="DIMA" :value="hasCompliance('DIMA')" small />
-      <BooleanHighlight label="Homologation" :value="hasCompliance('Homologation')" small />
+      <DsfrHighlight :color="hasCompliance('PDMA') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >PDMA : {{ hasCompliance("PDMA") ? "oui" : "non" }}</DsfrHighlight
+      >
+      <DsfrHighlight :color="hasCompliance('DIMA') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >DIMA : {{ hasCompliance("DIMA") ? "oui" : "non" }}</DsfrHighlight
+      >
+      <DsfrHighlight :color="hasCompliance('Homologation') ? 'green-emeraude' : 'red-marianne'" :small="true"
+        >Homologation : {{ hasCompliance("Homologation") ? "oui" : "non" }}</DsfrHighlight
+      >
     </div>
   </div>
 

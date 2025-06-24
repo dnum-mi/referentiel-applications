@@ -9,7 +9,7 @@ import { ApplicationRepository } from './infrastructure/repository/application.r
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
-import { ApplicationQualityService } from './quality.service';
+import { calculateIQ } from 'src/common/utils/quality.utils';
 
 @Injectable()
 export class ApplicationService {
@@ -18,7 +18,6 @@ export class ApplicationService {
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
     private readonly metadatasService: MetadatasService,
-    private readonly applicationQualityService: ApplicationQualityService,
   ) {}
 
   public async createApplication(
@@ -30,9 +29,7 @@ export class ApplicationService {
       createApplicationDto,
     );
 
-    await this.applicationQualityService.updateApplicationQuality(
-      application.id,
-    );
+    await this.updateApplicationQuality(application.id);
 
     for (const labelDto of createApplicationDto.labels || []) {
       await this.labelsService.create({
@@ -73,9 +70,7 @@ export class ApplicationService {
         data: applicationUpdates,
       });
 
-      await this.applicationQualityService.updateApplicationQuality(
-        updatedApplication.id,
-      );
+      await this.updateApplicationQuality(updatedApplication.id);
 
       await this.metadatasService.createMetadata({
         applicationId: updatedApplication.id,
@@ -103,11 +98,13 @@ export class ApplicationService {
     }
   }
 
-  public async updateQuality(): Promise<{ updatedCount: number }> {
+  public async updateAllApplicationsQuality(): Promise<{
+    updatedCount: number;
+  }> {
     const applications = await this.prisma.application.findMany();
     await Promise.all(
       applications.map(async (app) => {
-        await this.applicationQualityService.updateApplicationQuality(app.id);
+        await this.updateApplicationQuality(app.id);
       }),
     );
 
@@ -223,6 +220,13 @@ export class ApplicationService {
       if (data[field] !== undefined) {
         applicationUpdates[field] = { set: data[field] };
       }
+    });
+  }
+  async updateApplicationQuality(applicationId: string) {
+    const iq = await calculateIQ(applicationId, this.prisma);
+    return await this.prisma.application.update({
+      where: { id: applicationId },
+      data: { quality: iq },
     });
   }
 }

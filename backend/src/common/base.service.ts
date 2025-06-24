@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { translateEnum } from './utils/enum.utils';
+import { ApplicationService } from 'src/product/application.service';
 
 @Injectable()
 export class BaseService<T> {
@@ -9,6 +10,7 @@ export class BaseService<T> {
     private readonly model: any,
     protected readonly prisma: PrismaService,
     private readonly metadatasService?: MetadatasService,
+    private readonly applicationService?: ApplicationService,
   ) {}
 
   async findOne(id: string): Promise<T> {
@@ -48,10 +50,17 @@ export class BaseService<T> {
     entityName: string;
     metadataFields: Record<string, string>;
     getName?: (entity: T) => string;
+    triggerQualityUpdate?: Boolean;
   }): Promise<T> {
     const oldEntity = await this.findOne(options.id);
 
     const updatedEntity = await this.update(options.id, options.data);
+
+    if (options.triggerQualityUpdate) {
+      await this.applicationService.updateApplicationQuality(
+        options.applicationId,
+      );
+    }
 
     try {
       await this.metadatasService.createMetadata({
@@ -81,6 +90,7 @@ export class BaseService<T> {
     name: string;
     gender?: string;
     translateMap?: Record<string, string>;
+    triggerQualityUpdate?: Boolean;
   }): Promise<void> {
     const entity = await this.findOne(options.id);
     if (!entity) {
@@ -93,6 +103,12 @@ export class BaseService<T> {
     const value = options.translateMap
       ? translateEnum(options.translateMap, entityNameValue)
       : entityNameValue;
+
+    if (options.triggerQualityUpdate) {
+      await this.applicationService.updateApplicationQuality(
+        options.applicationId,
+      );
+    }
 
     try {
       await this.prisma.metadata.create({

@@ -12,11 +12,15 @@ import { LinksService } from './links.service';
 import { CreateLinkDto } from './dto/create-link.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { UpdateLinkDto } from './dto/update-link.dto';
+import { ApplicationService } from 'src/product/application.service';
 
 @ApiTags('Links')
 @Controller('applications/:applicationId/links')
 export class LinksController {
-  constructor(private service: LinksService) {}
+  constructor(
+    private service: LinksService,
+    private readonly applicationService: ApplicationService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new link for an application' })
@@ -27,7 +31,7 @@ export class LinksController {
     @Body() createLinkDto: CreateLinkDto,
     @Param('applicationId') applicationId: string,
   ) {
-    return await this.service.create({
+    const createdLink = await this.service.create({
       ...createLinkDto,
       application: {
         connect: {
@@ -42,6 +46,8 @@ export class LinksController {
         },
       },
     });
+    await this.applicationService.updateApplicationQuality(applicationId);
+    return createdLink;
   }
 
   @Get()
@@ -76,6 +82,7 @@ export class LinksController {
         description: 'description',
       },
       getName: (entity) => entity.link,
+      triggerQualityUpdate: true,
     });
   }
 
@@ -95,6 +102,7 @@ export class LinksController {
       applicationId,
       gender: 'du lien',
       name: 'link',
+      triggerQualityUpdate: true,
     });
   }
 }

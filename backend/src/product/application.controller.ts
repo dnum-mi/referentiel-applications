@@ -235,12 +235,12 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     Accessible par un administrateur seulement.
     `,
   })
-  async updateQuality() {
+  async updateAllApplicationsQuality() {
     Logger.log({
       message: 'Début de la modification des indices de qualités',
       action: 'patch',
     });
-    const result = await this.applicationService.updateQuality();
+    const result = await this.applicationService.updateAllApplicationsQuality();
     return { message: `${result.updatedCount} applications mises à jour.` };
   }
 

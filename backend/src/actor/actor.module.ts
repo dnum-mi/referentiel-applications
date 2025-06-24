@@ -5,7 +5,7 @@ import { ActorService } from './actor.service';
 import { ActorRepository } from './infrastructure/repository/actor.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
-import { ApplicationQualityService } from 'src/product/quality.service';
+import { ApplicationService } from 'src/product/application.service';
 
 @Module({
   imports: [PrismaModule],
@@ -15,7 +15,7 @@ import { ApplicationQualityService } from 'src/product/quality.service';
     ActorRepository,
     PrismaService,
     MetadatasService,
-    ApplicationQualityService,
+    ApplicationService,
   ],
   exports: [ActorRepository],
 })
