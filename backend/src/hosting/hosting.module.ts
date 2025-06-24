@@ -5,10 +5,10 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { HostingsController } from './hosting.controller';
 import { SitesController } from './site.controller';
 import { MetadatasModule } from 'src/metadatas/metadatas.module';
-import { ApplicationService } from 'src/product/application.service';
+import { ApplicationModule } from 'src/product/application.module';
 
 @Module({
-  imports: [PrismaModule, MetadatasModule],
+  imports: [PrismaModule, MetadatasModule, ApplicationModule],
   controllers: [HostingsController, SitesController],
   providers: [
     HostingService,
@@ -16,7 +16,6 @@ import { ApplicationService } from 'src/product/application.service';
       provide: 'IHostingRepository',
       useClass: HostingRepository,
     },
-    ApplicationService,
   ],
   exports: ['IHostingRepository'],
 })

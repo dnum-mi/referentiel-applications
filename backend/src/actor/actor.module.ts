@@ -5,18 +5,12 @@ import { ActorService } from './actor.service';
 import { ActorRepository } from './infrastructure/repository/actor.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
-import { ApplicationService } from 'src/product/application.service';
+import { ApplicationModule } from 'src/product/application.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, ApplicationModule],
   controllers: [ActorController],
-  providers: [
-    ActorService,
-    ActorRepository,
-    PrismaService,
-    MetadatasService,
-    ApplicationService,
-  ],
+  providers: [ActorService, ActorRepository, PrismaService, MetadatasService],
   exports: [ActorRepository],
 })
 export class ActorModule {}

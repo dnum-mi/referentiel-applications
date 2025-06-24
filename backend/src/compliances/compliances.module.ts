@@ -3,11 +3,11 @@ import { CompliancesService } from './compliances.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CompliancesController } from './compliances.controller';
 import { MetadatasModule } from 'src/metadatas/metadatas.module';
-import { ApplicationService } from 'src/product/application.service';
+import { ApplicationModule } from 'src/product/application.module';
 
 @Module({
-  imports: [MetadatasModule],
+  imports: [MetadatasModule, ApplicationModule],
   controllers: [CompliancesController],
-  providers: [CompliancesService, PrismaService, ApplicationService],
+  providers: [CompliancesService, PrismaService],
 })
 export class CompliancesModule {}
