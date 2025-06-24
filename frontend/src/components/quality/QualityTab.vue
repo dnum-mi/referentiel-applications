@@ -9,6 +9,7 @@ import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useHostingStore } from "@/stores/hostingStore";
 import BooleanHighlight from "@/components/quality/BooleanHighlight.vue";
+import { useLinkStore } from "@/stores/linkStore";
 
 const toaster = useToaster();
 
@@ -21,18 +22,15 @@ const actorTypeStore = useActorTypeStore();
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 const hostingStore = useHostingStore();
 const hostings = computed(() => hostingStore.hostings);
+const linkStore = useLinkStore();
 const compliances = ref<Compliance[]>([]);
-
-const getHighlightProps = (value: boolean) => ({
-  color: value ? "green-emeraude" : "red-marianne",
-  label: value ? "oui" : "non",
-});
 
 const fetchQuality = async () => {
   loading.value = true;
   try {
     await actorStore.fetchActorsByApplication(props.application.id);
     await hostingStore.fetchHostings(props.application.id);
+    await linkStore.fetchLinks(props.application.id);
     compliances.value = await CompliancesApi.getCompliances(props.application.id);
   } catch (error) {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
@@ -50,6 +48,10 @@ const hasActorType = (typeCode: string): boolean => {
 
 const hasCompliance = (complianceName: string): boolean => {
   return compliances.value.some((compliance) => compliance.name?.toLowerCase().includes(complianceName.toLowerCase()));
+};
+
+const hasLink = (linkValue: string): boolean => {
+  return linkStore.links.some((l) => l.link?.toLowerCase().includes(linkValue.toLowerCase()));
 };
 
 onMounted(async () => {
@@ -72,7 +74,7 @@ onMounted(async () => {
       <h4>Général</h4>
       <BooleanHighlight label="Description" :value="!!props.application.description" small />
       <BooleanHighlight label="Hébergement" :value="hostings.length > 0" small />
-      <DsfrHighlight color="green-emeraude" :small="true">SnapVisu :</DsfrHighlight>
+      <BooleanHighlight label="SnapVisu" :value="hasLink('snapvisu')" small />
     </div>
 
     <div class="fr-col-12 fr-col-md-4">

@@ -103,6 +103,17 @@ export class ApplicationService {
     }
   }
 
+  public async updateQuality(): Promise<{ updatedCount: number }> {
+    const applications = await this.prisma.application.findMany();
+    await Promise.all(
+      applications.map(async (app) => {
+        await this.applicationQualityService.updateApplicationQuality(app.id);
+      }),
+    );
+
+    return { updatedCount: applications.length };
+  }
+
   public async getSortedMetadatas(
     applicationId: string,
     offset = 0,

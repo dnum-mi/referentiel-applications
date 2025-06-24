@@ -4,7 +4,7 @@ export async function calculateIQ(
   applicationId: string,
   prisma: PrismaClient,
 ): Promise<number> {
-  const [application, hosting, actors, compliances] = await Promise.all([
+  const [application, hosting, actors, compliances, links] = await Promise.all([
     prisma.application.findUnique({ where: { id: applicationId } }),
     prisma.hosting.findFirst({ where: { applicationId } }),
     prisma.actor.findMany({
@@ -12,6 +12,7 @@ export async function calculateIQ(
       include: { actorType: true },
     }),
     prisma.compliance.findMany({ where: { applicationId } }),
+    prisma.externalRessource.findMany({ where: { applicationId } }),
   ]);
 
   const rules = [
@@ -37,7 +38,7 @@ export async function calculateIQ(
       importance: 3,
     },
     {
-      value: compliances.some((c) => c.name.toLowerCase().includes('snapvisu')),
+      value: links.some((l) => l.link.toLowerCase().includes('snapvisu')),
       importance: 3,
     },
   ];
