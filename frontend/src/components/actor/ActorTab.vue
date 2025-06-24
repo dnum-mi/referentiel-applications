@@ -10,7 +10,7 @@ import ActorForm from "./ActorForm.vue";
 
 import type { Actor } from "@/models/Actor";
 import type { Application } from "@/models/Application";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
@@ -53,11 +53,11 @@ const tableRows = computed(() =>
       return type ? type.label : "Type inconnu";
     })(),
     {
-      label: actor.email || "Email vide",
+      label: actor.email || "",
       to: actor.email ? `mailto:${actor.email}` : "",
     },
-    actor.firstname || "Prénom vide",
-    actor.lastname || "Nom vide",
+    actor.firstname || "",
+    actor.lastname || "",
     {
       component: "DsfrButton",
       label: "Modifier",
@@ -83,6 +83,7 @@ async function handleSaveActors(actor: Actor) {
     await actorStore.saveActor(actor);
     await actorStore.fetchActorsByApplication(props.application.id);
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
+    emit("update:application", props.application);
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
     console.error("❌ Erreur handleSaveActors :", error.response?.data || error);
@@ -102,6 +103,7 @@ async function confirmDelete() {
   selectedActorIds.value = [];
   showDeleteConfirmation.value = false;
   toaster.addSuccessMessage("Acteurs supprimés avec succès !");
+  emit("update:application", props.application);
 }
 
 function removeSelectedActors() {

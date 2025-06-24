@@ -1,4 +1,3 @@
-// src/application/application.service.ts
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, Application } from '@prisma/client';
@@ -7,69 +6,83 @@ import {
   PatchApplicationDto,
 } from './application/dto/create-application.dto';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import { SearchApplicationDto } from './application/dto/search-application.dto';
+import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
+import { MetadatasService } from 'src/metadatas/metadatas.service';
 
 @Injectable()
 export class ApplicationService {
-  applications: any;
   constructor(
     private prisma: PrismaService,
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
+    private readonly metadatasService: MetadatasService,
   ) {}
 
   public async createApplication(
     ownerId: string,
     createApplicationDto: CreateApplicationDto,
   ) {
-    const applicationMetadata = await this.createApplicationMetadata(ownerId);
     const application = await this.persistApplication(
       ownerId,
-      applicationMetadata.id,
       createApplicationDto,
     );
 
-    await this.labelsService.create({
-      source:
-        'https://referentiel-applications.interieur.rie.gouv.fr/applications',
-      value: application.label,
-      shortname: application.shortName,
-      metadata: {
-        connect: {
-          id: applicationMetadata.id,
+    for (const labelDto of createApplicationDto.labels || []) {
+      await this.labelsService.create({
+        source: labelDto.source,
+        value: labelDto.value,
+        metadatas: {
+          create: {
+            applicationId: application.id,
+            createdById: ownerId,
+            description: `Ajout du libellé alternatif "${labelDto.value}" à l'application`,
+          },
         },
-      },
-      application: {
-        connect: {
-          id: application.id,
+        application: {
+          connect: {
+            id: application.id,
+          },
         },
-      },
-    });
+      });
+    }
     return application;
   }
 
   public async update(params: {
     where: Prisma.ApplicationWhereUniqueInput;
     data: PatchApplicationDto;
+    ownerId: string;
   }): Promise<Application> {
-    const { where, data } = params;
+    const { where, data, ownerId } = params;
     const applicationUpdates: Prisma.ApplicationUpdateInput = {};
 
     this.applyScalarAndSimpleRelationUpdates(data, applicationUpdates);
 
     try {
-      const updatedApplication = await this.prisma.$transaction(async (tx) => {
-        const app = await tx.application.update({
-          where,
-          data: applicationUpdates,
-        });
+      const oldApp = await this.applicationRepository.findById(where.id);
 
-        if (data.label !== undefined || data.shortName !== undefined) {
-          await this.ensureLabelExists(tx, app);
-        }
+      const updatedApplication = await this.prisma.application.update({
+        where,
+        data: applicationUpdates,
+      });
 
-        return app;
+      await this.metadatasService.createMetadata({
+        applicationId: updatedApplication.id,
+        createdById: ownerId,
+        title: `des informations générales`,
+        fields: {
+          label: 'libellé',
+          shortName: 'nom court',
+          logo: 'logo',
+          description: 'description',
+          targetPopulations: 'populations cibles',
+          priorityRestart: 'priorité de redémarrage',
+          tags: 'tags',
+          purposes: 'objectifs',
+        },
+        oldData: oldApp,
+        newData: updatedApplication,
       });
 
       return updatedApplication;
@@ -80,13 +93,37 @@ export class ApplicationService {
     }
   }
 
-  public async searchApplications(
-    searchParams: SearchApplicationDto,
-  ): Promise<any[]> {
-    if (searchParams.link) {
-      return this.applicationRepository.findByLink(searchParams.link);
+  public async getSortedMetadatas(
+    applicationId: string,
+    offset = 0,
+    limit = 1,
+    order: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.prisma.metadata.findMany({
+      where: { applicationId },
+      orderBy: { createdAt: order },
+      skip: offset,
+      take: limit,
+      include: {
+        createdBy: true,
+      },
+    });
+  }
+
+  public async search(
+    searchParams: ApplicationSearchDto,
+  ): Promise<{ results: any[]; total: number } | any[]> {
+    // Handle link-specific search (old SearchApplicationDto behavior)
+    if ('link' in searchParams && searchParams.link) {
+      const results = await this.applicationRepository.findByLink(
+        searchParams.link,
+      );
+      return Array.isArray(results) ? results : [results];
     }
-    return this.applicationRepository.searchApplications(searchParams);
+
+    const searchResult =
+      await this.applicationRepository.findApplicationsBySearch(searchParams);
+    return searchResult;
   }
 
   public async exportApplications(): Promise<any[]> {
@@ -125,23 +162,7 @@ export class ApplicationService {
     await this.applicationRepository.delete(id);
   }
 
-  private async createApplicationMetadata(ownerId: string) {
-    const applicationMetadata = await this.prisma.metadata.create({
-      data: {
-        createdById: ownerId,
-        updatedById: ownerId,
-        createdAt: new Date(),
-      },
-    });
-
-    return applicationMetadata;
-  }
-
-  private async persistApplication(
-    ownerId: string,
-    applicationMetadataId: string,
-    createApplicationDto,
-  ) {
+  private async persistApplication(ownerId: string, createApplicationDto) {
     const user = await this.prisma.user.findUnique({
       where: { keycloakId: ownerId },
       select: { email: true, keycloakId: true },
@@ -153,7 +174,6 @@ export class ApplicationService {
 
     const application = this.applicationRepository.create(
       createApplicationDto,
-      applicationMetadataId,
       ownerId,
     );
 
@@ -183,44 +203,5 @@ export class ApplicationService {
         applicationUpdates[field] = { set: data[field] };
       }
     });
-  }
-
-  private async ensureLabelExists(
-    tx: Prisma.TransactionClient,
-    application: Application,
-  ) {
-    const labelLower = application.label.toLowerCase();
-    const shortnameLower = application.shortName
-      ? application.shortName.toLowerCase()
-      : null;
-
-    const existingLabel = await tx.label.findFirst({
-      where: {
-        AND: [
-          { value: { equals: labelLower, mode: 'insensitive' } },
-          { shortname: { equals: shortnameLower, mode: 'insensitive' } },
-        ],
-      },
-    });
-
-    if (!existingLabel) {
-      await tx.label.create({
-        data: {
-          source:
-            'https://referentiel-applications.interieur.rie.gouv.fr/applications',
-          value: application.label,
-          shortname: application.shortName,
-          metadata: {
-            create: {
-              createdById: application.ownerId,
-              updatedById: application.ownerId,
-            },
-          },
-          application: {
-            connect: { id: application.id },
-          },
-        },
-      });
-    }
   }
 }

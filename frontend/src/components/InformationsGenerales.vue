@@ -4,14 +4,14 @@ import type { Application, Label } from "@/models/Application";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
+import Labels from "@/api/label";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
-import axios from "axios";
 import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import type { Hosting } from "@/models/Hosting";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const isSubmitting = ref(false);
 const toaster = useToaster();
@@ -35,8 +35,8 @@ const userPermissions = ref(null);
 onMounted(async () => {
   if (props.application?.id) {
     await hostingStore.fetchHostings(props.application.id);
+    labels.value = await Labels.findByApplication(props.application.id);
   }
-  await fetchLabels();
   userPermissions.value = await Users.getUser().then((response) => {
     return response.permissions.split(",");
   });
@@ -50,14 +50,6 @@ const labels = ref<Label[]>([]);
 
 const applicationModal = useModal();
 const isModalOpened = computed(() => applicationModal.isModalOpen.value);
-
-const filteredAltLabels = computed(() =>
-  (labels.value || []).filter(
-    (label) =>
-      label.value.toLowerCase() !== application.value.label.toLowerCase() ||
-      (label.shortname && label.shortname.toLowerCase() !== (application.value.shortName || "").toLowerCase()),
-  ),
-);
 
 const priorityConfig = new Map<string, { type: string; label: string; tooltip: string }>([
   [
@@ -117,25 +109,27 @@ async function updateApplication(updatedData: any) {
     loading.value = true;
     applicationModal.closeModal();
 
-    const updatedApplication = await Applications.patchApplication({
-      ...props.application,
-      ...updatedData,
-    });
-
+    let updatedApplication = props.application;
+    if (updatedData.updatedInfo) {
+      updatedApplication = await Applications.patchApplication({
+        ...props.application,
+        ...updatedData.updatedInfo,
+      });
+    }
     if (updatedData.deletedLabels.length > 0) {
       const labelIds = updatedData.deletedLabels.map((label: Label) => label.id);
-      await deleteLabels(labelIds);
+      await Labels.delete(labelIds, props.application.id);
     }
     if (updatedData.updatedLabels.length > 0) {
-      await updateLabels(updatedData.updatedLabels);
+      await Labels.update(updatedData.updatedLabels);
     }
     if (updatedData.newLabels.length > 0) {
-      await createLabels(updatedData.newLabels);
+      await Labels.create(updatedData.newLabels, props.application.id);
     }
 
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
-    await fetchLabels();
+    labels.value = await Labels.findByApplication(props.application.id);
     toaster.addSuccessMessage("Application mise à jour avec succès");
   } catch (error) {
     console.error(error);
@@ -143,50 +137,6 @@ async function updateApplication(updatedData: any) {
   } finally {
     isSubmitting.value = false;
     loading.value = false;
-  }
-}
-
-async function createLabels(newLabels: Label[]) {
-  for (const label of newLabels) {
-    try {
-      await axios.post(`applications/${props.application.id}/labels`, {
-        source: label.source,
-        value: label.value,
-        shortname: label.shortname,
-      });
-    } catch (error) {
-      console.error(error);
-      toaster.addErrorMessage(`Erreur lors de la création du label: ${label.value}`);
-    }
-  }
-}
-
-async function updateLabels(updatedLabels: Label[]) {
-  for (const label of updatedLabels) {
-    try {
-      await axios.patch(`applications/${props.application.id}/labels/${label.id}`, {
-        source: label.source,
-        value: label.value,
-        shortname: label.shortname,
-      });
-    } catch (error) {
-      console.error(error);
-      toaster.addErrorMessage(`Erreur lors de la modification du label: ${label.value}`);
-    }
-  }
-}
-
-async function deleteLabels(labelIds: string[]) {
-  await Promise.all(labelIds.map((labelId) => axios.delete(`applications/${props.application.id}/labels/${labelId}`)));
-}
-
-async function fetchLabels() {
-  try {
-    const response = await axios.get(`applications/${props.application.id}/labels`);
-    labels.value = response.data;
-  } catch (error) {
-    console.error(error);
-    toaster.addErrorMessage("Erreur lors de la récupération des labels.");
   }
 }
 
@@ -254,10 +204,18 @@ watch(
               <h4>ID de l'application</h4>
               <p>{{ application.id }}</p>
 
-              <div v-if="filteredAltLabels.length > 0">
-                <h4>Libellés Alternatifs (Noms courts)</h4>
+              <div v-if="labels.length > 0">
+                <h4>Noms Alternatifs</h4>
                 <p>
-                  {{ filteredAltLabels.map((label) => `${label.value} (${label.shortname || ""})`).join(" ; ") }}
+                  {{
+                    labels
+                      .map((label) => {
+                        const value = label.value || "";
+                        const source = label.source && label.source.trim() !== "" ? ` (${label.source})` : "";
+                        return `${value}${source}`;
+                      })
+                      .join(" ; ")
+                  }}
                 </p>
               </div>
 

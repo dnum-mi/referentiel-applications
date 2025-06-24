@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { computed, defineProps, defineEmits, onMounted } from "vue";
 import { useHostingStore } from "@/stores/hostingStore";
+import Users from "@/api/user";
 
 const props = defineProps<{ applicationId: string }>();
 const emit = defineEmits(["edit", "delete"]);
 
 const hostingStore = useHostingStore();
 const hostings = computed(() => hostingStore.hostings);
+const userPermissions = ref(null);
 
-onMounted(() => {
+onMounted(async () => {
   hostingStore.fetchHostings(props.applicationId);
+
+  userPermissions.value = await Users.getUser().then((response) => {
+    return response.permissions.split(",");
+  });
 });
 
 const handleEdit = (hostingId) => {
@@ -52,8 +58,23 @@ const handleDelete = (hostingId) => {
           </div>
         </div>
         <div class="fr-col-auto">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" title="Modifier" @click="handleEdit(hosting.id)" class="fr-mr-1w" />
-          <DsfrButton tertiary size="sm" icon="fr-icon-delete-bin-line" title="Supprimer" @click="handleDelete(hosting.id)" />
+          <DsfrButton
+            tertiary
+            size="sm"
+            icon="fr-icon-edit-line"
+            title="Modifier"
+            @click="handleEdit(hosting.id)"
+            class="fr-mr-1w"
+            :disabled="!userPermissions?.includes('write')"
+          />
+          <DsfrButton
+            tertiary
+            size="sm"
+            icon="fr-icon-delete-bin-line"
+            title="Supprimer"
+            @click="handleDelete(hosting.id)"
+            :disabled="!userPermissions?.includes('write')"
+          />
         </div>
       </div>
     </div>

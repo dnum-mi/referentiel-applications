@@ -112,10 +112,12 @@ function resetAllFilters() {
   opacity: 0.7;
   z-index: 1010;
 }
+
 .sidebar-toggle:hover {
   opacity: 1;
   background-color: #f3f4f6;
 }
+
 .sidebar-toggle-icon {
   font-size: 1.2rem;
 }
@@ -138,6 +140,7 @@ function resetAllFilters() {
   user-select: none;
   align-self: flex-end;
 }
+
 .reset-link:hover {
   text-decoration: underline;
 }

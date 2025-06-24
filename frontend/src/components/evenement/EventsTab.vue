@@ -5,8 +5,7 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import { useEventStore } from "@/stores/EventStore";
 import EventForm from "./EventForm.vue";
-import { customSorter } from "@/utils/tableSort";
-import Users from "@/api/user.js";
+import Users from "@/api/user";
 
 const props = defineProps({
   application: {
@@ -15,6 +14,7 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(["update:application"]);
 const eventStore = useEventStore();
 const events = computed(() => eventStore.events);
 const loading = computed(() => eventStore.isLoading);
@@ -58,12 +58,14 @@ const rows = computed(() =>
 async function handleCreateEvent(newEvent) {
   await eventStore.createEvent(props.application.id, newEvent);
   eventModal.closeModal();
+  emit("update:application", props.application);
 }
 
 async function confirmDelete() {
   await eventStore.deleteEvents(props.application.id, selectedEventIds.value);
   selectedEventIds.value = [];
   showDeleteConfirmation.value = false;
+  emit("update:application", props.application);
 }
 
 function removeSelectedEvents() {
@@ -76,15 +78,6 @@ function removeSelectedEvents() {
 
 function cancelDelete() {
   showDeleteConfirmation.value = false;
-}
-
-function customSort(a: unknown, b: unknown) {
-  const dict = headers.reduce((acc, header, index) => {
-    acc[index] = header.key;
-    return acc;
-  }, {});
-
-  return customSorter(a, b, currentSortedColumn.value, dict);
 }
 </script>
 
@@ -138,7 +131,6 @@ function customSort(a: unknown, b: unknown) {
       bottom-action-bar-class="bottom-action-bar-class"
       pagination-wrapper-class="pagination-wrapper-class"
       sortable-rows
-      :sortFn="customSort"
       v-model:sortedBy="currentSortedColumn"
     >
       <template #cell="{ colKey, cell }">

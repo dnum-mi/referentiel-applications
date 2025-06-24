@@ -16,6 +16,7 @@ import {
 import { ExcelBuilderService } from 'src/common/service/excel-builder.service';
 import { ensureSheetHasAtLeastOneRow } from 'src/common/utils/excel.utils';
 import { sheetLabels } from 'src/product/constants/application-export.sheet-labels';
+import { ApplicationWithAllRelations } from 'src/product/types/application.type';
 
 @Injectable()
 export class ExportApplicationsUseCase {
@@ -26,7 +27,10 @@ export class ExportApplicationsUseCase {
 
   async execute(): Promise<Buffer> {
     const apps = await this.repository.findAllWithRelations();
+    return this.executeWithApps(apps);
+  }
 
+  async executeWithApps(apps: ApplicationWithAllRelations[]): Promise<Buffer> {
     const sheets = [
       {
         name: sheetLabels.Applications,
@@ -109,7 +113,6 @@ export class ExportApplicationsUseCase {
           applicationLabel: 'Aucune application',
           firstname: 'Aucun acteur',
           lastname: '',
-          role: '',
           type: '',
           email: '',
         }),
@@ -154,18 +157,12 @@ export class ExportApplicationsUseCase {
           { header: 'Application', key: 'applicationLabel', width: 30 },
           { header: columnLabels['labels.value'], key: 'value', width: 30 },
           { header: columnLabels['labels.source'], key: 'source', width: 30 },
-          {
-            header: columnLabels['labels.shortname'],
-            key: 'shortname',
-            width: 30,
-          },
         ],
         rows: ensureSheetHasAtLeastOneRow(apps.flatMap(mapLabels), {
           applicationId: '',
           applicationLabel: 'Aucune application',
-          value: 'Aucun label',
+          value: 'Aucun nom alternatif',
           source: '',
-          shortname: '',
         }),
       },
       {

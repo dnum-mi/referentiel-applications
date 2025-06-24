@@ -65,57 +65,39 @@ export const eventTypesArray = [
 
 export const eventTypesDict = Object.fromEntries(eventTypesArray.map(({ value, text }) => [value, text]));
 
-export const priorityConfig = new Map<string, { type: string; label: string; tooltip: string }>([
-  [
-    "R0",
-    {
-      type: "error",
-      label: "R0 – Immédiat (H24)",
-      tooltip: "Le socle technique indispensable sans lequel les applications ne peuvent être relancées (travaux en H24)",
-    },
-  ],
-  [
-    "R1",
-    {
-      type: "warning",
-      label: "R1 – Dès que le socle technique est rétabli (H24)",
-      tooltip: "Les applications prioritaires supportant les missions",
-    },
-  ],
-  [
-    "R1_STAR",
-    {
-      type: "warning",
-      label: "R1* – Selon période d'activité",
-      tooltip:
-        "Equivalent à R1 si en activité, Equivalent à R3 si en sommeil - Les applications prioritaires supportant les missions régaliennes ayant des périodes d'utilisation d'activité durant lesquelles l'indisponibilité présente des conséquences opérationnelles majeures et de sommeil durant lesquelles l'indisponibilité ne présente aucune conséquence opérationnelle",
-    },
-  ],
-  [
-    "R2",
-    {
-      type: "info",
-      label: "R2 – Dès que possible (H24)",
-      tooltip:
-        "Les applications opérationnelles dont l'indisponibilité présente des conséquences opérationnelles limitées (travaux en H24)",
-    },
-  ],
-  [
-    "R3",
-    {
-      type: "default",
-      label: "R3 – Quand le plus urgent est réalisé (H0)",
-      tooltip: "Les applications qui peuvent rester indisponibles sans conséquences opérationnelles (travaux en HO seulement)",
-    },
-  ],
-]);
-
-export const getPriorityBadgeType = (priority?: string) =>
-  priorityConfig.get(priority ?? "") ?? {
-    type: "none",
-    label: "Non définie",
-    tooltip: "Aucune priorité n'a été définie pour cette application",
-  };
+export const restartPrioritiesConfig = {
+  R0: {
+    type: "error",
+    label: "R0 – Immédiat (H24)",
+    shortLabel: "R0",
+    tooltip: "Le socle technique indispensable sans lequel les applications ne peuvent être relancées (travaux en H24)",
+  },
+  R1: {
+    type: "warning",
+    label: "R1 – Dès que le socle technique est rétabli (H24)",
+    shortLabel: "R1",
+    tooltip: "Les applications prioritaires supportant les missions",
+  },
+  R1_STAR: {
+    type: "warning",
+    label: "R1* – Selon période d'activité",
+    shortLabel: "R1*",
+    tooltip:
+      "Equivalent à R1 si en activité, Equivalent à R3 si en sommeil - Les applications prioritaires supportant les missions régaliennes ayant des périodes d'utilisation d'activité durant lesquelles l'indisponibilité présente des conséquences opérationnelles majeures et de sommeil durant lesquelles l'indisponibilité ne présente aucune conséquence opérationnelle",
+  },
+  R2: {
+    type: "info",
+    label: "R2 – Dès que possible (H24)",
+    shortLabel: "R2",
+    tooltip: "Les applications opérationnelles dont l'indisponibilité présente des conséquences opérationnelles limitées (travaux en H24)",
+  },
+  R3: {
+    type: "default",
+    label: "R3 – Quand le plus urgent est réalisé (H0)",
+    shortLabel: "R3",
+    tooltip: "Les applications qui peuvent rester indisponibles sans conséquences opérationnelles (travaux en HO seulement)",
+  },
+};
 
 export const applicationFieldsDict = {
   id: "Identifiant de l’application",

@@ -6,8 +6,8 @@ import { HostingOption } from '@prisma/client';
 
 @Injectable()
 export class HostingOptionService extends BaseService<HostingOption> {
-  constructor(private readonly prisma: PrismaService) {
-    super(prisma.hostingOption);
+  constructor(prisma: PrismaService) {
+    super(prisma.hostingOption, prisma);
   }
 
   async findAll(filters?: HostingOptionFiltersDto) {

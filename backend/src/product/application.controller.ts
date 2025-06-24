@@ -5,7 +5,6 @@ import {
   Body,
   Patch,
   Param,
-  Request,
   Get,
   Query,
   Logger,
@@ -20,17 +19,16 @@ import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from './application/dto/create-application.dto';
-import { SearchApplicationDto } from './application/dto/search-application.dto';
+import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
 import { Response } from 'express';
+import { UserId } from '../common/decorators/user-id.decorator';
+import { Permissions } from '../common/decorators/permissions.decorator';
 
 @ApiTags('applications')
 @Controller('applications')
 export class ApplicationController {
-  applicationsService: ApplicationService;
-  ExportApplicationsUseCase: any;
-
   constructor(
     private readonly applicationService: ApplicationService,
     private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
@@ -54,9 +52,8 @@ Vous devez fournir les informations suivantes :
   - **firstProductionDate**: Date de première mise en production.
   - **plannedDecommissioningDate**: Date prévue de déclassement.
 - **labels**: Les différents libellés alternatifs de l'application.
-  - **source**: La source de l'application.
-  - **value**: Le libellé de l'application.
-  - **shortname**: Le nom court de l'application.
+  - **source**: La source du libelé.
+  - **value**: Le libellé alternatif.
 - **compliances**: La liste des conformités associées avec :
   - **type**: Le type de conformité (Enum: ${Object.values(ComplianceType).join(', ')}).
   - **name**: Le nom de la conformité.
@@ -72,36 +69,82 @@ Vous devez fournir les informations suivantes :
   @ApiResponse({ status: 404, description: 'Metadata ou parent non trouvé.' })
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
-    @Request() req,
+    @UserId() userId: string,
   ) {
-    const user = req.user;
-
     Logger.log({
       message: "Début de la création de l'application",
-      userId: user.keycloakId,
+      userId: userId,
       action: 'create',
     });
     const newApplication = await this.applicationService.createApplication(
-      user.keycloakId,
+      userId,
       createApplicationDto,
     );
     return newApplication;
   }
 
   @Get('search')
-  @ApiOperation({ summary: 'Rechercher des applications' })
+  @ApiOperation({
+    summary: 'Rechercher et filtrer les applications',
+    description: `Endpoint unifié pour rechercher, filtrer et paginer les applications.
+      Supporte tous les types de filtres : label, shortName, tags, priorityRestart, hostingSearch, etc.
+      Inclut la pagination et le tri.`,
+  })
   @ApiResponse({
     status: 200,
     description:
-      'Liste des applications correspondant aux critères de recherche.',
+      'Liste des applications correspondant aux critères de recherche avec pagination.',
   })
-  async searchApplications(@Query() searchParams: SearchApplicationDto) {
-    return this.applicationService.searchApplications(searchParams);
+  async search(@Query() searchParams: ApplicationSearchDto) {
+    return this.applicationService.search(searchParams);
+  }
+
+  @Get(':id/metadatas')
+  @ApiOperation({
+    summary: 'Lister les metadatas d’une application avec pagination et tri',
+  })
+  getMetadatas(
+    @Param('id') id: string,
+    @Query('offset') offset = 0,
+    @Query('limit') limit = 1,
+    @Query('order') order: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.applicationService.getSortedMetadatas(
+      id,
+      Number(offset),
+      Number(limit),
+      order,
+    );
   }
 
   @Get('export/excel')
-  async exportExcel(@Res() res: Response) {
-    const buffer = await this.exportApplicationsUseCase.execute();
+  @Permissions('admin')
+  @ApiOperation({
+    summary: 'Exporter les applications en Excel',
+    description: `Permet d'exporter les applications en un fichier Excel.
+      Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
+      Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+      Accès limité aux utilisateurs avec privilège admin.`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Export Excel des applications',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Privilège admin requis',
+  })
+  async exportExcel(
+    @Query() searchParams: ApplicationSearchDto,
+    @Res() res: Response,
+  ) {
+    const buffer =
+      Object.keys(searchParams).length > 0
+        ? await this.applicationExportService.exportSearchResultsToExcel(
+            searchParams,
+          )
+        : await this.exportApplicationsUseCase.execute();
+
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -111,6 +154,46 @@ Vous devez fournir les informations suivantes :
       'attachment; filename=applications_export.xlsx',
     );
     res.send(buffer);
+  }
+
+  @Get('export')
+  @ApiOperation({
+    summary: 'Exporter les applications en CSV',
+    description: `Permet d'exporter les applications en un fichier CSV.
+      Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
+      Si aucun filtre n'est appliqué, toutes les applications sont exportées.`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Export CSV des applications',
+  })
+  async exportCsv(
+    @Query() searchParams: ApplicationSearchDto,
+    @Res() res: Response,
+  ) {
+    // Default columns to export if none specified
+    const columns = searchParams.columns || [
+      'id',
+      'label',
+      'shortName',
+      'description',
+      'tags',
+      'purposes',
+      'priorityRestart',
+    ];
+
+    // Generate the CSV
+    const result = await this.applicationExportService.exportApplications(
+      columns,
+      searchParams,
+    );
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=${result.fileName}`,
+    );
+    res.send(result.csv);
   }
 
   @Get(':id')
@@ -148,6 +231,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     `,
   })
   async update(
+    @UserId() userId: string,
     @Param('id') id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
   ): Promise<PatchApplicationDto> {
@@ -159,6 +243,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     return this.applicationService.update({
       where: { id: id },
       data: applicationToUpdate,
+      ownerId: userId,
     });
   }
 

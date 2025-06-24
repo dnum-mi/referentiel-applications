@@ -7,8 +7,7 @@ model Application {
   targetPopulations   String[]
   purposes            String[]
   tags                String[]
-  metadataId          String
-  metadata            Metadata              @relation("ApplicationMetadata", fields: [metadataId], references: [id])
+  metadatas           Metadata[]            @relation("ApplicationMetadatas")
   actors              Actor[]               @relation("ApplicationActors")
   compliances         Compliance[]          @relation("ApplicationCompliances")
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
@@ -52,7 +51,7 @@ enum RelationType {
 
 enum priorityRestart {
   R0
-  R1 
+  R1
   R1_STAR
   R2
   R3

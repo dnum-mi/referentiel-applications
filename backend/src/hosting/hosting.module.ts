@@ -4,9 +4,10 @@ import { HostingRepository } from './infrastructure/repository/hosting.repositor
 import { PrismaModule } from '../prisma/prisma.module';
 import { HostingsController } from './hosting.controller';
 import { SitesController } from './site.controller';
+import { MetadatasModule } from 'src/metadatas/metadatas.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, MetadatasModule],
   controllers: [HostingsController, SitesController],
   providers: [
     HostingService,

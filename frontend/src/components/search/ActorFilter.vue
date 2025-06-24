@@ -49,6 +49,15 @@ watch(selectedActorTypeId, (newVal) => {
 function clearActorType() {
   selectedActorTypeId.value = "";
 }
+
+watch(
+  () => searchStore.filters.actorType,
+  (val) => {
+    const match = actorTypeStore.actorTypes.find((actor) => actor.code === val);
+    selectedActorTypeId.value = match?.id ?? "";
+  },
+  { deep: true },
+);
 </script>
 
 <template>
@@ -70,9 +79,11 @@ function clearActorType() {
   align-items: center;
   border-radius: 4px;
 }
+
 .tag-label {
   margin-right: 0.5rem;
 }
+
 .tag-remove {
   background: transparent;
   border: none;
@@ -81,6 +92,7 @@ function clearActorType() {
   cursor: pointer;
   color: #555;
 }
+
 .tag-remove:hover {
   color: #d60000;
 }

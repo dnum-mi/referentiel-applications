@@ -3,12 +3,12 @@ export const apiConfig = {
     create: {
       method: "POST",
       url: "/applications/:applicationId/actors",
-      payload: ["role", "email", "firstname", "lastname", "actorTypeId", "organizationId", "applicationId"],
+      payload: ["email", "firstname", "lastname", "actorTypeId", "organizationId", "applicationId"],
     },
     update: {
       method: "PATCH",
       url: "/applications/:applicationId/actors/:id",
-      payload: ["role", "email", "firstname", "lastname", "actorTypeId", "organizationId", "applicationId"],
+      payload: ["email", "firstname", "lastname", "actorTypeId", "organizationId", "applicationId"],
     },
     delete: {
       method: "DELETE",
@@ -33,7 +33,7 @@ export const apiConfig = {
   },
   applicationSearch: {
     method: "GET",
-    url: "/search/applications",
+    url: "/applications/search",
     query: [
       "label",
       "shortName",

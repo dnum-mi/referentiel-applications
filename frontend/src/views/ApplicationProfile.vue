@@ -1,25 +1,35 @@
 <script setup lang="ts">
-import type { Application } from "@/models/Application";
+import type { Application, Metadata } from "@/models/Application";
 import Applications from "@/api/application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import ReportIssue from "@/components/Issue/ReportIssue.vue";
+import { formatDate } from "@/composables/use-date";
 
 const route = useRoute();
 const id = route.params.id as string;
 const application = ref<Application | null>(null);
+const metadata = ref<Metadata | null>();
+const firstMetadata = ref<Metadata | null>();
 const isLoading = ref(false);
 const errorMessage = ref("");
 
-function handleApplicationUpdate(updatedApplication: Application) {
+async function getMetadata(applicationId: string, order: "asc" | "desc") {
+  const result = await Applications.getSortedMetadata(applicationId, order);
+  return result[0] ?? null;
+}
+
+async function handleApplicationUpdate(updatedApplication: Application) {
   application.value = updatedApplication;
+  metadata.value = await getMetadata(updatedApplication.id, "desc");
 }
 
 async function loadApplication() {
   isLoading.value = true;
   try {
     application.value = await Applications.getApplicationById(id);
+    firstMetadata.value = await getMetadata(id, "asc");
+    metadata.value = await getMetadata(id, "desc");
   } catch (error) {
     errorMessage.value = `Une erreur est survenue lors de la récupération de l'application. (${error})`;
   } finally {
@@ -27,7 +37,9 @@ async function loadApplication() {
   }
 }
 
-onMounted(loadApplication);
+onMounted(() => {
+  loadApplication();
+});
 </script>
 
 <template>
@@ -38,11 +50,27 @@ onMounted(loadApplication);
       {{ errorMessage }}
     </div>
     <div v-else-if="application">
-      <h2>{{ application.label }}</h2>
-      <ReportIssue class="button-right" :application="application" />
+      <h2 class="fr-mt-4w fr-ml-4w">
+        {{ application.label }}
+        <p v-if="firstMetadata" class="subtitle">
+          Date de création : {{ new Date(firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
+            firstMetadata.createdBy?.email
+          }})
+        </p>
+        <p v-if="metadata" class="subtitle">
+          Dernière modification : {{ formatDate(metadata.createdAt) || "inconnue" }} ({{ metadata.createdBy?.email }})
+        </p>
+      </h2>
       <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.subtitle {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 0.3em;
+}
+</style>

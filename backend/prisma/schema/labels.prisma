@@ -1,10 +1,8 @@
 model Label {
   id            String      @id @default(uuid())
-  source        String
-  value         String?
-  shortname     String?
-  metadataId    String
-  metadata      Metadata    @relation("LabelMetadata", fields: [metadataId], references: [id])
+  source        String?
+  value         String
+  metadatas     Metadata[]  @relation("LabelMetadata")
   applicationId String
   application   Application @relation("ApplicationLabels", fields: [applicationId], references: [id], onDelete: Cascade)
 

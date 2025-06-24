@@ -5,6 +5,7 @@ model ExternalRessource {
   type          ExternalRessourceType
   applicationId String
   application   Application           @relation("ApplicationExternalsRessource", fields: [applicationId], references: [id], onDelete: Cascade)
+  metadatas     Metadata[]            @relation("ExternalRessourceMetadata")
 }
 
 enum ExternalRessourceType {

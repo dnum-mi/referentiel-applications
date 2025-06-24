@@ -1,6 +1,5 @@
 import {
   Controller,
-  Req,
   Get,
   Post,
   Delete,
@@ -18,6 +17,7 @@ import {
 import { LabelsService } from './labels.service';
 import { CreateLabelDto } from './dto/create-label.dto';
 import { Label } from './entities/label.entity';
+import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Labels')
 @Controller('applications/:applicationId/labels')
@@ -32,9 +32,8 @@ export class LabelsController {
 **Ce endpoint permet de créer un label complet.**
 
 Vous devez fournir les informations suivantes :
-- **source**: La source de l'application.
+- **source**: La source de l'application (peut être vide).
 - **value**: Le libellé de l'application.
-- **shortname**: Le nom court de l'application (peut être vide).
     `,
   })
   @ApiResponse({
@@ -43,25 +42,25 @@ Vous devez fournir les informations suivantes :
     description: 'Label créé avec succès.',
   })
   async create(
-    @Req() request,
+    @UserId() userId: string,
     @Body() createLabelDto: CreateLabelDto,
     @Param('applicationId') applicationId: string,
   ) {
-    const result = await this.service.create({
+    return await this.service.create({
       ...createLabelDto,
-      metadata: {
-        create: {
-          createdById: request.user.keycloakId,
-          updatedById: request.user.keycloakId,
-        },
-      },
       application: {
         connect: {
           id: applicationId,
         },
       },
+      metadatas: {
+        create: {
+          applicationId: applicationId,
+          createdById: userId,
+          description: `Ajout du libellé : ${createLabelDto.value}`,
+        },
+      },
     });
-    return result;
   }
 
   @Get()
@@ -87,11 +86,24 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @ApiBody({ type: CreateLabelDto })
   @ApiResponse({ status: 200, type: Label })
   update(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    return this.service.update(id, updateLabelDto);
+    return this.service.updateWithMetadata({
+      id,
+      data: updateLabelDto,
+      userId,
+      applicationId,
+      gender: 'du libellé alternatif',
+      entityName: 'labelId',
+      metadataFields: {
+        source: 'source',
+        value: 'valeur',
+      },
+      getName: (entity) => entity.value,
+    });
   }
 
   @Delete(':id')
@@ -102,10 +114,17 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     `,
   })
   @ApiResponse({ status: 200 })
-  async delete(
+  delete(
+    @UserId() userId: string,
     @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ) {
-    return this.service.delete(id);
+    return this.service.deleteWithMetadata({
+      id,
+      userId,
+      applicationId,
+      gender: 'du libellé alternatif',
+      name: 'value',
+    });
   }
 }

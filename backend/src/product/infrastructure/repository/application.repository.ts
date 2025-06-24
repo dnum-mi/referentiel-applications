@@ -6,30 +6,15 @@ import { CreateApplicationDto } from '../../application/dto/create-application.d
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 
-import { SearchApplicationDto } from './../../application/dto/search-application.dto';
-import {
-  buildLabelFilter,
-  buildPriorityFilter,
-  buildShortNameFilter,
-  buildTagFilters,
-  buildHostingSearchFilter,
-} from './search.utils';
+import { ApplicationSearchDto } from './../../application/dto/search-application.dto';
 import { ApplicationWithAllRelations } from 'src/product/types/application.type';
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(
-    application: CreateApplicationDto,
-    applicationMetadataId: string,
-    ownerId: string,
-  ) {
-    const mappedData = applicationMap(
-      application,
-      applicationMetadataId,
-      ownerId,
-    );
+  public async create(application: CreateApplicationDto, ownerId: string) {
+    const mappedData = applicationMap(application, ownerId);
     return await this.prisma.application.create(mappedData);
   }
 
@@ -54,63 +39,214 @@ export class ApplicationRepository implements IApplicationRepository {
         relationsAsTarget: {
           include: { sourceApplication: { select: { id: true, label: true } } },
         },
+        metadatas: {
+          include: { createdBy: { select: { email: true } } },
+        },
       },
     });
   }
 
-  async searchApplications(searchParams: SearchApplicationDto): Promise<any[]> {
+  async findApplicationsBySearch(
+    dto: ApplicationSearchDto,
+  ): Promise<{ results: any[]; total: number }> {
     const {
-      label,
+      shortName,
       tag,
       priorityRestart,
-      shortName,
-      hostingSearch,
       page = 0,
-      limit = 12,
-    } = searchParams;
+      limit = 15,
+      sortBy = 'shortName',
+      order = 'asc',
+    } = dto;
 
-    const skip = page * limit;
+    const safeOrder = order === 'desc' ? 'desc' : 'asc';
+    const upperCaseTags = tag?.map((t) => t.toUpperCase()) || [];
 
-    const conditions: Prisma.Sql[] = [
-      ...buildLabelFilter(label),
-      ...buildTagFilters(tag),
-      ...buildPriorityFilter(priorityRestart),
-      ...buildShortNameFilter(shortName),
-      ...buildHostingSearchFilter(hostingSearch),
-    ];
+    // Build a single comprehensive where clause with all filters
+    const whereConditions: Prisma.ApplicationWhereInput[] = [];
 
-    const whereClause = conditions.length
-      ? Prisma.sql`WHERE ${Prisma.join(conditions, ' AND ')}`
-      : Prisma.empty;
+    // Label filter - search both main label field and labels table
+    if (dto.label) {
+      whereConditions.push({
+        OR: [
+          {
+            label: {
+              contains: dto.label,
+              mode: 'insensitive' as const,
+            },
+          },
+          {
+            labels: {
+              some: {
+                value: {
+                  contains: dto.label,
+                  mode: 'insensitive' as const,
+                },
+              },
+            },
+          },
+        ],
+      });
+    }
 
-    const query = Prisma.sql`
-  SELECT a.*,
-    COALESCE(
-      (
-        SELECT jsonb_agg(
-          jsonb_build_object(
-            'platform', ho.platform,
-            'site', ho.site
-          )
-        )
-        FROM "Hosting" host
-        LEFT JOIN "HostingOption" ho ON host."hostingOptionId" = ho.id
-        WHERE host."applicationId" = a.id
-      ),
-      '[]'::jsonb
-    ) as hosting
-  FROM public.applications a
-  ${whereClause}
-  LIMIT ${Prisma.raw(limit.toString())}
-  OFFSET ${Prisma.raw(skip.toString())}
-`;
+    // Hosting search filter
+    if (dto.hostingSearch) {
+      whereConditions.push({
+        hostings: {
+          some: {
+            hostingOption: {
+              OR: [
+                {
+                  site: {
+                    contains: dto.hostingSearch,
+                    mode: 'insensitive' as const,
+                  },
+                },
+                {
+                  platform: {
+                    contains: dto.hostingSearch,
+                    mode: 'insensitive' as const,
+                  },
+                },
+                {
+                  provider: {
+                    contains: dto.hostingSearch,
+                    mode: 'insensitive' as const,
+                  },
+                },
+                {
+                  building: {
+                    contains: dto.hostingSearch,
+                    mode: 'insensitive' as const,
+                  },
+                },
+                {
+                  room: {
+                    contains: dto.hostingSearch,
+                    mode: 'insensitive' as const,
+                  },
+                },
+              ],
+            },
+          },
+        },
+      });
+    }
 
-    return this.prisma.$queryRaw(query);
+    // Organization filter
+    if (dto.organizationLabel) {
+      whereConditions.push({
+        actors: {
+          some: {
+            organization: {
+              label: {
+                contains: dto.organizationLabel,
+                mode: 'insensitive' as const,
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // Actor type filter
+    if (dto.actorType) {
+      whereConditions.push({
+        actors: {
+          some: {
+            actorType: {
+              code: {
+                equals: dto.actorType,
+                mode: 'insensitive' as const,
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // Link filter
+    if (dto.link) {
+      whereConditions.push({
+        externalRessource: {
+          some: {
+            link: {
+              contains: dto.link,
+              mode: 'insensitive' as const,
+            },
+          },
+        },
+      });
+    }
+
+    // Simple filters
+    if (shortName) {
+      whereConditions.push({
+        shortName: { contains: shortName, mode: 'insensitive' as const },
+      });
+    }
+
+    if (tag?.length) {
+      whereConditions.push({
+        tags: { hasSome: upperCaseTags },
+      });
+    }
+
+    if (priorityRestart?.length) {
+      whereConditions.push({
+        priorityRestart: { in: priorityRestart },
+      });
+    }
+
+    const where: Prisma.ApplicationWhereInput =
+      whereConditions.length > 0 ? { AND: whereConditions } : {};
+
+    const total = await this.prisma.application.count({ where });
+
+    // Handle different sorting options with fallback
+    const sortOptions: Record<
+      string,
+      Prisma.ApplicationOrderByWithRelationInput
+    > = {
+      hostingSite: { hostings: { _count: safeOrder } },
+      shortName: { shortName: safeOrder },
+      priorityRestart: { priorityRestart: safeOrder },
+      label: { label: safeOrder },
+    };
+
+    const orderBy = sortOptions[sortBy] || { shortName: safeOrder };
+
+    const results = await this.prisma.application.findMany({
+      where,
+      orderBy,
+      skip: page * limit,
+      take: limit,
+      include: {
+        hostings: {
+          include: {
+            hostingOption: true,
+          },
+        },
+        actors: {
+          include: {
+            organization: {
+              select: { id: true, label: true },
+            },
+            actorType: true,
+          },
+        },
+        labels: true,
+        externalRessource: true,
+      },
+    });
+
+    return { results, total };
   }
+
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
     return this.prisma.application.findMany({
       include: {
-        metadata: true,
+        metadatas: true,
         owner: true,
         compliances: true,
         labels: true,
@@ -140,7 +276,7 @@ export class ApplicationRepository implements IApplicationRepository {
   async exportAllApplicationsFull(): Promise<any[]> {
     return this.prisma.application.findMany({
       include: {
-        metadata: true,
+        metadatas: true,
         compliances: true,
         labels: true,
         actors: true,

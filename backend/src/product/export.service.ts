@@ -4,6 +4,7 @@ import { ApplicationRepository } from './infrastructure/repository/application.r
 import { ApplicationWithAllRelations } from './types/application.type';
 import { getFullField } from './application/map/application-export.map';
 import { columnLabels } from './columnLabels/application-export.columnLabels';
+import { ApplicationSearchDto } from './application/dto/search-application.dto';
 
 @Injectable()
 export class ApplicationExportService {
@@ -16,28 +17,44 @@ export class ApplicationExportService {
     return this.exportApplicationsUseCase.execute();
   }
 
-  async exportApplications(
-    columns: string[],
-    filters?: Record<string, string>,
-  ): Promise<{ fileName: string; csv: string }> {
-    const apps = await this.repository.findAllWithRelations();
-    const filteredApps = this.applyFilters(apps, filters);
-    return this.generateExportCsv(filteredApps, columns);
+  async exportSearchResultsToExcel(
+    searchParams: ApplicationSearchDto,
+  ): Promise<Buffer> {
+    const searchResult =
+      await this.repository.findApplicationsBySearch(searchParams);
+
+    // Get full relations for the filtered applications
+    const filteredIds = searchResult.results.map((app) => app.id);
+    const applicationsWithRelations =
+      await this.repository.findAllWithRelations();
+    const filteredApplications = applicationsWithRelations.filter((app) =>
+      filteredIds.includes(app.id),
+    );
+
+    return this.exportApplicationsUseCase.executeWithApps(filteredApplications);
   }
 
-  private applyFilters(
-    apps: ApplicationWithAllRelations[],
-    filters?: Record<string, string>,
-  ): ApplicationWithAllRelations[] {
-    if (!filters) return apps;
+  async exportApplications(
+    columns: string[],
+    filters?: ApplicationSearchDto,
+  ): Promise<{ fileName: string; csv: string }> {
+    let apps: ApplicationWithAllRelations[];
 
-    return apps.filter((app) => {
-      return Object.entries(filters).every(([field, rawValues]) => {
-        const values = rawValues.split(',').map((v) => v.trim().toLowerCase());
-        const actualValue = getFullField(app, field)?.toLowerCase() ?? '';
-        return values.some((val) => actualValue.includes(val));
-      });
-    });
+    if (filters && Object.keys(filters).length > 0) {
+      const searchResult =
+        await this.repository.findApplicationsBySearch(filters);
+
+      const filteredIds = searchResult.results.map((app) => app.id);
+      const applicationsWithRelations =
+        await this.repository.findAllWithRelations();
+      apps = applicationsWithRelations.filter((app) =>
+        filteredIds.includes(app.id),
+      );
+    } else {
+      apps = await this.repository.findAllWithRelations();
+    }
+
+    return this.generateExportCsv(apps, columns);
   }
 
   public generateCsv(

@@ -1,4 +1,4 @@
-import type { Application } from "@/models/Application";
+import type { Application, Metadata } from "@/models/Application";
 import requests from "./xhr-client";
 import axios from "axios";
 import { regexLink, regexPriority, regexTag } from "@/utils/regex";
@@ -44,6 +44,13 @@ const Applications = {
 
   async getApplicationById(id: string): Promise<Application> {
     const response = await axios.get(`/applications/${id}`);
+    return response.data;
+  },
+
+  async getSortedMetadata(applicationId: string, order: "asc" | "desc"): Promise<Metadata[]> {
+    const response = await axios.get(`applications/${applicationId}/metadatas`, {
+      params: { order },
+    });
     return response.data;
   },
 

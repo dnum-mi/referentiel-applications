@@ -7,7 +7,7 @@ import { statusDictionary, statusIconClasses } from "@/composables/use-dictionar
 import type { ReportIssue } from "@/models/ReportIssue";
 import { useReportIssueStore } from "@/stores/reportIssueStore";
 
-const title = "Liste de tous les signalements";
+const title = "Liste de toutes les corrections d'applications";
 const headers = ["Application", "Signalant", "Description", "Date", "Statut"];
 type Status = "in_pending" | "in_progress" | "done";
 
@@ -45,7 +45,7 @@ onMounted(async () => {
   <div class="fr-container fr-my-2v w-[800px]">
     <AppLoader v-if="isLoading" />
     <div v-else-if="!rows.length" class="text-center">
-      <p>Aucun signalement recensé.</p>
+      <p>Aucune correction recensée.</p>
     </div>
     <DsfrDataTable
       v-else

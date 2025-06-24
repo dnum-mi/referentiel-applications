@@ -122,15 +122,3 @@ jobs:
           record: false
           wait-on: "http://localhost:5173"
           wait-on-timeout: 12000
-          config: |
-            defaultCommandTimeout=10000
-            pageLoadTimeout=60000
-
-      - name: upload cypress screenshots
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: cypress-report-e2e
-          path: |
-            ./frontend/cypress/screenshots/
-          retention-days: 14

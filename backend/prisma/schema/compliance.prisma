@@ -8,8 +8,7 @@ model Compliance {
   scoreValue    String?
   scoreUnit     String?
   notes         String?
-  metadataId    String?
-  metadata      Metadata?        @relation("ComplianceMetadata", fields: [metadataId], references: [id])
+  metadatas     Metadata[]       @relation("ComplianceMetadata")
   applicationId String?
   application   Application?     @relation("ApplicationCompliances", fields: [applicationId], references: [id], onDelete: Cascade)
 

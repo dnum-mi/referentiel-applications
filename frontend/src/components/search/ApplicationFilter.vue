@@ -38,12 +38,22 @@ watch(link, (val) => {
   searchStore.setFilter("page", 0);
   debouncedSearch();
 });
+
+watch(
+  searchStore.filters,
+  () => {
+    label.value = searchStore.filters.label;
+    shortName.value = searchStore.filters.shortName;
+    tag.value = searchStore.filters.tag;
+    link.value = searchStore.filters.link;
+  },
+  { deep: true },
+);
 </script>
 
 <template>
   <div class="filter-section">
     <DsfrInput label-visible label="Nom de l'application" v-model="label" />
-    <DsfrInput label-visible label="Nom court" v-model="shortName" />
     <DsfrInput label-visible label="Tag" v-model="tag" />
     <DsfrInput label-visible label="Lien externe" v-model="link" />
   </div>

@@ -19,8 +19,6 @@ const correctionText = ref("");
 const opened = ref(false);
 
 const title = "Proposer une correction";
-const hint = `Veuillez renseigner votre signalement détecté pour l'application "${application.value?.label || ""}"`;
-const label = "Proposition";
 
 const submitCorrection = async () => {
   try {
@@ -40,19 +38,26 @@ const submitCorrection = async () => {
 </script>
 
 <template>
-  <div class="fr-container fr-my-2v">
-    <DsfrButton @click="opened = true">Proposer une correction</DsfrButton>
-
-    <DsfrModal v-model:opened="opened" :title="title" @close="opened = false">
-      <template #default>
-        <h2>{{ application?.label }}</h2>
-
-        <DsfrInput is-textarea v-model="correctionText" :hint="hint" :label="label" label-visible required />
-
-        <div class="button-right">
-          <DsfrButton @click="submitCorrection" :disabled="!correctionText"> Soumettre ma proposition </DsfrButton>
-        </div>
-      </template>
-    </DsfrModal>
+  <div class="correction-container">
+    <DsfrInput
+      is-textarea
+      v-model="correctionText"
+      placeholder="Écrivez votre correction..."
+      required
+      class="correction-textarea"
+      rows="2"
+    />
+    <div class="button-left">
+      <DsfrButton @click="submitCorrection" :disabled="!correctionText"> Proposer ma correction </DsfrButton>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.correction-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+</style>

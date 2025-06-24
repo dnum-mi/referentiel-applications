@@ -6,37 +6,21 @@ import {
   IsEnum,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 export class CreateLabelDto {
   @ApiProperty({
-    example:
-      'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+    example: 'CODE_PAI',
     description: 'Source of the label',
   })
   @IsString()
+  @IsOptional()
   source: string | null;
 
-  @ApiProperty({ example: 'My Application', description: 'Value of the label' })
+  @ApiProperty({ example: 'My App', description: 'Value of the label' })
   @IsString()
-  @IsOptional()
   value: string | null;
-
-  @ApiProperty({
-    example: 'short-app-name',
-    description: 'ShortName of the label',
-  })
-  @IsString()
-  @IsOptional()
-  shortname: string | null;
-
-  @ApiProperty({
-    example: 'metadata456',
-    description: 'Metadata ID',
-  })
-  @IsString()
-  metadataId?: string;
 }
 
 export class CreateApplicationDto {
@@ -46,15 +30,6 @@ export class CreateApplicationDto {
   })
   @IsString()
   label: string;
-
-  @ApiProperty({
-    example: 'metadata456',
-    description: 'Metadata ID',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  metadataId?: string;
 
   @ApiProperty({
     example: 'short-app-name',
@@ -117,6 +92,7 @@ export class CreateApplicationDto {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
+  @Transform(({ value }) => value.map((v) => v.toUpperCase()))
   tags?: string[];
 
   @ApiProperty({
@@ -133,14 +109,12 @@ export class CreateApplicationDto {
     description: 'Liste des labels alternatifs associés à l’application',
     example: [
       {
-        source:
-          'https://referentiel-applications.interieur.rie.gouv.fr/applications',
+        source: '',
         value: 'My App',
-        shortname: 'short-name',
-        metadataId: 'metadata456',
       },
     ],
   })
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateLabelDto)

@@ -1,3 +1,5 @@
+import type { Actor } from "./Actor";
+
 export interface Application {
   id: string;
   label: string;
@@ -7,29 +9,36 @@ export interface Application {
   targetPopulations?: string[];
   priorityRestart?: string;
   organisationCode?: string;
-  createdAt: string;
-  updatedAt: string;
 
   purposes?: string[];
   tags?: string[];
   ownerId?: string;
-  metadataId?: string;
 
   actors?: Actor[];
   compliances?: Compliance[];
   externalRessource?: ExternalRessource[];
   relationsAsSource?: Relation[];
   relationsAsTarget?: Relation[];
+  metadatas: Metadata[];
 }
 
 export interface Label {
   id?: string;
-  source: string;
+  source?: string;
   value: string;
-  shortname: string;
   metadataId?: string;
   applicationId?: string;
 }
+
+export interface Metadata {
+  id?: string;
+  applicationId?: string;
+  createdAt: string;
+  createdBy?: string;
+  description?: string;
+  action?: string;
+}
+
 export interface Compliance {
   id: string;
   type: string;
@@ -71,4 +80,5 @@ export interface User {
   keycloakId: string;
   email: string;
   organizationId?: string | null;
+  permissions?: string;
 }

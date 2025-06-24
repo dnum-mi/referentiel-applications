@@ -45,6 +45,12 @@ const routes = [
     component: () => import("@/views/UserProfile.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    name: routeNames.USERMANAGEMENT,
+    path: "/gestion-utilisateurs",
+    component: () => import("@/views/UserManagement.vue"),
+    meta: { requiresAuth: true },
+  },
 ];
 
 const router = createRouter({

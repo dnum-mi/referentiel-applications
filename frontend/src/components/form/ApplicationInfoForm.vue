@@ -12,12 +12,11 @@ const emit = defineEmits(["create:application", "submit", "cancel"]);
 
 const priorityRestartOptions = [
   { value: "", text: "Sélectionner une priorité" },
-  { value: "p0", text: "P0 - Critique" },
-  { value: "p1", text: "P1 - Haute" },
-  { value: "p2", text: "P2 - Moyenne" },
-  { value: "p3", text: "P3 - Normale" },
-  { value: "p4", text: "P4 - Faible" },
-  { value: "p5", text: "P5 - Très faible" },
+  { value: "R0", text: "R0 - Immédiat (H24)" },
+  { value: "R1", text: "R1 - Dès que le socle technique est rétabli (H24)" },
+  { value: "R1_STAR", text: "R1* - Selon période d'activité" },
+  { value: "R2", text: "R2 - Dès que possible (H24)" },
+  { value: "R3", text: "R3 - Quand le plus urgent est réalisé (H0)" },
 ];
 
 const handleSubmit = () => {
@@ -86,6 +85,12 @@ const removePopulation = (index: number) => {
 </script>
 
 <template>
+  <DsfrAlert
+    title="Informations minimales"
+    description="Cette étape permet de saisir uniquement les informations essentielles. Les autres éléments seront à compléter directement depuis la fiche de l'application, une fois celle-ci créée."
+    type="info"
+    class="fr-mb-3w"
+  />
   <form @submit.prevent="handleSubmit">
     <DsfrInputGroup label="Label" v-model="form.label" label-visible required />
 
@@ -109,7 +114,8 @@ const removePopulation = (index: number) => {
     />
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Population</label>
+      <label class="fr-label">Populations</label>
+      <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
       <div class="fr-mt-2w">
         <div v-for="(targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">

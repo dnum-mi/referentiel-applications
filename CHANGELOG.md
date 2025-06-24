@@ -1,5 +1,109 @@
 # Changelog
 
+## [1.25.5](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.4...v1.25.5) (2025-06-23)
+
+
+### Bug Fixes
+
+* :bug: update search results handling to use total count and improve response structure ([2e4044a](https://github.com/dnum-mi/referentiel-applications/commit/2e4044abc0f65c7bf8b0204c2f68a90ef4861aaa))
+
+## [1.25.4](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.3...v1.25.4) (2025-06-23)
+
+
+### Bug Fixes
+
+* :recycle: refactor application search functionality and remove unused sorting logic ([103d5c9](https://github.com/dnum-mi/referentiel-applications/commit/103d5c9d0d2e4e5558f59bfebf0c860c4305cad9))
+
+## [1.25.3](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.2...v1.25.3) (2025-06-20)
+
+
+### Bug Fixes
+
+* :bug: fix pagination not working in apps search ([f998ef4](https://github.com/dnum-mi/referentiel-applications/commit/f998ef4bfba17bcd5955f5829d69b677de96d827))
+
+## [1.25.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.1...v1.25.2) (2025-06-20)
+
+
+### Bug Fixes
+
+* trigger release ([1013516](https://github.com/dnum-mi/referentiel-applications/commit/10135166e0e2c01e4b0a487d696a3d7c1df6f8ce))
+
+## [1.25.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.0...v1.25.1) (2025-06-19)
+
+
+### Bug Fixes
+
+* **front:** :bug: fix comparison logic in application form ([#770](https://github.com/dnum-mi/referentiel-applications/issues/770)) ([6faf0da](https://github.com/dnum-mi/referentiel-applications/commit/6faf0da95ba3654851ebb94ecdd7ab4fcc02102c))
+* **front:** :bug: Make reset filters button clear applied filters ([#710](https://github.com/dnum-mi/referentiel-applications/issues/710)) ([b8f2dae](https://github.com/dnum-mi/referentiel-applications/commit/b8f2dae4bddccf98d542efa0ea525326dd20bd54))
+
+## [1.25.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.24.1...v1.25.0) (2025-06-17)
+
+
+### Features
+
+* :sparkles: create change history table ([#759](https://github.com/dnum-mi/referentiel-applications/issues/759)) ([825ebf2](https://github.com/dnum-mi/referentiel-applications/commit/825ebf2fe7f99e076b5eb1d222d98222979e9017))
+
+
+### Bug Fixes
+
+* **excel-export:** :bug: export all filtered apps instead of only the first 15 ([8531ace](https://github.com/dnum-mi/referentiel-applications/commit/8531aced4d28af8b5213cf65c927836f7a5c58a3))
+
+## [1.24.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.24.0...v1.24.1) (2025-06-16)
+
+
+### Bug Fixes
+
+* :bug: fixing sorting function for application ([#760](https://github.com/dnum-mi/referentiel-applications/issues/760)) ([2572bbe](https://github.com/dnum-mi/referentiel-applications/commit/2572bbe54c59e5e88d00ee61e7a133fd64c9e486))
+* **Dockerfile:** add procps package to fix hot reload issue ([6d99f27](https://github.com/dnum-mi/referentiel-applications/commit/6d99f27ab2e6858ab4389301a7b026c9e0baafaa))
+
+## [1.24.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.23.0...v1.24.0) (2025-06-13)
+
+
+### Features
+
+* **user-management:** add user management view and permissions handling ([#762](https://github.com/dnum-mi/referentiel-applications/issues/762)) ([c195640](https://github.com/dnum-mi/referentiel-applications/commit/c195640e1d36862c773027225c170dfe488b2903))
+
+## [1.23.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.22.0...v1.23.0) (2025-06-11)
+
+
+### Features
+
+* **compliance:** enhance compliance date handling and streamline update logic ([#756](https://github.com/dnum-mi/referentiel-applications/issues/756)) ([5668451](https://github.com/dnum-mi/referentiel-applications/commit/566845147ea386063f10391cd47ff694725318f0))
+* **export:** :sparkles: add CSV export feature for application search ([#734](https://github.com/dnum-mi/referentiel-applications/issues/734)) ([f6b1ee9](https://github.com/dnum-mi/referentiel-applications/commit/f6b1ee9c3e658658a8844cf47bb0a96ee7286117))
+
+
+### Bug Fixes
+
+* :bug: add sort metadata endpoint ([#758](https://github.com/dnum-mi/referentiel-applications/issues/758)) ([691e884](https://github.com/dnum-mi/referentiel-applications/commit/691e8849212ea8976cf9be232554f2d4f20a6c99))
+* **api:** :bug: make tag search case-insensitive ([#726](https://github.com/dnum-mi/referentiel-applications/issues/726)) ([ca60cda](https://github.com/dnum-mi/referentiel-applications/commit/ca60cdad5e08ce1f739372b2fa26781dea733708))
+
+## [1.22.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.21.0...v1.22.0) (2025-05-28)
+
+
+### Features
+
+* **metadata:** :sparkles: refactor and add last update date ([#606](https://github.com/dnum-mi/referentiel-applications/issues/606)) ([1af7688](https://github.com/dnum-mi/referentiel-applications/commit/1af7688ba71f0fa51b71f8f19be2c489f9e20038))
+
+
+### Bug Fixes
+
+* **api:** :bug: delete metadata id from label dto ([#732](https://github.com/dnum-mi/referentiel-applications/issues/732)) ([8b9b688](https://github.com/dnum-mi/referentiel-applications/commit/8b9b688864b842e7e58ffe3965e68523c5a73703))
+
+## [1.21.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.20.0...v1.21.0) (2025-05-28)
+
+
+### Features
+
+* **hosting:** enhance hosting modal with search functionality and form validation ([#696](https://github.com/dnum-mi/referentiel-applications/issues/696)) ([828e066](https://github.com/dnum-mi/referentiel-applications/commit/828e066b3b41a782d670a1c5f216ec05ec5ad313))
+
+
+### Bug Fixes
+
+* :bug: fix duplicated hosting search options ([#704](https://github.com/dnum-mi/referentiel-applications/issues/704)) ([d3b9d4b](https://github.com/dnum-mi/referentiel-applications/commit/d3b9d4b90efbbb8b0e1ddd393ea2a8ae42dbc502))
+* **actor:** remove default placeholder text for email, firstname, and lastname fields ([#708](https://github.com/dnum-mi/referentiel-applications/issues/708)) ([ba14e4c](https://github.com/dnum-mi/referentiel-applications/commit/ba14e4c633256691606d3c529e2fa7d6e64cb9c6))
+* **form:** :bug: use correct priority restart values (R0–R3) ([#728](https://github.com/dnum-mi/referentiel-applications/issues/728)) ([17d368b](https://github.com/dnum-mi/referentiel-applications/commit/17d368bcde7e4bfc22a00c01d5778a636b95fc24))
+* **front:** :bug: disable edit/delete buttons for hosting site when user doesn't have the permission ([#712](https://github.com/dnum-mi/referentiel-applications/issues/712)) ([fe2455d](https://github.com/dnum-mi/referentiel-applications/commit/fe2455dde20c6d5c03d152ed166c3a5507333e36))
+
 ## [1.20.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.19.0...v1.20.0) (2025-05-20)
 
 

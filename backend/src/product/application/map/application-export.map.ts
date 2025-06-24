@@ -72,7 +72,6 @@ export function mapActors(app: ApplicationWithAllRelations) {
       applicationLabel: app.label,
       firstname: a.firstname,
       lastname: a.lastname,
-      role: a.role,
       type: a.actorType?.label || '',
       email: a.email,
     })) ?? []
@@ -98,9 +97,8 @@ export function mapLabels(app: ApplicationWithAllRelations) {
     app.labels?.map((l) => ({
       applicationId: app.id,
       applicationLabel: app.label,
-      value: l.value,
       source: l.source,
-      shortname: l.shortname,
+      value: l.value,
     })) ?? []
   );
 }
