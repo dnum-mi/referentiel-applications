@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, watch, ref, onMounted } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
-import { getPriorityBadgeType } from "@/composables/use-dictionary";
+import { restartPrioritiesConfig } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
 import ExportApi from "@/api/export";
 import Users from "@/api/user";
@@ -142,10 +142,12 @@ async function exportToExcel() {
 
       <template v-else-if="colKey === 'Priorité'">
         <DsfrBadge
-          :label="getPriorityBadgeType(cell.priorityRestart).shortLabel"
-          :type="getPriorityBadgeType(cell.priorityRestart).type"
-          :title="getPriorityBadgeType(cell.priorityRestart).tooltip"
+          v-if="cell.priorityRestart"
+          :label="restartPrioritiesConfig[cell.priorityRestart].shortLabel"
+          :type="restartPrioritiesConfig[cell.priorityRestart].type"
+          :title="restartPrioritiesConfig[cell.priorityRestart].tooltip"
         />
+        <span v-else>-</span>
       </template>
 
       <template v-else>
@@ -167,7 +169,7 @@ async function exportToExcel() {
 <style scoped>
 .truncate {
   display: inline-block;
-  max-width: 300px;
+  max-width: 80vh;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
