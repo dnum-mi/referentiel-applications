@@ -50,7 +50,7 @@ export class BaseService<T> {
     entityName: string;
     metadataFields: Record<string, string>;
     getName?: (entity: T) => string;
-    triggerQualityUpdate?: Boolean;
+    triggerQualityUpdate?: boolean;
   }): Promise<T> {
     const oldEntity = await this.findOne(options.id);
 
@@ -90,7 +90,7 @@ export class BaseService<T> {
     name: string;
     gender?: string;
     translateMap?: Record<string, string>;
-    triggerQualityUpdate?: Boolean;
+    triggerQualityUpdate?: boolean;
   }): Promise<void> {
     const entity = await this.findOne(options.id);
     if (!entity) {
