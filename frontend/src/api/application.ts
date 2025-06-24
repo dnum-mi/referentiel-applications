@@ -4,7 +4,11 @@ import axios from "axios";
 import { regexLink, regexPriority, regexTag } from "@/utils/regex";
 
 const Applications = {
-  async getAllApplicationBySearch(searchParams?: string, page: number = 0, rowsPerPage: number = 12): Promise<Application[]> {
+  async getAllApplicationBySearch(
+    searchParams?: string,
+    page: number = 0,
+    rowsPerPage: number = 12,
+  ): Promise<{ results: Application[]; total: number }> {
     const raw = searchParams || "";
     let label = raw;
     const tag: string[] = [];
@@ -37,7 +41,7 @@ const Applications = {
     if (tag.length) params.tag = tag;
     if (priorityRestart) params.priorityRestart = priorityRestart;
 
-    return await requests.get<Application[]>("/applications/search", {
+    return await requests.get<{ results: Application[]; total: number }>("/applications/search", {
       params,
     });
   },

@@ -43,7 +43,8 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading!.value = true;
     try {
-      return await Applications.getAllApplicationBySearch(query);
+      const response = await Applications.getAllApplicationBySearch(query);
+      return response.results;
     } catch (error) {
       console.error(error);
       toaster.addErrorMessage("Erreur lors de la recherche d'applications.");
@@ -104,7 +105,6 @@ const closeModal = () => {
 
       <SuggestionsInput
         v-model:returnData="selectedApplication"
-        :searchData="suggestions"
         :searchDataFunction="performSearch"
         label="Rechercher une application"
         placeholder="Tapez au moins 3 caractères"
