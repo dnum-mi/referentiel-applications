@@ -1,28 +1,22 @@
 <script setup lang="ts">
 import { computed, watch, ref, onMounted } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
-import { useStatisticsStore } from "@/stores/statisticsStore";
 import { getPriorityBadgeType } from "@/composables/use-dictionary";
-import { customSorter } from "@/utils/tableSort";
-import { applicationFieldsDict } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
 import ExportApi from "@/api/export";
 import Users from "@/api/user";
 
 const searchStore = useApplicationSearchStore();
-const statsStore = useStatisticsStore();
 const userPermissions = ref<string[]>([]);
 
-const currentSortedColumn = defineModel("sortedBy", { default: "shortName" });
+const sortBy = ref(searchStore.filters.sortBy || "label");
+const sortedDesc = ref(searchStore.filters.order === "desc");
 
-const sortOrder = computed({
-  get: () => searchStore.filters.order,
-  set: (val: "asc" | "desc") => searchStore.setFilter("order", val),
-});
+const lastValidColumn = ref(sortBy.value);
 
 const columnToFieldMap: Record<string, string> = {
-  "Nom court": "shortName",
-  "Priorité de redémarrage": "priorityRestart",
+  Nom: "label",
+  Priorité: "priorityRestart",
   Hébergement: "hostingSite",
   Tags: "tag",
 };
@@ -36,22 +30,34 @@ const pages = computed(() => {
   }));
 });
 
-watch(currentSortedColumn, (col) => {
-  const sortField = columnToFieldMap[col] || "shortName";
-  searchStore.setFilter("sortBy", sortField);
-  searchStore.setFilter("page", 0);
-  searchStore.searchApplications();
-});
+watch(
+  [sortBy, sortedDesc],
+  ([col, desc]) => {
+    let actualColumn = col;
+    if (!col) {
+      actualColumn = lastValidColumn.value;
+      sortBy.value = actualColumn;
+    } else {
+      lastValidColumn.value = col;
+    }
 
-watch(sortOrder, () => {
-  searchStore.setFilter("page", 0);
-  searchStore.searchApplications();
-});
+    const sortField = columnToFieldMap[actualColumn] || actualColumn;
+    const orderValue = desc === true ? "desc" : "asc";
+
+    searchStore.setFilter("sortBy", sortField);
+    searchStore.setFilter("order", orderValue);
+    searchStore.setFilter("page", 0);
+    searchStore.searchApplications();
+  },
+  {
+    flush: "post",
+  },
+);
 
 const rows = computed(() =>
   searchStore.results.map((app: any) => ({
-    "Nom court": app,
-    "Priorité de redémarrage": app,
+    Nom: app,
+    Priorité: app,
     Hébergement: {
       hosting:
         app.hostings
@@ -70,11 +76,6 @@ const rows = computed(() =>
     },
   })),
 );
-
-function sorter(a: any, b: any, columnIndex: number) {
-  const col = currentSortedColumn.value;
-  return customSorter(a, b, col, applicationFieldsDict);
-}
 
 onMounted(async () => {
   userPermissions.value = await Users.getUser().then((response) => {
@@ -102,69 +103,65 @@ async function exportToExcel() {
 </script>
 
 <template>
-  <div>
-    <div class="flex justify-between mb-4">
-      <div class="export-button">
-        <DsfrButton
-          v-if="userPermissions.includes('admin')"
-          label="Exporter en CSV"
-          icon="ri-download-line"
-          @click="exportSearchResults"
-          secondary
-          icon-only-size="sm"
-          class="fr-mr-2w"
-        />
-        <DsfrButton
-          v-if="userPermissions.includes('admin')"
-          label="Exporter en Excel"
-          icon="ri-file-excel-2-line"
-          @click="exportToExcel"
-          secondary
-          icon-only-size="sm"
-        />
-      </div>
+  <div class="flex justify-between mb-4">
+    <div class="export-button">
+      <DsfrButton
+        v-if="userPermissions.includes('admin')"
+        label="Exporter en CSV"
+        icon="ri-download-line"
+        @click="exportSearchResults"
+        secondary
+        icon-only-size="sm"
+        class="fr-mr-2w"
+      />
+      <DsfrButton
+        v-if="userPermissions.includes('admin')"
+        label="Exporter en Excel"
+        icon="ri-file-excel-2-line"
+        @click="exportToExcel"
+        secondary
+        icon-only-size="sm"
+      />
     </div>
-    <DsfrDataTable
-      :headers-row="['Nom court', 'Priorité de redémarrage', 'Hébergement', 'Tags']"
-      :rows="rows"
-      :sortFn="sorter"
-      sortable-rows
-      vertical-borders
-      :pagination="false"
-      v-model:sortedBy="currentSortedColumn"
-      v-model:sortOrder="sortOrder"
-    >
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Nom court'">
-          <router-link :to="{ name: 'application', params: { id: cell.id } }" class="truncate">
-            {{ cell.shortName?.length ? cell.shortName : cell.label }}
-          </router-link>
-        </template>
-
-        <template v-else-if="colKey === 'Priorité de redémarrage'">
-          <DsfrBadge
-            :label="getPriorityBadgeType(cell.priorityRestart).label"
-            :type="getPriorityBadgeType(cell.priorityRestart).type"
-            :title="getPriorityBadgeType(cell.priorityRestart).tooltip"
-          />
-        </template>
-
-        <template v-else>
-          <span class="truncate">{{ Object.values(cell)[0] }}</span>
-        </template>
-      </template>
-    </DsfrDataTable>
-
-    <PaginationFooter
-      :totalFiltered="searchStore.total"
-      :totalAll="statsStore.totalApplications"
-      :pages="pages"
-      :limit="searchStore.limit"
-      :page="searchStore.page"
-      @update:limit="searchStore.limit = $event"
-      @update:page="searchStore.page = $event"
-    />
   </div>
+  <DsfrDataTable
+    :headers-row="['Nom', 'Priorité', 'Hébergement', 'Tags']"
+    :rows="rows"
+    sortable-rows
+    vertical-borders
+    :pagination="false"
+    v-model:sortedBy="sortBy"
+    v-model:sortedDesc="sortedDesc"
+  >
+    <template #cell="{ colKey, cell }">
+      <template v-if="colKey === 'Nom'">
+        <router-link :to="{ name: 'application', params: { id: cell.id } }" class="truncate">
+          {{ cell.label }}
+        </router-link>
+      </template>
+
+      <template v-else-if="colKey === 'Priorité'">
+        <DsfrBadge
+          :label="getPriorityBadgeType(cell.priorityRestart).shortLabel"
+          :type="getPriorityBadgeType(cell.priorityRestart).type"
+          :title="getPriorityBadgeType(cell.priorityRestart).tooltip"
+        />
+      </template>
+
+      <template v-else>
+        <span class="truncate">{{ Object.values(cell)[0] }}</span>
+      </template>
+    </template>
+  </DsfrDataTable>
+
+  <PaginationFooter
+    :totalFiltered="searchStore.total"
+    :pages="pages"
+    :limit="searchStore.limit"
+    :page="searchStore.page"
+    @update:limit="searchStore.limit = $event"
+    @update:page="searchStore.page = $event"
+  />
 </template>
 
 <style scoped>
