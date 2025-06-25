@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.26.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.6...v1.26.0) (2025-06-25)
+
+
+### Features
+
+* :sparkles: make organization search works as the hosting filter ([3a9db7a](https://github.com/dnum-mi/referentiel-applications/commit/3a9db7a10a12a9de4eb21c4e5c81e8d3f355c261))
+* **applications:** :sparkles: add email to logger data and add column lastlogin to admin dashboard ([#777](https://github.com/dnum-mi/referentiel-applications/issues/777)) ([2b38c0d](https://github.com/dnum-mi/referentiel-applications/commit/2b38c0d5a7b4887004fc936bfa3755e301f678dc))
+* **quality:** ✨ create IQ tab for the application ([#787](https://github.com/dnum-mi/referentiel-applications/issues/787)) ([6062039](https://github.com/dnum-mi/referentiel-applications/commit/60620397b8b4826407597566495ebd2a2b4f3b28))
+
 ## [1.25.6](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.5...v1.25.6) (2025-06-24)
 
 
