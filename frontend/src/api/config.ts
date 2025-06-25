@@ -43,6 +43,8 @@ export const apiConfig = {
       "organizationLabel",
       "actorType",
       "link",
+      "iqMin",
+      "iqMax",
       "page",
       "limit",
       "sortBy",
