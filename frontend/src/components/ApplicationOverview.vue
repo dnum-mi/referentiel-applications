@@ -9,6 +9,7 @@ import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
 import Relationships from "./RelationshipsTab.vue";
+import Quality from "./QualityTab.vue";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
@@ -76,6 +77,8 @@ const tabs = [
   { title: "Relations", icon: "ri-node-tree", component: Relationships },
 
   { title: "Corrections", icon: "ri-edit-line", component: NotificationsApplication },
+
+  { title: "Qualité", icon: "ri-bar-chart-line", component: Quality },
 ];
 </script>
 <template>

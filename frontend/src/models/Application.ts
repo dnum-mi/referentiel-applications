@@ -9,6 +9,7 @@ export interface Application {
   targetPopulations?: string[];
   priorityRestart?: string;
   organisationCode?: string;
+  quality?: number;
 
   purposes?: string[];
   tags?: string[];

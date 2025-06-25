@@ -12,11 +12,15 @@ import { CompliancesService } from './compliances.service';
 import { CreateComplianceDto } from './dto/create-compliance.dto';
 import { UpdateComplianceDto } from './dto/update-compliance.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { ApplicationService } from 'src/product/application.service';
 
 @ApiTags('Compliances')
 @Controller('applications/:applicationId/compliances')
 export class CompliancesController {
-  constructor(private readonly compliancesService: CompliancesService) {}
+  constructor(
+    private readonly compliancesService: CompliancesService,
+    private readonly applicationService: ApplicationService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new compliance for an application' })
@@ -27,7 +31,7 @@ export class CompliancesController {
     @Body() createComplianceDto: CreateComplianceDto,
     @Param('applicationId') applicationId: string,
   ) {
-    return await this.compliancesService.create({
+    const createdCompliance = await this.compliancesService.create({
       ...createComplianceDto,
       application: {
         connect: {
@@ -42,6 +46,8 @@ export class CompliancesController {
         },
       },
     });
+    await this.applicationService.updateApplicationQuality(applicationId);
+    return createdCompliance;
   }
 
   @Get()
@@ -96,6 +102,7 @@ export class CompliancesController {
         notes: 'notes',
       },
       getName: (entity) => entity.name,
+      triggerQualityUpdate: true,
     });
   }
 
@@ -115,6 +122,7 @@ export class CompliancesController {
       applicationId,
       gender: 'de la conformité',
       name: 'name',
+      triggerQualityUpdate: true,
     });
   }
 }

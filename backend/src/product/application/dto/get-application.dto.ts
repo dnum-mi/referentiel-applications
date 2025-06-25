@@ -1,4 +1,4 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class GetApplicationDto {
   @IsString()
@@ -22,4 +22,7 @@ export class GetApplicationDto {
 
   @IsArray()
   tags: string[];
+
+  @IsNumber()
+  quality: number | null;
 }
