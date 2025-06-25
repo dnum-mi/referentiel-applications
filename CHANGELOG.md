@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.6](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.5...v1.25.6) (2025-06-24)
+
+
+### Bug Fixes
+
+* :bug: fix relationships application search ([b399e73](https://github.com/dnum-mi/referentiel-applications/commit/b399e73493e385ec15ea9f0bd7c9ced32f306887))
+* :lipstick: update restart priority display and truncate css ([ecc7c5b](https://github.com/dnum-mi/referentiel-applications/commit/ecc7c5b3c74d274ebc95781f3071361a80c97f38))
+
 ## [1.25.5](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.4...v1.25.5) (2025-06-23)
 
 

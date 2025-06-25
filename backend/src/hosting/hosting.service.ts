@@ -3,16 +3,20 @@ import { Inject, Injectable } from '@nestjs/common';
 import { CreateHostingDto } from './applications/dto/create-hosting.dto';
 import { UpdateHostingDto } from './applications/dto/update-hosting.dto';
 import { Hosting } from './domain/hosting.entity';
+import { ApplicationService } from 'src/product/application.service';
 
 @Injectable()
 export class HostingService {
   constructor(
     @Inject('IHostingRepository')
     private readonly repository: IHostingRepository,
+    private readonly applicationService: ApplicationService,
   ) {}
 
-  create(dto: CreateHostingDto, ownerId: string) {
-    return this.repository.create(dto, ownerId);
+  async create(dto: CreateHostingDto, ownerId: string) {
+    const createdHosting = this.repository.create(dto, ownerId);
+    await this.applicationService.updateApplicationQuality(dto.applicationId);
+    return createdHosting;
   }
 
   findAll() {
@@ -27,12 +31,19 @@ export class HostingService {
     return this.repository.findDistinctSites();
   }
 
-  update(id: string, dto: UpdateHostingDto, ownerId: string) {
-    return this.repository.update(id, dto, ownerId);
+  async update(id: string, dto: UpdateHostingDto, ownerId: string) {
+    const updatedHosting = await this.repository.update(id, dto, ownerId);
+    await this.applicationService.updateApplicationQuality(dto.applicationId);
+    return updatedHosting;
   }
 
-  remove(id: string, ownerId?: string) {
-    return this.repository.delete(id, ownerId);
+  async remove(id: string, ownerId?: string) {
+    const hosting = await this.repository.findById(id);
+    const deletedHosting = await this.repository.delete(id, ownerId);
+    await this.applicationService.updateApplicationQuality(
+      hosting.applicationId,
+    );
+    return deletedHosting;
   }
 
   findApplicationsBySite(site: string) {

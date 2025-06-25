@@ -18,7 +18,12 @@ import { MetadatasModule } from 'src/metadatas/metadatas.module';
     ApplicationExportService,
     ExportApplicationsUseCase,
     ApplicationRepository,
+    ApplicationService,
   ],
-  exports: [ApplicationExportService, ApplicationRepository],
+  exports: [
+    ApplicationExportService,
+    ApplicationRepository,
+    ApplicationService,
+  ],
 })
 export class ApplicationModule {}

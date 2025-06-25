@@ -10,6 +10,7 @@ import {
   Logger,
   Delete,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 
@@ -22,9 +23,11 @@ import {
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
-import { Response } from 'express';
+import { application, Response } from 'express';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
 @ApiTags('applications')
 @Controller('applications')
@@ -221,6 +224,24 @@ Aucun paramètre n'est requis pour accéder à cette liste.
   @ApiResponse({ status: 200, description: 'Liste des applications' })
   async findAll() {
     return await this.applicationService.getApplications();
+  }
+
+  @Patch('data-quality')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({
+    summary: "Mettre à jour l'indice de qualité de toutes les applications",
+    description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes. 
+    Accessible par un administrateur seulement.
+    `,
+  })
+  async updateAllApplicationsQuality() {
+    Logger.log({
+      message: 'Début de la modification des indices de qualités',
+      action: 'patch',
+    });
+    const result = await this.applicationService.updateAllApplicationsQuality();
+    return { message: `${result.updatedCount} applications mises à jour.` };
   }
 
   @Patch(':id')
