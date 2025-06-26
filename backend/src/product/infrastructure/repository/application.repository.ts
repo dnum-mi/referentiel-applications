@@ -198,17 +198,12 @@ export class ApplicationRepository implements IApplicationRepository {
       });
     }
 
-    if (dto.iqMin != null || dto.iqMax != null) {
-      if (dto.iqMin == null) dto.iqMin = 5;
-      if (dto.iqMax == null) dto.iqMax = 100;
-
-      whereConditions.push({
-        quality: {
-          gte: dto.iqMin,
-          lte: dto.iqMax,
-        },
-      });
-    }
+    whereConditions.push({
+      quality: {
+        gte: dto.iqMin,
+        lte: dto.iqMax,
+      },
+    });
 
     const where: Prisma.ApplicationWhereInput =
       whereConditions.length > 0 ? { AND: whereConditions } : {};

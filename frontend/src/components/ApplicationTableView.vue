@@ -57,7 +57,7 @@ watch(
 
 const rows = computed(() =>
   searchStore.results.map((app: any) => ({
-    IQ: { value: app.quality !== undefined ? `${app.quality}%` : "0%" },
+    IQ: { value: app.quality !== null ? `${app.quality}%` : "0%" },
     Nom: app,
     Priorité: app,
     Hébergement: {

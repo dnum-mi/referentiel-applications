@@ -21,8 +21,8 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     hostingSearch: "",
     organizationLabel: "",
     actorType: "",
-    iqMin: 5,
-    iqMax: 100,
+    iqMin: null,
+    iqMax: null,
   });
 
   const page = computed({
@@ -53,8 +53,8 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       hostingSearch: "",
       organizationLabel: "",
       actorType: [],
-      iqMin: 5,
-      iqMax: 100,
+      iqMin: null,
+      iqMax: null,
     });
   }
 
@@ -70,7 +70,6 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
           if (["page", "limit", "sortBy", "order"].includes(key)) return true;
           if (val === "" || val === null || val === undefined) return false;
           if (Array.isArray(val) && val.length === 0) return false;
-          if ((key === "iqMin" && val === 5) || (key === "iqMax" && val === 100)) return false;
           return true;
         }),
       );
