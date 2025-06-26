@@ -73,6 +73,11 @@ const Applications = {
     console.log(response);
     return response.data;
   },
+
+  async patchApplicationsQuality(): Promise<string> {
+    const response = await axios.patch<{ message: string }>(`/applications/data-quality`);
+    return response.data.message;
+  },
 };
 
 export default Applications;

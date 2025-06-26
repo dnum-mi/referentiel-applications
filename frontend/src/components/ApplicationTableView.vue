@@ -15,6 +15,7 @@ const sortedDesc = ref(searchStore.filters.order === "desc");
 const lastValidColumn = ref(sortBy.value);
 
 const columnToFieldMap: Record<string, string> = {
+  IQ: "quality",
   Nom: "label",
   Priorité: "priorityRestart",
   Hébergement: "hostingSite",
@@ -56,6 +57,7 @@ watch(
 
 const rows = computed(() =>
   searchStore.results.map((app: any) => ({
+    IQ: { value: app.quality !== null ? `${app.quality}%` : "0%" },
     Nom: app,
     Priorité: app,
     Hébergement: {
@@ -125,7 +127,7 @@ async function exportToExcel() {
     </div>
   </div>
   <DsfrDataTable
-    :headers-row="['Nom', 'Priorité', 'Hébergement', 'Tags']"
+    :headers-row="['IQ', 'Nom', 'Priorité', 'Hébergement', 'Tags']"
     :rows="rows"
     sortable-rows
     vertical-borders

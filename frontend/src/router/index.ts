@@ -46,9 +46,9 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    name: routeNames.USERMANAGEMENT,
-    path: "/gestion-utilisateurs",
-    component: () => import("@/views/UserManagement.vue"),
+    name: routeNames.ADMINPAGE,
+    path: "/administration",
+    component: () => import("@/views/AdminPage.vue"),
     meta: { requiresAuth: true },
   },
 ];
