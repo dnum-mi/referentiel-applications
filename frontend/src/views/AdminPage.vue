@@ -121,7 +121,6 @@
               :label="loading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
               :icon="{ name: 'ri-refresh-line', animation: loading ? 'spin' : undefined }"
               :disabled="loading"
-              :secondary="false"
               @click="updateAllApplicationsQuality"
             />
           </template>
