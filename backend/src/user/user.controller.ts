@@ -1,4 +1,12 @@
-import { Controller, Patch, Body, Param, Get, Query } from '@nestjs/common';
+import {
+  Controller,
+  Patch,
+  Body,
+  Param,
+  Get,
+  Query,
+  Request,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,13 +18,15 @@ import { Permissions } from '../common/decorators/permissions.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Récupérer un utilisateur par ID' })
-  @ApiParam({ name: 'id', description: "ID Keycloak de l'utilisateur" })
-  @ApiResponse({ status: 200, description: 'Utilisateur trouvé' })
+  @Get('me')
+  @ApiOperation({ summary: 'Récupérer ses propres informations utilisateur' })
+  @ApiResponse({
+    status: 200,
+    description: 'Informations utilisateur trouvées',
+  })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
-  async findOne(@Param('id') id: string) {
-    return this.userService.findUserByKeycloakId(id);
+  async findMe(@Request() req: any) {
+    return req.user;
   }
 
   @Patch(':id')

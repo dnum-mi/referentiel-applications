@@ -12,9 +12,9 @@ const Users = {
     console.log({ "response:": response });
     return response;
   },
-  getUser: async (keycloakId: string = authentication.subject) => {
+  getUser: async () => {
     try {
-      const response = await requests.get<User>(`/users/${keycloakId}`);
+      const response = await requests.get<User>("/users/me");
       return response;
     } catch (error) {
       toaster.addErrorMessage("Échec du chargement des informations de l'utilisateur");
