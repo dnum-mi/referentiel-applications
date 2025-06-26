@@ -8,6 +8,7 @@ describe('Applications', () => {
   const app = setupTestSuite();
   let user: { keycloakId: string };
   let TOKEN: string;
+  let createdApplicationId: string;
 
   beforeAll(async () => {
     user = await UserFaker.create(['read', 'write']);
@@ -29,7 +30,7 @@ describe('Applications', () => {
   });
 
   it(`/POST applications`, async () => {
-    await request(app().getHttpServer())
+    const response = await request(app().getHttpServer())
       .post('/applications')
       .send({
         label: faker.company.name(),
@@ -54,5 +55,25 @@ describe('Applications', () => {
       })
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(201);
+
+    // Store the created application ID for the delete test
+    createdApplicationId = response.body.id;
+  });
+
+  it(`/DELETE applications/:id - should delete application with all related metadata`, async () => {
+    await request(app().getHttpServer())
+      .get(`/applications/${createdApplicationId}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    await request(app().getHttpServer())
+      .delete(`/applications/${createdApplicationId}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    await request(app().getHttpServer())
+      .get(`/applications/${createdApplicationId}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(404);
   });
 });

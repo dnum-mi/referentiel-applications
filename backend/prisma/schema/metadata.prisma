@@ -6,7 +6,7 @@ model Metadata {
   action MetadataAction @default(add)
 
   applicationId String
-  application   Application @relation("ApplicationMetadatas", fields: [applicationId], references: [id])
+  application   Application @relation("ApplicationMetadatas", fields: [applicationId], references: [id], onDelete: Cascade)
 
   createdById String
   createdBy   User   @relation("MetadataCreatedBy", fields: [createdById], references: [keycloakId])
