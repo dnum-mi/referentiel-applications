@@ -200,8 +200,8 @@ export class ApplicationRepository implements IApplicationRepository {
 
     whereConditions.push({
       quality: {
-        gte: dto.iqMin,
-        lte: dto.iqMax,
+        gte: dto.iqGte,
+        lte: dto.iqLte,
       },
     });
 
