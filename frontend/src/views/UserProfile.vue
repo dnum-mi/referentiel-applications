@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import axios from "axios";
 import useToaster from "@/composables/use-toaster";
-import { authentication } from "@/services/authentication";
+import Users from "@/api/user";
 
 const toaster = useToaster();
 const user = ref(null);
@@ -13,8 +12,7 @@ onMounted(async () => {
 
 async function fetchUserProfile() {
   try {
-    const response = await axios.get(`/users/${authentication.subject}`);
-    user.value = response.data;
+    user.value = await Users.getUser();
   } catch (err) {
     toaster.addErrorMessage("Échec du chargement du profil utilisateur");
   }
