@@ -1,7 +1,8 @@
-import { Controller, Patch, Body, Param, Get } from '@nestjs/common';
+import { Controller, Patch, Body, Param, Get, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserFilterDto } from './dto/filters.dto';
 import { Permissions } from '../common/decorators/permissions.decorator';
 
 @ApiTags('users')
@@ -44,14 +45,14 @@ export class UserController {
   @ApiOperation({
     summary: 'Lister tous les utilisateurs',
     description:
-      'Récupère la liste de tous les utilisateurs avec leurs permissions. Accès limité aux administrateurs.',
+      'Récupère la liste de tous les utilisateurs avec leurs permissions. Supporte la recherche par email et ID Keycloak. Accès limité aux administrateurs.',
   })
   @ApiResponse({ status: 200, description: 'Liste des utilisateurs' })
   @ApiResponse({
     status: 403,
     description: 'Accès refusé - Privilège admin requis',
   })
-  async findAll() {
-    return this.userService.findAll();
+  async findAll(@Query() filters: UserFilterDto) {
+    return this.userService.findAll(filters);
   }
 }

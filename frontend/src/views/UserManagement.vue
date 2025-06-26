@@ -4,6 +4,16 @@
       <div class="fr-col-12">
         <h1 class="fr-h1">Gestion des utilisateurs</h1>
         <p class="fr-text--lg">Gérez les permissions des utilisateurs de l'application</p>
+        <div class="fr-mb-4w">
+          <DsfrSearchBar
+            v-model="searchQuery"
+            label="Rechercher un utilisateur"
+            placeholder="Rechercher par email ou ID Keycloak..."
+            @search="handleSearch"
+            :button-text="'Rechercher'"
+            class="fr-col-12"
+          />
+        </div>
 
         <div v-if="loading" class="fr-alert fr-alert--info">
           <p>Chargement des utilisateurs...</p>
@@ -95,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import type { User } from "@/models/user";
 import Users from "@/api/user";
 import useToaster from "@/composables/use-toaster";
@@ -108,6 +118,7 @@ const error = ref<string | null>(null);
 const isEditModalOpen = ref(false);
 const selectedUser = ref<User | null>(null);
 const saving = ref(false);
+const searchQuery = ref("");
 
 const editingPermissions = ref({
   read: false,
@@ -119,17 +130,32 @@ onMounted(async () => {
   await loadUsers();
 });
 
+// Watch for search query changes and trigger search with debouncing
+watch(searchQuery, async (newQuery) => {
+  // Simple debouncing - wait 300ms after user stops typing
+  setTimeout(async () => {
+    if (searchQuery.value === newQuery) {
+      await loadUsers();
+    }
+  }, 300);
+});
+
 async function loadUsers() {
   loading.value = true;
   error.value = null;
   try {
-    users.value = (await Users.getAllUsers()) || [];
+    const filters = searchQuery.value.trim() ? { search: searchQuery.value.trim() } : undefined;
+    users.value = (await Users.getAllUsers(filters)) || [];
   } catch (err) {
     error.value = "Erreur lors du chargement des utilisateurs";
     console.error(err);
   } finally {
     loading.value = false;
   }
+}
+
+async function handleSearch() {
+  await loadUsers();
 }
 
 function getUserPermissions(user: User): string[] {
