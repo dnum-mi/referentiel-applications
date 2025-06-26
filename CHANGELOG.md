@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.27.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.26.0...v1.27.0) (2025-06-26)
+
+
+### Features
+
+* :sparkles: add users search filter ([9773800](https://github.com/dnum-mi/referentiel-applications/commit/977380073db04d0ef1f215a073d553047c25a335))
+* **quality:** :sparkles: add iq gte and iq lte filters ([#802](https://github.com/dnum-mi/referentiel-applications/issues/802)) ([a9612ef](https://github.com/dnum-mi/referentiel-applications/commit/a9612efef26b9c8e03a63da84f1941d9dbdf6a88))
+
+
+### Bug Fixes
+
+* :bug: fix application delete with metadatas on delete cascade ([371d0cf](https://github.com/dnum-mi/referentiel-applications/commit/371d0cf1744aeda79451630c35ec8cf50cf7c71c))
+* :lock: fix permissions guard check ([a6cfff9](https://github.com/dnum-mi/referentiel-applications/commit/a6cfff99eef0baeba170e0fc3afcb00078a0f34a))
+
 ## [1.26.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.6...v1.26.0) (2025-06-25)
 
 
