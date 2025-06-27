@@ -60,6 +60,7 @@ onMounted(() => {
         <p v-if="metadata" class="subtitle">
           Dernière modification : {{ formatDate(metadata.createdAt) || "inconnue" }} ({{ metadata.createdBy?.email }})
         </p>
+        <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" />
       </h2>
       <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />
     </div>
