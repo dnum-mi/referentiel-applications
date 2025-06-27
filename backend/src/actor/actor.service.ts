@@ -2,13 +2,24 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ActorRepository } from './infrastructure/repository/actor.repository';
 import { CreateActorDto, UpdateActorDto } from './dto/actor.dto';
 import { Prisma, Actor } from '@prisma/client';
+import { ApplicationService } from 'src/product/application.service';
 
 @Injectable()
 export class ActorService {
-  constructor(private actorRepository: ActorRepository) {}
+  constructor(
+    private actorRepository: ActorRepository,
+    private readonly applicationService: ApplicationService,
+  ) {}
 
   public async create(createActor: CreateActorDto, ownerId: string) {
-    return await this.actorRepository.create(createActor, ownerId);
+    const createdActor = await this.actorRepository.create(
+      createActor,
+      ownerId,
+    );
+    await this.applicationService.updateApplicationQuality(
+      createdActor.applicationId,
+    );
+    return createdActor;
   }
 
   public async findOne(id: string) {
@@ -31,11 +42,21 @@ export class ActorService {
     const { where, data, ownerId } = params;
 
     await this.findOne(where.id);
-    return await this.actorRepository.update(where, data, ownerId);
+    const updatedActor = await this.actorRepository.update(
+      where,
+      data,
+      ownerId,
+    );
+    await this.applicationService.updateApplicationQuality(
+      updatedActor.applicationId,
+    );
+    return updatedActor;
   }
 
   public async delete(id: string, ownerId: string) {
-    await this.findOne(id);
-    return await this.actorRepository.delete(id, ownerId);
+    const actor = await this.findOne(id);
+    const deletedActor = await this.actorRepository.delete(id, ownerId);
+    await this.applicationService.updateApplicationQuality(actor.applicationId);
+    return deletedActor;
   }
 }

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from 'jose';
+import { updateUserLastLogin } from 'src/common/utils/actionLog.utils';
 import { UserService } from 'src/user/user.service';
 
 @Injectable()
@@ -25,6 +26,8 @@ export class AuthMiddleware implements NestMiddleware {
         payload.email as string,
         payload.sub as string,
       );
+
+      updateUserLastLogin(req.user);
 
       next();
     } catch (error) {

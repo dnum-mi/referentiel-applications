@@ -48,7 +48,7 @@ const performSearch = async (query: string) => {
     isLoading.value = true;
     try {
       const result = await Applications.getAllApplicationBySearch(query);
-      suggestions.value = result;
+      suggestions.value = result.results;
     } catch (error) {
       console.error(error);
       toaster.addErrorMessage("Erreur lors de la recherche d'applications.");

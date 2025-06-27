@@ -50,27 +50,9 @@ export class PermissionsGuard implements CanActivate {
     userPermissions: string,
     requiredPermissions: string[],
   ): boolean {
-    // Handle comma-separated permissions
-    const permissions = userPermissions.includes(',')
-      ? userPermissions.split(',')
-      : [userPermissions];
+    const permissions = userPermissions.split(',');
 
-    // 'admin' permission implies all permissions
-    if (permissions.includes('admin')) {
-      return true;
-    }
-
-    // 'write' permission implies 'read' permission
-    if (permissions.includes('write')) {
-      return true;
-    }
-
-    // For read-only operations
-    if (permissions.includes('read') && requiredPermissions.includes('read')) {
-      return true;
-    }
-
-    return requiredPermissions.some((permission) =>
+    return requiredPermissions.every((permission) =>
       permissions.includes(permission),
     );
   }

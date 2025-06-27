@@ -43,6 +43,8 @@ export const apiConfig = {
       "organizationLabel",
       "actorType",
       "link",
+      "iqGte",
+      "iqLte",
       "page",
       "limit",
       "sortBy",

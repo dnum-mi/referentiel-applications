@@ -22,7 +22,7 @@ import {
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
-import { Response } from 'express';
+import { application, Response } from 'express';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
 
@@ -221,6 +221,23 @@ Aucun paramètre n'est requis pour accéder à cette liste.
   @ApiResponse({ status: 200, description: 'Liste des applications' })
   async findAll() {
     return await this.applicationService.getApplications();
+  }
+
+  @Patch('data-quality')
+  @Permissions('admin')
+  @ApiOperation({
+    summary: "Mettre à jour l'indice de qualité de toutes les applications",
+    description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes. 
+    Seulement accessible par les administrateurs.
+    `,
+  })
+  async updateAllApplicationsQuality() {
+    Logger.log({
+      message: 'Début de la modification des indices de qualités',
+      action: 'patch',
+    });
+    const result = await this.applicationService.updateAllApplicationsQuality();
+    return { message: `${result.updatedCount} applications mises à jour.` };
   }
 
   @Patch(':id')

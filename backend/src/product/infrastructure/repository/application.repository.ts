@@ -198,6 +198,13 @@ export class ApplicationRepository implements IApplicationRepository {
       });
     }
 
+    whereConditions.push({
+      quality: {
+        gte: dto.iqGte,
+        lte: dto.iqLte,
+      },
+    });
+
     const where: Prisma.ApplicationWhereInput =
       whereConditions.length > 0 ? { AND: whereConditions } : {};
 
@@ -211,6 +218,7 @@ export class ApplicationRepository implements IApplicationRepository {
       hostingSite: { hostings: { _count: safeOrder } },
       shortName: { shortName: safeOrder },
       priorityRestart: { priorityRestart: safeOrder },
+      quality: { quality: safeOrder },
       label: { label: safeOrder },
     };
 

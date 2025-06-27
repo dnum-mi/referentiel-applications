@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserFilterDto } from './dto/filters.dto';
 
 @Injectable()
 export class UserService {
@@ -55,7 +56,31 @@ export class UserService {
     });
   }
 
-  async findAll() {
-    return this.prisma.user.findMany();
+  async findAll(filters: UserFilterDto): Promise<User[]> {
+    const where: any = {};
+
+    if (filters.search) {
+      where.OR = [
+        {
+          email: {
+            contains: filters.search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          keycloakId: {
+            contains: filters.search,
+            mode: 'insensitive',
+          },
+        },
+      ];
+    }
+
+    return this.prisma.user.findMany({
+      where,
+      orderBy: {
+        email: 'asc',
+      },
+    });
   }
 }

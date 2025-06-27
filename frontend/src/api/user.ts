@@ -12,16 +12,22 @@ const Users = {
     console.log({ "response:": response });
     return response;
   },
-  getUser: async (keycloakId: string = authentication.subject) => {
+  getUser: async () => {
     try {
-      const response = await requests.get<User>(`/users/${keycloakId}`);
+      const response = await requests.get<User>("/users/me");
       return response;
     } catch (error) {
       toaster.addErrorMessage("Échec du chargement des informations de l'utilisateur");
     }
   },
-  getAllUsers: async () => {
-    return await requests.get<User[]>("/users");
+  getAllUsers: async (filters?: { search?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.search) params.append("search", filters.search);
+
+    const queryString = params.toString();
+    const url = queryString ? `/users?${queryString}` : "/users";
+
+    return await requests.get<User[]>(url);
   },
   updateUserPermissions: async (keycloakId: string, permissions: string) => {
     return await requests.patch<User>(`/users/${keycloakId}`, { permissions });

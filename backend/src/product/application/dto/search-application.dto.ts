@@ -8,6 +8,7 @@ import {
   Min,
   IsEnum,
   IsIn,
+  Max,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
@@ -76,6 +77,26 @@ export class ApplicationSearchDto {
   @IsOptional()
   @IsString()
   link?: string;
+
+  @ApiPropertyOptional({
+    description: 'Recherche par indice de qualité minimum',
+    default: 5,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  iqGte?: number = 5;
+
+  @ApiPropertyOptional({
+    description: 'Recherche par indice de qualité maximum',
+    default: 100,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Max(100)
+  iqLte?: number = 100;
 
   @ApiPropertyOptional({ description: 'Numéro de page', example: 0 })
   @IsOptional()

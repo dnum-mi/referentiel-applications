@@ -2,6 +2,7 @@ model User {
   keycloakId          String                @id
   email               String                @unique
   permissions         String                @default("read")
+  lastLogin           DateTime?             @default(now())
   organizationId      String?
   organization        Organization?         @relation(fields: [organizationId], references: [id])
   createdSet          Metadata[]            @relation("MetadataCreatedBy")

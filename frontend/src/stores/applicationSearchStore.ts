@@ -21,6 +21,8 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     hostingSearch: "",
     organizationLabel: "",
     actorType: "",
+    iqGte: 5,
+    iqLte: 100,
   });
 
   const page = computed({
@@ -51,6 +53,8 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       hostingSearch: "",
       organizationLabel: "",
       actorType: [],
+      iqGte: 5,
+      iqLte: 100,
     });
   }
 

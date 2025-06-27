@@ -4,6 +4,7 @@ import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 
 import ActorFilter from "@/components/search/ActorFilter.vue";
 import HostingFilter from "@/components/search/HostingFilter.vue";
+import QualityFilter from "@/components/search/QualityFilter.vue";
 import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import OrganizationFilter from "@/components/search/OrganizationFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
@@ -46,6 +47,10 @@ function resetAllFilters() {
 
         <DsfrAccordion :selected="openAccordions.includes(2)" @click="toggle(2)" title="Hébergement">
           <HostingFilter />
+        </DsfrAccordion>
+
+        <DsfrAccordion :selected="openAccordions.includes(3)" @click="toggle(3)" title="Qualité">
+          <QualityFilter />
         </DsfrAccordion>
       </div>
     </aside>

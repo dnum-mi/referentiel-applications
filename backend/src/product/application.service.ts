@@ -1,6 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, Application } from '@prisma/client';
+import { Prisma, Application, PrismaClient } from '@prisma/client';
 import {
   CreateApplicationDto,
   PatchApplicationDto,
@@ -9,6 +9,7 @@ import { ApplicationRepository } from './infrastructure/repository/application.r
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { calculateIQ } from 'src/common/utils/quality.utils';
 
 @Injectable()
 export class ApplicationService {
@@ -27,6 +28,8 @@ export class ApplicationService {
       ownerId,
       createApplicationDto,
     );
+
+    await this.updateApplicationQuality(application.id);
 
     for (const labelDto of createApplicationDto.labels || []) {
       await this.labelsService.create({
@@ -67,6 +70,8 @@ export class ApplicationService {
         data: applicationUpdates,
       });
 
+      await this.updateApplicationQuality(updatedApplication.id);
+
       await this.metadatasService.createMetadata({
         applicationId: updatedApplication.id,
         createdById: ownerId,
@@ -91,6 +96,19 @@ export class ApplicationService {
         `Application non trouvée pour l'ID: ${where.id}`,
       );
     }
+  }
+
+  public async updateAllApplicationsQuality(): Promise<{
+    updatedCount: number;
+  }> {
+    const applications = await this.prisma.application.findMany();
+    await Promise.all(
+      applications.map(async (app) => {
+        await this.updateApplicationQuality(app.id);
+      }),
+    );
+
+    return { updatedCount: applications.length };
   }
 
   public async getSortedMetadatas(
@@ -202,6 +220,13 @@ export class ApplicationService {
       if (data[field] !== undefined) {
         applicationUpdates[field] = { set: data[field] };
       }
+    });
+  }
+  async updateApplicationQuality(applicationId: string) {
+    const iq = await calculateIQ(applicationId, this.prisma);
+    return await this.prisma.application.update({
+      where: { id: applicationId },
+      data: { quality: iq },
     });
   }
 }

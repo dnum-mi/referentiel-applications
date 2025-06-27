@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.27.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.26.0...v1.27.0) (2025-06-26)
+
+
+### Features
+
+* :sparkles: add users search filter ([9773800](https://github.com/dnum-mi/referentiel-applications/commit/977380073db04d0ef1f215a073d553047c25a335))
+* **quality:** :sparkles: add iq gte and iq lte filters ([#802](https://github.com/dnum-mi/referentiel-applications/issues/802)) ([a9612ef](https://github.com/dnum-mi/referentiel-applications/commit/a9612efef26b9c8e03a63da84f1941d9dbdf6a88))
+
+
+### Bug Fixes
+
+* :bug: fix application delete with metadatas on delete cascade ([371d0cf](https://github.com/dnum-mi/referentiel-applications/commit/371d0cf1744aeda79451630c35ec8cf50cf7c71c))
+* :lock: fix permissions guard check ([a6cfff9](https://github.com/dnum-mi/referentiel-applications/commit/a6cfff99eef0baeba170e0fc3afcb00078a0f34a))
+
+## [1.26.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.6...v1.26.0) (2025-06-25)
+
+
+### Features
+
+* :sparkles: make organization search works as the hosting filter ([3a9db7a](https://github.com/dnum-mi/referentiel-applications/commit/3a9db7a10a12a9de4eb21c4e5c81e8d3f355c261))
+* **applications:** :sparkles: add email to logger data and add column lastlogin to admin dashboard ([#777](https://github.com/dnum-mi/referentiel-applications/issues/777)) ([2b38c0d](https://github.com/dnum-mi/referentiel-applications/commit/2b38c0d5a7b4887004fc936bfa3755e301f678dc))
+* **quality:** ✨ create IQ tab for the application ([#787](https://github.com/dnum-mi/referentiel-applications/issues/787)) ([6062039](https://github.com/dnum-mi/referentiel-applications/commit/60620397b8b4826407597566495ebd2a2b4f3b28))
+
+## [1.25.6](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.5...v1.25.6) (2025-06-24)
+
+
+### Bug Fixes
+
+* :bug: fix relationships application search ([b399e73](https://github.com/dnum-mi/referentiel-applications/commit/b399e73493e385ec15ea9f0bd7c9ced32f306887))
+* :lipstick: update restart priority display and truncate css ([ecc7c5b](https://github.com/dnum-mi/referentiel-applications/commit/ecc7c5b3c74d274ebc95781f3071361a80c97f38))
+
 ## [1.25.5](https://github.com/dnum-mi/referentiel-applications/compare/v1.25.4...v1.25.5) (2025-06-23)
 
 
