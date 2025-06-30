@@ -21,7 +21,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     hostingSearch: "",
     organizationLabel: "",
     actorType: "",
-    iqGte: 5,
+    iqGte: 0,
     iqLte: 100,
   });
 
@@ -53,7 +53,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       hostingSearch: "",
       organizationLabel: "",
       actorType: [],
-      iqGte: 5,
+      iqGte: 0,
       iqLte: 100,
     });
   }

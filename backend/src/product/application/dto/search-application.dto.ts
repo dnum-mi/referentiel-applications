@@ -80,13 +80,13 @@ export class ApplicationSearchDto {
 
   @ApiPropertyOptional({
     description: 'Recherche par indice de qualité minimum',
-    default: 5,
+    default: 0,
   })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  iqGte?: number = 5;
+  iqGte?: number = 0;
 
   @ApiPropertyOptional({
     description: 'Recherche par indice de qualité maximum',
