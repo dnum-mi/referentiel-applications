@@ -5,6 +5,12 @@ import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { formatDate } from "@/composables/use-date";
+import {
+  statusApplicationDictionary,
+  statusColorsApplication,
+  statusDictionary,
+  statusIconClassesApplication,
+} from "@/composables/use-dictionary";
 
 const route = useRoute();
 const id = route.params.id as string;
@@ -60,6 +66,7 @@ onMounted(() => {
         <p v-if="metadata" class="subtitle">
           Dernière modification : {{ formatDate(metadata.createdAt) || "inconnue" }} ({{ metadata.createdBy?.email }})
         </p>
+        <DsfrTag v-if="application.status" class="fr-mr-2w" :label="statusApplicationDictionary[application.status]" />
         <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" />
       </h2>
       <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />

@@ -5,6 +5,7 @@ export interface Application {
   label: string;
   shortName?: string;
   labels?: Label[];
+  status?: string; // New field for application status
   description?: string;
   targetPopulations?: string[];
   priorityRestart?: string;

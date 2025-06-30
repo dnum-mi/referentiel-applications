@@ -18,7 +18,6 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
     relationsAsTarget: {
       include: { sourceApplication: true };
     };
-    events: true;
     hostings: {
       include: {
         hostingOption: true;

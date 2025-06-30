@@ -265,7 +265,6 @@ export class ApplicationRepository implements IApplicationRepository {
             actorType: true,
           },
         },
-        events: true,
         hostings: {
           include: {
             hostingOption: true,
@@ -294,7 +293,6 @@ export class ApplicationRepository implements IApplicationRepository {
         relationsAsTarget: {
           include: { sourceApplication: true },
         },
-        events: true,
         hostings: {
           include: {
             hostingOption: true,

@@ -103,19 +103,6 @@ export function mapLabels(app: ApplicationWithAllRelations) {
   );
 }
 
-export function mapEvents(app: ApplicationWithAllRelations) {
-  return (
-    app.events?.map((e) => ({
-      applicationId: app.id,
-      applicationLabel: app.label,
-      type: translateEnum(EventTypeLabels, e.type),
-      start: e.start?.toISOString().split('T')[0],
-      end: e.end?.toISOString().split('T')[0],
-      description: e.description,
-    })) ?? []
-  );
-}
-
 export function mapExternalResources(app: ApplicationWithAllRelations) {
   return (
     app.externalRessource?.map((r) => ({

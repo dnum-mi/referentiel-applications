@@ -11,6 +11,7 @@ export const applicationMap = (
       logo: createApplicationDto.logo || null,
       description: createApplicationDto.description,
       targetPopulations: createApplicationDto.targetPopulations,
+      status: createApplicationDto.status || 'under_construction',
       purposes: createApplicationDto.purposes,
       tags: createApplicationDto.tags,
       priorityRestart: createApplicationDto.priorityRestart || null,

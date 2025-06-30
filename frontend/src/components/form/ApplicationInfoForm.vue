@@ -3,6 +3,7 @@ import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
+import { statusApplicationDictionary } from "@/composables/use-dictionary";
 
 const toaster = useToaster();
 
@@ -18,6 +19,13 @@ const priorityRestartOptions = [
   { value: "R2", text: "R2 - Dès que possible (H24)" },
   { value: "R3", text: "R3 - Quand le plus urgent est réalisé (H0)" },
 ];
+
+const statusOptions = computed(() =>
+  Object.keys(statusApplicationDictionary).map((value) => ({
+    value,
+    text: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
+  })),
+);
 
 const handleSubmit = () => {
   if (!validateAllTags()) {
@@ -36,6 +44,7 @@ const handleSubmit = () => {
     targetPopulations,
     purposes,
     tags,
+    status: form.value.status,
     priorityRestart: form.value.priorityRestart || null,
     labels: [],
   });
@@ -48,6 +57,7 @@ const form = ref({
   targetPopulations: [...[""]],
   purposes: [...[""]],
   tags: [...[""]],
+  status: "",
   priorityRestart: "",
 });
 
@@ -100,6 +110,13 @@ const removePopulation = (index: number) => {
       label-visible
       v-model="form.shortName"
       hint="Optionnel - Un nom court pour identifier rapidement l'application"
+    />
+
+    <DsfrSelect
+      v-model="form.status"
+      :options="statusOptions"
+      label="Status de l'application"
+      default-unselected-text="Sélectionner un status"
     />
 
     <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required>

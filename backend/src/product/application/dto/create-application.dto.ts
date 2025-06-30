@@ -1,4 +1,4 @@
-import { priorityRestart } from '@prisma/client';
+import { priorityRestart, Status } from '@prisma/client';
 import {
   IsString,
   IsOptional,
@@ -103,6 +103,15 @@ export class CreateApplicationDto {
   @IsOptional()
   @IsString()
   parentId?: string;
+
+  @ApiProperty({
+    enum: Status,
+    description: 'Statut de cycle de vie (défaut under_construction)',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(Status)
+  status?: Status;
 
   @ApiProperty({
     type: [CreateLabelDto],
