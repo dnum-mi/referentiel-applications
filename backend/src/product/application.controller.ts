@@ -227,7 +227,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
   @Permissions('admin')
   @ApiOperation({
     summary: "Mettre à jour l'indice de qualité de toutes les applications",
-    description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes. 
+    description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes.
     Seulement accessible par les administrateurs.
     `,
   })
@@ -236,8 +236,12 @@ Aucun paramètre n'est requis pour accéder à cette liste.
       message: 'Début de la modification des indices de qualités',
       action: 'patch',
     });
-    const result = await this.applicationService.updateAllApplicationsQuality();
-    return { message: `${result.updatedCount} applications mises à jour.` };
+
+    this.applicationService.updateAllApplicationsQualityInBackground();
+    return {
+      statusCode: 202,
+      message: 'Mise à jour des indices de qualité en cours...',
+    };
   }
 
   @Patch(':id')
