@@ -7,12 +7,12 @@ model Application {
   targetPopulations   String[]
   purposes            String[]
   tags                String[]
+  status               Status   @default(under_construction)
   metadatas           Metadata[]            @relation("ApplicationMetadatas")
   actors              Actor[]               @relation("ApplicationActors")
   compliances         Compliance[]          @relation("ApplicationCompliances")
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
-  events              Event[]               @relation("ApplicationEvents")
   hostings            Hosting[]
 
   ownerId String
@@ -56,4 +56,13 @@ enum priorityRestart {
   R1_STAR
   R2
   R3
+}
+
+enum Status {
+  under_construction
+  in_production_mvp
+  in_production
+  in_production_decommissioning
+  decommissioned
+  deleted
 }

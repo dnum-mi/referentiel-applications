@@ -80,6 +80,7 @@ export class ApplicationService {
           label: 'libellé',
           shortName: 'nom court',
           logo: 'logo',
+          status: 'statut',
           description: 'description',
           targetPopulations: 'populations cibles',
           priorityRestart: 'priorité de redémarrage',
@@ -208,6 +209,7 @@ export class ApplicationService {
       'shortName',
       'description',
       'priorityRestart',
+      'status',
     ] as const;
     const arrayFields = ['purposes', 'targetPopulations', 'tags'] as const;
 

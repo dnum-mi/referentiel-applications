@@ -4,7 +4,6 @@ import { ref, watch, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import ActorManager from "./actor/ActorTab.vue";
 import Compliances from "./CompliancesTab.vue";
-import Events from "./evenement/EventsTab.vue";
 import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
@@ -54,11 +53,6 @@ const updateApplication = (updatedApp: Application) => {
 
 const tabs = [
   { title: "Informations générales", icon: "ri-checkbox-circle-line", component: InformationsGenerales },
-  {
-    title: "Événements",
-    icon: "ri-time-line",
-    component: Events,
-  },
   {
     title: "Liens",
     icon: "ri-links-line",

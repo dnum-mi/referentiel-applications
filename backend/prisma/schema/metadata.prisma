@@ -14,9 +14,6 @@ model Metadata {
   dataOwnerId String?
   dataOwner   User?   @relation("MetadataDataOwnerBy", fields: [dataOwnerId], references: [keycloakId])
 
-  eventId String?
-  event   Event?  @relation("EventMetadata", fields: [eventId], references: [id])
-
   complianceId String?
   compliance   Compliance? @relation("ComplianceMetadata", fields: [complianceId], references: [id])
 

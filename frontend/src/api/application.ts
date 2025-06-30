@@ -62,6 +62,7 @@ const Applications = {
     const payload = {
       label: app.label,
       shortName: app.shortName,
+      status: app.status,
       description: app.description,
       targetPopulations: app.targetPopulations,
       purposes: app.purposes,

@@ -4,6 +4,7 @@ import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
+import { statusApplicationDictionary } from "@/composables/use-dictionary";
 
 const toaster = useToaster();
 
@@ -26,6 +27,13 @@ const priorityRestartOptions = [
   { value: "R3", text: "R3 - Quand le plus urgent est réalisé (H0)" },
 ];
 
+const statusOptions = computed(() =>
+  Object.keys(statusApplicationDictionary).map((value) => ({
+    value,
+    text: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
+  })),
+);
+
 const handleSubmit = () => {
   if (!validateAllTags()) {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
@@ -38,7 +46,7 @@ const handleSubmit = () => {
     tags: form.value.tags.filter((t) => t.trim() !== ""),
   };
 
-  const generalFields = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"];
+  const generalFields = ["label", "shortName", "logo", "description", "status", "targetPopulations", "purposes", "tags", "priorityRestart"];
 
   const isModified = areFieldsModified(props.initialData ?? {}, cleanedForm, generalFields);
 
@@ -70,6 +78,7 @@ const form = ref({
   label: props.initialData?.label ?? "",
   shortName: props.initialData?.shortName ?? "",
   labels: ref(props.labels ? [...props.labels] : []),
+  status: props.initialData?.status ?? "",
   description: props.initialData?.description ?? "",
   targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
   logo: props.initialData?.logo ?? "",
@@ -101,6 +110,13 @@ onMounted(() => {
       label-visible
       v-model="form.shortName"
       hint="Optionnel - Un nom court pour identifier rapidement l'application"
+    />
+
+    <DsfrSelect
+      v-model="form.status"
+      :options="statusOptions"
+      label="Status de l'application"
+      default-unselected-text="Sélectionner un status"
     />
 
     <div class="fr-form-group fr-mt-3w">

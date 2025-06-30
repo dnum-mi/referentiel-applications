@@ -6,7 +6,6 @@ import {
   mapAnomalyNotifications,
   mapApplications,
   mapCompliances,
-  mapEvents,
   mapExternalResources,
   mapHostings,
   mapLabels,
@@ -163,29 +162,6 @@ export class ExportApplicationsUseCase {
           applicationLabel: 'Aucune application',
           value: 'Aucun nom alternatif',
           source: '',
-        }),
-      },
-      {
-        name: sheetLabels.Events,
-        columns: [
-          { header: 'ID Application', key: 'applicationId', width: 30 },
-          { header: 'Application', key: 'applicationLabel', width: 30 },
-          { header: columnLabels['events.type'], key: 'type', width: 25 },
-          { header: columnLabels['events.start'], key: 'start', width: 20 },
-          { header: columnLabels['events.end'], key: 'end', width: 20 },
-          {
-            header: columnLabels['events.description'],
-            key: 'description',
-            width: 40,
-          },
-        ],
-        rows: ensureSheetHasAtLeastOneRow(apps.flatMap(mapEvents), {
-          applicationId: '',
-          applicationLabel: 'Aucune application',
-          type: 'Aucun événement',
-          start: '',
-          end: '',
-          description: '',
         }),
       },
       {
