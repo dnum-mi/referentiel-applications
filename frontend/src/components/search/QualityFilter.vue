@@ -22,7 +22,7 @@ watch([iqGte, iqLte], () => {
     <label class="fr-label fr-mb-2w">
       Indice de qualité
       <br />
-      <small> entre {{ iqGte === null || iqGte === "" ? 5 : iqGte }}% et {{ iqLte === null || iqLte === "" ? 100 : iqLte }}% </small>
+      <small> entre {{ iqGte === "" ? 0 : iqGte }}% et {{ iqLte === "" ? 100 : iqLte }}% </small>
     </label>
 
     <div class="fr-input-group">
