@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.27.0...v1.27.1) (2025-07-01)
+
+
+### Bug Fixes
+
+* **front:** set 5 and 100 defaults values and add iq tag ([#808](https://github.com/dnum-mi/referentiel-applications/issues/808)) ([b59f3a5](https://github.com/dnum-mi/referentiel-applications/commit/b59f3a525f99fdc7d5c56d9f583df5c6d595e0ea))
+
 ## [1.27.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.26.0...v1.27.0) (2025-06-26)
 
 
