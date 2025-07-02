@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.28.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.27.1...v1.28.0) (2025-07-02)
+
+
+### Features
+
+* **applications:** :fire: Add status in application ([14ca12e](https://github.com/dnum-mi/referentiel-applications/commit/14ca12e5c60596395d23ca11a7dcd2e6f1726ae6))
+
+
+### Bug Fixes
+
+* **back:** :bug: fix logging for patch data-quality endpoint ([90cf686](https://github.com/dnum-mi/referentiel-applications/commit/90cf68683612dffac00eaa7f2c2cb26c8997d60b))
+* **back:** :bug: run quality update as a background task ([754bf30](https://github.com/dnum-mi/referentiel-applications/commit/754bf30499f7992a4bbb2071d21f55ece4f7213b))
+
 ## [1.27.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.27.0...v1.27.1) (2025-07-01)
 
 
