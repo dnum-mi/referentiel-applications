@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { ActorController } from './actor.controller';
+import { ActorController, GlobalActorController } from './actor.controller';
 import { ActorService } from './actor.service';
 import { ActorRepository } from './infrastructure/repository/actor.repository';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -9,7 +9,7 @@ import { ApplicationModule } from 'src/product/application.module';
 
 @Module({
   imports: [PrismaModule, ApplicationModule],
-  controllers: [ActorController],
+  controllers: [ActorController, GlobalActorController],
   providers: [ActorService, ActorRepository, PrismaService, MetadatasService],
   exports: [ActorRepository],
 })

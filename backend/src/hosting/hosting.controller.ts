@@ -68,3 +68,16 @@ export class HostingsController {
     return this.hostingService.remove(id, userId);
   }
 }
+
+@Controller('hostings')
+export class GlobalHostingController {
+  constructor(private readonly hostingService: HostingService) {}
+
+  @Get('count')
+  @ApiOperation({
+    summary: "Récupérer le nombre total d'hébergements (toutes applications)",
+  })
+  public async countAllHostings(): Promise<number> {
+    return this.hostingService.countHostings();
+  }
+}

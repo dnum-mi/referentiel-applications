@@ -126,3 +126,16 @@ export class CompliancesController {
     });
   }
 }
+
+@Controller('compliances')
+export class GlobalComplianceController {
+  constructor(private readonly complianceService: CompliancesService) {}
+
+  @Get('count')
+  @ApiOperation({
+    summary: 'Récupérer le nombre total de conformités (toutes applications)',
+  })
+  public async countAllCompliances(): Promise<number> {
+    return this.complianceService.countAll();
+  }
+}

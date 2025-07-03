@@ -19,6 +19,10 @@ export class HostingService {
     return createdHosting;
   }
 
+  async countHostings(): Promise<number> {
+    return this.repository.count();
+  }
+
   findAll() {
     return this.repository.findAll();
   }

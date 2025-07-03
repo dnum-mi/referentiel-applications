@@ -118,3 +118,16 @@ Informations requises :
     return this.actorService.delete(id, userId);
   }
 }
+
+@Controller('actors')
+export class GlobalActorController {
+  constructor(private readonly actorService: ActorService) {}
+
+  @Get('count')
+  @ApiOperation({
+    summary: "Récupérer le nombre total d'acteurs (toutes applications)",
+  })
+  public async countAllActors(): Promise<number> {
+    return this.actorService.countActors();
+  }
+}

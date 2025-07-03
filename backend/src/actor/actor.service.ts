@@ -22,6 +22,10 @@ export class ActorService {
     return createdActor;
   }
 
+  public async countActors(): Promise<number> {
+    return this.actorRepository.count();
+  }
+
   public async findOne(id: string) {
     const actor = await this.actorRepository.findById(id);
     if (!actor) {
