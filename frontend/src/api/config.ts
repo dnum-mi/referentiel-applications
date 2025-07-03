@@ -41,6 +41,7 @@ export const apiConfig = {
       "priorityRestart",
       "hostingSearch",
       "organizationLabel",
+      "status",
       "actorType",
       "link",
       "iqGte",
