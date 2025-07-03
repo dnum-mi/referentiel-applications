@@ -21,6 +21,8 @@
     "typescript-eslint": "^8.25.0"
   },
   "dependencies": {
+    "chart.js": "^4.5.0",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "jose": "^5.9.6"
   }
 }

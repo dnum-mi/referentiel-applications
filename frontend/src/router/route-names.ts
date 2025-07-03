@@ -8,4 +8,5 @@ export const routeNames = {
   ISSUELIST: "issue-list",
   PROFILE: "profile",
   ADMINPAGE: "administration",
+  QUALITYPAGE: "qualite-generale",
 } as const;

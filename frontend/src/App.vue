@@ -61,6 +61,7 @@ interface QuickLink {
 
     const baseLinks = [
       { label: "Applications", to: { name: routeNames.SEARCHAPP } },
+      { label: "Qualité Générale", to: { name: routeNames.QUALITYPAGE } },
       { label: "Corrections", to: { name: routeNames.ISSUELIST } },
     ];
 
