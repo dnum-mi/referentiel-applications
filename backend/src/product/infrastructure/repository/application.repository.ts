@@ -198,6 +198,12 @@ export class ApplicationRepository implements IApplicationRepository {
       });
     }
 
+    if (dto.status?.length) {
+      whereConditions.push({
+        status: { in: dto.status },
+      });
+    }
+
     whereConditions.push({
       quality: {
         gte: dto.iqGte,
