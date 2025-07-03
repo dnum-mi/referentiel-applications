@@ -6,6 +6,10 @@ import Actors from "@/api/actor";
 export const useActorStore = defineStore("actorStore", () => {
   const actors = ref<Actor[]>([]);
 
+  async function countActors() {
+    return await Actors.countActors();
+  }
+
   async function fetchActorsByApplication(applicationId: string) {
     actors.value = await Actors.findByApplicationId(applicationId);
   }
@@ -20,6 +24,7 @@ export const useActorStore = defineStore("actorStore", () => {
 
   return {
     actors,
+    countActors,
     fetchActorsByApplication,
     saveActor,
     deleteActor,

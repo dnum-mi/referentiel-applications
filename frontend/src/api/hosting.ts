@@ -1,7 +1,13 @@
 import type { Hosting } from "@/models/Hosting";
 import requests from "./xhr-client";
+import axios from "axios";
 
 const Hostings = {
+  async countHostings(): Promise<number> {
+    const { data } = await axios.get(`hostings/count`);
+    return data;
+  },
+
   async getHostingsByApplicationId(applicationId: string): Promise<Hosting[]> {
     return await requests.get(`/applications/${applicationId}/hostings`);
   },

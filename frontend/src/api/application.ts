@@ -4,6 +4,16 @@ import axios from "axios";
 import { regexLink, regexPriority, regexTag } from "@/utils/regex";
 
 const Applications = {
+  async countApplications() {
+    const response = await axios.get(`/applications`);
+    return response.data.length;
+  },
+
+  async countApplicationsByMonth(): Promise<{ month: string; total: number }[]> {
+    const response = await axios.get("/applications/count-by-month");
+    return response.data;
+  },
+
   async getAllApplicationBySearch(
     searchParams?: string,
     page: number = 0,
