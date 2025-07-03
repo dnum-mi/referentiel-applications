@@ -113,6 +113,51 @@ export class ApplicationService {
     Logger.log(`${applications.length} applications mises à jour.`);
   }
 
+  async getApplicationsCountByMonth(lastMonths: number = 6) {
+    const now = new Date();
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - lastMonths + 1,
+      1,
+    );
+
+    const result = await this.prisma.$queryRaw<
+      { month: Date; total: number }[]
+    >`
+    WITH first_add_metadata AS (
+      SELECT DISTINCT ON (m."applicationId")
+        m."applicationId",
+        m."createdAt"
+      FROM "metadata" m
+      ORDER BY m."applicationId", m."createdAt" ASC
+    ),
+
+    months AS (
+      SELECT generate_series(
+        DATE_TRUNC('month', ${startDate}::timestamp),
+        DATE_TRUNC('month', NOW()),
+        INTERVAL '1 month'
+      ) AS month_start
+    )
+
+    SELECT
+      months.month_start AS month,
+      COUNT(f."applicationId") AS total
+    FROM months
+    LEFT JOIN first_add_metadata f
+      ON f."createdAt" <= months.month_start + INTERVAL '1 month' - INTERVAL '1 second'
+    GROUP BY months.month_start
+    ORDER BY months.month_start ASC;
+  `;
+
+    const convertedResult = result.map((r) => ({
+      month: r.month,
+      total: Number(r.total),
+    }));
+
+    return convertedResult;
+  }
+
   public async getSortedMetadatas(
     applicationId: string,
     offset = 0,
