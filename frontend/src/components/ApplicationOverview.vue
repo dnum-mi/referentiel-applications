@@ -70,7 +70,7 @@ const tabs = [
   },
   { title: "Relations", icon: "ri-node-tree", component: Relationships },
 
-  { title: "Corrections", icon: "ri-edit-line", component: NotificationsApplication },
+  { title: "Historiques", icon: "ri-edit-line", component: NotificationsApplication },
 
   { title: "Qualité", icon: "ri-bar-chart-line", component: Quality },
 ];
