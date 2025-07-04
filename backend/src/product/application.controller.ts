@@ -161,32 +161,19 @@ Vous devez fournir les informations suivantes :
     summary: 'Exporter les applications en CSV',
     description: `Permet d'exporter les applications en un fichier CSV.
       Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
-      Si aucun filtre n'est appliqué, toutes les applications sont exportées.`,
+      Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+      Cette nouvelle version utilise une vue optimisée qui inclut tous les acteurs, conformités et hébergements.`,
   })
   @ApiResponse({
     status: 200,
-    description: 'Export CSV des applications',
+    description: 'Export CSV détaillé des applications',
   })
   async exportCsv(
     @Query() searchParams: ApplicationSearchDto,
     @Res() res: Response,
   ) {
-    // Default columns to export if none specified
-    const columns = searchParams.columns || [
-      'id',
-      'label',
-      'shortName',
-      'description',
-      'tags',
-      'purposes',
-      'priorityRestart',
-    ];
-
-    // Generate the CSV
-    const result = await this.applicationExportService.exportApplications(
-      columns,
-      searchParams,
-    );
+    const result =
+      await this.applicationExportService.exportApplications(searchParams);
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader(
