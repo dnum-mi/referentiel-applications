@@ -5,6 +5,7 @@ import { ApplicationWithAllRelations } from './types/application.type';
 import { getFullField } from './application/map/application-export.map';
 import { columnLabels } from './columnLabels/application-export.columnLabels';
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
+import { ApplicationsExport } from '@prisma/client';
 
 @Injectable()
 export class ApplicationExportService {
@@ -35,26 +36,40 @@ export class ApplicationExportService {
   }
 
   async exportApplications(
-    columns: string[],
     filters?: ApplicationSearchDto,
   ): Promise<{ fileName: string; csv: string }> {
-    let apps: ApplicationWithAllRelations[];
+    let detailedApps: ApplicationsExport[];
 
     if (filters && Object.keys(filters).length > 0) {
-      const searchResult =
-        await this.repository.findApplicationsBySearch(filters);
-
-      const filteredIds = searchResult.results.map((app) => app.id);
-      const applicationsWithRelations =
-        await this.repository.findAllWithRelations();
-      apps = applicationsWithRelations.filter((app) =>
-        filteredIds.includes(app.id),
-      );
+      detailedApps = await this.repository.findDetailedExportBySearch(filters);
     } else {
-      apps = await this.repository.findAllWithRelations();
+      detailedApps = await this.repository.findAllForDetailedExport();
     }
 
-    return this.generateExportCsv(apps, columns);
+    const allColumns = [
+      'id',
+      'application',
+      'short',
+      'description',
+      'priorityRestart',
+      'hebergements',
+      'tags',
+      'MOA',
+      'MOE',
+      'Hebergeur',
+      'RSSIM',
+      'AutresActeurs',
+      'ConformitePDMA',
+      'ConformiteDIMA',
+      'ConformitePRA',
+      'ConformiteRGAA',
+      'ConformiteDSFR',
+      'ConformiteAIPD',
+      'AutresConformites',
+      'liens',
+    ];
+
+    return this.generateDetailedExportCsv(detailedApps, allColumns);
   }
 
   public generateCsv(
@@ -76,29 +91,33 @@ export class ApplicationExportService {
     return csvRows.join('\n');
   }
 
-  private generateExportCsv(
-    apps: ApplicationWithAllRelations[],
+  private generateDetailedExportCsv(
+    detailedApps: ApplicationsExport[],
     columns: string[],
   ): { fileName: string; csv: string } {
-    const defaultColumns = ['id', 'label', 'description'];
-    const allowedPrefixes = [
+    const defaultColumns = ['id', 'application', 'description'];
+
+    const availableColumns = [
       'id',
-      'label',
-      'shortName',
-      'logo',
+      'application',
+      'short',
       'description',
       'priorityRestart',
+      'hebergements',
       'tags',
-      'purposes',
-      'targetPopulations',
-      'compliances',
-      'labels',
-      'actors',
-      'relationsAsSource',
-      'relationsAsTarget',
-      'hostings',
-      'externalRessource',
-      'anomalyNotification',
+      'MOA',
+      'MOE',
+      'Hebergeur',
+      'RSSIM',
+      'AutresActeurs',
+      'ConformitePDMA',
+      'ConformiteDIMA',
+      'ConformitePRA',
+      'ConformiteRGAA',
+      'ConformiteDSFR',
+      'ConformiteAIPD',
+      'AutresConformites',
+      'liens',
     ];
 
     const columnArray = Array.isArray(columns) ? columns : [columns];
@@ -106,26 +125,52 @@ export class ApplicationExportService {
 
     const selected = allRequested
       .filter((c): c is string => typeof c === 'string')
-      .filter((c) =>
-        allowedPrefixes.some(
-          (prefix) => c === prefix || c.startsWith(prefix + '.'),
-        ),
-      );
+      .filter((c) => availableColumns.includes(c));
 
     const ignored = allRequested.filter((c) => !selected.includes(c));
     if (ignored.length > 0) {
       console.warn('Colonnes ignorées :', ignored);
     }
 
-    const data = apps.map((app) => {
+    // Map the detailed view data
+    const data = detailedApps.map((app) => {
       const row: Record<string, string> = {};
       for (const col of selected) {
-        row[col] = getFullField(app, col);
+        const value = (app as any)[col];
+        row[col] = Array.isArray(value)
+          ? value.join(', ')
+          : String(value ?? '');
       }
       return row;
     });
 
-    const csvHeaders = selected.map((field) => columnLabels[field] ?? field);
+    // Create user-friendly headers
+    const detailedColumnLabels: Record<string, string> = {
+      id: 'ID',
+      application: 'Application',
+      short: 'Nom court',
+      description: 'Description',
+      priorityRestart: 'Priorité Restart',
+      hebergements: 'Hébergements',
+      tags: 'Tags',
+      MOA: "Maîtrise d'Ouvrage",
+      MOE: "Maîtrise d'Œuvre",
+      Hebergeur: "Responsable de l'hébergement",
+      RSSIM: 'Responsable des SI Métier et de la Modernisation',
+      AutresActeurs: 'Autres Acteurs',
+      ConformitePDMA: 'Conformité PDMA',
+      ConformiteDIMA: 'Conformité DIMA',
+      ConformitePRA: 'Conformité PRA',
+      ConformiteRGAA: 'Conformité RGAA',
+      ConformiteDSFR: 'Conformité DSFR',
+      ConformiteAIPD: 'Conformité AIPD',
+      AutresConformites: 'Autres Conformités',
+      liens: 'Liens',
+    };
+
+    const csvHeaders = selected.map(
+      (field) => detailedColumnLabels[field] ?? field,
+    );
     const csv = this.generateCsv(data, selected, csvHeaders);
 
     const date = new Date().toISOString().split('T')[0];
@@ -145,7 +190,7 @@ export class ApplicationExportService {
         ? safeLabelParts.join('_')
         : `${selected.length}_colonnes`;
 
-    const fileName = `referentiel_application_${colsPart}_${date}.csv`;
+    const fileName = `referentiel_application_detailed_${colsPart}_${date}.csv`;
 
     return { fileName, csv };
   }
