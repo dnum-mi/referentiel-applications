@@ -19,7 +19,7 @@ export class HostingService {
     return createdHosting;
   }
 
-  async countHostings(): Promise<number> {
+  async count(): Promise<number> {
     return this.repository.count();
   }
 

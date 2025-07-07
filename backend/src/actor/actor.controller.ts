@@ -128,6 +128,6 @@ export class GlobalActorController {
     summary: "Récupérer le nombre total d'acteurs (toutes applications)",
   })
   public async countAllActors(): Promise<number> {
-    return this.actorService.countActors();
+    return this.actorService.count();
   }
 }

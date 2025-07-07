@@ -22,7 +22,7 @@ export class ActorService {
     return createdActor;
   }
 
-  public async countActors(): Promise<number> {
+  public async count(): Promise<number> {
     return this.actorRepository.count();
   }
 

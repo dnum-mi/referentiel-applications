@@ -78,6 +78,6 @@ export class GlobalHostingController {
     summary: "Récupérer le nombre total d'hébergements (toutes applications)",
   })
   public async countAllHostings(): Promise<number> {
-    return this.hostingService.countHostings();
+    return this.hostingService.count();
   }
 }
