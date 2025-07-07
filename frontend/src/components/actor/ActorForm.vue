@@ -66,7 +66,7 @@ const handleSubmit = () => {
     </div>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-      <DsfrButton secondary label="Annuler" @click="$emit('cancel')" />
+      <DsfrButton type="button" secondary label="Annuler" @click="$emit('cancel')" />
       <DsfrButton type="submit" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'">
         <template v-if="isSubmitting">
           <span class="fr-loading fr-loading--sm">

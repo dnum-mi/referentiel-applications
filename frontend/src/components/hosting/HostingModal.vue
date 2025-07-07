@@ -1,45 +1,44 @@
 <template>
   <DsfrModal :opened="true" :title="props.initialHosting ? 'Modifier un hébergement' : 'Créer un hébergement'" @close="$emit('close')">
-    <div v-if="isLoadingOptions" class="fr-text--center fr-mb-2w">
-      <span class="fr-loading fr-loading--sm">
-        <span class="fr-loading__icon" aria-hidden="true"></span>
-      </span>
-      Chargement des options...
-    </div>
-
-    <div v-else class="fr-form-group">
-      <DsfrInput label-visible label="Label" v-model="hostingForm.label" class="fr-mb-3w" />
-
-      <DsfrInput
-        label-visible
-        label="Option d'hébergement"
-        hint="Commencez à taper pour rechercher"
-        v-model="hostingOptionSearch"
-        list="hostingOptionsList"
-        required
-        class="fr-mb-3w"
-      />
-      <datalist id="hostingOptionsList">
-        <option v-for="option in hostingOptionsList" :key="option.id">
-          {{ formatOptionText(option) }}
-        </option>
-      </datalist>
-    </div>
-    <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-      <DsfrButton secondary label="Annuler" @click="$emit('close')" />
-      <DsfrButton
-        type="button"
-        :disabled="isSubmitting || isLoadingOptions || !isFormValid"
-        :label="props.initialHosting ? 'Modifier' : 'Créer'"
-        @click="handleSubmit"
-      >
-        <template v-if="isSubmitting">
-          <span class="fr-loading fr-loading--sm">
-            <span class="fr-loading__icon" aria-hidden="true"></span>
-          </span>
-        </template>
-      </DsfrButton>
-    </div>
+    <form @submit.prevent="handleSubmit">
+      <div v-if="isLoadingOptions" class="fr-text--center fr-mb-2w">
+        <span class="fr-loading fr-loading--sm">
+          <span class="fr-loading__icon" aria-hidden="true"></span>
+        </span>
+        Chargement des options...
+      </div>
+      <div v-else class="fr-form-group">
+        <DsfrInput label-visible label="Label" v-model="hostingForm.label" class="fr-mb-3w" />
+        <DsfrInput
+          label-visible
+          label="Option d'hébergement"
+          hint="Commencez à taper pour rechercher"
+          v-model="hostingOptionSearch"
+          list="hostingOptionsList"
+          required
+          class="fr-mb-3w"
+        />
+        <datalist id="hostingOptionsList">
+          <option v-for="option in hostingOptionsList" :key="option.id">
+            {{ formatOptionText(option) }}
+          </option>
+        </datalist>
+      </div>
+      <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
+        <DsfrButton type="button" secondary label="Annuler" @click="$emit('close')" />
+        <DsfrButton
+          type="submit"
+          :disabled="isSubmitting || isLoadingOptions || !isFormValid"
+          :label="props.initialHosting ? 'Modifier' : 'Créer'"
+        >
+          <template v-if="isSubmitting">
+            <span class="fr-loading fr-loading--sm">
+              <span class="fr-loading__icon" aria-hidden="true"></span>
+            </span>
+          </template>
+        </DsfrButton>
+      </div>
+    </form>
   </DsfrModal>
 </template>
 
@@ -122,7 +121,8 @@ const setInitialValues = () => {
 watch(() => props.initialHosting, setInitialValues, { immediate: true });
 watch(hostingOptionsList, setInitialValues, { immediate: true });
 
-const handleSubmit = async () => {
+const handleSubmit = () => {
+  console.log("Submitting hosting form", hostingForm.value);
   isSubmitting.value = true;
   try {
     const formData = {
@@ -134,13 +134,13 @@ const handleSubmit = async () => {
 
     let result;
     if (props.initialHosting) {
-      result = await hostingStore.updateHosting(props.applicationId, formData as Hosting);
+      result = hostingStore.updateHosting(props.applicationId, formData as Hosting);
       emit("hosting-updated", result);
     } else {
-      result = await hostingStore.createHosting(props.applicationId, formData as Hosting);
+      result = hostingStore.createHosting(props.applicationId, formData as Hosting);
       emit("hosting-created", result);
     }
-    emit("close");
+    // emit("close");
   } catch (err) {
     console.error(err);
   } finally {
