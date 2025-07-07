@@ -124,38 +124,45 @@ export class ApplicationService {
     const result = await this.prisma.$queryRaw<
       { month: Date; total: number }[]
     >`
-    WITH first_add_metadata AS (
-      SELECT DISTINCT ON (m."applicationId")
-        m."applicationId",
-        m."createdAt"
-      FROM "metadata" m
-      ORDER BY m."applicationId", m."createdAt" ASC
-    ),
+WITH months AS (
+  SELECT generate_series(
+    DATE_TRUNC('month', ${startDate}::timestamp),
+    DATE_TRUNC('month', NOW()),
+    INTERVAL '1 month'
+  ) AS month_start
+),
 
-    months AS (
-      SELECT generate_series(
-        DATE_TRUNC('month', ${startDate}::timestamp),
-        DATE_TRUNC('month', NOW()),
-        INTERVAL '1 month'
-      ) AS month_start
-    )
+latest_metadata AS (
+  SELECT DISTINCT ON (m."applicationId", month_start)
+    m."applicationId",
+    month_start,
+    m."description"
+  FROM months,
+       "metadata" m
+  WHERE m."createdAt" <= month_start + INTERVAL '1 month' - INTERVAL '1 second'
+  ORDER BY m."applicationId", month_start, m."createdAt" DESC
+),
 
-    SELECT
-      months.month_start AS month,
-      COUNT(f."applicationId") AS total
-    FROM months
-    LEFT JOIN first_add_metadata f
-      ON f."createdAt" <= months.month_start + INTERVAL '1 month' - INTERVAL '1 second'
-    GROUP BY months.month_start
-    ORDER BY months.month_start ASC;
-  `;
+filtered AS (
+  SELECT *
+  FROM latest_metadata
+  WHERE description IS NULL
+     OR description !~* 'Nouvelle\\(s\\) valeur\\(s\\):.*?"statut":"deleted"'
+)
 
-    const convertedResult = result.map((r) => ({
+SELECT
+  months.month_start AS month,
+  COUNT(DISTINCT f."applicationId") AS total
+FROM months
+LEFT JOIN filtered f ON f.month_start = months.month_start
+GROUP BY months.month_start
+ORDER BY months.month_start;
+`;
+
+    return result.map((r) => ({
       month: r.month,
       total: Number(r.total),
     }));
-
-    return convertedResult;
   }
 
   public async getSortedMetadatas(
