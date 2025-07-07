@@ -1,3 +1,9 @@
 {
-  "conventionalCommits.scopes": ["applications", "ci", "api", "front"]
+  "conventionalCommits.scopes": [
+    "applications",
+    "ci",
+    "api",
+    "front",
+    "migration"
+  ]
 }
