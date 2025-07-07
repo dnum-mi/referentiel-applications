@@ -4,7 +4,7 @@ import { IApplicationRepository } from './application.repository.interface';
 import { Injectable } from '@nestjs/common';
 import { CreateApplicationDto } from '../../application/dto/create-application.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, ApplicationsExport } from '@prisma/client';
 
 import { ApplicationSearchDto } from './../../application/dto/search-application.dto';
 import { ApplicationWithAllRelations } from 'src/product/types/application.type';
@@ -315,6 +315,28 @@ export class ApplicationRepository implements IApplicationRepository {
       include: { application: true },
     });
     return results.map((r) => r.application);
+  }
+
+  async findAllForDetailedExport(): Promise<ApplicationsExport[]> {
+    return this.prisma.applicationsExport.findMany({
+      orderBy: { application: 'asc' },
+    });
+  }
+
+  async findDetailedExportBySearch(
+    searchDto: ApplicationSearchDto,
+  ): Promise<ApplicationsExport[]> {
+    const searchResult = await this.findApplicationsBySearch(searchDto);
+    const applicationIds = searchResult.results.map((app) => app.id);
+
+    return this.prisma.applicationsExport.findMany({
+      where: {
+        id: {
+          in: applicationIds,
+        },
+      },
+      orderBy: { application: 'asc' },
+    });
   }
 
   public async delete(id: string): Promise<void> {
