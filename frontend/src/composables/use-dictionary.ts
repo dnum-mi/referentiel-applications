@@ -161,3 +161,13 @@ export const applicationFieldsDict = {
   "anomalyNotification.description": "Description",
   "anomalyNotification.status": "Statut de notification",
 };
+
+export const statusApplicationDictionary = {
+  select: "Sélectionner un status",
+  under_construction: "En construction",
+  in_production_mvp: "MVP en production",
+  in_production: "En production",
+  in_production_decommissioning: "À décommissionner",
+  decommissioned: "Décommissionné",
+  deleted: "Supprimé",
+};

@@ -96,7 +96,6 @@ export class ApplicationExportService {
       'actors',
       'relationsAsSource',
       'relationsAsTarget',
-      'events',
       'hostings',
       'externalRessource',
       'anomalyNotification',

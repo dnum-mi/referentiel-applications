@@ -78,7 +78,10 @@ export class CombinedInterceptor implements NestInterceptor {
       }
     }
 
-    if (entityType === 'Application' || entityType === 'Notification') {
+    if (
+      (entityType === 'Application' || entityType === 'Notification') &&
+      !url.includes('data-quality')
+    ) {
       try {
         let applicationId: string | undefined;
 
@@ -129,7 +132,10 @@ export class CombinedInterceptor implements NestInterceptor {
       });
     }
 
-    if (method === 'PATCH' || method === 'PUT') {
+    if (
+      (method === 'PATCH' || method === 'PUT') &&
+      !url.includes('data-quality')
+    ) {
       const oldData = await this.getOldData(params.id);
       this.logAction({
         message: `Début mise à jour de ${entityType} ${params.id}`,
@@ -163,7 +169,10 @@ export class CombinedInterceptor implements NestInterceptor {
             });
           }
 
-          if (method === 'PATCH' || method === 'PUT') {
+          if (
+            (method === 'PATCH' || method === 'PUT') &&
+            !url.includes('data-quality')
+          ) {
             const oldData = this.getOldData(params.id);
             const modifiedFields = this.getModifiedFields(oldData, body);
             this.logAction({

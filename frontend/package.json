@@ -13,8 +13,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "type-check": "vue-tsc --build --force",
-    "cy:open": "cypress open --config-file cypress.config.cjs --browser firefox",
-    "cy:run": "cypress run --config-file cypress.config.cjs --browser firefox"
+    "cy:open": "cypress open --config-file cypress.config.mts --browser firefox",
+    "cy:run": "cypress run --config-file cypress.config.mts --browser firefox"
   },
   "dependencies": {
     "@gouvfr/dsfr": "~1.12.1",

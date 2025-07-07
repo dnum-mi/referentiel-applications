@@ -1,5 +1,5 @@
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma, Application, PrismaClient } from '@prisma/client';
 import {
   CreateApplicationDto,
@@ -80,6 +80,7 @@ export class ApplicationService {
           label: 'libellé',
           shortName: 'nom court',
           logo: 'logo',
+          status: 'statut',
           description: 'description',
           targetPopulations: 'populations cibles',
           priorityRestart: 'priorité de redémarrage',
@@ -98,17 +99,18 @@ export class ApplicationService {
     }
   }
 
-  public async updateAllApplicationsQuality(): Promise<{
-    updatedCount: number;
-  }> {
+  public updateAllApplicationsQualityInBackground(): void {
+    this.updateAllApplicationsQuality().catch((err) => {
+      Logger.error('Erreur pendant la mise à jour en tâche de fond', err);
+    });
+  }
+
+  private async updateAllApplicationsQuality(): Promise<void> {
     const applications = await this.prisma.application.findMany();
     await Promise.all(
-      applications.map(async (app) => {
-        await this.updateApplicationQuality(app.id);
-      }),
+      applications.map((app) => this.updateApplicationQuality(app.id)),
     );
-
-    return { updatedCount: applications.length };
+    Logger.log(`${applications.length} applications mises à jour.`);
   }
 
   public async getSortedMetadatas(
@@ -207,6 +209,7 @@ export class ApplicationService {
       'shortName',
       'description',
       'priorityRestart',
+      'status',
     ] as const;
     const arrayFields = ['purposes', 'targetPopulations', 'tags'] as const;
 

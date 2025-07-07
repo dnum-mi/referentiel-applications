@@ -19,7 +19,6 @@ import { CombinedInterceptor } from './logger/combined.interceptor';
 import { ApplicationService } from './product/application.service';
 import { ConfigModule } from '@nestjs/config';
 import { RelationModule } from './relationship/relation.module';
-import { EventsModule } from './events/events.module';
 import { MetadatasModule } from './metadatas/metadatas.module';
 import { AnomalyNotificationModule } from './notification/anomaly-notification.module';
 import { ActorModule } from './actor/actor.module';
@@ -47,7 +46,6 @@ import { HostingOptionModule } from './hosting-option/hosting-option.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    EventsModule,
     MetadatasModule,
     LinksModule,
     LabelsModule,

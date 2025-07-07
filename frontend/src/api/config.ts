@@ -28,7 +28,7 @@ export const apiConfig = {
     patch: {
       method: "PATCH",
       url: "/applications/:id",
-      payload: ["label", "shortName", "description", "targetPopulations", "purposes", "tags", "priorityRestart", "actors"],
+      payload: ["label", "shortName", "description", "targetPopulations", "status", "purposes", "tags", "priorityRestart", "actors"],
     },
   },
   applicationSearch: {
@@ -41,6 +41,7 @@ export const apiConfig = {
       "priorityRestart",
       "hostingSearch",
       "organizationLabel",
+      "status",
       "actorType",
       "link",
       "iqGte",

@@ -1,4 +1,4 @@
-import { priorityRestart } from '@prisma/client';
+import { priorityRestart, Status } from '@prisma/client';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsNumber,
@@ -55,6 +55,15 @@ export class ApplicationSearchDto {
   actorType?: string;
 
   @ApiPropertyOptional({
+    type: [String],
+    enum: Status,
+    description: 'Filtrer par un ou plusieurs status',
+  })
+  @IsOptional()
+  @IsEnum(Status, { each: true })
+  status?: Status[];
+
+  @ApiPropertyOptional({
     description: "Nom de l'organisation liée à l'application",
     example: "Direction des systèmes d'information",
   })
@@ -80,13 +89,13 @@ export class ApplicationSearchDto {
 
   @ApiPropertyOptional({
     description: 'Recherche par indice de qualité minimum',
-    default: 5,
+    default: 0,
   })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  iqGte?: number = 5;
+  iqGte?: number = 0;
 
   @ApiPropertyOptional({
     description: 'Recherche par indice de qualité maximum',

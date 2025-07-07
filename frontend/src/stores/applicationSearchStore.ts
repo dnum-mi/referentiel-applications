@@ -14,6 +14,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     tag: [],
     link: "",
     priorityRestart: [],
+    status: [] as string[],
     page: 0,
     limit: 15,
     sortBy: "label",
@@ -21,7 +22,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     hostingSearch: "",
     organizationLabel: "",
     actorType: "",
-    iqGte: 5,
+    iqGte: 0,
     iqLte: 100,
   });
 
@@ -46,6 +47,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       tag: [],
       link: "",
       priorityRestart: [],
+      status: [],
       page: 0,
       limit: 15,
       sortBy: "label",
@@ -53,7 +55,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       hostingSearch: "",
       organizationLabel: "",
       actorType: [],
-      iqGte: 5,
+      iqGte: 0,
       iqLte: 100,
     });
   }

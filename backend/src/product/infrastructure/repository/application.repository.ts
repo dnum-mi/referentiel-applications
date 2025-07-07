@@ -198,6 +198,12 @@ export class ApplicationRepository implements IApplicationRepository {
       });
     }
 
+    if (dto.status?.length) {
+      whereConditions.push({
+        status: { in: dto.status },
+      });
+    }
+
     whereConditions.push({
       quality: {
         gte: dto.iqGte,
@@ -265,7 +271,6 @@ export class ApplicationRepository implements IApplicationRepository {
             actorType: true,
           },
         },
-        events: true,
         hostings: {
           include: {
             hostingOption: true,
@@ -294,7 +299,6 @@ export class ApplicationRepository implements IApplicationRepository {
         relationsAsTarget: {
           include: { sourceApplication: true },
         },
-        events: true,
         hostings: {
           include: {
             hostingOption: true,

@@ -1,15 +1,17 @@
-// frontend/cypress.config.cjs
-const { defineConfig } = require("cypress");
+import { defineConfig } from "cypress";
 
-module.exports = defineConfig({
+export default defineConfig({
   e2e: {
     baseUrl: "http://localhost:5173",
     specPattern: "cypress/e2e/**/*.cy.{js,ts}",
     fixturesFolder: "cypress/fixtures",
     supportFile: "cypress/support/e2e.{js,ts}",
     chromeWebSecurity: false,
-    setupNodeEvents(on, config) {
-      // ici vos hooks (intercepts, reports…)
+  },
+  component: {
+    devServer: {
+      framework: "vue",
+      bundler: "vite",
     },
   },
 });

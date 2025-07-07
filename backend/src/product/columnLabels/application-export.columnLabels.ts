@@ -44,12 +44,6 @@ export const columnLabels: Record<string, string> = {
   'actors.email': 'Email',
   'actors.organization.sigle': 'Organisation',
 
-  events: 'Événements',
-  'events.type': 'Type d’événement',
-  'events.start': 'Début',
-  'events.end': 'Fin',
-  'events.description': 'Description',
-
   externalRessource: 'Ressources externes',
   'externalRessource.link': 'Lien',
   'externalRessource.description': 'Description ressource',

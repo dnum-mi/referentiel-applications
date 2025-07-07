@@ -10,6 +10,7 @@ import OrganizationFilter from "@/components/search/OrganizationFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { routeNames } from "@/router/route-names";
+import StatusFilter from "./StatusFilter.vue";
 
 const sidebarOpen = ref(true);
 const searchStore = useApplicationSearchStore();
@@ -51,6 +52,10 @@ function resetAllFilters() {
 
         <DsfrAccordion :selected="openAccordions.includes(3)" @click="toggle(3)" title="Qualité">
           <QualityFilter />
+        </DsfrAccordion>
+
+        <DsfrAccordion :selected="openAccordions.includes(3)" @click="toggle(4)" title="Statut">
+          <StatusFilter />
         </DsfrAccordion>
       </div>
     </aside>

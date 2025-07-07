@@ -91,6 +91,16 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      - name: setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+          run_install: false
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: ./frontend/pnpm-lock.yaml
       - name: Start stack using docker compose
         run: IMAGE_TAG=${{ needs.build-client.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up client backend postgres keycloak -d
 
@@ -107,11 +117,18 @@ jobs:
           echo "Keycloak did not become ready in time"
           exit 1
 
-      - name: setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9
-          run_install: false
+      - name: Wait for Frontend to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:5173; then
+              echo "Frontend is ready"
+              exit 0
+            fi
+            echo "Waiting for Frontend..."
+            sleep 5
+          done
+          echo "Frontend did not become ready in time"
+          exit 1
 
       - name: Run E2E tests with cypress
         uses: cypress-io/github-action@v6

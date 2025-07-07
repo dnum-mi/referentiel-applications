@@ -1,4 +1,13 @@
-import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsEnum,
+} from 'class-validator';
+import { Status } from '@prisma/client';
+
+import { isEmpty } from 'rxjs';
 
 export class GetApplicationDto {
   @IsString()
@@ -13,6 +22,9 @@ export class GetApplicationDto {
 
   @IsString()
   logo: string;
+
+  @IsEnum(Status)
+  status?: Status;
 
   @IsString()
   description: string;
