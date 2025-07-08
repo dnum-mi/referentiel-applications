@@ -4,7 +4,7 @@ import { IApplicationRepository } from './application.repository.interface';
 import { Injectable } from '@nestjs/common';
 import { CreateApplicationDto } from '../../application/dto/create-application.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma, ApplicationsExport } from '@prisma/client';
+import type { Prisma, ApplicationsExport } from '@prisma/client';
 
 import { ApplicationSearchDto } from './../../application/dto/search-application.dto';
 import { ApplicationWithAllRelations } from 'src/product/types/application.type';
@@ -63,11 +63,11 @@ export class ApplicationRepository implements IApplicationRepository {
     const upperCaseTags = tag?.map((t) => t.toUpperCase()) || [];
 
     // Build a single comprehensive where clause with all filters
-    const whereConditions: Prisma.ApplicationWhereInput[] = [];
+    const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
 
     // Label filter - search both main label field and labels table
     if (dto.label) {
-      whereConditions.push({
+      where.AND.push({
         OR: [
           {
             label: {
@@ -91,7 +91,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
     // Hosting search filter
     if (dto.hostingSearch) {
-      whereConditions.push({
+      where.AND.push({
         hostings: {
           some: {
             hostingOption: {
@@ -135,7 +135,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
     // Organization filter
     if (dto.organizationLabel) {
-      whereConditions.push({
+      where.AND.push({
         actors: {
           some: {
             organization: {
@@ -151,7 +151,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
     // Actor type filter
     if (dto.actorType) {
-      whereConditions.push({
+      where.AND.push({
         actors: {
           some: {
             actorType: {
@@ -167,7 +167,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
     // Link filter
     if (dto.link) {
-      whereConditions.push({
+      where.AND.push({
         externalRessource: {
           some: {
             link: {
@@ -181,38 +181,35 @@ export class ApplicationRepository implements IApplicationRepository {
 
     // Simple filters
     if (shortName) {
-      whereConditions.push({
+      where.AND.push({
         shortName: { contains: shortName, mode: 'insensitive' as const },
       });
     }
 
     if (tag?.length) {
-      whereConditions.push({
+      where.AND.push({
         tags: { hasSome: upperCaseTags },
       });
     }
 
     if (priorityRestart?.length) {
-      whereConditions.push({
+      where.AND.push({
         priorityRestart: { in: priorityRestart },
       });
     }
 
     if (dto.status?.length) {
-      whereConditions.push({
+      where.AND.push({
         status: { in: dto.status },
       });
     }
 
-    whereConditions.push({
+    where.AND.push({
       quality: {
         gte: dto.iqGte,
         lte: dto.iqLte,
       },
     });
-
-    const where: Prisma.ApplicationWhereInput =
-      whereConditions.length > 0 ? { AND: whereConditions } : {};
 
     const total = await this.prisma.application.count({ where });
 
