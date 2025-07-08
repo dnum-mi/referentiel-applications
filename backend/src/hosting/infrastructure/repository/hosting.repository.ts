@@ -35,6 +35,10 @@ export class HostingRepository implements IHostingRepository {
     });
   }
 
+  public async count(): Promise<number> {
+    return this.prisma.hosting.count();
+  }
+
   async findAll(): Promise<Hosting[]> {
     return this.prisma.hosting.findMany();
   }

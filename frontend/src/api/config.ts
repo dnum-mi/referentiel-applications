@@ -30,6 +30,14 @@ export const apiConfig = {
       url: "/applications/:id",
       payload: ["label", "shortName", "description", "targetPopulations", "status", "purposes", "tags", "priorityRestart", "actors"],
     },
+    countByStatus: {
+      method: "GET",
+      url: "/applications/count-by-status",
+    },
+    countByMonth: {
+      method: "GET",
+      url: "/applications/count-by-month",
+    },
   },
   applicationSearch: {
     method: "GET",

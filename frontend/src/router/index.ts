@@ -51,6 +51,12 @@ const routes = [
     component: () => import("@/views/AdminPage.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    name: routeNames.QUALITYPAGE,
+    path: "/qualite-generale",
+    component: () => import("@/views/QualityPage.vue"),
+    meta: { requiresAuth: true },
+  },
 ];
 
 const router = createRouter({

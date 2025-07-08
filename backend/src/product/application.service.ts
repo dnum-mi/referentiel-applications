@@ -113,6 +113,66 @@ export class ApplicationService {
     Logger.log(`${applications.length} applications mises à jour.`);
   }
 
+  async countActiveApplications() {
+    return await this.prisma.application.count({
+      where: {
+        NOT: { status: 'deleted' },
+      },
+    });
+  }
+
+  async getApplicationsCountByMonth(lastMonths: number = 6) {
+    const now = new Date();
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - lastMonths + 1,
+      1,
+    );
+
+    const result = await this.prisma.$queryRaw<
+      { month: Date; total: number }[]
+    >`
+    WITH first_metadata AS (
+      SELECT DISTINCT ON (m."applicationId")
+        m."applicationId",
+        m."createdAt"
+      FROM "metadata" m
+      ORDER BY m."applicationId", m."createdAt" ASC
+    ),
+
+    filtered_apps AS (
+      SELECT
+        fm."applicationId",
+        fm."createdAt"
+      FROM first_metadata fm
+      JOIN "applications" a ON a.id = fm."applicationId"
+      WHERE a.status IS DISTINCT FROM 'deleted'
+    ),
+
+    months AS (
+      SELECT generate_series(
+        DATE_TRUNC('month', ${startDate}::timestamp),
+        DATE_TRUNC('month', NOW()),
+        INTERVAL '1 month'
+      ) AS month_start
+    )
+
+    SELECT
+      months.month_start AS month,
+      COUNT(fa."applicationId") AS total
+    FROM months
+    LEFT JOIN filtered_apps fa
+      ON fa."createdAt" <= months.month_start + INTERVAL '1 month' - INTERVAL '1 second'
+    GROUP BY months.month_start
+    ORDER BY months.month_start ASC;
+  `;
+
+    return result.map((r) => ({
+      month: r.month,
+      total: Number(r.total),
+    }));
+  }
+
   public async getSortedMetadatas(
     applicationId: string,
     offset = 0,

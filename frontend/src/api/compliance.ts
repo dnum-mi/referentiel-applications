@@ -4,6 +4,10 @@ import type { Compliance } from "@/models/Application";
 const baseUrl = (applicationId: string) => `/applications/${applicationId}/compliances`;
 
 export default class CompliancesApi {
+  static async countCompliances(): Promise<number> {
+    return await requests.get(`compliances/count`);
+  }
+
   static async getCompliances(applicationId: string): Promise<Compliance[]> {
     return await requests.get(baseUrl(applicationId));
   }

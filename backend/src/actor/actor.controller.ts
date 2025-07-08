@@ -21,8 +21,22 @@ import { Actor } from '@prisma/client';
 import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Actors')
-@Controller('applications/:applicationId/actors')
+@Controller('actors')
 export class ActorController {
+  constructor(private readonly actorService: ActorService) {}
+
+  @Get('count')
+  @ApiOperation({
+    summary: "Récupérer le nombre total d'acteurs (toutes applications)",
+  })
+  public async countAllActors(): Promise<number> {
+    return this.actorService.count();
+  }
+}
+
+@ApiTags('Actors')
+@Controller('applications/:applicationId/actors')
+export class ApplicationActorsController {
   constructor(private readonly actorService: ActorService) {}
 
   @Post()

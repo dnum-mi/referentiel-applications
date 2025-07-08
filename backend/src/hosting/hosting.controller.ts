@@ -14,8 +14,22 @@ import { UpdateHostingDto } from './applications/dto/update-hosting.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('Hostings')
+@Controller('hostings')
+export class HostingController {
+  constructor(private readonly hostingService: HostingService) {}
+
+  @Get('count')
+  @ApiOperation({
+    summary: "Récupérer le nombre total d'hébergements (toutes applications)",
+  })
+  public async countAllHostings(): Promise<number> {
+    return this.hostingService.count();
+  }
+}
+
+@ApiTags('Hostings')
 @Controller('applications/:applicationId/hostings')
-export class HostingsController {
+export class ApplicationHostingsController {
   constructor(private readonly hostingService: HostingService) {}
 
   @Post()

@@ -50,6 +50,10 @@ export class ActorRepository implements IActorRepository {
     return newActor;
   }
 
+  public async count(): Promise<number> {
+    return this.prisma.actor.count();
+  }
+
   public async findAll(applicationId?: string) {
     return await this.prisma.actor.findMany({
       where: { applicationId: applicationId },
