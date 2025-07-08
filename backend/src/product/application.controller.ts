@@ -99,6 +99,15 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.getApplicationsCountByMonth();
   }
 
+  @Get('count-by-iq')
+  @ApiOperation({
+    summary:
+      "Liste le nombre d'applications par indice de qualité (de 0% à 100%)",
+  })
+  async countByIq() {
+    return this.applicationService.getApplicationsCountByIq();
+  }
+
   @Get('search')
   @ApiOperation({
     summary: 'Rechercher et filtrer les applications',

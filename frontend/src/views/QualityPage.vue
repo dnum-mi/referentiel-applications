@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ApplicationsChart from "@/components/stats/ApplicationsChart.vue";
+import ApplicationsIqChart from "@/components/stats/ApplicationsIqChart.vue";
 import GlobalStats from "@/components/stats/GlobalStats.vue";
 </script>
 <template>
@@ -8,7 +9,7 @@ import GlobalStats from "@/components/stats/GlobalStats.vue";
       <GlobalStats />
     </div>
     <div class="cell chart-1-cell">
-      <!--     <ApplicationsiQChart />   -->
+      <ApplicationsIqChart />
     </div>
 
     <div class="cell chart-2-cell">
