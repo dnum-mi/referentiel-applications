@@ -91,19 +91,12 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+      - name: Start stack using docker compose
+        run: IMAGE_TAG=${{ needs.build-frontend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up client backend postgres keycloak -d
       - name: setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 9
-          run_install: false
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-          cache: "pnpm"
-          cache-dependency-path: ./frontend/pnpm-lock.yaml
-      - name: Start stack using docker compose
-        run: IMAGE_TAG=${{ needs.build-client.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up client backend postgres keycloak -d
-
       - name: Wait for Keycloak to be ready
         run: |
           for i in {1..30}; do
@@ -137,5 +130,9 @@ jobs:
           command: pnpm run cy:run
           install-command: pnpm install --frozen-lockfile
           record: false
-          wait-on: "http://localhost:5173"
-          wait-on-timeout: 12000
+      - name: Send artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: crypress-screenshots
+          path: ./frontend/cypress/screenshots/
