@@ -16,7 +16,7 @@ import { ApplicationService } from 'src/product/application.service';
 
 @ApiTags('Links')
 @Controller('applications/:applicationId/links')
-export class LinksController {
+export class ApplicationLinksController {
   constructor(
     private service: LinksService,
     private readonly applicationService: ApplicationService,

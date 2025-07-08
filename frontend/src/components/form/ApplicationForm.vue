@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Application, Label } from "@/models/Application";
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
@@ -77,7 +77,7 @@ const handleSubmit = () => {
 const form = ref({
   label: props.initialData?.label ?? "",
   shortName: props.initialData?.shortName ?? "",
-  labels: ref(props.labels ? [...props.labels] : []),
+  labels: props.labels ? [...props.labels] : [],
   status: props.initialData?.status ?? "",
   description: props.initialData?.description ?? "",
   targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
@@ -214,8 +214,8 @@ onMounted(() => {
     </div>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-      <DsfrButton secondary label="Annuler" @click="$emit('cancel')" />
-      <DsfrButton type="submit" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'">
+      <DsfrButton type="button" secondary label="Annuler" @click="$emit('cancel')" />
+      <DsfrButton type="button" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" @click="handleSubmit">
         <template v-if="isSubmitting">
           <span class="fr-loading fr-loading--sm">
             <span class="fr-loading__icon" aria-hidden="true"></span>

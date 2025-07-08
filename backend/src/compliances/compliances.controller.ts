@@ -15,8 +15,22 @@ import { UserId } from '../common/decorators/user-id.decorator';
 import { ApplicationService } from 'src/product/application.service';
 
 @ApiTags('Compliances')
+@Controller('compliances')
+export class ComplianceController {
+  constructor(private readonly complianceService: CompliancesService) {}
+
+  @Get('count')
+  @ApiOperation({
+    summary: 'Récupérer le nombre total de conformités (toutes applications)',
+  })
+  public async countAllCompliances(): Promise<number> {
+    return this.complianceService.countAll();
+  }
+}
+
+@ApiTags('Compliances')
 @Controller('applications/:applicationId/compliances')
-export class CompliancesController {
+export class ApplicationCompliancesController {
   constructor(
     private readonly compliancesService: CompliancesService,
     private readonly applicationService: ApplicationService,

@@ -21,6 +21,10 @@ export class BaseService<T> {
     return object;
   }
 
+  async countAll(): Promise<number> {
+    return this.model.count();
+  }
+
   async findAll(filters?: any): Promise<T[]> {
     return this.model.findMany({ where: filters });
   }

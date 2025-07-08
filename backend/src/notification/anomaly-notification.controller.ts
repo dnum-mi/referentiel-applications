@@ -25,7 +25,7 @@ import { FiltersDto } from 'src/notification/dto/filters.dto';
  */
 @ApiTags('Notifications')
 @Controller('anomaly-notifications')
-export class AnomalyNotificationController {
+export class ApplicationAnomalyNotificationsController {
   constructor(protected service: AnomalyNotificationService) {}
 
   /**

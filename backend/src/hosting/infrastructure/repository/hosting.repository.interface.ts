@@ -6,6 +6,7 @@ export const IHostingRepository = 'IHostingRepository';
 
 export interface IHostingRepository {
   create(data: CreateHostingDto, ownerId: string): Promise<Hosting>;
+  count(): Promise<number>;
   findAll(): Promise<Hosting[]>;
   findById(id: string): Promise<Hosting | null>;
   update(id: string, data: UpdateHostingDto, ownerId: string): Promise<Hosting>;

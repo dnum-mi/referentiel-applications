@@ -59,10 +59,7 @@ interface QuickLink {
       return response.permissions.split(",");
     });
 
-    const baseLinks = [
-      { label: "Applications", to: { name: routeNames.SEARCHAPP } },
-      { label: "Corrections", to: { name: routeNames.ISSUELIST } },
-    ];
+    const baseLinks = [];
 
     if (userPermissions.value.includes("admin")) {
       baseLinks.push({
@@ -95,6 +92,22 @@ interface QuickLink {
 })();
 
 const quickLinks = computed(() => (authenticated.value ? authenticatedQuickLinks.value : unauthenticatedQuickLinks.value));
+
+const navItems = [
+  {
+    id: "nav-home",
+    to: { name: routeNames.SEARCHAPP },
+    text: "Accueil",
+  },
+  {
+    to: { name: routeNames.QUALITYPAGE },
+    text: "Qualité Générale",
+  },
+  {
+    to: { name: routeNames.ISSUELIST },
+    text: "Corrections",
+  },
+];
 
 const toaster = useToaster();
 
@@ -188,7 +201,11 @@ function close() {
       :quick-links="quickLinks"
       show-beta
       :showSearch="authenticated"
-    />
+    >
+      <template #mainnav>
+        <DsfrNavigation :nav-items="navItems" />
+      </template>
+    </DsfrHeader>
 
     <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown">
       <div v-if="isLoading" class="loading-message">Chargement...</div>

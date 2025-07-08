@@ -9,6 +9,18 @@ export const useHostingStore = defineStore("hostingStore", () => {
   const isLoading = ref(false);
   const toaster = useToaster();
 
+  async function countHostings() {
+    try {
+      isLoading.value = true;
+      return await Hostings.countHostings();
+    } catch (error) {
+      console.error("Error counting hostings:", error);
+      toaster.addErrorMessage("Erreur lors de la récupération du nombre d'hébergements");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   const fetchHostings = async (applicationId: string) => {
     try {
       isLoading.value = true;
@@ -60,6 +72,7 @@ export const useHostingStore = defineStore("hostingStore", () => {
   return {
     hostings,
     isLoading,
+    countHostings,
     fetchHostings,
     createHosting,
     updateHosting,

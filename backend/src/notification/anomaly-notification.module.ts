@@ -2,11 +2,11 @@ import { UserModule } from './../user/user.module';
 import { PrismaModule } from './../prisma/prisma.module';
 import { Module } from '@nestjs/common';
 import { AnomalyNotificationService } from './anomaly-notification.service';
-import { AnomalyNotificationController } from './anomaly-notification.controller';
+import { ApplicationAnomalyNotificationsController } from './anomaly-notification.controller';
 
 @Module({
   imports: [PrismaModule, UserModule],
-  controllers: [AnomalyNotificationController],
+  controllers: [ApplicationAnomalyNotificationsController],
   providers: [AnomalyNotificationService],
   exports: [AnomalyNotificationService],
 })

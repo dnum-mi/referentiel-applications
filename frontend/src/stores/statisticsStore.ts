@@ -20,10 +20,20 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     }
   }
 
+  async function countApplications() {
+    totalApplications.value = await call("application", "countByStatus");
+  }
+
+  async function countApplicationsByMonth(): Promise<{ month: string; total: number }[]> {
+    return await call("application", "countByMonth");
+  }
+
   return {
     totalApplications,
     isLoading,
     error,
     fetchTotalApplications,
+    countApplications,
+    countApplicationsByMonth,
   };
 });

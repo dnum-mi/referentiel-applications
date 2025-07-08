@@ -2,6 +2,11 @@ import type { Actor } from "@/models/Actor";
 import axios from "axios";
 
 const Actors = {
+  async countActors(): Promise<number> {
+    const { data } = await axios.get(`actors/count`);
+    return data;
+  },
+
   async create(actor: Actor): Promise<Actor> {
     const { data } = await axios.post<Actor>(`applications/${actor.applicationId}/actors`, actor);
     return data;
