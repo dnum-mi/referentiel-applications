@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import Applications from "@/api/application";
 import { Chart, BarController, BarElement, CategoryScale, LinearScale } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import { useStatisticsStore } from "@/stores/statisticsStore";
 
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, ChartDataLabels);
 
@@ -14,10 +14,12 @@ const data = ref<number[]>([]);
 const isLoading = ref(false);
 const errorMessage = ref("");
 
+const statisticsStore = useStatisticsStore();
+
 async function loadData() {
   isLoading.value = true;
   try {
-    const applicationsByMonth = await Applications.countApplicationsByMonth();
+    const applicationsByMonth = await statisticsStore.countApplicationsByMonth();
 
     labels.value = applicationsByMonth.map((m) => {
       const date = new Date(m.month);
@@ -53,6 +55,11 @@ function renderChart() {
     },
     options: {
       responsive: true,
+      plugins: {
+        datalabels: {
+          color: "white",
+        },
+      },
     },
     scales: {
       y: {

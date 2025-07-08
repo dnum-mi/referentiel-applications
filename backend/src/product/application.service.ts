@@ -113,6 +113,14 @@ export class ApplicationService {
     Logger.log(`${applications.length} applications mises à jour.`);
   }
 
+  async countActiveApplications() {
+    return await this.prisma.application.count({
+      where: {
+        NOT: { status: 'deleted' },
+      },
+    });
+  }
+
   async getApplicationsCountByMonth(lastMonths: number = 6) {
     const now = new Date();
     const startDate = new Date(
@@ -124,40 +132,40 @@ export class ApplicationService {
     const result = await this.prisma.$queryRaw<
       { month: Date; total: number }[]
     >`
-WITH months AS (
-  SELECT generate_series(
-    DATE_TRUNC('month', ${startDate}::timestamp),
-    DATE_TRUNC('month', NOW()),
-    INTERVAL '1 month'
-  ) AS month_start
-),
+    WITH first_metadata AS (
+      SELECT DISTINCT ON (m."applicationId")
+        m."applicationId",
+        m."createdAt"
+      FROM "metadata" m
+      ORDER BY m."applicationId", m."createdAt" ASC
+    ),
 
-latest_metadata AS (
-  SELECT DISTINCT ON (m."applicationId", month_start)
-    m."applicationId",
-    month_start,
-    m."description"
-  FROM months,
-       "metadata" m
-  WHERE m."createdAt" <= month_start + INTERVAL '1 month' - INTERVAL '1 second'
-  ORDER BY m."applicationId", month_start, m."createdAt" DESC
-),
+    filtered_apps AS (
+      SELECT
+        fm."applicationId",
+        fm."createdAt"
+      FROM first_metadata fm
+      JOIN "applications" a ON a.id = fm."applicationId"
+      WHERE a.status IS DISTINCT FROM 'deleted'
+    ),
 
-filtered AS (
-  SELECT *
-  FROM latest_metadata
-  WHERE description IS NULL
-     OR description !~* 'Nouvelle\\(s\\) valeur\\(s\\):.*?"statut":"deleted"'
-)
+    months AS (
+      SELECT generate_series(
+        DATE_TRUNC('month', ${startDate}::timestamp),
+        DATE_TRUNC('month', NOW()),
+        INTERVAL '1 month'
+      ) AS month_start
+    )
 
-SELECT
-  months.month_start AS month,
-  COUNT(DISTINCT f."applicationId") AS total
-FROM months
-LEFT JOIN filtered f ON f.month_start = months.month_start
-GROUP BY months.month_start
-ORDER BY months.month_start;
-`;
+    SELECT
+      months.month_start AS month,
+      COUNT(fa."applicationId") AS total
+    FROM months
+    LEFT JOIN filtered_apps fa
+      ON fa."createdAt" <= months.month_start + INTERVAL '1 month' - INTERVAL '1 second'
+    GROUP BY months.month_start
+    ORDER BY months.month_start ASC;
+  `;
 
     return result.map((r) => ({
       month: r.month,

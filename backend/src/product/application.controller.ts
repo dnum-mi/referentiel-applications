@@ -83,6 +83,14 @@ Vous devez fournir les informations suivantes :
     return newApplication;
   }
 
+  @Get('count-by-status')
+  @ApiOperation({
+    summary: "Compte le nombre d'applications hors statut supprimé",
+  })
+  async count() {
+    return this.applicationService.countActiveApplications();
+  }
+
   @Get('count-by-month')
   @ApiOperation({
     summary: "Liste le nombre d'applications sur les 6 derniers mois",

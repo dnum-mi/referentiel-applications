@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import Applications from "@/api/application";
 import { onMounted, ref, computed } from "vue";
 import { useActorStore } from "@/stores/actorStore";
 import { useHostingStore } from "@/stores/hostingStore";
 import CompliancesApi from "@/api/compliance";
+import { useStatisticsStore } from "@/stores/statisticsStore";
 
-const applicationsNb = ref(0);
 const actorsNb = ref(0);
 const compliancesNb = ref(0);
 const hostingsNb = ref(0);
 const isLoading = ref(false);
 const errorMessage = ref("");
 
+const statisticStore = useStatisticsStore();
 const actorStore = useActorStore();
 const hostingStore = useHostingStore();
 
 const datasGroup = computed(() => [
-  `Nombre d'applications : ${applicationsNb.value}`,
+  `Nombre d'applications (hors applications supprimées): ${statisticStore.totalApplications}`,
   `Nombre d'acteurs : ${actorsNb.value}`,
   `Nombre de conformités : ${compliancesNb.value}`,
   `Nombre d'hébergements : ${hostingsNb.value}`,
@@ -25,7 +25,7 @@ const datasGroup = computed(() => [
 async function loadStats() {
   isLoading.value = true;
   try {
-    applicationsNb.value = await Applications.countApplications();
+    await statisticStore.countApplications();
     actorsNb.value = await actorStore.countActors();
     compliancesNb.value = await CompliancesApi.countCompliances();
     hostingsNb.value = await hostingStore.countHostings();
