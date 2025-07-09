@@ -5,36 +5,29 @@ import MyIssues from "@/components/Issue/MyIssues.vue";
 
 const activeTab = ref(0);
 const applicationTabListName = "Informations sur les corrections";
+
 const tabs = [
   {
     title: "Mes corrections",
     icon: "ri-edit-line",
+    tabId: "tab-my-issues",
+    panelId: "panel-my-issues",
     component: MyIssues,
   },
   {
     title: "Toutes les corrections",
     icon: "ri-edit-line",
+    tabId: "tab-all-issues",
+    panelId: "panel-all-issues",
     component: allIssues,
   },
 ];
 </script>
-<template>
-  <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName">
-    <template #tab-items>
-      <DsfrTabItem
-        v-for="(tab, index) in tabs"
-        :key="index"
-        :tab-id="`tab-${index}`"
-        :panel-id="`tab-content-${index}`"
-        :icon="tab.icon"
-        @click="activeTab = index"
-      >
-        {{ tab.title }}
-      </DsfrTabItem>
-    </template>
 
-    <template v-for="(tab, index) in tabs" :key="index">
-      <DsfrTabContent v-show="activeTab === index" :panel-id="`tab-content-${index}`" :tab-id="`tab-${index}`">
+<template>
+  <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName" :tab-titles="tabs">
+    <template v-for="(tab, index) in tabs" :key="tab.panelId">
+      <DsfrTabContent :tab-id="tab.tabId" :panel-id="tab.panelId" v-show="activeTab === index">
         <component :is="tab.component" />
       </DsfrTabContent>
     </template>
