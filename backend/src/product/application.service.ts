@@ -173,6 +173,28 @@ export class ApplicationService {
     }));
   }
 
+  async getApplicationsCountByIq() {
+    const result = await this.prisma.application.groupBy({
+      by: ['quality'],
+      _count: {
+        _all: true,
+      },
+      where: {
+        status: {
+          not: 'deleted',
+        },
+      },
+      orderBy: {
+        quality: 'asc',
+      },
+    });
+
+    return result.map((r) => ({
+      iq: r.quality,
+      total: r._count._all,
+    }));
+  }
+
   public async getSortedMetadatas(
     applicationId: string,
     offset = 0,
