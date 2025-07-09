@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import type { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserFilterDto } from './dto/filters.dto';
@@ -57,7 +57,7 @@ export class UserService {
   }
 
   async findAll(filters: UserFilterDto): Promise<User[]> {
-    const where: any = {};
+    const where: Prisma.UserWhereInput = {};
 
     if (filters.search) {
       where.OR = [

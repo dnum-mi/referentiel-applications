@@ -31,7 +31,7 @@ const fetchQuality = async () => {
     await hostingStore.fetchHostings(props.application.id);
     await linkStore.fetchLinks(props.application.id);
     compliances.value = await CompliancesApi.getCompliances(props.application.id);
-  } catch (error) {
+  } catch {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
   } finally {
     loading.value = false;

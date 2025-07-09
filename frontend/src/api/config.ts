@@ -38,6 +38,10 @@ export const apiConfig = {
       method: "GET",
       url: "/applications/count-by-month",
     },
+    countByIq: {
+      method: "GET",
+      url: "/applications/count-by-iq",
+    },
   },
   applicationSearch: {
     method: "GET",

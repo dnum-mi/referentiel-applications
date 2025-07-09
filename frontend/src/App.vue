@@ -97,7 +97,7 @@ const navItems = [
   {
     id: "nav-home",
     to: { name: routeNames.SEARCHAPP },
-    text: "Accueil",
+    text: "Applications",
   },
   {
     to: { name: routeNames.QUALITYPAGE },
@@ -203,7 +203,7 @@ function close() {
       :showSearch="authenticated"
     >
       <template #mainnav>
-        <DsfrNavigation :nav-items="navItems" />
+        <DsfrNavigation v-if="authenticated" :nav-items="navItems" />
       </template>
     </DsfrHeader>
 

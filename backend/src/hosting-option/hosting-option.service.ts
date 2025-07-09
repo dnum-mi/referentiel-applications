@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { HostingOptionFiltersDto } from './dto/hosting-option.dto';
 import { BaseService } from '../common/base.service';
-import { HostingOption } from '@prisma/client';
+import type { HostingOption, Prisma } from '@prisma/client';
 
 @Injectable()
 export class HostingOptionService extends BaseService<HostingOption> {
@@ -11,7 +11,7 @@ export class HostingOptionService extends BaseService<HostingOption> {
   }
 
   async findAll(filters?: HostingOptionFiltersDto) {
-    const where = {};
+    const where: Prisma.HostingOptionWhereInput = {};
     if (filters) {
       if (filters.site) {
         where['site'] = { contains: filters.site, mode: 'insensitive' };

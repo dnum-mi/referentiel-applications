@@ -92,7 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Start stack using docker compose
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up client postgres keycloak -d
+        run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up client backend postgres keycloak -d
       - name: setup pnpm
         uses: pnpm/action-setup@v3
         with:

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { Chart } from "chart.js";
 import { useStatisticsStore } from "@/stores/statisticsStore";
+import { Chart } from "chart.js";
 import { renderChart } from "@/utils/chart";
 
 const chartRef = ref<HTMLCanvasElement | null>(null);
@@ -15,13 +15,15 @@ const statisticsStore = useStatisticsStore();
 async function loadData() {
   isLoading.value = true;
   try {
-    const applicationsByMonth = await statisticsStore.countApplicationsByMonth();
+    const response = await statisticsStore.countApplicationsByIq();
 
-    const labels = applicationsByMonth.map((m) => {
-      const date = new Date(m.month);
-      return date.toLocaleString("fr-FR", { month: "short", year: "numeric" });
+    const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`);
+    const data: number[] = Array(21).fill(0);
+
+    response.forEach(({ iq, total }: { iq: number; total: number }) => {
+      const index = Math.floor(Math.round(iq) / 5);
+      if (index >= 0 && index <= 20) data[20 - index] += total;
     });
-    const data = applicationsByMonth.map((m) => m.total);
 
     chartInstance = renderChart(chartRef, chartInstance, labels, data);
   } catch {
@@ -31,16 +33,12 @@ async function loadData() {
   }
 }
 
-onMounted(() => {
-  loadData();
-});
+onMounted(loadData);
 </script>
 
 <template>
-  <div>
-    <h3>Nombre d'applications référencées</h3>
-    <div v-if="isLoading">Chargement...</div>
-    <div v-else-if="errorMessage">{{ errorMessage }}</div>
-    <canvas ref="chartRef" v-show="!isLoading && !errorMessage"></canvas>
-  </div>
+  <h3>Répartition des applications par IQ</h3>
+  <div v-if="isLoading">Chargement...</div>
+  <div v-else-if="errorMessage">{{ errorMessage }}</div>
+  <canvas ref="chartRef" v-show="!isLoading && !errorMessage"></canvas>
 </template>
