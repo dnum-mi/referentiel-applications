@@ -7,6 +7,8 @@ import { authentication } from "./services/authentication";
 import Applications from "@/api/application";
 import Users from "@/api/user";
 import router from "./router/index.js";
+import { useRoute } from "vue-router";
+const route = useRoute();
 
 const instance = getCurrentInstance();
 
@@ -220,7 +222,7 @@ function close() {
     </div>
   </div>
   <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w">
-    <router-view :key="$route.fullPath" />
+    <RouterView :key="route.params.id" />
   </div>
 
   <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :after-mandatory-links :operator-to />
