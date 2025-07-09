@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useStatisticsStore } from "@/stores/statisticsStore";
-import { Chart, BarElement, BarController, CategoryScale, LinearScale } from "chart.js";
-import ChartDataLabels from "chartjs-plugin-datalabels";
-
-Chart.register(BarElement, BarController, CategoryScale, LinearScale, ChartDataLabels);
+import { Chart } from "chart.js";
+import { renderChart } from "@/utils/chart";
 
 const chartRef = ref<HTMLCanvasElement | null>(null);
 let chartInstance: Chart | null = null;
 
-const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`);
-const data = ref<number[]>(Array(21).fill(0));
 const isLoading = ref(false);
 const errorMessage = ref("");
 
@@ -20,49 +16,21 @@ async function loadData() {
   isLoading.value = true;
   try {
     const response = await statisticsStore.countApplicationsByIq();
-    const buckets: number[] = Array(21).fill(0);
+
+    const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`);
+    const data: number[] = Array(21).fill(0);
 
     response.forEach(({ iq, total }: { iq: number; total: number }) => {
       const index = Math.floor(Math.round(iq) / 5);
-      if (index >= 0 && index <= 20) buckets[20 - index] += total;
+      if (index >= 0 && index <= 20) data[20 - index] += total;
     });
 
-    data.value = buckets;
-    renderChart();
+    chartInstance = renderChart(chartRef, chartInstance, labels, data);
   } catch {
     errorMessage.value = "Erreur lors du chargement des données";
   } finally {
     isLoading.value = false;
   }
-}
-
-function renderChart() {
-  if (!chartRef.value) return;
-  if (chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(chartRef.value, {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        {
-          data: data.value,
-          backgroundColor: "#3e95cd",
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        datalabels: { color: "white" },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-        },
-      },
-    },
-  });
 }
 
 onMounted(loadData);
@@ -72,5 +40,5 @@ onMounted(loadData);
   <h3>Répartition des applications par IQ</h3>
   <div v-if="isLoading">Chargement...</div>
   <div v-else-if="errorMessage">{{ errorMessage }}</div>
-  <canvas ref="chartRef"></canvas>
+  <canvas ref="chartRef" v-show="!isLoading && !errorMessage"></canvas>
 </template>
