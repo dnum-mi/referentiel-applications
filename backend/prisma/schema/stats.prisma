@@ -1,0 +1,13 @@
+
+enum StatsType {
+  iqAvg
+}
+
+model Stats {
+  id      String    @id @default(uuid())
+  valeur  Float
+  type    StatsType
+  date    DateTime  @unique
+
+  @@map("stats")
+}
