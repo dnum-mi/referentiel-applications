@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.29.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.28.0...v1.29.0) (2025-07-09)
+
+
+### Features
+
+* **applications:** :sparkles: add filter in status ([54e35f7](https://github.com/dnum-mi/referentiel-applications/commit/54e35f7b79cf2add54884d798deab5971698630a))
+* **back:** :sparkles: create quality page with global stats and application per month chart ([#821](https://github.com/dnum-mi/referentiel-applications/issues/821)) ([94c2c66](https://github.com/dnum-mi/referentiel-applications/commit/94c2c6605f21e403d1c178c2c87bfc1cd455a4ee))
+* **export:** :sparkles: add detailed export view and update export functionality ([3521733](https://github.com/dnum-mi/referentiel-applications/commit/3521733cfb51d38088afd1225ae1b0a0c3878b6c))
+* **front:** :lipstick: add navigation for improve ux ([12f995a](https://github.com/dnum-mi/referentiel-applications/commit/12f995acb5306b964216821d45f81ebdce71abec))
+* **quality:** :sparkles: add chart of applications grouped by iq in … ([#834](https://github.com/dnum-mi/referentiel-applications/issues/834)) ([5120a9a](https://github.com/dnum-mi/referentiel-applications/commit/5120a9a87366d58c60af41b432e6782d682a555f))
+
+
+### Bug Fixes
+
+* :bug: fix 500 error when sending applicationId in links creation ([4b26f57](https://github.com/dnum-mi/referentiel-applications/commit/4b26f57ba82f80aac185ef8dc46b25d5a1e07119))
+* :bug: fix modal behavior when pressing enter ([375b5af](https://github.com/dnum-mi/referentiel-applications/commit/375b5af5a247a90567b18512962bb03746245149))
+* **front:** :bug: hide navigation bar when user is not authenticated ([b47c9d7](https://github.com/dnum-mi/referentiel-applications/commit/b47c9d787181c297a10bf65766e9c268761c1c43))
+
 ## [1.28.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.27.1...v1.28.0) (2025-07-02)
 
 

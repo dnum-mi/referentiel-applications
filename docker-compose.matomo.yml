@@ -1,0 +1,35 @@
+services:
+  matomo:
+    image: matomo
+    container_name: matomo
+    restart: always
+    ports:
+      - "8083:80"
+    environment:
+      MATOMO_DATABASE_HOST: db
+      MATOMO_DATABASE_ADAPTER: mysql
+      MATOMO_DATABASE_TABLES_PREFIX: matomo_
+      MATOMO_DATABASE_USERNAME: matomo
+      MATOMO_DATABASE_PASSWORD: matomo
+      MATOMO_DATABASE_DBNAME: matomo
+    depends_on:
+      - db
+    volumes:
+      - matomo_data:/var/www/html
+
+  # Ajout du service MySQL pour Matomo en local
+  db:
+    image: mariadb:10.5
+    container_name: matomo-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: matomo
+      MYSQL_DATABASE: matomo
+      MYSQL_USER: matomo
+      MYSQL_PASSWORD: matomo
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+  matomo_data:
