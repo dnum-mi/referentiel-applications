@@ -97,7 +97,7 @@ export const restartPrioritiesConfig = {
     shortLabel: "R3",
     tooltip: "Les applications qui peuvent rester indisponibles sans conséquences opérationnelles (travaux en HO seulement)",
   },
-};
+} as const;
 
 export const applicationFieldsDict = {
   id: "Identifiant de l’application",
@@ -163,7 +163,6 @@ export const applicationFieldsDict = {
 };
 
 export const statusApplicationDictionary = {
-  select: "Sélectionner un status",
   under_construction: "En construction",
   in_production_mvp: "MVP en production",
   in_production: "En production",
@@ -171,3 +170,8 @@ export const statusApplicationDictionary = {
   decommissioned: "Décommissionné",
   deleted: "Supprimé",
 };
+
+export const priorityRestartLabelsOptions = Object.entries(restartPrioritiesConfig).map(([key, value]) => ({
+  value: key,
+  text: value.label,
+}));
