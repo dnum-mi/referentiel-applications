@@ -261,7 +261,7 @@ export class ApplicationRepository implements IApplicationRepository {
       include: {
         metadatas: true,
         owner: true,
-        compliances: true,
+        compliance: true,
         labels: true,
         externalRessource: true,
         anomalyNotification: true,
@@ -289,7 +289,7 @@ export class ApplicationRepository implements IApplicationRepository {
     return this.prisma.application.findMany({
       include: {
         metadatas: true,
-        compliances: true,
+        compliance: true,
         labels: true,
         actors: true,
         relationsAsSource: {

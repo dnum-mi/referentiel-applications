@@ -34,19 +34,34 @@ export const actorTypeMapping: Record<string, string> = {
 };
 
 export const complianceTypesDict = {
-  regulation: "Réglementation",
-  standard: "Standard",
-  policy: "Politique",
-  contractual: "Contractuel",
-  security: "Sécurité",
-  privacy: "Confidentialité",
+  DIMA: "DIMA",
+  PDMA: "PDMA",
+  HOMOLOGATION: "Homologation",
+  RGAA: "RGAA",
+  DSFR: "DSFR",
+  RGPD: "RGPD",
 };
-export const complianceStatusesDict = {
-  compliant: "Conforme",
-  non_compliant: "Non conforme",
-  partially_compliant: "Partiellement conforme",
-  not_concerned: "Non concerné",
+
+export const testResultsDict = {
+  OK: "OK",
+  KO: "KO",
 };
+
+export const backupStorageDict = {
+  S3: "S3",
+  LOCAL: "Local",
+  EXTERNE: "Externe",
+};
+
+export const durationHoursOptions = [
+  { value: 1, text: "1H" },
+  { value: 4, text: "4H" },
+  { value: 8, text: "8H" },
+  { value: 12, text: "12H" },
+  { value: 24, text: "24H" },
+  { value: 48, text: "48H" },
+  { value: 72, text: "72H" },
+];
 
 export const linkTypesDict = {
   documentation: "Documentation",
@@ -130,13 +145,6 @@ export const applicationFieldsDict = {
 
   compliances: "Conformités",
   "compliances.type": "Type de conformité",
-  "compliances.name": "Nom de la conformité",
-  "compliances.status": "Statut",
-  "compliances.validityStart": "Début de validité",
-  "compliances.validityEnd": "Fin de validité",
-  "compliances.scoreValue": "Score",
-  "compliances.scoreUnit": "Unité du score",
-  "compliances.notes": "Notes",
 
   actors: "Acteurs",
   "actors.firstname": "Prénom de l’acteur",

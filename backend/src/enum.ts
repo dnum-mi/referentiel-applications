@@ -1,18 +1,22 @@
 // enums.ts
 export enum ComplianceType {
-  REGULATION = 'regulation',
-  STANDARD = 'standard',
-  POLICY = 'policy',
-  CONTRACTUAL = 'contractual',
-  SECURITY = 'security',
-  PRIVACY = 'privacy',
+  DIMA = 'DIMA',
+  PDMA = 'PDMA',
+  HOMOLOGATION = 'HOMOLOGATION',
+  RGAA = 'RGAA',
+  DSFR = 'DSFR',
+  RGPD = 'RGPD',
 }
 
-export enum ComplianceStatus {
-  COMPLIANT = 'compliant',
-  NON_COMPLIANT = 'non_compliant',
-  PARTIALLY_COMPLIANT = 'partially_compliant',
-  NOT_CONCERNED = 'not_concerned',
+export enum TestResult {
+  OK = 'OK',
+  KO = 'KO',
+}
+
+export enum BackupStorage {
+  S3 = 'S3',
+  LOCAL = 'LOCAL',
+  EXTERNE = 'EXTERNE',
 }
 
 export enum AnomalyNotificationStatus {

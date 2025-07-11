@@ -11,7 +11,6 @@ describe('Compliances', () => {
   let application: { id: string };
   let user: { keycloakId: string };
   let TOKEN: string;
-  let createdCompliance: { id: string };
 
   beforeAll(async () => {
     user = await UserFaker.create(['read', 'write']);
@@ -23,83 +22,70 @@ describe('Compliances', () => {
   });
 
   it(`/GET applications/:applicationId/compliances`, async () => {
-    await request(app().getHttpServer())
+    const response = await request(app().getHttpServer())
       .get(`/applications/${application.id}/compliances`)
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
+
+    expect(response.body).toEqual({});
   });
 
-  it(`/POST applications/:applicationId/compliances`, async () => {
+  it(`/POST applications/:applicationId/compliances - create compliance with RGPD data`, async () => {
     const response = await request(app().getHttpServer())
       .post(`/applications/${application.id}/compliances`)
       .send({
-        name: 'RGPD Compliance',
-        type: 'regulation',
-        status: 'compliant',
-        validityStart: '2023-01-01T00:00:00.000Z',
-        validityEnd: '2025-01-01T00:00:00.000Z',
-        scoreValue: '85',
-        scoreUnit: '%',
-        notes: 'General Data Protection Regulation compliance',
+        rgpd_has_aipd: true,
+        rgpd_dpo_name: 'Jean Dupont',
       })
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(201);
 
-    createdCompliance = response.body;
     expect(response.body.id).toBeDefined();
-    expect(response.body.name).toEqual('RGPD Compliance');
+    expect(response.body.rgpd_has_aipd).toEqual(true);
+    expect(response.body.rgpd_dpo_name).toEqual('Jean Dupont');
   });
 
-  it(`/GET applications/:applicationId/compliances/:id`, async () => {
+  it(`/GET applications/:applicationId/compliances - should return the compliance`, async () => {
     const response = await request(app().getHttpServer())
-      .get(
-        `/applications/${application.id}/compliances/${createdCompliance.id}`,
-      )
+      .get(`/applications/${application.id}/compliances`)
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
 
-    expect(response.body.id).toEqual(createdCompliance.id);
-    expect(response.body.name).toEqual('RGPD Compliance');
+    expect(response.body.id).toBeDefined();
+    expect(response.body.rgpd_has_aipd).toEqual(true);
+    expect(response.body.rgpd_dpo_name).toEqual('Jean Dupont');
   });
 
-  it(`/PATCH applications/:applicationId/compliances/:id`, async () => {
-    const updatedData = {
-      name: 'Updated RGPD Compliance',
-      status: 'non_compliant',
-      notes: 'Updated compliance notes',
-      scoreValue: '40',
-    };
-
+  it(`/PATCH applications/:applicationId/compliances - update compliance with RGAA data`, async () => {
     const response = await request(app().getHttpServer())
-      .patch(
-        `/applications/${application.id}/compliances/${createdCompliance.id}`,
-      )
-      .send(updatedData)
+      .patch(`/applications/${application.id}/compliances`)
+      .send({
+        rgaa_audit_date: '2023-01-01T00:00:00.000Z',
+        rgaa_score_percentage: 85,
+        rgaa_service_url: 'https://example.com',
+      })
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
 
-    expect(response.body.name).toEqual('Updated RGPD Compliance');
-    expect(response.body.status).toEqual('non_compliant');
-    expect(response.body.notes).toEqual('Updated compliance notes');
-    expect(response.body.scoreValue).toEqual('40');
-    expect(response.body.type).toEqual('regulation');
+    expect(response.body.id).toBeDefined();
+    expect(response.body.rgaa_score_percentage).toEqual(85);
+    expect(response.body.rgaa_service_url).toEqual('https://example.com');
+    expect(response.body.rgpd_has_aipd).toEqual(true);
+    expect(response.body.rgpd_dpo_name).toEqual('Jean Dupont');
   });
 
-  it(`/DELETE applications/:applicationId/compliances/:id`, async () => {
+  it(`/DELETE applications/:applicationId/compliances - delete compliance`, async () => {
     await request(app().getHttpServer())
-      .delete(
-        `/applications/${application.id}/compliances/${createdCompliance.id}`,
-      )
+      .delete(`/applications/${application.id}/compliances`)
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);
-  });
 
-  it(`should return 404 when retrieving a deleted compliance`, async () => {
-    await request(app().getHttpServer())
-      .get(
-        `/applications/${application.id}/compliances/${createdCompliance.id}`,
-      )
+    // Verify it's deleted
+    const response = await request(app().getHttpServer())
+      .get(`/applications/${application.id}/compliances`)
       .set('Authorization', `Bearer ${TOKEN}`)
-      .expect(404);
+      .expect(200);
+
+    expect(response.body).toEqual({});
   });
 });

@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
   include: {
     metadatas: true;
-    compliances: true;
+    compliance: true;
     labels: true;
     actors: {
       include: {

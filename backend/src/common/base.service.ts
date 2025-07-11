@@ -29,6 +29,10 @@ export class BaseService<T> {
     return this.model.findMany({ where: filters });
   }
 
+  async findFirst(filters?: any): Promise<T | null> {
+    return this.model.findFirst({ where: filters });
+  }
+
   async create(createDto: any): Promise<T> {
     return this.model.create({ data: createDto });
   }
