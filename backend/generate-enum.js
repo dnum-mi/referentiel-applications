@@ -6,18 +6,12 @@ import path from 'path';
 // Définitions des énumérations
 const enums = {
   ComplianceType: [
-    'REGULATION = "regulation"',
-    'STANDARD = "standard"',
-    'POLICY = "policy"',
-    'CONTRACTUAL = "contractual"',
-    'SECURITY = "security"',
-    'PRIVACY = "privacy"',
-  ],
-  ComplianceStatus: [
-    'COMPLIANT = "compliant"',
-    'NON_COMPLIANT = "non_compliant"',
-    'PARTIALLY_COMPLIANT = "partially_compliant"',
-    'NOT_CONCERNED = "not_concerned"',
+    'DIMA = "DIMA"',
+    'PDMA = "PDMA"',
+    'HOMOLOGATION = "HOMOLOGATION"',
+    'RGAA = "RGAA"',
+    'DSFR = "DSFR"',
+    'RGPD = "RGPD"',
   ],
   ReferenceRepositoryType: [
     'ORGANIZATION = "organization"',

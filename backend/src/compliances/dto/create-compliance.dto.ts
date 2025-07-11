@@ -1,74 +1,302 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ComplianceStatus, ComplianceType } from 'src/enum';
-import { IsString, IsOptional, IsEnum, IsDateString } from 'class-validator';
+import { TestResult, BackupStorage } from 'src/enum';
+import {
+  IsString,
+  IsOptional,
+  IsEnum,
+  IsDateString,
+  IsBoolean,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateComplianceDto {
+  // DIMA specific fields
   @ApiProperty({
-    enum: ComplianceType,
-    description: 'Type of compliance (e.g., regulation, policy)',
+    example: 4,
+    description: 'DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)',
+    required: false,
   })
-  @IsEnum(ComplianceType)
   @IsOptional()
-  type: ComplianceType;
+  @IsInt()
+  @Transform(({ value }) => parseInt(value))
+  dima_duration_hours?: number;
 
-  @ApiProperty({ example: 'GDPR', description: 'Name of the compliance' })
+  @ApiProperty({
+    example: true,
+    description: 'DIMA HNO (Heure non ouvrée)',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  dima_is_hno?: boolean;
+
+  @ApiProperty({
+    example: 'Perte de revenu, impact client',
+    description: 'DIMA business impact of interruption',
+    required: false,
+  })
+  @IsOptional()
   @IsString()
-  @IsOptional()
-  name: string | null;
+  dima_business_impact?: string;
 
   @ApiProperty({
-    enum: ComplianceStatus,
-    description: 'Compliance status (e.g., compliant, non_compliant)',
+    example: true,
+    description: 'DIMA recovery plan exists',
+    required: false,
   })
   @IsOptional()
-  @IsEnum(ComplianceStatus)
-  status: ComplianceStatus;
+  @IsBoolean()
+  dima_recovery_plan?: boolean;
+
+  @ApiProperty({
+    example: 'Bascule sur serveur de secours',
+    description: 'DIMA recovery solutions',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  dima_recovery_solutions?: string;
 
   @ApiProperty({
     example: '2023-01-01',
-    description: 'Start date of validity',
+    description: 'DIMA last test date',
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  @Transform(({ value }) => new Date(value).toISOString())
-  validityStart?: string | null;
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    try {
+      return new Date(value).toISOString();
+    } catch (error) {
+      return value; // Return original value if conversion fails
+    }
+  })
+  dima_last_test_date?: string;
 
   @ApiProperty({
-    example: '2025-01-01',
-    description: 'End date of validity',
+    enum: TestResult,
+    description: 'DIMA test result',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(TestResult)
+  dima_test_result?: TestResult;
+
+  @ApiProperty({
+    example: 'Jean Dupont',
+    description: 'DIMA recovery manager',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  dima_recovery_manager?: string;
+
+  // PDMA specific fields
+  @ApiProperty({
+    example: 8,
+    description: 'PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)',
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Transform(({ value }) => parseInt(value))
+  pdma_duration_hours?: number;
+
+  @ApiProperty({
+    example: 'Transactions, logs, fichiers utilisateur',
+    description: 'PDMA data types concerned',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  pdma_data_types?: string;
+
+  @ApiProperty({
+    example: 'Toutes les heures',
+    description: 'PDMA backup frequency',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  pdma_backup_frequency?: string;
+
+  @ApiProperty({
+    example: 'Snapshot, backup incrémental',
+    description: 'PDMA backup method used',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  pdma_backup_method?: string;
+
+  @ApiProperty({
+    enum: BackupStorage,
+    description: 'PDMA backup storage',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(BackupStorage)
+  pdma_backup_storage?: BackupStorage;
+
+  @ApiProperty({
+    example: '2023-01-01',
+    description: 'PDMA last test date',
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  @Transform(({ value }) => new Date(value).toISOString())
-  validityEnd?: string | null;
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    try {
+      return new Date(value).toISOString();
+    } catch (error) {
+      return value; // Return original value if conversion fails
+    }
+  })
+  pdma_last_test_date?: string;
 
   @ApiProperty({
-    example: '85',
-    description: 'Score value (if applicable)',
+    enum: TestResult,
+    description: 'PDMA test result',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(TestResult)
+  pdma_test_result?: TestResult;
+
+  @ApiProperty({
+    example: 'Marie Martin',
+    description: 'PDMA restoration manager',
     required: false,
   })
   @IsOptional()
   @IsString()
-  scoreValue?: string | null;
+  pdma_restoration_manager?: string;
+
+  // Homologation specific fields
+  @ApiProperty({
+    example: '2023-01-01',
+    description: 'Homologation date',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    try {
+      return new Date(value).toISOString();
+    } catch (error) {
+      return value; // Return original value if conversion fails
+    }
+  })
+  homologation_date?: string;
 
   @ApiProperty({
-    example: '%',
-    description: 'Score unit (if applicable)',
+    example: 12,
+    description: 'Homologation duration in months',
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Transform(({ value }) => parseInt(value))
+  homologation_duration_months?: number;
+
+  @ApiProperty({
+    example: 'uuid-of-rssi-actor',
+    description: 'Homologation RSSI actor ID',
     required: false,
   })
   @IsOptional()
   @IsString()
-  scoreUnit?: string | null;
+  homologation_rssi_id?: string;
+
+  // RGAA specific fields
+  @ApiProperty({
+    example: '2023-01-01',
+    description: 'RGAA audit date',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    try {
+      return new Date(value).toISOString();
+    } catch (error) {
+      return value; // Return original value if conversion fails
+    }
+  })
+  rgaa_audit_date?: string;
 
   @ApiProperty({
-    example: 'Notes about the compliance',
-    description: 'Additional notes',
+    example: 'https://service.example.com',
+    description: 'RGAA service URL',
     required: false,
   })
   @IsOptional()
   @IsString()
-  notes?: string | null;
+  rgaa_service_url?: string;
+
+  @ApiProperty({
+    example: 'https://service.example.com/accessibilite',
+    description: 'RGAA accessibility page URL',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  rgaa_accessibility_url?: string;
+
+  @ApiProperty({
+    example: 85,
+    description: 'RGAA score percentage (0-100)',
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  @Transform(({ value }) => parseInt(value))
+  rgaa_score_percentage?: number;
+
+  // DSFR specific fields
+  @ApiProperty({
+    example: true,
+    description: 'DSFR implemented',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  dsfr_implemented?: boolean;
+
+  @ApiProperty({
+    example: '1.9.0',
+    description: 'DSFR version used',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  dsfr_version?: string;
+
+  // RGPD specific fields
+  @ApiProperty({
+    example: true,
+    description: 'RGPD has AIPD',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  rgpd_has_aipd?: boolean;
+
+  @ApiProperty({
+    example: 'Pierre Durand',
+    description: 'RGPD DPO name',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  rgpd_dpo_name?: string;
 }

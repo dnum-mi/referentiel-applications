@@ -7,10 +7,10 @@ model Application {
   targetPopulations   String[]
   purposes            String[]
   tags                String[]
-  status               Status   @default(under_construction)
+  status              Status                @default(under_construction)
   metadatas           Metadata[]            @relation("ApplicationMetadatas")
   actors              Actor[]               @relation("ApplicationActors")
-  compliances         Compliance[]          @relation("ApplicationCompliances")
+  compliance          Compliance?           @relation("ApplicationCompliance")
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
   hostings            Hosting[]
@@ -32,26 +32,26 @@ model Application {
 }
 
 view ApplicationsExport {
-  id                      String            @unique
-  application             String
-  short                   String?           @map("short")
-  description             String
-  priorityRestart         priorityRestart?  @map("priorityRestart")
-  hebergements            String            @map("hebergements")
-  tags                    String[]
-  MOA                     String            @map("MOA")
-  MOE                     String            @map("MOE")
-  Hebergeur               String            @map("Hebergeur")
-  RSSIM                   String            @map("RSSIM")
-  AutresActeurs           String            @map("Autres Acteurs")
-  ConformitePDMA          String            @map("Conformité PDMA")
-  ConformiteDIMA          String            @map("Conformité DIMA")
-  ConformitePRA           String            @map("Conformité PRA")
-  ConformiteRGAA          String            @map("Conformité RGAA")
-  ConformiteDSFR          String            @map("Conformité DSFR")
-  ConformiteAIPD          String            @map("Conformité AIPD")
-  AutresConformites       String            @map("Autres Conformités")
-  liens                   String            @map("liens")
+  id                String           @unique
+  application       String
+  short             String?          @map("short")
+  description       String
+  priorityRestart   priorityRestart? @map("priorityRestart")
+  hebergements      String           @map("hebergements")
+  tags              String[]
+  MOA               String           @map("MOA")
+  MOE               String           @map("MOE")
+  Hebergeur         String           @map("Hebergeur")
+  RSSIM             String           @map("RSSIM")
+  AutresActeurs     String           @map("Autres Acteurs")
+  ConformitePDMA    String           @map("Conformité PDMA")
+  ConformiteDIMA    String           @map("Conformité DIMA")
+  ConformitePRA     String           @map("Conformité PRA")
+  ConformiteRGAA    String           @map("Conformité RGAA")
+  ConformiteDSFR    String           @map("Conformité DSFR")
+  ConformiteAIPD    String           @map("Conformité AIPD")
+  AutresConformites String           @map("Autres Conformités")
+  liens             String           @map("liens")
 
   @@map("export_full_detailed")
 }

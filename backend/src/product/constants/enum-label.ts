@@ -20,19 +20,12 @@ export const PriorityRestartLabels: Record<string, string> = {
 };
 
 export const ComplianceTypeLabels: Record<string, string> = {
-  regulation: 'Réglementaire',
-  standard: 'Standard',
-  policy: 'Politique interne',
-  contractual: 'Contractuelle',
-  security: 'Sécurité',
-  privacy: 'Vie privée',
-};
-
-export const ComplianceStatusLabels: Record<string, string> = {
-  compliant: 'Conforme',
-  non_compliant: 'Non conforme',
-  partially_compliant: 'Partiellement conforme',
-  not_concerned: 'Non concerné',
+  DIMA: 'DIMA',
+  PDMA: 'PDMA',
+  HOMOLOGATION: 'Homologation',
+  RGAA: 'RGAA',
+  DSFR: 'DSFR',
+  RGPD: 'RGPD',
 };
 
 export const EventTypeLabels: Record<string, string> = {

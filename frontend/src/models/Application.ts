@@ -43,16 +43,47 @@ export interface Metadata {
 
 export interface Compliance {
   id: string;
-  type: string;
-  name: string;
-  status: string;
-  validityStart?: string;
-  validityEnd?: string;
-  scoreValue?: string;
-  scoreUnit?: string;
-  notes?: string;
-  metadataId?: string;
+  type: "DIMA" | "PDMA" | "HOMOLOGATION" | "RGAA" | "DSFR" | "RGPD";
   applicationId?: string;
+
+  // DIMA specific fields
+  dima_duration_hours?: number;
+  dima_is_hno?: boolean;
+  dima_business_impact?: string;
+  dima_recovery_plan?: boolean;
+  dima_recovery_solutions?: string;
+  dima_last_test_date?: string;
+  dima_test_result?: "OK" | "KO";
+  dima_recovery_manager?: string;
+
+  // PDMA specific fields
+  pdma_duration_hours?: number;
+  pdma_data_types?: string;
+  pdma_backup_frequency?: string;
+  pdma_backup_method?: string;
+  pdma_backup_storage?: "S3" | "LOCAL" | "EXTERNE";
+  pdma_last_test_date?: string;
+  pdma_test_result?: "OK" | "KO";
+  pdma_restoration_manager?: string;
+
+  // Homologation specific fields
+  homologation_date?: string;
+  homologation_duration_months?: number;
+  homologation_rssi_id?: string;
+
+  // RGAA specific fields
+  rgaa_audit_date?: string;
+  rgaa_service_url?: string;
+  rgaa_accessibility_url?: string;
+  rgaa_score_percentage?: number;
+
+  // DSFR specific fields
+  dsfr_implemented?: boolean;
+  dsfr_version?: string;
+
+  // RGPD specific fields
+  rgpd_has_aipd?: boolean;
+  rgpd_dpo_name?: string;
 }
 export interface ExternalRessource {
   id: string;

@@ -142,7 +142,7 @@ export class ExportApplicationsUseCase {
         rows: ensureSheetHasAtLeastOneRow(apps.flatMap(mapCompliances), {
           applicationId: '',
           applicationLabel: 'Aucune application',
-          type: 'Aucune conformité',
+          type: 'DIMA' as any, // Use a valid ComplianceType as default
           name: '',
           status: '',
           validityStart: '',

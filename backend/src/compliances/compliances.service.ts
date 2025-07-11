@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
 import { Compliance } from './entities/compliance.entity';
@@ -13,5 +13,10 @@ export class CompliancesService extends BaseService<Compliance> {
     applicationService: ApplicationService,
   ) {
     super(prisma.compliance, prisma, metadatasService, applicationService);
+  }
+
+  async findByApplicationId(applicationId: string): Promise<Compliance | null> {
+    const compliance = await this.findFirst({ applicationId });
+    return compliance ? compliance : null;
   }
 }

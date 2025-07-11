@@ -8,12 +8,8 @@ export default class CompliancesApi {
     return await requests.get(`compliances/count`);
   }
 
-  static async getCompliances(applicationId: string): Promise<Compliance[]> {
+  static async getCompliance(applicationId: string): Promise<Compliance> {
     return await requests.get(baseUrl(applicationId));
-  }
-
-  static async getCompliance(applicationId: string, id: string): Promise<Compliance> {
-    return await requests.get(`${baseUrl(applicationId)}/${id}`);
   }
 
   static async createCompliance(applicationId: string, compliance: Partial<Compliance>): Promise<Compliance> {

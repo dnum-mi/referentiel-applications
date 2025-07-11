@@ -1,32 +1,67 @@
 model Compliance {
-  id            String           @id @default(uuid())
-  type          ComplianceType
-  name          String
-  status        ComplianceStatus
-  validityStart DateTime?
-  validityEnd   DateTime?
-  scoreValue    String?
-  scoreUnit     String?
-  notes         String?
-  metadatas     Metadata[]       @relation("ComplianceMetadata")
-  applicationId String?
-  application   Application?     @relation("ApplicationCompliances", fields: [applicationId], references: [id], onDelete: Cascade)
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation("ApplicationCompliance", fields: [applicationId], references: [id], onDelete: Cascade)
+  metadatas     Metadata[]  @relation("ComplianceMetadata")
 
+  // DIMA specific fields
+  dima_duration_hours     Int? // Mandatory: 1, 4, 8, 12, 24, 48, 72
+  dima_is_hno             Boolean? // HNO (Heure non ouvrée) : Oui/Non
+  dima_business_impact    String? // Impact métier de l'interruption
+  dima_recovery_plan      Boolean? // Mandatory: Plan de reprise existant : (Oui / Non)
+  dima_recovery_solutions String? // Solutions de reprise
+  dima_last_test_date     DateTime? // Tests de reprise effectués : date
+  dima_test_result        TestResult? // Tests de reprise effectués : résultats
+  dima_recovery_manager   String? // Mandatory: Responsable de la reprise
+
+  // PDMA specific fields  
+  pdma_duration_hours      Int? // Mandatory: 1, 4, 8, 12, 24, 48, 72
+  pdma_data_types          String? // Types de données concernées
+  pdma_backup_frequency    String? // Fréquence de sauvegarde
+  pdma_backup_method       String? // Méthode de sauvegarde utilisée
+  pdma_backup_storage      BackupStorage? // Mandatory: Stockage des sauvegardes
+  pdma_last_test_date      DateTime? // Tests de restauration effectués : date
+  pdma_test_result         TestResult? // Tests de restauration effectués : résultats
+  pdma_restoration_manager String? // Mandatory: Responsable de la restauration
+
+  // Homologation specific fields
+  homologation_date            DateTime? // Mandatory: Date de l'homologation
+  homologation_duration_months Int? // Mandatory: Durée de l'homologation (en mois)
+  homologation_rssi_id         String? // Mandatory: RSSI
+  homologation_rssi            Actor?    @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
+
+  // RGAA specific fields
+  rgaa_audit_date        DateTime? // Mandatory: Date d'audit du RGAA
+  rgaa_service_url       String? // URL du service applicatif
+  rgaa_accessibility_url String? // URL de la page d'accessibilité du site
+  rgaa_score_percentage  Int? // Mandatory: Score obtenu lors de l'audit (en pourcentage)
+
+  // DSFR specific fields
+  dsfr_implemented Boolean? // Mandatory: Prise en compte de DSFR (oui/non)
+  dsfr_version     String? // Mandatory: La version de DSFR utilisée
+
+  // RGPD specific fields
+  rgpd_has_aipd Boolean? // Mandatory: Existe-t-il une AIPD ?
+  rgpd_dpo_name String? // Mandatory: Le nom du DPO délégué
   @@map("compliances")
 }
 
 enum ComplianceType {
-  regulation
-  standard
-  policy
-  contractual
-  security
-  privacy
+  DIMA
+  PDMA
+  HOMOLOGATION
+  RGAA
+  DSFR
+  RGPD
 }
 
-enum ComplianceStatus {
-  compliant
-  non_compliant
-  partially_compliant
-  not_concerned
+enum TestResult {
+  OK
+  KO
+}
+
+enum BackupStorage {
+  S3
+  LOCAL
+  EXTERNE
 }
