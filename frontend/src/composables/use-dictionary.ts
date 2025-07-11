@@ -33,20 +33,26 @@ export const actorTypeMapping: Record<string, string> = {
   Autre: "Autre",
 };
 
-export const complianceTypesDict = {
-  regulation: "Réglementation",
-  standard: "Standard",
-  policy: "Politique",
-  contractual: "Contractuel",
-  security: "Sécurité",
-  privacy: "Confidentialité",
+export const testResultsDict = {
+  OK: "OK",
+  KO: "KO",
 };
-export const complianceStatusesDict = {
-  compliant: "Conforme",
-  non_compliant: "Non conforme",
-  partially_compliant: "Partiellement conforme",
-  not_concerned: "Non concerné",
+
+export const backupStorageDict = {
+  S3: "S3",
+  LOCAL: "Local",
+  EXTERNE: "Externe",
 };
+
+export const durationHoursOptions = [
+  { value: 1, text: "1H" },
+  { value: 4, text: "4H" },
+  { value: 8, text: "8H" },
+  { value: 12, text: "12H" },
+  { value: 24, text: "24H" },
+  { value: 48, text: "48H" },
+  { value: 72, text: "72H" },
+];
 
 export const linkTypesDict = {
   documentation: "Documentation",
@@ -98,69 +104,6 @@ export const restartPrioritiesConfig = {
     tooltip: "Les applications qui peuvent rester indisponibles sans conséquences opérationnelles (travaux en HO seulement)",
   },
 } as const;
-
-export const applicationFieldsDict = {
-  id: "Identifiant de l’application",
-  label: "Libellé de l’application",
-  shortName: "Nom court",
-  logo: "Logo",
-  description: "Description",
-  tags: "Tags",
-  purposes: "Finalités",
-  targetPopulations: "Populations ciblées",
-  priorityRestart: "Priorité de redémarrage",
-
-  relationsAsSource: "Relations sortantes",
-  "relationsAsSource.targetApplication.label": "Cibles liées (nom)",
-  relationsAsTarget: "Relations entrantes",
-  "relationsAsTarget.sourceApplication.label": "Sources liées (nom)",
-
-  labels: "Labels",
-  "labels.value": "Valeur du label",
-  "labels.source": "Source du label",
-  "labels.shortname": "Nom court du label",
-
-  hostings: "Hébergements",
-  "hostings.provider": "Fournisseur d’hébergement",
-  "hostings.label": "Label d’hébergement",
-  "hostings.region": "Région",
-  "hostings.site": "Site",
-  "hostings.nature": "Nature",
-  "hostings.platform": "Plateforme",
-
-  compliances: "Conformités",
-  "compliances.type": "Type de conformité",
-  "compliances.name": "Nom de la conformité",
-  "compliances.status": "Statut",
-  "compliances.validityStart": "Début de validité",
-  "compliances.validityEnd": "Fin de validité",
-  "compliances.scoreValue": "Score",
-  "compliances.scoreUnit": "Unité du score",
-  "compliances.notes": "Notes",
-
-  actors: "Acteurs",
-  "actors.firstname": "Prénom de l’acteur",
-  "actors.lastname": "Nom de l’acteur",
-  "actors.role": "Rôle",
-  "actors.type": "Type",
-  "actors.email": "Email",
-  "actors.organization.sigle": "Organisation",
-
-  events: "Événements",
-  "events.type": "Type d’événement",
-  "events.start": "Début",
-  "events.end": "Fin",
-  "events.description": "Description",
-
-  externalRessource: "Ressources externes",
-  "externalRessource.link": "Lien",
-  "externalRessource.description": "Description ressource",
-  "externalRessource.type": "Type de ressource",
-
-  anomalyNotification: "Notifications d’anomalie",
-  "anomalyNotification.description": "Description",
-  "anomalyNotification.status": "Statut de notification",
-};
 
 export const statusApplicationDictionary = {
   under_construction: "En construction",

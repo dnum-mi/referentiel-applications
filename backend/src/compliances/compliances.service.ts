@@ -14,4 +14,8 @@ export class CompliancesService extends BaseService<Compliance> {
   ) {
     super(prisma.compliance, prisma, metadatasService, applicationService);
   }
+
+  async findByApplicationId(applicationId: string): Promise<Compliance | null> {
+    return this.model.findFirst({ where: { applicationId } });
+  }
 }

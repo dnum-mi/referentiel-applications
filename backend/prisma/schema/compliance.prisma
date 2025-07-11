@@ -1,32 +1,52 @@
 model Compliance {
-  id            String           @id @default(uuid())
-  type          ComplianceType
-  name          String
-  status        ComplianceStatus
-  validityStart DateTime?
-  validityEnd   DateTime?
-  scoreValue    String?
-  scoreUnit     String?
-  notes         String?
-  metadatas     Metadata[]       @relation("ComplianceMetadata")
-  applicationId String?
-  application   Application?     @relation("ApplicationCompliances", fields: [applicationId], references: [id], onDelete: Cascade)
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation("ApplicationCompliance", fields: [applicationId], references: [id], onDelete: Cascade)
+  metadatas     Metadata[]  @relation("ComplianceMetadata")
 
+  dima_duration_hours     Int?
+  dima_is_hno             Boolean?
+  dima_business_impact    String?
+  dima_recovery_plan      Boolean?
+  dima_recovery_solutions String?
+  dima_last_test_date     DateTime?
+  dima_test_result        TestResult?
+  dima_recovery_manager   String?
+
+  pdma_duration_hours      Int?
+  pdma_data_types          String?
+  pdma_backup_frequency    String?
+  pdma_backup_method       String?
+  pdma_backup_storage      BackupStorage?
+  pdma_last_test_date      DateTime?
+  pdma_test_result         TestResult?
+  pdma_restoration_manager String?
+
+  homologation_date            DateTime?
+  homologation_duration_months Int?
+  homologation_rssi_id         String?
+  homologation_rssi            Actor?    @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
+
+  rgaa_audit_date        DateTime?
+  rgaa_service_url       String?
+  rgaa_accessibility_url String?
+  rgaa_score_percentage  Int?
+
+  dsfr_implemented Boolean?
+  dsfr_version     String?
+
+  rgpd_has_aipd Boolean?
+  rgpd_dpo_name String?
   @@map("compliances")
 }
 
-enum ComplianceType {
-  regulation
-  standard
-  policy
-  contractual
-  security
-  privacy
+enum TestResult {
+  OK
+  KO
 }
 
-enum ComplianceStatus {
-  compliant
-  non_compliant
-  partially_compliant
-  not_concerned
+enum BackupStorage {
+  S3
+  LOCAL
+  EXTERNE
 }

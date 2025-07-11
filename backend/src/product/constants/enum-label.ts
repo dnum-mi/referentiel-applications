@@ -19,22 +19,6 @@ export const PriorityRestartLabels: Record<string, string> = {
   R3: 'R3 - Quand le plus urgent est réalisé (H0)',
 };
 
-export const ComplianceTypeLabels: Record<string, string> = {
-  regulation: 'Réglementaire',
-  standard: 'Standard',
-  policy: 'Politique interne',
-  contractual: 'Contractuelle',
-  security: 'Sécurité',
-  privacy: 'Vie privée',
-};
-
-export const ComplianceStatusLabels: Record<string, string> = {
-  compliant: 'Conforme',
-  non_compliant: 'Non conforme',
-  partially_compliant: 'Partiellement conforme',
-  not_concerned: 'Non concerné',
-};
-
 export const EventTypeLabels: Record<string, string> = {
   under_construction: 'En construction',
   in_production: 'En production',
