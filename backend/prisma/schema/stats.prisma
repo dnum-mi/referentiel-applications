@@ -8,6 +8,7 @@ model Stats {
   valeur  Float
   type    StatsType
   date    DateTime  @unique
-
+  
+  @@unique([date, type])
   @@map("stats")
 }
