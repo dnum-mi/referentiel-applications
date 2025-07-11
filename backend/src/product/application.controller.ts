@@ -21,7 +21,6 @@ import {
 } from './application/dto/create-application.dto';
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
-import { ComplianceStatus, ComplianceType } from 'src/enum';
 import { Response } from 'express';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
@@ -55,14 +54,7 @@ Vous devez fournir les informations suivantes :
   - **source**: La source du libelé.
   - **value**: Le libellé alternatif.
 - **compliances**: La liste des conformités associées avec :
-  - **type**: Le type de conformité (Enum: ${Object.values(ComplianceType).join(', ')}).
-  - **name**: Le nom de la conformité.
-  - **status**: Le statut (Enum: ${Object.values(ComplianceStatus).join(', ')}).
-  - **validityStart**: Date de début de validité.
-  - **validityEnd**: Date de fin de validité.
-  - **scoreValue**: Valeur du score.
-  - **scoreUnit**: Unité du score.
-  - **notes**: Notes complémentaires.
+  - Champs spécifiques selon le type de conformité (DIMA, PDMA, HOMOLOGATION, RGAA, DSFR, RGPD).
     `,
   })
   @ApiResponse({ status: 201, description: 'Application créée avec succès.' })

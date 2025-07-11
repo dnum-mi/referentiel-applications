@@ -28,13 +28,6 @@ export const columnLabels: Record<string, string> = {
 
   compliances: 'Conformités',
   'compliances.type': 'Type de conformité',
-  'compliances.name': 'Nom de la conformité',
-  'compliances.status': 'Statut',
-  'compliances.validityStart': 'Début de validité',
-  'compliances.validityEnd': 'Fin de validité',
-  'compliances.scoreValue': 'Score',
-  'compliances.scoreUnit': 'Unité du score',
-  'compliances.notes': 'Notes',
 
   actors: 'Acteurs',
   'actors.firstname': 'Prénom de l’acteur',

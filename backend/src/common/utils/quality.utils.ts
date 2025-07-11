@@ -4,14 +4,14 @@ export async function calculateIQ(
   applicationId: string,
   prisma: PrismaClient,
 ): Promise<number> {
-  const [application, hosting, actors, compliances, links] = await Promise.all([
+  const [application, hosting, actors, compliance, links] = await Promise.all([
     prisma.application.findUnique({ where: { id: applicationId } }),
     prisma.hosting.findFirst({ where: { applicationId } }),
     prisma.actor.findMany({
       where: { applicationId },
       include: { actorType: true },
     }),
-    prisma.compliance.findMany({ where: { applicationId } }),
+    prisma.compliance.findFirst({ where: { applicationId } }),
     prisma.externalRessource.findMany({ where: { applicationId } }),
   ]);
 
@@ -24,16 +24,25 @@ export async function calculateIQ(
     { value: actors.some((a) => a.actorType?.code === 'HEB'), importance: 3 },
     { value: actors.some((a) => a.actorType?.code === 'REP'), importance: 3 },
     {
-      value: compliances.some((c) => c.name.toLowerCase().includes('pdma')),
+      value: Boolean(
+        compliance?.pdma_duration_hours ||
+          compliance?.pdma_data_types ||
+          compliance?.pdma_backup_frequency,
+      ),
       importance: 3,
     },
     {
-      value: compliances.some((c) => c.name.toLowerCase().includes('dima')),
+      value: Boolean(
+        compliance?.dima_duration_hours ||
+          compliance?.dima_business_impact ||
+          compliance?.dima_recovery_plan,
+      ),
       importance: 3,
     },
     {
-      value: compliances.some((c) =>
-        c.name.toLowerCase().includes('homologation'),
+      value: Boolean(
+        compliance?.homologation_date ||
+          compliance?.homologation_duration_months,
       ),
       importance: 3,
     },

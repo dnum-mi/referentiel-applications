@@ -25,6 +25,7 @@ model Actor {
   actorTypeId    String?
   actorType      ActorType?    @relation(fields: [actorTypeId], references: [id])
   metadatas      Metadata[]    @relation("ActorMetadata")
+  compliances    Compliance[]  @relation("ComplianceHomologationRSSI")
 
   @@index([applicationId, actorTypeId])
   @@map("actors")

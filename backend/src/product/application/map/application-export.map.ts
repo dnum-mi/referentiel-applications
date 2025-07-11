@@ -1,7 +1,6 @@
 import { translateEnum } from 'src/common/utils/enum.utils';
 import {
   AnomalyNotificationStatusLabels,
-  ComplianceStatusLabels,
   ExternalRessourceTypeLabels,
   PriorityRestartLabels,
 } from 'src/product/constants/enum-label';
@@ -78,17 +77,42 @@ export function mapActors(app: ApplicationWithAllRelations) {
 }
 
 export function mapCompliances(app: ApplicationWithAllRelations) {
-  return (
-    app.compliances?.map((c) => ({
+  if (!app.compliance) return [];
+
+  const compliance = app.compliance;
+
+  return [
+    {
       applicationId: app.id,
       applicationLabel: app.label,
-      type: c.type,
-      name: c.name,
-      status: translateEnum(ComplianceStatusLabels, c.status),
-      validityStart: c.validityStart?.toISOString().split('T')[0],
-      validityEnd: c.validityEnd?.toISOString().split('T')[0],
-    })) ?? []
-  );
+      ...compliance,
+      // Convert boolean values to "Oui" or "Non"
+      dima_is_hno:
+        compliance.dima_is_hno === true
+          ? 'Oui'
+          : compliance.dima_is_hno === false
+            ? 'Non'
+            : null,
+      dima_recovery_plan:
+        compliance.dima_recovery_plan === true
+          ? 'Oui'
+          : compliance.dima_recovery_plan === false
+            ? 'Non'
+            : null,
+      dsfr_implemented:
+        compliance.dsfr_implemented === true
+          ? 'Oui'
+          : compliance.dsfr_implemented === false
+            ? 'Non'
+            : null,
+      rgpd_has_aipd:
+        compliance.rgpd_has_aipd === true
+          ? 'Oui'
+          : compliance.rgpd_has_aipd === false
+            ? 'Non'
+            : null,
+    },
+  ];
 }
 
 export function mapLabels(app: ApplicationWithAllRelations) {
