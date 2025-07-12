@@ -5,9 +5,11 @@ import { getToken } from './getToken';
 import { RelationType } from '@prisma/client';
 import { UserFaker } from './fakers/user.faker';
 import { ApplicationFaker } from './fakers/application.faker';
+import { getPrismaClient } from './fakers/prisma';
 
 describe('Relations End-to-End', () => {
   const app = setupTestSuite();
+  const prisma = getPrismaClient();
   let applicationSource: { id: string };
   let applicationTarget: { id: string };
   let applicationUpdates: { id: string };
@@ -27,6 +29,9 @@ describe('Relations End-to-End', () => {
     applicationSource = await ApplicationFaker.create(user);
     applicationTarget = await ApplicationFaker.create(user);
     applicationUpdates = await ApplicationFaker.create(user);
+  });
+  afterAll(async () => {
+    prisma.$disconnect();
   });
 
   it('should create a relation when provided with a valid DTO', async () => {

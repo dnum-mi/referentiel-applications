@@ -1,11 +1,12 @@
 import { KeycloakService } from '../../src/services/keycloak.service';
 import { faker } from '@faker-js/faker';
-import { prisma } from './prisma';
+import { getPrismaClient } from './prisma';
 
 const keycloakService = new KeycloakService();
 
 export class UserFaker {
   static async create(permissions: string[] = []) {
+    const prisma = getPrismaClient();
     const email = faker.internet.email();
     const username = email;
 
