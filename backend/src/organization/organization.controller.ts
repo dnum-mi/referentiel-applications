@@ -8,6 +8,7 @@ import {
   Request,
   Logger,
   Param,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { OrganizationService } from './organization.service';
@@ -16,6 +17,7 @@ import {
   PatchOrganizationDto,
 } from './dto/organization.dto';
 import { Organization } from '@prisma/client';
+import { OrganizationFilterDto } from './dto/filters.dto';
 
 /**
  * Controller la gestion des organisations
@@ -72,22 +74,29 @@ Vous devez fournir les informations suivantes :
    * @returns L'organisation correspondant à l'ID spécifié
    * @throws NotFoundException Si l'organisation n'est pas trouvée
    */
-  @Get(':id')
+  @Get('/:id')
   @ApiOperation({
     summary: 'Récupérer une organisation spécifique par ID',
     description: `Ce endpoint permet de récupérer les détails complets d'une organisation en fonction de son identifiant unique.`,
   })
   public async findOne(@Param('id') id: string): Promise<Organization> {
-    return await this.organizationService.findOne(id);
+    return this.organizationService.findOne(id);
   }
 
   @Get()
   @ApiResponse({ status: 200, description: 'Liste les organisations' })
-  public async findAll(): Promise<Organization[]> {
-    return await this.organizationService.findAll();
+  public async findAll(
+    @Query() filters: OrganizationFilterDto,
+  ): Promise<Record<string, Organization>> {
+    return this.organizationService.findMultiple({
+      ids: filters.ids ? filters.ids.split(',') : [],
+      withAncestors: filters.withAncestors === 'true',
+      withChildren: filters.withChildren === 'true',
+      search: filters.search,
+    });
   }
 
-  @Patch(':id')
+  @Patch('/:id')
   @ApiOperation({
     summary: 'Mettre à jour une organisation',
   })
@@ -98,9 +107,9 @@ Vous devez fournir les informations suivantes :
     return await this.organizationService.update(id, data);
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   @ApiOperation({ summary: 'Supprimer une organisation' })
   public async delete(@Param('id') id: string) {
-    return await this.organizationService.delete(id);
+    return this.organizationService.deleteSafe(id);
   }
 }
