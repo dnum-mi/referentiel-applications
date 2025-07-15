@@ -1,3 +1,10 @@
 {
-  "conventionalCommits.scopes": ["applications", "ci", "api", "front", "prisma"]
+  "conventionalCommits.scopes": [
+    "applications",
+    "ci",
+    "api",
+    "front",
+    "prisma",
+    "test"
+  ]
 }

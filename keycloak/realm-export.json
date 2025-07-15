@@ -2,7 +2,7 @@
   "id": "6bbd7025-6260-4a8c-b594-8a1149fe7d59",
   "realm": "referentiel-applications",
   "enabled": true,
-  "sslRequired": "external",
+  "sslRequired": "none",
   "registrationAllowed": true,
   "rememberMe": true,
   "loginWithEmailAllowed": true,
