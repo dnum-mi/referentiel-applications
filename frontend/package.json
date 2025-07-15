@@ -12,7 +12,9 @@
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "type-check": "vue-tsc --build --force"
+    "type-check": "vue-tsc --build --force",
+    "cy:open": "cypress open --config-file cypress.config.mts --browser firefox",
+    "cy:run": "cypress run --config-file cypress.config.mts --browser firefox"
   },
   "dependencies": {
     "@gouvfr/dsfr": "~1.14.0",
@@ -40,6 +42,7 @@
     "@vitejs/plugin-vue-jsx": "^5.0.1",
     "@vue/test-utils": "^2.4.6",
     "@vue/tsconfig": "^0.7.0",
+    "cypress": "^14.5.1",
     "jsdom": "^26.1.0",
     "npm-run-all2": "^8.0.4",
     "typescript": "~5.8.3",
