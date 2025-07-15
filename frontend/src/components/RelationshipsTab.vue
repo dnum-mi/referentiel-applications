@@ -3,13 +3,13 @@ import { watchEffect, onMounted } from "vue";
 import { useRelationStore } from "@/stores/relationStore";
 import { useRelationManager } from "@/composables/use-relation-manager";
 import type { Application } from "@/models/Application";
-import Users from "@/api/user.js";
+import { useUserStore } from "@/stores/userStore";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits<{ (e: "update:application", app: Application): void }>();
 
 const store = useRelationStore();
-const userPermissions = ref(null);
+const userStore = useUserStore();
 
 watchEffect(() => {
   if (props.application) {
@@ -36,12 +36,6 @@ const {
   closeEditRelationModal,
   handleUpdateRelation,
 } = useRelationManager(props.application, emit);
-
-onMounted(async () => {
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
-});
 </script>
 
 <template>
@@ -54,7 +48,7 @@ onMounted(async () => {
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         @click="openAddRelationModal"
-        :disabled="!userPermissions?.includes('write')"
+        :disabled="!userStore.userPermissions?.includes('write')"
       >
         Ajouter une relation
       </DsfrButton>
@@ -67,7 +61,7 @@ onMounted(async () => {
       tertiary
       @click="removeSelectedRelations"
       icon="fr-icon-delete-line"
-      :disabled="selectedRelationIds.length === 0 || !userPermissions?.includes('write')"
+      :disabled="selectedRelationIds.length === 0 || !userStore.userPermissions?.includes('write')"
     >
       Supprimer la sélection
     </DsfrButton>
@@ -101,7 +95,13 @@ onMounted(async () => {
         </a>
       </template>
       <template v-else-if="colKey === 'Actions'">
-        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.edit()" :disabled="!userPermissions?.includes('write')">
+        <DsfrButton
+          tertiary
+          size="sm"
+          icon="fr-icon-edit-line"
+          @click="cell.edit()"
+          :disabled="!userStore.userPermissions?.includes('write')"
+        >
           {{ cell.label }}
           Modifier
         </DsfrButton>

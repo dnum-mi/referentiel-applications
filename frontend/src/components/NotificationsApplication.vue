@@ -7,10 +7,6 @@ const props = defineProps<{ application: Application }>();
 
 const reportStore = useReportIssueStore();
 
-onMounted(() => {
-  reportStore.fetchIssueByApplication(props.application.id);
-});
-
 const headers = ["Date", "Auteur", "Description"];
 const currentPage = ref(0);
 const activeAccordion = ref<number>();

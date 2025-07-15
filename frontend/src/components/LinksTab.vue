@@ -7,7 +7,7 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import LinkForm from "./form/LinkForm.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
-import Users from "@/api/user";
+import { useUserStore } from "@/stores/userStore";
 
 const props = defineProps<{
   application: { id: string };
@@ -16,22 +16,19 @@ const props = defineProps<{
 const emit = defineEmits(["update:application"]);
 const toaster = useToaster();
 const linkStore = useLinkStore();
+const userStore = useUserStore();
 const linkModal = useModal();
 
 const selectedLinkIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(0);
-const userPermissions = ref(null);
 
 const formatLink = (url: string) => (!url.startsWith("http") ? `http://${url}` : url);
 const getTypeLabel = (type: string) => linkTypesDict[type] || "Type inconnu";
 
 onMounted(async () => {
   linkStore.fetchLinks(props.application.id);
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
 });
 
 const rows = computed(() =>
@@ -101,7 +98,7 @@ const removeSelectedLinks = () => {
       <DsfrButton
         class="fr-btn--icon-left fr-icon-add-line"
         @click="linkModal.openCreateModal()"
-        :disabled="!userPermissions?.includes('write')"
+        :disabled="!userStore.userPermissions?.includes('write')"
       >
         Ajouter un lien
       </DsfrButton>
@@ -118,7 +115,7 @@ const removeSelectedLinks = () => {
         type="button"
         tertiary
         icon="fr-icon-delete-line"
-        :disabled="!selectedLinkIds.length || !userPermissions?.includes('write')"
+        :disabled="!selectedLinkIds.length || !userStore.userPermissions?.includes('write')"
         @click="removeSelectedLinks"
       >
         Supprimer la sélection
@@ -145,7 +142,13 @@ const removeSelectedLinks = () => {
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">{{ cell.label }}</a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!userPermissions?.includes('write')">
+          <DsfrButton
+            tertiary
+            size="sm"
+            icon="fr-icon-edit-line"
+            @click="cell.onClick"
+            :disabled="!userStore.userPermissions?.includes('write')"
+          >
             {{ cell.label }}
           </DsfrButton>
         </template>

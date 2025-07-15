@@ -5,12 +5,7 @@ import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { formatDate } from "@/composables/use-date";
-import {
-  statusApplicationDictionary,
-  statusColorsApplication,
-  statusDictionary,
-  statusIconClassesApplication,
-} from "@/composables/use-dictionary";
+import { statusApplicationDictionary } from "@/composables/use-dictionary";
 
 const route = useRoute();
 const id = route.params.id as string;
