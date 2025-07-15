@@ -1,21 +1,8 @@
 <template>
   <div class="fr-container">
-    <DsfrTabs v-model="activeTab" tab-list-name="Administration">
-      <template #tab-items>
-        <DsfrTabItem
-          v-for="(tab, index) in tabs"
-          :key="index"
-          :tab-id="`tab-${index}`"
-          :panel-id="`tab-content-${index}`"
-          :icon="tab.icon"
-          @click="activeTab = index"
-        >
-          {{ tab.title }}
-        </DsfrTabItem>
-      </template>
-
-      <template v-for="(tab, index) in tabs" :key="index">
-        <DsfrTabContent v-show="activeTab === index" :panel-id="`tab-content-${index}`" :tab-id="`tab-${index}`">
+    <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs">
+      <template v-for="(tab, index) in tabs" :key="tab.panelId">
+        <DsfrTabContent :tab-id="tab.tabId" :panel-id="tab.panelId" v-show="activeTab === index">
           <template v-if="index === 0">
             <h1 class="fr-h1">Gestion des utilisateurs</h1>
             <p class="fr-text--lg">Gérez les permissions des utilisateurs de l'application</p>
@@ -158,10 +145,14 @@ const tabs = [
   {
     title: "Gestion des utilisateurs",
     icon: "ri-user-settings-line",
+    tabId: "tab-users",
+    panelId: "panel-users",
   },
   {
     title: "Indice de qualité",
     icon: "ri-bar-chart-line",
+    tabId: "tab-quality",
+    panelId: "panel-quality",
   },
 ];
 

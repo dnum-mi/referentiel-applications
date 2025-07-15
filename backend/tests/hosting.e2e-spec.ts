@@ -5,15 +5,20 @@ import { UserFaker } from './fakers/user.faker';
 import { HostingFaker } from './fakers/hosting.faker';
 import { HostingOptionFaker } from './fakers/hosting-option.faker';
 import { ApplicationFaker } from './fakers/application.faker';
+import { getPrismaClient } from './fakers/prisma';
 
 describe('Hostings', () => {
   const app = setupTestSuite();
+  const prisma = getPrismaClient();
   let user: { keycloakId: string };
   let application: { id: string };
 
   beforeAll(async () => {
     user = await UserFaker.create(['read', 'write']);
     application = await ApplicationFaker.create(user);
+  });
+  afterAll(async () => {
+    prisma.$disconnect();
   });
 
   it(`/GET applications/:applicationId/hostings`, async () => {

@@ -4,9 +4,11 @@ import { getToken } from './getToken';
 import { UserFaker } from './fakers/user.faker';
 import { ApplicationFaker } from './fakers/application.faker';
 import { LinkFaker } from './fakers/link.faker';
+import { getPrismaClient } from './fakers/prisma';
 
 describe('Links', () => {
   const app = setupTestSuite();
+  const prisma = getPrismaClient();
   let application: { id: string };
   let user: { keycloakId: string };
   let TOKEN: string;
@@ -15,6 +17,9 @@ describe('Links', () => {
     user = await UserFaker.create(['read', 'write']);
     TOKEN = await getToken(user);
     application = await ApplicationFaker.create(user);
+  });
+  afterAll(async () => {
+    prisma.$disconnect();
   });
 
   it(`/GET applications/:applicationId/links`, async () => {

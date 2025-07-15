@@ -1,6 +1,6 @@
 import { PrismaClient, priorityRestart } from '@prisma/client';
 import { faker } from '@faker-js/faker';
-import { prisma } from './prisma';
+import { getPrismaClient } from './prisma';
 
 const appTags = [
   'WEB',
@@ -34,6 +34,8 @@ const restartPriorities = Object.values(priorityRestart);
 
 export class ApplicationFaker {
   static async create(user) {
+    const prisma = getPrismaClient();
+
     return await prisma.application.create({
       data: {
         label: faker.company.name(),
