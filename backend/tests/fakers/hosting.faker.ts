@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { prisma } from './prisma';
+import { getPrismaClient } from './prisma';
 
 export class HostingFaker {
   static async create(override: {
@@ -8,6 +8,8 @@ export class HostingFaker {
     user: { keycloakId: string };
     [key: string]: any;
   }) {
+    const prisma = getPrismaClient();
+
     const { hostingOption, application, user, ...restOverride } = override;
 
     return await prisma.hosting.create({

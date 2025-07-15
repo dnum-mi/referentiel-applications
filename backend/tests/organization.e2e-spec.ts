@@ -3,15 +3,20 @@ import { setupTestSuite } from './setup';
 import { getToken } from './getToken';
 import { UserFaker } from './fakers/user.faker';
 import { OrganizationFaker } from './fakers/organization.faker';
+import { getPrismaClient } from './fakers/prisma';
 
 describe('Organizations', () => {
   const app = setupTestSuite();
+  const prisma = getPrismaClient();
   let user: { keycloakId: string };
   let TOKEN: string;
 
   beforeAll(async () => {
     user = await UserFaker.create(['read', 'write']);
     TOKEN = await getToken(user);
+  });
+  afterAll(async () => {
+    prisma.$disconnect();
   });
 
   it(`/POST organizations`, async () => {

@@ -1,8 +1,10 @@
 import { faker } from '@faker-js/faker';
-import { prisma } from './prisma';
+import { getPrismaClient } from './prisma';
 
 export class HostingOptionFaker {
   static async create(override = {}) {
+    const prisma = getPrismaClient();
+
     const platform = faker.helpers.arrayElement([
       'PHYSIQUE',
       'VIRTUALISATION',

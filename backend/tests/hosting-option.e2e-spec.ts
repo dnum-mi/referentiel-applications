@@ -3,13 +3,18 @@ import { setupTestSuite } from './setup';
 import { getToken } from './getToken';
 import { UserFaker } from './fakers/user.faker';
 import { HostingOptionFaker } from './fakers/hosting-option.faker';
+import { getPrismaClient } from './fakers/prisma';
 
 describe('HostingOptions', () => {
   const app = setupTestSuite();
   let user: { keycloakId: string };
+  const prisma = getPrismaClient();
 
   beforeAll(async () => {
     user = await UserFaker.create(['read', 'write']);
+  });
+  afterAll(async () => {
+    prisma.$disconnect();
   });
 
   it(`/GET hosting-options`, async () => {
