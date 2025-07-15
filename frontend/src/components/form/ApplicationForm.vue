@@ -5,6 +5,7 @@ import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 
 const toaster = useToaster();
 
@@ -17,15 +18,6 @@ const props = defineProps<{
 const emit = defineEmits(["update:application", "submit", "cancel"]);
 
 const initialLabels = ref<Label[]>([]);
-
-const priorityRestartOptions = [
-  { value: "", text: "Sélectionner une priorité" },
-  { value: "R0", text: "R0 - Immédiat (H24)" },
-  { value: "R1", text: "R1 - Dès que le socle technique est rétabli (H24)" },
-  { value: "R1_STAR", text: "R1* - Selon période d'activité" },
-  { value: "R2", text: "R2 - Dès que possible (H24)" },
-  { value: "R3", text: "R3 - Quand le plus urgent est réalisé (H0)" },
-];
 
 const statusOptions = computed(() =>
   Object.keys(statusApplicationDictionary).map((value) => ({
@@ -78,13 +70,13 @@ const form = ref({
   label: props.initialData?.label ?? "",
   shortName: props.initialData?.shortName ?? "",
   labels: props.labels ? [...props.labels] : [],
-  status: props.initialData?.status ?? "",
+  status: props.initialData?.status ?? null,
   description: props.initialData?.description ?? "",
   targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
   logo: props.initialData?.logo ?? "",
   purposes: [...(props.initialData?.purposes ?? [""])],
   tags: [...(props.initialData?.tags ?? [""])],
-  priorityRestart: props.initialData?.priorityRestart ?? "",
+  priorityRestart: props.initialData?.priorityRestart ?? null,
 });
 
 const isTagValid = (tag: string) => {
@@ -147,7 +139,7 @@ onMounted(() => {
 
     <DsfrSelect
       v-model="form.priorityRestart"
-      :options="priorityRestartOptions"
+      :options="priorityRestartLabelsOptions"
       label="Priorité de redémarrage"
       default-unselected-text="Sélectionner une priorité"
     />
@@ -156,7 +148,7 @@ onMounted(() => {
       <label class="fr-label">Population</label>
       <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
       <div class="fr-mt-2w">
-        <div v-for="(targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+        <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
             <DsfrInput v-model="form.targetPopulations[index]" />
           </div>
