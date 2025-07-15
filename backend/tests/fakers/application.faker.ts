@@ -55,6 +55,7 @@ export class ApplicationFaker {
             },
           ],
         },
+        quality: faker.number.int({ min: 10, max: 100 }),
       },
     });
   }

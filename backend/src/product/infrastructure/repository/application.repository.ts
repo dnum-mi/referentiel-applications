@@ -15,7 +15,9 @@ export class ApplicationRepository implements IApplicationRepository {
 
   public async create(application: CreateApplicationDto, ownerId: string) {
     const mappedData = applicationMap(application, ownerId);
-    return await this.prisma.application.create(mappedData);
+    return this.prisma.application.create({
+      data: { ...mappedData.data, quality: 0 },
+    });
   }
 
   public async findAll() {
