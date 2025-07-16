@@ -31,7 +31,7 @@ export class CreateOrganizationDto {
 
   @ApiProperty({
     example: 'f09ed26a-8415-476a-be3b-ada479291c34',
-    description: "L'identifiant de l'organisation",
+    description: "L'identifiant de l'organisation parente",
     required: false,
   })
   @IsString()

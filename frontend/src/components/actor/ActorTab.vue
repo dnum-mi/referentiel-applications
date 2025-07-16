@@ -10,7 +10,6 @@ import ActorForm from "./ActorForm.vue";
 
 import type { Actor } from "@/models/Actor";
 import type { Application } from "@/models/Application";
-import Users from "@/api/user";
 import { useUserStore } from "@/stores/userStore";
 
 const props = defineProps<{ application: Application }>();
@@ -18,7 +17,6 @@ const emit = defineEmits(["update:application"]);
 
 const actorStore = useActorStore();
 const userStore = useUserStore();
-const orgStore = useOrganizationStore();
 const actorTypeStore = useActorTypeStore();
 const toaster = useToaster();
 const actorModal = useModal();
@@ -31,24 +29,12 @@ const loading = ref(false);
 
 const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 
-const organizationsList = computed(() => orgStore.organizations);
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 
 const tableRows = computed(() =>
   actorStore.actors.map((actor) => [
     actor.id,
-    (() => {
-      const org = organizationsList.value.find((o) => o.id === actor.organizationId);
-      return org
-        ? {
-            label: org.label,
-            to: org.url || "#",
-          }
-        : {
-            label: "Organisation inconnue",
-            to: "#",
-          };
-    })(),
+    actor.organizationId ?? undefined,
     (() => {
       const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
       return type ? type.label : "Type inconnu";
@@ -68,7 +54,6 @@ const tableRows = computed(() =>
 );
 
 onBeforeMount(async () => {
-  await orgStore.fetchAll();
   await actorTypeStore.fetchAll();
 });
 
@@ -173,9 +158,8 @@ function cancelDelete() {
           <input type="checkbox" :value="cell" v-model="selectedActorIds" />
         </template>
         <template v-else-if="colKey === 'Organisation'">
-          <a :href="cell.to" target="_blank" rel="noopener noreferrer">
-            {{ cell.label }}
-          </a>
+          <OrgBreadCrumb v-if="cell" :organization-id="cell"></OrgBreadCrumb>
+          <template v-else>Aucune organisation</template>
         </template>
         <template v-else-if="colKey === 'Email'">
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">
@@ -211,7 +195,6 @@ function cancelDelete() {
     <ActorForm
       v-bind="{ application, initialData: actorModal.selectedItem.value }"
       :is-submitting="isSubmitting"
-      :organizations="organizationsList"
       :actorTypes="actorTypesList"
       @submit="handleSaveActors"
       @cancel="actorModal.closeModal"

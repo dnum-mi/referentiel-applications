@@ -3,5 +3,5 @@ export interface Organization {
   label: string;
   url: string;
   sigle: string;
-  parentId: string;
+  parentId: string | null;
 }

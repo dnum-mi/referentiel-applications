@@ -7,7 +7,7 @@ import { ApplicationService } from 'src/product/application.service';
 @Injectable()
 export class BaseService<T> {
   constructor(
-    private readonly model: any,
+    protected readonly model: any,
     protected readonly prisma: PrismaService,
     private readonly metadatasService?: MetadatasService,
     private readonly applicationService?: ApplicationService,

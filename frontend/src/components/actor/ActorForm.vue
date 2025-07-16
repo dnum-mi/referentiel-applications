@@ -1,20 +1,17 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { PropType } from "vue";
-import type { Actor, Application } from "@/models/Application";
+import type { Application } from "@/models/Application";
 import type { Organization } from "@/models/organization";
 import type { ActorType } from "@/models/ActorType";
-import SuggestionsInput from "../SuggestionsInput.vue";
+import type { Actor } from "@/models/Actor";
+import { useOrganizationStore } from "@/stores/organizationStore";
 
 const props = defineProps({
   initialData: Object as PropType<Actor>,
   isSubmitting: Boolean,
   application: {
     type: Object as PropType<Application>,
-    required: true,
-  },
-  organizations: {
-    type: Array as PropType<Organization[]>,
     required: true,
   },
   actorTypes: {
@@ -25,10 +22,13 @@ const props = defineProps({
 
 const emit = defineEmits(["submit", "cancel"]);
 
+const organizationStore = useOrganizationStore();
 const form = ref<Actor>({
   ...props.initialData,
   applicationId: props.application.id,
 });
+
+const actorOrganization = ref<Organization>(organizationStore.organizations[props.initialData?.organizationId ?? ""]);
 
 const actorTypeOptions = props.actorTypes.map((type) => ({
   text: type.label,
@@ -47,7 +47,12 @@ const handleSubmit = () => {
     </div>
 
     <div class="fr-input-group fr-mt-3w">
-      <SuggestionsInput :searchData="props.organizations" v-model:returnData="form.organizationId" label="Organisation" />
+      <OrganizationFilter
+        v-model="form.organizationId"
+        label="Organisation"
+        @select="form.organizationId = $event?.id"
+        :preselected="actorOrganization"
+      />
     </div>
 
     <div class="fr-input-group fr-mt-3w">

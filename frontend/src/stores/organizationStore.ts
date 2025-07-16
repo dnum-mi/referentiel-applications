@@ -1,40 +1,69 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import type { Organization } from "@/models/organization";
-import { call } from "@/api/callService";
+import OrganizationApi from "@/api/organization";
 
 export const useOrganizationStore = defineStore("organizationStore", () => {
-  const organizations = ref<Organization[]>([]);
-  const isLoading = ref(false);
+  const organizations = ref<Record<string, Organization>>({});
   const error = ref<string | null>(null);
 
-  async function fetchAll() {
-    try {
-      isLoading.value = true;
-      const result = await call("organization", "list");
-      organizations.value = result;
-    } catch (err: any) {
-      console.error("❌ Erreur lors du chargement des organisations :", err);
-      error.value = err.message ?? "Erreur inconnue";
-    } finally {
-      isLoading.value = false;
+  /**
+   * Search for organizations by label or sigle.
+   * @param search - The search term to filter organizations.
+   * @returns A promise that resolves to an array of organizations matching the search term.
+   */
+  async function search(search: string): Promise<Organization[]> {
+    const orgs = await OrganizationApi.searchOrganizations(search);
+    organizations.value = { ...organizations.value, ...orgs };
+    return Object.values(orgs);
+  }
+  /**
+   * Get an organization by its ID.
+   * If the organization is not found, it will fetch it.
+   * Prefer to use a computed on `organizations` to get the incoming organization.
+   * @param id - The ID of the organization to retrieve.
+   * @returns The organization object or undefined if not found.
+   */
+  function getById(id: string): Organization | undefined {
+    const org = organizations.value[id];
+    if (!org) {
+      fetchById(id);
     }
+    return org;
   }
 
-  async function fetchById(id: string): Promise<Organization | undefined> {
-    try {
-      return await call("organization", "get", { id });
-    } catch (err) {
-      console.error(`❌ Erreur lors de la récupération de l'organisation avec l'id ${id}`, err);
-      return undefined;
-    }
+  /**
+   * Fetch an organization by its ID and store it and its ancestors in the store.
+   * Prefer to use `getById` to retrieve an organization using cached data.
+   * If the organization is not found, it will create a fake one.
+   * @param id - The ID of the organization to fetch.
+   * @returns The fetched organization or a fake one if not found.
+   */
+  async function fetchById(id: string): Promise<Organization> {
+    await OrganizationApi.getOrganizations([id])
+      .then((data) => {
+        organizations.value = { ...organizations.value, ...data };
+      })
+      .catch((err) => {
+        console.error(`❌ Erreur lors de la récupération de l'organisation avec l'id ${id}`, err);
+        error.value = err.message ?? "Erreur inconnue";
+        const fakeData: Organization = {
+          id,
+          label: "Organisation non trouvée",
+          url: "", // Set to undefined if not found
+          sigle: "NOT FOUND", // Set to undefined if not found
+          parentId: null, // Set to null if not found
+        };
+        organizations.value = { ...organizations.value, [id]: fakeData };
+      });
+    return organizations.value[id];
   }
 
   return {
     organizations,
-    isLoading,
     error,
-    fetchAll,
     fetchById,
+    getById,
+    search,
   };
 });

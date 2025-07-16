@@ -4,8 +4,22 @@ model Organization {
   url      String?
   sigle    String?
   parentId String?
-  parent   Organization?  @relation("OrganizationParent", fields: [parentId], references: [id])
+  parent   Organization?  @relation("OrganizationParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   children Organization[] @relation("OrganizationParent")
   users    User[]
   actors   Actor[]
+
+  OrganizationClosureAncestor OrganizationClosure[] @relation("OrganizationClosureAncestor")
+  OrganizationClosureDescendant OrganizationClosure[] @relation("OrganizationClosureDescendant")
+}
+
+model OrganizationClosure {
+  ancestorId  String
+  descendantId String
+  depth       Int
+
+  ancestor    Organization @relation("OrganizationClosureAncestor", fields: [ancestorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  descendant  Organization @relation("OrganizationClosureDescendant", fields: [descendantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([ancestorId, descendantId])
 }
