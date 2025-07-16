@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.30.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.29.0...v1.30.0) (2025-07-16)
+
+
+### Features
+
+* **ci:** :sparkles: instal and initialize cypress and add cypress to the CI ([#703](https://github.com/dnum-mi/referentiel-applications/issues/703)) ([9d00a33](https://github.com/dnum-mi/referentiel-applications/commit/9d00a33ede0f7a48e358c0e3492c105cfbed3e70))
+
+
+### Bug Fixes
+
+* :bug: set default value for quality in Application model and update migration ([#848](https://github.com/dnum-mi/referentiel-applications/issues/848)) ([c2cc3af](https://github.com/dnum-mi/referentiel-applications/commit/c2cc3af178a2f75610986e853637922cfcdafb88))
+* **front:** :bug: add keyboard navigation for correction ans admin tabs ([bac95f2](https://github.com/dnum-mi/referentiel-applications/commit/bac95f2075250f18e13153cb67b96075a905fce3))
+* **front:** :bug: fix tabulation for tabs ([c44b0f6](https://github.com/dnum-mi/referentiel-applications/commit/c44b0f67cf5656095e33cfbb3208ad36645dd98d))
+* **router:** :bug: avoid component re-render on query param change ([5ba3e88](https://github.com/dnum-mi/referentiel-applications/commit/5ba3e881912b440f0905ffab7d1a17e79d08dd04))
+
 ## [1.29.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.28.0...v1.29.0) (2025-07-09)
 
 
