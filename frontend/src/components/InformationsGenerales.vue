@@ -12,6 +12,7 @@ import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import type { Hosting } from "@/models/Hosting";
 import Users from "@/api/user";
+import { useUserStore } from "@/stores/userStore";
 
 const isSubmitting = ref(false);
 const toaster = useToaster();
@@ -30,16 +31,12 @@ const hostingToEdit = ref<Hosting | null>(null);
 const hostingToDelete = ref<Hosting | null>(null);
 const isDeleteModalOpen = ref(false);
 const hostingStore = useHostingStore();
-const userPermissions = ref(null);
+const userStore = useUserStore();
 
 onMounted(async () => {
   if (props.application?.id) {
-    await hostingStore.fetchHostings(props.application.id);
     labels.value = await Labels.findByApplication(props.application.id);
   }
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
 });
 
 const application = ref<Application>({
@@ -193,7 +190,7 @@ watch(
                   class="fr-btn--icon-left fr-icon-edit-line"
                   label="Modifier"
                   @click="applicationModal.openModal()"
-                  :disabled="!userPermissions?.includes('write')"
+                  :disabled="!userStore.userPermissions?.includes('write')"
                 />
               </div>
             </div>
@@ -276,11 +273,11 @@ watch(
                   class="fr-btn--icon-left fr-icon-add-line"
                   label="Ajouter"
                   @click="isHostingModalOpen = true"
-                  :disabled="!userPermissions?.includes('write')"
+                  :disabled="!userStore.userPermissions?.includes('write')"
                 />
               </div>
             </div>
-            <HostingList :application-id="application.id" @edit="openEditHosting" @delete="openDeleteModal" />
+            <HostingList :hostings="hostingStore.hostings" @edit="openEditHosting" @delete="openDeleteModal" />
           </div>
         </div>
       </div>

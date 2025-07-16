@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref } from "vue";
 import axios from "axios";
 import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
-import SearchApplications from "./ApplicationTableView.vue";
 import type { Application } from "@/models/Application";
-import Applications from "@/api/application";
-import Users from "@/api/user";
+import { useUserStore } from "@/stores/userStore";
 
 const toaster = useToaster();
 const applicationModal = useModal();
 const isSubmitting = ref(false);
-const userPermissions = ref(null);
+const userStore = useUserStore();
 
 async function createApplication(newApplication: Application) {
   try {
@@ -22,12 +20,6 @@ async function createApplication(newApplication: Application) {
     toaster.addErrorMessage("Erreur lors de la création de l'application.");
   }
 }
-
-onMounted(async () => {
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
-});
 </script>
 
 <template>
@@ -36,7 +28,7 @@ onMounted(async () => {
       type="button"
       class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
       @click="applicationModal.openCreateModal()"
-      :disabled="!userPermissions?.includes('write')"
+      :disabled="!userStore.userPermissions?.includes('write')"
     >
       Créer une application
     </DsfrButton>

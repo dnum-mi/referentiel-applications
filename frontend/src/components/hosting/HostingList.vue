@@ -1,36 +1,20 @@
 <script setup lang="ts">
-import { computed, defineProps, defineEmits, onMounted } from "vue";
-import { useHostingStore } from "@/stores/hostingStore";
-import Users from "@/api/user";
+import { defineProps, defineEmits } from "vue";
+import type { Hosting } from "@/models/Hosting";
+import { useUserStore } from "@/stores/userStore";
 
-const props = defineProps<{ applicationId: string }>();
+defineProps<{ hostings: Hosting[] }>();
 const emit = defineEmits(["edit", "delete"]);
 
-const hostingStore = useHostingStore();
-const hostings = computed(() => hostingStore.hostings);
-const userPermissions = ref(null);
+const userStore = useUserStore();
 
-onMounted(async () => {
-  hostingStore.fetchHostings(props.applicationId);
+function handleEdit(hosting: Hosting) {
+  emit("edit", hosting);
+}
 
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
-});
-
-const handleEdit = (hostingId) => {
-  const hosting = hostings.value.find((h) => h.id === hostingId);
-  if (hosting) {
-    emit("edit", hosting);
-  }
-};
-
-const handleDelete = (hostingId) => {
-  const hosting = hostings.value.find((h) => h.id === hostingId);
-  if (hosting) {
-    emit("delete", hosting);
-  }
-};
+function handleDelete(hosting: Hosting) {
+  emit("delete", hosting);
+}
 </script>
 
 <template>
@@ -63,17 +47,17 @@ const handleDelete = (hostingId) => {
             size="sm"
             icon="fr-icon-edit-line"
             title="Modifier"
-            @click="handleEdit(hosting.id)"
+            @click="handleEdit(hosting)"
             class="fr-mr-1w"
-            :disabled="!userPermissions?.includes('write')"
+            :disabled="!userStore.userPermissions?.includes('write')"
           />
           <DsfrButton
             tertiary
             size="sm"
             icon="fr-icon-delete-bin-line"
             title="Supprimer"
-            @click="handleDelete(hosting.id)"
-            :disabled="!userPermissions?.includes('write')"
+            @click="handleDelete(hosting)"
+            :disabled="!userStore.userPermissions?.includes('write')"
           />
         </div>
       </div>

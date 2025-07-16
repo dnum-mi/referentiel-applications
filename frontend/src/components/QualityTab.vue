@@ -15,7 +15,6 @@ const toaster = useToaster();
 const props = defineProps<{ application: Application }>();
 
 const loading = ref(false);
-const userPermissions = ref(null);
 const actorStore = useActorStore();
 const actorTypeStore = useActorTypeStore();
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
@@ -27,8 +26,6 @@ const compliances = ref<Compliance[]>([]);
 const fetchQuality = async () => {
   loading.value = true;
   try {
-    await actorStore.fetchActorsByApplication(props.application.id);
-    await hostingStore.fetchHostings(props.application.id);
     await linkStore.fetchLinks(props.application.id);
     compliances.value = await CompliancesApi.getCompliances(props.application.id);
   } catch {
@@ -55,9 +52,6 @@ const hasLink = (linkValue: string): boolean => {
 
 onMounted(async () => {
   fetchQuality();
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
 });
 </script>
 

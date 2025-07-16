@@ -5,9 +5,10 @@ import { restartPrioritiesConfig } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
 import ExportApi from "@/api/export";
 import Users from "@/api/user";
+import { useUserStore } from "@/stores/userStore";
 
 const searchStore = useApplicationSearchStore();
-const userPermissions = ref<string[]>([]);
+const userStore = useUserStore();
 
 const sortBy = ref(searchStore.filters.sortBy || "label");
 const sortedDesc = ref(searchStore.filters.order === "desc");
@@ -79,12 +80,6 @@ const rows = computed(() =>
   })),
 );
 
-onMounted(async () => {
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
-});
-
 async function exportSearchResults() {
   try {
     await ExportApi.downloadCsv(searchStore.filters);
@@ -108,7 +103,7 @@ async function exportToExcel() {
   <div class="flex justify-between mb-4">
     <div class="export-button">
       <DsfrButton
-        v-if="userPermissions.includes('admin')"
+        v-if="userStore.userPermissions.includes('admin')"
         label="Exporter en CSV"
         icon="ri-download-line"
         @click="exportSearchResults"
@@ -117,7 +112,7 @@ async function exportToExcel() {
         class="fr-mr-2w"
       />
       <DsfrButton
-        v-if="userPermissions.includes('admin')"
+        v-if="userStore.userPermissions.includes('admin')"
         label="Exporter en Excel"
         icon="ri-file-excel-2-line"
         @click="exportToExcel"

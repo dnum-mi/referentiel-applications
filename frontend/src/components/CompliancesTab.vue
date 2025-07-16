@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch } from "vue";
 import type { Compliance } from "@/models/Application";
 import useToaster from "@/composables/use-toaster";
 import { defineProps, defineEmits } from "vue";
@@ -7,7 +7,7 @@ import { complianceTypesDict, complianceStatusesDict } from "@/composables/use-d
 import ComplianceForm from "./form/ComplianceForm.vue";
 import useModal from "@/composables/use-modal";
 import CompliancesApi from "@/api/compliance";
-import Users from "@/api/user";
+import { useUserStore } from "@/stores/userStore";
 
 const toaster = useToaster();
 
@@ -18,6 +18,7 @@ const props = defineProps({
   },
 });
 
+const userStore = useUserStore();
 const emit = defineEmits(["update:application"]);
 
 const localCompliances = ref<Compliance[]>([]);
@@ -31,7 +32,6 @@ const complianceModal = useModal();
 const showDeleteConfirmation = ref(false);
 const loading = ref(false);
 const isSubmitting = ref(false);
-const userPermissions = ref(null);
 
 function getTypeLabel(value: string): string {
   return value ? complianceTypesDict[value] || "Type inconnu" : "Aucun type sélectionné";
@@ -122,13 +122,6 @@ const fetchCompliances = async () => {
   }
 };
 
-onMounted(async () => {
-  fetchCompliances();
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
-});
-
 // Watch for application change (e.g., when switching between applications)
 watch(
   () => props.application.id,
@@ -150,7 +143,7 @@ watch(
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         @click="complianceModal.openCreateModal()"
-        :disabled="!userPermissions?.includes('write')"
+        :disabled="!userStore.userPermissions?.includes('write')"
       >
         Ajouter une conformité
       </DsfrButton>
@@ -166,7 +159,7 @@ watch(
         tertiary
         @click="removeSelectedCompliances"
         icon="fr-icon-delete-line"
-        :disabled="selectedComplianceIds.length === 0 || !userPermissions?.includes('write')"
+        :disabled="selectedComplianceIds.length === 0 || !userStore.userPermissions?.includes('write')"
       >
         Supprimer la sélection
       </DsfrButton>
@@ -193,7 +186,13 @@ watch(
           <input type="checkbox" :value="cell" v-model="selectedComplianceIds" />
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!userPermissions?.includes('write')">
+          <DsfrButton
+            tertiary
+            size="sm"
+            icon="fr-icon-edit-line"
+            @click="cell.onClick"
+            :disabled="!userStore.userPermissions?.includes('write')"
+          >
             {{ cell.label }}
           </DsfrButton>
         </template>
