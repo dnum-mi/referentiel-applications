@@ -23,7 +23,7 @@ export const useRelationStore = defineStore("relation", {
       enrichedApp.relationsAsSource = await Promise.all(
         (application.relationsAsSource || []).map(async (rel) => {
           if (!rel.targetApplication) {
-            rel.targetApplication = await Applications.getApplicationById(rel.applicationTarget);
+            rel.targetApplication = await Applications.getApplicationById(rel.applicationTargetId);
           }
           if (!rel.sourceApplication) {
             rel.sourceApplication = enrichedApp;
@@ -35,7 +35,7 @@ export const useRelationStore = defineStore("relation", {
       enrichedApp.relationsAsTarget = await Promise.all(
         (application.relationsAsTarget || []).map(async (rel) => {
           if (!rel.sourceApplication) {
-            rel.sourceApplication = await Applications.getApplicationById(rel.applicationSource);
+            rel.sourceApplication = await Applications.getApplicationById(rel.applicationSourceId);
           }
           if (!rel.targetApplication) {
             rel.targetApplication = enrichedApp;
@@ -48,12 +48,12 @@ export const useRelationStore = defineStore("relation", {
     },
 
     async updateRelation(updatedRelation: Relation) {
-      if (!updatedRelation.targetApplication && updatedRelation.applicationTarget) {
-        updatedRelation.targetApplication = await Applications.getApplicationById(updatedRelation.applicationTarget);
+      if (!updatedRelation.targetApplication && updatedRelation.applicationTargetId) {
+        updatedRelation.targetApplication = await Applications.getApplicationById(updatedRelation.applicationTargetId);
       }
 
-      if (!updatedRelation.sourceApplication && updatedRelation.applicationSource) {
-        updatedRelation.sourceApplication = await Applications.getApplicationById(updatedRelation.applicationSource);
+      if (!updatedRelation.sourceApplication && updatedRelation.applicationSourceId) {
+        updatedRelation.sourceApplication = await Applications.getApplicationById(updatedRelation.applicationSourceId);
       }
 
       const updateFn = (relations?: Relation[]) => {

@@ -5,11 +5,7 @@ import { RelationType } from '@prisma/client';
 export class RelationApplicationDto {
   @ApiProperty()
   @IsString()
-  applicationSource: string;
-
-  @ApiProperty()
-  @IsString()
-  applicationTarget: string;
+  applicationTargetId: string;
 
   @ApiProperty({ enum: RelationType, example: RelationType.is_part_of })
   @IsString()

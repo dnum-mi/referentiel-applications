@@ -4,23 +4,22 @@ import requests from "./xhr-client";
 const Relations = {
   async create(applicationSourceId: string, applicationTargetId: string, type: string): Promise<void> {
     const payload = {
-      applicationSource: applicationSourceId,
-      applicationTarget: applicationTargetId,
+      applicationTargetId: applicationTargetId,
       type: type,
     };
-    return await requests.post("/relations", payload);
+    return requests.post(`/applications/${applicationSourceId}/relations`, payload);
   },
 
-  async getAll(): Promise<Relation[]> {
-    return await requests.get<Relation[]>("/relations");
+  async getAllForApplication(applicationSourceId: string): Promise<Relation[]> {
+    return requests.get<Relation[]>(`/applications/${applicationSourceId}/relations`);
   },
 
-  async update(id: string, data: Partial<{ applicationSource: string; applicationTarget: string; type: string }>): Promise<Relation> {
-    return await requests.patch<Relation>(`/relations/${id}`, data);
+  async update(applicationSourceId: string, id: string, data: Partial<{ type: string; applicationTargetId: string }>): Promise<Relation> {
+    return requests.patch<Relation>(`/applications/${applicationSourceId}/relations/${id}`, data);
   },
 
-  async delete(id: string): Promise<void> {
-    return await requests.del(`/relations/${id}`);
+  async delete(applicationSourceId: string, id: string): Promise<void> {
+    return requests.del(`/applications/${applicationSourceId}/relations/${id}`);
   },
 };
 
