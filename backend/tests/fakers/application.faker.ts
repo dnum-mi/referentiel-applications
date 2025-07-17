@@ -1,4 +1,4 @@
-import { PrismaClient, priorityRestart } from '@prisma/client';
+import { priorityRestart } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import { getPrismaClient } from './prisma';
 

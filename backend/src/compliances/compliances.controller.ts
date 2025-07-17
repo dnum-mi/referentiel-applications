@@ -79,10 +79,7 @@ export class ApplicationCompliancesController {
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
   @ApiParam({ name: 'id', description: 'ID of the compliance' })
-  findOne(
-    @Param('applicationId') applicationId: string,
-    @Param('id') id: string,
-  ) {
+  findOne(@Param('id') id: string) {
     return this.compliancesService.findOne(id);
   }
 

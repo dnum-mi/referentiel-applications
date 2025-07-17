@@ -2,7 +2,6 @@
 import { ref, onMounted } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { defineProps } from "vue";
-import Users from "@/api/user";
 import type { Application, Compliance } from "@/models/Application";
 import CompliancesApi from "@/api/compliance";
 import { useActorStore } from "@/stores/actorStore";

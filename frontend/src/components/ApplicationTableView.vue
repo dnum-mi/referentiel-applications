@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { computed, watch, ref, onMounted } from "vue";
+import { computed, watch, ref } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { restartPrioritiesConfig } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
 import ExportApi from "@/api/export";
-import Users from "@/api/user";
 import { useUserStore } from "@/stores/userStore";
 
 const searchStore = useApplicationSearchStore();

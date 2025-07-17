@@ -158,7 +158,7 @@ export class ApplicationSearchDto {
       try {
         const parsed = JSON.parse(value);
         return Array.isArray(parsed) ? parsed : [value];
-      } catch (e) {
+      } catch (_e) {
         // If not valid JSON, treat as comma-separated values
         return value.split(',').map((v) => v.trim());
       }

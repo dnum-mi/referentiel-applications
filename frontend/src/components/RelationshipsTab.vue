@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watchEffect, onMounted } from "vue";
+import { watchEffect } from "vue";
 import { useRelationStore } from "@/stores/relationStore";
 import { useRelationManager } from "@/composables/use-relation-manager";
 import type { Application } from "@/models/Application";
@@ -26,7 +26,6 @@ const {
   isAddRelationModalOpen,
   isEditRelationModalOpen,
   relationToEdit,
-  editRelation,
   removeSelectedRelations,
   confirmDelete,
   cancelDelete,

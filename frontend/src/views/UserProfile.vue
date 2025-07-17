@@ -13,7 +13,7 @@ onMounted(async () => {
 async function fetchUserProfile() {
   try {
     user.value = await Users.getUser();
-  } catch (err) {
+  } catch (_err) {
     toaster.addErrorMessage("Échec du chargement du profil utilisateur");
   }
 }

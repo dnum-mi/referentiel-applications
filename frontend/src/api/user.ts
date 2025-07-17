@@ -1,4 +1,3 @@
-import { authentication } from "@/services/authentication.js";
 import type { User } from "../models/user";
 import requests from "./xhr-client";
 import useToaster from "@/composables/use-toaster.js";
@@ -16,7 +15,7 @@ const Users = {
     try {
       const response = await requests.get<User>("/users/me");
       return response;
-    } catch (error) {
+    } catch (_error) {
       toaster.addErrorMessage("Échec du chargement des informations de l'utilisateur");
     }
   },

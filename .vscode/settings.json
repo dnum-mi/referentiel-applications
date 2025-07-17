@@ -1,3 +1,5 @@
 {
-  "conventionalCommits.scopes": ["applications", "ci", "api", "front"]
+  "conventionalCommits.scopes": ["applications", "ci", "api", "front"],
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "editor.formatOnType": false // required
 }

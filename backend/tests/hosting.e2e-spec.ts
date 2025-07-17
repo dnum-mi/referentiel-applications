@@ -45,7 +45,7 @@ describe('Hostings', () => {
       label: 'Test Hosting with Option',
     };
 
-    const response = await request(app().getHttpServer())
+    await request(app().getHttpServer())
       .post(`/applications/${application.id}/hostings`)
       .send(newHosting)
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -61,7 +61,7 @@ describe('Hostings', () => {
       user: user,
     });
 
-    const response = await request(app().getHttpServer())
+    await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings/${hosting.id}`)
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(200);

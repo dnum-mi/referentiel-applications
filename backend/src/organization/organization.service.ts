@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrganizationDto } from './dto/organization.dto';
 import { Organization, Prisma } from '@prisma/client';
-import { extend } from 'lodash';
 import { BaseService } from 'src/common/base.service';
 
 @Injectable()
@@ -141,7 +140,7 @@ export class OrganizationService extends BaseService<Organization> {
       // On remonte la chaîne des parents
       while (parent) {
         // On commence par l’auto-référence (chaque nœud est son propre ancêtre)
-        const newClosure = await this.prisma.organizationClosure.upsert({
+        await this.prisma.organizationClosure.upsert({
           where: {
             ancestorId_descendantId: {
               ancestorId: parent.id,
