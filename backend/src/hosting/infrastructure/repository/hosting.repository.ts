@@ -5,7 +5,6 @@ import { Hosting } from 'src/hosting/domain/hosting.entity';
 import { CreateHostingDto } from 'src/hosting/applications/dto/create-hosting.dto';
 import { UpdateHostingDto } from 'src/hosting/applications/dto/update-hosting.dto';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
-import { application } from 'express';
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {

@@ -74,10 +74,7 @@ Informations requises :
   @ApiOperation({ summary: 'Récupérer un acteur par ID' })
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
-  public async findOne(
-    @Param('applicationId') applicationId: string,
-    @Param('id') id: string,
-  ): Promise<Actor> {
+  public async findOne(@Param('id') id: string): Promise<Actor> {
     return await this.actorService.findOne(id);
   }
 
@@ -97,7 +94,6 @@ Informations requises :
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
   public async updated(
     @UserId() userId: string,
-    @Param('applicationId') applicationId: string,
     @Param('id') id: string,
     @Body() actorToUpdate: UpdateActorDto,
   ): Promise<Actor> {
@@ -120,7 +116,6 @@ Informations requises :
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
   public async delete(
     @UserId() userId: string,
-    @Param('applicationId') applicationId: string,
     @Param('id') id: string,
   ): Promise<Actor> {
     Logger.log({

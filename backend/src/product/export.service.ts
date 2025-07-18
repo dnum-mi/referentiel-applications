@@ -1,9 +1,6 @@
 import { ExportApplicationsUseCase } from './application/usecases/application-export.usecase';
 import { Injectable } from '@nestjs/common';
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import { ApplicationWithAllRelations } from './types/application.type';
-import { getFullField } from './application/map/application-export.map';
-import { columnLabels } from './columnLabels/application-export.columnLabels';
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { ApplicationsExport } from '@prisma/client';
 

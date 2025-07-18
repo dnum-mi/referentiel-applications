@@ -11,7 +11,6 @@ import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import type { Hosting } from "@/models/Hosting";
-import Users from "@/api/user";
 import { useUserStore } from "@/stores/userStore";
 
 const isSubmitting = ref(false);

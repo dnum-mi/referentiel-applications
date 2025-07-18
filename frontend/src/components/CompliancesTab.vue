@@ -55,7 +55,7 @@ const handleSaveCompliances = async (compliance) => {
     complianceModal.closeModal();
     toaster.addSuccessMessage("Conformité sauvegardée avec succès !");
     emit("update:application", props.application);
-  } catch (error) {
+  } catch (_error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de la conformité.");
   } finally {
     isSubmitting.value = false;
@@ -84,7 +84,7 @@ async function confirmDelete() {
     showDeleteConfirmation.value = false;
     toaster.addSuccessMessage("Conformités supprimées avec succès !");
     emit("update:application", props.application);
-  } catch (error) {
+  } catch (_error) {
     toaster.addErrorMessage("Erreur lors de la suppression des conformités.");
   } finally {
     loading.value = false;
@@ -115,7 +115,7 @@ const fetchCompliances = async () => {
     const compliances = await CompliancesApi.getCompliances(props.application.id);
     localCompliances.value = compliances;
     updateRows();
-  } catch (error) {
+  } catch (_error) {
     toaster.addErrorMessage("Erreur lors du chargement des conformités.");
   } finally {
     loading.value = false;

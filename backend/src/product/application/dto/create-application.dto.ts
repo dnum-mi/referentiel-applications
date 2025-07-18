@@ -96,15 +96,6 @@ export class CreateApplicationDto {
   tags?: string[];
 
   @ApiProperty({
-    example: 'parentApp123',
-    description: 'Parent application ID',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  parentId?: string;
-
-  @ApiProperty({
     enum: Status,
     description: 'Statut de cycle de vie (défaut under_construction)',
     required: false,

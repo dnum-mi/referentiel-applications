@@ -9,7 +9,6 @@ import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import OrganizationFilter from "@/components/search/OrganizationFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
-import { routeNames } from "@/router/route-names";
 import StatusFilter from "./StatusFilter.vue";
 
 const sidebarOpen = ref(true);

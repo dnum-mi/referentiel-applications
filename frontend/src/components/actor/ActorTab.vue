@@ -4,7 +4,6 @@ import { defineProps, defineEmits } from "vue";
 import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import { useActorStore } from "@/stores/actorStore";
-import { useOrganizationStore } from "@/stores/organizationStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import ActorForm from "./ActorForm.vue";
 

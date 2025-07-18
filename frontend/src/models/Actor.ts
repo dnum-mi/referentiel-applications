@@ -1,3 +1,5 @@
+import type { User } from "./user";
+
 export interface Actor {
   id?: string;
   role?: string;

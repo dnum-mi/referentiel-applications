@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useReportIssueStore } from "@/stores/reportIssueStore";
-import { computed, onMounted } from "vue";
+import { computed } from "vue";
 import type { Application, Metadata } from "@/models/Application";
 
 const props = defineProps<{ application: Application }>();
@@ -41,7 +41,7 @@ function formatDescription(description: string): { title: string; content: strin
     }
 
     return { title, content: formatted };
-  } catch (e) {
+  } catch (_e) {
     return { title, content: description };
   }
 }

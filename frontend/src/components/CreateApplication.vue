@@ -16,7 +16,7 @@ async function createApplication(newApplication: Application) {
     applicationModal.closeModal();
     await axios.post<Application>(`/applications/`, newApplication);
     toaster.addSuccessMessage("Application créée avec succès !");
-  } catch (error) {
+  } catch (_error) {
     toaster.addErrorMessage("Erreur lors de la création de l'application.");
   }
 }
