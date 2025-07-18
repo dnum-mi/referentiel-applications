@@ -14,11 +14,16 @@ export class RelationRepository implements IRelationRepository {
   ) {}
 
   public async create(
-    { dto }: { dto: RelationApplicationDto },
+    applicationSourceId: string,
+    { applicationTargetId, type }: RelationApplicationDto,
     ownerId: string,
   ): Promise<Relation> {
     const createdRelation = await this.prisma.relation.create({
-      data: dto,
+      data: {
+        applicationSourceId,
+        applicationTargetId,
+        type,
+      },
       include: {
         sourceApplication: {
           select: { id: true, label: true },
@@ -47,8 +52,29 @@ export class RelationRepository implements IRelationRepository {
     return createdRelation;
   }
 
-  public async findAll(): Promise<Relation[]> {
-    return await this.prisma.relation.findMany();
+  public async findAllForApplicationSource(
+    applicationId: string,
+  ): Promise<Relation[]> {
+    return await this.prisma.relation.findMany({
+      where: {
+        OR: [
+          {
+            applicationSourceId: applicationId,
+          },
+          {
+            applicationTargetId: applicationId,
+          },
+        ],
+      },
+      include: {
+        sourceApplication: {
+          select: { id: true, label: true },
+        },
+        targetApplication: {
+          select: { id: true, label: true },
+        },
+      },
+    });
   }
 
   public async findOne(id: string): Promise<Relation> {

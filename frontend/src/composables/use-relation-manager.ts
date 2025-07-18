@@ -31,8 +31,8 @@ export function useRelationManager(application: Application, emit: (event: strin
   }
 
   function createRow(rel: Relation & { isSource: boolean }) {
-    const sourceLabel = rel.sourceApplication?.label || rel.applicationSource || "❌ Source inconnue";
-    const targetLabel = rel.targetApplication?.label || rel.applicationTarget || "❌ Cible inconnue";
+    const sourceLabel = rel.sourceApplication?.label || rel.applicationSourceId || "❌ Source inconnue";
+    const targetLabel = rel.targetApplication?.label || rel.applicationTargetId || "❌ Cible inconnue";
 
     return {
       id: rel.id,
@@ -41,7 +41,7 @@ export function useRelationManager(application: Application, emit: (event: strin
       Relation: getRelationLabelForSide(rel.type, rel.isSource),
       "Application Cible": {
         label: rel.isSource ? targetLabel : sourceLabel,
-        id: rel.isSource ? rel.applicationTarget : rel.applicationSource,
+        id: rel.isSource ? rel.applicationTargetId : rel.applicationSourceId,
       },
       Actions: { edit: () => editRelation(rel) },
     };
@@ -62,9 +62,9 @@ export function useRelationManager(application: Application, emit: (event: strin
     showDeleteConfirmation.value = true;
   }
 
-  async function confirmDelete() {
+  async function confirmDelete(applicationSourceId: string) {
     try {
-      await Promise.all(selectedRelationIds.value.map((id) => Relations.delete(id)));
+      await Promise.all(selectedRelationIds.value.map((id) => Relations.delete(applicationSourceId, id)));
       store.removeRelations(selectedRelationIds.value);
       selectedRelationIds.value = [];
       showDeleteConfirmation.value = false;

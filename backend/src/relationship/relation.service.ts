@@ -11,14 +11,19 @@ export class RelationService {
   ) {}
 
   async create(
+    applicationSourceId: string,
     dto: RelationApplicationDto,
     ownerId: string,
   ): Promise<Relation> {
-    return this.relationRepository.create({ dto }, ownerId);
+    return this.relationRepository.create(applicationSourceId, dto, ownerId);
   }
 
-  async findAll(): Promise<Relation[]> {
-    return this.relationRepository.findAll();
+  async findAllForApplicationSource(
+    applicationSourceId: string,
+  ): Promise<Relation[]> {
+    return this.relationRepository.findAllForApplicationSource(
+      applicationSourceId,
+    );
   }
 
   async findOne(id: string): Promise<Relation> {

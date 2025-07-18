@@ -112,13 +112,12 @@ const submitRelationUpdate = async () => {
   }
 
   const payload = {
-    applicationSource: props.relation.applicationSource,
-    applicationTarget: selectedApplication.value.id,
+    applicationTargetId: selectedApplication.value.id,
     type: relationType.value,
   };
 
   try {
-    const result = await Relations.update(props.relation.id, payload);
+    const result = await Relations.update(props.relation.applicationSourceId, props.relation.id, payload);
     emit("update-relation", result);
     closeModal();
   } catch (error) {
@@ -169,10 +168,12 @@ const closeModal = () => {
   max-height: 200px;
   overflow-y: auto;
 }
+
 .suggestion-item {
   padding: 0.5rem;
   cursor: pointer;
 }
+
 .suggestion-item:hover {
   background-color: #f0f0f0;
 }
@@ -184,6 +185,7 @@ const closeModal = () => {
   padding: 0.5rem;
   cursor: pointer;
 }
+
 .suggestion-button:hover,
 .suggestion-button:focus {
   background-color: #f0f0f0;

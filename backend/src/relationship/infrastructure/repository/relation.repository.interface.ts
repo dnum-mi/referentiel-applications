@@ -3,10 +3,11 @@ import { RelationApplicationDto } from '../../application/dto/relation-applicati
 
 export interface IRelationRepository {
   create(
-    { dto }: { dto: RelationApplicationDto },
-    ownerId: any,
+    applicationSourceId: string,
+    { applicationTargetId, type }: RelationApplicationDto,
+    ownerId: string,
   ): Promise<Relation>;
-  findAll(): Promise<Relation[]>;
+  findAllForApplicationSource(applicationSourceId: string): Promise<Relation[]>;
   findOne(id: string): Promise<Relation>;
   update(
     id: string,

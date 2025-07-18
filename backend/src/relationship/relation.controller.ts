@@ -14,23 +14,34 @@ import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { UserId } from '../common/decorators/user-id.decorator';
 
 @ApiTags('relation')
-@Controller('relations')
+@Controller('applications/:applicationId/relations')
 export class RelationController {
   constructor(private readonly relationService: RelationService) {}
 
   @Post()
+  @ApiParam({
+    name: 'applicationId',
+    description: "ID de l'application SOURCE",
+  })
   @ApiOperation({ summary: 'Créer une nouvelle relation' })
   async create(
+    @Param('applicationId') applicationId: string,
     @Body() dto: RelationApplicationDto,
     @UserId() userId: string,
   ): Promise<Relation> {
-    return this.relationService.create(dto, userId);
+    return this.relationService.create(applicationId, dto, userId);
   }
 
   @Get()
+  @ApiParam({
+    name: 'applicationId',
+    description: "ID de l'application SOURCE",
+  })
   @ApiOperation({ summary: 'Récupérer toutes les relations' })
-  async findAll(): Promise<Relation[]> {
-    return this.relationService.findAll();
+  async findAll(
+    @Param('applicationId') applicationId: string,
+  ): Promise<Relation[]> {
+    return this.relationService.findAllForApplicationSource(applicationId);
   }
 
   @Get(':id')
@@ -43,6 +54,10 @@ export class RelationController {
   }
 
   @Patch(':id')
+  @ApiParam({
+    name: 'applicationId',
+    description: "ID de l'application SOURCE",
+  })
   @ApiOperation({ summary: 'Mettre à jour une relation' })
   @ApiParam({
     name: 'id',
@@ -57,6 +72,10 @@ export class RelationController {
   }
 
   @Delete(':id')
+  @ApiParam({
+    name: 'applicationId',
+    description: "ID de l'application SOURCE",
+  })
   @ApiOperation({ summary: 'Supprimer une relation' })
   @ApiParam({
     name: 'id',
