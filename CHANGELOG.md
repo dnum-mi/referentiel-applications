@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.30.0...v1.31.0) (2025-07-21)
+
+
+### Features
+
+* :recycle: refactor compliances management ([d7a49b2](https://github.com/dnum-mi/referentiel-applications/commit/d7a49b250354d64dd12245cee45debd417392403))
+
 ## [1.30.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.29.0...v1.30.0) (2025-07-16)
 
 
