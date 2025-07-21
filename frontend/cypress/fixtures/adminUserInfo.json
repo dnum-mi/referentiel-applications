@@ -1,0 +1,7 @@
+{
+  "keycloakId": "f15d1c13-8198-4ca5-a180-94656e20d568",
+  "email": "user@example.com",
+  "permissions": "read,write,admin",
+  "lastLogin": "2025-07-10T12:06:28.200Z",
+  "organizationId": null
+}

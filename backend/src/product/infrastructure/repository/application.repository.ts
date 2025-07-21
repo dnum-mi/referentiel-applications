@@ -308,8 +308,16 @@ export class ApplicationRepository implements IApplicationRepository {
 
   async findByLink(link: string): Promise<any[]> {
     const results = await this.prisma.externalRessource.findMany({
-      where: { link },
-      include: { application: true },
+      where: {
+        link: {
+          contains: link,
+          mode: 'insensitive',
+        },
+      },
+      include: {
+        application: true,
+      },
+      distinct: ['applicationId'],
     });
     return results.map((r) => r.application);
   }

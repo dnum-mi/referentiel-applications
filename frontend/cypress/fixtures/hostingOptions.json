@@ -1,0 +1,114 @@
+[
+  {
+    "id": "cmcuj4was0000mz74jloqsnys",
+    "room": "IT2",
+    "building": "B15",
+    "site": "CER(RENNES)",
+    "platform": "VIRTUALISATION",
+    "provider": "DTNUM"
+  },
+  {
+    "id": "cmcuj51bo0004mz747xql9o6c",
+    "room": "IT4",
+    "building": "B26",
+    "site": "Chaddtown",
+    "platform": "CLOUD PI GEN2",
+    "provider": "SGAMI"
+  },
+  {
+    "id": "cmcuj54hx0007mz7421u93tkp",
+    "room": null,
+    "building": "B8",
+    "site": "East Issac",
+    "platform": "CLOUD PI GEN2",
+    "provider": "SGAMI"
+  },
+  {
+    "id": "cmcuj4r8v0000mz7ag2xbiijd",
+    "room": "IT3",
+    "building": "B9",
+    "site": "Hacienda Heights",
+    "platform": "CLOUD PI NATIVE",
+    "provider": "SGAMI"
+  },
+  {
+    "id": "cmcuj56j40008mz748t168jed",
+    "room": null,
+    "building": "B19",
+    "site": "Jadonland",
+    "platform": "CLOUD PI GEN2",
+    "provider": "OVH"
+  },
+  {
+    "id": "cmcuj4y1x0001mz74i7pu3jqz",
+    "room": null,
+    "building": null,
+    "site": "Kleinview",
+    "platform": "ISOCELE",
+    "provider": "OUTSCALE"
+  },
+  {
+    "id": "cmcuj4ynh0002mz747xxgojmu",
+    "room": "IT5",
+    "building": "B21",
+    "site": "LOGNES(SIL)",
+    "platform": "ISOCELE",
+    "provider": "DTNUM"
+  },
+  {
+    "id": "cmcuj59hz0009mz74i9k1zp9v",
+    "room": null,
+    "building": "B25",
+    "site": "Millerstead",
+    "platform": "CLOUD PI GEN2",
+    "provider": "OVH"
+  },
+  {
+    "id": "cmcuj4yof0006mz7ak8mjw0wp",
+    "room": "IT4",
+    "building": "B24",
+    "site": "Minneapolis",
+    "platform": "CLOUD PI NATIVE",
+    "provider": "SGAMI"
+  },
+  {
+    "id": "cmcuj4zyv0008mz7ar8xbwihx",
+    "room": "IT4",
+    "building": "B29",
+    "site": "New Mariannehaven",
+    "platform": "CLOUD PI NATIVE",
+    "provider": "SCALEWAY"
+  },
+  {
+    "id": "cmcuj4vpb0002mz7aq2uwtfft",
+    "room": "IT1",
+    "building": "B3",
+    "site": "New Reagan",
+    "platform": "ISOCELE",
+    "provider": "DTNUM"
+  },
+  {
+    "id": "cmcuj4xzn0004mz7aan61fsbp",
+    "room": "IT4",
+    "building": null,
+    "site": "North Aylaland",
+    "platform": "PHYSIQUE",
+    "provider": "DTNUM"
+  },
+  {
+    "id": "cmcuj52a60005mz74seeqrvq0",
+    "room": "IT1",
+    "building": "B8",
+    "site": "Port Bria",
+    "platform": "CLOUD PI GEN2",
+    "provider": "OUTSCALE"
+  },
+  {
+    "id": "cmcuj52td0006mz74xp5y4xae",
+    "room": "IT2",
+    "building": "B25",
+    "site": "Port Mellie",
+    "platform": "ISOCELE",
+    "provider": "PP"
+  }
+]

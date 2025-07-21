@@ -1,0 +1,92 @@
+[
+  {
+    "id": "58d707f9-fdf5-4aa0-afa6-6f1fa65a4ee3",
+    "code": "AA",
+    "label": "Architecte Applicatif",
+    "description": ""
+  },
+  {
+    "id": "5c0b2f91-7fa1-456a-b6a1-0f62f45e92fe",
+    "code": "AT",
+    "label": "Architecte Technique",
+    "description": ""
+  },
+  {
+    "id": "88f65849-4f1f-4520-83e1-5a77fc3fc3a5",
+    "code": "OTHER",
+    "label": "Autre",
+    "description": "Autre type d’acteur"
+  },
+  {
+    "id": "c6fe49a2-64bb-4d16-8c37-ea95658303dd",
+    "code": "CPD",
+    "label": "Correspondant à la Protection des Données",
+    "description": ""
+  },
+  {
+    "id": "8fc023d3-6171-40a0-8970-52f9f2b87d81",
+    "code": "CSM",
+    "label": "Correspondant Stratégique Métier",
+    "description": "Organisme Bénéficiaire"
+  },
+  {
+    "id": "0d0b5470-1f53-49e4-bbe3-2bdcb5bf87d4",
+    "code": "MOE",
+    "label": "Maîtrise d’Œuvre",
+    "description": ""
+  },
+  {
+    "id": "ed3fdf56-ea0d-47f3-8003-3538ea0f6823",
+    "code": "MOA",
+    "label": "Maîtrise d’Ouvrage",
+    "description": ""
+  },
+  {
+    "id": "d1cbcd46-0ad5-4382-bd57-6f22ca1cddf9",
+    "code": "PM",
+    "label": "Product Manager",
+    "description": ""
+  },
+  {
+    "id": "51ff924a-0bc6-42a9-9f20-21656e421abd",
+    "code": "PO",
+    "label": "Product Owner",
+    "description": ""
+  },
+  {
+    "id": "b0db2954-f145-4cf6-b3d6-1b88e9805b77",
+    "code": "RSSI",
+    "label": "Responsable de la Sécurité des Systèmes d’Information",
+    "description": ""
+  },
+  {
+    "id": "3805b86b-ccf4-40cf-b2a3-cad753a9a5fc",
+    "code": "HEB",
+    "label": "Responsable de l'hébergement",
+    "description": ""
+  },
+  {
+    "id": "080fd95c-be88-4247-ac35-00fd856b837b",
+    "code": "RSIMM",
+    "label": "Responsable des SI Métier et de la Modernisation",
+    "description": ""
+  },
+  {
+    "id": "a7d7aabe-598d-48d6-bbe8-d5f562fb8851",
+    "code": "RTO",
+    "label": "Responsable de traitement opérationnel",
+    "description": ""
+  },
+  {
+    "id": "967a4267-8ca5-4316-bdc6-20be96efc6ff",
+    "code": "REP",
+    "label": "Responsable d'exploitation opérationel",
+    "description": ""
+  },
+  {
+    "id": "c4c1d916-f258-4925-bef9-93e497ebf6c4",
+    "code": "TMA",
+    "label": "Tierce Maintenance Applicative",
+    "description": ""
+  }
+]

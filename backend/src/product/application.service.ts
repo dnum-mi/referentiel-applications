@@ -220,7 +220,11 @@ export class ApplicationService {
       const results = await this.applicationRepository.findByLink(
         searchParams.link,
       );
-      return Array.isArray(results) ? results : [results];
+
+      return {
+        results: Array.isArray(results) ? results : [results],
+        total: results.length,
+      };
     }
 
     const searchResult =
