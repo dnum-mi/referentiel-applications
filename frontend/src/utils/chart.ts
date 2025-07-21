@@ -1,29 +1,52 @@
 import type { Ref } from "vue";
-import { Chart, BarController, BarElement, CategoryScale, LinearScale } from "chart.js";
+import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, ChartDataLabels);
+// Register necessary Chart.js components and plugins
+Chart.register(...registerables, ChartDataLabels);
 
+type ChartType = "bar" | "line";
+
+/**
+ * Crée ou met à jour un graphique Chart.js.
+ *
+ * @param canvasRef      Référence au canvas HTML
+ * @param existingChart  Instance Chart.js existante (sera détruite si fournie)
+ * @param labels         Tableau des labels pour l'axe des abscisses
+ * @param data           Valeurs numériques à afficher
+ * @param type           Type de graphique ('bar' ou 'line')
+ * @returns L'instance Chart.js créée
+ */
 export function renderChart(
-  chartRef: Ref<HTMLCanvasElement | null>,
-  chartInstance: Chart | null,
+  canvasRef: Ref<HTMLCanvasElement | null>,
+  existingChart: Chart | null,
   labels: string[],
   data: number[],
+  type: ChartType = "bar",
 ): Chart | null {
-  if (!chartRef.value) return null;
+  const canvas = canvasRef.value;
+  if (!canvas) return null;
 
-  if (chartInstance) {
-    chartInstance.destroy();
+  // Detruire l'ancien graphique si nécessaire
+  if (existingChart) {
+    existingChart.destroy();
   }
 
-  return new Chart(chartRef.value, {
-    type: "bar",
+  // Créer et retourner la nouvelle instance Chart.js
+  return new Chart(canvas, {
+    type,
     data: {
       labels,
       datasets: [
         {
+          type,
+          label: type === "line" ? "IQ moyen" : "Répartition",
           data,
           backgroundColor: "#3e95cd",
+          borderColor: "#3e95cd",
+          fill: type === "line" ? false : true,
+          tension: type === "line" ? 0.3 : 0,
+          pointRadius: type === "line" ? 4 : 0,
         },
       ],
     },
@@ -31,14 +54,12 @@ export function renderChart(
       responsive: true,
       plugins: {
         datalabels: {
-          color: "white",
+          color: type === "line" ? "black" : "white",
+          align: type === "line" ? "top" : "center",
+          anchor: type === "line" ? "end" : "center",
         },
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-        },
-      },
+      scales: {},
     },
   });
 }
