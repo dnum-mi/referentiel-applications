@@ -28,9 +28,12 @@ import { APP_GUARD } from '@nestjs/core';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { CompliancesModule } from './compliances/compliances.module';
 import { HostingOptionModule } from './hosting-option/hosting-option.module';
+import { StatsModule } from './stats/stats.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     PrismaModule,
     RelationModule,
     UserModule,
@@ -39,6 +42,7 @@ import { HostingOptionModule } from './hosting-option/hosting-option.module';
     AnomalyNotificationModule,
     LoggerModule,
     HealthCheckModule,
+    StatsModule,
     OrganizationModule,
     ActorTypeModule,
     ActorModule,

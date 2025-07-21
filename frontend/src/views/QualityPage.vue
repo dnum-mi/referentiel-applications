@@ -2,6 +2,7 @@
 import ApplicationsChart from "@/components/stats/ApplicationsChart.vue";
 import ApplicationsIqChart from "@/components/stats/ApplicationsIqChart.vue";
 import GlobalStats from "@/components/stats/GlobalStats.vue";
+import IqChart from "@/components/stats/IqChart.vue";
 </script>
 <template>
   <div class="grid-2x2-container">
@@ -17,7 +18,7 @@ import GlobalStats from "@/components/stats/GlobalStats.vue";
     </div>
 
     <div class="cell chart-3-cell">
-      <!--    <QualityChart />   -->
+      <IqChart />
     </div>
   </div>
 </template>
