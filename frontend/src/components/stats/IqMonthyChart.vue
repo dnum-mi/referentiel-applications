@@ -12,32 +12,30 @@ const errorMessage = ref("");
 
 const statisticsStore = useStatisticsStore();
 
-async function loadData() {
+async function loadMonthlyIqStats() {
   isLoading.value = true;
   try {
-    const response = await statisticsStore.countApplicationsByIq();
+    await statisticsStore.fetchMonthlyIqStats();
 
-    const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`);
-    const data: number[] = Array(21).fill(0);
+    const labels = statisticsStore.iqMonthlyStats.map((s) =>
+      new Date(s.date).toLocaleDateString("fr-FR", { month: "short", year: "2-digit" })
+    );
 
-    response.forEach(({ iq, total }: { iq: number; total: number }) => {
-      const index = Math.floor(Math.round(iq) / 5);
-      if (index >= 0 && index <= 20) data[20 - index] += total;
-    });
+    const data = statisticsStore.iqMonthlyStats.map((s) => s.valeur);
 
-    chartInstance = renderChart(chartRef, chartInstance, labels, data, "bar");
-  } catch {
-    errorMessage.value = "Erreur lors du chargement des données";
+    chartInstance = renderChart(chartRef, chartInstance, labels, data, "line");
+  } catch (err) {
+    errorMessage.value = "Erreur lors du chargement des statistiques IQ";
   } finally {
     isLoading.value = false;
   }
 }
 
-onMounted(loadData);
+onMounted(loadMonthlyIqStats);
 </script>
 
 <template>
-  <h3>Répartition des applications par IQ</h3>
+  <h3>Évolution mensuelle de la qualité IQ moyenne</h3>
   <div v-if="isLoading">Chargement...</div>
   <div v-else-if="errorMessage">{{ errorMessage }}</div>
   <canvas ref="chartRef" v-show="!isLoading && !errorMessage"></canvas>
