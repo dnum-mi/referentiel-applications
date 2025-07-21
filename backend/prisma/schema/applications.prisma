@@ -23,7 +23,7 @@ model Application {
   labels            Label[]    @relation("ApplicationLabels")
 
   priorityRestart priorityRestart?
-  quality             Int?
+  quality             Int
 
   @@unique([label, description])
   @@index([label])
@@ -59,12 +59,12 @@ view ApplicationsExport {
 model Relation {
   id                String       @id @default(uuid())
   type              RelationType
-  applicationSource String
-  applicationTarget String
-  sourceApplication Application  @relation("SourceHasTarget", fields: [applicationSource], references: [id], onDelete: Cascade)
-  targetApplication Application  @relation("TargetHasSource", fields: [applicationTarget], references: [id], onDelete: Cascade)
+  applicationSourceId String @map("applicationSource")
+  applicationTargetId String @map("applicationTarget")
+  sourceApplication Application  @relation("SourceHasTarget", fields: [applicationSourceId], references: [id], onDelete: Cascade)
+  targetApplication Application  @relation("TargetHasSource", fields: [applicationTargetId], references: [id], onDelete: Cascade)
 
-  @@unique([applicationSource, applicationTarget, type])
+  @@unique([applicationSourceId, applicationTargetId, type])
   @@map("relations")
 }
 

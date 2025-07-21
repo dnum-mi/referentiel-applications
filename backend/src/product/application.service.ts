@@ -1,6 +1,6 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Prisma, Application, PrismaClient } from '@prisma/client';
+import { Prisma, Application } from '@prisma/client';
 import {
   CreateApplicationDto,
   PatchApplicationDto,

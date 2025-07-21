@@ -2,7 +2,6 @@ import { translateEnum } from 'src/common/utils/enum.utils';
 import {
   AnomalyNotificationStatusLabels,
   ComplianceStatusLabels,
-  EventTypeLabels,
   ExternalRessourceTypeLabels,
   PriorityRestartLabels,
 } from 'src/product/constants/enum-label';

@@ -7,7 +7,7 @@ export const useActorStore = defineStore("actorStore", () => {
   const actors = ref<Actor[]>([]);
 
   async function countActors() {
-    return await Actors.countActors();
+    return Actors.countActors();
   }
 
   async function fetchActorsByApplication(applicationId: string) {

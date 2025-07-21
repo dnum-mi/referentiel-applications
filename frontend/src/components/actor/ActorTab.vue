@@ -4,19 +4,18 @@ import { defineProps, defineEmits } from "vue";
 import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import { useActorStore } from "@/stores/actorStore";
-import { useOrganizationStore } from "@/stores/organizationStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import ActorForm from "./ActorForm.vue";
 
 import type { Actor } from "@/models/Actor";
 import type { Application } from "@/models/Application";
-import Users from "@/api/user";
+import { useUserStore } from "@/stores/userStore";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
 
 const actorStore = useActorStore();
-const orgStore = useOrganizationStore();
+const userStore = useUserStore();
 const actorTypeStore = useActorTypeStore();
 const toaster = useToaster();
 const actorModal = useModal();
@@ -26,28 +25,15 @@ const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const loading = ref(false);
-const userPermissions = ref(null);
 
 const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 
-const organizationsList = computed(() => orgStore.organizations);
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 
 const tableRows = computed(() =>
   actorStore.actors.map((actor) => [
     actor.id,
-    (() => {
-      const org = organizationsList.value.find((o) => o.id === actor.organizationId);
-      return org
-        ? {
-            label: org.label,
-            to: org.url || "#",
-          }
-        : {
-            label: "Organisation inconnue",
-            to: "#",
-          };
-    })(),
+    actor.organizationId ?? undefined,
     (() => {
       const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
       return type ? type.label : "Type inconnu";
@@ -67,12 +53,7 @@ const tableRows = computed(() =>
 );
 
 onBeforeMount(async () => {
-  await orgStore.fetchAll();
   await actorTypeStore.fetchAll();
-  await actorStore.fetchActorsByApplication(props.application.id);
-  userPermissions.value = await Users.getUser().then((response) => {
-    return response.permissions.split(",");
-  });
 });
 
 async function handleSaveActors(actor: Actor) {
@@ -129,7 +110,7 @@ function cancelDelete() {
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         @click="actorModal.openCreateModal()"
-        :disabled="!userPermissions?.includes('write')"
+        :disabled="!userStore.userPermissions?.includes('write')"
       >
         Ajouter un acteur
       </DsfrButton>
@@ -147,7 +128,7 @@ function cancelDelete() {
         tertiary
         @click="removeSelectedActors"
         icon="fr-icon-delete-line"
-        :disabled="selectedActorIds.length === 0 || !userPermissions?.includes('write')"
+        :disabled="selectedActorIds.length === 0 || !userStore.userPermissions?.includes('write')"
       >
         Supprimer la sélection
       </DsfrButton>
@@ -176,9 +157,8 @@ function cancelDelete() {
           <input type="checkbox" :value="cell" v-model="selectedActorIds" />
         </template>
         <template v-else-if="colKey === 'Organisation'">
-          <a :href="cell.to" target="_blank" rel="noopener noreferrer">
-            {{ cell.label }}
-          </a>
+          <OrgBreadCrumb v-if="cell" :organization-id="cell"></OrgBreadCrumb>
+          <template v-else>Aucune organisation</template>
         </template>
         <template v-else-if="colKey === 'Email'">
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">
@@ -186,7 +166,13 @@ function cancelDelete() {
           </a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!userPermissions?.includes('write')">
+          <DsfrButton
+            tertiary
+            size="sm"
+            icon="fr-icon-edit-line"
+            @click="cell.onClick"
+            :disabled="!userStore.userPermissions?.includes('write')"
+          >
             {{ cell.label }}
           </DsfrButton>
         </template>
@@ -208,7 +194,6 @@ function cancelDelete() {
     <ActorForm
       v-bind="{ application, initialData: actorModal.selectedItem.value }"
       :is-submitting="isSubmitting"
-      :organizations="organizationsList"
       :actorTypes="actorTypesList"
       @submit="handleSaveActors"
       @cancel="actorModal.closeModal"

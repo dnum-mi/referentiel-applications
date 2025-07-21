@@ -72,8 +72,8 @@ export interface Relation {
   id: string;
   type: string;
 
-  applicationSource: string;
-  applicationTarget: string;
+  applicationSourceId: string;
+  applicationTargetId: string;
 
   sourceApplication?: Application;
   targetApplication?: Application;

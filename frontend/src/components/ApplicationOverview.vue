@@ -10,9 +10,15 @@ import ActorManager from "./actor/ActorTab.vue";
 import Relationships from "./RelationshipsTab.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
 import Quality from "./QualityTab.vue";
+import { useActorStore } from "@/stores/actorStore";
+import { useHostingStore } from "@/stores/hostingStore";
+import { useReportIssueStore } from "@/stores/reportIssueStore";
 
 const props = defineProps<{ application: Application }>();
 const emit = defineEmits(["update:application"]);
+const hostingStore = useHostingStore();
+const actorStore = useActorStore();
+const reportIssueStore = useReportIssueStore();
 
 const application = ref(props.application);
 const activeTab = ref(0);
@@ -84,6 +90,14 @@ onMounted(() => {
       activeTab.value = index;
     }
   }
+});
+
+onBeforeMount(async () => {
+  await Promise.all([
+    hostingStore.fetchHostings(props.application.id),
+    actorStore.fetchActorsByApplication(props.application.id),
+    reportIssueStore.fetchIssueByApplication(props.application.id),
+  ]);
 });
 
 watch(

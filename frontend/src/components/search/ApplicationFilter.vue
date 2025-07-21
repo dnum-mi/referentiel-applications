@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 
@@ -8,7 +8,6 @@ const searchStore = useApplicationSearchStore();
 const label = ref(searchStore.filters.label);
 const shortName = ref(searchStore.filters.shortName);
 const tag = ref(searchStore.filters.tag);
-const priorityRestart = ref(searchStore.filters.priorityRestart);
 const link = ref(searchStore.filters.link);
 
 const { run: debouncedSearch } = useDebouncedFn(() => {

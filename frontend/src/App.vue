@@ -5,9 +5,9 @@ import useToaster from "./composables/use-toaster";
 import { routeNames } from "./router/route-names";
 import { authentication } from "./services/authentication";
 import Applications from "@/api/application";
-import Users from "@/api/user";
 import router from "./router/index.js";
 import { useRoute } from "vue-router";
+import { useUserStore } from "@/stores/userStore.js";
 const route = useRoute();
 
 const instance = getCurrentInstance();
@@ -25,8 +25,7 @@ const trackSearch = (query: string, source: string, resultCount: number) => {
   matomo.trackPageView(`Recherche depuis ${source} : ${query}`);
 };
 
-const authenticated = ref(authentication.authenticated);
-const userPermissions = ref<string[]>([]);
+const userStore = useUserStore();
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
 const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
@@ -48,6 +47,7 @@ interface QuickLink {
   const loginUrlLink = await authentication.createLoginUrl({
     redirectUri: window.location.href,
   });
+  await userStore.fetchUser();
   unauthenticatedQuickLinks.value = [
     {
       label: "Se connecter",
@@ -56,14 +56,10 @@ interface QuickLink {
       iconAttrs: { title: "Se connecter" },
     },
   ];
-  if (authenticated.value) {
-    userPermissions.value = await Users.getUser().then((response) => {
-      return response.permissions.split(",");
-    });
-
+  if (userStore.authenticated) {
     const baseLinks = [];
 
-    if (userPermissions.value.includes("admin")) {
+    if (userStore.userPermissions.includes("admin")) {
       baseLinks.push({
         label: "Admin",
         to: { name: routeNames.ADMINPAGE },
@@ -93,7 +89,7 @@ interface QuickLink {
   }
 })();
 
-const quickLinks = computed(() => (authenticated.value ? authenticatedQuickLinks.value : unauthenticatedQuickLinks.value));
+const quickLinks = computed(() => (userStore.authenticated ? authenticatedQuickLinks.value : unauthenticatedQuickLinks.value));
 
 const navItems = [
   {
@@ -202,10 +198,10 @@ function close() {
       :logo-text="logoText"
       :quick-links="quickLinks"
       show-beta
-      :showSearch="authenticated"
+      :showSearch="userStore.authenticated"
     >
       <template #mainnav>
-        <DsfrNavigation v-if="authenticated" :nav-items="navItems" />
+        <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItems" />
       </template>
     </DsfrHeader>
 

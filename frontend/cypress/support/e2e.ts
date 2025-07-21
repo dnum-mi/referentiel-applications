@@ -15,3 +15,24 @@
 
 // Import commands.js using ES2015 syntax:
 import "./commands";
+
+Cypress.on("window:before:load", (win) => {
+  if (!win.crypto.randomUUID) {
+    Object.defineProperty(win.crypto, "randomUUID", {
+      value: () => "00000000-0000-4000-8000-000000000000",
+      writable: true,
+      configurable: true,
+    });
+  }
+
+  if (!win.crypto.subtle) {
+    Object.defineProperty(win.crypto, "subtle", {
+      value: {
+        encrypt: () => Promise.resolve(new ArrayBuffer(0)),
+        decrypt: () => Promise.resolve(new ArrayBuffer(0)),
+      },
+      writable: true,
+      configurable: true,
+    });
+  }
+});

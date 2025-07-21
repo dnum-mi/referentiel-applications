@@ -1,18 +1,11 @@
 <script setup lang="ts">
 import { toRef } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 
 const searchStore = useApplicationSearchStore();
 
 const selectedPriorities = toRef(searchStore.filters, "priorityRestart");
-
-const priorityOptions = [
-  { value: "R0", label: "R0 - Immédiat (H24)" },
-  { value: "R1", label: "R1 - Dès que le socle technique est rétabli (H24)" },
-  { value: "R1_STAR", label: "R1* - Selon période d'activité" },
-  { value: "R2", label: "R2 - Dès que possible (H24)" },
-  { value: "R3", label: "R3 - Quand le plus urgent est réalisé (H0)" },
-];
 
 function togglePriority(value: string, event: Event) {
   const checked = (event.target as HTMLInputElement).checked;
@@ -42,14 +35,14 @@ function togglePriority(value: string, event: Event) {
     </label>
 
     <div>
-      <label v-for="option in priorityOptions" :key="option.value" class="checkbox-item">
+      <label v-for="option in priorityRestartLabelsOptions" :key="option.value" class="checkbox-item">
         <input
           type="checkbox"
           :value="option.value"
           :checked="selectedPriorities.includes(option.value)"
           @change="(e) => togglePriority(option.value, e)"
         />
-        {{ option.label }}
+        {{ option.text }}
       </label>
     </div>
   </div>

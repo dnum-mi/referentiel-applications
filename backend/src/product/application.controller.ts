@@ -22,7 +22,7 @@ import {
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { ComplianceStatus, ComplianceType } from 'src/enum';
-import { application, Response } from 'express';
+import { Response } from 'express';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
 

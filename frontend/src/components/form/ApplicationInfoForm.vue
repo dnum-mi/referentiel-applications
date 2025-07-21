@@ -4,21 +4,13 @@ import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 
 const toaster = useToaster();
 
 defineProps<{ isSubmitting?: boolean }>();
 
 const emit = defineEmits(["create:application", "submit", "cancel"]);
-
-const priorityRestartOptions = [
-  { value: "", text: "Sélectionner une priorité" },
-  { value: "R0", text: "R0 - Immédiat (H24)" },
-  { value: "R1", text: "R1 - Dès que le socle technique est rétabli (H24)" },
-  { value: "R1_STAR", text: "R1* - Selon période d'activité" },
-  { value: "R2", text: "R2 - Dès que possible (H24)" },
-  { value: "R3", text: "R3 - Quand le plus urgent est réalisé (H0)" },
-];
 
 const statusOptions = computed(() =>
   Object.keys(statusApplicationDictionary).map((value) => ({
@@ -125,7 +117,7 @@ const removePopulation = (index: number) => {
 
     <DsfrSelect
       v-model="form.priorityRestart"
-      :options="priorityRestartOptions"
+      :options="priorityRestartLabelsOptions"
       label="Priorité de redémarrage"
       default-unselected-text="Sélectionner une priorité"
     />

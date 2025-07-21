@@ -7,8 +7,6 @@ import {
 } from 'class-validator';
 import { Status } from '@prisma/client';
 
-import { isEmpty } from 'rxjs';
-
 export class GetApplicationDto {
   @IsString()
   id: string;

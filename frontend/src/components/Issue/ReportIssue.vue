@@ -18,8 +18,6 @@ const application = ref<Application>(props.application);
 const correctionText = ref("");
 const opened = ref(false);
 
-const title = "Proposer une correction";
-
 const submitCorrection = async () => {
   try {
     const applicationId = application.value?.id;
@@ -31,7 +29,7 @@ const submitCorrection = async () => {
     correctionText.value = "";
     opened.value = false;
     toaster.addSuccessMessage("Votre proposition sera prise en compte prochainement.");
-  } catch (error) {
+  } catch (_error) {
     toaster.addErrorMessage("Oops ! Une erreur est survenue, contactez l’administrateur du référentiel si le problème persiste.");
   }
 };

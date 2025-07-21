@@ -15,7 +15,9 @@ export class ApplicationRepository implements IApplicationRepository {
 
   public async create(application: CreateApplicationDto, ownerId: string) {
     const mappedData = applicationMap(application, ownerId);
-    return await this.prisma.application.create(mappedData);
+    return this.prisma.application.create({
+      data: { ...mappedData.data, quality: 0 },
+    });
   }
 
   public async findAll() {
@@ -32,15 +34,11 @@ export class ApplicationRepository implements IApplicationRepository {
     return await this.prisma.application.findUnique({
       where: { id },
       include: {
-        actors: true,
         relationsAsSource: {
           include: { targetApplication: { select: { id: true, label: true } } },
         },
         relationsAsTarget: {
           include: { sourceApplication: { select: { id: true, label: true } } },
-        },
-        metadatas: {
-          include: { createdBy: { select: { email: true } } },
         },
       },
     });

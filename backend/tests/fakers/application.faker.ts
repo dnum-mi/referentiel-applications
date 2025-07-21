@@ -1,4 +1,4 @@
-import { PrismaClient, priorityRestart } from '@prisma/client';
+import { priorityRestart } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import { getPrismaClient } from './prisma';
 
@@ -55,6 +55,7 @@ export class ApplicationFaker {
             },
           ],
         },
+        quality: faker.number.int({ min: 10, max: 100 }),
       },
     });
   }
