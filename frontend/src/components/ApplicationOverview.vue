@@ -5,7 +5,7 @@ import type { Application } from "@/models/Application";
 
 import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
-import Compliances from "./CompliancesTab.vue";
+import Compliances from "./compliances/CompliancesAccordionManager.vue";
 import ActorManager from "./actor/ActorTab.vue";
 import Relationships from "./RelationshipsTab.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
@@ -119,7 +119,12 @@ watch(
   <DsfrTabs v-model="activeTab" tab-list-name="Informations sur l'application" :tab-titles="tabs">
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
       <DsfrTabContent :tab-id="tab.tabId" :panel-id="tab.panelId" v-show="activeTab === index">
-        <component :is="tab.component" :application="application" @update:application="updateApplication" />
+        <component
+          :is="tab.component"
+          :application="application"
+          v-bind="tab.component === Compliances ? { 'application-id': application.id } : {}"
+          @update:application="updateApplication"
+        />
       </DsfrTabContent>
     </template>
   </DsfrTabs>

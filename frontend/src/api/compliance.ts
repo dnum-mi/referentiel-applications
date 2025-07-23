@@ -14,7 +14,8 @@ export default class CompliancesApi {
 
   static async createCompliance(applicationId: string, compliance: Partial<Compliance>): Promise<Compliance> {
     delete compliance.id;
-    return requests.post(baseUrl(applicationId), compliance);
+    const response = await requests.post(baseUrl(applicationId), compliance);
+    return response.data;
   }
 
   static async updateCompliance(applicationId: string, compliance: Partial<Compliance>): Promise<Compliance> {
