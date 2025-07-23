@@ -84,6 +84,12 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
   min-height: 100vh;
 }
 
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+}
+
 .main-content {
   flex: 1;
   padding: 1rem 2rem;

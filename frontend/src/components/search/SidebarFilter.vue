@@ -82,6 +82,7 @@ function resetAllFilters() {
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
+    background-color: var(--background-default-grey);
     top: 0;
     left: 0;
     width: 100vw;
