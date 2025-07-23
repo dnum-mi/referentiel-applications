@@ -197,7 +197,6 @@ function close() {
       :service-title="serviceTitle"
       :logo-text="logoText"
       :quick-links="quickLinks"
-      show-beta
       :showSearch="userStore.authenticated"
     >
       <template #mainnav>
