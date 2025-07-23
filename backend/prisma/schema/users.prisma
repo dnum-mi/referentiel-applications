@@ -1,7 +1,7 @@
 model User {
   keycloakId          String                @id
   email               String                @unique
-  permissions         String                @default("read")
+  permissions         String
   lastLogin           DateTime?             @default(now())
   organizationId      String?
   organization        Organization?         @relation(fields: [organizationId], references: [id])
@@ -41,4 +41,5 @@ model ActorType {
 
   @@unique([code])
   @@map("actorTypes")
+  appPermissions AppPermissions[]
 }

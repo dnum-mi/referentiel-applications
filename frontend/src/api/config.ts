@@ -127,10 +127,6 @@ export const apiConfig = {
       url: "/relations",
       payload: ["applicationSource", "applicationTarget", "type"],
     },
-    getAll: {
-      method: "GET",
-      url: "/relations",
-    },
     update: {
       method: "PATCH",
       url: "/relations/:id",

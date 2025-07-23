@@ -6,12 +6,15 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { HostingService } from './hosting.service';
 import { CreateHostingDto } from './applications/dto/create-hosting.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateHostingDto } from './applications/dto/update-hosting.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { ApplicationGuard } from 'src/common/guards/application.guard';
+import { AppAction } from 'src/common/decorators/application.decorator';
 
 @ApiTags('Hostings')
 @Controller('hostings')
@@ -28,11 +31,13 @@ export class HostingController {
 }
 
 @ApiTags('Hostings')
+@UseGuards(ApplicationGuard)
 @Controller('applications/:applicationId/hostings')
 export class ApplicationHostingsController {
   constructor(private readonly hostingService: HostingService) {}
 
   @Post()
+  @AppAction('writeHostings')
   @ApiOperation({ summary: 'Créer un hébergement pour une application' })
   @ApiResponse({ status: 201, description: 'Hébergement créé' })
   create(
@@ -45,6 +50,7 @@ export class ApplicationHostingsController {
   }
 
   @Get()
+  @AppAction('readHostings')
   @ApiOperation({
     summary: "Récupérer tous les hébergements d'une application",
   })
@@ -54,6 +60,7 @@ export class ApplicationHostingsController {
   }
 
   @Get(':id')
+  @AppAction('readHostings')
   @ApiOperation({
     summary: 'Récupérer un hébergement par ID pour une application',
   })
@@ -63,6 +70,7 @@ export class ApplicationHostingsController {
   }
 
   @Patch(':id')
+  @AppAction('writeHostings')
   @ApiOperation({
     summary: 'Mettre à jour un hébergement pour une application',
   })
@@ -70,12 +78,14 @@ export class ApplicationHostingsController {
   update(
     @UserId() userId: string,
     @Param('id') id: string,
+    @Param('applicationId') applicationId: string,
     @Body() dto: UpdateHostingDto,
   ) {
-    return this.hostingService.update(id, dto, userId);
+    return this.hostingService.update(id, { ...dto, applicationId }, userId);
   }
 
   @Delete(':id')
+  @AppAction('writeHostings')
   @ApiOperation({ summary: 'Supprimer un hébergement pour une application' })
   @ApiResponse({ status: 200, description: 'Hébergement supprimé' })
   remove(@UserId() userId: string, @Param('id') id: string) {

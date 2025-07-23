@@ -1,10 +1,9 @@
 // src/main.ts
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { CombinedInterceptor } from './logger/combined.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -13,8 +12,9 @@ async function bootstrap() {
   }
   app.setGlobalPrefix('api/v2');
 
-  const combinedInterceptor = app.get(CombinedInterceptor);
-  app.useGlobalInterceptors(combinedInterceptor);
+  const globalLogger = new Logger('Bootstrap');
+
+  globalLogger.log(`RequestLoggingInterceptor registered`);
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
   app.enableCors({
@@ -65,5 +65,6 @@ async function bootstrap() {
     }),
   );
   await app.listen(3500);
+  globalLogger.log(`Application is running on: http://localhost:3500`);
 }
 bootstrap();

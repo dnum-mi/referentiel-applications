@@ -59,4 +59,8 @@ export class ApplicationFaker {
       },
     });
   }
+  static async delete(applicationId: string) {
+    const prisma = getPrismaClient();
+    return prisma.application.delete({ where: { id: applicationId } });
+  }
 }

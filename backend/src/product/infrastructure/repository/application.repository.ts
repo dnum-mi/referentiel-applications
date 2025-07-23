@@ -46,6 +46,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
   async findApplicationsBySearch(
     dto: ApplicationSearchDto,
+    actorEmail?: string,
   ): Promise<{ results: any[]; total: number }> {
     const {
       shortName,
@@ -62,6 +63,19 @@ export class ApplicationRepository implements IApplicationRepository {
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
+
+    if (actorEmail) {
+      where.AND.push({
+        actors: {
+          some: {
+            email: {
+              equals: actorEmail,
+              mode: 'insensitive' as const,
+            },
+          },
+        },
+      });
+    }
 
     // Label filter - search both main label field and labels table
     if (dto.label) {

@@ -1,21 +1,18 @@
 <script setup lang="ts">
-import { watchEffect } from "vue";
-import { useRelationStore } from "@/stores/relationStore";
+import { computed } from "vue";
 import { useRelationManager } from "@/composables/use-relation-manager";
-import type { Application } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 
-const props = defineProps<{ application: Application }>();
-const emit = defineEmits<{ (e: "update:application", app: Application): void }>();
+const props = defineProps<{ application: ApplicationWithPerms }>();
 
-const store = useRelationStore();
 const userStore = useUserStore();
-
-watchEffect(() => {
-  if (props.application) {
-    store.setApplication(props.application);
-  }
-});
+const canEdit = computed(
+  () =>
+    userStore.userPermissions?.includes("write") ||
+    userStore.userPermissions?.includes("admin") ||
+    props.application.myPerms.has("writeRelations"),
+);
 
 const {
   headers,
@@ -31,23 +28,23 @@ const {
   cancelDelete,
   openAddRelationModal,
   closeAddRelationModal,
-  handleAddRelation,
+  handleCreateRelation,
   closeEditRelationModal,
   handleUpdateRelation,
-} = useRelationManager(props.application, emit);
+} = useRelationManager();
 </script>
 
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
     <div class="fr-col">
-      <h3 class="fr-mb-0">Gestion des relations de {{ store.currentApplication.label }}</h3>
+      <h3 class="fr-mb-0">Gestion des relations de {{ props.application.label }}</h3>
     </div>
     <div class="fr-col-auto">
       <DsfrButton
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         @click="openAddRelationModal"
-        :disabled="!userStore.userPermissions?.includes('write')"
+        :disabled="!canEdit"
       >
         Ajouter une relation
       </DsfrButton>
@@ -60,7 +57,7 @@ const {
       tertiary
       @click="removeSelectedRelations"
       icon="fr-icon-delete-line"
-      :disabled="selectedRelationIds.length === 0 || !userStore.userPermissions?.includes('write')"
+      :disabled="selectedRelationIds.length === 0 || !canEdit"
     >
       Supprimer la sélection
     </DsfrButton>
@@ -94,13 +91,7 @@ const {
         </a>
       </template>
       <template v-else-if="colKey === 'Actions'">
-        <DsfrButton
-          tertiary
-          size="sm"
-          icon="fr-icon-edit-line"
-          @click="cell.edit()"
-          :disabled="!userStore.userPermissions?.includes('write')"
-        >
+        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.edit()" :disabled="!canEdit">
           {{ cell.label }}
           Modifier
         </DsfrButton>
@@ -114,10 +105,16 @@ const {
   <AddRelationModal
     :opened="isAddRelationModalOpen"
     title="Ajouter une relation"
-    :applicationId="store.currentApplication.id"
+    :applicationId="application.id"
     @close="closeAddRelationModal"
-    @update:application="handleAddRelation"
-    @add-relation="handleAddRelation"
+    @add-relation="
+      (relation) =>
+        handleCreateRelation({
+          applicationTargetId: relation.targetId,
+          type: relation.type,
+          applicationSourceId: application.id,
+        })
+    "
   />
 
   <EditRelationModal

@@ -12,7 +12,8 @@ import {
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { ActorTypeService } from './actorType.service';
 import { CreateActorTypeDto, PatchActorTypeDto } from './dto/actorType.dto';
-import { ActorType } from '@prisma/client';
+import { ActorType, AppPermissions } from '@prisma/client';
+import { AppPermsDto } from './dto/app-perms-matrix.dto';
 
 /**
  * Controller la gestion des types d'acteur
@@ -60,6 +61,15 @@ Vous devez fournir les informations suivantes :
     return await this.actorTypeService.create(CreateActorTypeDto);
   }
 
+  @Get('/perms-matrix')
+  @ApiResponse({
+    status: 200,
+    description: 'Liste les types d’acteurs par id et de leurs permissions',
+  })
+  public async getMatrix(): Promise<AppPermissions[]> {
+    return this.actorTypeService.getPermsMatrix();
+  }
+
   /**
    * Récupère un type d'acteur spécifique par son ID
    *
@@ -75,6 +85,17 @@ Vous devez fournir les informations suivantes :
   })
   public async findOne(@Param('id') id: string): Promise<ActorType> {
     return await this.actorTypeService.findOne(id);
+  }
+
+  @Patch('/perms-matrix')
+  @ApiResponse({
+    status: 200,
+    description: 'Met à jour la matrice des permissions',
+  })
+  public async updateMatrix(
+    @Body() appPermsMatrix: AppPermsDto[],
+  ): Promise<AppPermissions[]> {
+    return this.actorTypeService.updatePermsMatrix(appPermsMatrix);
   }
 
   @Get()

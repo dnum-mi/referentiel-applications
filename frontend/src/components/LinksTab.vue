@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { defineProps } from "vue";
-import type { ExternalRessource } from "@/models/Application";
+import type { ApplicationWithPerms, ExternalRessource } from "@/models/Application";
 import { useLinkStore } from "@/stores/linkStore";
 import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
@@ -10,7 +10,7 @@ import { linkTypesDict } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 
 const props = defineProps<{
-  application: { id: string };
+  application: ApplicationWithPerms;
 }>();
 
 const emit = defineEmits(["update:application"]);
@@ -23,6 +23,12 @@ const selectedLinkIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(0);
+const canEdit = computed(
+  () =>
+    userStore.userPermissions?.includes("write") ||
+    userStore.userPermissions?.includes("admin") ||
+    props.application.myPerms.has("writeLinks"),
+);
 
 const formatLink = (url: string) => (!url.startsWith("http") ? `http://${url}` : url);
 const getTypeLabel = (type: string) => linkTypesDict[type] || "Type inconnu";
@@ -95,11 +101,7 @@ const removeSelectedLinks = () => {
       <h3 class="fr-mb-0">Gestion des liens</h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton
-        class="fr-btn--icon-left fr-icon-add-line"
-        @click="linkModal.openCreateModal()"
-        :disabled="!userStore.userPermissions?.includes('write')"
-      >
+      <DsfrButton class="fr-btn--icon-left fr-icon-add-line" @click="linkModal.openCreateModal()" :disabled="!canEdit">
         Ajouter un lien
       </DsfrButton>
     </div>
@@ -115,7 +117,7 @@ const removeSelectedLinks = () => {
         type="button"
         tertiary
         icon="fr-icon-delete-line"
-        :disabled="!selectedLinkIds.length || !userStore.userPermissions?.includes('write')"
+        :disabled="!selectedLinkIds.length || !canEdit"
         @click="removeSelectedLinks"
       >
         Supprimer la sélection
@@ -142,13 +144,7 @@ const removeSelectedLinks = () => {
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">{{ cell.label }}</a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton
-            tertiary
-            size="sm"
-            icon="fr-icon-edit-line"
-            @click="cell.onClick"
-            :disabled="!userStore.userPermissions?.includes('write')"
-          >
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!canEdit">
             {{ cell.label }}
           </DsfrButton>
         </template>

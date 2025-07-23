@@ -6,19 +6,24 @@ import {
   Param,
   Patch,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { RelationService } from './relation.service';
 import { RelationApplicationDto } from './application/dto/relation-application.dto';
 import { Relation } from './domain/relation.entity';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { ApplicationGuard } from 'src/common/guards/application.guard';
+import { AppAction } from 'src/common/decorators/application.decorator';
 
 @ApiTags('relation')
+@UseGuards(ApplicationGuard)
 @Controller('applications/:applicationId/relations')
 export class RelationController {
   constructor(private readonly relationService: RelationService) {}
 
   @Post()
+  @AppAction('writeRelations')
   @ApiParam({
     name: 'applicationId',
     description: "ID de l'application SOURCE",
@@ -33,11 +38,12 @@ export class RelationController {
   }
 
   @Get()
+  @AppAction('readRelations')
   @ApiParam({
     name: 'applicationId',
     description: "ID de l'application SOURCE",
   })
-  @ApiOperation({ summary: 'Récupérer toutes les relations' })
+  @ApiOperation({ summary: "Récupérer toutes les relations d'une application" })
   async findAll(
     @Param('applicationId') applicationId: string,
   ): Promise<Relation[]> {
@@ -45,6 +51,7 @@ export class RelationController {
   }
 
   @Get(':id')
+  @AppAction('readRelations')
   @ApiOperation({
     summary: 'Récupérer une relation par son identifiant unique',
   })
@@ -54,6 +61,7 @@ export class RelationController {
   }
 
   @Patch(':id')
+  @AppAction('writeRelations')
   @ApiParam({
     name: 'applicationId',
     description: "ID de l'application SOURCE",
@@ -72,6 +80,7 @@ export class RelationController {
   }
 
   @Delete(':id')
+  @AppAction('writeRelations')
   @ApiParam({
     name: 'applicationId',
     description: "ID de l'application SOURCE",

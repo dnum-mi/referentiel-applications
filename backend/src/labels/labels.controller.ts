@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,13 +19,17 @@ import { LabelsService } from './labels.service';
 import { CreateLabelDto } from './dto/create-label.dto';
 import { Label } from './entities/label.entity';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { ApplicationGuard } from 'src/common/guards/application.guard';
+import { AppAction } from 'src/common/decorators/application.decorator';
 
 @ApiTags('Labels')
+@UseGuards(ApplicationGuard)
 @Controller('applications/:applicationId/labels')
 export class LabelsController {
   constructor(private service: LabelsService) {}
 
   @Post()
+  @AppAction('writeBase')
   @ApiBody({ type: CreateLabelDto })
   @ApiOperation({
     summary: 'Créer un nouveau label',
@@ -64,6 +69,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get()
+  @AppAction('readBase')
   @ApiOperation({
     summary: "Récupérer les labels par ID d'application",
     description: `
@@ -78,6 +84,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   }
 
   @Patch(':id')
+  @AppAction('writeBase')
   @ApiOperation({
     summary: 'Mettre à jour un label existant',
   })
@@ -107,6 +114,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   }
 
   @Delete(':id')
+  @AppAction('writeBase')
   @ApiOperation({
     summary: 'Supprimer un label',
     description: ` Ce endpoint permet de supprimer un label existant. 

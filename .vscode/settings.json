@@ -1,5 +1,8 @@
 {
   "conventionalCommits.scopes": ["applications", "ci", "api", "front"],
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  "editor.formatOnType": false // required
+  "editor.formatOnType": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }

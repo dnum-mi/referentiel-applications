@@ -6,7 +6,7 @@ import {
   PatchActorTypeDto,
 } from 'src/actorType/dto/actorType.dto';
 import { actorTypeMap } from 'src/actorType/map/actorType.map';
-import { Prisma } from '@prisma/client';
+import { AppPermissions, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ActorTypeRepository implements IActorTypeRepository {
@@ -15,6 +15,22 @@ export class ActorTypeRepository implements IActorTypeRepository {
   public async create(actorType: CreateActorTypeDto) {
     const mappedData = actorTypeMap(actorType);
     return await this.prisma.actorType.create(mappedData);
+  }
+
+  public async getPermsMatrix(): Promise<AppPermissions[]> {
+    return this.prisma.appPermissions.findMany();
+  }
+
+  async updatePermsMatrix(
+    matrix: Partial<AppPermissions>[],
+  ): Promise<AppPermissions[]> {
+    for (const perm of matrix) {
+      await this.prisma.appPermissions.update({
+        where: { actorTypeId: perm.actorTypeId },
+        data: perm,
+      });
+    }
+    return this.getPermsMatrix();
   }
 
   public async findAll() {

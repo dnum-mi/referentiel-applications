@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { LinksService } from './links.service';
@@ -13,8 +14,11 @@ import { CreateLinkDto } from './dto/create-link.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { UpdateLinkDto } from './dto/update-link.dto';
 import { ApplicationService } from 'src/product/application.service';
+import { ApplicationGuard } from 'src/common/guards/application.guard';
+import { AppAction } from 'src/common/decorators/application.decorator';
 
 @ApiTags('Links')
+@UseGuards(ApplicationGuard)
 @Controller('applications/:applicationId/links')
 export class ApplicationLinksController {
   constructor(
@@ -23,6 +27,7 @@ export class ApplicationLinksController {
   ) {}
 
   @Post()
+  @AppAction('writeLinks')
   @ApiOperation({ summary: 'Create a new link for an application' })
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
@@ -51,6 +56,7 @@ export class ApplicationLinksController {
   }
 
   @Get()
+  @AppAction('readLinks')
   @ApiOperation({ summary: 'Retrieve all links for an application' })
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
@@ -59,6 +65,7 @@ export class ApplicationLinksController {
   }
 
   @Patch(':id')
+  @AppAction('writeLinks')
   @ApiOperation({ summary: 'Update a link for an application' })
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
@@ -87,6 +94,7 @@ export class ApplicationLinksController {
   }
 
   @Delete(':id')
+  @AppAction('writeLinks')
   @ApiOperation({ summary: 'Delete a link for an application' })
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })

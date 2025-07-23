@@ -1,4 +1,4 @@
-import type { Application, Metadata } from "@/models/Application";
+import type { Application, ApplicationRights, Metadata } from "@/models/Application";
 import requests from "./xhr-client";
 import axios from "axios";
 import { regexLink, regexPriority, regexTag } from "@/utils/regex";
@@ -55,6 +55,11 @@ const Applications = {
     const response = await axios.get(`applications/${applicationId}/metadatas`, {
       params: { order },
     });
+    return response.data;
+  },
+
+  async getMyPerms(applicationId: string): Promise<ApplicationRights> {
+    const response = await axios.get(`applications/${applicationId}/my-perms`);
     return response.data;
   },
 

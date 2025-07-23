@@ -1,6 +1,7 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import isEqual from 'lodash/isEqual';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MetadatasService {
@@ -66,7 +67,7 @@ export class MetadatasService {
       );
     }
 
-    const prismaData: any = {
+    const prismaData: Prisma.MetadataUncheckedCreateInput = {
       applicationId,
       createdById,
       action: 'update',
