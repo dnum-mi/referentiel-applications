@@ -17,3 +17,7 @@ export function useFilterWatcher(filters: Record<string, any>, callback: () => v
     );
   });
 }
+
+export function filterEmpty<T extends Record<string, any>>(obj: T): Partial<T> {
+  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null && v !== "")) as Partial<T>;
+}
