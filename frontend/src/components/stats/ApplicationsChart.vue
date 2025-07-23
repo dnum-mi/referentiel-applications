@@ -23,7 +23,7 @@ async function loadData() {
     });
     const data = applicationsByMonth.map((m) => m.total);
 
-    chartInstance = renderChart(chartRef, chartInstance, labels, data);
+    chartInstance = renderChart(chartRef, chartInstance, labels, data, "bar");
   } catch {
     errorMessage.value = "Erreur lors du chargement des données";
   } finally {

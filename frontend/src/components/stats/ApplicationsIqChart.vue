@@ -25,7 +25,7 @@ async function loadData() {
       if (index >= 0 && index <= 20) data[20 - index] += total;
     });
 
-    chartInstance = renderChart(chartRef, chartInstance, labels, data);
+    chartInstance = renderChart(chartRef, chartInstance, labels, data, "bar");
   } catch {
     errorMessage.value = "Erreur lors du chargement des données";
   } finally {
