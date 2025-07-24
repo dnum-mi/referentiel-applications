@@ -9,4 +9,5 @@ export const routeNames = {
   PROFILE: "profile",
   ADMINPAGE: "administration",
   QUALITYPAGE: "qualite-generale",
+  NOTFOUND: "not-found",
 } as const;
