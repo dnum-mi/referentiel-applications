@@ -2,6 +2,7 @@ import { authentication } from "@/services/authentication";
 import axios, { type AxiosResponse } from "axios";
 import useToaster from "@/composables/use-toaster";
 import router from "@/router/index.js";
+import { routeNames } from "@/router/route-names";
 
 const toaster = useToaster();
 
@@ -26,17 +27,29 @@ axios.interceptors.request.use(
 
 axios.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      authentication.login({ redirectUri: router.currentRoute.fullPath });
+  (error: AxiosError) => {
+    const status = error.response?.status;
 
+    // 401 → relance du login
+    if (status === 401) {
+      authentication.login({ redirectUri: router.currentRoute.fullPath });
       return Promise.reject(error);
     }
 
-    if (error.response?.status === 403) {
+    // 403 → message d’erreur
+    if (status === 403) {
       toaster.addErrorMessage("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
       return Promise.reject(error);
     }
+
+    // 404 → redirection vers NotFound
+    if (status === 404) {
+      router.replace({ name: routeNames.NOTFOUND });
+      // on rejette quand même pour que d'éventuels catch côté composant ne continuent pas de tourner
+      return Promise.reject(error);
+    }
+
+    // autres erreurs
     return Promise.reject(error);
   },
 );

@@ -57,6 +57,12 @@ const routes = [
     component: () => import("@/views/QualityPage.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    path: "/:pathMatch(.*)*",
+    name: routeNames.NOTFOUND,
+    component: () => import("@/views/NotFound.vue"),
+    meta: { requiresAuth: false },
+  },
 ];
 
 const router = createRouter({
