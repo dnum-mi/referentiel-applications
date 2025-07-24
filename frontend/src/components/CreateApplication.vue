@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import axios from "axios";
+import { useRouter } from "vue-router";
 import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import type { Application } from "@/models/Application";
@@ -10,14 +11,21 @@ const toaster = useToaster();
 const applicationModal = useModal();
 const isSubmitting = ref(false);
 const userStore = useUserStore();
+const router = useRouter();
 
 async function createApplication(newApplication: Application) {
   try {
     applicationModal.closeModal();
-    await axios.post<Application>(`/applications/`, newApplication);
+    const response = await axios.post<Application>(`/applications/`, newApplication);
+    const createdApp = response.data;
+
     toaster.addSuccessMessage("Application créée avec succès !");
+    router.push({ name: "application", params: { id: createdApp.id } });
   } catch (_error) {
+    console.error("Erreur lors de la création de l'application:", _error);
     toaster.addErrorMessage("Erreur lors de la création de l'application.");
+  } finally {
+    isSubmitting.value = false;
   }
 }
 </script>
