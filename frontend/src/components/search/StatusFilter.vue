@@ -22,10 +22,6 @@ const statusOptions = computed(() =>
     })),
 );
 
-const filteredStatuses = computed(() =>
-  modelValue.value.filter((val) => typeof val === "string" && val in statusApplicationDictionary && val !== "select"),
-);
-
 const onStatusChange = (newStatus: unknown) => {
   if (!Array.isArray(newStatus)) return;
 
