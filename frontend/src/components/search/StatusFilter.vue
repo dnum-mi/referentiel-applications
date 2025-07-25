@@ -40,6 +40,14 @@ const onStatusChange = (newStatus: unknown) => {
   searchStore.setFilter("page", 0);
   debouncedSearch();
 };
+
+watch(
+  () => searchStore.filters.status,
+  (newVal) => {
+    modelValue.value = newVal ?? [];
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
