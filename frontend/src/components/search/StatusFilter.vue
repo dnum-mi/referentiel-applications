@@ -22,10 +22,6 @@ const statusOptions = computed(() =>
     })),
 );
 
-const filteredStatuses = computed(() =>
-  modelValue.value.filter((val) => typeof val === "string" && val in statusApplicationDictionary && val !== "select"),
-);
-
 const onStatusChange = (newStatus: unknown) => {
   if (!Array.isArray(newStatus)) return;
 
@@ -55,15 +51,5 @@ const onStatusChange = (newStatus: unknown) => {
       legend="Filtrer par statut"
       name="status"
     />
-
-    <div class="fr-mt-4v">
-      <h3 class="fr-text--md">Statuts valides sélectionnés :</h3>
-      <ul v-if="filteredStatuses.length">
-        <li v-for="(status, index) in filteredStatuses" :key="index">
-          {{ statusApplicationDictionary[status] }}
-        </li>
-      </ul>
-      <p v-else>Aucun statut valide sélectionné.</p>
-    </div>
   </div>
 </template>
