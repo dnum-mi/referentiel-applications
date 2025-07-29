@@ -139,7 +139,8 @@ describe('Relations End-to-End', () => {
 
 describe('application guard', () => {
   const app = setupTestSuite();
-  let user: { keycloakId: string; email: string };
+  let appOwner: { keycloakId: string; email: string };
+  let appActor: { keycloakId: string; email: string };
   let TOKEN: string;
   const prisma = getPrismaClient();
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
@@ -148,16 +149,17 @@ describe('application guard', () => {
   let applicationTarget: AsyncReturnType<typeof ApplicationFaker.create>;
 
   beforeAll(async () => {
-    user = await UserFaker.create();
-    application = await ApplicationFaker.create(user);
-    applicationTarget = await ApplicationFaker.create(user);
+    appOwner = await UserFaker.create();
+    appActor = await UserFaker.create();
+    application = await ApplicationFaker.create(appOwner);
+    applicationTarget = await ApplicationFaker.create(appOwner);
     actorType = await ActorTypeFaker.create(['readRelations']);
     actor = await ActorFaker.link({
-      userEmail: user.email,
+      userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
     });
-    TOKEN = await getToken(user);
+    TOKEN = await getToken(appActor);
   });
 
   afterAll(async () => {

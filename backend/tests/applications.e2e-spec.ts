@@ -88,22 +88,24 @@ describe('Applications', () => {
 });
 describe('application guard', () => {
   const app = setupTestSuite();
-  let user: { keycloakId: string; email: string };
+  let appOwner: { keycloakId: string; email: string };
+  let appActor: { keycloakId: string; email: string };
   let TOKEN: string;
   const prisma = getPrismaClient();
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
   let application: AsyncReturnType<typeof ApplicationFaker.create>;
 
   beforeAll(async () => {
-    user = await UserFaker.create();
-    application = await ApplicationFaker.create(user);
+    appOwner = await UserFaker.create();
+    appActor = await UserFaker.create();
+    application = await ApplicationFaker.create(appOwner);
     actorType = await ActorTypeFaker.create([]);
     await ActorFaker.link({
-      userEmail: user.email,
+      userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
     });
-    TOKEN = await getToken(user);
+    TOKEN = await getToken(appActor);
   });
 
   afterAll(async () => {

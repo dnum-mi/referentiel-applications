@@ -109,13 +109,15 @@ describe('Hostings', () => {
 
 describe('application guard', () => {
   const app = setupTestSuite();
-  let user: { keycloakId: string; email: string };
+  let appOwner: { keycloakId: string; email: string };
+  let appActor: { keycloakId: string; email: string };
   let TOKEN: string;
   const prisma = getPrismaClient();
 
   beforeAll(async () => {
-    user = await UserFaker.create();
-    TOKEN = await getToken(user);
+    appOwner = await UserFaker.create();
+    appActor = await UserFaker.create();
+    TOKEN = await getToken(appActor);
   });
 
   afterAll(async () => {
@@ -124,9 +126,9 @@ describe('application guard', () => {
 
   it(`permissions testing`, async () => {
     const actorType = await ActorTypeFaker.create(['readHostings']);
-    const application = await ApplicationFaker.create(user);
+    const application = await ApplicationFaker.create(appOwner);
     await ActorFaker.link({
-      userEmail: user.email,
+      userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
     });

@@ -272,10 +272,10 @@ export class ApplicationService {
       // If the user has read or write permissions, proceed with the search
       return this.applicationRepository.findApplicationsBySearch(searchParams);
     }
-    return this.applicationRepository.findApplicationsBySearch(
-      searchParams,
-      user.email,
-    );
+    return this.applicationRepository.findApplicationsBySearch(searchParams, {
+      actorEmail: user.email,
+      ownerId: user.keycloakId,
+    });
   }
 
   public async exportApplications(): Promise<any[]> {

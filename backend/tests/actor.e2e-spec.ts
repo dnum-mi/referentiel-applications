@@ -48,13 +48,15 @@ describe('Actor', () => {
 
 describe('application guard', () => {
   const app = setupTestSuite();
-  let user: { keycloakId: string; email: string };
+  let appOwner: { keycloakId: string; email: string };
+  let appActor: { keycloakId: string; email: string };
   let TOKEN: string;
   const prisma = getPrismaClient();
 
   beforeAll(async () => {
-    user = await UserFaker.create();
-    TOKEN = await getToken(user);
+    appOwner = await UserFaker.create();
+    appActor = await UserFaker.create();
+    TOKEN = await getToken(appActor);
   });
 
   afterAll(async () => {
@@ -63,9 +65,9 @@ describe('application guard', () => {
 
   it(`permissions testing`, async () => {
     const actorType = await ActorTypeFaker.create(['readActors']);
-    const application = await ApplicationFaker.create(user);
+    const application = await ApplicationFaker.create(appOwner);
     await ActorFaker.link({
-      userEmail: user.email,
+      userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
     });
@@ -74,7 +76,7 @@ describe('application guard', () => {
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/actors`)
       .send({
-        email: user.email,
+        email: appOwner.email,
         firstname: 'firstname',
         lastname: 'lastname',
         actorTypeId: actorType.id,
@@ -88,7 +90,7 @@ describe('application guard', () => {
     const actor = await request(app().getHttpServer())
       .post(`/applications/${application.id}/actors`)
       .send({
-        email: user.email,
+        email: appOwner.email,
         firstname: 'firstname',
         lastname: 'lastname',
         actorTypeId: actorType.id,
