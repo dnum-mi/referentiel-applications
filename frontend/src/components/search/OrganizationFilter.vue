@@ -65,6 +65,7 @@ function reset() {
 function update() {
   if (organizationSearchInput.value !== selected.value?.label) {
     selected.value = null;
+    searchStore.resetFilters();
   }
 }
 </script>
