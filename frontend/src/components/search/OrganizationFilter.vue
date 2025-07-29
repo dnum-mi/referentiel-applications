@@ -3,6 +3,8 @@ import { ref, watch, defineEmits } from "vue";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import { DsfrInput } from "@gouvminint/vue-dsfr";
 import type { Organization } from "@/models/organization";
+import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
 
 const props = withDefaults(
   defineProps<{
@@ -17,10 +19,15 @@ const emits = defineEmits<{
   select: [value: Organization | null];
 }>();
 
+const searchStore = useApplicationSearchStore();
 const organizationStore = useOrganizationStore();
 const organizationSearchInput = ref("");
 const suggestions = ref<Organization[]>([]);
 const selected = ref<Organization | null>(props.preselected);
+
+const { run: debouncedSearch } = useDebouncedFn(() => {
+  searchStore.searchApplications();
+}, 300);
 
 if (props.preselected) {
   select(props.preselected);
@@ -44,11 +51,15 @@ watch(organizationSearchInput, (value: string) => {
 function select(org: Organization) {
   selected.value = org;
   organizationSearchInput.value = selected.value.label;
+  searchStore.setFilter("organizationLabel", organizationSearchInput.value);
+  searchStore.setFilter("page", 0);
+  debouncedSearch();
   emits("select", selected.value);
 }
 function reset() {
   selected.value = null;
   organizationSearchInput.value = "";
+  searchStore.resetFilters();
   emits("select", selected.value);
 }
 function update() {
