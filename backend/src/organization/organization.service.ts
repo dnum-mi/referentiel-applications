@@ -126,44 +126,45 @@ export class OrganizationService extends BaseService<Organization> {
    * @returns {Promise<void>}
    */
   async recalculateClosureTable(): Promise<void> {
-    // 1. On vide la closure table
-    await this.prisma.organizationClosure.deleteMany({});
+    console.log(
+      Date.now(),
+      'Début du recalcul de la table Organisation Closure',
+    );
 
-    // 2. On récupère tous les nœuds
+    // 1. On récupère tous les nœuds
     const allOrganizations = await this.prisma.organization.findMany();
+    // On prépare un objet pour accéder par id
+    const orgById = allOrganizations.reduce((acc, org) => {
+      acc[org.id] = org;
+      return acc;
+    }, {});
 
-    // 3. Pour chaque nœud, on construit la liste de ses ancêtres (y compris lui-même)
+    const closures: Prisma.OrganizationClosureCreateManyInput[] = [];
+
+    // 2. Pour chaque nœud, on construit la liste de ses ancêtres (y compris lui-même)
     for (const organization of allOrganizations) {
       let depth = 0;
       let parent = organization;
-
       // On remonte la chaîne des parents
       while (parent) {
-        // On commence par l’auto-référence (chaque nœud est son propre ancêtre)
-        await this.prisma.organizationClosure.upsert({
-          where: {
-            ancestorId_descendantId: {
-              ancestorId: parent.id,
-              descendantId: organization.id,
-            },
-          },
-          create: {
-            ancestorId: parent.id,
-            descendantId: organization.id,
-            depth,
-          },
-          update: {
-            depth,
-          },
-          include: {
-            ancestor: true,
-          },
+        closures.push({
+          ancestorId: parent.id,
+          descendantId: organization.id,
+          depth,
         });
+        // On commence par l’auto-référence (chaque nœud est son propre ancêtre)
         depth++;
         // On remonte au parent
-        parent =
-          allOrganizations.find((org) => org.id === parent.parentId) || null;
+        parent = orgById[parent.parentId];
       }
     }
+    // 3. On vide la table des closures existantes et on insère les nouvelles
+    console.log(Date.now(), 'Début de la transaction SQL');
+    await this.prisma.organizationClosure.deleteMany({});
+    await this.prisma.organizationClosure.createMany({
+      data: closures,
+      skipDuplicates: true,
+    });
+    console.log(Date.now(), 'Fin du recalcul de la table Organisation Closure');
   }
 }

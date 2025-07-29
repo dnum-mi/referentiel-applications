@@ -45,6 +45,7 @@ export class UserService {
       data: {
         email,
         keycloakId,
+        permissions: '',
       },
     });
   }
