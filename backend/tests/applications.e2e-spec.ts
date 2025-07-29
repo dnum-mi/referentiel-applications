@@ -4,6 +4,10 @@ import { getToken } from './getToken';
 import { UserFaker } from './fakers/user.faker';
 import { faker } from '@faker-js/faker';
 import { getPrismaClient } from './fakers/prisma';
+import { ActorTypeFaker } from './fakers/actor-type.faker';
+import { ApplicationFaker } from './fakers/application.faker';
+import { AsyncReturnType } from 'src/utils/types.util';
+import { ActorFaker } from './fakers/actor.faker';
 
 describe('Applications', () => {
   const app = setupTestSuite();
@@ -80,5 +84,83 @@ describe('Applications', () => {
       .get(`/applications/${createdApplicationId}`)
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(404);
+  });
+});
+describe('application guard', () => {
+  const app = setupTestSuite();
+  let user: { keycloakId: string; email: string };
+  let TOKEN: string;
+  const prisma = getPrismaClient();
+  let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
+  let application: AsyncReturnType<typeof ApplicationFaker.create>;
+
+  beforeAll(async () => {
+    user = await UserFaker.create();
+    application = await ApplicationFaker.create(user);
+    actorType = await ActorTypeFaker.create([]);
+    await ActorFaker.link({
+      userEmail: user.email,
+      actorTypeId: actorType.id,
+      applicationId: application.id,
+    });
+    TOKEN = await getToken(user);
+  });
+
+  afterAll(async () => {
+    await actorType.delete();
+    prisma.$disconnect();
+  });
+
+  it(`permissions testing`, async () => {
+    // remove all permission
+    await actorType.update([], { reset: true });
+    // Should fail to get the relation because the user does not have the read permission
+    await request(app().getHttpServer())
+      .get(`/applications/${application.id}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(403);
+
+    // Should fail to list relations because the user does not have the read permission
+    await request(app().getHttpServer())
+      .get(`/applications/${application.id}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(403);
+
+    // Add read permission
+    await actorType.update(['readBase']);
+
+    // Should succeed to get the relation
+    await request(app().getHttpServer())
+      .get(`/applications/${application.id}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    // should fail on write permission
+    await request(app().getHttpServer())
+      .patch(`/applications/${application.id}`)
+      .send({
+        description: 'Updated description',
+      })
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(403);
+
+    // Add write permission again
+    await actorType.update(['writeBase']);
+
+    // Should succeed to update the relation
+    await request(app().getHttpServer())
+      .patch(`/applications/${application.id}`)
+      .send({
+        description: 'Updated description',
+      })
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    // Should failed to delete the application because it's an admin privilege
+    // TODO should be fixed in the future with global permissions
+    // await request(app().getHttpServer())
+    //   .delete(`/applications/${application.id}`)
+    //   .set('Authorization', `Bearer ${TOKEN}`)
+    //   .expect(403);
   });
 });

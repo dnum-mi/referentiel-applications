@@ -15,7 +15,6 @@ import { UserModule } from './user/user.module';
 import { OrganizationModule } from './organization/organization.module';
 import { ActorTypeModule } from './actorType/actorType.module';
 import { AuthMiddleware } from './middlewares/auth.middleware';
-import { CombinedInterceptor } from './logger/combined.interceptor';
 import { ApplicationService } from './product/application.service';
 import { ConfigModule } from '@nestjs/config';
 import { RelationModule } from './relationship/relation.module';
@@ -30,6 +29,7 @@ import { CompliancesModule } from './compliances/compliances.module';
 import { HostingOptionModule } from './hosting-option/hosting-option.module';
 import { StatsModule } from './stats/stats.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { LoggingService } from './services/logging.service';
 
 @Module({
   imports: [
@@ -59,13 +59,14 @@ import { ScheduleModule } from '@nestjs/schedule';
   providers: [
     AppService,
     ApplicationService,
-    CombinedInterceptor,
+    LoggingService,
     AuthMiddleware,
     {
       provide: APP_GUARD,
       useClass: PermissionsGuard,
     },
   ],
+  exports: [LoggingService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

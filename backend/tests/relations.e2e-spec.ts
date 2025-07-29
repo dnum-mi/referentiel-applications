@@ -6,6 +6,9 @@ import { RelationType } from '@prisma/client';
 import { UserFaker } from './fakers/user.faker';
 import { ApplicationFaker } from './fakers/application.faker';
 import { getPrismaClient } from './fakers/prisma';
+import { ActorTypeFaker } from './fakers/actor-type.faker';
+import { ActorFaker } from './fakers/actor.faker';
+import { AsyncReturnType } from 'src/utils/types.util';
 
 describe('Relations End-to-End', () => {
   const app = setupTestSuite();
@@ -131,5 +134,120 @@ describe('Relations End-to-End', () => {
       .get(`/applications/${applicationSourceId}/relations/${relation.id}`)
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(404);
+  });
+});
+
+describe('application guard', () => {
+  const app = setupTestSuite();
+  let user: { keycloakId: string; email: string };
+  let TOKEN: string;
+  const prisma = getPrismaClient();
+  let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
+  let actor: AsyncReturnType<typeof ActorFaker.link>;
+  let application: AsyncReturnType<typeof ApplicationFaker.create>;
+  let applicationTarget: AsyncReturnType<typeof ApplicationFaker.create>;
+
+  beforeAll(async () => {
+    user = await UserFaker.create();
+    application = await ApplicationFaker.create(user);
+    applicationTarget = await ApplicationFaker.create(user);
+    actorType = await ActorTypeFaker.create(['readRelations']);
+    actor = await ActorFaker.link({
+      userEmail: user.email,
+      actorTypeId: actorType.id,
+      applicationId: application.id,
+    });
+    TOKEN = await getToken(user);
+  });
+
+  afterAll(async () => {
+    await actor.delete();
+    await actorType.delete();
+    prisma.$disconnect();
+  });
+
+  it(`permissions testing`, async () => {
+    // Should fail because the user does not have the write permission
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/relations`)
+      .send({
+        applicationTargetId: applicationTarget.id,
+        type: RelationType.is_part_of,
+      })
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(403);
+
+    // Should succeed after granting the write permission
+    await actorType.update(['writeRelations']);
+    const relation = await request(app().getHttpServer())
+      .post(`/applications/${application.id}/relations`)
+      .send({
+        applicationTargetId: applicationTarget.id,
+        type: RelationType.is_part_of,
+      })
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(201);
+    const relationId = relation.body.id;
+    expect(relationId).toBeDefined();
+
+    // remove all permission
+    await actorType.update([], { reset: true });
+    // Should fail to get the relation because the user does not have the read permission
+    await request(app().getHttpServer())
+      .get(`/applications/${application.id}/relations/${relationId}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(403);
+
+    // Should fail to list relations because the user does not have the read permission
+    await request(app().getHttpServer())
+      .get(`/applications/${application.id}/relations`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(403);
+
+    // Add read permission
+    await actorType.update(['readRelations']);
+
+    // Should succeed to get the relation
+    await request(app().getHttpServer())
+      .get(`/applications/${application.id}/relations/${relationId}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+    // Should succeed to list relations
+    await request(app().getHttpServer())
+      .get(`/applications/${application.id}/relations`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    // should fail on write permission
+    await request(app().getHttpServer())
+      .patch(`/applications/${application.id}/relations/${relationId}`)
+      .send({
+        type: RelationType.in_replacement_of,
+      })
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(403);
+
+    await request(app().getHttpServer())
+      .delete(`/applications/${application.id}/relations/${relationId}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(403);
+
+    // Add write permission again
+    await actorType.update(['writeRelations']);
+
+    // Should succeed to update the relation
+    await request(app().getHttpServer())
+      .patch(`/applications/${application.id}/relations/${relationId}`)
+      .send({
+        type: RelationType.in_replacement_of,
+      })
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
+
+    // Should succeed to delete the relation
+    await request(app().getHttpServer())
+      .delete(`/applications/${application.id}/relations/${relationId}`)
+      .set('Authorization', `Bearer ${TOKEN}`)
+      .expect(200);
   });
 });

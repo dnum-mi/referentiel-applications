@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue";
-import type { Application, Label } from "@/models/Application";
+import type { ApplicationWithPerms, Label } from "@/models/Application";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
@@ -19,7 +19,7 @@ const emit = defineEmits(["update:application"]);
 const loading = ref(false);
 
 const props = defineProps<{
-  application: Application;
+  application: ApplicationWithPerms;
   tags: string[];
   targetPopulations: string[];
   small?: boolean;
@@ -31,6 +31,25 @@ const hostingToDelete = ref<Hosting | null>(null);
 const isDeleteModalOpen = ref(false);
 const hostingStore = useHostingStore();
 const userStore = useUserStore();
+const canEditBase = computed(
+  () =>
+    userStore.userPermissions?.includes("write") ||
+    userStore.userPermissions?.includes("admin") ||
+    props.application.myPerms.has("writeBase"),
+);
+const canViewHostings = computed(
+  () =>
+    userStore.userPermissions?.includes("read") ||
+    userStore.userPermissions?.includes("write") ||
+    userStore.userPermissions?.includes("admin") ||
+    props.application.myPerms.has("readHostings"),
+);
+const canEditHostings = computed(
+  () =>
+    userStore.userPermissions?.includes("write") ||
+    userStore.userPermissions?.includes("admin") ||
+    props.application.myPerms.has("writeHostings"),
+);
 
 onMounted(async () => {
   if (props.application?.id) {
@@ -38,7 +57,7 @@ onMounted(async () => {
   }
 });
 
-const application = ref<Application>({
+const application = ref<ApplicationWithPerms>({
   ...props.application,
   labels: props.application.labels ?? [],
 });
@@ -189,7 +208,7 @@ watch(
                   class="fr-btn--icon-left fr-icon-edit-line"
                   label="Modifier"
                   @click="applicationModal.openModal()"
-                  :disabled="!userStore.userPermissions?.includes('write')"
+                  :disabled="!canEditBase"
                 />
               </div>
             </div>
@@ -258,7 +277,7 @@ watch(
         </div>
       </div>
 
-      <div class="fr-card">
+      <div class="fr-card" v-if="canViewHostings">
         <div class="fr-card__body">
           <div class="fr-card__content">
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
@@ -272,7 +291,7 @@ watch(
                   class="fr-btn--icon-left fr-icon-add-line"
                   label="Ajouter"
                   @click="isHostingModalOpen = true"
-                  :disabled="!userStore.userPermissions?.includes('write')"
+                  :disabled="!canEditHostings"
                 />
               </div>
             </div>

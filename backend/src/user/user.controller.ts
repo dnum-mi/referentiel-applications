@@ -7,6 +7,7 @@ import {
   Query,
   Request,
 } from '@nestjs/common';
+import { Request as Req } from 'express';
 import { UserService } from './user.service';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -25,7 +26,7 @@ export class UserController {
     description: 'Informations utilisateur trouvées',
   })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé' })
-  async findMe(@Request() req: any) {
+  async findMe(@Request() req: Req) {
     return req.user;
   }
 

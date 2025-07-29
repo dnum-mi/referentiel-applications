@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { CompliancesService } from './compliances.service';
@@ -13,6 +14,8 @@ import { CreateComplianceDto } from './dto/create-compliance.dto';
 import { UpdateComplianceDto } from './dto/update-compliance.dto';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { ApplicationService } from 'src/product/application.service';
+import { AppAction } from 'src/common/decorators/application.decorator';
+import { ApplicationGuard } from 'src/common/guards/application.guard';
 
 @ApiTags('Compliances')
 @Controller('compliances')
@@ -29,6 +32,7 @@ export class ComplianceController {
 }
 
 @ApiTags('Compliances')
+@UseGuards(ApplicationGuard)
 @Controller('applications/:applicationId/compliances')
 export class ApplicationCompliancesController {
   constructor(
@@ -37,6 +41,7 @@ export class ApplicationCompliancesController {
   ) {}
 
   @Post()
+  @AppAction('writeCompliances')
   @ApiOperation({ summary: 'Create a new compliance for an application' })
   @ApiResponse({ status: 201 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
@@ -65,6 +70,7 @@ export class ApplicationCompliancesController {
   }
 
   @Get()
+  @AppAction('readCompliances')
   @ApiOperation({ summary: 'Retrieve the compliance for an application' })
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })
@@ -73,6 +79,7 @@ export class ApplicationCompliancesController {
   }
 
   @Patch()
+  @AppAction('writeCompliances')
   @ApiOperation({ summary: 'Update the compliance for an application' })
   @ApiResponse({ status: 200 })
   @ApiParam({ name: 'applicationId', description: 'ID of the application' })

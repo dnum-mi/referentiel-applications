@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import type { Application, Metadata } from "@/models/Application";
+import type { Application, ApplicationWithPerms, Metadata } from "@/models/Application";
 import Applications from "@/api/application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { formatDate } from "@/composables/use-date";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { useApplicationStore } from "@/stores/applicationStore";
 
+const applicationStore = useApplicationStore();
 const route = useRoute();
 const id = route.params.id as string;
-const application = ref<Application | null>(null);
+const application = computed<ApplicationWithPerms>(() => applicationStore.applicationsById[id]);
+const applicationUpdated = ref<Application | null>(null);
 const metadata = ref<Metadata | null>();
 const firstMetadata = ref<Metadata | null>();
 const isLoading = ref(false);
@@ -20,27 +23,25 @@ async function getMetadata(applicationId: string, order: "asc" | "desc") {
   return result[0] ?? null;
 }
 
-async function handleApplicationUpdate(updatedApplication: Application) {
-  application.value = updatedApplication;
-  metadata.value = await getMetadata(updatedApplication.id, "desc");
+async function handleApplicationUpdate(updateData: Application) {
+  applicationUpdated.value = updateData;
+  metadata.value = await getMetadata(updateData.id, "desc");
 }
 
 async function loadApplication() {
   isLoading.value = true;
   try {
-    application.value = await Applications.getApplicationById(id);
-    firstMetadata.value = await getMetadata(id, "asc");
-    metadata.value = await getMetadata(id, "desc");
-  } catch (error) {
-    errorMessage.value = `Une erreur est survenue lors de la récupération de l'application. (${error})`;
+    await applicationStore.fetchApplication(id);
+    if (application.value.myPerms.has("readMetadata")) {
+      firstMetadata.value = await getMetadata(id, "asc");
+      metadata.value = await getMetadata(id, "desc");
+    }
   } finally {
     isLoading.value = false;
   }
 }
 
-onMounted(() => {
-  loadApplication();
-});
+onMounted(loadApplication);
 </script>
 
 <template>

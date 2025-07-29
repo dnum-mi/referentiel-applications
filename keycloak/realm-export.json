@@ -143,6 +143,50 @@
       }
     },
     {
+      "id": "f15d1c13-8198-4ca5-a180-94656e20d569",
+      "username": "admin",
+      "email": "admin@example.com",
+      "firstName": "The",
+      "lastName": "Administrator",
+      "emailVerified": true,
+      "enabled": true,
+      "createdTimestamp": 1728673414000,
+      "totp": false,
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "referentiel-applications": ["USER"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "f15d1c13-8198-4ca5-a180-94656e20d567",
+      "username": "support",
+      "email": "support@example.com",
+      "firstName": "Guy",
+      "lastName": "Yotine",
+      "emailVerified": true,
+      "enabled": true,
+      "createdTimestamp": 1728673414000,
+      "totp": false,
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "referentiel-applications": ["USER"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass",
+          "temporary": false
+        }
+      ]
+    },
+    {
       "id": "f15d1c13-8198-4ca5-a180-94656e20d568",
       "username": "user",
       "email": "user@example.com",
@@ -159,7 +203,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "password",
+          "value": "pass",
           "temporary": false
         }
       ]

@@ -10,6 +10,7 @@ import {
   Logger,
   Delete,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { ApplicationService } from './application.service';
 
@@ -24,6 +25,11 @@ import { GetApplicationDto } from './application/dto/get-application.dto';
 import { Response } from 'express';
 import { UserId } from '../common/decorators/user-id.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
+import { ApplicationGuard } from 'src/common/guards/application.guard';
+import { AppAction } from 'src/common/decorators/application.decorator';
+import { ApplicationRights } from './application/dto/application-rights.dto';
+import { User } from 'src/common/decorators/user.decorator';
+import { UserEntity as UserEntity } from 'src/user/entities/user.entity';
 
 @ApiTags('applications')
 @Controller('applications')
@@ -112,16 +118,21 @@ Vous devez fournir les informations suivantes :
     description:
       'Liste des applications correspondant aux critères de recherche avec pagination.',
   })
-  async search(@Query() searchParams: ApplicationSearchDto) {
-    return this.applicationService.search(searchParams);
+  async search(
+    @Query() searchParams: ApplicationSearchDto,
+    @User() user: UserEntity,
+  ) {
+    return this.applicationService.search(searchParams, user);
   }
 
-  @Get(':id/metadatas')
+  @Get(':applicationId/metadatas')
+  @UseGuards(ApplicationGuard)
+  @AppAction('readMetadata')
   @ApiOperation({
     summary: 'Lister les metadatas d’une application avec pagination et tri',
   })
   getMetadatas(
-    @Param('id') id: string,
+    @Param('applicationId') id: string,
     @Query('offset') offset = 0,
     @Query('limit') limit = 1,
     @Query('order') order: 'asc' | 'desc' = 'asc',
@@ -132,6 +143,19 @@ Vous devez fournir les informations suivantes :
       Number(limit),
       order,
     );
+  }
+
+  @Get(':applicationId/my-perms')
+  @UseGuards(ApplicationGuard)
+  @AppAction('readBase')
+  @ApiOperation({
+    summary: "Lister les droits de l'utilisateur sur l'application",
+  })
+  getMyPerms(
+    @Param('applicationId') id: string,
+    @User() user: UserEntity,
+  ): Promise<ApplicationRights> {
+    return this.applicationService.getMyPerms(id, user.email);
   }
 
   @Get('export/excel')
@@ -200,7 +224,9 @@ Vous devez fournir les informations suivantes :
     res.send(result.csv);
   }
 
-  @Get(':id')
+  @Get(':applicationId')
+  @UseGuards(ApplicationGuard)
+  @AppAction('readBase')
   @ApiOperation({
     summary: 'Récupérer une application spécifique par ID',
     description: `
@@ -209,11 +235,14 @@ Ce endpoint permet de récupérer les détails complets d'une application en fon
 Le paramètre **id** doit être fourni dans l'URL.
     `,
   })
-  async findOne(@Param('id') id: string): Promise<GetApplicationDto> {
+  async findOne(
+    @Param('applicationId') id: string,
+  ): Promise<GetApplicationDto> {
     return await this.applicationService.getApplicationById(id);
   }
 
   @Get()
+  // TODO réserver pour les administrateurs
   @ApiOperation({
     summary: 'Récupérer les applications',
     description: `
@@ -248,7 +277,9 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     };
   }
 
-  @Patch(':id')
+  @Patch(':applicationId')
+  @UseGuards(ApplicationGuard)
+  @AppAction('writeBase')
   @ApiOperation({
     summary: 'Mettre à jour une application',
     description: ` Ce endpoint permet de mettre à jour une application existante. 
@@ -257,7 +288,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
   })
   async update(
     @UserId() userId: string,
-    @Param('id') id: string,
+    @Param('applicationId') id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
   ): Promise<PatchApplicationDto> {
     Logger.log({
@@ -272,7 +303,8 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     });
   }
 
-  @Delete(':id')
+  @Delete(':applicationId')
+  // TODO réserver pour les administrateurs
   @ApiOperation({
     summary: 'Supprimer une application',
     description: 'Supprime une application par son ID.',
@@ -282,7 +314,7 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     description: 'Application supprimée avec succès.',
   })
   @ApiResponse({ status: 404, description: 'Application non trouvée.' })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('applicationId') id: string) {
     await this.applicationService.deleteApplication(id);
     return { message: 'Application supprimée avec succès.' };
   }

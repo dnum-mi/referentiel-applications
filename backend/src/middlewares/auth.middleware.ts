@@ -6,7 +6,14 @@ import {
 import { Request, Response, NextFunction } from 'express';
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from 'jose';
 import { updateUserLastLogin } from 'src/common/utils/actionLog.utils';
+import { UserEntity } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
+
+declare module 'express' {
+  export interface Request {
+    user?: UserEntity;
+  }
+}
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {

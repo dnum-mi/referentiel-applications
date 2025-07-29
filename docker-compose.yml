@@ -51,8 +51,8 @@ services:
       - "5555:5555"
 
   keycloak:
-    build:
-      context: ./keycloak
+    image: quay.io/keycloak/keycloak
+    command: ["start-dev", "--import-realm"]
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=password
@@ -63,6 +63,8 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
     depends_on:
       - postgres
 

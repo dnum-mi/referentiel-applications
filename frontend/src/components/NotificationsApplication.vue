@@ -1,15 +1,25 @@
 <script setup lang="ts">
 import { useReportIssueStore } from "@/stores/reportIssueStore";
 import { computed } from "vue";
-import type { Application, Metadata } from "@/models/Application";
+import type { ApplicationWithPerms, Metadata } from "@/models/Application";
+import { useUserStore } from "@/stores/userStore";
 
-const props = defineProps<{ application: Application }>();
+const props = defineProps<{ application: ApplicationWithPerms }>();
 
 const reportStore = useReportIssueStore();
 
 const headers = ["Date", "Auteur", "Description"];
 const currentPage = ref(0);
 const activeAccordion = ref<number>();
+const userStore = useUserStore();
+
+const canEdit = computed(() => {
+  return (
+    props.application.myPerms.has("writeMetadata") ||
+    userStore.userPermissions.includes("admin") ||
+    userStore.userPermissions.includes("write")
+  );
+});
 
 function formatDescription(description: string): { title: string; content: string } {
   const oldMatch = description.match(/Ancienne\(s\) valeur\(s\):\s*(\{.*?\})/s);
@@ -101,7 +111,7 @@ const loading = computed(() => reportStore.isLoading);
       </template>
     </DsfrDataTable>
   </DsfrAccordionsGroup>
-  <ReportIssue :application="application" />
+  <ReportIssue :application="application" v-if="canEdit" />
 </template>
 
 <style scoped>
@@ -110,6 +120,7 @@ const loading = computed(() => reportStore.isLoading);
   word-wrap: break-word;
   margin-top: 0.5rem;
 }
+
 .formatted-description {
   white-space: pre-wrap;
   word-wrap: break-word;

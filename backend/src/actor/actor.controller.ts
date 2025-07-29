@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -19,6 +20,8 @@ import { CreateActorDto, UpdateActorDto } from './dto/actor.dto';
 import { ActorService } from './actor.service';
 import { Actor } from '@prisma/client';
 import { UserId } from '../common/decorators/user-id.decorator';
+import { ApplicationGuard } from 'src/common/guards/application.guard';
+import { AppAction } from 'src/common/decorators/application.decorator';
 
 @ApiTags('Actors')
 @Controller('actors')
@@ -35,12 +38,14 @@ export class ActorController {
 }
 
 @ApiTags('Actors')
+@UseGuards(ApplicationGuard)
 @Controller('applications/:applicationId/actors')
 export class ApplicationActorsController {
   constructor(private readonly actorService: ActorService) {}
 
   @Post()
   @ApiBody({ type: CreateActorDto })
+  @AppAction('writeActors')
   @ApiOperation({
     summary: 'Créer un nouvel acteur',
     description: `
@@ -71,6 +76,7 @@ Informations requises :
   }
 
   @Get(':id')
+  @AppAction('readActors')
   @ApiOperation({ summary: 'Récupérer un acteur par ID' })
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
@@ -79,6 +85,7 @@ Informations requises :
   }
 
   @Get()
+  @AppAction('readActors')
   @ApiOperation({ summary: 'Récupérer tous les acteurs' })
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiResponse({ status: 200, description: 'Liste des acteurs' })
@@ -89,12 +96,14 @@ Informations requises :
   }
 
   @Patch(':id')
+  @AppAction('writeActors')
   @ApiOperation({ summary: 'Mettre à jour un acteur' })
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiParam({ name: 'id', description: "ID de l'acteur" })
   public async updated(
     @UserId() userId: string,
     @Param('id') id: string,
+    @Param('applicationId') applicationId: string,
     @Body() actorToUpdate: UpdateActorDto,
   ): Promise<Actor> {
     Logger.log({
@@ -105,12 +114,13 @@ Informations requises :
 
     return this.actorService.update({
       where: { id: id },
-      data: actorToUpdate,
+      data: { ...actorToUpdate, applicationId },
       ownerId: userId,
     });
   }
 
   @Delete(':id')
+  @AppAction('writeActors')
   @ApiOperation({ summary: 'Supprimer un acteur' })
   @ApiParam({ name: 'applicationId', description: "ID de l'application" })
   @ApiParam({ name: 'id', description: "ID de l'acteur" })

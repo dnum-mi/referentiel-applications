@@ -1,10 +1,10 @@
 import { ref, computed } from "vue";
 import { useRelationStore } from "@/stores/relationStore";
 import useToaster from "@/composables/use-toaster";
-import type { Application, Relation } from "@/models/Application";
+import type { Relation } from "@/models/Application";
 import Relations from "@/api/relation";
 
-export function useRelationManager(application: Application, emit: (event: string, payload?: any) => void) {
+export function useRelationManager() {
   const store = useRelationStore();
   const toaster = useToaster();
 
@@ -47,7 +47,7 @@ export function useRelationManager(application: Application, emit: (event: strin
     };
   }
 
-  const rows = computed(() => store.allRelations.map((rel) => createRow(rel)));
+  const rows = computed(() => store.relations.map((rel) => createRow(rel)));
 
   function editRelation(rel: Relation) {
     relationToEdit.value = { ...rel };
@@ -65,11 +65,10 @@ export function useRelationManager(application: Application, emit: (event: strin
   async function confirmDelete(applicationSourceId: string) {
     try {
       await Promise.all(selectedRelationIds.value.map((id) => Relations.delete(applicationSourceId, id)));
-      store.removeRelations(selectedRelationIds.value);
+      await store.fetchRelationsByApplication(applicationSourceId);
       selectedRelationIds.value = [];
       showDeleteConfirmation.value = false;
       toaster.addSuccessMessage("Relations supprimées avec succès !");
-      emit("update:application", application);
     } catch {
       toaster.addErrorMessage("Erreur lors de la suppression des relations.");
     }
@@ -87,21 +86,24 @@ export function useRelationManager(application: Application, emit: (event: strin
     isAddRelationModalOpen.value = false;
   }
 
-  function handleAddRelation(updatedApp: Application) {
-    store.setApplication(updatedApp);
-    emit("update:application", updatedApp);
-  }
-
   function closeEditRelationModal() {
     isEditRelationModalOpen.value = false;
     relationToEdit.value = null;
   }
 
-  function handleUpdateRelation(updated: Relation) {
-    store.updateRelation(updated);
-    toaster.addSuccessMessage("Relation mise à jour avec succès !");
+  async function handleUpdateRelation(updated: Relation) {
+    await store.updateRelation(updated.applicationSourceId, updated.id, {
+      type: updated.type,
+      applicationTargetId: updated.applicationTargetId,
+    });
+    toaster.addSuccessMessage("Relation mise à jour avec succès!");
     closeEditRelationModal();
-    emit("update:application", application);
+  }
+
+  async function handleCreateRelation(updated: Omit<Relation, "id">) {
+    await store.createRelation(updated.applicationSourceId, updated.applicationTargetId, updated.type);
+    toaster.addSuccessMessage("Relation créée avec succès!");
+    closeEditRelationModal();
   }
 
   return {
@@ -120,7 +122,7 @@ export function useRelationManager(application: Application, emit: (event: strin
     cancelDelete,
     openAddRelationModal,
     closeAddRelationModal,
-    handleAddRelation,
+    handleCreateRelation,
     closeEditRelationModal,
     handleUpdateRelation,
   };

@@ -8,10 +8,10 @@ import { useActorTypeStore } from "@/stores/actorTypeStore";
 import ActorForm from "./ActorForm.vue";
 
 import type { Actor } from "@/models/Actor";
-import type { Application } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 
-const props = defineProps<{ application: Application }>();
+const props = defineProps<{ application: ApplicationWithPerms }>();
 const emit = defineEmits(["update:application"]);
 
 const actorStore = useActorStore();
@@ -25,6 +25,12 @@ const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const loading = ref(false);
+const canEdit = computed(
+  () =>
+    userStore.userPermissions?.includes("write") ||
+    userStore.userPermissions?.includes("admin") ||
+    props.application.myPerms.has("writeActors"),
+);
 
 const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 
@@ -110,7 +116,7 @@ function cancelDelete() {
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         @click="actorModal.openCreateModal()"
-        :disabled="!userStore.userPermissions?.includes('write')"
+        :disabled="!canEdit"
       >
         Ajouter un acteur
       </DsfrButton>
@@ -128,7 +134,7 @@ function cancelDelete() {
         tertiary
         @click="removeSelectedActors"
         icon="fr-icon-delete-line"
-        :disabled="selectedActorIds.length === 0 || !userStore.userPermissions?.includes('write')"
+        :disabled="selectedActorIds.length === 0 || !canEdit"
       >
         Supprimer la sélection
       </DsfrButton>
@@ -166,13 +172,7 @@ function cancelDelete() {
           </a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton
-            tertiary
-            size="sm"
-            icon="fr-icon-edit-line"
-            @click="cell.onClick"
-            :disabled="!userStore.userPermissions?.includes('write')"
-          >
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!canEdit">
             {{ cell.label }}
           </DsfrButton>
         </template>

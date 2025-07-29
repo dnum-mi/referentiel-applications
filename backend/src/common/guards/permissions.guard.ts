@@ -18,9 +18,12 @@ export class PermissionsGuard implements CanActivate {
     );
 
     const request = context.switchToHttp().getRequest();
-    const { user, method } = request;
+    const {
+      user,
+      // method
+    } = request;
 
-    if (!user || !user.permissions) {
+    if (!user || user.permissions == null) {
       throw new ForbiddenException('User permissions not found');
     }
 
@@ -30,17 +33,6 @@ export class PermissionsGuard implements CanActivate {
         throw new ForbiddenException('Insufficient permissions');
       }
       return true;
-    }
-
-    // Apply default permission logic based on HTTP method
-    const isWriteOperation = ['POST', 'PATCH', 'PUT', 'DELETE'].includes(
-      method,
-    );
-
-    if (isWriteOperation && !this.hasPermission(user.permissions, ['write'])) {
-      throw new ForbiddenException(
-        'Write permission required for this operation',
-      );
     }
 
     return true;

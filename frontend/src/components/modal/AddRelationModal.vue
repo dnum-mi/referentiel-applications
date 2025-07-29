@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import Applications from "@/api/application";
-import Relations from "@/api/relation";
 import useToaster from "@/composables/use-toaster";
 import SuggestionsInput from "../SuggestionsInput.vue";
-
-interface ApplicationSummary {
-  id: string;
-  label: string;
-}
 
 const props = withDefaults(
   defineProps<{
@@ -24,11 +18,10 @@ const props = withDefaults(
 const toaster = useToaster();
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "add-relation", payload: { target: ApplicationSummary; relationType: string }): void;
-  (e: "update:application", payload: any): void;
+  (e: "add-relation", payload: { targetId: string; type: string }): void;
 }>();
 
-const selectedApplication = ref<ApplicationSummary | null>(null);
+const selectedApplicationId = ref<string | null>(null);
 const relationType = ref("is_part_of");
 const relationTypesForSelect = [
   { value: "is_part_of", text: "Fait partie de" },
@@ -56,7 +49,7 @@ async function performSearch(query: string) {
 }
 
 const submitRelation = async () => {
-  if (!selectedApplication.value) {
+  if (!selectedApplicationId.value) {
     toaster.addErrorMessage("L'application cible est requise.");
     return;
   }
@@ -71,18 +64,13 @@ const submitRelation = async () => {
   }
 
   try {
-    await Relations.create(applicationSourceId, selectedApplication.value, relationType.value);
     emit("add-relation", {
-      target: selectedApplication.value,
-      relationType: relationType.value,
+      targetId: selectedApplicationId.value,
+      type: relationType.value,
     });
-    const fetchApplication = await Applications.getApplicationById(props.applicationId);
-    emit("update:application", fetchApplication);
     closeModal();
-    toaster.addSuccessMessage("Relation ajoutée avec succès !");
   } catch (error) {
     console.error(error);
-    toaster.addErrorMessage("Erreur lors de l'ajout de la relation.");
   }
 };
 
@@ -104,7 +92,7 @@ const closeModal = () => {
       </div>
 
       <SuggestionsInput
-        v-model:returnData="selectedApplication"
+        v-model:returnData="selectedApplicationId"
         :searchDataFunction="performSearch"
         label="Rechercher une application"
         placeholder="Tapez au moins 3 caractères"

@@ -10,6 +10,15 @@ import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
 import { MetadatasService } from 'src/metadatas/metadatas.service';
 import { calculateIQ } from 'src/common/utils/quality.utils';
+import { ApplicationRights } from './application/dto/application-rights.dto';
+import { APP_PERMISSIONS } from 'src/common/utils/types';
+import { UserEntity } from 'src/user/entities/user.entity';
+
+export function objectEntries<Obj extends Record<string, unknown>>(
+  obj: Obj,
+): [keyof Obj, Obj[keyof Obj]][] {
+  return Object.entries(obj) as [keyof Obj, Obj[keyof Obj]][];
+}
 
 @Injectable()
 export class ApplicationService {
@@ -212,8 +221,41 @@ export class ApplicationService {
     });
   }
 
+  public async getMyPerms(
+    applicationId: string,
+    email: string,
+  ): Promise<ApplicationRights> {
+    const userActors = await this.prisma.actor.findMany({
+      where: { applicationId, email },
+      select: {
+        actorType: {
+          select: {
+            appPermissions: {
+              omit: {
+                actorTypeId: true,
+              },
+            },
+          },
+        },
+      },
+      distinct: ['actorTypeId'],
+    });
+    const perms = new Set<APP_PERMISSIONS>();
+    for (const actor of userActors) {
+      for (const actorPerms of actor.actorType.appPermissions) {
+        for (const [permName, value] of objectEntries(actorPerms)) {
+          if (value === true) {
+            perms.add(permName);
+          }
+        }
+      }
+    }
+    return Array.from(perms.values());
+  }
+
   public async search(
     searchParams: ApplicationSearchDto,
+    user?: UserEntity,
   ): Promise<{ results: any[]; total: number } | any[]> {
     // Handle link-specific search (old SearchApplicationDto behavior)
     if ('link' in searchParams && searchParams.link) {
@@ -222,10 +264,18 @@ export class ApplicationService {
       );
       return Array.isArray(results) ? results : [results];
     }
-
-    const searchResult =
-      await this.applicationRepository.findApplicationsBySearch(searchParams);
-    return searchResult;
+    if (
+      user.permissions.includes('read') ||
+      user.permissions.includes('write') ||
+      user.permissions.includes('admin')
+    ) {
+      // If the user has read or write permissions, proceed with the search
+      return this.applicationRepository.findApplicationsBySearch(searchParams);
+    }
+    return this.applicationRepository.findApplicationsBySearch(
+      searchParams,
+      user.email,
+    );
   }
 
   public async exportApplications(): Promise<any[]> {
@@ -241,11 +291,6 @@ export class ApplicationService {
         `Application non trouvée pour l'ID: ${applicationId}`,
       );
     }
-
-    console.log(
-      "📌 Application récupérée depuis l'API :",
-      JSON.stringify(application, null, 2),
-    );
 
     return application;
   }

@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { ActorType } from '@prisma/client';
+import { ActorType, AppPermissions } from '@prisma/client';
 import { ActorTypeRepository } from './infrastructure/repository/actorType.repository';
 import { CreateActorTypeDto, PatchActorTypeDto } from './dto/actorType.dto';
+import { AppPermsDto } from './dto/app-perms-matrix.dto';
 
 @Injectable()
 export class ActorTypeService {
@@ -21,6 +22,18 @@ export class ActorTypeService {
 
   public async findAll() {
     return await this.ActorTypeRepository.findAll();
+  }
+
+  public async getPermsMatrix() {
+    return this.ActorTypeRepository.getPermsMatrix();
+  }
+
+  public async updatePermsMatrix(
+    matrix: AppPermsDto[],
+  ): Promise<AppPermissions[]> {
+    return this.ActorTypeRepository.updatePermsMatrix(
+      matrix as AppPermissions[],
+    );
   }
 
   public async update(id, data: PatchActorTypeDto): Promise<ActorType> {
