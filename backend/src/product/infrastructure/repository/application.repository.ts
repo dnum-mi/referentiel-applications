@@ -46,7 +46,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
   async findApplicationsBySearch(
     dto: ApplicationSearchDto,
-    actorEmail?: string,
+    ownership?: { actorEmail?: string; ownerId?: string },
   ): Promise<{ results: any[]; total: number }> {
     const {
       shortName,
@@ -64,17 +64,26 @@ export class ApplicationRepository implements IApplicationRepository {
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
 
-    if (actorEmail) {
-      where.AND.push({
-        actors: {
-          some: {
-            email: {
-              equals: actorEmail,
-              mode: 'insensitive' as const,
+    if (ownership) {
+      const ownershipWhere: Prisma.ApplicationWhereInput = { OR: [] };
+      if (ownership.actorEmail) {
+        ownershipWhere.OR.push({
+          actors: {
+            some: {
+              email: {
+                equals: ownership.actorEmail,
+                mode: 'insensitive' as const,
+              },
             },
           },
-        },
-      });
+        });
+      }
+      if (ownership.ownerId) {
+        ownershipWhere.OR.push({ ownerId: ownership.ownerId });
+      }
+      if (ownershipWhere.OR.length > 0) {
+        where.AND.push(ownershipWhere);
+      }
     }
 
     // Label filter - search both main label field and labels table
@@ -223,8 +232,6 @@ export class ApplicationRepository implements IApplicationRepository {
       },
     });
 
-    const total = await this.prisma.application.count({ where });
-
     // Handle different sorting options with fallback
     const sortOptions: Record<
       string,
@@ -239,29 +246,32 @@ export class ApplicationRepository implements IApplicationRepository {
 
     const orderBy = sortOptions[sortBy] || { shortName: safeOrder };
 
-    const results = await this.prisma.application.findMany({
-      where,
-      orderBy,
-      skip: page * limit,
-      take: limit,
-      include: {
-        hostings: {
-          include: {
-            hostingOption: true,
-          },
-        },
-        actors: {
-          include: {
-            organization: {
-              select: { id: true, label: true },
+    const [results, total] = await Promise.all([
+      this.prisma.application.findMany({
+        where,
+        orderBy,
+        skip: page * limit,
+        take: limit,
+        include: {
+          hostings: {
+            include: {
+              hostingOption: true,
             },
-            actorType: true,
           },
+          actors: {
+            include: {
+              organization: {
+                select: { id: true, label: true },
+              },
+              actorType: true,
+            },
+          },
+          labels: true,
+          externalRessource: true,
         },
-        labels: true,
-        externalRessource: true,
-      },
-    });
+      }),
+      this.prisma.application.count({ where }),
+    ]);
 
     return { results, total };
   }

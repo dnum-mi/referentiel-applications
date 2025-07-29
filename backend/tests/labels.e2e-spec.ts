@@ -45,15 +45,17 @@ describe('Labels', () => {
 
 describe('application guard', () => {
   const app = setupTestSuite();
-  let user: { keycloakId: string; email: string };
+  let appOwner: { keycloakId: string; email: string };
+  let appActor: { keycloakId: string; email: string };
   let TOKEN: string;
   const prisma = getPrismaClient();
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
 
   beforeAll(async () => {
     actorType = await ActorTypeFaker.create(['readBase']);
-    user = await UserFaker.create();
-    TOKEN = await getToken(user);
+    appOwner = await UserFaker.create();
+    appActor = await UserFaker.create();
+    TOKEN = await getToken(appActor);
   });
 
   afterAll(async () => {
@@ -63,9 +65,9 @@ describe('application guard', () => {
 
   it(`permissions testing`, async () => {
     // read and write labels are parts of readBase and writeBase permissions
-    const application = await ApplicationFaker.create(user);
+    const application = await ApplicationFaker.create(appOwner);
     await ActorFaker.link({
-      userEmail: user.email,
+      userEmail: appActor.email,
       actorTypeId: actorType.id,
       applicationId: application.id,
     });

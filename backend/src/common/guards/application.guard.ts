@@ -66,26 +66,31 @@ export class ApplicationGuard implements CanActivate {
 
   private async getUserAppPermissions(
     applicationId: string,
-    email: string,
-  ): Promise<APP_PERMS_MAP> {
-    const actors = await this.prisma.actor.findMany({
-      where: {
-        applicationId,
-        email,
-      },
-      include: {
-        actorType: {
-          include: {
-            appPermissions: {
-              omit: {
-                actorTypeId: true,
+    user: User,
+  ): Promise<{ appPermsMap: APP_PERMS_MAP; isOwner: boolean }> {
+    const [actors, application] = await Promise.all([
+      this.prisma.actor.findMany({
+        where: {
+          applicationId,
+          email: user.email,
+        },
+        include: {
+          actorType: {
+            include: {
+              appPermissions: {
+                omit: {
+                  actorTypeId: true,
+                },
               },
             },
           },
         },
-      },
-      distinct: ['actorTypeId'],
-    });
+        distinct: ['actorTypeId'],
+      }),
+      this.prisma.application.findUnique({
+        where: { id: applicationId },
+      }),
+    ]);
     // reduce the permissions to a map
 
     const appPermsMap: APP_PERMS_MAP = {};
@@ -101,7 +106,7 @@ export class ApplicationGuard implements CanActivate {
       });
     });
 
-    return appPermsMap;
+    return { appPermsMap, isOwner: application.ownerId === user.keycloakId };
   }
 
   private async checkAppPermission(
@@ -113,11 +118,11 @@ export class ApplicationGuard implements CanActivate {
     if (globalPerms.write || globalPerms.admin) return true;
     if (action.startsWith('read') && globalPerms.read) return true;
 
-    const appPermissions = await this.getUserAppPermissions(
+    const { appPermsMap, isOwner } = await this.getUserAppPermissions(
       applicationId,
-      user.email,
+      user,
     );
 
-    return appPermissions[action] ?? false;
+    return (isOwner || appPermsMap[action]) ?? false;
   }
 }
