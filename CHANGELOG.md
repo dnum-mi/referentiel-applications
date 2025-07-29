@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.32.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.31.0...v1.32.0) (2025-07-29)
+
+
+### Features
+
+* **api:** :sparkles: add stats quality average ([fc9e603](https://github.com/dnum-mi/referentiel-applications/commit/fc9e603bdc95168c75c7a6e9b189ce9e7c20484f))
+
+
+### Bug Fixes
+
+* :lipstick: fix filter background for the searching app page ([#879](https://github.com/dnum-mi/referentiel-applications/issues/879)) ([1249500](https://github.com/dnum-mi/referentiel-applications/commit/124950091d5a15c3f88ed3dfdf5cffe82a67fef0))
+* **front:** :bug: add error page 404 ([7b9a10d](https://github.com/dnum-mi/referentiel-applications/commit/7b9a10d437b2dbd5f72a0fac5709c95dcb5beda4))
+* **front:** :bug: fix app search by organization ([3767617](https://github.com/dnum-mi/referentiel-applications/commit/3767617e4724b9ff118a97fa16a4e6677798ee5b))
+* **front:** :bug: fix redirection to app after create app ([c9cd4c5](https://github.com/dnum-mi/referentiel-applications/commit/c9cd4c5b8ac67c24bb4448b29dd50d6668871ffa))
+* **front:** :bug: remove selected status summary display ([#897](https://github.com/dnum-mi/referentiel-applications/issues/897)) ([0cf1ea6](https://github.com/dnum-mi/referentiel-applications/commit/0cf1ea64d576e031d5a37cc9663edcbed8b622ec))
+* **front:** :bug: reset search with empty input ([93d4354](https://github.com/dnum-mi/referentiel-applications/commit/93d4354de69a991be233cf6c5d902db7cb642915))
+* **front:** :bug: synchronize status checkbox with store using watch ([0bbb427](https://github.com/dnum-mi/referentiel-applications/commit/0bbb427f25e9b9b0eb305001c4f53b5d3b2e57c5))
+
 ## [1.31.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.30.0...v1.31.0) (2025-07-21)
 
 
