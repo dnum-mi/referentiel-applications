@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "db:generate": "prisma generate",
     "dev": "cross-env NODE_ENV=development nest start --watch",
     "build": "nest build",
     "start": "nest start",
@@ -33,7 +34,7 @@
     "@nestjs/swagger": "^7.2.0",
     "@nestjs/terminus": "^11.0.0",
     "@nestjs/throttler": "^6.2.1",
-    "@prisma/client": "^6.3.0",
+    "@prisma/client": "~6.3.0",
     "cache-manager": "^5.4.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
