@@ -75,8 +75,11 @@ function resetAllFilters() {
   z-index: 5;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
   padding: 1rem 0.5rem;
   transition: all 0.3s ease;
+  align-self: stretch;
 }
 
 @media (max-width: 768px) {
@@ -135,7 +138,6 @@ function resetAllFilters() {
 .filters-wrapper {
   flex: 1;
   overflow-y: auto;
-  max-height: calc(100vh - 3rem);
   padding: 0 0.5rem;
   display: flex;
   flex-direction: column;

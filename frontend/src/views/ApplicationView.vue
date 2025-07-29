@@ -59,6 +59,8 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 </script>
 
 <template>
+      <div class="flex flex-row <md:flex-col grow">
+
   <div class="layout">
     <SidebarFilters />
 
@@ -76,11 +78,13 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
       <ApplicationCardView v-else />
     </main>
   </div>
+      </div>
 </template>
 
 <style scoped>
 .layout {
   display: flex;
+  align-items: stretch;
   min-height: 100vh;
 }
 
@@ -92,8 +96,7 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 
 .main-content {
   flex: 1;
-  padding: 1rem 2rem;
-  overflow-x: auto;
+  padding: 1rem;
 }
 
 .loader {
