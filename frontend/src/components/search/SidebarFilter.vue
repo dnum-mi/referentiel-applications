@@ -75,11 +75,8 @@ function resetAllFilters() {
   z-index: 5;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  overflow-y: auto;
   padding: 1rem 0.5rem;
   transition: all 0.3s ease;
-  align-self: stretch;
 }
 
 @media (max-width: 768px) {
@@ -133,6 +130,15 @@ function resetAllFilters() {
 
 .sidebar-toggle-icon {
   font-size: 1.2rem;
+}
+
+.filters-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .reset-link {
