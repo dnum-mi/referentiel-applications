@@ -92,7 +92,8 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 
 .main-content {
   flex: 1;
-  padding: 1rem;
+  padding: 1rem 2rem;
+  overflow-x: auto;
 }
 
 .loader {
