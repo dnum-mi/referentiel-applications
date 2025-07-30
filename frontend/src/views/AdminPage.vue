@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import type { User } from "@/models/user";
+import { AdminLevel, type User } from "@/models/user";
 import Users from "@/api/user";
 import AppPermsMatrixApi from "@/api/admin/app-perms-matrix";
 import useToaster from "@/composables/use-toaster";
 import Applications from "@/api/application";
 import type { AppPermsMatrix } from "@/models/Application";
 import type { Tab } from "@/utils/types";
+import { AdminLevelOptions, AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
 
 const errorMessages = {
   ERR_LOAD_USERS: "Erreur lors du chargement des utilisateurs",
@@ -25,11 +26,7 @@ const searchQuery = ref("");
 const activeTab = ref(0);
 const appPermsMatrix = ref<AppPermsMatrix>();
 
-const editingPermissions = ref({
-  read: false,
-  write: false,
-  admin: false,
-});
+const editingAdminLevel = ref<AdminLevel>(AdminLevel.NONE);
 
 // Tabs consist of 4 main keys and an optional load function who comes always with a error key
 const tabs: Tab<typeof errorMessages>[] = [
@@ -110,46 +107,16 @@ async function handleSearch() {
   await loadUsers();
 }
 
-function getUserPermissions(user: User): string[] {
-  if (!user.permissions) return ["Aucune permission"];
-  return user.permissions
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean);
-}
-
-function getPermissionBadgeClass(permission: string): string {
-  switch (permission) {
-    case "admin":
-      return "fr-badge--error";
-    case "write":
-      return "fr-badge--warning";
-    case "read":
-      return "fr-badge--info";
-    default:
-      return "fr-badge--new";
-  }
-}
-
 function openEditModal(user: User) {
   selectedUser.value = user;
-  const permissions = getUserPermissions(user);
-  editingPermissions.value = {
-    read: permissions.includes("read"),
-    write: permissions.includes("write"),
-    admin: permissions.includes("admin"),
-  };
+  editingAdminLevel.value = user.adminLevel;
   isEditModalOpen.value = true;
 }
 
 function closeEditModal() {
   isEditModalOpen.value = false;
   selectedUser.value = null;
-  editingPermissions.value = {
-    read: false,
-    write: false,
-    admin: false,
-  };
+  editingAdminLevel.value = AdminLevel.NONE;
 }
 
 async function savePermissions() {
@@ -157,14 +124,7 @@ async function savePermissions() {
 
   saving.value = true;
   try {
-    const permissions = [];
-    if (editingPermissions.value.read) permissions.push("read");
-    if (editingPermissions.value.write) permissions.push("write");
-    if (editingPermissions.value.admin) permissions.push("admin");
-
-    const permissionsString = permissions.join(",");
-
-    await Users.updateUserPermissions(selectedUser.value.keycloakId, permissionsString);
+    await Users.updateUserAdminLevel(selectedUser.value.keycloakId, editingAdminLevel.value);
 
     toaster.addSuccessMessage("Permissions mises à jour avec succès");
     closeEditModal();
@@ -251,13 +211,8 @@ function saveAppPermsMatrix(matrix: AppPermsMatrix) {
                       {{ new Date(user.lastLogin).toLocaleString() }}
                     </td>
                     <td>
-                      <span
-                        v-for="(permission, index) in getUserPermissions(user)"
-                        :key="index"
-                        :class="getPermissionBadgeClass(permission)"
-                        class="fr-badge fr-mr-1w"
-                      >
-                        {{ permission.trim() }}
+                      <span class="fr-badge fr-mr-1w" :class="AdminLevelWordingBadgeClass[user.adminLevel]">
+                        {{ AdminLevelWording[user.adminLevel] }}
                       </span>
                     </td>
                     <td>
@@ -277,23 +232,13 @@ function saveAppPermsMatrix(matrix: AppPermsMatrix) {
 
             <div class="fr-form-group">
               <fieldset class="fr-fieldset">
-                <legend class="fr-fieldset__legend fr-text--regular">Permissions</legend>
-                <div class="fr-fieldset__content">
-                  <div class="fr-checkbox-group">
-                    <input id="perm-read" type="checkbox" v-model="editingPermissions.read" />
-                    <label class="fr-label" for="perm-read"> Lecture (read) - Consulter les applications </label>
-                  </div>
-                  <div class="fr-checkbox-group">
-                    <input id="perm-write" type="checkbox" v-model="editingPermissions.write" />
-                    <label class="fr-label" for="perm-write"> Écriture (write) - Modifier les applications </label>
-                  </div>
-                  <div class="fr-checkbox-group">
-                    <input id="perm-admin" type="checkbox" v-model="editingPermissions.admin" />
-                    <label class="fr-label" for="perm-admin">
-                      Administrateur (admin) - Tous les droits + gestion des utilisateurs + export Excel
-                    </label>
-                  </div>
-                </div>
+                <DsfrRadioButtonSet
+                  v-model="editingAdminLevel"
+                  legend="Niveau de privilège"
+                  hint=""
+                  :options="AdminLevelOptions"
+                  name="admin-level-radio"
+                ></DsfrRadioButtonSet>
               </fieldset>
             </div>
           </div>

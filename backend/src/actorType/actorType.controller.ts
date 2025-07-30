@@ -8,18 +8,23 @@ import {
   Request,
   Logger,
   Param,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { ActorTypeService } from './actorType.service';
 import { CreateActorTypeDto, PatchActorTypeDto } from './dto/actorType.dto';
 import { ActorType, AppPermissions } from '@prisma/client';
 import { AppPermsDto } from './dto/app-perms-matrix.dto';
+import { AdminGuard } from 'src/common/guards/admin.guard';
+import { RequiredAdminLevel } from 'src/common/decorators/admin.decorator';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 /**
  * Controller la gestion des types d'acteur
  * Permet de créer, mettre à jour, modifier
  */
 @ApiTags('actorTypes')
+@UseGuards(AdminGuard)
 @Controller('actorTypes')
 export class ActorTypeController {
   constructor(private readonly actorTypeService: ActorTypeService) {}
@@ -35,6 +40,7 @@ export class ActorTypeController {
    * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
    */
   @Post()
+  @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiBody({ type: CreateActorTypeDto })
   @ApiOperation({
     summary: 'Créer un nouveau type d’acteur',
@@ -62,6 +68,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get('/perms-matrix')
+  @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiResponse({
     status: 200,
     description: 'Liste les types d’acteurs par id et de leurs permissions',
@@ -79,6 +86,7 @@ Vous devez fournir les informations suivantes :
    * @throws NotFoundException Si le type d'acteur n'est pas trouvée
    */
   @Get(':id')
+  @RequiredAdminLevel(AdminLevel.NONE)
   @ApiOperation({
     summary: 'Récupérer un type d’acteur spécifique par ID',
     description: `Cet endpoint permet de récupérer les détails complets d'un type d’acteur en fonction de son identifiant unique.`,
@@ -99,6 +107,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get()
+  @RequiredAdminLevel(AdminLevel.NONE)
   @ApiResponse({ status: 200, description: 'Liste les types d’acteurs' })
   public async findAll(): Promise<ActorType[]> {
     return await this.actorTypeService.findAll();
@@ -113,6 +122,7 @@ Vous devez fournir les informations suivantes :
    * @returns Le type d'acteur mis à jour
    */
   @Patch(':id')
+  @RequiredAdminLevel(AdminLevel.WRITE)
   @ApiOperation({
     summary: 'Mettre à jour un type d’acteur',
     description: `
@@ -135,6 +145,7 @@ Les données de mise à jour doivent correspondre aux champs
   }
 
   @Delete(':id')
+  @RequiredAdminLevel(AdminLevel.WRITE)
   @ApiOperation({ summary: 'Supprimer un type d’acteur' })
   public async delete(@Param('id') id: string) {
     return await this.actorTypeService.delete(id);

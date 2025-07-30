@@ -8,11 +8,8 @@ import { Reflector } from '@nestjs/core';
 import { APP_ACTION_KEY } from '../decorators/application.decorator';
 import type { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import {
-  APP_PERMISSIONS,
-  APP_PERMS_MAP,
-  GLOBAL_PERMS_MAP,
-} from '../utils/types';
+import { APP_PERMISSIONS, APP_PERMS_MAP } from '../utils/types';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class ApplicationGuard implements CanActivate {
@@ -52,16 +49,6 @@ export class ApplicationGuard implements CanActivate {
     }
 
     return true;
-  }
-
-  private getUserGlobalPermissions(user: User): GLOBAL_PERMS_MAP {
-    const permList = user.permissions.split(',').map((p) => p.trim());
-    // Sinon refus
-    return {
-      admin: permList.includes('admin'),
-      write: permList.includes('write'),
-      read: permList.includes('read'),
-    };
   }
 
   private async getUserAppPermissions(
@@ -114,9 +101,9 @@ export class ApplicationGuard implements CanActivate {
     applicationId: string,
     action: APP_PERMISSIONS,
   ): Promise<boolean> {
-    const globalPerms = this.getUserGlobalPermissions(user);
-    if (globalPerms.write || globalPerms.admin) return true;
-    if (action.startsWith('read') && globalPerms.read) return true;
+    if (user.adminLevel >= AdminLevel.WRITE) return true;
+    if (action.startsWith('read') && user.adminLevel >= AdminLevel.READ)
+      return true;
 
     const { appPermsMap, isOwner } = await this.getUserAppPermissions(
       applicationId,

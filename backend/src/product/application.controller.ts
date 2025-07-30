@@ -24,12 +24,13 @@ import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { GetApplicationDto } from './application/dto/get-application.dto';
 import { Response } from 'express';
 import { UserId } from '../common/decorators/user-id.decorator';
-import { Permissions } from '../common/decorators/permissions.decorator';
+import { RequiredAdminLevel } from '../common/decorators/admin.decorator';
 import { ApplicationGuard } from 'src/common/guards/application.guard';
 import { AppAction } from 'src/common/decorators/application.decorator';
 import { ApplicationRights } from './application/dto/application-rights.dto';
 import { User } from 'src/common/decorators/user.decorator';
-import { UserEntity as UserEntity } from 'src/user/entities/user.entity';
+import { AdminLevel, UserEntity } from 'src/user/entities/user.entity';
+import { AdminGuard } from 'src/common/guards/admin.guard';
 
 @ApiTags('applications')
 @Controller('applications')
@@ -159,7 +160,8 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get('export/excel')
-  @Permissions('admin')
+  @UseGuards(AdminGuard)
+  @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
     summary: 'Exporter les applications en Excel',
     description: `Permet d'exporter les applications en un fichier Excel.
@@ -198,12 +200,15 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get('export')
+  @UseGuards(AdminGuard)
+  @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
     summary: 'Exporter les applications en CSV',
     description: `Permet d'exporter les applications en un fichier CSV.
       Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
       Si aucun filtre n'est appliqué, toutes les applications sont exportées.
-      Cette nouvelle version utilise une vue optimisée qui inclut tous les acteurs, conformités et hébergements.`,
+      Cette nouvelle version utilise une vue optimisée qui inclut tous les acteurs, conformités et hébergements.
+      Accès limité aux utilisateurs avec privilège admin.`,
   })
   @ApiResponse({
     status: 200,
@@ -257,7 +262,8 @@ Aucun paramètre n'est requis pour accéder à cette liste.
   }
 
   @Patch('data-quality')
-  @Permissions('admin')
+  @UseGuards(AdminGuard)
+  @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
     summary: "Mettre à jour l'indice de qualité de toutes les applications",
     description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes.
@@ -305,6 +311,8 @@ Aucun paramètre n'est requis pour accéder à cette liste.
 
   @Delete(':applicationId')
   // TODO réserver pour les administrateurs
+  @UseGuards(AdminGuard)
+  @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
     summary: 'Supprimer une application',
     description: 'Supprime une application par son ID.',

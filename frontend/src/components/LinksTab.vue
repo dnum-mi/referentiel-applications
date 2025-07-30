@@ -8,6 +8,7 @@ import useModal from "@/composables/use-modal";
 import LinkForm from "./form/LinkForm.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{
   application: ApplicationWithPerms;
@@ -23,12 +24,7 @@ const selectedLinkIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const currentPage = ref(0);
-const canEdit = computed(
-  () =>
-    userStore.userPermissions?.includes("write") ||
-    userStore.userPermissions?.includes("admin") ||
-    props.application.myPerms.has("writeLinks"),
-);
+const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeLinks"));
 
 const formatLink = (url: string) => (!url.startsWith("http") ? `http://${url}` : url);
 const getTypeLabel = (type: string) => linkTypesDict[type] || "Type inconnu";

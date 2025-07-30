@@ -19,6 +19,7 @@ import { useComplianceStore } from "@/stores/complianceStore";
 import { useRelationStore } from "@/stores/relationStore";
 import { useUserStore } from "@/stores/userStore";
 import useToaster from "@/composables/use-toaster";
+import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const emit = defineEmits(["update:application"]);
@@ -143,7 +144,7 @@ onMounted(() => {
 onBeforeMount(async () => {
   tabs.value = tabs.value.filter((tab) => {
     if (!tab.requiredPerms) return true;
-    if (userStore.userPermissions?.includes("read")) return true;
+    if (userStore.adminLevel >= AdminLevel.READ) return true;
     return tab.requiredPerms.every((perm) => props.application.myPerms.has(perm));
   });
   tabs.value.forEach((tab) => {
@@ -154,7 +155,7 @@ onBeforeMount(async () => {
       });
     }
   });
-  if (userStore.userPermissions.includes("read") || props.application.myPerms.has("readHostings")) {
+  if (userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings")) {
     hostingStore.fetchHostings(props.application.id).catch(() => {
       toaster.addErrorMessage(errorMessages.ERR_LOAD_HOSTINGS);
     });

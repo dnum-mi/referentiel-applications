@@ -6,6 +6,7 @@ import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import type { Application } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
 const toaster = useToaster();
 const applicationModal = useModal();
@@ -36,7 +37,7 @@ async function createApplication(newApplication: Application) {
       type="button"
       class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
       @click="applicationModal.openCreateModal()"
-      :disabled="!userStore.userPermissions?.includes('write')"
+      :disabled="userStore.adminLevel < AdminLevel.WRITE"
     >
       Créer une application
     </DsfrButton>

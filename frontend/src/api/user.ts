@@ -28,8 +28,8 @@ const Users = {
 
     return await requests.get<User[]>(url);
   },
-  updateUserPermissions: async (keycloakId: string, permissions: string) => {
-    return await requests.patch<User>(`/users/${keycloakId}`, { permissions });
+  updateUserAdminLevel: async (keycloakId: string, adminLevel: number) => {
+    return await requests.patch<User>(`/users/${keycloakId}`, { adminLevel });
   },
 };
 

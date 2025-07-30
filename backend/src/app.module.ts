@@ -23,8 +23,6 @@ import { AnomalyNotificationModule } from './notification/anomaly-notification.m
 import { ActorModule } from './actor/actor.module';
 import { LinksModule } from './links/links.module';
 import { LabelsModule } from './labels/labels.module';
-import { APP_GUARD } from '@nestjs/core';
-import { PermissionsGuard } from './common/guards/permissions.guard';
 import { CompliancesModule } from './compliances/compliances.module';
 import { HostingOptionModule } from './hosting-option/hosting-option.module';
 import { StatsModule } from './stats/stats.module';
@@ -56,16 +54,7 @@ import { LoggingService } from './services/logging.service';
     CompliancesModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    ApplicationService,
-    LoggingService,
-    AuthMiddleware,
-    {
-      provide: APP_GUARD,
-      useClass: PermissionsGuard,
-    },
-  ],
+  providers: [AppService, ApplicationService, LoggingService, AuthMiddleware],
   exports: [LoggingService],
 })
 export class AppModule implements NestModule {

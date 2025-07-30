@@ -3,16 +3,12 @@ import { computed } from "vue";
 import { useRelationManager } from "@/composables/use-relation-manager";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
 const userStore = useUserStore();
-const canEdit = computed(
-  () =>
-    userStore.userPermissions?.includes("write") ||
-    userStore.userPermissions?.includes("admin") ||
-    props.application.myPerms.has("writeRelations"),
-);
+const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeRelations"));
 
 const {
   headers,

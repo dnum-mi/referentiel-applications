@@ -8,6 +8,7 @@ import Applications from "@/api/application";
 import router from "./router/index.js";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore.js";
+import { AdminLevel } from "./models/user.js";
 const route = useRoute();
 
 const instance = getCurrentInstance();
@@ -59,7 +60,7 @@ interface QuickLink {
   if (userStore.authenticated) {
     const baseLinks = [];
 
-    if (userStore.userPermissions.includes("admin")) {
+    if (userStore.adminLevel >= AdminLevel.ADMIN) {
       baseLinks.push({
         label: "Admin",
         to: { name: routeNames.ADMINPAGE },

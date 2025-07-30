@@ -9,6 +9,7 @@ import { getPrismaClient } from './fakers/prisma';
 import { ActorTypeFaker } from './fakers/actor-type.faker';
 import { ActorFaker } from './fakers/actor.faker';
 import { AsyncReturnType } from 'src/utils/types.util';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 describe('Relations End-to-End', () => {
   const app = setupTestSuite();
@@ -27,7 +28,7 @@ describe('Relations End-to-End', () => {
 
   beforeAll(async () => {
     // Given
-    user = await UserFaker.create(['read', 'write']);
+    user = await UserFaker.create(AdminLevel.WRITE);
     TOKEN = await getToken(user);
     applicationSource = await ApplicationFaker.create(user);
     applicationTarget = await ApplicationFaker.create(user);

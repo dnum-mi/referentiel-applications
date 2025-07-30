@@ -8,6 +8,7 @@ import { ActorTypeFaker } from './fakers/actor-type.faker';
 import { ApplicationFaker } from './fakers/application.faker';
 import { AsyncReturnType } from 'src/utils/types.util';
 import { ActorFaker } from './fakers/actor.faker';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 describe('Applications', () => {
   const app = setupTestSuite();
@@ -17,7 +18,7 @@ describe('Applications', () => {
   const prisma = getPrismaClient();
 
   beforeAll(async () => {
-    user = await UserFaker.create(['read', 'write']);
+    user = await UserFaker.create(AdminLevel.WRITE);
     TOKEN = await getToken(user);
   });
   afterAll(async () => {
@@ -70,6 +71,9 @@ describe('Applications', () => {
   });
 
   it(`/DELETE applications/:id - should delete application with all related metadata`, async () => {
+    const user = await UserFaker.create(AdminLevel.ADMIN);
+    const TOKEN = await getToken(user);
+
     await request(app().getHttpServer())
       .get(`/applications/${createdApplicationId}`)
       .set('Authorization', `Bearer ${TOKEN}`)
@@ -86,6 +90,7 @@ describe('Applications', () => {
       .expect(404);
   });
 });
+
 describe('application guard', () => {
   const app = setupTestSuite();
   let appOwner: { keycloakId: string; email: string };
@@ -131,7 +136,7 @@ describe('application guard', () => {
     // Add read permission
     await actorType.update(['readBase']);
 
-    // Should succeed to get the relation
+    // Should succeed to get the application
     await request(app().getHttpServer())
       .get(`/applications/${application.id}`)
       .set('Authorization', `Bearer ${TOKEN}`)

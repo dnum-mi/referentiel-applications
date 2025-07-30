@@ -8,6 +8,7 @@ import { ApplicationFaker } from './fakers/application.faker';
 import { getPrismaClient } from './fakers/prisma';
 import { ActorTypeFaker } from './fakers/actor-type.faker';
 import { ActorFaker } from './fakers/actor.faker';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 describe('Hostings', () => {
   const app = setupTestSuite();
@@ -16,7 +17,7 @@ describe('Hostings', () => {
   let application: { id: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create(['read', 'write']);
+    user = await UserFaker.create(AdminLevel.WRITE);
     application = await ApplicationFaker.create(user);
   });
   afterAll(async () => {

@@ -4,6 +4,7 @@ import { getToken } from './getToken';
 import { UserFaker } from './fakers/user.faker';
 import { HostingOptionFaker } from './fakers/hosting-option.faker';
 import { getPrismaClient } from './fakers/prisma';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 describe('HostingOptions', () => {
   const app = setupTestSuite();
@@ -11,7 +12,7 @@ describe('HostingOptions', () => {
   const prisma = getPrismaClient();
 
   beforeAll(async () => {
-    user = await UserFaker.create(['read', 'write']);
+    user = await UserFaker.create(AdminLevel.WRITE);
   });
   afterAll(async () => {
     prisma.$disconnect();

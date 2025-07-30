@@ -1,7 +1,6 @@
 model User {
   keycloakId          String                @id
   email               String                @unique
-  permissions         String
   lastLogin           DateTime?             @default(now())
   organizationId      String?
   organization        Organization?         @relation(fields: [organizationId], references: [id])
@@ -9,6 +8,7 @@ model User {
   applications        Application[]         @relation("UserApplications")
   dataOwners          Metadata[]            @relation("MetadataDataOwnerBy")
   AnomalyNotification AnomalyNotification[] @relation("UserAnomalyNotification")
+  adminLevel          Int                   @default(0)
 
   @@map("users")
 }

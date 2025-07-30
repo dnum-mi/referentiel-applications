@@ -1,12 +1,9 @@
 <script setup lang="ts">
 import { defineProps, defineEmits } from "vue";
 import type { Hosting } from "@/models/Hosting";
-import { useUserStore } from "@/stores/userStore";
 
 defineProps<{ hostings: Hosting[] }>();
 const emit = defineEmits(["edit", "delete"]);
-
-const userStore = useUserStore();
 
 function handleEdit(hosting: Hosting) {
   emit("edit", hosting);
@@ -42,23 +39,8 @@ function handleDelete(hosting: Hosting) {
           </div>
         </div>
         <div class="fr-col-auto">
-          <DsfrButton
-            tertiary
-            size="sm"
-            icon="fr-icon-edit-line"
-            title="Modifier"
-            @click="handleEdit(hosting)"
-            class="fr-mr-1w"
-            :disabled="!userStore.userPermissions?.includes('write')"
-          />
-          <DsfrButton
-            tertiary
-            size="sm"
-            icon="fr-icon-delete-bin-line"
-            title="Supprimer"
-            @click="handleDelete(hosting)"
-            :disabled="!userStore.userPermissions?.includes('write')"
-          />
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" title="Modifier" @click="handleEdit(hosting)" class="fr-mr-1w" />
+          <DsfrButton tertiary size="sm" icon="fr-icon-delete-bin-line" title="Supprimer" @click="handleDelete(hosting)" />
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { defineProps, defineEmits } from "vue";
 import { testResultsDict, backupStorageDict, durationHoursOptions } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import { useComplianceStore } from "@/stores/complianceStore";
+import { AdminLevel } from "@/models/user";
 
 const toaster = useToaster();
 
@@ -19,12 +20,7 @@ const emit = defineEmits(["update:application"]);
 
 const loading = ref(false);
 const isSubmitting = ref(false);
-const canEdit = computed(
-  () =>
-    userStore.userPermissions?.includes("write") ||
-    userStore.userPermissions?.includes("admin") ||
-    props.application.myPerms.has("writeCompliances"),
-);
+const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeCompliances"));
 
 const form = ref<Partial<Compliance>>({});
 

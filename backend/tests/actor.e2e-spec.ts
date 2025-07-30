@@ -6,6 +6,7 @@ import { ApplicationFaker } from './fakers/application.faker';
 import { getPrismaClient } from './fakers/prisma';
 import { ActorTypeFaker } from './fakers/actor-type.faker';
 import { ActorFaker } from './fakers/actor.faker';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 describe('Actor', () => {
   const app = setupTestSuite();
@@ -18,17 +19,18 @@ describe('Actor', () => {
   });
 
   it(`/GET actor`, async () => {
-    user = await UserFaker.create(['read']);
+    user = await UserFaker.create(AdminLevel.READ);
     application = await ApplicationFaker.create(user);
     TOKEN = await getToken(user);
-    await request(app().getHttpServer())
+    const response = await request(app().getHttpServer())
       .get(`/applications/${application.id}/actors`)
-      .set('Authorization', `Bearer ${TOKEN}`)
-      .expect(200);
+      .set('Authorization', `Bearer ${TOKEN}`);
+
+    expect(response.status).toBe(200);
   });
 
   it(`/POST actor`, async () => {
-    user = await UserFaker.create(['write']);
+    user = await UserFaker.create(AdminLevel.WRITE);
     application = await ApplicationFaker.create(user);
     TOKEN = await getToken(user);
     await request(app().getHttpServer())
@@ -87,7 +89,7 @@ describe('application guard', () => {
 
     // Should succeed after granting the write permission
     await actorType.update(['writeActors']);
-    const actor = await request(app().getHttpServer())
+    const actorCreated = await request(app().getHttpServer())
       .post(`/applications/${application.id}/actors`)
       .send({
         email: appOwner.email,
@@ -98,7 +100,7 @@ describe('application guard', () => {
       })
       .set('Authorization', `Bearer ${TOKEN}`)
       .expect(201);
-    const actorId = actor.body.id;
+    const actorId = actorCreated.body.id;
     expect(actorId).toBeDefined();
 
     // remove all permission

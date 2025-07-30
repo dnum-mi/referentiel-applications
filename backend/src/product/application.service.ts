@@ -12,7 +12,7 @@ import { MetadatasService } from 'src/metadatas/metadatas.service';
 import { calculateIQ } from 'src/common/utils/quality.utils';
 import { ApplicationRights } from './application/dto/application-rights.dto';
 import { APP_PERMISSIONS } from 'src/common/utils/types';
-import { UserEntity } from 'src/user/entities/user.entity';
+import { AdminLevel, UserEntity } from 'src/user/entities/user.entity';
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -264,11 +264,7 @@ export class ApplicationService {
       );
       return Array.isArray(results) ? results : [results];
     }
-    if (
-      user.permissions.includes('read') ||
-      user.permissions.includes('write') ||
-      user.permissions.includes('admin')
-    ) {
+    if (user.adminLevel >= AdminLevel.READ) {
       // If the user has read or write permissions, proceed with the search
       return this.applicationRepository.findApplicationsBySearch(searchParams);
     }

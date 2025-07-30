@@ -5,6 +5,7 @@ import { restartPrioritiesConfig } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
 import ExportApi from "@/api/export";
 import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
 const searchStore = useApplicationSearchStore();
 const userStore = useUserStore();
@@ -102,7 +103,7 @@ async function exportToExcel() {
   <div class="flex justify-between mb-4">
     <div class="export-button">
       <DsfrButton
-        v-if="userStore.userPermissions.includes('admin')"
+        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         label="Exporter en CSV"
         icon="ri-download-line"
         @click="exportSearchResults"
@@ -111,7 +112,7 @@ async function exportToExcel() {
         class="fr-mr-2w"
       />
       <DsfrButton
-        v-if="userStore.userPermissions.includes('admin')"
+        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         label="Exporter en Excel"
         icon="ri-file-excel-2-line"
         @click="exportToExcel"

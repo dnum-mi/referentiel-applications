@@ -3,6 +3,7 @@ import { useReportIssueStore } from "@/stores/reportIssueStore";
 import { computed } from "vue";
 import type { ApplicationWithPerms, Metadata } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
@@ -14,11 +15,8 @@ const activeAccordion = ref<number>();
 const userStore = useUserStore();
 
 const canEdit = computed(() => {
-  return (
-    props.application.myPerms.has("writeMetadata") ||
-    userStore.userPermissions.includes("admin") ||
-    userStore.userPermissions.includes("write")
-  );
+  return props.application.myPerms.has("writeMetadata") || 
+  userStore.adminLevel >= AdminLevel.WRITE;
 });
 
 function formatDescription(description: string): { title: string; content: string } {
