@@ -2,10 +2,13 @@
 import { ref, watch, onMounted } from "vue";
 import { defineProps, defineEmits } from "vue";
 import { useComplianceStore } from "@/stores/complianceStore";
-import { durationHoursOptions, testResultsDict, backupStorageDict } from "@/composables/use-dictionary";
+import { durationHoursOptions, testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
+import { useUserStore } from "@/stores/userStore";
+import type { ApplicationWithPerms } from "@/models/Application";
 
 const props = defineProps<{
   applicationId: string;
+  application: ApplicationWithPerms;
   type: string;
   mode: "create" | "edit";
   initialData: Record<string, any> | null;
@@ -17,9 +20,17 @@ const emit = defineEmits<{
 }>();
 
 const store = useComplianceStore();
+const userStore = useUserStore();
 const form = ref<Record<string, any>>({});
 const loading = ref(false);
 const submitting = ref(false);
+
+const canEdit = computed(
+  () =>
+    userStore.userPermissions?.includes("write") ||
+    userStore.userPermissions?.includes("admin") ||
+    props.application.myPerms.has("writeCompliances"),
+);
 
 async function loadForm() {
   loading.value = true;
@@ -112,19 +123,39 @@ async function save() {
           label-visible
           required
           defaultUnselectedText="Choisir..."
+          :disabled="!canEdit"
         />
-        <DsfrCheckbox v-model="form.is_hno" label="Heure non ouvrée" :value="true" />
-        <DsfrInput v-model="form.business_impact" label="Impact métier" label-visible />
-        <DsfrCheckbox v-model="form.recovery_plan" label="Plan de reprise défini" :value="true" />
-        <DsfrInput v-model="form.recovery_solutions" label="Solutions de reprise" is-textarea label-visible />
-        <DsfrInput v-model="form.recovery_manager" label="Responsable de la reprise" label-visible type="text" />
-        <DsfrInput v-model="form.last_test_date" label="Date du dernier test" type="date" label-visible />
+        <DsfrCheckbox v-model="form.is_hno" :label="complianceFieldLabels.is_hno" :value="true" :disabled="!canEdit" />
+        <DsfrInput v-model="form.business_impact" :label="complianceFieldLabels.business_impact" label-visible :disabled="!canEdit" />
+        <DsfrCheckbox v-model="form.recovery_plan" :label="complianceFieldLabels.recovery_plan" :value="true" :disabled="!canEdit" />
+        <DsfrInput
+          v-model="form.recovery_solutions"
+          :label="complianceFieldLabels.recovery_solutions"
+          is-textarea
+          label-visible
+          :disabled="!canEdit"
+        />
+        <DsfrInput
+          v-model="form.recovery_manager"
+          :label="complianceFieldLabels.recovery_manager"
+          label-visible
+          type="text"
+          :disabled="!canEdit"
+        />
+        <DsfrInput
+          v-model="form.last_test_date"
+          :label="complianceFieldLabels.last_test_date"
+          type="date"
+          label-visible
+          :disabled="!canEdit"
+        />
         <DsfrSelect
           v-model="form.test_result"
           :options="Object.entries(testResultsDict).map(([v, t]) => ({ value: v, text: t }))"
-          label="Résultat du test"
+          :label="complianceFieldLabels.test_result"
           label-visible
           defaultUnselectedText="Choisir..."
+          :disabled="!canEdit"
         />
       </template>
 
@@ -132,16 +163,16 @@ async function save() {
         <DsfrSelect
           v-model="form.duration_hours"
           :options="durationHoursOptions"
-          label="Durée de sauvegarde"
+          :label="complianceFieldLabels.duration_hours"
           label-visible
           defaultUnselectedText="Choisir..."
         />
-        <DsfrInput v-model="form.data_types" label="Types de données" is-textarea label-visible />
-        <DsfrInput v-model="form.backup_frequency" label="Fréquence de sauvegarde" label-visible />
+        <DsfrInput v-model="form.data_types" :label="complianceFieldLabels.data_types" is-textarea label-visible />
+        <DsfrInput v-model="form.backup_frequency" :label="complianceFieldLabels.backup_frequency" label-visible />
         <DsfrSelect
           v-model="form.backup_storage"
           :options="Object.entries(backupStorageDict).map(([v, t]) => ({ value: v, text: t }))"
-          label="Stockage de sauvegarde"
+          :label="complianceFieldLabels.backup_storage"
           label-visible
           defaultUnselectedText="Choisir..."
         />
@@ -149,35 +180,42 @@ async function save() {
         <DsfrSelect
           v-model="form.test_result"
           :options="Object.entries(testResultsDict).map(([v, t]) => ({ value: v, text: t }))"
-          label="Résultat du test"
+          :label="complianceFieldLabels.test_result"
           label-visible
           defaultUnselectedText="Choisir..."
         />
-        <DsfrInput v-model="form.backup_method" label="Méthode de sauvegarde" type="text" label-visible />
-        <DsfrInput v-model="form.restoration_manager" label="Responsable de la restauration" type="text" label-visible />
+        <DsfrInput v-model="form.backup_method" :label="complianceFieldLabels.backup_method" type="text" label-visible />
+        <DsfrInput v-model="form.restoration_manager" :label="complianceFieldLabels.restoration_manager" type="text" label-visible />
       </template>
 
       <template v-else-if="type === 'homologation'">
-        <DsfrInput v-model="form.date" label="Date d'homologation" type="date" label-visible />
-        <DsfrInput v-model="form.duration_months" label="Durée (mois)" type="number" min="0" label-visible />
-        <DsfrInput v-model="form.rssi_id" label="ID RSSI" type="text" label-visible />
+        <DsfrInput v-model="form.date" :label="complianceFieldLabels.date" type="date" label-visible />
+        <DsfrInput v-model="form.duration_months" :label="complianceFieldLabels.duration_months" type="number" min="0" label-visible />
+        <DsfrInput v-model="form.rssi_id" :label="complianceFieldLabels.rssi_id" type="text" label-visible />
       </template>
 
       <template v-else-if="type === 'rgaa'">
-        <DsfrInput v-model="form.audit_date" label="Date d'audit" type="date" label-visible />
-        <DsfrInput v-model="form.service_url" label="URL du service" type="url" label-visible />
-        <DsfrInput v-model="form.accessibility_url" label="URL d'accessibilité" type="url" label-visible />
-        <DsfrInput v-model="form.score_percentage" label="Score (%)" type="number" min="0" max="100" label-visible />
+        <DsfrInput v-model="form.audit_date" :label="complianceFieldLabels.audit_date" type="date" label-visible />
+        <DsfrInput v-model="form.service_url" :label="complianceFieldLabels.service_url" type="url" label-visible />
+        <DsfrInput v-model="form.accessibility_url" :label="complianceFieldLabels.accessibility_url" type="url" label-visible />
+        <DsfrInput
+          v-model="form.score_percentage"
+          :label="complianceFieldLabels.score_percentage"
+          type="number"
+          min="0"
+          max="100"
+          label-visible
+        />
       </template>
 
       <template v-else-if="type === 'dsfr'">
-        <DsfrCheckbox v-model="form.implemented" label="DSFR implémenté" :value="true" />
-        <DsfrInput v-model="form.version" label="Version DSFR" label-visible />
+        <DsfrCheckbox v-model="form.implemented" :label="complianceFieldLabels.implemented" :value="true" />
+        <DsfrInput v-model="form.version" :label="complianceFieldLabels.version" label-visible />
       </template>
 
       <template v-else-if="type === 'rgpd'">
-        <DsfrCheckbox v-model="form.has_aipd" label="AIPD réalisée" :value="true" />
-        <DsfrInput v-model="form.dpo_name" label="Nom du DPO" label-visible />
+        <DsfrCheckbox v-model="form.has_aipd" :label="complianceFieldLabels.has_aipd" :value="true" />
+        <DsfrInput v-model="form.dpo_name" :label="complianceFieldLabels.dpo_name" label-visible />
       </template>
     </div>
     <div class="fr-mt-2w text-right">

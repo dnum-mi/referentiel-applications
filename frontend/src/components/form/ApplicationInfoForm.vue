@@ -84,6 +84,8 @@ const addPopulation = () => {
 const removePopulation = (index: number) => {
   form.value.targetPopulations.splice(index, 1);
 };
+
+const statusSelect = ref();
 </script>
 
 <template>
@@ -105,8 +107,10 @@ const removePopulation = (index: number) => {
     />
 
     <DsfrSelect
+      ref="statusSelect"
       v-model="form.status"
       :options="statusOptions"
+      tabindex="0"
       label="Status de l'application"
       default-unselected-text="Sélectionner un status"
     />
