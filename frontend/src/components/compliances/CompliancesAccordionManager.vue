@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import type { Application } from "@/models/Application";
 import { useComplianceStore } from "@/stores/complianceStore";
 import ComplianceForm from "./ComplianceForm.vue";
-import { testResultsDict, backupStorageDict } from "@/composables/use-dictionary";
+import { testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
 import { formatDateFR } from "@/composables/use-date";
 import { filterEmpty } from "@/composables/use-filter-watcher";
 
@@ -30,32 +30,6 @@ const labels: Record<ComplianceType, string> = {
   rgaa: "RGAA",
   dsfr: "DSFR",
   rgpd: "RGPD",
-};
-const fieldLabels: Record<string, string> = {
-  duration_hours: "Durée (heures)",
-  test_result: "Résultat du dernier test",
-  last_test_date: "Date du dernier test",
-  is_hno: "Heure non ouvrée",
-  data_types: "Types de données",
-  business_impact: "Impact métier",
-  service_url: "URL du service",
-  accessibility_url: "URL d'accessibilité",
-  backup_frequency: "Fréquence de sauvegarde",
-  backup_storage: "Stockage de sauvegarde",
-  date: "Date d’homologation",
-  duration_months: "Durée (mois)",
-  audit_date: "Date d’audit",
-  score_percentage: "Score (%)",
-  implemented: "DSFR implémenté",
-  version: "Version DSFR",
-  has_aipd: "AIPD réalisée",
-  dpo_name: "Nom du DPO",
-  recovery_plan: "Plan de reprise",
-  recovery_solutions: "Solutions de reprise",
-  recovery_manager: "Responsable de la reprise",
-  backup_method: "Méthode de sauvegarde",
-  restoration_manager: "Responsable de la restauration",
-  rssi_id: "ID RSSI",
 };
 
 // Extraction des données
@@ -218,7 +192,7 @@ function closeModal() {
           </div>
           <ul class="fr-pl-1w">
             <li v-for="(val, key) in compliances[type]" :key="key">
-              <strong>{{ fieldLabels[key] || key }}:</strong>
+              <strong>{{ complianceFieldLabels[key] || key }}:</strong>
               {{ renderValue(type, key, val) }}
             </li>
           </ul>
