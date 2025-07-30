@@ -3,8 +3,8 @@
   "version": "1.32.0",
   "type": "module",
   "scripts": {
-    "format": "prettier . --write",
-    "format-check": "prettier . --check",
+    "format": "eslint . --fix",
+    "format-check": "eslint .",
     "lint": "eslint .",
     "prepare": "husky",
     "commitlint": "commitlint --edit"
@@ -17,7 +17,6 @@
     "eslint-plugin-vue": "^9.32.0",
     "globals": "^16.0.0",
     "husky": "^9.1.7",
-    "prettier": "3.3.3",
     "typescript-eslint": "^8.25.0"
   },
   "dependencies": {
