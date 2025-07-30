@@ -17,12 +17,12 @@ async function loadData() {
   try {
     const response = await statisticsStore.countApplicationsByIq();
 
-    const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`);
+    const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`).reverse();
     const data: number[] = Array(21).fill(0);
 
     response.forEach(({ iq, total }: { iq: number; total: number }) => {
       const index = Math.floor(Math.round(iq) / 5);
-      if (index >= 0 && index <= 20) data[20 - index] += total;
+      if (index >= 0 && index <= 20) data[index] += total;
     });
 
     chartInstance = renderChart(chartRef, chartInstance, labels, data, "bar");
