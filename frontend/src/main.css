@@ -42,16 +42,6 @@ body,
   gap: 0.25rem;
 }
 
-.filters-wrapper {
-  flex: 1;
-  overflow-y: auto;
-  max-height: calc(100vh - 3rem);
-  padding: 0 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 .selected-tag {
   display: inline-flex;
   align-items: center;
