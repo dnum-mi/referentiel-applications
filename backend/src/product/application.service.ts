@@ -27,7 +27,7 @@ export class ApplicationService {
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
     private readonly metadatasService: MetadatasService,
-  ) {}
+  ) { }
 
   public async createApplication(
     ownerId: string,
@@ -138,48 +138,36 @@ export class ApplicationService {
       1,
     );
 
-    const result = await this.prisma.$queryRaw<
-      { month: Date; total: number }[]
-    >`
-    WITH first_metadata AS (
-      SELECT DISTINCT ON (m."applicationId")
-        m."applicationId",
-        m."createdAt"
-      FROM "metadata" m
-      ORDER BY m."applicationId", m."createdAt" ASC
-    ),
+    const result = await this.prisma.application.findMany({
+      where: {
+        metadatas: {
+          every: {
+            createdAt: {
+              gte: startDate,
+            },
+          },
+        },
+      },
+      select: {
+        metadatas: {
+          orderBy: { createdAt: 'asc' },
+          take: 1, // Get the first metadata for each application
+        },
+      },
+    });
 
-    filtered_apps AS (
-      SELECT
-        fm."applicationId",
-        fm."createdAt"
-      FROM first_metadata fm
-      JOIN "applications" a ON a.id = fm."applicationId"
-      WHERE a.status IS DISTINCT FROM 'deleted'
-    ),
-
-    months AS (
-      SELECT generate_series(
-        DATE_TRUNC('month', ${startDate}::timestamp),
-        DATE_TRUNC('month', NOW()),
-        INTERVAL '1 month'
-      ) AS month_start
-    )
-
-    SELECT
-      months.month_start AS month,
-      COUNT(fa."applicationId") AS total
-    FROM months
-    LEFT JOIN filtered_apps fa
-      ON fa."createdAt" <= months.month_start + INTERVAL '1 month' - INTERVAL '1 second'
-    GROUP BY months.month_start
-    ORDER BY months.month_start ASC;
-  `;
-
-    return result.map((r) => ({
-      month: r.month,
-      total: Number(r.total),
-    }));
+    // reduce by month
+    const monthMap = new Map<string, { month: string; total: number }>();
+    result.forEach((app) => {
+      app.metadatas.forEach((metadata) => {
+        const month = metadata.createdAt.toISOString().slice(0, 7); // Format YYYY-MM
+        if (!monthMap.has(month)) {
+          monthMap.set(month, { month, total: 0 });
+        }
+        monthMap.get(month)!.total += 1;
+      });
+    });
+    return Array.from(monthMap.values());
   }
 
   async getApplicationsCountByIq() {
