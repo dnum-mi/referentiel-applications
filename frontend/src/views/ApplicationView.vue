@@ -81,7 +81,7 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 <style scoped>
 .layout {
   display: flex;
-  align-items: stretch;
+  min-height: 100%;
 }
 
 @media (max-width: 768px) {
