@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { StatsService } from '../application/stats.service';
 import { GroupBy } from './types/stats-entry.type';
 import {
@@ -7,8 +7,13 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { AdminLevel } from 'src/user/entities/user.entity';
+import { AdminGuard } from 'src/common/guards/admin.guard';
+import { RequiredAdminLevel } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Stats')
+@UseGuards(AdminGuard)
+@RequiredAdminLevel(AdminLevel.ADMIN)
 @Controller('stats')
 export class StatsController {
   constructor(private readonly statsService: StatsService) {}

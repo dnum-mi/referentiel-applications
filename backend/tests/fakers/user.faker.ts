@@ -1,11 +1,12 @@
 import { KeycloakService } from '../../src/services/keycloak.service';
 import { faker } from '@faker-js/faker';
 import { getPrismaClient } from './prisma';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 const keycloakService = new KeycloakService();
 
 export class UserFaker {
-  static async create(permissions: string[] = []) {
+  static async create(adminLevel: AdminLevel = AdminLevel.NONE) {
     const prisma = getPrismaClient();
     const email = faker.internet.email();
     const username = email;
@@ -26,7 +27,7 @@ export class UserFaker {
         data: {
           email,
           keycloakId: keycloakUserID,
-          permissions: permissions.join(','), // Convert array to comma-separated string
+          adminLevel: adminLevel,
         },
       });
     }

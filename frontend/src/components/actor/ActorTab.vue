@@ -10,6 +10,7 @@ import ActorForm from "./ActorForm.vue";
 import type { Actor } from "@/models/Actor";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const emit = defineEmits(["update:application"]);
@@ -25,12 +26,7 @@ const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const loading = ref(false);
-const canEdit = computed(
-  () =>
-    userStore.userPermissions?.includes("write") ||
-    userStore.userPermissions?.includes("admin") ||
-    props.application.myPerms.has("writeActors"),
-);
+const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE);
 
 const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 

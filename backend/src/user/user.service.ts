@@ -45,7 +45,7 @@ export class UserService {
       data: {
         email,
         keycloakId,
-        permissions: '',
+        adminLevel: 0, // Default admin level
       },
     });
   }

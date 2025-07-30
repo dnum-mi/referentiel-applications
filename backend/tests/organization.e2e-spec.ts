@@ -4,6 +4,7 @@ import { getToken } from './getToken';
 import { UserFaker } from './fakers/user.faker';
 import { OrganizationFaker } from './fakers/organization.faker';
 import { getPrismaClient } from './fakers/prisma';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 describe('Organizations', () => {
   const app = setupTestSuite();
@@ -12,7 +13,7 @@ describe('Organizations', () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create(['read', 'write']);
+    user = await UserFaker.create(AdminLevel.WRITE);
     TOKEN = await getToken(user);
   });
   afterAll(async () => {

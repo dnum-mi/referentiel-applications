@@ -12,6 +12,7 @@ import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import type { Hosting } from "@/models/Hosting";
 import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
 const isSubmitting = ref(false);
 const toaster = useToaster();
@@ -31,25 +32,9 @@ const hostingToDelete = ref<Hosting | null>(null);
 const isDeleteModalOpen = ref(false);
 const hostingStore = useHostingStore();
 const userStore = useUserStore();
-const canEditBase = computed(
-  () =>
-    userStore.userPermissions?.includes("write") ||
-    userStore.userPermissions?.includes("admin") ||
-    props.application.myPerms.has("writeBase"),
-);
-const canViewHostings = computed(
-  () =>
-    userStore.userPermissions?.includes("read") ||
-    userStore.userPermissions?.includes("write") ||
-    userStore.userPermissions?.includes("admin") ||
-    props.application.myPerms.has("readHostings"),
-);
-const canEditHostings = computed(
-  () =>
-    userStore.userPermissions?.includes("write") ||
-    userStore.userPermissions?.includes("admin") ||
-    props.application.myPerms.has("writeHostings"),
-);
+const canEditBase = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase"));
+const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
+const canEditHostings = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeHostings"));
 
 onMounted(async () => {
   if (props.application?.id) {

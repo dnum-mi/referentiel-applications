@@ -1,3 +1,5 @@
+import { AdminLevel } from '../entities/user.entity';
+
 export class CreateUserDto {
-  permissions?: string;
+  adminLevel?: AdminLevel;
 }

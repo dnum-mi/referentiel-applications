@@ -6,13 +6,16 @@ import {
   Get,
   Query,
   Request,
+  UseGuards,
 } from '@nestjs/common';
 import { Request as Req } from 'express';
 import { UserService } from './user.service';
 import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserFilterDto } from './dto/filters.dto';
-import { Permissions } from '../common/decorators/permissions.decorator';
+import { RequiredAdminLevel } from '../common/decorators/admin.decorator';
+import { AdminGuard } from 'src/common/guards/admin.guard';
+import { AdminLevel } from './entities/user.entity';
 
 @ApiTags('users')
 @Controller('/users')
@@ -31,7 +34,8 @@ export class UserController {
   }
 
   @Patch(':id')
-  @Permissions('admin')
+  @UseGuards(AdminGuard)
+  @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
     summary: "Mettre à jour les permissions d'un utilisateur",
     description:
@@ -52,7 +56,8 @@ export class UserController {
   }
 
   @Get()
-  @Permissions('admin')
+  @UseGuards(AdminGuard)
+  @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
     summary: 'Lister tous les utilisateurs',
     description:

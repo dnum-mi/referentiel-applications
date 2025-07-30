@@ -126,11 +126,6 @@ export class OrganizationService extends BaseService<Organization> {
    * @returns {Promise<void>}
    */
   async recalculateClosureTable(): Promise<void> {
-    console.log(
-      Date.now(),
-      'Début du recalcul de la table Organisation Closure',
-    );
-
     // 1. On récupère tous les nœuds
     const allOrganizations = await this.prisma.organization.findMany();
     // On prépare un objet pour accéder par id
@@ -159,12 +154,10 @@ export class OrganizationService extends BaseService<Organization> {
       }
     }
     // 3. On vide la table des closures existantes et on insère les nouvelles
-    console.log(Date.now(), 'Début de la transaction SQL');
     await this.prisma.organizationClosure.deleteMany({});
     await this.prisma.organizationClosure.createMany({
       data: closures,
       skipDuplicates: true,
     });
-    console.log(Date.now(), 'Fin du recalcul de la table Organisation Closure');
   }
 }

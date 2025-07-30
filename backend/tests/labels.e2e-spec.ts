@@ -7,6 +7,7 @@ import { getPrismaClient } from './fakers/prisma';
 import { ActorTypeFaker } from './fakers/actor-type.faker';
 import { ActorFaker } from './fakers/actor.faker';
 import { AsyncReturnType } from 'src/utils/types.util';
+import { AdminLevel } from 'src/user/entities/user.entity';
 
 describe('Labels', () => {
   const app = setupTestSuite();
@@ -15,7 +16,7 @@ describe('Labels', () => {
   let user: { keycloakId: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create(['read', 'write']);
+    user = await UserFaker.create(AdminLevel.WRITE);
     application = await ApplicationFaker.create(user);
   });
   afterAll(async () => {

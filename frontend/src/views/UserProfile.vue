@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/userStore";
+import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
 
 const userStore = useUserStore();
 </script>
@@ -22,14 +23,10 @@ const userStore = useUserStore();
                   <td>{{ userStore.user.email }}</td>
                 </tr>
                 <tr>
-                  <th scope="row">Permissions</th>
+                  <th scope="row">Type</th>
                   <td>
-                    <span
-                      v-for="(permission, index) in userStore.user.permissions.split(',')"
-                      :key="index"
-                      class="fr-badge fr-badge--info fr-mr-1w"
-                    >
-                      {{ permission.trim() }}
+                    <span class="fr-badge fr-mr-1w" :class="AdminLevelWordingBadgeClass[userStore.adminLevel]">
+                      {{ AdminLevelWording[userStore.adminLevel] }}
                     </span>
                   </td>
                 </tr>
