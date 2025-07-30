@@ -104,7 +104,6 @@ async function save() {
   <form @submit.prevent="save">
     <AppLoader v-if="loading" />
     <div v-else>
-      <!-- DIMA -->
       <template v-if="type === 'dima'">
         <DsfrSelect
           v-model="form.duration_hours"
@@ -116,6 +115,9 @@ async function save() {
         />
         <DsfrCheckbox v-model="form.is_hno" label="Heure non ouvrée" :value="true" />
         <DsfrInput v-model="form.business_impact" label="Impact métier" label-visible />
+        <DsfrCheckbox v-model="form.recovery_plan" label="Plan de reprise défini" :value="true" />
+        <DsfrInput v-model="form.recovery_solutions" label="Solutions de reprise" is-textarea label-visible />
+        <DsfrInput v-model="form.recovery_manager" label="Responsable de la reprise" label-visible type="text" />
         <DsfrInput v-model="form.last_test_date" label="Date du dernier test" type="date" label-visible />
         <DsfrSelect
           v-model="form.test_result"
@@ -151,11 +153,14 @@ async function save() {
           label-visible
           defaultUnselectedText="Choisir..."
         />
+        <DsfrInput v-model="form.backup_method" label="Méthode de sauvegarde" type="text" label-visible />
+        <DsfrInput v-model="form.restoration_manager" label="Responsable de la restauration" type="text" label-visible />
       </template>
 
       <template v-else-if="type === 'homologation'">
         <DsfrInput v-model="form.date" label="Date d'homologation" type="date" label-visible />
         <DsfrInput v-model="form.duration_months" label="Durée (mois)" type="number" min="0" label-visible />
+        <DsfrInput v-model="form.rssi_id" label="ID RSSI" type="text" label-visible />
       </template>
 
       <template v-else-if="type === 'rgaa'">
