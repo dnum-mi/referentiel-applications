@@ -130,7 +130,19 @@ export class ApplicationService {
     });
   }
 
-  async getApplicationsCountByMonth(lastMonths: number = 6) {
+  getEmptyCountRange(n: number): Record<string, number> {
+    const now = new Date();
+    const range: Record<string, number> = {};
+    for (let i = 0; i < n; i++) {
+      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      // use MM-YYYY format
+      const monthKey = month.toISOString().slice(0, 7);
+      range[monthKey] = 0; // Initialize with 0
+    }
+    return range;
+  }
+
+  async getApplicationsCountByMonth(lastMonths: number = 6): Promise<{ month: string; total: number }[]> {
     const now = new Date();
     const startDate = new Date(
       now.getFullYear(),
@@ -157,17 +169,22 @@ export class ApplicationService {
     });
 
     // reduce by month
-    const monthMap = new Map<string, { month: string; total: number }>();
+    const monthMap: Record<string, number> = this.getEmptyCountRange(lastMonths);
+
     result.forEach((app) => {
-      app.metadatas.forEach((metadata) => {
-        const month = metadata.createdAt.toISOString().slice(0, 7); // Format YYYY-MM
-        if (!monthMap.has(month)) {
-          monthMap.set(month, { month, total: 0 });
+      const createdAt = app.metadatas[0]?.createdAt;
+      if (createdAt) {
+        const monthKey = new Date(createdAt).toISOString().slice(0, 7);
+        if (monthMap[monthKey] !== undefined) {
+          monthMap[monthKey]++;
         }
-        monthMap.get(month)!.total += 1;
-      });
+      }
     });
-    return Array.from(monthMap.values());
+
+    return Object.entries(monthMap).map(([month, total]) => ({
+      month,
+      total,
+    })).reverse(); // Reverse to have the most recent month first
   }
 
   async getApplicationsCountByIq() {
@@ -189,7 +206,7 @@ export class ApplicationService {
     return result.map((r) => ({
       iq: r.quality,
       total: r._count._all,
-    }));
+    })).reverse();
   }
 
   public async getSortedMetadatas(
