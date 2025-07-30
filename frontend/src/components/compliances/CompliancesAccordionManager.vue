@@ -50,6 +50,12 @@ const fieldLabels: Record<string, string> = {
   version: "Version DSFR",
   has_aipd: "AIPD réalisée",
   dpo_name: "Nom du DPO",
+  recovery_plan: "Plan de reprise",
+  recovery_solutions: "Solutions de reprise",
+  recovery_manager: "Responsable de la reprise",
+  backup_method: "Méthode de sauvegarde",
+  restoration_manager: "Responsable de la restauration",
+  rssi_id: "ID RSSI",
 };
 
 // Extraction des données
