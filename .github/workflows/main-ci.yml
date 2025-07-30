@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Prettier check
+      - name: Run Eslint check
         run: |
           npm install -g pnpm
           pnpm install --frozen-lockfile
