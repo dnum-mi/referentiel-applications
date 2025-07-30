@@ -1,7 +1,7 @@
 html,
 body,
 #app {
-  min-height: 100vh;
+  height: 100%;
 }
 
 .h-full {
@@ -45,7 +45,6 @@ body,
 .filters-wrapper {
   flex: 1;
   overflow-y: auto;
-  /* max-height: calc(100vh - 3rem); */
   padding: 0 0.5rem;
   display: flex;
   flex-direction: column;

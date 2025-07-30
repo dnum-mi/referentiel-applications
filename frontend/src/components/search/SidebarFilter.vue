@@ -70,7 +70,7 @@ function resetAllFilters() {
   width: 280px;
   border-right: 1px solid #e5e7eb;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
-  height: 100vh;
+  max-height: 100%;
   position: relative;
   z-index: 5;
   display: flex;
@@ -133,15 +133,6 @@ function resetAllFilters() {
 
 .sidebar-toggle-icon {
   font-size: 1.2rem;
-}
-
-.filters-wrapper {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
 }
 
 .reset-link {
