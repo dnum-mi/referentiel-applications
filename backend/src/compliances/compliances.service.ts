@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BaseService } from '../common/base.service';
 import { Compliance } from './entities/compliance.entity';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { MetadataService } from 'src/metadata/metadata.service';
 import { ApplicationService } from 'src/product/application.service';
 
 @Injectable()
 export class CompliancesService extends BaseService<Compliance> {
   constructor(
     prisma: PrismaService,
-    metadatasService: MetadatasService,
+    metadatasService: MetadataService,
     applicationService: ApplicationService,
   ) {
     super(prisma.compliance, prisma, metadatasService, applicationService);

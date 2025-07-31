@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { MetadataService } from 'src/metadata/metadata.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { translateEnum } from './utils/enum.utils';
 import { ApplicationService } from 'src/product/application.service';
@@ -9,9 +9,9 @@ export class BaseService<T> {
   constructor(
     protected readonly model: any,
     protected readonly prisma: PrismaService,
-    private readonly metadatasService?: MetadatasService,
+    private readonly metadatasService?: MetadataService,
     private readonly applicationService?: ApplicationService,
-  ) {}
+  ) { }
 
   async findOne(id: string): Promise<T> {
     const object = await this.model.findUnique({ where: { id } });

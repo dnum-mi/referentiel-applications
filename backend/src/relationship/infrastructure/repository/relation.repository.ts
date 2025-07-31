@@ -4,14 +4,14 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { RelationApplicationDto } from '../../application/dto/relation-application.dto';
 import { Relation } from '../../domain/relation.entity';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { MetadataService } from 'src/metadata/metadata.service';
 
 @Injectable()
 export class RelationRepository implements IRelationRepository {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly metadataService: MetadatasService,
-  ) {}
+    private readonly metadataService: MetadataService,
+  ) { }
 
   public async create(
     applicationSourceId: string,

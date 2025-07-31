@@ -8,7 +8,7 @@ import {
 import { ApplicationRepository } from './infrastructure/repository/application.repository';
 import { ApplicationSearchDto } from './application/dto/search-application.dto';
 import { LabelsService } from 'src/labels/labels.service';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { MetadataService } from 'src/metadata/metadata.service';
 import { calculateIQ } from 'src/common/utils/quality.utils';
 import { ApplicationRights } from './application/dto/application-rights.dto';
 import { APP_PERMISSIONS } from 'src/common/utils/types';
@@ -26,7 +26,7 @@ export class ApplicationService {
     private prisma: PrismaService,
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
-    private readonly metadatasService: MetadatasService,
+    private readonly metadatasService: MetadataService,
   ) { }
 
   public async createApplication(
@@ -207,23 +207,6 @@ export class ApplicationService {
       iq: r.quality,
       total: r._count._all,
     })).reverse();
-  }
-
-  public async getSortedMetadatas(
-    applicationId: string,
-    offset = 0,
-    limit = 1,
-    order: 'asc' | 'desc' = 'asc',
-  ) {
-    return this.prisma.metadata.findMany({
-      where: { applicationId },
-      orderBy: { createdAt: order },
-      skip: offset,
-      take: limit,
-      include: {
-        createdBy: true,
-      },
-    });
   }
 
   public async getMyPerms(

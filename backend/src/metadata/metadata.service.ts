@@ -1,11 +1,25 @@
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import isEqual from 'lodash/isEqual';
-import { Prisma } from '@prisma/client';
+import { Metadata, Prisma } from '@prisma/client';
+import { MetadataRepository } from './infrastructure/metadata.repository';
 
 @Injectable()
-export class MetadatasService {
-  constructor(protected readonly prisma: PrismaService) {}
+export class MetadataService {
+  constructor(
+    protected readonly prisma: PrismaService,
+    private metadataRepository: MetadataRepository,
+  ) { }
+
+  public async findAll(applicationId?: string) {
+    return await this.metadataRepository.findAll(applicationId);
+  }
+
+  async getFirstAndLastMetadata(
+    applicationId: string,
+  ): Promise<{ first: Metadata | null; last: Metadata | null }> {
+    return this.metadataRepository.findFirstAndLastByApplicationId(applicationId);
+  }
 
   public async createMetadata<T = any>(options: {
     applicationId: string;

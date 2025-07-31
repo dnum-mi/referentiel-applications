@@ -8,10 +8,10 @@ import { ApplicationRepository } from './infrastructure/repository/application.r
 import { CommonModule } from 'src/common/common.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { LabelsModule } from 'src/labels/labels.module';
-import { MetadatasModule } from 'src/metadatas/metadatas.module';
+import { MetadataModule } from 'src/metadata/metadata.module';
 
 @Module({
-  imports: [CommonModule, PrismaModule, LabelsModule, MetadatasModule],
+  imports: [CommonModule, PrismaModule, LabelsModule, MetadataModule],
   controllers: [ApplicationController],
   providers: [
     ApplicationService,
@@ -26,4 +26,4 @@ import { MetadatasModule } from 'src/metadatas/metadatas.module';
     ApplicationService,
   ],
 })
-export class ApplicationModule {}
+export class ApplicationModule { }

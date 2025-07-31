@@ -18,7 +18,7 @@ import { AuthMiddleware } from './middlewares/auth.middleware';
 import { ApplicationService } from './product/application.service';
 import { ConfigModule } from '@nestjs/config';
 import { RelationModule } from './relationship/relation.module';
-import { MetadatasModule } from './metadatas/metadatas.module';
+import { MetadataModule } from './metadata/metadata.module';
 import { AnomalyNotificationModule } from './notification/anomaly-notification.module';
 import { ActorModule } from './actor/actor.module';
 import { LinksModule } from './links/links.module';
@@ -48,7 +48,7 @@ import { LoggingService } from './services/logging.service';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MetadatasModule,
+    MetadataModule,
     LinksModule,
     LabelsModule,
     CompliancesModule,

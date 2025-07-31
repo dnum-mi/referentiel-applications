@@ -5,12 +5,12 @@ import {
   ApplicationCompliancesController,
   ComplianceController,
 } from './compliances.controller';
-import { MetadatasModule } from 'src/metadatas/metadatas.module';
+import { MetadataModule } from 'src/metadata/metadata.module';
 import { ApplicationModule } from 'src/product/application.module';
 
 @Module({
-  imports: [MetadatasModule, ApplicationModule],
+  imports: [MetadataModule, ApplicationModule],
   controllers: [ApplicationCompliancesController, ComplianceController],
   providers: [CompliancesService, PrismaService],
 })
-export class CompliancesModule {}
+export class CompliancesModule { }

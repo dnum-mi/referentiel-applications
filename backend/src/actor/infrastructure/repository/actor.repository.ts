@@ -3,14 +3,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { IActorRepository } from './actor.repository.interface';
 import { CreateActorDto, UpdateActorDto } from 'src/actor/dto/actor.dto';
 import { Prisma } from '@prisma/client';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { MetadataService } from 'src/metadata/metadata.service';
 
 @Injectable()
 export class ActorRepository implements IActorRepository {
   constructor(
     private prisma: PrismaService,
-    private metadataService: MetadatasService,
-  ) {}
+    private metadataService: MetadataService,
+  ) { }
 
   public async create(actor: CreateActorDto, ownerId: string) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
