@@ -20,6 +20,7 @@ import { useRelationStore } from "@/stores/relationStore";
 import { useUserStore } from "@/stores/userStore";
 import useToaster from "@/composables/use-toaster";
 import { AdminLevel } from "@/models/user";
+import { useMetadataStore } from "@/stores/metadataStore";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const emit = defineEmits(["update:application"]);
@@ -30,6 +31,7 @@ const linkStore = useLinkStore();
 const compliancesStore = useComplianceStore();
 const reportIssueStore = useReportIssueStore();
 const relationsStore = useRelationStore();
+const metadataStore = useMetadataStore();
 
 const application = ref<ApplicationWithPerms>(props.application);
 const activeTab = ref(0);
@@ -45,7 +47,7 @@ const updateApplication = (updatedApp: ApplicationWithPerms) => {
 const errorMessages = {
   ERR_LOAD_HOSTINGS: "Erreur lors du chargement des hébergements",
   ERR_LOAD_ACTORS: "Erreur lors du chargement des acteurs",
-  ERR_LOAD_ISSUES: "Erreur lors du chargement des problèmes",
+  ERR_LOAD_ISSUES_METADATAS: "Erreur lors du chargement des signalements et modifications",
   ERR_LOAD_LINKS: "Erreur lors du chargement des liens",
   ERR_LOAD_RELATIONS: "Erreur lors du chargement des relations",
   ERR_LOAD_COMPLIANCES: "Erreur lors du chargement des conformités",
@@ -55,7 +57,12 @@ const fetchLinks = linkStore.fetchLinks.bind(linkStore, props.application.id);
 const fetchCompliances = compliancesStore.fetchCompliance.bind(compliancesStore, props.application.id);
 const fetchActors = actorStore.fetchActorsByApplication.bind(actorStore, props.application.id);
 const fetchRelations = relationsStore.fetchRelationsByApplication.bind(relationsStore, props.application.id);
-const fetchIssues = reportIssueStore.fetchIssueByApplication.bind(reportIssueStore, props.application.id);
+const fetchHistoryData = async () => {
+  await Promise.all([
+    reportIssueStore.fetchIssueByApplication(props.application.id),
+    metadataStore.fetchMetadatasByApplication(props.application.id),
+  ]);
+};
 
 const tabs = ref<
   (Tab<typeof errorMessages> & {
@@ -118,8 +125,8 @@ const tabs = ref<
     panelId: "panel-history",
     component: NotificationsApplication,
     requiredPerms: ["readMetadata"],
-    loadFn: fetchIssues,
-    errorKey: "ERR_LOAD_ISSUES",
+    loadFn: fetchHistoryData,
+    errorKey: "ERR_LOAD_ISSUES_METADATAS",
   },
   {
     title: "Qualité",
