@@ -4,14 +4,14 @@ import { Injectable } from '@nestjs/common';
 import { Hosting } from 'src/hosting/domain/hosting.entity';
 import { CreateHostingDto } from 'src/hosting/applications/dto/create-hosting.dto';
 import { UpdateHostingDto } from 'src/hosting/applications/dto/update-hosting.dto';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
+import { MetadataService } from 'src/metadata/metadata.service';
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly metadataService: MetadatasService,
-  ) {}
+    private readonly metadataService: MetadataService,
+  ) { }
 
   async create(data: CreateHostingDto, ownerId: string): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;

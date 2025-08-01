@@ -39,7 +39,7 @@ export class ApplicationController {
     private readonly applicationService: ApplicationService,
     private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly applicationExportService: ApplicationExportService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiBody({ type: CreateApplicationDto })
@@ -126,26 +126,6 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.search(searchParams, user);
   }
 
-  @Get(':applicationId/metadatas')
-  @UseGuards(ApplicationGuard)
-  @AppAction('readMetadata')
-  @ApiOperation({
-    summary: 'Lister les metadatas d’une application avec pagination et tri',
-  })
-  getMetadatas(
-    @Param('applicationId') id: string,
-    @Query('offset') offset = 0,
-    @Query('limit') limit = 1,
-    @Query('order') order: 'asc' | 'desc' = 'asc',
-  ) {
-    return this.applicationService.getSortedMetadatas(
-      id,
-      Number(offset),
-      Number(limit),
-      order,
-    );
-  }
-
   @Get(':applicationId/my-perms')
   @UseGuards(ApplicationGuard)
   @AppAction('readBase')
@@ -184,8 +164,8 @@ Vous devez fournir les informations suivantes :
     const buffer =
       Object.keys(searchParams).length > 0
         ? await this.applicationExportService.exportSearchResultsToExcel(
-            searchParams,
-          )
+          searchParams,
+        )
         : await this.exportApplicationsUseCase.execute();
 
     res.setHeader(

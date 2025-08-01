@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { LabelsService } from './labels.service';
 import { LabelsController } from './labels.controller';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { MetadatasModule } from 'src/metadatas/metadatas.module';
+import { MetadataModule } from 'src/metadata/metadata.module';
 
 @Module({
-  imports: [MetadatasModule],
+  imports: [MetadataModule],
   controllers: [LabelsController],
   providers: [LabelsService, PrismaService],
   exports: [LabelsService],
 })
-export class LabelsModule {}
+export class LabelsModule { }

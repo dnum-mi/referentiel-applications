@@ -1,46 +1,43 @@
 <script setup lang="ts">
-import type { Application, ApplicationWithPerms, Metadata } from "@/models/Application";
-import Applications from "@/api/application";
+import type { Application, ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { formatDate } from "@/composables/use-date";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
 import { useApplicationStore } from "@/stores/applicationStore";
+import { useMetadataStore } from "@/stores/metadataStore";
+import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
+const userStore = useUserStore();
 const applicationStore = useApplicationStore();
+const metadataStore = useMetadataStore();
 const route = useRoute();
 const id = route.params.id as string;
 const application = computed<ApplicationWithPerms>(() => applicationStore.applicationsById[id]);
 const applicationUpdated = ref<Application | null>(null);
-const metadata = ref<Metadata | null>();
-const firstMetadata = ref<Metadata | null>();
 const isLoading = ref(false);
 const errorMessage = ref("");
 
-async function getMetadata(applicationId: string, order: "asc" | "desc") {
-  const result = await Applications.getSortedMetadata(applicationId, order);
-  return result[0] ?? null;
-}
-
 async function handleApplicationUpdate(updateData: Application) {
   applicationUpdated.value = updateData;
-  metadata.value = await getMetadata(updateData.id, "desc");
-}
+    if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
+      await metadataStore.getFirstAndLastMetadataByApplication(updateData.id);
+    }
+  }
 
 async function loadApplication() {
   isLoading.value = true;
   try {
     await applicationStore.fetchApplication(id);
-    if (application.value.myPerms.has("readMetadata")) {
-      firstMetadata.value = await getMetadata(id, "asc");
-      metadata.value = await getMetadata(id, "desc");
+    if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
+      await metadataStore.getFirstAndLastMetadataByApplication(id);
     }
   } finally {
     isLoading.value = false;
   }
 }
-
 onMounted(loadApplication);
 </script>
 
@@ -54,13 +51,13 @@ onMounted(loadApplication);
     <div v-else-if="application">
       <h2 class="fr-mt-4w fr-ml-4w">
         {{ application.label }}
-        <p v-if="firstMetadata" class="subtitle">
-          Date de création : {{ new Date(firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
-            firstMetadata.createdBy?.email
+        <p v-if="metadataStore.firstMetadata" class="subtitle">
+          Date de création : {{ new Date(metadataStore.firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
+            metadataStore.firstMetadata.createdBy?.email
           }})
         </p>
-        <p v-if="metadata" class="subtitle">
-          Dernière modification : {{ formatDate(metadata.createdAt) || "inconnue" }} ({{ metadata.createdBy?.email }})
+        <p v-if="metadataStore.lastMetadata" class="subtitle">
+          Dernière modification : {{ formatDate(metadataStore.lastMetadata.createdAt) || "inconnue" }} ({{ metadataStore.lastMetadata.createdBy?.email }})
         </p>
         <DsfrTag v-if="application.status" class="fr-mr-2w" :label="statusApplicationDictionary[application.status]" />
         <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" />

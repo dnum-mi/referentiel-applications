@@ -3,10 +3,10 @@ import { RelationController } from './relation.controller';
 import { RelationService } from './relation.service';
 import { RelationRepository } from './infrastructure/repository/relation.repository';
 import { PrismaModule } from '../prisma/prisma.module';
-import { MetadatasModule } from 'src/metadatas/metadatas.module';
+import { MetadataModule } from 'src/metadata/metadata.module';
 
 @Module({
-  imports: [PrismaModule, MetadatasModule],
+  imports: [PrismaModule, MetadataModule],
   controllers: [RelationController],
   providers: [
     RelationService,
@@ -17,4 +17,4 @@ import { MetadatasModule } from 'src/metadatas/metadatas.module';
   ],
   exports: ['IRelationRepository'],
 })
-export class RelationModule {}
+export class RelationModule { }

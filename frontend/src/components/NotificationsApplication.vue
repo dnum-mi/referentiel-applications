@@ -4,10 +4,12 @@ import { computed } from "vue";
 import type { ApplicationWithPerms, Metadata } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
+import { useMetadataStore } from "@/stores/metadataStore";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
 const reportStore = useReportIssueStore();
+const metadataStore = useMetadataStore();
 
 const headers = ["Date", "Auteur", "Description"];
 const currentPage = ref(0);
@@ -63,7 +65,7 @@ const rows = computed(() => {
     Description: { title, content: report.description || "" },
   }));
 
-  const modifications = (props.application.metadatas || []).map((metadata: Metadata) => {
+  const modifications = (metadataStore.metadatas || []).map((metadata: Metadata) => {
     const { title, content } = formatDescription(metadata.description || "");
     return {
       sortKey: new Date(metadata.createdAt).getTime(),
@@ -76,7 +78,7 @@ const rows = computed(() => {
   return [...reports, ...modifications].sort((a, b) => b.sortKey - a.sortKey).map((item, index) => ({ ...item, index }));
 });
 
-const loading = computed(() => reportStore.isLoading);
+const loading = computed(() => reportStore.isLoading || metadataStore.isLoading);
 </script>
 
 <template>

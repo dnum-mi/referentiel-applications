@@ -7,11 +7,11 @@ import {
   ApplicationHostingsController,
 } from './hosting.controller';
 import { SitesController } from './site.controller';
-import { MetadatasModule } from 'src/metadatas/metadatas.module';
+import { MetadataModule } from 'src/metadata/metadata.module';
 import { ApplicationModule } from 'src/product/application.module';
 
 @Module({
-  imports: [PrismaModule, MetadatasModule, ApplicationModule],
+  imports: [PrismaModule, MetadataModule, ApplicationModule],
   controllers: [
     ApplicationHostingsController,
     SitesController,
@@ -26,4 +26,4 @@ import { ApplicationModule } from 'src/product/application.module';
   ],
   exports: ['IHostingRepository'],
 })
-export class HostingModule {}
+export class HostingModule { }

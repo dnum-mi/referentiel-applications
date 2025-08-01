@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { LinksService } from './links.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ApplicationLinksController } from './links.controller';
-import { MetadatasService } from 'src/metadatas/metadatas.service';
 import { ApplicationModule } from 'src/product/application.module';
+import { MetadataModule } from 'src/metadata/metadata.module';
 
 @Module({
-  imports: [ApplicationModule],
+  imports: [ApplicationModule, MetadataModule],
   controllers: [ApplicationLinksController],
-  providers: [LinksService, PrismaService, MetadatasService],
+  providers: [LinksService, PrismaService],
 })
-export class LinksModule {}
+export class LinksModule { }
