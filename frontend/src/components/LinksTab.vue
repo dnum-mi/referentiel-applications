@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, defineProps } from "vue";
 import type { ApplicationWithPerms, ExternalRessource } from "@/models/Application";
 import { useLinkStore } from "@/stores/linkStore";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
 import LinkForm from "./form/LinkForm.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
@@ -14,7 +14,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(["update:application"]);
-const toaster = useToaster();
+const toaster = useToasterStore();
 const linkStore = useLinkStore();
 const userStore = useUserStore();
 const linkModal = useModal();

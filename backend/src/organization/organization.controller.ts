@@ -9,11 +9,13 @@ import {
   Logger,
   Param,
   Query,
+  HttpCode,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse, ApiNotFoundResponse } from "@nestjs/swagger";
 import { OrganizationService } from "./organization.service";
 import {
   CreateOrganizationDto,
+  OrganizationDto,
   PatchOrganizationDto,
 } from "./dto/organization.dto";
 import { Organization } from "@prisma/client";
@@ -52,7 +54,11 @@ Vous devez fournir les informations suivantes :
 - **parentId**: L'identifiant de l'organisation parente
     `,
   })
-  @ApiResponse({ status: 201, description: "Organisation Créée avec succes" })
+  @ApiCreatedResponse({
+    status: 201,
+    description: "Organisation Créée avec succes",
+    type: OrganizationDto,
+  })
   public async create(
     @Body() CreateOrganizationDto: CreateOrganizationDto,
     @Request() req,
@@ -79,12 +85,28 @@ Vous devez fournir les informations suivantes :
     summary: "Récupérer une organisation spécifique par ID",
     description: "Ce endpoint permet de récupérer les détails complets d'une organisation en fonction de son identifiant unique.",
   })
-  public async findOne(@Param("id") id: string): Promise<Organization> {
-    return this.organizationService.findOne(id);
+  @ApiOkResponse({
+    status: 200,
+    description: "Organisation trouvée",
+    type: OrganizationDto,
+  })
+  @ApiNotFoundResponse({ description: "Organisation non trouvée" })
+  public async findOne(
+    @Param("id") id: string,
+  ): Promise<Organization> {
+    return await this.organizationService.findOne(id);
   }
 
   @Get()
-  @ApiResponse({ status: 200, description: "Liste les organisations" })
+  @ApiOperation({
+    summary: "Récupérer toutes les organisations",
+    description: "Ce endpoint permet de récupérer la liste de toutes les organisations.",
+  })
+  @ApiOkResponse({
+    description: "Liste des organisations",
+    type: OrganizationDto,
+    isArray: true,
+  })
   public async findAll(
     @Query() filters: OrganizationFilterDto,
   ): Promise<Record<string, Organization>> {
@@ -100,6 +122,10 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Mettre à jour une organisation",
   })
+  @ApiOkResponse({
+    description: "Organisation mise à jour",
+    type: OrganizationDto,
+  })
   public async update(
     @Param("id") id: string,
     @Body() data: PatchOrganizationDto,
@@ -109,6 +135,11 @@ Vous devez fournir les informations suivantes :
 
   @Delete("/:id")
   @ApiOperation({ summary: "Supprimer une organisation" })
+  @HttpCode(204)
+  @ApiNoContentResponse({
+    status: 204,
+    description: "Organisation supprimée",
+  })
   public async delete(@Param("id") id: string) {
     return this.organizationService.deleteSafe(id);
   }

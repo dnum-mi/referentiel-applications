@@ -40,7 +40,7 @@ watch(selectedActorTypeId, (newVal) => {
       searchStore.setFilter("actorType", selected.code);
     }
   } else {
-    searchStore.setFilter("actorType", null);
+    searchStore.setFilter("actorType", undefined);
   }
   searchStore.setFilter("page", 0);
   debouncedSearch();

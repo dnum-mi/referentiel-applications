@@ -40,15 +40,7 @@ export class ApplicationGuard implements CanActivate {
       action as APP_PERMISSIONS,
     );
 
-    if (!authorized) {
-      // TODO utiliser le logger de NestJS
-      console.log(
-        `User ${user.email} is not authorized to perform action ${action} on application ${params.applicationId}`,
-      );
-      return false;
-    }
-
-    return true;
+    return authorized;
   }
 
   private async getUserAppPermissions(

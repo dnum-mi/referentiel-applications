@@ -1,31 +1,30 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { AdminLevel, type User } from "@/models/user";
-import Users from "@/api/user";
-import AppPermsMatrixApi from "@/api/admin/app-perms-matrix";
-import useToaster from "@/composables/use-toaster";
-import Applications from "@/api/application";
+import { AdminLevel } from "@/models/user";
+import { useToasterStore } from "@/stores/toasterStore";
 import type { AppPermsMatrix } from "@/models/Application";
 import type { Tab } from "@/utils/types";
 import { AdminLevelOptions, AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
+import api from "@/api/index";
+import type { AppPermsDto, UserEntity } from "@/client/types.gen";
+import { useApplicationStore } from "@/stores/applicationStore.js";
 
 const errorMessages = {
   ERR_LOAD_USERS: "Erreur lors du chargement des utilisateurs",
   ERR_LOAD_APP_MATRIX: "Erreur lors du chargement de la matrice des permissions",
 };
 
-const toaster = useToaster();
-
-const users = ref<User[]>([]);
+const toaster = useToasterStore();
+const applicationStore = useApplicationStore();
+const users = ref<UserEntity[]>([]);
 const loading = ref(false);
 const errors = ref<Set<keyof typeof errorMessages>>(new Set());
 const isEditModalOpen = ref(false);
-const selectedUser = ref<User | null>(null);
+const selectedUser = ref<UserEntity | null>(null);
 const saving = ref(false);
 const searchQuery = ref("");
 const activeTab = ref(0);
 const appPermsMatrix = ref<AppPermsMatrix>();
-
 const editingAdminLevel = ref<AdminLevel>(AdminLevel.NONE);
 
 // Tabs consist of 4 main keys and an optional load function who comes always with a error key
@@ -83,31 +82,34 @@ watch(searchQuery, async (newQuery) => {
 });
 
 async function loadUsers() {
-  try {
-    const filters = searchQuery.value.trim() ? { search: searchQuery.value.trim() } : undefined;
-    users.value = (await Users.getAllUsers(filters)) || [];
+  const filters = searchQuery.value.trim() ? { search: searchQuery.value.trim() } : undefined;
+  const response = await api.userControllerFindAll({ query: filters });
+  if (response.response.ok && response.data) {
+    users.value = response.data;
     errors.value.delete("ERR_LOAD_USERS");
-  } catch (err) {
-    errors.value.add("ERR_LOAD_USERS");
-    console.error(err);
+    return;
   }
+  users.value = [];
+  errors.value.add("ERR_LOAD_USERS");
+  console.error(response.error);
 }
 
 async function loadAppPermissionsMatrix() {
-  try {
-    appPermsMatrix.value = await AppPermsMatrixApi.get();
+  const response = await api.actorTypeControllerGetMatrix();
+  if (response.response.ok && response.data) {
+    appPermsMatrix.value = response.data;
     errors.value.delete("ERR_LOAD_APP_MATRIX");
-  } catch (err) {
-    errors.value.add("ERR_LOAD_APP_MATRIX");
-    console.error(err);
+    return;
   }
+  errors.value.add("ERR_LOAD_APP_MATRIX");
+  console.error(response.error);
 }
 
 async function handleSearch() {
   await loadUsers();
 }
 
-function openEditModal(user: User) {
+function openEditModal(user: UserEntity) {
   selectedUser.value = user;
   editingAdminLevel.value = user.adminLevel;
   isEditModalOpen.value = true;
@@ -124,7 +126,10 @@ async function savePermissions() {
 
   saving.value = true;
   try {
-    await Users.updateUserAdminLevel(selectedUser.value.keycloakId, editingAdminLevel.value);
+    await api.userControllerUpdate({
+      path: { id: selectedUser.value.keycloakId },
+      body: { adminLevel: editingAdminLevel.value },
+    });
 
     toaster.addSuccessMessage("Permissions mises à jour avec succès");
     closeEditModal();
@@ -140,7 +145,7 @@ async function savePermissions() {
 async function updateAllApplicationsQuality() {
   loading.value = true;
   try {
-    const message = await Applications.patchApplicationsQuality();
+    const message = await applicationStore.patchApplicationsQuality();
     toaster.addSuccessMessage(message);
   } catch (err) {
     toaster.addErrorMessage("Erreur lors de la mise à jour des IQ");
@@ -150,16 +155,17 @@ async function updateAllApplicationsQuality() {
   }
 }
 
-function saveAppPermsMatrix(matrix: AppPermsMatrix) {
-  AppPermsMatrixApi.update(matrix)
-    .then((data) => {
-      toaster.addSuccessMessage("Matrice des permissions mise à jour avec succès");
-      appPermsMatrix.value = data;
-    })
-    .catch((err) => {
-      toaster.addErrorMessage("Erreur lors de la mise à jour de la matrice des permissions");
-      console.error(err);
-    });
+async function saveAppPermsMatrix(body: AppPermsDto[]) {
+  const response = await api.actorTypeControllerUpdateMatrix({
+    body,
+  });
+  if (!response.response.ok) {
+    toaster.addErrorMessage("Erreur lors de la mise à jour de la matrice des permissions");
+    console.error(response.error);
+    return;
+  }
+  toaster.addSuccessMessage("Matrice des permissions mise à jour avec succès");
+  await loadAppPermissionsMatrix();
 }
 </script>
 
@@ -224,7 +230,9 @@ function saveAppPermsMatrix(matrix: AppPermsMatrix) {
                       <code>{{ user.keycloakId }}</code>
                     </td>
                     <td>
-                      {{ new Date(user.lastLogin).toLocaleString() }}
+                      <template v-if="user.lastLogin">
+                        {{ new Date(user.lastLogin).toLocaleString() }}
+                      </template>
                     </td>
                     <td>
                       <span class="fr-badge fr-mr-1w" :class="AdminLevelWordingBadgeClass[user.adminLevel]">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineProps, defineEmits } from "vue";
+import { ref, computed, defineProps } from "vue";
 import type { PropType } from "vue";
 import type { ExternalRessource } from "@/models/Application";
 import { linkTypesDict } from "@/composables/use-dictionary";

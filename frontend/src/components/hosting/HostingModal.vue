@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, watch, onMounted, computed } from "vue";
-import type { Hosting, HostingOption } from "@/models/Hosting";
 import { useHostingStore } from "@/stores/hostingStore";
-import useToaster from "@/composables/use-toaster";
-import HostingOptions from "@/api/hosting-options";
+import { useToasterStore } from "@/stores/toasterStore";
+import type { HostingDto, HostingOptionDto } from "@/client/types.gen";
 
 const props = defineProps<{
   applicationId: string
-  initialHosting?: Hosting
+  initialHosting?: HostingDto
 }>();
 
 const emit = defineEmits(["close", "hosting-created", "hosting-updated"]);
@@ -17,14 +16,14 @@ const hostingForm = ref({
   label: "",
 });
 
-const hostingOptionsList = ref<HostingOption[]>([]);
+const hostingOptionsList = ref<HostingOptionDto[]>([]);
 const isLoadingOptions = ref(false);
 const hostingOptionSearch = ref("");
 const isSubmitting = ref(false);
 const hostingStore = useHostingStore();
-const toaster = useToaster();
+const toaster = useToasterStore();
 
-function formatOptionText(option: HostingOption): string {
+function formatOptionText(option: HostingOptionDto): string {
   return [option.provider, option.platform, option.site, option.building || "", option.room || ""].filter(Boolean).join(" - ");
 }
 
@@ -43,7 +42,7 @@ watch(hostingOptionSearch, (newValue) => {
 async function fetchHostingOptions() {
   try {
     isLoadingOptions.value = true;
-    hostingOptionsList.value = await HostingOptions.getAll();
+    hostingOptionsList.value = await hostingStore.getAllHostingOptions();
   } catch (error) {
     console.error("Error fetching hosting options:", error);
     toaster.addErrorMessage("Erreur lors du chargement des options d'hébergement.");
@@ -89,11 +88,11 @@ function handleSubmit() {
     };
 
     let result;
-    if (props.initialHosting) {
-      result = hostingStore.updateHosting(props.applicationId, formData as Hosting);
+    if (formData.id) {
+      result = hostingStore.updateHosting(props.applicationId, formData.id, formData);
       emit("hosting-updated", result);
     } else {
-      result = hostingStore.createHosting(props.applicationId, formData as Hosting);
+      result = hostingStore.createHosting(props.applicationId, formData);
       emit("hosting-created", result);
     }
     // emit("close");

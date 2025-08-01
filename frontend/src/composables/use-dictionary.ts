@@ -1,3 +1,5 @@
+import type { ApplicationPriorityRestart } from "@/client/types.gen.js";
+
 export const statusDictionary = {
   in_pending: "En attente",
   in_progress: "En cours",
@@ -103,7 +105,7 @@ export const restartPrioritiesConfig = {
     shortLabel: "R3",
     tooltip: "Les applications qui peuvent rester indisponibles sans conséquences opérationnelles (travaux en HO seulement)",
   },
-} as const;
+} as const satisfies Record<ApplicationPriorityRestart, { type: string, label: string, shortLabel: string, tooltip: string }>;
 
 export const statusApplicationDictionary = {
   under_construction: "En construction",
@@ -115,7 +117,7 @@ export const statusApplicationDictionary = {
 };
 
 export const priorityRestartLabelsOptions = Object.entries(restartPrioritiesConfig).map(([key, value]) => ({
-  value: key,
+  value: key as ApplicationPriorityRestart,
   text: value.label,
 }));
 

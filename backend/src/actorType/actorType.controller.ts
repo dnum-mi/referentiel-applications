@@ -5,15 +5,15 @@ import {
   Patch,
   Delete,
   Body,
-  Request,
   Logger,
   Param,
   UseGuards,
+  HttpCode,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse } from "@nestjs/swagger";
 import { ActorTypeService } from "./actorType.service";
-import { CreateActorTypeDto, PatchActorTypeDto } from "./dto/actorType.dto";
-import { ActorType, AppPermissions } from "@prisma/client";
+import { ActorTypeDto, CreateActorTypeDto, PatchActorTypeDto } from "./dto/actorType.dto";
+import { ActorType } from "@prisma/client";
 import { AppPermsDto } from "./dto/app-perms-matrix.dto";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
@@ -34,7 +34,6 @@ export class ActorTypeController {
    * Cette méthode permet de créer un type d'acteur en utilisant les données fournies
    *
    * @param CreateActorTypeDto Les données nécessaires pour créer un nouveau type d'acteur
-   * @param req La requête contenant le token de l'utilisateur authentifié
    *
    * @returns Le nouveau type d'acteur créé
    * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
@@ -53,27 +52,29 @@ Vous devez fournir les informations suivantes :
 - **description**: La description du type d’acteur
     `,
   })
-  @ApiResponse({ status: 201, description: "type d’acteur créé avec succes" })
+  @HttpCode(201)
+  @ApiCreatedResponse({
+    description: "type d’acteur créé avec succes",
+    type: ActorTypeDto,
+  })
   public async create(
     @Body() CreateActorTypeDto: CreateActorTypeDto,
-    @Request() req,
   ) {
-    Logger.log({
-      message: "Début de la création du type d'acteur",
-      userId: req.user.keycloakId,
-      action: "create",
-    });
-
-    return await this.actorTypeService.create(CreateActorTypeDto);
+    return this.actorTypeService.create(CreateActorTypeDto);
   }
 
   @Get("/perms-matrix")
   @RequiredAdminLevel(AdminLevel.ADMIN)
-  @ApiResponse({
-    status: 200,
+  @ApiOperation({
+    summary: "Récupérer la matrice des permissions",
+    description: "Cet endpoint permet de récupérer la matrice des permissions pour les types d’acteurs.",
+  })
+  @ApiOkResponse({
+    type: AppPermsDto,
+    isArray: true,
     description: "Liste les types d’acteurs par id et de leurs permissions",
   })
-  public async getMatrix(): Promise<AppPermissions[]> {
+  public async getMatrix(): Promise<AppPermsDto[]> {
     return this.actorTypeService.getPermsMatrix();
   }
 
@@ -87,30 +88,52 @@ Vous devez fournir les informations suivantes :
    */
   @Get(":id")
   @RequiredAdminLevel(AdminLevel.NONE)
+  @ApiOkResponse({
+    type: ActorTypeDto,
+    description: "Récupère un type d’acteur spécifique par ID",
+  })
   @ApiOperation({
     summary: "Récupérer un type d’acteur spécifique par ID",
     description: "Cet endpoint permet de récupérer les détails complets d'un type d’acteur en fonction de son identifiant unique.",
   })
   public async findOne(@Param("id") id: string): Promise<ActorType> {
-    return await this.actorTypeService.findOne(id);
+    return this.actorTypeService.findOne(id);
   }
 
   @Patch("/perms-matrix")
-  @ApiResponse({
-    status: 200,
+  @ApiOperation({
+    summary: "Mettre à jour la matrice des permissions",
+    description: "Cet endpoint permet de mettre à jour la matrice des permissions pour les types d’acteurs.",
+  })
+  @ApiOkResponse({
+    type: AppPermsDto,
+    isArray: true,
     description: "Met à jour la matrice des permissions",
+  })
+  @ApiBody({
+    type: AppPermsDto,
+    isArray: true,
+    description: "Liste des permissions à mettre à jour pour les types d’acteurs",
   })
   public async updateMatrix(
     @Body() appPermsMatrix: AppPermsDto[],
-  ): Promise<AppPermissions[]> {
+  ): Promise<AppPermsDto[]> {
     return this.actorTypeService.updatePermsMatrix(appPermsMatrix);
   }
 
   @Get()
   @RequiredAdminLevel(AdminLevel.NONE)
-  @ApiResponse({ status: 200, description: "Liste les types d’acteurs" })
+  @ApiOperation({
+    summary: "Récupérer tous les types d’acteurs",
+    description: "Ce endpoint permet de récupérer la liste de tous les types d’acteurs disponibles.",
+  })
+  @ApiOkResponse({
+    description: "Liste les types d’acteurs",
+    type: ActorTypeDto,
+    isArray: true,
+  })
   public async findAll(): Promise<ActorType[]> {
-    return await this.actorTypeService.findAll();
+    return this.actorTypeService.findAll();
   }
 
   /**
@@ -131,6 +154,10 @@ Vous devez fournir l'identifiant du type d’acteur dans l'URL et les nouvelles 
 Les données de mise à jour doivent correspondre aux champs
     `,
   })
+  @ApiOkResponse({
+    type: PatchActorTypeDto,
+    description: "Type d’acteur mis à jour avec succès",
+  })
   public async update(
     @Param("id") id: string,
     @Body() actorTypeToUpdate: PatchActorTypeDto,
@@ -147,7 +174,11 @@ Les données de mise à jour doivent correspondre aux champs
   @Delete(":id")
   @RequiredAdminLevel(AdminLevel.WRITE)
   @ApiOperation({ summary: "Supprimer un type d’acteur" })
+  @HttpCode(204)
+  @ApiNoContentResponse({
+    description: "Type d’acteur supprimé avec succès",
+  })
   public async delete(@Param("id") id: string) {
-    return await this.actorTypeService.delete(id);
+    return this.actorTypeService.delete(id);
   }
 }

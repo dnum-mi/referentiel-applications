@@ -67,7 +67,11 @@ export class CreateApplicationDto {
   @IsString({ each: true })
   targetPopulations?: string[];
 
-  @ApiProperty({ enum: priorityRestart, required: false })
+  @ApiProperty({
+    enum: priorityRestart,
+    required: false,
+    enumName: "ApplicationPriorityRestart",
+  })
   @IsOptional()
   @IsEnum(priorityRestart)
   priorityRestart?: priorityRestart;
@@ -99,6 +103,7 @@ export class CreateApplicationDto {
     enum: Status,
     description: "Statut de cycle de vie (défaut under_construction)",
     required: false,
+    enumName: "ApplicationStatus",
   })
   @IsOptional()
   @IsEnum(Status)

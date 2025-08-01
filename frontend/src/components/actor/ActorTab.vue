@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, onBeforeMount, defineProps, defineEmits } from "vue";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
 import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import ActorForm from "./ActorForm.vue";
 
-import type { Actor } from "@/models/Actor";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
+import type { CreateActorDto } from "@/client/types.gen";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const emit = defineEmits(["update:application"]);
@@ -17,7 +17,7 @@ const emit = defineEmits(["update:application"]);
 const actorStore = useActorStore();
 const userStore = useUserStore();
 const actorTypeStore = useActorTypeStore();
-const toaster = useToaster();
+const toaster = useToasterStore();
 const actorModal = useModal();
 
 const selectedActorIds = ref<string[]>([]);
@@ -57,12 +57,16 @@ onBeforeMount(async () => {
   await actorTypeStore.fetchAll();
 });
 
-async function handleSaveActors(actor: Actor) {
+async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
   loading.value = true;
   actorModal.closeModal();
 
   try {
-    await actorStore.saveActor(actor);
+    if (!actor.id) {
+      await actorStore.createActor(actor, props.application.id);
+    } else {
+      await actorStore.updateActor(actor, props.application.id, actor.id);
+    }
     await actorStore.fetchActorsByApplication(props.application.id);
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
     emit("update:application", props.application);

@@ -369,3 +369,6 @@ auto-imports.d.ts
 .mongo-dev/
 
 components.d.ts
+
+# autogen client
+frontend/src/client

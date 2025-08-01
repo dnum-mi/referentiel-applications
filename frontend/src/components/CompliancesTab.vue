@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, defineProps, defineEmits } from "vue";
 import type { ApplicationWithPerms, Compliance } from "@/models/Application";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import { testResultsDict, backupStorageDict, durationHoursOptions } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import { useComplianceStore } from "@/stores/complianceStore";
@@ -15,7 +15,7 @@ const emit = defineEmits<{
   "update:application": [value: ApplicationWithPerms]
 }>();
 
-const toaster = useToaster();
+const toaster = useToasterStore();
 
 const userStore = useUserStore();
 const complianceStore = useComplianceStore();

@@ -2,7 +2,9 @@ import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "../src/app.module";
-import { PrismaService } from "src/prisma/prisma.service";
+import { setupSwagger } from "../src/swagger-config";
+import { getPrismaClient } from "./fakers/prisma";
+import type { PrismaClient } from "@prisma/client";
 
 export async function setupApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -10,17 +12,18 @@ export async function setupApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
+  setupSwagger(app, false);
   await app.init();
   return app;
 }
 
 export function setupTestSuite() {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let prisma: PrismaClient;
 
   beforeAll(async () => {
     app = await setupApp();
-    prisma = app.get(PrismaService);
+    prisma = getPrismaClient();
   });
 
   afterAll(async () => {

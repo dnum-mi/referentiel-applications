@@ -11,26 +11,28 @@ import {
   Delete,
   Res,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from "@nestjs/common";
 import { ApplicationService } from "./application.service";
 
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiForbiddenResponse, ApiAcceptedResponse, ApiNotFoundResponse, ApiNoContentResponse } from "@nestjs/swagger";
 import { ApplicationExportService } from "./export.service";
 import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from "./application/dto/create-application.dto";
 import { ApplicationSearchDto } from "./application/dto/search-application.dto";
-import { GetApplicationDto } from "./application/dto/get-application.dto";
+import { ApplicationDto, CountByIqDto, CountByMonthDto, ApplicationSearchResultDto } from "./application/dto/get-application.dto";
 import { Response } from "express";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationRights } from "./application/dto/application-rights.dto";
 import { User } from "src/common/decorators/user.decorator";
 import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
 import { AdminGuard } from "src/common/guards/admin.guard";
+import { APP_PERMISSIONS, AppPermissionsValues } from "src/common/utils/types";
 
 @ApiTags("applications")
 @Controller("applications")
@@ -64,17 +66,14 @@ Vous devez fournir les informations suivantes :
   - Champs spécifiques selon le type de conformité (DIMA, PDMA, HOMOLOGATION, RGAA, DSFR, RGPD).
     `,
   })
-  @ApiResponse({ status: 201, description: "Application créée avec succès." })
-  @ApiResponse({ status: 404, description: "Metadata ou parent non trouvé." })
+  @ApiCreatedResponse({
+    description: "Application créée avec succès.",
+    type: ApplicationDto,
+  })
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
     @UserId() userId: string,
   ) {
-    Logger.log({
-      message: "Début de la création de l'application",
-      userId,
-      action: "create",
-    });
     const newApplication = await this.applicationService.createApplication(
       userId,
       createApplicationDto,
@@ -86,7 +85,11 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Compte le nombre d'applications hors statut supprimé",
   })
-  async count() {
+  @ApiOkResponse({
+    description: "Nombre d'applications actives",
+    type: Number,
+  })
+  async count(): Promise<number> {
     return this.applicationService.countActiveApplications();
   }
 
@@ -94,7 +97,12 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Liste le nombre d'applications sur les 6 derniers mois",
   })
-  async countByMonth() {
+  @ApiOkResponse({
+    description: "Nombre d'applications par mois",
+    type: CountByMonthDto,
+    isArray: true,
+  })
+  async countByMonth(): Promise<CountByMonthDto[]> {
     return this.applicationService.getApplicationsCountByMonth();
   }
 
@@ -103,7 +111,12 @@ Vous devez fournir les informations suivantes :
     summary:
       "Liste le nombre d'applications par indice de qualité (de 0% à 100%)",
   })
-  async countByIq() {
+  @ApiOkResponse({
+    description: "Nombre d'applications par indice de qualité",
+    type: CountByIqDto,
+    isArray: true,
+  })
+  async countByIq(): Promise<CountByIqDto[]> {
     return this.applicationService.getApplicationsCountByIq();
   }
 
@@ -114,15 +127,15 @@ Vous devez fournir les informations suivantes :
       Supporte tous les types de filtres : label, shortName, tags, priorityRestart, hostingSearch, etc.
       Inclut la pagination et le tri.`,
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description:
       "Liste des applications correspondant aux critères de recherche avec pagination.",
+    type: ApplicationSearchResultDto,
   })
   async search(
     @Query() searchParams: ApplicationSearchDto,
     @User() user: UserEntity,
-  ) {
+  ): Promise<ApplicationSearchResultDto> {
     return this.applicationService.search(searchParams, user);
   }
 
@@ -132,10 +145,20 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Lister les droits de l'utilisateur sur l'application",
   })
+  @ApiOkResponse({
+    description: "Droits de l'utilisateur sur l'application",
+    schema: {
+      type: "array",
+      items: {
+        type: "string",
+        enum: AppPermissionsValues,
+      },
+    },
+  })
   getMyPerms(
     @Param("applicationId") id: string,
     @User() user: UserEntity,
-  ): Promise<ApplicationRights> {
+  ): Promise<APP_PERMISSIONS[]> {
     return this.applicationService.getMyPerms(id, user.email);
   }
 
@@ -149,12 +172,18 @@ Vous devez fournir les informations suivantes :
       Si aucun filtre n'est appliqué, toutes les applications sont exportées.
       Accès limité aux utilisateurs avec privilège admin.`,
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "Export Excel des applications",
+    content: {
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+        schema: {
+          type: "string",
+          format: "binary",
+        },
+      },
+    },
   })
-  @ApiResponse({
-    status: 403,
+  @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",
   })
   async exportExcel(
@@ -164,8 +193,8 @@ Vous devez fournir les informations suivantes :
     const buffer
       = Object.keys(searchParams).length > 0
         ? await this.applicationExportService.exportSearchResultsToExcel(
-          searchParams,
-        )
+            searchParams,
+          )
         : await this.exportApplicationsUseCase.execute();
 
     res.setHeader(
@@ -190,14 +219,14 @@ Vous devez fournir les informations suivantes :
       Cette nouvelle version utilise une vue optimisée qui inclut tous les acteurs, conformités et hébergements.
       Accès limité aux utilisateurs avec privilège admin.`,
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "Export CSV détaillé des applications",
+    type: String,
   })
   async exportCsv(
     @Query() searchParams: ApplicationSearchDto,
     @Res() res: Response,
-  ) {
+  ): Promise<void> {
     const result
       = await this.applicationExportService.exportApplications(searchParams);
 
@@ -220,10 +249,14 @@ Ce endpoint permet de récupérer les détails complets d'une application en fon
 Le paramètre **id** doit être fourni dans l'URL.
     `,
   })
+  @ApiOkResponse({
+    description: "Application trouvée avec succès",
+    type: ApplicationDto,
+  })
   async findOne(
     @Param("applicationId") id: string,
-  ): Promise<GetApplicationDto> {
-    return await this.applicationService.getApplicationById(id);
+  ): Promise<ApplicationDto> {
+    return this.applicationService.getApplicationById(id);
   }
 
   @Get()
@@ -236,12 +269,16 @@ Ce endpoint permet de récupérer la liste de toutes les applications existantes
 Aucun paramètre n'est requis pour accéder à cette liste.
     `,
   })
-  @ApiResponse({ status: 200, description: "Liste des applications" })
-  async findAll() {
-    return await this.applicationService.getApplications();
+  @ApiOkResponse({
+    description: "Liste des applications",
+    type: ApplicationDto,
+    isArray: true,
+  })
+  async findAll(): Promise<ApplicationDto[]> {
+    return this.applicationService.getApplications();
   }
 
-  @Patch("data-quality")
+  @Get("data-quality/update")
   @UseGuards(AdminGuard)
   @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
@@ -250,15 +287,17 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     Seulement accessible par les administrateurs.
     `,
   })
+  @ApiAcceptedResponse({
+    description: "Mise à jour des indices de qualité en cours...",
+    type: String,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @HttpCode(HttpStatus.ACCEPTED)
   async updateAllApplicationsQuality() {
-    Logger.log({
-      message: "Début de la modification des indices de qualités",
-      action: "patch",
-    });
-
     this.applicationService.updateAllApplicationsQualityInBackground();
     return {
-      statusCode: 202,
       message: "Mise à jour des indices de qualité en cours...",
     };
   }
@@ -272,11 +311,15 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     Vous devez fournir l'identifiant de l'application dans l'URL et les nouvelles données dans le corps de la requête. Les données de mise à jour doivent correspondre aux champs.
     `,
   })
+  @ApiOkResponse({
+    description: "Application mise à jour avec succès",
+    type: ApplicationDto,
+  })
   async update(
     @UserId() userId: string,
     @Param("applicationId") id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
-  ): Promise<PatchApplicationDto> {
+  ): Promise<ApplicationDto> {
     Logger.log({
       message: "Début de la modification de l'application",
       applicationToUpdate,
@@ -297,12 +340,14 @@ Aucun paramètre n'est requis pour accéder à cette liste.
     summary: "Supprimer une application",
     description: "Supprime une application par son ID.",
   })
-  @ApiResponse({
-    status: 200,
+  @ApiNoContentResponse({
     description: "Application supprimée avec succès.",
   })
-  @ApiResponse({ status: 404, description: "Application non trouvée." })
-  async remove(@Param("applicationId") id: string) {
+  @ApiNotFoundResponse({ description: "Application non trouvée." })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @Param("applicationId") id: string,
+  ) {
     await this.applicationService.deleteApplication(id);
     return { message: "Application supprimée avec succès." };
   }

@@ -51,7 +51,7 @@ watch([() => searchStore.page, () => searchStore.limit], () => {
 onMounted(async () => {
   updateMode();
   window.addEventListener("resize", updateMode);
-  statsStore.fetchTotalApplications();
+  statsStore.countApplications();
   searchStore.searchApplications();
 });
 

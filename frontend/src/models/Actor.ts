@@ -8,7 +8,7 @@ export interface Actor {
   lastname?: string
   userId?: string
   organizationId?: string | null
-  applicationId?: string
+  applicationId: string
   actorTypeId?: string | null
   user?: User
   externalOrganization?: External

@@ -4,7 +4,6 @@ import { getToken } from "./getToken";
 import { UserFaker } from "./fakers/user.faker";
 import { ApplicationFaker } from "./fakers/application.faker";
 import { LinkFaker } from "./fakers/link.faker";
-import { getPrismaClient } from "./fakers/prisma";
 import type { AsyncReturnType } from "src/utils/types.util";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -12,7 +11,6 @@ import { AdminLevel } from "src/user/entities/user.entity";
 
 describe("Links", () => {
   const app = setupTestSuite();
-  const prisma = getPrismaClient();
   let application: { id: string };
   let user: { keycloakId: string };
   let TOKEN: string;
@@ -21,9 +19,6 @@ describe("Links", () => {
     user = await UserFaker.create(AdminLevel.WRITE);
     TOKEN = await getToken(user);
     application = await ApplicationFaker.create(user);
-  });
-  afterAll(async () => {
-    prisma.$disconnect();
   });
 
   it("/GET applications/:applicationId/links", async () => {
@@ -63,7 +58,7 @@ describe("Links", () => {
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/links/${link.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(204);
   });
 });
 
@@ -72,7 +67,6 @@ describe("application guard", () => {
   let appOwner: { keycloakId: string, email: string };
   let appActor: { keycloakId: string, email: string };
   let TOKEN: string;
-  const prisma = getPrismaClient();
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
 
   beforeAll(async () => {
@@ -84,7 +78,6 @@ describe("application guard", () => {
 
   afterAll(async () => {
     await actorType.delete();
-    prisma.$disconnect();
   });
 
   it("permissions testing", async () => {
@@ -168,6 +161,6 @@ describe("application guard", () => {
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/links/${linkId}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(204);
   });
 });

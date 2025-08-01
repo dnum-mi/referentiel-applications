@@ -1,32 +1,51 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import type { Relation } from "@/models/Application";
-import Relations from "@/api/relation";
+import api from "@/api/index";
+import type { RelationDto, RelationType } from "@/client/types.gen";
 
 export const useRelationStore = defineStore("relationStore", () => {
-  const relations = ref<(Relation & { isSource: boolean })[]>([]);
+  const relations = ref<(RelationDto & { isSource: boolean })[]>([]);
   const relationsAsSource = computed(() => relations.value.filter(rel => rel.isSource));
   const relationsAsTarget = computed(() => relations.value.filter(rel => !rel.isSource));
 
   async function fetchRelationsByApplication(applicationId: string) {
-    relations.value = (await Relations.getAllForApplication(applicationId)).map(rel => ({
+    const response = await api.relationControllerFindAll({
+      path: { applicationId },
+    });
+    if (!response.response.ok) {
+      throw new Error("Failed to fetch relations");
+    }
+    if (!response.data) {
+      relations.value = [];
+      return;
+    }
+    // Map the relations to include isSource property based on applicationId
+    relations.value = response.data.map(rel => ({
       ...rel,
       isSource: rel.applicationSourceId === applicationId,
     }));
   }
 
-  async function createRelation(applicationSourceId: string, applicationTargetId: string, type: string) {
-    await Relations.create(applicationSourceId, applicationTargetId, type);
+  async function createRelation(applicationSourceId: string, applicationTargetId: string, type: RelationType) {
+    await api.relationControllerCreate({
+      path: { applicationId: applicationSourceId },
+      body: { applicationTargetId, type },
+    });
     await fetchRelationsByApplication(applicationSourceId);
   }
 
-  async function updateRelation(applicationSourceId: string, id: string, data: Partial<{ type: string, applicationTargetId: string }>) {
-    await Relations.update(applicationSourceId, id, data);
+  async function updateRelation(applicationSourceId: string, id: string, data: { type: RelationType, applicationTargetId: string }) {
+    await api.relationControllerUpdate({
+      path: { applicationId: applicationSourceId, id },
+      body: data,
+    });
     return fetchRelationsByApplication(applicationSourceId);
   }
 
   async function deleteRelation(applicationSourceId: string, id: string) {
-    await Relations.delete(applicationSourceId, id);
+    await api.relationControllerDelete({
+      path: { applicationId: applicationSourceId, id },
+    });
     return fetchRelationsByApplication(applicationSourceId);
   }
 

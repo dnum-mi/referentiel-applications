@@ -8,6 +8,7 @@ import type { Prisma, ApplicationsExport } from "@prisma/client";
 
 import { ApplicationSearchDto } from "./../../application/dto/search-application.dto";
 import { ApplicationWithAllRelations } from "src/product/types/application.type";
+import { ApplicationDto } from "src/product/application/dto/get-application.dto.js";
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
@@ -47,7 +48,7 @@ export class ApplicationRepository implements IApplicationRepository {
   async findApplicationsBySearch(
     dto: ApplicationSearchDto,
     ownership?: { actorEmail?: string, ownerId?: string },
-  ): Promise<{ results: any[], total: number }> {
+  ): Promise<{ results: ApplicationDto[], total: number }> {
     const {
       shortName,
       tag,
@@ -104,6 +105,36 @@ export class ApplicationRepository implements IApplicationRepository {
                   mode: "insensitive" as const,
                 },
               },
+            },
+          },
+        ],
+      });
+    }
+
+    // Label filter - search both main label field and labels table
+    if (dto.search) {
+      where.AND.push({
+        OR: [
+          {
+            label: {
+              contains: dto.search,
+              mode: "insensitive" as const,
+            },
+          },
+          {
+            labels: {
+              some: {
+                value: {
+                  contains: dto.label,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          },
+          {
+            shortName: {
+              contains: dto.search,
+              mode: "insensitive" as const,
             },
           },
         ],
@@ -328,7 +359,8 @@ export class ApplicationRepository implements IApplicationRepository {
     });
   }
 
-  async findByLink(link: string): Promise<any[]> {
+  // TODO should not exist and me merged with findApplicationsBySearch
+  async findByLink(link: string): Promise<ApplicationDto[]> {
     const results = await this.prisma.externalRessource.findMany({
       where: { link },
       include: { application: true },

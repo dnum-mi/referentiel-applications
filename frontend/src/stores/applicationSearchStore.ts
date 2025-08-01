@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
-import { ref, reactive, computed } from "vue";
-import { call } from "@/api/callService";
+import { ref, computed } from "vue";
+import api from "@/api/index.js";
+import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
+
+type Filters = Exclude<ApplicationControllerSearchData["query"], undefined>;
 
 export const useApplicationSearchStore = defineStore("applicationSearchStore", () => {
   const results = ref<any[]>([]);
@@ -8,83 +11,69 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
-  const filters = reactive({
-    label: "",
-    shortName: "",
-    tag: [],
-    link: "",
-    priorityRestart: [],
-    status: [] as string[],
+  const initialFilters = {
+    label: undefined,
+    shortName: undefined,
+    tag: undefined,
+    link: undefined,
+    priorityRestart: undefined,
+    status: undefined,
     page: 0,
     limit: 15,
     sortBy: "label",
     order: "asc",
-    hostingSearch: "",
-    organizationLabel: "",
-    actorType: "",
-    iqGte: 0,
-    iqLte: 100,
-  });
+    hostingSearch: undefined,
+    organizationLabel: undefined,
+    actorType: undefined,
+    iqGte: undefined,
+    iqLte: undefined,
+    search: undefined,
+  } as const satisfies Filters;
+
+  const filters = ref<Filters>(initialFilters);
 
   const page = computed({
-    get: () => filters.page,
-    set: val => (filters.page = val),
+    get: () => filters.value.page,
+    set: val => (filters.value.page = val),
   });
 
   const limit = computed({
-    get: () => filters.limit,
-    set: val => (filters.limit = val),
+    get: () => filters.value.limit,
+    set: val => (filters.value.limit = val),
   });
 
-  function setFilter(key: keyof typeof filters, value: any) {
-    filters[key] = value;
+  function setFilter<T extends keyof Filters>(key: T, value: Filters[T]) {
+    filters.value[key] = value;
   }
 
   function resetFilters() {
-    Object.assign(filters, {
-      label: "",
-      shortName: "",
-      tag: [],
-      link: "",
-      priorityRestart: [],
-      status: [],
-      page: 0,
-      limit: 15,
-      sortBy: "label",
-      order: "asc",
-      hostingSearch: "",
-      organizationLabel: "",
-      actorType: [],
-      iqGte: 0,
-      iqLte: 100,
-    });
+    filters.value = { ...initialFilters };
   }
 
-  async function searchApplications(customFilters = {}) {
+  async function searchApplications(customFilters?: Filters, store: boolean = true) {
     isLoading.value = true;
     error.value = null;
 
     try {
-      const rawQuery = { ...filters, ...customFilters };
+      const query = customFilters || filters.value;
 
-      const query = Object.fromEntries(
-        Object.entries(rawQuery).filter(([key, val]) => {
-          if (["page", "limit", "sortBy", "order"].includes(key)) return true;
-          if (val === "" || val === null || val === undefined) return false;
-          if (Array.isArray(val) && val.length === 0) return false;
-          return true;
-        }),
-      );
+      const response = await api.applicationControllerSearch({
+        query,
+      });
+      if (!response.response.ok || !response.data) {
+        throw new Error("Erreur lors de la recherche d'applications");
+      }
+      console.log("🧾 Résultat API /applications/search →", response.data);
+      console.log("📊 Total applications retournées :", response.data.total);
 
-      const res = await call("applicationSearch", undefined, query);
-
-      console.log("🧾 Résultat API /applications/search →", res);
-      console.log("📊 Total applications retournées :", res.total);
-
-      results.value = res.results;
-      total.value = res.total;
+      if (store) {
+        results.value = response.data.results;
+        total.value = response.data.total;
+      }
+      return response.data;
     } catch (err: any) {
       error.value = err?.message || "Erreur inconnue";
+      throw err;
     } finally {
       isLoading.value = false;
     }
@@ -98,6 +87,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     limit,
     isLoading,
     error,
+    initialFilters,
     searchApplications,
     setFilter,
     resetFilters,

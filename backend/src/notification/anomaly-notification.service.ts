@@ -26,7 +26,6 @@ export class AnomalyNotificationService extends BaseService<AnomalyNotification>
           connect: { keycloakId: data.notifierId },
         },
         description: data.description,
-        status: data.status,
       },
     });
   }

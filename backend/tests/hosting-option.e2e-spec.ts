@@ -3,19 +3,14 @@ import { setupTestSuite } from "./setup";
 import { getToken } from "./getToken";
 import { UserFaker } from "./fakers/user.faker";
 import { HostingOptionFaker } from "./fakers/hosting-option.faker";
-import { getPrismaClient } from "./fakers/prisma";
 import { AdminLevel } from "src/user/entities/user.entity";
 
 describe("HostingOptions", () => {
   const app = setupTestSuite();
   let user: { keycloakId: string };
-  const prisma = getPrismaClient();
 
   beforeAll(async () => {
     user = await UserFaker.create(AdminLevel.WRITE);
-  });
-  afterAll(async () => {
-    prisma.$disconnect();
   });
 
   it("/GET hosting-options", async () => {
@@ -95,7 +90,7 @@ describe("HostingOptions", () => {
     await request(app().getHttpServer())
       .delete(`/hosting-options/${hostingOption.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(204);
   });
 
   it("/GET hosting-options/sites", async () => {
