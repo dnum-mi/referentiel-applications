@@ -1,18 +1,18 @@
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Prisma, Application } from '@prisma/client';
+import { PrismaService } from "src/prisma/prisma.service";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { Prisma, Application } from "@prisma/client";
 import {
   CreateApplicationDto,
   PatchApplicationDto,
-} from './application/dto/create-application.dto';
-import { ApplicationRepository } from './infrastructure/repository/application.repository';
-import { ApplicationSearchDto } from './application/dto/search-application.dto';
-import { LabelsService } from 'src/labels/labels.service';
-import { MetadataService } from 'src/metadata/metadata.service';
-import { calculateIQ } from 'src/common/utils/quality.utils';
-import { ApplicationRights } from './application/dto/application-rights.dto';
-import { APP_PERMISSIONS } from 'src/common/utils/types';
-import { AdminLevel, UserEntity } from 'src/user/entities/user.entity';
+} from "./application/dto/create-application.dto";
+import { ApplicationRepository } from "./infrastructure/repository/application.repository";
+import { ApplicationSearchDto } from "./application/dto/search-application.dto";
+import { LabelsService } from "src/labels/labels.service";
+import { MetadataService } from "src/metadata/metadata.service";
+import { calculateIQ } from "src/common/utils/quality.utils";
+import { ApplicationRights } from "./application/dto/application-rights.dto";
+import { APP_PERMISSIONS } from "src/common/utils/types";
+import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -62,9 +62,9 @@ export class ApplicationService {
   }
 
   public async update(params: {
-    where: Prisma.ApplicationWhereUniqueInput;
-    data: PatchApplicationDto;
-    ownerId: string;
+    where: Prisma.ApplicationWhereUniqueInput
+    data: PatchApplicationDto
+    ownerId: string
   }): Promise<Application> {
     const { where, data, ownerId } = params;
     const applicationUpdates: Prisma.ApplicationUpdateInput = {};
@@ -84,17 +84,17 @@ export class ApplicationService {
       await this.metadataService.createMetadata({
         applicationId: updatedApplication.id,
         createdById: ownerId,
-        title: `des informations générales`,
+        title: "des informations générales",
         fields: {
-          label: 'libellé',
-          shortName: 'nom court',
-          logo: 'logo',
-          status: 'statut',
-          description: 'description',
-          targetPopulations: 'populations cibles',
-          priorityRestart: 'priorité de redémarrage',
-          tags: 'tags',
-          purposes: 'objectifs',
+          label: "libellé",
+          shortName: "nom court",
+          logo: "logo",
+          status: "statut",
+          description: "description",
+          targetPopulations: "populations cibles",
+          priorityRestart: "priorité de redémarrage",
+          tags: "tags",
+          purposes: "objectifs",
         },
         oldData: oldApp,
         newData: updatedApplication,
@@ -110,14 +110,14 @@ export class ApplicationService {
 
   public updateAllApplicationsQualityInBackground(): void {
     this.updateAllApplicationsQuality().catch((err) => {
-      Logger.error('Erreur pendant la mise à jour en tâche de fond', err);
+      Logger.error("Erreur pendant la mise à jour en tâche de fond", err);
     });
   }
 
   private async updateAllApplicationsQuality(): Promise<void> {
     const applications = await this.prisma.application.findMany();
     await Promise.all(
-      applications.map((app) => this.updateApplicationQuality(app.id)),
+      applications.map(app => this.updateApplicationQuality(app.id)),
     );
     Logger.log(`${applications.length} applications mises à jour.`);
   }
@@ -125,7 +125,7 @@ export class ApplicationService {
   async countActiveApplications() {
     return await this.prisma.application.count({
       where: {
-        NOT: { status: 'deleted' },
+        NOT: { status: "deleted" },
       },
     });
   }
@@ -142,7 +142,7 @@ export class ApplicationService {
     return range;
   }
 
-  async getApplicationsCountByMonth(lastMonths: number = 6): Promise<{ month: string; total: number }[]> {
+  async getApplicationsCountByMonth(lastMonths: number = 6): Promise<{ month: string, total: number }[]> {
     const now = new Date();
     const startDate = new Date(
       now.getFullYear(),
@@ -162,7 +162,7 @@ export class ApplicationService {
       },
       select: {
         metadatas: {
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: "asc" },
           take: 1, // Get the first metadata for each application
         },
       },
@@ -189,21 +189,21 @@ export class ApplicationService {
 
   async getApplicationsCountByIq() {
     const result = await this.prisma.application.groupBy({
-      by: ['quality'],
+      by: ["quality"],
       _count: {
         _all: true,
       },
       where: {
         status: {
-          not: 'deleted',
+          not: "deleted",
         },
       },
       orderBy: {
-        quality: 'asc',
+        quality: "asc",
       },
     });
 
-    return result.map((r) => ({
+    return result.map(r => ({
       iq: r.quality,
       total: r._count._all,
     })).reverse();
@@ -226,7 +226,7 @@ export class ApplicationService {
           },
         },
       },
-      distinct: ['actorTypeId'],
+      distinct: ["actorTypeId"],
     });
     const perms = new Set<APP_PERMISSIONS>();
     for (const actor of userActors) {
@@ -244,9 +244,9 @@ export class ApplicationService {
   public async search(
     searchParams: ApplicationSearchDto,
     user?: UserEntity,
-  ): Promise<{ results: any[]; total: number } | any[]> {
+  ): Promise<{ results: any[], total: number } | any[]> {
     // Handle link-specific search (old SearchApplicationDto behavior)
-    if ('link' in searchParams && searchParams.link) {
+    if ("link" in searchParams && searchParams.link) {
       const results = await this.applicationRepository.findByLink(
         searchParams.link,
       );
@@ -267,8 +267,8 @@ export class ApplicationService {
   }
 
   public async getApplicationById(applicationId: string) {
-    const application =
-      await this.applicationRepository.findById(applicationId);
+    const application
+      = await this.applicationRepository.findById(applicationId);
 
     if (!application) {
       throw new NotFoundException(
@@ -316,13 +316,13 @@ export class ApplicationService {
     applicationUpdates: Prisma.ApplicationUpdateInput,
   ): void {
     const scalarFields = [
-      'label',
-      'shortName',
-      'description',
-      'priorityRestart',
-      'status',
+      "label",
+      "shortName",
+      "description",
+      "priorityRestart",
+      "status",
     ] as const;
-    const arrayFields = ['purposes', 'targetPopulations', 'tags'] as const;
+    const arrayFields = ["purposes", "targetPopulations", "tags"] as const;
 
     scalarFields.forEach((field) => {
       if (data[field] !== undefined) {
@@ -336,6 +336,7 @@ export class ApplicationService {
       }
     });
   }
+
   async updateApplicationQuality(applicationId: string) {
     const iq = await calculateIQ(applicationId, this.prisma);
     return await this.prisma.application.update({

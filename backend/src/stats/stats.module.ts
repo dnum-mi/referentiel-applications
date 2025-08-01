@@ -1,11 +1,11 @@
-import { StatsController } from './interfaces/stats.controller';
-import { StatsRepository } from './infrastructure/stats.repository';
-import { StatsService } from './application/stats.service';
-import { Module } from '@nestjs/common';
+import { StatsController } from "./interfaces/stats.controller";
+import { StatsRepository } from "./infrastructure/stats.repository";
+import { StatsService } from "./application/stats.service";
+import { Module } from "@nestjs/common";
 
-import { PrismaModule } from '../prisma/prisma.module';
-import { StatsCronService } from './cron/stats.cron.service';
-import { GetIqAvgGroupedUseCase } from './application/use-cases/get-iq-avg-grouped.use-case.ts';
+import { PrismaModule } from "../prisma/prisma.module";
+import { StatsCronService } from "./cron/stats.cron.service";
+import { GetIqAvgGroupedUseCase } from "./application/use-cases/get-iq-avg-grouped.use-case.ts";
 
 @Module({
   imports: [PrismaModule],
@@ -13,7 +13,7 @@ import { GetIqAvgGroupedUseCase } from './application/use-cases/get-iq-avg-group
     StatsService,
     StatsCronService,
     {
-      provide: 'IStatsRepository',
+      provide: "IStatsRepository",
       useClass: StatsRepository,
     },
     StatsRepository,

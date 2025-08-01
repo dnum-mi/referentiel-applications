@@ -18,7 +18,7 @@ export function useRelationManager() {
 
   const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Actions"];
 
-  const relationTypes: Record<string, { source: string; target: string }> = {
+  const relationTypes: Record<string, { source: string, target: string }> = {
     is_part_of: { source: "Fait partie de", target: "A comme sous‑élément" },
     in_replacement_of: { source: "Remplace", target: "est remplacé par" },
     is_service_user_of: { source: "Utilise le service de", target: "Fournit le service à" },
@@ -47,7 +47,7 @@ export function useRelationManager() {
     };
   }
 
-  const rows = computed(() => store.relations.map((rel) => createRow(rel)));
+  const rows = computed(() => store.relations.map(rel => createRow(rel)));
 
   function editRelation(rel: Relation) {
     relationToEdit.value = { ...rel };
@@ -64,7 +64,7 @@ export function useRelationManager() {
 
   async function confirmDelete(applicationSourceId: string) {
     try {
-      await Promise.all(selectedRelationIds.value.map((id) => Relations.delete(applicationSourceId, id)));
+      await Promise.all(selectedRelationIds.value.map(id => Relations.delete(applicationSourceId, id)));
       await store.fetchRelationsByApplication(applicationSourceId);
       selectedRelationIds.value = [];
       showDeleteConfirmation.value = false;

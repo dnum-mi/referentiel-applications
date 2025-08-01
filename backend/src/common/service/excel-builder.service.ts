@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import * as ExcelJS from 'exceljs';
+import { Injectable } from "@nestjs/common";
+import * as ExcelJS from "exceljs";
 
-export type ExcelSheetConfig = {
-  name: string;
-  columns: { header: string; key: string; width?: number }[];
-  rows: Record<string, any>[];
-};
+export interface ExcelSheetConfig {
+  name: string
+  columns: { header: string, key: string, width?: number }[]
+  rows: Record<string, any>[]
+}
 
 @Injectable()
 export class ExcelBuilderService {
@@ -15,17 +15,17 @@ export class ExcelBuilderService {
     for (const { name, columns, rows } of sheets) {
       const sheet = workbook.addWorksheet(name);
       sheet.columns = columns;
-      rows.forEach((row) => sheet.addRow(row));
+      rows.forEach(row => sheet.addRow(row));
 
       sheet.autoFilter = {
         from: { row: 1, column: 1 },
         to: { row: 1, column: columns.length },
       };
 
-      sheet.views = [{ state: 'frozen', ySplit: 1 }];
+      sheet.views = [{ state: "frozen", ySplit: 1 }];
 
       const hasApplicationId = columns.some(
-        (col) => col.key === 'id' || col.key === 'applicationId',
+        col => col.key === "id" || col.key === "applicationId",
       );
 
       if (hasApplicationId) {
@@ -43,9 +43,9 @@ export class ExcelBuilderService {
       Boolean,
     );
 
-    const appIdKeys = ['applicationId', 'id', 'Application', 'ID Application'];
+    const appIdKeys = ["applicationId", "id", "Application", "ID Application"];
     const appIdColIndex = headerValues.findIndex(
-      (val) => typeof val === 'string' && appIdKeys.includes(val),
+      val => typeof val === "string" && appIdKeys.includes(val),
     );
 
     if (appIdColIndex === -1) return;
@@ -54,7 +54,7 @@ export class ExcelBuilderService {
 
     let currentAppId: string | undefined;
     let colorIndex = 0;
-    const colors = ['FFCCE5FF', 'FFE6CCFF'];
+    const colors = ["FFCCE5FF", "FFE6CCFF"];
 
     for (let i = 2; i <= sheet.rowCount; i++) {
       const row = sheet.getRow(i);
@@ -67,8 +67,8 @@ export class ExcelBuilderService {
 
       row.eachCell((cell) => {
         cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
+          type: "pattern",
+          pattern: "solid",
           fgColor: { argb: colors[colorIndex] },
         };
       });

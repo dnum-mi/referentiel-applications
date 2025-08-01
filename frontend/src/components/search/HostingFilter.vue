@@ -15,9 +15,9 @@ const siteStore = useSiteStore();
 const hostingSearchInput = ref(searchStore.filters.hostingSearch || "");
 const allHostingOptions = ref<[]>([]);
 
-const formatOptionText = (option: HostingOption): string => {
+function formatOptionText(option: HostingOption): string {
   return [option.provider, option.platform, option.site, option.building || "", option.room || ""].filter(Boolean).join(" - ");
-};
+}
 
 const { run: debouncedSearch } = useDebouncedFn(() => {
   searchStore.searchApplications();
@@ -52,9 +52,9 @@ watch(
   <div>
     <PriorityRestartFilter class="fr-mb-2w" />
     <DsfrInput
+      v-model="hostingSearchInput"
       label-visible
       label="Hébergement"
-      v-model="hostingSearchInput"
       list="hostingSuggestionsList"
       placeholder="Rechercher site, plateforme, fournisseur, etc."
     />

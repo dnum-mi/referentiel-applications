@@ -1,4 +1,4 @@
-import { AdminLevel } from '../entities/user.entity';
+import type { AdminLevel } from "../entities/user.entity";
 
 export class CreateUserDto {
   adminLevel?: AdminLevel;

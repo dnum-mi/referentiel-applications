@@ -1,17 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateOrganizationDto } from './dto/organization.dto';
-import { Organization, Prisma } from '@prisma/client';
-import { BaseService } from 'src/common/base.service';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "src/prisma/prisma.service";
+import { CreateOrganizationDto } from "./dto/organization.dto";
+import { Organization, Prisma } from "@prisma/client";
+import { BaseService } from "src/common/base.service";
 
 @Injectable()
 export class OrganizationService extends BaseService<Organization> {
   constructor(prisma: PrismaService) {
     super(prisma.organization, prisma);
   }
+
   async onModuleInit() {
     await this.recalculateClosureTable();
   }
+
   async create(data: CreateOrganizationDto): Promise<Organization> {
     const newOrg = await this.prisma.organization.create({ data });
     await this.recalculateClosureTable();
@@ -33,19 +35,19 @@ export class OrganizationService extends BaseService<Organization> {
     withChildren,
     search,
   }: {
-    ids?: string[];
-    withAncestors: boolean;
-    withChildren: boolean;
-    search?: string;
+    ids?: string[]
+    withAncestors: boolean
+    withChildren: boolean
+    search?: string
   }): Promise<Record<string, Organization>> {
     if (search) {
       return this.reduceToOrganizations(
         this.prisma.organization.findMany({
           where: {
             OR: [
-              { label: { contains: search, mode: 'insensitive' } },
-              { sigle: { contains: search, mode: 'insensitive' } },
-              { url: { contains: search, mode: 'insensitive' } },
+              { label: { contains: search, mode: "insensitive" } },
+              { sigle: { contains: search, mode: "insensitive" } },
+              { url: { contains: search, mode: "insensitive" } },
             ],
           },
         }),
@@ -68,10 +70,10 @@ export class OrganizationService extends BaseService<Organization> {
       descendantId: { in: ids },
     };
     if (withAncestors) {
-      where['ancestorId'] = { in: ids };
+      where.ancestorId = { in: ids };
     }
     if (withChildren) {
-      where['descendantId'] = { in: ids };
+      where.descendantId = { in: ids };
     }
 
     return (
@@ -108,7 +110,7 @@ export class OrganizationService extends BaseService<Organization> {
       });
       if (children.length > 0) {
         throw new Error(
-          'Cannot delete organization with children. Use force delete.',
+          "Cannot delete organization with children. Use force delete.",
         );
       }
     }

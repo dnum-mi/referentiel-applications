@@ -34,9 +34,9 @@ watch(
 );
 
 // Mode mobile ou desktop
-const updateMode = () => {
+function updateMode() {
   isMobile.value = window.matchMedia("(max-width: 768px)").matches;
-};
+}
 
 // Mise à jour du tri (colonne cliquée)
 watch(currentSortedColumn, (val) => {
@@ -72,7 +72,7 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         <CreateApplication />
       </div>
 
-      <ApplicationTableView v-if="displayMode === 'table'" v-model:sortedBy="currentSortedColumn" />
+      <ApplicationTableView v-if="displayMode === 'table'" v-model:sorted-by="currentSortedColumn" />
       <ApplicationCardView v-else />
     </main>
   </div>

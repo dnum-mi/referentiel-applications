@@ -21,7 +21,7 @@ export async function call<M extends ModelName, A extends ActionName<M> | undefi
   }
 
   // Remplacement des variables dynamiques dans l'URL (ex: :applicationId)
-  const url = urlTemplate.replace(/:([a-zA-Z0-9_]+)/g, (_, key: string) => {
+  const url = urlTemplate.replace(/:(\w+)/g, (_, key: string) => {
     const val = variables[key];
     if (val === undefined) throw new Error(`Missing variable '${key}' in URL`);
     return val;
@@ -30,9 +30,9 @@ export async function call<M extends ModelName, A extends ActionName<M> | undefi
   const payloadKeys = configEntry.payload ?? [];
   const queryKeys = configEntry.query ?? [];
 
-  const payload = Object.fromEntries(payloadKeys.filter((key) => variables[key] !== undefined).map((key) => [key, variables[key]]));
+  const payload = Object.fromEntries(payloadKeys.filter(key => variables[key] !== undefined).map(key => [key, variables[key]]));
 
-  const query = Object.fromEntries(queryKeys.filter((key) => variables[key] !== undefined).map((key) => [key, variables[key]]));
+  const query = Object.fromEntries(queryKeys.filter(key => variables[key] !== undefined).map(key => [key, variables[key]]));
 
   switch (method) {
     case "get":

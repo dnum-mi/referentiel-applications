@@ -1,9 +1,6 @@
-import { CreateApplicationDto } from '../dto/create-application.dto';
+import type { CreateApplicationDto } from "../dto/create-application.dto";
 
-export const applicationMap = (
-  createApplicationDto: CreateApplicationDto,
-  ownerId,
-) => {
+export function applicationMap(createApplicationDto: CreateApplicationDto, ownerId) {
   return {
     data: {
       label: createApplicationDto.label,
@@ -11,7 +8,7 @@ export const applicationMap = (
       logo: createApplicationDto.logo || null,
       description: createApplicationDto.description,
       targetPopulations: createApplicationDto.targetPopulations,
-      status: createApplicationDto.status || 'under_construction',
+      status: createApplicationDto.status || "under_construction",
       purposes: createApplicationDto.purposes,
       tags: createApplicationDto.tags,
       priorityRestart: createApplicationDto.priorityRestart || null,
@@ -19,9 +16,9 @@ export const applicationMap = (
       metadatas: {
         create: {
           createdById: ownerId,
-          description: 'Création de l’application',
+          description: "Création de l’application",
         },
       },
     },
   };
-};
+}

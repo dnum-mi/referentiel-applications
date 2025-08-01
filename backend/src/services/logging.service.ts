@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { decodeJwt } from 'jose';
+import { Injectable, Logger } from "@nestjs/common";
+import { decodeJwt } from "jose";
 
 @Injectable()
 export class LoggingService {
@@ -23,9 +23,9 @@ export class LoggingService {
   }
 
   extractUserFromToken(authorization: string, correlationId: string) {
-    if (!authorization?.startsWith('Bearer ')) return {};
+    if (!authorization?.startsWith("Bearer ")) return {};
     try {
-      const token = authorization.split(' ')[1];
+      const token = authorization.split(" ")[1];
       const decoded = decodeJwt(token);
       return {
         user: decoded.sub,

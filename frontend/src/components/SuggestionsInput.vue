@@ -47,7 +47,7 @@ watch(searchSuggestion, (newValue) => {
         isLoading.value = false;
       });
     } else {
-      suggestions.value = (props.searchData || []).filter((sug) => sug?.label?.toLowerCase().includes(newValue.toLowerCase()));
+      suggestions.value = (props.searchData || []).filter(sug => sug?.label?.toLowerCase().includes(newValue.toLowerCase()));
       isLoading.value = false;
     }
   } else {
@@ -59,14 +59,14 @@ watch(
   () => props.returnData,
   (newValue) => {
     defaultData.value = newValue;
-    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === newValue);
+    const foundSuggestion = (props.searchData || []).find(sug => sug.id === newValue);
     searchSuggestion.value = foundSuggestion?.label ?? "";
   },
 );
 
 onBeforeMount(() => {
   if (defaultData.value) {
-    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === defaultData.value);
+    const foundSuggestion = (props.searchData || []).find(sug => sug.id === defaultData.value);
     foundSuggestion ? (searchSuggestion.value = foundSuggestion.label) : (searchSuggestion.value = "");
   }
 });
@@ -75,9 +75,11 @@ onBeforeMount(() => {
 <template>
   <div>
     <label class="fr-label">{{ props.label }}</label>
-    <DsfrInput :label="props.label" v-model="searchSuggestion" :placeholder="props.placeholder" />
+    <DsfrInput v-model="searchSuggestion" :label="props.label" :placeholder="props.placeholder" />
 
-    <div v-if="isLoading">Chargement ...</div>
+    <div v-if="isLoading">
+      Chargement ...
+    </div>
 
     <ul v-if="suggestions.length" class="suggestions-list">
       <li v-for="suggestion in suggestions" :key="suggestion.id" class="suggestion-item" @click="selectSuggestion(suggestion)">

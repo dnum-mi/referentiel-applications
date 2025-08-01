@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { defineProps, computed } from "vue";
+
 const props = defineProps<{
-  read: boolean;
-  write: boolean;
-  readMinimum: boolean;
-  id: string;
+  read: boolean
+  write: boolean
+  readMinimum: boolean
+  id: string
+}>();
+
+defineEmits<{
+  (e: "update:model-value", value: (typeof options)[number]["value"]): void
 }>();
 
 const options = [
@@ -33,17 +38,13 @@ const computedValue = computed(() => {
   if (props.read) return "read";
   return "none";
 });
-defineEmits<{
-  (e: "update:model-value", value: (typeof options)[number]["value"]): void;
-}>();
 </script>
 
 <template>
   <DsfrSelect
     :options="options"
-    @update:model-value="$emit('update:model-value', $event as (typeof options)[number]['value'])"
     :select-id="`select-${id}`"
     :model-value="computedValue"
-  >
-  </DsfrSelect>
+    @update:model-value="$emit('update:model-value', $event as (typeof options)[number]['value'])"
+  />
 </template>

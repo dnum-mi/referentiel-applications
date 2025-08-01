@@ -27,11 +27,11 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     totalApplications.value = await call("application", "countByStatus");
   }
 
-  async function countApplicationsByMonth(): Promise<{ month: string; total: number }[]> {
+  async function countApplicationsByMonth(): Promise<{ month: string, total: number }[]> {
     return await call("application", "countByMonth");
   }
 
-  async function countApplicationsByIq(): Promise<{ iq: number; total: number }[]> {
+  async function countApplicationsByIq(): Promise<{ iq: number, total: number }[]> {
     return await call("application", "countByIq");
   }
 

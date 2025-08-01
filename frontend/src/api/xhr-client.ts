@@ -26,7 +26,7 @@ axios.interceptors.request.use(
 );
 
 axios.interceptors.response.use(
-  (response) => response,
+  response => response,
   (error: AxiosError) => {
     const status = error.response?.status;
 

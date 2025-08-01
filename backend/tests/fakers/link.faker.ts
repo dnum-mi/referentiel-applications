@@ -1,4 +1,4 @@
-import { getPrismaClient } from './prisma';
+import { getPrismaClient } from "./prisma";
 
 export class LinkFaker {
   static async create(application, user) {
@@ -6,9 +6,9 @@ export class LinkFaker {
 
     return await prisma.externalRessource.create({
       data: {
-        type: 'documentation',
-        link: 'https://example.com',
-        description: 'Example link',
+        type: "documentation",
+        link: "https://example.com",
+        description: "Example link",
         application: {
           connect: {
             id: application.id,

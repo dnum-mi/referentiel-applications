@@ -22,10 +22,10 @@ const errorMessage = ref("");
 
 async function handleApplicationUpdate(updateData: Application) {
   applicationUpdated.value = updateData;
-    if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
-      await metadataStore.getFirstAndLastMetadataByApplication(updateData.id);
-    }
+  if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
+    await metadataStore.getFirstAndLastMetadataByApplication(updateData.id);
   }
+}
 
 async function loadApplication() {
   isLoading.value = true;
@@ -44,7 +44,9 @@ onMounted(loadApplication);
 <template>
   <div>
     <DsfrBreadcrumb />
-    <div v-if="isLoading">Chargement...</div>
+    <div v-if="isLoading">
+      Chargement...
+    </div>
     <div v-else-if="errorMessage">
       {{ errorMessage }}
     </div>

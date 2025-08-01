@@ -14,15 +14,15 @@ const { run: debouncedSearch } = useDebouncedFn(() => {
 
 const statusOptions = computed(() =>
   Object.keys(statusApplicationDictionary)
-    .filter((key) => key !== "select")
-    .map((value) => ({
+    .filter(key => key !== "select")
+    .map(value => ({
       value,
       label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
       name: `${value}`,
     })),
 );
 
-const onStatusChange = (newStatus: unknown) => {
+function onStatusChange(newStatus: unknown) {
   if (!Array.isArray(newStatus)) return;
 
   const statusArray = newStatus.filter((val): val is string => typeof val === "string");
@@ -39,7 +39,7 @@ const onStatusChange = (newStatus: unknown) => {
 
   searchStore.setFilter("page", 0);
   debouncedSearch();
-};
+}
 
 watch(
   () => searchStore.filters.status,
@@ -54,10 +54,10 @@ watch(
   <div class="fr-container fr-my-2v">
     <DsfrCheckboxSet
       :model-value="modelValue"
-      @update:modelValue="onStatusChange"
       :options="statusOptions"
       legend="Filtrer par statut"
       name="status"
+      @update:model-value="onStatusChange"
     />
   </div>
 </template>

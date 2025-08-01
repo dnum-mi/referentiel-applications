@@ -1,7 +1,7 @@
-import { exec } from 'child_process';
-import { PrismaClient } from '@prisma/client';
+import { exec } from "node:child_process";
+import { PrismaClient } from "@prisma/client";
 
-const testDbName = 'test';
+const testDbName = "test";
 const testDatabaseUrl = `postgresql://postgres:password@postgres:5432/${testDbName}`;
 
 export async function createTestDatabase() {
@@ -20,7 +20,7 @@ export async function deleteTestDatabase() {
   const prisma = new PrismaClient({
     datasources: {
       db: {
-        url: `postgresql://postgres:password@postgres:5432/postgres`,
+        url: "postgresql://postgres:password@postgres:5432/postgres",
       },
     },
   });
@@ -30,9 +30,9 @@ export async function deleteTestDatabase() {
 
 export async function applyMigrations() {
   return new Promise((resolve, reject) => {
-    exec('npx prisma migrate deploy', (error, stdout, stderr) => {
+    exec("npx prisma migrate deploy", (error, stdout, stderr) => {
       if (error) {
-        console.error('Error running migrations:', stderr);
+        console.error("Error running migrations:", stderr);
         return reject(error);
       }
       console.log(stdout);

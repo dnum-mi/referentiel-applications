@@ -60,7 +60,7 @@ export const useHostingStore = defineStore("hostingStore", () => {
   const deleteHosting = async (applicationId: string, hostingId: string) => {
     try {
       await Hostings.delete(hostingId, applicationId);
-      hostings.value = hostings.value.filter((h) => h.id !== hostingId);
+      hostings.value = hostings.value.filter(h => h.id !== hostingId);
       toaster.addSuccessMessage("Hébergement supprimé avec succès");
     } catch (error) {
       console.error("Error deleting hosting:", error);

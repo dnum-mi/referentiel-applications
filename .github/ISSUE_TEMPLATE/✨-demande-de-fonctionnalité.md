@@ -15,7 +15,7 @@ labels: "amélioration"
 
 ## **Votre demande est-elle liée à un problème ? Merci de décrire :**
 
-Une description claire et concise du problème.  
+Une description claire et concise du problème.
 _Ex. Je suis toujours frustré(e) lorsque [...]_
 
 ## **Décrivez la solution que vous aimeriez voir mise en place :**

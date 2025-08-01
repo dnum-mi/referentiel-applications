@@ -1,6 +1,6 @@
 // link.entity.ts
 
-import { ExternalRessourceType } from '@prisma/client';
+import type { ExternalRessourceType } from "@prisma/client";
 
 export class Link {
   id: string;

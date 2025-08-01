@@ -1,38 +1,38 @@
-import { faker } from '@faker-js/faker';
-import { getPrismaClient } from './prisma';
+import { faker } from "@faker-js/faker";
+import { getPrismaClient } from "./prisma";
 
 type APP_PERMISSIONS =
-  | 'readBase'
-  | 'writeBase'
-  | 'readActors'
-  | 'writeActors'
-  | 'readCompliances'
-  | 'writeCompliances'
-  | 'readHostings'
-  | 'writeHostings'
-  | 'readMetadata'
-  | 'writeMetadata'
-  | 'readRelations'
-  | 'writeRelations'
-  | 'readLinks'
-  | 'writeLinks';
+  | "readBase"
+  | "writeBase"
+  | "readActors"
+  | "writeActors"
+  | "readCompliances"
+  | "writeCompliances"
+  | "readHostings"
+  | "writeHostings"
+  | "readMetadata"
+  | "writeMetadata"
+  | "readRelations"
+  | "writeRelations"
+  | "readLinks"
+  | "writeLinks";
 
 function permissionsToObject(permissions: Set<APP_PERMISSIONS>) {
   return {
-    readActors: permissions.has('readActors'),
-    writeActors: permissions.has('writeActors'),
-    readCompliances: permissions.has('readCompliances'),
-    writeCompliances: permissions.has('writeCompliances'),
-    readHostings: permissions.has('readHostings'),
-    writeHostings: permissions.has('writeHostings'),
-    readMetadata: permissions.has('readMetadata'),
-    writeMetadata: permissions.has('writeMetadata'),
-    readRelations: permissions.has('readRelations'),
-    writeRelations: permissions.has('writeRelations'),
-    readLinks: permissions.has('readLinks'),
-    writeLinks: permissions.has('writeLinks'),
-    readBase: permissions.has('readBase'),
-    writeBase: permissions.has('writeBase'),
+    readActors: permissions.has("readActors"),
+    writeActors: permissions.has("writeActors"),
+    readCompliances: permissions.has("readCompliances"),
+    writeCompliances: permissions.has("writeCompliances"),
+    readHostings: permissions.has("readHostings"),
+    writeHostings: permissions.has("writeHostings"),
+    readMetadata: permissions.has("readMetadata"),
+    writeMetadata: permissions.has("writeMetadata"),
+    readRelations: permissions.has("readRelations"),
+    writeRelations: permissions.has("writeRelations"),
+    readLinks: permissions.has("readLinks"),
+    writeLinks: permissions.has("writeLinks"),
+    readBase: permissions.has("readBase"),
+    writeBase: permissions.has("writeBase"),
   };
 }
 export class ActorTypeFaker {
@@ -45,9 +45,9 @@ export class ActorTypeFaker {
     // obtain a random label and transform to title case
     const label = faker.company
       .buzzPhrase()
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+      .replace(/\b\w/g, c => c.toUpperCase());
     const code = label
-      .replace(/[a-z\s]+/g, '')
+      .replace(/[a-z\s]+/g, "")
       .toUpperCase()
       .slice(0, 5);
     const actorType = await prisma.actorType.create({
@@ -62,7 +62,7 @@ export class ActorTypeFaker {
       },
     });
     if (!actorType) {
-      throw new Error('Actor type creation failed');
+      throw new Error("Actor type creation failed");
     }
     this.id = actorType.id;
     return {
@@ -87,7 +87,7 @@ export class ActorTypeFaker {
       data: permissionsToObject(this.permissions),
     });
     if (!actorType) {
-      throw new Error('Actor type update failed');
+      throw new Error("Actor type update failed");
     }
     return actorType;
   }

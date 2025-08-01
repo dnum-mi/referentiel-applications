@@ -9,11 +9,12 @@ import router from "./router/index.js";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore.js";
 import { AdminLevel } from "./models/user.js";
+
 const route = useRoute();
 
 const instance = getCurrentInstance();
 
-const trackSearch = (query: string, source: string, resultCount: number) => {
+function trackSearch(query: string, source: string, resultCount: number) {
   const matomo = instance?.proxy?.$matomo;
   if (!matomo) {
     console.warn("Matomo non dispo");
@@ -24,7 +25,7 @@ const trackSearch = (query: string, source: string, resultCount: number) => {
   matomo.setCustomUrl(`/search?q=${encoded}`);
   matomo.trackSiteSearch(query.trim(), "Applications", resultCount);
   matomo.trackPageView(`Recherche depuis ${source} : ${query}`);
-};
+}
 
 const userStore = useUserStore();
 const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
@@ -38,10 +39,10 @@ const versionLink = computed(() => ({
 }));
 
 interface QuickLink {
-  label: string;
-  to: { name: string } | string;
-  icon?: string;
-  iconAttrs?: Record<string, string>;
+  label: string
+  to: { name: string } | string
+  icon?: string
+  iconAttrs?: Record<string, string>
 }
 
 (async () => {
@@ -172,11 +173,11 @@ watch(searchQuery, (newVal) => {
   }, 300);
 });
 
-const clearSearch = () => {
+function clearSearch() {
   searchQuery.value = "";
   searchResults.value = [];
   instance?.proxy?.$matomo.trackEvent("search", "click", "search-result");
-};
+}
 
 const { setScheme, theme } = useScheme();
 function changeTheme() {
@@ -198,7 +199,7 @@ function close() {
       :service-title="serviceTitle"
       :logo-text="logoText"
       :quick-links="quickLinks"
-      :showSearch="userStore.authenticated"
+      :show-search="userStore.authenticated"
     >
       <template #mainnav>
         <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItems" />
@@ -206,8 +207,12 @@ function close() {
     </DsfrHeader>
 
     <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown">
-      <div v-if="isLoading" class="loading-message">Chargement...</div>
-      <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <div v-if="isLoading" class="loading-message">
+        Chargement...
+      </div>
+      <div v-if="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
       <ul v-if="searchResults.length">
         <li v-for="(app, index) in searchResults" :key="index" @click="clearSearch">
           <router-link :to="{ name: 'application', params: { id: app.id } }">

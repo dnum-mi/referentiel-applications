@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 defineProps<{
-  offlineReady?: boolean;
-  needRefresh?: boolean;
+  offlineReady?: boolean
+  needRefresh?: boolean
 }>();
 
 defineEmits<EventTypes>();
 
 interface EventTypes {
-  (event: "close"): void;
-  (event: "updateServiceWorker"): void;
+  (event: "close"): void
+  (event: "updateServiceWorker"): void
 }
 </script>
 
@@ -23,7 +23,9 @@ interface EventTypes {
       <DsfrButton v-if="needRefresh" class="button" icon="ri-refresh-line" icon-right @click="$emit('updateServiceWorker')">
         Recharger
       </DsfrButton>
-      <DsfrButton class="button" icon="ri-close-line" icon-right secondary @click="$emit('close')"> Fermer </DsfrButton>
+      <DsfrButton class="button" icon="ri-close-line" icon-right secondary @click="$emit('close')">
+        Fermer
+      </DsfrButton>
     </div>
   </div>
 </template>

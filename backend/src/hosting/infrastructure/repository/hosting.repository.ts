@@ -1,10 +1,10 @@
-import { PrismaService } from 'src/prisma/prisma.service';
-import { IHostingRepository } from './hosting.repository.interface';
-import { Injectable } from '@nestjs/common';
-import { Hosting } from 'src/hosting/domain/hosting.entity';
-import { CreateHostingDto } from 'src/hosting/applications/dto/create-hosting.dto';
-import { UpdateHostingDto } from 'src/hosting/applications/dto/update-hosting.dto';
-import { MetadataService } from 'src/metadata/metadata.service';
+import { PrismaService } from "src/prisma/prisma.service";
+import { IHostingRepository } from "./hosting.repository.interface";
+import { Injectable } from "@nestjs/common";
+import { Hosting } from "src/hosting/domain/hosting.entity";
+import { CreateHostingDto } from "src/hosting/applications/dto/create-hosting.dto";
+import { UpdateHostingDto } from "src/hosting/applications/dto/update-hosting.dto";
+import { MetadataService } from "src/metadata/metadata.service";
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {
@@ -25,9 +25,9 @@ export class HostingRepository implements IHostingRepository {
         }),
         metadatas: {
           create: {
-            applicationId: applicationId,
+            applicationId,
             createdById: ownerId,
-            description: `Ajout de l'hébergement : ` + rest.label,
+            description: `Ajout de l'hébergement : ${rest.label}`,
           },
         },
       },
@@ -79,15 +79,15 @@ export class HostingRepository implements IHostingRepository {
       applicationId,
       createdById: ownerId,
       title: `de l'hébergement ${oldHosting.label}`,
-      entity: 'hostingId',
+      entity: "hostingId",
       entityId: id,
       fields: {
-        label: 'libellé',
-        'hostingOption.site': 'site',
-        'hostingOption.platform': 'plateforme',
-        'hostingOption.provider': 'fournisseur',
-        'hostingOption.building': 'bâtiment',
-        'hostingOption.room': 'pièce',
+        label: "libellé",
+        "hostingOption.site": "site",
+        "hostingOption.platform": "plateforme",
+        "hostingOption.provider": "fournisseur",
+        "hostingOption.building": "bâtiment",
+        "hostingOption.room": "pièce",
       },
       oldData: oldHosting,
       newData: newHosting,
@@ -101,9 +101,9 @@ export class HostingRepository implements IHostingRepository {
 
     await this.prisma.metadata.create({
       data: {
-        action: 'delete',
+        action: "delete",
         applicationId: hosting.applicationId,
-        description: "Suppression de l'hébergement : " + hosting.label,
+        description: `Suppression de l'hébergement : ${hosting.label}`,
         createdById: ownerId,
       },
     });
@@ -117,7 +117,7 @@ export class HostingRepository implements IHostingRepository {
         hostingOption: {
           site: {
             equals: site,
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         },
       },
@@ -142,7 +142,7 @@ export class HostingRepository implements IHostingRepository {
         hostingOption: {
           site: {
             equals: site,
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         },
       },
@@ -156,10 +156,10 @@ export class HostingRepository implements IHostingRepository {
   async findDistinctSites(): Promise<string[]> {
     const hostingOptionSites = await this.prisma.hostingOption.findMany({
       select: { site: true },
-      distinct: ['site'],
-      orderBy: { site: 'asc' },
+      distinct: ["site"],
+      orderBy: { site: "asc" },
     });
 
-    return hostingOptionSites.map((r) => r.site);
+    return hostingOptionSites.map(r => r.site);
   }
 }

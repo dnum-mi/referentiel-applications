@@ -1,5 +1,5 @@
-import { IsString, IsEnum, IsOptional } from 'class-validator';
-import { ExternalRessourceType } from '@prisma/client';
+import { IsString, IsEnum, IsOptional } from "class-validator";
+import { ExternalRessourceType } from "@prisma/client";
 
 export class CreateLinkDto {
   @IsString()

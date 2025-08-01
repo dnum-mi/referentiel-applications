@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ActorRepository } from './infrastructure/repository/actor.repository';
-import { CreateActorDto, UpdateActorDto } from './dto/actor.dto';
-import { Prisma, Actor } from '@prisma/client';
-import { ApplicationService } from 'src/product/application.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { ActorRepository } from "./infrastructure/repository/actor.repository";
+import { CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
+import { Prisma, Actor } from "@prisma/client";
+import { ApplicationService } from "src/product/application.service";
 
 @Injectable()
 export class ActorService {
@@ -39,9 +39,9 @@ export class ActorService {
   }
 
   public async update(params: {
-    where: Prisma.ActorWhereUniqueInput;
-    data: UpdateActorDto;
-    ownerId: string;
+    where: Prisma.ActorWhereUniqueInput
+    data: UpdateActorDto
+    ownerId: string
   }): Promise<Actor> {
     const { where, data, ownerId } = params;
 

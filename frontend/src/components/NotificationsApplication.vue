@@ -17,11 +17,11 @@ const activeAccordion = ref<number>();
 const userStore = useUserStore();
 
 const canEdit = computed(() => {
-  return props.application.myPerms.has("writeMetadata") || 
-  userStore.adminLevel >= AdminLevel.WRITE;
+  return props.application.myPerms.has("writeMetadata")
+    || userStore.adminLevel >= AdminLevel.WRITE;
 });
 
-function formatDescription(description: string): { title: string; content: string } {
+function formatDescription(description: string): { title: string, content: string } {
   const oldMatch = description.match(/Ancienne\(s\) valeur\(s\):\s*(\{.*?\})/s);
   const newMatch = description.match(/Nouvelle\(s\) valeur\(s\):\s*(\{.*\})/s);
 
@@ -111,7 +111,7 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
       </template>
     </DsfrDataTable>
   </DsfrAccordionsGroup>
-  <ReportIssue :application="application" v-if="canEdit" />
+  <ReportIssue v-if="canEdit" :application="application" />
 </template>
 
 <style scoped>

@@ -4,11 +4,11 @@ import {
   ExecutionContext,
   CallHandler,
   Logger,
-} from '@nestjs/common';
-import { Observable, tap } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
-import { LoggingService } from '../services/logging.service';
-import { sanitizeHeaders } from '../utils/sanitize-headers.util';
+} from "@nestjs/common";
+import { Observable, tap } from "rxjs";
+import { v4 as uuidv4 } from "uuid";
+import { LoggingService } from "../services/logging.service";
+import { sanitizeHeaders } from "../utils/sanitize-headers.util";
 
 @Injectable()
 export class RequestLoggingInterceptor implements NestInterceptor {
@@ -21,8 +21,8 @@ export class RequestLoggingInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
-    const correlationId = request.headers['x-correlation-id'] || uuidv4();
-    response.setHeader('X-Correlation-ID', correlationId);
+    const correlationId = request.headers["x-correlation-id"] || uuidv4();
+    response.setHeader("X-Correlation-ID", correlationId);
 
     const logContext = {
       method: request.method,

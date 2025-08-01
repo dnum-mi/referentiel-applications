@@ -106,29 +106,29 @@ async function exportToExcel() {
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         label="Exporter en CSV"
         icon="ri-download-line"
-        @click="exportSearchResults"
         secondary
         icon-only-size="sm"
         class="fr-mr-2w"
+        @click="exportSearchResults"
       />
       <DsfrButton
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         label="Exporter en Excel"
         icon="ri-file-excel-2-line"
-        @click="exportToExcel"
         secondary
         icon-only-size="sm"
+        @click="exportToExcel"
       />
     </div>
   </div>
   <DsfrDataTable
+    v-model:sorted-by="sortBy"
+    v-model:sorted-desc="sortedDesc"
     :headers-row="['IQ', 'Nom', 'Priorité', 'Hébergement', 'Tags']"
     :rows="rows"
     sortable-rows
     vertical-borders
     :pagination="false"
-    v-model:sortedBy="sortBy"
-    v-model:sortedDesc="sortedDesc"
   >
     <template #cell="{ colKey, cell }">
       <template v-if="colKey === 'Nom'">
@@ -154,7 +154,7 @@ async function exportToExcel() {
   </DsfrDataTable>
 
   <PaginationFooter
-    :totalFiltered="searchStore.total"
+    :total-filtered="searchStore.total"
     :pages="pages"
     :limit="searchStore.limit"
     :page="searchStore.page"

@@ -4,7 +4,7 @@ import axios from "axios";
 
 const Hostings = {
   async countHostings(): Promise<number> {
-    const { data } = await axios.get(`hostings/count`);
+    const { data } = await axios.get("hostings/count");
     return data;
   },
 
@@ -15,7 +15,7 @@ const Hostings = {
   async create(hosting: Hosting, applicationId: string): Promise<Hosting> {
     const payload = {
       label: hosting.label,
-      applicationId: applicationId,
+      applicationId,
       hostingOptionId: hosting.hostingOptionId,
     };
     return await requests.post(`/applications/${applicationId}/hostings`, payload);
@@ -24,7 +24,7 @@ const Hostings = {
   async update(hostingId: string, hosting: Hosting, applicationId: string): Promise<Hosting> {
     const payload = {
       label: hosting.label,
-      applicationId: applicationId,
+      applicationId,
       hostingOptionId: hosting.hostingOptionId,
     };
     return await requests.patch(`/applications/${applicationId}/hostings/${hostingId}`, payload);

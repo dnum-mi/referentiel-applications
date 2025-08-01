@@ -4,6 +4,7 @@ import ApplicationsIqChart from "@/components/stats/ApplicationsIqChart.vue";
 import GlobalStats from "@/components/stats/GlobalStats.vue";
 import IqChart from "@/components/stats/IqChart.vue";
 </script>
+
 <template>
   <div class="grid-2x2-container">
     <div class="cell alerts-cell">

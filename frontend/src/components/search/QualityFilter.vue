@@ -21,13 +21,13 @@ watch([iqGte, iqLte], () => {
   <div>
     <label class="fr-label fr-mb-2w">
       Indice de qualité
-      <br />
+      <br>
       <small> entre {{ iqGte === "" ? 0 : iqGte }}% et {{ iqLte === "" ? 100 : iqLte }}% </small>
     </label>
 
     <div class="fr-input-group">
-      <DsfrInput label-visible label="IQ minimum" type="number" min="0" max="100" v-model.number="iqGte" />
-      <DsfrInput label-visible label="IQ maximum" type="number" min="0" max="100" v-model.number="iqLte" />
+      <DsfrInput v-model.number="iqGte" label-visible label="IQ minimum" type="number" min="0" max="100" />
+      <DsfrInput v-model.number="iqLte" label-visible label="IQ maximum" type="number" min="0" max="100" />
     </div>
   </div>
 </template>

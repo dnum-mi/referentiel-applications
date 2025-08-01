@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { IActorRepository } from './actor.repository.interface';
-import { CreateActorDto, UpdateActorDto } from 'src/actor/dto/actor.dto';
-import { Prisma } from '@prisma/client';
-import { MetadataService } from 'src/metadata/metadata.service';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "src/prisma/prisma.service";
+import { IActorRepository } from "./actor.repository.interface";
+import { CreateActorDto, UpdateActorDto } from "src/actor/dto/actor.dto";
+import { Prisma } from "@prisma/client";
+import { MetadataService } from "src/metadata/metadata.service";
 
 @Injectable()
 export class ActorRepository implements IActorRepository {
@@ -40,7 +40,7 @@ export class ActorRepository implements IActorRepository {
 
     await this.prisma.metadata.create({
       data: {
-        applicationId: applicationId,
+        applicationId,
         actorId: actorDatas.id,
         createdById: ownerId,
         description: `Ajout de l'acteur ${actorDatas.actorType?.code} : ${actorDatas.email}`,
@@ -56,7 +56,7 @@ export class ActorRepository implements IActorRepository {
 
   public async findAll(applicationId?: string) {
     return await this.prisma.actor.findMany({
-      where: { applicationId: applicationId },
+      where: { applicationId },
     });
   }
 
@@ -108,14 +108,14 @@ export class ActorRepository implements IActorRepository {
       applicationId,
       createdById: ownerId,
       title: `de l'acteur ${oldActor.actorType?.code}`,
-      entity: 'actorId',
+      entity: "actorId",
       entityId: newActor.id,
       fields: {
-        lastname: 'nom',
-        firstname: 'prénom',
-        email: 'email',
-        'organization.sigle': 'organisation',
-        'actorType.label': 'rôle',
+        lastname: "nom",
+        firstname: "prénom",
+        email: "email",
+        "organization.sigle": "organisation",
+        "actorType.label": "rôle",
       },
       oldData: oldActor,
       newData: newActor,
@@ -131,7 +131,7 @@ export class ActorRepository implements IActorRepository {
       data: {
         applicationId: actor.applicationId,
         createdById: ownerId,
-        action: 'delete',
+        action: "delete",
         description: `Suppression de l'acteur ${actor.actorType.code} : ${actor.email}`,
       },
     });

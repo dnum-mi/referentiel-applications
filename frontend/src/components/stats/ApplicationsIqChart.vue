@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useStatisticsStore } from "@/stores/statisticsStore";
-import { Chart } from "chart.js";
+import type { Chart } from "chart.js";
 import { renderChart } from "@/utils/chart";
 
 const chartRef = ref<HTMLCanvasElement | null>(null);
@@ -18,9 +18,9 @@ async function loadData() {
     const response = await statisticsStore.countApplicationsByIq();
 
     const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`).reverse();
-    const data: number[] = Array(21).fill(0);
+    const data: number[] = Array.from({ length: 21 }).fill(0);
 
-    response.forEach(({ iq, total }: { iq: number; total: number }) => {
+    response.forEach(({ iq, total }: { iq: number, total: number }) => {
       const index = Math.floor(Math.round(iq) / 5);
       if (index >= 0 && index <= 20) data[index] += total;
     });
@@ -38,7 +38,11 @@ onMounted(loadData);
 
 <template>
   <h3>Répartition des applications par IQ</h3>
-  <div v-if="isLoading">Chargement...</div>
-  <div v-else-if="errorMessage">{{ errorMessage }}</div>
-  <canvas ref="chartRef" v-show="!isLoading && !errorMessage"></canvas>
+  <div v-if="isLoading">
+    Chargement...
+  </div>
+  <div v-else-if="errorMessage">
+    {{ errorMessage }}
+  </div>
+  <canvas v-show="!isLoading && !errorMessage" ref="chartRef" />
 </template>

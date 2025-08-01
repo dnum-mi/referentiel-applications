@@ -11,7 +11,7 @@ export default function useModal() {
     isCreateModalOpen.value = type === "create";
   };
 
-  const openModal = (item) => toggleModal("view", item);
+  const openModal = item => toggleModal("view", item);
   const openCreateModal = () => toggleModal("create");
   const closeModal = () => toggleModal("close");
 

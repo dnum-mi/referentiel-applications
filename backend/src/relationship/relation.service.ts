@@ -1,12 +1,12 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { RelationApplicationDto } from './application/dto/relation-application.dto';
-import { IRelationRepository } from './infrastructure/repository/relation.repository.interface';
-import { Relation } from './domain/relation.entity';
+import { Injectable, NotFoundException, Inject } from "@nestjs/common";
+import { RelationApplicationDto } from "./application/dto/relation-application.dto";
+import { IRelationRepository } from "./infrastructure/repository/relation.repository.interface";
+import { Relation } from "./domain/relation.entity";
 
 @Injectable()
 export class RelationService {
   constructor(
-    @Inject('IRelationRepository')
+    @Inject("IRelationRepository")
     private readonly relationRepository: IRelationRepository,
   ) {}
 
@@ -29,7 +29,7 @@ export class RelationService {
   async findOne(id: string): Promise<Relation> {
     const relation = await this.relationRepository.findOne(id);
     if (!relation) {
-      throw new NotFoundException('Relation not found');
+      throw new NotFoundException("Relation not found");
     }
     return relation;
   }

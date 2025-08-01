@@ -1,6 +1,6 @@
-import { CreateActorTypeDto } from '../dto/actorType.dto';
+import type { CreateActorTypeDto } from "../dto/actorType.dto";
 
-export const actorTypeMap = (CreateActorTypeDto: CreateActorTypeDto) => {
+export function actorTypeMap(CreateActorTypeDto: CreateActorTypeDto) {
   return {
     data: {
       code: CreateActorTypeDto.code,
@@ -8,4 +8,4 @@ export const actorTypeMap = (CreateActorTypeDto: CreateActorTypeDto) => {
       description: CreateActorTypeDto.description,
     },
   };
-};
+}

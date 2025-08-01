@@ -10,6 +10,10 @@ const props = defineProps({
   },
 });
 
+const emits = defineEmits<{
+  (e: "update:appPermsMatrix", value: AppPermsMatrix): void
+  (e: "reload"): void
+}>();
 const actorTypeStore = useActorTypeStore();
 onBeforeMount(async () => {
   await actorTypeStore.fetchAll();
@@ -25,15 +29,10 @@ const permissionSuffixes = {
   Metadata: "Historique",
 };
 
-const emits = defineEmits<{
-  (e: "update:appPermsMatrix", value: AppPermsMatrix): void;
-  (e: "reload"): void;
-}>();
-
 const updatedMatrix = ref<AppPermsMatrix>(Array.from(props.appPermsMatrix));
 
 function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSuffixes, value: string) {
-  const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
+  const actorTypeIdx = updatedMatrix.value.findIndex(at => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
   if (value === "none") {
     updatedMatrix.value[actorTypeIdx][`write${permission}`] = false;
@@ -52,12 +51,17 @@ function saveAppPermsMatrix() {
   emits("update:appPermsMatrix", updatedMatrix.value);
 }
 </script>
+
 <template>
   <DsfrTable title="Tableau des permissions des applications">
     <template #header>
       <tr>
-        <th scope="col">Type d'acteur</th>
-        <th scope="col" v-for="perm in permissionSuffixes" :key="perm">{{ perm }}</th>
+        <th scope="col">
+          Type d'acteur
+        </th>
+        <th v-for="perm in permissionSuffixes" :key="perm" scope="col">
+          {{ perm }}
+        </th>
       </tr>
     </template>
     <tr v-for="actorType in updatedMatrix" :key="actorType.actorTypeId">
@@ -70,14 +74,17 @@ function saveAppPermsMatrix() {
           :write="actorType[`write${perm as keyof typeof permissionSuffixes}`]"
           :read-minimum="perm === 'Base'"
           @update:model-value="(value) => updateMatrix(actorType.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
-        >
-        </PermissionSelect>
+        />
       </td>
     </tr>
   </DsfrTable>
   <!-- Positionner à droite -->
   <div class="fr-mt-2w fr-text-right">
-    <DsfrButton @click="saveAppPermsMatrix" class="fr-mt-2w"> Enregistrer les modifications </DsfrButton>
-    <DsfrButton @click="$emit('reload')" class="fr-mt-2w fr-ml-2w"> Recharger les permissions </DsfrButton>
+    <DsfrButton class="fr-mt-2w" @click="saveAppPermsMatrix">
+      Enregistrer les modifications
+    </DsfrButton>
+    <DsfrButton class="fr-mt-2w fr-ml-2w" @click="$emit('reload')">
+      Recharger les permissions
+    </DsfrButton>
   </div>
 </template>

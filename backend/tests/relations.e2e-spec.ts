@@ -1,29 +1,29 @@
 // relation.e2e-spec.ts
-import request from 'supertest';
-import { setupTestSuite } from './setup';
-import { getToken } from './getToken';
-import { RelationType } from '@prisma/client';
-import { UserFaker } from './fakers/user.faker';
-import { ApplicationFaker } from './fakers/application.faker';
-import { getPrismaClient } from './fakers/prisma';
-import { ActorTypeFaker } from './fakers/actor-type.faker';
-import { ActorFaker } from './fakers/actor.faker';
-import { AsyncReturnType } from 'src/utils/types.util';
-import { AdminLevel } from 'src/user/entities/user.entity';
+import request from "supertest";
+import { setupTestSuite } from "./setup";
+import { getToken } from "./getToken";
+import { RelationType } from "@prisma/client";
+import { UserFaker } from "./fakers/user.faker";
+import { ApplicationFaker } from "./fakers/application.faker";
+import { getPrismaClient } from "./fakers/prisma";
+import { ActorTypeFaker } from "./fakers/actor-type.faker";
+import { ActorFaker } from "./fakers/actor.faker";
+import type { AsyncReturnType } from "src/utils/types.util";
+import { AdminLevel } from "src/user/entities/user.entity";
 
-describe('Relations End-to-End', () => {
+describe("Relations End-to-End", () => {
   const app = setupTestSuite();
   const prisma = getPrismaClient();
-  let applicationSource: { id: string; label: string };
-  let applicationTarget: { id: string; label: string };
-  let applicationUpdates: { id: string; label: string };
+  let applicationSource: { id: string, label: string };
+  let applicationTarget: { id: string, label: string };
+  let applicationUpdates: { id: string, label: string };
   let user: { keycloakId: string };
   let TOKEN: string;
   let relation: {
-    id: string;
-    applicationSourceId: string;
-    applicationTargetId: string;
-    type: string;
+    id: string
+    applicationSourceId: string
+    applicationTargetId: string
+    type: string
   };
 
   beforeAll(async () => {
@@ -38,7 +38,7 @@ describe('Relations End-to-End', () => {
     prisma.$disconnect();
   });
 
-  it('should create a relation when provided with a valid DTO', async () => {
+  it("should create a relation when provided with a valid DTO", async () => {
     // Given
     const applicationSourceId = applicationSource.id;
     const dto = {
@@ -50,7 +50,7 @@ describe('Relations End-to-End', () => {
     const response = await request(app().getHttpServer())
       .post(`/applications/${applicationSourceId}/relations`)
       .send(dto)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
 
     // Then
@@ -59,12 +59,12 @@ describe('Relations End-to-End', () => {
     expect(relation.id).toBeDefined();
   });
 
-  it('should retrieve all relations for an application', async () => {
+  it("should retrieve all relations for an application", async () => {
     const applicationSourceId = applicationSource.id;
     // When
     const response = await request(app().getHttpServer())
       .get(`/applications/${applicationSourceId}/relations`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     // Then
@@ -75,12 +75,12 @@ describe('Relations End-to-End', () => {
     });
   });
 
-  it('should retrieve a relation by its id', async () => {
+  it("should retrieve a relation by its id", async () => {
     const applicationSourceId = applicationSource.id;
     // When
     const response = await request(app().getHttpServer())
       .get(`/applications/${applicationSourceId}/relations/${relation.id}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     // Then
@@ -98,7 +98,7 @@ describe('Relations End-to-End', () => {
     });
   });
 
-  it('should update a relation with valid data', async () => {
+  it("should update a relation with valid data", async () => {
     const applicationSourceId = applicationSource.id;
     // Given
     const updatedDto = {
@@ -110,7 +110,7 @@ describe('Relations End-to-End', () => {
     const response = await request(app().getHttpServer())
       .patch(`/applications/${applicationSourceId}/relations/${relation.id}`)
       .send(updatedDto)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     // Then: la relation doit être mise à jour avec la nouvelle applicationTarget
@@ -119,29 +119,29 @@ describe('Relations End-to-End', () => {
     expect(relation.applicationTargetId).toEqual(applicationUpdates.id);
   });
 
-  it('should delete a relation', async () => {
+  it("should delete a relation", async () => {
     const applicationSourceId = applicationSource.id;
     // When
     await request(app().getHttpServer())
       .delete(`/applications/${applicationSourceId}/relations/${relation.id}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
   });
 
-  it('should return 404 when retrieving a deleted relation', async () => {
+  it("should return 404 when retrieving a deleted relation", async () => {
     const applicationSourceId = applicationSource.id;
     // When
     await request(app().getHttpServer())
       .get(`/applications/${applicationSourceId}/relations/${relation.id}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(404);
   });
 });
 
-describe('application guard', () => {
+describe("application guard", () => {
   const app = setupTestSuite();
-  let appOwner: { keycloakId: string; email: string };
-  let appActor: { keycloakId: string; email: string };
+  let appOwner: { keycloakId: string, email: string };
+  let appActor: { keycloakId: string, email: string };
   let TOKEN: string;
   const prisma = getPrismaClient();
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
@@ -154,7 +154,7 @@ describe('application guard', () => {
     appActor = await UserFaker.create();
     application = await ApplicationFaker.create(appOwner);
     applicationTarget = await ApplicationFaker.create(appOwner);
-    actorType = await ActorTypeFaker.create(['readRelations']);
+    actorType = await ActorTypeFaker.create(["readRelations"]);
     actor = await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
@@ -169,7 +169,7 @@ describe('application guard', () => {
     prisma.$disconnect();
   });
 
-  it(`permissions testing`, async () => {
+  it("permissions testing", async () => {
     // Should fail because the user does not have the write permission
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/relations`)
@@ -177,18 +177,18 @@ describe('application guard', () => {
         applicationTargetId: applicationTarget.id,
         type: RelationType.is_part_of,
       })
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(['writeRelations']);
+    await actorType.update(["writeRelations"]);
     const relation = await request(app().getHttpServer())
       .post(`/applications/${application.id}/relations`)
       .send({
         applicationTargetId: applicationTarget.id,
         type: RelationType.is_part_of,
       })
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
     const relationId = relation.body.id;
     expect(relationId).toBeDefined();
@@ -198,27 +198,27 @@ describe('application guard', () => {
     // Should fail to get the relation because the user does not have the read permission
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/relations/${relationId}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     // Should fail to list relations because the user does not have the read permission
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/relations`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     // Add read permission
-    await actorType.update(['readRelations']);
+    await actorType.update(["readRelations"]);
 
     // Should succeed to get the relation
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/relations/${relationId}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
     // Should succeed to list relations
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/relations`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     // should fail on write permission
@@ -227,16 +227,16 @@ describe('application guard', () => {
       .send({
         type: RelationType.in_replacement_of,
       })
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/relations/${relationId}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     // Add write permission again
-    await actorType.update(['writeRelations']);
+    await actorType.update(["writeRelations"]);
 
     // Should succeed to update the relation
     await request(app().getHttpServer())
@@ -244,13 +244,13 @@ describe('application guard', () => {
       .send({
         type: RelationType.in_replacement_of,
       })
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     // Should succeed to delete the relation
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/relations/${relationId}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
   });
 });

@@ -27,7 +27,7 @@ const tabs = [
 <template>
   <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName" :tab-titles="tabs">
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
-      <DsfrTabContent :tab-id="tab.tabId" :panel-id="tab.panelId" v-show="activeTab === index">
+      <DsfrTabContent v-show="activeTab === index" :tab-id="tab.tabId" :panel-id="tab.panelId">
         <component :is="tab.component" />
       </DsfrTabContent>
     </template>

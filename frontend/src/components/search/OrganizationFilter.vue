@@ -8,7 +8,7 @@ import { useDebouncedFn } from "@/composables/use-debouncefn";
 
 const props = withDefaults(
   defineProps<{
-    preselected?: Organization | undefined | null;
+    preselected?: Organization | undefined | null
   }>(),
   {
     preselected: null,
@@ -16,7 +16,7 @@ const props = withDefaults(
 );
 
 const emits = defineEmits<{
-  select: [value: Organization | null];
+  select: [value: Organization | null]
 }>();
 
 const searchStore = useApplicationSearchStore();
@@ -75,19 +75,19 @@ function update() {
     <div class="search-section">
       <div class="input-field">
         <DsfrInput
+          v-model="organizationSearchInput"
           label-visible
           label="Nom de l'organisation"
-          v-model="organizationSearchInput"
           list="organizationSuggestionsList"
           placeholder="Rechercher une organisation"
           @update:model-value="update"
         />
       </div>
-      <DsfrButton v-if="selected" class="cancel-button" secondary label="X" @click="reset"></DsfrButton>
+      <DsfrButton v-if="selected" class="cancel-button" secondary label="X" @click="reset" />
     </div>
     <template v-if="!selected">
       <div v-for="organization in suggestions" :key="organization.id" @click="select(organization)">
-        <OrgBreadCrumb hide-hierarchy :organization-id="organization.id" :clickable="false"> </OrgBreadCrumb>
+        <OrgBreadCrumb hide-hierarchy :organization-id="organization.id" :clickable="false" />
       </div>
     </template>
   </div>

@@ -44,7 +44,7 @@ export function renderChart(
           data,
           backgroundColor: "#3e95cd",
           borderColor: "#3e95cd",
-          fill: type === "line" ? false : true,
+          fill: type !== "line",
           tension: type === "line" ? 0.3 : 0,
           pointRadius: type === "line" ? 4 : 0,
         },

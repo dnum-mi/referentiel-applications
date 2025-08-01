@@ -12,7 +12,9 @@ import { routeNames } from "@/router/route-names";
     >
       <template #default>
         <router-link :to="{ name: routeNames.SEARCHAPP }">
-          <DsfrButton variant="secondary" size="small"> Retour à l'accueil </DsfrButton>
+          <DsfrButton variant="secondary" size="small">
+            Retour à l'accueil
+          </DsfrButton>
         </router-link>
       </template>
     </DsfrErrorPage>

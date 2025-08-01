@@ -1,7 +1,7 @@
-import { KeycloakService } from '../../src/services/keycloak.service';
-import { faker } from '@faker-js/faker';
-import { getPrismaClient } from './prisma';
-import { AdminLevel } from 'src/user/entities/user.entity';
+import { KeycloakService } from "../../src/services/keycloak.service";
+import { faker } from "@faker-js/faker";
+import { getPrismaClient } from "./prisma";
+import { AdminLevel } from "src/user/entities/user.entity";
 
 const keycloakService = new KeycloakService();
 
@@ -13,8 +13,8 @@ export class UserFaker {
 
     const adminToken = await keycloakService.getAdminToken();
     const keycloakUserID = await keycloakService.createUser(adminToken, {
-      email: email,
-      username: username,
+      email,
+      username,
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
     });
@@ -27,7 +27,7 @@ export class UserFaker {
         data: {
           email,
           keycloakId: keycloakUserID,
-          adminLevel: adminLevel,
+          adminLevel,
         },
       });
     }

@@ -3,13 +3,13 @@ import {
   CanActivate,
   ExecutionContext,
   InternalServerErrorException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { APP_ACTION_KEY } from '../decorators/application.decorator';
-import type { User } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { APP_PERMISSIONS, APP_PERMS_MAP } from '../utils/types';
-import { AdminLevel } from 'src/user/entities/user.entity';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { APP_ACTION_KEY } from "../decorators/application.decorator";
+import type { User } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
+import { APP_PERMISSIONS, APP_PERMS_MAP } from "../utils/types";
+import { AdminLevel } from "src/user/entities/user.entity";
 
 @Injectable()
 export class ApplicationGuard implements CanActivate {
@@ -26,7 +26,7 @@ export class ApplicationGuard implements CanActivate {
 
     if (!action) {
       throw new InternalServerErrorException(
-        'Server Error: Missing permission check',
+        "Server Error: Missing permission check",
       );
     }
 
@@ -54,7 +54,7 @@ export class ApplicationGuard implements CanActivate {
   private async getUserAppPermissions(
     applicationId: string,
     user: User,
-  ): Promise<{ appPermsMap: APP_PERMS_MAP; isOwner: boolean }> {
+  ): Promise<{ appPermsMap: APP_PERMS_MAP, isOwner: boolean }> {
     const [actors, application] = await Promise.all([
       this.prisma.actor.findMany({
         where: {
@@ -72,7 +72,7 @@ export class ApplicationGuard implements CanActivate {
             },
           },
         },
-        distinct: ['actorTypeId'],
+        distinct: ["actorTypeId"],
       }),
       this.prisma.application.findUnique({
         where: { id: applicationId },
@@ -87,7 +87,7 @@ export class ApplicationGuard implements CanActivate {
       }
       Object.values(actor.actorType.appPermissions).forEach((actor) => {
         Object.entries(actor).forEach(([key, value]) => {
-          if (key === 'actorTypeId') return;
+          if (key === "actorTypeId") return;
           appPermsMap[key] = appPermsMap[key] || value;
         });
       });
@@ -102,7 +102,7 @@ export class ApplicationGuard implements CanActivate {
     action: APP_PERMISSIONS,
   ): Promise<boolean> {
     if (user.adminLevel >= AdminLevel.WRITE) return true;
-    if (action.startsWith('read') && user.adminLevel >= AdminLevel.READ)
+    if (action.startsWith("read") && user.adminLevel >= AdminLevel.READ)
       return true;
 
     const { appPermsMap, isOwner } = await this.getUserAppPermissions(

@@ -1,10 +1,10 @@
-import { IsString, IsOptional, IsEmail } from 'class-validator';
-import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { PartialType } from '@nestjs/mapped-types';
+import { IsString, IsOptional, IsEmail } from "class-validator";
+import { ApiProperty, ApiHideProperty } from "@nestjs/swagger";
+import { PartialType } from "@nestjs/mapped-types";
 
 export class CreateActorDto {
   @ApiProperty({
-    example: 'example@example.com',
+    example: "example@example.com",
     description: "Email de l'acteur (Optionel)",
     required: false,
   })
@@ -13,8 +13,8 @@ export class CreateActorDto {
   email?: string;
 
   @ApiProperty({
-    example: 'Jean',
-    description: 'Prénom de l’acteur',
+    example: "Jean",
+    description: "Prénom de l’acteur",
     required: false,
   })
   @IsOptional()
@@ -22,8 +22,8 @@ export class CreateActorDto {
   firstname?: string;
 
   @ApiProperty({
-    example: 'Dupont',
-    description: 'Nom de l’acteur',
+    example: "Dupont",
+    description: "Nom de l’acteur",
     required: false,
   })
   @IsOptional()
@@ -31,7 +31,7 @@ export class CreateActorDto {
   lastname?: string;
 
   @ApiProperty({
-    example: '5708d232-8338-4abf-8f38-8370acc89497',
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
     description: "ID du type d'acteur lié",
     required: true,
   })
@@ -40,7 +40,7 @@ export class CreateActorDto {
   actorTypeId?: string;
 
   @ApiProperty({
-    example: '9965dc19-1c5a-472d-83e3-8bf65093c86c',
+    example: "9965dc19-1c5a-472d-83e3-8bf65093c86c",
     description: "ID de l'organization lié (Optionel)",
     required: false,
   })
@@ -49,7 +49,7 @@ export class CreateActorDto {
   organizationId?: string;
 
   @ApiProperty({
-    example: '035869dc-47a6-4cee-828f-f6a28d050b35',
+    example: "035869dc-47a6-4cee-828f-f6a28d050b35",
     description: "ID de l'application lié (Optionel)",
     required: false,
   })

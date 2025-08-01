@@ -39,10 +39,10 @@ const route = useRoute();
 const router = useRouter();
 const toaster = useToaster();
 
-const updateApplication = (updatedApp: ApplicationWithPerms) => {
+function updateApplication(updatedApp: ApplicationWithPerms) {
   Object.assign(application.value, updatedApp);
   emit("update:application", updatedApp);
-};
+}
 
 const errorMessages = {
   ERR_LOAD_HOSTINGS: "Erreur lors du chargement des hébergements",
@@ -57,90 +57,90 @@ const fetchLinks = linkStore.fetchLinks.bind(linkStore, props.application.id);
 const fetchCompliances = compliancesStore.fetchCompliance.bind(compliancesStore, props.application.id);
 const fetchActors = actorStore.fetchActorsByApplication.bind(actorStore, props.application.id);
 const fetchRelations = relationsStore.fetchRelationsByApplication.bind(relationsStore, props.application.id);
-const fetchHistoryData = async () => {
+async function fetchHistoryData() {
   await Promise.all([
     reportIssueStore.fetchIssueByApplication(props.application.id),
     metadataStore.fetchMetadatasByApplication(props.application.id),
   ]);
-};
+}
 
 const tabs = ref<
   (Tab<typeof errorMessages> & {
-    component: Component;
-    requiredPerms: APP_PERMISSIONS[];
+    component: Component
+    requiredPerms: APP_PERMISSIONS[]
   })[]
 >([
-  {
-    title: "Informations générales",
-    icon: "ri-checkbox-circle-line",
-    tabId: "tab-infos",
-    panelId: "panel-infos",
-    component: InformationsGenerales,
-    requiredPerms: ["readBase"],
-  },
-  {
-    title: "Liens",
-    icon: "ri-links-line",
-    tabId: "tab-links",
-    panelId: "panel-links",
-    component: Links,
-    requiredPerms: ["readLinks"],
-    loadFn: fetchLinks,
-    errorKey: "ERR_LOAD_LINKS",
-  },
-  {
-    title: "Conformités",
-    icon: "ri-shield-check-line",
-    tabId: "tab-compliances",
-    panelId: "panel-compliances",
-    component: CompliancesAccordionManager,
-    requiredPerms: ["readCompliances"],
-    loadFn: fetchCompliances,
-    errorKey: "ERR_LOAD_COMPLIANCES",
-  },
-  {
-    title: "Acteurs",
-    icon: "ri-team-line",
-    tabId: "tab-actors",
-    panelId: "panel-actors",
-    component: ActorManager,
-    requiredPerms: ["readActors"],
-    loadFn: fetchActors,
-    errorKey: "ERR_LOAD_ACTORS",
-  },
-  {
-    title: "Relations",
-    icon: "ri-node-tree",
-    tabId: "tab-relations",
-    panelId: "panel-relations",
-    component: Relationships,
-    requiredPerms: ["readRelations"],
-    loadFn: fetchRelations,
-    errorKey: "ERR_LOAD_RELATIONS",
-  },
-  {
-    title: "Historique",
-    icon: "ri-edit-line",
-    tabId: "tab-history",
-    panelId: "panel-history",
-    component: NotificationsApplication,
-    requiredPerms: ["readMetadata"],
-    loadFn: fetchHistoryData,
-    errorKey: "ERR_LOAD_ISSUES_METADATAS",
-  },
-  {
-    title: "Qualité",
-    icon: "ri-bar-chart-line",
-    tabId: "tab-quality",
-    panelId: "panel-quality",
-    component: Quality,
-    requiredPerms: ["readCompliances", "readActors", "readLinks", "readBase"],
-  },
-]);
+      {
+        title: "Informations générales",
+        icon: "ri-checkbox-circle-line",
+        tabId: "tab-infos",
+        panelId: "panel-infos",
+        component: InformationsGenerales,
+        requiredPerms: ["readBase"],
+      },
+      {
+        title: "Liens",
+        icon: "ri-links-line",
+        tabId: "tab-links",
+        panelId: "panel-links",
+        component: Links,
+        requiredPerms: ["readLinks"],
+        loadFn: fetchLinks,
+        errorKey: "ERR_LOAD_LINKS",
+      },
+      {
+        title: "Conformités",
+        icon: "ri-shield-check-line",
+        tabId: "tab-compliances",
+        panelId: "panel-compliances",
+        component: CompliancesAccordionManager,
+        requiredPerms: ["readCompliances"],
+        loadFn: fetchCompliances,
+        errorKey: "ERR_LOAD_COMPLIANCES",
+      },
+      {
+        title: "Acteurs",
+        icon: "ri-team-line",
+        tabId: "tab-actors",
+        panelId: "panel-actors",
+        component: ActorManager,
+        requiredPerms: ["readActors"],
+        loadFn: fetchActors,
+        errorKey: "ERR_LOAD_ACTORS",
+      },
+      {
+        title: "Relations",
+        icon: "ri-node-tree",
+        tabId: "tab-relations",
+        panelId: "panel-relations",
+        component: Relationships,
+        requiredPerms: ["readRelations"],
+        loadFn: fetchRelations,
+        errorKey: "ERR_LOAD_RELATIONS",
+      },
+      {
+        title: "Historique",
+        icon: "ri-edit-line",
+        tabId: "tab-history",
+        panelId: "panel-history",
+        component: NotificationsApplication,
+        requiredPerms: ["readMetadata"],
+        loadFn: fetchHistoryData,
+        errorKey: "ERR_LOAD_ISSUES_METADATAS",
+      },
+      {
+        title: "Qualité",
+        icon: "ri-bar-chart-line",
+        tabId: "tab-quality",
+        panelId: "panel-quality",
+        component: Quality,
+        requiredPerms: ["readCompliances", "readActors", "readLinks", "readBase"],
+      },
+    ]);
 
 onMounted(() => {
   const tabParam = route.query.tab;
-  if (tabParam && !isNaN(Number(tabParam))) {
+  if (tabParam && !Number.isNaN(Number(tabParam))) {
     const index = Number(tabParam);
     if (index >= 0 && index < tabs.value.length) {
       activeTab.value = index;
@@ -152,7 +152,7 @@ onBeforeMount(async () => {
   tabs.value = tabs.value.filter((tab) => {
     if (!tab.requiredPerms) return true;
     if (userStore.adminLevel >= AdminLevel.READ) return true;
-    return tab.requiredPerms.every((perm) => props.application.myPerms.has(perm));
+    return tab.requiredPerms.every(perm => props.application.myPerms.has(perm));
   });
   tabs.value.forEach((tab) => {
     if (tab.loadFn) {
@@ -187,7 +187,7 @@ watch(
 <template>
   <DsfrTabs v-model="activeTab" tab-list-name="Informations sur l'application" :tab-titles="tabs">
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
-      <DsfrTabContent :tab-id="tab.tabId" :panel-id="tab.panelId" v-show="activeTab === index">
+      <DsfrTabContent v-show="activeTab === index" :tab-id="tab.tabId" :panel-id="tab.panelId">
         <component :is="tab.component" :application="application" @update:application="updateApplication" />
       </DsfrTabContent>
     </template>

@@ -28,12 +28,12 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
 
   const page = computed({
     get: () => filters.page,
-    set: (val) => (filters.page = val),
+    set: val => (filters.page = val),
   });
 
   const limit = computed({
     get: () => filters.limit,
-    set: (val) => (filters.limit = val),
+    set: val => (filters.limit = val),
   });
 
   function setFilter(key: keyof typeof filters, value: any) {

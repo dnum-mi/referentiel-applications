@@ -30,14 +30,14 @@ const form = ref<Actor>({
 
 const actorOrganization = ref<Organization>(organizationStore.organizations[props.initialData?.organizationId ?? ""]);
 
-const actorTypeOptions = props.actorTypes.map((type) => ({
+const actorTypeOptions = props.actorTypes.map(type => ({
   text: type.label,
   value: type.id,
 }));
 
-const handleSubmit = () => {
+function handleSubmit() {
   emit("submit", form.value);
-};
+}
 </script>
 
 <template>
@@ -50,24 +50,24 @@ const handleSubmit = () => {
       <OrganizationFilter
         v-model="form.organizationId"
         label="Organisation"
-        @select="form.organizationId = $event?.id"
         :preselected="actorOrganization"
+        @select="form.organizationId = $event?.id"
       />
     </div>
 
     <div class="fr-input-group fr-mt-3w">
       <label class="fr-label" for="email">Email</label>
-      <input type="email" id="email" v-model="form.email" class="fr-input" placeholder="exemple@domaine.com" />
+      <input id="email" v-model="form.email" type="email" class="fr-input" placeholder="exemple@domaine.com">
     </div>
 
     <div class="fr-input-group fr-mt-3w">
       <label class="fr-label" for="firstname">Prénom (Optionnel)</label>
-      <input type="text" id="firstname" v-model="form.firstname" class="fr-input" placeholder="Prénom" />
+      <input id="firstname" v-model="form.firstname" type="text" class="fr-input" placeholder="Prénom">
     </div>
 
     <div class="fr-input-group fr-mt-3w">
       <label class="fr-label" for="lastname">Nom (Optionnel)</label>
-      <input type="text" id="lastname" v-model="form.lastname" class="fr-input" placeholder="Nom de famille" />
+      <input id="lastname" v-model="form.lastname" type="text" class="fr-input" placeholder="Nom de famille">
     </div>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
@@ -75,7 +75,7 @@ const handleSubmit = () => {
       <DsfrButton type="submit" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'">
         <template v-if="isSubmitting">
           <span class="fr-loading fr-loading--sm">
-            <span class="fr-loading__icon" aria-hidden="true"></span>
+            <span class="fr-loading__icon" aria-hidden="true" />
           </span>
         </template>
       </DsfrButton>

@@ -137,7 +137,7 @@ async function savePermissions() {
   }
 }
 
-const updateAllApplicationsQuality = async () => {
+async function updateAllApplicationsQuality() {
   loading.value = true;
   try {
     const message = await Applications.patchApplicationsQuality();
@@ -148,7 +148,7 @@ const updateAllApplicationsQuality = async () => {
   } finally {
     loading.value = false;
   }
-};
+}
 
 function saveAppPermsMatrix(matrix: AppPermsMatrix) {
   AppPermsMatrixApi.update(matrix)
@@ -167,16 +167,20 @@ function saveAppPermsMatrix(matrix: AppPermsMatrix) {
   <div class="fr-container">
     <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs">
       <DsfrTabContent :panel-id="tabs[0].panelId" :tab-id="tabs[0].tabId">
-        <h1 class="fr-h1">Gestion des utilisateurs</h1>
-        <p class="fr-text--lg">Gérez les permissions des utilisateurs de l'application</p>
+        <h1 class="fr-h1">
+          Gestion des utilisateurs
+        </h1>
+        <p class="fr-text--lg">
+          Gérez les permissions des utilisateurs de l'application
+        </p>
         <div class="fr-mb-4w">
           <DsfrSearchBar
             v-model="searchQuery"
             label="Rechercher un utilisateur"
             placeholder="Rechercher par email ou ID Keycloak..."
-            @search="handleSearch"
-            :button-text="'Rechercher'"
+            button-text="Rechercher"
             class="fr-col-12"
+            @search="handleSearch"
           />
         </div>
 
@@ -185,7 +189,9 @@ function saveAppPermsMatrix(matrix: AppPermsMatrix) {
         </div>
 
         <div v-else-if="errors.size" class="fr-alert fr-alert--error">
-          <p v-for="errorKey in errors.keys()" :key="errorKey">{{ errorMessages[errorKey] }}</p>
+          <p v-for="errorKey in errors.keys()" :key="errorKey">
+            {{ errorMessages[errorKey] }}
+          </p>
         </div>
 
         <div v-else class="fr-card">
@@ -194,11 +200,21 @@ function saveAppPermsMatrix(matrix: AppPermsMatrix) {
               <table>
                 <thead>
                   <tr>
-                    <th scope="col">Email</th>
-                    <th scope="col">ID Keycloak</th>
-                    <th scope="col">Derniere Connection</th>
-                    <th scope="col">Permissions actuelles</th>
-                    <th scope="col">Actions</th>
+                    <th scope="col">
+                      Email
+                    </th>
+                    <th scope="col">
+                      ID Keycloak
+                    </th>
+                    <th scope="col">
+                      Derniere Connection
+                    </th>
+                    <th scope="col">
+                      Permissions actuelles
+                    </th>
+                    <th scope="col">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -238,19 +254,21 @@ function saveAppPermsMatrix(matrix: AppPermsMatrix) {
                   hint=""
                   :options="AdminLevelOptions"
                   name="admin-level-radio"
-                ></DsfrRadioButtonSet>
+                />
               </fieldset>
             </div>
           </div>
 
           <template #footer>
             <DsfrButton label="Annuler" secondary @click="closeEditModal" />
-            <DsfrButton label="Sauvegarder" @click="savePermissions" :disabled="saving" />
+            <DsfrButton label="Sauvegarder" :disabled="saving" @click="savePermissions" />
           </template>
         </DsfrModal>
       </DsfrTabContent>
       <DsfrTabContent :panel-id="tabs[1].panelId" :tab-id="tabs[1].tabId">
-        <h1 class="fr-h1">Gestion de l'indice de qualité</h1>
+        <h1 class="fr-h1">
+          Gestion de l'indice de qualité
+        </h1>
         <DsfrButton
           :label="loading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
           :icon="{ name: 'ri-refresh-line', animation: loading ? 'spin' : undefined }"

@@ -1,7 +1,7 @@
-import { Prisma, priorityRestart } from '@prisma/client';
+import { Prisma, priorityRestart } from "@prisma/client";
 
-const accentFrom = 'àáâãäåèéêëìíîïòóôõöùúûüç';
-const accentTo = 'aaaaaaeeeeiiiiooooouuuuc';
+const accentFrom = "àáâãäåèéêëìíîïòóôõöùúûüç";
+const accentTo = "aaaaaaeeeeiiiiooooouuuuc";
 const ALLOWED_PRIORITIES = Object.values(priorityRestart);
 
 export function buildLabelFilter(label?: string): Prisma.Sql[] {

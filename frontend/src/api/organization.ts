@@ -3,7 +3,7 @@ import axios from "axios";
 
 const Organizations = {
   async getOrganizations(ids?: string[]): Promise<Record<string, Organization>> {
-    const { data } = await axios.get<Record<string, Organization>>(`organizations?withAncestors=true${ids ? "&ids=" + ids.join(",") : ""}`);
+    const { data } = await axios.get<Record<string, Organization>>(`organizations?withAncestors=true${ids ? `&ids=${ids.join(",")}` : ""}`);
     return data;
   },
   async searchOrganizations(search: string): Promise<Record<string, Organization>> {
@@ -11,7 +11,7 @@ const Organizations = {
     return data;
   },
   async create(organization: Omit<Organization, "id">): Promise<Organization> {
-    const { data } = await axios.post<Organization>(`organizations`, organization);
+    const { data } = await axios.post<Organization>("organizations", organization);
     return data;
   },
   async patch(id: string, organization: Partial<Organization>): Promise<Organization> {

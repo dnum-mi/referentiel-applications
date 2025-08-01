@@ -5,11 +5,11 @@ import Relations from "@/api/relation";
 
 export const useRelationStore = defineStore("relationStore", () => {
   const relations = ref<(Relation & { isSource: boolean })[]>([]);
-  const relationsAsSource = computed(() => relations.value.filter((rel) => rel.isSource));
-  const relationsAsTarget = computed(() => relations.value.filter((rel) => !rel.isSource));
+  const relationsAsSource = computed(() => relations.value.filter(rel => rel.isSource));
+  const relationsAsTarget = computed(() => relations.value.filter(rel => !rel.isSource));
 
   async function fetchRelationsByApplication(applicationId: string) {
-    relations.value = (await Relations.getAllForApplication(applicationId)).map((rel) => ({
+    relations.value = (await Relations.getAllForApplication(applicationId)).map(rel => ({
       ...rel,
       isSource: rel.applicationSourceId === applicationId,
     }));
@@ -20,7 +20,7 @@ export const useRelationStore = defineStore("relationStore", () => {
     await fetchRelationsByApplication(applicationSourceId);
   }
 
-  async function updateRelation(applicationSourceId: string, id: string, data: Partial<{ type: string; applicationTargetId: string }>) {
+  async function updateRelation(applicationSourceId: string, id: string, data: Partial<{ type: string, applicationTargetId: string }>) {
     await Relations.update(applicationSourceId, id, data);
     return fetchRelationsByApplication(applicationSourceId);
   }

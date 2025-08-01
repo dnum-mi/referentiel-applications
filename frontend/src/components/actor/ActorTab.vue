@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeMount } from "vue";
-import { defineProps, defineEmits } from "vue";
+import { ref, computed, onBeforeMount, defineProps, defineEmits } from "vue";
 import useToaster from "@/composables/use-toaster";
 import useModal from "@/composables/use-modal";
 import { useActorStore } from "@/stores/actorStore";
@@ -33,11 +32,11 @@ const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom"
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 
 const tableRows = computed(() =>
-  actorStore.actors.map((actor) => [
+  actorStore.actors.map(actor => [
     actor.id,
     actor.organizationId ?? undefined,
     (() => {
-      const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
+      const type = actorTypesList.value.find(t => t.id === actor.actorTypeId);
       return type ? type.label : "Type inconnu";
     })(),
     {
@@ -76,7 +75,7 @@ async function handleSaveActors(actor: Actor) {
 }
 
 async function confirmDelete() {
-  const actorsToDelete = actorStore.actors.filter((actor) => selectedActorIds.value.includes(actor.id));
+  const actorsToDelete = actorStore.actors.filter(actor => selectedActorIds.value.includes(actor.id));
 
   for (const actor of actorsToDelete) {
     await actorStore.deleteActor(actor.id, props.application.id);
@@ -105,14 +104,16 @@ function cancelDelete() {
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
     <div class="fr-col">
-      <h3 class="fr-mb-0">Gestion des acteurs</h3>
+      <h3 class="fr-mb-0">
+        Gestion des acteurs
+      </h3>
     </div>
     <div class="fr-col-auto">
       <DsfrButton
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
-        @click="actorModal.openCreateModal()"
         :disabled="!canEdit"
+        @click="actorModal.openCreateModal()"
       >
         Ajouter un acteur
       </DsfrButton>
@@ -128,9 +129,9 @@ function cancelDelete() {
       <DsfrButton
         type="button"
         tertiary
-        @click="removeSelectedActors"
         icon="fr-icon-delete-line"
         :disabled="selectedActorIds.length === 0 || !canEdit"
+        @click="removeSelectedActors"
       >
         Supprimer la sélection
       </DsfrButton>
@@ -156,11 +157,13 @@ function cancelDelete() {
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Sélection'">
-          <input type="checkbox" :value="cell" v-model="selectedActorIds" />
+          <input v-model="selectedActorIds" type="checkbox" :value="cell">
         </template>
         <template v-else-if="colKey === 'Organisation'">
-          <OrgBreadCrumb v-if="cell" :organization-id="cell"></OrgBreadCrumb>
-          <template v-else>Aucune organisation</template>
+          <OrgBreadCrumb v-if="cell" :organization-id="cell" />
+          <template v-else>
+            Aucune organisation
+          </template>
         </template>
         <template v-else-if="colKey === 'Email'">
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">
@@ -168,7 +171,7 @@ function cancelDelete() {
           </a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!canEdit">
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" @click="cell.onClick">
             {{ cell.label }}
           </DsfrButton>
         </template>
@@ -190,13 +193,13 @@ function cancelDelete() {
     <ActorForm
       v-bind="{ application, initialData: actorModal.selectedItem.value }"
       :is-submitting="isSubmitting"
-      :actorTypes="actorTypesList"
+      :actor-types="actorTypesList"
       @submit="handleSaveActors"
       @cancel="actorModal.closeModal"
     />
   </DsfrModal>
 
-  <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="acteurs" @confirm="confirmDelete" @cancel="cancelDelete" />
+  <DeleteConfirmationModal :opened="showDeleteConfirmation" item-name="acteurs" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
 
 <style scoped>

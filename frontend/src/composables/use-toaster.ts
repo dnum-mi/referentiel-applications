@@ -19,15 +19,15 @@ function getRandomString(length: number) {
 }
 
 export interface Message {
-  id?: string;
-  title?: string;
-  description: string;
-  type?: "info" | "success" | "warning" | "error";
-  closeable?: boolean;
-  titleTag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-  timeout?: number;
-  style?: Record<string, string>;
-  class?: string | Record<string, string> | Array<string | Record<string, string>>;
+  id?: string
+  title?: string
+  description: string
+  type?: "info" | "success" | "warning" | "error"
+  closeable?: boolean
+  titleTag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
+  timeout?: number
+  style?: Record<string, string>
+  class?: string | Record<string, string> | Array<string | Record<string, string>>
 }
 
 const timeouts: Record<string, number> = {};
@@ -35,7 +35,7 @@ const messages: Message[] = reactive([]);
 
 function useToaster(defaultTimeout = 10000) {
   function removeMessage(id: string) {
-    const index = messages.findIndex((message) => message.id === id);
+    const index = messages.findIndex(message => message.id === id);
     clearTimeout(timeouts[id]);
     if (index === -1) {
       return;

@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
-import { defineProps, defineEmits } from "vue";
+import { ref, watch, onMounted, defineProps, defineEmits } from "vue";
 import { useComplianceStore } from "@/stores/complianceStore";
 import { durationHoursOptions, testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
 
 const props = defineProps<{
-  applicationId: string;
-  application: ApplicationWithPerms;
-  type: string;
-  mode: "create" | "edit";
-  initialData: Record<string, any> | null;
-  opened: boolean;
+  applicationId: string
+  application: ApplicationWithPerms
+  type: string
+  mode: "create" | "edit"
+  initialData: Record<string, any> | null
+  opened: boolean
 }>();
 
 const emit = defineEmits<{
-  (e: "saved"): void;
+  (e: "saved"): void
 }>();
 
 const store = useComplianceStore();
@@ -27,9 +26,9 @@ const submitting = ref(false);
 
 const canEdit = computed(
   () =>
-    userStore.userPermissions?.includes("write") ||
-    userStore.userPermissions?.includes("admin") ||
-    props.application.myPerms.has("writeCompliances"),
+    userStore.userPermissions?.includes("write")
+    || userStore.userPermissions?.includes("admin")
+    || props.application.myPerms.has("writeCompliances"),
 );
 
 async function loadForm() {
@@ -45,7 +44,7 @@ async function loadForm() {
 onMounted(loadForm);
 watch(
   () => props.opened,
-  (open) => open && loadForm(),
+  open => open && loadForm(),
 );
 watch(
   () => props.initialData,
@@ -55,7 +54,7 @@ watch(
 async function save() {
   submitting.value = true;
 
-  const schema: Record<string, { numberKeys: string[]; dateKeys: string[] }> = {
+  const schema: Record<string, { numberKeys: string[], dateKeys: string[] }> = {
     dima: {
       numberKeys: ["duration_hours"],
       dateKeys: ["last_test_date"],
@@ -122,7 +121,7 @@ async function save() {
           label="Durée d'interruption maximale"
           label-visible
           required
-          defaultUnselectedText="Choisir..."
+          default-unselected-text="Choisir..."
           :disabled="!canEdit"
         />
         <DsfrCheckbox v-model="form.is_hno" :label="complianceFieldLabels.is_hno" :value="true" :disabled="!canEdit" />
@@ -154,7 +153,7 @@ async function save() {
           :options="Object.entries(testResultsDict).map(([v, t]) => ({ value: v, text: t }))"
           :label="complianceFieldLabels.test_result"
           label-visible
-          defaultUnselectedText="Choisir..."
+          default-unselected-text="Choisir..."
           :disabled="!canEdit"
         />
       </template>
@@ -165,7 +164,7 @@ async function save() {
           :options="durationHoursOptions"
           :label="complianceFieldLabels.duration_hours"
           label-visible
-          defaultUnselectedText="Choisir..."
+          default-unselected-text="Choisir..."
         />
         <DsfrInput v-model="form.data_types" :label="complianceFieldLabels.data_types" is-textarea label-visible />
         <DsfrInput v-model="form.backup_frequency" :label="complianceFieldLabels.backup_frequency" label-visible />
@@ -174,7 +173,7 @@ async function save() {
           :options="Object.entries(backupStorageDict).map(([v, t]) => ({ value: v, text: t }))"
           :label="complianceFieldLabels.backup_storage"
           label-visible
-          defaultUnselectedText="Choisir..."
+          default-unselected-text="Choisir..."
         />
         <DsfrInput v-model="form.last_test_date" label="Date du dernier test" type="date" label-visible />
         <DsfrSelect
@@ -182,7 +181,7 @@ async function save() {
           :options="Object.entries(testResultsDict).map(([v, t]) => ({ value: v, text: t }))"
           :label="complianceFieldLabels.test_result"
           label-visible
-          defaultUnselectedText="Choisir..."
+          default-unselected-text="Choisir..."
         />
         <DsfrInput v-model="form.backup_method" :label="complianceFieldLabels.backup_method" type="text" label-visible />
         <DsfrInput v-model="form.restoration_manager" :label="complianceFieldLabels.restoration_manager" type="text" label-visible />

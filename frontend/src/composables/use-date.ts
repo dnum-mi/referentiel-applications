@@ -1,6 +1,6 @@
 import { format, parseISO, isFuture } from "date-fns";
 
-export const formatDate = (isoDate: string): string => {
+export function formatDate(isoDate: string): string {
   const date = new Date(isoDate);
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
@@ -9,7 +9,7 @@ export const formatDate = (isoDate: string): string => {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
-};
+}
 
 export function formatDateFR(isoDate: string | Date): string {
   const d = typeof isoDate === "string" ? parseISO(isoDate) : isoDate;

@@ -11,7 +11,7 @@
             </div>
             <div class="fr-grid-row fr-grid-row--gutters">
               <div class="fr-col-md-3">
-                <img src="../../public/assets/svg-screen.svg" alt="" />
+                <img src="../../public/assets/svg-screen.svg" alt="">
               </div>
               <div class="fr-col-md-9">
                 <div class="fr-m-0">
@@ -38,45 +38,65 @@
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svg-centralize.svg" alt="" />
-                    <h3 class="fr-tile__title">Centralisation</h3>
-                    <p class="fr-tile__desc fr-text--sm">Rassembler toutes les fiches produits dans un seul point de vérité.</p>
+                    <img src="../../public/assets/svg-centralize.svg" alt="">
+                    <h3 class="fr-tile__title">
+                      Centralisation
+                    </h3>
+                    <p class="fr-tile__desc fr-text--sm">
+                      Rassembler toutes les fiches produits dans un seul point de vérité.
+                    </p>
                   </div>
                 </div>
               </div>
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svg-loupe.svg" alt="" />
-                    <h3 class="fr-tile__title">Facilité d'accès</h3>
-                    <p class="fr-tile__desc fr-text--sm">Avoir une vue d'ensemble claire des produits à disposition des utilisateurs.</p>
+                    <img src="../../public/assets/svg-loupe.svg" alt="">
+                    <h3 class="fr-tile__title">
+                      Facilité d'accès
+                    </h3>
+                    <p class="fr-tile__desc fr-text--sm">
+                      Avoir une vue d'ensemble claire des produits à disposition des utilisateurs.
+                    </p>
                   </div>
                 </div>
               </div>
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svg-dependencies.svg" alt="" />
-                    <h3 class="fr-tile__title">Gestion des dépendances</h3>
-                    <p class="fr-tile__desc fr-text--sm">Comprendre les interconnexions et dépendances entre applications.</p>
+                    <img src="../../public/assets/svg-dependencies.svg" alt="">
+                    <h3 class="fr-tile__title">
+                      Gestion des dépendances
+                    </h3>
+                    <p class="fr-tile__desc fr-text--sm">
+                      Comprendre les interconnexions et dépendances entre applications.
+                    </p>
                   </div>
                 </div>
               </div>
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svgviewer-output(3).svg" alt="" />
-                    <h3 class="fr-tile__title">Amélioration de la maintenance</h3>
-                    <p class="fr-tile__desc fr-text--sm">Simplifier les processus de mise à jour et d’audit.</p>
+                    <img src="../../public/assets/svgviewer-output(3).svg" alt="">
+                    <h3 class="fr-tile__title">
+                      Amélioration de la maintenance
+                    </h3>
+                    <p class="fr-tile__desc fr-text--sm">
+                      Simplifier les processus de mise à jour et d’audit.
+                    </p>
                   </div>
                 </div>
               </div>
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svg-stats.svg" alt="" />
-                    <h3 class="fr-tile__title">Amélioration de l'exploitabilité</h3>
-                    <p class="fr-tile__desc fr-text--sm">mesurer les impactes d'incidents opérationnels.</p>
+                    <img src="../../public/assets/svg-stats.svg" alt="">
+                    <h3 class="fr-tile__title">
+                      Amélioration de l'exploitabilité
+                    </h3>
+                    <p class="fr-tile__desc fr-text--sm">
+                      mesurer les impactes d'incidents opérationnels.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -88,7 +108,9 @@
           <div class="fr-container fr-pb-3w">
             <div class="fr-grid-row">
               <div class="fr-col">
-                <h2 class="fr-m-0 fr-mt-1w">Envie de devenir beta testeur ?</h2>
+                <h2 class="fr-m-0 fr-mt-1w">
+                  Envie de devenir beta testeur ?
+                </h2>
               </div>
             </div>
             <div class="fr-grid-row fr-grid-row--gutters fr-pt-3w" />
@@ -99,7 +121,7 @@
                   class="fr-btn fr-btn--secondary fr-btn--md fr-mt-2w"
                   href="https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr"
                   target="_blank"
-                  ><span class="fr-icon-mail-open-line fr-icon--sm fr-mr-1w" />
+                ><span class="fr-icon-mail-open-line fr-icon--sm fr-mr-1w" />
                   Nous Contacter sur Tchap
                 </a>
               </div>

@@ -1,10 +1,10 @@
-import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { PartialType } from '@nestjs/mapped-types';
-import { IsString, IsOptional } from 'class-validator';
+import { ApiProperty, ApiHideProperty } from "@nestjs/swagger";
+import { PartialType } from "@nestjs/mapped-types";
+import { IsString, IsOptional } from "class-validator";
 
 export class CreateOrganizationDto {
   @ApiProperty({
-    example: 'Direction de la transformation numérique',
+    example: "Direction de la transformation numérique",
     description: "Nom de l'organisation",
     required: true,
   })
@@ -12,7 +12,7 @@ export class CreateOrganizationDto {
   label: string;
 
   @ApiProperty({
-    example: '',
+    example: "",
     description: "url de l'organisation",
     required: false,
   })
@@ -21,7 +21,7 @@ export class CreateOrganizationDto {
   url: string;
 
   @ApiProperty({
-    example: 'dtnum',
+    example: "dtnum",
     description: "sigle de l'organisation",
     required: false,
   })
@@ -30,7 +30,7 @@ export class CreateOrganizationDto {
   sigle: string;
 
   @ApiProperty({
-    example: 'f09ed26a-8415-476a-be3b-ada479291c34',
+    example: "f09ed26a-8415-476a-be3b-ada479291c34",
     description: "L'identifiant de l'organisation parente",
     required: false,
   })
