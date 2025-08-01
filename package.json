@@ -1,15 +1,15 @@
 {
   "name": "referentiel-applications",
-  "version": "1.32.0",
   "type": "module",
+  "version": "1.32.0",
   "scripts": {
     "format": "eslint . --fix",
-    "format-check": "eslint .",
     "lint": "eslint .",
     "prepare": "husky",
     "commitlint": "commitlint --edit"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^3.11.2",
     "@commitlint/cli": "^19.7.1",
     "@commitlint/config-conventional": "^19.7.1",
     "@eslint/js": "^9.21.0",
@@ -18,8 +18,5 @@
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "typescript-eslint": "^8.25.0"
-  },
-  "dependencies": {
-    "jose": "^5.9.6"
   }
 }

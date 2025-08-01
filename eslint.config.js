@@ -1,43 +1,72 @@
-import globals from "globals";
-import pluginJs from "@eslint/js";
-import tseslint from "typescript-eslint";
-import pluginVue from "eslint-plugin-vue";
+import antfu from "@antfu/eslint-config";
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
-  { ignores: ["**/backend/dist/**"] },
-  { files: ["**/*.{js,mjs,cjs,ts,vue}"] },
-  { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
+export default antfu(
   {
-    rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          args: "all",
-          argsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-          destructuredArrayIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-        },
-      ],
-      "@typescript-eslint/no-empty-object-type": "warn",
-      "@typescript-eslint/no-unused-expressions": "warn",
-      "no-undef": "warn", // TODO passer à erreur une fois le auto import activé
-      "no-useless-escape": "warn",
+    languageOptions: {
+      parserOptions: {
+        emitDecoratorMetadata: true,
+        experimentalDecorators: true,
+        sourceType: "module",
+      },
     },
-  },
-  ...pluginVue.configs["flat/essential"],
-  {
-    files: ["**/*.vue"],
-    languageOptions: { parserOptions: { parser: tseslint.parser } },
-  },
-  {
-    files: ["tests/**", "**/*.spec.ts", "**/*.e2e-spec.ts"],
-    rules: {
-      "no-undef": "off",
+    stylistic: {
+      overrides: {
+        "antfu/consistent-chaining": "off",
+        "antfu/if-newline": "off",
+        "antfu/no-top-level-await": "off",
+        "jsonc/sort-keys": "off",
+        "no-console": "off",
+        "node/prefer-global/process": ["error", "always"],
+        "node/prefer-global/console": ["error", "always"],
+        "node/prefer-global/buffer": ["error", "always"],
+        "perfectionist/sort-exports": "off",
+        "perfectionist/sort-imports": "off",
+        "perfectionist/sort-named-exports": "off",
+        "perfectionist/sort-named-imports": "off",
+        "style/comma-dangle": ["error", "always-multiline"],
+        "style/quote-props": ["error", "as-needed", { keywords: false, unnecessary: true }],
+        "style/brace-style": ["error", "1tbs", { allowSingleLine: true }],
+        "style/max-statements-per-line": ["error", { max: 2 }],
+        "ts/ban-ts-comment": "off",
+        "unused-imports/no-unused-imports": "error",
+        "unused-imports/no-unused-vars": ["error", { vars: "all", varsIgnorePattern: "^_", args: "after-used", argsIgnorePattern: "^_", caughtErrors: "all", caughtErrorsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" }],
+        "vue/no-v-html": "off",
+        "vue/no-irregular-whitespace": "off",
+        "vue/script-indent": "off",
+        "no-alert": "off",
+        "no-cond-assign": "off",
+        "style/quotes": ["error", "double"],
+        "style/semi": ["error", "always"],
+        "sort-imports": ["error", { allowSeparatedGroups: true, ignoreDeclarationSort: true, ignoreMemberSort: true }],
+      },
     },
+    typescript: true,
+    vue: {
+      overrides: {
+        // TODO: Uniformiser les noms d'événements personnalisés en kebab-case ou camelCase
+        "vue/custom-event-name-casing": "off",
+      },
+    },
+    yaml: {
+      overrides: {
+        "yaml/quotes": ["error", { prefer: "double" }],
+        "yaml/indent": ["error", 2, { indentBlockSequences: true, indicatorValueIndent: 2 }],
+      },
+    },
+    ignores: [
+      "**/node_modules",
+      "**/prisma/migrations",
+      "**/pnpm-lock.yaml",
+      "**/.turbo",
+      "**/dist/",
+      "**/types/",
+      "**/coverage/",
+      "**/templates/*.{yaml,yml}",
+      "**/Chart.yaml",
+      "**/*.d.ts",
+      "**/*.md/*.js",
+      "**/*.md/*.ts",
+      "**/cypress/support/component.js",
+    ],
   },
-];
+);
