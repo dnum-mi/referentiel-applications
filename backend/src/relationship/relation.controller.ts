@@ -7,11 +7,12 @@ import {
   Patch,
   Delete,
   UseGuards,
+  HttpCode,
 } from "@nestjs/common";
 import { RelationService } from "./relation.service";
-import { RelationApplicationDto } from "./application/dto/relation-application.dto";
+import { RelationApplicationDto, RelationDto } from "./application/dto/relation-application.dto";
 import { Relation } from "./domain/relation.entity";
-import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
@@ -28,7 +29,15 @@ export class RelationController {
     name: "applicationId",
     description: "ID de l'application SOURCE",
   })
-  @ApiOperation({ summary: "Créer une nouvelle relation" })
+  @HttpCode(201)
+  @ApiCreatedResponse({
+    type: RelationDto,
+    description: "Relation créée avec succès",
+  })
+  @ApiOperation({
+    summary: "Créer une nouvelle relation",
+    description: "Permet de créer une relation entre deux applications.",
+  })
   async create(
     @Param("applicationId") applicationId: string,
     @Body() dto: RelationApplicationDto,
@@ -43,7 +52,15 @@ export class RelationController {
     name: "applicationId",
     description: "ID de l'application SOURCE",
   })
-  @ApiOperation({ summary: "Récupérer toutes les relations d'une application" })
+  @ApiOkResponse({
+    description: "Liste des relations trouvées",
+    type: RelationDto,
+    isArray: true,
+  })
+  @ApiOperation({
+    summary: "Récupérer toutes les relations d'une application",
+    description: "Renvoie la liste de toutes les relations d'une application donnée.",
+  })
   async findAll(
     @Param("applicationId") applicationId: string,
   ): Promise<Relation[]> {
@@ -54,6 +71,10 @@ export class RelationController {
   @AppAction("readRelations")
   @ApiOperation({
     summary: "Récupérer une relation par son identifiant unique",
+  })
+  @ApiOkResponse({
+    type: RelationDto,
+    description: "Relation trouvée avec succès",
   })
   @ApiParam({ name: "id", description: "Identifiant unique de la relation" })
   async findOne(@Param("id") id: string): Promise<Relation> {
@@ -71,9 +92,14 @@ export class RelationController {
     name: "id",
     description: "Identifiant unique de la relation à mettre à jour",
   })
+  @ApiOkResponse({
+    type: RelationDto,
+    description: "Relation mise à jour avec succès",
+  })
   async update(
     @UserId() userId: string,
     @Param("id") id: string,
+    @Param("applicationId") _applicationId: string,
     @Body() dto: RelationApplicationDto,
   ): Promise<Relation> {
     return this.relationService.update(id, dto, userId);
@@ -86,6 +112,10 @@ export class RelationController {
     description: "ID de l'application SOURCE",
   })
   @ApiOperation({ summary: "Supprimer une relation" })
+  @HttpCode(204)
+  @ApiNoContentResponse({
+    description: "Relation supprimée avec succès",
+  })
   @ApiParam({
     name: "id",
     description: "Identifiant unique de la relation à supprimer",

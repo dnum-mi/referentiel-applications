@@ -8,4 +8,5 @@ export interface User {
   keycloakId: string
   email: string
   adminLevel: AdminLevel
+  lastLogin: Date | null
 }

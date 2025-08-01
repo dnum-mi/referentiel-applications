@@ -1,21 +1,21 @@
 import { faker } from "@faker-js/faker";
 import { getPrismaClient } from "./prisma";
 
-type APP_PERMISSIONS =
-  | "readBase"
-  | "writeBase"
-  | "readActors"
-  | "writeActors"
-  | "readCompliances"
-  | "writeCompliances"
-  | "readHostings"
-  | "writeHostings"
-  | "readMetadata"
-  | "writeMetadata"
-  | "readRelations"
-  | "writeRelations"
-  | "readLinks"
-  | "writeLinks";
+type APP_PERMISSIONS
+  = | "readBase"
+    | "writeBase"
+    | "readActors"
+    | "writeActors"
+    | "readCompliances"
+    | "writeCompliances"
+    | "readHostings"
+    | "writeHostings"
+    | "readMetadata"
+    | "writeMetadata"
+    | "readRelations"
+    | "writeRelations"
+    | "readLinks"
+    | "writeLinks";
 
 function permissionsToObject(permissions: Set<APP_PERMISSIONS>) {
   return {

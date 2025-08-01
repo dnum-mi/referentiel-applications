@@ -17,6 +17,7 @@ jobs:
     with:
       image: ghcr.io/dnum-mi/referentiel-applications/backend
       context: ./backend
+      target: prod
 
   build-frontend:
     name: Build Frontend
@@ -24,6 +25,7 @@ jobs:
     with:
       image: ghcr.io/dnum-mi/referentiel-applications/frontend
       context: ./frontend
+      target: prod
 
   test-lint:
     name: Test Linting
@@ -39,7 +41,6 @@ jobs:
 
   test-backend:
     name: Test Backend
-    needs: build-backend
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -47,7 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Start stack using docker compose
-        run: BACK_IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml up keycloak backend postgres -d
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml up keycloak postgres -d
       - name: Wait for Keycloak to be ready
         run: |
           for i in {1..30}; do
@@ -60,13 +62,17 @@ jobs:
           done
           echo "Keycloak did not become ready in time"
           exit 1
-      - run: docker compose exec backend pnpm prisma migrate deploy
-      - run: docker compose exec backend pnpm run test:cov
+      - name: Run db:deploy
+        run:
+          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run db:deploy
+      - name: Run test coverage
+        run:
+          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run test:cov
       - name: Produce the coverage report
         uses: insightsengineering/coverage-action@v2
         with:
           coverage-summary-title: Backend Coverage Summary
-          path: ./backend/coverage/cobertura-coverage.xml
+          path: ./coverage/cobertura-coverage.xml
           publish: true
           # threshold: 80
           diff-storage: _xml_coverage_reports_backend
@@ -81,11 +87,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Start stack using docker compose
-        run: FRONT_IMAGE_TAG=${{ needs.build-frontend.outputs.image_tag }} BACK_IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.frontend.ci.yml -f docker-compose.backend.ci.yml up client backend postgres keycloak -d
+        run: |
+          echo "BACK_IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }}" >> .env
+          echo "FRONT_IMAGE_TAG=${{ needs.build-frontend.outputs.image_tag }}" >> .env
+          cat .env
+          . .env
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml up client backend postgres keycloak -d
       - name: setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 9.15.9
       - name: Wait for Keycloak to be ready
         run: |
           for i in {1..30}; do
@@ -102,7 +113,7 @@ jobs:
       - name: Wait for Frontend to be ready
         run: |
           for i in {1..30}; do
-            if curl -s http://localhost:5173; then
+            if curl -s http://localhost:8080; then
               echo "Frontend is ready"
               exit 0
             fi

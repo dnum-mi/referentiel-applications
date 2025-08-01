@@ -21,7 +21,4 @@ export class CreateAnomalyNotificationRequestDto {
 
   @IsString()
   description: string;
-
-  @IsEnum(AnomalyNotificationStatus)
-  status: AnomalyNotificationStatus;
 }

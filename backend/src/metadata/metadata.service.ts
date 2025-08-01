@@ -1,7 +1,7 @@
 import { PrismaService } from "src/prisma/prisma.service";
 import { Injectable } from "@nestjs/common";
 import isEqual from "lodash/isEqual";
-import { Metadata, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { MetadataRepository } from "./infrastructure/metadata.repository";
 
 @Injectable()
@@ -17,7 +17,7 @@ export class MetadataService {
 
   async getFirstAndLastMetadata(
     applicationId: string,
-  ): Promise<{ first: Metadata | null, last: Metadata | null }> {
+  ) {
     return this.metadataRepository.findFirstAndLastByApplicationId(applicationId);
   }
 

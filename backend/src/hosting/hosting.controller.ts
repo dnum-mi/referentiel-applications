@@ -3,15 +3,16 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import { HostingService } from "./hosting.service";
-import { CreateHostingDto } from "./applications/dto/create-hosting.dto";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { UpdateHostingDto } from "./applications/dto/update-hosting.dto";
+import { CreateHostingDto, HostingDto, UpdateHostingDto } from "./applications/dto/hosting.dto";
+import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
@@ -24,6 +25,10 @@ export class HostingController {
   @Get("count")
   @ApiOperation({
     summary: "Récupérer le nombre total d'hébergements (toutes applications)",
+  })
+  @ApiOkResponse({
+    description: "Nombre total d'hébergements",
+    type: Number,
   })
   public async countAllHostings(): Promise<number> {
     return this.hostingService.count();
@@ -39,7 +44,11 @@ export class ApplicationHostingsController {
   @Post()
   @AppAction("writeHostings")
   @ApiOperation({ summary: "Créer un hébergement pour une application" })
-  @ApiResponse({ status: 201, description: "Hébergement créé" })
+  @ApiCreatedResponse({
+    description: "Hébergement créé",
+    type: HostingDto,
+  })
+  @HttpCode(HttpStatus.CREATED)
   create(
     @UserId() userId: string,
     @Param("applicationId") applicationId: string,
@@ -54,7 +63,11 @@ export class ApplicationHostingsController {
   @ApiOperation({
     summary: "Récupérer tous les hébergements d'une application",
   })
-  @ApiResponse({ status: 200, description: "Liste des hébergements" })
+  @ApiOkResponse({
+    description: "Liste des hébergements",
+    type: HostingDto,
+    isArray: true,
+  })
   findAll(@Param("applicationId") applicationId: string) {
     return this.hostingService.findByApplicationId(applicationId);
   }
@@ -64,7 +77,10 @@ export class ApplicationHostingsController {
   @ApiOperation({
     summary: "Récupérer un hébergement par ID pour une application",
   })
-  @ApiResponse({ status: 200, description: "Hébergement trouvé" })
+  @ApiOkResponse({
+    description: "Hébergement trouvé",
+    type: HostingDto,
+  })
   findOne(@Param("id") id: string) {
     return this.hostingService.findOne(id);
   }
@@ -73,8 +89,12 @@ export class ApplicationHostingsController {
   @AppAction("writeHostings")
   @ApiOperation({
     summary: "Mettre à jour un hébergement pour une application",
+
   })
-  @ApiResponse({ status: 200, description: "Hébergement mis à jour" })
+  @ApiOkResponse({
+    description: "Hébergement mis à jour",
+    type: HostingDto,
+  })
   update(
     @UserId() userId: string,
     @Param("id") id: string,
@@ -87,8 +107,12 @@ export class ApplicationHostingsController {
   @Delete(":id")
   @AppAction("writeHostings")
   @ApiOperation({ summary: "Supprimer un hébergement pour une application" })
-  @ApiResponse({ status: 200, description: "Hébergement supprimé" })
-  remove(@UserId() userId: string, @Param("id") id: string) {
-    return this.hostingService.remove(id, userId);
+  @ApiNoContentResponse({ description: "Hébergement supprimé" })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @UserId() userId: string,
+    @Param("id") id: string,
+  ) {
+    await this.hostingService.remove(id, userId);
   }
 }

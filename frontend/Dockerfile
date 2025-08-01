@@ -1,4 +1,4 @@
-FROM node:23-slim AS build
+FROM node:24-slim AS base
 
 WORKDIR /app
 
@@ -10,15 +10,21 @@ RUN npm install -g pnpm
 # Copy necessary files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies using pnpm
+FROM base AS dev
+
 RUN pnpm install
-RUN pnpm install --frozen-lockfile
+CMD ["npm" , "run" , "dev"]
 
 
+FROM base AS build
+
+RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
 
+RUN npm run api:generate
 # Temporary disable type checking
 RUN npm run build-only
+CMD ["pnpm" , "dev"]
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
 

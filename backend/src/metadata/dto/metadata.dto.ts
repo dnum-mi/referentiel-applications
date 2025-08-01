@@ -1,0 +1,110 @@
+import { ApiProperty } from "@nestjs/swagger";
+import { MetadataAction } from "@prisma/client";
+import { UserEntity } from "src/user/entities/user.entity";
+
+export class MetadataDto {
+  @ApiProperty({
+    description: "ID de la metadata",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+  })
+  id: string;
+
+  @ApiProperty({
+    description: "ID de l'application liée",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+  })
+  applicationId: string | null;
+
+  @ApiProperty({
+    description: "Action effectuée sur la metadata",
+    example: MetadataAction.add,
+    enum: MetadataAction,
+    enumName: "MetadataAction",
+  })
+  action: MetadataAction;
+
+  @ApiProperty({
+    description: "ID de l'acteur lié à la metadata",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+  })
+  actorId: string | null;
+
+  @ApiProperty({
+    description: "Date de création de la metadata",
+    example: "2023-10-01T12:00:00Z",
+    type: String,
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: "ID de la conformité liée à la metadata",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+  })
+  complianceId: string | null;
+
+  @ApiProperty({
+    description: "ID de l'utilisateur qui a créé la metadata",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+  })
+  createdById: string;
+
+  @ApiProperty({
+    description: "ID du propriétaire des données lié à la metadata",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+  })
+  dataOwnerId: string | null;
+
+  @ApiProperty({
+    description: "Description de la metadata",
+    example: "Initial metadata",
+    nullable: true,
+  })
+  description: string | null;
+
+  @ApiProperty({
+    description: "ID de la ressource externe liée à la metadata",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+  })
+  externalRessourceId: string | null;
+
+  @ApiProperty({
+    description: "ID de l'hébergement lié à la metadata",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+  })
+  hostingId: string | null;
+
+  @ApiProperty({
+    description: "ID du label liée à la metadata",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+  })
+  labelId: string | null;
+
+  @ApiProperty({
+    description: "Utilisateur qui a créé la metadata",
+    type: UserEntity,
+  })
+  createdBy: UserEntity;
+}
+
+export class FirstLastMetadataDto {
+  @ApiProperty({
+    description: "La première metadata de l'application",
+    type: MetadataDto,
+    nullable: true,
+  })
+  first: MetadataDto | null;
+
+  @ApiProperty({
+    description: "La dernière metadata de l'application",
+    type: String,
+    nullable: true,
+  })
+  last: MetadataDto | null;
+}

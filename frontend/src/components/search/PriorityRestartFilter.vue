@@ -2,25 +2,24 @@
 import { toRef } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
+import type { ApplicationPriorityRestart } from "@/client/types.gen.js";
 
 const searchStore = useApplicationSearchStore();
 
 const selectedPriorities = toRef(searchStore.filters, "priorityRestart");
 
-function togglePriority(value: string, event: Event) {
+function togglePriority(value: ApplicationPriorityRestart, event: Event) {
   const checked = (event.target as HTMLInputElement).checked;
-  const current = selectedPriorities.value;
 
-  if (checked && !current.includes(value)) {
-    current.push(value);
-  } else if (!checked) {
-    const index = current.indexOf(value);
-    if (index !== -1) {
-      current.splice(index, 1);
-    }
+  const selected = new Set<ApplicationPriorityRestart>(searchStore.filters.priorityRestart || []);
+  if (checked) {
+    selected.add(value);
+  } else {
+    selected.delete(value);
   }
 
   searchStore.setFilter("page", 0);
+  searchStore.setFilter("priorityRestart", Array.from(selected));
   searchStore.searchApplications();
 }
 </script>
@@ -29,7 +28,7 @@ function togglePriority(value: string, event: Event) {
   <div>
     <label class="fr-label fr-mb-2w">
       Priorité de redémarrage
-      <small v-if="selectedPriorities.length > 0">
+      <small v-if="selectedPriorities && selectedPriorities.length > 0">
         ({{ selectedPriorities.length }} sélectionnée<span v-if="selectedPriorities.length > 1">s</span>)
       </small>
     </label>
@@ -39,7 +38,7 @@ function togglePriority(value: string, event: Event) {
         <input
           type="checkbox"
           :value="option.value"
-          :checked="selectedPriorities.includes(option.value)"
+          :checked="selectedPriorities?.includes(option.value)"
           @change="(e) => togglePriority(option.value, e)"
         >
         {{ option.text }}

@@ -7,13 +7,13 @@ import {
 import {
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiParam,
+  ApiOkResponse,
 } from "@nestjs/swagger";
 import { MetadataService } from "./metadata.service";
-import { Metadata } from "@prisma/client";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
+import { FirstLastMetadataDto, MetadataDto } from "./dto/metadata.dto";
 
 @ApiTags("Metadatas")
 @UseGuards(ApplicationGuard)
@@ -25,10 +25,14 @@ export class ApplicationMetadataController {
   @AppAction("readMetadata")
   @ApiOperation({ summary: "Récupérer toutes les metadatas d'une application" })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
-  @ApiResponse({ status: 200, description: "Liste des metadatas" })
+  @ApiOkResponse({
+    description: "Liste des metadatas",
+    type: MetadataDto,
+    isArray: true,
+  })
   public async findAll(
-        @Param("applicationId") applicationId: string,
-  ): Promise<Metadata[]> {
+    @Param("applicationId") applicationId: string,
+  ): Promise<MetadataDto[]> {
     return this.metadataService.findAll(applicationId);
   }
 
@@ -39,13 +43,13 @@ export class ApplicationMetadataController {
     summary: "Retourne la première et la dernière metadata d'une application",
   })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "La première et la dernière metadata",
+    type: FirstLastMetadataDto,
   })
   async getFirstAndLastMetadata(
         @Param("applicationId") applicationId: string,
-  ): Promise<{ first: Metadata | null, last: Metadata | null }> {
+  ): Promise<FirstLastMetadataDto> {
     return this.metadataService.getFirstAndLastMetadata(applicationId);
   }
 }

@@ -2,7 +2,6 @@
 import { onMounted, ref, computed } from "vue";
 import { useActorStore } from "@/stores/actorStore";
 import { useHostingStore } from "@/stores/hostingStore";
-import CompliancesApi from "@/api/compliance";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 
 const actorsNb = ref(0);
@@ -12,6 +11,7 @@ const isLoading = ref(false);
 const errorMessage = ref("");
 
 const statisticStore = useStatisticsStore();
+const statsStore = useStatisticsStore();
 const actorStore = useActorStore();
 const hostingStore = useHostingStore();
 
@@ -27,7 +27,7 @@ async function loadStats() {
   try {
     await statisticStore.countApplications();
     actorsNb.value = await actorStore.countActors();
-    compliancesNb.value = await CompliancesApi.countCompliances();
+    compliancesNb.value = await statsStore.countCompliances();
     hostingsNb.value = await hostingStore.countHostings();
   } catch (error) {
     errorMessage.value = `Erreur lors du chargement des données : ${error}`;

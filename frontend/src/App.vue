@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
-import useToaster from "./composables/use-toaster";
+import { useToasterStore } from "./stores/toasterStore.js";
 import { routeNames } from "./router/route-names";
 import { authentication } from "./services/authentication";
-import Applications from "@/api/application";
 import router from "./router/index.js";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore.js";
 import { AdminLevel } from "./models/user.js";
+import { configureClients } from "./api/init-clients.js";
+import { useApplicationSearchStore } from "./stores/applicationSearchStore.js";
 
 const route = useRoute();
 
 const instance = getCurrentInstance();
+const userStore = useUserStore();
+const applicationSearchStore = useApplicationSearchStore();
+const toaster = useToasterStore();
+const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
+const authenticatedQuickLinks = ref<QuickLink[]>([]);
+
+configureClients(toaster);
 
 function trackSearch(query: string, source: string, resultCount: number) {
   const matomo = instance?.proxy?.$matomo;
@@ -26,10 +34,6 @@ function trackSearch(query: string, source: string, resultCount: number) {
   matomo.trackSiteSearch(query.trim(), "Applications", resultCount);
   matomo.trackPageView(`Recherche depuis ${source} : ${query}`);
 }
-
-const userStore = useUserStore();
-const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
-const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
 const appVersion = import.meta.env.VITE_RDA_APP_VERSION ?? "VITE_RDA_APP_VERSION";
 
@@ -109,8 +113,6 @@ const navItems = [
   },
 ];
 
-const toaster = useToaster();
-
 const logoText = ["Ministère", "de l’intérieur"];
 const serviceDescription = "Une application pour les réunir toutes";
 const serviceTitle = "Référentiel des Applications";
@@ -121,7 +123,7 @@ const ecosystemLinks = [
   { label: "Code source", href: "http://github.com/dnum-mi/referentiel-applications" },
   {
     label: "Api du référentiel",
-    href: `${import.meta.env.VITE_RDA_API_URL ?? "VITE_RDA_API_URL"}/api/v2/`,
+    href: `${import.meta.env.VITE_RDA_API_URL ?? "VITE_RDA_API_URL"}/api/v2/swagger/`,
   },
 ];
 const mandatoryLinks = computed(() => [
@@ -158,13 +160,23 @@ watch(searchQuery, (newVal) => {
     try {
       isLoading.value = true;
       errorMessage.value = "";
-      const response = await Applications.getAllApplicationBySearch(newVal);
-      searchResults.value = response.results || [];
-
       const query = newVal.trim();
-      const resultCount = searchResults.value.total;
+      const response = await applicationSearchStore.searchApplications({
+        search: query,
+        limit: 5,
+      }, false);
+      const resultCount = response.total || searchResults.value.length;
+
+      if (!response || !response.results) {
+        errorMessage.value = "Aucun résultat trouvé";
+        searchResults.value = [];
+      } else {
+        searchResults.value = response.results.map(app => ({
+          ...app,
+          label: app.label,
+        }));
+      }
       trackSearch(query, "le header", resultCount);
-      trackResultClick(app.label);
     } catch (error) {
       instance?.proxy?.$matomo?.trackEvent("Error", "Search Error", error.message);
     } finally {

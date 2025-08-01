@@ -14,6 +14,14 @@ import { Transform, Type } from "class-transformer";
 
 export class ApplicationSearchDto {
   @ApiPropertyOptional({
+    description: "Recherche plein texte sur tous les champs",
+    example: "Mon Application",
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({
     description: "Recherche par label",
     example: "Mon Application",
   })

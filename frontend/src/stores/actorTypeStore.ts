@@ -1,18 +1,24 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { ActorType } from "@/models/ActorType";
-import { call } from "@/api/callService";
+import api from "@/api/index.js";
+import type { ActorTypeDto } from "@/client/types.gen.js";
 
 export const useActorTypeStore = defineStore("actorTypeStore", () => {
-  const actorTypes = ref<ActorType[]>([]);
+  const actorTypes = ref<ActorTypeDto[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
   async function fetchAll() {
     try {
       isLoading.value = true;
-      const result = await call("actorType", "list");
-      actorTypes.value = result;
+      const response = await api.actorTypeControllerFindAll();
+      if (!response.response.ok) {
+        throw new Error("Erreur lors de la récupération des types d'acteurs");
+      }
+      if (!response.data) {
+        throw new Error("Aucun type d'acteur trouvé");
+      }
+      actorTypes.value = response.data;
     } catch (err: any) {
       console.error("❌ Erreur lors du chargement des types d'acteurs :", err);
       error.value = err.message ?? "Erreur inconnue";
@@ -21,9 +27,16 @@ export const useActorTypeStore = defineStore("actorTypeStore", () => {
     }
   }
 
-  async function fetchById(id: string): Promise<ActorType | undefined> {
+  async function fetchById(id: string): Promise<ActorTypeDto | undefined> {
     try {
-      return await call("actorType", "get", { id });
+      const response = await api.actorTypeControllerFindOne({ path: { id } });
+      if (!response.response.ok) {
+        throw new Error("Erreur lors de la récupération des types d'acteurs");
+      }
+      if (!response.data) {
+        throw new Error("Aucun type d'acteur trouvé");
+      }
+      return response.data;
     } catch (err) {
       console.error(`❌ Erreur lors de la récupération du type d'acteur avec l'id ${id}`, err);
       return undefined;

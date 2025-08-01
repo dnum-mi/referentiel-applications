@@ -15,6 +15,13 @@ const { run: debouncedSearch } = useDebouncedFn(() => {
 watch([iqGte, iqLte], () => {
   debouncedSearch();
 });
+
+const iqGteDisplay = computed(() => {
+  return typeof iqGte.value === "undefined" ? 0 : iqGte.value;
+});
+const iqLteDisplay = computed(() => {
+  return typeof iqLte.value === "undefined" ? 100 : iqLte.value;
+});
 </script>
 
 <template>
@@ -22,7 +29,7 @@ watch([iqGte, iqLte], () => {
     <label class="fr-label fr-mb-2w">
       Indice de qualité
       <br>
-      <small> entre {{ iqGte === "" ? 0 : iqGte }}% et {{ iqLte === "" ? 100 : iqLte }}% </small>
+      <small> entre {{ iqGteDisplay }}% et {{ iqLteDisplay }}% </small>
     </label>
 
     <div class="fr-input-group">

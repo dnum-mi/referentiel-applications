@@ -1,11 +1,13 @@
+import type { ApplicationDto, ApplicationStatus, RelationType } from "@/client/types.gen";
 import type { Actor } from "./Actor";
 
+// TODO sortir ce modèle et utiliser ApplicationDto
 export interface Application {
   id: string
   label: string
   shortName?: string
   labels?: Label[]
-  status?: string // New field for application status
+  status: ApplicationStatus // New field for application status
   description?: string
   targetPopulations?: string[]
   priorityRestart?: string
@@ -24,7 +26,7 @@ export interface Application {
   metadatas: Metadata[]
 }
 
-export type ApplicationWithPerms = Application & { myPerms: Set<APP_PERMISSIONS> };
+export type ApplicationWithPerms = ApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
 
 export interface Label {
   id?: string
@@ -108,7 +110,7 @@ export interface Event {
 }
 export interface Relation {
   id: string
-  type: string
+  type: RelationType
 
   applicationSourceId: string
   applicationTargetId: string
@@ -124,21 +126,21 @@ export interface User {
 }
 
 // refer directly to columns in database
-export type APP_PERMISSIONS =
-  | "readBase"
-  | "writeBase"
-  | "readActors"
-  | "writeActors"
-  | "readCompliances"
-  | "writeCompliances"
-  | "readHostings"
-  | "writeHostings"
-  | "readMetadata"
-  | "writeMetadata"
-  | "readRelations"
-  | "writeRelations"
-  | "readLinks"
-  | "writeLinks";
+export type APP_PERMISSIONS
+  = | "readBase"
+    | "writeBase"
+    | "readActors"
+    | "writeActors"
+    | "readCompliances"
+    | "writeCompliances"
+    | "readHostings"
+    | "writeHostings"
+    | "readMetadata"
+    | "writeMetadata"
+    | "readRelations"
+    | "writeRelations"
+    | "readLinks"
+    | "writeLinks";
 export type ApplicationRights = APP_PERMISSIONS[];
 
 export type AppPermsMatrix = ({

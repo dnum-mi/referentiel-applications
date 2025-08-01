@@ -1,21 +1,23 @@
 // src/stores/complianceStore.ts
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import CompliancesApi from "@/api/compliance";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import type { Compliance } from "@/models/Application";
+import api from "@/api/index.js";
+import type { ComplianceDto, CreateComplianceDto } from "@/client/types.gen.js";
 
 export const useComplianceStore = defineStore("complianceStore", () => {
-  const compliance = ref<Compliance | null>(null);
+  const compliance = ref<ComplianceDto | null>(null);
   const isLoading = ref(false);
-  const toaster = useToaster();
+  const toaster = useToasterStore();
 
   // Fetch global compliance object
   const fetchCompliance = async (applicationId: string) => {
     try {
       isLoading.value = true;
-      compliance.value = await CompliancesApi.getCompliance(applicationId);
-      console.log("▶️ store.compliance =", compliance.value);
+      const response = await api.applicationCompliancesControllerFindOne({ path: { applicationId } });
+      compliance.value = response.data ?? null;
+      return compliance.value;
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la récupération des conformités.");
       throw error;
@@ -25,14 +27,16 @@ export const useComplianceStore = defineStore("complianceStore", () => {
   };
 
   // Create or update: on crée un nouvel objet complet
-  const createCompliance = async (applicationId: string, payload: Partial<Compliance>) => {
+  const createCompliance = async (applicationId: string, payload: Partial<CreateComplianceDto>) => {
     try {
       console.log("Creating compliance with payload:", payload);
-      const created = await CompliancesApi.createCompliance(applicationId, payload);
-      console.log("Compliance created store:", created);
-      compliance.value = created;
+      const response = await api.applicationCompliancesControllerCreate({ path: { applicationId }, body: payload });
+      if (!response.response.ok || !response.data) {
+        throw new Error("Erreur lors de la création de la conformité.");
+      }
+      compliance.value = response.data;
       toaster.addSuccessMessage("Conformité créée avec succès !");
-      return created;
+      return response.data;
     } catch (error) {
       console.error("Error creating compliance:", error);
       toaster.addErrorMessage("Erreur lors de la création de la conformité.");
@@ -42,10 +46,13 @@ export const useComplianceStore = defineStore("complianceStore", () => {
 
   const updateCompliance = async (applicationId: string, payload: Partial<Compliance>) => {
     try {
-      const updated = await CompliancesApi.updateCompliance(applicationId, payload);
-      compliance.value = updated;
+      const response = await api.applicationCompliancesControllerUpdate({ path: { applicationId }, body: payload });
+      if (!response.response.ok || !response.data) {
+        throw new Error("Erreur lors de la mise à jour de la conformité.");
+      }
+      compliance.value = response.data;
       toaster.addSuccessMessage("Conformité mise à jour avec succès !");
-      return updated;
+      return response.data;
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la modification de la conformité.");
       throw error;

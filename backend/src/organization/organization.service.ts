@@ -10,7 +10,7 @@ export class OrganizationService extends BaseService<Organization> {
     super(prisma.organization, prisma);
   }
 
-  async onModuleInit() {
+  async onApplicationBootstrap() {
     await this.recalculateClosureTable();
   }
 

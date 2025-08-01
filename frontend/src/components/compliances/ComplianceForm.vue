@@ -4,7 +4,7 @@ import { useComplianceStore } from "@/stores/complianceStore";
 import { durationHoursOptions, testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
-import { AdminLevel } from "@/models/user.ts";
+import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{
   applicationId: string

@@ -1,10 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { Organization } from "@/models/organization";
-import OrganizationApi from "@/api/organization";
+import api from "@/api/index";
+import type { OrganizationDto } from "@/client/types.gen";
 
 export const useOrganizationStore = defineStore("organizationStore", () => {
-  const organizations = ref<Record<string, Organization>>({});
+  const organizations = ref<Record<string, OrganizationDto>>({});
   const error = ref<string | null>(null);
 
   /**
@@ -12,10 +12,22 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
    * @param search - The search term to filter organizations.
    * @returns A promise that resolves to an array of organizations matching the search term.
    */
-  async function search(search: string): Promise<Organization[]> {
-    const orgs = await OrganizationApi.searchOrganizations(search);
-    organizations.value = { ...organizations.value, ...orgs };
-    return Object.values(orgs);
+  async function search(search: string): Promise<OrganizationDto[]> {
+    const response = await api.organizationControllerFindAll({
+      query: { search },
+    });
+    if (!response.response.ok) {
+      throw new Error("Failed to fetch organizations");
+    }
+    if (!response.data) {
+      organizations.value = {};
+      return [];
+    }
+    response.data.forEach((org: OrganizationDto) => {
+      organizations.value[org.id] = org;
+    });
+    error.value = null;
+    return Object.values(response.data);
   }
   /**
    * Get an organization by its ID.
@@ -24,7 +36,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
    * @param id - The ID of the organization to retrieve.
    * @returns The organization object or undefined if not found.
    */
-  function getById(id: string): Organization | undefined {
+  function getById(id: string): OrganizationDto | undefined {
     const org = organizations.value[id];
     if (!org) {
       fetchById(id);
@@ -39,15 +51,31 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
    * @param id - The ID of the organization to fetch.
    * @returns The fetched organization or a fake one if not found.
    */
-  async function fetchById(id: string): Promise<Organization> {
-    await OrganizationApi.getOrganizations([id])
-      .then((data) => {
-        organizations.value = { ...organizations.value, ...data };
+  async function fetchById(id: string): Promise<OrganizationDto> {
+    const response = await api.organizationControllerFindOne({
+      path: { id },
+    });
+    if (response.response.ok && response.data) {
+      organizations.value[id] = response.data;
+      return response.data;
+    }
+    // If the organization is not found, we create a fake one
+    error.value = response.response.statusText || "Organisation non trouvée";
+    await api.organizationControllerFindAll({
+      query: { ids: id },
+    })
+      .then((response) => {
+        if (response.response.ok && response.data) {
+          response.data.forEach((org: OrganizationDto) => {
+            organizations.value[org.id] = org;
+          });
+        }
+        error.value = null;
       })
       .catch((err) => {
         console.error(`❌ Erreur lors de la récupération de l'organisation avec l'id ${id}`, err);
         error.value = err.message ?? "Erreur inconnue";
-        const fakeData: Organization = {
+        const fakeData: OrganizationDto = {
           id,
           label: "Organisation non trouvée",
           url: "", // Set to undefined if not found

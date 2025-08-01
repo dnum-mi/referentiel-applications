@@ -1,12 +1,14 @@
 import { ref, computed } from "vue";
 import { useRelationStore } from "@/stores/relationStore";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import type { Relation } from "@/models/Application";
-import Relations from "@/api/relation";
+import api from "@/api/index";
+import { RelationType } from "@/client/types.gen";
+import type { RelationDto } from "@/client/types.gen";
 
 export function useRelationManager() {
   const store = useRelationStore();
-  const toaster = useToaster();
+  const toaster = useToasterStore();
 
   const selectedRelationIds = ref<string[]>([]);
   const currentPage = ref(0);
@@ -14,23 +16,23 @@ export function useRelationManager() {
   const showDeleteConfirmation = ref(false);
   const isAddRelationModalOpen = ref(false);
   const isEditRelationModalOpen = ref(false);
-  const relationToEdit = ref<Relation | null>(null);
+  const relationToEdit = ref<RelationDto | null>(null);
 
   const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Actions"];
 
-  const relationTypes: Record<string, { source: string, target: string }> = {
-    is_part_of: { source: "Fait partie de", target: "A comme sous‑élément" },
-    in_replacement_of: { source: "Remplace", target: "est remplacé par" },
-    is_service_user_of: { source: "Utilise le service de", target: "Fournit le service à" },
-    is_data_user_of: { source: "Utilise la donnée de", target: "Fournit la donnée à" },
+  const relationTypes: Record<RelationType, { source: string, target: string }> = {
+    [RelationType.IS_PART_OF]: { source: "Fait partie de", target: "A comme sous‑élément" },
+    [RelationType.IN_REPLACEMENT_OF]: { source: "Remplace", target: "est remplacé par" },
+    [RelationType.IS_SERVICE_USER_OF]: { source: "Utilise le service de", target: "Fournit le service à" },
+    [RelationType.IS_DATA_USER_OF]: { source: "Utilise la donnée de", target: "Fournit la donnée à" },
   };
 
-  function getRelationLabelForSide(type: string, isSource: boolean): string {
+  function getRelationLabelForSide(type: RelationType, isSource: boolean): string {
     const rel = relationTypes[type];
     return rel ? (isSource ? rel.source : rel.target) : type;
   }
 
-  function createRow(rel: Relation & { isSource: boolean }) {
+  function createRow(rel: RelationDto & { isSource: boolean }) {
     const sourceLabel = rel.sourceApplication?.label || rel.applicationSourceId || "❌ Source inconnue";
     const targetLabel = rel.targetApplication?.label || rel.applicationTargetId || "❌ Cible inconnue";
 
@@ -49,7 +51,7 @@ export function useRelationManager() {
 
   const rows = computed(() => store.relations.map(rel => createRow(rel)));
 
-  function editRelation(rel: Relation) {
+  function editRelation(rel: RelationDto) {
     relationToEdit.value = { ...rel };
     isEditRelationModalOpen.value = true;
   }
@@ -64,7 +66,9 @@ export function useRelationManager() {
 
   async function confirmDelete(applicationSourceId: string) {
     try {
-      await Promise.all(selectedRelationIds.value.map(id => Relations.delete(applicationSourceId, id)));
+      await Promise.all(selectedRelationIds.value.map(id => api.relationControllerDelete({
+        path: { applicationId: applicationSourceId, id },
+      })));
       await store.fetchRelationsByApplication(applicationSourceId);
       selectedRelationIds.value = [];
       showDeleteConfirmation.value = false;
@@ -91,7 +95,7 @@ export function useRelationManager() {
     relationToEdit.value = null;
   }
 
-  async function handleUpdateRelation(updated: Relation) {
+  async function handleUpdateRelation(updated: RelationDto) {
     await store.updateRelation(updated.applicationSourceId, updated.id, {
       type: updated.type,
       applicationTargetId: updated.applicationTargetId,

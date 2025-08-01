@@ -3,7 +3,6 @@ import { setupTestSuite } from "./setup";
 import { getToken } from "./getToken";
 import { UserFaker } from "./fakers/user.faker";
 import { faker } from "@faker-js/faker";
-import { getPrismaClient } from "./fakers/prisma";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ApplicationFaker } from "./fakers/application.faker";
 import type { AsyncReturnType } from "src/utils/types.util";
@@ -15,14 +14,10 @@ describe("Applications", () => {
   let user: { keycloakId: string };
   let TOKEN: string;
   let createdApplicationId: string;
-  const prisma = getPrismaClient();
 
   beforeAll(async () => {
     user = await UserFaker.create(AdminLevel.WRITE);
     TOKEN = await getToken(user);
-  });
-  afterAll(async () => {
-    prisma.$disconnect();
   });
 
   it("/GET applications", async () => {
@@ -82,7 +77,7 @@ describe("Applications", () => {
     await request(app().getHttpServer())
       .delete(`/applications/${createdApplicationId}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(204);
 
     await request(app().getHttpServer())
       .get(`/applications/${createdApplicationId}`)
@@ -96,7 +91,6 @@ describe("application guard", () => {
   let appOwner: { keycloakId: string, email: string };
   let appActor: { keycloakId: string, email: string };
   let TOKEN: string;
-  const prisma = getPrismaClient();
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
   let application: AsyncReturnType<typeof ApplicationFaker.create>;
 
@@ -115,7 +109,6 @@ describe("application guard", () => {
 
   afterAll(async () => {
     await actorType.delete();
-    prisma.$disconnect();
   });
 
   it("permissions testing", async () => {
