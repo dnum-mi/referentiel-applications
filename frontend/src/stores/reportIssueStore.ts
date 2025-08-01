@@ -1,13 +1,43 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import api from "@/api/index.js";
-import type { CreateAnomalyNotificationRequestDto, GetAnomalyNotificationDto } from "@/client/types.gen.js";
+import api from "@/api/index";
+import type { AnomalyNotificationsControllerFindAllData, CreateAnomalyNotificationRequestDto, GetAnomalyNotificationDto } from "@/client/types.gen";
+
+export type reportIssueFilter = Exclude<AnomalyNotificationsControllerFindAllData["query"], undefined>;
 
 export const useReportIssueStore = defineStore("reportIssueStore", () => {
   const userReports = ref<GetAnomalyNotificationDto[]>([]);
   const allReports = ref<GetAnomalyNotificationDto[]>([]);
   const issues = ref<GetAnomalyNotificationDto[]>([]);
   const isLoading = ref(false);
+
+  const defaultFilters: reportIssueFilter = {
+    searchReport: "",
+    sortBy: "application",
+    order: "asc",
+    page: 0,
+    limit: 15,
+  };
+
+  const filters = ref<reportIssueFilter>(defaultFilters);
+
+  const page = computed({
+    get: () => filters.value.page,
+    set: val => (filters.value.page = val),
+  });
+
+  const limit = computed({
+    get: () => filters.value.limit,
+    set: val => (filters.value.limit = val),
+  });
+
+  function setFilter(key: keyof typeof filters, value: any) {
+    filters[key] = value;
+  }
+
+  function resetFilters() {
+    Object.assign(filters, defaultFilters);
+  }
 
   const fetchMyReports = async () => {
     try {
@@ -24,10 +54,16 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     }
   };
 
-  const fetchAllReports = async () => {
+  const fetchAllReports = async (customFilters?: reportIssueFilter) => {
     try {
       isLoading.value = true;
-      const response = await api.anomalyNotificationsControllerFindAll({ query: { all: true } });
+
+      const query: reportIssueFilter = { ...filters.value, ...customFilters };
+
+      query.all = true;
+
+      const response = await api.anomalyNotificationsControllerFindAll({ query });
+
       if (!response.response.ok) {
         throw new Error("Erreur lors de la récupération des notifications d'anomalies");
       }
@@ -45,7 +81,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
   const fetchIssueByApplication = async (applicationId: string) => {
     isLoading.value = true;
     try {
-      const response = await api.applicationAnomalyNotificationsControllerFindAll({ path: { applicationId }, query: { all: true } });
+      const response = await api.applicationAnomalyNotificationsControllerFindAll({ path: { applicationId } });
       if (!response.response.ok) {
         throw new Error("Erreur lors de la récupération des signalements pour l'application");
       }
@@ -99,6 +135,21 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     }
   };
 
+  async function updateReport(id: string, applicationId: string, status: "in_pending" | "in_progress" | "done") {
+    try {
+      if (applicationId) {
+        await api.applicationAnomalyNotificationsControllerUpdate({ path: { applicationId, id }, body: { status } });
+      } else {
+        await api.anomalyNotificationsControllerUpdate({ path: { id }, body: { status } });
+      }
+      return true;
+    } catch (error) {
+      console.log("Erreur lors de l'enregistrement des modifications : ", error);
+    } finally {
+      fetchAllReports();
+    }
+  };
+
   return {
     issues,
     userReports,
@@ -109,5 +160,11 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     proposeCorrection,
     proposeAnomaly,
     fetchIssueByApplication,
+    filters,
+    page,
+    limit,
+    setFilter,
+    resetFilters,
+    updateReport,
   };
 });

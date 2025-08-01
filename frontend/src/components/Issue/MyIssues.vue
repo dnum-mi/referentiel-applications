@@ -2,28 +2,39 @@
 import { onMounted, ref, computed } from "vue";
 import { routeNames } from "@/router/route-names";
 import { formatDate } from "@/composables/use-date";
-import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
 import { useReportIssueStore } from "@/stores/reportIssueStore";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
+import type { DsfrDataTableHeaderCell, DsfrDataTableRow } from "@gouvminint/vue-dsfr";
+import ReportStatusTag from "./ReportStatusTag.vue";
+import type { GenericRow } from "@/utils/types";
 
 const title = "Liste de mes signalements d'applications";
-const headers = ["Application", "Description", "Date", "Statut"];
-type Status = "in_pending" | "in_progress" | "done";
+const headers = [
+  { key: "application", label: "Application" },
+  { key: "description", label: "Description" },
+  { key: "date", label: "Date" },
+  { key: "status", label: "Statut" },
+] as const satisfies DsfrDataTableHeaderCell[];
 
 const reportStore = useReportIssueStore();
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
 const isLoading = ref(true);
 
+const { run: debouncedSearch } = useDebouncedFn(() => {
+  reportStore.fetchMyReports();
+}, 300);
+
 onMounted(async () => {
   isLoading.value = true;
-  await reportStore.fetchMyReports();
   isLoading.value = false;
+  debouncedSearch();
 });
 
-const rows = computed(() =>
-  reportStore.userReports.map(report => ({
+const rows = computed<DsfrDataTableRow[]>(() =>
+  reportStore.userReports.map((report): GenericRow<typeof headers> => ({
     id: report.id,
-    Application: {
+    application: {
       label: report.application?.label,
       to: report.application?.id
         ? {
@@ -32,13 +43,10 @@ const rows = computed(() =>
           }
         : undefined,
     },
-    Description: report.description,
-    Date: formatDate(report.createdAt),
-    Statut: {
-      component: "DsfrTag",
-      icon: statusIconClasses[report.status as Status],
-      label: statusDictionary[report.status as Status],
-      class: report.status,
+    description: report.description,
+    date: formatDate(report.createdAt),
+    status: {
+      report,
     },
   })),
 );
@@ -58,17 +66,15 @@ const rows = computed(() =>
     :rows="rows"
     row-key="id"
     :title="title"
-    selectable-rows
     pagination
     :rows-per-page="10"
-    :pagination-options="[10, 20, 30]"
+    :pagination-options="[10, 20, 30, 50]"
     bottom-action-bar-class="bottom-action-bar-class"
     pagination-wrapper-class="pagination-wrapper-class"
     sorted="id"
-    :sortable-rows="['id']"
   >
     <template #cell="{ colKey, cell }">
-      <template v-if="colKey === 'Application'">
+      <template v-if="colKey === 'application'">
         <template v-if="cell && cell.to && cell.to.params && cell.to.params.id">
           <router-link :to="cell.to" data-testid="my-issues-application-link">
             {{ cell.label || 'Voir l’application' }}
@@ -78,32 +84,19 @@ const rows = computed(() =>
           <span data-testid="my-issues-application-link">{{ cell.label || 'Signalement global' }}</span>
         </template>
       </template>
-      <template v-else-if="colKey === 'Statut'">
-        <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" data-testid="my-issues-status-tag" />
+      <template v-else-if="colKey === 'description'">
+        <p class="text-wrap">
+          {{ cell }}
+        </p>
       </template>
-      <template v-else>
-        {{ cell }}
+      <template v-else-if="colKey === 'status'">
+        <ReportStatusTag :report="cell.report" :is-editing="false" @refresh="reportStore.fetchMyReports()" />
       </template>
     </template>
   </DsfrDataTable>
 </template>
 
 <style scoped>
-:deep(.in_progress) {
-  color: var(--info-425-625);
-  background-color: var(--info-950-100);
-}
-
-:deep(.in_pending) {
-  color: var(--error-425-625);
-  background-color: var(--error-950-100);
-}
-
-:deep(.done) {
-  color: var(--success-425-625);
-  background-color: var(--success-950-100);
-}
-
 .text-center {
   display: flex;
   justify-content: center;
@@ -119,5 +112,11 @@ const rows = computed(() =>
   margin: 20px auto;
   width: 80%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text-wrap {
+  width: auto;
+  white-space: normal;
+  word-wrap: break-word;
 }
 </style>

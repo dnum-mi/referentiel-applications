@@ -1,15 +1,31 @@
 import { IsString, IsEnum, IsOptional } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 import { AnomalyNotificationStatus } from "@prisma/client";
 
 export class CreateAnomalyNotificationDto {
   @IsString()
   @IsOptional()
+  @ApiProperty({
+    description: "L'ID de l'application associée à la notification d'anomalie",
+    required: false,
+  })
   applicationId?: string;
 
   @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: "La description de la notification d'anomalie",
+    required: false,
+  })
   description: string;
 
+  @IsOptional()
   @IsEnum(AnomalyNotificationStatus)
+  @ApiProperty({
+    description: "Le statut de la notification d'anomalie",
+    enum: AnomalyNotificationStatus,
+    required: false,
+  })
   status?: AnomalyNotificationStatus;
 }
 

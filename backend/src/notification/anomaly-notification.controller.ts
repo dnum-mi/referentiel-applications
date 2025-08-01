@@ -19,27 +19,23 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AnomalyNotificationService } from "./anomaly-notification.service";
+import { AnomalyNotificationsService } from "./anomaly-notification.service";
 import {
   CreateAnomalyNotificationDto,
   CreateAnomalyNotificationRequestDto,
 } from "./dto/create-anomaly-notification.dto";
 import { GetAnomalyNotificationDto } from "./dto/get-anomaly-notification.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
-import { AnomalyFiltersDto } from "src/notification/dto/filters.dto";
+import { AnomalyFiltersDto } from "./dto/anomaly-filters.dto";
 import { User } from "src/common/decorators/user.decorator";
-import { Requestor } from "src/user/entities/user.entity";
+import { Requestor, UserEntity } from "src/user/entities/user.entity";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 
-/**
- * Contrôleur pour la gestion des notifications d'anomalies.
- * Il permet de créer, récupérer, mettre à jour et supprimer des notifications d'anomalies.
- */
-@ApiTags("Notifications")
+@ApiTags("AnomalyNotifications")
 @Controller("anomaly-notifications")
 export class AnomalyNotificationsController {
-  constructor(protected service: AnomalyNotificationService) {}
+  constructor(protected service: AnomalyNotificationsService) {}
 
   /**
    * Récupère toutes les notifications d'anomalie.
@@ -57,13 +53,13 @@ export class AnomalyNotificationsController {
     isArray: true,
   })
   findAll(
-    @User() requestor: Requestor,
     @Query() filters: AnomalyFiltersDto,
+    @User() requestor: UserEntity,
   ) {
-    return this.service.findAll({
+    return this.service.findAll(
       requestor,
-      notifierId: !filters.all ? requestor.id : undefined,
-    });
+      filters,
+    );
   }
 
   /**
@@ -93,6 +89,27 @@ export class AnomalyNotificationsController {
     };
     return this.service.create(data, requestor);
   }
+
+  /**
+   * Met à jour une notification d'anomalie existante.
+   *
+   * @param id L'identifiant de la notification à mettre à jour.
+   * @param updateDto Les nouvelles données de la notification.
+   * @returns La notification d'anomalie mise à jour.
+   */
+  @Patch(":id")
+  @ApiOperation({ summary: "Mettre à jour une notification" })
+  @AppAction("manageAnomalyNotifications")
+  @ApiOkResponse({
+    description: "Notification mise à jour avec succès",
+    type: GetAnomalyNotificationDto,
+  })
+  update(
+    @Param("id") id: string,
+    @Body() updateDto: UpdateAnomalyNotificationDto,
+  ) {
+    return this.service.update(id, updateDto);
+  }
 }
 
 /**
@@ -104,7 +121,7 @@ export class AnomalyNotificationsController {
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/anomaly-notifications")
 export class ApplicationAnomalyNotificationsController {
-  constructor(protected service: AnomalyNotificationService) {}
+  constructor(protected service: AnomalyNotificationsService) {}
 
   /**
    * Crée une nouvelle notification d'anomalie.
@@ -153,11 +170,11 @@ export class ApplicationAnomalyNotificationsController {
     @User() requestor: Requestor,
     @Param("applicationId") applicationId: string,
   ) {
-    return this.service.findAll({
-      applicationId,
+    return this.service.findAll(
       requestor,
-      notifierId: !filters.all ? requestor.id : undefined,
-    });
+      filters,
+      applicationId,
+    );
   }
 
   /**

@@ -4,9 +4,10 @@ import { CreateAnomalyNotificationDto } from "./dto/create-anomaly-notification.
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
 import { Prisma } from "@prisma/client";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { AnomalyFiltersDto, SortByEnum } from "./dto/anomaly-filters.dto";
 
 @Injectable()
-export class AnomalyNotificationService {
+export class AnomalyNotificationsService {
   constructor(protected readonly prisma: PrismaService) {}
 
   /**
@@ -50,35 +51,86 @@ export class AnomalyNotificationService {
    * Récupère toutes les notifications d'anomalies.
    * @returns Un tableau de notifications d'anomalies.
    */
-  async findAll({
-    applicationId,
-    requestor,
-    notifierId,
-  }: {
-    applicationId?: string
-    notifierId?: string
-    requestor: Requestor
-  }) {
-    const where: Prisma.AnomalyNotificationWhereInput = {
-      applicationId,
-      notifierId,
-    };
+  async findAll(
+    requestor: Requestor,
+    filters: AnomalyFiltersDto,
+    applicationId?: string,
+  ) {
+    const {
+      searchReport,
+      sortBy = "date",
+      order = "asc",
+      page = 0,
+      limit = 15,
+      all,
+    } = filters;
 
     // Controle des permissions
     const hasApplicationReadPerms = requestor.appPerms?.includes("readAnomalyNotifications");
     const isAdminRead = requestor.adminLevel >= AdminLevel.READ;
+    const canReadAll = hasApplicationReadPerms || isAdminRead;
+
+    const where: { AND: Prisma.AnomalyNotificationWhereInput[] } = { AND: [] };
 
     if (applicationId) {
-      if (!hasApplicationReadPerms && !isAdminRead) {
-        where.notifierId = requestor.id;
+      if (!canReadAll || !all) {
+        where.AND.push({
+          notifierId: {
+            equals: requestor.id,
+          },
+        });
       }
-    } else if (!isAdminRead) {
-      where.notifierId = requestor.id;
+
+      where.AND.push({
+        applicationId: {
+          equals: applicationId,
+        },
+      });
+    } else if (!isAdminRead || !all) {
+      where.AND.push({
+        notifierId: {
+          equals: requestor.id,
+        },
+      });
     }
 
+    if (searchReport) {
+      where.AND.push({
+        OR: [
+          {
+            application: {
+              label: {
+                contains: searchReport,
+                mode: "insensitive" as const,
+              },
+            },
+          },
+          {
+            description: {
+              contains: searchReport,
+              mode: "insensitive" as const,
+            },
+          },
+        ],
+      });
+    }
+
+    const sortOptions: Record<keyof typeof SortByEnum, Prisma.AnomalyNotificationOrderByWithRelationInput> = {
+      application: { application: { label: order } },
+      description: { description: order },
+      date: { createdAt: order },
+      status: { status: order },
+      signalant: { notifier: { email: order } },
+    };
+
+    const orderBy = sortOptions[sortBy];
+
     return this.prisma.anomalyNotification.findMany({
-      include: { history: true, application: true, notifier: true },
       where,
+      orderBy,
+      skip: page * limit,
+      take: limit,
+      include: { history: true, application: true, notifier: true },
     });
   }
 

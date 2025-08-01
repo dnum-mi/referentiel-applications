@@ -2,6 +2,7 @@ import { IsOptional, IsString, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty, PickType } from "@nestjs/swagger";
 import { UserEntity } from "src/user/entities/user.entity";
+import { AnomalyNotificationStatus } from "@prisma/client";
 
 export class ApplicationDto {
   @IsString()
@@ -34,8 +35,14 @@ export class GetAnomalyNotificationDto {
   @IsString()
   description: string;
 
+  @ApiProperty({
+    description: "Le statut de la notification d'anomalie",
+    enum: AnomalyNotificationStatus,
+    required: true,
+    enumName: "AnomalyNotificationStatus",
+  })
   @IsString()
-  status: string;
+  status: AnomalyNotificationStatus;
 
   @IsString()
   @ApiProperty({

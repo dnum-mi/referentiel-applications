@@ -1347,6 +1347,108 @@ paths:
         "204":
           description: Token supprimé avec succès
       tags: *a7
+  /api/v2/anomaly-notifications:
+    get:
+      operationId: AnomalyNotificationsController_findAll
+      summary: Récupérer toutes les notifications d'anomalies
+      description: Renvoie la liste de toutes les notifications d'anomalies.
+      parameters:
+        - name: all
+          required: false
+          in: query
+          description: Filtrer les notifications d'anomalies pour l'utilisateur connecté
+          schema:
+            default: false
+            type: boolean
+        - name: searchReport
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          required: false
+          in: query
+          schema:
+            enum:
+              - application
+              - status
+              - date
+              - description
+              - signalant
+            type: string
+        - name: order
+          required: false
+          in: query
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 0
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            type: number
+      responses:
+        "200":
+          description: Liste des notifications d'anomalies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags: &a8
+        - AnomalyNotifications
+    post:
+      operationId: AnomalyNotificationsController_create
+      summary: Rapporter une anomalie
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnomalyNotificationRequestDto"
+      responses:
+        "201":
+          description: Notification d'anomalie créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags: *a8
+  /api/v2/anomaly-notifications/{id}:
+    patch:
+      operationId: AnomalyNotificationsController_update
+      summary: Mettre à jour une notification
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAnomalyNotificationDto"
+      responses:
+        "200":
+          description: Notification mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags: *a8
   /api/v2/applications/{applicationId}/anomaly-notifications:
     post:
       operationId: ApplicationAnomalyNotificationsController_create
@@ -1371,7 +1473,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: &a8
+      tags: &a9
         - ApplicationNotifications
     get:
       operationId: ApplicationAnomalyNotificationsController_findAll
@@ -1386,6 +1488,42 @@ paths:
           schema:
             default: false
             type: boolean
+        - name: searchReport
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          required: false
+          in: query
+          schema:
+            enum:
+              - application
+              - status
+              - date
+              - description
+              - signalant
+            type: string
+        - name: order
+          required: false
+          in: query
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 0
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            type: number
         - name: applicationId
           required: true
           in: path
@@ -1401,7 +1539,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: *a8
+      tags: *a9
   /api/v2/applications/{applicationId}/anomaly-notifications/{id}:
     get:
       operationId: ApplicationAnomalyNotificationsController_findOne
@@ -1425,7 +1563,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: *a8
+      tags: *a9
     patch:
       operationId: ApplicationAnomalyNotificationsController_update
       summary: Mettre à jour une notification
@@ -1454,7 +1592,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: *a8
+      tags: *a9
     delete:
       operationId: ApplicationAnomalyNotificationsController_remove
       summary: Supprimer une notification
@@ -1473,48 +1611,6 @@ paths:
       responses:
         "204":
           description: Notification supprimée avec succès
-      tags: *a8
-  /api/v2/anomaly-notifications:
-    get:
-      operationId: AnomalyNotificationsController_findAll
-      summary: Récupérer toutes les notifications d'anomalies
-      description: Renvoie la liste de toutes les notifications d'anomalies.
-      parameters:
-        - name: all
-          required: false
-          in: query
-          description: Filtrer les notifications d'anomalies pour l'utilisateur connecté
-          schema:
-            default: false
-            type: boolean
-      responses:
-        "200":
-          description: Liste des notifications d'anomalies
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: &a9
-        - Notifications
-    post:
-      operationId: AnomalyNotificationsController_create
-      summary: Rapporter une anomalie
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateAnomalyNotificationRequestDto"
-      responses:
-        "201":
-          description: Notification d'anomalie créée avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetAnomalyNotificationDto"
       tags: *a9
   /api/v2/health-check:
     get:
@@ -3142,15 +3238,6 @@ components:
           example: 2023-12-31T23:59:59.999Z
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
-    CreateAnomalyNotificationRequestDto:
-      type: object
-      properties:
-        applicationId:
-          type: string
-        description:
-          type: string
-      required:
-        - description
     Notifier:
       type: object
       properties:
@@ -3161,6 +3248,13 @@ components:
       required:
         - id
         - email
+    AnomalyNotificationStatus:
+      type: string
+      description: Le statut de la notification d'anomalie
+      enum:
+        - in_pending
+        - in_progress
+        - done
     GetAnomalyNotificationDto:
       type: object
       properties:
@@ -3168,6 +3262,8 @@ components:
           description: The user who reported the issue
           allOf:
             - $ref: "#/components/schemas/Notifier"
+        status:
+          $ref: "#/components/schemas/AnomalyNotificationStatus"
         createdAt:
           type: string
           description: Date de création de la metadata
@@ -3182,36 +3278,40 @@ components:
           type: string
         description:
           type: string
-        status:
-          type: string
         updatedAt:
           format: date-time
           type: string
       required:
         - notifier
+        - status
         - createdAt
         - id
         - application
         - notifierId
         - description
-        - status
         - updatedAt
-    UpdateAnomalyNotificationDto:
+    CreateAnomalyNotificationRequestDto:
       type: object
       properties:
-        status:
-          type: string
-          description: Le nouveau statut de la notification d'anomalie
-          enum:
-            - in_pending
-            - in_progress
-            - done
         applicationId:
           type: string
         description:
           type: string
       required:
-        - status
+        - description
+    UpdateAnomalyNotificationDto:
+      type: object
+      properties:
+        description:
+          type: string
+          description: La description de la notification d'anomalie
+        status:
+          type: string
+          description: Le statut de la notification d'anomalie
+          enum:
+            - in_pending
+            - in_progress
+            - done
     GetIqAvgGroupedDto:
       type: object
       properties:
