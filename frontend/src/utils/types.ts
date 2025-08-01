@@ -14,3 +14,10 @@ export type Tab<E extends Record<string, string>> = {
     errorKey?: never
   }
 );
+
+type GenericHeaders = {
+  key: string
+  label: string
+}[];
+
+export type GenericRow<H extends GenericHeaders> = Record<(H)[number]["key"], any> & { id: string };
