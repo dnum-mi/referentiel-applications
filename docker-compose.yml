@@ -20,6 +20,8 @@ services:
   backend:
     build:
       context: ./backend
+      target: dev
+    image: refapp-backend:dev
     command: pnpm start:dev
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/postgres
@@ -69,7 +71,10 @@ services:
       - postgres
 
   client:
-    image: node:22
+    build:
+      context: ./backend
+      target: dev
+    image: refapp-client:dev
     working_dir: /app
     volumes:
       - ./frontend:/app

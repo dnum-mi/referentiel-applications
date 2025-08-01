@@ -1,4 +1,4 @@
-FROM node:22-slim
+FROM node:24-slim AS dev
 
 WORKDIR /app
 
@@ -13,8 +13,11 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 RUN pnpm prisma generate
-RUN pnpm run build
-
 ENV PORT=3500
+CMD ["pnpm" , "dev"]
+
+
+FROM dev AS prod
+RUN pnpm run build
 
 CMD ["node" , "dist/src/main.js"]

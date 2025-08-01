@@ -1,4 +1,4 @@
-FROM node:23-slim AS build
+FROM node:24-slim AS build
 
 WORKDIR /app
 
@@ -11,7 +11,6 @@ RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies using pnpm
-RUN pnpm install
 RUN pnpm install --frozen-lockfile
 
 
@@ -20,16 +19,17 @@ COPY . .
 # Temporary disable type checking
 RUN npm run build-only
 
+FROM build AS dev
+CMD ["pnpm" , "dev"]
+
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
 
-USER 0
+COPY --chown=1000:1000 --chmod=664 nginx.conf /etc/nginx/nginx.conf
+COPY --chown=1000:1000 --chmod=777 --from=build /app/dist /usr/share/nginx/html/
 
-COPY --chown=1001:1001 --chmod=664 nginx.conf /etc/nginx/nginx.conf
-COPY --chown=1001:1001 --chmod=777 --from=build /app/dist /usr/share/nginx/html/
+COPY --chown=1000:1000 --chmod=775 entrypoint.sh /docker-entrypoint.d/entrypoint.sh
 
-COPY --chown=1001:1001 --chmod=775 entrypoint.sh /docker-entrypoint.d/entrypoint.sh
-
-USER 1001
+USER 1000
 
 ENV APP_ENV_PREFIX=VITE_RDA_
 ENV APP_DIST_DIR=/usr/share/nginx/html
