@@ -26,7 +26,7 @@ export class ApplicationService {
     private prisma: PrismaService,
     private applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
-    private readonly metadatasService: MetadataService,
+    private readonly metadataService: MetadataService,
   ) { }
 
   public async createApplication(
@@ -81,7 +81,7 @@ export class ApplicationService {
 
       await this.updateApplicationQuality(updatedApplication.id);
 
-      await this.metadatasService.createMetadata({
+      await this.metadataService.createMetadata({
         applicationId: updatedApplication.id,
         createdById: ownerId,
         title: `des informations générales`,

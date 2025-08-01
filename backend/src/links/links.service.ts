@@ -9,13 +9,13 @@ import { ApplicationService } from 'src/product/application.service';
 export class LinksService extends BaseService<Link> {
   constructor(
     prisma: PrismaService,
-    metadatasService: MetadataService,
+    metadataService: MetadataService,
     applicationService: ApplicationService,
   ) {
     super(
       prisma.externalRessource,
       prisma,
-      metadatasService,
+      metadataService,
       applicationService,
     );
   }

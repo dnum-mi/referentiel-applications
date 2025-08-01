@@ -9,10 +9,10 @@ import { ApplicationService } from 'src/product/application.service';
 export class CompliancesService extends BaseService<Compliance> {
   constructor(
     prisma: PrismaService,
-    metadatasService: MetadataService,
+    metadataService: MetadataService,
     applicationService: ApplicationService,
   ) {
-    super(prisma.compliance, prisma, metadatasService, applicationService);
+    super(prisma.compliance, prisma, metadataService, applicationService);
   }
 
   async findByApplicationId(applicationId: string): Promise<Compliance | null> {

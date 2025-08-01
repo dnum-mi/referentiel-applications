@@ -6,8 +6,8 @@ import { MetadataService } from 'src/metadata/metadata.service';
 
 @Injectable()
 export class LabelsService extends BaseService<Label> {
-  constructor(prisma: PrismaService, metadatasService: MetadataService) {
-    super(prisma.label, prisma, metadatasService);
+  constructor(prisma: PrismaService, metadataService: MetadataService) {
+    super(prisma.label, prisma, metadataService);
   }
 
   /**

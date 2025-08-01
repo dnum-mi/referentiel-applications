@@ -9,7 +9,7 @@ export class BaseService<T> {
   constructor(
     protected readonly model: any,
     protected readonly prisma: PrismaService,
-    private readonly metadatasService?: MetadataService,
+    private readonly metadataService?: MetadataService,
     private readonly applicationService?: ApplicationService,
   ) { }
 
@@ -67,7 +67,7 @@ export class BaseService<T> {
     }
 
     try {
-      await this.metadatasService.createMetadata({
+      await this.metadataService.createMetadata({
         applicationId: options.applicationId,
         createdById: options.userId,
         title: `${options.gender} ${options.getName?.(updatedEntity) ?? ''}`,
