@@ -43,6 +43,11 @@ export interface Metadata {
   action?: string;
 }
 
+export type FirstAndLastMetadata = {
+  first: Metadata | null;
+  last: Metadata | null;
+};
+
 export interface Compliance {
   id: string;
   type: "DIMA" | "PDMA" | "HOMOLOGATION" | "RGAA" | "DSFR" | "RGPD";

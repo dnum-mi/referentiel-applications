@@ -200,15 +200,4 @@ export const apiConfig = {
       payload: ["keycloakId", "email"],
     },
   },
-
-  metadata: {
-    getByAppId: {
-      method: "GET",
-      url: "/applications/:applicationId/metadatas"
-    },
-    getFirstAndLast: {
-      method: "GET",
-      url: "/applications/:applicationId/metadatas/first-last"
-    }
-  }
 } as const;
