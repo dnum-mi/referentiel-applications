@@ -44,7 +44,7 @@ export const useLinkStore = defineStore("linkStore", () => {
         applicationId,
         linkId: link.id,
       });
-      const index = links.value.findIndex((l) => l.id === link.id);
+      const index = links.value.findIndex(l => l.id === link.id);
       if (index !== -1) links.value[index] = updated;
       toaster.addSuccessMessage("Lien modifié avec succès !");
       return updated;
@@ -56,8 +56,8 @@ export const useLinkStore = defineStore("linkStore", () => {
 
   const deleteLinks = async (applicationId: string, linkIds: string[]) => {
     try {
-      await Promise.all(linkIds.map((linkId) => call("link", "delete", { applicationId, linkId })));
-      links.value = links.value.filter((l) => !linkIds.includes(l.id));
+      await Promise.all(linkIds.map(linkId => call("link", "delete", { applicationId, linkId })));
+      links.value = links.value.filter(l => !linkIds.includes(l.id));
       toaster.addSuccessMessage("Liens supprimés avec succès !");
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la suppression des liens.");

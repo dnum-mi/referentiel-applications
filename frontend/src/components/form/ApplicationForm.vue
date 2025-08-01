@@ -4,29 +4,41 @@ import { ref, computed, onMounted } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
-import { statusApplicationDictionary } from "@/composables/use-dictionary";
-import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
-
-const toaster = useToaster();
+import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 
 const props = defineProps<{
-  initialData?: Application;
-  labels: Label[];
-  isSubmitting?: boolean;
+  initialData?: Application
+  labels: Label[]
+  isSubmitting?: boolean
 }>();
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
 
+const toaster = useToaster();
+
 const initialLabels = ref<Label[]>([]);
 
 const statusOptions = computed(() =>
-  Object.keys(statusApplicationDictionary).map((value) => ({
+  Object.keys(statusApplicationDictionary).map(value => ({
     value,
     text: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
   })),
 );
 
-const handleSubmit = () => {
+const form = ref({
+  label: props.initialData?.label ?? "",
+  shortName: props.initialData?.shortName ?? "",
+  labels: props.labels ? [...props.labels] : [],
+  status: props.initialData?.status ?? null,
+  description: props.initialData?.description ?? "",
+  targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
+  logo: props.initialData?.logo ?? "",
+  purposes: [...(props.initialData?.purposes ?? [""])],
+  tags: [...(props.initialData?.tags ?? [""])],
+  priorityRestart: props.initialData?.priorityRestart ?? null,
+});
+
+function handleSubmit() {
   if (!validateAllTags()) {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
@@ -34,8 +46,8 @@ const handleSubmit = () => {
 
   const cleanedForm = {
     ...form.value,
-    purposes: form.value.purposes.filter((p) => p.trim() !== ""),
-    tags: form.value.tags.filter((t) => t.trim() !== ""),
+    purposes: form.value.purposes.filter(p => p.trim() !== ""),
+    tags: form.value.tags.filter(t => t.trim() !== ""),
   };
 
   const generalFields = ["label", "shortName", "logo", "description", "status", "targetPopulations", "purposes", "tags", "priorityRestart"];
@@ -44,10 +56,10 @@ const handleSubmit = () => {
 
   const currentLabels = form.value.labels;
 
-  const deletedLabels = initialLabels.value.filter((initial) => !currentLabels.some((label) => label.id === initial.id));
-  const newLabels = currentLabels.filter((label) => !initialLabels.value.some((initial) => initial.id === label.id));
+  const deletedLabels = initialLabels.value.filter(initial => !currentLabels.some(label => label.id === initial.id));
+  const newLabels = currentLabels.filter(label => !initialLabels.value.some(initial => initial.id === label.id));
   const updatedLabels = currentLabels.filter((label) => {
-    const initial = initialLabels.value.find((i) => i.id === label.id);
+    const initial = initialLabels.value.find(i => i.id === label.id);
     return initial && areFieldsModified(initial, label, ["value", "source"]);
   });
 
@@ -64,28 +76,15 @@ const handleSubmit = () => {
         }
       : null,
   });
-};
+}
 
-const form = ref({
-  label: props.initialData?.label ?? "",
-  shortName: props.initialData?.shortName ?? "",
-  labels: props.labels ? [...props.labels] : [],
-  status: props.initialData?.status ?? null,
-  description: props.initialData?.description ?? "",
-  targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
-  logo: props.initialData?.logo ?? "",
-  purposes: [...(props.initialData?.purposes ?? [""])],
-  tags: [...(props.initialData?.tags ?? [""])],
-  priorityRestart: props.initialData?.priorityRestart ?? null,
-});
-
-const isTagValid = (tag: string) => {
+function isTagValid(tag: string) {
   return regexFormatTag.test(tag);
-};
+}
 
-const validateAllTags = (): boolean => {
-  return form.value.tags.every((tag) => isTagValid(tag));
-};
+function validateAllTags(): boolean {
+  return form.value.tags.every(tag => isTagValid(tag));
+}
 
 onMounted(() => {
   initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
@@ -94,13 +93,13 @@ onMounted(() => {
 
 <template>
   <form @submit.prevent="handleSubmit">
-    <DsfrInputGroup label="Nom de l'application" v-model="form.label" label-visible required />
+    <DsfrInputGroup v-model="form.label" label="Nom de l'application" label-visible required />
 
     <DsfrInputGroup
+      v-model="form.shortName"
       class="fr-mt-3w"
       label="Nom court"
       label-visible
-      v-model="form.shortName"
       hint="Optionnel - Un nom court pour identifier rapidement l'application"
     />
 
@@ -132,7 +131,7 @@ onMounted(() => {
         />
       </div>
     </div>
-    <br />
+    <br>
     <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required>
       <MarkdownEditor v-model="form.description" />
     </DsfrInputGroup>
@@ -146,7 +145,9 @@ onMounted(() => {
 
     <div class="fr-form-group fr-mt-3w">
       <label class="fr-label">Population</label>
-      <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
+      <p class="fr-hint-text">
+        Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)
+      </p>
       <div class="fr-mt-2w">
         <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
@@ -168,10 +169,10 @@ onMounted(() => {
     </div>
 
     <DsfrInputGroup
+      v-model="form.logo"
       class="fr-mt-3w"
       label="URL du logo"
       label-visible
-      v-model="form.logo"
       hint="Optionnel - URL d'une image représentant l'application"
     />
 
@@ -210,7 +211,7 @@ onMounted(() => {
       <DsfrButton type="button" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" @click="handleSubmit">
         <template v-if="isSubmitting">
           <span class="fr-loading fr-loading--sm">
-            <span class="fr-loading__icon" aria-hidden="true"></span>
+            <span class="fr-loading__icon" aria-hidden="true" />
           </span>
         </template>
       </DsfrButton>

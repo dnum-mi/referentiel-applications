@@ -10,7 +10,7 @@ const actorTypeStore = useActorTypeStore();
 const selectedActorTypeId = ref("");
 
 const actorTypeOptions = computed(() =>
-  actorTypeStore.actorTypes.map((actor) => ({
+  actorTypeStore.actorTypes.map(actor => ({
     text: actor.label,
     value: actor.id,
   })),
@@ -20,13 +20,13 @@ const { run: debouncedSearch } = useDebouncedFn(() => {
   searchStore.searchApplications();
 }, 300);
 
-const selectedActor = computed(() => actorTypeStore.actorTypes.find((actor) => actor.id === selectedActorTypeId.value));
+const selectedActor = computed(() => actorTypeStore.actorTypes.find(actor => actor.id === selectedActorTypeId.value));
 
 onMounted(async () => {
   await actorTypeStore.fetchAll();
   const currentCode = searchStore.filters.actorType;
   if (currentCode) {
-    const match = actorTypeStore.actorTypes.find((actor) => actor.code === currentCode);
+    const match = actorTypeStore.actorTypes.find(actor => actor.code === currentCode);
     if (match) {
       selectedActorTypeId.value = match.id;
     }
@@ -35,7 +35,7 @@ onMounted(async () => {
 
 watch(selectedActorTypeId, (newVal) => {
   if (newVal) {
-    const selected = actorTypeStore.actorTypes.find((actor) => actor.id === newVal);
+    const selected = actorTypeStore.actorTypes.find(actor => actor.id === newVal);
     if (selected) {
       searchStore.setFilter("actorType", selected.code);
     }
@@ -53,7 +53,7 @@ function clearActorType() {
 watch(
   () => searchStore.filters.actorType,
   (val) => {
-    const match = actorTypeStore.actorTypes.find((actor) => actor.code === val);
+    const match = actorTypeStore.actorTypes.find(actor => actor.code === val);
     selectedActorTypeId.value = match?.id ?? "";
   },
   { deep: true },
@@ -65,7 +65,9 @@ watch(
     <DsfrSelect v-model="selectedActorTypeId" :options="actorTypeOptions" label="Type d'acteur" />
     <div v-if="selectedActor" class="selected-tag">
       <span class="tag-label">{{ selectedActor.label }}</span>
-      <button class="tag-remove" @click="clearActorType" title="Retirer ce filtre">×</button>
+      <button class="tag-remove" title="Retirer ce filtre" @click="clearActorType">
+        ×
+      </button>
     </div>
   </div>
 </template>

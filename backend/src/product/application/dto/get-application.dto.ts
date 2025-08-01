@@ -4,8 +4,8 @@ import {
   IsOptional,
   IsString,
   IsEnum,
-} from 'class-validator';
-import { Status } from '@prisma/client';
+} from "class-validator";
+import { Status } from "@prisma/client";
 
 export class GetApplicationDto {
   @IsString()

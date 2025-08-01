@@ -1,16 +1,16 @@
-import request from 'supertest';
-import { setupTestSuite } from './setup';
-import { getToken } from './getToken';
-import { UserFaker } from './fakers/user.faker';
-import { HostingFaker } from './fakers/hosting.faker';
-import { HostingOptionFaker } from './fakers/hosting-option.faker';
-import { ApplicationFaker } from './fakers/application.faker';
-import { getPrismaClient } from './fakers/prisma';
-import { ActorTypeFaker } from './fakers/actor-type.faker';
-import { ActorFaker } from './fakers/actor.faker';
-import { AdminLevel } from 'src/user/entities/user.entity';
+import request from "supertest";
+import { setupTestSuite } from "./setup";
+import { getToken } from "./getToken";
+import { UserFaker } from "./fakers/user.faker";
+import { HostingFaker } from "./fakers/hosting.faker";
+import { HostingOptionFaker } from "./fakers/hosting-option.faker";
+import { ApplicationFaker } from "./fakers/application.faker";
+import { getPrismaClient } from "./fakers/prisma";
+import { ActorTypeFaker } from "./fakers/actor-type.faker";
+import { ActorFaker } from "./fakers/actor.faker";
+import { AdminLevel } from "src/user/entities/user.entity";
 
-describe('Hostings', () => {
+describe("Hostings", () => {
   const app = setupTestSuite();
   const prisma = getPrismaClient();
   let user: { keycloakId: string };
@@ -24,94 +24,94 @@ describe('Hostings', () => {
     prisma.$disconnect();
   });
 
-  it(`/GET applications/:applicationId/hostings`, async () => {
+  it("/GET applications/:applicationId/hostings", async () => {
     const TOKEN = await getToken(user);
     const hostingOption = await HostingOptionFaker.create();
     await HostingFaker.create({
-      application: application,
-      hostingOption: hostingOption,
-      user: user,
+      application,
+      hostingOption,
+      user,
     });
 
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
   });
 
-  it(`/POST applications/:applicationId/hostings with hostingOption reference`, async () => {
+  it("/POST applications/:applicationId/hostings with hostingOption reference", async () => {
     const TOKEN = await getToken(user);
     const hostingOption = await HostingOptionFaker.create();
 
     const newHosting = {
       hostingOptionId: hostingOption.id,
-      label: 'Test Hosting with Option',
+      label: "Test Hosting with Option",
     };
 
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/hostings`)
       .send(newHosting)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
   });
 
-  it(`/GET applications/:applicationId/hostings/:id`, async () => {
+  it("/GET applications/:applicationId/hostings/:id", async () => {
     const TOKEN = await getToken(user);
     const hostingOption = await HostingOptionFaker.create();
     const hosting = await HostingFaker.create({
-      application: application,
-      hostingOption: hostingOption,
-      user: user,
+      application,
+      hostingOption,
+      user,
     });
 
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings/${hosting.id}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
   });
 
-  it(`/PATCH applications/:applicationId/hostings/:id to update hostingOption`, async () => {
+  it("/PATCH applications/:applicationId/hostings/:id to update hostingOption", async () => {
     const TOKEN = await getToken(user);
     const hostingOption = await HostingOptionFaker.create();
     const hosting = await HostingFaker.create({
-      application: application,
-      hostingOption: hostingOption,
-      user: user,
+      application,
+      hostingOption,
+      user,
     });
 
     const updateData = {
       applicationId: application.id,
       hostingOptionId: hostingOption.id,
-      label: 'Hosting with Updated Option',
+      label: "Hosting with Updated Option",
     };
 
     await request(app().getHttpServer())
       .patch(`/applications/${application.id}/hostings/${hosting.id}`)
       .send(updateData)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
   });
 
-  it(`/DELETE applications/:applicationId/hostings/:id`, async () => {
+  it("/DELETE applications/:applicationId/hostings/:id", async () => {
     const TOKEN = await getToken(user);
     const hostingOption = await HostingOptionFaker.create();
     const hosting = await HostingFaker.create({
-      application: application,
-      hostingOption: hostingOption,
-      user: user,
+      application,
+      hostingOption,
+      user,
     });
 
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/hostings/${hosting.id}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
   });
 });
 
-describe('application guard', () => {
+describe("application guard", () => {
   const app = setupTestSuite();
-  let appOwner: { keycloakId: string; email: string };
-  let appActor: { keycloakId: string; email: string };
+  let appOwner: { keycloakId: string, email: string };
+  let appActor: { keycloakId: string, email: string };
   let TOKEN: string;
   const prisma = getPrismaClient();
 
@@ -125,8 +125,8 @@ describe('application guard', () => {
     prisma.$disconnect();
   });
 
-  it(`permissions testing`, async () => {
-    const actorType = await ActorTypeFaker.create(['readHostings']);
+  it("permissions testing", async () => {
+    const actorType = await ActorTypeFaker.create(["readHostings"]);
     const application = await ApplicationFaker.create(appOwner);
     await ActorFaker.link({
       userEmail: appActor.email,
@@ -136,8 +136,8 @@ describe('application guard', () => {
 
     // Get hostings options
     const hostingOptions = await request(app().getHttpServer())
-      .get(`/hosting-options`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .get("/hosting-options")
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     const hostingOptionId = hostingOptions.body[0].id;
@@ -146,23 +146,23 @@ describe('application guard', () => {
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/hostings`)
       .send({
-        label: 'Test Hosting',
+        label: "Test Hosting",
         hostingOptionId,
         applicationId: application.id,
       })
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(['writeHostings']);
+    await actorType.update(["writeHostings"]);
     const hosting = await request(app().getHttpServer())
       .post(`/applications/${application.id}/hostings`)
       .send({
-        label: 'Test Hosting',
+        label: "Test Hosting",
         hostingOptionId,
         applicationId: application.id,
       })
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
     const hostingId = hosting.body.id;
     expect(hostingId).toBeDefined();
@@ -172,59 +172,59 @@ describe('application guard', () => {
     // Should fail to get the hosting because the user does not have the read permission
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings/${hostingId}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     // Should fail to list hostings because the user does not have the read permission
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     // Add read permission
-    await actorType.update(['readHostings']);
+    await actorType.update(["readHostings"]);
 
     // Should succeed to get the hosting
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings/${hostingId}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
     // Should succeed to list hostings
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/hostings`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     // should fail on write permission
     await request(app().getHttpServer())
       .patch(`/applications/${application.id}/hostings/${hostingId}`)
       .send({
-        label: 'Updated Hosting',
+        label: "Updated Hosting",
       })
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/hostings/${hostingId}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(403);
 
     // Add write permission again
-    await actorType.update(['writeHostings']);
+    await actorType.update(["writeHostings"]);
 
     // Should succeed to update the hosting
     await request(app().getHttpServer())
       .patch(`/applications/${application.id}/hostings/${hostingId}`)
       .send({
-        label: 'Updated Hosting',
+        label: "Updated Hosting",
       })
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     // Should succeed to delete the hosting
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/hostings/${hostingId}`)
-      .set('Authorization', `Bearer ${TOKEN}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     // Finally delete the actor type

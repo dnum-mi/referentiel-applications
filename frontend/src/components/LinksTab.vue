@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { defineProps } from "vue";
+import { ref, computed, onMounted, defineProps } from "vue";
 import type { ApplicationWithPerms, ExternalRessource } from "@/models/Application";
 import { useLinkStore } from "@/stores/linkStore";
 import useToaster from "@/composables/use-toaster";
@@ -11,7 +10,7 @@ import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{
-  application: ApplicationWithPerms;
+  application: ApplicationWithPerms
 }>();
 
 const emit = defineEmits(["update:application"]);
@@ -34,7 +33,7 @@ onMounted(async () => {
 });
 
 const rows = computed(() =>
-  linkStore.links.map((link) => [
+  linkStore.links.map(link => [
     link.id,
     { label: link.link || "Lien vide", to: formatLink(link.link) },
     link.description || "Description vide",
@@ -47,7 +46,7 @@ const rows = computed(() =>
   ]),
 );
 
-const createLink = async (newLink: ExternalRessource) => {
+async function createLink(newLink: ExternalRessource) {
   try {
     isSubmitting.value = true;
     await linkStore.createLink(props.application.id, {
@@ -59,9 +58,9 @@ const createLink = async (newLink: ExternalRessource) => {
   } finally {
     isSubmitting.value = false;
   }
-};
+}
 
-const editLink = async (updatedLink: ExternalRessource) => {
+async function editLink(updatedLink: ExternalRessource) {
   try {
     isSubmitting.value = true;
     await linkStore.updateLink(props.application.id, {
@@ -73,31 +72,33 @@ const editLink = async (updatedLink: ExternalRessource) => {
   } finally {
     isSubmitting.value = false;
   }
-};
+}
 
-const confirmDelete = async () => {
+async function confirmDelete() {
   await linkStore.deleteLinks(props.application.id, selectedLinkIds.value);
   selectedLinkIds.value = [];
   showDeleteConfirmation.value = false;
   emit("update:application", props.application);
-};
+}
 
-const removeSelectedLinks = () => {
+function removeSelectedLinks() {
   if (!selectedLinkIds.value.length) {
     toaster.addErrorMessage("Aucune sélection.");
     return;
   }
   showDeleteConfirmation.value = true;
-};
+}
 </script>
 
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
     <div class="fr-col">
-      <h3 class="fr-mb-0">Gestion des liens</h3>
+      <h3 class="fr-mb-0">
+        Gestion des liens
+      </h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton class="fr-btn--icon-left fr-icon-add-line" @click="linkModal.openCreateModal()" :disabled="!canEdit">
+      <DsfrButton class="fr-btn--icon-left fr-icon-add-line" :disabled="!canEdit" @click="linkModal.openCreateModal()">
         Ajouter un lien
       </DsfrButton>
     </div>
@@ -134,13 +135,13 @@ const removeSelectedLinks = () => {
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Sélection'">
-          <input type="checkbox" :value="cell" v-model="selectedLinkIds" />
+          <input v-model="selectedLinkIds" type="checkbox" :value="cell">
         </template>
         <template v-else-if="colKey === 'Lien'">
           <a :href="cell.to" target="_blank" rel="noopener noreferrer">{{ cell.label }}</a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.onClick" :disabled="!canEdit">
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" @click="cell.onClick">
             {{ cell.label }}
           </DsfrButton>
         </template>
@@ -158,7 +159,7 @@ const removeSelectedLinks = () => {
     @close="linkModal.closeModal"
   >
     <LinkForm
-      :initialData="linkModal.selectedItem.value"
+      :initial-data="linkModal.selectedItem.value"
       :is-submitting="isSubmitting"
       @submit="(formData) => (linkModal.selectedItem.value ? editLink(formData) : createLink(formData))"
       @cancel="linkModal.closeModal"
@@ -167,7 +168,7 @@ const removeSelectedLinks = () => {
 
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
-    itemName="liens"
+    item-name="liens"
     @confirm="confirmDelete"
     @cancel="() => (showDeleteConfirmation.value = false)"
   />

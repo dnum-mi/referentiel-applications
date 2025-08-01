@@ -14,17 +14,16 @@ import type { Hosting } from "@/models/Hosting";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 
+const props = defineProps<{
+  application: ApplicationWithPerms
+  tags: string[]
+  targetPopulations: string[]
+  small?: boolean
+}>();
+const emit = defineEmits(["update:application"]);
 const isSubmitting = ref(false);
 const toaster = useToaster();
-const emit = defineEmits(["update:application"]);
 const loading = ref(false);
-
-const props = defineProps<{
-  application: ApplicationWithPerms;
-  tags: string[];
-  targetPopulations: string[];
-  small?: boolean;
-}>();
 
 const isHostingModalOpen = ref(false);
 const hostingToEdit = ref<Hosting | null>(null);
@@ -35,6 +34,7 @@ const userStore = useUserStore();
 const canEditBase = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase"));
 const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
 const canEditHostings = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeHostings"));
+const labels = ref<Label[]>([]);
 
 onMounted(async () => {
   if (props.application?.id) {
@@ -46,12 +46,11 @@ const application = ref<ApplicationWithPerms>({
   ...props.application,
   labels: props.application.labels ?? [],
 });
-const labels = ref<Label[]>([]);
 
 const applicationModal = useModal();
 const isModalOpened = computed(() => applicationModal.isModalOpen.value);
 
-const priorityConfig = new Map<string, { type: string; label: string; tooltip: string }>([
+const priorityConfig = new Map<string, { type: string, label: string, tooltip: string }>([
   [
     "R0",
     {
@@ -96,12 +95,13 @@ const priorityConfig = new Map<string, { type: string; label: string; tooltip: s
   ],
 ]);
 
-const getPriorityBadgeType = (priority?: string) =>
-  priorityConfig.get(priority ?? "") ?? {
+function getPriorityBadgeType(priority?: string) {
+  return priorityConfig.get(priority ?? "") ?? {
     type: "none",
     label: "Non définie",
     tooltip: "Aucune priorité n'a été définie pour cette application",
   };
+}
 
 async function updateApplication(updatedData: any) {
   isSubmitting.value = true;
@@ -184,7 +184,9 @@ watch(
           <div class="fr-card__content">
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
               <div class="fr-col">
-                <h3 class="fr-mb-0">Informations générales</h3>
+                <h3 class="fr-mb-0">
+                  Informations générales
+                </h3>
               </div>
               <div class="fr-col-auto">
                 <DsfrButton
@@ -192,8 +194,8 @@ watch(
                   size="sm"
                   class="fr-btn--icon-left fr-icon-edit-line"
                   label="Modifier"
-                  @click="applicationModal.openModal()"
                   :disabled="!canEditBase"
+                  @click="applicationModal.openModal()"
                 />
               </div>
             </div>
@@ -222,12 +224,18 @@ watch(
               <h4>Description</h4>
               <MarkdownDisplay :content="application.description" />
 
-              <h4 class="fr-mt-3w">Objectifs</h4>
+              <h4 class="fr-mt-3w">
+                Objectifs
+              </h4>
               <ul v-if="application.purposes?.length">
-                <li v-for="purpose in application.purposes" :key="purpose">{{ purpose }}</li>
+                <li v-for="purpose in application.purposes" :key="purpose">
+                  {{ purpose }}
+                </li>
               </ul>
 
-              <h4 class="fr-mt-3w">Tags</h4>
+              <h4 class="fr-mt-3w">
+                Tags
+              </h4>
               <ul v-if="application.tags?.length" class="fr-tags-group">
                 <li v-for="tag in application.tags" :key="tag">
                   <DsfrTag :label="tag" :small="small" />
@@ -243,7 +251,9 @@ watch(
       <div class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <h3 class="fr-card__title">Priorité de redémarrage</h3>
+            <h3 class="fr-card__title">
+              Priorité de redémarrage
+            </h3>
             <div class="fr-card__desc">
               <template v-if="application.priorityRestart">
                 <DsfrBadge
@@ -255,19 +265,23 @@ watch(
                 />
               </template>
               <template v-else>
-                <p class="fr-text--sm fr-text--italic">Aucune priorité définie.</p>
+                <p class="fr-text--sm fr-text--italic">
+                  Aucune priorité définie.
+                </p>
               </template>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="fr-card" v-if="canViewHostings">
+      <div v-if="canViewHostings" class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content">
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
               <div class="fr-col">
-                <h3 class="fr-card__title">Sites d'hébergement</h3>
+                <h3 class="fr-card__title">
+                  Sites d'hébergement
+                </h3>
               </div>
               <div class="fr-col-auto">
                 <DsfrButton
@@ -275,8 +289,8 @@ watch(
                   size="sm"
                   class="fr-btn--icon-left fr-icon-add-line"
                   label="Ajouter"
-                  @click="isHostingModalOpen = true"
                   :disabled="!canEditHostings"
+                  @click="isHostingModalOpen = true"
                 />
               </div>
             </div>
@@ -289,7 +303,9 @@ watch(
       <div v-if="(application.targetPopulations ?? []).length > 0" class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <h3 class="fr-card__title">Population</h3>
+            <h3 class="fr-card__title">
+              Population
+            </h3>
             <div class="fr-card__desc">
               <ul class="fr-tags-group">
                 <li v-for="targetPopulation in application.targetPopulations" :key="targetPopulation">
@@ -305,22 +321,22 @@ watch(
 
   <HostingModal
     v-if="isHostingModalOpen"
-    :applicationId="application.id"
+    :application-id="application.id"
     @hosting-created="handleHostingCreated"
     @close="isHostingModalOpen = false"
   />
 
   <HostingModal
     v-if="hostingToEdit"
-    :applicationId="application.id"
-    :initialHosting="hostingToEdit"
+    :application-id="application.id"
+    :initial-hosting="hostingToEdit"
     @hosting-updated="handleHostingUpdated"
     @close="hostingToEdit = null"
   />
   <DeleteConfirmationModal
     v-if="isDeleteModalOpen"
     :opened="isDeleteModalOpen"
-    itemName="l'hébergement"
+    item-name="l'hébergement"
     @confirm="confirmDeletionHosting"
     @cancel="cancelDeletionHosting"
   />

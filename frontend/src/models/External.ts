@@ -1,6 +1,6 @@
 export interface ExternalRessource {
-  id: string;
-  link: string;
-  description: string;
-  type: string;
+  id: string
+  link: string
+  description: string
+  type: string
 }

@@ -7,21 +7,20 @@ import type { Relation, Application } from "@/models/Application";
 
 const props = withDefaults(
   defineProps<{
-    opened?: boolean;
-    title: string;
-    relation: Relation | null;
+    opened?: boolean
+    title: string
+    relation: Relation | null
   }>(),
   {
     opened: false,
   },
 );
 
-const toaster = useToaster();
 const emit = defineEmits<{
-  (e: "close"): void;
-  (e: "update-relation", updatedRelation: Relation): void;
+  (e: "close"): void
+  (e: "update-relation", updatedRelation: Relation): void
 }>();
-
+const toaster = useToaster();
 const searchText = ref("");
 const suggestions = ref<Application[]>([]);
 const selectedApplication = ref<Application | null>(null);
@@ -43,7 +42,7 @@ function debounce<T extends (...args: any[]) => void>(func: T, delay: number): T
   } as T;
 }
 
-const performSearch = async (query: string) => {
+async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading.value = true;
     try {
@@ -59,7 +58,7 @@ const performSearch = async (query: string) => {
   } else {
     suggestions.value = [];
   }
-};
+}
 
 const debouncedSearch = debounce(performSearch, 300);
 
@@ -91,13 +90,13 @@ watch(
   { immediate: true },
 );
 
-const selectApplication = (app: Application) => {
+function selectApplication(app: Application) {
   selectedApplication.value = app;
   searchText.value = app.label;
   suggestions.value = [];
-};
+}
 
-const submitRelationUpdate = async () => {
+async function submitRelationUpdate() {
   if (!selectedApplication.value) {
     toaster.addErrorMessage("L'application cible est requise.");
     return;
@@ -124,11 +123,11 @@ const submitRelationUpdate = async () => {
     console.error(error);
     toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
   }
-};
+}
 
-const closeModal = () => {
+function closeModal() {
   emit("close");
-};
+}
 </script>
 
 <template>
@@ -142,11 +141,13 @@ const closeModal = () => {
           default-unselected-text="Sélectionner une option"
         />
       </div>
-      <DsfrInput label="Rechercher une application" v-model="searchText" placeholder="Tapez au moins 3 caractères" />
-      <div v-if="isLoading">Chargement...</div>
+      <DsfrInput v-model="searchText" label="Rechercher une application" placeholder="Tapez au moins 3 caractères" />
+      <div v-if="isLoading">
+        Chargement...
+      </div>
       <ul v-if="suggestions.length" class="suggestions-list">
         <li v-for="app in suggestions" :key="app.id" class="suggestion-item">
-          <button type="button" @click="selectApplication(app)" class="suggestion-button">
+          <button type="button" class="suggestion-button" @click="selectApplication(app)">
             {{ app.label }}
           </button>
         </li>

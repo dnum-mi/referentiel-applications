@@ -5,11 +5,11 @@ export class Hosting {
 
   hostingOptionId?: string;
   hostingOption?: {
-    id: string;
-    room?: string;
-    building?: string;
-    site: string;
-    platform: string;
-    provider: string;
+    id: string
+    room?: string
+    building?: string
+    site: string
+    platform: string
+    provider: string
   };
 }

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 defineProps<{
-  totalFiltered: number;
-  pages: { label: string; title: string; href: string }[];
-  limit: number;
-  page: number;
+  totalFiltered: number
+  pages: { label: string, title: string, href: string }[]
+  limit: number
+  page: number
 }>();
 
 const emit = defineEmits<{
-  (e: "update:limit", value: number): void;
-  (e: "update:page", value: number): void;
+  (e: "update:limit", value: number): void
+  (e: "update:page", value: number): void
 }>();
 </script>
 
@@ -27,7 +27,9 @@ const emit = defineEmits<{
       <DsfrPagination :current-page="page" :pages="pages" @update:current-page="emit('update:page', $event)" />
     </div>
 
-    <div class="footer-item total-count">{{ totalFiltered }} application(s) trouvée(s)</div>
+    <div class="footer-item total-count">
+      {{ totalFiltered }} application(s) trouvée(s)
+    </div>
   </div>
 </template>
 

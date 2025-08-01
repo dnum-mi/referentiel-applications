@@ -38,8 +38,8 @@ watch([() => searchStore.page, () => searchStore.limit], () => {
     </div>
 
     <PaginationFooter
-      :totalFiltered="searchStore.total"
-      :totalAll="statsStore.totalApplications"
+      :total-filtered="searchStore.total"
+      :total-all="statsStore.totalApplications"
       :pages="pages"
       :limit="searchStore.limit"
       :page="searchStore.page"

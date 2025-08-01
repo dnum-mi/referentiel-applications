@@ -4,8 +4,8 @@ import requests from "./xhr-client";
 const Relations = {
   async create(applicationSourceId: string, applicationTargetId: string, type: string): Promise<void> {
     const payload = {
-      applicationTargetId: applicationTargetId,
-      type: type,
+      applicationTargetId,
+      type,
     };
     return requests.post(`/applications/${applicationSourceId}/relations`, payload);
   },
@@ -14,7 +14,7 @@ const Relations = {
     return requests.get<Relation[]>(`/applications/${applicationSourceId}/relations`);
   },
 
-  async update(applicationSourceId: string, id: string, data: Partial<{ type: string; applicationTargetId: string }>): Promise<Relation> {
+  async update(applicationSourceId: string, id: string, data: Partial<{ type: string, applicationTargetId: string }>): Promise<Relation> {
     return requests.patch<Relation>(`/applications/${applicationSourceId}/relations/${id}`, data);
   },
 

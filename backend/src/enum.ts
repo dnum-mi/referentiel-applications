@@ -1,25 +1,25 @@
 // enums.ts
 export enum TestResult {
-  OK = 'OK',
-  KO = 'KO',
+  OK = "OK",
+  KO = "KO",
 }
 
 export enum BackupStorage {
-  S3 = 'S3',
-  LOCAL = 'LOCAL',
-  EXTERNE = 'EXTERNE',
+  S3 = "S3",
+  LOCAL = "LOCAL",
+  EXTERNE = "EXTERNE",
 }
 
 export enum AnomalyNotificationStatus {
-  PENDING = 'in_pending',
-  INPROGRESS = 'in_progress',
-  DONE = 'done',
+  PENDING = "in_pending",
+  INPROGRESS = "in_progress",
+  DONE = "done",
 }
 
 export enum ExternalRessourceType {
-  DOCUMENTATION = 'documentation',
-  SUPERVISION = 'supervision',
-  SERVICE = 'service',
+  DOCUMENTATION = "documentation",
+  SUPERVISION = "supervision",
+  SERVICE = "service",
   AUDIENCE_METRICS = "Mesure d'audience",
 }
 

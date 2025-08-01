@@ -5,7 +5,7 @@ import type { ApplicationWithPerms } from "@/models/Application";
 import { useReportIssueStore } from "@/stores/reportIssueStore";
 
 const props = defineProps<{
-  application: ApplicationWithPerms;
+  application: ApplicationWithPerms
 }>();
 
 const reportIssueStore = useReportIssueStore();
@@ -15,7 +15,7 @@ const application = ref<ApplicationWithPerms>(props.application);
 const correctionText = ref("");
 const opened = ref(false);
 
-const submitCorrection = async () => {
+async function submitCorrection() {
   try {
     const applicationId = application.value?.id;
     if (!applicationId) throw new Error("Application ID is undefined");
@@ -29,21 +29,23 @@ const submitCorrection = async () => {
   } catch (_error) {
     toaster.addErrorMessage("Oops ! Une erreur est survenue, contactez l’administrateur du référentiel si le problème persiste.");
   }
-};
+}
 </script>
 
 <template>
   <div class="correction-container">
     <DsfrInput
-      is-textarea
       v-model="correctionText"
+      is-textarea
       placeholder="Écrivez votre correction..."
       required
       class="correction-textarea"
       rows="2"
     />
     <div class="button-left">
-      <DsfrButton @click="submitCorrection" :disabled="!correctionText"> Proposer ma correction </DsfrButton>
+      <DsfrButton :disabled="!correctionText" @click="submitCorrection">
+        Proposer ma correction
+      </DsfrButton>
     </div>
   </div>
 </template>

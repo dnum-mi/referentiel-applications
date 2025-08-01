@@ -77,8 +77,8 @@ const previewFns: Record<ComplianceType, (d: Record<string, any>) => string> = {
     return parts.join(" • ");
   },
 
-  pdma: (d) => `${d.duration_hours}H`,
-  homologation: () => ``,
+  pdma: d => `${d.duration_hours}H`,
+  homologation: () => "",
   rgaa: (d) => {
     const score = d.score_percentage;
     // pas de score ou score < 50 => non-conformité
@@ -92,14 +92,14 @@ const previewFns: Record<ComplianceType, (d: Record<string, any>) => string> = {
     // sinon, conformité partielle (50 ≤ score < 100)
     return "Conformité partielle";
   },
-  dsfr: () => ``,
-  rgpd: () => ``,
+  dsfr: () => "",
+  rgpd: () => "",
 };
 
-const getPreview = (type: ComplianceType): string => {
+function getPreview(type: ComplianceType): string {
   const data = compliances.value[type];
   return data ? previewFns[type](data) : "";
-};
+}
 
 function renderValue(type: string, key: string, val: any): string {
   // DIMA : résultat de test
@@ -166,7 +166,9 @@ function closeModal() {
   <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-3w">
     <!-- Titre à gauche (col qui remplit tout l'espace restant) -->
     <div class="fr-col">
-      <h3 class="fr-mb-0">Gestion des conformités</h3>
+      <h3 class="fr-mb-0">
+        Gestion des conformités
+      </h3>
     </div>
 
     <!-- Bouton à droite (col-auto pour s'ajuster précisément) -->
@@ -185,7 +187,7 @@ function closeModal() {
   <!-- Accordions -->
   <DsfrAccordionsGroup v-model="activeAccordion">
     <template v-for="(type, idx) in typesWithData" :key="type">
-      <DsfrAccordion :index="idx" :title="labels[type] + (getPreview(type) ? ' • ' + getPreview(type) : '')">
+      <DsfrAccordion :index="idx" :title="labels[type] + (getPreview(type) ? ` • ${getPreview(type)}` : '')">
         <template #default>
           <div class="fr-mb-1w text-right">
             <DsfrButton size="xs" icon="ri-edit-line" label="Modifier" @click.stop="onEditClick(type)" />
@@ -204,14 +206,14 @@ function closeModal() {
   <!-- Modal -->
   <DsfrModal
     v-model:opened="showModal"
-    @close="closeModal"
     :title="
       selectedType
         ? isNewType
-          ? 'Créer ' + labels[selectedType]
-          : 'Modifier ' + labels[selectedType]
+          ? `Créer ${labels[selectedType]}`
+          : `Modifier ${labels[selectedType]}`
         : 'Sélectionner un type de conformité'
     "
+    @close="closeModal"
   >
     <template #default>
       <!-- Sélecteur si pas encore de type choisi -->
@@ -221,7 +223,7 @@ function closeModal() {
           :options="types.map((t) => ({ value: t, text: labels[t], disabled: typesWithData.includes(t) }))"
           label="Type de conformité"
           label-visible
-          defaultUnselectedText="Sélectionner un type"
+          default-unselected-text="Sélectionner un type"
         />
       </div>
       <!-- Formulaire dès qu'un type est choisi -->

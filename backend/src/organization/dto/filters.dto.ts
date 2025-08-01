@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from "class-validator";
 
 export class OrganizationFilterDto {
   @IsOptional()
@@ -7,11 +7,11 @@ export class OrganizationFilterDto {
 
   @IsOptional()
   @IsString()
-  withChildren?: 'true' | 'false';
+  withChildren?: "true" | "false";
 
   @IsOptional()
   @IsString()
-  withAncestors?: 'true' | 'false';
+  withAncestors?: "true" | "false";
 
   @IsOptional()
   @IsString()

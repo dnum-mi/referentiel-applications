@@ -1,10 +1,10 @@
 // infrastructure/repository/relation.repository.ts
-import { IRelationRepository } from './relation.repository.interface';
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
-import { RelationApplicationDto } from '../../application/dto/relation-application.dto';
-import { Relation } from '../../domain/relation.entity';
-import { MetadataService } from 'src/metadata/metadata.service';
+import { IRelationRepository } from "./relation.repository.interface";
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../../../prisma/prisma.service";
+import { RelationApplicationDto } from "../../application/dto/relation-application.dto";
+import { Relation } from "../../domain/relation.entity";
+import { MetadataService } from "src/metadata/metadata.service";
 
 @Injectable()
 export class RelationRepository implements IRelationRepository {
@@ -115,8 +115,8 @@ export class RelationRepository implements IRelationRepository {
       createdById: ownerId,
       title: `de la relation avec ${updated.targetApplication.label}`,
       fields: {
-        'sourceApplication.label': 'application source',
-        'targetApplication.label': 'application visée',
+        "sourceApplication.label": "application source",
+        "targetApplication.label": "application visée",
       },
       newData: updated,
       oldData: oldRelation,
@@ -127,8 +127,8 @@ export class RelationRepository implements IRelationRepository {
       createdById: ownerId,
       title: `de la relation avec ${updated.sourceApplication.label}`,
       fields: {
-        'sourceApplication.label': 'application source',
-        'targetApplication.label': 'application visée',
+        "sourceApplication.label": "application source",
+        "targetApplication.label": "application visée",
       },
       newData: updated,
       oldData: oldRelation,
@@ -156,13 +156,13 @@ export class RelationRepository implements IRelationRepository {
       data: [
         {
           applicationId: deletedRelation.sourceApplication.id,
-          action: 'delete',
+          action: "delete",
           description,
           createdById: ownerId,
         },
         {
           applicationId: deletedRelation.targetApplication.id,
-          action: 'delete',
+          action: "delete",
           description,
           createdById: ownerId,
         },

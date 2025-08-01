@@ -1,26 +1,26 @@
-import { faker } from '@faker-js/faker';
-import { getPrismaClient } from './prisma';
+import { faker } from "@faker-js/faker";
+import { getPrismaClient } from "./prisma";
 
 export class HostingOptionFaker {
   static async create(override = {}) {
     const prisma = getPrismaClient();
 
     const platform = faker.helpers.arrayElement([
-      'PHYSIQUE',
-      'VIRTUALISATION',
-      'CLOUD PI NATIVE',
-      'CLOUD PI GEN2',
-      'ISOCELE',
+      "PHYSIQUE",
+      "VIRTUALISATION",
+      "CLOUD PI NATIVE",
+      "CLOUD PI GEN2",
+      "ISOCELE",
     ]);
     const provider = faker.helpers.arrayElement([
-      'DTNUM',
-      'STIG',
-      'OUTSCALE',
-      'OVH',
-      'SCALEWAY',
-      'SGAMI',
-      'ATE',
-      'PP',
+      "DTNUM",
+      "STIG",
+      "OUTSCALE",
+      "OVH",
+      "SCALEWAY",
+      "SGAMI",
+      "ATE",
+      "PP",
     ]);
 
     return await prisma.hostingOption.create({

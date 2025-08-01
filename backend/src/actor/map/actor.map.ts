@@ -1,6 +1,6 @@
-import { CreateActorDto } from '../dto/actor.dto';
+import type { CreateActorDto } from "../dto/actor.dto";
 
-export const actorMap = (createActorDto: CreateActorDto) => {
+export function actorMap(createActorDto: CreateActorDto) {
   return {
     data: {
       ...createActorDto,
@@ -15,4 +15,4 @@ export const actorMap = (createActorDto: CreateActorDto) => {
         : undefined,
     },
   };
-};
+}

@@ -14,12 +14,18 @@ function onDelete() {
   emit("delete");
 }
 </script>
+
 <template>
   <div class="action-buttons">
-    <DsfrButton @click="onEdit" icon="ri-pencil-line">Éditer</DsfrButton>
-    <DsfrButton @click="onDelete" icon="ri-delete-bin-line">Supprimer</DsfrButton>
+    <DsfrButton icon="ri-pencil-line" @click="onEdit">
+      Éditer
+    </DsfrButton>
+    <DsfrButton icon="ri-delete-bin-line" @click="onDelete">
+      Supprimer
+    </DsfrButton>
   </div>
 </template>
+
 <style scoped>
 .action-buttons {
   display: flex;

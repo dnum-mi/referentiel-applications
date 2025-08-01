@@ -6,21 +6,20 @@ import SuggestionsInput from "../SuggestionsInput.vue";
 
 const props = withDefaults(
   defineProps<{
-    opened?: boolean;
-    title: string;
-    applicationId: string;
+    opened?: boolean
+    title: string
+    applicationId: string
   }>(),
   {
     opened: false,
   },
 );
 
-const toaster = useToaster();
 const emit = defineEmits<{
-  (e: "close"): void;
-  (e: "add-relation", payload: { targetId: string; type: string }): void;
+  (e: "close"): void
+  (e: "add-relation", payload: { targetId: string, type: string }): void
 }>();
-
+const toaster = useToaster();
 const selectedApplicationId = ref<string | null>(null);
 const relationType = ref("is_part_of");
 const relationTypesForSelect = [
@@ -48,7 +47,7 @@ async function performSearch(query: string) {
   }
 }
 
-const submitRelation = async () => {
+async function submitRelation() {
   if (!selectedApplicationId.value) {
     toaster.addErrorMessage("L'application cible est requise.");
     return;
@@ -72,11 +71,11 @@ const submitRelation = async () => {
   } catch (error) {
     console.error(error);
   }
-};
+}
 
-const closeModal = () => {
+function closeModal() {
   emit("close");
-};
+}
 </script>
 
 <template>
@@ -92,8 +91,8 @@ const closeModal = () => {
       </div>
 
       <SuggestionsInput
-        v-model:returnData="selectedApplicationId"
-        :searchDataFunction="performSearch"
+        v-model:return-data="selectedApplicationId"
+        :search-data-function="performSearch"
         label="Rechercher une application"
         placeholder="Tapez au moins 3 caractères"
       />

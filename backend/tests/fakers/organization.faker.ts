@@ -1,4 +1,4 @@
-import { getPrismaClient } from './prisma';
+import { getPrismaClient } from "./prisma";
 
 export class OrganizationFaker {
   static async create() {
@@ -6,9 +6,9 @@ export class OrganizationFaker {
 
     return await prisma.organization.create({
       data: {
-        label: 'Test Organization',
-        url: 'http://example.com',
-        sigle: 'TEST',
+        label: "Test Organization",
+        url: "http://example.com",
+        sigle: "TEST",
       },
     });
   }

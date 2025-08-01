@@ -1,4 +1,4 @@
-import { TestResult, BackupStorage } from 'src/enum';
+import type { TestResult, BackupStorage } from "src/enum";
 
 export class Compliance {
   id: string;

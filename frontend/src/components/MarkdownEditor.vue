@@ -9,7 +9,7 @@ const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
 const localValue = ref(props.modelValue);
 watch(
   () => props.modelValue,
-  (val) => (localValue.value = val),
+  val => (localValue.value = val),
 );
 
 const currentTab = ref<"edit" | "preview">("edit");
@@ -38,7 +38,7 @@ function insertAtStart(prefix: string) {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const lines = localValue.value.slice(start, end).split("\n");
-  const newText = lines.map((line) => prefix + line).join("\n");
+  const newText = lines.map(line => prefix + line).join("\n");
   localValue.value = localValue.value.slice(0, start) + newText + localValue.value.slice(end);
   emitChange();
   nextTick(() => {
@@ -64,7 +64,7 @@ function insertLink() {
 }
 
 function insertTable() {
-  const table = `\n| Colonne 1 | Colonne 2 |\n|-----------|-----------|\n| Valeur 1  | Valeur 2  |\n`;
+  const table = "\n| Colonne 1 | Colonne 2 |\n|-----------|-----------|\n| Valeur 1  | Valeur 2  |\n";
   insertAtCursor(table);
 }
 
@@ -79,7 +79,7 @@ function handleKeydown(event: KeyboardEvent) {
     const lines = localValue.value.slice(start, end).split("\n");
     const isShift = event.shiftKey;
     const modifiedLines = lines.map((line) => {
-      return isShift ? (line.startsWith("  ") ? line.slice(2) : line.replace(/^\t/, "")) : "  " + line;
+      return isShift ? (line.startsWith("  ") ? line.slice(2) : line.replace(/^\t/, "")) : `  ${line}`;
     });
     const newText = modifiedLines.join("\n");
     localValue.value = localValue.value.slice(0, start) + newText + localValue.value.slice(end);
@@ -95,10 +95,10 @@ function handleKeydown(event: KeyboardEvent) {
     const before = localValue.value.slice(0, start);
     const lastLine = before.split("\n").at(-1) ?? "";
 
-    if (/^(\s*)([-*+]|\d+\.)\s?$/.test(lastLine)) {
+    if (/^\s*[-*+]|\d+\.\s?$/.test(lastLine)) {
       event.preventDefault();
       const indent = /^(\s*)/.exec(lastLine)?.[1] ?? "";
-      insertAtCursor("\n" + indent);
+      insertAtCursor(`\n${indent}`);
       return;
     }
 
@@ -106,7 +106,7 @@ function handleKeydown(event: KeyboardEvent) {
     if (bulletMatch) {
       event.preventDefault();
       const indent = bulletMatch[1] || "";
-      insertAtCursor("\n" + indent + "- ");
+      insertAtCursor(`\n${indent}- `);
       return;
     }
 
@@ -160,14 +160,14 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
       <div class="main">
         <textarea
           v-if="currentTab === 'edit'"
+          ref="textareaRef"
+          v-model="localValue"
           class="editor fr-input"
           rows="10"
-          v-model="localValue"
           @input="emitChange"
           @keydown="handleKeydown"
-          ref="textareaRef"
-        ></textarea>
-        <div v-else class="preview" v-html="renderedHtml" v-use-mermaid />
+        />
+        <div v-else v-use-mermaid class="preview" v-html="renderedHtml" />
       </div>
 
       <div class="toolbar">

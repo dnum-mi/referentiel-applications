@@ -2,16 +2,16 @@ import {
   Injectable,
   NestMiddleware,
   UnauthorizedException,
-} from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-import { createRemoteJWKSet, decodeJwt, jwtVerify } from 'jose';
-import { updateUserLastLogin } from 'src/common/utils/actionLog.utils';
-import { UserEntity } from 'src/user/entities/user.entity';
-import { UserService } from 'src/user/user.service';
+} from "@nestjs/common";
+import { Request, Response, NextFunction } from "express";
+import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
+import { updateUserLastLogin } from "src/common/utils/actionLog.utils";
+import { UserEntity } from "src/user/entities/user.entity";
+import { UserService } from "src/user/user.service";
 
-declare module 'express' {
+declare module "express" {
   export interface Request {
-    user?: UserEntity;
+    user?: UserEntity
   }
 }
 
@@ -23,7 +23,7 @@ export class AuthMiddleware implements NestMiddleware {
 
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
-      const token = req.headers['authorization']?.split(' ')[1];
+      const token = req.headers.authorization?.split(" ")[1];
 
       const payload = process.env.AUTH_VERIFY_JWT
         ? (await jwtVerify(token, this.jwks)).payload

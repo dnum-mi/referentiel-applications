@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { TestResult, BackupStorage } from 'src/enum';
+import { ApiProperty } from "@nestjs/swagger";
+import { TestResult, BackupStorage } from "src/enum";
 import {
   IsString,
   IsOptional,
@@ -9,13 +9,13 @@ import {
   IsInt,
   Min,
   Max,
-} from 'class-validator';
+} from "class-validator";
 
 export class CreateComplianceDto {
   // DIMA specific fields
   @ApiProperty({
     example: 4,
-    description: 'DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)',
+    description: "DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)",
     required: false,
   })
   @IsOptional()
@@ -24,7 +24,7 @@ export class CreateComplianceDto {
 
   @ApiProperty({
     example: true,
-    description: 'DIMA HNO (Heure non ouvrée)',
+    description: "DIMA HNO (Heure non ouvrée)",
     required: false,
   })
   @IsOptional()
@@ -32,8 +32,8 @@ export class CreateComplianceDto {
   dima_is_hno?: boolean;
 
   @ApiProperty({
-    example: 'Perte de revenu, impact client',
-    description: 'DIMA business impact of interruption',
+    example: "Perte de revenu, impact client",
+    description: "DIMA business impact of interruption",
     required: false,
   })
   @IsOptional()
@@ -42,7 +42,7 @@ export class CreateComplianceDto {
 
   @ApiProperty({
     example: true,
-    description: 'DIMA recovery plan exists',
+    description: "DIMA recovery plan exists",
     required: false,
   })
   @IsOptional()
@@ -50,8 +50,8 @@ export class CreateComplianceDto {
   dima_recovery_plan?: boolean;
 
   @ApiProperty({
-    example: 'Bascule sur serveur de secours',
-    description: 'DIMA recovery solutions',
+    example: "Bascule sur serveur de secours",
+    description: "DIMA recovery solutions",
     required: false,
   })
   @IsOptional()
@@ -59,8 +59,8 @@ export class CreateComplianceDto {
   dima_recovery_solutions?: string;
 
   @ApiProperty({
-    example: '2023-01-01',
-    description: 'DIMA last test date',
+    example: "2023-01-01",
+    description: "DIMA last test date",
     required: false,
   })
   @IsOptional()
@@ -69,7 +69,7 @@ export class CreateComplianceDto {
 
   @ApiProperty({
     enum: TestResult,
-    description: 'DIMA test result',
+    description: "DIMA test result",
     required: false,
   })
   @IsOptional()
@@ -77,8 +77,8 @@ export class CreateComplianceDto {
   dima_test_result?: TestResult;
 
   @ApiProperty({
-    example: 'Jean Dupont',
-    description: 'DIMA recovery manager',
+    example: "Jean Dupont",
+    description: "DIMA recovery manager",
     required: false,
   })
   @IsOptional()
@@ -88,7 +88,7 @@ export class CreateComplianceDto {
   // PDMA specific fields
   @ApiProperty({
     example: 8,
-    description: 'PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)',
+    description: "PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)",
     required: false,
   })
   @IsOptional()
@@ -96,8 +96,8 @@ export class CreateComplianceDto {
   pdma_duration_hours?: number;
 
   @ApiProperty({
-    example: 'Transactions, logs, fichiers utilisateur',
-    description: 'PDMA data types concerned',
+    example: "Transactions, logs, fichiers utilisateur",
+    description: "PDMA data types concerned",
     required: false,
   })
   @IsOptional()
@@ -105,8 +105,8 @@ export class CreateComplianceDto {
   pdma_data_types?: string;
 
   @ApiProperty({
-    example: 'Toutes les heures',
-    description: 'PDMA backup frequency',
+    example: "Toutes les heures",
+    description: "PDMA backup frequency",
     required: false,
   })
   @IsOptional()
@@ -114,8 +114,8 @@ export class CreateComplianceDto {
   pdma_backup_frequency?: string;
 
   @ApiProperty({
-    example: 'Snapshot, backup incrémental',
-    description: 'PDMA backup method used',
+    example: "Snapshot, backup incrémental",
+    description: "PDMA backup method used",
     required: false,
   })
   @IsOptional()
@@ -124,7 +124,7 @@ export class CreateComplianceDto {
 
   @ApiProperty({
     enum: BackupStorage,
-    description: 'PDMA backup storage',
+    description: "PDMA backup storage",
     required: false,
   })
   @IsOptional()
@@ -132,8 +132,8 @@ export class CreateComplianceDto {
   pdma_backup_storage?: BackupStorage;
 
   @ApiProperty({
-    example: '2023-01-01',
-    description: 'PDMA last test date',
+    example: "2023-01-01",
+    description: "PDMA last test date",
     required: false,
   })
   @IsOptional()
@@ -142,7 +142,7 @@ export class CreateComplianceDto {
 
   @ApiProperty({
     enum: TestResult,
-    description: 'PDMA test result',
+    description: "PDMA test result",
     required: false,
   })
   @IsOptional()
@@ -150,8 +150,8 @@ export class CreateComplianceDto {
   pdma_test_result?: TestResult;
 
   @ApiProperty({
-    example: 'Marie Martin',
-    description: 'PDMA restoration manager',
+    example: "Marie Martin",
+    description: "PDMA restoration manager",
     required: false,
   })
   @IsOptional()
@@ -160,8 +160,8 @@ export class CreateComplianceDto {
 
   // Homologation specific fields
   @ApiProperty({
-    example: '2023-01-01',
-    description: 'Homologation date',
+    example: "2023-01-01",
+    description: "Homologation date",
     required: false,
   })
   @IsOptional()
@@ -170,7 +170,7 @@ export class CreateComplianceDto {
 
   @ApiProperty({
     example: 12,
-    description: 'Homologation duration in months',
+    description: "Homologation duration in months",
     required: false,
   })
   @IsOptional()
@@ -178,8 +178,8 @@ export class CreateComplianceDto {
   homologation_duration_months?: number;
 
   @ApiProperty({
-    example: 'uuid-of-rssi-actor',
-    description: 'Homologation RSSI actor ID',
+    example: "uuid-of-rssi-actor",
+    description: "Homologation RSSI actor ID",
     required: false,
   })
   @IsOptional()
@@ -188,8 +188,8 @@ export class CreateComplianceDto {
 
   // RGAA specific fields
   @ApiProperty({
-    example: '2023-01-01',
-    description: 'RGAA audit date',
+    example: "2023-01-01",
+    description: "RGAA audit date",
     required: false,
   })
   @IsOptional()
@@ -197,8 +197,8 @@ export class CreateComplianceDto {
   rgaa_audit_date?: string;
 
   @ApiProperty({
-    example: 'https://service.example.com',
-    description: 'RGAA service URL',
+    example: "https://service.example.com",
+    description: "RGAA service URL",
     required: false,
   })
   @IsOptional()
@@ -206,8 +206,8 @@ export class CreateComplianceDto {
   rgaa_service_url?: string;
 
   @ApiProperty({
-    example: 'https://service.example.com/accessibilite',
-    description: 'RGAA accessibility page URL',
+    example: "https://service.example.com/accessibilite",
+    description: "RGAA accessibility page URL",
     required: false,
   })
   @IsOptional()
@@ -216,7 +216,7 @@ export class CreateComplianceDto {
 
   @ApiProperty({
     example: 85,
-    description: 'RGAA score percentage (0-100)',
+    description: "RGAA score percentage (0-100)",
     required: false,
   })
   @IsOptional()
@@ -228,7 +228,7 @@ export class CreateComplianceDto {
   // DSFR specific fields
   @ApiProperty({
     example: true,
-    description: 'DSFR implemented',
+    description: "DSFR implemented",
     required: false,
   })
   @IsOptional()
@@ -236,8 +236,8 @@ export class CreateComplianceDto {
   dsfr_implemented?: boolean;
 
   @ApiProperty({
-    example: '1.9.0',
-    description: 'DSFR version used',
+    example: "1.9.0",
+    description: "DSFR version used",
     required: false,
   })
   @IsOptional()
@@ -247,7 +247,7 @@ export class CreateComplianceDto {
   // RGPD specific fields
   @ApiProperty({
     example: true,
-    description: 'RGPD has AIPD',
+    description: "RGPD has AIPD",
     required: false,
   })
   @IsOptional()
@@ -255,8 +255,8 @@ export class CreateComplianceDto {
   rgpd_has_aipd?: boolean;
 
   @ApiProperty({
-    example: 'Pierre Durand',
-    description: 'RGPD DPO name',
+    example: "Pierre Durand",
+    description: "RGPD DPO name",
     required: false,
   })
   @IsOptional()

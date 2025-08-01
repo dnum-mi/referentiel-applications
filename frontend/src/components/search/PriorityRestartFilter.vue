@@ -41,7 +41,7 @@ function togglePriority(value: string, event: Event) {
           :value="option.value"
           :checked="selectedPriorities.includes(option.value)"
           @change="(e) => togglePriority(option.value, e)"
-        />
+        >
         {{ option.text }}
       </label>
     </div>

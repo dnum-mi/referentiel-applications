@@ -1,12 +1,12 @@
-import { faker } from '@faker-js/faker';
-import { getPrismaClient } from './prisma';
+import { faker } from "@faker-js/faker";
+import { getPrismaClient } from "./prisma";
 
 export class HostingFaker {
   static async create(override: {
-    hostingOption: { id: string };
-    application: { id: string };
-    user: { keycloakId: string };
-    [key: string]: any;
+    hostingOption: { id: string }
+    application: { id: string }
+    user: { keycloakId: string }
+    [key: string]: any
   }) {
     const prisma = getPrismaClient();
 

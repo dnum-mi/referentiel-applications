@@ -27,7 +27,7 @@ const groupBy = ref<"day" | "week" | "month">("month");
 /** (Re)dessine le chart */
 function updateChart() {
   if (!chartRef.value || !iqStats.value.length) return;
-  const labels = iqStats.value.map((s) =>
+  const labels = iqStats.value.map(s =>
     // Pour 'month', label="YYYY-MM" ; pour 'day'/'week', label="YYYY-MM-DD"
     new Date(s.label + (groupBy.value === "month" ? "-01" : "")).toLocaleDateString("fr-FR", {
       day: groupBy.value === "day" ? "2-digit" : undefined,
@@ -35,7 +35,7 @@ function updateChart() {
       year: "numeric",
     }),
   );
-  const data = iqStats.value.map((s) => s.moyenne);
+  const data = iqStats.value.map(s => s.moyenne);
 
   chartInstance = renderChart(chartRef, chartInstance, labels, data, "line");
 }
@@ -60,23 +60,33 @@ onMounted(async () => {
   <div class="filters">
     <label>
       Du
-      <input type="date" v-model="startDate" />
+      <input v-model="startDate" type="date">
     </label>
     <label>
       Au
-      <input type="date" v-model="endDate" />
+      <input v-model="endDate" type="date">
     </label>
 
     <div class="buttons">
-      <button :class="{ active: groupBy === 'day' }" @click="applyFilter('day')">Jour</button>
-      <button :class="{ active: groupBy === 'week' }" @click="applyFilter('week')">Semaine</button>
-      <button :class="{ active: groupBy === 'month' }" @click="applyFilter('month')">Mois</button>
+      <button :class="{ active: groupBy === 'day' }" @click="applyFilter('day')">
+        Jour
+      </button>
+      <button :class="{ active: groupBy === 'week' }" @click="applyFilter('week')">
+        Semaine
+      </button>
+      <button :class="{ active: groupBy === 'month' }" @click="applyFilter('month')">
+        Mois
+      </button>
     </div>
   </div>
 
-  <div v-if="isLoading">Chargement...</div>
-  <div v-else-if="error">{{ error }}</div>
-  <canvas ref="chartRef" v-else></canvas>
+  <div v-if="isLoading">
+    Chargement...
+  </div>
+  <div v-else-if="error">
+    {{ error }}
+  </div>
+  <canvas v-else ref="chartRef" />
 </template>
 
 <style scoped>

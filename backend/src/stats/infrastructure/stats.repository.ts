@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { StatsType } from '@prisma/client';
-import { IStatsRepository } from './stats.repository-interface';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../../prisma/prisma.service";
+import { StatsType } from "@prisma/client";
+import { IStatsRepository } from "./stats.repository-interface";
 
 @Injectable()
 export class StatsRepository implements IStatsRepository {
@@ -12,13 +12,13 @@ export class StatsRepository implements IStatsRepository {
     from: Date,
     to: Date,
     type: StatsType,
-  ): Promise<{ date: Date; valeur: number }[]> {
+  ): Promise<{ date: Date, valeur: number }[]> {
     return this.prisma.stats.findMany({
       where: {
         type,
         date: { gte: from, lte: to },
       },
-      orderBy: { date: 'asc' },
+      orderBy: { date: "asc" },
       select: { date: true, valeur: true },
     });
   }
@@ -31,7 +31,7 @@ export class StatsRepository implements IStatsRepository {
 
     // Filtrer les valeurs non-null
     const valid = records
-      .map((r) => r.quality)
+      .map(r => r.quality)
       .filter((q): q is number => q !== null && q !== undefined);
 
     if (valid.length === 0) {

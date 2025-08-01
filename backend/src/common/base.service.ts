@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { MetadataService } from 'src/metadata/metadata.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { translateEnum } from './utils/enum.utils';
-import { ApplicationService } from 'src/product/application.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { MetadataService } from "src/metadata/metadata.service";
+import { PrismaService } from "src/prisma/prisma.service";
+import { translateEnum } from "./utils/enum.utils";
+import { ApplicationService } from "src/product/application.service";
 
 @Injectable()
 export class BaseService<T> {
@@ -46,15 +46,15 @@ export class BaseService<T> {
   }
 
   async updateWithMetadata(options: {
-    id: string;
-    data: any;
-    userId: string;
-    applicationId: string;
-    gender: string;
-    entityName: string;
-    metadataFields: Record<string, string>;
-    getName?: (entity: T) => string;
-    triggerQualityUpdate?: boolean;
+    id: string
+    data: any
+    userId: string
+    applicationId: string
+    gender: string
+    entityName: string
+    metadataFields: Record<string, string>
+    getName?: (entity: T) => string
+    triggerQualityUpdate?: boolean
   }): Promise<T> {
     const oldEntity = await this.findOne(options.id);
 
@@ -70,7 +70,7 @@ export class BaseService<T> {
       await this.metadataService.createMetadata({
         applicationId: options.applicationId,
         createdById: options.userId,
-        title: `${options.gender} ${options.getName?.(updatedEntity) ?? ''}`,
+        title: `${options.gender} ${options.getName?.(updatedEntity) ?? ""}`,
         entity: options.entityName,
         entityId: options.id,
         fields: options.metadataFields,
@@ -79,7 +79,7 @@ export class BaseService<T> {
       });
     } catch (err) {
       console.error(
-        'Erreur lors de la création des métadonnées (update):',
+        "Erreur lors de la création des métadonnées (update):",
         err,
       );
     }
@@ -88,21 +88,21 @@ export class BaseService<T> {
   }
 
   async deleteWithMetadata(options: {
-    id: string;
-    userId: string;
-    applicationId: string;
-    name: string;
-    gender?: string;
-    translateMap?: Record<string, string>;
-    triggerQualityUpdate?: boolean;
+    id: string
+    userId: string
+    applicationId: string
+    name: string
+    gender?: string
+    translateMap?: Record<string, string>
+    triggerQualityUpdate?: boolean
   }): Promise<void> {
     const entity = await this.findOne(options.id);
     if (!entity) {
-      throw new NotFoundException(`${options.id ?? 'Élément'} introuvable`);
+      throw new NotFoundException(`${options.id ?? "Élément"} introuvable`);
     }
     await this.model.delete({ where: { id: options.id } });
 
-    const entityNameValue = (entity as any)[options.name] ?? '';
+    const entityNameValue = (entity as any)[options.name] ?? "";
 
     const value = options.translateMap
       ? translateEnum(options.translateMap, entityNameValue)
@@ -119,13 +119,13 @@ export class BaseService<T> {
         data: {
           applicationId: options.applicationId,
           createdById: options.userId,
-          action: 'delete',
+          action: "delete",
           description: `Suppression ${options.gender} ${value}`,
         },
       });
     } catch (err) {
       console.error(
-        'Erreur lors de la création des métadonnées (delete):',
+        "Erreur lors de la création des métadonnées (delete):",
         err,
       );
     }

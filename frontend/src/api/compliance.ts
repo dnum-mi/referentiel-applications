@@ -5,7 +5,7 @@ const baseUrl = (applicationId: string) => `/applications/${applicationId}/compl
 
 export default class CompliancesApi {
   static async countCompliances(): Promise<number> {
-    return requests.get(`compliances/count`);
+    return requests.get("compliances/count");
   }
 
   static async getCompliance(applicationId: string): Promise<Compliance> {

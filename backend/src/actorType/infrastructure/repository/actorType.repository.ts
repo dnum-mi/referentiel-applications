@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { IActorTypeRepository } from './actorType.repository.interface';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { Injectable } from "@nestjs/common";
+import { IActorTypeRepository } from "./actorType.repository.interface";
+import { PrismaService } from "src/prisma/prisma.service";
 import {
   CreateActorTypeDto,
   PatchActorTypeDto,
-} from 'src/actorType/dto/actorType.dto';
-import { actorTypeMap } from 'src/actorType/map/actorType.map';
-import { AppPermissions, Prisma } from '@prisma/client';
+} from "src/actorType/dto/actorType.dto";
+import { actorTypeMap } from "src/actorType/map/actorType.map";
+import { AppPermissions, Prisma } from "@prisma/client";
 
 @Injectable()
 export class ActorTypeRepository implements IActorTypeRepository {
@@ -36,7 +36,7 @@ export class ActorTypeRepository implements IActorTypeRepository {
   public async findAll() {
     return await this.prisma.actorType.findMany({
       orderBy: {
-        label: 'asc',
+        label: "asc",
       },
     });
   }

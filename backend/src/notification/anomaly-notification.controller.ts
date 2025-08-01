@@ -8,23 +8,23 @@ import {
   Param,
   Query,
   Request,
-} from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AnomalyNotificationService } from './anomaly-notification.service';
+} from "@nestjs/common";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { AnomalyNotificationService } from "./anomaly-notification.service";
 import {
   CreateAnomalyNotificationDto,
   CreateAnomalyNotificationRequestDto,
-} from './dto/create-anomaly-notification.dto';
-import { GetAnomalyNotificationDto } from './dto/get-anomaly-notification.dto';
-import { UpdateAnomalyNotificationDto } from './dto/update-anomaly-notification.dto';
-import { FiltersDto } from 'src/notification/dto/filters.dto';
+} from "./dto/create-anomaly-notification.dto";
+import { GetAnomalyNotificationDto } from "./dto/get-anomaly-notification.dto";
+import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
+import { FiltersDto } from "src/notification/dto/filters.dto";
 
 /**
  * Contrôleur pour la gestion des notifications d'anomalies.
  * Il permet de créer, récupérer, mettre à jour et supprimer des notifications d'anomalies.
  */
-@ApiTags('Notifications')
-@Controller('anomaly-notifications')
+@ApiTags("Notifications")
+@Controller("anomaly-notifications")
 export class ApplicationAnomalyNotificationsController {
   constructor(protected service: AnomalyNotificationService) {}
 
@@ -38,7 +38,7 @@ export class ApplicationAnomalyNotificationsController {
    */
   @Post()
   @ApiOperation({
-    summary: 'Demande de modification pour une fiche application',
+    summary: "Demande de modification pour une fiche application",
   })
   async create(
     @Request() req,
@@ -75,9 +75,9 @@ export class ApplicationAnomalyNotificationsController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Liste des notifications de signalements retournée.',
+    description: "Liste des notifications de signalements retournée.",
   })
-  @Get('user-notifications')
+  @Get("user-notifications")
   async findByCurrentUser(
     @Request() req,
   ): Promise<GetAnomalyNotificationDto[]> {
@@ -90,9 +90,9 @@ export class ApplicationAnomalyNotificationsController {
    * @param id L'identifiant de la notification.
    * @returns La notification d'anomalie correspondant à l'ID.
    */
-  @Get(':id')
-  @ApiOperation({ summary: 'Récupérer une notification spécifique par ID' })
-  findOne(@Param('id') id: string) {
+  @Get(":id")
+  @ApiOperation({ summary: "Récupérer une notification spécifique par ID" })
+  findOne(@Param("id") id: string) {
     return this.service.findOne(id);
   }
 
@@ -103,10 +103,10 @@ export class ApplicationAnomalyNotificationsController {
    * @param updateDto Les nouvelles données de la notification.
    * @returns La notification d'anomalie mise à jour.
    */
-  @Patch(':id')
-  @ApiOperation({ summary: 'Mettre à jour une notification' })
+  @Patch(":id")
+  @ApiOperation({ summary: "Mettre à jour une notification" })
   update(
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() updateDto: UpdateAnomalyNotificationDto,
   ) {
     return this.service.update(id, updateDto);
@@ -119,9 +119,9 @@ export class ApplicationAnomalyNotificationsController {
    * @returns La notification d'anomalie supprimée.
    * @throws NotFoundException Si la notification n'est pas trouvée.
    */
-  @Delete(':id')
-  @ApiOperation({ summary: 'Supprimer une notification' })
-  remove(@Param('id') id: string) {
+  @Delete(":id")
+  @ApiOperation({ summary: "Supprimer une notification" })
+  remove(@Param("id") id: string) {
     return this.service.delete(id);
   }
 }

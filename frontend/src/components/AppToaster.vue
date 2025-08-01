@@ -4,7 +4,7 @@ import type { Message } from "../composables/use-toaster";
 defineProps<{ messages: Message[] }>();
 
 const emit = defineEmits<{
-  closeMessage: [id: string];
+  closeMessage: [id: string]
 }>();
 
 const close = (id: string) => emit("closeMessage", id);

@@ -7,32 +7,32 @@ import {
   Param,
   Patch,
   UseGuards,
-} from '@nestjs/common';
+} from "@nestjs/common";
 import {
   ApiTags,
   ApiResponse,
   ApiOperation,
   ApiBody,
   ApiParam,
-} from '@nestjs/swagger';
-import { LabelsService } from './labels.service';
-import { CreateLabelDto } from './dto/create-label.dto';
-import { Label } from './entities/label.entity';
-import { UserId } from '../common/decorators/user-id.decorator';
-import { ApplicationGuard } from 'src/common/guards/application.guard';
-import { AppAction } from 'src/common/decorators/application.decorator';
+} from "@nestjs/swagger";
+import { LabelsService } from "./labels.service";
+import { CreateLabelDto } from "./dto/create-label.dto";
+import { Label } from "./entities/label.entity";
+import { UserId } from "../common/decorators/user-id.decorator";
+import { ApplicationGuard } from "src/common/guards/application.guard";
+import { AppAction } from "src/common/decorators/application.decorator";
 
-@ApiTags('Labels')
+@ApiTags("Labels")
 @UseGuards(ApplicationGuard)
-@Controller('applications/:applicationId/labels')
+@Controller("applications/:applicationId/labels")
 export class LabelsController {
   constructor(private service: LabelsService) {}
 
   @Post()
-  @AppAction('writeBase')
+  @AppAction("writeBase")
   @ApiBody({ type: CreateLabelDto })
   @ApiOperation({
-    summary: 'Créer un nouveau label',
+    summary: "Créer un nouveau label",
     description: `
 **Ce endpoint permet de créer un label complet.**
 
@@ -44,12 +44,12 @@ Vous devez fournir les informations suivantes :
   @ApiResponse({
     status: 201,
     type: Label,
-    description: 'Label créé avec succès.',
+    description: "Label créé avec succès.",
   })
   async create(
     @UserId() userId: string,
     @Body() createLabelDto: CreateLabelDto,
-    @Param('applicationId') applicationId: string,
+    @Param("applicationId") applicationId: string,
   ) {
     return await this.service.create({
       ...createLabelDto,
@@ -60,7 +60,7 @@ Vous devez fournir les informations suivantes :
       },
       metadatas: {
         create: {
-          applicationId: applicationId,
+          applicationId,
           createdById: userId,
           description: `Ajout du libellé : ${createLabelDto.value}`,
         },
@@ -69,7 +69,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get()
-  @AppAction('readBase')
+  @AppAction("readBase")
   @ApiOperation({
     summary: "Récupérer les labels par ID d'application",
     description: `
@@ -78,24 +78,24 @@ Ce endpoint permet de récupérer la liste de tous les labels d'une application 
 Le paramètre **applicationId** doit être fourni dans l'URL.
     `,
   })
-  @ApiResponse({ status: 200, description: 'Liste des labels' })
-  async findAllSorted(@Param('applicationId') applicationId: string) {
+  @ApiResponse({ status: 200, description: "Liste des labels" })
+  async findAllSorted(@Param("applicationId") applicationId: string) {
     return this.service.findAllSorted(applicationId);
   }
 
-  @Patch(':id')
-  @AppAction('writeBase')
+  @Patch(":id")
+  @AppAction("writeBase")
   @ApiOperation({
-    summary: 'Mettre à jour un label existant',
+    summary: "Mettre à jour un label existant",
   })
-  @ApiParam({ name: 'applicationId', description: "ID de l'application" })
-  @ApiParam({ name: 'id', description: 'ID du label' })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
+  @ApiParam({ name: "id", description: "ID du label" })
   @ApiBody({ type: CreateLabelDto })
   @ApiResponse({ status: 200, type: Label })
   update(
     @UserId() userId: string,
-    @Param('applicationId') applicationId: string,
-    @Param('id') id: string,
+    @Param("applicationId") applicationId: string,
+    @Param("id") id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
     return this.service.updateWithMetadata({
@@ -103,20 +103,20 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
       data: updateLabelDto,
       userId,
       applicationId,
-      gender: 'du libellé alternatif',
-      entityName: 'labelId',
+      gender: "du libellé alternatif",
+      entityName: "labelId",
       metadataFields: {
-        source: 'source',
-        value: 'valeur',
+        source: "source",
+        value: "valeur",
       },
-      getName: (entity) => entity.value,
+      getName: entity => entity.value,
     });
   }
 
-  @Delete(':id')
-  @AppAction('writeBase')
+  @Delete(":id")
+  @AppAction("writeBase")
   @ApiOperation({
-    summary: 'Supprimer un label',
+    summary: "Supprimer un label",
     description: ` Ce endpoint permet de supprimer un label existant. 
     Vous devez fournir l'identifiant du label dans l'URL.
     `,
@@ -124,15 +124,15 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @ApiResponse({ status: 200 })
   delete(
     @UserId() userId: string,
-    @Param('applicationId') applicationId: string,
-    @Param('id') id: string,
+    @Param("applicationId") applicationId: string,
+    @Param("id") id: string,
   ) {
     return this.service.deleteWithMetadata({
       id,
       userId,
       applicationId,
-      gender: 'du libellé alternatif',
-      name: 'value',
+      gender: "du libellé alternatif",
+      name: "value",
     });
   }
 }

@@ -43,8 +43,12 @@ onMounted(() => {
 
 <template>
   <div class="cell alerts-cell">
-    <div v-if="isLoading">Chargement...</div>
-    <div v-else-if="errorMessage">{{ errorMessage }}</div>
+    <div v-if="isLoading">
+      Chargement...
+    </div>
+    <div v-else-if="errorMessage">
+      {{ errorMessage }}
+    </div>
     <div v-else>
       <h3>Informations au : {{ new Date().toLocaleDateString("fr-FR") }}</h3>
       <DsfrAlert

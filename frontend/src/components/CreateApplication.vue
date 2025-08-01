@@ -17,7 +17,7 @@ const router = useRouter();
 async function createApplication(newApplication: Application) {
   try {
     applicationModal.closeModal();
-    const response = await axios.post<Application>(`/applications/`, newApplication);
+    const response = await axios.post<Application>("/applications/", newApplication);
     const createdApp = response.data;
 
     toaster.addSuccessMessage("Application créée avec succès !");
@@ -36,8 +36,8 @@ async function createApplication(newApplication: Application) {
     <DsfrButton
       type="button"
       class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
-      @click="applicationModal.openCreateModal()"
       :disabled="userStore.adminLevel < AdminLevel.WRITE"
+      @click="applicationModal.openCreateModal()"
     >
       Créer une application
     </DsfrButton>
@@ -45,7 +45,7 @@ async function createApplication(newApplication: Application) {
     <DsfrModal
       size="lg"
       :opened="applicationModal.isCreateModalOpen.value"
-      :title="'Créer une application'"
+      title="Créer une application"
       @close="applicationModal.closeModal"
     >
       <ApplicationInfoForm :is-submitting="isSubmitting" @submit="createApplication" @cancel="applicationModal.closeModal" />

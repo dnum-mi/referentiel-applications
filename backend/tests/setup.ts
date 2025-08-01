@@ -1,7 +1,8 @@
-import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from 'src/prisma/prisma.service';
+import type { INestApplication } from "@nestjs/common";
+import type { TestingModule } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
+import { AppModule } from "../src/app.module";
+import { PrismaService } from "src/prisma/prisma.service";
 
 export async function setupApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({

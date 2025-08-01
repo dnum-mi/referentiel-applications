@@ -1,13 +1,13 @@
-import { applicationMap } from '../../application/map/application.map';
-import { IApplicationRepository } from './application.repository.interface';
+import { applicationMap } from "../../application/map/application.map";
+import { IApplicationRepository } from "./application.repository.interface";
 
-import { Injectable } from '@nestjs/common';
-import { CreateApplicationDto } from '../../application/dto/create-application.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
-import type { Prisma, ApplicationsExport } from '@prisma/client';
+import { Injectable } from "@nestjs/common";
+import { CreateApplicationDto } from "../../application/dto/create-application.dto";
+import { PrismaService } from "src/prisma/prisma.service";
+import type { Prisma, ApplicationsExport } from "@prisma/client";
 
-import { ApplicationSearchDto } from './../../application/dto/search-application.dto';
-import { ApplicationWithAllRelations } from 'src/product/types/application.type';
+import { ApplicationSearchDto } from "./../../application/dto/search-application.dto";
+import { ApplicationWithAllRelations } from "src/product/types/application.type";
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
@@ -46,20 +46,20 @@ export class ApplicationRepository implements IApplicationRepository {
 
   async findApplicationsBySearch(
     dto: ApplicationSearchDto,
-    ownership?: { actorEmail?: string; ownerId?: string },
-  ): Promise<{ results: any[]; total: number }> {
+    ownership?: { actorEmail?: string, ownerId?: string },
+  ): Promise<{ results: any[], total: number }> {
     const {
       shortName,
       tag,
       priorityRestart,
       page = 0,
       limit = 15,
-      sortBy = 'shortName',
-      order = 'asc',
+      sortBy = "shortName",
+      order = "asc",
     } = dto;
 
-    const safeOrder = order === 'desc' ? 'desc' : 'asc';
-    const upperCaseTags = tag?.map((t) => t.toUpperCase()) || [];
+    const safeOrder = order === "desc" ? "desc" : "asc";
+    const upperCaseTags = tag?.map(t => t.toUpperCase()) || [];
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
@@ -72,7 +72,7 @@ export class ApplicationRepository implements IApplicationRepository {
             some: {
               email: {
                 equals: ownership.actorEmail,
-                mode: 'insensitive' as const,
+                mode: "insensitive" as const,
               },
             },
           },
@@ -93,7 +93,7 @@ export class ApplicationRepository implements IApplicationRepository {
           {
             label: {
               contains: dto.label,
-              mode: 'insensitive' as const,
+              mode: "insensitive" as const,
             },
           },
           {
@@ -101,7 +101,7 @@ export class ApplicationRepository implements IApplicationRepository {
               some: {
                 value: {
                   contains: dto.label,
-                  mode: 'insensitive' as const,
+                  mode: "insensitive" as const,
                 },
               },
             },
@@ -120,31 +120,31 @@ export class ApplicationRepository implements IApplicationRepository {
                 {
                   site: {
                     contains: dto.hostingSearch,
-                    mode: 'insensitive' as const,
+                    mode: "insensitive" as const,
                   },
                 },
                 {
                   platform: {
                     contains: dto.hostingSearch,
-                    mode: 'insensitive' as const,
+                    mode: "insensitive" as const,
                   },
                 },
                 {
                   provider: {
                     contains: dto.hostingSearch,
-                    mode: 'insensitive' as const,
+                    mode: "insensitive" as const,
                   },
                 },
                 {
                   building: {
                     contains: dto.hostingSearch,
-                    mode: 'insensitive' as const,
+                    mode: "insensitive" as const,
                   },
                 },
                 {
                   room: {
                     contains: dto.hostingSearch,
-                    mode: 'insensitive' as const,
+                    mode: "insensitive" as const,
                   },
                 },
               ],
@@ -162,7 +162,7 @@ export class ApplicationRepository implements IApplicationRepository {
             organization: {
               label: {
                 contains: dto.organizationLabel,
-                mode: 'insensitive' as const,
+                mode: "insensitive" as const,
               },
             },
           },
@@ -178,7 +178,7 @@ export class ApplicationRepository implements IApplicationRepository {
             actorType: {
               code: {
                 equals: dto.actorType,
-                mode: 'insensitive' as const,
+                mode: "insensitive" as const,
               },
             },
           },
@@ -193,7 +193,7 @@ export class ApplicationRepository implements IApplicationRepository {
           some: {
             link: {
               contains: dto.link,
-              mode: 'insensitive' as const,
+              mode: "insensitive" as const,
             },
           },
         },
@@ -203,7 +203,7 @@ export class ApplicationRepository implements IApplicationRepository {
     // Simple filters
     if (shortName) {
       where.AND.push({
-        shortName: { contains: shortName, mode: 'insensitive' as const },
+        shortName: { contains: shortName, mode: "insensitive" as const },
       });
     }
 
@@ -333,12 +333,12 @@ export class ApplicationRepository implements IApplicationRepository {
       where: { link },
       include: { application: true },
     });
-    return results.map((r) => r.application);
+    return results.map(r => r.application);
   }
 
   async findAllForDetailedExport(): Promise<ApplicationsExport[]> {
     return this.prisma.applicationsExport.findMany({
-      orderBy: { application: 'asc' },
+      orderBy: { application: "asc" },
     });
   }
 
@@ -346,7 +346,7 @@ export class ApplicationRepository implements IApplicationRepository {
     searchDto: ApplicationSearchDto,
   ): Promise<ApplicationsExport[]> {
     const searchResult = await this.findApplicationsBySearch(searchDto);
-    const applicationIds = searchResult.results.map((app) => app.id);
+    const applicationIds = searchResult.results.map(app => app.id);
 
     return this.prisma.applicationsExport.findMany({
       where: {
@@ -354,7 +354,7 @@ export class ApplicationRepository implements IApplicationRepository {
           in: applicationIds,
         },
       },
-      orderBy: { application: 'asc' },
+      orderBy: { application: "asc" },
     });
   }
 

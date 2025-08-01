@@ -1,5 +1,4 @@
 // vite.config.js
-import process from "node:process";
 import { fileURLToPath, URL } from "node:url";
 
 import { vueDsfrAutoimportPreset, vueDsfrComponentResolver } from "@gouvminint/vue-dsfr/meta";
@@ -85,7 +84,7 @@ export default defineConfig({
       "/auth": {
         target: "http://localhost:8082",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/auth/, ""),
+        rewrite: path => path.replace(/^\/auth/, ""),
       },
       "/api": {
         target: "http://backend:3500",

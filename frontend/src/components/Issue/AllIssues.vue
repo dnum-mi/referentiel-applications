@@ -66,7 +66,9 @@ onMounted(async () => {
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Application'">
-          <router-link :to="cell.to">{{ cell.label }}</router-link>
+          <router-link :to="cell.to">
+            {{ cell.label }}
+          </router-link>
         </template>
         <template v-else-if="colKey === 'Statut'">
           <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" />

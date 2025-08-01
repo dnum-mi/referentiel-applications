@@ -1,4 +1,4 @@
-import { apiConfig } from "./config";
+import type { apiConfig } from "./config";
 
 export type ApiConfig = typeof apiConfig;
 
@@ -8,8 +8,8 @@ export type PayloadKeys<M extends ModelName, A extends ActionName<M>> = ApiConfi
   ? ApiConfig[M][A]["payload"]
   : [];
 
-export type ApiAction<M extends ModelName, A extends ActionName<M>> = {
-  method: ApiConfig[M][A]["method"];
-  url: ApiConfig[M][A]["url"];
-  payload: PayloadKeys<M, A>;
-};
+export interface ApiAction<M extends ModelName, A extends ActionName<M>> {
+  method: ApiConfig[M][A]["method"]
+  url: ApiConfig[M][A]["url"]
+  payload: PayloadKeys<M, A>
+}

@@ -3,30 +3,40 @@ import { ref } from "vue";
 import useToaster from "@/composables/use-toaster";
 import { regexFormatTag } from "@/utils/regex";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
-import { statusApplicationDictionary } from "@/composables/use-dictionary";
-import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
-
-const toaster = useToaster();
+import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 
 defineProps<{ isSubmitting?: boolean }>();
 
 const emit = defineEmits(["create:application", "submit", "cancel"]);
 
+const toaster = useToaster();
+
 const statusOptions = computed(() =>
-  Object.keys(statusApplicationDictionary).map((value) => ({
+  Object.keys(statusApplicationDictionary).map(value => ({
     value,
     text: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
   })),
 );
 
-const handleSubmit = () => {
+const form = ref({
+  label: "",
+  shortName: "",
+  description: "",
+  targetPopulations: [...[""]],
+  purposes: [...[""]],
+  tags: [...[""]],
+  status: "",
+  priorityRestart: "",
+});
+
+function handleSubmit() {
   if (!validateAllTags()) {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
-  const purposes = form.value.purposes.filter((p) => p.trim() !== "");
-  const tags = form.value.tags.filter((t) => t.trim() !== "");
-  const targetPopulations = form.value.targetPopulations.filter((t) => t.trim() !== "");
+  const purposes = form.value.purposes.filter(p => p.trim() !== "");
+  const tags = form.value.tags.filter(t => t.trim() !== "");
+  const targetPopulations = form.value.targetPopulations.filter(t => t.trim() !== "");
 
   emit("submit", {
     label: form.value.label,
@@ -40,50 +50,39 @@ const handleSubmit = () => {
     priorityRestart: form.value.priorityRestart || null,
     labels: [],
   });
-};
+}
 
-const form = ref({
-  label: "",
-  shortName: "",
-  description: "",
-  targetPopulations: [...[""]],
-  purposes: [...[""]],
-  tags: [...[""]],
-  status: "",
-  priorityRestart: "",
-});
-
-const addPurpose = () => {
+function addPurpose() {
   form.value.purposes.push("");
-};
+}
 
-const removePurpose = (index: number) => {
+function removePurpose(index: number) {
   form.value.purposes.splice(index, 1);
-};
+}
 
-const addTag = () => {
+function addTag() {
   form.value.tags.push("");
-};
+}
 
-const isTagValid = (tag: string) => {
+function isTagValid(tag: string) {
   return regexFormatTag.test(tag);
-};
+}
 
-const validateAllTags = (): boolean => {
-  return form.value.tags.every((tag) => isTagValid(tag));
-};
+function validateAllTags(): boolean {
+  return form.value.tags.every(tag => isTagValid(tag));
+}
 
-const removeTag = (index: number) => {
+function removeTag(index: number) {
   form.value.tags.splice(index, 1);
-};
+}
 
-const addPopulation = () => {
+function addPopulation() {
   form.value.targetPopulations.push("");
-};
+}
 
-const removePopulation = (index: number) => {
+function removePopulation(index: number) {
   form.value.targetPopulations.splice(index, 1);
-};
+}
 
 const statusSelect = ref();
 </script>
@@ -96,13 +95,13 @@ const statusSelect = ref();
     class="fr-mb-3w"
   />
   <form @submit.prevent="handleSubmit">
-    <DsfrInputGroup label="Label" v-model="form.label" label-visible required />
+    <DsfrInputGroup v-model="form.label" label="Label" label-visible required />
 
     <DsfrInputGroup
+      v-model="form.shortName"
       class="fr-mt-3w"
       label="Nom court"
       label-visible
-      v-model="form.shortName"
       hint="Optionnel - Un nom court pour identifier rapidement l'application"
     />
 
@@ -128,7 +127,9 @@ const statusSelect = ref();
 
     <div class="fr-form-group fr-mt-3w">
       <label class="fr-label">Populations</label>
-      <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
+      <p class="fr-hint-text">
+        Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)
+      </p>
       <div class="fr-mt-2w">
         <div v-for="(targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
@@ -177,7 +178,7 @@ const statusSelect = ref();
       <DsfrButton type="submit" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'">
         <template v-if="isSubmitting">
           <span class="fr-loading fr-loading--sm">
-            <span class="fr-loading__icon" aria-hidden="true"></span>
+            <span class="fr-loading__icon" aria-hidden="true" />
           </span>
         </template>
       </DsfrButton>

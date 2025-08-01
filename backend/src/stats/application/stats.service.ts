@@ -1,19 +1,19 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { StatsType } from '@prisma/client';
-import { GroupBy } from '../interfaces/types/stats-entry.type';
-import { StatsHelper } from '../infrastructure/helpers/stats.helper';
-import { GetIqAvgGroupedUseCase } from './use-cases/get-iq-avg-grouped.use-case.ts';
-import { IStatsRepository } from '../infrastructure/stats.repository-interface';
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { StatsType } from "@prisma/client";
+import { GroupBy } from "../interfaces/types/stats-entry.type";
+import { StatsHelper } from "../infrastructure/helpers/stats.helper";
+import { GetIqAvgGroupedUseCase } from "./use-cases/get-iq-avg-grouped.use-case.ts";
+import { IStatsRepository } from "../infrastructure/stats.repository-interface";
 
 @Injectable()
 export class StatsService {
   constructor(
-    @Inject('IStatsRepository')
+    @Inject("IStatsRepository")
     private readonly statsRepository: IStatsRepository,
     private readonly getIqAvgGroupedUseCase: GetIqAvgGroupedUseCase,
   ) {}
 
-  async getIqAvgGrouped(from?: Date, to?: Date, groupBy: GroupBy = 'month') {
+  async getIqAvgGrouped(from?: Date, to?: Date, groupBy: GroupBy = "month") {
     const today = new Date();
     const defaultTo = today;
     const defaultFrom = new Date(today.getFullYear(), today.getMonth() - 5, 1);
@@ -24,7 +24,7 @@ export class StatsService {
     return this.getIqAvgGroupedUseCase.execute(fromDate, toDate, groupBy);
   }
 
-  async computeAndStoreDailyIqAvg(): Promise<{ date: Date; valeur: number }> {
+  async computeAndStoreDailyIqAvg(): Promise<{ date: Date, valeur: number }> {
     const now = new Date();
     const date = StatsHelper.getUtcMidnightForParis(now);
     Logger.log(
@@ -41,13 +41,13 @@ export class StatsService {
       `🔍 Vérification de l'existence de la stat du jour: ${existing.length} entrées trouvées.`,
     );
     if (existing.length > 0) {
-      Logger.log(`⚠️ Stat du jour déjà existante, pas de calcul nécessaire.`);
+      Logger.log("⚠️ Stat du jour déjà existante, pas de calcul nécessaire.");
       return existing[0];
     }
 
     // 2) Calculer la moyenne de 'quality' via la méthode du repository
-    const moyenneQuality =
-      await this.statsRepository.getAverageApplicationQuality();
+    const moyenneQuality
+      = await this.statsRepository.getAverageApplicationQuality();
     Logger.log(`➗ Quality moyenne calculée = ${moyenneQuality}`);
 
     // 3) Enregistrer la stat via la méthode du repository

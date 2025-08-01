@@ -1,14 +1,14 @@
-import { IHostingRepository } from './infrastructure/repository/hosting.repository.interface';
-import { Inject, Injectable } from '@nestjs/common';
-import { CreateHostingDto } from './applications/dto/create-hosting.dto';
-import { UpdateHostingDto } from './applications/dto/update-hosting.dto';
-import { Hosting } from './domain/hosting.entity';
-import { ApplicationService } from 'src/product/application.service';
+import { IHostingRepository } from "./infrastructure/repository/hosting.repository.interface";
+import { Inject, Injectable } from "@nestjs/common";
+import { CreateHostingDto } from "./applications/dto/create-hosting.dto";
+import { UpdateHostingDto } from "./applications/dto/update-hosting.dto";
+import { Hosting } from "./domain/hosting.entity";
+import { ApplicationService } from "src/product/application.service";
 
 @Injectable()
 export class HostingService {
   constructor(
-    @Inject('IHostingRepository')
+    @Inject("IHostingRepository")
     private readonly repository: IHostingRepository,
     private readonly applicationService: ApplicationService,
   ) {}

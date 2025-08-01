@@ -1,5 +1,5 @@
-import { priorityRestart, Status } from '@prisma/client';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { priorityRestart, Status } from "@prisma/client";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsNumber,
   IsOptional,
@@ -9,24 +9,24 @@ import {
   IsEnum,
   IsIn,
   Max,
-} from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+} from "class-validator";
+import { Transform, Type } from "class-transformer";
 
 export class ApplicationSearchDto {
   @ApiPropertyOptional({
-    description: 'Recherche par label',
-    example: 'Mon Application',
+    description: "Recherche par label",
+    example: "Mon Application",
   })
   @IsOptional()
   @IsString()
   label?: string;
 
-  @ApiPropertyOptional({ description: 'Recherche par shortName' })
+  @ApiPropertyOptional({ description: "Recherche par shortName" })
   @IsOptional()
   @IsString()
   shortName?: string;
 
-  @ApiPropertyOptional({ description: 'Filtrer par tags (un ou plusieurs)' })
+  @ApiPropertyOptional({ description: "Filtrer par tags (un ou plusieurs)" })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
@@ -35,10 +35,10 @@ export class ApplicationSearchDto {
 
   @ApiPropertyOptional({
     description:
-      'Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)',
+      "Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)",
     enum: priorityRestart,
     isArray: true,
-    example: ['R1', 'R2'],
+    example: ["R1", "R2"],
   })
   @IsOptional()
   @IsArray()
@@ -48,7 +48,7 @@ export class ApplicationSearchDto {
 
   @ApiPropertyOptional({
     description: "Type d'acteur. Utiliser les valeurs de /actorTypes",
-    example: 'MOA',
+    example: "MOA",
   })
   @IsOptional()
   @IsString()
@@ -57,7 +57,7 @@ export class ApplicationSearchDto {
   @ApiPropertyOptional({
     type: [String],
     enum: Status,
-    description: 'Filtrer par un ou plusieurs status',
+    description: "Filtrer par un ou plusieurs status",
   })
   @IsOptional()
   @IsEnum(Status, { each: true })
@@ -74,21 +74,21 @@ export class ApplicationSearchDto {
   @ApiPropertyOptional({
     description:
       "Recherche unifiée sur tous les champs d'hébergement (site, plateforme, fournisseur, bâtiment, salle)",
-    example: 'Paris',
+    example: "Paris",
   })
   @IsOptional()
   @IsString()
   hostingSearch?: string;
 
   @ApiPropertyOptional({
-    description: 'Recherche par lien (ressource externe)',
+    description: "Recherche par lien (ressource externe)",
   })
   @IsOptional()
   @IsString()
   link?: string;
 
   @ApiPropertyOptional({
-    description: 'Recherche par indice de qualité minimum',
+    description: "Recherche par indice de qualité minimum",
     default: 0,
   })
   @IsOptional()
@@ -98,7 +98,7 @@ export class ApplicationSearchDto {
   iqGte?: number = 0;
 
   @ApiPropertyOptional({
-    description: 'Recherche par indice de qualité maximum',
+    description: "Recherche par indice de qualité maximum",
     default: 100,
   })
   @IsOptional()
@@ -107,7 +107,7 @@ export class ApplicationSearchDto {
   @Max(100)
   iqLte?: number = 100;
 
-  @ApiPropertyOptional({ description: 'Numéro de page', example: 0 })
+  @ApiPropertyOptional({ description: "Numéro de page", example: 0 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
@@ -115,7 +115,7 @@ export class ApplicationSearchDto {
   page?: number;
 
   @ApiPropertyOptional({
-    description: 'Nombre de résultats par page',
+    description: "Nombre de résultats par page",
     example: 15,
   })
   @IsOptional()
@@ -125,42 +125,42 @@ export class ApplicationSearchDto {
   limit?: number;
 
   @ApiPropertyOptional({
-    description: 'Champ utilisé pour le tri',
-    example: 'label',
+    description: "Champ utilisé pour le tri",
+    example: "label",
   })
   @IsOptional()
   @IsString()
   sortBy?: string;
 
   @ApiPropertyOptional({
-    description: 'Ordre de tri',
-    example: 'asc',
-    enum: ['asc', 'desc'],
+    description: "Ordre de tri",
+    example: "asc",
+    enum: ["asc", "desc"],
   })
   @IsOptional()
-  @IsIn(['asc', 'desc'])
-  order?: 'asc' | 'desc';
+  @IsIn(["asc", "desc"])
+  order?: "asc" | "desc";
 
   @ApiPropertyOptional({
     description: "Colonnes à inclure dans l'export",
-    example: '["id", "label", "shortName", "description"]',
-    type: 'array',
+    example: "[\"id\", \"label\", \"shortName\", \"description\"]",
+    type: "array",
     items: {
-      type: 'string',
+      type: "string",
     },
   })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   @Transform(({ value }) => {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       // Try to parse if it's a JSON string
       try {
         const parsed = JSON.parse(value);
         return Array.isArray(parsed) ? parsed : [value];
       } catch (_e) {
         // If not valid JSON, treat as comma-separated values
-        return value.split(',').map((v) => v.trim());
+        return value.split(",").map(v => v.trim());
       }
     }
     return Array.isArray(value) ? value : [value];

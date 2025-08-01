@@ -1,9 +1,9 @@
-import {
+import type {
   GroupBy,
   GroupedStat,
   StatEntry,
-} from 'src/stats/interfaces/types/stats-entry.type';
-import { StatsHelper } from './stats.helper';
+} from "src/stats/interfaces/types/stats-entry.type";
+import { StatsHelper } from "./stats.helper";
 
 /**
  * Agrégateur qui utilise uniquement le helper fourni pour le fuseau Europe/Paris et formate en ISO-like
@@ -23,10 +23,10 @@ export class StatsAggregator {
       let label: string;
 
       switch (groupBy) {
-        case 'day':
+        case "day":
           label = dateAtParisMidnight.toISOString().substring(0, 10);
           break;
-        case 'week': {
+        case "week": {
           // Trouver le lundi de cette semaine (ISO, début lundi)
           const day = dateAtParisMidnight.getUTCDay(); // 0=Dimanche, 1=Lundi
           const diffToMonday = (day + 6) % 7;
@@ -35,16 +35,16 @@ export class StatsAggregator {
           label = monday.toISOString().substring(0, 10);
           break;
         }
-        case 'month': {
+        case "month": {
           const year = dateAtParisMidnight.getUTCFullYear();
           const month = String(dateAtParisMidnight.getUTCMonth() + 1).padStart(
             2,
-            '0',
+            "0",
           );
           label = `${year}-${month}`;
           break;
         }
-        case 'year':
+        case "year":
           label = String(dateAtParisMidnight.getUTCFullYear());
           break;
       }

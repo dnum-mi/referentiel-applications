@@ -1,8 +1,8 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateAnomalyNotificationDto } from './create-anomaly-notification.dto';
-import { IsOptional, IsEnum } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { AnomalyNotificationStatus } from '@prisma/client';
+import { PartialType } from "@nestjs/mapped-types";
+import { CreateAnomalyNotificationDto } from "./create-anomaly-notification.dto";
+import { IsOptional, IsEnum } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+import { AnomalyNotificationStatus } from "@prisma/client";
 
 export class UpdateAnomalyNotificationDto extends PartialType(
   CreateAnomalyNotificationDto,

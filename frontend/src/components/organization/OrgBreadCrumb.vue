@@ -3,18 +3,18 @@ import { computed, ref } from "vue";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import type { Organization } from "@/models/organization";
 
-const orgStore = useOrganizationStore();
 const props = withDefaults(
   defineProps<{
-    organizationId: string;
-    hideHierarchy?: boolean;
-    clickable?: boolean;
+    organizationId: string
+    hideHierarchy?: boolean
+    clickable?: boolean
   }>(),
   {
     hideHierarchy: false,
     clickable: true,
   },
 );
+const orgStore = useOrganizationStore();
 const organization = computed<Organization | undefined>(() => {
   orgStore.getById(props.organizationId);
   return orgStore.organizations[props.organizationId];
@@ -22,20 +22,24 @@ const organization = computed<Organization | undefined>(() => {
 
 const unfold = ref(false);
 </script>
+
 <template>
   <template v-if="!hideHierarchy && organization?.parentId">
     <template v-if="unfold">
-      <OrgBreadCrumb :organizationId="organization.parentId"> <a @click="unfold = false" class="fr-link" href="#"> - </a> </OrgBreadCrumb
-      >&nbsp;
+      <OrgBreadCrumb :organization-id="organization.parentId">
+        <a class="fr-link" href="#" @click="unfold = false"> - </a>
+      </OrgBreadCrumb>&nbsp;
     </template>
     <template v-else>
-      <a @click="unfold = true" class="fr-link" href="#" title="Voir le parent"> + </a>
+      <a class="fr-link" href="#" title="Voir le parent" @click="unfold = true"> + </a>
     </template>
   </template>
-  <template v-else></template>
-  <a v-if="unfold" @click="unfold = false" target="" href="#" title="Refermer l'arborescence">–</a>
+  <template v-else />
+  <a v-if="unfold" target="" href="#" title="Refermer l'arborescence" @click="unfold = false">–</a>
   <template v-if="organization">
-    <template v-if="!hideHierarchy && organization?.parentId"> &nbsp; </template>
+    <template v-if="!hideHierarchy && organization?.parentId">
+&nbsp;
+    </template>
     <template v-if="clickable">
       <a v-if="organization.url" :href="organization.url" target="_blank">{{ organization.label }}</a>
       <a v-else target="" href="#">{{ organization.label }}</a>

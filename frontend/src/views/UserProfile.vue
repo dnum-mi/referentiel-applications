@@ -10,20 +10,28 @@ const userStore = useUserStore();
     <div class="fr-col-12 fr-col-md-8">
       <div v-if="userStore.user" class="fr-card">
         <div class="fr-card__body fr-mt-2w">
-          <h2 class="fr-h4">Informations personnelles</h2>
+          <h2 class="fr-h4">
+            Informations personnelles
+          </h2>
           <div class="fr-table">
             <table>
               <tbody>
                 <tr>
-                  <th scope="row">ID Keycloak</th>
+                  <th scope="row">
+                    ID Keycloak
+                  </th>
                   <td>{{ userStore.user.keycloakId }}</td>
                 </tr>
                 <tr>
-                  <th scope="row">Email</th>
+                  <th scope="row">
+                    Email
+                  </th>
                   <td>{{ userStore.user.email }}</td>
                 </tr>
                 <tr>
-                  <th scope="row">Type</th>
+                  <th scope="row">
+                    Type
+                  </th>
                   <td>
                     <span class="fr-badge fr-mr-1w" :class="AdminLevelWordingBadgeClass[userStore.adminLevel]">
                       {{ AdminLevelWording[userStore.adminLevel] }}

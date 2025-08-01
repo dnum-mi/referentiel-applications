@@ -1,9 +1,9 @@
-import { PrismaService } from './../../prisma/prisma.service';
-import { Controller, Get, HttpException, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { PrismaService } from "./../../prisma/prisma.service";
+import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 
-@ApiTags('Health Check')
-@Controller('health-check')
+@ApiTags("Health Check")
+@Controller("health-check")
 export class HealthCheckController {
   constructor(private readonly prismaService: PrismaService) {}
 
@@ -18,7 +18,7 @@ export class HealthCheckController {
     description: "L'application fonctionne correctement.",
     schema: {
       example: {
-        status: 'ok',
+        status: "ok",
       },
     },
   })
@@ -28,18 +28,18 @@ export class HealthCheckController {
       "Le service n'est pas disponible en raison d'une erreur lors de la connexion à la base de données.",
     schema: {
       example: {
-        status: 'error',
+        status: "error",
         message: "Détail de l'erreur",
       },
     },
   })
-  async checkHealth(): Promise<{ status: string; message?: string }> {
+  async checkHealth(): Promise<{ status: string, message?: string }> {
     try {
       await this.prismaService.$queryRaw`SELECT 1`;
-      return { status: 'ok' };
+      return { status: "ok" };
     } catch (error) {
       throw new HttpException(
-        { status: 'error', message: error },
+        { status: "error", message: error },
         HttpStatus.SERVICE_UNAVAILABLE,
       );
     }

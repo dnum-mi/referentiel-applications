@@ -3,10 +3,10 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { ADMIN_LEVEL_KEY } from '../decorators/admin.decorator';
-import { AdminLevel } from 'src/user/entities/user.entity';
+} from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { ADMIN_LEVEL_KEY } from "../decorators/admin.decorator";
+import { AdminLevel } from "src/user/entities/user.entity";
 
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -25,13 +25,13 @@ export class AdminGuard implements CanActivate {
     } = request;
 
     if (!user) {
-      throw new ForbiddenException('User not found');
+      throw new ForbiddenException("User not found");
     }
 
     // If specific admin level is required, check it
     if (requiredAdminLevel) {
       if (user.adminLevel < requiredAdminLevel) {
-        throw new ForbiddenException('Insufficient admin level');
+        throw new ForbiddenException("Insufficient admin level");
       }
       return true;
     }

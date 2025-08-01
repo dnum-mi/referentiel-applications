@@ -1,8 +1,8 @@
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
-import isEqual from 'lodash/isEqual';
-import { Metadata, Prisma } from '@prisma/client';
-import { MetadataRepository } from './infrastructure/metadata.repository';
+import { PrismaService } from "src/prisma/prisma.service";
+import { Injectable } from "@nestjs/common";
+import isEqual from "lodash/isEqual";
+import { Metadata, Prisma } from "@prisma/client";
+import { MetadataRepository } from "./infrastructure/metadata.repository";
 
 @Injectable()
 export class MetadataService {
@@ -17,19 +17,19 @@ export class MetadataService {
 
   async getFirstAndLastMetadata(
     applicationId: string,
-  ): Promise<{ first: Metadata | null; last: Metadata | null }> {
+  ): Promise<{ first: Metadata | null, last: Metadata | null }> {
     return this.metadataRepository.findFirstAndLastByApplicationId(applicationId);
   }
 
   public async createMetadata<T = any>(options: {
-    applicationId: string;
-    createdById: string;
-    title: string;
-    entity?: string;
-    entityId?: string;
-    fields?: Record<string, string>;
-    oldData: T;
-    newData: T;
+    applicationId: string
+    createdById: string
+    title: string
+    entity?: string
+    entityId?: string
+    fields?: Record<string, string>
+    oldData: T
+    newData: T
   }) {
     const {
       applicationId,
@@ -43,7 +43,7 @@ export class MetadataService {
     } = options;
 
     const extractValue = (obj: any, path: string): any => {
-      return path.split('.').reduce((acc, key) => acc?.[key], obj) ?? '';
+      return path.split(".").reduce((acc, key) => acc?.[key], obj) ?? "";
     };
 
     const buildValueMap = (source: any) => {
@@ -71,7 +71,7 @@ export class MetadataService {
     const descriptionLines = [`Modification ${title}`];
 
     if (Object.keys(changedOldValues).length === 0) {
-      descriptionLines.push(`Aucune modification détectée.`);
+      descriptionLines.push("Aucune modification détectée.");
     } else {
       descriptionLines.push(
         `Ancienne(s) valeur(s): ${JSON.stringify(changedOldValues)}`,
@@ -84,8 +84,8 @@ export class MetadataService {
     const prismaData: Prisma.MetadataUncheckedCreateInput = {
       applicationId,
       createdById,
-      action: 'update',
-      description: descriptionLines.join('\n'),
+      action: "update",
+      description: descriptionLines.join("\n"),
     };
 
     if (entity && entityId) {

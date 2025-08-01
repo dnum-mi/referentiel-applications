@@ -1,10 +1,10 @@
-import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { PartialType } from '@nestjs/mapped-types';
-import { IsString, IsOptional } from 'class-validator';
+import { ApiProperty, ApiHideProperty } from "@nestjs/swagger";
+import { PartialType } from "@nestjs/mapped-types";
+import { IsString, IsOptional } from "class-validator";
 
 export class CreateActorTypeDto {
   @ApiProperty({
-    example: 'MOA',
+    example: "MOA",
     description: "Code du type d'acteur",
     required: true,
   })
@@ -13,7 +13,7 @@ export class CreateActorTypeDto {
   code: string;
 
   @ApiProperty({
-    example: 'Maîtrise d’Ouvrage',
+    example: "Maîtrise d’Ouvrage",
     description: "Libellé du type d'acteur",
     required: true,
   })
@@ -22,7 +22,7 @@ export class CreateActorTypeDto {
 
   @ApiProperty({
     example:
-      'La MOA définit les besoins du projet, supervise sa mise en œuvre et veille à ce que les objectifs métiers soient atteints.',
+      "La MOA définit les besoins du projet, supervise sa mise en œuvre et veille à ce que les objectifs métiers soient atteints.",
     description: "description du type d'acteur",
     required: false,
   })

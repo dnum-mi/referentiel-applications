@@ -1,33 +1,33 @@
-import { priorityRestart } from '@prisma/client';
-import { faker } from '@faker-js/faker';
-import { getPrismaClient } from './prisma';
+import { priorityRestart } from "@prisma/client";
+import { faker } from "@faker-js/faker";
+import { getPrismaClient } from "./prisma";
 
 const appTags = [
-  'WEB',
-  'MOBILE',
-  'API',
-  'DESKTOP',
-  'CLOUD',
-  'DATABASE',
-  'MICROSERVICE',
-  'FRONTEND',
-  'BACKEND',
-  'FULLSTACK',
-  'ANALYTICS',
-  'MONITORING',
-  'SECURITY',
-  'INTEGRATION',
-  'LEGACY',
-  'MODERN',
-  'CRITICAL',
-  'INTERNAL',
-  'EXTERNAL',
-  'DEVELOPMENT',
-  'PRODUCTION',
-  'STAGING',
-  'TEST',
-  'BUSINESS',
-  'TECHNICAL',
+  "WEB",
+  "MOBILE",
+  "API",
+  "DESKTOP",
+  "CLOUD",
+  "DATABASE",
+  "MICROSERVICE",
+  "FRONTEND",
+  "BACKEND",
+  "FULLSTACK",
+  "ANALYTICS",
+  "MONITORING",
+  "SECURITY",
+  "INTEGRATION",
+  "LEGACY",
+  "MODERN",
+  "CRITICAL",
+  "INTERNAL",
+  "EXTERNAL",
+  "DEVELOPMENT",
+  "PRODUCTION",
+  "STAGING",
+  "TEST",
+  "BUSINESS",
+  "TECHNICAL",
 ];
 
 const restartPriorities = Object.values(priorityRestart);
@@ -59,6 +59,7 @@ export class ApplicationFaker {
       },
     });
   }
+
   static async delete(applicationId: string) {
     const prisma = getPrismaClient();
     return prisma.application.delete({ where: { id: applicationId } });

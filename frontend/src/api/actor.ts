@@ -3,7 +3,7 @@ import axios from "axios";
 
 const Actors = {
   async countActors(): Promise<number> {
-    const { data } = await axios.get(`actors/count`);
+    const { data } = await axios.get("actors/count");
     return data;
   },
 

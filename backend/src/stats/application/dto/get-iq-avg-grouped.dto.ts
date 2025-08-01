@@ -1,7 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 
 export class GetIqAvgGroupedDto {
-  @ApiProperty({ example: '2025-07' })
+  @ApiProperty({ example: "2025-07" })
   label: string;
 
   @ApiProperty({ example: 78.2 })

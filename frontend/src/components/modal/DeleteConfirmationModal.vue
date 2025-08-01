@@ -18,11 +18,15 @@ function cancel() {
 </script>
 
 <template>
-  <DsfrModal :opened="opened" :title="`Confirmation de suppression`" size="sm" @close="cancel">
+  <DsfrModal :opened="opened" title="Confirmation de suppression" size="sm" @close="cancel">
     <p>Êtes-vous sûr de vouloir supprimer les {{ itemName }} sélectionnés ? Cette action est irréversible.</p>
     <div class="actions">
-      <DsfrButton type="button" @click="cancel" tertiary>Annuler</DsfrButton>
-      <DsfrButton type="button" @click="confirm" primary>Confirmer</DsfrButton>
+      <DsfrButton type="button" tertiary @click="cancel">
+        Annuler
+      </DsfrButton>
+      <DsfrButton type="button" primary @click="confirm">
+        Confirmer
+      </DsfrButton>
     </div>
   </DsfrModal>
 </template>

@@ -39,7 +39,7 @@ export const useEventStore = defineStore("eventStore", () => {
 
   const deleteEvents = async (applicationId: string, ids: string[]) => {
     try {
-      await Promise.all(ids.map((id) => call("event", "delete", { applicationId, eventId: id })));
+      await Promise.all(ids.map(id => call("event", "delete", { applicationId, eventId: id })));
       toaster.addSuccessMessage("Événements supprimés avec succès !");
       await fetchEvents(applicationId);
     } catch {

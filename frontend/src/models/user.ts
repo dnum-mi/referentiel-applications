@@ -5,7 +5,7 @@ export enum AdminLevel {
   ADMIN = 30,
 }
 export interface User {
-  keycloakId: string;
-  email: string;
-  adminLevel: AdminLevel;
+  keycloakId: string
+  email: string
+  adminLevel: AdminLevel
 }

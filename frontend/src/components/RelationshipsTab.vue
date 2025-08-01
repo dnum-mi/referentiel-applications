@@ -33,14 +33,16 @@ const {
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
     <div class="fr-col">
-      <h3 class="fr-mb-0">Gestion des relations de {{ props.application.label }}</h3>
+      <h3 class="fr-mb-0">
+        Gestion des relations de {{ props.application.label }}
+      </h3>
     </div>
     <div class="fr-col-auto">
       <DsfrButton
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
-        @click="openAddRelationModal"
         :disabled="!canEdit"
+        @click="openAddRelationModal"
       >
         Ajouter une relation
       </DsfrButton>
@@ -51,9 +53,9 @@ const {
     <DsfrButton
       type="button"
       tertiary
-      @click="removeSelectedRelations"
       icon="fr-icon-delete-line"
       :disabled="selectedRelationIds.length === 0 || !canEdit"
+      @click="removeSelectedRelations"
     >
       Supprimer la sélection
     </DsfrButton>
@@ -79,7 +81,7 @@ const {
   >
     <template #cell="{ colKey, cell }">
       <template v-if="colKey === 'Sélection'">
-        <input type="checkbox" :value="cell" v-model="selectedRelationIds" />
+        <input v-model="selectedRelationIds" type="checkbox" :value="cell">
       </template>
       <template v-else-if="colKey === 'Application Cible'">
         <a :href="`/applications/${cell.id}`" class="fr-link">
@@ -87,7 +89,7 @@ const {
         </a>
       </template>
       <template v-else-if="colKey === 'Actions'">
-        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" @click="cell.edit()" :disabled="!canEdit">
+        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" @click="cell.edit()">
           {{ cell.label }}
           Modifier
         </DsfrButton>
@@ -101,7 +103,7 @@ const {
   <AddRelationModal
     :opened="isAddRelationModalOpen"
     title="Ajouter une relation"
-    :applicationId="application.id"
+    :application-id="application.id"
     @close="closeAddRelationModal"
     @add-relation="
       (relation) =>
@@ -121,7 +123,7 @@ const {
     @update-relation="handleUpdateRelation"
   />
 
-  <DeleteConfirmationModal :opened="showDeleteConfirmation" itemName="relations" @confirm="confirmDelete" @cancel="cancelDelete" />
+  <DeleteConfirmationModal :opened="showDeleteConfirmation" item-name="relations" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
 
 <style scoped>

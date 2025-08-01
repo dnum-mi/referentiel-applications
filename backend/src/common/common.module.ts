@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
-import { ExcelBuilderService } from './service/excel-builder.service';
+import { Module } from "@nestjs/common";
+import { ExcelBuilderService } from "./service/excel-builder.service";
 
 @Module({
   providers: [ExcelBuilderService],

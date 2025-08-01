@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import type { Prisma, User } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UserFilterDto } from './dto/filters.dto';
+import { Injectable } from "@nestjs/common";
+import type { Prisma, User } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { UserFilterDto } from "./dto/filters.dto";
 
 @Injectable()
 export class UserService {
@@ -65,13 +65,13 @@ export class UserService {
         {
           email: {
             contains: filters.search,
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         },
         {
           keycloakId: {
             contains: filters.search,
-            mode: 'insensitive',
+            mode: "insensitive",
           },
         },
       ];
@@ -80,7 +80,7 @@ export class UserService {
     return this.prisma.user.findMany({
       where,
       orderBy: {
-        email: 'asc',
+        email: "asc",
       },
     });
   }
