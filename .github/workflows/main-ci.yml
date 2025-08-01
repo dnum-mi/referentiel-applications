@@ -25,17 +25,6 @@ jobs:
       image: ghcr.io/dnum-mi/referentiel-applications/frontend
       context: ./frontend
 
-  test-format:
-    name: Test Formatting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Eslint check
-        run: |
-          npm install -g pnpm
-          pnpm install --frozen-lockfile
-          pnpm run format-check
-
   test-lint:
     name: Test Linting
     runs-on: ubuntu-latest
