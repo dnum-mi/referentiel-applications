@@ -12,7 +12,7 @@ export class MetadataService {
   ) { }
 
   public async findAll(applicationId?: string) {
-    return await this.metadataRepository.findAll(applicationId);
+    return this.metadataRepository.findAll(applicationId);
   }
 
   async getFirstAndLastMetadata(

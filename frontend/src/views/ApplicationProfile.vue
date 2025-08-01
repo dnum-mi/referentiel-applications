@@ -7,7 +7,10 @@ import { formatDate } from "@/composables/use-date";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
+import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
 
+const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 const metadataStore = useMetadataStore();
 const route = useRoute();
@@ -19,8 +22,8 @@ const errorMessage = ref("");
 
 async function handleApplicationUpdate(updateData: Application) {
   applicationUpdated.value = updateData;
-    if (application.value.myPerms.has("readMetadata")) {
-  await metadataStore.getFirstAndLastMetadataByApplication(updateData.id);
+    if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
+      await metadataStore.getFirstAndLastMetadataByApplication(updateData.id);
     }
   }
 
@@ -28,7 +31,7 @@ async function loadApplication() {
   isLoading.value = true;
   try {
     await applicationStore.fetchApplication(id);
-    if (application.value.myPerms.has("readMetadata")) {
+    if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
       await metadataStore.getFirstAndLastMetadataByApplication(id);
     }
   } finally {

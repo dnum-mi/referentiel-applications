@@ -29,7 +29,7 @@ export class ApplicationMetadataController {
     public async findAll(
         @Param('applicationId') applicationId: string,
     ): Promise<Metadata[]> {
-        return await this.metadataService.findAll(applicationId);
+        return this.metadataService.findAll(applicationId);
     }
 
     @Get('first-last')
