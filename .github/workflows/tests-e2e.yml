@@ -60,7 +60,7 @@ jobs:
         with:
           working-directory: ./frontend
           command: pnpm run cy:run
-          install-command: pnpm install --frozen-lockfile
+          install-command: pnpm install
       - name: Send artifacts
         uses: actions/upload-artifact@v4
         if: ${{ failure() }}

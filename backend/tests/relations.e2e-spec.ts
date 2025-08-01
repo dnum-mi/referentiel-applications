@@ -5,7 +5,6 @@ import { getToken } from "./getToken";
 import { RelationType } from "@prisma/client";
 import { UserFaker } from "./fakers/user.faker";
 import { ApplicationFaker } from "./fakers/application.faker";
-import { getPrismaClient } from "./fakers/prisma";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
 import type { AsyncReturnType } from "src/utils/types.util";
@@ -13,7 +12,6 @@ import { AdminLevel } from "src/user/entities/user.entity";
 
 describe("Relations End-to-End", () => {
   const app = setupTestSuite();
-  const prisma = getPrismaClient();
   let applicationSource: { id: string, label: string };
   let applicationTarget: { id: string, label: string };
   let applicationUpdates: { id: string, label: string };
@@ -33,9 +31,6 @@ describe("Relations End-to-End", () => {
     applicationSource = await ApplicationFaker.create(user);
     applicationTarget = await ApplicationFaker.create(user);
     applicationUpdates = await ApplicationFaker.create(user);
-  });
-  afterAll(async () => {
-    prisma.$disconnect();
   });
 
   it("should create a relation when provided with a valid DTO", async () => {
@@ -125,7 +120,7 @@ describe("Relations End-to-End", () => {
     await request(app().getHttpServer())
       .delete(`/applications/${applicationSourceId}/relations/${relation.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(204);
   });
 
   it("should return 404 when retrieving a deleted relation", async () => {
@@ -143,7 +138,6 @@ describe("application guard", () => {
   let appOwner: { keycloakId: string, email: string };
   let appActor: { keycloakId: string, email: string };
   let TOKEN: string;
-  const prisma = getPrismaClient();
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
   let actor: AsyncReturnType<typeof ActorFaker.link>;
   let application: AsyncReturnType<typeof ApplicationFaker.create>;
@@ -166,7 +160,6 @@ describe("application guard", () => {
   afterAll(async () => {
     await actor.delete();
     await actorType.delete();
-    prisma.$disconnect();
   });
 
   it("permissions testing", async () => {
@@ -251,6 +244,6 @@ describe("application guard", () => {
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/relations/${relationId}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(204);
   });
 });

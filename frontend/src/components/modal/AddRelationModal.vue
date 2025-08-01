@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import Applications from "@/api/application";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import SuggestionsInput from "../SuggestionsInput.vue";
+import { RelationType } from "@/client/types.gen";
+import { useApplicationSearchStore } from "@/stores/applicationSearchStore.js";
 
 const props = withDefaults(
   defineProps<{
@@ -19,14 +20,15 @@ const emit = defineEmits<{
   (e: "close"): void
   (e: "add-relation", payload: { targetId: string, type: string }): void
 }>();
-const toaster = useToaster();
+const toaster = useToasterStore();
+const applicationSearchStore = useApplicationSearchStore();
 const selectedApplicationId = ref<string | null>(null);
-const relationType = ref("is_part_of");
+const relationType = ref<RelationType>(RelationType.IS_PART_OF);
 const relationTypesForSelect = [
-  { value: "is_part_of", text: "Fait partie de" },
-  { value: "in_replacement_of", text: "Remplace" },
-  { value: "is_service_user_of", text: "Utilise le service de" },
-  { value: "is_data_user_of", text: "Utilise la donnée de" },
+  { value: RelationType.IS_PART_OF, text: "Fait partie de" },
+  { value: RelationType.IN_REPLACEMENT_OF, text: "Remplace" },
+  { value: RelationType.IS_SERVICE_USER_OF, text: "Utilise le service de" },
+  { value: RelationType.IS_DATA_USER_OF, text: "Utilise la donnée de" },
 ];
 
 const isLoading = ref(false);
@@ -35,7 +37,7 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading!.value = true;
     try {
-      const response = await Applications.getAllApplicationBySearch(query);
+      const response = await applicationSearchStore.searchApplications({ search: query, limit: 10 });
       return response.results;
     } catch (error) {
       console.error(error);

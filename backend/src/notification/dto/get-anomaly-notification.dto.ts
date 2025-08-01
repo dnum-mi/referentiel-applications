@@ -1,5 +1,7 @@
 import { IsString, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
+import { ApiProperty } from "@nestjs/swagger";
+import { UserEntity } from "src/user/entities/user.entity";
 
 export class ApplicationDto {
   @IsString()
@@ -22,6 +24,9 @@ export class GetAnomalyNotificationDto {
 
   @IsString()
   notifierId: string;
+
+  @ApiProperty({ type: UserEntity, description: "The user who reported the issue" })
+  notifier: UserEntity;
 
   @IsString()
   description: string;

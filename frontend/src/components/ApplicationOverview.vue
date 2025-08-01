@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeMount, type Component } from "vue";
+import { ref, watch, onMounted, onBeforeMount } from "vue";
+import type { Component } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 
@@ -18,7 +19,7 @@ import { useLinkStore } from "@/stores/linkStore";
 import { useComplianceStore } from "@/stores/complianceStore";
 import { useRelationStore } from "@/stores/relationStore";
 import { useUserStore } from "@/stores/userStore";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
 
@@ -37,7 +38,7 @@ const application = ref<ApplicationWithPerms>(props.application);
 const activeTab = ref(0);
 const route = useRoute();
 const router = useRouter();
-const toaster = useToaster();
+const toaster = useToasterStore();
 
 function updateApplication(updatedApp: ApplicationWithPerms) {
   Object.assign(application.value, updatedApp);
@@ -70,73 +71,73 @@ const tabs = ref<
     requiredPerms: APP_PERMISSIONS[]
   })[]
 >([
-      {
-        title: "Informations générales",
-        icon: "ri-checkbox-circle-line",
-        tabId: "tab-infos",
-        panelId: "panel-infos",
-        component: InformationsGenerales,
-        requiredPerms: ["readBase"],
-      },
-      {
-        title: "Liens",
-        icon: "ri-links-line",
-        tabId: "tab-links",
-        panelId: "panel-links",
-        component: Links,
-        requiredPerms: ["readLinks"],
-        loadFn: fetchLinks,
-        errorKey: "ERR_LOAD_LINKS",
-      },
-      {
-        title: "Conformités",
-        icon: "ri-shield-check-line",
-        tabId: "tab-compliances",
-        panelId: "panel-compliances",
-        component: CompliancesAccordionManager,
-        requiredPerms: ["readCompliances"],
-        loadFn: fetchCompliances,
-        errorKey: "ERR_LOAD_COMPLIANCES",
-      },
-      {
-        title: "Acteurs",
-        icon: "ri-team-line",
-        tabId: "tab-actors",
-        panelId: "panel-actors",
-        component: ActorManager,
-        requiredPerms: ["readActors"],
-        loadFn: fetchActors,
-        errorKey: "ERR_LOAD_ACTORS",
-      },
-      {
-        title: "Relations",
-        icon: "ri-node-tree",
-        tabId: "tab-relations",
-        panelId: "panel-relations",
-        component: Relationships,
-        requiredPerms: ["readRelations"],
-        loadFn: fetchRelations,
-        errorKey: "ERR_LOAD_RELATIONS",
-      },
-      {
-        title: "Historique",
-        icon: "ri-edit-line",
-        tabId: "tab-history",
-        panelId: "panel-history",
-        component: NotificationsApplication,
-        requiredPerms: ["readMetadata"],
-        loadFn: fetchHistoryData,
-        errorKey: "ERR_LOAD_ISSUES_METADATAS",
-      },
-      {
-        title: "Qualité",
-        icon: "ri-bar-chart-line",
-        tabId: "tab-quality",
-        panelId: "panel-quality",
-        component: Quality,
-        requiredPerms: ["readCompliances", "readActors", "readLinks", "readBase"],
-      },
-    ]);
+  {
+    title: "Informations générales",
+    icon: "ri-checkbox-circle-line",
+    tabId: "tab-infos",
+    panelId: "panel-infos",
+    component: InformationsGenerales,
+    requiredPerms: ["readBase"],
+  },
+  {
+    title: "Liens",
+    icon: "ri-links-line",
+    tabId: "tab-links",
+    panelId: "panel-links",
+    component: Links,
+    requiredPerms: ["readLinks"],
+    loadFn: fetchLinks,
+    errorKey: "ERR_LOAD_LINKS",
+  },
+  {
+    title: "Conformités",
+    icon: "ri-shield-check-line",
+    tabId: "tab-compliances",
+    panelId: "panel-compliances",
+    component: CompliancesAccordionManager,
+    requiredPerms: ["readCompliances"],
+    loadFn: fetchCompliances,
+    errorKey: "ERR_LOAD_COMPLIANCES",
+  },
+  {
+    title: "Acteurs",
+    icon: "ri-team-line",
+    tabId: "tab-actors",
+    panelId: "panel-actors",
+    component: ActorManager,
+    requiredPerms: ["readActors"],
+    loadFn: fetchActors,
+    errorKey: "ERR_LOAD_ACTORS",
+  },
+  {
+    title: "Relations",
+    icon: "ri-node-tree",
+    tabId: "tab-relations",
+    panelId: "panel-relations",
+    component: Relationships,
+    requiredPerms: ["readRelations"],
+    loadFn: fetchRelations,
+    errorKey: "ERR_LOAD_RELATIONS",
+  },
+  {
+    title: "Historique",
+    icon: "ri-edit-line",
+    tabId: "tab-history",
+    panelId: "panel-history",
+    component: NotificationsApplication,
+    requiredPerms: ["readMetadata"],
+    loadFn: fetchHistoryData,
+    errorKey: "ERR_LOAD_ISSUES_METADATAS",
+  },
+  {
+    title: "Qualité",
+    icon: "ri-bar-chart-line",
+    tabId: "tab-quality",
+    panelId: "panel-quality",
+    component: Quality,
+    requiredPerms: ["readCompliances", "readActors", "readLinks", "readBase"],
+  },
+]);
 
 onMounted(() => {
   const tabParam = route.query.tab;

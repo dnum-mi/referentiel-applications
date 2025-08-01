@@ -1,6 +1,6 @@
 import { PrismaService } from "./../../prisma/prisma.service";
 import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiInternalServerErrorResponse, ApiOkResponse } from "@nestjs/swagger";
 
 @ApiTags("Health Check")
 @Controller("health-check")
@@ -13,8 +13,7 @@ export class HealthCheckController {
     description:
       "Exécute une requête basique vers la base de données pour vérifier la connectivité et l'état global de l'application.",
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "L'application fonctionne correctement.",
     schema: {
       example: {
@@ -22,8 +21,7 @@ export class HealthCheckController {
       },
     },
   })
-  @ApiResponse({
-    status: 503,
+  @ApiInternalServerErrorResponse({
     description:
       "Le service n'est pas disponible en raison d'une erreur lors de la connexion à la base de données.",
     schema: {

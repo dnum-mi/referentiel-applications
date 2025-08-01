@@ -67,6 +67,8 @@ export default antfu(
       "**/*.md/*.js",
       "**/*.md/*.ts",
       "**/cypress/support/component.js",
+      "**/frontend/src/client",
+      "**/swagger.yaml",
     ],
   },
 );

@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
+import type { ApplicationStatus } from "@/client/types.gen";
 
 const searchStore = useApplicationSearchStore();
 const modelValue = ref<string[]>(searchStore.filters.status ?? []);
@@ -25,7 +26,7 @@ const statusOptions = computed(() =>
 function onStatusChange(newStatus: unknown) {
   if (!Array.isArray(newStatus)) return;
 
-  const statusArray = newStatus.filter((val): val is string => typeof val === "string");
+  const statusArray = newStatus.filter((val): val is string => typeof val === "string") as ApplicationStatus[];
   modelValue.value = statusArray;
 
   console.log("✅ Nouveau statut sélectionné :", statusArray);

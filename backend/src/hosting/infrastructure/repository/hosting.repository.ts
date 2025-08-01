@@ -2,9 +2,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { IHostingRepository } from "./hosting.repository.interface";
 import { Injectable } from "@nestjs/common";
 import { Hosting } from "src/hosting/domain/hosting.entity";
-import { CreateHostingDto } from "src/hosting/applications/dto/create-hosting.dto";
-import { UpdateHostingDto } from "src/hosting/applications/dto/update-hosting.dto";
 import { MetadataService } from "src/metadata/metadata.service";
+import { CreateHostingDto, UpdateHostingDto } from "src/hosting/applications/dto/hosting.dto.js";
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {
@@ -16,7 +15,7 @@ export class HostingRepository implements IHostingRepository {
   async create(data: CreateHostingDto, ownerId: string): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
-    return await this.prisma.hosting.create({
+    return this.prisma.hosting.create({
       data: {
         ...rest,
         application: { connect: { id: applicationId } },
@@ -30,6 +29,9 @@ export class HostingRepository implements IHostingRepository {
             description: `Ajout de l'hébergement : ${rest.label}`,
           },
         },
+      },
+      include: {
+        hostingOption: true,
       },
     });
   }
@@ -131,23 +133,6 @@ export class HostingRepository implements IHostingRepository {
     return this.prisma.hosting.findMany({
       where: { applicationId },
       include: {
-        hostingOption: true,
-      },
-    });
-  }
-
-  async findApplicationsBySite(site: string): Promise<Hosting[]> {
-    return this.prisma.hosting.findMany({
-      where: {
-        hostingOption: {
-          site: {
-            equals: site,
-            mode: "insensitive",
-          },
-        },
-      },
-      include: {
-        application: true,
         hostingOption: true,
       },
     });

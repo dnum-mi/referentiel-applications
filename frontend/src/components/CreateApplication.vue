@@ -2,13 +2,13 @@
 import { ref } from "vue";
 import axios from "axios";
 import { useRouter } from "vue-router";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
 import type { Application } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 
-const toaster = useToaster();
+const toaster = useToasterStore();
 const applicationModal = useModal();
 const isSubmitting = ref(false);
 const userStore = useUserStore();

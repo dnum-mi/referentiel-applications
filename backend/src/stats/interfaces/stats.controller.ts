@@ -56,12 +56,6 @@ Authorization: Bearer <TOKEN>
   })
   @ApiOkResponse({
     description: "Tableau de buckets avec label, moyenne, min, max, count",
-    schema: {
-      example: [
-        { label: "2025-06", moyenne: 47.33, min: 30, max: 60, count: 3 },
-        { label: "2025-07", moyenne: 52.5, min: 50, max: 55, count: 2 },
-      ],
-    },
     type: GetIqAvgGroupedDto,
     isArray: true,
   })

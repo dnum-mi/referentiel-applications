@@ -1,5 +1,4 @@
-import { ApiProperty, ApiHideProperty } from "@nestjs/swagger";
-import { PartialType } from "@nestjs/mapped-types";
+import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { IsString, IsOptional } from "class-validator";
 
 export class CreateActorTypeDto {
@@ -31,8 +30,13 @@ export class CreateActorTypeDto {
   description: string;
 }
 
-export class PatchActorTypeDto extends PartialType(CreateActorTypeDto) {
-  @ApiHideProperty()
-  @IsOptional()
+export class PatchActorTypeDto extends PartialType(CreateActorTypeDto) {}
+export class ActorTypeDto extends CreateActorTypeDto {
+  @ApiProperty({
+    example: "12345678-1234-1234-1234-123456789012",
+    description: "Identifiant unique du type d'acteur",
+    required: true,
+  })
+  @IsString()
   id: string;
 }

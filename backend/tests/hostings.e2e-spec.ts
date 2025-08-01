@@ -5,23 +5,18 @@ import { UserFaker } from "./fakers/user.faker";
 import { HostingFaker } from "./fakers/hosting.faker";
 import { HostingOptionFaker } from "./fakers/hosting-option.faker";
 import { ApplicationFaker } from "./fakers/application.faker";
-import { getPrismaClient } from "./fakers/prisma";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
 
 describe("Hostings", () => {
   const app = setupTestSuite();
-  const prisma = getPrismaClient();
   let user: { keycloakId: string };
   let application: { id: string };
 
   beforeAll(async () => {
     user = await UserFaker.create(AdminLevel.WRITE);
     application = await ApplicationFaker.create(user);
-  });
-  afterAll(async () => {
-    prisma.$disconnect();
   });
 
   it("/GET applications/:applicationId/hostings", async () => {
@@ -104,7 +99,7 @@ describe("Hostings", () => {
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/hostings/${hosting.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(204);
   });
 });
 
@@ -113,16 +108,11 @@ describe("application guard", () => {
   let appOwner: { keycloakId: string, email: string };
   let appActor: { keycloakId: string, email: string };
   let TOKEN: string;
-  const prisma = getPrismaClient();
 
   beforeAll(async () => {
     appOwner = await UserFaker.create();
     appActor = await UserFaker.create();
     TOKEN = await getToken(appActor);
-  });
-
-  afterAll(async () => {
-    prisma.$disconnect();
   });
 
   it("permissions testing", async () => {
@@ -225,7 +215,7 @@ describe("application guard", () => {
     await request(app().getHttpServer())
       .delete(`/applications/${application.id}/hostings/${hostingId}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(204);
 
     // Finally delete the actor type
     await actorType.delete();

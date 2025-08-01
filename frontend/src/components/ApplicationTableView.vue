@@ -24,7 +24,7 @@ const columnToFieldMap: Record<string, string> = {
 };
 
 const pages = computed(() => {
-  const totalPages = Math.ceil(searchStore.total / searchStore.limit);
+  const totalPages = Math.ceil(searchStore.total / (searchStore.limit ?? searchStore.initialFilters.limit));
   return Array.from({ length: totalPages }).map((_, i) => ({
     label: String(i + 1),
     title: `Page ${i + 1}`,
@@ -154,10 +154,10 @@ async function exportToExcel() {
   </DsfrDataTable>
 
   <PaginationFooter
-    :total-filtered="searchStore.total"
+    :total-filtered="searchStore.total ?? 0"
     :pages="pages"
-    :limit="searchStore.limit"
-    :page="searchStore.page"
+    :limit="searchStore.limit ?? 0"
+    :page="searchStore.page ?? 0"
     @update:limit="searchStore.limit = $event"
     @update:page="searchStore.page = $event"
   />

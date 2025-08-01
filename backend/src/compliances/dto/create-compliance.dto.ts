@@ -263,3 +263,13 @@ export class CreateComplianceDto {
   @IsString()
   rgpd_dpo_name?: string;
 }
+
+export class ComplianceDto extends CreateComplianceDto {
+  @ApiProperty({
+    example: "12345678-1234-1234-1234-123456789012",
+    description: "Unique identifier of the compliance record",
+    required: true,
+  })
+  @IsString()
+  id: string;
+}

@@ -78,6 +78,8 @@ services:
     working_dir: /app
     volumes:
       - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm dev"
     environment:
       - VITE_RDA_KEYCLOAK_AUTH_SERVER_URL=http://localhost:8082
       - VITE_RDA_KEYCLOAK_REALM=referentiel-applications

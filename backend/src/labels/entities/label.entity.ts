@@ -1,7 +1,6 @@
 export class Label {
   id: string;
   source: string;
-  value?: string;
-  shortname?: string;
+  value: string;
   applicationId: string;
 }

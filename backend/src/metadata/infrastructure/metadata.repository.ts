@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { IMetadataRepository } from "./metadata.repository.interface";
-import { Metadata } from "@prisma/client";
 
 @Injectable()
 export class MetadataRepository implements IMetadataRepository {
@@ -17,10 +16,7 @@ export class MetadataRepository implements IMetadataRepository {
     });
   }
 
-  async findFirstAndLastByApplicationId(applicationId: string): Promise<{
-    first: Metadata | null
-    last: Metadata | null
-  }> {
+  async findFirstAndLastByApplicationId(applicationId: string) {
     const [first, last] = await this.prisma.$transaction([
       this.prisma.metadata.findFirst({
         where: { applicationId },

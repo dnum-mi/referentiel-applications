@@ -39,9 +39,6 @@ jobs:
         run: |
           mkdir -p backend/coverage # create before to avoid permission issues
           docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run test:cov
-      # - name: Fix relative paths in coverage report
-      #   run: |
-      #     sed -i 's|<source>/app</source>|<source>backend</source>|g' backend/coverage/lcov.info
       - name: Produce the coverage report
         uses: insightsengineering/coverage-action@v2
         with:

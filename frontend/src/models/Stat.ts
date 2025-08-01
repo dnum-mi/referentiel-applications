@@ -1,4 +1,4 @@
-export type GroupBy = "day" | "week" | "month" | "year";
+export type GroupBy = "jour" | "semaine" | "mois" | "année";
 
 export interface IqAvg {
   label: string

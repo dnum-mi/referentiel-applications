@@ -7,10 +7,11 @@ import {
   Param,
   NotFoundException,
   UseGuards,
+  HttpCode,
 } from "@nestjs/common";
-import { ApiTags, ApiResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiParam, ApiCreatedResponse, ApiOkResponse } from "@nestjs/swagger";
 import { CompliancesService } from "./compliances.service";
-import { CreateComplianceDto } from "./dto/create-compliance.dto";
+import { ComplianceDto, CreateComplianceDto } from "./dto/create-compliance.dto";
 import { UpdateComplianceDto } from "./dto/update-compliance.dto";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ApplicationService } from "src/product/application.service";
@@ -25,6 +26,10 @@ export class ComplianceController {
   @Get("count")
   @ApiOperation({
     summary: "Récupérer le nombre total de conformités (toutes applications)",
+  })
+  @ApiOkResponse({
+    description: "Nombre total de conformités",
+    type: Number,
   })
   public async countAllCompliances(): Promise<number> {
     return this.complianceService.countAll();
@@ -43,7 +48,11 @@ export class ApplicationCompliancesController {
   @Post()
   @AppAction("writeCompliances")
   @ApiOperation({ summary: "Create a new compliance for an application" })
-  @ApiResponse({ status: 201 })
+  @HttpCode(201)
+  @ApiCreatedResponse({
+    description: "Compliance created successfully",
+    type: ComplianceDto,
+  })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   async create(
     @UserId() userId: string,
@@ -72,7 +81,10 @@ export class ApplicationCompliancesController {
   @Get()
   @AppAction("readCompliances")
   @ApiOperation({ summary: "Retrieve the compliance for an application" })
-  @ApiResponse({ status: 200 })
+  @ApiOkResponse({
+    description: "Compliance found successfully",
+    type: ComplianceDto,
+  })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   async findOne(@Param("applicationId") applicationId: string) {
     return this.compliancesService.findByApplicationId(applicationId);
@@ -81,7 +93,10 @@ export class ApplicationCompliancesController {
   @Patch()
   @AppAction("writeCompliances")
   @ApiOperation({ summary: "Update the compliance for an application" })
-  @ApiResponse({ status: 200 })
+  @ApiOkResponse({
+    description: "Compliance updated successfully",
+    type: ComplianceDto,
+  })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   async update(
     @UserId() userId: string,

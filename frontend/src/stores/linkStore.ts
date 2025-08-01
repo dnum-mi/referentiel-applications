@@ -1,19 +1,23 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { call } from "@/api/callService";
-import useToaster from "@/composables/use-toaster";
-import type { ExternalRessource } from "@/models/Application";
+import { useToasterStore } from "@/stores/toasterStore";
+import api from "@/api/index.js";
+import type { CreateLinkDto, LinkDto, UpdateLinkDto } from "@/client/types.gen.js";
 
 export const useLinkStore = defineStore("linkStore", () => {
-  const links = ref<ExternalRessource[]>([]);
+  const links = ref<LinkDto[]>([]);
   const isLoading = ref(false);
-  const toaster = useToaster();
+  const toaster = useToasterStore();
 
   const fetchLinks = async (applicationId: string) => {
     try {
       isLoading.value = true;
-      const result = await call("link", "getByApplication", { applicationId });
-      links.value = result || [];
+
+      const response = await api.applicationLinksControllerFindAll({ path: { applicationId } });
+      if (!response.response.ok) {
+        throw new Error("Erreur lors de la récupération des liens.");
+      }
+      links.value = response.data ?? [];
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la récupération des liens.");
       throw error;
@@ -22,12 +26,13 @@ export const useLinkStore = defineStore("linkStore", () => {
     }
   };
 
-  const createLink = async (applicationId: string, link: Omit<ExternalRessource, "id">) => {
+  const createLink = async (applicationId: string, link: Omit<CreateLinkDto, "id">) => {
     try {
-      const newLink = await call("link", "create", {
-        ...link,
-        applicationId,
-      });
+      const response = await api.applicationLinksControllerCreate({ path: { applicationId }, body: link });
+      if (!response.response.ok || !response.data) {
+        throw new Error("Erreur lors de la création du lien.");
+      }
+      const newLink = response.data;
       links.value.push(newLink);
       toaster.addSuccessMessage("Lien créé avec succès !");
       return newLink;
@@ -37,13 +42,13 @@ export const useLinkStore = defineStore("linkStore", () => {
     }
   };
 
-  const updateLink = async (applicationId: string, link: ExternalRessource) => {
+  const updateLink = async (applicationId: string, link: UpdateLinkDto & { id: string }) => {
     try {
-      const updated = await call("link", "update", {
-        ...link,
-        applicationId,
-        linkId: link.id,
-      });
+      const response = await api.applicationLinksControllerUpdate({ path: { applicationId, id: link.id }, body: link });
+      if (!response.response.ok || !response.data) {
+        throw new Error("Erreur lors de la modification du lien.");
+      }
+      const updated = response.data;
       const index = links.value.findIndex(l => l.id === link.id);
       if (index !== -1) links.value[index] = updated;
       toaster.addSuccessMessage("Lien modifié avec succès !");
@@ -56,7 +61,14 @@ export const useLinkStore = defineStore("linkStore", () => {
 
   const deleteLinks = async (applicationId: string, linkIds: string[]) => {
     try {
-      await Promise.all(linkIds.map(linkId => call("link", "delete", { applicationId, linkId })));
+      if (linkIds.length === 0) {
+        toaster.addErrorMessage("Aucun lien sélectionné pour la suppression.");
+        return;
+      }
+
+      await Promise.all(linkIds.map(linkId =>
+        api.applicationLinksControllerDelete({ path: { applicationId, id: linkId } }),
+      ));
       links.value = links.value.filter(l => !linkIds.includes(l.id));
       toaster.addSuccessMessage("Liens supprimés avec succès !");
     } catch (error) {

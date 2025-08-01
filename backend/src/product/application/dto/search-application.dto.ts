@@ -14,6 +14,14 @@ import { Transform, Type } from "class-transformer";
 
 export class ApplicationSearchDto {
   @ApiPropertyOptional({
+    description: "Recherche plein texte sur tous les champs",
+    example: "Mon Application",
+    type: "string",
+    required: false,
+  })
+  search?: string;
+
+  @ApiPropertyOptional({
     description: "Recherche par label",
     example: "Mon Application",
   })
@@ -143,15 +151,11 @@ export class ApplicationSearchDto {
 
   @ApiPropertyOptional({
     description: "Colonnes à inclure dans l'export",
-    example: "[\"id\", \"label\", \"shortName\", \"description\"]",
-    type: "array",
-    items: {
-      type: "string",
-    },
+    example: "id,label,shortName,description",
+    type: "string",
   })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
+  @IsString()
   @Transform(({ value }) => {
     if (typeof value === "string") {
       // Try to parse if it's a JSON string
@@ -163,7 +167,7 @@ export class ApplicationSearchDto {
         return value.split(",").map(v => v.trim());
       }
     }
-    return Array.isArray(value) ? value : [value];
+    return Array.isArray(value) ? value : [value] as string[];
   })
-  columns?: string[];
+  columns?: string;
 }

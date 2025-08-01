@@ -1,8 +1,7 @@
 <script lang="ts" setup>
-import type { Message } from "../composables/use-toaster";
+import type { Message } from "../stores/toasterStore";
 
 defineProps<{ messages: Message[] }>();
-
 const emit = defineEmits<{
   closeMessage: [id: string]
 }>();

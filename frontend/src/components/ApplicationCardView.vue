@@ -10,7 +10,7 @@ const statsStore = useStatisticsStore();
 const paginatedResults = computed(() => searchStore.results);
 
 const pages = computed(() => {
-  const totalPages = Math.ceil(searchStore.total / searchStore.limit);
+  const totalPages = Math.ceil(searchStore.total / (searchStore.limit ?? searchStore.initialFilters.limit));
   return Array.from({ length: totalPages }).map((_, i) => ({
     label: `${i + 1}`,
     title: `Page ${i + 1}`,
@@ -38,10 +38,10 @@ watch([() => searchStore.page, () => searchStore.limit], () => {
     </div>
 
     <PaginationFooter
-      :total-filtered="searchStore.total"
-      :total-all="statsStore.totalApplications"
+      :total-filtered="searchStore.total ?? 0"
+      :total-all="statsStore.totalApplications ?? 0"
       :pages="pages"
-      :limit="searchStore.limit"
+      :limit="searchStore.limit ?? 0"
       :page="searchStore.page"
       @update:limit="searchStore.limit = $event"
       @update:page="searchStore.page = $event"

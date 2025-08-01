@@ -8,8 +8,10 @@ import {
   Param,
   Query,
   Request,
+  HttpCode,
+  HttpStatus,
 } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { AnomalyNotificationService } from "./anomaly-notification.service";
 import {
   CreateAnomalyNotificationDto,
@@ -40,6 +42,11 @@ export class ApplicationAnomalyNotificationsController {
   @ApiOperation({
     summary: "Demande de modification pour une fiche application",
   })
+  @ApiCreatedResponse({
+    description: "Notification d'anomalie créée avec succès",
+    type: GetAnomalyNotificationDto,
+  })
+  @HttpCode(HttpStatus.CREATED)
   async create(
     @Request() req,
     @Body() requestData: CreateAnomalyNotificationRequestDto,
@@ -57,7 +64,15 @@ export class ApplicationAnomalyNotificationsController {
    * @returns La liste de toutes les notifications d'anomalie.
    */
   @Get()
-  @ApiResponse({ status: 200 })
+  @ApiOperation({
+    summary: "Récupérer toutes les notifications d'anomalies",
+    description: "Renvoie la liste de toutes les notifications d'anomalies.",
+  })
+  @ApiOkResponse({
+    description: "Liste des notifications d'anomalies",
+    type: GetAnomalyNotificationDto,
+    isArray: true,
+  })
   findAll(@Query() filters: FiltersDto) {
     return this.service.findAll(filters);
   }
@@ -73,15 +88,16 @@ export class ApplicationAnomalyNotificationsController {
     summary:
       "Récupérer les notifications de signalements pour l'utilisateur actuellement connecté",
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: "Liste des notifications de signalements retournée.",
+    type: GetAnomalyNotificationDto,
+    isArray: true,
   })
   @Get("user-notifications")
   async findByCurrentUser(
     @Request() req,
   ): Promise<GetAnomalyNotificationDto[]> {
-    return await this.service.findAll({ notifierId: req.user.keycloakId });
+    return this.service.findAll({ notifierId: req.user.keycloakId });
   }
 
   /**
@@ -92,6 +108,10 @@ export class ApplicationAnomalyNotificationsController {
    */
   @Get(":id")
   @ApiOperation({ summary: "Récupérer une notification spécifique par ID" })
+  @ApiOkResponse({
+    type: GetAnomalyNotificationDto,
+    description: "Notification trouvée avec succès",
+  })
   findOne(@Param("id") id: string) {
     return this.service.findOne(id);
   }
@@ -105,6 +125,10 @@ export class ApplicationAnomalyNotificationsController {
    */
   @Patch(":id")
   @ApiOperation({ summary: "Mettre à jour une notification" })
+  @ApiOkResponse({
+    description: "Notification mise à jour avec succès",
+    type: GetAnomalyNotificationDto,
+  })
   update(
     @Param("id") id: string,
     @Body() updateDto: UpdateAnomalyNotificationDto,
@@ -121,6 +145,10 @@ export class ApplicationAnomalyNotificationsController {
    */
   @Delete(":id")
   @ApiOperation({ summary: "Supprimer une notification" })
+  @ApiNoContentResponse({
+    description: "Notification supprimée avec succès",
+  })
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param("id") id: string) {
     return this.service.delete(id);
   }

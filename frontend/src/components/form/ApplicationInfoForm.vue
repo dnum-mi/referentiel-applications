@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
@@ -9,7 +9,7 @@ defineProps<{ isSubmitting?: boolean }>();
 
 const emit = defineEmits(["create:application", "submit", "cancel"]);
 
-const toaster = useToaster();
+const toaster = useToasterStore();
 
 const statusOptions = computed(() =>
   Object.keys(statusApplicationDictionary).map(value => ({
