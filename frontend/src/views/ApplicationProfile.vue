@@ -19,8 +19,10 @@ const errorMessage = ref("");
 
 async function handleApplicationUpdate(updateData: Application) {
   applicationUpdated.value = updateData;
+    if (application.value.myPerms.has("readMetadata")) {
   await metadataStore.getFirstAndLastMetadataByApplication(updateData.id);
-}
+    }
+  }
 
 async function loadApplication() {
   isLoading.value = true;
