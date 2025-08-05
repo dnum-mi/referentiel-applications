@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.33.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.32.0...v1.33.0) (2025-08-05)
+
+
+### Features
+
+* ✨ add application permissions model and guard for permission checks ([#893](https://github.com/dnum-mi/referentiel-applications/issues/893)) ([c2a823d](https://github.com/dnum-mi/referentiel-applications/commit/c2a823dc2be2be2312f8d5afa3a2827e663c4759))
+* implement admin level system for user permissions ([f31cec3](https://github.com/dnum-mi/referentiel-applications/commit/f31cec3636226e28415790db13020dae01904151))
+
+
+### Bug Fixes
+
+* :bug: correct data indexing and label order in IQ chart ([96bcc19](https://github.com/dnum-mi/referentiel-applications/commit/96bcc1946a4e0ff6d317996776a1fd6094ee8d67))
+* :bug: monthly count logic ([42d82cf](https://github.com/dnum-mi/referentiel-applications/commit/42d82cfd9ef97749dac20d7bd37e0356d9caa898))
+* **front:** :art: add dictionnary labels in composables ([06bb433](https://github.com/dnum-mi/referentiel-applications/commit/06bb433707c8ec484b317ddfdb7fd1143ad16eec))
+* **front:** :bug: Add field compliance form ([d255f3c](https://github.com/dnum-mi/referentiel-applications/commit/d255f3c88e4dea72da3167ea8fc7cbbb6ed7f1c9))
+* **front:** :bug: fix extension of the filter bar ([3cddc44](https://github.com/dnum-mi/referentiel-applications/commit/3cddc447d1d381e9320bdb625398118c3675ea6d))
+* **front:** :bug: fix sidebar filters scroll ([f14c02f](https://github.com/dnum-mi/referentiel-applications/commit/f14c02f30b6e7947123d767045806f1a1e2681d2))
+* **metadata:** :bug: create metadata controller with get endpoints, store and fix history tab ([#913](https://github.com/dnum-mi/referentiel-applications/issues/913)) ([1eaad7b](https://github.com/dnum-mi/referentiel-applications/commit/1eaad7ba4c7d2407c77f72290463bc11c582ba6d))
+
 ## [1.32.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.31.0...v1.32.0) (2025-07-29)
 
 
