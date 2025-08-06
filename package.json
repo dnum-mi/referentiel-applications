@@ -1,7 +1,7 @@
 {
   "name": "referentiel-applications",
   "type": "module",
-  "version": "1.33.0",
+  "version": "1.33.1",
   "scripts": {
     "format": "eslint . --fix",
     "lint": "eslint .",
