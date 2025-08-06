@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import type { Application } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import { useComplianceStore } from "@/stores/complianceStore";
 import ComplianceForm from "./ComplianceForm.vue";
 import { testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
@@ -8,7 +8,7 @@ import { formatDateFR } from "@/composables/use-date";
 import { filterEmpty } from "@/composables/use-filter-watcher";
 
 // Props
-const props = defineProps<{ application: Application }>();
+const props = defineProps<{ application: ApplicationWithPerms }>();
 const applicationId = props.application.id;
 
 // Store
@@ -229,6 +229,7 @@ function closeModal() {
       <!-- Formulaire dès qu'un type est choisi -->
       <ComplianceForm
         v-if="selectedType"
+        :application="application"
         :opened="showModal"
         :application-id="applicationId"
         :type="selectedType"

@@ -11,7 +11,9 @@ const props = defineProps<{
   application: ApplicationWithPerms
 }>();
 
-const emit = defineEmits(["update:application"]);
+const emit = defineEmits<{
+  "update:application": [value: ApplicationWithPerms]
+}>();
 
 const toaster = useToaster();
 
