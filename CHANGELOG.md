@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.33.0...v1.33.1) (2025-08-06)
+
+
+### Bug Fixes
+
+* :bug: wrong perms system ([573a492](https://github.com/dnum-mi/referentiel-applications/commit/573a492c71e21afc13c71b33d3f99bdf089c9111))
+
 ## [1.33.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.32.0...v1.33.0) (2025-08-05)
 
 
