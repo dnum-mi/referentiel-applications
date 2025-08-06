@@ -4,6 +4,7 @@ import { useComplianceStore } from "@/stores/complianceStore";
 import { durationHoursOptions, testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
+import { AdminLevel } from "@/models/user.ts";
 
 const props = defineProps<{
   applicationId: string
@@ -26,8 +27,7 @@ const submitting = ref(false);
 
 const canEdit = computed(
   () =>
-    userStore.userPermissions?.includes("write")
-    || userStore.userPermissions?.includes("admin")
+    userStore.adminLevel >= AdminLevel.WRITE
     || props.application.myPerms.has("writeCompliances"),
 );
 
