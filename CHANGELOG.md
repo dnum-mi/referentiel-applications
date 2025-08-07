@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.33.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.33.1...v1.33.2) (2025-08-07)
+
+
+### Bug Fixes
+
+* :bug: remove admin guard from stats controller ([1b48f25](https://github.com/dnum-mi/referentiel-applications/commit/1b48f25d746b6f756f3b303b39d841aa56d3a54a))
+
 ## [1.33.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.33.0...v1.33.1) (2025-08-06)
 
 
