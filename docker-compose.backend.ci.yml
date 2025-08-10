@@ -1,7 +1,7 @@
 services:
   backend:
     volumes:
-      - ./coverage:/app/coverage
+      - ./backend/coverage:/app/coverage
 
   postgres:
     healthcheck:

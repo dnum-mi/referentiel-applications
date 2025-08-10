@@ -115,7 +115,8 @@
     "coverageDirectory": "./coverage",
     "coverageReporters": [
       "text",
-      "cobertura"
+      "cobertura",
+      "lcov"
     ],
     "testEnvironment": "node",
     "moduleDirectories": [

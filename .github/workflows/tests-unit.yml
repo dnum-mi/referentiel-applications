@@ -1,0 +1,86 @@
+name: Test and scan
+
+on:
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: false
+      SONAR_HOST_URL:
+        required: false
+
+jobs:
+  test-backend:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start stack using docker compose
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml up keycloak postgres -d
+      - name: Wait for Keycloak to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then
+              echo "Keycloak is ready"
+              exit 0
+            fi
+            echo "Waiting for Keycloak..."
+            sleep 5
+          done
+          echo "Keycloak did not become ready in time"
+          exit 1
+      - name: Run db:deploy
+        run: |
+          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run db:deploy
+      - name: Run test coverage
+        run: |
+          mkdir -p backend/coverage # create before to avoid permission issues
+          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run test:cov
+      # - name: Fix relative paths in coverage report
+      #   run: |
+      #     sed -i 's|<source>/app</source>|<source>backend</source>|g' backend/coverage/lcov.info
+      - name: Produce the coverage report
+        uses: insightsengineering/coverage-action@v2
+        with:
+          coverage-summary-title: Backend Coverage Summary
+          path: ./backend/coverage/cobertura-coverage.xml
+          publish: true
+          # threshold: 80
+          diff-storage: _xml_coverage_reports_backend
+      - name: Upload vitest coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-tests-coverage
+          path: |
+            ./backend/coverage/
+          retention-days: 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.15.9
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+      - name: Generate backend database schema
+        run: cd backend && pnpm install --frozen-lockfile && pnpm db:generate
+      - name: Generate frontend API schema
+        run: cd frontend && pnpm install --frozen-lockfile && pnpm api:generate
+      - uses: SonarSource/sonarqube-scan-action@v5
+        with:
+          args: >
+            -Dsonar.javascript.lcov.reportPaths=./backend/coverage/lcov.info
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      # If you wish to fail your job when the Quality Gate is red, uncomment the
+      # following lines. This would typically be used to fail a deployment.
+      # We do not recommend to use this in a pull request. Prefer using pull request
+      # decoration instead.
+      # - uses: SonarSource/sonarqube-quality-gate-action@v1
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

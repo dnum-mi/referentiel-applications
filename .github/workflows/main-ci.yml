@@ -39,99 +39,19 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm run lint
 
-  test-backend:
-    name: Test Backend
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Start stack using docker compose
-        run: |
-          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml up keycloak postgres -d
-      - name: Wait for Keycloak to be ready
-        run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then
-              echo "Keycloak is ready"
-              exit 0
-            fi
-            echo "Waiting for Keycloak..."
-            sleep 5
-          done
-          echo "Keycloak did not become ready in time"
-          exit 1
-      - name: Run db:deploy
-        run:
-          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run db:deploy
-      - name: Run test coverage
-        run:
-          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run test:cov
-      - name: Produce the coverage report
-        uses: insightsengineering/coverage-action@v2
-        with:
-          coverage-summary-title: Backend Coverage Summary
-          path: ./coverage/cobertura-coverage.xml
-          publish: true
-          # threshold: 80
-          diff-storage: _xml_coverage_reports_backend
+  unit-tests:
+    name: Unit Tests
+    uses: ./.github/workflows/tests-unit.yml
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-  test-e2e-frontend:
-    name: Test E2E Frontend
-    needs: [build-frontend, build-backend]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Start stack using docker compose
-        run: |
-          echo "BACK_IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }}" >> .env
-          echo "FRONT_IMAGE_TAG=${{ needs.build-frontend.outputs.image_tag }}" >> .env
-          cat .env
-          . .env
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml up client backend postgres keycloak -d
-      - name: setup pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 9.15.9
-      - name: Wait for Keycloak to be ready
-        run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then
-              echo "Keycloak is ready"
-              exit 0
-            fi
-            echo "Waiting for Keycloak..."
-            sleep 5
-          done
-          echo "Keycloak did not become ready in time"
-          exit 1
-
-      - name: Wait for Frontend to be ready
-        run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:8080; then
-              echo "Frontend is ready"
-              exit 0
-            fi
-            echo "Waiting for Frontend..."
-            sleep 5
-          done
-          echo "Frontend did not become ready in time"
-          exit 1
-
-      - name: Run E2E tests with cypress
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: ./frontend
-          command: pnpm run cy:run
-          install-command: pnpm install --frozen-lockfile
-      - name: Send artifacts
-        uses: actions/upload-artifact@v4
-        if: ${{ failure() }}
-        with:
-          name: crypress-screenshots
-          path: ./frontend/cypress/screenshots/
+  e2e-tests:
+    name: E2E Tests
+    uses: ./.github/workflows/tests-e2e.yml
+    needs:
+      - build-frontend
+      - build-backend
+    with:
+      BACKEND_IMAGE_TAG: ${{ needs.build-backend.outputs.image_tag }}
+      FRONTEND_IMAGE_TAG: ${{ needs.build-frontend.outputs.image_tag }}
