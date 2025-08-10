@@ -2,6 +2,7 @@
   "name": "referentiel-applications",
   "type": "module",
   "version": "1.33.2",
+  "packageManager": "pnpm@10.14.0",
   "scripts": {
     "format": "eslint . --fix",
     "lint": "eslint .",
