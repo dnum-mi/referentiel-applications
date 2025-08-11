@@ -28,7 +28,7 @@ jobs:
       - name: setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9.15.9
+          version: 10.14.0
       - name: Wait for Keycloak to be ready
         run: |
           for i in {1..30}; do

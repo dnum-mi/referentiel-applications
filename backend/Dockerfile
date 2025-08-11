@@ -4,7 +4,7 @@ WORKDIR /app
 ENV PORT=3500
 
 RUN apt-get update -y && apt-get install -y openssl jq libssl-dev procps
-RUN npm install --ignore-scripts --location=global pnpm@9.15.9
+RUN npm install --ignore-scripts --location=global pnpm@10.14.0
 
 COPY package.json pnpm-lock.yaml ./
 
