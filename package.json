@@ -7,7 +7,12 @@
     "format": "eslint . --fix",
     "lint": "eslint .",
     "prepare": "husky",
-    "commitlint": "commitlint --edit"
+    "commitlint": "commitlint --edit",
+    "up": "docker compose up --build",
+    "down": "docker compose down -v",
+    "generate": "cd backend && pnpm db:generate && cd ../frontend && pnpm api:generate",
+    "docker:init": "docker compose exec backend pnpm db:init && docker compose restart backend && docker compose exec client pnpm api:generate",
+    "npm:install": "pnpm install && cd backend && pnpm install && cd ../frontend && pnpm install"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.0",

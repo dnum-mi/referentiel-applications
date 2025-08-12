@@ -13,7 +13,10 @@ RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
 
 FROM base AS dev
 RUN pnpm install
-COPY . .
+COPY *.json *.yaml *ts ./
+COPY src/ src/
+COPY tests/ tests/
+COPY prisma/ prisma/
 RUN pnpm db:generate
 EXPOSE 3500
 CMD [ "pnpm", "start:dev" ]
