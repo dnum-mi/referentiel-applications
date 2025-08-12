@@ -29,6 +29,8 @@ jobs:
         uses: pnpm/action-setup@v3
         with:
           version: 10.14.0
+          run_install: |
+            - args: [--frozen-lockfile]
       - name: Wait for Keycloak to be ready
         run: |
           for i in {1..30}; do
@@ -59,8 +61,9 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           working-directory: ./frontend
-          command: pnpm run cy:run
-          install-command: pnpm install
+          command: pnpm --filter client run cy:run
+        env:
+          CYPRESS_INSTALL_BINARY: 1
       - name: Send artifacts
         uses: actions/upload-artifact@v4
         if: ${{ failure() }}

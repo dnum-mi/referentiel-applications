@@ -6,7 +6,7 @@ on:
       image:
         required: true
         type: string
-      context:
+      Dockerfile:
         required: true
         type: string
       target:
@@ -43,7 +43,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ${{ inputs.context }}
+          file: ${{ inputs.Dockerfile }}
           push: true
           pull: true
           tags: ${{ steps.meta.outputs.tags }}

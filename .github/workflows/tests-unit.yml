@@ -20,6 +20,14 @@ jobs:
       - name: Start stack using docker compose
         run: |
           docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml up keycloak postgres -d
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.14.0
+          run_install: |
+            - args: [--frozen-lockfile]
+
       - name: Wait for Keycloak to be ready
         run: |
           for i in {1..30}; do
@@ -34,11 +42,11 @@ jobs:
           exit 1
       - name: Run db:deploy
         run: |
-          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run db:deploy
+          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend db:deploy
       - name: Run test coverage
         run: |
           mkdir -p backend/coverage # create before to avoid permission issues
-          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run test:cov
+          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend test:cov
       - name: Produce the coverage report
         uses: insightsengineering/coverage-action@v2
         with:
@@ -54,14 +62,6 @@ jobs:
           path: |
             ./backend/coverage/
           retention-days: 1
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 10.14.0
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
       - name: Generate backend database schema
         run: cd backend && pnpm install --frozen-lockfile && pnpm db:generate
       - name: Generate frontend API schema

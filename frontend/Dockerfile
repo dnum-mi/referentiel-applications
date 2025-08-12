@@ -5,33 +5,30 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y jq
 RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
 
-RUN npm install -g pnpm
+RUN npm install --ignore-scripts --location=global pnpm@10.14.0
 
 # Copy necessary files
-COPY package.json pnpm-lock.yaml ./
-
-FROM base AS dev
-RUN pnpm install
-CMD ["npm" , "run" , "dev"]
+COPY ./package.json ./pnpm-lock.yaml ./pnpm-workspace.yaml ./
+COPY ./frontend/package.json ./frontend/package.json
+RUN pnpm install --frozen-lockfile
 
 
 FROM base AS build
 RUN pnpm install --frozen-lockfile --ignore-scripts
-COPY . .
+COPY ./frontend/ ./frontend
 
-RUN npm run api:generate
+RUN pnpm --filter client run api:generate
 # Temporary disable type checking
-RUN npm run build-only
-CMD ["pnpm" , "dev"]
+RUN pnpm --filter client run build-only
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
 
 USER 0
 
-COPY --chown=1001:1001 --chmod=664 nginx.conf /etc/nginx/nginx.conf
-COPY --chown=1001:1001 --chmod=777 --from=build /app/dist /usr/share/nginx/html/
+COPY --chown=1001:1001 --chmod=664 ./frontend/nginx.conf /etc/nginx/nginx.conf
+COPY --chown=1001:1001 --chmod=777 --from=build /app/frontend/dist /usr/share/nginx/html/
 
-COPY --chown=1001:1001 --chmod=775 entrypoint.sh /docker-entrypoint.d/entrypoint.sh
+COPY --chown=1001:1001 --chmod=775 ./frontend/entrypoint.sh /docker-entrypoint.d/entrypoint.sh
 
 USER 1001
 

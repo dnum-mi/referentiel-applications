@@ -16,7 +16,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/dnum-mi/referentiel-applications/backend
-      context: ./backend
+      Dockerfile: ./backend/Dockerfile
       target: prod
 
   build-frontend:
@@ -24,7 +24,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/dnum-mi/referentiel-applications/frontend
-      context: ./frontend
+      Dockerfile: ./frontend/Dockerfile
       target: prod
 
   test-lint:
