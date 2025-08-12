@@ -1,0 +1,3581 @@
+openapi: 3.0.0
+paths:
+  /api/v2:
+    get:
+      operationId: AppController_getHello
+      summary: Get application greeting
+      description: Returns a simple greeting message from the application.
+      parameters: []
+      responses:
+        "200":
+          description: Returns a greeting message.
+          content:
+            application/json:
+              schema:
+                type: string
+  /api/v2/applications/{applicationId}/relations:
+    post:
+      operationId: RelationController_create
+      summary: Créer une nouvelle relation
+      description: Permet de créer une relation entre deux applications.
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application SOURCE
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelationApplicationDto"
+      responses:
+        "201":
+          description: Relation créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationDto"
+      tags: &a1
+        - relation
+    get:
+      operationId: RelationController_findAll
+      summary: Récupérer toutes les relations d'une application
+      description: Renvoie la liste de toutes les relations d'une application donnée.
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application SOURCE
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des relations trouvées
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RelationDto"
+      tags: *a1
+  /api/v2/applications/{applicationId}/relations/{id}:
+    get:
+      operationId: RelationController_findOne
+      summary: Récupérer une relation par son identifiant unique
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Identifiant unique de la relation
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
+      responses:
+        "200":
+          description: Relation trouvée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationDto"
+      tags: *a1
+    patch:
+      operationId: RelationController_update
+      summary: Mettre à jour une relation
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Identifiant unique de la relation à mettre à jour
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application SOURCE
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelationApplicationDto"
+      responses:
+        "200":
+          description: Relation mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationDto"
+      tags: *a1
+    delete:
+      operationId: RelationController_delete
+      summary: Supprimer une relation
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Identifiant unique de la relation à supprimer
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application SOURCE
+          schema: {}
+      responses:
+        "204":
+          description: Relation supprimée avec succès
+      tags: *a1
+  /api/v2/applications/{applicationId}/metadatas:
+    get:
+      operationId: ApplicationMetadataController_findAll
+      summary: Récupérer toutes les metadatas d'une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des metadatas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetadataDto"
+      tags: &a2
+        - Metadatas
+  /api/v2/applications/{applicationId}/metadatas/first-last:
+    get:
+      operationId: ApplicationMetadataController_getFirstAndLastMetadata
+      summary: Retourne la première et la dernière metadata d'une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: La première et la dernière metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FirstLastMetadataDto"
+      tags: *a2
+  /api/v2/users/me:
+    get:
+      operationId: UserController_findMe
+      summary: Récupérer ses propres informations utilisateur
+      parameters: []
+      responses:
+        "200":
+          description: Informations utilisateur trouvées
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEntity"
+        "404":
+          description: Utilisateur non trouvé
+      tags: &a3
+        - users
+  /api/v2/users/{id}:
+    patch:
+      operationId: UserController_update
+      summary: Mettre à jour les permissions d'un utilisateur
+      description: Permet de modifier les permissions d'un utilisateur. Accès limité
+        aux administrateurs.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID Keycloak de l'utilisateur
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserDto"
+      responses:
+        "200":
+          description: Utilisateur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEntity"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a3
+  /api/v2/users:
+    get:
+      operationId: UserController_findAll
+      summary: Lister tous les utilisateurs
+      description: Récupère la liste de tous les utilisateurs avec leurs permissions.
+        Supporte la recherche par email et ID Keycloak. Accès limité aux
+        administrateurs.
+      parameters:
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserEntity"
+        "403":
+          description: Accès refusé - Privilège admin requis
+      tags: *a3
+  /api/v2/applications:
+    post:
+      operationId: ApplicationController_create
+      summary: Créer une nouvelle application
+      description: "
+
+        **Ce endpoint permet de créer une application complète.**
+
+
+        Vous devez fournir les informations suivantes :
+
+        - **label**: Le libellé de l'application.
+
+        - **shortName**: Le nom court de l'application.
+
+        - **logo**: L'URL du logo (peut être vide).
+
+        - **description**: Une description détaillée de l'application.
+
+        - **purposes**: Les domaines d'activité (ex: finance, HR, operations).
+
+        - **tags**: Des tags pour catégoriser l'application.
+
+        \  - **firstProductionDate**: Date de première mise en production.
+
+        \  - **plannedDecommissioningDate**: Date prévue de déclassement.
+
+        - **labels**: Les différents libellés alternatifs de l'application.
+
+        \  - **source**: La source du libelé.
+
+        \  - **value**: Le libellé alternatif.
+
+        - **compliances**: La liste des conformités associées avec :
+
+        \  - Champs spécifiques selon le type de conformité (DIMA, PDMA,
+        HOMOLOGATION, RGAA, DSFR, RGPD).
+
+        \    "
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateApplicationDto"
+      responses:
+        "201":
+          description: Application créée avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationDto"
+      tags: &a4
+        - applications
+    get:
+      operationId: ApplicationController_findAll
+      summary: Récupérer les applications
+      description: "
+
+        Ce endpoint permet de récupérer la liste de toutes les applications
+        existantes dans le système.
+
+
+        Aucun paramètre n'est requis pour accéder à cette liste.
+
+        \    "
+      parameters: []
+      responses:
+        "200":
+          description: Liste des applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApplicationDto"
+      tags: *a4
+  /api/v2/applications/count-by-status:
+    get:
+      operationId: ApplicationController_count
+      summary: Compte le nombre d'applications hors statut supprimé
+      parameters: []
+      responses:
+        "200":
+          description: Nombre d'applications actives
+          content:
+            application/json:
+              schema:
+                type: number
+      tags: *a4
+  /api/v2/applications/count-by-month:
+    get:
+      operationId: ApplicationController_countByMonth
+      summary: Liste le nombre d'applications sur les 6 derniers mois
+      parameters: []
+      responses:
+        "200":
+          description: Nombre d'applications par mois
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountByMonthDto"
+      tags: *a4
+  /api/v2/applications/count-by-iq:
+    get:
+      operationId: ApplicationController_countByIq
+      summary: Liste le nombre d'applications par indice de qualité (de 0% à 100%)
+      parameters: []
+      responses:
+        "200":
+          description: Nombre d'applications par indice de qualité
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountByIqDto"
+      tags: *a4
+  /api/v2/applications/search:
+    get:
+      operationId: ApplicationController_search
+      summary: Rechercher et filtrer les applications
+      description: >-
+        Endpoint unifié pour rechercher, filtrer et paginer les applications.
+              Supporte tous les types de filtres : label, shortName, tags, priorityRestart, hostingSearch, etc.
+              Inclut la pagination et le tri.
+      parameters:
+        - name: search
+          required: false
+          in: query
+          description: Recherche plein texte sur tous les champs
+          schema:
+            example: Mon Application
+            type: string
+        - name: label
+          required: false
+          in: query
+          description: Recherche par label
+          schema:
+            example: Mon Application
+            type: string
+        - name: shortName
+          required: false
+          in: query
+          description: Recherche par shortName
+          schema:
+            type: string
+        - name: tag
+          required: false
+          in: query
+          description: Filtrer par tags (un ou plusieurs)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: priorityRestart
+          required: false
+          in: query
+          description: Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)
+          schema:
+            example:
+              - R1
+              - R2
+            type: array
+            items:
+              type: string
+              enum:
+                - R0
+                - R1
+                - R1_STAR
+                - R2
+                - R3
+        - name: actorType
+          required: false
+          in: query
+          description: Type d'acteur. Utiliser les valeurs de /actorTypes
+          schema:
+            example: MOA
+            type: string
+        - name: status
+          required: false
+          in: query
+          description: Filtrer par un ou plusieurs status
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - under_construction
+                - in_production_mvp
+                - in_production
+                - in_production_decommissioning
+                - decommissioned
+                - deleted
+        - name: organizationLabel
+          required: false
+          in: query
+          description: Nom de l'organisation liée à l'application
+          schema:
+            example: Direction des systèmes d'information
+            type: string
+        - name: hostingSearch
+          required: false
+          in: query
+          description: Recherche unifiée sur tous les champs d'hébergement (site,
+            plateforme, fournisseur, bâtiment, salle)
+          schema:
+            example: Paris
+            type: string
+        - name: link
+          required: false
+          in: query
+          description: Recherche par lien (ressource externe)
+          schema:
+            type: string
+        - name: iqGte
+          required: false
+          in: query
+          description: Recherche par indice de qualité minimum
+          schema:
+            minimum: 0
+            default: 0
+            type: number
+        - name: iqLte
+          required: false
+          in: query
+          description: Recherche par indice de qualité maximum
+          schema:
+            maximum: 100
+            default: 100
+            type: number
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: Nombre de résultats par page
+          schema:
+            minimum: 1
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: columns
+          required: false
+          in: query
+          description: Colonnes à inclure dans l'export
+          schema:
+            example: id,label,shortName,description
+            type: string
+      responses:
+        "200":
+          description: Liste des applications correspondant aux critères de recherche avec
+            pagination.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationSearchResultDto"
+      tags: *a4
+  /api/v2/applications/{applicationId}/my-perms:
+    get:
+      operationId: ApplicationController_getMyPerms
+      summary: Lister les droits de l'utilisateur sur l'application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Droits de l'utilisateur sur l'application
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - readBase
+                    - writeCompliances
+                    - readRelations
+                    - writeRelations
+                    - readActors
+                    - writeActors
+                    - readCompliances
+                    - writeBase
+                    - readHostings
+                    - writeHostings
+                    - readLinks
+                    - writeLinks
+                    - readMetadata
+                    - writeMetadata
+      tags: *a4
+  /api/v2/applications/export/excel:
+    get:
+      operationId: ApplicationController_exportExcel
+      summary: Exporter les applications en Excel
+      description: >-
+        Permet d'exporter les applications en un fichier Excel.
+              Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
+              Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+              Accès limité aux utilisateurs avec privilège admin.
+      parameters:
+        - name: search
+          required: false
+          in: query
+          description: Recherche plein texte sur tous les champs
+          schema:
+            example: Mon Application
+            type: string
+        - name: label
+          required: false
+          in: query
+          description: Recherche par label
+          schema:
+            example: Mon Application
+            type: string
+        - name: shortName
+          required: false
+          in: query
+          description: Recherche par shortName
+          schema:
+            type: string
+        - name: tag
+          required: false
+          in: query
+          description: Filtrer par tags (un ou plusieurs)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: priorityRestart
+          required: false
+          in: query
+          description: Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)
+          schema:
+            example:
+              - R1
+              - R2
+            type: array
+            items:
+              type: string
+              enum:
+                - R0
+                - R1
+                - R1_STAR
+                - R2
+                - R3
+        - name: actorType
+          required: false
+          in: query
+          description: Type d'acteur. Utiliser les valeurs de /actorTypes
+          schema:
+            example: MOA
+            type: string
+        - name: status
+          required: false
+          in: query
+          description: Filtrer par un ou plusieurs status
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - under_construction
+                - in_production_mvp
+                - in_production
+                - in_production_decommissioning
+                - decommissioned
+                - deleted
+        - name: organizationLabel
+          required: false
+          in: query
+          description: Nom de l'organisation liée à l'application
+          schema:
+            example: Direction des systèmes d'information
+            type: string
+        - name: hostingSearch
+          required: false
+          in: query
+          description: Recherche unifiée sur tous les champs d'hébergement (site,
+            plateforme, fournisseur, bâtiment, salle)
+          schema:
+            example: Paris
+            type: string
+        - name: link
+          required: false
+          in: query
+          description: Recherche par lien (ressource externe)
+          schema:
+            type: string
+        - name: iqGte
+          required: false
+          in: query
+          description: Recherche par indice de qualité minimum
+          schema:
+            minimum: 0
+            default: 0
+            type: number
+        - name: iqLte
+          required: false
+          in: query
+          description: Recherche par indice de qualité maximum
+          schema:
+            maximum: 100
+            default: 100
+            type: number
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: Nombre de résultats par page
+          schema:
+            minimum: 1
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: columns
+          required: false
+          in: query
+          description: Colonnes à inclure dans l'export
+          schema:
+            example: id,label,shortName,description
+            type: string
+      responses:
+        "200":
+          description: Export Excel des applications
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Accès refusé - Privilège admin requis
+      tags: *a4
+  /api/v2/applications/export:
+    get:
+      operationId: ApplicationController_exportCsv
+      summary: Exporter les applications en CSV
+      description: >-
+        Permet d'exporter les applications en un fichier CSV.
+              Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
+              Si aucun filtre n'est appliqué, toutes les applications sont exportées.
+              Cette nouvelle version utilise une vue optimisée qui inclut tous les acteurs, conformités et hébergements.
+              Accès limité aux utilisateurs avec privilège admin.
+      parameters:
+        - name: search
+          required: false
+          in: query
+          description: Recherche plein texte sur tous les champs
+          schema:
+            example: Mon Application
+            type: string
+        - name: label
+          required: false
+          in: query
+          description: Recherche par label
+          schema:
+            example: Mon Application
+            type: string
+        - name: shortName
+          required: false
+          in: query
+          description: Recherche par shortName
+          schema:
+            type: string
+        - name: tag
+          required: false
+          in: query
+          description: Filtrer par tags (un ou plusieurs)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: priorityRestart
+          required: false
+          in: query
+          description: Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)
+          schema:
+            example:
+              - R1
+              - R2
+            type: array
+            items:
+              type: string
+              enum:
+                - R0
+                - R1
+                - R1_STAR
+                - R2
+                - R3
+        - name: actorType
+          required: false
+          in: query
+          description: Type d'acteur. Utiliser les valeurs de /actorTypes
+          schema:
+            example: MOA
+            type: string
+        - name: status
+          required: false
+          in: query
+          description: Filtrer par un ou plusieurs status
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - under_construction
+                - in_production_mvp
+                - in_production
+                - in_production_decommissioning
+                - decommissioned
+                - deleted
+        - name: organizationLabel
+          required: false
+          in: query
+          description: Nom de l'organisation liée à l'application
+          schema:
+            example: Direction des systèmes d'information
+            type: string
+        - name: hostingSearch
+          required: false
+          in: query
+          description: Recherche unifiée sur tous les champs d'hébergement (site,
+            plateforme, fournisseur, bâtiment, salle)
+          schema:
+            example: Paris
+            type: string
+        - name: link
+          required: false
+          in: query
+          description: Recherche par lien (ressource externe)
+          schema:
+            type: string
+        - name: iqGte
+          required: false
+          in: query
+          description: Recherche par indice de qualité minimum
+          schema:
+            minimum: 0
+            default: 0
+            type: number
+        - name: iqLte
+          required: false
+          in: query
+          description: Recherche par indice de qualité maximum
+          schema:
+            maximum: 100
+            default: 100
+            type: number
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: limit
+          required: false
+          in: query
+          description: Nombre de résultats par page
+          schema:
+            minimum: 1
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: columns
+          required: false
+          in: query
+          description: Colonnes à inclure dans l'export
+          schema:
+            example: id,label,shortName,description
+            type: string
+      responses:
+        "200":
+          description: Export CSV détaillé des applications
+          content:
+            application/json:
+              schema:
+                type: string
+      tags: *a4
+  /api/v2/applications/{applicationId}:
+    get:
+      operationId: ApplicationController_findOne
+      summary: Récupérer une application spécifique par ID
+      description: "
+
+        Ce endpoint permet de récupérer les détails complets d'une application
+        en fonction de son identifiant unique.
+
+
+        Le paramètre **id** doit être fourni dans l'URL.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Application trouvée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationDto"
+      tags: *a4
+    patch:
+      operationId: ApplicationController_update
+      summary: Mettre à jour une application
+      description: " Ce endpoint permet de mettre à jour une application existante.\ 
+
+        \    Vous devez fournir l'identifiant de l'application dans l'URL et les
+        nouvelles données dans le corps de la requête. Les données de mise à
+        jour doivent correspondre aux champs.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchApplicationDto"
+      responses:
+        "200":
+          description: Application mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationDto"
+      tags: *a4
+    delete:
+      operationId: ApplicationController_remove
+      summary: Supprimer une application
+      description: Supprime une application par son ID.
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Application supprimée avec succès.
+        "404":
+          description: Application non trouvée.
+      tags: *a4
+  /api/v2/applications/data-quality/update:
+    get:
+      operationId: ApplicationController_updateAllApplicationsQuality
+      summary: Mettre à jour l'indice de qualité de toutes les applications
+      description: " Ce endpoint permet de mettre à jour l'indice de qualité des
+        applications existantes.
+
+        \    Seulement accessible par les administrateurs.
+
+        \    "
+      parameters: []
+      responses:
+        "202":
+          description: Mise à jour des indices de qualité en cours...
+          content:
+            application/json:
+              schema:
+                type: string
+        "403":
+          description: Accès refusé - Privilège admin requis
+      tags: *a4
+  /api/v2/applications/{applicationId}/labels:
+    post:
+      operationId: LabelsController_create
+      summary: Créer un nouveau label
+      description: "
+
+        **Ce endpoint permet de créer un label complet.**
+
+
+        Vous devez fournir les informations suivantes :
+
+        - **source**: La source de l'application (peut être vide).
+
+        - **value**: Le libellé de l'application.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLabelDto"
+      responses:
+        "201":
+          description: Label créé avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelDto"
+      tags: &a5
+        - Labels
+    get:
+      operationId: LabelsController_findAllSorted
+      summary: Récupérer les labels par ID d'application
+      description: "
+
+        Ce endpoint permet de récupérer la liste de tous les labels d'une
+        application en fonction de son identifiant unique.
+
+
+        Le paramètre **applicationId** doit être fourni dans l'URL.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des labels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LabelDto"
+      tags: *a5
+  /api/v2/applications/{applicationId}/labels/{id}:
+    patch:
+      operationId: LabelsController_update
+      summary: Mettre à jour un label existant
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID du label
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLabelDto"
+      responses:
+        "200":
+          description: Label mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelDto"
+      tags: *a5
+    delete:
+      operationId: LabelsController_delete
+      summary: Supprimer un label
+      description: " Ce endpoint permet de supprimer un label existant.\ 
+
+        \    Vous devez fournir l'identifiant du label dans l'URL.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Label supprimé avec succès
+      tags: *a5
+  /api/v2/applications/{applicationId}/hostings:
+    post:
+      operationId: ApplicationHostingsController_create
+      summary: Créer un hébergement pour une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHostingDto"
+      responses:
+        "201":
+          description: Hébergement créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingDto"
+      tags: &a6
+        - Hostings
+    get:
+      operationId: ApplicationHostingsController_findAll
+      summary: Récupérer tous les hébergements d'une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des hébergements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HostingDto"
+      tags: *a6
+  /api/v2/applications/{applicationId}/hostings/{id}:
+    get:
+      operationId: ApplicationHostingsController_findOne
+      summary: Récupérer un hébergement par ID pour une application
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
+      responses:
+        "200":
+          description: Hébergement trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingDto"
+      tags: *a6
+    patch:
+      operationId: ApplicationHostingsController_update
+      summary: Mettre à jour un hébergement pour une application
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHostingDto"
+      responses:
+        "200":
+          description: Hébergement mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingDto"
+      tags: *a6
+    delete:
+      operationId: ApplicationHostingsController_remove
+      summary: Supprimer un hébergement pour une application
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
+      responses:
+        "204":
+          description: Hébergement supprimé
+      tags: *a6
+  /api/v2/sites:
+    get:
+      operationId: SitesController_findDistinctSites
+      summary: Liste des sites distincts existants
+      parameters: []
+      responses:
+        "200":
+          description: Liste des sites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      tags:
+        - Sites
+  /api/v2/hostings/count:
+    get:
+      operationId: HostingController_countAllHostings
+      summary: Récupérer le nombre total d'hébergements (toutes applications)
+      parameters: []
+      responses:
+        "200":
+          description: Nombre total d'hébergements
+          content:
+            application/json:
+              schema:
+                type: number
+      tags:
+        - Hostings
+  /api/v2/anomaly-notifications:
+    post:
+      operationId: ApplicationAnomalyNotificationsController_create
+      summary: Demande de modification pour une fiche application
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAnomalyNotificationRequestDto"
+      responses:
+        "201":
+          description: Notification d'anomalie créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags: &a7
+        - Notifications
+    get:
+      operationId: ApplicationAnomalyNotificationsController_findAll
+      summary: Récupérer toutes les notifications d'anomalies
+      description: Renvoie la liste de toutes les notifications d'anomalies.
+      parameters:
+        - name: userId
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: applicationId
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des notifications d'anomalies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags: *a7
+  /api/v2/anomaly-notifications/user-notifications:
+    get:
+      operationId: ApplicationAnomalyNotificationsController_findByCurrentUser
+      summary: Récupérer les notifications de signalements pour l'utilisateur
+        actuellement connecté
+      parameters: []
+      responses:
+        "200":
+          description: Liste des notifications de signalements retournée.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags: *a7
+  /api/v2/anomaly-notifications/{id}:
+    get:
+      operationId: ApplicationAnomalyNotificationsController_findOne
+      summary: Récupérer une notification spécifique par ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification trouvée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags: *a7
+    patch:
+      operationId: ApplicationAnomalyNotificationsController_update
+      summary: Mettre à jour une notification
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAnomalyNotificationDto"
+      responses:
+        "200":
+          description: Notification mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags: *a7
+    delete:
+      operationId: ApplicationAnomalyNotificationsController_remove
+      summary: Supprimer une notification
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Notification supprimée avec succès
+      tags: *a7
+  /api/v2/health-check:
+    get:
+      operationId: HealthCheckController_checkHealth
+      summary: Vérification de la santé de l'application
+      description: Exécute une requête basique vers la base de données pour vérifier
+        la connectivité et l'état global de l'application.
+      parameters: []
+      responses:
+        "200":
+          description: L'application fonctionne correctement.
+          content:
+            application/json:
+              schema:
+                example:
+                  status: ok
+        "500":
+          description: Le service n'est pas disponible en raison d'une erreur lors de la
+            connexion à la base de données.
+          content:
+            application/json:
+              schema:
+                example:
+                  status: error
+                  message: Détail de l'erreur
+      tags:
+        - Health Check
+  /api/v2/stats/iq-avg/period:
+    get:
+      operationId: StatsController_getIqAvgGrouped
+      summary: Récupérer la moyenne des IQ par période
+      description: "
+
+        Permet de récupérer la moyenne des IQ par période. \ 
+
+        Vous pouvez spécifier la période en utilisant les paramètres `from` et
+        `to`, \ 
+
+        ainsi que le regroupement souhaité avec `groupBy`. \ 
+
+
+        **Valeurs possibles pour `groupBy` :** \ 
+
+        - `jour` (day) \ 
+
+        - `semaine` (week) \ 
+
+        - `mois` (month) \ 
+
+        - `année` (year) \ 
+
+
+        **Exemple d’appel :** \ 
+
+        ```http
+
+        GET /stats/iq-avg/period?from=2025-07-01&to=2025-07-23&groupBy=mois
+
+        Authorization: Bearer <TOKEN>
+
+        ```
+
+        \    "
+      parameters:
+        - name: from
+          required: false
+          in: query
+          description: Date de début au format ISO (ex. 2025-07-01)
+          schema:
+            example: 2025-07-01
+            type: string
+        - name: to
+          required: false
+          in: query
+          description: Date de fin au format ISO (ex. 2025-07-23)
+          schema:
+            example: 2025-07-23
+            type: string
+        - name: groupBy
+          required: false
+          in: query
+          description: Regroupement souhaité (jour, semaine, mois, année)
+          schema:
+            enum:
+              - jour
+              - semaine
+              - mois
+              - année
+            type: string
+      responses:
+        "200":
+          description: Tableau de buckets avec label, moyenne, min, max, count
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetIqAvgGroupedDto"
+      tags:
+        - Stats
+  /api/v2/organizations:
+    post:
+      operationId: OrganizationController_create
+      summary: Créer une nouvelle organisation
+      description: "
+
+        **Ce endpoint permet de créer une organisation complète**
+
+
+        Vous devez fournir les informations suivantes :
+
+        - **label**: Le libellé de l'organisation
+
+        - **url**: L'url de l'organisation
+
+        - **sigle**: Le sigle de l'organisation
+
+        - **parentId**: L'identifiant de l'organisation parente
+
+        \    "
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganizationDto"
+      responses:
+        "201":
+          description: Organisation Créée avec succes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationDto"
+      tags: &a8
+        - organizations
+    get:
+      operationId: OrganizationController_findAll
+      summary: Récupérer toutes les organisations
+      description: Ce endpoint permet de récupérer la liste de toutes les organisations.
+      parameters:
+        - name: ids
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des organisations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrganizationDto"
+      tags: *a8
+  /api/v2/organizations/{id}:
+    get:
+      operationId: OrganizationController_findOne
+      summary: Récupérer une organisation spécifique par ID
+      description: Ce endpoint permet de récupérer les détails complets d'une
+        organisation en fonction de son identifiant unique.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Organisation trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationDto"
+        "404":
+          description: Organisation non trouvée
+      tags: *a8
+    patch:
+      operationId: OrganizationController_update
+      summary: Mettre à jour une organisation
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchOrganizationDto"
+      responses:
+        "200":
+          description: Organisation mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationDto"
+      tags: *a8
+    delete:
+      operationId: OrganizationController_delete
+      summary: Supprimer une organisation
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Organisation supprimée
+      tags: *a8
+  /api/v2/actorTypes:
+    post:
+      operationId: ActorTypeController_create
+      summary: Créer un nouveau type d’acteur
+      description: "
+
+        **Ce endpoint permet de créer un type d’acteur complète**
+
+
+        Vous devez fournir les informations suivantes :
+
+        - **code**: Le code du type d’acteur
+
+        - **label**: Le libellé du type d’acteur
+
+        - **description**: La description du type d’acteur
+
+        \    "
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateActorTypeDto"
+      responses:
+        "201":
+          description: type d’acteur créé avec succes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActorTypeDto"
+      tags: &a9
+        - actorTypes
+    get:
+      operationId: ActorTypeController_findAll
+      summary: Récupérer tous les types d’acteurs
+      description: Ce endpoint permet de récupérer la liste de tous les types
+        d’acteurs disponibles.
+      parameters: []
+      responses:
+        "200":
+          description: Liste les types d’acteurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActorTypeDto"
+      tags: *a9
+  /api/v2/actorTypes/perms-matrix:
+    get:
+      operationId: ActorTypeController_getMatrix
+      summary: Récupérer la matrice des permissions
+      description: Cet endpoint permet de récupérer la matrice des permissions pour
+        les types d’acteurs.
+      parameters: []
+      responses:
+        "200":
+          description: Liste les types d’acteurs par id et de leurs permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppPermsDto"
+      tags: *a9
+    patch:
+      operationId: ActorTypeController_updateMatrix
+      summary: Mettre à jour la matrice des permissions
+      description: Cet endpoint permet de mettre à jour la matrice des permissions
+        pour les types d’acteurs.
+      parameters: []
+      requestBody:
+        required: true
+        description: Liste des permissions à mettre à jour pour les types d’acteurs
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/AppPermsDto"
+      responses:
+        "200":
+          description: Met à jour la matrice des permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppPermsDto"
+      tags: *a9
+  /api/v2/actorTypes/{id}:
+    get:
+      operationId: ActorTypeController_findOne
+      summary: Récupérer un type d’acteur spécifique par ID
+      description: Cet endpoint permet de récupérer les détails complets d'un type
+        d’acteur en fonction de son identifiant unique.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Récupère un type d’acteur spécifique par ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActorTypeDto"
+      tags: *a9
+    patch:
+      operationId: ActorTypeController_update
+      summary: Mettre à jour un type d’acteur
+      description: "
+
+        Ce endpoint permet de mettre à jour un type d’acteur existante
+
+        Vous devez fournir l'identifiant du type d’acteur dans l'URL et les
+        nouvelles données dans le corps de la requête
+
+        Les données de mise à jour doivent correspondre aux champs
+
+        \    "
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchActorTypeDto"
+      responses:
+        "200":
+          description: Type d’acteur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatchActorTypeDto"
+      tags: *a9
+    delete:
+      operationId: ActorTypeController_delete
+      summary: Supprimer un type d’acteur
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Type d’acteur supprimé avec succès
+      tags: *a9
+  /api/v2/applications/{applicationId}/actors:
+    post:
+      operationId: ApplicationActorsController_create
+      summary: Créer un nouvel acteur
+      description: "
+
+        Ce endpoint permet de créer un acteur complet.
+
+
+        Informations requises :\ 
+
+        - **email** : Email de l'acteur
+
+        - **firstname** : Prénom de l'acteur
+
+        - **lastname** : Nom de l'acteur
+
+        - **actorTypeId** : ID du type d'acteur lié à l'acteur\ 
+
+        - **organizationId** : ID de l'organisation liée à l'acteur
+
+        - **applicationId** : ID de l'application liée à l'acteur
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateActorDto"
+      responses:
+        "201":
+          description: Acteur créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActorDto"
+      tags: &a10
+        - Actors
+    get:
+      operationId: ApplicationActorsController_findAll
+      summary: Récupérer tous les acteurs
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des acteurs trouvés
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActorDto"
+      tags: *a10
+  /api/v2/applications/{applicationId}/actors/{id}:
+    get:
+      operationId: ApplicationActorsController_findOne
+      summary: Récupérer un acteur par ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'acteur
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
+      responses:
+        "200":
+          description: Acteur trouvé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActorDto"
+      tags: *a10
+    patch:
+      operationId: ApplicationActorsController_updated
+      summary: Mettre à jour un acteur
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'acteur
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateActorDto"
+      responses:
+        "200":
+          description: Acteur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActorDto"
+      tags: *a10
+    delete:
+      operationId: ApplicationActorsController_delete
+      summary: Supprimer un acteur
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'acteur
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
+      responses:
+        "204":
+          description: Acteur supprimé avec succès
+      tags: *a10
+  /api/v2/actors/count:
+    get:
+      operationId: ActorController_countAllActors
+      summary: Récupérer le nombre total d'acteurs (toutes applications)
+      parameters: []
+      responses:
+        "200":
+          description: Nombre total d'acteurs
+          content:
+            application/json:
+              schema:
+                type: number
+      tags:
+        - Actors
+  /api/v2/hosting-options:
+    post:
+      operationId: HostingOptionController_create
+      summary: Create a new hosting option
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHostingOptionDto"
+      responses:
+        "201":
+          description: Hosting option created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingOptionDto"
+      tags: &a11
+        - HostingOptions
+    get:
+      operationId: HostingOptionController_findAll
+      summary: Get all hosting options with optional filtering
+      parameters:
+        - name: site
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: platform
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: provider
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: building
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: room
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of hosting options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HostingOptionDto"
+      tags: *a11
+  /api/v2/hosting-options/sites:
+    get:
+      operationId: HostingOptionController_findDistinctSites
+      summary: Get all distinct site values
+      parameters: []
+      responses:
+        "200":
+          description: List of distinct sites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      tags: *a11
+  /api/v2/hosting-options/platforms:
+    get:
+      operationId: HostingOptionController_findDistinctPlatforms
+      summary: Get all distinct platform values
+      parameters: []
+      responses:
+        "200":
+          description: List of distinct platforms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      tags: *a11
+  /api/v2/hosting-options/providers:
+    get:
+      operationId: HostingOptionController_findDistinctProviders
+      summary: Get all distinct provider values
+      parameters: []
+      responses:
+        "200":
+          description: List of distinct providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      tags: *a11
+  /api/v2/hosting-options/{id}:
+    get:
+      operationId: HostingOptionController_findOne
+      summary: Get hosting option by ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Hosting option found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingOptionDto"
+        "404":
+          description: Hosting option not found
+      tags: *a11
+    patch:
+      operationId: HostingOptionController_update
+      summary: Update hosting option by ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHostingOptionDto"
+      responses:
+        "200":
+          description: Hosting option updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingOptionDto"
+        "404":
+          description: Hosting option not found
+      tags: *a11
+    delete:
+      operationId: HostingOptionController_remove
+      summary: Delete hosting option by ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Hosting option deleted successfully
+        "404":
+          description: Hosting option not found
+      tags: *a11
+  /api/v2/applications/{applicationId}/links:
+    post:
+      operationId: ApplicationLinksController_create
+      summary: Create a new link for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLinkDto"
+      responses:
+        "201":
+          description: Link created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkDto"
+      tags: &a12
+        - Links
+    get:
+      operationId: ApplicationLinksController_findAll
+      summary: Retrieve all links for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of links for the application
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LinkDto"
+      tags: *a12
+  /api/v2/applications/{applicationId}/links/{id}:
+    patch:
+      operationId: ApplicationLinksController_update
+      summary: Update a link for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID of the link to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLinkDto"
+      responses:
+        "200":
+          description: Link updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinkDto"
+      tags: *a12
+    delete:
+      operationId: ApplicationLinksController_delete
+      summary: Delete a link for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID of the link to delete
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Link deleted successfully
+      tags: *a12
+  /api/v2/applications/{applicationId}/compliances:
+    post:
+      operationId: ApplicationCompliancesController_create
+      summary: Create a new compliance for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateComplianceDto"
+      responses:
+        "201":
+          description: Compliance created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDto"
+      tags: &a13
+        - Compliances
+    get:
+      operationId: ApplicationCompliancesController_findOne
+      summary: Retrieve the compliance for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Compliance found successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDto"
+      tags: *a13
+    patch:
+      operationId: ApplicationCompliancesController_update
+      summary: Update the compliance for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateComplianceDto"
+      responses:
+        "200":
+          description: Compliance updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDto"
+      tags: *a13
+  /api/v2/compliances/count:
+    get:
+      operationId: ComplianceController_countAllCompliances
+      summary: Récupérer le nombre total de conformités (toutes applications)
+      parameters: []
+      responses:
+        "200":
+          description: Nombre total de conformités
+          content:
+            application/json:
+              schema:
+                type: number
+      tags:
+        - Compliances
+info:
+  title: API Référentiel Applications
+  description: API pour la gestion des applications
+  version: "2.0"
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/auth
+          tokenUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/token
+          scopes:
+            openid: OpenID scope
+            profile: Profile scope
+      description: OAuth2 authentication using Keycloak
+  schemas:
+    relationType:
+      type: string
+      enum:
+        - is_part_of
+        - in_replacement_of
+        - is_service_user_of
+        - is_data_user_of
+    RelationApplicationDto:
+      type: object
+      properties:
+        applicationTargetId:
+          type: string
+        type:
+          $ref: "#/components/schemas/relationType"
+      required:
+        - applicationTargetId
+        - type
+    ApplicationMinimalDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+      required:
+        - id
+        - label
+    RelationDto:
+      type: object
+      properties:
+        id:
+          type: string
+        applicationSourceId:
+          type: string
+        applicationTargetId:
+          type: string
+        sourceApplication:
+          $ref: "#/components/schemas/ApplicationMinimalDto"
+        targetApplication:
+          $ref: "#/components/schemas/ApplicationMinimalDto"
+        type:
+          $ref: "#/components/schemas/relationType"
+      required:
+        - id
+        - applicationSourceId
+        - applicationTargetId
+        - sourceApplication
+        - targetApplication
+        - type
+    MetadataAction:
+      type: string
+      description: Action effectuée sur la metadata
+      enum:
+        - add
+        - update
+        - delete
+    UserEntity:
+      type: object
+      properties:
+        keycloakId:
+          type: string
+        email:
+          type: string
+        adminLevel:
+          enum:
+            - 0
+            - 10
+            - 20
+            - 30
+          type: number
+        organizationId:
+          type: string
+          nullable: true
+        lastLogin:
+          format: date-time
+          type: string
+          nullable: true
+      required:
+        - keycloakId
+        - email
+        - adminLevel
+        - organizationId
+        - lastLogin
+    MetadataDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID de la metadata
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        applicationId:
+          type: string
+          nullable: true
+          description: ID de l'application liée
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        action:
+          example: add
+          $ref: "#/components/schemas/MetadataAction"
+        actorId:
+          type: string
+          nullable: true
+          description: ID de l'acteur lié à la metadata
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        createdAt:
+          type: string
+          description: Date de création de la metadata
+          example: 2023-10-01T12:00:00Z
+        complianceId:
+          type: string
+          nullable: true
+          description: ID de la conformité liée à la metadata
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        createdById:
+          type: string
+          description: ID de l'utilisateur qui a créé la metadata
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        dataOwnerId:
+          type: string
+          nullable: true
+          description: ID du propriétaire des données lié à la metadata
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        description:
+          type: string
+          nullable: true
+          description: Description de la metadata
+          example: Initial metadata
+        externalRessourceId:
+          type: string
+          nullable: true
+          description: ID de la ressource externe liée à la metadata
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        hostingId:
+          type: string
+          nullable: true
+          description: ID de l'hébergement lié à la metadata
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        labelId:
+          type: string
+          nullable: true
+          description: ID du label liée à la metadata
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        createdBy:
+          description: Utilisateur qui a créé la metadata
+          allOf:
+            - $ref: "#/components/schemas/UserEntity"
+      required:
+        - id
+        - applicationId
+        - action
+        - actorId
+        - createdAt
+        - complianceId
+        - createdById
+        - dataOwnerId
+        - description
+        - externalRessourceId
+        - hostingId
+        - labelId
+        - createdBy
+    FirstLastMetadataDto:
+      type: object
+      properties:
+        first:
+          nullable: true
+          description: La première metadata de l'application
+          allOf:
+            - $ref: "#/components/schemas/MetadataDto"
+        last:
+          type: string
+          nullable: true
+          description: La dernière metadata de l'application
+      required:
+        - first
+        - last
+    UpdateUserDto:
+      type: object
+      properties:
+        adminLevel:
+          enum:
+            - 0
+            - 10
+            - 20
+            - 30
+          type: number
+    ApplicationPriorityRestart:
+      type: string
+      enum:
+        - R0
+        - R1
+        - R1_STAR
+        - R2
+        - R3
+    ApplicationStatus:
+      type: string
+      description: Current status of the application
+      enum:
+        - under_construction
+        - in_production_mvp
+        - in_production
+        - in_production_decommissioning
+        - decommissioned
+        - deleted
+    CreateLabelDto:
+      type: object
+      properties:
+        source:
+          type: string
+          nullable: true
+          example: CODE_PAI
+          description: Source of the label
+        value:
+          type: string
+          example: short-app-name
+          description: Value of the label
+      required:
+        - source
+        - value
+    CreateApplicationDto:
+      type: object
+      properties:
+        label:
+          type: string
+          example: My Application
+          description: Label of the application
+        shortName:
+          type: string
+          example: short-app-name
+          description: Short name of the application
+        logo:
+          type: string
+          example: http://example.com/logo.png
+          description: Logo URL of the application
+        description:
+          type: string
+          example: An amazing application
+          description: Description of the application
+        targetPopulations:
+          example: &a14
+            - population 1
+            - population 2
+          description: population associated with the application
+          type: array
+          items:
+            type: string
+        priorityRestart:
+          $ref: "#/components/schemas/ApplicationPriorityRestart"
+        purposes:
+          example: &a15
+            - finance
+            - HR
+          description: Purposes of the application
+          type: array
+          items:
+            type: string
+        tags:
+          example: &a16
+            - tag1
+            - tag2
+          description: Tags associated with the application
+          type: array
+          items:
+            type: string
+        status:
+          $ref: "#/components/schemas/ApplicationStatus"
+        labels:
+          description: Liste des labels alternatifs associés à l’application
+          example: &a17
+            - source: ""
+              value: My App
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateLabelDto"
+      required:
+        - label
+        - description
+        - labels
+    ApplicationDto:
+      type: object
+      properties:
+        logo:
+          type: string
+          nullable: true
+          example: https://example.com/logo.png
+          description: URL of the application logo
+        status:
+          $ref: "#/components/schemas/ApplicationStatus"
+        priorityRestart:
+          $ref: "#/components/schemas/ApplicationPriorityRestart"
+        id:
+          type: string
+        label:
+          type: string
+        shortName:
+          type: string
+          nullable: true
+        description:
+          type: string
+        targetPopulations:
+          type: array
+          items:
+            type: string
+        purposes:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        ownerId:
+          type: string
+        quality:
+          type: number
+          nullable: true
+      required:
+        - logo
+        - id
+        - label
+        - shortName
+        - description
+        - targetPopulations
+        - purposes
+        - tags
+        - ownerId
+        - quality
+    CountByMonthDto:
+      type: object
+      properties:
+        month:
+          type: string
+          description: Month in YYYY-MM format
+          example: 2023-10
+        total:
+          type: number
+          description: Total number of applications for the month
+          example: 150
+      required:
+        - month
+        - total
+    CountByIqDto:
+      type: object
+      properties:
+        iq:
+          type: number
+          description: Indice de qualité de l'application
+          example: 85
+        total:
+          type: number
+          description: Total d'applications pour cet indice de qualité
+          example: 30
+      required:
+        - iq
+        - total
+    ApplicationSearchResultDto:
+      type: object
+      properties:
+        results:
+          description: Liste des applications correspondant aux critères de recherche
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationDto"
+        total:
+          type: number
+          description: Nombre total d'applications correspondant aux critères de recherche
+          example: 100
+      required:
+        - results
+        - total
+    PatchApplicationDto:
+      type: object
+      properties:
+        label:
+          type: string
+          example: My Application
+          description: Label of the application
+        shortName:
+          type: string
+          example: short-app-name
+          description: Short name of the application
+        logo:
+          type: string
+          example: http://example.com/logo.png
+          description: Logo URL of the application
+        description:
+          type: string
+          example: An amazing application
+          description: Description of the application
+        targetPopulations:
+          example: *a14
+          description: population associated with the application
+          type: array
+          items:
+            type: string
+        priorityRestart:
+          $ref: "#/components/schemas/ApplicationPriorityRestart"
+        purposes:
+          example: *a15
+          description: Purposes of the application
+          type: array
+          items:
+            type: string
+        tags:
+          example: *a16
+          description: Tags associated with the application
+          type: array
+          items:
+            type: string
+        status:
+          $ref: "#/components/schemas/ApplicationStatus"
+        labels:
+          description: Liste des labels alternatifs associés à l’application
+          example: *a17
+          type: array
+          items:
+            $ref: "#/components/schemas/CreateLabelDto"
+    LabelDto:
+      type: object
+      properties:
+        source:
+          type: string
+          nullable: true
+          example: CODE_PAI
+          description: Source of the label
+        value:
+          type: string
+          example: short-app-name
+          description: Value of the label
+        id:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID of the label
+        applicationId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID of the application to which the label belongs
+      required:
+        - source
+        - value
+        - id
+        - applicationId
+    CreateHostingDto:
+      type: object
+      properties:
+        label:
+          type: string
+        hostingOptionId:
+          type: string
+          description: ID of the hosting option
+        applicationId:
+          type: string
+      required:
+        - applicationId
+    HostingOptionDto:
+      type: object
+      properties:
+        site:
+          type: string
+          description: Site name (géographique)
+          example: CER(RENNES)
+        platform:
+          type: string
+          description: Platform name
+          example: PHYSIQUE
+        provider:
+          type: string
+          description: Provider name
+          example: DTNUM
+        building:
+          type: string
+          description: Building (optional)
+          example: B15
+        room:
+          type: string
+          description: Room (optional)
+          example: IT2
+        id:
+          type: string
+          description: Unique identifier of the hosting option
+          example: 12345678-1234-1234-1234-123456789012
+      required:
+        - site
+        - platform
+        - provider
+        - id
+    HostingDto:
+      type: object
+      properties:
+        label:
+          type: string
+        hostingOptionId:
+          type: string
+          description: ID of the hosting option
+        applicationId:
+          type: string
+        id:
+          type: string
+        hostingOption:
+          $ref: "#/components/schemas/HostingOptionDto"
+      required:
+        - applicationId
+        - id
+        - hostingOption
+    UpdateHostingDto:
+      type: object
+      properties:
+        label:
+          type: string
+        hostingOptionId:
+          type: string
+          description: ID of the hosting option
+        applicationId:
+          type: string
+    CreateAnomalyNotificationRequestDto:
+      type: object
+      properties:
+        applicationId:
+          type: string
+        description:
+          type: string
+      required:
+        - applicationId
+        - description
+    GetAnomalyNotificationDto:
+      type: object
+      properties:
+        notifier:
+          description: The user who reported the issue
+          allOf:
+            - $ref: "#/components/schemas/UserEntity"
+        id:
+          type: string
+        applicationId:
+          type: string
+        application:
+          $ref: "#/components/schemas/ApplicationDto"
+        notifierId:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - notifier
+        - id
+        - applicationId
+        - application
+        - notifierId
+        - description
+        - status
+        - createdAt
+        - updatedAt
+    UpdateAnomalyNotificationDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Le nouveau statut de la notification d'anomalie
+          enum:
+            - in_pending
+            - in_progress
+            - done
+        applicationId:
+          type: string
+        notifierId:
+          type: string
+        description:
+          type: string
+      required:
+        - status
+    GetIqAvgGroupedDto:
+      type: object
+      properties:
+        label:
+          type: string
+          example: 2025-07
+        moyenne:
+          type: number
+          example: 78.2
+        min:
+          type: number
+          example: 62
+        max:
+          type: number
+          example: 93
+        count:
+          type: number
+          example: 14
+      required:
+        - label
+        - moyenne
+        - min
+        - max
+        - count
+    CreateOrganizationDto:
+      type: object
+      properties:
+        label:
+          type: string
+          example: Direction de la transformation numérique
+          description: Nom de l'organisation
+        url:
+          type: string
+          example: ""
+          description: url de l'organisation
+        sigle:
+          type: string
+          example: dtnum
+          description: sigle de l'organisation
+        parentId:
+          type: string
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de l'organisation parente
+      required:
+        - label
+    OrganizationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de l'organisation
+        label:
+          type: string
+          example: Direction de la transformation numérique
+          description: Nom de l'organisation
+        url:
+          type: string
+          nullable: true
+          example: ""
+          description: url de l'organisation
+        sigle:
+          type: string
+          nullable: true
+          example: dtnum
+          description: sigle de l'organisation
+        parentId:
+          type: string
+          nullable: true
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de l'organisation parente
+      required:
+        - id
+        - label
+        - url
+        - sigle
+        - parentId
+    PatchOrganizationDto:
+      type: object
+      properties:
+        label:
+          type: string
+          example: Direction de la transformation numérique
+          description: Nom de l'organisation
+        url:
+          type: string
+          example: ""
+          description: url de l'organisation
+        sigle:
+          type: string
+          example: dtnum
+          description: sigle de l'organisation
+        parentId:
+          type: string
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de l'organisation parente
+    CreateActorTypeDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: MOA
+          description: Code du type d'acteur
+        label:
+          type: string
+          example: Maîtrise d’Ouvrage
+          description: Libellé du type d'acteur
+        description:
+          type: string
+          example: La MOA définit les besoins du projet, supervise sa mise en œuvre et
+            veille à ce que les objectifs métiers soient atteints.
+          description: description du type d'acteur
+      required:
+        - code
+        - label
+    ActorTypeDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: MOA
+          description: Code du type d'acteur
+        label:
+          type: string
+          example: Maîtrise d’Ouvrage
+          description: Libellé du type d'acteur
+        description:
+          type: string
+          example: La MOA définit les besoins du projet, supervise sa mise en œuvre et
+            veille à ce que les objectifs métiers soient atteints.
+          description: description du type d'acteur
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant unique du type d'acteur
+      required:
+        - code
+        - label
+        - id
+    AppPermsDto:
+      type: object
+      properties:
+        actorTypeId:
+          type: string
+        readBase:
+          type: boolean
+        writeBase:
+          type: boolean
+        readActors:
+          type: boolean
+        writeActors:
+          type: boolean
+        readCompliances:
+          type: boolean
+        writeCompliances:
+          type: boolean
+        readHostings:
+          type: boolean
+        writeHostings:
+          type: boolean
+        readMetadata:
+          type: boolean
+        writeMetadata:
+          type: boolean
+        readRelations:
+          type: boolean
+        writeRelations:
+          type: boolean
+        readLinks:
+          type: boolean
+        writeLinks:
+          type: boolean
+      required:
+        - actorTypeId
+        - readBase
+        - writeBase
+        - readActors
+        - writeActors
+        - readCompliances
+        - writeCompliances
+        - readHostings
+        - writeHostings
+        - readMetadata
+        - writeMetadata
+        - readRelations
+        - writeRelations
+        - readLinks
+        - writeLinks
+    PatchActorTypeDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: MOA
+          description: Code du type d'acteur
+        label:
+          type: string
+          example: Maîtrise d’Ouvrage
+          description: Libellé du type d'acteur
+        description:
+          type: string
+          example: La MOA définit les besoins du projet, supervise sa mise en œuvre et
+            veille à ce que les objectifs métiers soient atteints.
+          description: description du type d'acteur
+    CreateActorDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@example.com
+          description: Email de l'acteur (Optionel)
+        firstname:
+          type: string
+          example: Jean
+          description: Prénom de l’acteur
+        lastname:
+          type: string
+          example: Dupont
+          description: Nom de l’acteur
+        actorTypeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type d'acteur lié
+        organizationId:
+          type: string
+          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
+          description: ID de l'organization lié (Optionel)
+        applicationId:
+          type: string
+          example: 035869dc-47a6-4cee-828f-f6a28d050b35
+          description: ID de l'application lié (Optionel)
+      required:
+        - actorTypeId
+    ActorDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@example.com
+          description: Email de l'acteur (Optionel)
+        firstname:
+          type: string
+          example: Jean
+          description: Prénom de l’acteur
+        lastname:
+          type: string
+          example: Dupont
+          description: Nom de l’acteur
+        actorTypeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type d'acteur lié
+        organizationId:
+          type: string
+          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
+          description: ID de l'organization lié (Optionel)
+        applicationId:
+          type: string
+          example: 035869dc-47a6-4cee-828f-f6a28d050b35
+          description: ID de l'application lié (Optionel)
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant unique de l'acteur
+      required:
+        - actorTypeId
+        - id
+    UpdateActorDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@example.com
+          description: Email de l'acteur (Optionel)
+        firstname:
+          type: string
+          example: Jean
+          description: Prénom de l’acteur
+        lastname:
+          type: string
+          example: Dupont
+          description: Nom de l’acteur
+        actorTypeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type d'acteur lié
+        organizationId:
+          type: string
+          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
+          description: ID de l'organization lié (Optionel)
+        applicationId:
+          type: string
+          example: 035869dc-47a6-4cee-828f-f6a28d050b35
+          description: ID de l'application lié (Optionel)
+    CreateHostingOptionDto:
+      type: object
+      properties:
+        site:
+          type: string
+          description: Site name (géographique)
+          example: CER(RENNES)
+        platform:
+          type: string
+          description: Platform name
+          example: PHYSIQUE
+        provider:
+          type: string
+          description: Provider name
+          example: DTNUM
+        building:
+          type: string
+          description: Building (optional)
+          example: B15
+        room:
+          type: string
+          description: Room (optional)
+          example: IT2
+      required:
+        - site
+        - platform
+        - provider
+    UpdateHostingOptionDto:
+      type: object
+      properties:
+        site:
+          type: string
+          description: Site name (géographique)
+          example: CER(RENNES)
+        platform:
+          type: string
+          description: Platform name
+          example: PHYSIQUE
+        provider:
+          type: string
+          description: Provider name
+          example: DTNUM
+        building:
+          type: string
+          description: Building (optional)
+          example: B15
+        room:
+          type: string
+          description: Room (optional)
+          example: IT2
+      required:
+        - site
+        - platform
+        - provider
+    ExternalRessourceType:
+      type: string
+      description: Type of the external resource
+      enum:
+        - documentation
+        - supervision
+        - service
+        - audience_metrics
+    CreateLinkDto:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/ExternalRessourceType"
+        description:
+          type: string
+        link:
+          type: string
+      required:
+        - type
+        - link
+    LinkDto:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/ExternalRessourceType"
+        description:
+          type: string
+        link:
+          type: string
+        id:
+          type: string
+      required:
+        - type
+        - link
+        - id
+    UpdateLinkDto:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/ExternalRessourceType"
+        description:
+          type: string
+        link:
+          type: string
+    CreateComplianceDto:
+      type: object
+      properties:
+        dima_duration_hours:
+          type: number
+          example: 4
+          description: DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+        dima_is_hno:
+          type: boolean
+          example: true
+          description: DIMA HNO (Heure non ouvrée)
+        dima_business_impact:
+          type: string
+          example: Perte de revenu, impact client
+          description: DIMA business impact of interruption
+        dima_recovery_plan:
+          type: boolean
+          example: true
+          description: DIMA recovery plan exists
+        dima_recovery_solutions:
+          type: string
+          example: Bascule sur serveur de secours
+          description: DIMA recovery solutions
+        dima_last_test_date:
+          type: string
+          example: 2023-01-01
+          description: DIMA last test date
+        dima_test_result:
+          enum: &a18
+            - OK
+            - KO
+          type: string
+          description: DIMA test result
+        dima_recovery_manager:
+          type: string
+          example: Jean Dupont
+          description: DIMA recovery manager
+        pdma_duration_hours:
+          type: number
+          example: 8
+          description: PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+        pdma_data_types:
+          type: string
+          example: Transactions, logs, fichiers utilisateur
+          description: PDMA data types concerned
+        pdma_backup_frequency:
+          type: string
+          example: Toutes les heures
+          description: PDMA backup frequency
+        pdma_backup_method:
+          type: string
+          example: Snapshot, backup incrémental
+          description: PDMA backup method used
+        pdma_backup_storage:
+          enum: &a19
+            - S3
+            - LOCAL
+            - EXTERNE
+          type: string
+          description: PDMA backup storage
+        pdma_last_test_date:
+          type: string
+          example: 2023-01-01
+          description: PDMA last test date
+        pdma_test_result:
+          enum: &a20
+            - OK
+            - KO
+          type: string
+          description: PDMA test result
+        pdma_restoration_manager:
+          type: string
+          example: Marie Martin
+          description: PDMA restoration manager
+        homologation_date:
+          type: string
+          example: 2023-01-01
+          description: Homologation date
+        homologation_duration_months:
+          type: number
+          example: 12
+          description: Homologation duration in months
+        homologation_rssi_id:
+          type: string
+          example: uuid-of-rssi-actor
+          description: Homologation RSSI actor ID
+        rgaa_audit_date:
+          type: string
+          example: 2023-01-01
+          description: RGAA audit date
+        rgaa_service_url:
+          type: string
+          example: https://service.example.com
+          description: RGAA service URL
+        rgaa_accessibility_url:
+          type: string
+          example: https://service.example.com/accessibilite
+          description: RGAA accessibility page URL
+        rgaa_score_percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 85
+          description: RGAA score percentage (0-100)
+        dsfr_implemented:
+          type: boolean
+          example: true
+          description: DSFR implemented
+        dsfr_version:
+          type: string
+          example: 1.9.0
+          description: DSFR version used
+        rgpd_has_aipd:
+          type: boolean
+          example: true
+          description: RGPD has AIPD
+        rgpd_dpo_name:
+          type: string
+          example: Pierre Durand
+          description: RGPD DPO name
+    ComplianceDto:
+      type: object
+      properties:
+        dima_duration_hours:
+          type: number
+          example: 4
+          description: DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+        dima_is_hno:
+          type: boolean
+          example: true
+          description: DIMA HNO (Heure non ouvrée)
+        dima_business_impact:
+          type: string
+          example: Perte de revenu, impact client
+          description: DIMA business impact of interruption
+        dima_recovery_plan:
+          type: boolean
+          example: true
+          description: DIMA recovery plan exists
+        dima_recovery_solutions:
+          type: string
+          example: Bascule sur serveur de secours
+          description: DIMA recovery solutions
+        dima_last_test_date:
+          type: string
+          example: 2023-01-01
+          description: DIMA last test date
+        dima_test_result:
+          enum: *a18
+          type: string
+          description: DIMA test result
+        dima_recovery_manager:
+          type: string
+          example: Jean Dupont
+          description: DIMA recovery manager
+        pdma_duration_hours:
+          type: number
+          example: 8
+          description: PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+        pdma_data_types:
+          type: string
+          example: Transactions, logs, fichiers utilisateur
+          description: PDMA data types concerned
+        pdma_backup_frequency:
+          type: string
+          example: Toutes les heures
+          description: PDMA backup frequency
+        pdma_backup_method:
+          type: string
+          example: Snapshot, backup incrémental
+          description: PDMA backup method used
+        pdma_backup_storage:
+          enum: *a19
+          type: string
+          description: PDMA backup storage
+        pdma_last_test_date:
+          type: string
+          example: 2023-01-01
+          description: PDMA last test date
+        pdma_test_result:
+          enum: *a20
+          type: string
+          description: PDMA test result
+        pdma_restoration_manager:
+          type: string
+          example: Marie Martin
+          description: PDMA restoration manager
+        homologation_date:
+          type: string
+          example: 2023-01-01
+          description: Homologation date
+        homologation_duration_months:
+          type: number
+          example: 12
+          description: Homologation duration in months
+        homologation_rssi_id:
+          type: string
+          example: uuid-of-rssi-actor
+          description: Homologation RSSI actor ID
+        rgaa_audit_date:
+          type: string
+          example: 2023-01-01
+          description: RGAA audit date
+        rgaa_service_url:
+          type: string
+          example: https://service.example.com
+          description: RGAA service URL
+        rgaa_accessibility_url:
+          type: string
+          example: https://service.example.com/accessibilite
+          description: RGAA accessibility page URL
+        rgaa_score_percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 85
+          description: RGAA score percentage (0-100)
+        dsfr_implemented:
+          type: boolean
+          example: true
+          description: DSFR implemented
+        dsfr_version:
+          type: string
+          example: 1.9.0
+          description: DSFR version used
+        rgpd_has_aipd:
+          type: boolean
+          example: true
+          description: RGPD has AIPD
+        rgpd_dpo_name:
+          type: string
+          example: Pierre Durand
+          description: RGPD DPO name
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Unique identifier of the compliance record
+      required:
+        - id
+    UpdateComplianceDto:
+      type: object
+      properties:
+        dima_duration_hours:
+          type: number
+          example: 4
+          description: DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+        dima_is_hno:
+          type: boolean
+          example: true
+          description: DIMA HNO (Heure non ouvrée)
+        dima_business_impact:
+          type: string
+          example: Perte de revenu, impact client
+          description: DIMA business impact of interruption
+        dima_recovery_plan:
+          type: boolean
+          example: true
+          description: DIMA recovery plan exists
+        dima_recovery_solutions:
+          type: string
+          example: Bascule sur serveur de secours
+          description: DIMA recovery solutions
+        dima_last_test_date:
+          type: string
+          example: 2023-01-01
+          description: DIMA last test date
+        dima_test_result:
+          enum: *a18
+          type: string
+          description: DIMA test result
+        dima_recovery_manager:
+          type: string
+          example: Jean Dupont
+          description: DIMA recovery manager
+        pdma_duration_hours:
+          type: number
+          example: 8
+          description: PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+        pdma_data_types:
+          type: string
+          example: Transactions, logs, fichiers utilisateur
+          description: PDMA data types concerned
+        pdma_backup_frequency:
+          type: string
+          example: Toutes les heures
+          description: PDMA backup frequency
+        pdma_backup_method:
+          type: string
+          example: Snapshot, backup incrémental
+          description: PDMA backup method used
+        pdma_backup_storage:
+          enum: *a19
+          type: string
+          description: PDMA backup storage
+        pdma_last_test_date:
+          type: string
+          example: 2023-01-01
+          description: PDMA last test date
+        pdma_test_result:
+          enum: *a20
+          type: string
+          description: PDMA test result
+        pdma_restoration_manager:
+          type: string
+          example: Marie Martin
+          description: PDMA restoration manager
+        homologation_date:
+          type: string
+          example: 2023-01-01
+          description: Homologation date
+        homologation_duration_months:
+          type: number
+          example: 12
+          description: Homologation duration in months
+        homologation_rssi_id:
+          type: string
+          example: uuid-of-rssi-actor
+          description: Homologation RSSI actor ID
+        rgaa_audit_date:
+          type: string
+          example: 2023-01-01
+          description: RGAA audit date
+        rgaa_service_url:
+          type: string
+          example: https://service.example.com
+          description: RGAA service URL
+        rgaa_accessibility_url:
+          type: string
+          example: https://service.example.com/accessibilite
+          description: RGAA accessibility page URL
+        rgaa_score_percentage:
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 85
+          description: RGAA score percentage (0-100)
+        dsfr_implemented:
+          type: boolean
+          example: true
+          description: DSFR implemented
+        dsfr_version:
+          type: string
+          example: 1.9.0
+          description: DSFR version used
+        rgpd_has_aipd:
+          type: boolean
+          example: true
+          description: RGPD has AIPD
+        rgpd_dpo_name:
+          type: string
+          example: Pierre Durand
+          description: RGPD DPO name
+security:
+  - oauth2: []

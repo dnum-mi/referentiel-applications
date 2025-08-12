@@ -36,13 +36,13 @@ export class ActorTypeService {
     );
   }
 
-  public async update(id, data: PatchActorTypeDto): Promise<ActorType> {
+  public async update(id: string, data: PatchActorTypeDto): Promise<ActorType> {
     await this.findOne(id);
-    return await this.ActorTypeRepository.update(id, data);
+    return this.ActorTypeRepository.update({ id }, data);
   }
 
   public async delete(id: string) {
     await this.findOne(id);
-    return await this.ActorTypeRepository.delete(id);
+    return this.ActorTypeRepository.delete(id);
   }
 }

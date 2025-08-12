@@ -16,13 +16,14 @@ echo "Prefix: $APP_ENV_PREFIX"
 echo "Directory: $APP_DIST_DIR"
 ls $APP_DIST_DIR | grep 'assets'
 
+env | grep "^$APP_ENV_PREFIX"
 for i in $(env | grep "^$APP_ENV_PREFIX"); do
     key=$(echo "$i" | cut -d '=' -f 1)
     value=$(echo "$i" | cut -d '=' -f 2-)
 
     echo "Setting $key=$value"
     FILE_COUNT=$(grep $key -rnl $APP_DIST_DIR | wc -l)
-    echo "Found $FILE_COUNT files with matching key"
+    echo "Found $FILE_COUNT files with matching key: $key"
 
     find "$APP_DIST_DIR" -type f -exec sed -i 's|'"${key}"'|'"${value}"'|g' {} \;  
 done

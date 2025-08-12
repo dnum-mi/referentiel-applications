@@ -7,20 +7,24 @@ import {
   Param,
   Patch,
   UseGuards,
+  HttpStatus,
+  HttpCode,
 } from "@nestjs/common";
 import {
   ApiTags,
-  ApiResponse,
   ApiOperation,
   ApiBody,
   ApiParam,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiNoContentResponse,
 } from "@nestjs/swagger";
 import { LabelsService } from "./labels.service";
 import { CreateLabelDto } from "./dto/create-label.dto";
-import { Label } from "./entities/label.entity";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
+import { LabelDto } from "./dto/label.dto";
 
 @ApiTags("Labels")
 @UseGuards(ApplicationGuard)
@@ -41,17 +45,17 @@ Vous devez fournir les informations suivantes :
 - **value**: Le libellé de l'application.
     `,
   })
-  @ApiResponse({
-    status: 201,
-    type: Label,
+  @ApiCreatedResponse({
+    type: LabelDto,
     description: "Label créé avec succès.",
   })
+  @HttpCode(HttpStatus.CREATED)
   async create(
     @UserId() userId: string,
     @Body() createLabelDto: CreateLabelDto,
     @Param("applicationId") applicationId: string,
-  ) {
-    return await this.service.create({
+  ): Promise<LabelDto> {
+    return this.service.create({
       ...createLabelDto,
       application: {
         connect: {
@@ -78,7 +82,11 @@ Ce endpoint permet de récupérer la liste de tous les labels d'une application 
 Le paramètre **applicationId** doit être fourni dans l'URL.
     `,
   })
-  @ApiResponse({ status: 200, description: "Liste des labels" })
+  @ApiOkResponse({
+    description: "Liste des labels",
+    type: LabelDto,
+    isArray: true,
+  })
   async findAllSorted(@Param("applicationId") applicationId: string) {
     return this.service.findAllSorted(applicationId);
   }
@@ -91,7 +99,10 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiParam({ name: "id", description: "ID du label" })
   @ApiBody({ type: CreateLabelDto })
-  @ApiResponse({ status: 200, type: Label })
+  @ApiOkResponse({
+    description: "Label mis à jour",
+    type: LabelDto,
+  })
   update(
     @UserId() userId: string,
     @Param("applicationId") applicationId: string,
@@ -121,13 +132,16 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     Vous devez fournir l'identifiant du label dans l'URL.
     `,
   })
-  @ApiResponse({ status: 200 })
-  delete(
+  @ApiNoContentResponse({
+    description: "Label supprimé avec succès",
+  })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(
     @UserId() userId: string,
     @Param("applicationId") applicationId: string,
     @Param("id") id: string,
   ) {
-    return this.service.deleteWithMetadata({
+    await this.service.deleteWithMetadata({
       id,
       userId,
       applicationId,

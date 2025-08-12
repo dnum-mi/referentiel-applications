@@ -1,3 +1,0 @@
-services:
-  frontend:
-    image: ${FRONT_IMAGE_TAG}

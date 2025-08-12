@@ -2,17 +2,18 @@
 import { ref, watch, onMounted, computed } from "vue";
 import type { ApplicationWithPerms, Label } from "@/models/Application";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
-import useToaster from "@/composables/use-toaster";
-import Applications from "@/api/application";
+import { useToasterStore } from "@/stores/toasterStore";
 import Labels from "@/api/label";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
 import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
-import type { Hosting } from "@/models/Hosting";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
+import type { HostingDto } from "@/client/types.gen";
+import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
+import { useApplicationStore } from "@/stores/applicationStore.js";
 
 const props = defineProps<{
   application: ApplicationWithPerms
@@ -22,14 +23,15 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(["update:application"]);
 const isSubmitting = ref(false);
-const toaster = useToaster();
+const toaster = useToasterStore();
 const loading = ref(false);
 
 const isHostingModalOpen = ref(false);
-const hostingToEdit = ref<Hosting | null>(null);
-const hostingToDelete = ref<Hosting | null>(null);
+const hostingToEdit = ref<HostingDto | null>(null);
+const hostingToDelete = ref<HostingDto | null>(null);
 const isDeleteModalOpen = ref(false);
 const hostingStore = useHostingStore();
+const applicationStore = useApplicationStore();
 const userStore = useUserStore();
 const canEditBase = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase"));
 const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
@@ -44,13 +46,12 @@ onMounted(async () => {
 
 const application = ref<ApplicationWithPerms>({
   ...props.application,
-  labels: props.application.labels ?? [],
 });
 
 const applicationModal = useModal();
 const isModalOpened = computed(() => applicationModal.isModalOpen.value);
 
-const priorityConfig = new Map<string, { type: string, label: string, tooltip: string }>([
+const priorityConfigOptions = [
   [
     "R0",
     {
@@ -88,19 +89,22 @@ const priorityConfig = new Map<string, { type: string, label: string, tooltip: s
   [
     "R3",
     {
-      type: "default",
+      type: "info",
       label: "R3 – Quand le plus urgent est réalisé (H0)",
       tooltip: "Les applications qui peuvent rester indisponibles sans conséquences opérationnelles (travaux en HO seulement)",
     },
   ],
-]);
+] as const;
+const priorityConfig = new Map<string, { type: DsfrAlertType, label: string, tooltip: string }>(priorityConfigOptions);
 
 function getPriorityBadgeType(priority?: string) {
-  return priorityConfig.get(priority ?? "") ?? {
-    type: "none",
-    label: "Non définie",
-    tooltip: "Aucune priorité n'a été définie pour cette application",
-  };
+  return priority
+    ? priorityConfig.get(priority)
+    : {
+        type: "info" as const,
+        label: "Non définie",
+        tooltip: "Aucune priorité n'a été définie pour cette application",
+      };
 }
 
 async function updateApplication(updatedData: any) {
@@ -111,7 +115,7 @@ async function updateApplication(updatedData: any) {
 
     let updatedApplication = props.application;
     if (updatedData.updatedInfo) {
-      updatedApplication = await Applications.patchApplication({
+      updatedApplication = await applicationStore.patchApplication({
         ...props.application,
         ...updatedData.updatedInfo,
       });
@@ -140,10 +144,10 @@ async function updateApplication(updatedData: any) {
   }
 }
 
-function openEditHosting(hosting: Hosting) {
+function openEditHosting(hosting: HostingDto) {
   hostingToEdit.value = hosting;
 }
-function openDeleteModal(hosting: Hosting) {
+function openDeleteModal(hosting: HostingDto) {
   hostingToDelete.value = hosting;
   isDeleteModalOpen.value = true;
 }
@@ -195,7 +199,7 @@ watch(
                   class="fr-btn--icon-left fr-icon-edit-line"
                   label="Modifier"
                   :disabled="!canEditBase"
-                  @click="applicationModal.openModal()"
+                  @click="applicationModal.openModal"
                 />
               </div>
             </div>
@@ -257,11 +261,11 @@ watch(
             <div class="fr-card__desc">
               <template v-if="application.priorityRestart">
                 <DsfrBadge
-                  :label="getPriorityBadgeType(application.priorityRestart).label"
-                  :type="getPriorityBadgeType(application.priorityRestart).type"
+                  :label="getPriorityBadgeType(application.priorityRestart)?.label ?? 'Non définie'"
+                  :type="getPriorityBadgeType(application.priorityRestart)?.type ?? 'error'"
                   :small="small"
-                  :title="getPriorityBadgeType(application.priorityRestart).tooltip"
-                  :aria-label="`Priorité de redémarrage : ${getPriorityBadgeType(application.priorityRestart).tooltip}`"
+                  :title="getPriorityBadgeType(application.priorityRestart)?.tooltip"
+                  :aria-label="`Priorité de redémarrage : ${getPriorityBadgeType(application.priorityRestart)?.tooltip}`"
                 />
               </template>
               <template v-else>
@@ -322,7 +326,6 @@ watch(
   <HostingModal
     v-if="isHostingModalOpen"
     :application-id="application.id"
-    @hosting-created="handleHostingCreated"
     @close="isHostingModalOpen = false"
   />
 
@@ -330,7 +333,6 @@ watch(
     v-if="hostingToEdit"
     :application-id="application.id"
     :initial-hosting="hostingToEdit"
-    @hosting-updated="handleHostingUpdated"
     @close="hostingToEdit = null"
   />
   <DeleteConfirmationModal

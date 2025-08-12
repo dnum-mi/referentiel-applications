@@ -8,15 +8,18 @@ import {
   Param,
   Logger,
   UseGuards,
+  HttpCode,
 } from "@nestjs/common";
 import {
   ApiBody,
   ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiParam,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiNoContentResponse,
 } from "@nestjs/swagger";
-import { CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
+import { ActorDto, CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
 import { ActorService } from "./actor.service";
 import { Actor } from "@prisma/client";
 import { UserId } from "../common/decorators/user-id.decorator";
@@ -31,6 +34,10 @@ export class ActorController {
   @Get("count")
   @ApiOperation({
     summary: "Récupérer le nombre total d'acteurs (toutes applications)",
+  })
+  @ApiOkResponse({
+    description: "Nombre total d'acteurs",
+    type: Number,
   })
   public async countAllActors(): Promise<number> {
     return this.actorService.count();
@@ -61,7 +68,11 @@ Informations requises :
     `,
   })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
-  @ApiResponse({ status: 201, description: "Acteur créé avec succès" })
+  @HttpCode(201)
+  @ApiCreatedResponse({
+    description: "Acteur créé avec succès",
+    type: ActorDto,
+  })
   public async create(
     @Body() createActorDto: CreateActorDto,
     @UserId() userId: string,
@@ -78,6 +89,10 @@ Informations requises :
   @Get(":id")
   @AppAction("readActors")
   @ApiOperation({ summary: "Récupérer un acteur par ID" })
+  @ApiOkResponse({
+    description: "Acteur trouvé avec succès",
+    type: ActorDto,
+  })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiParam({ name: "id", description: "ID de l'acteur" })
   public async findOne(@Param("id") id: string): Promise<Actor> {
@@ -87,8 +102,13 @@ Informations requises :
   @Get()
   @AppAction("readActors")
   @ApiOperation({ summary: "Récupérer tous les acteurs" })
+  @ApiOkResponse({
+    description: "Liste des acteurs trouvés",
+    type: ActorDto,
+    isArray: true,
+  })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
-  @ApiResponse({ status: 200, description: "Liste des acteurs" })
+  @ApiOkResponse({ description: "Liste des acteurs" })
   public async findAll(
     @Param("applicationId") applicationId: string,
   ): Promise<Actor[]> {
@@ -98,6 +118,10 @@ Informations requises :
   @Patch(":id")
   @AppAction("writeActors")
   @ApiOperation({ summary: "Mettre à jour un acteur" })
+  @ApiOkResponse({
+    description: "Acteur mis à jour avec succès",
+    type: ActorDto,
+  })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiParam({ name: "id", description: "ID de l'acteur" })
   public async updated(
@@ -122,6 +146,10 @@ Informations requises :
   @Delete(":id")
   @AppAction("writeActors")
   @ApiOperation({ summary: "Supprimer un acteur" })
+  @HttpCode(204)
+  @ApiNoContentResponse({
+    description: "Acteur supprimé avec succès",
+  })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiParam({ name: "id", description: "ID de l'acteur" })
   public async delete(

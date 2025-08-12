@@ -1,0 +1,16 @@
+services:
+  backend:
+    image: ${BACK_IMAGE_TAG}
+    pull_policy: always
+    volumes: !reset []
+    command: !reset null
+
+  client:
+    image: ${FRONT_IMAGE_TAG}
+    pull_policy: always
+    ports:
+      - 8080:8080
+    volumes: !reset []
+    command: !reset null
+
+  prisma-studio: !reset null

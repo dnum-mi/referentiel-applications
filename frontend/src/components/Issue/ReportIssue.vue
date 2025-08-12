@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, defineProps } from "vue";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useReportIssueStore } from "@/stores/reportIssueStore";
 
@@ -9,7 +9,7 @@ const props = defineProps<{
 }>();
 
 const reportIssueStore = useReportIssueStore();
-const toaster = useToaster();
+const toaster = useToasterStore();
 
 const application = ref<ApplicationWithPerms>(props.application);
 const correctionText = ref("");

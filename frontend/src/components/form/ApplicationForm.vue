@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import type { Application, Label } from "@/models/Application";
+import type { Label } from "@/models/Application";
 import { ref, computed, onMounted } from "vue";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
 import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
+import type { ApplicationDto } from "@/client/types.gen";
 
 const props = defineProps<{
-  initialData?: Application
+  initialData?: ApplicationDto
   labels: Label[]
   isSubmitting?: boolean
 }>();
 
 const emit = defineEmits(["update:application", "submit", "cancel"]);
 
-const toaster = useToaster();
+const toaster = useToasterStore();
 
 const initialLabels = ref<Label[]>([]);
 

@@ -13,6 +13,7 @@ import { calculateIQ } from "src/common/utils/quality.utils";
 import { ApplicationRights } from "./application/dto/application-rights.dto";
 import { APP_PERMISSIONS } from "src/common/utils/types";
 import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
+import { ApplicationSearchResultDto } from "./application/dto/get-application.dto.js";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -244,13 +245,16 @@ export class ApplicationService {
   public async search(
     searchParams: ApplicationSearchDto,
     user?: UserEntity,
-  ): Promise<{ results: any[], total: number } | any[]> {
+  ): Promise<ApplicationSearchResultDto> {
     // Handle link-specific search (old SearchApplicationDto behavior)
     if ("link" in searchParams && searchParams.link) {
       const results = await this.applicationRepository.findByLink(
         searchParams.link,
       );
-      return Array.isArray(results) ? results : [results];
+      return {
+        results,
+        total: results.length,
+      };
     }
     if (user.adminLevel >= AdminLevel.READ) {
       // If the user has read or write permissions, proceed with the search

@@ -73,3 +73,12 @@ export class HostingOptionFiltersDto {
   @IsString()
   room?: string;
 }
+
+export class HostingOptionDto extends CreateHostingOptionDto {
+  @ApiProperty({
+    description: "Unique identifier of the hosting option",
+    example: "12345678-1234-1234-1234-123456789012",
+  })
+  @IsString()
+  id: string;
+}

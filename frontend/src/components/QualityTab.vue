@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, defineProps } from "vue";
-import useToaster from "@/composables/use-toaster";
+import { useToasterStore } from "@/stores/toasterStore";
 import type { Application, Compliance } from "@/models/Application";
-import CompliancesApi from "@/api/compliance";
 import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useLinkStore } from "@/stores/linkStore";
+import { useComplianceStore } from "@/stores/complianceStore.js";
 
 const props = defineProps<{ application: Application }>();
 
-const toaster = useToaster();
+const toaster = useToasterStore();
 
 const loading = ref(false);
 const actorStore = useActorStore();
@@ -19,13 +19,14 @@ const actorTypesList = computed(() => actorTypeStore.actorTypes);
 const hostingStore = useHostingStore();
 const hostings = computed(() => hostingStore.hostings);
 const linkStore = useLinkStore();
+const complianceStore = useComplianceStore();
 const compliances = ref<Compliance>();
 
 async function fetchQuality() {
   loading.value = true;
   try {
     await linkStore.fetchLinks(props.application.id);
-    compliances.value = await CompliancesApi.getCompliance(props.application.id);
+    compliances.value = await complianceStore.fetchCompliance(props.application.id);
   } catch {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
   } finally {

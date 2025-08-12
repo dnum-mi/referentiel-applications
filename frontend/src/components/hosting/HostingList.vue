@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
-import type { Hosting } from "@/models/Hosting";
+import { defineProps } from "vue";
+import type { HostingDto } from "@/client/types.gen";
 
-defineProps<{ hostings: Hosting[] }>();
+defineProps<{ hostings: HostingDto[] }>();
 const emit = defineEmits(["edit", "delete"]);
 
-function handleEdit(hosting: Hosting) {
+function handleEdit(hosting: HostingDto) {
   emit("edit", hosting);
 }
 
-function handleDelete(hosting: Hosting) {
+function handleDelete(hosting: HostingDto) {
   emit("delete", hosting);
 }
 </script>

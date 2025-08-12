@@ -1,20 +1,28 @@
-FROM node:22-slim
+FROM node:24-slim AS base
 
 WORKDIR /app
+ENV PORT=3500
 
-RUN apt-get update && apt-get install -y jq libssl-dev procps
-RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
+RUN apt-get update -y && apt-get install -y openssl jq libssl-dev procps
+RUN npm install --ignore-scripts --location=global pnpm@10.14.0
 
 COPY package.json pnpm-lock.yaml ./
 
-RUN npm install -g pnpm
-RUN pnpm install --frozen-lockfile
+RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
 
+
+FROM base AS dev
+RUN pnpm install
 COPY . .
+RUN pnpm db:generate
+EXPOSE 3500
+CMD [ "pnpm", "start:dev" ]
 
-RUN pnpm prisma generate
-RUN pnpm run build
 
-ENV PORT=3500
-
-CMD ["node" , "dist/src/main.js"]
+FROM base AS prod
+RUN pnpm install --frozen-lockfile --ignore-scripts
+COPY . .
+RUN pnpm db:generate
+RUN pnpm build
+EXPOSE 8080
+CMD [ "pnpm", "start:prod" ]

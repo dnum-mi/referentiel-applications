@@ -4,18 +4,18 @@ import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useSiteStore } from "@/stores/siteStore";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 import PriorityRestartFilter from "./PriorityRestartFilter.vue";
-import HostingOptions from "@/api/hosting-options";
 import { DsfrInput } from "@gouvminint/vue-dsfr";
-
-import type { HostingOption } from "@/models/Hosting";
+import type { HostingOptionDto } from "@/client/types.gen.js";
+import { useHostingStore } from "@/stores/hostingStore.js";
 
 const searchStore = useApplicationSearchStore();
 const siteStore = useSiteStore();
+const hostingStore = useHostingStore();
 
-const hostingSearchInput = ref(searchStore.filters.hostingSearch || "");
-const allHostingOptions = ref<[]>([]);
+const hostingSearchInput = ref(searchStore.filters.hostingSearch);
+const allHostingOptions = ref<HostingOptionDto[]>([]);
 
-function formatOptionText(option: HostingOption): string {
+function formatOptionText(option: HostingOptionDto): string {
   return [option.provider, option.platform, option.site, option.building || "", option.room || ""].filter(Boolean).join(" - ");
 }
 
@@ -26,14 +26,14 @@ const { run: debouncedSearch } = useDebouncedFn(() => {
 onMounted(async () => {
   siteStore.fetchAll();
   try {
-    const hostingOptions = await HostingOptions.getAll();
+    const hostingOptions = await hostingStore.getAllHostingOptions();
     allHostingOptions.value = hostingOptions;
   } catch (error) {
     console.error("Error fetching hosting options data:", error);
   }
 });
 
-watch(hostingSearchInput, (value: string) => {
+watch(hostingSearchInput, (value?: string) => {
   searchStore.setFilter("hostingSearch", value);
   searchStore.setFilter("page", 0);
   debouncedSearch();

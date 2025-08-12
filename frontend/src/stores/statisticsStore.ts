@@ -1,63 +1,69 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { call } from "@/api/callService";
-import Stats from "@/api/stats";
 import type { GroupBy, IqAvg } from "@/models/Stat";
+import api from "@/api/index";
 
 export const useStatisticsStore = defineStore("statisticsStore", () => {
   const totalApplications = ref<number | null>(null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const iqStats = ref<IqAvg[]>([]);
-
-  async function fetchTotalApplications() {
-    try {
-      isLoading.value = true;
-      error.value = null;
-      const apps = await call("application", "list");
-      totalApplications.value = apps.length;
-    } catch (err: any) {
-      error.value = err.message ?? "Erreur inconnue";
-    } finally {
-      isLoading.value = false;
-    }
-  }
+  const totalCompliances = ref<number>(0);
 
   async function countApplications() {
-    totalApplications.value = await call("application", "countByStatus");
+    const response = await api.applicationControllerCount();
+    totalApplications.value = response.data ?? 0;
   }
 
   async function countApplicationsByMonth(): Promise<{ month: string, total: number }[]> {
-    return await call("application", "countByMonth");
+    const response = await api.applicationControllerCountByMonth();
+    if (!response.response.ok || !response.data) {
+      throw new Error("Erreur lors de la récupération des applications par mois");
+    }
+    return response.data;
   }
 
   async function countApplicationsByIq(): Promise<{ iq: number, total: number }[]> {
-    return await call("application", "countByIq");
+    const response = await api.applicationControllerCountByIq();
+    if (!response.response.ok || !response.data) {
+      throw new Error("Erreur lors de la récupération des applications par IQ");
+    }
+    return response.data;
   }
 
-  async function fetchIqStats(from?: string, to?: string, groupBy: GroupBy = "month") {
+  async function fetchIqStats(from?: string, to?: string, groupBy: GroupBy = "mois") {
     isLoading.value = true;
     error.value = null;
-    try {
-      const result = await Stats.getIqAvgGrouped(from, to, groupBy);
-      iqStats.value = result;
-    } catch (err: any) {
-      console.error("🔍 fetchIqStats error:", err);
-      error.value = err.message ?? "Erreur lors du chargement des stats IQ";
-    } finally {
-      isLoading.value = false;
+    const response = await api.statsControllerGetIqAvgGrouped({ query: { from, to, groupBy } });
+    if (!response.response.ok) {
+      throw new Error("Erreur lors de la récupération des stats IQ");
     }
+    if (!response.data || !Array.isArray(response.data)) {
+      throw new Error("Données de stats IQ invalides");
+    }
+    iqStats.value = response.data;
   }
+
+  // fetch total compliance count
+  const countCompliances = async (): Promise<number> => {
+    const response = await api.complianceControllerCountAllCompliances();
+    if (!response.response.ok) {
+      throw new Error("Erreur lors du comptage des conformités.");
+    }
+    totalCompliances.value = response.data ?? 0;
+    return totalCompliances.value;
+  };
 
   return {
     // State properties
     iqStats,
     totalApplications,
     isLoading,
+    totalCompliances,
     error,
 
     // Methods
-    fetchTotalApplications,
+    countCompliances,
     countApplications,
     countApplicationsByMonth,
     countApplicationsByIq,

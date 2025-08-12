@@ -7,10 +7,11 @@ import {
   Param,
   Delete,
   UseGuards,
+  HttpCode,
 } from "@nestjs/common";
-import { ApiTags, ApiResponse, ApiOperation, ApiParam } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiParam, ApiCreatedResponse, ApiOkResponse, ApiNoContentResponse } from "@nestjs/swagger";
 import { LinksService } from "./links.service";
-import { CreateLinkDto } from "./dto/create-link.dto";
+import { CreateLinkDto, LinkDto } from "./dto/create-link.dto";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { UpdateLinkDto } from "./dto/update-link.dto";
 import { ApplicationService } from "src/product/application.service";
@@ -29,7 +30,11 @@ export class ApplicationLinksController {
   @Post()
   @AppAction("writeLinks")
   @ApiOperation({ summary: "Create a new link for an application" })
-  @ApiResponse({ status: 201 })
+  @HttpCode(201)
+  @ApiCreatedResponse({
+    description: "Link created successfully",
+    type: LinkDto,
+  })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   async create(
     @UserId() userId: string,
@@ -58,7 +63,7 @@ export class ApplicationLinksController {
   @Get()
   @AppAction("readLinks")
   @ApiOperation({ summary: "Retrieve all links for an application" })
-  @ApiResponse({ status: 200 })
+  @ApiOkResponse({ description: "List of links for the application", type: LinkDto, isArray: true })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   findAll(@Param("applicationId") applicationId: string) {
     return this.service.findAll({ applicationId });
@@ -67,7 +72,7 @@ export class ApplicationLinksController {
   @Patch(":id")
   @AppAction("writeLinks")
   @ApiOperation({ summary: "Update a link for an application" })
-  @ApiResponse({ status: 200 })
+  @ApiOkResponse({ description: "Link updated successfully", type: LinkDto })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   @ApiParam({ name: "id", description: "ID of the link to update" })
   update(
@@ -96,7 +101,8 @@ export class ApplicationLinksController {
   @Delete(":id")
   @AppAction("writeLinks")
   @ApiOperation({ summary: "Delete a link for an application" })
-  @ApiResponse({ status: 200 })
+  @HttpCode(204)
+  @ApiNoContentResponse({ description: "Link deleted successfully" })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   @ApiParam({ name: "id", description: "ID of the link to delete" })
   delete(

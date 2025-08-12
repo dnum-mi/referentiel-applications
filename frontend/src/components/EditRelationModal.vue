@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import Applications from "@/api/application";
-import Relations from "@/api/relation";
-import useToaster from "@/composables/use-toaster";
-import type { Relation, Application } from "@/models/Application";
+import { useToasterStore } from "@/stores/toasterStore";
+import api from "@/api/index";
+import { RelationType } from "@/client/types.gen";
+import type { ApplicationDto, RelationDto } from "@/client/types.gen";
+import { useApplicationSearchStore } from "@/stores/applicationSearchStore.js";
 
 const props = withDefaults(
   defineProps<{
     opened?: boolean
     title: string
-    relation: Relation | null
+    relation: RelationDto | null
   }>(),
   {
     opened: false,
@@ -18,18 +19,19 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: "close"): void
-  (e: "update-relation", updatedRelation: Relation): void
+  (e: "update-relation", updatedRelation: RelationDto): void
 }>();
-const toaster = useToaster();
+const toaster = useToasterStore();
+const applicationSearchStore = useApplicationSearchStore();
 const searchText = ref("");
-const suggestions = ref<Application[]>([]);
-const selectedApplication = ref<Application | null>(null);
-const relationType = ref("is_part_of");
+const suggestions = ref<ApplicationDto[]>([]);
+const selectedApplication = ref<Required<Pick<ApplicationDto, "id" | "label">> | null>(null);
+const relationTypeSelected = ref<RelationType>(RelationType.IS_PART_OF);
 const relationTypesForSelect = [
-  { value: "is_part_of", text: "Fait partie de" },
-  { value: "in_replacement_of", text: "Remplace" },
-  { value: "is_service_user_of", text: "Utilise le service de" },
-  { value: "is_data_user_of", text: "Utilise la donnée de" },
+  { value: RelationType.IS_PART_OF, text: "Fait partie de" },
+  { value: RelationType.IN_REPLACEMENT_OF, text: "Remplace" },
+  { value: RelationType.IS_SERVICE_USER_OF, text: "Utilise le service de" },
+  { value: RelationType.IS_DATA_USER_OF, text: "Utilise la donnée de" },
 ];
 
 const isLoading = ref(false);
@@ -46,8 +48,11 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading.value = true;
     try {
-      const result = await Applications.getAllApplicationBySearch(query);
-      suggestions.value = result.results;
+      const response = await applicationSearchStore.searchApplications({
+        search: query,
+        limit: 10,
+      }, false);
+      suggestions.value = response.results || [];
     } catch (error) {
       console.error(error);
       toaster.addErrorMessage("Erreur lors de la recherche d'applications.");
@@ -70,7 +75,7 @@ watch(
   () => props.relation,
   (newRelation) => {
     if (newRelation) {
-      relationType.value = newRelation.type;
+      relationTypeSelected.value = newRelation.type;
       if (newRelation.targetApplication) {
         selectedApplication.value = {
           id: newRelation.targetApplication.id,
@@ -82,7 +87,7 @@ watch(
         searchText.value = "";
       }
     } else {
-      relationType.value = "is_part_of";
+      relationTypeSelected.value = RelationType.IS_PART_OF;
       selectedApplication.value = null;
       searchText.value = "";
     }
@@ -90,7 +95,7 @@ watch(
   { immediate: true },
 );
 
-function selectApplication(app: Application) {
+function selectApplication(app: ApplicationDto) {
   selectedApplication.value = app;
   searchText.value = app.label;
   suggestions.value = [];
@@ -101,7 +106,7 @@ async function submitRelationUpdate() {
     toaster.addErrorMessage("L'application cible est requise.");
     return;
   }
-  if (!relationType.value) {
+  if (!relationTypeSelected.value) {
     toaster.addErrorMessage("Le type de relation est requis.");
     return;
   }
@@ -112,16 +117,27 @@ async function submitRelationUpdate() {
 
   const payload = {
     applicationTargetId: selectedApplication.value.id,
-    type: relationType.value,
+    type: relationTypeSelected.value,
   };
 
-  try {
-    const result = await Relations.update(props.relation.applicationSourceId, props.relation.id, payload);
+  const response = await api.relationControllerUpdate({
+    path: { applicationId: props.relation.applicationSourceId, id: props.relation.id },
+    body: payload,
+  });
+  if (response.error) {
+    console.error(response.error);
+    toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
+    return;
+  }
+  if (!response.response.ok) {
+    toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
+    return;
+  }
+  if (response.data) {
+    const result = response.data;
+
     emit("update-relation", result);
     closeModal();
-  } catch (error) {
-    console.error(error);
-    toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
   }
 }
 
@@ -135,7 +151,7 @@ function closeModal() {
     <template #default>
       <div class="relation-type">
         <DsfrSelect
-          v-model="relationType"
+          v-model="relationTypeSelected"
           :options="relationTypesForSelect"
           label="Type de relation"
           default-unselected-text="Sélectionner une option"

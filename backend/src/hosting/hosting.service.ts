@@ -1,9 +1,8 @@
 import { IHostingRepository } from "./infrastructure/repository/hosting.repository.interface";
 import { Inject, Injectable } from "@nestjs/common";
-import { CreateHostingDto } from "./applications/dto/create-hosting.dto";
-import { UpdateHostingDto } from "./applications/dto/update-hosting.dto";
 import { Hosting } from "./domain/hosting.entity";
 import { ApplicationService } from "src/product/application.service";
+import { CreateHostingDto, UpdateHostingDto } from "./applications/dto/hosting.dto.js";
 
 @Injectable()
 export class HostingService {
@@ -48,10 +47,6 @@ export class HostingService {
       hosting.applicationId,
     );
     return deletedHosting;
-  }
-
-  findApplicationsBySite(site: string) {
-    return this.repository.findApplicationsBySite(site);
   }
 
   async findByApplicationId(applicationId: string): Promise<Hosting[]> {
