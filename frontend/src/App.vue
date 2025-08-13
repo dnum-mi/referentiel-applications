@@ -53,7 +53,9 @@ interface QuickLink {
   const loginUrlLink = await authentication.createLoginUrl({
     redirectUri: window.location.href,
   });
-  await userStore.fetchUser();
+  if (authentication.authenticated) {
+    await userStore.fetchUser();
+  }
   unauthenticatedQuickLinks.value = [
     {
       label: "Se connecter",

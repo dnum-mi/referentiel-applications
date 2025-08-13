@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
-import { updateUserLastLogin } from "src/common/utils/actionLog.utils";
+import { ActionLogService } from "src/action-log/action-log.service";
 import { UserEntity } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 
@@ -19,7 +19,10 @@ declare module "express" {
 export class AuthMiddleware implements NestMiddleware {
   private jwks = createRemoteJWKSet(new URL(process.env.KEYCLOAK_JWKS_URL));
 
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private readonly actionLogService: ActionLogService,
+  ) {}
 
   async use(req: Request, _res: Response, next: NextFunction) {
     try {
@@ -34,7 +37,7 @@ export class AuthMiddleware implements NestMiddleware {
         payload.sub as string,
       );
 
-      updateUserLastLogin(req.user);
+      this.actionLogService.updateUserLastLogin(req.user);
 
       next();
     } catch (error) {
