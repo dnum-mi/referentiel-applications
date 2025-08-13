@@ -27,6 +27,9 @@ import { HostingOptionModule } from "./hosting-option/hosting-option.module";
 import { StatsModule } from "./stats/stats.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { LoggingService } from "./services/logging.service";
+import appConfig from "./config/app.config";
+import databaseConfig from "./config/database.config";
+import { ActionLogService } from "./action-log/action-log.service";
 
 @Module({
   imports: [
@@ -46,14 +49,24 @@ import { LoggingService } from "./services/logging.service";
     HostingOptionModule,
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [appConfig, databaseConfig],
+      envFilePath: [".env"],
+      cache: true,
     }),
     MetadataModule,
     LinksModule,
     LabelsModule,
     CompliancesModule,
+    PrismaModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ApplicationService, LoggingService, AuthMiddleware],
+  providers: [
+    AppService,
+    ApplicationService,
+    ActionLogService,
+    LoggingService,
+    AuthMiddleware,
+  ],
   exports: [LoggingService],
 })
 export class AppModule implements NestModule {

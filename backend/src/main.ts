@@ -4,10 +4,15 @@ import { NestFactory } from "@nestjs/core";
 import { Logger as PinoLogger } from "nestjs-pino";
 import { AppModule } from "./app.module";
 import { setupSwagger } from "./swagger-config.js";
+import { ConfigService } from "@nestjs/config";
 
 async function bootstrap() {
   const globalPrefix = "/api/v2";
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const configService = app.get(ConfigService);
+  const port = configService.get<number>("app.port");
+  const host = configService.get<string>("app.host");
+
   if (!process.env.DISABLE_PINO_LOGGER) {
     app.useLogger(app.get(PinoLogger));
   }
@@ -33,7 +38,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(3500);
-  globalLogger.log("Application is running on: http://localhost:3500");
+  await app.listen(port, host);
+  globalLogger.log(`Application is running on: http://${host}:${port}`);
 }
 bootstrap();
