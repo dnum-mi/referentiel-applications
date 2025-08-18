@@ -284,7 +284,7 @@ watch(
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
               <div class="fr-col">
                 <h3 class="fr-card__title">
-                  Sites d'hébergement
+                  Hébergement
                 </h3>
               </div>
               <div class="fr-col-auto">
