@@ -1,0 +1,19 @@
+name: Test Formatting
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  test-lint:
+    name: Test Linting
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ESLint
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
+          pnpm run lint
