@@ -38,7 +38,6 @@ services:
     volumes:
       - ./backend:/app
       - ./frontend/openapi:/app/openapi
-      - /app/node_modules
 
   prisma-studio:
     build:
