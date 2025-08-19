@@ -1,11 +1,14 @@
 import {
+  Inject,
   Injectable,
   NestMiddleware,
   UnauthorizedException,
 } from "@nestjs/common";
+import { ConfigType } from "@nestjs/config";
 import { Request, Response, NextFunction } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { ActionLogService } from "src/action-log/action-log.service";
+import { keycloakConfig } from "src/config";
 import { UserEntity } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 
@@ -17,12 +20,16 @@ declare module "express" {
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-  private jwks = createRemoteJWKSet(new URL(process.env.KEYCLOAK_JWKS_URL));
+  private jwks: ReturnType<typeof createRemoteJWKSet>;
 
   constructor(
+    @Inject(keycloakConfig.KEY)
+    private readonly config: ConfigType<typeof keycloakConfig>,
     private userService: UserService,
     private readonly actionLogService: ActionLogService,
-  ) {}
+  ) {
+    this.jwks = createRemoteJWKSet(new URL(this.config.jwksUrl));
+  }
 
   async use(req: Request, _res: Response, next: NextFunction) {
     try {

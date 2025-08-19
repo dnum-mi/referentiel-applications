@@ -27,13 +27,18 @@ import { HostingOptionModule } from "./hosting-option/hosting-option.module";
 import { StatsModule } from "./stats/stats.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { LoggingService } from "./services/logging.service";
-import appConfig from "./config/app.config";
-import databaseConfig from "./config/database.config";
 import { ActionLogService } from "./action-log/action-log.service";
+import * as configs from "./config/index";
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [configs.appConfig, configs.databaseConfig, configs.keycloakConfig],
+      envFilePath: [".env"],
+      cache: true,
+    }),
     PrismaModule,
     RelationModule,
     UserModule,
@@ -47,12 +52,6 @@ import { ActionLogService } from "./action-log/action-log.service";
     ActorTypeModule,
     ActorModule,
     HostingOptionModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [appConfig, databaseConfig],
-      envFilePath: [".env"],
-      cache: true,
-    }),
     MetadataModule,
     LinksModule,
     LabelsModule,

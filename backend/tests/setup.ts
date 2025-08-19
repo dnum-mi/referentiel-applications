@@ -12,7 +12,15 @@ export async function setupApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
-  setupSwagger(app, false);
+  setupSwagger(app, {
+    writeYaml: false,
+    onlyWriteSwagger: false,
+    baseUrl: process.env.BASE_URL,
+  }, {
+    baseUrl: process.env.KEYCLOAK_BASE_URL,
+    realm: process.env.KEYCLOAK_REALM,
+    clientId: process.env.KEYCLOAK_CLIENT_ID,
+  });
   await app.init();
   return app;
 }
