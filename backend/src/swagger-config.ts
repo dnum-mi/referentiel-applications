@@ -41,6 +41,11 @@ export function setupSwagger(
     jsonDocumentUrl: "/swagger/json",
     yamlDocumentUrl: "/swagger/yaml",
     useGlobalPrefix: true,
+    swaggerOptions: {
+      oauth2RedirectUrl: "http://localhost:3500/api/v2/swagger/oauth2-redirect.html",
+      clientId: process.env.KEYCLOAK_CLIENT_ID,
+      usePkceWithAuthorizationCodeGrant: true,
+    },
   });
 
   if (writeYaml) {
