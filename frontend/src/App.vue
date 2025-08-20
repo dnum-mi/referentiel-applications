@@ -17,8 +17,6 @@ const instance = getCurrentInstance();
 const userStore = useUserStore();
 const applicationSearchStore = useApplicationSearchStore();
 const toaster = useToasterStore();
-const unauthenticatedQuickLinks = ref<QuickLink[]>([]);
-const authenticatedQuickLinks = ref<QuickLink[]>([]);
 
 configureClients(toaster);
 
@@ -49,55 +47,59 @@ interface QuickLink {
   iconAttrs?: Record<string, string>
 }
 
-(async () => {
-  const loginUrlLink = await authentication.createLoginUrl({
-    redirectUri: window.location.href,
-  });
-  if (authentication.authenticated) {
-    await userStore.fetchUser();
-  }
-  unauthenticatedQuickLinks.value = [
+if (authentication.authenticated) {
+  userStore.fetchUser();
+}
+
+const authenticatedQuickLinks = computed<QuickLink[]>(() => {
+  const baseLinks: QuickLink[] = [
     {
-      label: "Se connecter",
-      to: loginUrlLink,
-      icon: "ri-lock-line",
-      iconAttrs: { title: "Se connecter" },
+      label: "Mon profil",
+      to: { name: routeNames.PROFILE },
+      icon: "ri-user-line",
+      iconAttrs: { title: "Accéder à mon profil" },
+    },
+    {
+      label: "Déconnexion",
+      to: authentication.createLogoutUrl({
+        redirectUri: window.location.origin + router.resolve({ name: "accueil" }).href,
+      }),
+      icon: "ri-logout-box-r-line",
+      iconAttrs: { title: "Déconnexion" },
     },
   ];
-  if (userStore.authenticated) {
-    const baseLinks = [];
-
-    if (userStore.adminLevel >= AdminLevel.ADMIN) {
-      baseLinks.push({
-        label: "Admin",
-        to: { name: routeNames.ADMINPAGE },
-        icon: "ri-user-settings-line",
-        iconAttrs: { title: "Admin" },
-      });
-    }
-
-    baseLinks.push(
-      {
-        label: "Mon profil",
-        to: { name: routeNames.PROFILE },
-        icon: "ri-user-line",
-        iconAttrs: { title: "Accéder à mon profil" },
-      },
-      {
-        label: "Déconnexion",
-        to: authentication.createLogoutUrl({
-          redirectUri: window.location.origin + router.resolve({ name: "accueil" }).href,
-        }),
-        icon: "ri-logout-box-r-line",
-        iconAttrs: { title: "Déconnexion" },
-      },
-    );
-
-    authenticatedQuickLinks.value = baseLinks;
+  if (userStore.adminLevel >= AdminLevel.ADMIN) {
+    baseLinks.unshift({
+      label: "Admin",
+      to: { name: routeNames.ADMINPAGE },
+      icon: "ri-user-settings-line",
+      iconAttrs: { title: "Admin" },
+    });
   }
-})();
+  return baseLinks;
+});
 
-const quickLinks = computed(() => (userStore.authenticated ? authenticatedQuickLinks.value : unauthenticatedQuickLinks.value));
+const loginRedirectUrl = ref<string>("");
+
+authentication.createLoginUrl({
+  redirectUri: window.location.href,
+}).then((url) => {
+  loginRedirectUrl.value = url;
+});
+
+const unauthenticatedQuickLinks = computed<QuickLink[]>(() => ([{
+  label: "Se connecter",
+  to: loginRedirectUrl.value,
+  icon: "ri-lock-line",
+  iconAttrs: { title: "Se connecter" },
+}]));
+
+const quickLinks = computed<QuickLink[]>(() => {
+  if (!userStore.authenticated) {
+    return unauthenticatedQuickLinks.value;
+  }
+  return authenticatedQuickLinks.value;
+});
 
 const navItems = [
   {
