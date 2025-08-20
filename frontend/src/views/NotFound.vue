@@ -5,10 +5,10 @@ import { routeNames } from "@/router/route-names";
 <template>
   <div class="fr-container fr-my-2w">
     <DsfrErrorPage
-      title="Oups, perdu ?"
-      subtitle="Erreur 404: Je suis une théière"
-      description="Il semblerait que vous ayez demandé du café à une théière. Essayons de remettre les choses au clair."
-      help="Si vous cherchez du thé, vous êtes au bon endroit. Sinon, peut-être voulez-vous retourner à la page d'accueil ?"
+      title="Vous ne passerez pas"
+      subtitle="Erreur 404 : la page demandée est introuvable."
+      description="Même les plus grands voyageurs égarent parfois leur chemin. Cette page n’existe pas ou n’est plus accessible."
+      help="Revenez à l’accueil pour poursuivre votre quête."
     >
       <template #default>
         <router-link :to="{ name: routeNames.SEARCHAPP }">
