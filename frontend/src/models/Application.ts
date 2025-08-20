@@ -1,4 +1,4 @@
-import type { ApplicationDto, ApplicationStatus, RelationType } from "@/client/types.gen";
+import type { ApplicationDto, ApplicationStatus, AppPermsDto, RelationType } from "@/client/types.gen";
 import type { Actor } from "./Actor";
 
 // TODO sortir ce modèle et utiliser ApplicationDto
@@ -127,24 +127,5 @@ export interface User {
 
 // refer directly to columns in database
 export type APP_PERMISSIONS
-  = | "readBase"
-    | "writeBase"
-    | "readActors"
-    | "writeActors"
-    | "readCompliances"
-    | "writeCompliances"
-    | "readHostings"
-    | "writeHostings"
-    | "readMetadata"
-    | "writeMetadata"
-    | "readRelations"
-    | "writeRelations"
-    | "readLinks"
-    | "writeLinks";
+  = keyof Exclude<AppPermsDto, "actorTypeId">;
 export type ApplicationRights = APP_PERMISSIONS[];
-
-export type AppPermsMatrix = ({
-  [x in APP_PERMISSIONS]: boolean;
-} & {
-  actorTypeId: string
-})[];

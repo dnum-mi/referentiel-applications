@@ -11,7 +11,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
 
   const fetchMyReports = async () => {
     try {
-      const response = await api.applicationAnomalyNotificationsControllerFindByCurrentUser();
+      const response = await api.anomalyNotificationsControllerFindAll();
       if (!response.response.ok) {
         throw new Error("Erreur lors de la récupération des notifications d'anomalies");
       }
@@ -27,7 +27,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
   const fetchAllReports = async () => {
     try {
       isLoading.value = true;
-      const response = await api.applicationAnomalyNotificationsControllerFindAll();
+      const response = await api.anomalyNotificationsControllerFindAll({ query: { all: true } });
       if (!response.response.ok) {
         throw new Error("Erreur lors de la récupération des notifications d'anomalies");
       }
@@ -45,7 +45,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
   const fetchIssueByApplication = async (applicationId: string) => {
     isLoading.value = true;
     try {
-      const response = await api.applicationAnomalyNotificationsControllerFindAll({ query: { applicationId } });
+      const response = await api.applicationAnomalyNotificationsControllerFindAll({ path: { applicationId }, query: { all: true } });
       if (!response.response.ok) {
         throw new Error("Erreur lors de la récupération des signalements pour l'application");
       }
@@ -67,7 +67,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     };
 
     try {
-      const response = await api.applicationAnomalyNotificationsControllerCreate({ body: payload });
+      const response = await api.applicationAnomalyNotificationsControllerCreate({ path: { applicationId }, body: payload });
       if (!response.response.ok) {
         throw new Error("Erreur lors de la proposition de correction");
       }

@@ -6,7 +6,7 @@ export type Tab<E extends Record<string, string>> = {
   disabled?: boolean
 } & (
   | {
-    loadFn: () => Promise<void>
+    loadFn: () => Promise<any>
     errorKey: keyof E
   }
   | {

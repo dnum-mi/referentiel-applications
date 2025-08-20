@@ -6,7 +6,7 @@ export type APP_PERMISSIONS = Exclude<
   keyof typeof Prisma.AppPermissionsScalarFieldEnum,
   "actorTypeId"
 >;
-export type APP_PERMS_MAP = Partial<Record<APP_PERMISSIONS, boolean>>;
+export type APP_PERMS_MAP = Set<APP_PERMISSIONS>;
 
 // uniquement utile pour faire matcher le typage avec une vraie valeur pour les class nest
 export const AppPermissionsRecord = {
@@ -23,7 +23,9 @@ export const AppPermissionsRecord = {
   readLinks: null,
   writeLinks: null,
   readMetadata: null,
-  writeMetadata: null,
+  readAnomalyNotifications: null,
+  manageAnomalyNotifications: null,
+  postAnomalyNotifications: null,
 } as const satisfies Record<APP_PERMISSIONS, null>;
 
 export const AppPermissionsValues: APP_PERMISSIONS[] = Object.keys(AppPermissionsRecord) as APP_PERMISSIONS[];

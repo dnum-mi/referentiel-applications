@@ -44,10 +44,6 @@ export class AppPermsDto {
 
   @ApiProperty()
   @IsBoolean()
-  writeMetadata: boolean;
-
-  @ApiProperty()
-  @IsBoolean()
   readRelations: boolean;
 
   @ApiProperty()
@@ -61,4 +57,16 @@ export class AppPermsDto {
   @ApiProperty()
   @IsBoolean()
   writeLinks: boolean;
+
+  @ApiProperty()
+  @IsBoolean()
+  readAnomalyNotifications: boolean;
+
+  @ApiProperty()
+  @IsBoolean()
+  postAnomalyNotifications: boolean;
+
+  @ApiProperty()
+  @IsBoolean()
+  manageAnomalyNotifications: boolean;
 }

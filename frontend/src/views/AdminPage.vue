@@ -2,7 +2,6 @@
 import { ref, watch } from "vue";
 import { AdminLevel } from "@/models/user";
 import { useToasterStore } from "@/stores/toasterStore";
-import type { AppPermsMatrix } from "@/models/Application";
 import type { Tab } from "@/utils/types";
 import { AdminLevelOptions, AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
 import api from "@/api/index";
@@ -24,7 +23,7 @@ const selectedUser = ref<UserEntity | null>(null);
 const saving = ref(false);
 const searchQuery = ref("");
 const activeTab = ref(0);
-const appPermsMatrix = ref<AppPermsMatrix>();
+const appPermsMatrix = ref<AppPermsDto[]>();
 const editingAdminLevel = ref<AdminLevel>(AdminLevel.NONE);
 
 // Tabs consist of 4 main keys and an optional load function who comes always with a error key
@@ -289,7 +288,7 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
           v-if="appPermsMatrix"
           :app-perms-matrix="appPermsMatrix"
           @reload="loadAppPermissionsMatrix"
-          @update:app-perms-matrix="(m: AppPermsMatrix) => saveAppPermsMatrix(m)"
+          @update:app-perms-matrix="(m: AppPermsDto[]) => saveAppPermsMatrix(m)"
         />
       </DsfrTabContent>
     </DsfrTabs>

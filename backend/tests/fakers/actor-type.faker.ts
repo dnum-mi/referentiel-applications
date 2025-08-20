@@ -1,23 +1,8 @@
 import { faker } from "@faker-js/faker";
 import { getPrismaClient } from "./prisma";
+import type { APP_PERMISSIONS } from "src/common/utils/types";
 
-type APP_PERMISSIONS
-  = | "readBase"
-    | "writeBase"
-    | "readActors"
-    | "writeActors"
-    | "readCompliances"
-    | "writeCompliances"
-    | "readHostings"
-    | "writeHostings"
-    | "readMetadata"
-    | "writeMetadata"
-    | "readRelations"
-    | "writeRelations"
-    | "readLinks"
-    | "writeLinks";
-
-function permissionsToObject(permissions: Set<APP_PERMISSIONS>) {
+function permissionsToObject(permissions: Set<APP_PERMISSIONS>): Record<APP_PERMISSIONS, boolean> {
   return {
     readActors: permissions.has("readActors"),
     writeActors: permissions.has("writeActors"),
@@ -26,13 +11,15 @@ function permissionsToObject(permissions: Set<APP_PERMISSIONS>) {
     readHostings: permissions.has("readHostings"),
     writeHostings: permissions.has("writeHostings"),
     readMetadata: permissions.has("readMetadata"),
-    writeMetadata: permissions.has("writeMetadata"),
     readRelations: permissions.has("readRelations"),
     writeRelations: permissions.has("writeRelations"),
     readLinks: permissions.has("readLinks"),
     writeLinks: permissions.has("writeLinks"),
     readBase: permissions.has("readBase"),
     writeBase: permissions.has("writeBase"),
+    readAnomalyNotifications: permissions.has("readAnomalyNotifications"),
+    postAnomalyNotifications: permissions.has("postAnomalyNotifications"),
+    manageAnomalyNotifications: permissions.has("manageAnomalyNotifications"),
   };
 }
 export class ActorTypeFaker {

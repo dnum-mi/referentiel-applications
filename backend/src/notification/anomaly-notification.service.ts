@@ -1,29 +1,30 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { CreateAnomalyNotificationDto } from "./dto/create-anomaly-notification.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
-import { BaseService } from "src/common/base.service";
-import { AnomalyNotification } from "./entities/anomaly-notification.entity";
+import { Prisma } from "@prisma/client";
+import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
 
 @Injectable()
-export class AnomalyNotificationService extends BaseService<AnomalyNotification> {
-  constructor(protected readonly prisma: PrismaService) {
-    super(prisma.anomalyNotification, prisma);
-  }
+export class AnomalyNotificationService {
+  constructor(protected readonly prisma: PrismaService) {}
 
   /**
    * Crée une nouvelle notification d'anomalie.
    * @param data Les données nécessaires pour créer la notification.
    * @returns La notification d'anomalie créée.
    */
-  public async create(data: CreateAnomalyNotificationDto) {
-    return await this.prisma.anomalyNotification.create({
+  public async create(data: CreateAnomalyNotificationDto, requestor: UserEntity) {
+    if (!requestor.appPerms.includes("postAnomalyNotifications")) {
+      throw new ForbiddenException("Vous n'avez pas la permission de créer une notification d'anomalie.");
+    }
+    return this.prisma.anomalyNotification.create({
       data: {
         application: {
           connect: { id: data.applicationId },
         },
         notifier: {
-          connect: { keycloakId: data.notifierId },
+          connect: { keycloakId: requestor.keycloakId },
         },
         description: data.description,
       },
@@ -34,10 +35,37 @@ export class AnomalyNotificationService extends BaseService<AnomalyNotification>
    * Récupère toutes les notifications d'anomalies.
    * @returns Un tableau de notifications d'anomalies.
    */
-  async findAll(filters?: any) {
-    return await this.prisma.anomalyNotification.findMany({
+  async findAll({
+    applicationId,
+    requestor,
+    notifierId,
+  }: {
+    applicationId?: string
+    notifierId?: string
+    requestor: UserEntity
+  }) {
+    const where: Prisma.AnomalyNotificationWhereInput = {
+      applicationId,
+      notifierId,
+    };
+
+    // Controle des permissions
+    const hasApplicationReadPerms = requestor.appPerms?.includes("readAnomalyNotifications");
+    const isAdminRead = requestor.adminLevel >= AdminLevel.READ;
+
+    if (applicationId) {
+      if (!hasApplicationReadPerms && !isAdminRead) {
+        where.notifierId = requestor.keycloakId;
+      }
+    } else {
+      if (!isAdminRead) {
+        where.notifierId = requestor.keycloakId;
+      }
+    }
+
+    return this.prisma.anomalyNotification.findMany({
       include: { history: true, application: true, notifier: true },
-      where: filters,
+      where,
     });
   }
 
@@ -47,9 +75,19 @@ export class AnomalyNotificationService extends BaseService<AnomalyNotification>
    * @returns La notification d'anomalie trouvée.
    * @throws NotFoundException Si la notification n'est pas trouvée.
    */
-  async findOne(id: string) {
+  async findOne(id: string, requestor: UserEntity) {
+    const hasApplicationReadPerms
+    = requestor.appPerms?.includes("readAnomalyNotifications")
+      || requestor.appPerms?.includes("manageAnomalyNotifications")
+      || requestor.adminLevel >= AdminLevel.READ;
+
+    const where: Prisma.AnomalyNotificationWhereUniqueInput = {
+      id,
+      ...(hasApplicationReadPerms ? {} : { notifierId: requestor.keycloakId }),
+    };
+
     const notification = await this.prisma.anomalyNotification.findUnique({
-      where: { id },
+      where,
       include: { history: true, application: true },
     });
     if (!notification) {
@@ -67,10 +105,15 @@ export class AnomalyNotificationService extends BaseService<AnomalyNotification>
    * @throws NotFoundException Si la notification n'est pas trouvée.
    */
   async update(id: string, data: UpdateAnomalyNotificationDto) {
-    await this.findOne(id);
-    return await this.prisma.anomalyNotification.update({
+    return this.prisma.anomalyNotification.update({
       where: { id },
       data,
+    });
+  }
+
+  async delete(id: string) {
+    return this.prisma.anomalyNotification.delete({
+      where: { id },
     });
   }
 }

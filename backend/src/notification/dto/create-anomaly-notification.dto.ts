@@ -6,9 +6,6 @@ export class CreateAnomalyNotificationDto {
   applicationId: string;
 
   @IsString()
-  notifierId: string;
-
-  @IsString()
   description: string;
 
   @IsEnum(AnomalyNotificationStatus)

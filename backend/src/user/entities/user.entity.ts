@@ -1,4 +1,5 @@
-import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import { APP_PERMISSIONS } from "src/common/utils/types";
 
 export enum AdminLevel {
   NONE = 0,
@@ -24,4 +25,8 @@ export class UserEntity {
 
   @IsString()
   lastLogin: Date | null;
+
+  @IsArray()
+  @IsOptional()
+  appPerms?: APP_PERMISSIONS[]; // Changed from permissions to appPerms
 }

@@ -1,6 +1,6 @@
 import { IsString, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, PickType } from "@nestjs/swagger";
 import { UserEntity } from "src/user/entities/user.entity";
 
 export class ApplicationDto {
@@ -10,6 +10,8 @@ export class ApplicationDto {
   @IsString()
   ownerId: string;
 }
+
+class Notifier extends PickType(UserEntity, ["keycloakId", "email"]) {}
 
 export class GetAnomalyNotificationDto {
   @IsString()
@@ -25,8 +27,8 @@ export class GetAnomalyNotificationDto {
   @IsString()
   notifierId: string;
 
-  @ApiProperty({ type: UserEntity, description: "The user who reported the issue" })
-  notifier: UserEntity;
+  @ApiProperty({ type: Notifier, description: "The user who reported the issue" })
+  notifier: Notifier;
 
   @IsString()
   description: string;
@@ -35,6 +37,11 @@ export class GetAnomalyNotificationDto {
   status: string;
 
   @IsString()
+  @ApiProperty({
+    description: "Date de création de la metadata",
+    example: "2023-10-01T12:00:00Z",
+    type: String,
+  })
   createdAt: Date;
 
   @IsString()

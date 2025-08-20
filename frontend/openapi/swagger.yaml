@@ -563,7 +563,9 @@ paths:
                     - readLinks
                     - writeLinks
                     - readMetadata
-                    - writeMetadata
+                    - readAnomalyNotifications
+                    - manageAnomalyNotifications
+                    - postAnomalyNotifications
       tags: *a4
   /api/v2/applications/export/excel:
     get:
@@ -1252,11 +1254,16 @@ paths:
                 type: number
       tags:
         - Hostings
-  /api/v2/anomaly-notifications:
+  /api/v2/applications/{applicationId}/anomaly-notifications:
     post:
       operationId: ApplicationAnomalyNotificationsController_create
       summary: Demande de modification pour une fiche application
-      parameters: []
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
       requestBody:
         required: true
         content:
@@ -1271,25 +1278,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetAnomalyNotificationDto"
       tags: &a7
-        - Notifications
+        - ApplicationNotifications
     get:
       operationId: ApplicationAnomalyNotificationsController_findAll
-      summary: Récupérer toutes les notifications d'anomalies
-      description: Renvoie la liste de toutes les notifications d'anomalies.
+      summary: Récupérer toutes les notifications d'anomalies pour une application
+      description: Renvoie la liste de toutes les notifications d'anomalies pour une
+        application donnée.
       parameters:
-        - name: userId
+        - name: all
           required: false
           in: query
+          description: Filtrer les notifications d'anomalies pour l'utilisateur connecté
           schema:
-            type: string
+            default: false
+            type: boolean
         - name: applicationId
-          required: false
-          in: query
+          required: true
+          in: path
+          description: ID de l'application
           schema:
             type: string
       responses:
         "200":
-          description: Liste des notifications d'anomalies
+          description: Liste des notifications d'anomalies pour l'application
           content:
             application/json:
               schema:
@@ -1297,23 +1308,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/GetAnomalyNotificationDto"
       tags: *a7
-  /api/v2/anomaly-notifications/user-notifications:
-    get:
-      operationId: ApplicationAnomalyNotificationsController_findByCurrentUser
-      summary: Récupérer les notifications de signalements pour l'utilisateur
-        actuellement connecté
-      parameters: []
-      responses:
-        "200":
-          description: Liste des notifications de signalements retournée.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: *a7
-  /api/v2/anomaly-notifications/{id}:
+  /api/v2/applications/{applicationId}/anomaly-notifications/{id}:
     get:
       operationId: ApplicationAnomalyNotificationsController_findOne
       summary: Récupérer une notification spécifique par ID
@@ -1323,6 +1318,11 @@ paths:
           in: path
           schema:
             type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
       responses:
         "200":
           description: Notification trouvée avec succès
@@ -1340,6 +1340,11 @@ paths:
           in: path
           schema:
             type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
       requestBody:
         required: true
         content:
@@ -1363,10 +1368,39 @@ paths:
           in: path
           schema:
             type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
       responses:
         "204":
           description: Notification supprimée avec succès
       tags: *a7
+  /api/v2/anomaly-notifications:
+    get:
+      operationId: AnomalyNotificationsController_findAll
+      summary: Récupérer toutes les notifications d'anomalies
+      description: Renvoie la liste de toutes les notifications d'anomalies.
+      parameters:
+        - name: all
+          required: false
+          in: query
+          description: Filtrer les notifications d'anomalies pour l'utilisateur connecté
+          schema:
+            default: false
+            type: boolean
+      responses:
+        "200":
+          description: Liste des notifications d'anomalies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetAnomalyNotificationDto"
+      tags:
+        - Notifications
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -2335,6 +2369,10 @@ components:
           format: date-time
           type: string
           nullable: true
+        appPerms:
+          type: array
+          items:
+            type: object
       required:
         - keycloakId
         - email
@@ -2780,13 +2818,27 @@ components:
       required:
         - applicationId
         - description
+    Notifier:
+      type: object
+      properties:
+        keycloakId:
+          type: string
+        email:
+          type: string
+      required:
+        - keycloakId
+        - email
     GetAnomalyNotificationDto:
       type: object
       properties:
         notifier:
           description: The user who reported the issue
           allOf:
-            - $ref: "#/components/schemas/UserEntity"
+            - $ref: "#/components/schemas/Notifier"
+        createdAt:
+          type: string
+          description: Date de création de la metadata
+          example: 2023-10-01T12:00:00Z
         id:
           type: string
         applicationId:
@@ -2799,21 +2851,18 @@ components:
           type: string
         status:
           type: string
-        createdAt:
-          format: date-time
-          type: string
         updatedAt:
           format: date-time
           type: string
       required:
         - notifier
+        - createdAt
         - id
         - applicationId
         - application
         - notifierId
         - description
         - status
-        - createdAt
         - updatedAt
     UpdateAnomalyNotificationDto:
       type: object
@@ -2826,8 +2875,6 @@ components:
             - in_progress
             - done
         applicationId:
-          type: string
-        notifierId:
           type: string
         description:
           type: string
@@ -2995,8 +3042,6 @@ components:
           type: boolean
         readMetadata:
           type: boolean
-        writeMetadata:
-          type: boolean
         readRelations:
           type: boolean
         writeRelations:
@@ -3004,6 +3049,12 @@ components:
         readLinks:
           type: boolean
         writeLinks:
+          type: boolean
+        readAnomalyNotifications:
+          type: boolean
+        postAnomalyNotifications:
+          type: boolean
+        manageAnomalyNotifications:
           type: boolean
       required:
         - actorTypeId
@@ -3016,11 +3067,13 @@ components:
         - readHostings
         - writeHostings
         - readMetadata
-        - writeMetadata
         - readRelations
         - writeRelations
         - readLinks
         - writeLinks
+        - readAnomalyNotifications
+        - postAnomalyNotifications
+        - manageAnomalyNotifications
     PatchActorTypeDto:
       type: object
       properties:
