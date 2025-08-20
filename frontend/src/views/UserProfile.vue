@@ -3,6 +3,9 @@ import { useUserStore } from "@/stores/userStore";
 import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
 
 const userStore = useUserStore();
+onMounted(() => {
+  userStore.fetchUser();
+});
 </script>
 
 <template>
