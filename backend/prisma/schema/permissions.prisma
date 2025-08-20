@@ -1,18 +1,28 @@
 model AppPermissions {
     readBase Boolean
     writeBase Boolean
+
     readActors Boolean
     writeActors Boolean
+    
     readCompliances Boolean
     writeCompliances Boolean
+    
     readHostings Boolean
     writeHostings Boolean
+    
     readMetadata Boolean
-    writeMetadata Boolean
+    
     readRelations Boolean
     writeRelations Boolean
+    
     readLinks Boolean
     writeLinks Boolean
+    
+    readAnomalyNotifications Boolean @default(false)
+    postAnomalyNotifications Boolean @default(true)
+    manageAnomalyNotifications Boolean @default(false)
+
     actorTypeId String @unique
     actorType ActorType @relation(fields: [actorTypeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }

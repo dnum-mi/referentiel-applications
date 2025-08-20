@@ -7,11 +7,11 @@ import {
   Delete,
   Param,
   Query,
-  Request,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from "@nestjs/common";
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { AnomalyNotificationService } from "./anomaly-notification.service";
 import {
   CreateAnomalyNotificationDto,
@@ -19,7 +19,11 @@ import {
 } from "./dto/create-anomaly-notification.dto";
 import { GetAnomalyNotificationDto } from "./dto/get-anomaly-notification.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
-import { FiltersDto } from "src/notification/dto/filters.dto";
+import { AnomalyFiltersDto } from "src/notification/dto/filters.dto";
+import { User } from "src/common/decorators/user.decorator";
+import { UserEntity } from "src/user/entities/user.entity";
+import { AppAction } from "src/common/decorators/application.decorator";
+import { ApplicationGuard } from "src/common/guards/application.guard";
 
 /**
  * Contrôleur pour la gestion des notifications d'anomalies.
@@ -27,36 +31,8 @@ import { FiltersDto } from "src/notification/dto/filters.dto";
  */
 @ApiTags("Notifications")
 @Controller("anomaly-notifications")
-export class ApplicationAnomalyNotificationsController {
+export class AnomalyNotificationsController {
   constructor(protected service: AnomalyNotificationService) {}
-
-  /**
-   * Crée une nouvelle notification d'anomalie.
-   *
-   * @param req La requête HTTP contenant les informations de l'utilisateur.
-   * @param requestData Les données nécessaires pour créer une notification d'anomalie.
-   * @returns La notification d'anomalie créée.
-   * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant.
-   */
-  @Post()
-  @ApiOperation({
-    summary: "Demande de modification pour une fiche application",
-  })
-  @ApiCreatedResponse({
-    description: "Notification d'anomalie créée avec succès",
-    type: GetAnomalyNotificationDto,
-  })
-  @HttpCode(HttpStatus.CREATED)
-  async create(
-    @Request() req,
-    @Body() requestData: CreateAnomalyNotificationRequestDto,
-  ) {
-    const data: CreateAnomalyNotificationDto = {
-      ...requestData,
-      notifierId: req.user.keycloakId,
-    };
-    return this.service.create(data);
-  }
 
   /**
    * Récupère toutes les notifications d'anomalie.
@@ -73,31 +49,80 @@ export class ApplicationAnomalyNotificationsController {
     type: GetAnomalyNotificationDto,
     isArray: true,
   })
-  findAll(@Query() filters: FiltersDto) {
-    return this.service.findAll(filters);
+  findAll(
+    @User() requestor: UserEntity,
+    @Query() filters: AnomalyFiltersDto,
+  ) {
+    return this.service.findAll({
+      requestor,
+      notifierId: !filters.all ? requestor.keycloakId : undefined,
+    });
+  }
+}
+
+/**
+ * Contrôleur pour la gestion des notifications d'anomalies.
+ * Il permet de créer, récupérer, mettre à jour et supprimer des notifications d'anomalies.
+ */
+@ApiTags("ApplicationNotifications")
+@ApiParam({ name: "applicationId", description: "ID de l'application" })
+@UseGuards(ApplicationGuard)
+@Controller("applications/:applicationId/anomaly-notifications")
+export class ApplicationAnomalyNotificationsController {
+  constructor(protected service: AnomalyNotificationService) {}
+
+  /**
+   * Crée une nouvelle notification d'anomalie.
+   *
+   * @param requestor La requête HTTP contenant les informations de l'utilisateur.
+   * @param requestData Les données nécessaires pour créer une notification d'anomalie.
+   * @returns La notification d'anomalie créée.
+   * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant.
+   */
+  @Post()
+  @ApiOperation({
+    summary: "Demande de modification pour une fiche application",
+  })
+  @ApiCreatedResponse({
+    description: "Notification d'anomalie créée avec succès",
+    type: GetAnomalyNotificationDto,
+  })
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @User() requestor: UserEntity,
+    @Body() requestData: CreateAnomalyNotificationRequestDto,
+  ) {
+    const data: CreateAnomalyNotificationDto = {
+      ...requestData,
+    };
+    return this.service.create(data, requestor);
   }
 
   /**
-   * Récupère les notifications de signalement pour l'utilisateur actuellement connecté.
+   * Récupère toutes les notifications d'anomalie pour une application.
    *
-   * @param req La requête HTTP contenant les informations de l'utilisateur.
-   * @returns Une liste des notifications d'anomalies pour l'utilisateur.
-   * @throws NotFoundException Si aucune notification n'est trouvée pour l'utilisateur.
+   * @returns La liste de toutes les notifications d'anomalie d'une application.
    */
+  @Get()
   @ApiOperation({
-    summary:
-      "Récupérer les notifications de signalements pour l'utilisateur actuellement connecté",
+    summary: "Récupérer toutes les notifications d'anomalies pour une application",
+    description: "Renvoie la liste de toutes les notifications d'anomalies pour une application donnée.",
   })
   @ApiOkResponse({
-    description: "Liste des notifications de signalements retournée.",
+    description: "Liste des notifications d'anomalies pour l'application",
     type: GetAnomalyNotificationDto,
     isArray: true,
   })
-  @Get("user-notifications")
-  async findByCurrentUser(
-    @Request() req,
-  ): Promise<GetAnomalyNotificationDto[]> {
-    return this.service.findAll({ notifierId: req.user.keycloakId });
+  findAll(
+    @Query() filters: AnomalyFiltersDto,
+    @User() requestor: UserEntity,
+    @Param("applicationId") applicationId: string,
+  ) {
+    return this.service.findAll({
+      applicationId,
+      requestor,
+      notifierId: !filters.all ? requestor.keycloakId : undefined,
+    });
   }
 
   /**
@@ -112,8 +137,11 @@ export class ApplicationAnomalyNotificationsController {
     type: GetAnomalyNotificationDto,
     description: "Notification trouvée avec succès",
   })
-  findOne(@Param("id") id: string) {
-    return this.service.findOne(id);
+  findOne(
+    @Param("id") id: string,
+    @User() requestor: UserEntity,
+  ) {
+    return this.service.findOne(id, requestor);
   }
 
   /**
@@ -125,6 +153,7 @@ export class ApplicationAnomalyNotificationsController {
    */
   @Patch(":id")
   @ApiOperation({ summary: "Mettre à jour une notification" })
+  @AppAction("manageAnomalyNotifications")
   @ApiOkResponse({
     description: "Notification mise à jour avec succès",
     type: GetAnomalyNotificationDto,
@@ -145,6 +174,7 @@ export class ApplicationAnomalyNotificationsController {
    */
   @Delete(":id")
   @ApiOperation({ summary: "Supprimer une notification" })
+  @AppAction("manageAnomalyNotifications")
   @ApiNoContentResponse({
     description: "Notification supprimée avec succès",
   })

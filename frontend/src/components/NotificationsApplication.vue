@@ -16,8 +16,8 @@ const currentPage = ref(0);
 const activeAccordion = ref<number>();
 const userStore = useUserStore();
 
-const canEdit = computed(() => {
-  return props.application.myPerms.has("writeMetadata")
+const canPost = computed(() => {
+  return props.application.myPerms.has("postAnomalyNotifications")
     || userStore.adminLevel >= AdminLevel.WRITE;
 });
 
@@ -111,7 +111,7 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
       </template>
     </DsfrDataTable>
   </DsfrAccordionsGroup>
-  <ReportIssue v-if="canEdit" :application="application" />
+  <ReportIssue v-if="canPost" :application="application" />
 </template>
 
 <style scoped>

@@ -59,10 +59,11 @@ const fetchCompliances = compliancesStore.fetchCompliance.bind(compliancesStore,
 const fetchActors = actorStore.fetchActorsByApplication.bind(actorStore, props.application.id);
 const fetchRelations = relationsStore.fetchRelationsByApplication.bind(relationsStore, props.application.id);
 async function fetchHistoryData() {
-  await Promise.all([
-    reportIssueStore.fetchIssueByApplication(props.application.id),
-    metadataStore.fetchMetadatasByApplication(props.application.id),
-  ]);
+  if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
+    metadataStore.fetchMetadatasByApplication(application.value.id);
+  }
+
+  reportIssueStore.fetchIssueByApplication(props.application.id);
 }
 
 const tabs = ref<
@@ -125,7 +126,7 @@ const tabs = ref<
     tabId: "tab-history",
     panelId: "panel-history",
     component: NotificationsApplication,
-    requiredPerms: ["readMetadata"],
+    requiredPerms: [],
     loadFn: fetchHistoryData,
     errorKey: "ERR_LOAD_ISSUES_METADATAS",
   },
