@@ -7,6 +7,7 @@ model Application {
   targetPopulations   String[]
   purposes            String[]
   tags                String[]
+  tagsPivot           ApplicationTag[]
   status              Status                @default(under_construction)
   metadatas           Metadata[]            @relation("ApplicationMetadatas")
   actors              Actor[]               @relation("ApplicationActors")

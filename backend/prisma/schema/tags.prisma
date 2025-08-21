@@ -1,0 +1,20 @@
+model Tag {
+  name      String   @id
+  createdAt DateTime @default(now())
+  applications ApplicationTag[]
+  @@map("tags")
+}
+
+model ApplicationTag {
+  applicationId String
+  tagName       String
+  assignedAt    DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  tag         Tag         @relation(fields: [tagName], references: [name], onDelete: Cascade)
+
+  @@id([applicationId, tagName])
+  @@index([tagName])
+  @@index([applicationId])
+  @@map("application_tag")
+}
