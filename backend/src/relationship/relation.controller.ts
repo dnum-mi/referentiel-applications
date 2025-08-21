@@ -19,16 +19,13 @@ import { AppAction } from "src/common/decorators/application.decorator";
 
 @ApiTags("relation")
 @UseGuards(ApplicationGuard)
+@ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
 @Controller("applications/:applicationId/relations")
 export class RelationController {
   constructor(private readonly relationService: RelationService) {}
 
   @Post()
   @AppAction("writeRelations")
-  @ApiParam({
-    name: "applicationId",
-    description: "ID de l'application SOURCE",
-  })
   @HttpCode(201)
   @ApiCreatedResponse({
     type: RelationDto,
@@ -48,10 +45,6 @@ export class RelationController {
 
   @Get()
   @AppAction("readRelations")
-  @ApiParam({
-    name: "applicationId",
-    description: "ID de l'application SOURCE",
-  })
   @ApiOkResponse({
     description: "Liste des relations trouvées",
     type: RelationDto,
@@ -76,7 +69,6 @@ export class RelationController {
     type: RelationDto,
     description: "Relation trouvée avec succès",
   })
-  @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiParam({ name: "id", description: "Identifiant unique de la relation" })
   async findOne(@Param("id") id: string): Promise<Relation> {
     return this.relationService.findOne(id);
@@ -84,10 +76,6 @@ export class RelationController {
 
   @Patch(":id")
   @AppAction("writeRelations")
-  @ApiParam({
-    name: "applicationId",
-    description: "ID de l'application SOURCE",
-  })
   @ApiOperation({ summary: "Mettre à jour une relation" })
   @ApiParam({
     name: "id",
@@ -108,10 +96,6 @@ export class RelationController {
 
   @Delete(":id")
   @AppAction("writeRelations")
-  @ApiParam({
-    name: "applicationId",
-    description: "ID de l'application SOURCE",
-  })
   @ApiOperation({ summary: "Supprimer une relation" })
   @HttpCode(204)
   @ApiNoContentResponse({

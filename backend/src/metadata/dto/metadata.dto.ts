@@ -103,7 +103,7 @@ export class FirstLastMetadataDto {
 
   @ApiProperty({
     description: "La dernière metadata de l'application",
-    type: String,
+    type: MetadataDto,
     nullable: true,
   })
   last: MetadataDto | null;

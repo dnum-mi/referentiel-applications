@@ -22,7 +22,7 @@ paths:
         - name: applicationId
           required: true
           in: path
-          description: ID de l'application SOURCE
+          description: ID de l'application
           schema:
             type: string
       requestBody:
@@ -48,7 +48,7 @@ paths:
         - name: applicationId
           required: true
           in: path
-          description: ID de l'application SOURCE
+          description: ID de l'application
           schema:
             type: string
       responses:
@@ -76,7 +76,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       responses:
         "200":
           description: Relation trouvée avec succès
@@ -98,7 +99,7 @@ paths:
         - name: applicationId
           required: true
           in: path
-          description: ID de l'application SOURCE
+          description: ID de l'application
           schema:
             type: string
       requestBody:
@@ -128,8 +129,9 @@ paths:
         - name: applicationId
           required: true
           in: path
-          description: ID de l'application SOURCE
-          schema: {}
+          description: ID de l'application
+          schema:
+            type: string
       responses:
         "204":
           description: Relation supprimée avec succès
@@ -1168,7 +1170,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       responses:
         "200":
           description: Hébergement trouvé
@@ -1219,7 +1222,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       responses:
         "204":
           description: Hébergement supprimé
@@ -1263,7 +1267,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -1322,7 +1327,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       responses:
         "200":
           description: Notification trouvée avec succès
@@ -1344,7 +1350,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -1372,7 +1379,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       responses:
         "204":
           description: Notification supprimée avec succès
@@ -1806,7 +1814,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -1857,7 +1866,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       responses:
         "200":
           description: Acteur trouvé avec succès
@@ -1910,7 +1920,8 @@ paths:
           required: true
           in: path
           description: ID de l'application
-          schema: {}
+          schema:
+            type: string
       responses:
         "204":
           description: Acteur supprimé avec succès
@@ -2278,7 +2289,8 @@ info:
   version: "2.0"
   contact: {}
 tags: []
-servers: []
+servers:
+  - url: http://localhost:3500
 components:
   securitySchemes:
     oauth2:
@@ -2287,6 +2299,7 @@ components:
         authorizationCode:
           authorizationUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/auth
           tokenUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/token
+          refreshUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/token
           scopes:
             openid: OpenID scope
             profile: Profile scope
@@ -2464,9 +2477,10 @@ components:
           allOf:
             - $ref: "#/components/schemas/MetadataDto"
         last:
-          type: string
           nullable: true
           description: La dernière metadata de l'application
+          allOf:
+            - $ref: "#/components/schemas/MetadataDto"
       required:
         - first
         - last
@@ -3630,5 +3644,8 @@ components:
           type: string
           example: Pierre Durand
           description: RGPD DPO name
+externalDocs:
+  description: Specification JSON
+  url: http://localhost:3500/api/v2/swagger/json
 security:
   - oauth2: []
