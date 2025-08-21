@@ -49,3 +49,21 @@ jobs:
             echo "Waiting for Frontend..."
             sleep 5
           done
+          echo "Frontend did not become ready in time"
+          exit 1
+
+      - name: Wait for Backend to be ready
+        run: |
+          docker compose logs backend
+      - name: Wait for Backend to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:3500/api/v2/health-check | grep -q "ok"; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            echo "Waiting for Backend..."
+            sleep 5
+          done
+          echo "Backend did not become ready in time"
+          exit 1

@@ -75,7 +75,7 @@ export class AppModule implements NestModule {
       .exclude(
         "/health-check",
         "/swagger/**",
-        "/",
+        "",
       )
       .forRoutes("*");
   }
