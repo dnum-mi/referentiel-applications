@@ -38,7 +38,7 @@ export class HostingController {
 @ApiTags("Hostings")
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/hostings")
-@ApiParam({ name: "applicationId", description: "ID de l'application" })
+@ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
 export class ApplicationHostingsController {
   constructor(private readonly hostingService: HostingService) {}
 

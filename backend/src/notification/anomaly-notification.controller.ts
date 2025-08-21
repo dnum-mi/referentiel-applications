@@ -11,7 +11,14 @@ import {
   HttpStatus,
   UseGuards,
 } from "@nestjs/common";
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { AnomalyNotificationService } from "./anomaly-notification.service";
 import {
   CreateAnomalyNotificationDto,
@@ -65,7 +72,7 @@ export class AnomalyNotificationsController {
  * Il permet de créer, récupérer, mettre à jour et supprimer des notifications d'anomalies.
  */
 @ApiTags("ApplicationNotifications")
-@ApiParam({ name: "applicationId", description: "ID de l'application" })
+@ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/anomaly-notifications")
 export class ApplicationAnomalyNotificationsController {

@@ -46,6 +46,7 @@ export class ActorController {
 
 @ApiTags("Actors")
 @UseGuards(ApplicationGuard)
+@ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
 @Controller("applications/:applicationId/actors")
 export class ApplicationActorsController {
   constructor(private readonly actorService: ActorService) {}
@@ -67,7 +68,6 @@ Informations requises :
 - **applicationId** : ID de l'application liée à l'acteur
     `,
   })
-  @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @HttpCode(201)
   @ApiCreatedResponse({
     description: "Acteur créé avec succès",
@@ -93,8 +93,10 @@ Informations requises :
     description: "Acteur trouvé avec succès",
     type: ActorDto,
   })
-  @ApiParam({ name: "applicationId", description: "ID de l'application" })
-  @ApiParam({ name: "id", description: "ID de l'acteur" })
+  @ApiParam({
+    name: "id",
+    description: "ID de l'acteur",
+  })
   public async findOne(@Param("id") id: string): Promise<Actor> {
     return await this.actorService.findOne(id);
   }
@@ -107,7 +109,6 @@ Informations requises :
     type: ActorDto,
     isArray: true,
   })
-  @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiOkResponse({ description: "Liste des acteurs" })
   public async findAll(
     @Param("applicationId") applicationId: string,
@@ -122,8 +123,10 @@ Informations requises :
     description: "Acteur mis à jour avec succès",
     type: ActorDto,
   })
-  @ApiParam({ name: "applicationId", description: "ID de l'application" })
-  @ApiParam({ name: "id", description: "ID de l'acteur" })
+  @ApiParam({
+    name: "id",
+    description: "ID de l'acteur",
+  })
   public async updated(
     @UserId() userId: string,
     @Param("id") id: string,
@@ -150,8 +153,10 @@ Informations requises :
   @ApiNoContentResponse({
     description: "Acteur supprimé avec succès",
   })
-  @ApiParam({ name: "applicationId", description: "ID de l'application" })
-  @ApiParam({ name: "id", description: "ID de l'acteur" })
+  @ApiParam({
+    name: "id",
+    description: "ID de l'acteur",
+  })
   public async delete(
     @UserId() userId: string,
     @Param("id") id: string,
