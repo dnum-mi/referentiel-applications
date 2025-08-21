@@ -1,5 +1,11 @@
 import { registerAs } from "@nestjs/config";
 
-export default registerAs("database", () => ({
-  url: process.env.DATABASE_URL ?? "postgresql://postgres:password@localhost:5432/postgres",
-}));
+export default registerAs("database", () => {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL is not defined");
+  }
+  return {
+    url,
+  };
+});

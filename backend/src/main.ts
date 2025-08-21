@@ -5,13 +5,15 @@ import { Logger as PinoLogger } from "nestjs-pino";
 import { AppModule } from "./app.module";
 import { setupSwagger } from "./swagger-config.js";
 import { ConfigService } from "@nestjs/config";
+import type { AppConfig } from "./config/app.config";
+import type { KeycloakConfig } from "./config/keycloak.config";
 
 async function bootstrap() {
   const globalPrefix = "/api/v2";
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const configService = app.get(ConfigService);
-  const port = configService.get<number>("app.port");
-  const host = configService.get<string>("app.host");
+  const appConfig = configService.get<AppConfig>("app");
+  const keycloakConfig = configService.get<KeycloakConfig>("keycloak");
 
   if (!process.env.DISABLE_PINO_LOGGER) {
     app.useLogger(app.get(PinoLogger));
@@ -29,7 +31,7 @@ async function bootstrap() {
   });
 
   // Configuration de Swagger
-  setupSwagger(app, true);
+  setupSwagger(app, appConfig, keycloakConfig);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -38,7 +40,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(port, host);
-  globalLogger.log(`Application is running on: http://${host}:${port}`);
+  await app.listen(appConfig.port, appConfig.host);
+  globalLogger.log(`Application is running on: http://${appConfig.host}:${appConfig.port}`);
 }
 bootstrap();

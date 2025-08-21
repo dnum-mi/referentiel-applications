@@ -4,15 +4,23 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { stringify } from "yaml";
+import type { KeycloakConfig } from "./config/keycloak.config";
 
 // Configuration de Swagger
 export function setupSwagger(
   app: INestApplication<any>,
-  writeYaml = process.env.WRITE_SWAGGER_YAML === "true",
+  options: {
+    writeYaml?: boolean
+    onlyWriteSwagger?: boolean
+    baseUrl: string
+  },
+  keycloakConfig: Pick<KeycloakConfig, "baseUrl" | "realm" | "clientId">,
 ) {
   const config = new DocumentBuilder()
     .setTitle("API Référentiel Applications")
     .setDescription("API pour la gestion des applications")
+    .setExternalDoc("Specification JSON", `${options.baseUrl}/api/v2/swagger/json`)
+    .addServer(options.baseUrl)
     .setVersion("2.0")
     .addOAuth2(
       {
@@ -20,8 +28,9 @@ export function setupSwagger(
         description: "OAuth2 authentication using Keycloak",
         flows: {
           authorizationCode: {
-            authorizationUrl: `${process.env.KEYCLOAK_BASE_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/auth`,
-            tokenUrl: `${process.env.KEYCLOAK_BASE_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/token`,
+            authorizationUrl: `${keycloakConfig.baseUrl}/realms/${keycloakConfig.realm}/protocol/openid-connect/auth`,
+            tokenUrl: `${keycloakConfig.baseUrl}/realms/${keycloakConfig.realm}/protocol/openid-connect/token`,
+            refreshUrl: `${keycloakConfig.baseUrl}/realms/${keycloakConfig.realm}/protocol/openid-connect/token`,
             scopes: {
               openid: "OpenID scope",
               profile: "Profile scope",
@@ -42,14 +51,17 @@ export function setupSwagger(
     yamlDocumentUrl: "/swagger/yaml",
     useGlobalPrefix: true,
     swaggerOptions: {
-      oauth2RedirectUrl: "http://localhost:3500/api/v2/swagger/oauth2-redirect.html",
-      clientId: process.env.KEYCLOAK_CLIENT_ID,
+      oauth2RedirectUrl: `${options.baseUrl}/api/v2/swagger/oauth2-redirect.html`,
       usePkceWithAuthorizationCodeGrant: true,
+      initOAuth: {
+        scopes: ["openid", "profile"],
+        clientId: keycloakConfig.clientId,
+      },
     },
   });
 
-  if (writeYaml) {
-    const yamlContent = stringify(document);
+  if (options.writeYaml) {
+    const yamlContent = stringify(document, { });
     // Écriture au format YAML
     setTimeout(() => {
       writeFile(join(__dirname, "../..", "openapi", "swagger.yaml"), yamlContent)
@@ -57,7 +69,7 @@ export function setupSwagger(
           console.error("Error writing Swagger YAML file:", error);
         })
         .finally(() => {
-          if (process.env.ONLY_WRITE_SWAGGER === "true") {
+          if (options.onlyWriteSwagger) {
           // Si on ne veut que générer le fichier YAML et pas démarrer l'application
             process.exit(0);
           }
