@@ -1,19 +1,23 @@
 FROM node:24-slim AS base
 
+ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
+ENV PATH=$PATH:/home/node/.npm-global/bin
 WORKDIR /app
+RUN chown -R node:root /app
 ENV PORT=3500
 
 RUN apt-get update -y && apt-get install -y openssl jq libssl-dev procps
 RUN npm install --ignore-scripts --location=global pnpm@10.14.0
 
-COPY package.json pnpm-lock.yaml ./
+COPY --chown=node:root package.json pnpm-lock.yaml ./
 
 RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
+USER node
 
 
 FROM base AS dev
 RUN pnpm install
-COPY . .
+COPY --chown=node:root . .
 RUN pnpm db:generate
 EXPOSE 3500
 CMD [ "pnpm", "start:dev" ]
@@ -21,7 +25,7 @@ CMD [ "pnpm", "start:dev" ]
 
 FROM base AS prod
 RUN pnpm install --frozen-lockfile --ignore-scripts
-COPY . .
+COPY --chown=node:root . .
 RUN pnpm db:generate
 RUN pnpm build
 EXPOSE 8080

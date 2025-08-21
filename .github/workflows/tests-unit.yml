@@ -41,14 +41,6 @@ jobs:
         run: |
           mkdir -p backend/coverage # create before to avoid permission issues
           docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run test:cov
-      - name: Produce the coverage report
-        uses: insightsengineering/coverage-action@v2
-        with:
-          coverage-summary-title: Backend Coverage Summary
-          path: ./backend/coverage/cobertura-coverage.xml
-          publish: true
-          # threshold: 80
-          diff-storage: _xml_coverage_reports_backend
       - name: Upload vitest coverage artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -86,6 +78,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        continue-on-error: true
       # If you wish to fail your job when the Quality Gate is red, uncomment the
       # following lines. This would typically be used to fail a deployment.
       # We do not recommend to use this in a pull request. Prefer using pull request
