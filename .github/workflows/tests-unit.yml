@@ -7,6 +7,8 @@ on:
         required: false
       SONAR_HOST_URL:
         required: false
+      SONAR_PROJECT_KEY:
+        required: false
 
 jobs:
   test-backend:
@@ -66,10 +68,21 @@ jobs:
         run: cd backend && pnpm install --frozen-lockfile && pnpm db:generate
       - name: Generate frontend API schema
         run: cd frontend && pnpm install --frozen-lockfile && pnpm api:generate
+
+      - name: Set sonarqube args
+        id: sonar-args
+        run: |
+          echo "SONAR_ARGS_PR=-Dsonar.pullrequest.provider=github -Dsonar.pullrequest.key=${{ github.event.number }} -Dsonar.pullrequest.branch=${{ github.head_ref }} -Dsonar.pullrequest.base=${{ github.base_ref }} -Dsonar.pullrequest.github.repository=${{ github.repository }}" >> $GITHUB_OUTPUT
+          echo "SONAR_ARGS_BRANCH=-Dsonar.branch.name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+
       - uses: SonarSource/sonarqube-scan-action@v5
         with:
           args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.javascript.lcov.reportPaths=./backend/coverage/lcov.info
+            -Dsonar.exclusions=**/tests/**
+            -Dsonar.scm.provider=git
+            ${{ github.event_name == 'pull_request' && steps.sonar-args.outputs.SONAR_ARGS_PR || steps.sonar-args.outputs.SONAR_ARGS_BRANCH }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
