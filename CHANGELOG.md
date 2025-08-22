@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.34.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.33.2...v1.34.0) (2025-08-22)
+
+
+### Features
+
+* add workflow_dispatch in tests-unit.yml ([2b2b74c](https://github.com/dnum-mi/referentiel-applications/commit/2b2b74c6226872c24c6f5dafc64ae2a6a89ac186))
+* enhance anomaly notification management with permission checks ([7a7ebcd](https://github.com/dnum-mi/referentiel-applications/commit/7a7ebcdbb6642c44604565462078c2330dd569bd))
+* **front:** :lipstick: add hard delete application button for admin ([#956](https://github.com/dnum-mi/referentiel-applications/issues/956)) ([77af038](https://github.com/dnum-mi/referentiel-applications/commit/77af03895b0a65e6357f5f6e0f2d229af747877b))
+* implement generateId utility function for unique ID generation ([94f681e](https://github.com/dnum-mi/referentiel-applications/commit/94f681e16ad064b4438c00bae33c47a705bfb527))
+
+
+### Bug Fixes
+
+* :bug: avoid call /me if not authenticated ([53ce2fd](https://github.com/dnum-mi/referentiel-applications/commit/53ce2fd7c33378140172c529a9a25aff56257b40))
+* a lot of sonarqube issues ([16d257a](https://github.com/dnum-mi/referentiel-applications/commit/16d257abb5560298b546d1face43a9e9fc359ec2))
+* add backend readiness check in E2E tests and set user for production build ([b029d6c](https://github.com/dnum-mi/referentiel-applications/commit/b029d6cafdd961590578e6608db91fab1cd569a0))
+* enhance API parameter descriptions and types ([6fc5a73](https://github.com/dnum-mi/referentiel-applications/commit/6fc5a7349b2e2790c4d5391d308250f3472bf6de))
+* fetch user data on component mount ([f37f99b](https://github.com/dnum-mi/referentiel-applications/commit/f37f99b0e3dbd101d74eeae301c4794cabd0c3ca))
+* **front:** :pencil2: change text for error page ([9b13dc6](https://github.com/dnum-mi/referentiel-applications/commit/9b13dc6aa6276d04d09e7c691280ec1c96d82c2d))
+* improve Dockerfile for better package installation and cleanup ([3cbfa33](https://github.com/dnum-mi/referentiel-applications/commit/3cbfa33d858d11047d78ce6ecd0751571132c53f))
+* missing auth auto refresh mechanism ([3ed9e13](https://github.com/dnum-mi/referentiel-applications/commit/3ed9e13e0ea1a6e213bb6c99e5bfd1538e833501))
+* **swagger:** :bug: add swagger options with correct oauth2 redirect url ([#942](https://github.com/dnum-mi/referentiel-applications/issues/942)) ([3f8ba38](https://github.com/dnum-mi/referentiel-applications/commit/3f8ba38224e16b015fbf354b5b6e2c9bee3b9bd6))
+* update async handling in findOne method and improve search parameter validation ([94f681e](https://github.com/dnum-mi/referentiel-applications/commit/94f681e16ad064b4438c00bae33c47a705bfb527))
+
 ## [1.33.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.33.1...v1.33.2) (2025-08-07)
 
 
