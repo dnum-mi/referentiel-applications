@@ -112,9 +112,11 @@ onMounted(() => {
     />
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Noms alternatifs</label>
+      <legend class="fr-label">
+        Noms alternatifs
+      </legend>
       <div class="fr-mt-2w">
-        <div v-for="(label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+        <div v-for="(_label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div v-if="form.labels.length > 0" class="fr-col">
             <DsfrInput v-model="form.labels[index].source" :placeholder="`Reférentiel externe ${index + 1} (optionnel)`" />
             <DsfrInput v-model="form.labels[index].value" :placeholder="`Nom ou identifiant externe ${index + 1}`" />
@@ -145,7 +147,9 @@ onMounted(() => {
     />
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Population</label>
+      <legend class="fr-label">
+        Population
+      </legend>
       <p class="fr-hint-text">
         Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)
       </p>
@@ -178,7 +182,9 @@ onMounted(() => {
     />
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Objectifs</label>
+      <legend class="fr-label">
+        Objectifs
+      </legend>
       <div class="fr-mt-2w">
         <div v-for="(purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
@@ -193,7 +199,9 @@ onMounted(() => {
     </div>
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Tags</label>
+      <legend class="fr-label">
+        Tags
+      </legend>
       <div class="fr-mt-2w">
         <div v-for="(tag, index) in form.tags" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">

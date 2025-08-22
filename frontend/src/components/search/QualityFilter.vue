@@ -17,20 +17,20 @@ watch([iqGte, iqLte], () => {
 });
 
 const iqGteDisplay = computed(() => {
-  return typeof iqGte.value === "undefined" ? 0 : iqGte.value;
+  return !iqGte.value ? 0 : iqGte.value;
 });
 const iqLteDisplay = computed(() => {
-  return typeof iqLte.value === "undefined" ? 100 : iqLte.value;
+  return !iqLte.value ? 100 : iqLte.value;
 });
 </script>
 
 <template>
   <div>
-    <label class="fr-label fr-mb-2w">
+    <legend class="fr-label fr-mb-2w">
       Indice de qualité
       <br>
       <small> entre {{ iqGteDisplay }}% et {{ iqLteDisplay }}% </small>
-    </label>
+    </legend>
 
     <div class="fr-input-group">
       <DsfrInput v-model.number="iqGte" label-visible label="IQ minimum" type="number" min="0" max="100" />

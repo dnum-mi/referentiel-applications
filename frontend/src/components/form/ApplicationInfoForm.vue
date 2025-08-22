@@ -126,7 +126,9 @@ const statusSelect = ref();
     />
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Populations</label>
+      <legend class="fr-label">
+        Populations
+      </legend>
       <p class="fr-hint-text">
         Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)
       </p>
@@ -144,7 +146,9 @@ const statusSelect = ref();
     </div>
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Objectifs</label>
+      <legend class="fr-label">
+        Objectifs
+      </legend>
       <div class="fr-mt-2w">
         <div v-for="(purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
@@ -159,7 +163,9 @@ const statusSelect = ref();
     </div>
 
     <div class="fr-form-group fr-mt-3w">
-      <label class="fr-label">Tags</label>
+      <legend class="fr-label">
+        Tags
+      </legend>
       <div class="fr-mt-2w">
         <div v-for="(tag, index) in form.tags" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">

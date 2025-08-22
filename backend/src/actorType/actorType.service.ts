@@ -13,7 +13,7 @@ export class ActorTypeService {
   }
 
   public async findOne(id: string) {
-    const actorType = this.ActorTypeRepository.findById(id);
+    const actorType = await this.ActorTypeRepository.findById(id);
     if (!actorType) {
       throw new NotFoundException(`Type d'acteur non trouvée pour l'ID ${id}`);
     }

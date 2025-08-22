@@ -26,12 +26,9 @@ function togglePriority(value: ApplicationPriorityRestart, event: Event) {
 
 <template>
   <div>
-    <label class="fr-label fr-mb-2w">
+    <legend class="fr-label fr-mb-2w">
       Priorité de redémarrage
-      <small v-if="selectedPriorities && selectedPriorities.length > 0">
-        ({{ selectedPriorities.length }} sélectionnée<span v-if="selectedPriorities.length > 1">s</span>)
-      </small>
-    </label>
+    </legend>
 
     <div>
       <label v-for="option in priorityRestartLabelsOptions" :key="option.value" class="checkbox-item">

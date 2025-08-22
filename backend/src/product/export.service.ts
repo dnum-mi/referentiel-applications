@@ -178,7 +178,7 @@ export class ApplicationExportService {
           .normalize("NFD")
           .replace(/[\u0300-\u036F]/g, "")
           .replace(/\W+/g, "_")
-          .replace(/^_+|_+$/g, ""),
+          .replace(/(^_+)|(_+$)/g, ""),
       )
       .slice(0, 5);
 

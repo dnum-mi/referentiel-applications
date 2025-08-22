@@ -1,38 +1,23 @@
 <script lang="ts" setup>
+import { generateId } from "@/utils/generator-utils";
 import { ref, watch, defineEmits, onBeforeMount } from "vue";
 
-const props = defineProps({
-  searchData: {
-    type: Array,
-    required: false,
-    default: () => [],
-  },
-  searchDataFunction: {
-    type: Function,
-    required: false,
-  },
-  returnData: {
-    type: String,
-    required: true,
-  },
-  label: {
-    type: String,
-    default: "Suggestions",
-  },
-  placeholder: {
-    type: String,
-    default: "Tapez au moins 3 caractères",
-  },
-});
+const props = defineProps<{
+  searchData?: Array<{ id: string, label: string }>
+  searchDataFunction?: (query: string) => Promise<Array<{ id: string, label: string }>>
+  returnData: string
+  label: string
+  placeholder: string
+}>();
 
 const emit = defineEmits(["update:returnData"]);
-
+const inputId = generateId("suggestions-input");
 const searchSuggestion = ref("");
 const isLoading = ref(false);
-const suggestions = ref([]);
+const suggestions = ref<Array<{ id: string, label: string }>>([]);
 const defaultData = ref(props.returnData);
 
-function selectSuggestion(suggestion: any) {
+function selectSuggestion(suggestion: { id: string, label: string }) {
   searchSuggestion.value = suggestion.label;
   emit("update:returnData", suggestion.id);
   suggestions.value = [];
@@ -74,8 +59,13 @@ onBeforeMount(() => {
 
 <template>
   <div>
-    <label class="fr-label">{{ props.label }}</label>
-    <DsfrInput v-model="searchSuggestion" :label="props.label" :placeholder="props.placeholder" />
+    <label class="fr-label" :for="inputId">{{ props.label }}</label>
+    <DsfrInput
+      :id="inputId"
+      v-model="searchSuggestion"
+      :label="props.label"
+      :placeholder="props.placeholder"
+    />
 
     <div v-if="isLoading">
       Chargement ...

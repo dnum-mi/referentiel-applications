@@ -16,9 +16,10 @@ export class ApplicationSearchDto {
   @ApiPropertyOptional({
     description: "Recherche plein texte sur tous les champs",
     example: "Mon Application",
-    type: "string",
     required: false,
   })
+  @IsOptional()
+  @IsString()
   search?: string;
 
   @ApiPropertyOptional({
