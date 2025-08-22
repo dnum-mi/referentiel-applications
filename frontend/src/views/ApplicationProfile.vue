@@ -121,7 +121,6 @@ const actions = computed(() => [
       v-model="confirmationInput"
       type="text"
       placeholder="Nom de l’application"
-      @input="updateActions"
     />
   </DsfrModal>
 </template>
