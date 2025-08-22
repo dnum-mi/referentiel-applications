@@ -35,24 +35,24 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
       if (!authentication.authenticated) {
         authentication.login();
       }
-      return Promise.reject(response);
+      return Promise.reject(new Error("Unauthorized"));
     }
 
     // 403 → message d’erreur
     if (status === 403) {
       toaster.addErrorMessage("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
-      return Promise.reject(response);
+      return Promise.reject(new Error("Forbidden"));
     }
 
     // 404 → redirection vers NotFound
     if (status === 404) {
       router.replace({ name: routeNames.NOTFOUND });
       // on rejette quand même pour que d'éventuels catch côté composant ne continuent pas de tourner
-      return Promise.reject(response);
+      return Promise.reject(new Error("Not Found"));
     }
 
     // autres erreurs
-    return Promise.reject(response);
+    return Promise.reject(new Error("Unknown Error"));
   };
 
   // Configurer le nouveau client axios
