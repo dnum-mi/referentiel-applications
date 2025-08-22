@@ -7,7 +7,7 @@ import { ApplicationService } from "src/product/application.service";
 @Injectable()
 export class ActorService {
   constructor(
-    private actorRepository: ActorRepository,
+    private readonly actorRepository: ActorRepository,
     private readonly applicationService: ApplicationService,
   ) {}
 

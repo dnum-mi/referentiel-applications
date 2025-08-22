@@ -23,7 +23,7 @@ import { AppAction } from "src/common/decorators/application.decorator";
 @Controller("applications/:applicationId/links")
 export class ApplicationLinksController {
   constructor(
-    private service: LinksService,
+    private readonly service: LinksService,
     private readonly applicationService: ApplicationService,
   ) {}
 

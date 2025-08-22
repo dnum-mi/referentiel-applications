@@ -10,7 +10,7 @@ import { AppPermissions, Prisma } from "@prisma/client";
 
 @Injectable()
 export class ActorTypeRepository implements IActorTypeRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   public async create(actorType: CreateActorTypeDto) {
     const mappedData = actorTypeMap(actorType);

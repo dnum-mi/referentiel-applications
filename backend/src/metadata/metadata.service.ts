@@ -8,7 +8,7 @@ import { MetadataRepository } from "./infrastructure/metadata.repository";
 export class MetadataService {
   constructor(
     protected readonly prisma: PrismaService,
-    private metadataRepository: MetadataRepository,
+    private readonly metadataRepository: MetadataRepository,
   ) { }
 
   public async findAll(applicationId?: string) {

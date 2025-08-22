@@ -6,7 +6,7 @@ import { AppPermsDto } from "./dto/app-perms-matrix.dto";
 
 @Injectable()
 export class ActorTypeService {
-  constructor(private ActorTypeRepository: ActorTypeRepository) {}
+  constructor(private readonly ActorTypeRepository: ActorTypeRepository) {}
 
   public async create(createActorType: CreateActorTypeDto) {
     return await this.ActorTypeRepository.create(createActorType);

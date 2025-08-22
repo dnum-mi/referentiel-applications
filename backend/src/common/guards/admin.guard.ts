@@ -10,7 +10,7 @@ import { AdminLevel } from "src/user/entities/user.entity";
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
     const requiredAdminLevel = this.reflector.getAllAndOverride<AdminLevel>(

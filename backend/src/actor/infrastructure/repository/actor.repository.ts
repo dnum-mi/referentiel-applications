@@ -8,8 +8,8 @@ import { MetadataService } from "src/metadata/metadata.service";
 @Injectable()
 export class ActorRepository implements IActorRepository {
   constructor(
-    private prisma: PrismaService,
-    private metadataService: MetadataService,
+    private readonly prisma: PrismaService,
+    private readonly metadataService: MetadataService,
   ) { }
 
   public async create(actor: CreateActorDto, ownerId: string) {

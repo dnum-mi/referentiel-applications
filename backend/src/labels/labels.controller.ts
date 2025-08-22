@@ -30,7 +30,7 @@ import { LabelDto } from "./dto/label.dto";
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/labels")
 export class LabelsController {
-  constructor(private service: LabelsService) {}
+  constructor(private readonly service: LabelsService) {}
 
   @Post()
   @AppAction("writeBase")

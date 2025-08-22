@@ -260,7 +260,8 @@ Le paramètre **id** doit être fourni dans l'URL.
   }
 
   @Get()
-  // TODO réserver pour les administrateurs
+  @UseGuards(AdminGuard)
+  @RequiredAdminLevel(AdminLevel.READ)
   @ApiOperation({
     summary: "Récupérer les applications",
     description: `
@@ -333,7 +334,6 @@ Aucun paramètre n'est requis pour accéder à cette liste.
   }
 
   @Delete(":applicationId")
-  // TODO réserver pour les administrateurs
   @UseGuards(AdminGuard)
   @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({

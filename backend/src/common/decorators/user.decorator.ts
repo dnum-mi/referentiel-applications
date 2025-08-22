@@ -8,6 +8,6 @@ export const User = createParamDecorator<
   ExecutionContext,
   UserEntity | undefined
 >((_data: unknown, ctx: ExecutionContext): UserEntity | undefined => {
-  const request = ctx.switchToHttp().getRequest() as Request;
-  return request.user as UserEntity | undefined;
+  const request = ctx.switchToHttp().getRequest<Request>();
+  return request.user;
 });
