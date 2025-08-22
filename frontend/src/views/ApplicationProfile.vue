@@ -39,6 +39,34 @@ async function loadApplication() {
   }
 }
 onMounted(loadApplication);
+
+const opened = ref(false);
+const confirmationInput = ref("");
+
+const appName = computed(() => application.value?.label ?? "");
+
+function resetModal() {
+  opened.value = false;
+  confirmationInput.value = "";
+};
+
+const actions = computed(() => [
+  {
+    label: "Supprimer définitivement",
+    disabled: confirmationInput.value !== appName.value,
+    async onClick() {
+      resetModal();
+      await applicationStore.deleteApplication(id);
+    },
+  },
+  {
+    label: "Annuler",
+    secondary: true,
+    onClick() {
+      resetModal();
+    },
+  },
+]);
 </script>
 
 <template>
@@ -50,8 +78,8 @@ onMounted(loadApplication);
     <div v-else-if="errorMessage">
       {{ errorMessage }}
     </div>
-    <div v-else-if="application">
-      <h2 class="fr-mt-4w fr-ml-4w">
+    <div v-else-if="application" style="position: relative; margin: 2rem 1rem;">
+      <h2>
         {{ application.label }}
         <p v-if="metadataStore.firstMetadata" class="subtitle">
           Date de création : {{ new Date(metadataStore.firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
@@ -64,9 +92,38 @@ onMounted(loadApplication);
         <DsfrTag v-if="application.status" class="fr-mr-2w" :label="statusApplicationDictionary[application.status]" />
         <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" />
       </h2>
+
+      <DsfrButton
+        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
+        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
+        style="position: absolute; top: 0; right: 0;"
+        @click="opened = true"
+      >
+        Supprimer l’application
+      </DsfrButton>
       <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />
     </div>
   </div>
+
+  <DsfrModal
+    v-model:opened="opened"
+    title="Supprimer définitivement l’application"
+    :actions="actions"
+    @close="resetModal"
+  >
+    <DsfrAlert
+      title="Cette action est irréversible"
+      :description="`Cela concerne l'application ainsi que toutes ses données. Pour confirmer, veuillez retaper le nom de l’application : ${appName}`"
+      type="warning"
+      class="fr-mb-3w"
+    />
+    <DsfrInput
+      v-model="confirmationInput"
+      type="text"
+      placeholder="Nom de l’application"
+      @input="updateActions"
+    />
+  </DsfrModal>
 </template>
 
 <style scoped>
