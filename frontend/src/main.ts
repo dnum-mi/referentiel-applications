@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import { authentication } from "@/services/authentication";
+import { authenticationInit } from "@/services/authentication";
 import App from "./App.vue";
 import { createPinia } from "pinia";
 import router from "./router/index";
@@ -40,7 +40,7 @@ app.use(router);
 
 app.component("VIcon", VIcon);
 
-authentication.init({ onLoad: "check-sso" }).then(() => {
+authenticationInit().then(() => {
   app.mount("#app");
 });
 

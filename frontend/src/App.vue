@@ -3,7 +3,7 @@ import { ref, computed, watch } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import { useToasterStore } from "./stores/toasterStore.js";
 import { routeNames } from "./router/route-names";
-import { authentication } from "./services/authentication";
+import { getAuthentication } from "./services/authentication";
 import router from "./router/index.js";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore.js";
@@ -47,7 +47,7 @@ interface QuickLink {
   iconAttrs?: Record<string, string>
 }
 
-if (authentication.authenticated) {
+if (getAuthentication().authenticated) {
   userStore.fetchUser();
 }
 
@@ -61,7 +61,7 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
     },
     {
       label: "Déconnexion",
-      to: authentication.createLogoutUrl({
+      to: getAuthentication().createLogoutUrl({
         redirectUri: window.location.origin + router.resolve({ name: "accueil" }).href,
       }),
       icon: "ri-logout-box-r-line",
@@ -81,7 +81,7 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
 
 const loginRedirectUrl = ref<string>("");
 
-authentication.createLoginUrl({
+getAuthentication().createLoginUrl({
   redirectUri: window.location.href,
 }).then((url) => {
   loginRedirectUrl.value = url;
