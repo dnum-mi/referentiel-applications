@@ -6,6 +6,7 @@ import api from "@/api/index";
 import type { ApplicationPriorityRestart, PatchApplicationDto } from "@/client/types.gen";
 import router from "@/router";
 import { routeNames } from "@/router/route-names";
+import type { Filters } from "./applicationSearchStore";
 
 export const useApplicationStore = defineStore("applicationStore", () => {
   const applicationsById = ref<Record<string, ApplicationWithPerms>>({});
@@ -85,6 +86,44 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     toaster.addSuccessMessage("Application supprimée définitivement avec succès.");
   };
 
+  const exportToCsv = async (filters: Filters = {}): Promise<Blob> => {
+    const cleanedFilters = cleanFilters(filters);
+
+    const response = await api.applicationControllerExportCsv({
+      query: cleanedFilters,
+    });
+
+    if (!response.response.ok || !response.data) {
+      throw new Error("Erreur lors de l'export CSV.");
+    }
+
+    return new Blob([response.data], { type: "text/csv;charset=utf-8;" });
+  };
+
+  const exportToExcel = async (filters: Filters = {}): Promise<Blob> => {
+    const cleanedFilters = cleanFilters(filters);
+    const response = await api.applicationControllerExportExcel({
+      query: cleanedFilters,
+    });
+
+    if (!response.response.ok || !response.data) {
+      throw new Error("Erreur lors de l'export Excel.");
+    }
+
+    return new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  };
+
+  const downloadCsv = async (filters: Filters): Promise<void> => {
+    const blob = await exportToCsv(filters);
+    downloadBlob(blob);
+  };
+
+  const downloadExcel = async (filters: Filters): Promise<void> => {
+    const blob = await exportToExcel(filters);
+    const date = new Date().toISOString().split("T")[0];
+    downloadBlob(blob, `applications_export_${date}.xlsx`);
+  };
+
   return {
     application,
     applicationsById,
@@ -95,5 +134,27 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     patchApplication,
     patchApplicationsQuality,
     deleteApplication,
+    downloadCsv,
+    downloadExcel,
   };
 });
+
+function downloadBlob(blob: Blob, filename: string = "applications_export.csv"): void {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+function cleanFilters(filters: Filters = {}) {
+  return Object.fromEntries(
+    Object.entries(filters).filter(([_, value]) => {
+      if (value === "" || value === null || value === undefined) return false;
+      if (Array.isArray(value) && value.length === 0) return false;
+      return true;
+    }),
+  );
+}

@@ -3,11 +3,12 @@ import { computed, watch, ref } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { restartPrioritiesConfig } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
-import ExportApi from "@/api/export";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
+import { useApplicationStore } from "@/stores/applicationStore";
 
 const searchStore = useApplicationSearchStore();
+const applicationStore = useApplicationStore();
 const userStore = useUserStore();
 
 const sortBy = ref(searchStore.filters.sortBy || "label");
@@ -82,7 +83,7 @@ const rows = computed(() =>
 
 async function exportSearchResults() {
   try {
-    await ExportApi.downloadCsv(searchStore.filters);
+    await applicationStore.downloadCsv(searchStore.filters);
   } catch (error) {
     console.error("Export error:", error);
     alert("Une erreur est survenue lors de l'exportation CSV. Veuillez réessayer.");
@@ -91,7 +92,7 @@ async function exportSearchResults() {
 
 async function exportToExcel() {
   try {
-    await ExportApi.downloadExcel(searchStore.filters);
+    await applicationStore.downloadExcel(searchStore.filters);
   } catch (error) {
     console.error("Excel export error:", error);
     alert("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
