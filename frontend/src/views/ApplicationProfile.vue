@@ -20,6 +20,10 @@ const applicationUpdated = ref<Application | null>(null);
 const isLoading = ref(false);
 const errorMessage = ref("");
 
+const deleteModalOpened = ref(false);
+const deleteConfirmationInput = ref("");
+const applicationLabel = computed(() => application.value?.label ?? "");
+
 async function handleApplicationUpdate(updateData: Application) {
   applicationUpdated.value = updateData;
   if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
@@ -40,20 +44,15 @@ async function loadApplication() {
 }
 onMounted(loadApplication);
 
-const opened = ref(false);
-const confirmationInput = ref("");
-
-const appName = computed(() => application.value?.label ?? "");
-
 function resetModal() {
-  opened.value = false;
-  confirmationInput.value = "";
+  deleteModalOpened.value = false;
+  deleteConfirmationInput.value = "";
 };
 
 const actions = computed(() => [
   {
     label: "Supprimer définitivement",
-    disabled: confirmationInput.value !== appName.value,
+    disabled: deleteConfirmationInput.value !== applicationLabel.value,
     async onClick() {
       resetModal();
       await applicationStore.deleteApplication(id);
@@ -97,7 +96,7 @@ const actions = computed(() => [
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         style="position: absolute; top: 0; right: 0;"
-        @click="opened = true"
+        @click="deleteModalOpened = true"
       >
         Supprimer l’application
       </DsfrButton>
@@ -106,19 +105,19 @@ const actions = computed(() => [
   </div>
 
   <DsfrModal
-    v-model:opened="opened"
+    v-model:opened="deleteModalOpened"
     title="Supprimer définitivement l’application"
     :actions="actions"
     @close="resetModal"
   >
     <DsfrAlert
       title="Cette action est irréversible"
-      :description="`Cela concerne l'application ainsi que toutes ses données. Pour confirmer, veuillez retaper le nom de l’application : ${appName}`"
+      :description="`Cela concerne l'application ainsi que toutes ses données. Pour confirmer, veuillez retaper le nom de l’application : ${applicationLabel}`"
       type="warning"
       class="fr-mb-3w"
     />
     <DsfrInput
-      v-model="confirmationInput"
+      v-model="deleteConfirmationInput"
       type="text"
       placeholder="Nom de l’application"
     />
