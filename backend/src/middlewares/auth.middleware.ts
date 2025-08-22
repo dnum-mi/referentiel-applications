@@ -20,12 +20,12 @@ declare module "express" {
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
-  private jwks: ReturnType<typeof createRemoteJWKSet>;
+  private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
 
   constructor(
     @Inject(keycloakConfig.KEY)
     private readonly config: ConfigType<typeof keycloakConfig>,
-    private userService: UserService,
+    private readonly userService: UserService,
     private readonly actionLogService: ActionLogService,
   ) {
     this.jwks = createRemoteJWKSet(new URL(this.config.jwksUrl));

@@ -57,10 +57,8 @@ export class AnomalyNotificationService {
       if (!hasApplicationReadPerms && !isAdminRead) {
         where.notifierId = requestor.keycloakId;
       }
-    } else {
-      if (!isAdminRead) {
-        where.notifierId = requestor.keycloakId;
-      }
+    } else if (!isAdminRead) {
+      where.notifierId = requestor.keycloakId;
     }
 
     return this.prisma.anomalyNotification.findMany({
