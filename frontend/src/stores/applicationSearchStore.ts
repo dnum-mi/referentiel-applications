@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import api from "@/api/index.js";
 import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
 
-type Filters = Exclude<ApplicationControllerSearchData["query"], undefined>;
+export type Filters = Exclude<ApplicationControllerSearchData["query"], undefined>;
 
 export const useApplicationSearchStore = defineStore("applicationSearchStore", () => {
   const results = ref<any[]>([]);
