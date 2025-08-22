@@ -4,6 +4,8 @@ import { useToasterStore } from "@/stores/toasterStore";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 import api from "@/api/index";
 import type { ApplicationPriorityRestart, PatchApplicationDto } from "@/client/types.gen";
+import router from "@/router";
+import { routeNames } from "@/router/route-names";
 
 export const useApplicationStore = defineStore("applicationStore", () => {
   const applicationsById = ref<Record<string, ApplicationWithPerms>>({});
@@ -73,6 +75,16 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     return response.data;
   };
 
+  const deleteApplication = async (applicationId: string): Promise<void> => {
+    const response = await api.applicationControllerRemove({ path: { applicationId } });
+    if (!response.response.ok) {
+      toaster.addErrorMessage("Erreur lors de la suppression définitive de l'application.");
+      throw new Error("Erreur lors de la suppression définitive de l'application.");
+    }
+    router.push({ name: routeNames.SEARCHAPP });
+    toaster.addSuccessMessage("Application supprimée définitivement avec succès.");
+  };
+
   return {
     application,
     applicationsById,
@@ -82,5 +94,6 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     fetchApplication,
     patchApplication,
     patchApplicationsQuality,
+    deleteApplication,
   };
 });
