@@ -95,7 +95,7 @@ function handleKeydown(event: KeyboardEvent) {
     const before = localValue.value.slice(0, start);
     const lastLine = before.split("\n").at(-1) ?? "";
 
-    if (/^\s*[-*+]|\d+\.\s?$/.test(lastLine)) {
+    if (/^(?:\s*[-*+]|\d+\.\s?)$/.test(lastLine)) {
       event.preventDefault();
       const indent = /^(\s*)/.exec(lastLine)?.[1] ?? "";
       insertAtCursor(`\n${indent}`);

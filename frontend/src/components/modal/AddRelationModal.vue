@@ -22,7 +22,7 @@ const emit = defineEmits<{
 }>();
 const toaster = useToasterStore();
 const applicationSearchStore = useApplicationSearchStore();
-const selectedApplicationId = ref<string | null>(null);
+const selectedApplicationId = ref<string>("");
 const relationType = ref<RelationType>(RelationType.IS_PART_OF);
 const relationTypesForSelect = [
   { value: RelationType.IS_PART_OF, text: "Fait partie de" },
@@ -37,7 +37,7 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading!.value = true;
     try {
-      const response = await applicationSearchStore.searchApplications({ search: query, limit: 10 });
+      const response = await applicationSearchStore.searchApplications({ search: query, limit: 10 }, false);
       return response.results;
     } catch (error) {
       console.error(error);
@@ -47,6 +47,7 @@ async function performSearch(query: string) {
       isLoading.value = false;
     }
   }
+  return [];
 }
 
 async function submitRelation() {
