@@ -28,7 +28,7 @@ CMD [ "pnpm", "start:dev" ]
 FROM base AS prod
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY --chown=node:root . .
-RUN pnpm db:generate
-RUN pnpm build
+RUN pnpm db:generate \
+    && pnpm build
 EXPOSE 8080
 CMD [ "pnpm", "start:prod" ]

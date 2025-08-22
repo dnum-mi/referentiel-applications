@@ -13,8 +13,8 @@ import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
 @Injectable()
 export class ApplicationGuard implements CanActivate {
   constructor(
-    private reflector: Reflector,
-    private prisma: PrismaService,
+    private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

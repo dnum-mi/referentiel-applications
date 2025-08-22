@@ -25,8 +25,8 @@ export function getFullField(
     return app.hostings
       .map((h) => {
         const provider = h.hostingOption?.provider ?? "";
-        const site = h.hostingOption?.site ?? "";
-        return `${provider}${site ? ` (${site})` : ""}`;
+        const site = h.hostingOption?.site ? ` (${h.hostingOption.site})` : "";
+        return `${provider}${site}`;
       })
       .join(", ");
   }
@@ -76,6 +76,12 @@ export function mapActors(app: ApplicationWithAllRelations) {
   );
 }
 
+function translateBoolean(value: boolean | null | undefined): string | null {
+  if (value === true) return "Oui";
+  if (value === false) return "Non";
+  return null;
+}
+
 export function mapCompliances(app: ApplicationWithAllRelations) {
   if (!app.compliance) return [];
 
@@ -87,30 +93,10 @@ export function mapCompliances(app: ApplicationWithAllRelations) {
       applicationLabel: app.label,
       ...compliance,
       // Convert boolean values to "Oui" or "Non"
-      dima_is_hno:
-        compliance.dima_is_hno === true
-          ? "Oui"
-          : compliance.dima_is_hno === false
-            ? "Non"
-            : null,
-      dima_recovery_plan:
-        compliance.dima_recovery_plan === true
-          ? "Oui"
-          : compliance.dima_recovery_plan === false
-            ? "Non"
-            : null,
-      dsfr_implemented:
-        compliance.dsfr_implemented === true
-          ? "Oui"
-          : compliance.dsfr_implemented === false
-            ? "Non"
-            : null,
-      rgpd_has_aipd:
-        compliance.rgpd_has_aipd === true
-          ? "Oui"
-          : compliance.rgpd_has_aipd === false
-            ? "Non"
-            : null,
+      dima_is_hno: translateBoolean(compliance.dima_is_hno),
+      dima_recovery_plan: translateBoolean(compliance.dima_recovery_plan),
+      dsfr_implemented: translateBoolean(compliance.dsfr_implemented),
+      rgpd_has_aipd: translateBoolean(compliance.rgpd_has_aipd),
     },
   ];
 }

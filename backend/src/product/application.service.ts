@@ -24,8 +24,8 @@ export function objectEntries<Obj extends Record<string, unknown>>(
 @Injectable()
 export class ApplicationService {
   constructor(
-    private prisma: PrismaService,
-    private applicationRepository: ApplicationRepository,
+    private readonly prisma: PrismaService,
+    private readonly applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
     private readonly metadataService: MetadataService,
   ) { }
