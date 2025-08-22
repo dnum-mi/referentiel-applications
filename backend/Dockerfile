@@ -6,13 +6,15 @@ WORKDIR /app
 RUN chown -R node:root /app
 ENV PORT=3500
 
-RUN apt-get update -y && apt-get install -y openssl jq libssl-dev procps
-RUN npm install --ignore-scripts --location=global pnpm@10.14.0
+RUN apt-get update -y \
+    && apt-get install -y jq libssl-dev openssl procps \
+    && apt-get clean \
+    && npm install --ignore-scripts --location=global pnpm@10.14.0
 
 COPY --chown=node:root package.json pnpm-lock.yaml ./
 
-RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
 USER node
+RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
 
 
 FROM base AS dev
