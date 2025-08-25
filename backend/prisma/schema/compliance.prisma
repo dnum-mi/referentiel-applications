@@ -30,7 +30,7 @@ model Compliance {
   rgaa_audit_date        DateTime?
   rgaa_service_url       String?
   rgaa_accessibility_url String?
-  rgaa_score_percentage  Int?
+  rgaa_score_percentage  Decimal? @db.Decimal(5,2)
 
   dsfr_implemented Boolean?
   dsfr_version     String?

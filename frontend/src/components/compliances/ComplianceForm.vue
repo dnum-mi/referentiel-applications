@@ -201,8 +201,10 @@ async function save() {
           v-model="form.score_percentage"
           :label="complianceFieldLabels.score_percentage"
           type="number"
+          inputmode="decimal"
           min="0"
           max="100"
+          step="0.01"
           label-visible
         />
       </template>

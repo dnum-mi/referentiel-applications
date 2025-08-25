@@ -3391,7 +3391,7 @@ components:
           example: https://service.example.com/accessibilite
           description: RGAA accessibility page URL
         rgaa_score_percentage:
-          type: number
+          type: string
           minimum: 0
           maximum: 100
           example: 85
@@ -3504,7 +3504,7 @@ components:
           example: https://service.example.com/accessibilite
           description: RGAA accessibility page URL
         rgaa_score_percentage:
-          type: number
+          type: string
           minimum: 0
           maximum: 100
           example: 85
@@ -3623,7 +3623,7 @@ components:
           example: https://service.example.com/accessibilite
           description: RGAA accessibility page URL
         rgaa_score_percentage:
-          type: number
+          type: string
           minimum: 0
           maximum: 100
           example: 85
