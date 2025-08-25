@@ -2249,10 +2249,6 @@ components:
           format: date-time
           type: string
           nullable: true
-        appPerms:
-          type: array
-          items:
-            type: object
       required:
         - keycloakId
         - email

@@ -41,7 +41,7 @@ import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { User } from "src/common/decorators/user.decorator";
-import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
+import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { APP_PERMISSIONS, AppPermissionsValues } from "src/common/utils/types";
 
@@ -145,9 +145,9 @@ Vous devez fournir les informations suivantes :
   })
   async search(
     @Query() searchParams: ApplicationSearchDto,
-    @User() user: UserEntity,
+    @User() requestor: Requestor,
   ): Promise<ApplicationSearchResultDto> {
-    return this.applicationService.search(searchParams, user);
+    return this.applicationService.search(searchParams, requestor);
   }
 
   @Get(":applicationId/my-perms")
@@ -172,7 +172,7 @@ Vous devez fournir les informations suivantes :
     type: String,
   })
   getMyPerms(
-    @User() user: UserEntity,
+    @User() user: Requestor,
   ): Promise<APP_PERMISSIONS[]> {
     return this.applicationService.getMyPerms(user);
   }

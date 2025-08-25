@@ -25,6 +25,12 @@ export class UserEntity {
 
   @IsString()
   lastLogin: Date | null;
+}
+
+export class Requestor extends UserEntity {
+  @IsArray()
+  @IsOptional()
+  groups?: string[];
 
   @IsArray()
   @IsOptional()

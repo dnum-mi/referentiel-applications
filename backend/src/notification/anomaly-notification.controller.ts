@@ -28,7 +28,7 @@ import { GetAnomalyNotificationDto } from "./dto/get-anomaly-notification.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
 import { AnomalyFiltersDto } from "src/notification/dto/filters.dto";
 import { User } from "src/common/decorators/user.decorator";
-import { UserEntity } from "src/user/entities/user.entity";
+import { Requestor } from "src/user/entities/user.entity";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 
@@ -57,7 +57,7 @@ export class AnomalyNotificationsController {
     isArray: true,
   })
   findAll(
-    @User() requestor: UserEntity,
+    @User() requestor: Requestor,
     @Query() filters: AnomalyFiltersDto,
   ) {
     return this.service.findAll({
@@ -96,7 +96,7 @@ export class ApplicationAnomalyNotificationsController {
   })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @User() requestor: UserEntity,
+    @User() requestor: Requestor,
     @Body() requestData: CreateAnomalyNotificationRequestDto,
   ) {
     const data: CreateAnomalyNotificationDto = {
@@ -122,7 +122,7 @@ export class ApplicationAnomalyNotificationsController {
   })
   findAll(
     @Query() filters: AnomalyFiltersDto,
-    @User() requestor: UserEntity,
+    @User() requestor: Requestor,
     @Param("applicationId") applicationId: string,
   ) {
     return this.service.findAll({
@@ -146,7 +146,7 @@ export class ApplicationAnomalyNotificationsController {
   })
   findOne(
     @Param("id") id: string,
-    @User() requestor: UserEntity,
+    @User() requestor: Requestor,
   ) {
     return this.service.findOne(id, requestor);
   }

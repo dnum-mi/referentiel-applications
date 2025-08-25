@@ -11,7 +11,7 @@ import { LabelsService } from "src/labels/labels.service";
 import { MetadataService } from "src/metadata/metadata.service";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { ApplicationRights } from "./application/dto/application-rights.dto";
-import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
+import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { ApplicationSearchResultDto } from "./application/dto/get-application.dto.js";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
@@ -210,22 +210,22 @@ export class ApplicationService {
   }
 
   public async getMyPerms(
-    requestor: UserEntity,
+    requestor: Requestor,
   ): Promise<ApplicationRights> {
     return requestor.appPerms;
   }
 
   public async search(
     searchParams: ApplicationSearchDto,
-    user?: UserEntity,
+    requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
-    if (user.adminLevel >= AdminLevel.READ) {
+    if (requestor.adminLevel >= AdminLevel.READ) {
       // If the user has read or write permissions, proceed with the search
       return this.applicationRepository.findApplicationsBySearch(searchParams);
     }
     return this.applicationRepository.findApplicationsBySearch(searchParams, {
-      actorEmail: user.email,
-      ownerId: user.keycloakId,
+      actorEmail: requestor.email,
+      ownerId: requestor.keycloakId,
     });
   }
 

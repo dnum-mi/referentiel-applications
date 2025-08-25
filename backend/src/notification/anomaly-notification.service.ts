@@ -3,7 +3,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { CreateAnomalyNotificationDto } from "./dto/create-anomaly-notification.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
 import { Prisma } from "@prisma/client";
-import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
+import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 
 @Injectable()
 export class AnomalyNotificationService {
@@ -14,7 +14,7 @@ export class AnomalyNotificationService {
    * @param data Les données nécessaires pour créer la notification.
    * @returns La notification d'anomalie créée.
    */
-  public async create(data: CreateAnomalyNotificationDto, requestor: UserEntity) {
+  public async create(data: CreateAnomalyNotificationDto, requestor: Requestor) {
     if (!requestor.appPerms.includes("postAnomalyNotifications")) {
       throw new ForbiddenException("Vous n'avez pas la permission de créer une notification d'anomalie.");
     }
@@ -42,7 +42,7 @@ export class AnomalyNotificationService {
   }: {
     applicationId?: string
     notifierId?: string
-    requestor: UserEntity
+    requestor: Requestor
   }) {
     const where: Prisma.AnomalyNotificationWhereInput = {
       applicationId,
@@ -73,7 +73,7 @@ export class AnomalyNotificationService {
    * @returns La notification d'anomalie trouvée.
    * @throws NotFoundException Si la notification n'est pas trouvée.
    */
-  async findOne(id: string, requestor: UserEntity) {
+  async findOne(id: string, requestor: Requestor) {
     const hasApplicationReadPerms
     = requestor.appPerms?.includes("readAnomalyNotifications")
       || requestor.appPerms?.includes("manageAnomalyNotifications")
