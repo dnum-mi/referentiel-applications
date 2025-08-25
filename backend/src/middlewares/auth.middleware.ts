@@ -9,12 +9,12 @@ import { Request, Response, NextFunction } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { ActionLogService } from "src/action-log/action-log.service";
 import { keycloakConfig } from "src/config/configs";
-import { UserEntity } from "src/user/entities/user.entity";
+import { Requestor } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 
 declare module "express" {
   export interface Request {
-    user?: UserEntity
+    user?: Requestor
   }
 }
 
@@ -24,11 +24,11 @@ export class AuthMiddleware implements NestMiddleware {
 
   constructor(
     @Inject(keycloakConfig.KEY)
-    private readonly config: ConfigType<typeof keycloakConfig>,
+    private readonly keycloak: ConfigType<typeof keycloakConfig>,
     private readonly userService: UserService,
     private readonly actionLogService: ActionLogService,
   ) {
-    this.jwks = createRemoteJWKSet(new URL(this.config.jwksUrl));
+    this.jwks = createRemoteJWKSet(new URL(this.keycloak.jwksUrl));
   }
 
   async use(req: Request, _res: Response, next: NextFunction) {

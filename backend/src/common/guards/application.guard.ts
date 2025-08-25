@@ -8,7 +8,7 @@ import { APP_ACTION_KEY } from "../decorators/application.decorator";
 import type { User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { APP_PERMISSIONS, APP_PERMS_MAP, AppPermissionsRecord } from "../utils/types";
-import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
+import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 
 @Injectable()
 export class ApplicationGuard implements CanActivate {
@@ -25,7 +25,7 @@ export class ApplicationGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
 
-    const user = request.user as UserEntity;
+    const user = request.user as Requestor;
     const { params } = request;
 
     const appPermsMap = await this.getUserAppPermissions(
@@ -106,7 +106,7 @@ export class ApplicationGuard implements CanActivate {
   }
 
   private async checkAppPermission(
-    user: UserEntity,
+    user: Requestor,
     action?: APP_PERMISSIONS,
   ): Promise<boolean> {
     if (typeof action === "undefined") {

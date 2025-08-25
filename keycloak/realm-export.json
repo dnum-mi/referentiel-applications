@@ -58,6 +58,22 @@
       ],
       "protocolMappers": [
         {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "false",
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "lightweight.claim": "false",
+            "access.token.claim": "true",
+            "claim.name": "groups"
+          }
+        },
+        {
           "name": "sub",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-property-mapper",
@@ -112,8 +128,22 @@
       ],
       "authorizationServicesEnabled": false,
       "serviceAccountsEnabled": true,
-      "webOrigins": ["+"],
+      "webOrigins": [
+        "+"
+      ],
       "directAccessGrantsEnabled": true
+    }
+  ],
+  "groups": [
+    {
+      "id": "2b3f547a-ba9a-4509-bd09-2054f73bd1af",
+      "name": "admin",
+      "description": "",
+      "path": "/admin",
+      "subGroups": [],
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {}
     }
   ],
   "users": [
@@ -125,11 +155,20 @@
       "createdTimestamp": 1728673413023,
       "totp": false,
       "serviceAccountClientId": "referentiel-applications",
-      "realmRoles": ["default-roles-referentiel-applications"],
+      "realmRoles": [
+        "default-roles-referentiel-applications"
+      ],
       "clientRoles": {
-        "realm-management": ["impersonation", "create-client"],
-        "referentiel-applications": ["USER"],
-        "broker": ["read-token"],
+        "realm-management": [
+          "impersonation",
+          "create-client"
+        ],
+        "referentiel-applications": [
+          "USER"
+        ],
+        "broker": [
+          "read-token"
+        ],
         "account": [
           "view-groups",
           "manage-account",
@@ -152,9 +191,13 @@
       "enabled": true,
       "createdTimestamp": 1728673414000,
       "totp": false,
-      "realmRoles": ["user"],
+      "realmRoles": [
+        "user"
+      ],
       "clientRoles": {
-        "referentiel-applications": ["USER"]
+        "referentiel-applications": [
+          "USER"
+        ]
       },
       "credentials": [
         {
@@ -162,6 +205,9 @@
           "value": "pass",
           "temporary": false
         }
+      ],
+      "groups": [
+        "/admin"
       ]
     },
     {
@@ -174,9 +220,13 @@
       "enabled": true,
       "createdTimestamp": 1728673414000,
       "totp": false,
-      "realmRoles": ["user"],
+      "realmRoles": [
+        "user"
+      ],
       "clientRoles": {
-        "referentiel-applications": ["USER"]
+        "referentiel-applications": [
+          "USER"
+        ]
       },
       "credentials": [
         {
@@ -196,9 +246,13 @@
       "enabled": true,
       "createdTimestamp": 1728673414000,
       "totp": false,
-      "realmRoles": ["user"],
+      "realmRoles": [
+        "user"
+      ],
       "clientRoles": {
-        "referentiel-applications": ["USER"]
+        "referentiel-applications": [
+          "USER"
+        ]
       },
       "credentials": [
         {
