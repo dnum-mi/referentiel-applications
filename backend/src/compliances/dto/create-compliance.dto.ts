@@ -7,9 +7,11 @@ import {
   IsDateString,
   IsBoolean,
   IsInt,
+  IsNumber,
   Min,
   Max,
 } from "class-validator";
+import { Type } from "class-transformer";
 
 export class CreateComplianceDto {
   // DIMA specific fields
@@ -220,10 +222,11 @@ export class CreateComplianceDto {
     required: false,
   })
   @IsOptional()
-  @IsInt()
+  @Type(() => Number)
+  @IsNumber()
   @Min(0)
   @Max(100)
-  rgaa_score_percentage?: number;
+  rgaa_score_percentage?: string;
 
   // DSFR specific fields
   @ApiProperty({

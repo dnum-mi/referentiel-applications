@@ -60,14 +60,14 @@ describe("Compliances", () => {
       .patch(`/applications/${application.id}/compliances`)
       .send({
         rgaa_audit_date: "2023-01-01T00:00:00.000Z",
-        rgaa_score_percentage: 85,
+        rgaa_score_percentage: "85.2",
         rgaa_service_url: "https://example.com",
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     expect(response.body.id).toBeDefined();
-    expect(response.body.rgaa_score_percentage).toEqual(85);
+    expect(response.body.rgaa_score_percentage).toEqual("85.2");
     expect(response.body.rgaa_service_url).toEqual("https://example.com");
     expect(response.body.rgpd_has_aipd).toEqual(true);
     expect(response.body.rgpd_dpo_name).toEqual("Jean Dupont");
