@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, defineProps, defineEmits } from "vue";
 import { useComplianceStore } from "@/stores/complianceStore";
-import { durationHoursOptions, testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
+import { dimaDurationHoursOptions, pdmaDurationHoursOptions, testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
@@ -117,7 +117,7 @@ async function save() {
       <template v-if="type === 'dima'">
         <DsfrSelect
           v-model="form.duration_hours"
-          :options="durationHoursOptions"
+          :options="dimaDurationHoursOptions"
           label="Durée d'interruption maximale"
           label-visible
           required
@@ -161,7 +161,7 @@ async function save() {
       <template v-else-if="type === 'pdma'">
         <DsfrSelect
           v-model="form.duration_hours"
-          :options="durationHoursOptions"
+          :options="pdmaDurationHoursOptions"
           :label="complianceFieldLabels.duration_hours"
           label-visible
           default-unselected-text="Choisir..."

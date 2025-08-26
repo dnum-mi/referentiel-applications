@@ -46,14 +46,18 @@ export const backupStorageDict = {
   EXTERNE: "Externe",
 };
 
-export const durationHoursOptions = [
+export const dimaDurationHoursOptions = [
   { value: 1, text: "1H" },
   { value: 4, text: "4H" },
-  { value: 8, text: "8H" },
-  { value: 12, text: "12H" },
+  { value: 24, text: "24H" },
+  { value: 96, text: "96H" },
+];
+
+export const pdmaDurationHoursOptions = [
+  { value: 0, text: "0H" },
+  { value: 2, text: "2H" },
   { value: 24, text: "24H" },
   { value: 48, text: "48H" },
-  { value: 72, text: "72H" },
 ];
 
 export const linkTypesDict = {
