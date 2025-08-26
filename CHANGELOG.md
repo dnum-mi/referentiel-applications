@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.34.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.34.0...v1.34.1) (2025-08-26)
+
+
+### Bug Fixes
+
+* update entrypoint script to use temporary directory for file processing ([556a8bf](https://github.com/dnum-mi/referentiel-applications/commit/556a8bf21ed5d0b5645cf706d92fd93514c52331))
+
 ## [1.34.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.33.2...v1.34.0) (2025-08-22)
 
 
