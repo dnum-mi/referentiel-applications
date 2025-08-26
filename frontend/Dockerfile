@@ -4,8 +4,8 @@ WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y jq \
-    && apt-get clean \
-    && npm install -g pnpm
+    && apt-get clean
+RUN npm install -g pnpm
 
 RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
 
@@ -30,10 +30,11 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
 
 USER 0
 
+RUN chmod 777 /usr/share/nginx/html
 COPY --chown=1001:1001 --chmod=444 nginx.conf /etc/nginx/nginx.conf
-COPY --chown=1001:1001 --from=build /app/dist /usr/share/nginx/html/
+COPY --chown=1001:1001 --chmod=777 --from=build /app/dist /app
 
-COPY --chown=1001:1001 --chmod=554 entrypoint.sh /docker-entrypoint.d/entrypoint.sh
+COPY --chown=1001:1001 --chmod=775 entrypoint.sh /docker-entrypoint.d/entrypoint.sh
 
 USER 1001
 

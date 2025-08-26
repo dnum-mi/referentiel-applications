@@ -1,32 +1,34 @@
 #!/bin/sh
 
-DEFAULT_APP_ENV_PREFIX="VITE_RDA_"
-DEFAULT_APP_DIST_DIR="/app"
-
-if [ -z "$APP_ENV_PREFIX" ]; then
-    echo "APP_ENV_PREFIX is not set. Setting to default: $DEFAULT_APP_ENV_PREFIX"
-    export APP_ENV_PREFIX=$DEFAULT_APP_ENV_PREFIX
-fi
-if [ -z "$APP_DIST_DIR" ]; then
-    echo "APP_DIST_DIR is not set. Setting to default: $DEFAULT_APP_DIST_DIR"
-    export APP_DIST_DIR=$DEFAULT_APP_DIST_DIR
-fi
+APP_ENV_PREFIX="VITE_RDA_"
+APP_SRC_DIR="/app"
+APP_DIST_DIR="/usr/share/nginx/html"
 
 echo "Prefix: $APP_ENV_PREFIX"
-echo "Directory: $APP_DIST_DIR"
-ls $APP_DIST_DIR | grep 'assets'
+echo "Source directory: $APP_DIST_DIR"
+echo "Dist directory: $APP_DIST_DIR"
 
-env | grep "^$APP_ENV_PREFIX"
-for i in $(env | grep "^$APP_ENV_PREFIX"); do
-    key=$(echo "$i" | cut -d '=' -f 1)
-    value=$(echo "$i" | cut -d '=' -f 2-)
+env | grep "^$APP_ENV_PREFIX" | while IFS='=' read -r key value; do
+    [ -z "$key" ] && continue
 
     echo "Setting $key=$value"
-    FILE_COUNT=$(grep $key -rnl $APP_DIST_DIR | wc -l)
+
+    FILES=$(grep -rl -- "$key" "$APP_SRC_DIR" || true)
+    FILE_COUNT=$(echo "$FILES" | grep -c . || true)
     echo "Found $FILE_COUNT files with matching key: $key"
 
-    find "$APP_DIST_DIR" -type f -exec sed -i 's|'"${key}"'|'"${value}"'|g' {} \;  
+    for file in $FILES; do
+        tmpfile="${file}.tmp"
+        sed "s|${key}|${value}|g" "$file" > "$tmpfile"
+        mv "$tmpfile" "$file"
+    done
 done
+
+# On écrase complètement le dossier de destination
+echo copying files from src to dist
+ls -R "$APP_SRC_DIR"/
+rm -rf "$APP_DIST_DIR"/*
+cp -r "$APP_SRC_DIR"/* "$APP_DIST_DIR"/
 
 echo "Done."
 
