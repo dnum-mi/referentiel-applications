@@ -160,24 +160,14 @@ export class CreateComplianceDto {
   @IsString()
   pdma_restoration_manager?: string;
 
-  // Homologation specific fields
   @ApiProperty({
     example: "2023-01-01",
-    description: "Homologation date",
+    description: "Homologation date end",
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  homologation_date?: string;
-
-  @ApiProperty({
-    example: 12,
-    description: "Homologation duration in months",
-    required: false,
-  })
-  @IsOptional()
-  @IsInt()
-  homologation_duration_months?: number;
+  homologation_date_end?: string;
 
   @ApiProperty({
     example: "uuid-of-rssi-actor",

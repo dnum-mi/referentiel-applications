@@ -3228,14 +3228,10 @@ components:
           type: string
           example: Marie Martin
           description: PDMA restoration manager
-        homologation_date:
+        homologation_date_end:
           type: string
           example: 2023-01-01
-          description: Homologation date
-        homologation_duration_months:
-          type: number
-          example: 12
-          description: Homologation duration in months
+          description: Homologation date end
         homologation_rssi_id:
           type: string
           example: uuid-of-rssi-actor
@@ -3341,14 +3337,10 @@ components:
           type: string
           example: Marie Martin
           description: PDMA restoration manager
-        homologation_date:
+        homologation_date_end:
           type: string
           example: 2023-01-01
-          description: Homologation date
-        homologation_duration_months:
-          type: number
-          example: 12
-          description: Homologation duration in months
+          description: Homologation date end
         homologation_rssi_id:
           type: string
           example: uuid-of-rssi-actor
@@ -3460,14 +3452,10 @@ components:
           type: string
           example: Marie Martin
           description: PDMA restoration manager
-        homologation_date:
+        homologation_date_end:
           type: string
           example: 2023-01-01
-          description: Homologation date
-        homologation_duration_months:
-          type: number
-          example: 12
-          description: Homologation duration in months
+          description: Homologation date end
         homologation_rssi_id:
           type: string
           example: uuid-of-rssi-actor

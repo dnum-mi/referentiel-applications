@@ -193,12 +193,7 @@ export class ExportApplicationsUseCase {
             width: 25,
           },
           // HOMOLOGATION fields
-          { header: "Homologation Date", key: "homologation_date", width: 20 },
-          {
-            header: "Homologation Durée (mois)",
-            key: "homologation_duration_months",
-            width: 20,
-          },
+          { header: "Homologation Date Fin", key: "homologation_date_end", width: 20 },
           {
             header: "Homologation RSSI ID",
             key: "homologation_rssi_id",
@@ -240,8 +235,7 @@ export class ExportApplicationsUseCase {
           pdma_last_test_date: null,
           pdma_test_result: null,
           pdma_restoration_manager: null,
-          homologation_date: null,
-          homologation_duration_months: null,
+          homologation_date_end: null,
           homologation_rssi_id: null,
           rgaa_audit_date: null,
           rgaa_service_url: null,

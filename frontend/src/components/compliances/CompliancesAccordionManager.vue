@@ -123,7 +123,7 @@ function renderValue(type: string, key: string, val: any): string {
     return val ? "Oui" : "Non";
   }
   // Tous les champs date (date d’homologation ou *_date)
-  if ((key === "date" || key.endsWith("_date")) && val) {
+  if ((key === "date" || key.endsWith("date_end")) && val) {
     return formatDateFR(val);
   }
   // Valeur brute pour tout le reste

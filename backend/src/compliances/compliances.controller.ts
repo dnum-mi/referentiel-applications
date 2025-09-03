@@ -137,8 +137,7 @@ export class ApplicationCompliancesController {
         pdma_test_result: "résultat test PDMA",
         pdma_restoration_manager: "responsable restauration PDMA",
         // Homologation fields
-        homologation_date: "date homologation",
-        homologation_duration_months: "durée homologation (mois)",
+        homologation_date_end: "date fin homologation",
         homologation_rssi_id: "RSSI homologation",
         // RGAA fields
         rgaa_audit_date: "date audit RGAA",

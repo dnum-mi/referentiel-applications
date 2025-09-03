@@ -127,6 +127,7 @@ export const priorityRestartLabelsOptions = Object.entries(restartPrioritiesConf
 
 export const complianceFieldLabels: Record<string, string> = {
   duration_hours: "Durée (heures)",
+  date_end: "Date de fin d’homologation",
   test_result: "Résultat du dernier test",
   last_test_date: "Date du dernier test",
   is_hno: "Heure non ouvrée",
@@ -136,7 +137,6 @@ export const complianceFieldLabels: Record<string, string> = {
   accessibility_url: "URL d'accessibilité",
   backup_frequency: "Fréquence de sauvegarde",
   backup_storage: "Stockage de sauvegarde",
-  date: "Date d’homologation",
   duration_months: "Durée (mois)",
   audit_date: "Date d’audit",
   score_percentage: "Score (%)",
@@ -149,5 +149,4 @@ export const complianceFieldLabels: Record<string, string> = {
   recovery_manager: "Responsable de la reprise",
   backup_method: "Méthode de sauvegarde",
   restoration_manager: "Responsable de la restauration",
-  rssi_id: "ID RSSI",
 };

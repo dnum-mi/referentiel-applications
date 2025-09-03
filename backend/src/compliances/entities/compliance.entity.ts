@@ -25,8 +25,7 @@ export class Compliance {
   pdma_restoration_manager?: string;
 
   // Homologation specific fields
-  homologation_date?: Date;
-  homologation_duration_months?: number;
+  homologation_date_end?: Date;
   homologation_rssi_id?: string;
 
   // RGAA specific fields
