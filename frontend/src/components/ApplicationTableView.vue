@@ -81,15 +81,6 @@ const rows = computed(() =>
   })),
 );
 
-async function exportSearchResults() {
-  try {
-    await applicationStore.downloadCsv(searchStore.filters);
-  } catch (error) {
-    console.error("Export error:", error);
-    alert("Une erreur est survenue lors de l'exportation CSV. Veuillez réessayer.");
-  }
-}
-
 async function exportToExcel() {
   try {
     await applicationStore.downloadExcel(searchStore.filters);
@@ -103,15 +94,6 @@ async function exportToExcel() {
 <template>
   <div class="flex justify-between mb-4">
     <div class="export-button">
-      <DsfrButton
-        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
-        label="Exporter en CSV"
-        icon="ri-download-line"
-        secondary
-        icon-only-size="sm"
-        class="fr-mr-2w"
-        @click="exportSearchResults"
-      />
       <DsfrButton
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         label="Exporter en Excel"

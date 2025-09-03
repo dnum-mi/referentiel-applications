@@ -86,20 +86,6 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     toaster.addSuccessMessage("Application supprimée définitivement avec succès.");
   };
 
-  const exportToCsv = async (filters: Filters = {}): Promise<Blob> => {
-    const cleanedFilters = cleanFilters(filters);
-
-    const response = await api.applicationControllerExportCsv({
-      query: cleanedFilters,
-    });
-
-    if (!response.response.ok || !response.data) {
-      throw new Error("Erreur lors de l'export CSV.");
-    }
-
-    return new Blob([response.data], { type: "text/csv;charset=utf-8;" });
-  };
-
   const exportToExcel = async (filters: Filters = {}): Promise<Blob> => {
     const cleanedFilters = cleanFilters(filters);
     const response = await api.applicationControllerExportExcel({
@@ -111,11 +97,6 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     }
 
     return new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-  };
-
-  const downloadCsv = async (filters: Filters): Promise<void> => {
-    const blob = await exportToCsv(filters);
-    downloadBlob(blob);
   };
 
   const downloadExcel = async (filters: Filters): Promise<void> => {
@@ -134,7 +115,6 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     patchApplication,
     patchApplicationsQuality,
     deleteApplication,
-    downloadCsv,
     downloadExcel,
   };
 });

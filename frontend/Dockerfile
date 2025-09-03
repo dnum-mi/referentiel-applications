@@ -14,17 +14,16 @@ COPY package.json pnpm-lock.yaml ./
 
 FROM base AS dev
 RUN pnpm install
-CMD ["npm" , "run" , "dev"]
+CMD ["pnpm" , "run" , "dev"]
 
 
 FROM base AS build
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
 
-RUN npm run api:generate
+RUN pnpm api:generate
 # Temporary disable type checking
-RUN npm run build-only
-CMD ["pnpm" , "dev"]
+RUN pnpm build-only
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
 
