@@ -81,12 +81,12 @@ const actions = computed(() => [
       <h2>
         {{ application.label }}
         <p v-if="metadataStore.firstMetadata" class="subtitle">
-          Date de création : {{ new Date(metadataStore.firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
+          Date de création de la fiche  : {{ new Date(metadataStore.firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
             metadataStore.firstMetadata.createdBy?.email
           }})
         </p>
         <p v-if="metadataStore.lastMetadata" class="subtitle">
-          Dernière modification : {{ formatDate(metadataStore.lastMetadata.createdAt) || "inconnue" }} ({{ metadataStore.lastMetadata.createdBy?.email }})
+          Dernière modification de la fiche {{ formatDate(metadataStore.lastMetadata.createdAt) || "inconnue" }} ({{ metadataStore.lastMetadata.createdBy?.email }})
         </p>
         <DsfrTag v-if="application.status" class="fr-mr-2w" :label="statusApplicationDictionary[application.status]" />
         <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" />
