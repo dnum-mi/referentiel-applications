@@ -50,7 +50,7 @@ function hasCompliance(complianceType: string): boolean {
     case "PDMA":
       return !!(compliances.value.pdma_duration_hours || compliances.value.pdma_restoration_manager);
     case "HOMOLOGATION":
-      return !!compliances.value.homologation_date;
+      return !!compliances.value.homologation_date_end;
     case "RGAA":
       return !!(compliances.value.rgaa_audit_date || compliances.value.rgaa_score_percentage);
     case "DSFR":

@@ -20,10 +20,8 @@ model Compliance {
   pdma_backup_storage      BackupStorage?
   pdma_last_test_date      DateTime?
   pdma_test_result         TestResult?
-  pdma_restoration_manager String?
-
-  homologation_date            DateTime?
-  homologation_duration_months Int?
+  pdma_restoration_manager String? 
+  homologation_date_end        DateTime?
   homologation_rssi_id         String?
   homologation_rssi            Actor?    @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
 

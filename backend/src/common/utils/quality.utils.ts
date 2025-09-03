@@ -41,8 +41,7 @@ export async function calculateIQ(
     },
     {
       value: Boolean(
-        compliance?.homologation_date
-        || compliance?.homologation_duration_months,
+        compliance?.homologation_date_end,
       ),
       importance: 3,
     },

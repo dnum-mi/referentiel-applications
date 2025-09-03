@@ -29,7 +29,6 @@ export const useComplianceStore = defineStore("complianceStore", () => {
   // Create or update: on crée un nouvel objet complet
   const createCompliance = async (applicationId: string, payload: Partial<CreateComplianceDto>) => {
     try {
-      console.log("Creating compliance with payload:", payload);
       const response = await api.applicationCompliancesControllerCreate({ path: { applicationId }, body: payload });
       if (!response.response.ok || !response.data) {
         throw new Error("Erreur lors de la création de la conformité.");

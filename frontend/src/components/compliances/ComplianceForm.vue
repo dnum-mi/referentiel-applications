@@ -64,8 +64,8 @@ async function save() {
       dateKeys: ["last_test_date"],
     },
     homologation: {
-      numberKeys: ["duration_months"],
-      dateKeys: ["date"],
+      numberKeys: [],
+      dateKeys: ["date_end"],
     },
     rgaa: {
       numberKeys: ["score_percentage"],
@@ -196,9 +196,7 @@ async function save() {
       </template>
 
       <template v-else-if="type === 'homologation'">
-        <DsfrInput v-model="form.date" :label="complianceFieldLabels.date" type="date" label-visible data-testid="compliance-homologation-date" />
-        <DsfrInput v-model="form.duration_months" :label="complianceFieldLabels.duration_months" type="number" min="0" label-visible data-testid="compliance-homologation-duration" />
-        <DsfrInput v-model="form.rssi_id" :label="complianceFieldLabels.rssi_id" type="text" label-visible data-testid="compliance-homologation-rssi-id" />
+        <DsfrInput v-model="form.date_end" :label="complianceFieldLabels.date" type="date" label-visible />
       </template>
 
       <template v-else-if="type === 'rgaa'">
