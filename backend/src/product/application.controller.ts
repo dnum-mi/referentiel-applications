@@ -208,36 +208,6 @@ Vous devez fournir les informations suivantes :
     res.send(buffer);
   }
 
-  @Get("export")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
-  @ApiOperation({
-    summary: "Exporter les applications en CSV",
-    description: `Permet d'exporter les applications en un fichier CSV.
-      Vous pouvez ajouter des filtres de recherche pour n'exporter que les applications correspondantes.
-      Si aucun filtre n'est appliqué, toutes les applications sont exportées.
-      Cette nouvelle version utilise une vue optimisée qui inclut tous les acteurs, conformités et hébergements.
-      Accès limité aux utilisateurs avec privilège admin.`,
-  })
-  @ApiOkResponse({
-    description: "Export CSV détaillé des applications",
-    type: String,
-  })
-  async exportCsv(
-    @Query() searchParams: ApplicationSearchDto,
-    @Res() res: Response,
-  ): Promise<void> {
-    const result
-      = await this.applicationExportService.exportApplications(searchParams);
-
-    res.setHeader("Content-Type", "text/csv");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename=${result.fileName}`,
-    );
-    res.send(result.csv);
-  }
-
   @Get(":applicationId")
   @UseGuards(ApplicationGuard)
   @AppAction("readBase")

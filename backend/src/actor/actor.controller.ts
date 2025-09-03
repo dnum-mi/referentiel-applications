@@ -68,7 +68,6 @@ Informations requises :
 - **applicationId** : ID de l'application liée à l'acteur
     `,
   })
-  @HttpCode(201)
   @ApiCreatedResponse({
     description: "Acteur créé avec succès",
     type: ActorDto,

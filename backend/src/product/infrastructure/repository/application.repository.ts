@@ -4,7 +4,7 @@ import { IApplicationRepository } from "./application.repository.interface";
 import { Injectable } from "@nestjs/common";
 import { CreateApplicationDto } from "../../application/dto/create-application.dto";
 import { PrismaService } from "src/prisma/prisma.service";
-import type { Prisma, ApplicationsExport } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 import { ApplicationSearchDto } from "./../../application/dto/search-application.dto";
 import { ApplicationWithAllRelations } from "src/product/types/application.type";
@@ -47,8 +47,21 @@ export class ApplicationRepository implements IApplicationRepository {
 
   async findApplicationsBySearch(
     dto: ApplicationSearchDto,
-    ownership?: { actorEmail?: string, ownerId?: string },
-  ): Promise<{ results: ApplicationDto[], total: number }> {
+    paginationOrOwnership: boolean | { actorEmail: string, ownerId: string } = true,
+    ownership?: { actorEmail: string, ownerId: string },
+  ): Promise<{ results: any[], total: number }> {
+    // Handle parameter overloading
+    let pagination: boolean;
+    let ownershipFilter: { actorEmail: string, ownerId: string } | undefined;
+
+    if (typeof paginationOrOwnership === "boolean") {
+      pagination = paginationOrOwnership;
+      ownershipFilter = ownership;
+    } else {
+      pagination = true; // default when ownership is provided
+      ownershipFilter = paginationOrOwnership;
+    }
+
     const {
       shortName,
       tag,
@@ -64,28 +77,6 @@ export class ApplicationRepository implements IApplicationRepository {
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
-
-    if (ownership) {
-      const ownershipWhere: Prisma.ApplicationWhereInput = { OR: [] };
-      if (ownership.actorEmail) {
-        ownershipWhere.OR.push({
-          actors: {
-            some: {
-              email: {
-                equals: ownership.actorEmail,
-                mode: "insensitive" as const,
-              },
-            },
-          },
-        });
-      }
-      if (ownership.ownerId) {
-        ownershipWhere.OR.push({ ownerId: ownership.ownerId });
-      }
-      if (ownershipWhere.OR.length > 0) {
-        where.AND.push(ownershipWhere);
-      }
-    }
 
     // Label filter - search both main label field and labels table
     if (dto.label) {
@@ -263,6 +254,31 @@ export class ApplicationRepository implements IApplicationRepository {
       },
     });
 
+    // Add ownership filter if provided
+    if (ownershipFilter) {
+      const ownershipWhere = { OR: [] };
+
+      if (ownershipFilter.actorEmail) {
+        ownershipWhere.OR.push({
+          actors: {
+            some: {
+              actorEmail: {
+                equals: ownershipFilter.actorEmail,
+              },
+            },
+          },
+        });
+      }
+
+      if (ownershipFilter.ownerId) {
+        ownershipWhere.OR.push({ ownerId: ownershipFilter.ownerId });
+      }
+
+      if (ownershipWhere.OR.length > 0) {
+        where.AND.push(ownershipWhere);
+      }
+    }
+
     // Handle different sorting options with fallback
     const sortOptions: Record<
       string,
@@ -277,32 +293,35 @@ export class ApplicationRepository implements IApplicationRepository {
 
     const orderBy = sortOptions[sortBy] || { shortName: safeOrder };
 
-    const [results, total] = await Promise.all([
-      this.prisma.application.findMany({
-        where,
-        orderBy,
-        skip: page * limit,
-        take: limit,
-        include: {
-          hostings: {
-            include: {
-              hostingOption: true,
-            },
+    const queryOptions: any = {
+      where,
+      orderBy,
+      include: {
+        hostings: {
+          include: {
+            hostingOption: true,
           },
-          actors: {
-            include: {
-              organization: {
-                select: { id: true, label: true },
-              },
-              actorType: true,
-            },
-          },
-          labels: true,
-          externalRessource: true,
         },
-      }),
-      this.prisma.application.count({ where }),
-    ]);
+        actors: {
+          include: {
+            organization: {
+              select: { id: true, label: true },
+            },
+            actorType: true,
+          },
+        },
+        labels: true,
+        externalRessource: true,
+      },
+    };
+
+    if (pagination) {
+      queryOptions.skip = page * limit;
+      queryOptions.take = limit;
+    }
+
+    const results = await this.prisma.application.findMany(queryOptions);
+    const total = await this.prisma.application.count({ where });
 
     return { results, total };
   }
@@ -366,28 +385,6 @@ export class ApplicationRepository implements IApplicationRepository {
       include: { application: true },
     });
     return results.map(r => r.application);
-  }
-
-  async findAllForDetailedExport(): Promise<ApplicationsExport[]> {
-    return this.prisma.applicationsExport.findMany({
-      orderBy: { application: "asc" },
-    });
-  }
-
-  async findDetailedExportBySearch(
-    searchDto: ApplicationSearchDto,
-  ): Promise<ApplicationsExport[]> {
-    const searchResult = await this.findApplicationsBySearch(searchDto);
-    const applicationIds = searchResult.results.map(app => app.id);
-
-    return this.prisma.applicationsExport.findMany({
-      where: {
-        id: {
-          in: applicationIds,
-        },
-      },
-      orderBy: { application: "asc" },
-    });
   }
 
   public async delete(id: string): Promise<void> {
