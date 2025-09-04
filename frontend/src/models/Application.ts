@@ -29,11 +29,11 @@ export interface Application {
 export type ApplicationWithPerms = ApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
 
 export interface Label {
-  id?: string
-  source?: string
+  id: string
+  source: string
   value: string
-  metadataId?: string
-  applicationId?: string
+  metadataId: string
+  applicationId: string
 }
 
 export interface Metadata {
