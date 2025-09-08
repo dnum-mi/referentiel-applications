@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.35.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.34.1...v1.35.0) (2025-09-08)
+
+
+### Features
+
+* **front:** :lipstick: add new pdma and dmia duration hours ([c119631](https://github.com/dnum-mi/referentiel-applications/commit/c119631183b1abd5731368e543ec84a069196a13))
+* refactor application export functionality to use applicationStore ([12f580e](https://github.com/dnum-mi/referentiel-applications/commit/12f580eb0b158f9aa5be622ff6b6870734c1ae75))
+* **tests:** add Playwright configuration and initial test cases ([0282194](https://github.com/dnum-mi/referentiel-applications/commit/0282194d77c282cfcffaee92cbd35707e192fdab))
+
+
+### Bug Fixes
+
+* :fire: remove CSV export feature and fix xls export ([c7da1c6](https://github.com/dnum-mi/referentiel-applications/commit/c7da1c69c2b7348d793f70f5d569b43b554a7612))
+* change type from number to string ([81ae1f3](https://github.com/dnum-mi/referentiel-applications/commit/81ae1f3c1f47f06f241766751c7e8eb77f1ce487))
+* **compliance:** :bug: replace int rgaa score by decimal ([81ae1f3](https://github.com/dnum-mi/referentiel-applications/commit/81ae1f3c1f47f06f241766751c7e8eb77f1ce487))
+* **front:** :bug: replace commas with dots as the decimal separator ([81ae1f3](https://github.com/dnum-mi/referentiel-applications/commit/81ae1f3c1f47f06f241766751c7e8eb77f1ce487))
+* improve error handling in response interceptor ([8159669](https://github.com/dnum-mi/referentiel-applications/commit/815966981c133ac3b10271e4979c637b27dbecbd))
+* **test:** :bug: convert rgaa_score_percentage to number for e2e tests ([81ae1f3](https://github.com/dnum-mi/referentiel-applications/commit/81ae1f3c1f47f06f241766751c7e8eb77f1ce487))
+
 ## [1.34.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.34.0...v1.34.1) (2025-08-26)
 
 
