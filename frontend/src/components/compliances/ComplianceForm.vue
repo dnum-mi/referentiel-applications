@@ -111,8 +111,8 @@ async function save() {
 </script>
 
 <template>
-  <form @submit.prevent="save">
-    <AppLoader v-if="loading" />
+  <form data-testid="compliance-form" @submit.prevent="save">
+    <AppLoader v-if="loading" data-testid="compliance-loader" />
     <div v-else>
       <template v-if="type === 'dima'">
         <DsfrSelect
@@ -123,16 +123,18 @@ async function save() {
           required
           default-unselected-text="Choisir..."
           :disabled="!canEdit"
+          data-testid="compliance-dima-duration"
         />
-        <DsfrCheckbox v-model="form.is_hno" :label="complianceFieldLabels.is_hno" :value="true" :disabled="!canEdit" />
-        <DsfrInput v-model="form.business_impact" :label="complianceFieldLabels.business_impact" label-visible :disabled="!canEdit" />
-        <DsfrCheckbox v-model="form.recovery_plan" :label="complianceFieldLabels.recovery_plan" :value="true" :disabled="!canEdit" />
+        <DsfrCheckbox v-model="form.is_hno" :label="complianceFieldLabels.is_hno" :value="true" :disabled="!canEdit" data-testid="compliance-dima-hno" />
+        <DsfrInput v-model="form.business_impact" :label="complianceFieldLabels.business_impact" label-visible :disabled="!canEdit" data-testid="compliance-dima-business-impact" />
+        <DsfrCheckbox v-model="form.recovery_plan" :label="complianceFieldLabels.recovery_plan" :value="true" :disabled="!canEdit" data-testid="compliance-dima-recovery-plan" />
         <DsfrInput
           v-model="form.recovery_solutions"
           :label="complianceFieldLabels.recovery_solutions"
           is-textarea
           label-visible
           :disabled="!canEdit"
+          data-testid="compliance-dima-recovery-solutions"
         />
         <DsfrInput
           v-model="form.recovery_manager"
@@ -140,6 +142,7 @@ async function save() {
           label-visible
           type="text"
           :disabled="!canEdit"
+          data-testid="compliance-dima-recovery-manager"
         />
         <DsfrInput
           v-model="form.last_test_date"
@@ -147,6 +150,7 @@ async function save() {
           type="date"
           label-visible
           :disabled="!canEdit"
+          data-testid="compliance-dima-last-test-date"
         />
         <DsfrSelect
           v-model="form.test_result"
@@ -155,6 +159,7 @@ async function save() {
           label-visible
           default-unselected-text="Choisir..."
           :disabled="!canEdit"
+          data-testid="compliance-dima-test-result"
         />
       </template>
 
@@ -165,38 +170,41 @@ async function save() {
           :label="complianceFieldLabels.duration_hours"
           label-visible
           default-unselected-text="Choisir..."
+          data-testid="compliance-pdma-duration"
         />
-        <DsfrInput v-model="form.data_types" :label="complianceFieldLabels.data_types" is-textarea label-visible />
-        <DsfrInput v-model="form.backup_frequency" :label="complianceFieldLabels.backup_frequency" label-visible />
+        <DsfrInput v-model="form.data_types" :label="complianceFieldLabels.data_types" is-textarea label-visible data-testid="compliance-pdma-data-types" />
+        <DsfrInput v-model="form.backup_frequency" :label="complianceFieldLabels.backup_frequency" label-visible data-testid="compliance-pdma-backup-frequency" />
         <DsfrSelect
           v-model="form.backup_storage"
           :options="Object.entries(backupStorageDict).map(([v, t]) => ({ value: v, text: t }))"
           :label="complianceFieldLabels.backup_storage"
           label-visible
           default-unselected-text="Choisir..."
+          data-testid="compliance-pdma-backup-storage"
         />
-        <DsfrInput v-model="form.last_test_date" label="Date du dernier test" type="date" label-visible />
+        <DsfrInput v-model="form.last_test_date" label="Date du dernier test" type="date" label-visible data-testid="compliance-pdma-last-test-date" />
         <DsfrSelect
           v-model="form.test_result"
           :options="Object.entries(testResultsDict).map(([v, t]) => ({ value: v, text: t }))"
           :label="complianceFieldLabels.test_result"
           label-visible
           default-unselected-text="Choisir..."
+          data-testid="compliance-pdma-test-result"
         />
-        <DsfrInput v-model="form.backup_method" :label="complianceFieldLabels.backup_method" type="text" label-visible />
-        <DsfrInput v-model="form.restoration_manager" :label="complianceFieldLabels.restoration_manager" type="text" label-visible />
+        <DsfrInput v-model="form.backup_method" :label="complianceFieldLabels.backup_method" type="text" label-visible data-testid="compliance-pdma-backup-method" />
+        <DsfrInput v-model="form.restoration_manager" :label="complianceFieldLabels.restoration_manager" type="text" label-visible data-testid="compliance-pdma-restoration-manager" />
       </template>
 
       <template v-else-if="type === 'homologation'">
-        <DsfrInput v-model="form.date" :label="complianceFieldLabels.date" type="date" label-visible />
-        <DsfrInput v-model="form.duration_months" :label="complianceFieldLabels.duration_months" type="number" min="0" label-visible />
-        <DsfrInput v-model="form.rssi_id" :label="complianceFieldLabels.rssi_id" type="text" label-visible />
+        <DsfrInput v-model="form.date" :label="complianceFieldLabels.date" type="date" label-visible data-testid="compliance-homologation-date" />
+        <DsfrInput v-model="form.duration_months" :label="complianceFieldLabels.duration_months" type="number" min="0" label-visible data-testid="compliance-homologation-duration" />
+        <DsfrInput v-model="form.rssi_id" :label="complianceFieldLabels.rssi_id" type="text" label-visible data-testid="compliance-homologation-rssi-id" />
       </template>
 
       <template v-else-if="type === 'rgaa'">
-        <DsfrInput v-model="form.audit_date" :label="complianceFieldLabels.audit_date" type="date" label-visible />
-        <DsfrInput v-model="form.service_url" :label="complianceFieldLabels.service_url" type="url" label-visible />
-        <DsfrInput v-model="form.accessibility_url" :label="complianceFieldLabels.accessibility_url" type="url" label-visible />
+        <DsfrInput v-model="form.audit_date" :label="complianceFieldLabels.audit_date" type="date" label-visible data-testid="compliance-rgaa-audit-date" />
+        <DsfrInput v-model="form.service_url" :label="complianceFieldLabels.service_url" type="url" label-visible data-testid="compliance-rgaa-service-url" />
+        <DsfrInput v-model="form.accessibility_url" :label="complianceFieldLabels.accessibility_url" type="url" label-visible data-testid="compliance-rgaa-accessibility-url" />
         <DsfrInput
           v-model="form.score_percentage"
           :label="complianceFieldLabels.score_percentage"
@@ -206,21 +214,22 @@ async function save() {
           max="100"
           step="0.01"
           label-visible
+          data-testid="compliance-rgaa-score"
         />
       </template>
 
       <template v-else-if="type === 'dsfr'">
-        <DsfrCheckbox v-model="form.implemented" :label="complianceFieldLabels.implemented" :value="true" />
-        <DsfrInput v-model="form.version" :label="complianceFieldLabels.version" label-visible />
+        <DsfrCheckbox v-model="form.implemented" :label="complianceFieldLabels.implemented" :value="true" data-testid="compliance-dsfr-implemented" />
+        <DsfrInput v-model="form.version" :label="complianceFieldLabels.version" label-visible data-testid="compliance-dsfr-version" />
       </template>
 
       <template v-else-if="type === 'rgpd'">
-        <DsfrCheckbox v-model="form.has_aipd" :label="complianceFieldLabels.has_aipd" :value="true" />
-        <DsfrInput v-model="form.dpo_name" :label="complianceFieldLabels.dpo_name" label-visible />
+        <DsfrCheckbox v-model="form.has_aipd" :label="complianceFieldLabels.has_aipd" :value="true" data-testid="compliance-rgpd-aipd" />
+        <DsfrInput v-model="form.dpo_name" :label="complianceFieldLabels.dpo_name" label-visible data-testid="compliance-rgpd-dpo" />
       </template>
     </div>
     <div class="fr-mt-2w text-right">
-      <DsfrButton type="submit" :loading="submitting" label="Enregistrer" />
+      <DsfrButton type="submit" :loading="submitting" label="Enregistrer" data-testid="compliance-submit-btn" />
     </div>
   </form>
 </template>

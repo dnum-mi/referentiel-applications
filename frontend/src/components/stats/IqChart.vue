@@ -57,36 +57,36 @@ onMounted(async () => {
 <template>
   <h3>Évolution de l’IQ moyen (6 derniers mois)</h3>
 
-  <div class="filters">
+  <div class="filters" data-testid="iq-chart-filters">
     <label>
       Du
-      <input v-model="startDate" type="date">
+      <input v-model="startDate" type="date" data-testid="iq-chart-start-date">
     </label>
     <label>
       Au
-      <input v-model="endDate" type="date">
+      <input v-model="endDate" type="date" data-testid="iq-chart-end-date">
     </label>
 
-    <div class="buttons">
-      <button :class="{ active: groupBy === 'day' }" @click="applyFilter('day')">
+    <div class="buttons" data-testid="iq-chart-buttons">
+      <button :class="{ active: groupBy === 'day' }" data-testid="iq-chart-btn-day" @click="applyFilter('day')">
         Jour
       </button>
-      <button :class="{ active: groupBy === 'week' }" @click="applyFilter('week')">
+      <button :class="{ active: groupBy === 'week' }" data-testid="iq-chart-btn-week" @click="applyFilter('week')">
         Semaine
       </button>
-      <button :class="{ active: groupBy === 'month' }" @click="applyFilter('month')">
+      <button :class="{ active: groupBy === 'month' }" data-testid="iq-chart-btn-month" @click="applyFilter('month')">
         Mois
       </button>
     </div>
   </div>
 
-  <div v-if="isLoading">
+  <div v-if="isLoading" data-testid="iq-chart-loading">
     Chargement...
   </div>
-  <div v-else-if="error">
+  <div v-else-if="error" data-testid="iq-chart-error">
     {{ error }}
   </div>
-  <canvas v-else ref="chartRef" />
+  <canvas v-else ref="chartRef" data-testid="iq-chart-canvas" />
 </template>
 
 <style scoped>

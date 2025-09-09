@@ -17,10 +17,10 @@ function onDelete() {
 
 <template>
   <div class="action-buttons">
-    <DsfrButton icon="ri-pencil-line" @click="onEdit">
+    <DsfrButton icon="ri-pencil-line" data-testid="actor-edit-action" @click="onEdit">
       Éditer
     </DsfrButton>
-    <DsfrButton icon="ri-delete-bin-line" @click="onDelete">
+    <DsfrButton icon="ri-delete-bin-line" data-testid="actor-delete-action" @click="onDelete">
       Supprimer
     </DsfrButton>
   </div>

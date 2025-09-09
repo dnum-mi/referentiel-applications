@@ -105,8 +105,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <form @submit.prevent="handleSubmit">
-    <DsfrInputGroup v-model="form.label" label="Nom de l'application" label-visible required />
+  <form data-testid="application-form" @submit.prevent="handleSubmit">
+    <DsfrInputGroup v-model="form.label" label="Nom de l'application" label-visible required data-testid="application-label" />
 
     <DsfrInputGroup
       v-model="form.shortName"
@@ -114,6 +114,7 @@ onMounted(() => {
       label="Nom court"
       label-visible
       hint="Optionnel - Un nom court pour identifier rapidement l'application"
+      data-testid="application-shortname"
     />
 
     <DsfrSelect
@@ -121,6 +122,7 @@ onMounted(() => {
       :options="statusOptions"
       label="Status de l'application"
       default-unselected-text="Sélectionner un status"
+      data-testid="application-status"
     />
 
     <div class="fr-form-group fr-mt-3w">
@@ -130,11 +132,11 @@ onMounted(() => {
       <div class="fr-mt-2w">
         <div v-for="(_label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div v-if="form.labels.length > 0" class="fr-col">
-            <DsfrInput v-model="form.labels[index].source" :placeholder="`Reférentiel externe ${index + 1} (optionnel)`" />
-            <DsfrInput v-model="form.labels[index].value" :placeholder="`Nom ou identifiant externe ${index + 1}`" />
+            <DsfrInput v-model="form.labels[index].source" :placeholder="`Reférentiel externe ${index + 1} (optionnel)`" :data-testid="`application-alt-label-source-${index}`" />
+            <DsfrInput v-model="form.labels[index].value" :placeholder="`Nom ou identifiant externe ${index + 1}`" :data-testid="`application-alt-label-value-${index}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.labels.splice(index, 1)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-alt-label-remove-${index}`" @click="form.labels.splice(index, 1)" />
           </div>
         </div>
         <DsfrButton
@@ -142,13 +144,14 @@ onMounted(() => {
           secondary
           icon="add-line"
           label="Ajouter un libellé"
+          data-testid="application-alt-label-add"
           @click="form.labels.push({ source: '', value: '' })"
         />
       </div>
     </div>
     <br>
     <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required>
-      <MarkdownEditor v-model="form.description" />
+      <MarkdownEditor v-model="form.description" data-testid="application-description" />
     </DsfrInputGroup>
 
     <DsfrSelect
@@ -156,6 +159,7 @@ onMounted(() => {
       :options="priorityRestartLabelsOptions"
       label="Priorité de redémarrage"
       default-unselected-text="Sélectionner une priorité"
+      data-testid="application-priority-restart"
     />
 
     <div class="fr-form-group fr-mt-3w">
@@ -168,7 +172,7 @@ onMounted(() => {
       <div class="fr-mt-2w">
         <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput v-model="form.targetPopulations[index]" />
+            <DsfrInput v-model="form.targetPopulations[index]" :data-testid="`application-population-${index}`" />
           </div>
           <div class="fr-col-auto">
             <DsfrButton
@@ -177,11 +181,12 @@ onMounted(() => {
               size="sm"
               icon="delete-line"
               label="Supprimer"
+              :data-testid="`application-population-remove-${index}`"
               @click="form.targetPopulations.splice(index, 1)"
             />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" @click="form.targetPopulations.push('')" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" data-testid="application-population-add" @click="form.targetPopulations.push('')" />
       </div>
     </div>
 
@@ -191,6 +196,7 @@ onMounted(() => {
       label="URL du logo"
       label-visible
       hint="Optionnel - URL d'une image représentant l'application"
+      data-testid="application-logo"
     />
 
     <div class="fr-form-group fr-mt-3w">
@@ -200,13 +206,13 @@ onMounted(() => {
       <div class="fr-mt-2w">
         <div v-for="(purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput v-model="form.purposes[index]" :placeholder="`Objectif ${index + 1}`" />
+            <DsfrInput v-model="form.purposes[index]" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-purpose-${index}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.purposes.splice(index, 1)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-purpose-remove-${index}`" @click="form.purposes.splice(index, 1)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" @click="form.purposes.push('')" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" data-testid="application-purpose-add" @click="form.purposes.push('')" />
       </div>
     </div>
 
@@ -217,21 +223,21 @@ onMounted(() => {
       <div class="fr-mt-2w">
         <div v-for="(tag, index) in form.tags" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput v-model="form.tags[index]" :placeholder="`Tag ${index + 1}`" />
+            <DsfrInput v-model="form.tags[index]" :placeholder="`Tag ${index + 1}`" :data-testid="`application-tag-${index}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" @click="form.tags.splice(index, 1)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-tag-remove-${index}`" @click="form.tags.splice(index, 1)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" @click="form.tags.push('')" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" data-testid="application-tag-add" @click="form.tags.push('')" />
       </div>
     </div>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-      <DsfrButton type="button" secondary label="Annuler" @click="$emit('cancel')" />
-      <DsfrButton type="button" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" @click="handleSubmit">
+      <DsfrButton type="button" secondary label="Annuler" data-testid="application-cancel-btn" @click="$emit('cancel')" />
+      <DsfrButton type="button" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" data-testid="application-submit-btn" @click="handleSubmit">
         <template v-if="isSubmitting">
-          <span class="fr-loading fr-loading--sm">
+          <span class="fr-loading fr-loading--sm" data-testid="application-submit-loading">
             <span class="fr-loading__icon" aria-hidden="true" />
           </span>
         </template>

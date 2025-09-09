@@ -25,7 +25,7 @@ const iqLteDisplay = computed(() => {
 </script>
 
 <template>
-  <div>
+  <div data-testid="quality-filter">
     <legend class="fr-label fr-mb-2w">
       Indice de qualité
       <br>
@@ -33,8 +33,8 @@ const iqLteDisplay = computed(() => {
     </legend>
 
     <div class="fr-input-group">
-      <DsfrInput v-model.number="iqGte" label-visible label="IQ minimum" type="number" min="0" max="100" />
-      <DsfrInput v-model.number="iqLte" label-visible label="IQ maximum" type="number" min="0" max="100" />
+      <DsfrInput v-model.number="iqGte" label-visible label="IQ minimum" type="number" min="0" max="100" data-testid="quality-filter-min" />
+      <DsfrInput v-model.number="iqLte" label-visible label="IQ maximum" type="number" min="0" max="100" data-testid="quality-filter-max" />
     </div>
   </div>
 </template>

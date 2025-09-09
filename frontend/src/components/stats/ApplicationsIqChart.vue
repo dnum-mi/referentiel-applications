@@ -38,11 +38,11 @@ onMounted(loadData);
 
 <template>
   <h3>Répartition des applications par IQ</h3>
-  <div v-if="isLoading">
+  <div v-if="isLoading" data-testid="applications-iq-chart-loading">
     Chargement...
   </div>
-  <div v-else-if="errorMessage">
+  <div v-else-if="errorMessage" data-testid="applications-iq-chart-error">
     {{ errorMessage }}
   </div>
-  <canvas v-show="!isLoading && !errorMessage" ref="chartRef" />
+  <canvas v-show="!isLoading && !errorMessage" ref="chartRef" data-testid="applications-iq-chart-canvas" />
 </template>

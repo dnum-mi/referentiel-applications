@@ -92,7 +92,7 @@ async function exportToExcel() {
 </script>
 
 <template>
-  <div class="flex justify-between mb-4">
+  <div class="flex justify-between mb-4" data-testid="application-table-header">
     <div class="export-button">
       <DsfrButton
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
@@ -100,6 +100,7 @@ async function exportToExcel() {
         icon="ri-file-excel-2-line"
         secondary
         icon-only-size="sm"
+        data-testid="application-export-btn"
         @click="exportToExcel"
       />
     </div>
@@ -112,10 +113,15 @@ async function exportToExcel() {
     sortable-rows
     vertical-borders
     :pagination="false"
+    data-testid="application-table"
   >
     <template #cell="{ colKey, cell }">
       <template v-if="colKey === 'Nom'">
-        <router-link :to="{ name: 'application', params: { id: cell.id } }" class="truncate">
+        <router-link
+          :to="{ name: 'application', params: { id: cell.id } }"
+          class="truncate"
+          data-testid="application-table-link"
+        >
           {{ cell.label }}
         </router-link>
       </template>
@@ -126,12 +132,13 @@ async function exportToExcel() {
           :label="restartPrioritiesConfig[cell.priorityRestart].shortLabel"
           :type="restartPrioritiesConfig[cell.priorityRestart].type"
           :title="restartPrioritiesConfig[cell.priorityRestart].tooltip"
+          data-testid="application-priority-badge"
         />
         <span v-else>-</span>
       </template>
 
       <template v-else>
-        <span class="truncate">{{ Object.values(cell)[0] }}</span>
+        <span class="truncate" data-testid="application-table-cell">{{ Object.values(cell)[0] }}</span>
       </template>
     </template>
   </DsfrDataTable>
@@ -141,6 +148,7 @@ async function exportToExcel() {
     :pages="pages"
     :limit="searchStore.limit ?? 0"
     :page="searchStore.page ?? 0"
+    data-testid="application-pagination-footer"
     @update:limit="searchStore.limit = $event"
     @update:page="searchStore.page = $event"
   />

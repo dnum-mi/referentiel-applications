@@ -50,16 +50,21 @@ watch(
 
 <template>
   <div>
-    <PriorityRestartFilter class="fr-mb-2w" />
+    <PriorityRestartFilter class="fr-mb-2w" data-testid="hosting-priority-restart-filter" />
     <DsfrInput
       v-model="hostingSearchInput"
       label-visible
       label="Hébergement"
       list="hostingSuggestionsList"
       placeholder="Rechercher site, plateforme, fournisseur, etc."
+      data-testid="hosting-search-input"
     />
-    <datalist id="hostingSuggestionsList">
-      <option v-for="option in allHostingOptions" :key="`option-${option.site}-${option.platform}-${option.provider}`">
+    <datalist id="hostingSuggestionsList" data-testid="hosting-suggestions-list">
+      <option
+        v-for="option in allHostingOptions"
+        :key="`option-${option.site}-${option.platform}-${option.provider}`"
+        :data-testid="`hosting-option-${option.site}-${option.platform}-${option.provider}`"
+      >
         {{ formatOptionText(option) }}
       </option>
     </datalist>

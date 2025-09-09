@@ -9,11 +9,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--center">
+  <div class="fr-grid-row fr-grid-row--center" data-testid="user-profile">
     <div class="fr-col-12 fr-col-md-8">
-      <div v-if="userStore.user" class="fr-card">
+      <div v-if="userStore.user" class="fr-card" data-testid="user-profile-card">
         <div class="fr-card__body fr-mt-2w">
-          <h2 class="fr-h4">
+          <h2 class="fr-h4" data-testid="user-profile-title">
             Informations personnelles
           </h2>
           <div class="fr-table">
@@ -23,20 +23,24 @@ onMounted(() => {
                   <th scope="row">
                     ID Keycloak
                   </th>
-                  <td>{{ userStore.user.keycloakId }}</td>
+                  <td data-testid="user-profile-keycloak">
+                    {{ userStore.user.keycloakId }}
+                  </td>
                 </tr>
                 <tr>
                   <th scope="row">
                     Email
                   </th>
-                  <td>{{ userStore.user.email }}</td>
+                  <td data-testid="user-profile-email">
+                    {{ userStore.user.email }}
+                  </td>
                 </tr>
                 <tr>
                   <th scope="row">
                     Type
                   </th>
                   <td>
-                    <span class="fr-badge fr-mr-1w" :class="AdminLevelWordingBadgeClass[userStore.adminLevel]">
+                    <span class="fr-badge fr-mr-1w" :class="AdminLevelWordingBadgeClass[userStore.adminLevel]" data-testid="user-profile-type">
                       {{ AdminLevelWording[userStore.adminLevel] }}
                     </span>
                   </td>

@@ -59,7 +59,7 @@ function saveAppPermsMatrix() {
 </script>
 
 <template>
-  <DsfrTable title="Tableau des permissions des applications">
+  <DsfrTable title="Tableau des permissions des applications" data-testid="app-perms-table">
     <template #header>
       <tr>
         <th scope="col">
@@ -77,7 +77,7 @@ function saveAppPermsMatrix() {
         </th>
       </tr>
     </template>
-    <tr v-for="perms in (updatedMatrix as AppPermsDto[])" :key="perms.actorTypeId">
+    <tr v-for="perms in (updatedMatrix as AppPermsDto[])" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
       <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
       <td
         v-for="perm in permissionKeys"
@@ -90,6 +90,7 @@ function saveAppPermsMatrix() {
           :read="perms[`read${perm}`] || false"
           :write="perms[`write${perm}`] || false"
           :perm-order="['read', 'write']"
+          :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
         <PermissionSelect
@@ -98,6 +99,7 @@ function saveAppPermsMatrix() {
           class="permission-select"
           :read="perms[`read${perm}`] || false"
           :perm-order="['none', 'read']"
+          :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
         <PermissionSelect
@@ -106,6 +108,7 @@ function saveAppPermsMatrix() {
           class="permission-select"
           :read="perms[`read${perm}`] || false"
           :write="perms[`write${perm}`] || false"
+          :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
       </td>
@@ -115,6 +118,7 @@ function saveAppPermsMatrix() {
           :read="perms.readAnomalyNotifications"
           :post="perms.postAnomalyNotifications"
           :manage="perms.manageAnomalyNotifications"
+          :data-testid="`app-perms-anomaly-${perms.actorTypeId}`"
           @update:model-value="(value: AnomalyPermissionValue[]) => updateAnomalyMatrix(perms.actorTypeId, value)"
         />
       </td>
@@ -124,11 +128,12 @@ function saveAppPermsMatrix() {
   <div class="fr-mt-2w fr-text-right">
     <DsfrButton
       class="fr-mt-2w"
+      data-testid="app-perms-save-btn"
       @click="saveAppPermsMatrix"
     >
       Enregistrer les modifications
     </DsfrButton>
-    <DsfrButton class="fr-mt-2w fr-ml-2w" @click="$emit('reload')">
+    <DsfrButton class="fr-mt-2w fr-ml-2w" data-testid="app-perms-reload-btn" @click="$emit('reload')">
       Recharger les permissions
     </DsfrButton>
   </div>

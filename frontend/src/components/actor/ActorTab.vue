@@ -106,7 +106,7 @@ function cancelDelete() {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="actor-tab">
     <div class="fr-col">
       <h3 class="fr-mb-0">
         Gestion des acteurs
@@ -117,6 +117,7 @@ function cancelDelete() {
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         :disabled="!canEdit"
+        data-testid="actor-add-btn"
         @click="actorModal.openCreateModal()"
       >
         Ajouter un acteur
@@ -124,7 +125,7 @@ function cancelDelete() {
     </div>
   </div>
 
-  <div v-if="!loading && tableRows.length === 0" class="text-center">
+  <div v-if="!loading && tableRows.length === 0" class="text-center" data-testid="actor-empty-state">
     <p>Aucun acteur enregistré.</p>
   </div>
 
@@ -135,13 +136,14 @@ function cancelDelete() {
         tertiary
         icon="fr-icon-delete-line"
         :disabled="selectedActorIds.length === 0 || !canEdit"
+        data-testid="actor-bulk-delete-btn"
         @click="removeSelectedActors"
       >
         Supprimer la sélection
       </DsfrButton>
     </div>
 
-    <AppLoader v-if="loading" />
+    <AppLoader v-if="loading" data-testid="actor-loader" />
 
     <DsfrDataTable
       v-else
@@ -158,10 +160,11 @@ function cancelDelete() {
       pagination-wrapper-class="pagination-wrapper-class"
       sorted="id"
       :sortable-rows="['id']"
+      data-testid="actor-table"
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Sélection'">
-          <input v-model="selectedActorIds" type="checkbox" :value="cell">
+          <input v-model="selectedActorIds" type="checkbox" :value="cell" :data-testid="`actor-row-select-${cell}`">
         </template>
         <template v-else-if="colKey === 'Organisation'">
           <OrgBreadCrumb v-if="cell" :organization-id="cell" />
@@ -170,12 +173,12 @@ function cancelDelete() {
           </template>
         </template>
         <template v-else-if="colKey === 'Email'">
-          <a :href="cell.to" target="_blank" rel="noopener noreferrer">
+          <a :href="cell.to" target="_blank" rel="noopener noreferrer" data-testid="actor-email-link">
             {{ cell.label }}
           </a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" @click="cell.onClick">
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="actor-edit-btn" @click="cell.onClick">
             {{ cell.label }}
           </DsfrButton>
         </template>
@@ -192,18 +195,26 @@ function cancelDelete() {
   <DsfrModal
     :opened="actorModal.isModalOpen.value || actorModal.isCreateModalOpen.value"
     :title="actorModal.isCreateModalOpen.value ? 'Ajouter un acteur' : 'Modifier l\'acteur'"
+    data-testid="actor-modal"
     @close="actorModal.closeModal"
   >
     <ActorForm
       v-bind="{ application, initialData: actorModal.selectedItem.value }"
       :is-submitting="isSubmitting"
       :actor-types="actorTypesList"
+      data-testid="actor-form-container"
       @submit="handleSaveActors"
       @cancel="actorModal.closeModal"
     />
   </DsfrModal>
 
-  <DeleteConfirmationModal :opened="showDeleteConfirmation" item-name="acteurs" @confirm="confirmDelete" @cancel="cancelDelete" />
+  <DeleteConfirmationModal
+    :opened="showDeleteConfirmation"
+    item-name="acteurs"
+    data-testid="actor-delete-modal"
+    @confirm="confirmDelete"
+    @cancel="cancelDelete"
+  />
 </template>
 
 <style scoped>

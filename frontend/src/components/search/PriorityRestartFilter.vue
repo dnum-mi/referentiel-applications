@@ -30,12 +30,13 @@ function togglePriority(value: ApplicationPriorityRestart, event: Event) {
       Priorité de redémarrage
     </legend>
 
-    <div>
+    <div data-testid="priority-restart-filter">
       <label v-for="option in priorityRestartLabelsOptions" :key="option.value" class="checkbox-item">
         <input
           type="checkbox"
           :value="option.value"
           :checked="selectedPriorities?.includes(option.value)"
+          :data-testid="`priority-restart-option-${option.value}`"
           @change="(e) => togglePriority(option.value, e)"
         >
         {{ option.text }}

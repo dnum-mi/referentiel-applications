@@ -54,6 +54,7 @@ watch(
 <template>
   <div class="fr-container fr-my-2v">
     <DsfrCheckboxSet
+      data-testid="status-filter-checkboxes"
       :model-value="modelValue"
       :options="statusOptions"
       legend="Filtrer par statut"

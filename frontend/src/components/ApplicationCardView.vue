@@ -25,7 +25,7 @@ watch([() => searchStore.page, () => searchStore.limit], () => {
 
 <template>
   <div>
-    <div class="card-container">
+    <div class="card-container" data-testid="application-card-container">
       <DsfrCard
         v-for="app in paginatedResults"
         :key="app.id"
@@ -34,6 +34,7 @@ watch([() => searchStore.page, () => searchStore.limit], () => {
         :link="{ name: 'application', params: { id: app.id } }"
         description="Consulter l'application"
         size="md"
+        :data-testid="`application-card-${app.id}`"
       />
     </div>
 
@@ -43,6 +44,7 @@ watch([() => searchStore.page, () => searchStore.limit], () => {
       :pages="pages"
       :limit="searchStore.limit ?? 0"
       :page="searchStore.page"
+      data-testid="application-pagination-footer"
       @update:limit="searchStore.limit = $event"
       @update:page="searchStore.page = $event"
     />

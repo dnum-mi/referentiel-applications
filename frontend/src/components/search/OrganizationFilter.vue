@@ -80,13 +80,14 @@ function update() {
           label="Nom de l'organisation"
           list="organizationSuggestionsList"
           placeholder="Rechercher une organisation"
+          data-testid="organization-filter-input"
           @update:model-value="update"
         />
       </div>
-      <DsfrButton v-if="selected" class="cancel-button" secondary label="X" @click="reset" />
+      <DsfrButton v-if="selected" class="cancel-button" secondary label="X" data-testid="organization-filter-reset" @click="reset" />
     </div>
     <template v-if="!selected">
-      <div v-for="organization in suggestions" :key="organization.id" @click="select(organization)">
+      <div v-for="organization in suggestions" :key="organization.id" :data-testid="`organization-suggestion-${organization.id}`" @click="select(organization)">
         <OrgBreadCrumb hide-hierarchy :organization-id="organization.id" :clickable="false" />
       </div>
     </template>

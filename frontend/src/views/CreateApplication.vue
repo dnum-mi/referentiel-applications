@@ -15,12 +15,15 @@ const readonly = "";
 </script>
 
 <template>
-  <div class="fr-container fr-my-2w">
-    <h2>Ajouter une application</h2>
+  <div class="fr-container fr-my-2w" data-testid="create-application-page">
+    <h2 data-testid="create-application-title">
+      Ajouter une application
+    </h2>
     <div class="form-input">
       <div>
         <DsfrInputGroup
           :id="id"
+          data-testid="create-input-valid"
           :valid-message="validMessage1"
           :placeholder="placeholder"
           :readonly="readonly !== ''"
@@ -35,6 +38,7 @@ const readonly = "";
 
         <DsfrInputGroup
           :id="id"
+          data-testid="create-input-error"
           :error-message="errorMessage1"
           :placeholder="placeholder"
           :readonly="readonly !== ''"
@@ -49,6 +53,7 @@ const readonly = "";
 
         <DsfrInputGroup
           :id="id"
+          data-testid="create-input-multiple"
           :error-message="[errorMessage1, errorMessage2]"
           :valid-message="[validMessage1]"
           :placeholder="placeholder"
@@ -62,10 +67,11 @@ const readonly = "";
 
         <h2>4. Avec plusieurs champs de saisie</h2>
 
-        <DsfrInputGroup valid-message="Tout va bien pour ces deux champs">
+        <DsfrInputGroup valid-message="Tout va bien pour ces deux champs" data-testid="create-input-multi-fields">
           <p>
             <DsfrInput
               :id="id"
+              data-testid="create-input-field-1"
               :placeholder="placeholder"
               :readonly="readonly !== ''"
               :model-value="modelValue"
@@ -79,6 +85,7 @@ const readonly = "";
           <p>
             <DsfrInput
               :id="id"
+              data-testid="create-input-field-2"
               :placeholder="placeholder"
               :readonly="readonly !== ''"
               :model-value="modelValue2"
@@ -94,6 +101,7 @@ const readonly = "";
       <div>
         <DsfrInputGroup
           :id="id"
+          data-testid="create-input-valid-2"
           :valid-message="validMessage1"
           :placeholder="placeholder"
           :readonly="readonly !== ''"
@@ -108,6 +116,7 @@ const readonly = "";
 
         <DsfrInputGroup
           :id="id"
+          data-testid="create-input-error-2"
           :error-message="errorMessage1"
           :placeholder="placeholder"
           :readonly="readonly !== ''"
@@ -122,6 +131,7 @@ const readonly = "";
 
         <DsfrInputGroup
           :id="id"
+          data-testid="create-input-multiple-2"
           :error-message="[errorMessage1, errorMessage2]"
           :valid-message="[validMessage1]"
           :placeholder="placeholder"
@@ -135,10 +145,11 @@ const readonly = "";
 
         <h2>4. Avec plusieurs champs de saisie</h2>
 
-        <DsfrInputGroup valid-message="Tout va bien pour ces deux champs">
+        <DsfrInputGroup valid-message="Tout va bien pour ces deux champs" data-testid="create-input-multi-fields-2">
           <p>
             <DsfrInput
               :id="id"
+              data-testid="create-input-field-3"
               :placeholder="placeholder"
               :readonly="readonly !== ''"
               :model-value="modelValue"
@@ -152,6 +163,7 @@ const readonly = "";
           <p>
             <DsfrInput
               :id="id"
+              data-testid="create-input-field-4"
               :placeholder="placeholder"
               :readonly="readonly !== ''"
               :model-value="modelValue2"

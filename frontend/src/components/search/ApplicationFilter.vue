@@ -52,9 +52,9 @@ watch(
 
 <template>
   <div class="filter-section">
-    <DsfrInput v-model="label" label-visible label="Nom de l'application" />
-    <DsfrInput v-model="tag" label-visible label="Tag" />
-    <DsfrInput v-model="link" label-visible label="Lien externe" />
+    <DsfrInput v-model="label" label-visible label="Nom de l'application" data-testid="application-filter-label" />
+    <DsfrInput v-model="tag" label-visible label="Tag" data-testid="application-filter-tag" />
+    <DsfrInput v-model="link" label-visible label="Lien externe" data-testid="application-filter-link" />
   </div>
 </template>
 

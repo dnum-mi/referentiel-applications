@@ -109,69 +109,69 @@ onMounted(async () => {
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
     <div class="fr-col">
-      <h2 class="fr-mb-0">
+      <h2 class="fr-mb-0" data-testid="quality-title">
         Informations de qualité
       </h2>
     </div>
   </div>
-  <AppLoader v-if="loading" />
+  <AppLoader v-if="loading" data-testid="quality-loader" />
   <div v-else class="fr-grid-row fr-grid-row--gutters">
-    <div class="fr-col-12 fr-col-md-4">
+    <div class="fr-col-12 fr-col-md-4" data-testid="quality-general">
       <h4>Général</h4>
-      <DsfrHighlight :color="!!props.application.description ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight data-testid="quality-description" :color="!!props.application.description ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         Description : {{ !!props.application.description ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight :color="hostings.length > 0 ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight data-testid="quality-hosting" :color="hostings.length > 0 ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         Hébergement : {{ hostings.length > 0 ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight :color="hasLink('snapvisu') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight data-testid="quality-snapvisu" :color="hasLink('snapvisu') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         SnapVisu : {{ hasLink("snapvisu") ? "oui" : "non" }}
       </DsfrHighlight>
     </div>
 
-    <div class="fr-col-12 fr-col-md-4">
+    <div class="fr-col-12 fr-col-md-4" data-testid="quality-actors">
       <h4>Acteurs</h4>
-      <DsfrHighlight :color="hasActorType('MOA') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight data-testid="quality-actor-moa" :color="hasActorType('MOA') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         MOA : {{ hasActorType("MOA") ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight :color="hasActorType('MOE') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight data-testid="quality-actor-moe" :color="hasActorType('MOE') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         MOE : {{ hasActorType("MOE") ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight :color="hasActorType('HEB') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight data-testid="quality-actor-heb" :color="hasActorType('HEB') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         Responsable hébergement : {{ hasActorType("HEB") ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight :color="hasActorType('REP') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight data-testid="quality-actor-rep" :color="hasActorType('REP') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         Exploitation : {{ hasActorType("REP") ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight :color="hasActorType('TMA') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight data-testid="quality-actor-tma" :color="hasActorType('TMA') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         TMA : {{ hasActorType("TMA") ? "oui" : "non" }}
       </DsfrHighlight>
     </div>
 
-    <div class="fr-col-12 fr-col-md-4">
+    <div class="fr-col-12 fr-col-md-4" data-testid="quality-compliance">
       <h4>Conformités</h4>
-      <DsfrHighlight :color="getComplianceColor('DIMA')" :small="true">
+      <DsfrHighlight data-testid="quality-dima" :color="getComplianceColor('DIMA')" :small="true">
         DIMA : {{ getComplianceStatus("DIMA") }}
       </DsfrHighlight>
-      <DsfrHighlight :color="getComplianceColor('PDMA')" :small="true">
+      <DsfrHighlight data-testid="quality-pdma" :color="getComplianceColor('PDMA')" :small="true">
         PDMA : {{ getComplianceStatus("PDMA") }}
       </DsfrHighlight>
-      <DsfrHighlight :color="getComplianceColor('HOMOLOGATION')" :small="true">
+      <DsfrHighlight data-testid="quality-homologation" :color="getComplianceColor('HOMOLOGATION')" :small="true">
         Homologation : {{ getComplianceStatus("HOMOLOGATION") }}
       </DsfrHighlight>
-      <DsfrHighlight :color="getComplianceColor('RGAA')" :small="true">
+      <DsfrHighlight data-testid="quality-rgaa" :color="getComplianceColor('RGAA')" :small="true">
         RGAA : {{ getComplianceStatus("RGAA") }}
       </DsfrHighlight>
-      <DsfrHighlight :color="getComplianceColor('DSFR')" :small="true">
+      <DsfrHighlight data-testid="quality-dsfr" :color="getComplianceColor('DSFR')" :small="true">
         DSFR : {{ getComplianceStatus("DSFR") }}
       </DsfrHighlight>
-      <DsfrHighlight :color="getComplianceColor('RGPD')" :small="true">
+      <DsfrHighlight data-testid="quality-rgpd" :color="getComplianceColor('RGPD')" :small="true">
         RGPD : {{ getComplianceStatus("RGPD") }}
       </DsfrHighlight>
     </div>
   </div>
 
-  <DsfrHighlight :large="true">
+  <DsfrHighlight :large="true" data-testid="quality-index">
     INDICE QUALITE: {{ props.application.quality ?? 0 }}%
   </DsfrHighlight>
 </template>

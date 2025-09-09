@@ -70,37 +70,38 @@ const actions = computed(() => [
 
 <template>
   <div>
-    <DsfrBreadcrumb />
-    <div v-if="isLoading">
+    <DsfrBreadcrumb data-testid="breadcrumb" />
+    <div v-if="isLoading" data-testid="application-loading">
       Chargement...
     </div>
-    <div v-else-if="errorMessage">
+    <div v-else-if="errorMessage" data-testid="application-error">
       {{ errorMessage }}
     </div>
-    <div v-else-if="application" style="position: relative; margin: 2rem 1rem;">
-      <h2>
+    <div v-else-if="application" style="position: relative; margin: 2rem 1rem;" data-testid="application-profile">
+      <h2 data-testid="application-title">
         {{ application.label }}
-        <p v-if="metadataStore.firstMetadata" class="subtitle">
+        <p v-if="metadataStore.firstMetadata" class="subtitle" data-testid="application-created-at">
           Date de création de la fiche  : {{ new Date(metadataStore.firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
             metadataStore.firstMetadata.createdBy?.email
           }})
         </p>
-        <p v-if="metadataStore.lastMetadata" class="subtitle">
+        <p v-if="metadataStore.lastMetadata" class="subtitle" data-testid="application-updated-at">
           Dernière modification de la fiche {{ formatDate(metadataStore.lastMetadata.createdAt) || "inconnue" }} ({{ metadataStore.lastMetadata.createdBy?.email }})
         </p>
-        <DsfrTag v-if="application.status" class="fr-mr-2w" :label="statusApplicationDictionary[application.status]" />
-        <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" />
+        <DsfrTag v-if="application.status" class="fr-mr-2w" :label="statusApplicationDictionary[application.status]" data-testid="application-status-tag" />
+        <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" data-testid="application-iq-tag" />
       </h2>
 
       <DsfrButton
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         style="position: absolute; top: 0; right: 0;"
+        data-testid="application-delete-btn"
         @click="deleteModalOpened = true"
       >
         Supprimer l’application
       </DsfrButton>
-      <ApplicationOverview :application="application" @update:application="handleApplicationUpdate" />
+      <ApplicationOverview :application="application" data-testid="application-overview" @update:application="handleApplicationUpdate" />
     </div>
   </div>
 
@@ -108,6 +109,7 @@ const actions = computed(() => [
     v-model:opened="deleteModalOpened"
     title="Supprimer définitivement l’application"
     :actions="actions"
+    data-testid="application-delete-modal"
     @close="resetModal"
   >
     <DsfrAlert
@@ -115,11 +117,13 @@ const actions = computed(() => [
       :description="`Cela concerne l'application ainsi que toutes ses données. Pour confirmer, veuillez retaper le nom de l’application : ${applicationLabel}`"
       type="warning"
       class="fr-mb-3w"
+      data-testid="application-delete-alert"
     />
     <DsfrInput
       v-model="deleteConfirmationInput"
       type="text"
       placeholder="Nom de l’application"
+      data-testid="application-delete-input"
     />
   </DsfrModal>
 </template>

@@ -36,12 +36,13 @@ function updateSelectedValues() {
 </script>
 
 <template>
-  <div class="anomaly-permission-select">
+  <div class="anomaly-permission-select" data-testid="anomaly-permission-select">
     <DsfrToggleSwitch
       v-model="canRead"
       label="Lecture"
       no-text
       :disabled="canManage"
+      data-testid="anomaly-permission-read"
       @update:model-value="updateSelectedValues"
     />
     <DsfrToggleSwitch
@@ -49,12 +50,14 @@ function updateSelectedValues() {
       label="Publication"
       no-text
       :disabled="canManage"
+      data-testid="anomaly-permission-post"
       @update:model-value="updateSelectedValues"
     />
     <DsfrToggleSwitch
       v-model="canManage"
       label="Gestion"
       no-text
+      data-testid="anomaly-permission-manage"
       @update:model-value="updateSelectedValues"
     />
   </div>

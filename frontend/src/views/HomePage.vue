@@ -1,12 +1,14 @@
 <template>
-  <div class="container-picture">
+  <div class="container-picture" data-testid="home-page">
     <div class="">
       <div id="incubator-view">
         <div class="fr-container-fluid fr-py-6w">
           <div class="fr-container">
             <div class="fr-grid-row fr-grid-row--center fr-grid-row--gutters fr-py-2w">
               <div class="fr-col">
-                <h1>Le référentiel des applications</h1>
+                <h1 data-testid="home-title">
+                  Le référentiel des applications
+                </h1>
               </div>
             </div>
             <div class="fr-grid-row fr-grid-row--gutters">
@@ -31,12 +33,14 @@
           <div class="fr-container">
             <div class="fr-grid-row">
               <div class="fr-col">
-                <h2>Objectifs du référentiel</h2>
+                <h2 data-testid="home-objectives-title">
+                  Objectifs du référentiel
+                </h2>
               </div>
             </div>
             <div class="fr-grid-row fr-grid-row--gutters">
               <div class="fr-col-12 fr-col-sm-4">
-                <div class="fr-tile">
+                <div class="fr-tile" data-testid="home-tile-centralisation">
                   <div class="fr-tile__body">
                     <img src="../../public/assets/svg-centralize.svg" alt="">
                     <h3 class="fr-tile__title">
@@ -49,7 +53,7 @@
                 </div>
               </div>
               <div class="fr-col-12 fr-col-sm-4">
-                <div class="fr-tile">
+                <div class="fr-tile" data-testid="home-tile-access">
                   <div class="fr-tile__body">
                     <img src="../../public/assets/svg-loupe.svg" alt="">
                     <h3 class="fr-tile__title">
@@ -62,7 +66,7 @@
                 </div>
               </div>
               <div class="fr-col-12 fr-col-sm-4">
-                <div class="fr-tile">
+                <div class="fr-tile" data-testid="home-tile-dependencies">
                   <div class="fr-tile__body">
                     <img src="../../public/assets/svg-dependencies.svg" alt="">
                     <h3 class="fr-tile__title">
@@ -75,7 +79,7 @@
                 </div>
               </div>
               <div class="fr-col-12 fr-col-sm-4">
-                <div class="fr-tile">
+                <div class="fr-tile" data-testid="home-tile-maintenance">
                   <div class="fr-tile__body">
                     <img src="../../public/assets/svgviewer-output(3).svg" alt="">
                     <h3 class="fr-tile__title">
@@ -88,7 +92,7 @@
                 </div>
               </div>
               <div class="fr-col-12 fr-col-sm-4">
-                <div class="fr-tile">
+                <div class="fr-tile" data-testid="home-tile-exploitability">
                   <div class="fr-tile__body">
                     <img src="../../public/assets/svg-stats.svg" alt="">
                     <h3 class="fr-tile__title">
@@ -108,7 +112,7 @@
           <div class="fr-container fr-pb-3w">
             <div class="fr-grid-row">
               <div class="fr-col">
-                <h2 class="fr-m-0 fr-mt-1w">
+                <h2 class="fr-m-0 fr-mt-1w" data-testid="home-beta-title">
                   Envie de devenir beta testeur ?
                 </h2>
               </div>
@@ -119,6 +123,7 @@
               <div class="fr-col">
                 <a
                   class="fr-btn fr-btn--secondary fr-btn--md fr-mt-2w"
+                  data-testid="home-contact-link"
                   href="https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr"
                   target="_blank"
                 ><span class="fr-icon-mail-open-line fr-icon--sm fr-mr-1w" />

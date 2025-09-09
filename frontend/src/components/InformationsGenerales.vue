@@ -200,7 +200,7 @@ watch(
 </script>
 
 <template>
-  <div class="responsive-layout">
+  <div class="responsive-layout" data-testid="informations-generales">
     <div class="responsive-column">
       <div class="fr-card">
         <div class="fr-card__body">
@@ -217,19 +217,22 @@ watch(
                   size="sm"
                   class="fr-btn--icon-left fr-icon-edit-line"
                   label="Modifier"
+                  data-testid="info-edit-btn"
                   :disabled="!canEditBase"
                   @click="applicationModal.openModal"
                 />
               </div>
             </div>
 
-            <AppLoader v-if="loading" />
+            <AppLoader v-if="loading" data-testid="info-loader" />
 
             <div v-else>
               <h4>ID de l'application</h4>
-              <p>{{ application.id }}</p>
+              <p data-testid="info-application-id">
+                {{ application.id }}
+              </p>
 
-              <div v-if="labels.length > 0">
+              <div v-if="labels.length > 0" data-testid="info-alt-labels">
                 <h4>Noms Alternatifs</h4>
                 <p>
                   {{
@@ -245,12 +248,12 @@ watch(
               </div>
 
               <h4>Description</h4>
-              <MarkdownDisplay :content="application.description" />
+              <MarkdownDisplay :content="application.description" data-testid="info-description" />
 
               <h4 class="fr-mt-3w">
                 Objectifs
               </h4>
-              <ul v-if="application.purposes?.length">
+              <ul v-if="application.purposes?.length" data-testid="info-purposes">
                 <li v-for="purpose in application.purposes" :key="purpose">
                   {{ purpose }}
                 </li>
@@ -259,7 +262,7 @@ watch(
               <h4 class="fr-mt-3w">
                 Tags
               </h4>
-              <ul v-if="application.tags?.length" class="fr-tags-group">
+              <ul v-if="application.tags?.length" class="fr-tags-group" data-testid="info-tags">
                 <li v-for="tag in application.tags" :key="tag">
                   <DsfrTag :label="tag" :small="small" />
                 </li>
@@ -285,10 +288,11 @@ watch(
                   :small="small"
                   :title="getPriorityBadgeType(application.priorityRestart)?.tooltip"
                   :aria-label="`Priorité de redémarrage : ${getPriorityBadgeType(application.priorityRestart)?.tooltip}`"
+                  data-testid="info-priority-badge"
                 />
               </template>
               <template v-else>
-                <p class="fr-text--sm fr-text--italic">
+                <p class="fr-text--sm fr-text--italic" data-testid="info-priority-empty">
                   Aucune priorité définie.
                 </p>
               </template>
@@ -297,7 +301,7 @@ watch(
         </div>
       </div>
 
-      <div v-if="canViewHostings" class="fr-card">
+      <div v-if="canViewHostings" class="fr-card" data-testid="info-hostings">
         <div class="fr-card__body">
           <div class="fr-card__content">
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
@@ -312,6 +316,7 @@ watch(
                   size="sm"
                   class="fr-btn--icon-left fr-icon-add-line"
                   label="Ajouter"
+                  data-testid="info-add-hosting-btn"
                   :disabled="!canEditHostings"
                   @click="isHostingModalOpen = true"
                 />
@@ -323,7 +328,7 @@ watch(
       </div>
 
       <!-- Carte : Population -->
-      <div v-if="(application.targetPopulations ?? []).length > 0" class="fr-card">
+      <div v-if="(application.targetPopulations ?? []).length > 0" class="fr-card" data-testid="info-population">
         <div class="fr-card__body">
           <div class="fr-card__content">
             <h3 class="fr-card__title">
@@ -362,10 +367,11 @@ watch(
     @cancel="cancelDeletionHosting"
   />
 
-  <DsfrModal size="lg" :opened="isModalOpened" title="Modifier l'application" @close="applicationModal.closeModal">
+  <DsfrModal size="lg" :opened="isModalOpened" title="Modifier l'application" data-testid="info-edit-modal" @close="applicationModal.closeModal">
     <ApplicationForm
       v-bind="{ initialData: application, labels }"
       :is-submitting="isSubmitting"
+      data-testid="info-edit-form"
       @submit="updateApplication"
       @cancel="applicationModal.closeModal"
     />

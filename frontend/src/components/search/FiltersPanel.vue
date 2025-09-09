@@ -6,11 +6,11 @@ import ApplicationFilter from "./ApplicationFilter.vue";
 </script>
 
 <template>
-  <aside class="filters-panel">
-    <SearchBar />
-    <ActorFilter />
-    <HostingFilter />
-    <ApplicationFilter />
+  <aside class="filters-panel" data-testid="filters-panel">
+    <SearchBar data-testid="filters-search-bar" />
+    <ActorFilter data-testid="filters-actor" />
+    <HostingFilter data-testid="filters-hosting" />
+    <ApplicationFilter data-testid="filters-application" />
   </aside>
 </template>
 

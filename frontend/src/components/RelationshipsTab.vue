@@ -31,7 +31,7 @@ const {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="relations-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">
         Gestion des relations de {{ props.application.label }}
@@ -42,6 +42,7 @@ const {
         type="button"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         :disabled="!canEdit"
+        data-testid="relation-add-btn"
         @click="openAddRelationModal"
       >
         Ajouter une relation
@@ -49,19 +50,20 @@ const {
     </div>
   </div>
 
-  <div class="global-delete">
+  <div class="global-delete" data-testid="relations-delete-container">
     <DsfrButton
       type="button"
       tertiary
       icon="fr-icon-delete-line"
       :disabled="selectedRelationIds.length === 0 || !canEdit"
+      data-testid="relation-delete-selected-btn"
       @click="removeSelectedRelations"
     >
       Supprimer la sélection
     </DsfrButton>
   </div>
 
-  <div v-if="rows.length === 0" class="text-center">
+  <div v-if="rows.length === 0" class="text-center" data-testid="relations-empty">
     <p>Aucune relation définie.</p>
   </div>
 
@@ -78,18 +80,19 @@ const {
     :pagination-options="[5, 10, 20, 30]"
     sorted="Sélection"
     :sortable-rows="['Sélection']"
+    data-testid="relations-table"
   >
     <template #cell="{ colKey, cell }">
       <template v-if="colKey === 'Sélection'">
         <input v-model="selectedRelationIds" type="checkbox" :value="cell">
       </template>
       <template v-else-if="colKey === 'Application Cible'">
-        <a :href="`/applications/${cell.id}`" class="fr-link">
+        <a :href="`/applications/${cell.id}`" class="fr-link" data-testid="relation-target-link">
           {{ cell.label }}
         </a>
       </template>
       <template v-else-if="colKey === 'Actions'">
-        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" @click="cell.edit()">
+        <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="relation-edit-btn" @click="cell.edit()">
           {{ cell.label }}
           Modifier
         </DsfrButton>
@@ -104,6 +107,7 @@ const {
     :opened="isAddRelationModalOpen"
     title="Ajouter une relation"
     :application-id="application.id"
+    data-testid="relation-add-modal"
     @close="closeAddRelationModal"
     @add-relation="
       (relation) =>
@@ -119,11 +123,12 @@ const {
     :opened="isEditRelationModalOpen"
     title="Modifier une relation"
     :relation="relationToEdit"
+    data-testid="relation-edit-modal"
     @close="closeEditRelationModal"
     @update-relation="handleUpdateRelation"
   />
 
-  <DeleteConfirmationModal :opened="showDeleteConfirmation" item-name="relations" @confirm="confirmDelete" @cancel="cancelDelete" />
+  <DeleteConfirmationModal :opened="showDeleteConfirmation" item-name="relations" data-testid="relation-delete-modal" @confirm="confirmDelete" @cancel="cancelDelete" />
 </template>
 
 <style scoped>

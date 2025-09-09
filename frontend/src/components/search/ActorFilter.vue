@@ -62,10 +62,10 @@ watch(
 
 <template>
   <div class="filter-section">
-    <DsfrSelect v-model="selectedActorTypeId" :options="actorTypeOptions" label="Type d'acteur" />
-    <div v-if="selectedActor" class="selected-tag">
+    <DsfrSelect v-model="selectedActorTypeId" :options="actorTypeOptions" label="Type d'acteur" data-testid="actor-filter-select" />
+    <div v-if="selectedActor" class="selected-tag" data-testid="actor-filter-selected">
       <span class="tag-label">{{ selectedActor.label }}</span>
-      <button class="tag-remove" title="Retirer ce filtre" @click="clearActorType">
+      <button class="tag-remove" title="Retirer ce filtre" data-testid="actor-filter-remove" @click="clearActorType">
         ×
       </button>
     </div>

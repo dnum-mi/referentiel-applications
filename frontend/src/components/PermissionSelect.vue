@@ -53,6 +53,8 @@ function togglePermission() {
     tertiary
     small
     :class="permDict[permOrder[permIndex]].class ?? 'permission-error'"
+    data-testid="permission-toggle"
+    :data-state="permOrder[permIndex]"
     @click="togglePermission"
   >
     {{ permDict[permOrder[permIndex]].label ?? "?" }}

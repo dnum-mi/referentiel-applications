@@ -13,17 +13,17 @@ interface EventTypes {
 </script>
 
 <template>
-  <div v-if="offlineReady || needRefresh" role="alert" class="new-content-wrapper">
+  <div v-if="offlineReady || needRefresh" role="alert" class="new-content-wrapper" data-testid="reload-prompt">
     <div class="mb-2">
-      <span v-if="offlineReady"> App prête pour le hors-ligne </span>
-      <span v-else> Nouveau contenu disponible, cliquer sur "Recharger" pour mettre à jour. </span>
+      <span v-if="offlineReady" data-testid="reload-offline-msg"> App prête pour le hors-ligne </span>
+      <span v-else data-testid="reload-refresh-msg"> Nouveau contenu disponible, cliquer sur "Recharger" pour mettre à jour. </span>
     </div>
 
     <div class="actions">
-      <DsfrButton v-if="needRefresh" class="button" icon="ri-refresh-line" icon-right @click="$emit('updateServiceWorker')">
+      <DsfrButton v-if="needRefresh" class="button" icon="ri-refresh-line" icon-right data-testid="reload-refresh-btn" @click="$emit('updateServiceWorker')">
         Recharger
       </DsfrButton>
-      <DsfrButton class="button" icon="ri-close-line" icon-right secondary @click="$emit('close')">
+      <DsfrButton class="button" icon="ri-close-line" icon-right secondary data-testid="reload-close-btn" @click="$emit('close')">
         Fermer
       </DsfrButton>
     </div>

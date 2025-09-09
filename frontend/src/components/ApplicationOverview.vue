@@ -187,10 +187,25 @@ watch(
 </script>
 
 <template>
-  <DsfrTabs v-model="activeTab" tab-list-name="Informations sur l'application" :tab-titles="tabs">
+  <DsfrTabs
+    v-model="activeTab"
+    tab-list-name="Informations sur l'application"
+    :tab-titles="tabs"
+    data-testid="application-tabs"
+  >
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
-      <DsfrTabContent v-show="activeTab === index" :tab-id="tab.tabId" :panel-id="tab.panelId">
-        <component :is="tab.component" :application="application" @update:application="updateApplication" />
+      <DsfrTabContent
+        v-show="activeTab === index"
+        :tab-id="tab.tabId"
+        :panel-id="tab.panelId"
+        :data-testid="`application-tab-content-${tab.tabId}`"
+      >
+        <component
+          :is="tab.component"
+          :application="application"
+          :data-testid="`application-tab-component-${tab.tabId}`"
+          @update:application="updateApplication"
+        />
       </DsfrTabContent>
     </template>
   </DsfrTabs>
