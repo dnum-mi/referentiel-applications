@@ -12,9 +12,10 @@ RUN apt-get update -y \
 RUN npm install --ignore-scripts --location=global pnpm@10.14.0
 
 COPY --chown=node:root package.json pnpm-lock.yaml ./
+COPY --chown=node:root ../package.json ./package-root.json
 
 USER node
-RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
+RUN export APP_VERSION=$(jq -r '.version' package-root.json)
 
 
 FROM base AS dev

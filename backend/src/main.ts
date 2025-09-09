@@ -5,8 +5,8 @@ import { Logger as PinoLogger } from "nestjs-pino";
 import { AppModule } from "./app.module";
 import { setupSwagger } from "./swagger-config.js";
 import { ConfigService } from "@nestjs/config";
-import type { AppConfig } from "./config/app.config";
-import type { KeycloakConfig } from "./config/keycloak.config";
+import type { AppConfig } from "./config/configs/app.config";
+import type { KeycloakConfig } from "./config/configs/keycloak.config";
 
 async function bootstrap() {
   const globalPrefix = "/api/v2";

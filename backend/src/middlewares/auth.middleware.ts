@@ -8,7 +8,7 @@ import { ConfigType } from "@nestjs/config";
 import { Request, Response, NextFunction } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { ActionLogService } from "src/action-log/action-log.service";
-import { keycloakConfig } from "src/config";
+import { keycloakConfig } from "src/config/configs";
 import { UserEntity } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 
