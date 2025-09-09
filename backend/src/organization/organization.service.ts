@@ -20,15 +20,6 @@ export class OrganizationService extends BaseService<Organization> {
     return newOrg;
   }
 
-  async reduceToOrganizations(
-    organizations: Prisma.PrismaPromise<Organization[]>,
-  ): Promise<Record<string, Organization>> {
-    return (await organizations).reduce((acc, org) => {
-      acc[org.id] = org;
-      return acc;
-    }, {});
-  }
-
   async findMultiple({
     ids,
     withAncestors,
@@ -39,28 +30,24 @@ export class OrganizationService extends BaseService<Organization> {
     withAncestors: boolean
     withChildren: boolean
     search?: string
-  }): Promise<Record<string, Organization>> {
+  }): Promise<Organization[]> {
     if (search) {
-      return this.reduceToOrganizations(
-        this.prisma.organization.findMany({
-          where: {
-            OR: [
-              { label: { contains: search, mode: "insensitive" } },
-              { sigle: { contains: search, mode: "insensitive" } },
-              { url: { contains: search, mode: "insensitive" } },
-            ],
-          },
-        }),
-      );
+      return this.prisma.organization.findMany({
+        where: {
+          OR: [
+            { label: { contains: search, mode: "insensitive" } },
+            { sigle: { contains: search, mode: "insensitive" } },
+            { url: { contains: search, mode: "insensitive" } },
+          ],
+        },
+      });
     }
 
     // si aucun ID n'est fourni, on retourne les organisations racines
     if (!ids || ids.length === 0) {
-      return this.reduceToOrganizations(
-        this.prisma.organization.findMany({
-          where: { parentId: null },
-        }),
-      );
+      return this.prisma.organization.findMany({
+        where: { parentId: null },
+      });
     }
 
     // sinon, on retourne les organisations correspondant aux IDs fournis
@@ -76,18 +63,18 @@ export class OrganizationService extends BaseService<Organization> {
       where.descendantId = { in: ids };
     }
 
-    return (
-      await this.prisma.organizationClosure.findMany({
-        where,
-        select: { ancestor: true, descendant: true },
-      })
-    ).reduce((acc, relation) => {
+    const closures = await this.prisma.organizationClosure.findMany({
+      where,
+      select: { ancestor: true, descendant: true },
+    });
+
+    return Object.values(closures.reduce((acc, relation) => {
       acc[relation.ancestor.id] = relation.ancestor;
       if (withChildren) {
         acc[relation.descendant.id] = relation.descendant;
       }
       return acc;
-    }, {});
+    }, {}));
   }
 
   async update(
