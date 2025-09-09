@@ -1,4 +1,5 @@
 import { getPrismaClient } from "./prisma";
+import { faker } from "@faker-js/faker";
 
 export class ActorFaker {
   static async link(actor: {
@@ -11,8 +12,8 @@ export class ActorFaker {
       data: {
         actorTypeId: actor.actorTypeId,
         email: actor.userEmail,
-        firstname: "Test",
-        lastname: "User",
+        firstname: faker.person.firstName(),
+        lastname: faker.person.lastName(),
         applicationId: actor.applicationId,
       },
     });
