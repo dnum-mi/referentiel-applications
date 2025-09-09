@@ -3,10 +3,13 @@ import type { Prisma, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserFilterDto } from "./dto/filters.dto";
+import { UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+  ) {}
 
   async findUserByKeycloakId(keycloakId: string): Promise<User | null> {
     return this.prisma.user.findUnique({
@@ -83,5 +86,9 @@ export class UserService {
         email: "asc",
       },
     });
+  }
+
+  getCurrentUser(requestor: UserEntity): UserEntity {
+    return requestor;
   }
 }

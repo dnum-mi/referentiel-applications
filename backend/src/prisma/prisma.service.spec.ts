@@ -2,7 +2,7 @@ import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { PrismaService } from "./prisma.service";
 import { ConfigModule } from "@nestjs/config";
-import databaseConfig from "src/config/database.config";
+import databaseConfig from "src/config/configs/database.config";
 import { LoggerModule } from "src/logger/logger.module";
 
 describe("prismaService", () => {

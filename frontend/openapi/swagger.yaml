@@ -2136,6 +2136,20 @@ paths:
                 type: number
       tags:
         - Compliances
+  /api/v2/config:
+    get:
+      operationId: getConfig
+      summary: Récupérer la configuration du client
+      parameters: []
+      responses:
+        "200":
+          description: Configuration du client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigDto"
+      tags:
+        - Config
 info:
   title: API Référentiel Applications
   description: API pour la gestion des applications
@@ -3497,6 +3511,30 @@ components:
           type: string
           example: Pierre Durand
           description: RGPD DPO name
+    ConfigDto:
+      type: object
+      properties:
+        keycloakUrl:
+          type: string
+          description: Keycloak base URL
+          example: https://keycloak.example.com
+        keycloakRealm:
+          type: string
+          description: Keycloak realm
+          example: my-realm
+        keycloakClientId:
+          type: string
+          description: Keycloak client ID
+          example: my-client-id
+        version:
+          type: string
+          description: Backend version
+          example: 1.0.0
+      required:
+        - keycloakUrl
+        - keycloakRealm
+        - keycloakClientId
+        - version
 externalDocs:
   description: Specification JSON
   url: http://localhost:3500/api/v2/swagger/json

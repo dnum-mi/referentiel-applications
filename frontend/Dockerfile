@@ -7,7 +7,8 @@ RUN apt-get update \
     && apt-get clean
 RUN npm install -g pnpm
 
-RUN export VITE_RDA_APP_VERSION=$(jq -r '.version' package.json)
+COPY ../package.json ./package-root.json
+RUN export APP_VERSION=$(jq -r '.version' package-root.json)
 
 # Copy necessary files
 COPY package.json pnpm-lock.yaml ./

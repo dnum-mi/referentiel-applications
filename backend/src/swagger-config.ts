@@ -4,7 +4,7 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { stringify } from "yaml";
-import type { KeycloakConfig } from "./config/keycloak.config";
+import type { KeycloakConfig } from "./config/configs/keycloak.config";
 
 // Configuration de Swagger
 export function setupSwagger(

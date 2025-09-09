@@ -5,10 +5,8 @@ import {
   Param,
   Get,
   Query,
-  Request,
   UseGuards,
 } from "@nestjs/common";
-import { Request as Req } from "express";
 import { UserService } from "./user.service";
 import { ApiTags, ApiOperation, ApiParam, ApiOkResponse, ApiNotFoundResponse, ApiForbiddenResponse } from "@nestjs/swagger";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -16,6 +14,7 @@ import { UserFilterDto } from "./dto/filters.dto";
 import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { AdminLevel, UserEntity } from "./entities/user.entity";
+import { User } from "src/common/decorators/user.decorator";
 
 @ApiTags("users")
 @Controller("/users")
@@ -29,8 +28,8 @@ export class UserController {
     description: "Informations utilisateur trouvées",
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
-  findMe(@Request() req: Req) {
-    return req.user;
+  findMe(@User() user: UserEntity) {
+    return this.userService.getCurrentUser(user);
   }
 
   @Patch(":id")

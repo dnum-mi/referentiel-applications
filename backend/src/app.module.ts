@@ -15,7 +15,7 @@ import { OrganizationModule } from "./organization/organization.module";
 import { ActorTypeModule } from "./actorType/actorType.module";
 import { AuthMiddleware } from "./middlewares/auth.middleware";
 import { ApplicationService } from "./product/application.service";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule as NestConfigModule } from "@nestjs/config";
 import { RelationModule } from "./relationship/relation.module";
 import { MetadataModule } from "./metadata/metadata.module";
 import { AnomalyNotificationModule } from "./notification/anomaly-notification.module";
@@ -28,14 +28,15 @@ import { StatsModule } from "./stats/stats.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { LoggingService } from "./services/logging.service";
 import { ActionLogService } from "./action-log/action-log.service";
-import * as configs from "./config/index";
+import { configs } from "./config/configs/index";
+import { ConfigModule } from "./config/config.module";
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
-    ConfigModule.forRoot({
+    NestConfigModule.forRoot({
       isGlobal: true,
-      load: [configs.appConfig, configs.databaseConfig, configs.keycloakConfig],
+      load: configs,
       envFilePath: [".env"],
       cache: true,
     }),
@@ -57,6 +58,7 @@ import * as configs from "./config/index";
     LabelsModule,
     CompliancesModule,
     PrismaModule,
+    ConfigModule,
   ],
   controllers: [AppController],
   providers: [
@@ -76,6 +78,7 @@ export class AppModule implements NestModule {
         "/health-check",
         "/swagger/**",
         "",
+        "/config",
       )
       .forRoutes("*");
   }

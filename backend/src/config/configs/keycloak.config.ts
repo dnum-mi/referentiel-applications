@@ -6,6 +6,7 @@ export interface KeycloakConfig {
   realm: string
   clientId: string
 }
+
 export default registerAs("keycloak", (): KeycloakConfig => {
   const jwksUrl = process.env.KEYCLOAK_JWKS_URL;
   const baseUrl = process.env.KEYCLOAK_BASE_URL;
