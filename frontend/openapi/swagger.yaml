@@ -3207,10 +3207,6 @@ components:
           type: string
           example: 2023-01-01
           description: Homologation date
-        homologation_date_end:
-          type: string
-          example: 2023-01-01
-          description: Homologation date end
         homologation_duration_months:
           type: number
           example: 12
@@ -3324,10 +3320,6 @@ components:
           type: string
           example: 2023-01-01
           description: Homologation date
-        homologation_date_end:
-          type: string
-          example: 2023-01-01
-          description: Homologation date end
         homologation_duration_months:
           type: number
           example: 12
@@ -3447,10 +3439,6 @@ components:
           type: string
           example: 2023-01-01
           description: Homologation date
-        homologation_date_end:
-          type: string
-          example: 2023-01-01
-          description: Homologation date end
         homologation_duration_months:
           type: number
           example: 12

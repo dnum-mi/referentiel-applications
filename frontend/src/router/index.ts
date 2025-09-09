@@ -27,13 +27,6 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    name: routeNames.CREATEAPP,
-    path: "/create-application",
-    component: () => import("@/views/CreateApplication.vue"),
-    props: true,
-    meta: { requiresAuth: true },
-  },
-  {
     name: routeNames.PROFILEAPP,
     path: "/applications/:id",
     component: () => import("@/views/ApplicationProfile.vue"),
