@@ -3,7 +3,6 @@ import { ref, watch, onMounted, computed } from "vue";
 import type { ApplicationWithPerms, Label } from "@/models/Application";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
 import { useToasterStore } from "@/stores/toasterStore";
-import Labels from "@/api/label";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
 import HostingList from "./hosting/HostingList.vue";
@@ -11,9 +10,10 @@ import HostingModal from "./hosting/HostingModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import type { HostingDto } from "@/client/types.gen";
+import type { HostingDto, LabelDto } from "@/client/types.gen";
 import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
 import { useApplicationStore } from "@/stores/applicationStore.js";
+import api from "@/api/index.js";
 
 const props = defineProps<{
   application: ApplicationWithPerms
@@ -36,14 +36,18 @@ const userStore = useUserStore();
 const canEditBase = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase"));
 const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
 const canEditHostings = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeHostings"));
-const labels = ref<Label[]>([]);
+const labels = ref<LabelDto[]>([]);
 
-onMounted(async () => {
-  if (props.application?.id) {
-    labels.value = await Labels.findByApplication(props.application.id);
+async function fetchLabels() {
+  const response = await api.labelsControllerFindAllSorted({ path: { applicationId: props.application.id } });
+  if (!response.data) {
+    toaster.addErrorMessage("Erreur lors du chargement des noms alternatifs");
+    return;
   }
-});
+  labels.value = response.data;
+};
 
+onMounted(fetchLabels);
 const application = ref<ApplicationWithPerms>({
   ...props.application,
 });
@@ -121,19 +125,34 @@ async function updateApplication(updatedData: any) {
       });
     }
     if (updatedData.deletedLabels.length > 0) {
-      const labelIds = updatedData.deletedLabels.map((label: Label) => label.id);
-      await Labels.delete(labelIds, props.application.id);
+      await Promise.all(updatedData.deletedLabels.map((label: Label) => api.labelsControllerDelete({
+        path: {
+          applicationId: label.applicationId,
+          id: label.id,
+        },
+      })));
     }
     if (updatedData.updatedLabels.length > 0) {
-      await Labels.update(updatedData.updatedLabels);
+      await Promise.all(updatedData.updatedLabels.map((label: Label) => api.labelsControllerUpdate({
+        path: {
+          applicationId: label.applicationId,
+          id: label.id,
+        },
+        body: label,
+      })));
     }
     if (updatedData.newLabels.length > 0) {
-      await Labels.create(updatedData.newLabels, props.application.id);
+      await Promise.all(updatedData.newLabels.map((label: Label) => api.labelsControllerCreate({
+        path: {
+          applicationId: props.application.id,
+        },
+        body: label,
+      })));
     }
 
     application.value = updatedApplication;
     emit("update:application", updatedApplication);
-    labels.value = await Labels.findByApplication(props.application.id);
+    await fetchLabels();
     toaster.addSuccessMessage("Application mise à jour avec succès");
   } catch (error) {
     console.error(error);

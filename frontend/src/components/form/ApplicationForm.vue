@@ -5,14 +5,15 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
 import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
-import type { ApplicationDto } from "@/client/types.gen";
+import type { ApplicationDto, ApplicationPriorityRestart, ApplicationStatus, CreateLabelDto, LabelDto } from "@/client/types.gen";
 
 const props = defineProps<{
   initialData?: ApplicationDto
-  labels: Label[]
+  labels: LabelDto[]
   isSubmitting?: boolean
 }>();
 
+// TODO typé les emits
 const emit = defineEmits(["update:application", "submit", "cancel"]);
 
 const toaster = useToasterStore();
@@ -26,7 +27,18 @@ const statusOptions = computed(() =>
   })),
 );
 
-const form = ref({
+const form = ref<{
+  label: string
+  shortName: string
+  labels: (CreateLabelDto & { id?: string })[]
+  status: ApplicationStatus | null
+  description: string
+  targetPopulations: string[]
+  logo: string
+  purposes: string[]
+  tags: string[]
+  priorityRestart: ApplicationPriorityRestart | null
+}>({
   label: props.initialData?.label ?? "",
   shortName: props.initialData?.shortName ?? "",
   labels: props.labels ? [...props.labels] : [],
@@ -48,7 +60,7 @@ function handleSubmit() {
   const cleanedForm = {
     ...form.value,
     purposes: form.value.purposes.filter(p => p.trim() !== ""),
-    tags: form.value.tags.filter(t => t.trim() !== ""),
+    tags: form.value.tags?.filter(t => t.trim() !== "") ?? [],
   };
 
   const generalFields = ["label", "shortName", "logo", "description", "status", "targetPopulations", "purposes", "tags", "priorityRestart"];
