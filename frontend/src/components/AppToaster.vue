@@ -13,7 +13,7 @@ const close = (id: string) => emit("closeMessage", id);
   <div class="toaster-container" data-testid="app-toaster">
     <TransitionGroup mode="out-in" name="list" tag="div" class="toasters">
       <template v-for="message in messages" :key="message.id">
-        <DsfrAlert class="app-alert" v-bind="message" data-testid="app-toaster-message" @close="close(message.id as string)" />
+        <DsfrAlert class="app-alert" v-bind="message" :data-testid="`app-toaster-message-${message.id}`" @close="close(message.id as string)" />
       </template>
     </TransitionGroup>
   </div>

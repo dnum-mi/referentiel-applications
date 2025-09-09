@@ -20,7 +20,9 @@ const isLoading = computed(() => reportStore.isLoading);
 
 const rows = computed(() =>
   (reportStore.allReports || []).map((report: ReportIssue) => ({
+    id: report.id,
     Application: {
+      id: report.id,
       label: report.application?.label,
       to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
     },
@@ -28,6 +30,7 @@ const rows = computed(() =>
     Description: report.description,
     Date: formatDate(report.createdAt),
     Statut: {
+      id: report.id,
       component: "DsfrTag",
       icon: statusIconClasses[report.status as Status],
       label: statusDictionary[report.status as Status],
@@ -67,12 +70,12 @@ onMounted(async () => {
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Application'">
-          <router-link :to="cell.to" data-testid="issues-application-link">
+          <router-link :to="cell.to" :data-testid="`issues-row-${cell.id}-application`">
             {{ cell.label }}
           </router-link>
         </template>
         <template v-else-if="colKey === 'Statut'">
-          <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" data-testid="issues-status-tag" />
+          <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" :data-testid="`issues-row-${cell.id}-status`" />
         </template>
         <template v-else>
           {{ cell }}

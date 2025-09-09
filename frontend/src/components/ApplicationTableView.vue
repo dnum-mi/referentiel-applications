@@ -120,7 +120,7 @@ async function exportToExcel() {
         <router-link
           :to="{ name: 'application', params: { id: cell.id } }"
           class="truncate"
-          data-testid="application-table-link"
+          :data-testid="`application-row-${cell.id}-link`"
         >
           {{ cell.label }}
         </router-link>
@@ -132,13 +132,18 @@ async function exportToExcel() {
           :label="restartPrioritiesConfig[cell.priorityRestart].shortLabel"
           :type="restartPrioritiesConfig[cell.priorityRestart].type"
           :title="restartPrioritiesConfig[cell.priorityRestart].tooltip"
-          data-testid="application-priority-badge"
+          :data-testid="`application-row-${cell.id}-priority`"
         />
         <span v-else>-</span>
       </template>
 
       <template v-else>
-        <span class="truncate" data-testid="application-table-cell">{{ Object.values(cell)[0] }}</span>
+        <span
+          class="truncate"
+          :data-testid="`application-row-${cell.id}-${colKey === 'Hébergement' ? 'hosting' : colKey === 'Tags' ? 'tags' : 'iq'}`"
+        >
+          {{ Object.values(cell)[0] }}
+        </span>
       </template>
     </template>
   </DsfrDataTable>
