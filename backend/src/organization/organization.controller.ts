@@ -109,7 +109,7 @@ Vous devez fournir les informations suivantes :
   })
   public async findAll(
     @Query() filters: OrganizationFilterDto,
-  ): Promise<Record<string, Organization>> {
+  ): Promise<OrganizationDto[]> {
     return this.organizationService.findMultiple({
       ids: filters.ids ? filters.ids.split(",") : [],
       withAncestors: filters.withAncestors === "true",

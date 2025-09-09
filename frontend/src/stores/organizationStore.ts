@@ -7,6 +7,12 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
   const organizations = ref<Record<string, OrganizationDto>>({});
   const error = ref<string | null>(null);
 
+  function storeOrganization(orgs: OrganizationDto[]) {
+    orgs.forEach((org) => {
+      organizations.value[org.id] = org;
+    });
+  }
+
   /**
    * Search for organizations by label or sigle.
    * @param search - The search term to filter organizations.
@@ -20,14 +26,13 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
       throw new Error("Failed to fetch organizations");
     }
     if (!response.data) {
-      organizations.value = {};
       return [];
     }
-    response.data.forEach((org: OrganizationDto) => {
-      organizations.value[org.id] = org;
-    });
+
+    storeOrganization(response.data);
+
     error.value = null;
-    return Object.values(response.data);
+    return response.data;
   }
   /**
    * Get an organization by its ID.
@@ -66,9 +71,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
     })
       .then((response) => {
         if (response.response.ok && response.data) {
-          response.data.forEach((org: OrganizationDto) => {
-            organizations.value[org.id] = org;
-          });
+          storeOrganization(response.data);
         }
         error.value = null;
       })
