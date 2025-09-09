@@ -27,25 +27,25 @@ const unfold = ref(false);
   <template v-if="!hideHierarchy && organization?.parentId">
     <template v-if="unfold">
       <OrgBreadCrumb :organization-id="organization.parentId">
-        <a class="fr-link" href="#" @click="unfold = false"> - </a>
+        <a class="fr-link" href="#" data-testid="org-breadcrumb-collapse" @click="unfold = false"> - </a>
       </OrgBreadCrumb>&nbsp;
     </template>
     <template v-else>
-      <a class="fr-link" href="#" title="Voir le parent" @click="unfold = true"> + </a>
+      <a class="fr-link" href="#" title="Voir le parent" data-testid="org-breadcrumb-expand" @click="unfold = true"> + </a>
     </template>
   </template>
   <template v-else />
-  <a v-if="unfold" target="" href="#" title="Refermer l'arborescence" @click="unfold = false">–</a>
+  <a v-if="unfold" target="" href="#" title="Refermer l'arborescence" data-testid="org-breadcrumb-close" @click="unfold = false">–</a>
   <template v-if="organization">
     <template v-if="!hideHierarchy && organization?.parentId">
 &nbsp;
     </template>
     <template v-if="clickable">
-      <a v-if="organization.url" :href="organization.url" target="_blank">{{ organization.label }}</a>
-      <a v-else target="" href="#">{{ organization.label }}</a>
+      <a v-if="organization.url" :href="organization.url" target="_blank" data-testid="org-breadcrumb-link">{{ organization.label }}</a>
+      <a v-else target="" href="#" data-testid="org-breadcrumb-link">{{ organization.label }}</a>
     </template>
     <template v-else>
-      <span target="" href="#">{{ organization.label }}</span>
+      <span target="" href="#" data-testid="org-breadcrumb-label">{{ organization.label }}</span>
     </template>
   </template>
 </template>

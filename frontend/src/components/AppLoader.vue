@@ -3,5 +3,5 @@ import { VIcon } from "@gouvminint/vue-dsfr";
 </script>
 
 <template>
-  <VIcon name="ri-loader-4-line" animation="spin" />
+  <VIcon name="ri-loader-4-line" animation="spin" data-testid="app-loader" />
 </template>

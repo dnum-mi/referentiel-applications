@@ -216,22 +216,23 @@ function close() {
       :logo-text="logoText"
       :quick-links="quickLinks"
       :show-search="userStore.authenticated"
+      data-testid="main-header"
     >
       <template #mainnav>
-        <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItems" />
+        <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItems" data-testid="main-navigation" />
       </template>
     </DsfrHeader>
 
-    <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown">
-      <div v-if="isLoading" class="loading-message">
+    <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown" data-testid="header-search-results">
+      <div v-if="isLoading" class="loading-message" data-testid="header-search-loading">
         Chargement...
       </div>
-      <div v-if="errorMessage" class="error-message">
+      <div v-if="errorMessage" class="error-message" data-testid="header-search-error">
         {{ errorMessage }}
       </div>
       <ul v-if="searchResults.length">
-        <li v-for="(app, index) in searchResults" :key="index" @click="clearSearch">
-          <router-link :to="{ name: 'application', params: { id: app.id } }">
+        <li v-for="(app, index) in searchResults" :key="index" data-testid="header-search-item" @click="clearSearch">
+          <router-link :to="{ name: 'application', params: { id: app.id } }" data-testid="router-outlet">
             {{ app.label || "Application" }}
           </router-link>
         </li>
@@ -242,7 +243,7 @@ function close() {
     <RouterView :key="route.params.id" />
   </div>
 
-  <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :after-mandatory-links :operator-to />
+  <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :after-mandatory-links :operator-to data-testid="footer" />
 
   <!-- <DsfrConsent>
     <p>
@@ -254,9 +255,9 @@ function close() {
     </p>
   </DsfrConsent> -->
 
-  <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" @close="close" @update-service-worker="updateServiceWorker" />
+  <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" data-testid="pwa-reload-prompt" @close="close" @update-service-worker="updateServiceWorker" />
 
-  <AppToaster :messages="toaster.messages" @close-message="toaster.removeMessage($event)" />
+  <AppToaster :messages="toaster.messages" data-testid="toast-container" @close-message="toaster.removeMessage($event)" />
 </template>
 
 <style scoped>

@@ -105,16 +105,16 @@ function handleSubmit() {
 </script>
 
 <template>
-  <DsfrModal :opened="true" :title="props.initialHosting ? 'Modifier un hébergement' : 'Créer un hébergement'" @close="$emit('close')">
-    <form @submit.prevent="handleSubmit">
-      <div v-if="isLoadingOptions" class="fr-text--center fr-mb-2w">
-        <span class="fr-loading fr-loading--sm">
+  <DsfrModal :opened="true" :title="props.initialHosting ? 'Modifier un hébergement' : 'Créer un hébergement'" data-testid="hosting-modal" @close="$emit('close')">
+    <form data-testid="hosting-form" @submit.prevent="handleSubmit">
+      <div v-if="isLoadingOptions" class="fr-text--center fr-mb-2w" data-testid="hosting-options-loading">
+        <span class="fr-loading fr-loading--sm" data-testid="hosting-options-spinner">
           <span class="fr-loading__icon" aria-hidden="true" />
         </span>
         Chargement des options...
       </div>
       <div v-else class="fr-form-group">
-        <DsfrInput v-model="hostingForm.label" label-visible label="Label" class="fr-mb-3w" />
+        <DsfrInput v-model="hostingForm.label" label-visible label="Label" class="fr-mb-3w" data-testid="hosting-label-input" />
         <DsfrInput
           v-model="hostingOptionSearch"
           label-visible
@@ -123,22 +123,24 @@ function handleSubmit() {
           list="hostingOptionsList"
           required
           class="fr-mb-3w"
+          data-testid="hosting-option-search-input"
         />
-        <datalist id="hostingOptionsList">
-          <option v-for="option in hostingOptionsList" :key="option.id">
+        <datalist id="hostingOptionsList" data-testid="hosting-options-list">
+          <option v-for="option in hostingOptionsList" :key="option.id" :data-testid="`hosting-option-${option.id}`">
             {{ formatOptionText(option) }}
           </option>
         </datalist>
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-        <DsfrButton type="button" secondary label="Annuler" @click="$emit('close')" />
+        <DsfrButton type="button" secondary label="Annuler" data-testid="hosting-cancel-btn" @click="$emit('close')" />
         <DsfrButton
           type="submit"
           :disabled="isSubmitting || isLoadingOptions || !isFormValid"
           :label="props.initialHosting ? 'Modifier' : 'Créer'"
+          data-testid="hosting-submit-btn"
         >
           <template v-if="isSubmitting">
-            <span class="fr-loading fr-loading--sm">
+            <span class="fr-loading fr-loading--sm" data-testid="hosting-submit-loading">
               <span class="fr-loading__icon" aria-hidden="true" />
             </span>
           </template>

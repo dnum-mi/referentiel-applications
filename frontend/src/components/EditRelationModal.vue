@@ -147,7 +147,7 @@ function closeModal() {
 </script>
 
 <template>
-  <DsfrModal :opened="props.opened" :title="props.title" @close="closeModal">
+  <DsfrModal :opened="props.opened" :title="props.title" data-testid="edit-relation-modal" @close="closeModal">
     <template #default>
       <div class="relation-type">
         <DsfrSelect
@@ -155,23 +155,34 @@ function closeModal() {
           :options="relationTypesForSelect"
           label="Type de relation"
           default-unselected-text="Sélectionner une option"
+          data-testid="edit-relation-type-select"
         />
       </div>
-      <DsfrInput v-model="searchText" label="Rechercher une application" placeholder="Tapez au moins 3 caractères" />
-      <div v-if="isLoading">
+      <DsfrInput
+        v-model="searchText"
+        label="Rechercher une application"
+        placeholder="Tapez au moins 3 caractères"
+        data-testid="edit-relation-search-input"
+      />
+      <div v-if="isLoading" data-testid="edit-relation-loading">
         Chargement...
       </div>
-      <ul v-if="suggestions.length" class="suggestions-list">
+      <ul v-if="suggestions.length" class="suggestions-list" data-testid="edit-relation-suggestions">
         <li v-for="app in suggestions" :key="app.id" class="suggestion-item">
-          <button type="button" class="suggestion-button" @click="selectApplication(app)">
+          <button
+            type="button"
+            class="suggestion-button"
+            :data-testid="`edit-relation-suggestion-${app.id}`"
+            @click="selectApplication(app)"
+          >
             {{ app.label }}
           </button>
         </li>
       </ul>
     </template>
     <template #footer>
-      <DsfrButton label="Sauvegarder" @click="submitRelationUpdate" />
-      <DsfrButton label="Annuler" secondary @click="closeModal" />
+      <DsfrButton label="Sauvegarder" data-testid="edit-relation-save-btn" @click="submitRelationUpdate" />
+      <DsfrButton label="Annuler" secondary data-testid="edit-relation-cancel-btn" @click="closeModal" />
     </template>
   </DsfrModal>
 </template>

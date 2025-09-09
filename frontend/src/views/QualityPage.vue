@@ -6,20 +6,20 @@ import IqChart from "@/components/stats/IqChart.vue";
 </script>
 
 <template>
-  <div class="grid-2x2-container">
+  <div class="grid-2x2-container" data-testid="quality-page">
     <div class="cell alerts-cell">
-      <GlobalStats />
+      <GlobalStats data-testid="quality-global-stats" />
     </div>
     <div class="cell chart-1-cell">
-      <ApplicationsIqChart />
+      <ApplicationsIqChart data-testid="quality-iq-chart" />
     </div>
 
     <div class="cell chart-2-cell">
-      <ApplicationsChart />
+      <ApplicationsChart data-testid="quality-applications-chart" />
     </div>
 
     <div class="cell chart-3-cell">
-      <IqChart />
+      <IqChart data-testid="quality-iq-trend-chart" />
     </div>
   </div>
 </template>

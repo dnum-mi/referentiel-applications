@@ -91,20 +91,20 @@ function removeSelectedLinks() {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="links-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">
         Gestion des liens
       </h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton class="fr-btn--icon-left fr-icon-add-line" :disabled="!canEdit" @click="linkModal.openCreateModal()">
+      <DsfrButton class="fr-btn--icon-left fr-icon-add-line" data-testid="link-add-btn" :disabled="!canEdit" @click="linkModal.openCreateModal()">
         Ajouter un lien
       </DsfrButton>
     </div>
   </div>
 
-  <div v-if="!linkStore.isLoading && rows.length === 0" class="text-center">
+  <div v-if="!linkStore.isLoading && rows.length === 0" class="text-center" data-testid="links-empty">
     <p>Aucun lien enregistré.</p>
   </div>
 
@@ -114,6 +114,7 @@ function removeSelectedLinks() {
         type="button"
         tertiary
         icon="fr-icon-delete-line"
+        data-testid="link-delete-selected-btn"
         :disabled="!selectedLinkIds.length || !canEdit"
         @click="removeSelectedLinks"
       >
@@ -121,7 +122,7 @@ function removeSelectedLinks() {
       </DsfrButton>
     </div>
 
-    <AppLoader v-if="linkStore.isLoading" />
+    <AppLoader v-if="linkStore.isLoading" data-testid="links-loader" />
     <DsfrDataTable
       v-else
       v-model:selection="selectedLinkIds"
@@ -132,16 +133,17 @@ function removeSelectedLinks() {
       pagination
       :rows-per-page="5"
       :pagination-options="[5, 10, 20, 30]"
+      data-testid="links-table"
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Sélection'">
           <input v-model="selectedLinkIds" type="checkbox" :value="cell">
         </template>
         <template v-else-if="colKey === 'Lien'">
-          <a :href="cell.to" target="_blank" rel="noopener noreferrer">{{ cell.label }}</a>
+          <a :href="cell.to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ cell.label }}</a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" @click="cell.onClick">
+          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="link-edit-btn" @click="cell.onClick">
             {{ cell.label }}
           </DsfrButton>
         </template>
@@ -156,11 +158,13 @@ function removeSelectedLinks() {
   <DsfrModal
     :opened="linkModal.isModalOpen.value || linkModal.isCreateModalOpen.value"
     :title="linkModal.isCreateModalOpen.value ? 'Ajouter un lien' : 'Modifier le lien'"
+    data-testid="link-modal"
     @close="linkModal.closeModal"
   >
     <LinkForm
       :initial-data="linkModal.selectedItem.value"
       :is-submitting="isSubmitting"
+      data-testid="link-form"
       @submit="(formData) => (linkModal.selectedItem.value ? editLink(formData) : createLink(formData))"
       @cancel="linkModal.closeModal"
     />
@@ -169,6 +173,7 @@ function removeSelectedLinks() {
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
     item-name="liens"
+    data-testid="link-delete-modal"
     @confirm="confirmDelete"
     @cancel="() => (showDeleteConfirmation.value = false)"
   />

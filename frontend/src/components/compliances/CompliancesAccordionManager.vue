@@ -163,7 +163,7 @@ function closeModal() {
 
 <template>
   <!-- Header -->
-  <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-3w">
+  <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-3w" data-testid="compliance-accordion-header">
     <!-- Titre à gauche (col qui remplit tout l'espace restant) -->
     <div class="fr-col">
       <h3 class="fr-mb-0">
@@ -173,27 +173,27 @@ function closeModal() {
 
     <!-- Bouton à droite (col-auto pour s'ajuster précisément) -->
     <div class="fr-col-auto">
-      <DsfrButton icon="fr-icon-add-line" size="sm" label="Ajouter" :disabled="store.isLoading" @click="onAddClick" />
+      <DsfrButton icon="fr-icon-add-line" size="sm" label="Ajouter" :disabled="store.isLoading" data-testid="compliance-add-btn" @click="onAddClick" />
     </div>
   </div>
 
   <!-- Loader -->
-  <AppLoader v-if="store.isLoading" />
+  <AppLoader v-if="store.isLoading" data-testid="compliance-accordion-loader" />
 
-  <div v-else-if="typesWithData.length === 0" class="fr-mb-2w">
+  <div v-else-if="typesWithData.length === 0" class="fr-mb-2w" data-testid="compliance-empty">
     <p>Aucune conformité renseignée pour cette application.</p>
   </div>
 
   <!-- Accordions -->
-  <DsfrAccordionsGroup v-model="activeAccordion">
+  <DsfrAccordionsGroup v-model="activeAccordion" data-testid="compliance-accordions">
     <template v-for="(type, idx) in typesWithData" :key="type">
-      <DsfrAccordion :index="idx" :title="labels[type] + (getPreview(type) ? ` • ${getPreview(type)}` : '')">
+      <DsfrAccordion :index="idx" :title="labels[type] + (getPreview(type) ? ` • ${getPreview(type)}` : '')" :data-testid="`compliance-accordion-${type}`">
         <template #default>
           <div class="fr-mb-1w text-right">
-            <DsfrButton size="xs" icon="ri-edit-line" label="Modifier" @click.stop="onEditClick(type)" />
+            <DsfrButton size="xs" icon="ri-edit-line" label="Modifier" data-testid="compliance-edit-btn" @click.stop="onEditClick(type)" />
           </div>
-          <ul class="fr-pl-1w">
-            <li v-for="(val, key) in compliances[type]" :key="key">
+          <ul class="fr-pl-1w" data-testid="compliance-detail-list">
+            <li v-for="(val, key) in compliances[type]" :key="key" :data-testid="`compliance-${type}-field-${key}`">
               <strong>{{ complianceFieldLabels[key] || key }}:</strong>
               {{ renderValue(type, key, val) }}
             </li>
@@ -206,6 +206,7 @@ function closeModal() {
   <!-- Modal -->
   <DsfrModal
     v-model:opened="showModal"
+    data-testid="compliance-modal"
     :title="
       selectedType
         ? isNewType
@@ -220,6 +221,7 @@ function closeModal() {
       <div v-if="!selectedType" class="fr-mb-2w">
         <DsfrSelect
           v-model="selectedType"
+          data-testid="compliance-type-select"
           :options="types.map((t) => ({ value: t, text: labels[t], disabled: typesWithData.includes(t) }))"
           label="Type de conformité"
           label-visible
@@ -229,6 +231,7 @@ function closeModal() {
       <!-- Formulaire dès qu'un type est choisi -->
       <ComplianceForm
         v-if="selectedType"
+        data-testid="compliance-form-container"
         :application="application"
         :opened="showModal"
         :application-id="applicationId"
@@ -240,7 +243,7 @@ function closeModal() {
       />
     </template>
     <template #footer>
-      <DsfrButton type="button" label="Annuler" secondary @click="closeModal" />
+      <DsfrButton type="button" label="Annuler" secondary data-testid="compliance-cancel-btn" @click="closeModal" />
     </template>
   </DsfrModal>
 </template>

@@ -13,10 +13,10 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="footer-bar">
+  <div class="footer-bar" data-testid="pagination-footer">
     <div class="footer-item">
       <label for="rows-per-page" class="fr-label">Résultats par page</label>
-      <select id="rows-per-page" class="fr-select" :value="limit" @change="emit('update:limit', +$event.target.value)">
+      <select id="rows-per-page" class="fr-select" :value="limit" data-testid="pagination-rows-select" @change="emit('update:limit', +$event.target.value)">
         <option v-for="opt in [5, 15, 30, 50, 100]" :key="opt" :value="opt">
           {{ opt }}
         </option>
@@ -24,10 +24,10 @@ const emit = defineEmits<{
     </div>
 
     <div class="footer-item pagination-centered">
-      <DsfrPagination :current-page="page" :pages="pages" @update:current-page="emit('update:page', $event)" />
+      <DsfrPagination :current-page="page" :pages="pages" data-testid="pagination-component" @update:current-page="emit('update:page', $event)" />
     </div>
 
-    <div class="footer-item total-count">
+    <div class="footer-item total-count" data-testid="pagination-total-count">
       {{ totalFiltered }} application(s) trouvée(s)
     </div>
   </div>

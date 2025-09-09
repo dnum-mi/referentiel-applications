@@ -37,14 +37,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div data-testid="applications-chart">
     <h3>Nombre d'applications référencées</h3>
-    <div v-if="isLoading">
+    <div v-if="isLoading" data-testid="applications-chart-loading">
       Chargement...
     </div>
-    <div v-else-if="errorMessage">
+    <div v-else-if="errorMessage" data-testid="applications-chart-error">
       {{ errorMessage }}
     </div>
-    <canvas v-show="!isLoading && !errorMessage" ref="chartRef" />
+    <canvas v-show="!isLoading && !errorMessage" ref="chartRef" data-testid="applications-chart-canvas" />
   </div>
 </template>

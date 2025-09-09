@@ -141,12 +141,13 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
 </script>
 
 <template>
-  <div class="markdown-editor">
+  <div class="markdown-editor" data-testid="markdown-editor">
     <div class="editor-container">
       <div class="tab-column">
         <button
           v-for="tab in tabs"
           :key="tab.value"
+          :data-testid="`markdown-tab-${tab.value}`"
           :title="tab.title"
           type="button"
           class="icon-button"
@@ -164,16 +165,18 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           v-model="localValue"
           class="editor fr-input"
           rows="10"
+          data-testid="markdown-textarea"
           @input="emitChange"
           @keydown="handleKeydown"
         />
-        <div v-else v-use-mermaid class="preview" v-html="renderedHtml" />
+        <div v-else v-use-mermaid class="preview" data-testid="markdown-preview" v-html="renderedHtml" />
       </div>
 
       <div class="toolbar">
         <button
           v-for="(action, index) in toolbarActions"
           :key="index"
+          :data-testid="`markdown-toolbar-${index}`"
           type="button"
           class="icon-button"
           :title="action.title"

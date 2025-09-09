@@ -29,42 +29,42 @@ function resetAllFilters() {
 
 <template>
   <Transition name="sidebar-width">
-    <aside v-if="sidebarOpen" class="sidebar">
+    <aside v-if="sidebarOpen" class="sidebar" data-testid="sidebar-filter">
       <div class="filters-wrapper">
-        <p class="reset-link" title="Réinitialiser les filtres" @click="resetAllFilters">
+        <p class="reset-link" title="Réinitialiser les filtres" data-testid="sidebar-reset-filters" @click="resetAllFilters">
           ✕ Réinitialiser
         </p>
 
         <h5>Filtres</h5>
-        <p class="total-count">
+        <p class="total-count" data-testid="sidebar-total-count">
           {{ searchStore.total }} application(s) trouvée(s) sur {{ statsStore.totalApplications }}
         </p>
 
-        <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" @click="toggle(0)">
+        <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">
           <ApplicationFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(1)" title="Organisation & Acteurs" @click="toggle(1)">
+        <DsfrAccordion :selected="openAccordions.includes(1)" title="Organisation & Acteurs" data-testid="sidebar-accordion-organization" @click="toggle(1)">
           <ActorFilter />
           <OrganizationFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(2)" title="Hébergement" @click="toggle(2)">
+        <DsfrAccordion :selected="openAccordions.includes(2)" title="Hébergement" data-testid="sidebar-accordion-hosting" @click="toggle(2)">
           <HostingFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(3)" title="Qualité" @click="toggle(3)">
+        <DsfrAccordion :selected="openAccordions.includes(3)" title="Qualité" data-testid="sidebar-accordion-quality" @click="toggle(3)">
           <QualityFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(3)" title="Statut" @click="toggle(4)">
+        <DsfrAccordion :selected="openAccordions.includes(3)" title="Statut" data-testid="sidebar-accordion-status" @click="toggle(4)">
           <StatusFilter />
         </DsfrAccordion>
       </div>
     </aside>
   </Transition>
 
-  <button class="sidebar-toggle" :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'" @click="toggleSidebar">
+  <button class="sidebar-toggle" data-testid="sidebar-toggle" :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'" @click="toggleSidebar">
     <VIcon :name="sidebarOpen ? 'ri-arrow-left-s-line' : 'ri-arrow-right-s-line'" class="sidebar-toggle-icon" />
   </button>
 </template>

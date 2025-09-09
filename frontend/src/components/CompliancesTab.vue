@@ -126,7 +126,7 @@ async function handleSave() {
 
   <AppLoader v-if="loading" />
 
-  <form v-else class="compliance-form" @submit.prevent="handleSave">
+  <form v-else class="compliance-form" data-testid="compliance-form" @submit.prevent="handleSave">
     <div class="fr-grid-row fr-grid-row--gutters">
       <!-- DIMA Section -->
       <div class="fr-col-12 fr-col-lg-6">
@@ -143,6 +143,7 @@ async function handleSave() {
             label-visible
             default-unselected-text="Choisir une durée"
             :disabled="!canEdit"
+            data-testid="dima-duration"
           />
 
           <DsfrCheckbox
@@ -152,6 +153,7 @@ async function handleSave() {
             name="dima_is_hno"
             :value="true"
             :disabled="!canEdit"
+            data-testid="dima-hno"
           />
 
           <DsfrInput
@@ -161,6 +163,7 @@ async function handleSave() {
             label-visible
             type="text"
             :disabled="!canEdit"
+            data-testid="dima-business-impact"
           />
 
           <DsfrCheckbox
@@ -170,6 +173,7 @@ async function handleSave() {
             name="dima_recovery_plan"
             :value="true"
             :disabled="!canEdit"
+            data-testid="dima-recovery-plan"
           />
 
           <DsfrInput
@@ -179,6 +183,7 @@ async function handleSave() {
             label-visible
             is-textarea
             :disabled="!canEdit"
+            data-testid="dima-recovery-solutions"
           />
 
           <DsfrInput
@@ -188,6 +193,7 @@ async function handleSave() {
             label-visible
             type="date"
             :disabled="!canEdit"
+            data-testid="dima-last-test-date"
           />
 
           <DsfrSelect
@@ -198,6 +204,7 @@ async function handleSave() {
             label-visible
             default-unselected-text="Choisir un résultat"
             :disabled="!canEdit"
+            data-testid="dima-test-result"
           />
 
           <DsfrInput
@@ -207,6 +214,7 @@ async function handleSave() {
             label-visible
             type="text"
             :disabled="!canEdit"
+            data-testid="dima-recovery-manager"
           />
         </div>
       </div>
@@ -226,6 +234,7 @@ async function handleSave() {
             label-visible
             default-unselected-text="Choisir une durée"
             :disabled="!canEdit"
+            data-testid="pdma-duration"
           />
 
           <DsfrInput
@@ -235,6 +244,7 @@ async function handleSave() {
             label-visible
             is-textarea
             :disabled="!canEdit"
+            data-testid="pdma-data-types"
           />
 
           <DsfrInput
@@ -244,6 +254,7 @@ async function handleSave() {
             label-visible
             type="text"
             :disabled="!canEdit"
+            data-testid="pdma-backup-frequency"
           />
 
           <DsfrInput
@@ -253,6 +264,7 @@ async function handleSave() {
             label-visible
             type="text"
             :disabled="!canEdit"
+            data-testid="pdma-backup-method"
           />
 
           <DsfrSelect
@@ -263,6 +275,7 @@ async function handleSave() {
             label-visible
             default-unselected-text="Choisir un stockage"
             :disabled="!canEdit"
+            data-testid="pdma-backup-storage"
           />
 
           <DsfrInput
@@ -272,6 +285,7 @@ async function handleSave() {
             label-visible
             type="date"
             :disabled="!canEdit"
+            data-testid="pdma-last-test-date"
           />
 
           <DsfrSelect
@@ -282,6 +296,7 @@ async function handleSave() {
             label-visible
             default-unselected-text="Choisir un résultat"
             :disabled="!canEdit"
+            data-testid="pdma-test-result"
           />
 
           <DsfrInput
@@ -291,6 +306,7 @@ async function handleSave() {
             label-visible
             type="text"
             :disabled="!canEdit"
+            data-testid="pdma-restoration-manager"
           />
         </div>
       </div>
@@ -309,6 +325,7 @@ async function handleSave() {
             label-visible
             type="date"
             :disabled="!canEdit"
+            data-testid="homologation-date"
           />
 
           <DsfrInput
@@ -319,9 +336,10 @@ async function handleSave() {
             type="number"
             min="0"
             :disabled="!canEdit"
+            data-testid="homologation-duration"
           />
 
-          <DsfrInput v-model="form.homologation_rssi_id" class="fr-mb-3w" label="ID RSSI" label-visible type="text" :disabled="!canEdit" />
+          <DsfrInput v-model="form.homologation_rssi_id" class="fr-mb-3w" label="ID RSSI" label-visible type="text" :disabled="!canEdit" data-testid="homologation-rssi-id" />
         </div>
       </div>
 
@@ -332,7 +350,7 @@ async function handleSave() {
             RGAA
           </h4>
 
-          <DsfrInput v-model="form.rgaa_audit_date" class="fr-mb-3w" label="Date d'audit" label-visible type="date" :disabled="!canEdit" />
+          <DsfrInput v-model="form.rgaa_audit_date" class="fr-mb-3w" label="Date d'audit" label-visible type="date" :disabled="!canEdit" data-testid="rgaa-audit-date" />
 
           <DsfrInput
             v-model="form.rgaa_service_url"
@@ -341,6 +359,7 @@ async function handleSave() {
             label-visible
             type="url"
             :disabled="!canEdit"
+            data-testid="rgaa-service-url"
           />
 
           <DsfrInput
@@ -350,6 +369,7 @@ async function handleSave() {
             label-visible
             type="url"
             :disabled="!canEdit"
+            data-testid="rgaa-accessibility-url"
           />
 
           <DsfrInput
@@ -361,6 +381,7 @@ async function handleSave() {
             min="0"
             max="100"
             :disabled="!canEdit"
+            data-testid="rgaa-score"
           />
         </div>
       </div>
@@ -379,9 +400,10 @@ async function handleSave() {
             name="dsfr_implemented"
             :value="true"
             :disabled="!canEdit"
+            data-testid="dsfr-implemented"
           />
 
-          <DsfrInput v-model="form.dsfr_version" class="fr-mb-3w" label="Version DSFR" label-visible type="text" :disabled="!canEdit" />
+          <DsfrInput v-model="form.dsfr_version" class="fr-mb-3w" label="Version DSFR" label-visible type="text" :disabled="!canEdit" data-testid="dsfr-version" />
         </div>
       </div>
 
@@ -399,15 +421,16 @@ async function handleSave() {
             name="rgpd_has_aipd"
             :value="true"
             :disabled="!canEdit"
+            data-testid="rgpd-aipd"
           />
 
-          <DsfrInput v-model="form.rgpd_dpo_name" class="fr-mb-3w" label="Nom du DPO" label-visible type="text" :disabled="!canEdit" />
+          <DsfrInput v-model="form.rgpd_dpo_name" class="fr-mb-3w" label="Nom du DPO" label-visible type="text" :disabled="!canEdit" data-testid="rgpd-dpo-name" />
         </div>
       </div>
     </div>
 
     <div v-if="canEdit" class="fr-mt-4w">
-      <DsfrButton type="submit" label="Sauvegarder les conformités" :disabled="!canEdit || isSubmitting" :loading="isSubmitting" />
+      <DsfrButton type="submit" label="Sauvegarder les conformités" data-testid="compliance-submit-btn" :disabled="!canEdit || isSubmitting" :loading="isSubmitting" />
     </div>
   </form>
 </template>

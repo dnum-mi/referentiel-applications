@@ -58,7 +58,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <div>
+  <div data-testid="suggestions-input">
     <label class="fr-label" :for="inputId">{{ props.label }}</label>
     <DsfrInput
       :id="inputId"
@@ -67,12 +67,18 @@ onBeforeMount(() => {
       :placeholder="props.placeholder"
     />
 
-    <div v-if="isLoading">
+    <div v-if="isLoading" data-testid="suggestions-loading">
       Chargement ...
     </div>
 
-    <ul v-if="suggestions.length" class="suggestions-list">
-      <li v-for="suggestion in suggestions" :key="suggestion.id" class="suggestion-item" @click="selectSuggestion(suggestion)">
+    <ul v-if="suggestions.length" class="suggestions-list" data-testid="suggestions-list">
+      <li
+        v-for="suggestion in suggestions"
+        :key="suggestion.id"
+        class="suggestion-item"
+        :data-testid="`suggestion-item-${suggestion.id}`"
+        @click="selectSuggestion(suggestion)"
+      >
         {{ suggestion.label }}
       </li>
     </ul>

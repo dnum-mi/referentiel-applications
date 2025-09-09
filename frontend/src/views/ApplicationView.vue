@@ -59,21 +59,21 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 </script>
 
 <template>
-  <div class="layout">
-    <SidebarFilters />
+  <div class="layout" data-testid="application-view">
+    <SidebarFilters data-testid="application-filters" />
 
     <main class="main-content">
-      <div v-if="showLoader" class="loader">
+      <div v-if="showLoader" class="loader" data-testid="application-loader">
         <AppLoader />
       </div>
 
-      <div class="toggle-and-create-container">
-        <DsfrToggleSwitch v-model="isMobile" active-text="Mode Tuiles" inactive-text="Mode Tableau" />
-        <CreateApplication />
+      <div class="toggle-and-create-container" data-testid="application-toggle-create">
+        <DsfrToggleSwitch v-model="isMobile" active-text="Mode Tuiles" inactive-text="Mode Tableau" data-testid="application-toggle-view" />
+        <CreateApplication data-testid="application-create" />
       </div>
 
-      <ApplicationTableView v-if="displayMode === 'table'" v-model:sorted-by="currentSortedColumn" />
-      <ApplicationCardView v-else />
+      <ApplicationTableView v-if="displayMode === 'table'" v-model:sorted-by="currentSortedColumn" data-testid="application-table-view" />
+      <ApplicationCardView v-else data-testid="application-card-view" />
     </main>
   </div>
 </template>

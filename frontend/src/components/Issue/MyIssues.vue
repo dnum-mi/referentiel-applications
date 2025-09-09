@@ -43,14 +43,15 @@ const rows = computed(() =>
 
 <template>
   <div class="fr-container fr-my-2v w-[800px]">
-    <AppLoader v-if="isLoading" />
-    <div v-else-if="!rows.length" class="text-center">
+    <AppLoader v-if="isLoading" data-testid="my-issues-loader" />
+    <div v-else-if="!rows.length" class="text-center" data-testid="my-issues-empty">
       <p>Aucune correction recensée.</p>
     </div>
     <DsfrDataTable
       v-else
       v-model:selection="selection"
       v-model:current-page="currentPage"
+      data-testid="my-issues-table"
       :headers-row="headers"
       :rows="rows"
       row-key="id"
@@ -66,12 +67,12 @@ const rows = computed(() =>
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Application'">
-          <router-link :to="cell.to">
+          <router-link :to="cell.to" data-testid="my-issues-application-link">
             {{ cell.label }}
           </router-link>
         </template>
         <template v-else-if="colKey === 'Statut'">
-          <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" />
+          <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" data-testid="my-issues-status-tag" />
         </template>
         <template v-else>
           {{ cell }}

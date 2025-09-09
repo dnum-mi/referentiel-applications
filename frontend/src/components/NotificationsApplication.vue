@@ -82,8 +82,8 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
 </script>
 
 <template>
-  <AppLoader v-if="loading" />
-  <div v-else-if="!loading && rows.length === 0" class="text-center">
+  <AppLoader v-if="loading" data-testid="notifications-loader" />
+  <div v-else-if="!loading && rows.length === 0" class="text-center" data-testid="notifications-empty">
     <p>Aucune correction proposée.</p>
   </div>
 
@@ -96,12 +96,13 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
       pagination
       :rows-per-page="5"
       :pagination-options="[5, 10, 20, 30]"
+      data-testid="notifications-table"
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Description'">
-          <DsfrAccordion :id="cell.index" :title="cell.title">
+          <DsfrAccordion :id="cell.index" :title="cell.title" data-testid="notifications-accordion">
             <div class="full-description">
-              <pre class="formatted-description">{{ cell.content }}</pre>
+              <pre class="formatted-description" data-testid="notifications-description">{{ cell.content }}</pre>
             </div>
           </DsfrAccordion>
         </template>
@@ -111,7 +112,7 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
       </template>
     </DsfrDataTable>
   </DsfrAccordionsGroup>
-  <ReportIssue v-if="canPost" :application="application" />
+  <ReportIssue v-if="canPost" :application="application" data-testid="notifications-report-issue" />
 </template>
 
 <style scoped>

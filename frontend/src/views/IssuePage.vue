@@ -25,10 +25,10 @@ const tabs = [
 </script>
 
 <template>
-  <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName" :tab-titles="tabs">
+  <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName" :tab-titles="tabs" data-testid="issues-tabs">
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
-      <DsfrTabContent v-show="activeTab === index" :tab-id="tab.tabId" :panel-id="tab.panelId">
-        <component :is="tab.component" />
+      <DsfrTabContent v-show="activeTab === index" :tab-id="tab.tabId" :panel-id="tab.panelId" :data-testid="`issues-tab-content-${tab.tabId}`">
+        <component :is="tab.component" :data-testid="`issues-tab-component-${tab.tabId}`" />
       </DsfrTabContent>
     </template>
   </DsfrTabs>

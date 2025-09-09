@@ -82,7 +82,7 @@ function closeModal() {
 </script>
 
 <template>
-  <DsfrModal :opened="props.opened" :title="props.title" @close="closeModal">
+  <DsfrModal :opened="props.opened" :title="props.title" data-testid="relation-modal" @close="closeModal">
     <template #default>
       <div class="relation-type">
         <DsfrSelect
@@ -90,6 +90,7 @@ function closeModal() {
           :options="relationTypesForSelect"
           label="Type de relation"
           default-unselected-text="Sélectionner une option"
+          data-testid="relation-type-select"
         />
       </div>
 
@@ -98,12 +99,13 @@ function closeModal() {
         :search-data-function="performSearch"
         label="Rechercher une application"
         placeholder="Tapez au moins 3 caractères"
+        data-testid="relation-suggestions-input"
       />
     </template>
 
     <template #footer>
-      <DsfrButton label="Sauvegarder" @click="submitRelation" />
-      <DsfrButton label="Annuler" secondary @click="closeModal" />
+      <DsfrButton label="Sauvegarder" data-testid="relation-save-btn" @click="submitRelation" />
+      <DsfrButton label="Annuler" secondary data-testid="relation-cancel-btn" @click="closeModal" />
     </template>
   </DsfrModal>
 </template>

@@ -41,9 +41,10 @@ async function submitCorrection() {
       required
       class="correction-textarea"
       rows="2"
+      data-testid="report-issue-textarea"
     />
     <div class="button-left">
-      <DsfrButton :disabled="!correctionText" @click="submitCorrection">
+      <DsfrButton :disabled="!correctionText" data-testid="report-issue-submit-btn" @click="submitCorrection">
         Proposer ma correction
       </DsfrButton>
     </div>

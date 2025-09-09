@@ -170,9 +170,9 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
 
 <template>
   <div class="fr-container">
-    <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs">
+    <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs" data-testid="admin-tabs">
       <DsfrTabContent :panel-id="tabs[0].panelId" :tab-id="tabs[0].tabId">
-        <h1 class="fr-h1">
+        <h1 class="fr-h1" data-testid="admin-users-title">
           Gestion des utilisateurs
         </h1>
         <p class="fr-text--lg">
@@ -185,21 +185,22 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
             placeholder="Rechercher par email ou ID Keycloak..."
             button-text="Rechercher"
             class="fr-col-12"
+            data-testid="admin-user-search"
             @search="handleSearch"
           />
         </div>
 
-        <div v-if="loading" class="fr-alert fr-alert--info">
+        <div v-if="loading" class="fr-alert fr-alert--info" data-testid="admin-users-loading">
           <p>Chargement des utilisateurs...</p>
         </div>
 
-        <div v-else-if="errors.size" class="fr-alert fr-alert--error">
+        <div v-else-if="errors.size" class="fr-alert fr-alert--error" data-testid="admin-users-error">
           <p v-for="errorKey in errors.keys()" :key="errorKey">
             {{ errorMessages[errorKey] }}
           </p>
         </div>
 
-        <div v-else class="fr-card">
+        <div v-else class="fr-card" data-testid="admin-users-card">
           <div class="fr-card__body">
             <div class="fr-table fr-table--bordered">
               <table>
@@ -239,7 +240,7 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
                       </span>
                     </td>
                     <td>
-                      <DsfrButton label="Modifier" size="sm" secondary @click="openEditModal(user)" />
+                      <DsfrButton label="Modifier" size="sm" secondary data-testid="admin-user-edit-btn" @click="openEditModal(user)" />
                     </td>
                   </tr>
                 </tbody>
@@ -248,7 +249,7 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
           </div>
         </div>
 
-        <DsfrModal :opened="isEditModalOpen" title="Modifier les permissions utilisateur" @close="closeEditModal">
+        <DsfrModal :opened="isEditModalOpen" title="Modifier les permissions utilisateur" data-testid="admin-edit-user-modal" @close="closeEditModal">
           <div v-if="selectedUser">
             <p><strong>Utilisateur :</strong> {{ selectedUser.email }}</p>
             <p><strong>ID Keycloak :</strong> {{ selectedUser.keycloakId }}</p>
@@ -261,14 +262,15 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
                   hint=""
                   :options="AdminLevelOptions"
                   name="admin-level-radio"
+                  data-testid="admin-level-radio"
                 />
               </fieldset>
             </div>
           </div>
 
           <template #footer>
-            <DsfrButton label="Annuler" secondary @click="closeEditModal" />
-            <DsfrButton label="Sauvegarder" :disabled="saving" @click="savePermissions" />
+            <DsfrButton label="Annuler" secondary data-testid="admin-cancel-btn" @click="closeEditModal" />
+            <DsfrButton label="Sauvegarder" :disabled="saving" data-testid="admin-save-perms-btn" @click="savePermissions" />
           </template>
         </DsfrModal>
       </DsfrTabContent>
@@ -280,6 +282,7 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
           :label="loading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
           :icon="{ name: 'ri-refresh-line', animation: loading ? 'spin' : undefined }"
           :disabled="loading"
+          data-testid="admin-quality-recompute-btn"
           @click="updateAllApplicationsQuality"
         />
       </DsfrTabContent>
@@ -287,6 +290,7 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
         <AppPermsMatrix
           v-if="appPermsMatrix"
           :app-perms-matrix="appPermsMatrix"
+          data-testid="admin-matrix"
           @reload="loadAppPermissionsMatrix"
           @update:app-perms-matrix="(m: AppPermsDto[]) => saveAppPermsMatrix(m)"
         />

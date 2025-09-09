@@ -14,7 +14,7 @@ const renderedHtml = computed(() => {
 </script>
 
 <template>
-  <div class="markdown-preview" v-html="renderedHtml" />
+  <div class="markdown-preview" data-testid="markdown-display" v-html="renderedHtml" />
 </template>
 
 <style scoped>

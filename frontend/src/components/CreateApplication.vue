@@ -37,6 +37,7 @@ async function createApplication(newApplication: Application) {
       type="button"
       class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
       :disabled="userStore.adminLevel < AdminLevel.WRITE"
+      data-testid="create-application-btn"
       @click="applicationModal.openCreateModal()"
     >
       Créer une application
@@ -46,9 +47,10 @@ async function createApplication(newApplication: Application) {
       size="lg"
       :opened="applicationModal.isCreateModalOpen.value"
       title="Créer une application"
+      data-testid="create-application-modal"
       @close="applicationModal.closeModal"
     >
-      <ApplicationInfoForm :is-submitting="isSubmitting" @submit="createApplication" @cancel="applicationModal.closeModal" />
+      <ApplicationInfoForm :is-submitting="isSubmitting" data-testid="create-application-form" @submit="createApplication" @cancel="applicationModal.closeModal" />
     </DsfrModal>
   </div>
 </template>
