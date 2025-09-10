@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.36.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.35.0...v1.36.0) (2025-09-10)
+
+
+### Features
+
+* enhance organization filtering with boolean options and debounce fetch logic ([bd00c74](https://github.com/dnum-mi/referentiel-applications/commit/bd00c74fa001b630fdaa69428f704b2b8cbfbea6))
+
+
+### Bug Fixes
+
+* :bug: fix status filter handling ([b2b421c](https://github.com/dnum-mi/referentiel-applications/commit/b2b421cbabdca49f0b4f76da86031d8dfa5b797c))
+* organization dto ([c162f56](https://github.com/dnum-mi/referentiel-applications/commit/c162f5607ca79fce131c46372166ee02a72cb8a4))
+* remove deprecated label client API and update label types in application model ([68df258](https://github.com/dnum-mi/referentiel-applications/commit/68df25802e72e20eda744161b21530331864fe2d))
+* update application search and export logic to handle pagination and filters ([15d214e](https://github.com/dnum-mi/referentiel-applications/commit/15d214e0111e5079b3e99a38d1f2a30fec0ab116))
+* updateActor function signature to destructure actor parameter ([ac7f486](https://github.com/dnum-mi/referentiel-applications/commit/ac7f4864e02e3ef855faf55cb093704b14b4ebd4))
+
 ## [1.35.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.34.1...v1.35.0) (2025-09-08)
 
 
