@@ -36,7 +36,7 @@ export const useActorStore = defineStore("actorStore", () => {
     return response.data;
   }
 
-  async function updateActor(actor: UpdateActorDto, applicationId: string, actorId: string): Promise<ActorDto | undefined> {
+  async function updateActor({ id: _id, ...actor }: UpdateActorDto & { id?: string }, applicationId: string, actorId: string): Promise<ActorDto | undefined> {
     const response = await api.applicationActorsControllerUpdated({
       path: { applicationId, id: actorId },
       body: actor,
