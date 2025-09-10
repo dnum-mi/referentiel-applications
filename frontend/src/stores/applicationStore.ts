@@ -88,6 +88,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
 
   const exportToExcel = async (filters: Filters = {}): Promise<Blob> => {
     const cleanedFilters = cleanFilters(filters);
+    cleanedFilters.limit = 0;
     const response = await api.applicationControllerExportExcel({
       query: cleanedFilters,
     });
