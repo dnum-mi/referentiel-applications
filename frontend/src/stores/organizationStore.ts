@@ -2,10 +2,14 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
 import type { OrganizationDto } from "@/client/types.gen";
+import { debounce } from "@/utils/debouncer-utils";
 
 export const useOrganizationStore = defineStore("organizationStore", () => {
   const organizations = ref<Record<string, OrganizationDto>>({});
   const error = ref<string | null>(null);
+
+  const pendingIds: Set<string> = new Set();
+  const resolvers: Record<string, (org: OrganizationDto | undefined) => void> = {};
 
   function storeOrganization(orgs: OrganizationDto[]) {
     orgs.forEach((org) => {
@@ -13,11 +17,6 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
     });
   }
 
-  /**
-   * Search for organizations by label or sigle.
-   * @param search - The search term to filter organizations.
-   * @returns A promise that resolves to an array of organizations matching the search term.
-   */
   async function search(search: string): Promise<OrganizationDto[]> {
     const response = await api.organizationControllerFindAll({
       query: { search },
@@ -28,66 +27,85 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
     if (!response.data) {
       return [];
     }
-
     storeOrganization(response.data);
-
     error.value = null;
     return response.data;
   }
-  /**
-   * Get an organization by its ID.
-   * If the organization is not found, it will fetch it.
-   * Prefer to use a computed on `organizations` to get the incoming organization.
-   * @param id - The ID of the organization to retrieve.
-   * @returns The organization object or undefined if not found.
-   */
-  function getById(id: string): OrganizationDto | undefined {
-    const org = organizations.value[id];
-    if (!org) {
-      fetchById(id);
-    }
-    return org;
-  }
 
-  /**
-   * Fetch an organization by its ID and store it and its ancestors in the store.
-   * Prefer to use `getById` to retrieve an organization using cached data.
-   * If the organization is not found, it will create a fake one.
-   * @param id - The ID of the organization to fetch.
-   * @returns The fetched organization or a fake one if not found.
-   */
-  async function fetchById(id: string): Promise<OrganizationDto> {
-    const response = await api.organizationControllerFindOne({
-      path: { id },
-    });
-    if (response.response.ok && response.data) {
-      organizations.value[id] = response.data;
-      return response.data;
-    }
-    // If the organization is not found, we create a fake one
-    error.value = response.response.statusText || "Organisation non trouvée";
-    await api.organizationControllerFindAll({
-      query: { ids: id },
-    })
-      .then((response) => {
-        if (response.response.ok && response.data) {
-          storeOrganization(response.data);
+  // Debounced batch fetch
+  const debouncedFetch = debounce(async () => {
+    const ids = Array.from(pendingIds);
+    pendingIds.clear();
+
+    try {
+      const response = await api.organizationControllerFindAll({
+        query: { ids: ids.join(","), withAncestors: true },
+      });
+
+      if (response.response.ok && response.data) {
+        storeOrganization(response.data);
+
+        response.data.forEach((org: OrganizationDto) => {
+          resolvers[org.id]?.(org);
+          delete resolvers[org.id];
+        });
+      }
+
+      // Resolve missing with fake orgs
+      ids.forEach((id) => {
+        if (!organizations.value[id]) {
+          const fakeData: OrganizationDto = {
+            id,
+            label: "Organisation non trouvée",
+            url: "",
+            sigle: "NOT FOUND",
+            parentId: null,
+          };
+          organizations.value = { ...organizations.value, [id]: fakeData };
+          resolvers[id]?.(fakeData);
+          delete resolvers[id];
         }
-        error.value = null;
-      })
-      .catch((err) => {
-        console.error(`❌ Erreur lors de la récupération de l'organisation avec l'id ${id}`, err);
-        error.value = err.message ?? "Erreur inconnue";
+      });
+    } catch (err: any) {
+      console.error("❌ Erreur lors de la récupération des organisations", err);
+      error.value = err.message ?? "Erreur inconnue";
+
+      ids.forEach((id) => {
         const fakeData: OrganizationDto = {
           id,
           label: "Organisation non trouvée",
-          url: "", // Set to undefined if not found
-          sigle: "NOT FOUND", // Set to undefined if not found
-          parentId: null, // Set to null if not found
+          url: "",
+          sigle: "NOT FOUND",
+          parentId: null,
         };
         organizations.value = { ...organizations.value, [id]: fakeData };
+        resolvers[id]?.(fakeData);
+        delete resolvers[id];
       });
-    return organizations.value[id];
+    }
+  }, 10);
+
+  /**
+   * Get an organization by its ID.
+   * Always returns a promise — no more sync/async split.
+   */
+  async function getById(id: string): Promise<OrganizationDto | undefined> {
+    if (organizations.value[id]) {
+      return organizations.value[id];
+    }
+    return fetchById(id);
+  }
+
+  async function fetchById(id: string): Promise<OrganizationDto | undefined> {
+    return new Promise((resolve) => {
+      if (organizations.value[id]) {
+        resolve(organizations.value[id]);
+        return;
+      }
+      pendingIds.add(id);
+      resolvers[id] = resolve;
+      debouncedFetch();
+    });
   }
 
   return {

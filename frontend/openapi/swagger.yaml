@@ -1388,6 +1388,20 @@ paths:
       summary: Récupérer toutes les organisations
       description: Ce endpoint permet de récupérer la liste de toutes les organisations.
       parameters:
+        - name: withChildren
+          required: false
+          in: query
+          description: Renvoi les organisations enfants de chaque organisation
+          schema:
+            default: false
+            type: boolean
+        - name: withAncestors
+          required: false
+          in: query
+          description: Renvoi les organisations parentes de chaque organisation
+          schema:
+            default: true
+            type: boolean
         - name: ids
           required: false
           in: query

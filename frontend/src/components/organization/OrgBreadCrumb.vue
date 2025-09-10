@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useOrganizationStore } from "@/stores/organizationStore";
-import type { Organization } from "@/models/organization";
+import type { OrganizationDto } from "@/client/types.gen";
 
 const props = withDefaults(
   defineProps<{
@@ -15,8 +15,11 @@ const props = withDefaults(
   },
 );
 const orgStore = useOrganizationStore();
-const organization = computed<Organization | undefined>(() => {
+
+onMounted(() => {
   orgStore.getById(props.organizationId);
+});
+const organization = computed<OrganizationDto | undefined>(() => {
   return orgStore.organizations[props.organizationId];
 });
 
