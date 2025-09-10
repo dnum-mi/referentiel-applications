@@ -241,9 +241,9 @@ export class ApplicationRepository implements IApplicationRepository {
       });
     }
 
-    if (dto.status?.length) {
+    if (dto.status__in?.length) {
       where.AND.push({
-        status: { in: dto.status },
+        status: { in: dto.status__in },
       });
     }
 
@@ -262,7 +262,7 @@ export class ApplicationRepository implements IApplicationRepository {
         ownershipWhere.OR.push({
           actors: {
             some: {
-              actorEmail: {
+              email: {
                 equals: ownershipFilter.actorEmail,
               },
             },
