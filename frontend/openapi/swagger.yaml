@@ -431,7 +431,7 @@ paths:
           schema:
             example: MOA
             type: string
-        - name: status
+        - name: status__in
           required: false
           in: query
           description: Filtrer par un ou plusieurs status
@@ -631,7 +631,7 @@ paths:
           schema:
             example: MOA
             type: string
-        - name: status
+        - name: status__in
           required: false
           in: query
           description: Filtrer par un ou plusieurs status

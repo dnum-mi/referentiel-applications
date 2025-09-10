@@ -70,7 +70,8 @@ export class ApplicationSearchDto {
   })
   @IsOptional()
   @IsEnum(Status, { each: true })
-  status?: Status[];
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  status__in?: Status[];
 
   @ApiPropertyOptional({
     description: "Nom de l'organisation liée à l'application",

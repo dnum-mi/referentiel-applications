@@ -17,7 +17,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     tag: undefined,
     link: undefined,
     priorityRestart: undefined,
-    status: undefined,
+    status__in: undefined,
     page: 0,
     limit: 15,
     sortBy: "label",

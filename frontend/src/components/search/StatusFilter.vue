@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { ref, computed } from "vue";
+import { computed, toRef } from "vue";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 import type { ApplicationStatus } from "@/client/types.gen";
 
 const searchStore = useApplicationSearchStore();
-const modelValue = ref<string[]>(searchStore.filters.status ?? []);
+const selectedStatuses = toRef(searchStore.filters, "status__in");
 
 const { run: debouncedSearch } = useDebouncedFn(() => {
   searchStore.setFilter("page", 0);
@@ -19,43 +19,22 @@ const statusOptions = computed(() =>
     .map(value => ({
       value,
       label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
-      name: `${value}`,
+      name: value,
     })),
 );
 
-function onStatusChange(newStatus: unknown) {
-  if (!Array.isArray(newStatus)) return;
-
-  const statusArray = newStatus.filter((val): val is string => typeof val === "string") as ApplicationStatus[];
-  modelValue.value = statusArray;
-
-  console.log("✅ Nouveau statut sélectionné :", statusArray);
-
-  // ✅ Ne pas envoyer [] dans le filtre
-  if (statusArray.length === 0) {
-    searchStore.setFilter("status", undefined);
-  } else {
-    searchStore.setFilter("status", statusArray);
-  }
-
+function onStatusChange(status__in: ApplicationStatus[]) {
+  searchStore.setFilter("status__in", status__in.length > 0 ? status__in : undefined);
   searchStore.setFilter("page", 0);
   debouncedSearch();
 }
-
-watch(
-  () => searchStore.filters.status,
-  (newVal) => {
-    modelValue.value = newVal ?? [];
-  },
-  { immediate: true },
-);
 </script>
 
 <template>
   <div class="fr-container fr-my-2v">
     <DsfrCheckboxSet
       data-testid="status-filter-checkboxes"
-      :model-value="modelValue"
+      :model-value="selectedStatuses || []"
       :options="statusOptions"
       legend="Filtrer par statut"
       name="status"
