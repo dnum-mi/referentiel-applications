@@ -17,8 +17,7 @@ export class ApplicationExportService {
   async exportSearchResultsToExcel(
     searchParams: ApplicationSearchDto,
   ): Promise<Buffer> {
-    // Get all matching applications without pagination for export
-    const allMatchingApps = await this.repository.findApplicationsBySearch(searchParams, false);
+    const allMatchingApps = await this.repository.findApplicationsBySearch(searchParams);
 
     // Get full relations for the filtered applications
     const filteredIds = allMatchingApps.results.map(app => app.id);

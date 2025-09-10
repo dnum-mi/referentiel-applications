@@ -246,16 +246,6 @@ export class ApplicationService {
     searchParams: ApplicationSearchDto,
     user?: UserEntity,
   ): Promise<ApplicationSearchResultDto> {
-    // Handle link-specific search (old SearchApplicationDto behavior)
-    if ("link" in searchParams && searchParams.link) {
-      const results = await this.applicationRepository.findByLink(
-        searchParams.link,
-      );
-      return {
-        results,
-        total: results.length,
-      };
-    }
     if (user.adminLevel >= AdminLevel.READ) {
       // If the user has read or write permissions, proceed with the search
       return this.applicationRepository.findApplicationsBySearch(searchParams);

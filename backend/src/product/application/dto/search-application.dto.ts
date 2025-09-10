@@ -125,14 +125,14 @@ export class ApplicationSearchDto {
   page?: number;
 
   @ApiPropertyOptional({
-    description: "Nombre de résultats par page",
+    description: "Nombre de résultats par page, 0 pour supprimer la pagination",
     example: 15,
   })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
-  @Min(1)
-  limit?: number;
+  @Min(0)
+  limit?: number = 15;
 
   @ApiPropertyOptional({
     description: "Champ utilisé pour le tri",
