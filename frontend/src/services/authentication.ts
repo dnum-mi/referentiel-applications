@@ -1,15 +1,21 @@
 import Keycloak from "keycloak-js";
 import type { KeycloakInitOptions } from "keycloak-js";
+import { getConfig } from "./config";
 
 export const keycloakInitOptions: KeycloakInitOptions = {
   onLoad: "check-sso",
   flow: "standard",
 };
 
+const config = await getConfig();
+if (config instanceof Error) {
+  throw config;
+}
+
 const keycloakConfig = {
-  url: import.meta.env.VITE_RDA_KEYCLOAK_AUTH_SERVER_URL ?? "VITE_RDA_KEYCLOAK_AUTH_SERVER_URL",
-  realm: import.meta.env.VITE_RDA_KEYCLOAK_REALM ?? "VITE_RDA_KEYCLOAK_REALM",
-  clientId: import.meta.env.VITE_RDA_KEYCLOAK_CLIENT_ID ?? "VITE_RDA_KEYCLOAK_CLIENT_ID",
+  url: config.keycloakUrl,
+  realm: config.keycloakRealm,
+  clientId: config.keycloakClientId,
 };
 
 let authentication: Keycloak;
