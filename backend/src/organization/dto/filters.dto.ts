@@ -1,4 +1,6 @@
-import { IsOptional, IsString } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import { IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class OrganizationFilterDto {
   @IsOptional()
@@ -6,12 +8,22 @@ export class OrganizationFilterDto {
   ids?: string;
 
   @IsOptional()
-  @IsString()
-  withChildren?: "true" | "false";
+  @Type(() => Boolean)
+  @ApiProperty({
+    description: "Renvoi les organisations enfants de chaque organisation",
+    default: false,
+  })
+  @IsBoolean()
+  withChildren?: boolean;
 
   @IsOptional()
-  @IsString()
-  withAncestors?: "true" | "false";
+  @Type(() => Boolean)
+  @ApiProperty({
+    description: "Renvoi les organisations parentes de chaque organisation",
+    default: true,
+  })
+  @IsBoolean()
+  withAncestors?: boolean;
 
   @IsOptional()
   @IsString()

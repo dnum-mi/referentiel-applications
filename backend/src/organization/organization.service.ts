@@ -57,10 +57,10 @@ export class OrganizationService extends BaseService<Organization> {
       descendantId: { in: ids },
     };
     if (withAncestors) {
-      where.ancestorId = { in: ids };
+      where.descendantId = { in: ids };
     }
     if (withChildren) {
-      where.descendantId = { in: ids };
+      where.ancestorId = { in: ids };
     }
 
     const closures = await this.prisma.organizationClosure.findMany({
@@ -70,9 +70,7 @@ export class OrganizationService extends BaseService<Organization> {
 
     return Object.values(closures.reduce((acc, relation) => {
       acc[relation.ancestor.id] = relation.ancestor;
-      if (withChildren) {
-        acc[relation.descendant.id] = relation.descendant;
-      }
+      acc[relation.descendant.id] = relation.descendant;
       return acc;
     }, {}));
   }

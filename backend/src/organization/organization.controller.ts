@@ -112,8 +112,8 @@ Vous devez fournir les informations suivantes :
   ): Promise<OrganizationDto[]> {
     return this.organizationService.findMultiple({
       ids: filters.ids ? filters.ids.split(",") : [],
-      withAncestors: filters.withAncestors === "true",
-      withChildren: filters.withChildren === "true",
+      withAncestors: filters.withAncestors,
+      withChildren: filters.withChildren,
       search: filters.search,
     });
   }
