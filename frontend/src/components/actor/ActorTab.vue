@@ -25,7 +25,7 @@ const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
 const loading = ref(false);
-const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE);
+const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeActors"));
 
 const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 
