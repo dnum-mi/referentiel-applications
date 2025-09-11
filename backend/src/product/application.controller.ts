@@ -16,7 +16,18 @@ import {
 } from "@nestjs/common";
 import { ApplicationService } from "./application.service";
 
-import { ApiTags, ApiOperation, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiForbiddenResponse, ApiAcceptedResponse, ApiNotFoundResponse, ApiNoContentResponse } from "@nestjs/swagger";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiForbiddenResponse,
+  ApiAcceptedResponse,
+  ApiNotFoundResponse,
+  ApiNoContentResponse,
+  ApiParam,
+} from "@nestjs/swagger";
 import { ApplicationExportService } from "./export.service";
 import {
   CreateApplicationDto,
@@ -155,11 +166,15 @@ Vous devez fournir les informations suivantes :
       },
     },
   })
+  @ApiParam({
+    name: "applicationId",
+    required: true,
+    type: String,
+  })
   getMyPerms(
-    @Param("applicationId") id: string,
     @User() user: UserEntity,
   ): Promise<APP_PERMISSIONS[]> {
-    return this.applicationService.getMyPerms(id, user.email);
+    return this.applicationService.getMyPerms(user);
   }
 
   @Get("export/excel")
