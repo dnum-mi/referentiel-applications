@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import { authenticationInit } from "@/services/authentication";
+import { getConfig } from "@/services/config";
 import App from "./App.vue";
 import { createPinia } from "pinia";
 import router from "./router/index";
@@ -40,8 +41,10 @@ app.use(router);
 
 app.component("VIcon", VIcon);
 
-authenticationInit().then(() => {
-  app.mount("#app");
+getConfig().then(() => {
+  authenticationInit().then(() => {
+    app.mount("#app");
+  });
 });
 
 router.afterEach((to) => {

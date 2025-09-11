@@ -13,16 +13,20 @@ if (config instanceof Error) {
 }
 
 const keycloakConfig = {
-  url: config.keycloakUrl,
-  realm: config.keycloakRealm,
-  clientId: config.keycloakClientId,
+  keycloakUrl: config.keycloakUrl,
+  keycloakRealm: config.keycloakRealm,
+  keycloakClientId: config.keycloakClientId,
 };
 
 let authentication: Keycloak;
 
-export function getAuthentication() {
+export function getAuthentication(): Keycloak {
   if (!authentication) {
-    authentication = new Keycloak(keycloakConfig);
+    authentication = new Keycloak({
+      url: keycloakConfig.keycloakUrl,
+      realm: keycloakConfig.keycloakRealm,
+      clientId: keycloakConfig.keycloakClientId,
+    });
     authentication.onAuthSuccess = () => {
       if (!(authentication.refreshTokenParsed?.exp && authentication.tokenParsed?.exp && authentication.refreshTokenParsed.exp > authentication.tokenParsed.exp)) {
         return;
