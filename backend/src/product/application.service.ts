@@ -11,7 +11,6 @@ import { LabelsService } from "src/labels/labels.service";
 import { MetadataService } from "src/metadata/metadata.service";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { ApplicationRights } from "./application/dto/application-rights.dto";
-import { APP_PERMISSIONS } from "src/common/utils/types";
 import { AdminLevel, UserEntity } from "src/user/entities/user.entity";
 import { ApplicationSearchResultDto } from "./application/dto/get-application.dto.js";
 
@@ -211,35 +210,9 @@ export class ApplicationService {
   }
 
   public async getMyPerms(
-    applicationId: string,
-    email: string,
+    requestor: UserEntity,
   ): Promise<ApplicationRights> {
-    const userActors = await this.prisma.actor.findMany({
-      where: { applicationId, email },
-      select: {
-        actorType: {
-          select: {
-            appPermissions: {
-              omit: {
-                actorTypeId: true,
-              },
-            },
-          },
-        },
-      },
-      distinct: ["actorTypeId"],
-    });
-    const perms = new Set<APP_PERMISSIONS>();
-    for (const actor of userActors) {
-      for (const actorPerms of actor.actorType.appPermissions) {
-        for (const [permName, value] of objectEntries(actorPerms)) {
-          if (value === true) {
-            perms.add(permName);
-          }
-        }
-      }
-    }
-    return Array.from(perms.values());
+    return requestor.appPerms;
   }
 
   public async search(
