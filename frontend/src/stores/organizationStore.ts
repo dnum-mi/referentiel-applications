@@ -17,7 +17,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
     });
   }
 
-  async function search(search: string): Promise<OrganizationDto[]> {
+  async function find(search?: string): Promise<OrganizationDto[]> {
     const response = await api.organizationControllerFindAll({
       query: { search },
     });
@@ -113,6 +113,6 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
     error,
     fetchById,
     getById,
-    search,
+    find,
   };
 });
