@@ -2156,8 +2156,7 @@ info:
   version: "2.0"
   contact: {}
 tags: []
-servers:
-  - url: http://localhost:3500
+servers: []
 components:
   securitySchemes:
     oauth2:
@@ -3531,8 +3530,5 @@ components:
         - keycloakRealm
         - keycloakClientId
         - version
-externalDocs:
-  description: Specification JSON
-  url: http://localhost:3500/api/v2/swagger/json
 security:
   - oauth2: []

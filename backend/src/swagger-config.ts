@@ -12,15 +12,12 @@ export function setupSwagger(
   options: {
     writeYaml?: boolean
     onlyWriteSwagger?: boolean
-    baseUrl: string
   },
   keycloakConfig: Pick<KeycloakConfig, "baseUrl" | "realm" | "clientId">,
 ) {
   const config = new DocumentBuilder()
     .setTitle("API Référentiel Applications")
     .setDescription("API pour la gestion des applications")
-    .setExternalDoc("Specification JSON", `${options.baseUrl}/api/v2/swagger/json`)
-    .addServer(options.baseUrl)
     .setVersion("2.0")
     .addOAuth2(
       {
@@ -51,7 +48,6 @@ export function setupSwagger(
     yamlDocumentUrl: "/swagger/yaml",
     useGlobalPrefix: true,
     swaggerOptions: {
-      oauth2RedirectUrl: `${options.baseUrl}/api/v2/swagger/oauth2-redirect.html`,
       usePkceWithAuthorizationCodeGrant: true,
       initOAuth: {
         scopes: ["openid", "profile"],

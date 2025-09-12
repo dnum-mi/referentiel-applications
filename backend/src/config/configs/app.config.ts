@@ -6,7 +6,6 @@ export interface AppConfig {
   host: string
   onlyWriteSwagger: boolean
   writeYaml: boolean
-  baseUrl: string
   version: string
 }
 export default registerAs("app", (): AppConfig => {
@@ -15,12 +14,7 @@ export default registerAs("app", (): AppConfig => {
   const host = process.env.HOST ?? "0.0.0.0";
   const onlyWriteSwagger = process.env.ONLY_WRITE_SWAGGER === "true";
   const writeYaml = process.env.WRITE_SWAGGER_YAML !== "false";
-  const baseUrl = process.env.BASE_URL;
   const version = process.env.VERSION ?? "development";
-
-  if (!baseUrl) {
-    throw new Error("BASE_URL is not defined");
-  }
 
   return {
     env,
@@ -28,7 +22,6 @@ export default registerAs("app", (): AppConfig => {
     host,
     onlyWriteSwagger,
     writeYaml,
-    baseUrl,
     version,
   };
 });

@@ -4,9 +4,7 @@ import router from "@/router/index.js";
 import { routeNames } from "@/router/route-names";
 import { client } from "@/client/client.gen";
 
-const baseURL = `${import.meta.env.VITE_RDA_API_URL ?? "VITE_RDA_API_URL"}`;
-
-axios.defaults.baseURL = `${baseURL}/api/v2`;
+axios.defaults.baseURL = "/api/v2";
 axios.defaults.withCredentials = true;
 axios.defaults.headers.common.Accept = "application/json";
 axios.defaults.headers.common["Content-Type"] = "application/json";
@@ -59,7 +57,6 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
   client.interceptors.request.use(requestInterceptor);
 
   client.setConfig({
-    baseUrl: baseURL,
     credentials: "include",
     headers: {
       Accept: "application/json",
