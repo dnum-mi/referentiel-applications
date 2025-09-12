@@ -1,114 +1,52 @@
 <script setup lang="ts">
-import { ref, watch, defineEmits } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import { DsfrInput } from "@gouvminint/vue-dsfr";
-import type { Organization } from "@/models/organization";
+import type { OrganizationDto } from "@/client/types.gen";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 
-const props = withDefaults(
-  defineProps<{
-    preselected?: Organization | undefined | null
-  }>(),
-  {
-    preselected: null,
-  },
-);
-
-const emits = defineEmits<{
-  select: [value: Organization | null]
-}>();
-
 const searchStore = useApplicationSearchStore();
 const organizationStore = useOrganizationStore();
-const organizationSearchInput = ref("");
-const suggestions = ref<Organization[]>([]);
-const selected = ref<Organization | null>(props.preselected);
+
+const organizationSearchInput = ref(searchStore.filters.organizationLabel);
+const organizations = ref<OrganizationDto[]>([]);
 
 const { run: debouncedSearch } = useDebouncedFn(() => {
   searchStore.searchApplications();
 }, 300);
 
-if (props.preselected) {
-  select(props.preselected);
-}
-
-watch(organizationSearchInput, (value: string) => {
-  if (value.length >= 3) {
-    organizationStore
-      .search(value)
-      .then((data) => {
-        suggestions.value = data;
-      })
-      .catch((error) => {
-        console.error("Error fetching organization suggestions:", error);
-      });
-  } else {
-    suggestions.value = [];
-  }
+onMounted(async () => {
+  organizations.value = await organizationStore.find();
 });
 
-function select(org: Organization) {
-  selected.value = org;
-  organizationSearchInput.value = selected.value.label;
-  searchStore.setFilter("organizationLabel", organizationSearchInput.value);
+watch(organizationSearchInput, (value?: string) => {
+  searchStore.setFilter("organizationLabel", value);
   searchStore.setFilter("page", 0);
   debouncedSearch();
-  emits("select", selected.value);
-}
-function reset() {
-  selected.value = null;
-  organizationSearchInput.value = "";
-  searchStore.resetFilters();
-  emits("select", selected.value);
-}
-function update() {
-  if (organizationSearchInput.value !== selected.value?.label) {
-    selected.value = null;
-    searchStore.resetFilters();
-  }
-}
+});
+
+watch(
+  searchStore.filters,
+  () => {
+    organizationSearchInput.value = searchStore.filters.organizationLabel;
+  },
+  { deep: true },
+);
 </script>
 
 <template>
-  <div class="filter-section">
-    <div class="search-section">
-      <div class="input-field">
-        <DsfrInput
-          v-model="organizationSearchInput"
-          label-visible
-          label="Nom de l'organisation"
-          list="organizationSuggestionsList"
-          placeholder="Rechercher une organisation"
-          data-testid="organization-filter-input"
-          @update:model-value="update"
-        />
-      </div>
-      <DsfrButton v-if="selected" class="cancel-button" secondary label="X" data-testid="organization-filter-reset" @click="reset" />
-    </div>
-    <template v-if="!selected">
-      <div v-for="organization in suggestions" :key="organization.id" :data-testid="`organization-suggestion-${organization.id}`" @click="select(organization)">
-        <OrgBreadCrumb hide-hierarchy :organization-id="organization.id" :clickable="false" />
-      </div>
-    </template>
-  </div>
+  <DsfrInput
+    v-model="organizationSearchInput"
+    label-visible
+    label="Nom de l'organisation"
+    list="organizationSuggestionsList"
+    placeholder="Rechercher une organisation"
+    data-testid="organization-filter-input"
+  />
+  <datalist id="organizationSuggestionsList" data-testid="organization-suggestions-list">
+    <option v-for="organization in organizations" :key="organization.id" :data-testid="`organization-option-${organization.id}`">
+      {{ organization.label }}
+    </option>
+  </datalist>
 </template>
-
-<style scoped>
-.search-section {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  justify-content: space-between;
-  align-content: space-between;
-}
-
-.input-field {
-  flex: 1;
-}
-
-.cancel-button {
-  flex: 0;
-  align-self: end;
-}
-</style>
