@@ -3,7 +3,7 @@ import { AnomalyNotificationStatus } from "@prisma/client";
 
 export class CreateAnomalyNotificationDto {
   @IsString()
-  applicationId: string;
+  applicationId?: string;
 
   @IsString()
   description: string;
@@ -14,7 +14,7 @@ export class CreateAnomalyNotificationDto {
 
 export class CreateAnomalyNotificationRequestDto {
   @IsString()
-  applicationId: string;
+  applicationId?: string;
 
   @IsString()
   description: string;

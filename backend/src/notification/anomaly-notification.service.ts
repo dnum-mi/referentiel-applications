@@ -18,17 +18,28 @@ export class AnomalyNotificationService {
     if (!requestor.appPerms.includes("postAnomalyNotifications")) {
       throw new ForbiddenException("Vous n'avez pas la permission de créer une notification d'anomalie.");
     }
-    return this.prisma.anomalyNotification.create({
-      data: {
-        application: {
-          connect: { id: data.applicationId },
+    if (data.applicationId) {
+      return this.prisma.anomalyNotification.create({
+        data: {
+          application: {
+            connect: { id: data.applicationId },
+          },
+          notifier: {
+            connect: { keycloakId: requestor.keycloakId },
+          },
+          description: data.description,
         },
-        notifier: {
-          connect: { id: requestor.id },
+      });
+    } else {
+      return this.prisma.anomalyNotification.create({
+        data: {
+          notifier: {
+            connect: { keycloakId: requestor.keycloakId },
+          },
+          description: data.description,
         },
-        description: data.description,
-      },
-    });
+      });
+    }
   }
 
   /**

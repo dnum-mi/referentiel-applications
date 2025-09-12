@@ -60,6 +60,25 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     }
   };
 
+  const proposeAnomaly = async (description: string) => {
+    const payload = {
+      description,
+    };
+
+    try {
+      const response = await api.anomalyNotificationsControllerCreate({ body: payload });
+      if (!response.response.ok) {
+        throw new Error("Erreur lors de la proposition d'anomalie");
+      }
+      if (!response.data) {
+        console.warn("Aucune donnée retournée lors de la proposition d'anomalie.");
+      }
+    } catch (err) {
+      console.error("❌ Erreur lors de la proposition d'anomalie :", err);
+      throw err;
+    }
+  };
+
   const proposeCorrection = async (applicationId: string, description: string) => {
     const payload: CreateAnomalyNotificationRequestDto = {
       applicationId,
@@ -88,6 +107,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     fetchMyReports,
     fetchAllReports,
     proposeCorrection,
+    proposeAnomaly,
     fetchIssueByApplication,
   };
 });

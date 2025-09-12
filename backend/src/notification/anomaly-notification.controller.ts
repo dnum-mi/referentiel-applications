@@ -65,6 +65,33 @@ export class AnomalyNotificationsController {
       notifierId: !filters.all ? requestor.id : undefined,
     });
   }
+
+  /**
+   * Crée une nouvelle notification d'anomalie.
+   *
+   * @param requestor La requête HTTP contenant les informations de l'utilisateur.
+   * @param requestData Les données nécessaires pour créer une notification d'anomalie.
+   * @returns La notification d'anomalie créée.
+   * @throws BadRequestException Si le token est invalide ou l'identifiant
+   */
+  @Post()
+  @ApiOperation({
+    summary: "Rapporter une anomalie",
+  })
+  @ApiCreatedResponse({
+    description: "Notification d'anomalie créée avec succès",
+    type: GetAnomalyNotificationDto,
+  })
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @User() requestor: UserEntity,
+    @Body() requestData: CreateAnomalyNotificationRequestDto,
+  ) {
+    const data: CreateAnomalyNotificationDto = {
+      ...requestData,
+    };
+    return this.service.create(data, requestor);
+  }
 }
 
 /**

@@ -232,19 +232,6 @@ paths:
         Supporte la recherche par email et ID Keycloak. Accès limité aux
         administrateurs.
       parameters:
-        - name: type
-          required: false
-          in: query
-          description: Type d'utilisateur. Utiliser les valeurs de /userTypes
-          schema:
-            example:
-              - human
-            type: array
-            items:
-              type: string
-              enum:
-                - human
-                - bot
         - name: search
           required: false
           in: query
@@ -1073,138 +1060,6 @@ paths:
                 type: number
       tags:
         - Hostings
-  /api/v2/tokens:
-    get:
-      operationId: TokenController_list
-      summary: Récupère tous les tokens de service
-      description: Cette méthode permet de récupérer tous les tokens de service.
-      parameters: []
-      responses:
-        "200":
-          description: Liste des tokens récupérée avec succès
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TokenDto"
-      tags: &a7
-        - tokens
-    post:
-      operationId: TokenController_createService
-      summary: Crée un nouveau token de service
-      description: Cette méthode permet de créer un nouveau token de service.
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateServiceTokenDto"
-      responses:
-        "201":
-          description: Token créé avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a7
-  /api/v2/tokens/personal:
-    get:
-      operationId: TokenController_findPersonal
-      summary: Récupère tous les tokens personnels
-      description: Cette méthode permet de récupérer tous les tokens personnels.
-      parameters: []
-      responses:
-        "200":
-          description: Liste des tokens récupérée avec succès
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TokenDto"
-      tags: *a7
-    post:
-      operationId: TokenController_createPersonal
-      summary: Crée un nouveau token personnel
-      description: Cette méthode permet de créer un nouveau token personnel.
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreatePersonalTokenDto"
-      responses:
-        "201":
-          description: Token créé avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a7
-  /api/v2/tokens/{id}/regenerate:
-    post:
-      operationId: TokenController_regenerate
-      summary: Régénère un token de service
-      description: Cette méthode permet de régénérer un token de service.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RegenerateTokenDto"
-      responses:
-        "200":
-          description: Token régénéré avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TokenDto"
-        "201":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a7
-  /api/v2/tokens/{id}:
-    delete:
-      operationId: TokenController_delete
-      summary: Supprime (révoque) un token de service
-      description: Cette méthode permet de supprimer (révoquer) un token de service.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Token supprimé avec succès
-      tags: *a7
-  /api/v2/tokens/personal/{id}:
-    delete:
-      operationId: TokenController_deletePersonal
-      summary: Supprime (révoque) un token personnel
-      description: Cette méthode permet de supprimer (révoquer) un token personnel.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Token supprimé avec succès
-      tags: *a7
   /api/v2/applications/{applicationId}/anomaly-notifications:
     post:
       operationId: ApplicationAnomalyNotificationsController_create
@@ -1229,7 +1084,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: &a8
+      tags: &a7
         - ApplicationNotifications
     get:
       operationId: ApplicationAnomalyNotificationsController_findAll
@@ -1259,7 +1114,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: *a8
+      tags: *a7
   /api/v2/applications/{applicationId}/anomaly-notifications/{id}:
     get:
       operationId: ApplicationAnomalyNotificationsController_findOne
@@ -1283,7 +1138,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: *a8
+      tags: *a7
     patch:
       operationId: ApplicationAnomalyNotificationsController_update
       summary: Mettre à jour une notification
@@ -1312,7 +1167,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetAnomalyNotificationDto"
-      tags: *a8
+      tags: *a7
     delete:
       operationId: ApplicationAnomalyNotificationsController_remove
       summary: Supprimer une notification
@@ -1331,7 +1186,7 @@ paths:
       responses:
         "204":
           description: Notification supprimée avec succès
-      tags: *a8
+      tags: *a7
   /api/v2/anomaly-notifications:
     get:
       operationId: AnomalyNotificationsController_findAll
@@ -1489,7 +1344,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: &a9
+      tags: &a8
         - organizations
     get:
       operationId: OrganizationController_findAll
@@ -1529,7 +1384,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/OrganizationDto"
-      tags: *a9
+      tags: *a8
   /api/v2/organizations/{id}:
     get:
       operationId: OrganizationController_findOne
@@ -1551,7 +1406,7 @@ paths:
                 $ref: "#/components/schemas/OrganizationDto"
         "404":
           description: Organisation non trouvée
-      tags: *a9
+      tags: *a8
     patch:
       operationId: OrganizationController_update
       summary: Mettre à jour une organisation
@@ -1574,7 +1429,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: *a9
+      tags: *a8
     delete:
       operationId: OrganizationController_delete
       summary: Supprimer une organisation
@@ -1587,7 +1442,7 @@ paths:
       responses:
         "204":
           description: Organisation supprimée
-      tags: *a9
+      tags: *a8
   /api/v2/actorTypes:
     post:
       operationId: ActorTypeController_create
@@ -1620,7 +1475,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorTypeDto"
-      tags: &a10
+      tags: &a9
         - actorTypes
     get:
       operationId: ActorTypeController_findAll
@@ -1637,7 +1492,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ActorTypeDto"
-      tags: *a10
+      tags: *a9
   /api/v2/actorTypes/perms-matrix:
     get:
       operationId: ActorTypeController_getMatrix
@@ -1654,7 +1509,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AppPermsDto"
-      tags: *a10
+      tags: *a9
     patch:
       operationId: ActorTypeController_updateMatrix
       summary: Mettre à jour la matrice des permissions
@@ -1679,7 +1534,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AppPermsDto"
-      tags: *a10
+      tags: *a9
   /api/v2/actorTypes/{id}:
     get:
       operationId: ActorTypeController_findOne
@@ -1699,7 +1554,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorTypeDto"
-      tags: *a10
+      tags: *a9
     patch:
       operationId: ActorTypeController_update
       summary: Mettre à jour un type d’acteur
@@ -1732,7 +1587,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PatchActorTypeDto"
-      tags: *a10
+      tags: *a9
     delete:
       operationId: ActorTypeController_delete
       summary: Supprimer un type d’acteur
@@ -1745,7 +1600,7 @@ paths:
       responses:
         "204":
           description: Type d’acteur supprimé avec succès
-      tags: *a10
+      tags: *a9
   /api/v2/applications/{applicationId}/actors:
     post:
       operationId: ApplicationActorsController_create
@@ -1790,7 +1645,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: &a11
+      tags: &a10
         - Actors
     get:
       operationId: ApplicationActorsController_findAll
@@ -1811,7 +1666,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ActorDto"
-      tags: *a11
+      tags: *a10
   /api/v2/applications/{applicationId}/actors/{id}:
     get:
       operationId: ApplicationActorsController_findOne
@@ -1836,7 +1691,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: *a11
+      tags: *a10
     patch:
       operationId: ApplicationActorsController_updated
       summary: Mettre à jour un acteur
@@ -1866,7 +1721,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: *a11
+      tags: *a10
     delete:
       operationId: ApplicationActorsController_delete
       summary: Supprimer un acteur
@@ -1886,7 +1741,7 @@ paths:
       responses:
         "204":
           description: Acteur supprimé avec succès
-      tags: *a11
+      tags: *a10
   /api/v2/actors/count:
     get:
       operationId: ActorController_countAllActors
@@ -1919,7 +1774,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingOptionDto"
-      tags: &a12
+      tags: &a11
         - HostingOptions
     get:
       operationId: HostingOptionController_findAll
@@ -1959,7 +1814,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/HostingOptionDto"
-      tags: *a12
+      tags: *a11
   /api/v2/hosting-options/sites:
     get:
       operationId: HostingOptionController_findDistinctSites
@@ -1974,7 +1829,7 @@ paths:
                 type: array
                 items:
                   type: string
-      tags: *a12
+      tags: *a11
   /api/v2/hosting-options/platforms:
     get:
       operationId: HostingOptionController_findDistinctPlatforms
@@ -1989,7 +1844,7 @@ paths:
                 type: array
                 items:
                   type: string
-      tags: *a12
+      tags: *a11
   /api/v2/hosting-options/providers:
     get:
       operationId: HostingOptionController_findDistinctProviders
@@ -2004,7 +1859,7 @@ paths:
                 type: array
                 items:
                   type: string
-      tags: *a12
+      tags: *a11
   /api/v2/hosting-options/{id}:
     get:
       operationId: HostingOptionController_findOne
@@ -2024,7 +1879,7 @@ paths:
                 $ref: "#/components/schemas/HostingOptionDto"
         "404":
           description: Hosting option not found
-      tags: *a12
+      tags: *a11
     patch:
       operationId: HostingOptionController_update
       summary: Update hosting option by ID
@@ -2049,7 +1904,7 @@ paths:
                 $ref: "#/components/schemas/HostingOptionDto"
         "404":
           description: Hosting option not found
-      tags: *a12
+      tags: *a11
     delete:
       operationId: HostingOptionController_remove
       summary: Delete hosting option by ID
@@ -2064,7 +1919,7 @@ paths:
           description: Hosting option deleted successfully
         "404":
           description: Hosting option not found
-      tags: *a12
+      tags: *a11
   /api/v2/applications/{applicationId}/links:
     post:
       operationId: ApplicationLinksController_create
@@ -2089,7 +1944,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: &a13
+      tags: &a12
         - Links
     get:
       operationId: ApplicationLinksController_findAll
@@ -2110,7 +1965,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/LinkDto"
-      tags: *a13
+      tags: *a12
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
       operationId: ApplicationLinksController_update
@@ -2141,7 +1996,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: *a13
+      tags: *a12
     delete:
       operationId: ApplicationLinksController_delete
       summary: Delete a link for an application
@@ -2161,7 +2016,7 @@ paths:
       responses:
         "204":
           description: Link deleted successfully
-      tags: *a13
+      tags: *a12
   /api/v2/applications/{applicationId}/compliances:
     post:
       operationId: ApplicationCompliancesController_create
@@ -2186,7 +2041,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: &a14
+      tags: &a13
         - Compliances
     get:
       operationId: ApplicationCompliancesController_findOne
@@ -2205,7 +2060,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: *a14
+      tags: *a13
     patch:
       operationId: ApplicationCompliancesController_update
       summary: Update the compliance for an application
@@ -2229,7 +2084,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: *a14
+      tags: *a13
   /api/v2/compliances/count:
     get:
       operationId: ComplianceController_countAllCompliances
@@ -2278,11 +2133,6 @@ components:
             openid: OpenID scope
             profile: Profile scope
       description: OAuth2 authentication using Keycloak
-    api_key:
-      type: apiKey
-      in: header
-      name: x-refapp-token
-      description: Token authentication
   schemas:
     relationType:
       type: string
@@ -2340,18 +2190,9 @@ components:
         - add
         - update
         - delete
-    UserType:
-      type: string
-      enum:
-        - human
-        - bot
     UserEntity:
       type: object
       properties:
-        type:
-          $ref: "#/components/schemas/UserType"
-        id:
-          type: string
         keycloakId:
           type: string
         email:
@@ -2371,8 +2212,7 @@ components:
           type: string
           nullable: true
       required:
-        - type
-        - id
+        - keycloakId
         - email
         - adminLevel
         - organizationId
@@ -2532,7 +2372,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a15
+          example: &a14
             - population 1
             - population 2
           description: population associated with the application
@@ -2542,7 +2382,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a16
+          example: &a15
             - finance
             - HR
           description: Purposes of the application
@@ -2550,7 +2390,7 @@ components:
           items:
             type: string
         tags:
-          example: &a17
+          example: &a16
             - tag1
             - tag2
           description: Tags associated with the application
@@ -2561,7 +2401,7 @@ components:
           $ref: "#/components/schemas/ApplicationStatus"
         labels:
           description: Liste des labels alternatifs associés à l’application
-          example: &a18
+          example: &a17
             - source: ""
               value: My App
           type: array
@@ -2683,7 +2523,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a15
+          example: *a14
           description: population associated with the application
           type: array
           items:
@@ -2691,13 +2531,13 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a16
+          example: *a15
           description: Purposes of the application
           type: array
           items:
             type: string
         tags:
-          example: *a17
+          example: *a16
           description: Tags associated with the application
           type: array
           items:
@@ -2706,7 +2546,7 @@ components:
           $ref: "#/components/schemas/ApplicationStatus"
         labels:
           description: Liste des labels alternatifs associés à l’application
-          example: *a18
+          example: *a17
           type: array
           items:
             $ref: "#/components/schemas/CreateLabelDto"
@@ -2807,149 +2647,6 @@ components:
           description: ID of the hosting option
         applicationId:
           type: string
-    TokenDto:
-      type: object
-      properties:
-        id:
-          type: string
-          example: abc123def456ghi789jkl012mno345pq
-          description: Identifiant unique du token
-        adminLevel:
-          enum: &a19
-            - 0
-            - 10
-            - 20
-            - 30
-          type: number
-          example: 10
-          description: Niveau d'administration du token
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-        status:
-          type: object
-          example: active
-          description: Statut du token
-      required:
-        - id
-        - description
-        - name
-        - status
-    CreateServiceTokenDto:
-      type: object
-      properties:
-        adminLevel:
-          enum:
-            - 0
-            - 10
-            - 20
-            - 30
-          type: number
-          example: 10
-          description: Niveau d'administration du token
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-      required:
-        - adminLevel
-        - description
-        - name
-    ExposedTokenDto:
-      type: object
-      properties:
-        id:
-          type: string
-          example: abc123def456ghi789jkl012mno345pq
-          description: Identifiant unique du token
-        adminLevel:
-          enum: *a19
-          type: number
-          example: 10
-          description: Niveau d'administration du token
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-        status:
-          type: object
-          example: active
-          description: Statut du token
-        password:
-          type: string
-          example: xyz987uvw654rst321opq098nml765kj
-          description: Valeur du token (ne sera pas stockée, à afficher une seule fois)
-      required:
-        - id
-        - description
-        - name
-        - status
-        - password
-    CreatePersonalTokenDto:
-      type: object
-      properties:
-        adminLevel:
-          enum:
-            - 0
-            - 10
-            - 20
-            - 30
-          type: number
-          example: 10
-          description: Niveau d'administration du token personnel (optionnel). Il ne
-            pourra pas être supérieur à celui de l'utilisateur créant le token.
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-      required:
-        - description
-        - name
-    RegenerateTokenDto:
-      type: object
-      properties:
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
     CreateAnomalyNotificationRequestDto:
       type: object
       properties:
@@ -2963,12 +2660,12 @@ components:
     Notifier:
       type: object
       properties:
-        id:
+        keycloakId:
           type: string
         email:
           type: string
       required:
-        - id
+        - keycloakId
         - email
     GetAnomalyNotificationDto:
       type: object
@@ -3448,7 +3145,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a20
+          enum: &a18
             - OK
             - KO
           type: string
@@ -3474,7 +3171,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a21
+          enum: &a19
             - S3
             - LOCAL
             - EXTERNE
@@ -3485,7 +3182,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a22
+          enum: &a20
             - OK
             - KO
           type: string
@@ -3564,7 +3261,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a20
+          enum: *a18
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -3588,7 +3285,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a21
+          enum: *a19
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -3596,7 +3293,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a22
+          enum: *a20
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -3679,7 +3376,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a20
+          enum: *a18
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -3703,7 +3400,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a21
+          enum: *a19
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -3711,7 +3408,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a22
+          enum: *a20
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -3786,4 +3483,3 @@ components:
         - version
 security:
   - oauth2: []
-  - api_key: []
