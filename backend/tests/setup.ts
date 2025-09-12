@@ -15,7 +15,6 @@ export async function setupApp(): Promise<INestApplication> {
   setupSwagger(app, {
     writeYaml: false,
     onlyWriteSwagger: false,
-    baseUrl: process.env.BASE_URL,
   }, {
     baseUrl: process.env.KEYCLOAK_BASE_URL,
     realm: process.env.KEYCLOAK_REALM,

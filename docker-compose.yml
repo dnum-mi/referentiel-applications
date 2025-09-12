@@ -31,7 +31,6 @@ services:
       - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
       - AUTH_VERIFY_JWT=true
       - DISABLE_PINO_LOGGER=true
-      - BASE_URL=http://localhost:3500
       - KEYCLOAK_CLIENT_ID=referentiel-applications
     depends_on:
       - postgres
@@ -83,7 +82,6 @@ services:
       - /app/node_modules
     command: sh -c "npm install -g pnpm && pnpm install && pnpm dev"
     environment:
-      - VITE_RDA_API_URL=http://localhost:3500
       - VITE_RDA_APP_VERSION=development
       - VITE_RDA_MATOMO_URL=http://localhost:8083
       - VITE_RDA_MATOMO_SITE_ID=1

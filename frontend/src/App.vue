@@ -127,7 +127,7 @@ const ecosystemLinks = [
   { label: "Code source", href: "http://github.com/dnum-mi/referentiel-applications" },
   {
     label: "Api du référentiel",
-    href: `${import.meta.env.VITE_RDA_API_URL ?? "VITE_RDA_API_URL"}/api/v2/swagger/`,
+    href: "/api/v2/swagger/",
   },
 ];
 const mandatoryLinks = computed(() => [
