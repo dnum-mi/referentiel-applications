@@ -1,44 +1,50 @@
 <script lang="ts" setup>
-import { computed, toRef } from "vue";
+import { computed } from "vue";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
 import type { ApplicationStatus } from "@/client/types.gen";
 
 const searchStore = useApplicationSearchStore();
-const selectedStatuses = toRef(searchStore.filters, "status__in");
 
-const { run: debouncedSearch } = useDebouncedFn(() => {
-  searchStore.setFilter("page", 0);
-  searchStore.searchApplications();
-}, 300);
+const statusOptions = Object.keys(statusApplicationDictionary)
+  .map(value => ({
+    value,
+    label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
+    name: value,
+  }));
 
-const statusOptions = computed(() =>
-  Object.keys(statusApplicationDictionary)
-    .filter(key => key !== "select")
-    .map(value => ({
-      value,
-      label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
-      name: value,
-    })),
-);
+const selectedStatus = computed(() => searchStore.filters.status__in);
 
-function onStatusChange(status__in: ApplicationStatus[]) {
-  searchStore.setFilter("status__in", status__in.length > 0 ? status__in : undefined);
-  searchStore.setFilter("page", 0);
-  debouncedSearch();
+function toggleStatus(value: ApplicationStatus, event: Event) {
+  const checked = (event.target as HTMLInputElement).checked;
+
+  const selected = new Set<ApplicationStatus>(searchStore.filters.status__in || []);
+  if (checked) {
+    selected.add(value);
+  } else {
+    selected.delete(value);
+  }
+
+  searchStore.setFilter({ status__in: Array.from(selected) });
 }
 </script>
 
 <template>
-  <div class="fr-container fr-my-2v">
-    <DsfrCheckboxSet
-      data-testid="status-filter-checkboxes"
-      :model-value="selectedStatuses || []"
-      :options="statusOptions"
-      legend="Filtrer par statut"
-      name="status"
-      @update:model-value="onStatusChange"
-    />
+  <div>
+    <legend class="fr-label fr-mb-2w">
+      Priorité de redémarrage
+    </legend>
+    <div data-testid="status-filter">
+      <label v-for="option in statusOptions" :key="option.value" class="checkbox-item">
+        <input
+          type="checkbox"
+          :value="option.value"
+          :checked="selectedStatus?.includes(option.value as ApplicationStatus)"
+          :data-testid="`status-option-${option.value}`"
+          @change="(e) => toggleStatus(option.value as ApplicationStatus, e)"
+        >
+        {{ option.label }}
+      </label>
+    </div>
   </div>
 </template>

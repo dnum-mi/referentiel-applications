@@ -40,7 +40,7 @@ function updateMode() {
 
 // Mise à jour du tri (colonne cliquée)
 watch(currentSortedColumn, (val) => {
-  searchStore.setFilter("sortBy", val);
+  searchStore.setFilter({ sortBy: val });
 });
 
 watch([() => searchStore.page, () => searchStore.limit], () => {
@@ -72,7 +72,11 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         <CreateApplication data-testid="application-create" />
       </div>
 
-      <ApplicationTableView v-if="displayMode === 'table'" v-model:sorted-by="currentSortedColumn" data-testid="application-table-view" />
+      <ApplicationTableView
+        v-if="displayMode === 'table'"
+        v-model:sorted-by="currentSortedColumn"
+        data-testid="application-table-view"
+      />
       <ApplicationCardView v-else data-testid="application-card-view" />
     </main>
   </div>

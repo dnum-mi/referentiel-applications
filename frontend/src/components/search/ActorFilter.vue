@@ -2,7 +2,6 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
 
 const searchStore = useApplicationSearchStore();
 const actorTypeStore = useActorTypeStore();
@@ -10,17 +9,14 @@ const actorTypeStore = useActorTypeStore();
 const selectedActorTypeId = ref("");
 
 const actorTypeOptions = computed(() =>
-  actorTypeStore.actorTypes.map(actor => ({
+  [{
+    text: "Tous",
+    value: "",
+  }, ...actorTypeStore.actorTypes.map(actor => ({
     text: actor.label,
     value: actor.id,
-  })),
+  }))],
 );
-
-const { run: debouncedSearch } = useDebouncedFn(() => {
-  searchStore.searchApplications();
-}, 300);
-
-const selectedActor = computed(() => actorTypeStore.actorTypes.find(actor => actor.id === selectedActorTypeId.value));
 
 onMounted(async () => {
   await actorTypeStore.fetchAll();
@@ -37,18 +33,18 @@ watch(selectedActorTypeId, (newVal) => {
   if (newVal) {
     const selected = actorTypeStore.actorTypes.find(actor => actor.id === newVal);
     if (selected) {
-      searchStore.setFilter("actorType", selected.code);
+      searchStore.setFilter({
+        actorType: selected.code,
+        page: 0,
+      });
     }
-  } else {
-    searchStore.setFilter("actorType", undefined);
+    return;
   }
-  searchStore.setFilter("page", 0);
-  debouncedSearch();
+  searchStore.setFilter({
+    actorType: undefined,
+    page: 0,
+  });
 });
-
-function clearActorType() {
-  selectedActorTypeId.value = "";
-}
 
 watch(
   () => searchStore.filters.actorType,
@@ -63,12 +59,6 @@ watch(
 <template>
   <div class="filter-section">
     <DsfrSelect v-model="selectedActorTypeId" :options="actorTypeOptions" label="Type d'acteur" data-testid="actor-filter-select" />
-    <div v-if="selectedActor" class="selected-tag" data-testid="actor-filter-selected">
-      <span class="tag-label">{{ selectedActor.label }}</span>
-      <button class="tag-remove" title="Retirer ce filtre" data-testid="actor-filter-remove" @click="clearActorType">
-        ×
-      </button>
-    </div>
   </div>
 </template>
 
