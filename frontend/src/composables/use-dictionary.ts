@@ -1,4 +1,4 @@
-import type { ApplicationPriorityRestart } from "@/client/types.gen.js";
+import type { ApplicationPriorityRestart, ApplicationStatus } from "@/client/types.gen.js";
 
 export const statusDictionary = {
   in_pending: "En attente",
@@ -111,7 +111,7 @@ export const restartPrioritiesConfig = {
   },
 } as const satisfies Record<ApplicationPriorityRestart, { type: string, label: string, shortLabel: string, tooltip: string }>;
 
-export const statusApplicationDictionary = {
+export const statusApplicationDictionary: Record<ApplicationStatus, string> = {
   under_construction: "En construction",
   in_production_mvp: "MVP en production",
   in_production: "En production",

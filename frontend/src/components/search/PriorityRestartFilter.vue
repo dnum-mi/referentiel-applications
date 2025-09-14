@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { toRef } from "vue";
+import { computed } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 import type { ApplicationPriorityRestart } from "@/client/types.gen.js";
 
 const searchStore = useApplicationSearchStore();
 
-const selectedPriorities = toRef(searchStore.filters, "priorityRestart");
+const selectedPriorities = computed(() => searchStore.filters.priorityRestart);
 
 function togglePriority(value: ApplicationPriorityRestart, event: Event) {
   const checked = (event.target as HTMLInputElement).checked;
@@ -18,9 +18,7 @@ function togglePriority(value: ApplicationPriorityRestart, event: Event) {
     selected.delete(value);
   }
 
-  searchStore.setFilter("page", 0);
-  searchStore.setFilter("priorityRestart", Array.from(selected));
-  searchStore.searchApplications();
+  searchStore.setFilter({ priorityRestart: Array.from(selected) });
 }
 </script>
 

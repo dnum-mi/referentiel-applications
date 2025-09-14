@@ -2,7 +2,6 @@
 import { ref, onMounted, watch } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useSiteStore } from "@/stores/siteStore";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
 import PriorityRestartFilter from "./PriorityRestartFilter.vue";
 import { DsfrInput } from "@gouvminint/vue-dsfr";
 import type { HostingOptionDto } from "@/client/types.gen.js";
@@ -19,10 +18,6 @@ function formatOptionText(option: HostingOptionDto): string {
   return [option.provider, option.platform, option.site, option.building || "", option.room || ""].filter(Boolean).join(" - ");
 }
 
-const { run: debouncedSearch } = useDebouncedFn(() => {
-  searchStore.searchApplications();
-}, 300);
-
 onMounted(async () => {
   siteStore.fetchAll();
   try {
@@ -34,9 +29,7 @@ onMounted(async () => {
 });
 
 watch(hostingSearchInput, (value?: string) => {
-  searchStore.setFilter("hostingSearch", value);
-  searchStore.setFilter("page", 0);
-  debouncedSearch();
+  searchStore.setFilter({ hostingSearch: value, page: 0 });
 });
 
 watch(

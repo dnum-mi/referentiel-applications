@@ -47,18 +47,15 @@ watch(
     const sortField = columnToFieldMap[actualColumn] || actualColumn;
     const orderValue = desc === true ? "desc" : "asc";
 
-    searchStore.setFilter("sortBy", sortField);
-    searchStore.setFilter("order", orderValue);
-    searchStore.setFilter("page", 0);
-    searchStore.searchApplications();
+    searchStore.setFilter({ sortBy: sortField, order: orderValue });
   },
   {
     flush: "post",
   },
 );
 
-const rows = computed(() =>
-  searchStore.results.map((app: any) => ({
+const rows = computed(() => {
+  const rows = searchStore.results.map((app: any) => ({
     IQ: { value: app.quality !== null ? `${app.quality}%` : "0%" },
     Nom: app,
     Priorité: app,
@@ -78,8 +75,12 @@ const rows = computed(() =>
     Tags: {
       tags: app.tags?.join(", ") || "-",
     },
-  })),
-);
+  }));
+  if (searchStore.filters.order === "desc") {
+    rows.reverse();
+  }
+  return rows;
+});
 
 async function exportToExcel() {
   try {
@@ -88,6 +89,10 @@ async function exportToExcel() {
     console.error("Excel export error:", error);
     alert("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }
+}
+
+function updateSortedColumn(key: string | undefined) {
+  searchStore.setFilter({ sortBy: key || "label", page: 0 });
 }
 </script>
 
@@ -108,12 +113,16 @@ async function exportToExcel() {
   <DsfrDataTable
     v-model:sorted-by="sortBy"
     v-model:sorted-desc="sortedDesc"
+    title="Liste des applications"
+    no-caption
     :headers-row="['IQ', 'Nom', 'Priorité', 'Hébergement', 'Tags']"
     :rows="rows"
     sortable-rows
     vertical-borders
     :pagination="false"
     data-testid="application-table"
+    @update:sorted-by="updateSortedColumn"
+    @update:sorted-desc="searchStore.setOrder"
   >
     <template #cell="{ colKey, cell }">
       <template v-if="colKey === 'Nom'">

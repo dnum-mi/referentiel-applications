@@ -10,6 +10,7 @@ import OrganizationFilter from "@/components/search/OrganizationFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import StatusFilter from "./StatusFilter.vue";
+import { DsfrButton } from "@gouvminint/vue-dsfr";
 
 const sidebarOpen = ref(true);
 const searchStore = useApplicationSearchStore();
@@ -23,7 +24,6 @@ function toggleSidebar() {
 
 function resetAllFilters() {
   searchStore.resetFilters();
-  searchStore.searchApplications();
 }
 </script>
 
@@ -31,9 +31,15 @@ function resetAllFilters() {
   <Transition name="sidebar-width">
     <aside v-if="sidebarOpen" class="sidebar" data-testid="sidebar-filter">
       <div class="filters-wrapper">
-        <p class="reset-link" title="Réinitialiser les filtres" data-testid="sidebar-reset-filters" @click="resetAllFilters">
+        <DsfrButton
+          tertiary
+          size="small"
+          class="reset-link"
+          data-testid="sidebar-reset-filters-button"
+          @click="resetAllFilters"
+        >
           ✕ Réinitialiser
-        </p>
+        </DsfrButton>
 
         <h5>Filtres</h5>
         <p class="total-count" data-testid="sidebar-total-count">
@@ -146,16 +152,7 @@ function resetAllFilters() {
 }
 
 .reset-link {
-  margin-left: auto;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  user-select: none;
   align-self: flex-end;
-}
-
-.reset-link:hover {
-  text-decoration: underline;
 }
 
 .sidebar-header {

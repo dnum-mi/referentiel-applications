@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "@/api/index.js";
 import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
 
 export type Filters = Exclude<ApplicationControllerSearchData["query"], undefined>;
 
@@ -25,8 +26,8 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     hostingSearch: undefined,
     organizationLabel: undefined,
     actorType: undefined,
-    iqGte: undefined,
-    iqLte: undefined,
+    iqGte: 0,
+    iqLte: 100,
     search: undefined,
   } as const satisfies Filters;
 
@@ -42,12 +43,41 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     set: val => (filters.value.limit = val),
   });
 
-  function setFilter<T extends keyof Filters>(key: T, value: Filters[T]) {
-    filters.value[key] = value;
+  const { run: debouncedSearch } = useDebouncedFn(() => {
+    searchApplications();
+  }, 300);
+
+  watch(filters, () => {
+    debouncedSearch();
+  }, { deep: true, immediate: true });
+
+  function setFilter<T extends keyof Filters>(values: Partial<Pick<Filters, T>>) {
+    filters.value = { ...filters.value, ...values };
+  }
+
+  function setOrder(ascending: boolean) {
+    filters.value.order = ascending ? "asc" : "desc";
   }
 
   function resetFilters() {
     filters.value = { ...initialFilters };
+  }
+
+  function cleanFilters(filters: Filters): Filters {
+    const cleaned: Filters = { ...filters };
+    Object.entries(cleaned).forEach(([key, value]) => {
+      if (typeof value === "number") {
+        return;
+      }
+      if (
+        value == null
+        || value === ""
+        || (Array.isArray(value) && value.length === 0)
+      ) {
+        delete cleaned[key as keyof Filters];
+      }
+    });
+    return cleaned;
   }
 
   async function searchApplications(customFilters?: Filters, store: boolean = true) {
@@ -55,7 +85,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     error.value = null;
 
     try {
-      const query = customFilters || filters.value;
+      const query = cleanFilters(customFilters || filters.value);
 
       const response = await api.applicationControllerSearch({
         query,
@@ -90,6 +120,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     initialFilters,
     searchApplications,
     setFilter,
+    setOrder,
     resetFilters,
   };
 });

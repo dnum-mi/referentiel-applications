@@ -45,7 +45,7 @@ body,
 .selected-tag {
   display: inline-flex;
   align-items: center;
-  background: #e5e5e5;
+  background: var(--background-raised-grey-hover) !important;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
   margin-top: 0.3rem;
