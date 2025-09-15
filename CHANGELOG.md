@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.37.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.37.0...v1.37.1) (2025-09-15)
+
+
+### Bug Fixes
+
+* client bad api url ([941efc6](https://github.com/dnum-mi/referentiel-applications/commit/941efc601a4b4aaa973087412a4f1ce775998ee9))
+
 ## [1.37.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.36.0...v1.37.0) (2025-09-15)
 
 
