@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.37.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.36.0...v1.37.0) (2025-09-15)
+
+
+### Features
+
+* :sparkles: improve organization filter ux and fix full text search ([f3a34c6](https://github.com/dnum-mi/referentiel-applications/commit/f3a34c6b3b16990e4d5a2369ab9a6eaa5b3a849a))
+* implement configuration retrieval for Keycloak initialization ([5029ee9](https://github.com/dnum-mi/referentiel-applications/commit/5029ee9a271c4af9e69ca784561c0f15ddc5e4af))
+
+
+### Bug Fixes
+
+* add route configuration to init client ([360cabf](https://github.com/dnum-mi/referentiel-applications/commit/360cabf40a030ae25f3e40479fd8780491eb7ed4))
+* edit permissions check for actors based on user permissions ([e4ce7da](https://github.com/dnum-mi/referentiel-applications/commit/e4ce7da984455b850bf65fc3655119ab19851a48))
+
 ## [1.36.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.35.0...v1.36.0) (2025-09-10)
 
 
