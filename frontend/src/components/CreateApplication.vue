@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import axios from "axios";
 import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
-import type { Application } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
+import api from "@/api/index";
+import type { ApplicationDto, CreateApplicationDto } from "@/client/types.gen";
 
 const toaster = useToasterStore();
 const applicationModal = useModal();
@@ -14,11 +14,11 @@ const isSubmitting = ref(false);
 const userStore = useUserStore();
 const router = useRouter();
 
-async function createApplication(newApplication: Application) {
+async function createApplication(newApplication: CreateApplicationDto) {
   try {
     applicationModal.closeModal();
-    const response = await axios.post<Application>("/applications/", newApplication);
-    const createdApp = response.data;
+    const response = await api.applicationControllerCreate({ body: newApplication });
+    const createdApp = response.data as ApplicationDto;
 
     toaster.addSuccessMessage("Application créée avec succès !");
     router.push({ name: "application", params: { id: createdApp.id } });
