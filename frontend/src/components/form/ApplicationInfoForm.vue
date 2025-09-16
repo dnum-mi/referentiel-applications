@@ -4,10 +4,14 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
+import type { ApplicationPriorityRestart, ApplicationStatus, CreateApplicationDto } from "@/client/types.gen";
 
 defineProps<{ isSubmitting?: boolean }>();
 
-const emit = defineEmits(["create:application", "submit", "cancel"]);
+const emit = defineEmits<{
+  submit: [data: CreateApplicationDto]
+  cancel: []
+}>();
 
 const toaster = useToasterStore();
 
@@ -40,14 +44,14 @@ function handleSubmit() {
 
   emit("submit", {
     label: form.value.label,
-    shortName: form.value.shortName || null,
-    logo: null,
+    shortName: form.value.shortName,
+    logo: undefined,
     description: form.value.description,
     targetPopulations,
     purposes,
     tags,
-    status: form.value.status,
-    priorityRestart: form.value.priorityRestart || null,
+    status: form.value.status as ApplicationStatus,
+    priorityRestart: form.value.priorityRestart as ApplicationPriorityRestart,
     labels: [],
   });
 }
