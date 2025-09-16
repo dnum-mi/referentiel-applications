@@ -2,8 +2,7 @@
 import { ref, onMounted } from "vue";
 import type { PropType } from "vue";
 import type { Application } from "@/models/Application";
-import type { OrganizationDto } from "@/client/types.gen.js";
-import type { ActorType } from "@/models/ActorType";
+import type { OrganizationDto, ActorTypeDto } from "@/client/types.gen.js";
 import type { Actor } from "@/models/Actor";
 import { useOrganizationStore } from "@/stores/organizationStore";
 
@@ -15,7 +14,7 @@ const props = defineProps({
     required: true,
   },
   actorTypes: {
-    type: Array as PropType<ActorType[]>,
+    type: Array as PropType<ActorTypeDto[]>,
     required: true,
   },
 });

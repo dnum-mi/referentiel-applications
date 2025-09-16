@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { Label } from "@/models/Application";
 import { ref, computed, onMounted } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
@@ -18,7 +17,7 @@ const emit = defineEmits(["update:application", "submit", "cancel"]);
 
 const toaster = useToasterStore();
 
-const initialLabels = ref<Label[]>([]);
+const initialLabels = ref<LabelDto[]>([]);
 
 const statusOptions = computed(() =>
   Object.keys(statusApplicationDictionary).map(value => ({

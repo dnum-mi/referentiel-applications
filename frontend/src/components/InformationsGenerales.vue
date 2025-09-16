@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue";
-import type { ApplicationWithPerms, Label } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import ApplicationForm from "./form/ApplicationForm.vue";
@@ -125,7 +125,7 @@ async function updateApplication(updatedData: any) {
       });
     }
     if (updatedData.deletedLabels.length > 0) {
-      await Promise.all(updatedData.deletedLabels.map((label: Label) => api.labelsControllerDelete({
+      await Promise.all(updatedData.deletedLabels.map((label: LabelDto) => api.labelsControllerDelete({
         path: {
           applicationId: label.applicationId,
           id: label.id,
@@ -133,7 +133,7 @@ async function updateApplication(updatedData: any) {
       })));
     }
     if (updatedData.updatedLabels.length > 0) {
-      await Promise.all(updatedData.updatedLabels.map((label: Label) => api.labelsControllerUpdate({
+      await Promise.all(updatedData.updatedLabels.map((label: LabelDto) => api.labelsControllerUpdate({
         path: {
           applicationId: label.applicationId,
           id: label.id,
@@ -142,7 +142,7 @@ async function updateApplication(updatedData: any) {
       })));
     }
     if (updatedData.newLabels.length > 0) {
-      await Promise.all(updatedData.newLabels.map((label: Label) => api.labelsControllerCreate({
+      await Promise.all(updatedData.newLabels.map((label: LabelDto) => api.labelsControllerCreate({
         path: {
           applicationId: props.application.id,
         },

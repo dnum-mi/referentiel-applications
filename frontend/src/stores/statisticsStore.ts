@@ -1,13 +1,13 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { GroupBy, IqAvg } from "@/models/Stat";
+import type { GetIqAvgGroupedDto } from "@/client";
 import api from "@/api/index";
 
 export const useStatisticsStore = defineStore("statisticsStore", () => {
   const totalApplications = ref<number | null>(null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
-  const iqStats = ref<IqAvg[]>([]);
+  const iqStats = ref<GetIqAvgGroupedDto[]>([]);
   const totalCompliances = ref<number>(0);
 
   async function countApplications() {
@@ -31,7 +31,7 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     return response.data;
   }
 
-  async function fetchIqStats(from?: string, to?: string, groupBy: GroupBy = "mois") {
+  async function fetchIqStats(from?: string, to?: string, groupBy: "jour" | "semaine" | "mois" | "année" = "mois") {
     isLoading.value = true;
     error.value = null;
     const response = await api.statsControllerGetIqAvgGrouped({ query: { from, to, groupBy } });

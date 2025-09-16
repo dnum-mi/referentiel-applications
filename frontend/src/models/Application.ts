@@ -1,4 +1,4 @@
-import type { ApplicationDto, ApplicationStatus, AppPermsDto, RelationType } from "@/client/types.gen";
+import type { ApplicationDto, ApplicationStatus, AppPermsDto, RelationType, LinkDto, LabelDto, MetadataDto } from "@/client/types.gen";
 import type { Actor } from "./Actor";
 
 // TODO sortir ce modèle et utiliser ApplicationDto
@@ -6,7 +6,7 @@ export interface Application {
   id: string
   label: string
   shortName?: string
-  labels?: Label[]
+  labels?: LabelDto[]
   status: ApplicationStatus // New field for application status
   description?: string
   targetPopulations?: string[]
@@ -20,35 +20,13 @@ export interface Application {
 
   actors?: Actor[]
   compliances?: Compliance[]
-  externalRessource?: ExternalRessource[]
+  externalRessource?: LinkDto[]
   relationsAsSource?: Relation[]
   relationsAsTarget?: Relation[]
-  metadatas: Metadata[]
+  metadatas: MetadataDto[]
 }
 
 export type ApplicationWithPerms = ApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
-
-export interface Label {
-  id: string
-  source: string
-  value: string
-  metadataId: string
-  applicationId: string
-}
-
-export interface Metadata {
-  id?: string
-  applicationId?: string
-  createdAt: string
-  createdBy?: string
-  description?: string
-  action?: string
-}
-
-export interface FirstAndLastMetadata {
-  first: Metadata | null
-  last: Metadata | null
-}
 
 export interface Compliance {
   id: string
@@ -92,12 +70,6 @@ export interface Compliance {
   // RGPD specific fields
   rgpd_has_aipd?: boolean
   rgpd_dpo_name?: string
-}
-export interface ExternalRessource {
-  id: string
-  link: string
-  description: string
-  type: string
 }
 export interface Event {
   id: string

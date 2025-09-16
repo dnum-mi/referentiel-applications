@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, defineProps } from "vue";
 import type { PropType } from "vue";
-import type { ExternalRessource } from "@/models/Application";
+import type { LinkDto } from "@/client/types.gen";
 import { linkTypesDict } from "@/composables/use-dictionary";
 
 const props = defineProps({
   initialData: {
-    type: Object as PropType<ExternalRessource>,
+    type: Object as PropType<LinkDto>,
     required: false,
   },
   isSubmitting: {
