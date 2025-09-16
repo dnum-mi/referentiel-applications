@@ -10,41 +10,35 @@ const statusOptions = Object.keys(statusApplicationDictionary)
   .map(value => ({
     value,
     label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
-    name: value,
   }));
 
-const selectedStatus = computed(() => searchStore.filters.status__in);
-
-function toggleStatus(value: ApplicationStatus, event: Event) {
-  const checked = (event.target as HTMLInputElement).checked;
-
-  const selected = new Set<ApplicationStatus>(searchStore.filters.status__in || []);
-  if (checked) {
-    selected.add(value);
-  } else {
-    selected.delete(value);
+const selectedStatusNames = computed<string>(() => {
+  const names = statusOptions
+    .filter(option => searchStore.filters.status__in?.includes(option.value as ApplicationStatus))
+    .map(option => option.label);
+  if (names.length === statusOptions.length) {
+    return "Tous";
   }
-
-  searchStore.setFilter({ status__in: Array.from(selected) });
-}
+  if (names.length === 0) {
+    return "Sélectionner...";
+  }
+  return names.join(", ");
+});
+const values = ref<string[]>([]);
+watch(values, (vals) => {
+  searchStore.setFilter({ status__in: vals as ApplicationStatus[] });
+});
 </script>
 
 <template>
-  <div>
-    <legend class="fr-label fr-mb-2w">
-      Priorité de redémarrage
-    </legend>
-    <div data-testid="status-filter">
-      <label v-for="option in statusOptions" :key="option.value" class="checkbox-item">
-        <input
-          type="checkbox"
-          :value="option.value"
-          :checked="selectedStatus?.includes(option.value as ApplicationStatus)"
-          :data-testid="`status-option-${option.value}`"
-          @change="(e) => toggleStatus(option.value as ApplicationStatus, e)"
-        >
-        {{ option.label }}
-      </label>
-    </div>
-  </div>
+  <DsfrMultiselect
+    v-model="values"
+    label="Statut"
+    :options="statusOptions"
+    :search="false"
+    :select-all="false"
+    id-key="value"
+    label-key="label"
+    :button-label="selectedStatusNames"
+  />
 </template>

@@ -6,7 +6,7 @@ import IqChart from "@/components/stats/IqChart.vue";
 </script>
 
 <template>
-  <div class="grid-2x2-container" data-testid="quality-page">
+  <div class="fr-mt-3w fr-mt-md-5w grid-2x2-container" data-testid="quality-page">
     <div class="cell alerts-cell">
       <GlobalStats data-testid="quality-global-stats" />
     </div>

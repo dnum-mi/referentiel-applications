@@ -5,7 +5,7 @@ import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import ActorFilter from "@/components/search/ActorFilter.vue";
 import HostingFilter from "@/components/search/HostingFilter.vue";
 import QualityFilter from "@/components/search/QualityFilter.vue";
-import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
+import ApplicationFilter from "@/components/search/TagFilter.vue";
 import OrganizationFilter from "@/components/search/OrganizationFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
@@ -76,6 +76,14 @@ function resetAllFilters() {
 </template>
 
 <style scoped>
+.search-zone {
+  display: flex;
+  padding: 0.5rem;
+  margin-inline: 0.5rem;
+  width: calc(100% - 1rem);
+  background-color: var(--background-raised-grey-hover);
+  border-bottom: 1px solid #e5e7eb;
+}
 .sidebar {
   width: 280px;
   border-right: 1px solid #e5e7eb;

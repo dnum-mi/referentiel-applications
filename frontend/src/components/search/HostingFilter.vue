@@ -2,7 +2,6 @@
 import { ref, onMounted, watch } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useSiteStore } from "@/stores/siteStore";
-import PriorityRestartFilter from "./PriorityRestartFilter.vue";
 import { DsfrInput } from "@gouvminint/vue-dsfr";
 import type { HostingOptionDto } from "@/client/types.gen.js";
 import { useHostingStore } from "@/stores/hostingStore.js";
@@ -42,7 +41,6 @@ watch(
 </script>
 
 <template>
-  <PriorityRestartFilter class="fr-mb-2w" data-testid="hosting-priority-restart-filter" />
   <DsfrInput
     v-model="hostingSearchInput"
     label-visible

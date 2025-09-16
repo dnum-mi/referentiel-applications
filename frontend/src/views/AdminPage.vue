@@ -169,7 +169,7 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
 </script>
 
 <template>
-  <div class="fr-container">
+  <div class="fr-container fr-mt-3w fr-mt-md-5w ">
     <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs" data-testid="admin-tabs">
       <DsfrTabContent :panel-id="tabs[0].panelId" :tab-id="tabs[0].tabId">
         <h1 class="fr-h1" data-testid="admin-users-title">

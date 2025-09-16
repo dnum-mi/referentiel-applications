@@ -11,6 +11,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
   const total = ref(0);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  const advancedSearch = ref(false);
 
   const initialFilters = {
     label: undefined,
@@ -110,6 +111,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
   }
 
   return {
+    advancedSearch,
     filters,
     results,
     total,

@@ -9,7 +9,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--center" data-testid="user-profile">
+  <div class="fr-mt-3w fr-mt-md-5w fr-grid-row fr-grid-row--center" data-testid="user-profile">
     <div class="fr-col-12 fr-col-md-8">
       <div v-if="userStore.user" class="fr-card" data-testid="user-profile-card">
         <div class="fr-card__body fr-mt-2w">

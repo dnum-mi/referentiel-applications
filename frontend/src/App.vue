@@ -215,7 +215,6 @@ function close() {
       :service-title="serviceTitle"
       :logo-text="logoText"
       :quick-links="quickLinks"
-      :show-search="userStore.authenticated"
       data-testid="main-header"
     >
       <template #mainnav>
@@ -239,7 +238,7 @@ function close() {
       </ul>
     </div>
   </div>
-  <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w">
+  <div class="fr-mb-5w">
     <RouterView :key="route.params.id" />
   </div>
 

@@ -5,10 +5,14 @@ import { useStatisticsStore } from "@/stores/statisticsStore";
 
 import ApplicationTableView from "@/components/ApplicationTableView.vue";
 import ApplicationCardView from "@/components/ApplicationCardView.vue";
-import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
+import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "@/models/user";
+import { useApplicationStore } from "@/stores/applicationStore";
 
 const statsStore = useStatisticsStore();
+const applicationStore = useApplicationStore();
+const userStore = useUserStore();
 const searchStore = useApplicationSearchStore();
 
 const currentSortedColumn = ref("label");
@@ -56,19 +60,40 @@ onMounted(async () => {
 });
 
 const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
+async function exportToExcel() {
+  try {
+    await applicationStore.downloadExcel(searchStore.filters);
+  } catch (error) {
+    console.error("Excel export error:", error);
+    alert("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
+  }
+}
 </script>
 
 <template>
   <div class="layout" data-testid="application-view">
-    <SidebarFilters data-testid="application-filters" />
+    <FilterForm id="application-search" data-testid="application-search" />
 
     <main class="main-content">
       <div v-if="showLoader" class="loader" data-testid="application-loader">
         <AppLoader />
       </div>
 
-      <div class="toggle-and-create-container" data-testid="application-toggle-create">
+      <div class="application-actions" data-testid="application-toggle-create">
         <DsfrToggleSwitch v-model="isMobile" active-text="Mode Tuiles" inactive-text="Mode Tableau" data-testid="application-toggle-view" />
+        <div class="mb-4" data-testid="application-table-header">
+          <div class="export-button">
+            <DsfrButton
+              v-if="userStore.adminLevel >= AdminLevel.ADMIN"
+              label="Exporter en Excel"
+              icon="ri-file-excel-2-line"
+              secondary
+              icon-only-size="sm"
+              data-testid="application-export-btn"
+              @click="exportToExcel"
+            />
+          </div>
+        </div>
         <CreateApplication data-testid="application-create" />
       </div>
 
@@ -83,8 +108,15 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 </template>
 
 <style scoped>
+#application-search {
+  width: 100%;
+  align-self: center;
+  padding: 1rem;
+  background-color: var(--background-raised-grey-hover);
+}
 .layout {
   display: flex;
+  flex-direction: column;
   min-height: 100%;
 }
 
@@ -106,7 +138,7 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
   margin-top: 3rem;
 }
 
-.toggle-and-create-container {
+.application-actions {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 1.5rem;
