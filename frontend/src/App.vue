@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import { useToasterStore } from "./stores/toasterStore.js";
 import { routeNames } from "./router/route-names";
@@ -9,29 +9,14 @@ import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore.js";
 import { AdminLevel } from "./models/user.js";
 import { configureClients } from "./api/init-clients.js";
-import { useApplicationSearchStore } from "./stores/applicationSearchStore.js";
+import SearchHeader from "./components/search/SearchHeader.vue";
 
 const route = useRoute();
 
-const instance = getCurrentInstance();
 const userStore = useUserStore();
-const applicationSearchStore = useApplicationSearchStore();
 const toaster = useToasterStore();
 
 configureClients(toaster);
-
-function trackSearch(query: string, source: string, resultCount: number) {
-  const matomo = instance?.proxy?.$matomo;
-  if (!matomo) {
-    console.warn("Matomo non dispo");
-    return;
-  }
-
-  const encoded = encodeURIComponent(query.trim());
-  matomo.setCustomUrl(`/search?q=${encoded}`);
-  matomo.trackSiteSearch(query.trim(), "Applications", resultCount);
-  matomo.trackPageView(`Recherche depuis ${source} : ${query}`);
-}
 
 const appVersion = import.meta.env.VITE_RDA_APP_VERSION ?? "VITE_RDA_APP_VERSION";
 
@@ -149,52 +134,6 @@ const afterMandatoryLinks = [
   },
 ];
 
-const searchQuery = ref("");
-
-const searchResults = ref<any[]>([]);
-const isLoading = ref(false);
-const errorMessage = ref("");
-let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
-
-watch(searchQuery, (newVal) => {
-  if (debounceTimeout) {
-    clearTimeout(debounceTimeout);
-  }
-  debounceTimeout = setTimeout(async () => {
-    try {
-      isLoading.value = true;
-      errorMessage.value = "";
-      const query = newVal.trim();
-      const response = await applicationSearchStore.searchApplications({
-        search: query,
-        limit: 5,
-      }, false);
-      const resultCount = response.total || searchResults.value.length;
-
-      if (!response || !response.results) {
-        errorMessage.value = "Aucun résultat trouvé";
-        searchResults.value = [];
-      } else {
-        searchResults.value = response.results.map(app => ({
-          ...app,
-          label: app.label,
-        }));
-      }
-      trackSearch(query, "le header", resultCount);
-    } catch (error) {
-      instance?.proxy?.$matomo?.trackEvent("Error", "Search Error", error.message);
-    } finally {
-      isLoading.value = false;
-    }
-  }, 300);
-});
-
-function clearSearch() {
-  searchQuery.value = "";
-  searchResults.value = [];
-  instance?.proxy?.$matomo.trackEvent("search", "click", "search-result");
-}
-
 const { setScheme, theme } = useScheme();
 function changeTheme() {
   setScheme(theme.value === "light" ? "dark" : "light");
@@ -208,52 +147,27 @@ function close() {
 </script>
 
 <template>
-  <div class="header-container">
-    <DsfrHeader
-      v-model="searchQuery"
-      :service-description="serviceDescription"
-      :service-title="serviceTitle"
-      :logo-text="logoText"
-      :quick-links="quickLinks"
-      :show-search="userStore.authenticated"
-      data-testid="main-header"
-    >
-      <template #mainnav>
-        <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItems" data-testid="main-navigation" />
-      </template>
-    </DsfrHeader>
-
-    <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown" data-testid="header-search-results">
-      <div v-if="isLoading" class="loading-message" data-testid="header-search-loading">
-        Chargement...
-      </div>
-      <div v-if="errorMessage" class="error-message" data-testid="header-search-error">
-        {{ errorMessage }}
-      </div>
-      <ul v-if="searchResults.length">
-        <li v-for="(app, index) in searchResults" :key="index" data-testid="header-search-item" @click="clearSearch">
-          <router-link :to="{ name: 'application', params: { id: app.id } }" data-testid="router-outlet">
-            {{ app.label || "Application" }}
-          </router-link>
-        </li>
-      </ul>
+  <DsfrHeader
+    :service-description="serviceDescription"
+    :service-title="serviceTitle"
+    :logo-text="logoText"
+    :quick-links="quickLinks"
+    data-testid="main-header"
+  >
+    <div v-if="userStore.authenticated" class="header-container">
+      <SearchHeader />
     </div>
-  </div>
+
+    <template #mainnav>
+      <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItems" data-testid="main-navigation" />
+    </template>
+  </DsfrHeader>
+
   <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w">
     <RouterView :key="route.params.id" />
   </div>
 
   <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :after-mandatory-links :operator-to data-testid="footer" />
-
-  <!-- <DsfrConsent>
-    <p>
-      Nous avons recours à plusieurs cookies afin d'améliorer votre
-      expérience sur cette application. Vos données vous appartiennent
-      et ce bandeau vous permet de sélectionner les cookies que vous
-      souhaitez activer. Pour plus d'informations, consultez notre page
-      <a href="/donnee">Données personnelles et cookies</a>.
-    </p>
-  </DsfrConsent> -->
 
   <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" data-testid="pwa-reload-prompt" @close="close" @update-service-worker="updateServiceWorker" />
 
@@ -261,45 +175,4 @@ function close() {
 </template>
 
 <style scoped>
-.header-container {
-  position: relative;
-}
-
-.search-results-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: white;
-  width: 100%;
-  max-width: 384px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  z-index: 1000;
-  margin-top: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-}
-
-.search-results-dropdown ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.search-results-dropdown li {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-/* Ajout d'un effet survol */
-.search-results-dropdown li:hover {
-  background-color: #f0f0f0;
-}
-
-.loading-message,
-.error-message {
-  padding: 0.5rem;
-  text-align: center;
-}
 </style>
