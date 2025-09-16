@@ -1,4 +1,3 @@
-import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";

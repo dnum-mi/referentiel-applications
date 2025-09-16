@@ -14,7 +14,8 @@
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test --reporter=list",
-    "type-check": "vue-tsc --build --force"
+    "type-check": "vue-tsc --build --force",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@gouvfr/dsfr": "~1.14.0",
