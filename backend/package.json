@@ -131,5 +131,8 @@
     ],
     "maxWorkers": 2,
     "testTimeout": 30000
+  },
+  "prisma": {
+    "seed": "ts-node ./prisma/seed.ts"
   }
 }

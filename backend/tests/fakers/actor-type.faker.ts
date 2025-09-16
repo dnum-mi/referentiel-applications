@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import { getPrismaClient } from "./prisma";
 import type { APP_PERMISSIONS } from "src/common/utils/types";
 
-function permissionsToObject(permissions: Set<APP_PERMISSIONS>): Record<APP_PERMISSIONS, boolean> {
+export function permissionsToObject(permissions: Set<APP_PERMISSIONS>): Record<APP_PERMISSIONS, boolean> {
   return {
     readActors: permissions.has("readActors"),
     writeActors: permissions.has("writeActors"),
