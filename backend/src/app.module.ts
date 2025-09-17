@@ -30,6 +30,7 @@ import { LoggingService } from "./services/logging.service";
 import { ActionLogService } from "./action-log/action-log.service";
 import { configs } from "./config/configs/index";
 import { ConfigModule } from "./config/config.module";
+import { TokenModule } from "./token/token.module";
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ConfigModule } from "./config/config.module";
     UserModule,
     ApplicationModule,
     HostingModule,
+    TokenModule,
     AnomalyNotificationModule,
     LoggerModule,
     HealthCheckModule,

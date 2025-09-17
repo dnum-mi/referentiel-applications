@@ -1,6 +1,6 @@
 import type { CreateApplicationDto } from "../dto/create-application.dto";
 
-export function applicationMap(createApplicationDto: CreateApplicationDto, ownerId) {
+export function applicationMap(createApplicationDto: CreateApplicationDto, ownerId: string) {
   return {
     data: {
       label: createApplicationDto.label,
@@ -12,7 +12,7 @@ export function applicationMap(createApplicationDto: CreateApplicationDto, owner
       purposes: createApplicationDto.purposes,
       tags: createApplicationDto.tags,
       priorityRestart: createApplicationDto.priorityRestart || null,
-      owner: { connect: { keycloakId: ownerId } },
+      owner: { connect: { id: ownerId } },
       metadatas: {
         create: {
           createdById: ownerId,

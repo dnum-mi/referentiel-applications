@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 import { APP_PERMISSIONS } from "src/common/utils/types";
 
@@ -8,9 +9,18 @@ export enum AdminLevel {
   ADMIN = 30,
 }
 
+export const UserType = {
+  human: "human",
+  bot: "bot",
+} as const;
+
 export class UserEntity {
   @IsString()
-  keycloakId: string;
+  id: string;
+
+  @IsString()
+  @IsOptional()
+  keycloakId?: string;
 
   @IsString()
   email: string;
@@ -25,6 +35,11 @@ export class UserEntity {
 
   @IsString()
   lastLogin: Date | null;
+
+  @ApiProperty({ enum: UserType, enumName: "UserType" })
+  @IsString()
+  @IsEnum(UserType)
+  type: keyof typeof UserType;
 }
 
 export class Requestor extends UserEntity {

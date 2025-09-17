@@ -27,7 +27,7 @@ export class HostingFaker {
         },
         metadatas: {
           create: {
-            createdById: user.keycloakId,
+            createdById: user.id,
             applicationId: application.id,
           },
         },

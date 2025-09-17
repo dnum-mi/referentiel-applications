@@ -5,7 +5,6 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { APP_ACTION_KEY } from "../decorators/application.decorator";
-import type { User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { APP_PERMISSIONS, APP_PERMS_MAP, AppPermissionsRecord } from "../utils/types";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
@@ -43,7 +42,7 @@ export class ApplicationGuard implements CanActivate {
 
   private async getUserAppPermissions(
     applicationId: string,
-    user: User,
+    user: Requestor,
   ): Promise<APP_PERMS_MAP> {
     const [actors, application] = await Promise.all([
       this.prisma.actor.findMany({
@@ -71,7 +70,7 @@ export class ApplicationGuard implements CanActivate {
     // reduce the permissions to a map
 
     const appPermsSet = new Set<APP_PERMISSIONS>();
-    if (application?.ownerId === user.keycloakId || user.adminLevel >= AdminLevel.WRITE) {
+    if (application?.ownerId === user.id || user.adminLevel >= AdminLevel.WRITE) {
       Object.keys(AppPermissionsRecord).forEach((key) => {
         appPermsSet.add(key as APP_PERMISSIONS);
       });

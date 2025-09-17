@@ -2,7 +2,7 @@ model AnomalyNotification {
   id            String                    @id @default(uuid())
   applicationId String
   notifierId    String
-  notifier      User                      @relation("UserAnomalyNotification", fields: [notifierId], references: [keycloakId])
+  notifier      User                      @relation("UserAnomalyNotification", fields: [notifierId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   description   String
   status        AnomalyNotificationStatus @default(in_pending)
   createdAt     DateTime                  @default(now())

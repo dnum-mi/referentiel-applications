@@ -126,7 +126,7 @@ async function savePermissions() {
   saving.value = true;
   try {
     await api.userControllerUpdate({
-      path: { id: selectedUser.value.keycloakId },
+      path: { id: selectedUser.value.id },
       body: { adminLevel: editingAdminLevel.value },
     });
 

@@ -225,7 +225,7 @@ export class ApplicationService {
     }
     return this.applicationRepository.findApplicationsBySearch(searchParams, {
       actorEmail: requestor.email,
-      ownerId: requestor.keycloakId,
+      ownerId: requestor.id,
     });
   }
 
@@ -262,12 +262,12 @@ export class ApplicationService {
 
   private async persistApplication(ownerId: string, createApplicationDto) {
     const user = await this.prisma.user.findUnique({
-      where: { keycloakId: ownerId },
+      where: { id: ownerId },
       select: { email: true, keycloakId: true },
     });
 
     if (!user) {
-      throw new NotFoundException(`User not found for keycloakId=${ownerId}`);
+      throw new NotFoundException(`User not found for id=${ownerId}`);
     }
 
     const application = this.applicationRepository.create(

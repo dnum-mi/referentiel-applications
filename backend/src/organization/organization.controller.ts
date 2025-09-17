@@ -65,7 +65,7 @@ Vous devez fournir les informations suivantes :
   ) {
     Logger.log({
       message: "Début de la création de l'organisation",
-      userId: req.user.keycloakId,
+      userId: req.user.id,
       action: "create",
     });
 

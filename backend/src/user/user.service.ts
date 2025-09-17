@@ -3,7 +3,7 @@ import type { Prisma, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserFilterDto } from "./dto/filters.dto";
-import { Requestor, UserEntity } from "./entities/user.entity";
+import { UserEntity, UserType } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
@@ -11,16 +11,10 @@ export class UserService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async findUserByKeycloakId(keycloakId: string): Promise<User | null> {
-    return this.prisma.user.findUnique({
-      where: { keycloakId },
-    });
-  }
-
   async findOrCreateByEmail(
     email: string,
     keycloakId: string,
-  ): Promise<Requestor | null> {
+  ): Promise<UserEntity | null> {
     // Check if a user exists with the given keycloakId
     const existingUserByKeycloakId = await this.prisma.user.findUnique({
       where: { keycloakId },
@@ -62,6 +56,12 @@ export class UserService {
 
   async findAll(filters: UserFilterDto): Promise<User[]> {
     const where: Prisma.UserWhereInput = {};
+
+    if (filters.type) {
+      where.type = { in: filters.type };
+    } else {
+      where.type = UserType.human;
+    }
 
     if (filters.search) {
       where.OR = [
