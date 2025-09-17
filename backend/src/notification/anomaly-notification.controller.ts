@@ -62,7 +62,7 @@ export class AnomalyNotificationsController {
   ) {
     return this.service.findAll({
       requestor,
-      notifierId: !filters.all ? requestor.keycloakId : undefined,
+      notifierId: !filters.all ? requestor.id : undefined,
     });
   }
 }
@@ -128,7 +128,7 @@ export class ApplicationAnomalyNotificationsController {
     return this.service.findAll({
       applicationId,
       requestor,
-      notifierId: !filters.all ? requestor.keycloakId : undefined,
+      notifierId: !filters.all ? requestor.id : undefined,
     });
   }
 

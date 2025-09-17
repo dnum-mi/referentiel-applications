@@ -5,6 +5,7 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { stringify } from "yaml";
 import type { KeycloakConfig } from "./config/configs/keycloak.config";
+import { API_KEY_HEADER } from "./utils/constants.util";
 
 // Configuration de Swagger
 export function setupSwagger(
@@ -37,7 +38,14 @@ export function setupSwagger(
       },
       "oauth2",
     )
+    .addApiKey({
+      type: "apiKey",
+      name: API_KEY_HEADER,
+      in: "header",
+      description: "Token authentication",
+    }, "api_key")
     .addSecurityRequirements("oauth2")
+    .addSecurityRequirements("api_key")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

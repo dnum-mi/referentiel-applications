@@ -24,7 +24,7 @@ export class AnomalyNotificationService {
           connect: { id: data.applicationId },
         },
         notifier: {
-          connect: { keycloakId: requestor.keycloakId },
+          connect: { id: requestor.id },
         },
         description: data.description,
       },
@@ -55,10 +55,10 @@ export class AnomalyNotificationService {
 
     if (applicationId) {
       if (!hasApplicationReadPerms && !isAdminRead) {
-        where.notifierId = requestor.keycloakId;
+        where.notifierId = requestor.id;
       }
     } else if (!isAdminRead) {
-      where.notifierId = requestor.keycloakId;
+      where.notifierId = requestor.id;
     }
 
     return this.prisma.anomalyNotification.findMany({
@@ -81,7 +81,7 @@ export class AnomalyNotificationService {
 
     const where: Prisma.AnomalyNotificationWhereUniqueInput = {
       id,
-      ...(hasApplicationReadPerms ? {} : { notifierId: requestor.keycloakId }),
+      ...(hasApplicationReadPerms ? {} : { notifierId: requestor.id }),
     };
 
     const notification = await this.prisma.anomalyNotification.findUnique({

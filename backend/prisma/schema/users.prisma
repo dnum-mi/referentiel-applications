@@ -1,5 +1,6 @@
 model User {
-  keycloakId          String                @id
+  id                  String                @unique @default(uuid())
+  keycloakId          String?               @unique
   email               String                @unique
   lastLogin           DateTime?             @default(now())
   organizationId      String?
@@ -9,6 +10,9 @@ model User {
   dataOwners          Metadata[]            @relation("MetadataDataOwnerBy")
   AnomalyNotification AnomalyNotification[] @relation("UserAnomalyNotification")
   adminLevel          Int                   @default(0)
+  tokensImpersonate   Token[]               @relation("TokenUserImpersonate")
+  tokensCreated       Token[]               @relation("TokenUserCreator")
+  type                UserType              @default(human)
 
   @@map("users")
 }
@@ -37,9 +41,14 @@ model ActorType {
   label       String
   description String?
 
-  actors Actor[]
+  actors         Actor[]
+  appPermissions AppPermissions[]
 
   @@unique([code])
   @@map("actorTypes")
-  appPermissions AppPermissions[]
+}
+
+enum UserType {
+  human
+  bot
 }

@@ -16,7 +16,7 @@ model Application {
   hostings            Hosting[]
 
   ownerId String
-  owner   User   @relation("UserApplications", fields: [ownerId], references: [keycloakId])
+  owner   User   @relation("UserApplications", fields: [ownerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   relationsAsSource Relation[] @relation("SourceHasTarget")
   relationsAsTarget Relation[] @relation("TargetHasSource")

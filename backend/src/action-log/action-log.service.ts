@@ -1,14 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { User } from "@prisma/client";
+import { Requestor } from "src/user/entities/user.entity";
 
 @Injectable()
 export class ActionLogService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async updateUserLastLogin(user: Pick<User, "keycloakId">) {
+  async updateUserLastLogin(user: Pick<Requestor, "id">) {
     return this.prisma.user.update({
-      where: { keycloakId: user.keycloakId },
+      where: { id: user.id },
       data: { lastLogin: new Date() },
     });
   }

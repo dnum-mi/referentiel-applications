@@ -18,7 +18,7 @@ export class LinkFaker {
         metadatas: {
           create: {
             applicationId: application.id,
-            createdById: user.keycloakId,
+            createdById: user.id,
           },
         },
       },

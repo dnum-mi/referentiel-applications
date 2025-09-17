@@ -46,13 +46,13 @@ export class ApplicationFaker {
         priorityRestart: faker.helpers.arrayElement(restartPriorities),
         owner: {
           connect: {
-            keycloakId: user.keycloakId,
+            id: user.id,
           },
         },
         metadatas: {
           create: [
             {
-              createdById: user.keycloakId,
+              createdById: user.id,
             },
           ],
         },

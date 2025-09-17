@@ -11,7 +11,7 @@ export class ApplicationDto {
   ownerId: string;
 }
 
-class Notifier extends PickType(UserEntity, ["keycloakId", "email"]) {}
+class Notifier extends PickType(UserEntity, ["id", "email"]) {}
 
 export class GetAnomalyNotificationDto {
   @IsString()
