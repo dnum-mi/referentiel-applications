@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.38.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.37.1...v1.38.0) (2025-09-17)
+
+
+### Features
+
+* **api:** :sparkles: add field in compliance ([e3950be](https://github.com/dnum-mi/referentiel-applications/commit/e3950befca2358239ade5f8c4190e5f5f9b21f6d))
+
+
+### Bug Fixes
+
+* streamline filter updates and improve search functionality across components ([7efa705](https://github.com/dnum-mi/referentiel-applications/commit/7efa7056523eadf28c937fec2bbb87b5c9dbad1c))
+* update application creation logic and improve form submission handling ([d41251a](https://github.com/dnum-mi/referentiel-applications/commit/d41251a94c0966279ae708a6e7604e876644174b))
+
 ## [1.37.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.37.0...v1.37.1) (2025-09-15)
 
 
