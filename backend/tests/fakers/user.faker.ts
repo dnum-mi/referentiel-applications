@@ -2,9 +2,10 @@ import { KeycloakService } from "../../src/services/keycloak.service";
 import { faker } from "@faker-js/faker";
 import { getPrismaClient } from "./prisma";
 import { AdminLevel } from "src/user/entities/user.entity";
+import type { AsyncReturnType } from "src/utils/types.util";
 
 const keycloakService = new KeycloakService();
-
+export type UserFakerReturnType = AsyncReturnType<typeof UserFaker.create>;
 export class UserFaker {
   static async create(adminLevel: AdminLevel = AdminLevel.NONE) {
     const prisma = getPrismaClient();

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, defineProps } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
-import type { Application, Compliance } from "@/models/Application";
+import type { Application } from "@/models/Application";
 import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useLinkStore } from "@/stores/linkStore";
 import { useComplianceStore } from "@/stores/complianceStore.js";
+import type { ComplianceDto } from "@/client/types.gen";
 
 const props = defineProps<{ application: Application }>();
 
@@ -20,7 +21,7 @@ const hostingStore = useHostingStore();
 const hostings = computed(() => hostingStore.hostings);
 const linkStore = useLinkStore();
 const complianceStore = useComplianceStore();
-const compliances = ref<Compliance>();
+const compliances = ref<ComplianceDto | null>(null);
 
 async function fetchQuality() {
   loading.value = true;
@@ -79,7 +80,7 @@ function getComplianceColor(complianceType: string): string {
       return compliances.value.rgpd_has_aipd ? "green-emeraude" : "yellow-tournesol";
     case "RGAA":
       if (!compliances.value.rgaa_score_percentage) return "yellow-tournesol";
-      if (compliances.value.rgaa_score_percentage >= 50) return "green-emeraude";
+      if (Number(compliances.value.rgaa_score_percentage) >= 50) return "green-emeraude";
       return "yellow-tournesol";
     default:
       return hasCompliance(complianceType) ? "green-emeraude" : "yellow-tournesol";

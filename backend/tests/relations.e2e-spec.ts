@@ -3,6 +3,7 @@ import request from "supertest";
 import { setupTestSuite } from "./setup";
 import { getToken } from "./getToken";
 import { RelationType } from "@prisma/client";
+import type { UserFakerReturnType } from "./fakers/user.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { ApplicationFaker } from "./fakers/application.faker";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
@@ -15,7 +16,7 @@ describe("Relations End-to-End", () => {
   let applicationSource: { id: string, label: string };
   let applicationTarget: { id: string, label: string };
   let applicationUpdates: { id: string, label: string };
-  let user: { keycloakId: string };
+  let user: UserFakerReturnType;
   let TOKEN: string;
   let relation: {
     id: string
@@ -135,8 +136,8 @@ describe("Relations End-to-End", () => {
 
 describe("application guard", () => {
   const app = setupTestSuite();
-  let appOwner: { keycloakId: string, email: string };
-  let appActor: { keycloakId: string, email: string };
+  let appOwner: UserFakerReturnType;
+  let appActor: UserFakerReturnType;
   let TOKEN: string;
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
   let actor: AsyncReturnType<typeof ActorFaker.link>;

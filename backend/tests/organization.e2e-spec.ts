@@ -1,13 +1,14 @@
 import request from "supertest";
 import { setupTestSuite } from "./setup";
 import { getToken } from "./getToken";
+import type { UserFakerReturnType } from "./fakers/user.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { OrganizationFaker } from "./fakers/organization.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
 
 describe("Organizations", () => {
   const app = setupTestSuite();
-  let user: { keycloakId: string };
+  let user: UserFakerReturnType;
   let TOKEN: string;
 
   beforeAll(async () => {

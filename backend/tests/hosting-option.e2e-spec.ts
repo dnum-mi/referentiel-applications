@@ -1,13 +1,14 @@
 import request from "supertest";
 import { setupTestSuite } from "./setup";
 import { getToken } from "./getToken";
+import type { UserFakerReturnType } from "./fakers/user.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { HostingOptionFaker } from "./fakers/hosting-option.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
 
 describe("HostingOptions", () => {
   const app = setupTestSuite();
-  let user: { keycloakId: string };
+  let user: UserFakerReturnType;
 
   beforeAll(async () => {
     user = await UserFaker.create(AdminLevel.WRITE);
