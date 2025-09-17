@@ -61,5 +61,8 @@
     "editor.defaultFormatter": "yzhang.markdown-all-in-one"
   },
   // conventional commits
-  "conventionalCommits.showNewVersionNotes": false
+  "conventionalCommits.showNewVersionNotes": false,
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  }
 }

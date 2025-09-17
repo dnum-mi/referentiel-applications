@@ -2,9 +2,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
-import type { Compliance } from "@/models/Application";
 import api from "@/api/index.js";
-import type { ComplianceDto, CreateComplianceDto } from "@/client/types.gen.js";
+import type { ComplianceDto, CreateComplianceDto, UpdateComplianceDto } from "@/client/types.gen";
 
 export const useComplianceStore = defineStore("complianceStore", () => {
   const compliance = ref<ComplianceDto | null>(null);
@@ -43,7 +42,7 @@ export const useComplianceStore = defineStore("complianceStore", () => {
     }
   };
 
-  const updateCompliance = async (applicationId: string, payload: Partial<Compliance>) => {
+  const updateCompliance = async (applicationId: string, payload: Partial<UpdateComplianceDto>) => {
     try {
       const response = await api.applicationCompliancesControllerUpdate({ path: { applicationId }, body: payload });
       if (!response.response.ok || !response.data) {

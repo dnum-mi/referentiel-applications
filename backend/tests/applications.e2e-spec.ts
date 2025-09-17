@@ -1,6 +1,7 @@
 import request from "supertest";
 import { setupTestSuite } from "./setup";
 import { getToken } from "./getToken";
+import type { UserFakerReturnType } from "./fakers/user.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { faker } from "@faker-js/faker";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
@@ -11,7 +12,7 @@ import { AdminLevel } from "src/user/entities/user.entity";
 
 describe("Applications", () => {
   const app = setupTestSuite();
-  let user: { keycloakId: string };
+  let user: UserFakerReturnType;
   let TOKEN: string;
   let createdApplicationId: string;
 
@@ -88,8 +89,8 @@ describe("Applications", () => {
 
 describe("application guard", () => {
   const app = setupTestSuite();
-  let appOwner: { keycloakId: string, email: string };
-  let appActor: { keycloakId: string, email: string };
+  let appOwner: UserFakerReturnType;
+  let appActor: UserFakerReturnType;
   let TOKEN: string;
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
   let application: AsyncReturnType<typeof ApplicationFaker.create>;
