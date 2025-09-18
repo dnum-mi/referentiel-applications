@@ -250,6 +250,31 @@ paths:
           in: query
           schema:
             type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: itemsPerPage
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: sortColumn
+          required: false
+          in: query
+          schema:
+            enum:
+              - email
+              - keycloakId
+              - lastLogin
+              - adminLevel
+            type: string
+        - name: isSortDescending
+          required: false
+          in: query
+          schema:
+            type: string
       responses:
         "200":
           description: Liste des utilisateurs
