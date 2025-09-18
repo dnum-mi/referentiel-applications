@@ -1,0 +1,24 @@
+﻿name: Version Release Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-backend:
+    name: Build Backend
+    uses: ./.github/workflows/build.yml
+    with:
+      image: ghcr.io/dnum-mi/referentiel-applications/backend
+      context: ./backend
+      target: prod
+
+  build-frontend:
+    name: Build Frontend
+    uses: ./.github/workflows/build.yml
+    with:
+      image: ghcr.io/dnum-mi/referentiel-applications/frontend
+      context: ./frontend
+      target: prod
