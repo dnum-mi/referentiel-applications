@@ -37,7 +37,7 @@ UPDATE "users" SET "id" = "keycloakId";
 ALTER TABLE "users" ALTER COLUMN "id" SET NOT NULL;
 
 -- CreateTable
-CREATE TABLE "Token" (
+CREATE TABLE "tokens" (
     "id" TEXT NOT NULL,
     "adminLevel" INTEGER,
     "description" TEXT NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE "Token" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Token_hash_key" ON "Token"("hash");
+CREATE UNIQUE INDEX "Token_hash_key" ON "tokens"("hash");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_id_key" ON "users"("id");
@@ -72,10 +72,10 @@ ALTER TABLE "metadata" ADD CONSTRAINT "metadata_createdById_fkey" FOREIGN KEY ("
 ALTER TABLE "metadata" ADD CONSTRAINT "metadata_dataOwnerId_fkey" FOREIGN KEY ("dataOwnerId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Token" ADD CONSTRAINT "Token_userIdImpersonate_fkey" FOREIGN KEY ("userIdImpersonate") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tokens" ADD CONSTRAINT "tokens_userIdImpersonate_fkey" FOREIGN KEY ("userIdImpersonate") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Token" ADD CONSTRAINT "Token_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "tokens" ADD CONSTRAINT "tokens_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_keycloakId_key" ON "users"("keycloakId");

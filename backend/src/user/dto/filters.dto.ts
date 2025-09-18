@@ -10,7 +10,7 @@ export class UserFilterDto {
 
   @ApiPropertyOptional({
     description:
-      "Type d'utilisateur. Utiliser les valeurs de /userTypes",
+      "Type d'utilisateur. Utiliser les valeurs de UserType",
     enum: UserType,
     isArray: true,
     example: ["human"],
@@ -19,5 +19,5 @@ export class UserFilterDto {
   @IsArray()
   @IsEnum(UserType, { each: true })
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
-  type: (keyof typeof UserType)[];
+  type?: (keyof typeof UserType)[];
 }

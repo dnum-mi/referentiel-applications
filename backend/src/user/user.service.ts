@@ -55,19 +55,20 @@ export class UserService {
   }
 
   async findAll(filters: UserFilterDto): Promise<User[]> {
+    const { type, search } = filters;
     const where: Prisma.UserWhereInput = {};
 
-    if (filters.type) {
-      where.type = { in: filters.type };
+    if (type) {
+      where.type = { in: type };
     } else {
       where.type = UserType.human;
     }
 
-    if (filters.search) {
+    if (search) {
       where.OR = [
         {
           email: {
-            contains: filters.search,
+            contains: search,
             mode: "insensitive",
           },
         },
