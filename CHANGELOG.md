@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.39.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.38.0...v1.39.0) (2025-09-18)
+
+
+### Features
+
+* **token:** implement token management system with CRUD operations ([ab16b66](https://github.com/dnum-mi/referentiel-applications/commit/ab16b66b65665a44fb85eee564aef55bef8d0d90))
+
+
+### Bug Fixes
+
+* update organization input handling to use model-value event and improve search functionality ([1bd9f9d](https://github.com/dnum-mi/referentiel-applications/commit/1bd9f9d978bd2a141fc4e5f25ae6710efa922dc6))
+
 ## [1.38.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.37.1...v1.38.0) (2025-09-17)
 
 
