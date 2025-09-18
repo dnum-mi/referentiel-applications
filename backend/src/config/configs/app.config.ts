@@ -14,7 +14,7 @@ export default registerAs("app", (): AppConfig => {
   const host = process.env.HOST ?? "0.0.0.0";
   const onlyWriteSwagger = process.env.ONLY_WRITE_SWAGGER === "true";
   const writeYaml = process.env.WRITE_SWAGGER_YAML !== "false";
-  const version = process.env.VERSION ?? "development";
+  const version = process.env.APP_VERSION ?? "development";
 
   return {
     env,

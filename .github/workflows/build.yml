@@ -48,3 +48,5 @@ jobs:
           pull: true
           tags: ${{ steps.meta.outputs.tags }}
           target: ${{ inputs.target }}
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.tags }}

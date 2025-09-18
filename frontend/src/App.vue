@@ -10,6 +10,7 @@ import { useUserStore } from "@/stores/userStore.js";
 import { AdminLevel } from "./models/user.js";
 import { configureClients } from "./api/init-clients.js";
 import { useApplicationSearchStore } from "./stores/applicationSearchStore.js";
+import { getConfig } from "./services/config";
 
 const route = useRoute();
 
@@ -33,11 +34,11 @@ function trackSearch(query: string, source: string, resultCount: number) {
   matomo.trackPageView(`Recherche depuis ${source} : ${query}`);
 }
 
-const appVersion = import.meta.env.VITE_RDA_APP_VERSION ?? "VITE_RDA_APP_VERSION";
+const appVersion = ref("version inconnue");
 
 const versionLink = computed(() => ({
-  label: `📦 ${appVersion}`,
-  href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion}`,
+  label: `📦 ${appVersion.value}`,
+  href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion.value}`,
 }));
 
 interface QuickLink {
@@ -205,6 +206,14 @@ function close() {
   offlineReady.value = false;
   needRefresh.value = false;
 }
+
+onMounted(async () => {
+  const result = await getConfig();
+  if (result instanceof Error) {
+    return;
+  }
+  appVersion.value = result.version;
+});
 </script>
 
 <template>

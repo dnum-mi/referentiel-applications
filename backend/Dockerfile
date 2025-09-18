@@ -15,8 +15,7 @@ COPY --chown=node:root package.json pnpm-lock.yaml ./
 COPY --chown=node:root ../package.json ./package-root.json
 
 USER node
-RUN export APP_VERSION=$(jq -r '.version' package-root.json)
-
+ARG APP_VERSION=development
 
 FROM base AS dev
 RUN pnpm install
