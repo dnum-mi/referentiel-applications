@@ -37,23 +37,24 @@ const actorTypeOptions = props.actorTypes.map(type => ({
 }));
 
 onMounted(async () => {
-  organizations.value = await organizationStore.find();
-
-  // Set initial organization display value if organizationId exists
-  if (form.value.organizationId) {
-    const org = organizations.value.find(o => o.id === form.value.organizationId);
-    organizationInputValue.value = org?.label || "";
+  const orgId = props.initialData?.organizationId;
+  if (orgId) {
+    const org = await organizationStore.getById(orgId);
+    if (org) {
+      organizationInputValue.value = org.label;
+      organizations.value = [org];
+    }
   }
 });
 
 // Handle organization input changes
-function handleOrganizationInput(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const inputValue = target.value;
-  organizationInputValue.value = inputValue;
+async function handleOrganizationInput(search: string) {
+  organizationInputValue.value = search;
 
   // Find matching organization and update form
-  const matchingOrg = organizations.value.find(org => org.label === inputValue);
+  const response = await organizationStore.find(search);
+  organizations.value = response;
+  const matchingOrg = organizations.value.find(org => org.label === organizationInputValue.value);
   form.value.organizationId = matchingOrg?.id || "";
 }
 
@@ -76,7 +77,7 @@ function handleSubmit() {
         list="organizationSuggestionsList"
         placeholder="Rechercher une organisation"
         data-testid="actor-organization"
-        @input="handleOrganizationInput"
+        @update:model-value="handleOrganizationInput"
       />
       <datalist id="organizationSuggestionsList" data-testid="organization-suggestions-list">
         <option
