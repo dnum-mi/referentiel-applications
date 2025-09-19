@@ -1,5 +1,5 @@
 // src/main.ts
-import { Logger, ValidationPipe } from "@nestjs/common";
+import { Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { Logger as PinoLogger } from "nestjs-pino";
 import { AppModule } from "./app.module";
@@ -7,6 +7,7 @@ import { setupSwagger } from "./swagger-config.js";
 import { ConfigService } from "@nestjs/config";
 import type { AppConfig } from "./config/configs/app.config";
 import type { KeycloakConfig } from "./config/configs/keycloak.config";
+import { setupGlobalValidation } from "./config/app-config";
 
 async function bootstrap() {
   const globalPrefix = "/api/v2";
@@ -33,16 +34,9 @@ async function bootstrap() {
   // Configuration de Swagger
   setupSwagger(app, appConfig, keycloakConfig);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+  // Setup global validation
+  setupGlobalValidation(app);
+
   await app.listen(appConfig.port, appConfig.host);
   globalLogger.log(`Application is running on: http://${appConfig.host}:${appConfig.port}`);
 }
