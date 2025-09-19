@@ -19,16 +19,6 @@ export class ApplicationRepository implements IApplicationRepository {
     });
   }
 
-  public async findAll() {
-    return await this.prisma.application.findMany({
-      include: {
-        actors: true,
-        relationsAsSource: { include: { targetApplication: true } },
-        relationsAsTarget: { include: { sourceApplication: true } },
-      },
-    });
-  }
-
   public async findById(id: string) {
     return await this.prisma.application.findUnique({
       where: { id },

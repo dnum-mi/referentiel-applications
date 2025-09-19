@@ -26,11 +26,24 @@ describe("Applications", () => {
       .get("/applications")
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
-  });
 
-  it("/GET applications/search", async () => {
     await request(app().getHttpServer())
-      .get("/applications/search")
+      .get("/applications")
+      .query({
+        search: "test",
+        page: 0,
+        limit: 10,
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    await request(app().getHttpServer())
+      .get("/applications")
+      .query({
+        label: "test app",
+        sortBy: "label",
+        order: "asc",
+      })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
   });
@@ -44,20 +57,8 @@ describe("Applications", () => {
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
         tags: ["tag1", "tag2", "tag3"],
-        parentId: null,
-        lifecycle: {
-          status: "in_production",
-          firstProductionDate: "2025-01-06T10:34:25.061Z",
-          plannedDecommissioningDate: "2030-12-31T23:59:59.000Z",
-        },
-        actors: [
-          {
-            role: "dev",
-            userId: user.keycloakId,
-          },
-        ],
-        compliances: [],
-        externals: [],
+        status: "in_production",
+        labels: [],
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);

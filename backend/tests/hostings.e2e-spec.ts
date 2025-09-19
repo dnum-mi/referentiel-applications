@@ -42,6 +42,7 @@ describe("Hostings", () => {
     const newHosting = {
       hostingOptionId: hostingOption.id,
       label: "Test Hosting with Option",
+      applicationId: application.id,
     };
 
     await request(app().getHttpServer())

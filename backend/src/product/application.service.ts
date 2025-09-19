@@ -238,11 +238,6 @@ export class ApplicationService {
     return application;
   }
 
-  public async getApplications() {
-    const applications = await this.applicationRepository.findAll();
-    return applications;
-  }
-
   public async deleteApplication(id: string): Promise<void> {
     const existing = await this.applicationRepository.findById(id);
     if (!existing) {
