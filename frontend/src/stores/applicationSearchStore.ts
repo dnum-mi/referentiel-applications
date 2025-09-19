@@ -93,7 +93,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       if (!response.response.ok || !response.data) {
         throw new Error("Erreur lors de la recherche d'applications");
       }
-      console.log("🧾 Résultat API /applications/search →", response.data);
+      console.log("🧾 Résultat API /applications →", response.data);
       console.log("📊 Total applications retournées :", response.data.total);
 
       if (store) {

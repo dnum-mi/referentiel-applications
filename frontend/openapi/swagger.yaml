@@ -318,60 +318,6 @@ paths:
       tags: &a4
         - applications
     get:
-      operationId: ApplicationController_findAll
-      summary: Récupérer les applications
-      description: "
-
-        Ce endpoint permet de récupérer la liste de toutes les applications
-        existantes dans le système.
-
-
-        Aucun paramètre n'est requis pour accéder à cette liste.
-
-        \    "
-      parameters: []
-      responses:
-        "200":
-          description: Liste des applications
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ApplicationDto"
-      tags: *a4
-  /api/v2/applications/count-by-month:
-    get:
-      operationId: ApplicationController_countByMonth
-      summary: Liste le nombre d'applications sur les 6 derniers mois
-      parameters: []
-      responses:
-        "200":
-          description: Nombre d'applications par mois
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CountByMonthDto"
-      tags: *a4
-  /api/v2/applications/count-by-iq:
-    get:
-      operationId: ApplicationController_countByIq
-      summary: Liste le nombre d'applications par indice de qualité (de 0% à 100%)
-      parameters: []
-      responses:
-        "200":
-          description: Nombre d'applications par indice de qualité
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CountByIqDto"
-      tags: *a4
-  /api/v2/applications/search:
-    get:
       operationId: ApplicationController_search
       summary: Rechercher et filtrer les applications
       description: >-
@@ -532,6 +478,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationSearchResultDto"
+      tags: *a4
+  /api/v2/applications/count-by-month:
+    get:
+      operationId: ApplicationController_countByMonth
+      summary: Liste le nombre d'applications sur les 6 derniers mois
+      parameters: []
+      responses:
+        "200":
+          description: Nombre d'applications par mois
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountByMonthDto"
+      tags: *a4
+  /api/v2/applications/count-by-iq:
+    get:
+      operationId: ApplicationController_countByIq
+      summary: Liste le nombre d'applications par indice de qualité (de 0% à 100%)
+      parameters: []
+      responses:
+        "200":
+          description: Nombre d'applications par indice de qualité
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountByIqDto"
       tags: *a4
   /api/v2/applications/{applicationId}/my-perms:
     get:
