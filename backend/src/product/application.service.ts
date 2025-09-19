@@ -122,14 +122,6 @@ export class ApplicationService {
     Logger.log(`${applications.length} applications mises à jour.`);
   }
 
-  async countActiveApplications() {
-    return await this.prisma.application.count({
-      where: {
-        NOT: { status: "deleted" },
-      },
-    });
-  }
-
   getEmptyCountRange(n: number): Record<string, number> {
     const now = new Date();
     const range: Record<string, number> = {};
@@ -221,9 +213,9 @@ export class ApplicationService {
   ): Promise<ApplicationSearchResultDto> {
     if (requestor.adminLevel >= AdminLevel.READ) {
       // If the user has read or write permissions, proceed with the search
-      return this.applicationRepository.findApplicationsBySearch(searchParams);
+      return this.applicationRepository.findApplications(searchParams);
     }
-    return this.applicationRepository.findApplicationsBySearch(searchParams, {
+    return this.applicationRepository.findApplications(searchParams, {
       actorEmail: requestor.email,
       ownerId: requestor.id,
     });

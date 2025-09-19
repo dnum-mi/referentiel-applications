@@ -43,7 +43,7 @@ export class ApplicationRepository implements IApplicationRepository {
     });
   }
 
-  async findApplicationsBySearch(
+  async findApplications(
     filters: ApplicationSearchFilters,
     ownership?: { actorEmail?: string, ownerId?: string },
   ): Promise<{ results: ApplicationDto[], total: number }> {

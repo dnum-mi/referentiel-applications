@@ -11,8 +11,8 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
   const totalCompliances = ref<number>(0);
 
   async function countApplications() {
-    const response = await api.applicationControllerCount();
-    totalApplications.value = response.data ?? 0;
+    const response = await api.applicationControllerSearch();
+    totalApplications.value = response.data?.total ?? 0;
   }
 
   async function countApplicationsByMonth(): Promise<{ month: string, total: number }[]> {

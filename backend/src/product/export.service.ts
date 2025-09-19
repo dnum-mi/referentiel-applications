@@ -17,7 +17,7 @@ export class ApplicationExportService {
   async exportSearchResultsToExcel(
     searchParams: ApplicationSearchDto,
   ): Promise<Buffer> {
-    const allMatchingApps = await this.repository.findApplicationsBySearch(searchParams);
+    const allMatchingApps = await this.repository.findApplications(searchParams);
 
     // Get full relations for the filtered applications
     const filteredIds = allMatchingApps.results.map(app => app.id);
