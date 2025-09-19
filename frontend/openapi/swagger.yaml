@@ -340,19 +340,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/ApplicationDto"
       tags: *a4
-  /api/v2/applications/count-by-status:
-    get:
-      operationId: ApplicationController_count
-      summary: Compte le nombre d'applications hors statut supprimé
-      parameters: []
-      responses:
-        "200":
-          description: Nombre d'applications actives
-          content:
-            application/json:
-              schema:
-                type: number
-      tags: *a4
   /api/v2/applications/count-by-month:
     get:
       operationId: ApplicationController_countByMonth

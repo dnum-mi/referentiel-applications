@@ -13,7 +13,7 @@ export interface IApplicationRepository {
     actorsToCreate,
   ) => Promise<Application>
   delete: (id: string) => Promise<void>
-  findApplicationsBySearch: (
+  findApplications: (
     search: ApplicationSearchFilters,
     ownership?: { actorEmail?: string, ownerId?: string },
   ) => Promise<{ results: ApplicationDto[], total: number }>
