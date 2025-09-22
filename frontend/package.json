@@ -13,10 +13,8 @@
     "test": "run-s test:unit test:e2e",
     "test:unit": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "type-check": "vue-tsc --build --force",
-    "cy:open": "cypress open --config-file cypress.config.mts --browser firefox",
-    "cy:run": "cypress run --config-file cypress.config.mts --browser firefox"
+    "test:e2e": "playwright test --reporter=list",
+    "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
     "@gouvfr/dsfr": "~1.14.0",
