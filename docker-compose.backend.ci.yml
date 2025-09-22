@@ -1,5 +1,7 @@
 services:
   backend:
+    image: ${BACKEND_IMAGE_TAG}
+    command: pnpm start:prod
     volumes:
       - ./backend/coverage:/app/coverage
       - /app/node_modules

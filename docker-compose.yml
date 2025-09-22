@@ -21,7 +21,6 @@ services:
     build:
       context: ./backend
       target: dev
-    image: refapp-backend:dev
     command: pnpm start:dev
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/postgres

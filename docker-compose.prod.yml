@@ -2,8 +2,9 @@ services:
   backend:
     image: ${BACK_IMAGE_TAG}
     pull_policy: always
-    volumes: !reset []
+    build: !reset null
     command: !reset null
+    volumes: !reset []
 
   client:
     image: ${FRONT_IMAGE_TAG}
