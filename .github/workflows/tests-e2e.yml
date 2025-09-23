@@ -22,7 +22,17 @@ jobs:
         env:
           BACK_IMAGE_TAG: ${{ inputs.BACKEND_IMAGE_TAG }}
           FRONT_IMAGE_TAG: ${{ inputs.FRONTEND_IMAGE_TAG }}
-        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml up backend postgres keycloak -d
+        run: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm install -g pnpm && pnpm install
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: pnpm exec playwright install --with-deps
 
       - name: Wait for Keycloak to be ready
         run: |
@@ -37,33 +47,22 @@ jobs:
           echo "Keycloak did not become ready in time"
           exit 1
 
+      - name: Wait for Frontend to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:8080 | grep -q "<title>Référentiel des applications</title>"; then
+              echo "Frontend is ready"
+              exit 0
+            fi
+            echo "Waiting for Frontend..."
+            sleep 5
+          done
+          echo "Frontend did not become ready in time"
+          exit 1
+
       - name: Check backend logs
         run: docker compose logs backend --since 1m || echo "No logs"
 
-      - name: Wait for Backend to be ready
-        run: |
-          for i in {1..30}; do
-            if curl -s http://localhost:3500/api/v2/health-check | grep -q "ok"; then
-              echo "Backend is ready"
-              exit 0
-            fi
-            echo "Waiting for Backend..."
-            sleep 5
-          done
-          echo "Backend did not become ready in time"
-          exit 1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-      - name: Install dependencies
-        working-directory: ./frontend
-        run: npm install -g pnpm && pnpm install
-      - name: Install Playwright Browsers
-        working-directory: ./frontend
-        run: pnpm exec playwright install --with-deps
-      - name: Generate client
-        working-directory: ./frontend
-        run: pnpm openapi-ts
       - name: Run Playwright tests
         working-directory: ./frontend
         run: pnpm test:e2e

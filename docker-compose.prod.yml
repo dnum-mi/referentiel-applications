@@ -11,7 +11,9 @@ services:
     pull_policy: always
     ports:
       - 8080:8080
-    volumes: !reset []
+    volumes: !reset
+      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
+
     command: !reset null
 
   prisma-studio: !reset null
