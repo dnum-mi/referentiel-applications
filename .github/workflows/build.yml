@@ -37,9 +37,6 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ inputs.image }}
-      - name: Debug metadata output
-        run: |
-          echo "tags: ${{ steps.meta.outputs.tags }}"
       - name: Build and push
         uses: docker/build-push-action@v6
         with:

@@ -87,7 +87,7 @@ export default defineConfig({
         rewrite: path => path.replace(/^\/auth/, ""),
       },
       "/api": {
-        target: "http://backend:3500",
+        target: process.env.API_BASE_URL ?? "http://backend:3500",
         changeOrigin: true,
       },
     },
