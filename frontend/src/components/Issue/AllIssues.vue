@@ -22,9 +22,12 @@ const rows = computed(() =>
   (reportStore.allReports || []).map((report: ReportIssue) => ({
     id: report.id,
     Application: {
+      // id ici sert uniquement pour le data-testid unique par ligne
       id: report.id,
       label: report.application?.label,
-      to: { name: routeNames.PROFILEAPP, params: { id: report.application?.id } },
+      to: report.application?.id
+        ? { name: routeNames.PROFILEAPP, params: { id: report.application.id } }
+        : undefined,
     },
     Signalant: report.notifier?.email || "Inconnu",
     Description: report.description,
@@ -70,9 +73,14 @@ onMounted(async () => {
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Application'">
-          <router-link :to="cell.to" :data-testid="`issues-row-${cell.id}-application`">
-            {{ cell.label }}
-          </router-link>
+          <template v-if="cell && cell.to && cell.to.params && cell.to.params.id">
+            <router-link :to="cell.to" :data-testid="`issues-row-${cell.id}-application`">
+              {{ cell.label || 'Voir l’application' }}
+            </router-link>
+          </template>
+          <template v-else>
+            <span :data-testid="`issues-row-${cell.id}-application`">{{ cell.label || 'Signalement global' }}</span>
+          </template>
         </template>
         <template v-else-if="colKey === 'Statut'">
           <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" :data-testid="`issues-row-${cell.id}-status`" />

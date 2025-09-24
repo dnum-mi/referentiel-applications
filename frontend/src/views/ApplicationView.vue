@@ -7,6 +7,7 @@ import ApplicationTableView from "@/components/ApplicationTableView.vue";
 import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
+import ReportAnomaly from "@/components/modal/reportAnomaly.vue";
 
 const statsStore = useStatisticsStore();
 const searchStore = useApplicationSearchStore();
@@ -14,6 +15,7 @@ const searchStore = useApplicationSearchStore();
 const currentSortedColumn = ref("label");
 const isMobile = ref(false);
 const showLoader = ref(false);
+const isReportMissingOpen = ref(false);
 
 let loaderTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -76,6 +78,26 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         <CreateApplication data-testid="application-create" />
       </div>
 
+      <div class="secondary-actions">
+        <DsfrButton
+          priority="secondary"
+          icon="fr-icon-alert-line"
+          aria-haspopup="dialog"
+          aria-controls="modal-report-missing"
+          type="button"
+          data-testid="report-missing-app"
+          @click="isReportMissingOpen = true"
+        >
+          Signaler une application manquante
+        </DsfrButton>
+      </div>
+
+      <ReportAnomaly
+        :opened="isReportMissingOpen"
+        context="global"
+        @close="isReportMissingOpen = false"
+      />
+
       <ApplicationTableView
         v-if="displayMode === 'table'"
         v-model:sorted-by="currentSortedColumn"
@@ -124,5 +146,12 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
   margin: 1rem 0;
   font-size: 0.95rem;
   color: #1e293b;
+}
+
+.secondary-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+  margin-bottom: 1.5rem;
 }
 </style>

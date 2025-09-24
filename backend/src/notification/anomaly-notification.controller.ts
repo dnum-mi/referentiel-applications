@@ -84,11 +84,12 @@ export class AnomalyNotificationsController {
   })
   @HttpCode(HttpStatus.CREATED)
   async create(
-    @User() requestor: UserEntity,
+    @User() requestor: Requestor,
     @Body() requestData: CreateAnomalyNotificationRequestDto,
   ) {
     const data: CreateAnomalyNotificationDto = {
       ...requestData,
+      description: requestData.description,
     };
     return this.service.create(data, requestor);
   }

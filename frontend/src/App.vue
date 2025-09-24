@@ -18,8 +18,6 @@ const userStore = useUserStore();
 const applicationSearchStore = useApplicationSearchStore();
 const toaster = useToasterStore();
 
-const isReportAnomalyOpen = ref(false);
-
 configureClients(toaster);
 
 function trackSearch(query: string, source: string, resultCount: number) {
@@ -116,14 +114,6 @@ const navItems = [
   {
     to: { name: routeNames.ISSUELIST },
     text: "Corrections",
-  },
-  {
-    text: "rapporter une anomalie",
-    to: "#",
-    onclick: () => {
-      isReportAnomalyOpen.value = true;
-      return true;
-    },
   },
 ];
 
@@ -232,8 +222,6 @@ function close() {
         <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItems" data-testid="main-navigation" />
       </template>
     </DsfrHeader>
-
-    <ReportAnomaly :opened="isReportAnomalyOpen" @close="isReportAnomalyOpen = false" />
 
     <div v-if="searchQuery && (searchResults.length || isLoading || errorMessage)" class="search-results-dropdown" data-testid="header-search-results">
       <div v-if="isLoading" class="loading-message" data-testid="header-search-loading">

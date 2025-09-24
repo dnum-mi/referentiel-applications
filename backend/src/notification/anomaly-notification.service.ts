@@ -15,9 +15,13 @@ export class AnomalyNotificationService {
    * @returns La notification d'anomalie créée.
    */
   public async create(data: CreateAnomalyNotificationDto, requestor: Requestor) {
-    if (!requestor.appPerms.includes("postAnomalyNotifications")) {
+    const hasPostPerm = requestor.appPerms?.includes("postAnomalyNotifications") === true;
+    const isAdminReadOrMore = requestor.adminLevel >= AdminLevel.READ;
+    if (!hasPostPerm && !isAdminReadOrMore) {
+      console.error("Permission denied");
       throw new ForbiddenException("Vous n'avez pas la permission de créer une notification d'anomalie.");
     }
+
     if (data.applicationId) {
       return this.prisma.anomalyNotification.create({
         data: {
@@ -25,7 +29,7 @@ export class AnomalyNotificationService {
             connect: { id: data.applicationId },
           },
           notifier: {
-            connect: { keycloakId: requestor.keycloakId },
+            connect: { id: requestor.id },
           },
           description: data.description,
         },

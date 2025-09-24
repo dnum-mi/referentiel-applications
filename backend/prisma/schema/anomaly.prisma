@@ -1,6 +1,6 @@
 model AnomalyNotification {
   id            String                    @id @default(uuid())
-  applicationId String
+  applicationId String?
   notifierId    String
   notifier      User                      @relation("UserAnomalyNotification", fields: [notifierId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   description   String

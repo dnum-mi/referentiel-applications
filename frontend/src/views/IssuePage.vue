@@ -8,14 +8,14 @@ const applicationTabListName = "Informations sur les corrections";
 
 const tabs = [
   {
-    title: "Mes corrections",
+    title: "Mes Signalements",
     icon: "ri-edit-line",
     tabId: "tab-my-issues",
     panelId: "panel-my-issues",
     component: MyIssues,
   },
   {
-    title: "Toutes les corrections",
+    title: "Tous les Signalements",
     icon: "ri-edit-line",
     tabId: "tab-all-issues",
     panelId: "panel-all-issues",
