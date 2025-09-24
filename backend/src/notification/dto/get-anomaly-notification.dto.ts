@@ -1,4 +1,4 @@
-import { IsString, ValidateNested } from "class-validator";
+import { IsOptional, IsString, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty, PickType } from "@nestjs/swagger";
 import { UserEntity } from "src/user/entities/user.entity";
@@ -18,7 +18,8 @@ export class GetAnomalyNotificationDto {
   id: string;
 
   @IsString()
-  applicationId: string;
+  @IsOptional()
+  applicationId?: string;
 
   @ValidateNested()
   @Type(() => ApplicationDto)

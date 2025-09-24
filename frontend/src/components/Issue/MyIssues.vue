@@ -22,12 +22,15 @@ onMounted(async () => {
 
 const rows = computed(() =>
   reportStore.userReports.map(report => ({
+    id: report.id,
     Application: {
       label: report.application?.label,
-      to: {
-        name: routeNames.PROFILEAPP,
-        params: { id: report.application?.id },
-      },
+      to: report.application?.id
+        ? {
+            name: routeNames.PROFILEAPP,
+            params: { id: report.application.id },
+          }
+        : undefined,
     },
     Description: report.description,
     Date: formatDate(report.createdAt),
@@ -67,9 +70,14 @@ const rows = computed(() =>
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Application'">
-          <router-link :to="cell.to" data-testid="my-issues-application-link">
-            {{ cell.label }}
-          </router-link>
+          <template v-if="cell && cell.to && cell.to.params && cell.to.params.id">
+            <router-link :to="cell.to" data-testid="my-issues-application-link">
+              {{ cell.label || 'Voir l’application' }}
+            </router-link>
+          </template>
+          <template v-else>
+            <span data-testid="my-issues-application-link">{{ cell.label || 'Signalement global' }}</span>
+          </template>
         </template>
         <template v-else-if="colKey === 'Statut'">
           <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" data-testid="my-issues-status-tag" />
