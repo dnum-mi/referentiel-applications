@@ -170,11 +170,14 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
 
 <template>
   <div class="fr-container">
+    <h1 class="fr-h1" data-testid="admin-page-title">
+      Administration
+    </h1>
     <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs" data-testid="admin-tabs">
       <DsfrTabContent :panel-id="tabs[0].panelId" :tab-id="tabs[0].tabId">
-        <h1 class="fr-h1" data-testid="admin-users-title">
+        <h2 class="fr-h2" data-testid="admin-users-title">
           Gestion des utilisateurs
-        </h1>
+        </h2>
         <p class="fr-text--lg">
           Gérez les permissions des utilisateurs de l'application
         </p>
@@ -275,9 +278,9 @@ async function saveAppPermsMatrix(body: AppPermsDto[]) {
         </DsfrModal>
       </DsfrTabContent>
       <DsfrTabContent :panel-id="tabs[1].panelId" :tab-id="tabs[1].tabId">
-        <h1 class="fr-h1">
+        <h2 class="fr-h2">
           Gestion de l'indice de qualité
-        </h1>
+        </h2>
         <DsfrButton
           :label="loading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
           :icon="{ name: 'ri-refresh-line', animation: loading ? 'spin' : undefined }"
