@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.40.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.39.0...v1.40.0) (2025-09-25)
+
+
+### Features
+
+* :sparkles: Add possibility to report an anomaly globally ([b212797](https://github.com/dnum-mi/referentiel-applications/commit/b21279758dc917974fde9a6511512ffc0fcb3fd0))
+* ajouter le workflow de construction pour les versions de backend et frontend ([bc853b2](https://github.com/dnum-mi/referentiel-applications/commit/bc853b26835475a3d2ebac37d60875490bd2c28d))
+* **front:** :sparkles: add global request button in application list ([07de923](https://github.com/dnum-mi/referentiel-applications/commit/07de92348034fe708edf10cb1e8745ac78c2184a))
+
+
+### Bug Fixes
+
+* :bug: fix the state and the display for the chart ofthe Iq stats ([d6db717](https://github.com/dnum-mi/referentiel-applications/commit/d6db717d75f295610abe77051afd370d66d1193f))
+* :bug: fix weird count behavior in application list ([bd8e32a](https://github.com/dnum-mi/referentiel-applications/commit/bd8e32a34147976f74195f89a3fc90b077507394))
+* ✅ fix playwright ci tests ([149da3d](https://github.com/dnum-mi/referentiel-applications/commit/149da3d1a24c4c5eb54919ebac43bd0a1eb07564))
+* add H1 titles to all view components and browser tab titles ([d4a61d4](https://github.com/dnum-mi/referentiel-applications/commit/d4a61d4cec8ce12703b7a35a39007813ae6127b9))
+* **front:** :bug: fix navigation accessibility searchbar and resultlist ([c5e7522](https://github.com/dnum-mi/referentiel-applications/commit/c5e752269fabef732fbb113e6c198a295f0c362b))
+
 ## [1.39.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.38.0...v1.39.0) (2025-09-18)
 
 
