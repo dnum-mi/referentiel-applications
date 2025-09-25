@@ -31,7 +31,7 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     return response.data;
   }
 
-  async function fetchIqStats(from?: string, to?: string, groupBy: "jour" | "semaine" | "mois" | "année" = "mois") {
+  async function fetchIqStats(from?: string, to?: string, groupBy: "day" | "week" | "month" | "year" = "month") {
     isLoading.value = true;
     error.value = null;
     const response = await api.statsControllerGetIqAvgGrouped({ query: { from, to, groupBy } });
