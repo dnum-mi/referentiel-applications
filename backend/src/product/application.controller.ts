@@ -119,7 +119,7 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.getApplicationsCountByIq();
   }
 
-  @Get("search")
+  @Get()
   @ApiOperation({
     summary: "Rechercher et filtrer les applications",
     description: `Endpoint unifié pour rechercher, filtrer et paginer les applications.
@@ -230,26 +230,6 @@ Le paramètre **id** doit être fourni dans l'URL.
     @Param("applicationId") id: string,
   ): Promise<ApplicationDto> {
     return this.applicationService.getApplicationById(id);
-  }
-
-  @Get()
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.READ)
-  @ApiOperation({
-    summary: "Récupérer les applications",
-    description: `
-Ce endpoint permet de récupérer la liste de toutes les applications existantes dans le système.
-
-Aucun paramètre n'est requis pour accéder à cette liste.
-    `,
-  })
-  @ApiOkResponse({
-    description: "Liste des applications",
-    type: ApplicationDto,
-    isArray: true,
-  })
-  async findAll(): Promise<ApplicationDto[]> {
-    return this.applicationService.getApplications();
   }
 
   @Get("data-quality/update")

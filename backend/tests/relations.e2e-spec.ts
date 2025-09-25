@@ -219,6 +219,7 @@ describe("application guard", () => {
     await request(app().getHttpServer())
       .patch(`/applications/${application.id}/relations/${relationId}`)
       .send({
+        applicationTargetId: applicationTarget.id,
         type: RelationType.in_replacement_of,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
@@ -236,6 +237,7 @@ describe("application guard", () => {
     await request(app().getHttpServer())
       .patch(`/applications/${application.id}/relations/${relationId}`)
       .send({
+        applicationTargetId: applicationTarget.id,
         type: RelationType.in_replacement_of,
       })
       .set("Authorization", `Bearer ${TOKEN}`)

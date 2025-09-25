@@ -3,6 +3,7 @@ import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "../src/app.module";
 import { setupSwagger } from "../src/swagger-config";
+import { setupGlobalValidation } from "../src/config/app-config";
 import { getPrismaClient } from "./fakers/prisma";
 import type { PrismaClient } from "@prisma/client";
 
@@ -12,6 +13,10 @@ export async function setupApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
+
+  // Use the same validation configuration as the main app
+  setupGlobalValidation(app);
+
   setupSwagger(app, {
     writeYaml: false,
     onlyWriteSwagger: false,
