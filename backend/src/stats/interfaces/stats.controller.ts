@@ -62,25 +62,12 @@ Authorization: Bearer <TOKEN>
   async getIqAvgGrouped(
     @Query("from") from?: string,
     @Query("to") to?: string,
-    @Query("groupBy") groupBy?: string,
+    @Query("groupBy") groupBy?: GroupBy,
   ) {
-    // Traduction inverse des valeurs FR → EN
-    const groupByMap: Record<string, GroupBy> = {
-      jour: "day",
-      semaine: "week",
-      mois: "month",
-      année: "year",
-      day: "day",
-      week: "week",
-      month: "month",
-      year: "year",
-    };
-    const groupByValue: GroupBy = groupByMap[groupBy ?? "month"] ?? "month";
-
     return this.statsService.getIqAvgGrouped(
       from && new Date(from),
       to && new Date(to),
-      groupByValue,
+      groupBy,
     );
   }
 }

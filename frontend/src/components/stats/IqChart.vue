@@ -26,7 +26,10 @@ const groupBy = ref<"day" | "week" | "month">("month");
 
 /** (Re)dessine le chart */
 function updateChart() {
-  if (!chartRef.value || !iqStats.value.length) return;
+  if (!chartRef.value || !iqStats.value.length) {
+    isLoading.value = false;
+    return;
+  };
   const labels = iqStats.value.map(s =>
     // Pour 'month', label="YYYY-MM" ; pour 'day'/'week', label="YYYY-MM-DD"
     new Date(s.label + (groupBy.value === "month" ? "-01" : "")).toLocaleDateString("fr-FR", {
@@ -38,6 +41,7 @@ function updateChart() {
   const data = iqStats.value.map(s => s.moyenne);
 
   chartInstance = renderChart(chartRef, chartInstance, labels, data, "line");
+  isLoading.value = false;
 }
 
 /** Appelle l’API avec la plage et le groupBy choisis */
@@ -60,11 +64,11 @@ onMounted(async () => {
   <div class="filters" data-testid="iq-chart-filters">
     <label>
       Du
-      <input v-model="startDate" type="date" data-testid="iq-chart-start-date">
+      <input v-model="startDate" type="date" data-testid="iq-chart-start-date" style="color: grey;">
     </label>
     <label>
       Au
-      <input v-model="endDate" type="date" data-testid="iq-chart-end-date">
+      <input v-model="endDate" type="date" data-testid="iq-chart-end-date" style="color: grey;">
     </label>
 
     <div class="buttons" data-testid="iq-chart-buttons">
@@ -86,7 +90,10 @@ onMounted(async () => {
   <div v-else-if="error" data-testid="iq-chart-error">
     {{ error }}
   </div>
-  <canvas v-else ref="chartRef" data-testid="iq-chart-canvas" />
+  <div v-else-if="!iqStats.length" data-testid="iq-chart-no-data">
+    Aucune donnée disponible pour la période sélectionnée.
+  </div>
+  <canvas v-show="!isLoading && !error" ref="chartRef" data-testid="iq-chart-canvas" />
 </template>
 
 <style scoped>
