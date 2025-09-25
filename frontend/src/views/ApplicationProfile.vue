@@ -78,7 +78,7 @@ const actions = computed(() => [
       {{ errorMessage }}
     </div>
     <div v-else-if="application" style="position: relative; margin: 2rem 1rem;" data-testid="application-profile">
-      <h2 data-testid="application-title">
+      <h1 data-testid="application-title">
         {{ application.label }}
         <p v-if="metadataStore.firstMetadata" class="subtitle" data-testid="application-created-at">
           Date de création de la fiche  : {{ new Date(metadataStore.firstMetadata.createdAt).toLocaleDateString("fr-FR") || "inconnue" }} ({{
@@ -90,7 +90,7 @@ const actions = computed(() => [
         </p>
         <DsfrTag v-if="application.status" class="fr-mr-2w" :label="statusApplicationDictionary[application.status]" data-testid="application-status-tag" />
         <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" data-testid="application-iq-tag" />
-      </h2>
+      </h1>
 
       <DsfrButton
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"

@@ -11,6 +11,9 @@ onMounted(() => {
 <template>
   <div class="fr-grid-row fr-grid-row--center" data-testid="user-profile">
     <div class="fr-col-12 fr-col-md-8">
+      <h1 class="fr-h1" data-testid="user-profile-main-title">
+        Profil utilisateur
+      </h1>
       <div v-if="userStore.user" class="fr-card" data-testid="user-profile-card">
         <div class="fr-card__body fr-mt-2w">
           <h2 class="fr-h4" data-testid="user-profile-title">

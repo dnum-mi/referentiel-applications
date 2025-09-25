@@ -63,6 +63,10 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
     <SidebarFilters data-testid="application-filters" />
 
     <main class="main-content">
+      <h1 class="fr-h1" data-testid="application-search-title">
+        Recherche d'applications
+      </h1>
+
       <div v-if="showLoader" class="loader" data-testid="application-loader">
         <AppLoader />
       </div>
