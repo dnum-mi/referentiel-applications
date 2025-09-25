@@ -6,6 +6,10 @@ on:
     branches:
       - main
   workflow_call:
+    inputs:
+      backend_image_tag:
+        required: false
+        type: string
     secrets:
       SONAR_TOKEN:
         required: false
@@ -21,11 +25,12 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    env:
+      IMAGE_TAG: ${{ inputs.backend_image_tag }}
     steps:
       - uses: actions/checkout@v4
       - name: Start stack using docker compose
-        run: |
-          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml up keycloak postgres -d
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend keycloak postgres -d
       - name: Wait for Keycloak to be ready
         run: |
           for i in {1..30}; do
@@ -38,19 +43,15 @@ jobs:
           done
           echo "Keycloak did not become ready in time"
           exit 1
-      - name: Run db:deploy
-        run: |
-          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run db:deploy
+      - name: Run migrations
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm prisma migrate deploy
       - name: Run test coverage
-        run: |
-          mkdir -p backend/coverage # create before to avoid permission issues
-          docker compose -f docker-compose.yml -f docker-compose.backend.ci.yml run backend npm run test:cov
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm test:cov
       - name: Upload vitest coverage artifacts
         uses: actions/upload-artifact@v4
         with:
           name: unit-tests-coverage
-          path: |
-            ./backend/coverage/
+          path: ./backend/coverage/
           retention-days: 1
 
       - name: Install pnpm

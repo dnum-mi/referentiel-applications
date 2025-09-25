@@ -13,7 +13,7 @@
             </div>
             <div class="fr-grid-row fr-grid-row--gutters">
               <div class="fr-col-md-3">
-                <img src="../../public/assets/svg-screen.svg" alt="">
+                <img src="/assets/svg-screen.svg" alt="">
               </div>
               <div class="fr-col-md-9">
                 <div class="fr-m-0">
@@ -42,7 +42,7 @@
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile" data-testid="home-tile-centralisation">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svg-centralize.svg" alt="">
+                    <img src="/assets/svg-centralize.svg" alt="">
                     <h3 class="fr-tile__title">
                       Centralisation
                     </h3>
@@ -55,7 +55,7 @@
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile" data-testid="home-tile-access">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svg-loupe.svg" alt="">
+                    <img src="/assets/svg-loupe.svg" alt="">
                     <h3 class="fr-tile__title">
                       Facilité d'accès
                     </h3>
@@ -68,7 +68,7 @@
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile" data-testid="home-tile-dependencies">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svg-dependencies.svg" alt="">
+                    <img src="/assets/svg-dependencies.svg" alt="">
                     <h3 class="fr-tile__title">
                       Gestion des dépendances
                     </h3>
@@ -81,7 +81,7 @@
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile" data-testid="home-tile-maintenance">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svgviewer-output(3).svg" alt="">
+                    <img src="/assets/svgviewer-output(3).svg" alt="">
                     <h3 class="fr-tile__title">
                       Amélioration de la maintenance
                     </h3>
@@ -94,7 +94,7 @@
               <div class="fr-col-12 fr-col-sm-4">
                 <div class="fr-tile" data-testid="home-tile-exploitability">
                   <div class="fr-tile__body">
-                    <img src="../../public/assets/svg-stats.svg" alt="">
+                    <img src="/assets/svg-stats.svg" alt="">
                     <h3 class="fr-tile__title">
                       Amélioration de l'exploitabilité
                     </h3>
