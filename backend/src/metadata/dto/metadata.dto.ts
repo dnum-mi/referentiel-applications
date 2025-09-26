@@ -1,6 +1,18 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { MetadataAction } from "@prisma/client";
+import { PaginationDto } from "src/common/dto";
 import { UserEntity } from "src/user/entities/user.entity";
+
+
+export class MetadataFiltersDto extends PaginationDto{}
+
+export class ApplicationLightDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  label: string;
+}
 
 export class MetadataDto {
   @ApiProperty({
@@ -85,6 +97,9 @@ export class MetadataDto {
     nullable: true,
   })
   labelId: string | null;
+
+  @ApiProperty({ required: false, type: () => ApplicationLightDto })
+  application?: ApplicationLightDto;
 
   @ApiProperty({
     description: "Utilisateur qui a créé la metadata",

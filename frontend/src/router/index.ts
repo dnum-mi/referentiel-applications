@@ -51,6 +51,13 @@ const routes = [
     meta: { requiresAuth: true, title: "Qualité générale - Référentiel des applications" },
   },
   {
+    name: routeNames.HISTORY,
+    path: "/historique",
+    component: () => import("@/views/HistoryPage.vue"),
+    meta: { requiresAuth: true, title: "Historique global - Référentiel des applications" },
+  },
+
+  {
     path: "/:pathMatch(.*)*",
     name: routeNames.NOTFOUND,
     component: () => import("@/views/NotFound.vue"),

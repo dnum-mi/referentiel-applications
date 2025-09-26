@@ -8,11 +8,16 @@ export class MetadataRepository implements IMetadataRepository {
     private readonly prisma: PrismaService,
   ) { }
 
-  public async findAll(applicationId: string) {
-    return await this.prisma.metadata.findMany({
-      where: { applicationId },
+  public async findAll(applicationId?: string) {
+    return this.prisma.metadata.findMany({
+      where: applicationId ? { applicationId } : undefined,
       orderBy: { createdAt: "desc" },
-      include: { createdBy: true },
+      include: {
+        createdBy: true,
+        application: {
+          select: { id: true, label: true },
+        },
+      },
     });
   }
 

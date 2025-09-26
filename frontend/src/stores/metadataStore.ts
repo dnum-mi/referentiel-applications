@@ -49,6 +49,22 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     metadatas.value = response.data;
   };
 
+  const fetchMetadatasGlobal = async () => {
+    isLoading.value = true;
+    try {
+      console.log("Fetching global metadatas...");
+      const response = await api.allMetadatasControllerFindAll();
+      console.log(response);
+      isLoading.value = false;
+      metadatas.value = response.data ?? [];
+    } catch (error) {
+      isLoading.value = false;
+      toaster.addErrorMessage("Erreur technique lors de la récupération des metadatas globales.");
+      metadatas.value = [];
+      console.error(error);
+    }
+  };
+
   return {
     firstMetadata,
     lastMetadata,
@@ -56,5 +72,6 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     isLoading,
     getFirstAndLastMetadataByApplication,
     fetchMetadatasByApplication,
+    fetchMetadatasGlobal,
   };
 });
