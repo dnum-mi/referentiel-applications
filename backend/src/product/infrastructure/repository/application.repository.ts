@@ -75,175 +75,189 @@ export class ApplicationRepository implements IApplicationRepository {
       }
     }
 
-    // Label filter - search both main label field and labels table
-    if (filters.label) {
-      where.AND.push({
-        OR: [
-          {
-            label: {
-              contains: filters.label,
-              mode: "insensitive" as const,
-            },
-          },
-          {
-            labels: {
-              some: {
-                value: {
-                  contains: filters.label,
-                  mode: "insensitive" as const,
-                },
-              },
-            },
-          },
-        ],
-      });
-    }
-
-    // Label filter - search both main label field and labels table
-    if (filters.search) {
-      where.AND.push({
-        OR: [
-          {
-            label: {
-              contains: filters.search,
-              mode: "insensitive" as const,
-            },
-          },
-          {
-            labels: {
-              some: {
-                value: {
-                  contains: filters.label,
-                  mode: "insensitive" as const,
-                },
-              },
-            },
-          },
-          {
-            shortName: {
-              contains: filters.search,
-              mode: "insensitive" as const,
-            },
-          },
-        ],
-      });
-    }
-
-    // Hosting search filter
-    if (filters.hostingSearch) {
-      where.AND.push({
-        hostings: {
-          some: {
-            hostingOption: {
-              OR: [
-                {
-                  site: {
-                    contains: filters.hostingSearch,
-                    mode: "insensitive" as const,
-                  },
-                },
-                {
-                  platform: {
-                    contains: filters.hostingSearch,
-                    mode: "insensitive" as const,
-                  },
-                },
-                {
-                  provider: {
-                    contains: filters.hostingSearch,
-                    mode: "insensitive" as const,
-                  },
-                },
-                {
-                  building: {
-                    contains: filters.hostingSearch,
-                    mode: "insensitive" as const,
-                  },
-                },
-                {
-                  room: {
-                    contains: filters.hostingSearch,
-                    mode: "insensitive" as const,
-                  },
-                },
-              ],
-            },
-          },
-        },
-      });
-    }
-
-    // Organization filter
-    if (filters.organizationLabel) {
-      where.AND.push({
-        actors: {
-          some: {
-            organization: {
+    const filterConfigs = [
+      {
+        condition: filters.label,
+        whereClause: {
+          OR: [
+            {
               label: {
-                contains: filters.organizationLabel,
+                contains: filters.label,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              labels: {
+                some: {
+                  value: {
+                    contains: filters.label,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        condition: filters.search,
+        whereClause: {
+          OR: [
+            {
+              label: {
+                contains: filters.search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              labels: {
+                some: {
+                  value: {
+                    contains: filters.search,
+                    mode: "insensitive" as const,
+                  },
+                },
+              },
+            },
+            {
+              shortName: {
+                contains: filters.search,
+                mode: "insensitive" as const,
+              },
+            },
+          ],
+        },
+      },
+      {
+        condition: filters.hostingSearch,
+        whereClause: {
+          hostings: {
+            some: {
+              hostingOption: {
+                OR: [
+                  {
+                    site: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    platform: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    provider: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    building: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    room: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.organization,
+        whereClause: {
+          actors: {
+            some: {
+              organization: {
+                OR: [
+                  {
+                    label: {
+                      contains: filters.organization,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    sigle: {
+                      contains: filters.organization,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.actorType,
+        whereClause: {
+          actors: {
+            some: {
+              actorType: {
+                code: {
+                  equals: filters.actorType,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.link,
+        whereClause: {
+          externalRessource: {
+            some: {
+              link: {
+                contains: filters.link,
                 mode: "insensitive" as const,
               },
             },
           },
         },
-      });
-    }
-
-    // Actor type filter
-    if (filters.actorType) {
-      where.AND.push({
-        actors: {
-          some: {
-            actorType: {
-              code: {
-                equals: filters.actorType,
-                mode: "insensitive" as const,
-              },
-            },
-          },
+      },
+      {
+        condition: shortName,
+        whereClause: {
+          shortName: { contains: shortName, mode: "insensitive" as const },
         },
-      });
-    }
-
-    // Link filter
-    if (filters.link) {
-      where.AND.push({
-        externalRessource: {
-          some: {
-            link: {
-              contains: filters.link,
-              mode: "insensitive" as const,
-            },
-          },
+      },
+      {
+        condition: tag?.length,
+        whereClause: {
+          tags: { hasSome: upperCaseTags },
         },
-      });
-    }
+      },
+      {
+        condition: priorityRestart?.length,
+        whereClause: {
+          priorityRestart: { in: priorityRestart },
+        },
+      },
+      {
+        condition: filters.status__in?.length,
+        whereClause: {
+          status: { in: filters.status__in },
+        },
+      },
+    ];
 
-    // Simple filters
-    if (shortName) {
-      where.AND.push({
-        shortName: { contains: shortName, mode: "insensitive" as const },
-      });
-    }
+    // Apply all filters using the configuration array
+    filterConfigs.forEach(({ condition, whereClause }) => {
+      if (condition) {
+        where.AND.push(whereClause);
+      }
+    });
 
-    if (tag?.length) {
-      where.AND.push({
-        tags: { hasSome: upperCaseTags },
-      });
-    }
-
-    if (priorityRestart?.length) {
-      where.AND.push({
-        priorityRestart: { in: priorityRestart },
-      });
-    }
-
-    if (filters.status__in?.length) {
-      where.AND.push({
-        status: { in: filters.status__in },
-      });
-    }
-
+    // Always add quality filter
     where.AND.push({
       quality: {
         gte: filters.iqGte,
