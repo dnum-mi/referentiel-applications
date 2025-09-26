@@ -100,6 +100,11 @@ const navItems = [
     to: { name: routeNames.ISSUELIST },
     text: "Corrections",
   },
+  {
+    to: { name: routeNames.HISTORY },
+    text: "Historique",
+  },
+
 ];
 
 const logoText = ["Ministère", "de l’intérieur"];

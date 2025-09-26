@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Param,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -13,7 +14,8 @@ import {
 import { MetadataService } from "./metadata.service";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
-import { FirstLastMetadataDto, MetadataDto } from "./dto/metadata.dto";
+import { FirstLastMetadataDto, MetadataDto, MetadataFiltersDto } from "./dto/metadata.dto";
+import { PaginatedResponseDto } from "src/common/dto";
 
 @ApiTags("Metadatas")
 @UseGuards(ApplicationGuard)
@@ -51,5 +53,22 @@ export class ApplicationMetadataController {
         @Param("applicationId") applicationId: string,
   ): Promise<FirstLastMetadataDto> {
     return this.metadataService.getFirstAndLastMetadata(applicationId);
+  }
+}
+
+
+@ApiTags("Metadatas")
+@Controller("metadatas")
+export class MetadatasController {
+  constructor(private readonly metadataService: MetadataService) { }
+
+  @Get()
+  @ApiOperation({ summary: "Récupérer toutes les metadatas (paginated)" })
+  @ApiOkResponse({
+    description: "Liste paginée des metadatas",
+    type: PaginatedResponseDto<MetadataDto>,
+  })
+  public async findAll(@Query() filters: MetadataFiltersDto): Promise<PaginatedResponseDto<MetadataDto>> {
+    return this.metadataService.findAll(filters);
   }
 }

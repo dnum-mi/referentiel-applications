@@ -177,6 +177,22 @@ paths:
               schema:
                 $ref: "#/components/schemas/FirstLastMetadataDto"
       tags: *a2
+  /api/v2/metadatas/all:
+    get:
+      operationId: MetadatasController_findAll
+      summary: Récupérer toutes les metadatas
+      parameters: []
+      responses:
+        "200":
+          description: Liste des metadatas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetadataDto"
+      tags:
+        - Metadatas
   /api/v2/users/me:
     get:
       operationId: UserController_findMe
@@ -2361,6 +2377,16 @@ components:
         - add
         - update
         - delete
+    ApplicationLightDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+      required:
+        - id
+        - label
     UserType:
       type: string
       enum:
@@ -2456,6 +2482,8 @@ components:
           nullable: true
           description: ID du label liée à la metadata
           example: 5708d232-8338-4abf-8f38-8370acc89497
+        application:
+          $ref: "#/components/schemas/ApplicationLightDto"
         createdBy:
           description: Utilisateur qui a créé la metadata
           allOf:
