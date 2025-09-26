@@ -48,47 +48,45 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="fr-container fr-my-2v w-[800px]">
-    <AppLoader v-if="isLoading" data-testid="issues-loader" />
-    <div v-else-if="!rows.length" class="text-center" data-testid="issues-empty">
-      <p>Aucune correction recensée.</p>
-    </div>
-    <DsfrDataTable
-      v-else
-      v-model:selection="selection"
-      v-model:current-page="currentPage"
-      data-testid="issues-table"
-      :headers-row="headers"
-      :rows="rows"
-      selectable-rows
-      row-key="id"
-      :title="title"
-      pagination
-      :rows-per-page="10"
-      :pagination-options="[10, 20, 30]"
-      bottom-action-bar-class="bottom-action-bar-class"
-      pagination-wrapper-class="pagination-wrapper-class"
-      sorted="id"
-      :sortable-rows="['id']"
-    >
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Application'">
-          <template v-if="cell && cell.to && cell.to.params && cell.to.params.id">
-            <router-link :to="cell.to" :data-testid="`issues-row-${cell.id}-application`">
-              {{ cell.label || 'Voir l’application' }}
-            </router-link>
-          </template>
-          <template v-else>
-            <span :data-testid="`issues-row-${cell.id}-application`">{{ cell.label || 'Signalement global' }}</span>
-          </template>
-        </template>
-        <template v-else-if="colKey === 'Statut'">
-          <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" :data-testid="`issues-row-${cell.id}-status`" />
+  <AppLoader v-if="isLoading" data-testid="issues-loader" />
+  <div v-else-if="!rows.length" class="text-center" data-testid="issues-empty">
+    <p>Aucune correction recensée.</p>
+  </div>
+  <DsfrDataTable
+    v-else
+    v-model:selection="selection"
+    v-model:current-page="currentPage"
+    data-testid="issues-table"
+    :headers-row="headers"
+    :rows="rows"
+    selectable-rows
+    row-key="id"
+    :title="title"
+    pagination
+    :rows-per-page="10"
+    :pagination-options="[10, 20, 30]"
+    bottom-action-bar-class="bottom-action-bar-class"
+    pagination-wrapper-class="pagination-wrapper-class"
+    sorted="id"
+    :sortable-rows="['id']"
+  >
+    <template #cell="{ colKey, cell }">
+      <template v-if="colKey === 'Application'">
+        <template v-if="cell && cell.to && cell.to.params && cell.to.params.id">
+          <router-link :to="cell.to" :data-testid="`issues-row-${cell.id}-application`">
+            {{ cell.label || 'Voir l’application' }}
+          </router-link>
         </template>
         <template v-else>
-          {{ cell }}
+          <span :data-testid="`issues-row-${cell.id}-application`">{{ cell.label || 'Signalement global' }}</span>
         </template>
       </template>
-    </DsfrDataTable>
-  </div>
+      <template v-else-if="colKey === 'Statut'">
+        <DsfrTag :icon="cell.icon" :class="cell.class" :label="cell.label" :data-testid="`issues-row-${cell.id}-status`" />
+      </template>
+      <template v-else>
+        {{ cell }}
+      </template>
+    </template>
+  </DsfrDataTable>
 </template>
