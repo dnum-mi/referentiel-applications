@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.41.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.40.0...v1.41.0) (2025-09-26)
+
+
+### Features
+
+* **front:** :sparkles: add pagination in page admin ([ec86974](https://github.com/dnum-mi/referentiel-applications/commit/ec869746a65d3647c5836885bd65eddda9541e26))
+
+
+### Bug Fixes
+
+* :bug: fix applications search by organization sigle and label ([0fa457d](https://github.com/dnum-mi/referentiel-applications/commit/0fa457d59d52e4559979bf9a02efdb6f6a923471))
+* **front:** :lipstick: fix issue tables fill witdh ([56f964c](https://github.com/dnum-mi/referentiel-applications/commit/56f964cdf7128a831e595825e77a9e70560c08a0))
+
 ## [1.40.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.39.0...v1.40.0) (2025-09-25)
 
 
