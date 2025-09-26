@@ -8,11 +8,11 @@ import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 const searchStore = useApplicationSearchStore();
 const organizationStore = useOrganizationStore();
 
-const organizationSearchInput = computed(() => searchStore.filters.organizationLabel);
+const organizationSearchInput = computed(() => searchStore.filters.organization);
 const organizations = ref<OrganizationDto[]>([]);
 
 function updateOrganizationFilter(value?: string) {
-  searchStore.setFilter({ organizationLabel: value, page: 0 });
+  searchStore.setFilter({ organization: value, page: 0 });
 }
 
 watch(organizationSearchInput, async (val) => {

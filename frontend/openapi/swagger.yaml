@@ -417,7 +417,7 @@ paths:
                 - in_production_decommissioning
                 - decommissioned
                 - deleted
-        - name: organizationLabel
+        - name: organization
           required: false
           in: query
           description: Nom de l'organisation liée à l'application
@@ -648,7 +648,7 @@ paths:
                 - in_production_decommissioning
                 - decommissioned
                 - deleted
-        - name: organizationLabel
+        - name: organization
           required: false
           in: query
           description: Nom de l'organisation liée à l'application

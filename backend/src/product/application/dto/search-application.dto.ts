@@ -79,7 +79,7 @@ export class ApplicationSearchDto {
   })
   @IsOptional()
   @IsString()
-  organizationLabel?: string;
+  organization?: string;
 
   @ApiPropertyOptional({
     description:

@@ -8,7 +8,7 @@ interface ApplicationOption {
   id: string | number
   label: string
   shortName?: string
-  organizationLabel?: string
+  organization?: string
 }
 
 interface SearchResponse {
@@ -72,7 +72,7 @@ const templates = {
   suggestion: (application: ApplicationOption) => {
     const label = escapeHtml(application?.label ?? "");
     const short = application?.shortName ? ` <small>(${escapeHtml(application.shortName)})</small>` : "";
-    const org = application?.organizationLabel ? ` — <em>${escapeHtml(application.organizationLabel)}</em>` : "";
+    const org = application?.organization ? ` — <em>${escapeHtml(application.organization)}</em>` : "";
     return `${label}${short}${org}`;
   },
 };

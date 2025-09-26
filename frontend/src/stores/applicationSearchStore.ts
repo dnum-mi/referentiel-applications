@@ -23,7 +23,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     sortBy: "label",
     order: "asc",
     hostingSearch: undefined,
-    organizationLabel: undefined,
+    organization: undefined,
     actorType: undefined,
     iqGte: 0,
     iqLte: 100,
