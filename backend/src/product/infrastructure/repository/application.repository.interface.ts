@@ -2,6 +2,7 @@ import type { Application } from "@prisma/client";
 import type { CreateApplicationDto } from "src/product/application/dto/create-application.dto";
 import type { ApplicationDto } from "src/product/application/dto/get-application.dto";
 import type { ApplicationSearchDto } from "src/product/application/dto/search-application.dto";
+import type { PaginatedResponseDto } from "src/common/dto";
 
 export type ApplicationSearchFilters = ApplicationSearchDto;
 
@@ -16,5 +17,5 @@ export interface IApplicationRepository {
   findApplications: (
     search: ApplicationSearchFilters,
     ownership?: { actorEmail?: string, ownerId?: string },
-  ) => Promise<{ results: ApplicationDto[], total: number }>
+  ) => Promise<PaginatedResponseDto<ApplicationDto>>
 }

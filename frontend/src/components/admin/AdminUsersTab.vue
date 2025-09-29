@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import api from "@/api/index";
-import type { UserEntity } from "@/client/types.gen";
+import type { PaginatedResponseDto, UserEntity } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { AdminLevelOptions, AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
@@ -45,33 +45,28 @@ async function fetchUsers() {
 
     const query: Record<string, any> = {
       search: searchQuery.value.trim() || undefined,
-      page: currentPage.value + 1,
-      itemsPerPage: itemsPerPage.value,
-      sortColumn: fieldKey,
-      isSortDescending: isSortDescending.value,
+      page: currentPage.value,
+      pageSize: itemsPerPage.value,
+      sortBy: fieldKey,
+      order: isSortDescending.value ? "desc" : "asc",
     };
 
     const response = await api.userControllerFindAll({ query });
 
     if (response.response.ok && response.data) {
-      const items = response.data as UserEntity[];
+      const data = response.data as PaginatedResponseDto;
 
-      if (items.length === 0 && currentPage.value > 0) {
+      if (data.results.length === 0 && currentPage.value > 0) {
         if (remoteTotalCount.value == null) {
-          remoteTotalCount.value = currentPage.value * itemsPerPage.value;
+          remoteTotalCount.value = data.total;
         }
         currentPage.value = Math.max(0, currentPage.value - 1);
         await fetchUsers();
         return;
       }
 
-      userList.value = items;
-
-      try {
-        const totalHeader = (response.response as any)?.headers?.get?.("X-Total-Count");
-        remoteTotalCount.value = totalHeader ? Number(totalHeader) : remoteTotalCount.value;
-      } catch {
-      }
+      userList.value = data.results;
+      remoteTotalCount.value = data.total;
 
       errorKeySet.value.delete("ERR_LOAD_USERS");
     } else {
@@ -82,10 +77,6 @@ async function fetchUsers() {
   } finally {
     isLoading.value = false;
   }
-}
-
-async function onSearch() {
-  await fetchUsers();
 }
 
 let searchDebounceTimeout: number | undefined;
@@ -110,7 +101,6 @@ const tableRows = computed(() =>
     "ID Keycloak": user.keycloakId,
     "Dernière connexion": user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
     Permissions: {
-      level: user.adminLevel,
       label: AdminLevelWording[user.adminLevel],
       badgeClass: AdminLevelWordingBadgeClass[user.adminLevel],
     },
@@ -133,16 +123,8 @@ const paginationPages = computed(() =>
   })),
 );
 
-watch([itemsPerPage, totalRowCount], () => {
-  if (currentPage.value > totalPageCount.value - 1) currentPage.value = 0;
-});
-
 function onUpdateSortColumn(columnName: string | undefined) {
-  const proposedColumn = columnName || "Email";
-  if (proposedColumn === "Actions") {
-    return;
-  }
-  sortColumn.value = proposedColumn;
+  sortColumn.value = columnName || "Email";
 }
 
 function openEditModal(user: UserEntity) {
@@ -158,7 +140,7 @@ function closeEditModal() {
 }
 
 async function savePermissions() {
-  if (!selectedUser.value) return;
+  if (!selectedUser.value || !selectedUser.value.keycloakId) return;
   isSaving.value = true;
   try {
     await api.userControllerUpdate({
@@ -176,19 +158,14 @@ async function savePermissions() {
   }
 }
 
-function updateItemsPerPage(value: number | string) {
-  const numericValue = Number(value as any);
-  if (!Number.isFinite(numericValue) || numericValue <= 0) return;
-  itemsPerPage.value = numericValue;
+function updateItemsPerPage(value: number) {
+  itemsPerPage.value = value;
   currentPage.value = 0;
   fetchUsers();
 }
-function updatePage(value: number | string | { page: number | string }) {
-  const rawValue = typeof value === "object" && value !== null ? (value as any).page : value;
-  const numericValue = Number(rawValue as any);
-  if (!Number.isFinite(numericValue)) return;
+function updatePage(value: number) {
   const maxIndex = totalPageCount.value - 1;
-  currentPage.value = Math.max(0, Math.min(numericValue, maxIndex));
+  currentPage.value = Math.max(0, Math.min(value, maxIndex));
   fetchUsers();
 }
 
@@ -212,7 +189,6 @@ onMounted(fetchUsers);
         button-text="Rechercher"
         class="fr-col-12"
         data-testid="admin-user-search"
-        @search="onSearch"
       />
     </div>
 
