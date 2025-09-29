@@ -136,47 +136,36 @@ export class ApplicationService {
 
   async getApplicationsCountByMonth(lastMonths: number = 6): Promise<{ month: string, total: number }[]> {
     const now = new Date();
-    const startDate = new Date(
-      now.getFullYear(),
-      now.getMonth() - lastMonths + 1,
-      1,
-    );
-
-    const result = await this.prisma.application.findMany({
-      where: {
-        metadatas: {
-          every: {
-            createdAt: {
-              gte: startDate,
-            },
-          },
-        },
-      },
+    const applications = await this.prisma.application.findMany({
+      where: { status: { not: "deleted" } },
       select: {
         metadatas: {
           orderBy: { createdAt: "asc" },
-          take: 1, // Get the first metadata for each application
+          take: 1,
+          select: { createdAt: true },
         },
       },
     });
 
-    // reduce by month
-    const monthMap: Record<string, number> = this.getEmptyCountRange(lastMonths);
+    const months: string[] = [];
+    for (let i = lastMonths - 1; i >= 0; i--) {
+      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(month.toISOString().slice(0, 7));
+    }
 
-    result.forEach((app) => {
-      const createdAt = app.metadatas[0]?.createdAt;
-      if (createdAt) {
-        const monthKey = new Date(createdAt).toISOString().slice(0, 7);
-        if (monthMap[monthKey] !== undefined) {
-          monthMap[monthKey]++;
-        }
-      }
+    return months.map((monthKey) => {
+      const endOfMonth = new Date(`${monthKey}-01`);
+      endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+      endOfMonth.setDate(0);
+      endOfMonth.setHours(23, 59, 59, 999);
+
+      const total = applications.filter((app) => {
+        const createdAt = app.metadatas[0]?.createdAt;
+        return createdAt && new Date(createdAt) <= endOfMonth;
+      }).length;
+
+      return { month: monthKey, total };
     });
-
-    return Object.entries(monthMap).map(([month, total]) => ({
-      month,
-      total,
-    })).reverse(); // Reverse to have the most recent month first
   }
 
   async getApplicationsCountByIq() {
