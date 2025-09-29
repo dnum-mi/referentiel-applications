@@ -7,12 +7,12 @@ import {
   IsArray,
   Min,
   IsEnum,
-  IsIn,
   Max,
 } from "class-validator";
 import { Transform, Type } from "class-transformer";
+import { PaginationDto } from "../../../common/dto";
 
-export class ApplicationSearchDto {
+export class ApplicationSearchDto extends PaginationDto {
   @ApiPropertyOptional({
     description: "Recherche plein texte sur tous les champs",
     example: "Mon Application",
@@ -116,40 +116,6 @@ export class ApplicationSearchDto {
   @IsNumber()
   @Max(100)
   iqLte?: number = 100;
-
-  @ApiPropertyOptional({ description: "Numéro de page", example: 0 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  page?: number;
-
-  @ApiPropertyOptional({
-    description: "Nombre de résultats par page, 0 pour supprimer la pagination",
-    example: 15,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  limit?: number = 15;
-
-  @ApiPropertyOptional({
-    description: "Champ utilisé pour le tri",
-    example: "label",
-  })
-  @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @ApiPropertyOptional({
-    description: "Ordre de tri",
-    example: "asc",
-    enum: ["asc", "desc"],
-  })
-  @IsOptional()
-  @IsIn(["asc", "desc"])
-  order?: "asc" | "desc";
 
   @ApiPropertyOptional({
     description: "Colonnes à inclure dans l'export",

@@ -19,7 +19,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     priorityRestart: undefined,
     status__in: ["under_construction", "in_production_mvp", "in_production", "in_production_decommissioning", "decommissioned"],
     page: 0,
-    limit: 15,
+    pageSize: 15,
     sortBy: "label",
     order: "asc",
     hostingSearch: undefined,
@@ -37,9 +37,9 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     set: val => (filters.value.page = val),
   });
 
-  const limit = computed({
-    get: () => filters.value.limit,
-    set: val => (filters.value.limit = val),
+  const pageSize = computed({
+    get: () => filters.value.pageSize,
+    set: val => (filters.value.pageSize = val),
   });
 
   const { run: debouncedSearch } = useDebouncedFn(() => {
@@ -113,7 +113,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     results,
     total,
     page,
-    limit,
+    pageSize,
     isLoading,
     error,
     initialFilters,

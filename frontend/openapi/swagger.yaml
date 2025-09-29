@@ -232,11 +232,47 @@ paths:
         Supporte la recherche par email et ID Keycloak. Accès limité aux
         administrateurs.
       parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
         - name: type
           required: false
           in: query
           description: Type d'utilisateur. Utiliser les valeurs de /userTypes
           schema:
+            default:
+              - human
             example:
               - human
             type: array
@@ -250,40 +286,13 @@ paths:
           in: query
           schema:
             type: string
-        - name: page
-          required: false
-          in: query
-          schema:
-            type: string
-        - name: itemsPerPage
-          required: false
-          in: query
-          schema:
-            type: string
-        - name: sortColumn
-          required: false
-          in: query
-          schema:
-            enum:
-              - email
-              - keycloakId
-              - lastLogin
-              - adminLevel
-            type: string
-        - name: isSortDescending
-          required: false
-          in: query
-          schema:
-            type: string
       responses:
         "200":
-          description: Liste des utilisateurs
+          description: Liste paginée des utilisateurs
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/UserEntity"
+                $ref: "#/components/schemas/PaginatedResponseDto"
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a3
@@ -350,6 +359,40 @@ paths:
               Supporte tous les types de filtres : label, shortName, tags, priorityRestart, hostingSearch, etc.
               Inclut la pagination et le tri.
       parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
         - name: search
           required: false
           in: query
@@ -454,40 +497,6 @@ paths:
             maximum: 100
             default: 100
             type: number
-        - name: page
-          required: false
-          in: query
-          description: Numéro de page
-          schema:
-            minimum: 0
-            example: 0
-            type: number
-        - name: limit
-          required: false
-          in: query
-          description: Nombre de résultats par page, 0 pour supprimer la pagination
-          schema:
-            minimum: 0
-            default: 15
-            example: 15
-            type: number
-        - name: sortBy
-          required: false
-          in: query
-          description: Champ utilisé pour le tri
-          schema:
-            example: label
-            type: string
-        - name: order
-          required: false
-          in: query
-          description: Ordre de tri
-          schema:
-            example: asc
-            enum:
-              - asc
-              - desc
-            type: string
         - name: columns
           required: false
           in: query
@@ -581,6 +590,40 @@ paths:
               Si aucun filtre n'est appliqué, toutes les applications sont exportées.
               Accès limité aux utilisateurs avec privilège admin.
       parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
         - name: search
           required: false
           in: query
@@ -685,40 +728,6 @@ paths:
             maximum: 100
             default: 100
             type: number
-        - name: page
-          required: false
-          in: query
-          description: Numéro de page
-          schema:
-            minimum: 0
-            example: 0
-            type: number
-        - name: limit
-          required: false
-          in: query
-          description: Nombre de résultats par page, 0 pour supprimer la pagination
-          schema:
-            minimum: 0
-            default: 15
-            example: 15
-            type: number
-        - name: sortBy
-          required: false
-          in: query
-          description: Champ utilisé pour le tri
-          schema:
-            example: label
-            type: string
-        - name: order
-          required: false
-          in: query
-          description: Ordre de tri
-          schema:
-            example: asc
-            enum:
-              - asc
-              - desc
-            type: string
         - name: columns
           required: false
           in: query
@@ -2522,6 +2531,21 @@ components:
             - 20
             - 30
           type: number
+    PaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            type: array
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     ApplicationPriorityRestart:
       type: string
       enum:

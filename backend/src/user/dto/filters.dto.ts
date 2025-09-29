@@ -1,9 +1,10 @@
-import { IsArray, IsEnum, IsOptional, IsString, IsIn, IsBooleanString, IsNumberString } from "class-validator";
+import { IsArray, IsEnum, IsOptional, IsString } from "class-validator";
 import { UserType } from "../entities/user.entity";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
+import { PaginationDto } from "../../common/dto";
 
-export class UserFilterDto {
+export class UserFilterDto extends PaginationDto {
   @IsOptional()
   @IsString()
   search?: string;
@@ -19,21 +20,5 @@ export class UserFilterDto {
   @IsArray()
   @IsEnum(UserType, { each: true })
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
-  type: (keyof typeof UserType)[];
-
-  @IsOptional()
-  @IsNumberString()
-  page?: string;
-
-  @IsOptional()
-  @IsNumberString()
-  itemsPerPage?: string;
-
-  @IsOptional()
-  @IsIn(["email", "keycloakId", "lastLogin", "adminLevel"])
-  sortColumn?: "email" | "keycloakId" | "lastLogin" | "adminLevel";
-
-  @IsOptional()
-  @IsBooleanString()
-  isSortDescending?: string;
+  type: (keyof typeof UserType)[] = [UserType.human];
 }

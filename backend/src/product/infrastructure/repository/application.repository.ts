@@ -7,6 +7,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import type { Prisma } from "@prisma/client";
 import { ApplicationWithAllRelations } from "src/product/types/application.type";
 import { ApplicationDto } from "src/product/application/dto/get-application.dto.js";
+import { paginate } from "src/common/utils/pagination.utils";
+import { PaginatedResponseDto } from "src/common/dto";
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
@@ -36,13 +38,13 @@ export class ApplicationRepository implements IApplicationRepository {
   async findApplications(
     filters: ApplicationSearchFilters,
     ownership?: { actorEmail?: string, ownerId?: string },
-  ): Promise<{ results: ApplicationDto[], total: number }> {
+  ): Promise<PaginatedResponseDto<ApplicationDto>> {
     const {
       shortName,
       tag,
       priorityRestart,
       page,
-      limit,
+      pageSize,
       sortBy = "shortName",
       order = "asc",
     } = filters;
@@ -283,9 +285,7 @@ export class ApplicationRepository implements IApplicationRepository {
       this.prisma.application.findMany({
         where,
         orderBy,
-        // disable pagination if limit is 0 or not provided
-        skip: (limit && limit > 0 && page) ? page * limit : undefined,
-        take: limit && limit > 0 ? limit : undefined,
+        ...paginate(page, pageSize),
         include: {
           hostings: {
             include: {
@@ -307,7 +307,7 @@ export class ApplicationRepository implements IApplicationRepository {
       this.prisma.application.count({ where }),
     ]);
 
-    return { results, total };
+    return new PaginatedResponseDto(results, total);
   }
 
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
