@@ -124,6 +124,12 @@ function updateSortedColumn(key: string | undefined) {
     @update:sorted-by="updateSortedColumn"
     @update:sorted-desc="searchStore.setOrder"
   >
+    <template #header="header">
+      <DsfrTableHeader
+        :header="header.key"
+        :aria-sort="sortedDesc ? 'descending' : 'ascending'"
+      />
+    </template>
     <template #cell="{ colKey, cell }">
       <template v-if="colKey === 'Nom'">
         <router-link

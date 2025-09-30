@@ -217,6 +217,12 @@ onMounted(fetchUsers);
         data-testid="admin-users-table"
         @update:sorted-by="onUpdateSortColumn"
       >
+        <template #header="header">
+          <DsfrTableHeader
+            :header="header.key"
+            :aria-sort="isSortDescending ? 'descending' : 'ascending'"
+          />
+        </template>
         <template #cell="{ colKey, cell }">
           <template v-if="colKey === 'Permissions'">
             <span class="fr-badge" :class="cell.badgeClass">{{ cell.label }}</span>
