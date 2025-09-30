@@ -4,7 +4,7 @@ import allIssues from "@/components/Issue/AllIssues.vue";
 import MyIssues from "@/components/Issue/MyIssues.vue";
 
 const activeTab = ref(0);
-const applicationTabListName = "Informations sur les corrections";
+const applicationTabListName = "Informations sur les signalements";
 
 const tabs = [
   {
@@ -27,7 +27,7 @@ const tabs = [
 <template>
   <div data-testid="issue-page">
     <h1 class="fr-h1" data-testid="issue-page-title">
-      Corrections
+      Signalements
     </h1>
     <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName" :tab-titles="tabs" data-testid="issues-tabs">
       <template v-for="(tab, index) in tabs" :key="tab.panelId">

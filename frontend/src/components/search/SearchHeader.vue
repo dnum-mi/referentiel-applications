@@ -48,7 +48,7 @@ async function source(query: string, syncResults: (rows: ApplicationOption[]) =>
         ...initialFilters,
         search: query.trim() || undefined,
         page: 0,
-        limit: 8,
+        pageSize: 8,
       } as any,
       false,
     )) as Partial<SearchResponse> | undefined;

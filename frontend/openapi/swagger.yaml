@@ -138,7 +138,7 @@ paths:
       tags: *a1
   /api/v2/applications/{applicationId}/metadatas:
     get:
-      operationId: ApplicationMetadataController_findAll
+      operationId: ApplicationMetadataController_find
       summary: Récupérer toutes les metadatas d'une application
       parameters:
         - name: applicationId
@@ -147,15 +147,61 @@ paths:
           description: ID de l'application
           schema:
             type: string
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: createdAtGte
+          required: false
+          in: query
+          description: Date de création minimum (inclusive)
+          schema:
+            example: 2023-01-01T00:00:00.000Z
+            type: string
+        - name: createdAtLte
+          required: false
+          in: query
+          description: Date de création maximum (inclusive)
+          schema:
+            example: 2023-12-31T23:59:59.999Z
+            type: string
       responses:
         "200":
           description: Liste des metadatas
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/MetadataDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: &a2
         - Metadatas
   /api/v2/applications/{applicationId}/metadatas/first-last:
@@ -177,20 +223,66 @@ paths:
               schema:
                 $ref: "#/components/schemas/FirstLastMetadataDto"
       tags: *a2
-  /api/v2/metadatas/all:
+  /api/v2/metadatas:
     get:
-      operationId: MetadatasController_findAll
+      operationId: MetadatasController_find
       summary: Récupérer toutes les metadatas
-      parameters: []
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: createdAtGte
+          required: false
+          in: query
+          description: Date de création minimum (inclusive)
+          schema:
+            example: 2023-01-01T00:00:00.000Z
+            type: string
+        - name: createdAtLte
+          required: false
+          in: query
+          description: Date de création maximum (inclusive)
+          schema:
+            example: 2023-12-31T23:59:59.999Z
+            type: string
       responses:
         "200":
-          description: Liste des metadatas
+          description: Récupérer toutes les metadatas
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/MetadataDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags:
         - Metadatas
   /api/v2/users/me:
@@ -2370,6 +2462,21 @@ components:
         - sourceApplication
         - targetApplication
         - type
+    PaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            type: array
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     MetadataAction:
       type: string
       description: Action effectuée sur la metadata
@@ -2528,21 +2635,6 @@ components:
             - 20
             - 30
           type: number
-    PaginatedResponseDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            type: array
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     ApplicationPriorityRestart:
       type: string
       enum:
