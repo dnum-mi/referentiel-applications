@@ -11,6 +11,7 @@ import { UserService } from "./user.service";
 import { ApiTags, ApiOperation, ApiParam, ApiOkResponse, ApiNotFoundResponse, ApiForbiddenResponse } from "@nestjs/swagger";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserFilterDto } from "./dto/filters.dto";
+import { PaginatedResponseDto } from "src/common/dto";
 import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { AdminLevel, UserEntity } from "./entities/user.entity";
@@ -62,9 +63,8 @@ export class UserController {
       "Récupère la liste de tous les utilisateurs avec leurs permissions. Supporte la recherche par email et ID Keycloak. Accès limité aux administrateurs.",
   })
   @ApiOkResponse({
-    description: "Liste des utilisateurs",
-    type: UserEntity,
-    isArray: true,
+    description: "Liste paginée des utilisateurs",
+    type: PaginatedResponseDto<UserEntity>,
   })
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",

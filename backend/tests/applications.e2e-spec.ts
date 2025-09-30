@@ -32,7 +32,7 @@ describe("Applications", () => {
       .query({
         search: "test",
         page: 0,
-        limit: 10,
+        pageSize: 10,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
