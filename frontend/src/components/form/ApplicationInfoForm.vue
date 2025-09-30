@@ -22,15 +22,24 @@ const statusOptions = computed(() =>
   })),
 );
 
-const form = ref({
+const form = ref<{
+  label: string
+  shortName: string
+  description: string
+  targetPopulations: string[]
+  purposes: string[]
+  tags: string[]
+  status: ApplicationStatus | null
+  priorityRestart: ApplicationPriorityRestart | null
+}>({
   label: "",
   shortName: "",
   description: "",
-  targetPopulations: [...[""]],
-  purposes: [...[""]],
-  tags: [...[""]],
-  status: "",
-  priorityRestart: "",
+  targetPopulations: [""],
+  purposes: [""],
+  tags: [""],
+  status: null,
+  priorityRestart: null,
 });
 
 function handleSubmit() {
