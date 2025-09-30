@@ -9,7 +9,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--center" data-testid="user-profile">
+  <div class="fr-grid-row fr-grid-row--center profil-container" data-testid="user-profile">
     <div class="fr-col-12 fr-col-md-8">
       <h1 class="fr-h1" data-testid="user-profile-main-title">
         Profil utilisateur
@@ -56,3 +56,9 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.profil-container {
+  margin-bottom: 10rem;
+}
+</style>
