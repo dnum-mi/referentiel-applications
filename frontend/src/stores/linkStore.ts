@@ -4,20 +4,41 @@ import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index.js";
 import type { CreateLinkDto, LinkDto, UpdateLinkDto } from "@/client/types.gen.js";
 
+interface LinkFilters {
+  page?: number
+  pageSize?: number
+  sortBy?: string
+  order?: "asc" | "desc"
+}
+
 export const useLinkStore = defineStore("linkStore", () => {
   const links = ref<LinkDto[]>([]);
+  const total = ref(0);
   const isLoading = ref(false);
   const toaster = useToasterStore();
 
-  const fetchLinks = async (applicationId: string) => {
+  const fetchLinks = async (applicationId: string, filters: LinkFilters = {}) => {
     try {
       isLoading.value = true;
 
-      const response = await api.applicationLinksControllerFindAll({ path: { applicationId } });
+      // Remove undefined values
+      const cleanParams = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== undefined),
+      );
+
+      const response = await api.applicationLinksControllerFindAll({
+        path: { applicationId },
+        query: cleanParams as any,
+      });
+
       if (!response.response.ok) {
         throw new Error("Erreur lors de la récupération des liens.");
       }
-      links.value = response.data ?? [];
+
+      // Handle paginated response
+      const responseData = response.data as any;
+      links.value = responseData.results ?? [];
+      total.value = responseData.total ?? 0;
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la récupération des liens.");
       throw error;
@@ -33,7 +54,6 @@ export const useLinkStore = defineStore("linkStore", () => {
         throw new Error("Erreur lors de la création du lien.");
       }
       const newLink = response.data;
-      links.value.push(newLink);
       toaster.addSuccessMessage("Lien créé avec succès !");
       return newLink;
     } catch (error) {
@@ -49,8 +69,6 @@ export const useLinkStore = defineStore("linkStore", () => {
         throw new Error("Erreur lors de la modification du lien.");
       }
       const updated = response.data;
-      const index = links.value.findIndex(l => l.id === link.id);
-      if (index !== -1) links.value[index] = updated;
       toaster.addSuccessMessage("Lien modifié avec succès !");
       return updated;
     } catch (error) {
@@ -69,8 +87,8 @@ export const useLinkStore = defineStore("linkStore", () => {
       await Promise.all(linkIds.map(linkId =>
         api.applicationLinksControllerDelete({ path: { applicationId, id: linkId } }),
       ));
-      links.value = links.value.filter(l => !linkIds.includes(l.id));
       toaster.addSuccessMessage("Liens supprimés avec succès !");
+      // Note: Component should refetch with current pagination state
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la suppression des liens.");
       throw error;
@@ -79,6 +97,7 @@ export const useLinkStore = defineStore("linkStore", () => {
 
   return {
     links,
+    total,
     isLoading,
     fetchLinks,
     createLink,

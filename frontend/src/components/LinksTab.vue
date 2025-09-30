@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, defineProps } from "vue";
-import type { ApplicationWithPerms, ExternalRessource } from "@/models/Application";
+import { ref, computed, onMounted, defineProps, watch } from "vue";
+import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateLinkDto, UpdateLinkDto } from "@/client/types.gen";
 import { useLinkStore } from "@/stores/linkStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
 import LinkForm from "./form/LinkForm.vue";
+import PaginationFooter from "./PaginationFooter.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
@@ -22,14 +24,38 @@ const linkModal = useModal();
 const selectedLinkIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
-const currentPage = ref(0);
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeLinks"));
 
+const currentPage = ref(0);
+const pageSize = ref(10);
+
 const formatLink = (url: string) => (!url.startsWith("http") ? `http://${url}` : url);
-const getTypeLabel = (type: string) => linkTypesDict[type] || "Type inconnu";
+const getTypeLabel = (type: string) => (linkTypesDict as any)[type] || "Type inconnu";
+
+// Computed properties for pagination
+const pages = computed(() => {
+  const totalPages = Math.ceil(linkStore.total / pageSize.value);
+  return Array.from({ length: totalPages }).map((_, i) => ({
+    label: String(i + 1),
+    title: `Page ${i + 1}`,
+    href: `#page-${i + 1}`,
+  }));
+});
+
+// Watch for pagination changes
+watch([currentPage, pageSize], () => {
+  fetchLinks();
+});
+
+function fetchLinks() {
+  linkStore.fetchLinks(props.application.id, {
+    page: currentPage.value,
+    pageSize: pageSize.value,
+  });
+}
 
 onMounted(async () => {
-  linkStore.fetchLinks(props.application.id);
+  fetchLinks();
 });
 
 const rows = computed(() =>
@@ -46,7 +72,7 @@ const rows = computed(() =>
   ]),
 );
 
-async function createLink(newLink: ExternalRessource) {
+async function createLink(newLink: CreateLinkDto) {
   try {
     isSubmitting.value = true;
     await linkStore.createLink(props.application.id, {
@@ -55,20 +81,28 @@ async function createLink(newLink: ExternalRessource) {
     });
     linkModal.closeModal();
     emit("update:application", props.application);
+    await fetchLinks();
   } finally {
     isSubmitting.value = false;
   }
 }
 
-async function editLink(updatedLink: ExternalRessource) {
+async function editLink(updatedLink: UpdateLinkDto) {
   try {
     isSubmitting.value = true;
+    const selectedItem = linkModal.selectedItem.value as any;
+    if (!selectedItem?.id) {
+      throw new Error("Aucun élément sélectionné pour la modification.");
+    }
+
     await linkStore.updateLink(props.application.id, {
       ...updatedLink,
-      link: formatLink(updatedLink.link),
+      id: selectedItem.id,
+      link: updatedLink.link ? formatLink(updatedLink.link) : undefined,
     });
     linkModal.closeModal();
     emit("update:application", props.application);
+    await fetchLinks();
   } finally {
     isSubmitting.value = false;
   }
@@ -79,6 +113,8 @@ async function confirmDelete() {
   selectedLinkIds.value = [];
   showDeleteConfirmation.value = false;
   emit("update:application", props.application);
+  await fetchLinks();
+  emit("update:application", props.application);
 }
 
 function removeSelectedLinks() {
@@ -87,6 +123,16 @@ function removeSelectedLinks() {
     return;
   }
   showDeleteConfirmation.value = true;
+}
+
+// Pagination handlers
+function handlePageChange(newPage: number) {
+  currentPage.value = newPage;
+}
+
+function handlePageSizeChange(newPageSize: number) {
+  pageSize.value = newPageSize;
+  currentPage.value = 0;
 }
 </script>
 
@@ -123,35 +169,45 @@ function removeSelectedLinks() {
     </div>
 
     <AppLoader v-if="linkStore.isLoading" data-testid="links-loader" />
-    <DsfrDataTable
-      v-else
-      v-model:selection="selectedLinkIds"
-      v-model:current-page="currentPage"
-      :headers-row="['Sélection', 'Lien', 'Description', 'Type de lien', 'Actions']"
-      :rows="rows"
-      row-key="id"
-      pagination
-      :rows-per-page="5"
-      :pagination-options="[5, 10, 20, 30]"
-      data-testid="links-table"
-    >
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Sélection'">
-          <input v-model="selectedLinkIds" type="checkbox" :value="cell">
+
+    <div v-else>
+      <DsfrDataTable
+        v-model:selection="selectedLinkIds"
+        :headers-row="['Sélection', 'Lien', 'Description', 'Type de lien', 'Actions']"
+        :rows="rows"
+        row-key="id"
+        :pagination="false"
+        title="Liste des liens"
+        data-testid="links-table"
+      >
+        <template #cell="{ colKey, cell }">
+          <template v-if="colKey === 'Sélection'">
+            <input v-model="selectedLinkIds" type="checkbox" :value="cell">
+          </template>
+          <template v-else-if="colKey === 'Lien'">
+            <a :href="(cell as any).to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ (cell as any).label }}</a>
+          </template>
+          <template v-else-if="colKey === 'Actions'">
+            <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="link-edit-btn" @click="(cell as any).onClick">
+              {{ (cell as any).label }}
+            </DsfrButton>
+          </template>
+          <template v-else>
+            {{ cell }}
+          </template>
         </template>
-        <template v-else-if="colKey === 'Lien'">
-          <a :href="cell.to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ cell.label }}</a>
-        </template>
-        <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="link-edit-btn" @click="cell.onClick">
-            {{ cell.label }}
-          </DsfrButton>
-        </template>
-        <template v-else>
-          {{ cell }}
-        </template>
-      </template>
-    </DsfrDataTable>
+      </DsfrDataTable>
+
+      <PaginationFooter
+        :total-filtered="linkStore.total"
+        :pages="pages"
+        :limit="pageSize"
+        :page="currentPage"
+        data-testid="links-pagination-footer"
+        @update:limit="handlePageSizeChange"
+        @update:page="handlePageChange"
+      />
+    </div>
   </div>
 
   <!-- Modals -->
@@ -162,7 +218,7 @@ function removeSelectedLinks() {
     @close="linkModal.closeModal"
   >
     <LinkForm
-      :initial-data="linkModal.selectedItem.value"
+      :initial-data="linkModal.selectedItem.value ?? undefined"
       :is-submitting="isSubmitting"
       data-testid="link-form"
       @submit="(formData) => (linkModal.selectedItem.value ? editLink(formData) : createLink(formData))"
@@ -175,7 +231,7 @@ function removeSelectedLinks() {
     item-name="liens"
     data-testid="link-delete-modal"
     @confirm="confirmDelete"
-    @cancel="() => (showDeleteConfirmation.value = false)"
+    @cancel="() => (showDeleteConfirmation = false)"
   />
 </template>
 
@@ -186,5 +242,9 @@ input[type="checkbox"] {
   border-radius: 4px;
   border: 2px solid var(--dsfr-border, #ccc);
   transition: all 0.3s ease;
+}
+
+.global-delete {
+  margin-bottom: 1rem;
 }
 </style>
