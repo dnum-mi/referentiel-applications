@@ -1,9 +1,17 @@
 import { ref, computed, watch } from "vue";
+import { defineStore } from "pinia";
 import api from "@/api/index.js";
 import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 
-export type Filters = Exclude<ApplicationControllerSearchData["query"], undefined>;
+export type Filters = Exclude<ApplicationControllerSearchData["query"], undefined> & {
+  // Frontend-only hosting filters that get converted to hostingSearch
+  hostingSite?: string
+  hostingPlatform?: string
+  hostingProvider?: string
+  hostingBuilding?: string
+  hostingRoom?: string
+};
 
 export const useApplicationSearchStore = defineStore("applicationSearchStore", () => {
   const results = ref<any[]>([]);
@@ -23,6 +31,11 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     sortBy: "label",
     order: "asc",
     hostingSearch: undefined,
+    hostingSite: undefined,
+    hostingPlatform: undefined,
+    hostingProvider: undefined,
+    hostingBuilding: undefined,
+    hostingRoom: undefined,
     organization: undefined,
     actorType: undefined,
     iqGte: 0,
@@ -76,7 +89,18 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
         delete cleaned[key as keyof Filters];
       }
     });
-    return cleaned;
+
+    // Convert frontend hosting filters to backend hostingSearch
+    const { hostingSite, hostingPlatform, hostingProvider, hostingBuilding, hostingRoom, ...backendFilters } = cleaned;
+
+    // Build hostingSearch from individual hosting filters
+    const hostingSearchTerms = [hostingSite, hostingPlatform, hostingProvider, hostingBuilding, hostingRoom].filter(Boolean);
+
+    if (hostingSearchTerms.length > 0) {
+      (backendFilters as any).hostingSearch = hostingSearchTerms.join(" ");
+    }
+
+    return backendFilters as Filters;
   }
 
   async function searchApplications(customFilters?: Filters, store: boolean = true) {
@@ -84,7 +108,8 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     error.value = null;
 
     try {
-      const query = cleanFilters(customFilters || filters.value);
+      const currentFilters = customFilters ?? filters.value;
+      const query = cleanFilters(currentFilters);
 
       const response = await api.applicationControllerSearch({
         query,
@@ -95,11 +120,17 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       console.log("🧾 Résultat API /applications →", response.data);
       console.log("📊 Total applications retournées :", response.data.total);
 
+      const searchResults = response.data.results;
+
       if (store) {
-        results.value = response.data.results;
+        results.value = searchResults;
         total.value = response.data.total;
       }
-      return response.data;
+      return {
+        ...response.data,
+        results: searchResults,
+        total: response.data.total,
+      };
     } catch (err: any) {
       error.value = err?.message || "Erreur inconnue";
       throw err;
