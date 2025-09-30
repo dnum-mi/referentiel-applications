@@ -10,7 +10,7 @@ const statsStore = useStatisticsStore();
 const paginatedResults = computed(() => searchStore.results);
 
 const pages = computed(() => {
-  const totalPages = Math.ceil(searchStore.total / (searchStore.limit ?? searchStore.initialFilters.limit));
+  const totalPages = Math.ceil(searchStore.total / (searchStore.pageSize ?? searchStore.initialFilters.pageSize));
   return Array.from({ length: totalPages }).map((_, i) => ({
     label: `${i + 1}`,
     title: `Page ${i + 1}`,
@@ -18,7 +18,7 @@ const pages = computed(() => {
   }));
 });
 
-watch([() => searchStore.page, () => searchStore.limit], () => {
+watch([() => searchStore.page, () => searchStore.pageSize], () => {
   searchStore.searchApplications();
 });
 </script>
@@ -42,10 +42,10 @@ watch([() => searchStore.page, () => searchStore.limit], () => {
       :total-filtered="searchStore.total ?? 0"
       :total-all="statsStore.totalApplications ?? 0"
       :pages="pages"
-      :limit="searchStore.limit ?? 0"
+      :limit="searchStore.pageSize ?? 0"
       :page="searchStore.page"
       data-testid="application-pagination-footer"
-      @update:limit="searchStore.limit = $event"
+      @update:limit="searchStore.pageSize = $event"
       @update:page="searchStore.page = $event"
     />
   </div>

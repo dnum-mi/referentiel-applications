@@ -45,7 +45,7 @@ watch(currentSortedColumn, (val) => {
   searchStore.setFilter({ sortBy: val });
 });
 
-watch([() => searchStore.page, () => searchStore.limit], () => {
+watch([() => searchStore.page, () => searchStore.pageSize], () => {
   searchStore.searchApplications();
 });
 
@@ -136,16 +136,6 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
   display: flex;
   justify-content: flex-end;
   margin-bottom: 1.5rem;
-}
-
-.summary-box {
-  background-color: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 1rem;
-  margin: 1rem 0;
-  font-size: 0.95rem;
-  color: #1e293b;
 }
 
 .secondary-actions {

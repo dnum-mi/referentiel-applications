@@ -25,7 +25,7 @@ const columnToFieldMap: Record<string, string> = {
 };
 
 const pages = computed(() => {
-  const totalPages = Math.ceil(searchStore.total / (searchStore.limit ?? searchStore.initialFilters.limit));
+  const totalPages = Math.ceil(searchStore.total / (searchStore.pageSize ?? searchStore.initialFilters.pageSize));
   return Array.from({ length: totalPages }).map((_, i) => ({
     label: String(i + 1),
     title: `Page ${i + 1}`,
@@ -160,10 +160,10 @@ function updateSortedColumn(key: string | undefined) {
   <PaginationFooter
     :total-filtered="searchStore.total ?? 0"
     :pages="pages"
-    :limit="searchStore.limit ?? 0"
+    :limit="searchStore.pageSize ?? 0"
     :page="searchStore.page ?? 0"
     data-testid="application-pagination-footer"
-    @update:limit="searchStore.limit = $event"
+    @update:limit="searchStore.pageSize = $event"
     @update:page="searchStore.page = $event"
   />
 </template>
