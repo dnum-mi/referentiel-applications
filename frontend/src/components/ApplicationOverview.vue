@@ -60,7 +60,12 @@ const fetchActors = actorStore.fetchActorsByApplication.bind(actorStore, props.a
 const fetchRelations = relationsStore.fetchRelationsByApplication.bind(relationsStore, props.application.id);
 async function fetchHistoryData() {
   if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
-    metadataStore.fetchMetadatasByApplication(application.value.id);
+    metadataStore.fetchMetadatasByApplication(application.value.id, {
+      page: 0,
+      pageSize: 20,
+      sortBy: "createdAt",
+      order: "desc",
+    });
   }
 
   reportIssueStore.fetchIssueByApplication(props.application.id);

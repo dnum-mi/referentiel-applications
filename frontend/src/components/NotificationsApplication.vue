@@ -92,7 +92,7 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
       v-model:current-page="currentPage"
       :headers-row="headers"
       :rows="rows"
-      title="Liste des corrections et modifications"
+      title="Liste des signalements et modifications"
       pagination
       :rows-per-page="5"
       :pagination-options="[5, 10, 20, 30]"

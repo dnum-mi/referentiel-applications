@@ -18,6 +18,22 @@ import { FirstLastMetadataDto, MetadataDto, MetadataFiltersDto } from "./dto/met
 import { PaginatedResponseDto } from "src/common/dto";
 
 @ApiTags("Metadatas")
+@Controller("metadatas")
+export class MetadatasController {
+  constructor(private readonly metadataService: MetadataService) { }
+
+  @Get()
+  @ApiOperation({ summary: "Récupérer toutes les metadatas" })
+  @ApiOkResponse({
+    description: "Récupérer toutes les metadatas",
+    type: PaginatedResponseDto<MetadataDto>,
+  })
+  public async find(@Query() filters: MetadataFiltersDto): Promise<PaginatedResponseDto<MetadataDto>> {
+    return this.metadataService.find(filters);
+  }
+}
+
+@ApiTags("Metadatas")
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/metadatas")
 export class ApplicationMetadataController {
@@ -29,13 +45,13 @@ export class ApplicationMetadataController {
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiOkResponse({
     description: "Liste des metadatas",
-    type: MetadataDto,
-    isArray: true,
+    type: PaginatedResponseDto<MetadataDto>,
   })
-  public async findAll(
+  public async find(
     @Param("applicationId") applicationId: string,
-  ): Promise<MetadataDto[]> {
-    return this.metadataService.findAll(applicationId);
+    @Query() filters: MetadataFiltersDto,
+  ): Promise<PaginatedResponseDto<MetadataDto>> {
+    return this.metadataService.find({ ...filters, applicationId });
   }
 
   @Get("first-last")
@@ -53,22 +69,5 @@ export class ApplicationMetadataController {
         @Param("applicationId") applicationId: string,
   ): Promise<FirstLastMetadataDto> {
     return this.metadataService.getFirstAndLastMetadata(applicationId);
-  }
-}
-
-
-@ApiTags("Metadatas")
-@Controller("metadatas")
-export class MetadatasController {
-  constructor(private readonly metadataService: MetadataService) { }
-
-  @Get()
-  @ApiOperation({ summary: "Récupérer toutes les metadatas (paginated)" })
-  @ApiOkResponse({
-    description: "Liste paginée des metadatas",
-    type: PaginatedResponseDto<MetadataDto>,
-  })
-  public async findAll(@Query() filters: MetadataFiltersDto): Promise<PaginatedResponseDto<MetadataDto>> {
-    return this.metadataService.findAll(filters);
   }
 }

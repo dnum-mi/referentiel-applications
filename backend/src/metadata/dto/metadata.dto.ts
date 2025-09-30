@@ -1,10 +1,28 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { MetadataAction } from "@prisma/client";
 import { PaginationDto } from "src/common/dto";
 import { UserEntity } from "src/user/entities/user.entity";
+import { IsOptional, IsDateString } from "class-validator";
 
+export class MetadataFiltersDto extends PaginationDto {
+  @ApiPropertyOptional({
+    description: "Date de création minimum (inclusive)",
+    example: "2023-01-01T00:00:00.000Z",
+    type: String,
+  })
+  @IsOptional()
+  @IsDateString()
+  createdAtGte?: string;
 
-export class MetadataFiltersDto extends PaginationDto{}
+  @ApiPropertyOptional({
+    description: "Date de création maximum (inclusive)",
+    example: "2023-12-31T23:59:59.999Z",
+    type: String,
+  })
+  @IsOptional()
+  @IsDateString()
+  createdAtLte?: string;
+}
 
 export class ApplicationLightDto {
   @ApiProperty()

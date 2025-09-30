@@ -8,6 +8,7 @@ export const useMetadataStore = defineStore("metadataStore", () => {
   const metadatas = ref<MetadataDto[]>([]);
   const firstMetadata = ref<MetadataDto | null>(null);
   const lastMetadata = ref<MetadataDto | null>(null);
+  const total = ref(0);
   const isLoading = ref(false);
   const toaster = useToasterStore();
 
@@ -31,10 +32,11 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     }
   }
 
-  const fetchMetadatasByApplication = async (applicationId: string) => {
+  const fetchMetadatasByApplication = async (applicationId: string, query: { page?: number, pageSize?: number, sortBy?: string, order?: "asc" | "desc", createdAtGte?: string, createdAtLte?: string } = {}) => {
     isLoading.value = true;
-    const response = await api.applicationMetadataControllerFindAll({
+    const response = await api.applicationMetadataControllerFind({
       path: { applicationId },
+      query,
     });
     isLoading.value = false;
     if (!response.response.ok) {
@@ -44,23 +46,39 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     }
     if (!response.data) {
       metadatas.value = [];
+      total.value = 0;
       return;
     }
-    metadatas.value = response.data;
+
+    // Handle paginated response
+    const responseData = response.data as any;
+    metadatas.value = responseData.results ?? [];
+    total.value = responseData.total ?? 0;
   };
 
-  const fetchMetadatasGlobal = async () => {
+  const fetchMetadatas = async (query: { page?: number, pageSize?: number, sortBy?: string, order?: "asc" | "desc", createdAtGte?: string, createdAtLte?: string } = {}) => {
     isLoading.value = true;
     try {
       console.log("Fetching global metadatas...");
-      const response = await api.allMetadatasControllerFindAll();
+      const response = await api.metadatasControllerFind({ query });
       console.log(response);
       isLoading.value = false;
-      metadatas.value = response.data ?? [];
+
+      if (!response.data) {
+        metadatas.value = [];
+        total.value = 0;
+        return;
+      }
+
+      // Handle paginated response
+      const responseData = response.data as any;
+      metadatas.value = responseData.results ?? [];
+      total.value = responseData.total ?? 0;
     } catch (error) {
       isLoading.value = false;
       toaster.addErrorMessage("Erreur technique lors de la récupération des metadatas globales.");
       metadatas.value = [];
+      total.value = 0;
       console.error(error);
     }
   };
@@ -69,9 +87,10 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     firstMetadata,
     lastMetadata,
     metadatas,
+    total,
     isLoading,
     getFirstAndLastMetadataByApplication,
     fetchMetadatasByApplication,
-    fetchMetadatasGlobal,
+    fetchMetadatasGlobal: fetchMetadatas,
   };
 });

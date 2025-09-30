@@ -50,7 +50,7 @@ async function performSearch(query: string) {
     try {
       const response = await applicationSearchStore.searchApplications({
         search: query,
-        limit: 10,
+        pageSize: 10,
       }, false);
       suggestions.value = response.results || [];
     } catch (error) {

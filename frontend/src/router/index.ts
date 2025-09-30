@@ -24,7 +24,7 @@ const routes = [
     name: routeNames.ISSUELIST,
     path: "/issue-list",
     component: () => import("@/views/IssuePage.vue"),
-    meta: { requiresAuth: true, title: "Corrections - Référentiel des applications" },
+    meta: { requiresAuth: true, title: "Signalements - Référentiel des applications" },
   },
   {
     name: routeNames.PROFILEAPP,

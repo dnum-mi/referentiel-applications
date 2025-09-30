@@ -1,20 +1,96 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, watch } from "vue";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
+import PaginationFooter from "@/components/PaginationFooter.vue";
 
-const title = "Historique global des modifications";
 const headers = ["Application", "Auteur", "Type", "Date", "Description"];
 
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
+const pageSize = ref(15);
+const sortBy = ref("createdAt");
+const sortOrder = ref<"asc" | "desc">("desc");
+const createdAtGte = ref<string>("");
+const createdAtLte = ref<string>("");
 
 const metadataStore = useMetadataStore();
 
 const isLoading = computed(() => metadataStore.isLoading);
+const totalItems = computed(() => metadataStore.total);
+
+const pages = computed(() => {
+  const totalPages = Math.ceil(totalItems.value / pageSize.value);
+  return Array.from({ length: totalPages }).map((_, i) => ({
+    label: String(i + 1),
+    title: `Page ${i + 1}`,
+    href: `#page-${i + 1}`,
+  }));
+});
+
+watch([currentPage, pageSize], () => {
+  fetchData();
+});
+
+function convertLocalToUTC(localDateTimeString: string): string {
+  if (!localDateTimeString) return "";
+  const localDate = new Date(localDateTimeString);
+  return localDate.toISOString();
+}
+
+function fetchData() {
+  const filters: any = {
+    page: currentPage.value,
+    pageSize: pageSize.value,
+    sortBy: sortBy.value,
+    order: sortOrder.value,
+  };
+
+  if (createdAtGte.value) {
+    filters.createdAtGte = convertLocalToUTC(createdAtGte.value);
+  }
+
+  if (createdAtLte.value) {
+    filters.createdAtLte = convertLocalToUTC(createdAtLte.value);
+  }
+
+  return metadataStore.fetchMetadatasGlobal(filters);
+}
+
+async function applyFilters() {
+  currentPage.value = 0;
+  await fetchData();
+}
+
+function clearFilters() {
+  createdAtGte.value = "";
+  createdAtLte.value = "";
+  sortBy.value = "createdAt";
+  sortOrder.value = "desc";
+  applyFilters();
+}
+
+// Pagination handlers
+function handlePageChange(newPage: number) {
+  currentPage.value = newPage;
+}
+
+function handlePageSizeChange(newPageSize: number) {
+  pageSize.value = newPageSize;
+  currentPage.value = 0;
+}
+
+// Sorting options
+const sortOptions = [
+  { value: "", text: "-- Aucun tri --" },
+  { value: "createdAt", text: "Date" },
+  { value: "application.label", text: "Application" },
+  { value: "createdBy.email", text: "Auteur" },
+  { value: "action", text: "Type" },
+];
 
 onMounted(async () => {
-  await metadataStore.fetchMetadatasGlobal();
+  await fetchData();
 });
 
 function formatDescription(description: string): { title: string, content: string } {
@@ -55,12 +131,13 @@ function formatDescription(description: string): { title: string, content: strin
   }
 }
 
-const rows = computed(() =>
+const metadataTableRows = computed(() =>
   metadataStore.metadatas.map((meta) => {
     const { title: descTitle, content } = formatDescription(meta.description || "");
     return {
       id: meta.id,
       Application: {
+        id: meta.id,
         label: meta.application?.label ?? "Application inconnue",
         to: meta.applicationId
           ? { name: "application", params: { id: meta.applicationId } }
@@ -68,6 +145,7 @@ const rows = computed(() =>
       },
       Auteur: meta.createdBy?.email ?? "Inconnu",
       Type: {
+        id: meta.id,
         component: "DsfrTag",
         label: meta.action,
         class: meta.action,
@@ -84,71 +162,148 @@ const rows = computed(() =>
 </script>
 
 <template>
-  <div class="fr-container fr-my-2v w-[1000px]">
-    <AppLoader v-if="isLoading" data-testid="history-loader" />
-    <div v-else-if="!rows.length" class="text-center" data-testid="history-empty">
-      <p>Aucune modification recensée.</p>
+  <div class="fr-container--fluid fr-px-2w">
+    <h1>Modifications</h1>
+
+    <!-- Filters and Sorting form -->
+    <form class="fr-mb-4w" @submit.prevent="applyFilters">
+      <h3>Filtres et tri</h3>
+
+      <!-- Date filters -->
+      <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w">
+        <div class="fr-col-12 fr-col-md-4">
+          <DsfrInput
+            v-model="createdAtGte"
+            label="Date de début"
+            label-visible
+            type="datetime-local"
+            data-testid="history-filter-date-from"
+          />
+        </div>
+        <div class="fr-col-12 fr-col-md-4">
+          <DsfrInput
+            v-model="createdAtLte"
+            label="Date de fin"
+            label-visible
+            type="datetime-local"
+            data-testid="history-filter-date-to"
+          />
+        </div>
+      </div>
+
+      <!-- Sorting controls -->
+      <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w">
+        <div class="fr-col-12 fr-col-md-4">
+          <DsfrSelect
+            v-model="sortBy"
+            label="Trier par"
+            :options="sortOptions"
+            data-testid="history-sort-select"
+          />
+        </div>
+        <div class="fr-col-12 fr-col-md-4">
+          <DsfrSelect
+            v-model="sortOrder"
+            label="Ordre"
+            :options="[
+              { value: '', text: '-- Aucun ordre --' },
+              { value: 'desc', text: 'Décroissant' },
+              { value: 'asc', text: 'Croissant' },
+            ]"
+            data-testid="history-sort-order-select"
+          />
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="fr-btns-group fr-btns-group--inline">
+        <DsfrButton
+          type="submit"
+          label="Appliquer"
+          :disabled="isLoading"
+          data-testid="history-apply-filters"
+        />
+        <DsfrButton
+          type="button"
+          secondary
+          label="Effacer"
+          :disabled="isLoading"
+          data-testid="history-clear-filters"
+          @click="clearFilters"
+        />
+      </div>
+    </form>
+
+    <!-- Loading indicator for table -->
+    <div v-if="isLoading" class="fr-mb-3w">
+      <AppLoader data-testid="history-loader" />
     </div>
-    <DsfrDataTable
-      v-else
-      v-model:selection="selection"
-      v-model:current-page="currentPage"
-      data-testid="history-table"
-      :headers-row="headers"
-      :rows="rows"
-      row-key="id"
-      :title="title"
-      pagination
-      :rows-per-page="15"
-      :pagination-options="[15, 30, 50]"
-      sorted="Date"
-      :sortable-rows="['Date', 'Application', 'Auteur', 'Type']"
-    >
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Description'">
-          <DsfrAccordion :id="`meta-${cell.id}`" :title="cell.title" data-testid="history-description-accordion">
-            <pre class="formatted-description" data-testid="history-description-content">{{ cell.content }}</pre>
-          </DsfrAccordion>
-        </template>
-        <template v-else-if="colKey === 'Application'">
-          <template v-if="cell && cell.to">
-            <router-link :to="cell.to" :data-testid="`history-row-${cell.id}-application`">
-              {{ cell.label }}
-            </router-link>
+
+    <!-- Empty state -->
+    <div v-else-if="metadataTableRows.length === 0" class="text-center fr-mb-3w" data-testid="history-empty">
+      <p>Aucune donnée recensée.</p>
+    </div>
+
+    <!-- Data table - always visible structure -->
+    <div v-else>
+      <DsfrDataTable
+        v-model:selection="selection"
+        :headers-row="headers"
+        :rows="metadataTableRows"
+        row-key="id"
+        :pagination="false"
+        title="Données"
+        data-testid="history-table"
+      >
+        <template #cell="{ colKey, cell }">
+          <template v-if="colKey === 'Description'">
+            <DsfrAccordion :id="`meta-${(cell as any).id}`" :title="(cell as any).title" data-testid="history-description-accordion">
+              <div class="formatted-description" data-testid="history-description-content">
+                {{ (cell as any).content }}
+              </div>
+            </DsfrAccordion>
+          </template>
+          <template v-else-if="colKey === 'Application'">
+            <template v-if="cell && (cell as any).to">
+              <router-link :to="(cell as any).to" :data-testid="`history-row-${(cell as any).id}-application`">
+                {{ (cell as any).label }}
+              </router-link>
+            </template>
+            <template v-else>
+              <span :data-testid="`history-row-${(cell as any).id}-application`">{{ (cell as any).label }}</span>
+            </template>
+          </template>
+          <template v-else-if="colKey === 'Type'">
+            <DsfrTag :class="(cell as any).class" :label="(cell as any).label" :data-testid="`history-row-${(cell as any).id}-type`" />
           </template>
           <template v-else>
-            <span :data-testid="`history-row-${cell.id}-application`">{{ cell.label }}</span>
+            {{ cell }}
           </template>
         </template>
-        <template v-else-if="colKey === 'Type'">
-          <DsfrTag :class="cell.class" :label="cell.label" :data-testid="`history-row-${cell.id}-type`" />
-        </template>
-        <template v-else>
-          {{ cell }}
-        </template>
-      </template>
-    </DsfrDataTable>
+      </DsfrDataTable>
+
+      <!-- Pagination -->
+      <PaginationFooter
+        :total-filtered="totalItems"
+        :pages="pages"
+        :limit="pageSize"
+        :page="currentPage"
+        data-testid="history-pagination-footer"
+        @update:limit="handlePageSizeChange"
+        @update:page="handlePageChange"
+      />
+    </div>
   </div>
 </template>
 
 <style scoped>
-.text-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  color: #555;
-  font-size: 1.2rem;
-  font-weight: 500;
-  background-color: #f9f9f9;
-  border: 1px dashed #ccc;
-  border-radius: 8px;
-  padding: 20px;
-  margin: 20px auto;
-  width: 80%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
 .add { background-color: #e6f8ea; color: #1aa779; }
 .update { background-color: #f8f3e6; color: #a7791a; }
 .delete { background-color: #f8e6e6; color: #a71a1a; }
+
+.formatted-description {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
 </style>

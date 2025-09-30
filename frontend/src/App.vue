@@ -98,23 +98,21 @@ const navItems = [
   },
   {
     to: { name: routeNames.ISSUELIST },
-    text: "Corrections",
+    text: "Signalements",
   },
   {
     to: { name: routeNames.HISTORY },
-    text: "Historique",
+    text: "Modifications",
   },
-
 ];
 
 const logoText = ["Ministère", "de l’intérieur"];
 const serviceDescription = "Une application pour les réunir toutes";
 const serviceTitle = "Référentiel des Applications";
-const homeLink = "/";
-const homeTitle = "Retour à l’accueil du site - Référenciel des Applications";
+const homeTo = "/applications";
 const operatorTo = "/applications";
 const ecosystemLinks = [
-  { label: "CCT", title: "Convention collective", href: "http://cct.sg.minint.fr/accueil/Accueil.html" },
+  { label: "CCT", href: "http://cct.sg.minint.fr/accueil/Accueil.html" },
   { label: "Code source", href: "http://github.com/dnum-mi/referentiel-applications" },
   {
     label: "Api du référentiel",
@@ -173,7 +171,7 @@ function close() {
     <RouterView :key="route.params.id" />
   </div>
 
-  <DsfrFooter :logo-text :home-link :home-title :ecosystem-links :mandatory-links :after-mandatory-links :operator-to data-testid="footer" />
+  <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :after-mandatory-links :operator-to data-testid="footer" />
 
   <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" data-testid="pwa-reload-prompt" @close="close" @update-service-worker="updateServiceWorker" />
 

@@ -5,7 +5,7 @@ import { formatDate } from "@/composables/use-date";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
 import { useReportIssueStore } from "@/stores/reportIssueStore";
 
-const title = "Liste de mes corrections d'applications";
+const title = "Liste de mes signalements d'applications";
 const headers = ["Application", "Description", "Date", "Statut"];
 type Status = "in_pending" | "in_progress" | "done";
 

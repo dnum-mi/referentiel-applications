@@ -28,7 +28,7 @@ const emit = defineEmits<{
     </div>
 
     <div class="footer-item total-count" data-testid="pagination-total-count">
-      {{ totalFiltered }} application(s) trouvée(s)
+      {{ totalFiltered }} résultat(s)
     </div>
   </div>
 </template>
@@ -41,21 +41,5 @@ const emit = defineEmits<{
   justify-content: space-between;
   align-items: center;
   margin-top: 2rem;
-}
-
-.footer-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.pagination-centered {
-  flex-grow: 1;
-  justify-content: center;
-}
-
-.total-count {
-  font-size: 0.875rem;
-  color: #444;
 }
 </style>

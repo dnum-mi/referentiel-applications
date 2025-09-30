@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { IMetadataRepository } from "./metadata.repository.interface";
+import { MetadataFiltersDto } from "../dto/metadata.dto";
+import { PaginatedResponseDto } from "src/common/dto";
+import { paginate } from "src/common/utils/pagination.utils";
+import type { Prisma } from "@prisma/client";
 
 @Injectable()
 export class MetadataRepository implements IMetadataRepository {
@@ -8,10 +12,49 @@ export class MetadataRepository implements IMetadataRepository {
     private readonly prisma: PrismaService,
   ) { }
 
-  public async findAll(applicationId?: string) {
-    return this.prisma.metadata.findMany({
-      where: applicationId ? { applicationId } : undefined,
-      orderBy: { createdAt: "desc" },
+  public async findAll(filters?: MetadataFiltersDto & { applicationId?: string }): Promise<PaginatedResponseDto<any>> {
+    const where: Prisma.MetadataWhereInput = {};
+
+    if (filters?.applicationId) {
+      where.applicationId = filters.applicationId;
+    }
+
+    if (filters?.createdAtGte || filters?.createdAtLte) {
+      where.createdAt = {};
+      if (filters.createdAtGte) {
+        where.createdAt.gte = new Date(filters.createdAtGte);
+      }
+      if (filters.createdAtLte) {
+        where.createdAt.lte = new Date(filters.createdAtLte);
+      }
+    }
+
+    // Handle sorting
+    let orderBy: any = { createdAt: "desc" }; // Default sort
+
+    if (filters?.sortBy) {
+      const order = filters.order || "desc";
+
+      switch (filters.sortBy) {
+        case "application.label":
+          orderBy = { application: { label: order } };
+          break;
+        case "createdBy.email":
+          orderBy = { createdBy: { email: order } };
+          break;
+        case "action":
+        case "createdAt":
+          orderBy = { [filters.sortBy]: order };
+          break;
+        default:
+          orderBy = { createdAt: order };
+      }
+    }
+
+    const results = await this.prisma.metadata.findMany({
+      where,
+      ...paginate(filters?.page, filters?.pageSize),
+      orderBy,
       include: {
         createdBy: true,
         application: {
@@ -19,6 +62,8 @@ export class MetadataRepository implements IMetadataRepository {
         },
       },
     });
+
+    return new PaginatedResponseDto(results, await this.prisma.metadata.count({ where }));
   }
 
   async findFirstAndLastByApplicationId(applicationId: string) {
