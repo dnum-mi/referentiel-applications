@@ -2494,6 +2494,38 @@ components:
       required:
         - id
         - label
+    OrganizationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de l'organisation
+        label:
+          type: string
+          example: Direction de la transformation numérique
+          description: Nom de l'organisation
+        url:
+          type: string
+          nullable: true
+          example: ""
+          description: url de l'organisation
+        sigle:
+          type: string
+          nullable: true
+          example: dtnum
+          description: sigle de l'organisation
+        parentId:
+          type: string
+          nullable: true
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de l'organisation parente
+      required:
+        - id
+        - label
+        - url
+        - sigle
+        - parentId
     UserType:
       type: string
       enum:
@@ -2502,6 +2534,10 @@ components:
     UserEntity:
       type: object
       properties:
+        organization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
         type:
           $ref: "#/components/schemas/UserType"
         id:
@@ -3221,38 +3257,6 @@ components:
           description: L'identifiant de l'organisation parente
       required:
         - label
-    OrganizationDto:
-      type: object
-      properties:
-        id:
-          type: string
-          example: f09ed26a-8415-476a-be3b-ada479291c34
-          description: L'identifiant de l'organisation
-        label:
-          type: string
-          example: Direction de la transformation numérique
-          description: Nom de l'organisation
-        url:
-          type: string
-          nullable: true
-          example: ""
-          description: url de l'organisation
-        sigle:
-          type: string
-          nullable: true
-          example: dtnum
-          description: sigle de l'organisation
-        parentId:
-          type: string
-          nullable: true
-          example: f09ed26a-8415-476a-be3b-ada479291c34
-          description: L'identifiant de l'organisation parente
-      required:
-        - id
-        - label
-        - url
-        - sigle
-        - parentId
     PatchOrganizationDto:
       type: object
       properties:

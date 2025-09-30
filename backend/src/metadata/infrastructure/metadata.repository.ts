@@ -56,7 +56,11 @@ export class MetadataRepository implements IMetadataRepository {
       ...paginate(filters?.page, filters?.pageSize),
       orderBy,
       include: {
-        createdBy: true,
+        createdBy: {
+          include: {
+            organization: true,
+          },
+        },
         application: {
           select: { id: true, label: true },
         },
@@ -71,12 +75,24 @@ export class MetadataRepository implements IMetadataRepository {
       this.prisma.metadata.findFirst({
         where: { applicationId },
         orderBy: { createdAt: "asc" },
-        include: { createdBy: true },
+        include: {
+          createdBy: {
+            include: {
+              organization: true,
+            },
+          },
+        },
       }),
       this.prisma.metadata.findFirst({
         where: { applicationId },
         orderBy: { createdAt: "desc" },
-        include: { createdBy: true },
+        include: {
+          createdBy: {
+            include: {
+              organization: true,
+            },
+          },
+        },
       }),
     ]);
 

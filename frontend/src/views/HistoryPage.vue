@@ -4,7 +4,14 @@ import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
 import PaginationFooter from "@/components/PaginationFooter.vue";
 
-const headers = ["Application", "Auteur", "Type", "Date", "Description"];
+const headers = [
+  "Application",
+  "Auteur",
+  "Organisation",
+  "Type",
+  "Date",
+  "Description",
+];
 
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
@@ -134,6 +141,7 @@ function formatDescription(description: string): { title: string, content: strin
 const metadataTableRows = computed(() =>
   metadataStore.metadatas.map((meta) => {
     const { title: descTitle, content } = formatDescription(meta.description || "");
+
     return {
       id: meta.id,
       Application: {
@@ -144,6 +152,7 @@ const metadataTableRows = computed(() =>
           : undefined,
       },
       Auteur: meta.createdBy?.email ?? "Inconnu",
+      Organisation: (meta.createdBy as any)?.organization?.label ?? "-",
       Type: {
         id: meta.id,
         component: "DsfrTag",
@@ -234,17 +243,14 @@ const metadataTableRows = computed(() =>
       </div>
     </form>
 
-    <!-- Loading indicator for table -->
     <div v-if="isLoading" class="fr-mb-3w">
       <AppLoader data-testid="history-loader" />
     </div>
 
-    <!-- Empty state -->
     <div v-else-if="metadataTableRows.length === 0" class="text-center fr-mb-3w" data-testid="history-empty">
       <p>Aucune donnée recensée.</p>
     </div>
 
-    <!-- Data table - always visible structure -->
     <div v-else>
       <DsfrDataTable
         v-model:selection="selection"
