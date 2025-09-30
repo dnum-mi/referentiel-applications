@@ -7,6 +7,7 @@ import HostingFilter from "@/components/search/HostingFilter.vue";
 import QualityFilter from "@/components/search/QualityFilter.vue";
 import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import OrganizationFilter from "@/components/search/OrganizationFilter.vue";
+import PriorityRestartFilter from "@/components/search/PriorityRestartFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import StatusFilter from "./StatusFilter.vue";
@@ -48,6 +49,7 @@ function resetAllFilters() {
 
         <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">
           <ApplicationFilter />
+          <PriorityRestartFilter />
         </DsfrAccordion>
 
         <DsfrAccordion :selected="openAccordions.includes(1)" title="Organisation & Acteurs" data-testid="sidebar-accordion-organization" @click="toggle(1)">

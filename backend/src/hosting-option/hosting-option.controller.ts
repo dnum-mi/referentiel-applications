@@ -45,50 +45,6 @@ export class HostingOptionController {
     return this.hostingOptionService.findAll(filters);
   }
 
-  @Get("sites")
-  @ApiOperation({ summary: "Get all distinct site values" })
-  @ApiOkResponse({
-    description: "List of distinct sites",
-    type: String,
-    isArray: true,
-  })
-  findDistinctSites() {
-    return this.hostingOptionService.findDistinctSites();
-  }
-
-  @Get("platforms")
-  @ApiOperation({ summary: "Get all distinct platform values" })
-  @ApiOkResponse({
-    description: "List of distinct platforms",
-    type: String,
-    isArray: true,
-  })
-  findDistinctPlatforms() {
-    return this.hostingOptionService.findDistinctPlatforms();
-  }
-
-  @Get("providers")
-  @ApiOperation({ summary: "Get all distinct provider values" })
-  @ApiOkResponse({
-    description: "List of distinct providers",
-    type: String,
-    isArray: true,
-  })
-  findDistinctProviders() {
-    return this.hostingOptionService.findDistinctProviders();
-  }
-
-  @Get(":id")
-  @ApiOperation({ summary: "Get hosting option by ID" })
-  @ApiOkResponse({
-    description: "Hosting option found",
-    type: HostingOptionDto,
-  })
-  @ApiNotFoundResponse({ description: "Hosting option not found" })
-  findOne(@Param("id") id: string) {
-    return this.hostingOptionService.findOne(id);
-  }
-
   @Patch(":id")
   @ApiOperation({ summary: "Update hosting option by ID" })
   @ApiOkResponse({

@@ -35,31 +35,4 @@ export class HostingOptionService extends BaseService<HostingOption> {
       orderBy: [{ site: "asc" }, { platform: "asc" }, { provider: "asc" }],
     });
   }
-
-  async findDistinctSites() {
-    const results = await this.prisma.hostingOption.findMany({
-      select: { site: true },
-      distinct: ["site"],
-      orderBy: { site: "asc" },
-    });
-    return results.map(r => r.site);
-  }
-
-  async findDistinctPlatforms() {
-    const results = await this.prisma.hostingOption.findMany({
-      select: { platform: true },
-      distinct: ["platform"],
-      orderBy: { platform: "asc" },
-    });
-    return results.map(r => r.platform);
-  }
-
-  async findDistinctProviders() {
-    const results = await this.prisma.hostingOption.findMany({
-      select: { provider: true },
-      distinct: ["provider"],
-      orderBy: { provider: "asc" },
-    });
-    return results.map(r => r.provider);
-  }
 }

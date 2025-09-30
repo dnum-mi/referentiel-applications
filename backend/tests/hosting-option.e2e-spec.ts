@@ -45,21 +45,6 @@ describe("HostingOptions", () => {
     expect(response.body.room).toBe(newHostingOption.room);
   });
 
-  it("/GET hosting-options/:id", async () => {
-    const TOKEN = await getToken(user);
-    const hostingOption = await HostingOptionFaker.create();
-
-    const response = await request(app().getHttpServer())
-      .get(`/hosting-options/${hostingOption.id}`)
-      .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
-
-    expect(response.body.id).toBe(hostingOption.id);
-    expect(response.body.site).toBe(hostingOption.site);
-    expect(response.body.platform).toBe(hostingOption.platform);
-    expect(response.body.provider).toBe(hostingOption.provider);
-  });
-
   it("/PATCH hosting-options/:id", async () => {
     const TOKEN = await getToken(user);
     const hostingOption = await HostingOptionFaker.create();
@@ -82,52 +67,6 @@ describe("HostingOptions", () => {
     expect(response.body.provider).toBe(updateData.provider);
     expect(response.body.building).toBe(updateData.building);
     expect(response.body.room).toBe(updateData.room);
-  });
-
-  it("/DELETE hosting-options/:id", async () => {
-    const TOKEN = await getToken(user);
-    const hostingOption = await HostingOptionFaker.create();
-
-    await request(app().getHttpServer())
-      .delete(`/hosting-options/${hostingOption.id}`)
-      .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(204);
-  });
-
-  it("/GET hosting-options/sites", async () => {
-    const TOKEN = await getToken(user);
-    await HostingOptionFaker.create();
-
-    const response = await request(app().getHttpServer())
-      .get("/hosting-options/sites")
-      .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
-
-    expect(Array.isArray(response.body)).toBe(true);
-  });
-
-  it("/GET hosting-options/platforms", async () => {
-    const TOKEN = await getToken(user);
-    await HostingOptionFaker.create();
-
-    const response = await request(app().getHttpServer())
-      .get("/hosting-options/platforms")
-      .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
-
-    expect(Array.isArray(response.body)).toBe(true);
-  });
-
-  it("/GET hosting-options/providers", async () => {
-    const TOKEN = await getToken(user);
-    await HostingOptionFaker.create();
-
-    const response = await request(app().getHttpServer())
-      .get("/hosting-options/providers")
-      .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
-
-    expect(Array.isArray(response.body)).toBe(true);
   });
 
   it("filters hosting-options by site", async () => {

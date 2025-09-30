@@ -2012,71 +2012,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/HostingOptionDto"
       tags: *a13
-  /api/v2/hosting-options/sites:
-    get:
-      operationId: HostingOptionController_findDistinctSites
-      summary: Get all distinct site values
-      parameters: []
-      responses:
-        "200":
-          description: List of distinct sites
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-      tags: *a13
-  /api/v2/hosting-options/platforms:
-    get:
-      operationId: HostingOptionController_findDistinctPlatforms
-      summary: Get all distinct platform values
-      parameters: []
-      responses:
-        "200":
-          description: List of distinct platforms
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-      tags: *a13
-  /api/v2/hosting-options/providers:
-    get:
-      operationId: HostingOptionController_findDistinctProviders
-      summary: Get all distinct provider values
-      parameters: []
-      responses:
-        "200":
-          description: List of distinct providers
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-      tags: *a13
   /api/v2/hosting-options/{id}:
-    get:
-      operationId: HostingOptionController_findOne
-      summary: Get hosting option by ID
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Hosting option found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HostingOptionDto"
-        "404":
-          description: Hosting option not found
-      tags: *a13
     patch:
       operationId: HostingOptionController_update
       summary: Update hosting option by ID
