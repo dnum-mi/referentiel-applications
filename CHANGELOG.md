@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.42.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.41.0...v1.42.0) (2025-09-30)
+
+
+### Features
+
+* :zap: improve application search hosting filter with selectable fields ([6648470](https://github.com/dnum-mi/referentiel-applications/commit/664847029ef098a52540ebfc05f9aff6cb78bd52))
+* :zap: use backend pagination for links ([452ef7f](https://github.com/dnum-mi/referentiel-applications/commit/452ef7f623eefed3d6621183a9296cc37cccdec5))
+* **front:** add historypage for application  update ([cb12cdf](https://github.com/dnum-mi/referentiel-applications/commit/cb12cdf15a6739c3a4605f33a29adc741e1a817f))
+* implement pagination and filtering for metadata retrieval ([afbf21e](https://github.com/dnum-mi/referentiel-applications/commit/afbf21e1c97a8fbff9a0cc8f52f0835008655b4c))
+* include organization details in metadatas ([32c15c7](https://github.com/dnum-mi/referentiel-applications/commit/32c15c709e2ad644189142ef80a6094f107360e1))
+
+
+### Bug Fixes
+
+* **api:** :bug: fix the monthly counter for application that wasn't returning right numbers ([b972640](https://github.com/dnum-mi/referentiel-applications/commit/b972640ee00862b1530287ff9c4f52e17a984662))
+* **front:** :bug: create application without priority restart ([c56b767](https://github.com/dnum-mi/referentiel-applications/commit/c56b767e10fec30e639799cd8938afc2edeb1bcf))
+* **front:** :lipstick: resolve overlap with footer on profile page ([4d69a7d](https://github.com/dnum-mi/referentiel-applications/commit/4d69a7d0b4dd9d399b64d1f492561ae6d238335e))
+* **front:** :recycle: add title to CCT Link and to the logo button in the footer ([7d434f4](https://github.com/dnum-mi/referentiel-applications/commit/7d434f418994504eca075f5858e763a86271ba62))
+* **front:** :recycle: set html language to french for accessibility ([87fbfc4](https://github.com/dnum-mi/referentiel-applications/commit/87fbfc408e25c1b930d573ff2913745c018a16f7))
+
 ## [1.41.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.40.0...v1.41.0) (2025-09-26)
 
 
