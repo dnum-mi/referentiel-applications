@@ -88,7 +88,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       }
     });
 
-    return cleaned as Filters;
+    return cleaned;
   }
 
   async function searchApplications(customFilters?: Filters, store: boolean = true) {
