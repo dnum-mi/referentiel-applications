@@ -32,7 +32,7 @@ export class HostingOptionService extends BaseService<HostingOption> {
 
     return this.prisma.hostingOption.findMany({
       where,
-      orderBy: [{ site: "asc" }, { platform: "asc" }, { provider: "asc" }],
+      orderBy: [{ provider: "asc" }, { platform: "asc" }, { site: "asc" }, { building: "asc" }, { room: "asc" }],
     });
   }
 }
