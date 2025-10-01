@@ -21,6 +21,14 @@ export default defineConfig({
       includeAssets: ["favicon.svg", "safari-pinned-tab.svg"],
       workbox: {
         maximumFileSizeToCacheInBytes: 3000000, // Pour le CSS du DSFR :-/
+        navigateFallbackDenylist: [/^\/api*/],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith("/api"),
+            handler: "NetworkOnly",
+          },
+        ],
+
       },
       manifest: {
         name: "Dummy app",
@@ -40,7 +48,9 @@ export default defineConfig({
           },
         ],
         display: "standalone",
+
       },
+
     }),
     AutoImport({
       include: [/\.[tj]sx?$/, /\.vue$/, /\.vue\?vue/],
