@@ -1,19 +1,27 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
-import type { ApplicationPriorityRestart, ApplicationStatus, CreateApplicationDto } from "@/client/types.gen";
+import api from "@/api/index";
+import type { CreateApplicationDto, ApplicationDto } from "@/client/types.gen";
 
-defineProps<{ isSubmitting?: boolean }>();
+type FormData = Omit<CreateApplicationDto, "targetPopulations" | "purposes" | "tags"> & {
+  targetPopulations: string[]
+  purposes: string[]
+  tags: string[]
+};
 
 const emit = defineEmits<{
-  submit: [data: CreateApplicationDto]
+  success: [application: ApplicationDto]
   cancel: []
 }>();
 
 const toaster = useToasterStore();
+const router = useRouter();
+const isSubmitting = ref(false);
 
 const statusOptions = computed(() =>
   Object.keys(statusApplicationDictionary).map(value => ({
@@ -22,47 +30,52 @@ const statusOptions = computed(() =>
   })),
 );
 
-const form = ref<{
-  label: string
-  shortName: string
-  description: string
-  targetPopulations: string[]
-  purposes: string[]
-  tags: string[]
-  status: ApplicationStatus | null
-  priorityRestart: ApplicationPriorityRestart | null
-}>({
+const form = ref<FormData>({
   label: "",
   shortName: "",
   description: "",
   targetPopulations: [""],
   purposes: [""],
   tags: [""],
-  status: null,
-  priorityRestart: null,
+  status: undefined,
+  priorityRestart: undefined,
+  labels: [],
+  logo: undefined,
 });
 
-function handleSubmit() {
+async function handleSubmit() {
   if (!validateAllTags()) {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
-  const purposes = form.value.purposes.filter(p => p.trim() !== "");
-  const tags = form.value.tags.filter(t => t.trim() !== "");
-  const targetPopulations = form.value.targetPopulations.filter(t => t.trim() !== "");
 
-  emit("submit", {
-    label: form.value.label,
-    shortName: form.value.shortName,
-    logo: undefined,
-    description: form.value.description,
-    targetPopulations,
-    purposes,
-    tags,
-    status: form.value.status as ApplicationStatus,
-    priorityRestart: form.value.priorityRestart as ApplicationPriorityRestart,
-    labels: [],
-  });
+  // Filter out empty values, handle undefined arrays
+  const filterEmpty = (arr: string[] | undefined) => arr?.filter(item => item.trim() !== "");
+
+  const applicationData: CreateApplicationDto = {
+    ...form.value,
+    targetPopulations: filterEmpty(form.value.targetPopulations),
+    purposes: filterEmpty(form.value.purposes),
+    tags: filterEmpty(form.value.tags),
+    status: form.value.status!,
+    priorityRestart: form.value.priorityRestart!,
+  };
+
+  isSubmitting.value = true;
+
+  try {
+    const response = await api.applicationControllerCreate({ body: applicationData });
+    const application = response.data as ApplicationDto;
+
+    toaster.addSuccessMessage("Application créée avec succès !");
+    router.push({ name: "application", params: { id: application.id } });
+    emit("success", application);
+  } catch (error) {
+    console.error("Erreur lors de la création de l'application:", error);
+    toaster.addErrorMessage("Erreur lors de la création de l'application.");
+  } finally {
+    isSubmitting.value = false;
+  }
 }
 
 function addPurpose() {
@@ -77,12 +90,8 @@ function addTag() {
   form.value.tags.push("");
 }
 
-function isTagValid(tag: string) {
-  return regexFormatTag.test(tag);
-}
-
 function validateAllTags(): boolean {
-  return form.value.tags.every(tag => isTagValid(tag));
+  return form.value.tags.every(tag => tag === "" || regexFormatTag.test(tag));
 }
 
 function removeTag(index: number) {
@@ -96,8 +105,6 @@ function addPopulation() {
 function removePopulation(index: number) {
   form.value.targetPopulations.splice(index, 1);
 }
-
-const statusSelect = ref();
 </script>
 
 <template>
@@ -120,10 +127,8 @@ const statusSelect = ref();
     />
 
     <DsfrSelect
-      ref="statusSelect"
       v-model="form.status"
       :options="statusOptions"
-      tabindex="0"
       label="Status de l'application"
       default-unselected-text="Sélectionner un status"
       data-testid="application-info-status"
@@ -151,7 +156,7 @@ const statusSelect = ref();
       <div class="fr-mt-2w">
         <div v-for="(targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput v-model="form.targetPopulations[index]" :placeholder="`Population ${index + 1}`" :data-testid="`application-info-population-${index}`" />
+            <DsfrInput v-model="form.targetPopulations![index]" :placeholder="`Population ${index + 1}`" :data-testid="`application-info-population-${index}`" />
           </div>
           <div class="fr-col-auto">
             <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-info-population-remove-${index}`" @click="removePopulation(index)" />
@@ -168,7 +173,7 @@ const statusSelect = ref();
       <div class="fr-mt-2w">
         <div v-for="(purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput v-model="form.purposes[index]" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-info-purpose-${index}`" />
+            <DsfrInput v-model="form.purposes![index]" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-info-purpose-${index}`" />
           </div>
           <div class="fr-col-auto">
             <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-info-purpose-remove-${index}`" @click="removePurpose(index)" />
@@ -185,7 +190,7 @@ const statusSelect = ref();
       <div class="fr-mt-2w">
         <div v-for="(tag, index) in form.tags" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput v-model="form.tags[index]" :placeholder="`Tag ${index + 1}`" :data-testid="`application-info-tag-${index}`" />
+            <DsfrInput v-model="form.tags![index]" :placeholder="`Tag ${index + 1}`" :data-testid="`application-info-tag-${index}`" />
           </div>
           <div class="fr-col-auto">
             <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-info-tag-remove-${index}`" @click="removeTag(index)" />
