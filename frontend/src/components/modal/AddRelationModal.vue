@@ -37,7 +37,7 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading!.value = true;
     try {
-      const response = await applicationSearchStore.searchApplications({ search: query, limit: 10 }, false);
+      const response = await applicationSearchStore.searchApplications({ search: query, pageSize: 10 }, false);
       return response.results;
     } catch (error) {
       console.error(error);
