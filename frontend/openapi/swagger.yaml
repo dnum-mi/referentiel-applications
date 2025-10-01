@@ -583,6 +583,41 @@ paths:
           schema:
             example: Paris
             type: string
+        - name: hostingSite
+          required: false
+          in: query
+          description: Filtrer par site d'hébergement
+          schema:
+            example: Paris
+            type: string
+        - name: hostingPlatform
+          required: false
+          in: query
+          description: Filtrer par plateforme d'hébergement
+          schema:
+            example: AWS
+            type: string
+        - name: hostingProvider
+          required: false
+          in: query
+          description: Filtrer par fournisseur d'hébergement
+          schema:
+            example: Amazon
+            type: string
+        - name: hostingBuilding
+          required: false
+          in: query
+          description: Filtrer par bâtiment d'hébergement
+          schema:
+            example: Bâtiment A
+            type: string
+        - name: hostingRoom
+          required: false
+          in: query
+          description: Filtrer par pièce d'hébergement
+          schema:
+            example: Salle 101
+            type: string
         - name: link
           required: false
           in: query
@@ -813,6 +848,41 @@ paths:
             plateforme, fournisseur, bâtiment, salle)
           schema:
             example: Paris
+            type: string
+        - name: hostingSite
+          required: false
+          in: query
+          description: Filtrer par site d'hébergement
+          schema:
+            example: Paris
+            type: string
+        - name: hostingPlatform
+          required: false
+          in: query
+          description: Filtrer par plateforme d'hébergement
+          schema:
+            example: AWS
+            type: string
+        - name: hostingProvider
+          required: false
+          in: query
+          description: Filtrer par fournisseur d'hébergement
+          schema:
+            example: Amazon
+            type: string
+        - name: hostingBuilding
+          required: false
+          in: query
+          description: Filtrer par bâtiment d'hébergement
+          schema:
+            example: Bâtiment A
+            type: string
+        - name: hostingRoom
+          required: false
+          in: query
+          description: Filtrer par pièce d'hébergement
+          schema:
+            example: Salle 101
             type: string
         - name: link
           required: false

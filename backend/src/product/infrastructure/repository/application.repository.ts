@@ -131,43 +131,75 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
       {
-        condition: filters.hostingSearch,
+        condition: filters.hostingSite,
         whereClause: {
           hostings: {
             some: {
               hostingOption: {
-                OR: [
-                  {
-                    site: {
-                      contains: filters.hostingSearch,
-                      mode: "insensitive" as const,
-                    },
-                  },
-                  {
-                    platform: {
-                      contains: filters.hostingSearch,
-                      mode: "insensitive" as const,
-                    },
-                  },
-                  {
-                    provider: {
-                      contains: filters.hostingSearch,
-                      mode: "insensitive" as const,
-                    },
-                  },
-                  {
-                    building: {
-                      contains: filters.hostingSearch,
-                      mode: "insensitive" as const,
-                    },
-                  },
-                  {
-                    room: {
-                      contains: filters.hostingSearch,
-                      mode: "insensitive" as const,
-                    },
-                  },
-                ],
+                site: {
+                  contains: filters.hostingSite,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.hostingPlatform,
+        whereClause: {
+          hostings: {
+            some: {
+              hostingOption: {
+                platform: {
+                  contains: filters.hostingPlatform,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.hostingProvider,
+        whereClause: {
+          hostings: {
+            some: {
+              hostingOption: {
+                provider: {
+                  contains: filters.hostingProvider,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.hostingBuilding,
+        whereClause: {
+          hostings: {
+            some: {
+              hostingOption: {
+                building: {
+                  contains: filters.hostingBuilding,
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.hostingRoom,
+        whereClause: {
+          hostings: {
+            some: {
+              hostingOption: {
+                room: {
+                  contains: filters.hostingRoom,
+                  mode: "insensitive" as const,
+                },
               },
             },
           },

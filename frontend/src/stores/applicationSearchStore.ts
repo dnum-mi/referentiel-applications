@@ -5,7 +5,6 @@ import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 
 export type Filters = Exclude<ApplicationControllerSearchData["query"], undefined> & {
-  // Frontend-only hosting filters that get converted to hostingSearch
   hostingSite?: string
   hostingPlatform?: string
   hostingProvider?: string
@@ -30,7 +29,6 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     pageSize: 15,
     sortBy: "label",
     order: "asc",
-    hostingSearch: undefined,
     hostingSite: undefined,
     hostingPlatform: undefined,
     hostingProvider: undefined,
@@ -90,17 +88,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       }
     });
 
-    // Convert frontend hosting filters to backend hostingSearch
-    const { hostingSite, hostingPlatform, hostingProvider, hostingBuilding, hostingRoom, ...backendFilters } = cleaned;
-
-    // Build hostingSearch from individual hosting filters
-    const hostingSearchTerms = [hostingSite, hostingPlatform, hostingProvider, hostingBuilding, hostingRoom].filter(Boolean);
-
-    if (hostingSearchTerms.length > 0) {
-      (backendFilters as any).hostingSearch = hostingSearchTerms.join(" ");
-    }
-
-    return backendFilters as Filters;
+    return cleaned;
   }
 
   async function searchApplications(customFilters?: Filters, store: boolean = true) {

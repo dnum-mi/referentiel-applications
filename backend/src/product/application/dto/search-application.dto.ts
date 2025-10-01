@@ -91,6 +91,46 @@ export class ApplicationSearchDto extends PaginationDto {
   hostingSearch?: string;
 
   @ApiPropertyOptional({
+    description: "Filtrer par site d'hébergement",
+    example: "Paris",
+  })
+  @IsOptional()
+  @IsString()
+  hostingSite?: string;
+
+  @ApiPropertyOptional({
+    description: "Filtrer par plateforme d'hébergement",
+    example: "AWS",
+  })
+  @IsOptional()
+  @IsString()
+  hostingPlatform?: string;
+
+  @ApiPropertyOptional({
+    description: "Filtrer par fournisseur d'hébergement",
+    example: "Amazon",
+  })
+  @IsOptional()
+  @IsString()
+  hostingProvider?: string;
+
+  @ApiPropertyOptional({
+    description: "Filtrer par bâtiment d'hébergement",
+    example: "Bâtiment A",
+  })
+  @IsOptional()
+  @IsString()
+  hostingBuilding?: string;
+
+  @ApiPropertyOptional({
+    description: "Filtrer par pièce d'hébergement",
+    example: "Salle 101",
+  })
+  @IsOptional()
+  @IsString()
+  hostingRoom?: string;
+
+  @ApiPropertyOptional({
     description: "Recherche par lien (ressource externe)",
   })
   @IsOptional()
