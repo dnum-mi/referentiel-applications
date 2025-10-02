@@ -196,7 +196,7 @@ async function save() {
       </template>
 
       <template v-else-if="type === 'homologation'">
-        <DsfrInput v-model="form.date_end" :label="complianceFieldLabels.date" type="date" label-visible />
+        <DsfrInput v-model="form.date_end" :label="complianceFieldLabels.date_end" type="date" label-visible />
       </template>
 
       <template v-else-if="type === 'rgaa'">
