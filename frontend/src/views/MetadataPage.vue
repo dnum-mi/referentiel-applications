@@ -217,6 +217,8 @@ const metadataTableRows = computed(() =>
           type="submit"
           label="Appliquer"
           :disabled="isLoading"
+          title="Appliquer les filtres"
+          aria-label="Appliquer les filtres"
           data-testid="history-apply-filters"
         />
         <DsfrButton
@@ -225,6 +227,8 @@ const metadataTableRows = computed(() =>
           label="Effacer"
           :disabled="isLoading"
           data-testid="history-clear-filters"
+          title="Effacer les filtres"
+          aria-label="Effacer les filtres"
           @click="clearFilters"
         />
       </div>

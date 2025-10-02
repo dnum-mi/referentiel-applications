@@ -129,11 +129,18 @@ function saveAppPermsMatrix() {
     <DsfrButton
       class="fr-mt-2w"
       data-testid="app-perms-save-btn"
+      title="Enregistrer la matrice des permissions"
+      aria-label="Enregistrer la matrice des permissions"
       @click="saveAppPermsMatrix"
     >
       Enregistrer les modifications
     </DsfrButton>
-    <DsfrButton class="fr-mt-2w fr-ml-2w" data-testid="app-perms-reload-btn" @click="$emit('reload')">
+    <DsfrButton
+      class="fr-mt-2w fr-ml-2w" data-testid="app-perms-reload-btn"
+      title="Recharger la matrice des permissions"
+      aria-label="Recharger la matrice des permissions"
+      @click="$emit('reload')"
+    >
       Recharger les permissions
     </DsfrButton>
   </div>
