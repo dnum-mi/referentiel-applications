@@ -20,22 +20,21 @@ model Compliance {
   pdma_backup_storage      BackupStorage?
   pdma_last_test_date      DateTime?
   pdma_test_result         TestResult?
-  pdma_restoration_manager String? 
-  homologation_date_end        DateTime?
-  homologation_rssi_id         String?
-  homologation_rssi            Actor?    @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
+  pdma_restoration_manager String?
+  homologation_date_end    DateTime?
+  homologation_rssi_id     String?
+  homologation_rssi        Actor?         @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
 
   rgaa_audit_date        DateTime?
   rgaa_service_url       String?
   rgaa_accessibility_url String?
-  rgaa_score_percentage  Decimal? @db.Decimal(5,2)
+  rgaa_score_percentage  Decimal?  @db.Decimal(5, 2)
 
   dsfr_implemented Boolean?
   dsfr_version     String?
 
   rgpd_has_aipd Boolean?
   rgpd_dpo_name String?
-  @@map("compliances")
 }
 
 enum TestResult {

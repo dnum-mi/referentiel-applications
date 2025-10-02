@@ -28,8 +28,6 @@ model Metadata {
 
   hostingId String?
   hosting   Hosting? @relation("HostingMetadata", fields: [hostingId], references: [id])
-
-  @@map("metadata")
 }
 
 enum MetadataAction {

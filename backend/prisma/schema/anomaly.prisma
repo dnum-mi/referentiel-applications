@@ -10,8 +10,6 @@ model AnomalyNotification {
 
   history     AnomalyNotificationHistory[]
   application Application?                 @relation("ApplicationAnomalyNotification", fields: [applicationId], references: [id], onDelete: Cascade)
-
-  @@map("anomalyNotification")
 }
 
 model AnomalyNotificationHistory {
@@ -22,8 +20,6 @@ model AnomalyNotificationHistory {
   date                DateTime                  @default(now())
 
   issueNotification AnomalyNotification @relation(fields: [issueNotificationId], references: [id])
-
-  @@map("anomalyNotificationHistory")
 }
 
 enum AnomalyNotificationStatus {

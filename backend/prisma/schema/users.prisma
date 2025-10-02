@@ -13,8 +13,6 @@ model User {
   tokensImpersonate   Token[]               @relation("TokenUserImpersonate")
   tokensCreated       Token[]               @relation("TokenUserCreator")
   type                UserType              @default(human)
-
-  @@map("users")
 }
 
 model Actor {
@@ -32,7 +30,6 @@ model Actor {
   compliances    Compliance[]  @relation("ComplianceHomologationRSSI")
 
   @@index([applicationId, actorTypeId])
-  @@map("actors")
 }
 
 model ActorType {
@@ -45,7 +42,6 @@ model ActorType {
   appPermissions AppPermissions[]
 
   @@unique([code])
-  @@map("actorTypes")
 }
 
 enum UserType {
