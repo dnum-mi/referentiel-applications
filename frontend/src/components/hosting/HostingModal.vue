@@ -7,6 +7,7 @@ import type { HostingDto, HostingOptionDto } from "@/client/types.gen";
 const props = defineProps<{
   applicationId: string
   initialHosting?: HostingDto
+  errorMessage: string
 }>();
 
 const emit = defineEmits(["close", "hostingCreated", "hostingUpdated"]);
@@ -105,6 +106,16 @@ async function handleSubmit() {
 
 <template>
   <DsfrModal :opened="true" :title="props.initialHosting ? 'Modifier un hébergement' : 'Créer un hébergement'" data-testid="hosting-modal" @close="$emit('close')">
+    <DsfrAlert
+      v-show="props.initialHosting && props.errorMessage.length > 0"
+      class="mb-4"
+      tabindex="-1"
+      type="error"
+      role="alert"
+      aria-live="assertive"
+      title="Une erreur est survenue"
+      :description="props.errorMessage"
+    />
     <form data-testid="hosting-form" @submit.prevent="handleSubmit">
       <div v-if="isLoadingOptions" class="fr-text--center fr-mb-2w" data-testid="hosting-options-loading">
         <span class="fr-loading fr-loading--sm" data-testid="hosting-options-spinner">

@@ -17,6 +17,7 @@ type FormData = Omit<CreateApplicationDto, "targetPopulations" | "purposes" | "t
 const emit = defineEmits<{
   success: [application: ApplicationDto]
   cancel: []
+  errorMessage: [message: string]
 }>();
 
 const toaster = useToasterStore();
@@ -45,7 +46,7 @@ const form = ref<FormData>({
 
 async function handleSubmit() {
   if (!validateAllTags()) {
-    toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
+    emit("errorMessage", "Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
 

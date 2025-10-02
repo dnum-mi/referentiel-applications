@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index";
 import { RelationType } from "@/client/types.gen";
 import type { ApplicationDto, RelationDto } from "@/client/types.gen";
@@ -21,7 +20,6 @@ const emit = defineEmits<{
   (e: "close"): void
   (e: "updateRelation", updatedRelation: RelationDto): void
 }>();
-const toaster = useToasterStore();
 const applicationSearchStore = useApplicationSearchStore();
 const searchText = ref("");
 const suggestions = ref<ApplicationDto[]>([]);
@@ -33,6 +31,7 @@ const relationTypesForSelect = [
   { value: RelationType.IS_SERVICE_USER_OF, text: "Utilise le service de" },
   { value: RelationType.IS_DATA_USER_OF, text: "Utilise la donnée de" },
 ];
+const errorMessage = ref<string>("");
 
 const isLoading = ref(false);
 
@@ -55,7 +54,7 @@ async function performSearch(query: string) {
       suggestions.value = response.results || [];
     } catch (error) {
       console.error(error);
-      toaster.addErrorMessage("Erreur lors de la recherche d'applications.");
+      errorMessage.value = "Erreur lors de la recherche d'applications.";
       suggestions.value = [];
     } finally {
       isLoading.value = false;
@@ -103,15 +102,15 @@ function selectApplication(app: ApplicationDto) {
 
 async function submitRelationUpdate() {
   if (!selectedApplication.value) {
-    toaster.addErrorMessage("L'application cible est requise.");
+    errorMessage.value = "L'application cible est requise.";
     return;
   }
   if (!relationTypeSelected.value) {
-    toaster.addErrorMessage("Le type de relation est requis.");
+    errorMessage.value = "Le type de relation est requis.";
     return;
   }
   if (!props.relation) {
-    toaster.addErrorMessage("La relation à mettre à jour est introuvable.");
+    errorMessage.value = "La relation à mettre à jour est introuvable.";
     return;
   }
 
@@ -126,11 +125,11 @@ async function submitRelationUpdate() {
   });
   if (response.error) {
     console.error(response.error);
-    toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
+    errorMessage.value = "Erreur lors de la mise à jour de la relation.";
     return;
   }
   if (!response.response.ok) {
-    toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
+    errorMessage.value = "Erreur lors de la mise à jour de la relation.";
     return;
   }
   if (response.data) {
@@ -149,6 +148,16 @@ function closeModal() {
 <template>
   <DsfrModal :opened="props.opened" :title="props.title" data-testid="edit-relation-modal" @close="closeModal">
     <template #default>
+      <DsfrAlert
+        v-show="errorMessage.length > 0"
+        class="mb-4"
+        tabindex="-1"
+        type="error"
+        role="alert"
+        aria-live="assertive"
+        title="Une erreur est survenue"
+        :description="errorMessage"
+      />
       <div class="relation-type">
         <DsfrSelect
           v-model="relationTypeSelected"

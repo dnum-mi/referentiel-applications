@@ -22,7 +22,6 @@ import { useLinkStore } from "@/stores/linkStore";
 import { useComplianceStore } from "@/stores/complianceStore";
 import { useRelationStore } from "@/stores/relationStore";
 import { useUserStore } from "@/stores/userStore";
-import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { BREAKPOINTS } from "@/constants/breakpoint";
@@ -30,8 +29,8 @@ import { BREAKPOINTS } from "@/constants/breakpoint";
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const emit = defineEmits<{
   (e: "update:application", updatedApp: ApplicationWithPerms): void;
+  (e: "errorMessage", message: string): void;
 }>();
-
 const hostingStore = useHostingStore();
 const userStore = useUserStore();
 const actorStore = useActorStore();
@@ -40,7 +39,6 @@ const compliancesStore = useComplianceStore();
 const reportIssueStore = useReportIssueStore();
 const relationsStore = useRelationStore();
 const metadataStore = useMetadataStore();
-const toaster = useToasterStore();
 
 // Local reactive state
 const application = ref<ApplicationWithPerms>(props.application);
@@ -197,15 +195,15 @@ onBeforeMount(async () => {
         .catch((err: unknown) => {
           console.error(`Error loading ${tab.title}:`, err);
           const msg = tab.errorKey ? errorMessages[tab.errorKey] : "Erreur de chargement";
-          toaster.addErrorMessage(msg);
-        });
+          emit("errorMessage", msg);
+      });
     }
   });
 
   // fetch hostings if allowed
   if (userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings")) {
     hostingStore.fetchHostings(application.value.id).catch(() => {
-      toaster.addErrorMessage(errorMessages.ERR_LOAD_HOSTINGS);
+      emit("errorMessage", errorMessages.ERR_LOAD_HOSTINGS);
     });
   }
 });

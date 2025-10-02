@@ -3,13 +3,13 @@ import { ref, computed, withDefaults, defineProps, watch } from "vue";
 import type { ApplicationWithPerms } from "@/models/Application";
 import type { CreateLinkDto, UpdateLinkDto, Link } from "@/client/types.gen";
 import { useLinkStore } from "@/stores/linkStore";
-import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
 import LinkForm from "./form/LinkForm.vue";
 import PaginationFooter from "./PaginationFooter.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
+import { useToasterStore } from '@/stores/toasterStore.js';
 
 const props = withDefaults(defineProps<{
   application: ApplicationWithPerms,
@@ -18,12 +18,10 @@ const props = withDefaults(defineProps<{
   isMobile: false,
 });
 
-// emit est supprimé car nous ne l'utilisons plus
-const toaster = useToasterStore();
 const linkStore = useLinkStore();
 const userStore = useUserStore();
-// Amélioration 2 : Typer le composable useModal
 const linkModal = useModal<Link>();
+const toaster = useToasterStore();
 
 const selectedLinkIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
@@ -33,7 +31,8 @@ const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props
 const currentPage = ref(0);
 const pageSize = ref(15);
 
-// L'utilisation de 'as any' est moins idéale, mais acceptable si linkTypesDict est un objet simple
+const errorMessage = ref("");
+
 const getTypeLabel = (type: string) => (linkTypesDict as Record<string, string>)[type] || "Type inconnu";
 
 watch(() => props.isMobile, (isMobile) => {
@@ -123,7 +122,6 @@ async function confirmDelete() {
       currentPage.value = Math.max(0, currentPage.value - 1);
       await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
     }
-    // Amélioration 3 : 'emit' supprimé
   } catch (err) {
     toaster.addErrorMessage("Erreur lors de la suppression.");
     console.error("confirmDelete error:", err);
@@ -134,7 +132,7 @@ async function confirmDelete() {
 
 function removeSelectedLinks() {
   if (!selectedLinkIds.value.length) {
-    toaster.addErrorMessage("Aucune sélection.");
+    errorMessage.value = "Aucune sélection.";
     return;
   }
   showDeleteConfirmation.value = true;
@@ -291,6 +289,16 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
     data-testid="link-modal"
     @close="linkModal.closeModal"
   >
+    <DsfrAlert
+      v-show="errorMessage.length > 0"
+      class="mb-4"
+      tabindex="-1"
+      type="error"
+      role="alert"
+      aria-live="assertive"
+      title="Une erreur est survenue"
+      :description="errorMessage"
+    />
     <LinkForm
       :initial-data="linkModal.selectedItem.value ?? undefined"
       :is-submitting="isSubmitting"

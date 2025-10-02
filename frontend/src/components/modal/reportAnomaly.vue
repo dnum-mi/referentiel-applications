@@ -24,6 +24,7 @@ const reportIssueStore = useReportIssueStore();
 
 const description = ref("");
 const isSubmitting = ref(false);
+const errorMessage = ref<string>("");
 
 const titleMapper = {
   application: "Demander une correction sur cette application",
@@ -41,7 +42,7 @@ const placeholder = computed(() => placeholderMapper[props.context]);
 async function submitAnomaly() {
   const desc = description.value;
   if (!desc) {
-    toaster.addErrorMessage("Veuillez décrire votre signalement.");
+    errorMessage.value = "Veuillez décrire votre signalement.";
     return;
   }
 
@@ -81,6 +82,16 @@ function closeModal() {
     data-testid="report-anomaly-modal"
     @close="closeModal"
   >
+    <DsfrAlert
+      v-show="errorMessage.length > 0"
+      class="mb-4"
+      tabindex="-1"
+      type="error"
+      role="alert"
+      aria-live="assertive"
+      title="Une erreur est survenue"
+      :description="errorMessage"
+    />
     <DsfrInput
       v-model.trim="description"
       is-textarea
