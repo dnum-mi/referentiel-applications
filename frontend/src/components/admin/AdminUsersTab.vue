@@ -241,7 +241,10 @@ onMounted(fetchUsers);
               size="sm"
               secondary
               data-testid="admin-user-edit-btn"
+              title="Modifier les permissions de l'utilisateur"
+              aria-label="Modifier les permissions de l'utilisateur"
               @click="openEditModal(cell as UserEntity)"
+
             />
           </template>
 
@@ -289,8 +292,18 @@ onMounted(fetchUsers);
       </div>
 
       <template #footer>
-        <DsfrButton label="Annuler" secondary data-testid="admin-cancel-btn" @click="closeEditModal" />
-        <DsfrButton label="Sauvegarder" :disabled="isSaving" data-testid="admin-save-perms-btn" @click="savePermissions" />
+        <DsfrButton
+          label="Annuler" secondary data-testid="admin-cancel-btn"
+          title="Annuler la modification"
+          aria-label="Annuler la modification"
+          @click="closeEditModal"
+        />
+        <DsfrButton
+          label="Sauvegarder"
+          title="Sauvegarder les modifications"
+          aria-label="Sauvegarder les modifications"
+          :disabled="isSaving" data-testid="admin-save-perms-btn" @click="savePermissions"
+        />
       </template>
     </DsfrModal>
   </div>

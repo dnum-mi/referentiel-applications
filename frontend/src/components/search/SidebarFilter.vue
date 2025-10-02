@@ -173,7 +173,6 @@ function resetAllFilters() {
 
 .total-count {
   font-size: 0.875rem;
-  color: #444;
   margin: 0.25rem 0 0;
 }
 </style>

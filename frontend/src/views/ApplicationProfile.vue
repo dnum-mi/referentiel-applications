@@ -97,7 +97,8 @@ const actions = computed(() => [
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         style="position: absolute; top: 0; right: 0;"
         data-testid="application-delete-btn"
-        @click="deleteModalOpened = true"
+        title="Supprimer définitivement cette application"
+        aria-label="Supprimer définitivement cette application" @click="deleteModalOpened = true"
       >
         Supprimer l’application
       </DsfrButton>
@@ -124,6 +125,8 @@ const actions = computed(() => [
       type="text"
       placeholder="Nom de l’application"
       data-testid="application-delete-input"
+      title="Entrez le nom de l’application pour confirmer"
+      aria-label="Entrer le nom de l’application pour confirmer"
     />
   </DsfrModal>
 </template>

@@ -45,6 +45,8 @@ const tabs = ref<DsfrTab[]>([
         v-show="activeTab === index"
         :panel-id="tab.panelId"
         :tab-id="tab.tabId"
+        :title="`Onglet ${tab.title}`"
+        :aria-label="`Onglet ${tab.title}`"
         :data-testid="tab.panelId"
       >
         <component :is="tab.component" />

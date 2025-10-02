@@ -115,6 +115,8 @@ function cancelDelete() {
     <div class="fr-col-auto">
       <DsfrButton
         type="button"
+        title="Ajouter un nouvel acteur à l’application"
+        aria-label="Ajouter un acteur"
         class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
         :disabled="!canEdit"
         data-testid="actor-add-btn"
@@ -137,6 +139,8 @@ function cancelDelete() {
         icon="fr-icon-delete-line"
         :disabled="selectedActorIds.length === 0 || !canEdit"
         data-testid="actor-bulk-delete-btn"
+        title="Supprimer tous les acteurs sélectionnés"
+        aria-label="Supprimer la sélection"
         @click="removeSelectedActors"
       >
         Supprimer la sélection
@@ -164,7 +168,10 @@ function cancelDelete() {
     >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Sélection'">
-          <input v-model="selectedActorIds" type="checkbox" :value="cell" :data-testid="`actor-row-select-${cell}`">
+          <input
+            v-model="selectedActorIds"
+            type="checkbox" :value="cell" :data-testid="`actor-row-select-${cell}`"
+          >
         </template>
         <template v-else-if="colKey === 'Organisation'">
           <OrgBreadCrumb v-if="cell" :organization-id="cell" />
@@ -173,12 +180,23 @@ function cancelDelete() {
           </template>
         </template>
         <template v-else-if="colKey === 'Email'">
-          <a :href="cell.to" target="_blank" rel="noopener noreferrer" data-testid="actor-email-link">
+          <a
+            :href="cell.to"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="actor-email-link"
+            title="Envoyer un email à {{ cell.label }}"
+            aria-label="Envoyer un email à {{ cell.label }}"
+          >
             {{ cell.label }}
           </a>
         </template>
         <template v-else-if="colKey === 'Actions'">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="actor-edit-btn" @click="cell.onClick">
+          <DsfrButton
+            title="Modifier les informations de l’acteur"
+            aria-label="Modifier l’acteur"
+            tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="actor-edit-btn" @click="cell.onClick"
+          >
             {{ cell.label }}
           </DsfrButton>
         </template>

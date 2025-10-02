@@ -47,7 +47,12 @@ onMounted(load);
     </div>
     <div v-else-if="error" class="fr-alert fr-alert--error">
       {{ error }}
-      <DsfrButton size="sm" class="fr-ml-2w" @click="load">
+      <DsfrButton
+        size="sm" class="fr-ml-2w"
+        title="R"
+        aria-label="R"
+        @click="load"
+      >
         Réessayer
       </DsfrButton>
     </div>

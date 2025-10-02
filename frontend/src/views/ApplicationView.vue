@@ -58,7 +58,10 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         <AppLoader />
       </div>
       <div class="fr-mb-5w">
-        <DsfrToggleSwitch v-model="isMobile" active-text="Mode Tuiles" inactive-text="Mode Tableau" data-testid="application-toggle-view" />
+        <DsfrToggleSwitch
+          v-model="isMobile" active-text="Mode Tuiles" title="Changer le mode d'affichage (tuiles/tableau)"
+          aria-label="Changer le mode d'affichage (tuiles/tableau)" inactive-text="Mode Tableau" data-testid="application-toggle-view"
+        />
       </div>
 
       <div class="fr-grid-row fr-grid-row--gutters fr-mb-1w">
@@ -68,7 +71,10 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
             icon="fr-icon-add-line"
             type="button"
             :disabled="userStore.adminLevel < AdminLevel.WRITE"
+            title="Créer une nouvelle application"
+            aria-label="Créer une nouvelle application"
             data-testid="create-application-btn"
+
             @click="isCreateModalOpen = true"
           >
             Créer une application
@@ -82,6 +88,8 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
             aria-controls="modal-report-missing"
             type="button"
             data-testid="report-missing-app"
+            title="Signaler une application manquante"
+            aria-label="Signaler une application manquante"
             @click="isReportMissingOpen = true"
           >
             Signaler une application manquante
