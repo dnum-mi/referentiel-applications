@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.43.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.42.0...v1.43.0) (2025-10-02)
+
+
+### Features
+
+* :sparkles: Rework that add edit for report as admin, add search and sort in AllReport page ([1a98413](https://github.com/dnum-mi/referentiel-applications/commit/1a9841359516ab032b4cd3e849f9a5f4e143d50b))
+* add individual hosting filters for improved application search ([#1120](https://github.com/dnum-mi/referentiel-applications/issues/1120)) ([05876a1](https://github.com/dnum-mi/referentiel-applications/commit/05876a1bdeecbd970bbab7842d488988a1195a53))
+* add sorting option by organization label in metadata retrieval ([#1124](https://github.com/dnum-mi/referentiel-applications/issues/1124)) ([7022196](https://github.com/dnum-mi/referentiel-applications/commit/70221962e9e46756f38f236297359b2d28e47164))
+* enhance sorting functionality in metadata table with updated filters ([#1126](https://github.com/dnum-mi/referentiel-applications/issues/1126)) ([d1e0e5e](https://github.com/dnum-mi/referentiel-applications/commit/d1e0e5efeefeb0c99f939ed27f0d2c09dce66dc1))
+* **front:** :wheelchair: indicate column sort state with aria-sort on table headers ([518d6a3](https://github.com/dnum-mi/referentiel-applications/commit/518d6a3c17709edaf4c22548fa2a35e8c4a8f176))
+
+
+### Bug Fixes
+
+* :bug: fix application creation when no tags filled ([#1122](https://github.com/dnum-mi/referentiel-applications/issues/1122)) ([246f6b9](https://github.com/dnum-mi/referentiel-applications/commit/246f6b916d90653bf6afcd21dd2082466520c798))
+* add runtime caching and denylist for API requests in Vite configuration ([2ed7a0d](https://github.com/dnum-mi/referentiel-applications/commit/2ed7a0da39db11fe3f08dfce50bb4f76b29ea38a))
+* **front:** :bug: use correct variable for label of the compliance homologation ([b7a22c6](https://github.com/dnum-mi/referentiel-applications/commit/b7a22c6f9734588643da68c30624bd03f18e1ca9))
+* update searchApplications to use pageSize instead of limit ([0e648dd](https://github.com/dnum-mi/referentiel-applications/commit/0e648ddd9fa46ff100383bddeaa2e1072fe660eb))
+
 ## [1.42.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.41.0...v1.42.0) (2025-09-30)
 
 
