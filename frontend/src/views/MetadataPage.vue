@@ -16,8 +16,8 @@ const headers = [
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
 const pageSize = ref(15);
-const sortBy = ref("createdAt");
-const sortOrder = ref<"asc" | "desc">("desc");
+const sortBy = ref("Date");
+const isSortDescending = ref(true);
 const createdAtGte = ref<string>("");
 const createdAtLte = ref<string>("");
 
@@ -35,7 +35,21 @@ const pages = computed(() => {
   }));
 });
 
+const columnToFieldKeyMap: Record<string, string> = {
+  Application: "application.label",
+  Auteur: "createdBy.email",
+  Organisation: "createdBy.organization.label",
+  Type: "action",
+  Date: "createdAt",
+  Description: "description",
+};
+
 watch([currentPage, pageSize], () => {
+  fetchData();
+});
+
+watch([sortBy, isSortDescending], () => {
+  currentPage.value = 0;
   fetchData();
 });
 
@@ -46,11 +60,13 @@ function convertLocalToUTC(localDateTimeString: string): string {
 }
 
 function fetchData() {
+  const fieldKey = columnToFieldKeyMap[sortBy.value] ?? "createdAt";
+
   const filters: any = {
     page: currentPage.value,
     pageSize: pageSize.value,
-    sortBy: sortBy.value,
-    order: sortOrder.value,
+    sortBy: fieldKey,
+    order: isSortDescending.value ? "desc" : "asc",
   };
 
   if (createdAtGte.value) {
@@ -72,8 +88,8 @@ async function applyFilters() {
 function clearFilters() {
   createdAtGte.value = "";
   createdAtLte.value = "";
-  sortBy.value = "createdAt";
-  sortOrder.value = "desc";
+  sortBy.value = "Date";
+  isSortDescending.value = true;
   applyFilters();
 }
 
@@ -87,15 +103,9 @@ function handlePageSizeChange(newPageSize: number) {
   currentPage.value = 0;
 }
 
-// Sorting options
-const sortOptions = [
-  { value: "", text: "-- Aucun tri --" },
-  { value: "createdAt", text: "Date" },
-  { value: "application.label", text: "Application" },
-  { value: "createdBy.email", text: "Auteur" },
-  { value: "createdBy.organization.label", text: "Organisation" },
-  { value: "action", text: "Type" },
-];
+function onUpdateSortColumn(columnName: string | undefined) {
+  sortBy.value = columnName || "Date";
+}
 
 onMounted(async () => {
   await fetchData();
@@ -177,7 +187,7 @@ const metadataTableRows = computed(() =>
 
     <!-- Filters and Sorting form -->
     <form class="fr-mb-4w" @submit.prevent="applyFilters">
-      <h3>Filtres et tri</h3>
+      <h3>Filtres</h3>
 
       <!-- Date filters -->
       <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w">
@@ -197,30 +207,6 @@ const metadataTableRows = computed(() =>
             label-visible
             type="datetime-local"
             data-testid="history-filter-date-to"
-          />
-        </div>
-      </div>
-
-      <!-- Sorting controls -->
-      <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w">
-        <div class="fr-col-12 fr-col-md-4">
-          <DsfrSelect
-            v-model="sortBy"
-            label="Trier par"
-            :options="sortOptions"
-            data-testid="history-sort-select"
-          />
-        </div>
-        <div class="fr-col-12 fr-col-md-4">
-          <DsfrSelect
-            v-model="sortOrder"
-            label="Ordre"
-            :options="[
-              { value: '', text: '-- Aucun ordre --' },
-              { value: 'desc', text: 'Décroissant' },
-              { value: 'asc', text: 'Croissant' },
-            ]"
-            data-testid="history-sort-order-select"
           />
         </div>
       </div>
@@ -254,13 +240,18 @@ const metadataTableRows = computed(() =>
 
     <div v-else>
       <DsfrDataTable
+        :key="`${currentPage}-${pageSize}-${sortBy}-${isSortDescending}`"
         v-model:selection="selection"
+        v-model:sorted-by="sortBy"
+        v-model:sorted-desc="isSortDescending"
         :headers-row="headers"
         :rows="metadataTableRows"
+        :sortable-rows="['Application', 'Auteur', 'Organisation', 'Type', 'Date']"
         row-key="id"
         :pagination="false"
         title="Données"
         data-testid="history-table"
+        @update:sorted-by="onUpdateSortColumn"
       >
         <template #cell="{ colKey, cell }">
           <template v-if="colKey === 'Description'">
