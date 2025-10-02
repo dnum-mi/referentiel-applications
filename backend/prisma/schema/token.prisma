@@ -13,7 +13,7 @@ model Token {
   userIdImpersonate String
   userImpersonate   User   @relation("TokenUserImpersonate", fields: [userIdImpersonate], references: [id], onDelete: Restrict, onUpdate: Cascade)
   createdById       String
-  createdBy         User    @relation("TokenUserCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  createdBy         User   @relation("TokenUserCreator", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
 }
 
 enum TokenStatus {

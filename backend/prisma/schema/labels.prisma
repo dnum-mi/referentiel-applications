@@ -5,6 +5,4 @@ model Label {
   metadatas     Metadata[]  @relation("LabelMetadata")
   applicationId String
   application   Application @relation("ApplicationLabels", fields: [applicationId], references: [id], onDelete: Cascade)
-
-  @@map("labels")
 }
