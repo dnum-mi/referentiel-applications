@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
-import { useToasterStore } from "./stores/toasterStore.js";
+import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
 import { getAuthentication } from "./services/authentication";
-import router from "./router/index.js";
+import router from "./router/index";
 import { useRoute } from "vue-router";
-import { useUserStore } from "@/stores/userStore.js";
-import { AdminLevel } from "./models/user.js";
-import { configureClients } from "./api/init-clients.js";
+import { useUserStore } from "@/stores/userStore";
+import { AdminLevel } from "./models/user";
+import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
 
 const route = useRoute();

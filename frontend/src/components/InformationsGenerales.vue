@@ -12,7 +12,7 @@ import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import type { HostingDto, LabelDto } from "@/client/types.gen";
 import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
-import { useApplicationStore } from "@/stores/applicationStore.js";
+import { useApplicationStore } from "@/stores/applicationStore";
 import api from "@/api/index.js";
 
 const props = defineProps<{
@@ -25,6 +25,7 @@ const emit = defineEmits(["update:application"]);
 const isSubmitting = ref(false);
 const toaster = useToasterStore();
 const loading = ref(false);
+const errorMessage = ref<string>("");
 
 const isHostingModalOpen = ref(false);
 const hostingToEdit = ref<HostingDto | null>(null);
@@ -159,7 +160,7 @@ async function updateApplication(updatedData: any) {
     toaster.addSuccessMessage("Application mise à jour avec succès");
   } catch (error) {
     console.error(error);
-    toaster.addErrorMessage("Erreur lors de la mise à jour de l'application");
+    errorMessage.value = "Erreur lors de la mise à jour de l'application";
   } finally {
     isSubmitting.value = false;
     loading.value = false;
@@ -181,7 +182,7 @@ async function confirmDeletionHosting() {
     toaster.addSuccessMessage("Hébergement supprimé avec succès");
   } catch (error) {
     console.error(error);
-    toaster.addErrorMessage("Erreur lors de la suppression de l'hébergement");
+    errorMessage.value = "Erreur lors de la suppression de l'hébergement";
   } finally {
     hostingToDelete.value = null;
     isDeleteModalOpen.value = false;
@@ -353,6 +354,7 @@ watch(
   <HostingModal
     v-if="isHostingModalOpen"
     :application-id="application.id"
+    :error-message="errorMessage"
     @close="isHostingModalOpen = false"
     @hostingCreated="isHostingModalOpen = false"
   />
@@ -361,6 +363,7 @@ watch(
     v-if="hostingToEdit"
     :application-id="application.id"
     :initial-hosting="hostingToEdit"
+    :error-message="errorMessage"
     @close="hostingToEdit = null"
     @hostingUpdated="hostingToEdit = null"
   />
@@ -373,12 +376,23 @@ watch(
   />
 
   <DsfrModal size="lg" :opened="isModalOpened" title="Modifier l'application" data-testid="info-edit-modal" @close="applicationModal.closeModal">
+    <DsfrAlert
+      v-show="errorMessage.length > 0"
+      class="mb-4"
+      tabindex="-1"
+      type="error"
+      role="alert"
+      aria-live="assertive"
+      title="Une erreur est survenue"
+      :description="errorMessage"
+    />
     <ApplicationForm
       v-bind="{ initialData: application, labels }"
       :is-submitting="isSubmitting"
       data-testid="info-edit-form"
       @submit="updateApplication"
       @cancel="applicationModal.closeModal"
+      @errorMessage="(msg: string) => (errorMessage = msg)"
     />
   </DsfrModal>
 </template>

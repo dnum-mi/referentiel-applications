@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
 import SuggestionsInput from "../SuggestionsInput.vue";
 import { RelationType } from "@/client/types.gen";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore.js";
@@ -20,7 +19,6 @@ const emit = defineEmits<{
   (e: "close"): void
   (e: "addRelation", payload: { targetId: string, type: string }): void
 }>();
-const toaster = useToasterStore();
 const applicationSearchStore = useApplicationSearchStore();
 const selectedApplicationId = ref<string>("");
 const relationType = ref<RelationType>(RelationType.IS_PART_OF);
@@ -30,6 +28,7 @@ const relationTypesForSelect = [
   { value: RelationType.IS_SERVICE_USER_OF, text: "Utilise le service de" },
   { value: RelationType.IS_DATA_USER_OF, text: "Utilise la donnée de" },
 ];
+const errorMessage = ref<string>("");
 
 const isLoading = ref(false);
 
@@ -41,7 +40,7 @@ async function performSearch(query: string) {
       return response.results;
     } catch (error) {
       console.error(error);
-      toaster.addErrorMessage("Erreur lors de la recherche d'applications.");
+      errorMessage.value = "Erreur lors de la recherche d'applications.";
       return [];
     } finally {
       isLoading.value = false;
@@ -52,16 +51,16 @@ async function performSearch(query: string) {
 
 async function submitRelation() {
   if (!selectedApplicationId.value) {
-    toaster.addErrorMessage("L'application cible est requise.");
+    errorMessage.value = "L'application cible est requise.";
     return;
   }
   if (!relationType.value) {
-    toaster.addErrorMessage("Le type de relation est requis.");
+    errorMessage.value = "Le type de relation est requis.";
     return;
   }
   const applicationSourceId = props.applicationId;
   if (!applicationSourceId) {
-    toaster.addErrorMessage("L'application source est introuvable.");
+    errorMessage.value = "L'application source est introuvable.";
     return;
   }
 
@@ -84,6 +83,16 @@ function closeModal() {
 <template>
   <DsfrModal :opened="props.opened" :title="props.title" data-testid="relation-modal" @close="closeModal">
     <template #default>
+      <DsfrAlert
+        v-show="errorMessage.length > 0"
+        class="mb-4"
+        tabindex="-1"
+        type="error"
+        role="alert"
+        aria-live="assertive"
+        title="Une erreur est survenue"
+        :description="errorMessage"
+      />
       <div class="relation-type">
         <DsfrSelect
           v-model="relationType"

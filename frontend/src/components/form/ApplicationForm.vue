@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
@@ -13,8 +13,7 @@ const props = defineProps<{
   isSubmitting?: boolean
 }>();
 
-// TODO typé les emits
-const emit = defineEmits(["update:application", "submit", "cancel"]);
+const emit = defineEmits(["update:application", "submit", "cancel", "errorMessage"]);
 const labelError = ref<string | undefined>(undefined);
 const descriptionError = ref<string | undefined>(undefined);
 const toaster = useToasterStore();
@@ -58,11 +57,7 @@ function handleSubmit() {
     hasError = true;
   }
   if (!validateAllTags()) {
-    toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
-    hasError = true;
-  }
-
-  if (hasError) {
+    emit("errorMessage", "Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
     return;
   }
 
