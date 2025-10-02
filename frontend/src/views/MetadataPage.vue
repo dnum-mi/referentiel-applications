@@ -93,6 +93,7 @@ const sortOptions = [
   { value: "createdAt", text: "Date" },
   { value: "application.label", text: "Application" },
   { value: "createdBy.email", text: "Auteur" },
+  { value: "createdBy.organization.label", text: "Organisation" },
   { value: "action", text: "Type" },
 ];
 

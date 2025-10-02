@@ -53,7 +53,7 @@ const routes = [
   {
     name: routeNames.HISTORY,
     path: "/historique",
-    component: () => import("@/views/HistoryPage.vue"),
+    component: () => import("@/views/MetadataPage.vue"),
     meta: { requiresAuth: true, title: "Historique global - Référentiel des applications" },
   },
 

@@ -42,6 +42,9 @@ export class MetadataRepository implements IMetadataRepository {
         case "createdBy.email":
           orderBy = { createdBy: { email: order } };
           break;
+        case "createdBy.organization.label":
+          orderBy = { createdBy: { organization: { label: order } } };
+          break;
         case "action":
         case "createdAt":
           orderBy = { [filters.sortBy]: order };
