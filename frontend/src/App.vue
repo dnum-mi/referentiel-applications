@@ -151,6 +151,7 @@ function close() {
 </script>
 
 <template>
+  <SkipLinks data-testid="skip-links" />
   <DsfrHeader
     :service-description="serviceDescription"
     :service-title="serviceTitle"
