@@ -28,6 +28,7 @@ describe("Actor", () => {
   it("/POST actor", async () => {
     user = await UserFaker.create(AdminLevel.WRITE);
     application = await ApplicationFaker.create(user);
+    const actorType = await ActorTypeFaker.create();
     TOKEN = await getToken(user);
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/actors`)
@@ -35,8 +36,7 @@ describe("Actor", () => {
         email: "test@test.co",
         firstname: "firstname",
         lastname: "lastname",
-        actorTypeId: "",
-        organizationId: "",
+        actorTypeId: actorType.id,
         applicationId: application.id,
       })
       .set("Authorization", `Bearer ${TOKEN}`)

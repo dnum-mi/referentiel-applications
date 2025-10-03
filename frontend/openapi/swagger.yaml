@@ -2837,6 +2837,10 @@ components:
             - 20
             - 30
           type: number
+        organizationId:
+          type: string
+          nullable: true
+          description: ID de l'organisation
     ApplicationPriorityRestart:
       type: string
       enum:
@@ -3581,10 +3585,12 @@ components:
           description: ID du type d'acteur lié
         organizationId:
           type: string
+          nullable: true
           example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
           description: ID de l'organization lié (Optionel)
         applicationId:
           type: string
+          nullable: true
           example: 035869dc-47a6-4cee-828f-f6a28d050b35
           description: ID de l'application lié (Optionel)
       required:
@@ -3610,10 +3616,12 @@ components:
           description: ID du type d'acteur lié
         organizationId:
           type: string
+          nullable: true
           example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
           description: ID de l'organization lié (Optionel)
         applicationId:
           type: string
+          nullable: true
           example: 035869dc-47a6-4cee-828f-f6a28d050b35
           description: ID de l'application lié (Optionel)
         id:
@@ -3644,10 +3652,12 @@ components:
           description: ID du type d'acteur lié
         organizationId:
           type: string
+          nullable: true
           example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
           description: ID de l'organization lié (Optionel)
         applicationId:
           type: string
+          nullable: true
           example: 035869dc-47a6-4cee-828f-f6a28d050b35
           description: ID de l'application lié (Optionel)
     CreateHostingOptionDto:

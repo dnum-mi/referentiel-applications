@@ -190,7 +190,7 @@ const metadataTableRows = computed(() =>
       <h3>Filtres</h3>
 
       <!-- Date filters -->
-      <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w">
+      <div class="fr-grid-row fr-grid-row--gutters fr-mb-1w">
         <div class="fr-col-12 fr-col-md-4">
           <DsfrInput
             v-model="createdAtGte"
