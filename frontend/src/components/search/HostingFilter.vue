@@ -125,11 +125,11 @@ onMounted(loadHostingOptions);
 <template>
   <div class="hosting-filters">
     <DsfrSelect
-      v-model="selectedSite"
-      label="Site"
-      :options="siteOptions"
+      v-model="selectedProvider"
+      label="Fournisseur"
+      :options="providerOptions"
       :disabled="isLoading"
-      data-testid="hosting-site-select"
+      data-testid="hosting-provider-select"
     />
 
     <DsfrSelect
@@ -141,11 +141,11 @@ onMounted(loadHostingOptions);
     />
 
     <DsfrSelect
-      v-model="selectedProvider"
-      label="Fournisseur"
-      :options="providerOptions"
+      v-model="selectedSite"
+      label="Site"
+      :options="siteOptions"
       :disabled="isLoading"
-      data-testid="hosting-provider-select"
+      data-testid="hosting-site-select"
     />
 
     <DsfrSelect
