@@ -3,13 +3,8 @@ import { computed, watch, ref } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { restartPrioritiesConfig } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
-import { useUserStore } from "@/stores/userStore";
-import { AdminLevel } from "@/models/user";
-import { useApplicationStore } from "@/stores/applicationStore";
 
 const searchStore = useApplicationSearchStore();
-const applicationStore = useApplicationStore();
-const userStore = useUserStore();
 
 const sortBy = ref(searchStore.filters.sortBy || "label");
 const sortedDesc = ref(searchStore.filters.order === "desc");
@@ -82,34 +77,13 @@ const rows = computed(() => {
   return rows;
 });
 
-async function exportToExcel() {
-  try {
-    await applicationStore.downloadExcel(searchStore.filters);
-  } catch (error) {
-    console.error("Excel export error:", error);
-    alert("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
-  }
-}
-
 function updateSortedColumn(key: string | undefined) {
   searchStore.setFilter({ sortBy: key || "label", page: 0 });
 }
 </script>
 
 <template>
-  <div class="flex justify-between mb-4" data-testid="application-table-header">
-    <div class="export-button">
-      <DsfrButton
-        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
-        label="Exporter en Excel"
-        icon="ri-file-excel-2-line"
-        secondary
-        icon-only-size="sm"
-        data-testid="application-export-btn"
-        @click="exportToExcel"
-      />
-    </div>
-  </div>
+  <div class="flex justify-between mb-4" data-testid="application-table-header" />
   <DsfrDataTable
     v-model:sorted-by="sortBy"
     v-model:sorted-desc="sortedDesc"
@@ -181,9 +155,5 @@ function updateSortedColumn(key: string | undefined) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.export-button {
-  margin-bottom: 10px;
 }
 </style>
