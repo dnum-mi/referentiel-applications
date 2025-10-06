@@ -28,17 +28,20 @@ jobs:
       context: ./frontend
       target: prod
 
-  test-lint:
-    name: Test Linting
+  test-lint-format:
+    name: Test Linting & Formatting
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - name: Run ESLint
+      - name: Install dependencies
         run: |
           npm install -g pnpm
           pnpm install --frozen-lockfile
-          pnpm run lint
+      - name: Run ESLint
+        run: pnpm run lint
+      - name: Run Prettier
+        run: pnpm exec prettier . --check
 
   unit-tests:
     name: Unit Tests
