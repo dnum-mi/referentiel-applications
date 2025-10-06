@@ -64,6 +64,14 @@ export class ApplicationSearchDto extends PaginationDto {
   actorType?: string;
 
   @ApiPropertyOptional({
+    description: "Email d'un acteur pour filtrer les applications",
+    example: "user@example.com",
+  })
+  @IsOptional()
+  @IsString()
+  actorEmail?: string;
+
+  @ApiPropertyOptional({
     type: [String],
     enum: Status,
     description: "Filtrer par un ou plusieurs status",

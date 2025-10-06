@@ -6,7 +6,6 @@ import ActorFilter from "@/components/search/ActorFilter.vue";
 import HostingFilter from "@/components/search/HostingFilter.vue";
 import QualityFilter from "@/components/search/QualityFilter.vue";
 import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
-import OrganizationFilter from "@/components/search/OrganizationFilter.vue";
 import PriorityRestartFilter from "@/components/search/PriorityRestartFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
@@ -32,13 +31,7 @@ function resetAllFilters() {
   <Transition name="sidebar-width">
     <aside v-if="sidebarOpen" class="sidebar" data-testid="sidebar-filter">
       <div class="filters-wrapper">
-        <DsfrButton
-          tertiary
-          size="small"
-          class="reset-link"
-          data-testid="sidebar-reset-filters-button"
-          @click="resetAllFilters"
-        >
+        <DsfrButton tertiary size="small" class="reset-link" data-testid="sidebar-reset-filters-button" @click="resetAllFilters">
           ✕ Réinitialiser
         </DsfrButton>
 
@@ -52,12 +45,21 @@ function resetAllFilters() {
           <PriorityRestartFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(1)" title="Organisation & Acteurs" data-testid="sidebar-accordion-organization" @click="toggle(1)">
+        <DsfrAccordion
+          :selected="openAccordions.includes(1)"
+          title="Organisation & Acteurs"
+          data-testid="sidebar-accordion-organization"
+          @click="toggle(1)"
+        >
           <ActorFilter />
-          <OrganizationFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(2)" title="Hébergement" data-testid="sidebar-accordion-hosting" @click="toggle(2)">
+        <DsfrAccordion
+          :selected="openAccordions.includes(2)"
+          title="Hébergement"
+          data-testid="sidebar-accordion-hosting"
+          @click="toggle(2)"
+        >
           <HostingFilter />
         </DsfrAccordion>
 
@@ -72,7 +74,12 @@ function resetAllFilters() {
     </aside>
   </Transition>
 
-  <button class="sidebar-toggle" data-testid="sidebar-toggle" :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'" @click="toggleSidebar">
+  <button
+    class="sidebar-toggle"
+    data-testid="sidebar-toggle"
+    :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'"
+    @click="toggleSidebar"
+  >
     <VIcon :name="sidebarOpen ? 'ri-arrow-left-s-line' : 'ri-arrow-right-s-line'" class="sidebar-toggle-icon" />
   </button>
 </template>
