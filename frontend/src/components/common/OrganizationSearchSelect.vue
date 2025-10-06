@@ -1,0 +1,154 @@
+<script setup lang="ts">
+import { ref, computed, watch } from "vue";
+import type { PropType } from "vue";
+import type { OrganizationDto } from "@/client/types.gen";
+import { useOrganizationStore } from "@/stores/organizationStore";
+
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: "",
+  },
+  description: {
+    type: String,
+    default: "",
+  },
+  initialOrganization: {
+    type: Object as PropType<OrganizationDto | null>,
+    default: null,
+  },
+});
+
+const emit = defineEmits<{
+  "update:modelValue": [value: string]
+}>();
+
+const organizationStore = useOrganizationStore();
+
+const searchQuery = ref("");
+const organizations = ref<OrganizationDto[]>([]);
+const isLoading = ref(false);
+const selectedOrganizationId = ref(props.modelValue);
+
+// Computed options for the select
+const selectOptions = computed(() => {
+  const options = [];
+
+  // Always allow empty option
+  options.push({
+    text: "",
+    value: "",
+  });
+
+  // Add initial organization if it exists and is not already in the search results
+  if (props.initialOrganization
+    && !organizations.value.find(org => org.id === props.initialOrganization?.id)) {
+    options.push({
+      text: props.initialOrganization.label,
+      value: props.initialOrganization.id,
+    });
+  }
+
+  organizations.value.forEach((org) => {
+    options.push({
+      text: org.label,
+      value: org.id,
+    });
+  });
+
+  return options;
+});
+
+// Watch for external model value changes
+watch(() => props.modelValue, (newValue) => {
+  selectedOrganizationId.value = newValue;
+});
+
+// Watch for internal selection changes
+watch(selectedOrganizationId, (newValue) => {
+  emit("update:modelValue", newValue);
+});
+
+// Search organizations
+async function searchOrganizations() {
+  if (!searchQuery.value.trim()) {
+    organizations.value = [];
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    const results = await organizationStore.find(searchQuery.value);
+    organizations.value = results;
+  } catch (error) {
+    console.error("Error searching organizations:", error);
+    organizations.value = [];
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+function clearSearch() {
+  searchQuery.value = "";
+  organizations.value = [];
+}
+
+let searchTimeout: ReturnType<typeof setTimeout> | undefined;
+watch(searchQuery, () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+  searchTimeout = setTimeout(searchOrganizations, 300);
+});
+</script>
+
+<template>
+  <div>
+    <div class="fr-form-group">
+      <DsfrInput
+        v-model="searchQuery"
+        label="Organisation"
+        placeholder="Rechercher une organisation..."
+        :description="description"
+        label-visible
+      >
+        <template v-if="searchQuery" #append>
+          <DsfrButton
+            label="Effacer"
+            size="sm"
+            tertiary
+            no-outline
+            @click="clearSearch"
+          />
+        </template>
+      </DsfrInput>
+    </div>
+
+    <div v-if="selectOptions.length > 0" class="fr-mt-1w">
+      <DsfrSelect
+        v-model="selectedOrganizationId"
+        :options="selectOptions"
+        :disabled="isLoading"
+        :label-visible="false"
+      />
+    </div>
+
+    <div v-if="searchQuery && !isLoading && organizations.length > 0" class="fr-mt-1w">
+      <p class="fr-text--xs fr-text--mention-grey">
+        {{ organizations.length }} résultat{{ organizations.length > 1 ? 's' : '' }} trouvé{{ organizations.length > 1 ? 's' : '' }}
+      </p>
+    </div>
+
+    <div v-if="isLoading" class="fr-mt-1w">
+      <p class="fr-text--sm">
+        Recherche en cours...
+      </p>
+    </div>
+
+    <div v-else-if="searchQuery && organizations.length === 0" class="fr-mt-1w">
+      <p class="fr-text--xs fr-text--mention-grey">
+        Aucune organisation trouvée
+      </p>
+    </div>
+  </div>
+</template>

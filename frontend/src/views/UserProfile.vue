@@ -32,6 +32,14 @@ onMounted(() => {
                 </tr>
                 <tr>
                   <th scope="row">
+                    Organisation
+                  </th>
+                  <td data-testid="user-profile-organization">
+                    {{ userStore.user.organization?.label || "Non renseignée" }}
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">
                     Email
                   </th>
                   <td data-testid="user-profile-email">

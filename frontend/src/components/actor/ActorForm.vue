@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import type { PropType } from "vue";
 import type { Application } from "@/models/Application";
 import type { OrganizationDto, ActorTypeDto } from "@/client/types.gen.js";
 import type { Actor } from "@/models/Actor";
+import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 import { useOrganizationStore } from "@/stores/organizationStore";
 
 const props = defineProps({
@@ -22,8 +23,7 @@ const props = defineProps({
 const emit = defineEmits(["submit", "cancel"]);
 
 const organizationStore = useOrganizationStore();
-const organizations = ref<OrganizationDto[]>([]);
-const organizationInputValue = ref("");
+const initialOrganization = ref<OrganizationDto | null>(null);
 
 const form = ref<Actor>({
   email: "",
@@ -36,27 +36,27 @@ const actorTypeOptions = props.actorTypes.map(type => ({
   value: type.id,
 }));
 
+// Handle organization ID with proper typing
+const organizationId = computed({
+  get: () => form.value.organizationId || "",
+  set: (value: string) => {
+    form.value.organizationId = value === "" ? null : value;
+  },
+});
+
+// Load initial organization if actor has one
 onMounted(async () => {
-  const orgId = props.initialData?.organizationId;
-  if (orgId) {
-    const org = await organizationStore.getById(orgId);
-    if (org) {
-      organizationInputValue.value = org.label;
-      organizations.value = [org];
+  if (props.initialData?.organizationId) {
+    try {
+      const org = await organizationStore.getById(props.initialData.organizationId);
+      if (org) {
+        initialOrganization.value = org;
+      }
+    } catch (error) {
+      console.error("Error loading initial organization:", error);
     }
   }
 });
-
-// Handle organization input changes
-async function handleOrganizationInput(search: string) {
-  organizationInputValue.value = search;
-
-  // Find matching organization and update form
-  const response = await organizationStore.find(search);
-  organizations.value = response;
-  const matchingOrg = organizations.value.find(org => org.label === organizationInputValue.value);
-  form.value.organizationId = matchingOrg?.id || "";
-}
 
 function handleSubmit() {
   emit("submit", form.value);
@@ -70,25 +70,11 @@ function handleSubmit() {
     </div>
 
     <div class="fr-input-group fr-mt-3w">
-      <DsfrInput
-        :model-value="organizationInputValue"
-        label-visible
-        label="Organisation"
-        list="organizationSuggestionsList"
-        placeholder="Rechercher une organisation"
+      <OrganizationSearchSelect
+        v-model="organizationId"
+        :initial-organization="initialOrganization"
         data-testid="actor-organization"
-        @update:model-value="handleOrganizationInput"
       />
-      <datalist id="organizationSuggestionsList" data-testid="organization-suggestions-list">
-        <option
-          v-for="organization in organizations"
-          :key="organization.id"
-          :value="organization.label"
-          :data-testid="`organization-option-${organization.id}`"
-        >
-          {{ organization.label }}
-        </option>
-      </datalist>
     </div>
 
     <div class="fr-input-group fr-mt-3w">

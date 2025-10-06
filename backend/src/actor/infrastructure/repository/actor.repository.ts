@@ -18,21 +18,9 @@ export class ActorRepository implements IActorRepository {
     const newActor = await this.prisma.actor.create({
       data: {
         ...rest,
-        ...(organizationId && {
-          organization: {
-            connect: { id: organizationId },
-          },
-        }),
-        ...(applicationId && {
-          application: {
-            connect: { id: applicationId },
-          },
-        }),
-        ...(actorTypeId && {
-          actorType: {
-            connect: { id: actorTypeId },
-          },
-        }),
+        organizationId: organizationId ?? null,
+        applicationId: applicationId ?? null,
+        actorTypeId: actorTypeId ?? null,
       },
     });
 
@@ -84,21 +72,9 @@ export class ActorRepository implements IActorRepository {
       where,
       data: {
         ...rest,
-        ...(organizationId && {
-          organization: {
-            connect: { id: organizationId },
-          },
-        }),
-        ...(applicationId && {
-          application: {
-            connect: { id: applicationId },
-          },
-        }),
-        ...(actorTypeId && {
-          actorType: {
-            connect: { id: actorTypeId },
-          },
-        }),
+        ...(organizationId !== undefined && { organizationId: organizationId || null }),
+        ...(applicationId !== undefined && { applicationId: applicationId || null }),
+        ...(actorTypeId !== undefined && { actorTypeId: actorTypeId || null }),
       },
     });
 

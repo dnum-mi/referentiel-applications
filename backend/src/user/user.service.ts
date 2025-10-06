@@ -20,6 +20,9 @@ export class UserService {
     // Check if a user exists with the given keycloakId
     const existingUserByKeycloakId = await this.prisma.user.findUnique({
       where: { keycloakId },
+      include: {
+        organization: true,
+      },
     });
 
     if (existingUserByKeycloakId) {
@@ -29,6 +32,9 @@ export class UserService {
     // Check if a user exists with the given email
     const existingUserByEmail = await this.prisma.user.findUnique({
       where: { email },
+      include: {
+        organization: true,
+      },
     });
 
     if (existingUserByEmail) {
@@ -36,6 +42,9 @@ export class UserService {
       return this.prisma.user.update({
         where: { email },
         data: { keycloakId },
+        include: {
+          organization: true,
+        },
       });
     }
 
@@ -45,6 +54,9 @@ export class UserService {
         email,
         keycloakId,
         adminLevel: 0, // Default admin level
+      },
+      include: {
+        organization: true,
       },
     });
   }
@@ -75,15 +87,39 @@ export class UserService {
             mode: "insensitive",
           },
         },
+        {
+          organization: {
+            label: {
+              contains: filters.search,
+              mode: "insensitive",
+            },
+          },
+        },
       ];
+    }
+
+    let orderBy: Prisma.UserOrderByWithRelationInput = {};
+
+    if (filters.sortBy === "Organisation") {
+      orderBy = {
+        organization: {
+          label: filters.order || "asc",
+        },
+      };
+    } else {
+      const sortField = filters.sortBy || "email";
+      orderBy = {
+        [sortField]: filters.order || "asc",
+      };
     }
 
     return new PaginatedResponseDto(
       await this.prisma.user.findMany({
         where,
-        orderBy: {
-          [filters.sortBy]: filters.order,
+        include: {
+          organization: true,
         },
+        orderBy,
         ...paginate(filters.page, filters.pageSize),
       }),
       await this.prisma.user.count({ where }),

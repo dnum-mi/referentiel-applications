@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import api from "@/api/index";
-import type { PaginatedResponseDto, UserEntity } from "@/client/types.gen";
+import type { UserEntity, UpdateUserDto, PaginatedResponseDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { AdminLevelOptions, AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
 import PaginationFooter from "../PaginationFooter.vue";
+import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 
 const toaster = useToasterStore();
 
@@ -23,6 +24,7 @@ const selectedUser = ref<UserEntity | null>(null);
 const isSaving = ref(false);
 const searchQuery = ref("");
 const editingAdminLevel = ref<AdminLevel>(AdminLevel.NONE);
+const editingOrganizationId = ref<string>("");
 
 const sortColumn = ref<string>("Email");
 const isSortDescending = ref<boolean>(false);
@@ -31,9 +33,9 @@ const itemsPerPage = ref<number>(10);
 const currentPage = ref<number>(0);
 const remoteTotalCount = ref<number | null>(null);
 
-const columnToFieldKeyMap: Record<string, keyof UserEntity> = {
+const columnToFieldKeyMap: Record<string, string> = {
   Email: "email",
-  "ID Keycloak": "keycloakId",
+  Organisation: "Organisation",
   "Dernière connexion": "lastLogin",
   Permissions: "adminLevel",
 };
@@ -54,7 +56,7 @@ async function fetchUsers() {
     const response = await api.userControllerFindAll({ query });
 
     if (response.response.ok && response.data) {
-      const data = response.data as PaginatedResponseDto;
+      const data = response.data as PaginatedResponseDto & { results: UserEntity[] };
 
       if (data.results.length === 0 && currentPage.value > 0) {
         if (remoteTotalCount.value == null) {
@@ -98,7 +100,7 @@ watch([sortColumn, isSortDescending], () => {
 const tableRows = computed(() =>
   userList.value.map(user => ({
     Email: user.email,
-    "ID Keycloak": user.keycloakId,
+    Organisation: user.organization?.label || "Non renseignée",
     "Dernière connexion": user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
     Permissions: {
       label: AdminLevelWording[user.adminLevel],
@@ -127,9 +129,10 @@ function onUpdateSortColumn(columnName: string | undefined) {
   sortColumn.value = columnName || "Email";
 }
 
-function openEditModal(user: UserEntity) {
+async function openEditModal(user: UserEntity) {
   selectedUser.value = user;
   editingAdminLevel.value = user.adminLevel;
+  editingOrganizationId.value = user.organizationId || "";
   isEditModalOpen.value = true;
 }
 
@@ -137,6 +140,7 @@ function closeEditModal() {
   isEditModalOpen.value = false;
   selectedUser.value = null;
   editingAdminLevel.value = AdminLevel.NONE;
+  editingOrganizationId.value = "";
 }
 
 async function savePermissions() {
@@ -145,13 +149,16 @@ async function savePermissions() {
   try {
     await api.userControllerUpdate({
       path: { id: selectedUser.value.keycloakId },
-      body: { adminLevel: editingAdminLevel.value },
+      body: {
+        adminLevel: editingAdminLevel.value,
+        organizationId: editingOrganizationId.value === "" ? null : editingOrganizationId.value,
+      } as UpdateUserDto,
     });
-    toaster.addSuccessMessage("Permissions mises à jour avec succès");
+    toaster.addSuccessMessage("Utilisateur mis à jour avec succès");
     closeEditModal();
     await fetchUsers();
   } catch (err) {
-    toaster.addErrorMessage("Erreur lors de la mise à jour des permissions");
+    toaster.addErrorMessage("Erreur lors de la mise à jour de l'utilisateur");
     console.error(err);
   } finally {
     isSaving.value = false;
@@ -185,7 +192,7 @@ onMounted(fetchUsers);
       <DsfrSearchBar
         v-model="searchQuery"
         label="Rechercher un utilisateur"
-        placeholder="Rechercher par email ou ID Keycloak..."
+        placeholder="Rechercher par email ou organisation..."
         button-text="Rechercher"
         class="fr-col-12"
         data-testid="admin-user-search"
@@ -209,9 +216,9 @@ onMounted(fetchUsers);
         v-model:sorted-desc="isSortDescending"
         title="Utilisateurs"
         no-caption
-        :headers-row="['Email', 'ID Keycloak', 'Dernière connexion', 'Permissions', 'Actions']"
+        :headers-row="['Email', 'Organisation', 'Dernière connexion', 'Permissions', 'Actions']"
         :rows="tableRows"
-        :sortable-rows="['Email', 'ID Keycloak', 'Dernière connexion', 'Permissions']"
+        :sortable-rows="['Email', 'Organisation', 'Dernière connexion', 'Permissions']"
         vertical-borders
         :pagination="false"
         data-testid="admin-users-table"
@@ -225,7 +232,7 @@ onMounted(fetchUsers);
         </template>
         <template #cell="{ colKey, cell }">
           <template v-if="colKey === 'Permissions'">
-            <span class="fr-badge" :class="cell.badgeClass">{{ cell.label }}</span>
+            <span class="fr-badge" :class="(cell as any).badgeClass">{{ (cell as any).label }}</span>
           </template>
 
           <template v-else-if="colKey === 'Actions'">
@@ -234,7 +241,7 @@ onMounted(fetchUsers);
               size="sm"
               secondary
               data-testid="admin-user-edit-btn"
-              @click="openEditModal(cell)"
+              @click="openEditModal(cell as UserEntity)"
             />
           </template>
 
@@ -256,26 +263,29 @@ onMounted(fetchUsers);
 
     <DsfrModal
       :opened="isEditModalOpen"
-      title="Modifier les permissions utilisateur"
+      title="Modifier l'utilisateur"
       data-testid="admin-edit-user-modal"
       @close="closeEditModal"
     >
       <div v-if="selectedUser">
         <p><strong>Utilisateur :</strong> {{ selectedUser.email }}</p>
-        <p><strong>ID Keycloak :</strong> {{ selectedUser.keycloakId }}</p>
 
-        <div class="fr-form-group">
-          <fieldset class="fr-fieldset">
-            <DsfrRadioButtonSet
-              v-model="editingAdminLevel"
-              legend="Niveau de privilège"
-              hint=""
-              :options="AdminLevelOptions"
-              name="admin-level-radio"
-              data-testid="admin-level-radio"
-            />
-          </fieldset>
-        </div>
+        <OrganizationSearchSelect
+          v-model="editingOrganizationId"
+          class="fr-mb-2w"
+          description="Recherchez et sélectionnez une organisation pour cet utilisateur"
+          :initial-organization="selectedUser.organization"
+          data-testid="user-organization-search"
+        />
+
+        <DsfrRadioButtonSet
+          v-model="editingAdminLevel"
+          legend="Niveau de privilège"
+          hint=""
+          :options="AdminLevelOptions"
+          name="admin-level-radio"
+          data-testid="admin-level-radio"
+        />
       </div>
 
       <template #footer>

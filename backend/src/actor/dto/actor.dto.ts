@@ -44,8 +44,7 @@ export class CreateActorDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
-  organizationId?: string;
+  organizationId?: string | null;
 
   @ApiProperty({
     example: "035869dc-47a6-4cee-828f-f6a28d050b35",
@@ -53,8 +52,7 @@ export class CreateActorDto {
     required: false,
   })
   @IsOptional()
-  @IsString()
-  applicationId?: string;
+  applicationId?: string | null;
 }
 
 export class UpdateActorDto extends PartialType(CreateActorDto) {}
