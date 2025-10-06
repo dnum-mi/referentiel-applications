@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.44.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.43.0...v1.44.0) (2025-10-06)
+
+
+### Features
+
+* :sparkles: add actorEmail filter to application search ([#1144](https://github.com/dnum-mi/referentiel-applications/issues/1144)) ([0a8b8e8](https://github.com/dnum-mi/referentiel-applications/commit/0a8b8e854566397faf51c0b5408bc1145f03baaf))
+* :sparkles: add description columns to Organization ([b9c2a55](https://github.com/dnum-mi/referentiel-applications/commit/b9c2a553b79a0f7299fe33e0fbeb0cb22103df05))
+* :sparkles: add user organization management and refactor organization selection ([#1130](https://github.com/dnum-mi/referentiel-applications/issues/1130)) ([ea8253e](https://github.com/dnum-mi/referentiel-applications/commit/ea8253e62903ed827c8df46ae5fbb65bb794df43))
+* :sparkles: rename constraints and indexes for improved consistency in database schema ([#1145](https://github.com/dnum-mi/referentiel-applications/issues/1145)) ([c4e3304](https://github.com/dnum-mi/referentiel-applications/commit/c4e330485f9d10e9fca520c96b146bdc9f5dfceb))
+* **front:** :sparkles: add SkipLinks ([75d1f2d](https://github.com/dnum-mi/referentiel-applications/commit/75d1f2da654645d88a36a4bcc40688a19b8181f1))
+
+
+### Bug Fixes
+
+* :bug: fix search query params saved in the store ([#1141](https://github.com/dnum-mi/referentiel-applications/issues/1141)) ([6d042f0](https://github.com/dnum-mi/referentiel-applications/commit/6d042f069b9e3b2cc6b1fc213f401b905f2b0c2d))
+
 ## [1.43.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.42.0...v1.43.0) (2025-10-02)
 
 
