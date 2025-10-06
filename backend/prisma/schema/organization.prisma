@@ -1,13 +1,14 @@
 model Organization {
-  id       String         @id @default(uuid())
-  label    String
-  url      String?
-  sigle    String?
-  parentId String?
-  parent   Organization?  @relation("OrganizationParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  children Organization[] @relation("OrganizationParent")
-  users    User[]
-  actors   Actor[]
+  id          String         @id @default(uuid())
+  label       String
+  url         String?
+  sigle       String?
+  description String?
+  parentId    String?
+  parent      Organization?  @relation("OrganizationParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  children    Organization[] @relation("OrganizationParent")
+  users       User[]
+  actors      Actor[]
 
   OrganizationClosureAncestor   OrganizationClosure[] @relation("OrganizationClosureAncestor")
   OrganizationClosureDescendant OrganizationClosure[] @relation("OrganizationClosureDescendant")
