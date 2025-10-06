@@ -80,9 +80,6 @@ const templates = {
 function onUpdateQuery(query: string) { lastQuery = query; }
 
 function onConfirm(selection: { id?: string | number, label?: string } | string) {
-  const value = typeof selection === "string" ? selection : (selection?.label ?? "");
-  appStore.setFilter({ search: value });
-
   if (typeof selection !== "string" && selection?.id) {
     router.push({ name: "application", params: { id: selection.id } });
     searchRef.value?.clear();
@@ -91,18 +88,17 @@ function onConfirm(selection: { id?: string | number, label?: string } | string)
 </script>
 
 <template>
-  <div data-testid="search-header">
-    <AccessibleAutocomplete
-      id="app-search"
-      ref="searchRef"
-      :source="source"
-      :templates="templates"
-      name="app-search"
-      display-menu="overlay"
-      placeholder="Rechercher une application"
-      :min-length="1"
-      @confirm="onConfirm"
-      @update:query="onUpdateQuery"
-    />
-  </div>
+  <AccessibleAutocomplete
+    id="app-search"
+    ref="searchRef"
+    data-testid="search-header"
+    :source="source"
+    :templates="templates"
+    name="app-search"
+    display-menu="overlay"
+    placeholder="Rechercher une application"
+    :min-length="1"
+    @confirm="onConfirm"
+    @update:query="onUpdateQuery"
+  />
 </template>
