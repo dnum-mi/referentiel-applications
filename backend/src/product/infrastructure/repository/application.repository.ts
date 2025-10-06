@@ -246,6 +246,19 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
       {
+        condition: filters.actorEmail,
+        whereClause: {
+          actors: {
+            some: {
+              email: {
+                equals: filters.actorEmail,
+                mode: "insensitive" as const,
+              },
+            },
+          },
+        },
+      },
+      {
         condition: filters.link,
         whereClause: {
           externalRessource: {

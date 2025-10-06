@@ -36,6 +36,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     hostingRoom: undefined,
     organization: undefined,
     actorType: undefined,
+    actorEmail: undefined,
     iqGte: 0,
     iqLte: 100,
     search: undefined,

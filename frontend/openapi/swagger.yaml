@@ -553,6 +553,13 @@ paths:
           schema:
             example: MOA
             type: string
+        - name: actorEmail
+          required: false
+          in: query
+          description: Email d'un acteur pour filtrer les applications
+          schema:
+            example: user@example.com
+            type: string
         - name: status__in
           required: false
           in: query
@@ -818,6 +825,13 @@ paths:
           description: Type d'acteur. Utiliser les valeurs de /actorTypes
           schema:
             example: MOA
+            type: string
+        - name: actorEmail
+          required: false
+          in: query
+          description: Email d'un acteur pour filtrer les applications
+          schema:
+            example: user@example.com
             type: string
         - name: status__in
           required: false

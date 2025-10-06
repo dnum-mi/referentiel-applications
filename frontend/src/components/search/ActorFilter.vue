@@ -2,90 +2,91 @@
 import { ref, onMounted, computed, watch } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
+import { DsfrInput } from "@gouvminint/vue-dsfr";
+import { useOrganizationStore } from "@/stores/organizationStore";
+import type { OrganizationDto } from "@/client/types.gen";
 
 const searchStore = useApplicationSearchStore();
 const actorTypeStore = useActorTypeStore();
+const organizationStore = useOrganizationStore();
 
-const selectedActorTypeId = ref("");
+const organizations = ref<OrganizationDto[]>([]);
 
-const actorTypeOptions = computed(() =>
-  [{
-    text: "Tous",
-    value: "",
-  }, ...actorTypeStore.actorTypes.map(actor => ({
-    text: actor.label,
-    value: actor.id,
-  }))],
-);
+const selectedActorTypeId = computed({
+  get: () => {
+    const currentCode = searchStore.filters.actorType;
+    if (!currentCode) return "";
 
-onMounted(async () => {
-  await actorTypeStore.fetchAll();
-  const currentCode = searchStore.filters.actorType;
-  if (currentCode) {
     const match = actorTypeStore.actorTypes.find(actor => actor.code === currentCode);
-    if (match) {
-      selectedActorTypeId.value = match.id;
+    return match?.id ?? "";
+  },
+  set: (value: string) => {
+    if (!value) {
+      searchStore.setFilter({ actorType: undefined, page: 0 });
+      return;
     }
-  }
+
+    const selected = actorTypeStore.actorTypes.find(actor => actor.id === value);
+    if (selected) {
+      searchStore.setFilter({ actorType: selected.code, page: 0 });
+    }
+  },
 });
 
-watch(selectedActorTypeId, (newVal) => {
-  if (newVal) {
-    const selected = actorTypeStore.actorTypes.find(actor => actor.id === newVal);
-    if (selected) {
-      searchStore.setFilter({
-        actorType: selected.code,
-        page: 0,
-      });
-    }
-    return;
-  }
-  searchStore.setFilter({
-    actorType: undefined,
-    page: 0,
-  });
+const actorTypeOptions = computed(() => [
+  { text: "Tous", value: "" },
+  ...actorTypeStore.actorTypes.map(actor => ({
+    text: actor.label,
+    value: actor.id,
+  })),
+]);
+
+const actorEmailValue = computed({
+  get: () => searchStore.filters.actorEmail || "",
+  set: (value: string) => {
+    searchStore.setFilter({
+      actorEmail: value || undefined,
+      page: 0,
+    });
+  },
+});
+
+const organizationValue = computed({
+  get: () => searchStore.filters.organization || "",
+  set: (value: string) => {
+    searchStore.setFilter({ organization: value || undefined, page: 0 });
+  },
+});
+
+onMounted(() => {
+  actorTypeStore.fetchAll();
 });
 
 watch(
-  () => searchStore.filters.actorType,
-  (val) => {
-    const match = actorTypeStore.actorTypes.find(actor => actor.code === val);
-    selectedActorTypeId.value = match?.id ?? "";
+  () => searchStore.filters.organization,
+  async (searchTerm) => {
+    organizations.value = await organizationStore.find(searchTerm);
   },
-  { deep: true },
+  { immediate: true },
 );
 </script>
 
 <template>
-  <div class="filter-section">
-    <DsfrSelect v-model="selectedActorTypeId" :options="actorTypeOptions" label="Type d'acteur" data-testid="actor-filter-select" />
-  </div>
+  <DsfrSelect v-model="selectedActorTypeId" :options="actorTypeOptions" label="Type d'acteur" data-testid="actor-filter-select" />
+
+  <DsfrInput v-model="actorEmailValue" label-visible label="Email" type="email" data-testid="actor-email-filter-input" class="fr-mb-2w" />
+
+  <DsfrInput
+    v-model="organizationValue"
+    label-visible
+    label="Nom de l'organisation"
+    list="organizationSuggestionsList"
+    placeholder="Rechercher une organisation"
+    data-testid="organization-filter-input"
+  />
+  <datalist id="organizationSuggestionsList" data-testid="organization-suggestions-list">
+    <option v-for="organization in organizations" :key="organization.id" :data-testid="`organization-option-${organization.id}`">
+      {{ organization.label }}
+    </option>
+  </datalist>
 </template>
-
-<style scoped>
-.selected-tag {
-  margin-top: 0.5rem;
-  background: #e5e5e5;
-  padding: 0.3rem 0.6rem;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 4px;
-}
-
-.tag-label {
-  margin-right: 0.5rem;
-}
-
-.tag-remove {
-  background: transparent;
-  border: none;
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
-  color: #555;
-}
-
-.tag-remove:hover {
-  color: #d60000;
-}
-</style>
