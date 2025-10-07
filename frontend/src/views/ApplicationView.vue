@@ -2,23 +2,18 @@
 import { ref, watch, onMounted, computed } from "vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useStatisticsStore } from "@/stores/statisticsStore";
-import { useUserStore } from "@/stores/userStore";
-import { AdminLevel } from "@/models/user";
 
 import ApplicationTableView from "@/components/ApplicationTableView.vue";
 import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
-import ReportAnomaly from "@/components/modal/reportAnomaly.vue";
 import CreateApplicationModal from "@/components/modal/CreateApplicationModal.vue";
 
 const statsStore = useStatisticsStore();
 const searchStore = useApplicationSearchStore();
-const userStore = useUserStore();
 
 const currentSortedColumn = ref("label");
 const isMobile = ref(false);
-const isReportMissingOpen = ref(false);
 const isCreateModalOpen = ref(false);
 
 // Mode mobile ou desktop
@@ -64,44 +59,7 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         />
       </div>
 
-      <div class="fr-grid-row fr-grid-row--gutters fr-mb-1w">
-        <div class="fr-col-auto">
-          <DsfrButton
-            secondary
-            icon="fr-icon-add-line"
-            type="button"
-            :disabled="userStore.adminLevel < AdminLevel.WRITE"
-            title="Créer une nouvelle application"
-            aria-label="Créer une nouvelle application"
-            data-testid="create-application-btn"
-
-            @click="isCreateModalOpen = true"
-          >
-            Créer une application
-          </DsfrButton>
-        </div>
-        <div class="fr-col-auto">
-          <DsfrButton
-            secondary
-            icon="fr-icon-alert-line"
-            aria-haspopup="dialog"
-            aria-controls="modal-report-missing"
-            type="button"
-            data-testid="report-missing-app"
-            title="Signaler une application manquante"
-            aria-label="Signaler une application manquante"
-            @click="isReportMissingOpen = true"
-          >
-            Signaler une application manquante
-          </DsfrButton>
-        </div>
-      </div>
-
-      <ReportAnomaly
-        :opened="isReportMissingOpen"
-        context="global"
-        @close="isReportMissingOpen = false"
-      />
+      <ApplicationSearchActions />
 
       <CreateApplicationModal
         :opened="isCreateModalOpen"
