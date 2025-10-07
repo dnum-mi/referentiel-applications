@@ -8,19 +8,21 @@ const chartRef = ref<HTMLCanvasElement | null>(null);
 let chartInstance: Chart | null = null;
 
 const isLoading = ref(false);
+const isTableView = ref(false);
 const errorMessage = ref("");
+const countApplicationsByIq = ref<{ iq: number, total: number }[]>([]);
 
 const statisticsStore = useStatisticsStore();
 
 async function loadData() {
   isLoading.value = true;
   try {
-    const response = await statisticsStore.countApplicationsByIq();
+    countApplicationsByIq.value = await statisticsStore.countApplicationsByIq();
 
     const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`).reverse();
     const data: number[] = Array.from({ length: 21 }).fill(0);
 
-    response.forEach(({ iq, total }: { iq: number, total: number }) => {
+    countApplicationsByIq.value.forEach(({ iq, total }: { iq: number, total: number }) => {
       const index = Math.floor(Math.round(iq) / 5);
       if (index >= 0 && index <= 20) data[index] += total;
     });
@@ -37,12 +39,42 @@ onMounted(loadData);
 </script>
 
 <template>
-  <h3>Répartition des applications par IQ</h3>
-  <div v-if="isLoading" data-testid="applications-iq-chart-loading">
-    Chargement...
-  </div>
-  <div v-else-if="errorMessage" data-testid="applications-iq-chart-error">
-    {{ errorMessage }}
-  </div>
-  <canvas v-show="!isLoading && !errorMessage" ref="chartRef" data-testid="applications-iq-chart-canvas" />
+  <section aria-labelledby="applications-iq-title">
+    <h3 id="applications-iq-title">
+      Répartition des applications par IQ
+    </h3>
+    <output v-if="isLoading" data-testid="applications-iq-chart-loading">
+      Chargement...
+    </output>
+    <div v-else-if="errorMessage" role="alert" data-testid="applications-iq-chart-error">
+      {{ errorMessage }}
+    </div>
+    <p id="applications-iq-desc" class="fr-sr-only">
+      Ce graphique présente la répartition par tranches de 5% de l'Indice de Qualité (IQ) des applications.
+    </p>
+    <dsfr-button
+      :label="isTableView ? 'Voir le graphique' : 'Voir le tableau'"
+      class="fr-mb-2v"
+      data-testid="applications-iq-chart-toggle-view"
+      @click="() => { isTableView = !isTableView }"
+    />
+    <canvas
+      v-show="!isLoading && !errorMessage && !isTableView"
+      ref="chartRef"
+      data-testid="applications-iq-chart-canvas"
+    />
+    <DsfrDataTable
+      v-show="!isLoading && !errorMessage && isTableView"
+      :rows="countApplicationsByIq"
+      :headers-row="[
+        { key: 'iq', label: 'Tranche d\'IQ', sortable: false },
+        { key: 'total', label: 'Nombre d\'applications', sortable: false },
+      ]"
+      :sortable-rows="false"
+      row-key="iq"
+      aria-label="Répartition des applications par IQ (tableau)"
+      aria-describedby="applications-iq-desc"
+      data-testid="applications-iq-chart-table"
+    />
+  </section>
 </template>
