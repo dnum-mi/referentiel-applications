@@ -13,7 +13,6 @@ const headers = [
   "Description",
 ];
 
-const selection = ref<string[]>([]);
 const currentPage = ref(0);
 const pageSize = ref(15);
 const sortBy = ref("Date");
@@ -245,9 +244,9 @@ const metadataTableRows = computed(() =>
     <div v-else>
       <DsfrDataTable
         :key="`${currentPage}-${pageSize}-${sortBy}-${isSortDescending}`"
-        v-model:selection="selection"
         v-model:sorted-by="sortBy"
         v-model:sorted-desc="isSortDescending"
+        :sort-fn="(a, b) => (isSortDescending ? -1 : 1)"
         :headers-row="headers"
         :rows="metadataTableRows"
         :sortable-rows="['Application', 'Auteur', 'Organisation', 'Type', 'Date']"
