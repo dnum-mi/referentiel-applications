@@ -3,6 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CreateOrganizationDto } from "./dto/organization.dto";
 import { Organization, Prisma } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
+import { OrganizationFilterDto } from "./dto/filters.dto";
 
 @Injectable()
 export class OrganizationService extends BaseService<Organization> {
@@ -20,31 +21,36 @@ export class OrganizationService extends BaseService<Organization> {
     return newOrg;
   }
 
-  async findMultiple({
-    ids,
-    withAncestors,
-    withChildren,
-    search,
-  }: {
-    ids?: string[]
-    withAncestors: boolean
-    withChildren: boolean
-    search?: string
-  }): Promise<Organization[]> {
-    if (search) {
+  async find(filters: OrganizationFilterDto): Promise<Organization[]> {
+    if (filters.search) {
+      const where: Prisma.OrganizationWhereInput = {
+        OR: [
+          { label: { contains: filters.search, mode: "insensitive" } },
+          { sigle: { contains: filters.search, mode: "insensitive" } },
+          { url: { contains: filters.search, mode: "insensitive" } },
+        ],
+      };
+
+      // Si usedOnly est activé, on ajoute la condition pour filtrer les organisations utilisées
+      if (filters.usedOnly) {
+        where.AND = [
+          where,
+          {
+            OR: [
+              { actors: { some: {} } },
+              { users: { some: {} } },
+            ],
+          },
+        ];
+      }
+
       return this.prisma.organization.findMany({
-        where: {
-          OR: [
-            { label: { contains: search, mode: "insensitive" } },
-            { sigle: { contains: search, mode: "insensitive" } },
-            { url: { contains: search, mode: "insensitive" } },
-          ],
-        },
+        where,
       });
     }
 
     // si aucun ID n'est fourni, on retourne les organisations racines
-    if (!ids || ids.length === 0) {
+    if (!filters.ids || filters.ids.length === 0) {
       return this.prisma.organization.findMany({
         where: { parentId: null },
       });
@@ -54,13 +60,13 @@ export class OrganizationService extends BaseService<Organization> {
     // et on peut filtrer par ancêtres ou descendants si nécessaire
 
     const where: Prisma.OrganizationClosureWhereInput = {
-      descendantId: { in: ids },
+      descendantId: { in: filters.ids },
     };
-    if (withAncestors) {
-      where.descendantId = { in: ids };
+    if (filters.withAncestors) {
+      where.descendantId = { in: filters.ids };
     }
-    if (withChildren) {
-      where.ancestorId = { in: ids };
+    if (filters.withChildren) {
+      where.ancestorId = { in: filters.ids };
     }
 
     const closures = await this.prisma.organizationClosure.findMany({
