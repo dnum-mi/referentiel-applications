@@ -4,6 +4,7 @@ import StatusAnnouncer from "./StatusAnnouncer.vue";
 import { useAutocompleteSource } from "@/composables/use-autocomplete-source";
 import { useComboboxA11y } from "@/composables/use-combobox-A11y";
 import { useComboboxKeyboard } from "@/composables/use-combobox-keyboard";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
 
 const props = withDefaults(defineProps<{
   id: string
@@ -32,6 +33,10 @@ const { options, menuOpen, selected, query, setQuery, search, openAll, close }
     minLength: props.minLength!,
     showAllValues: false,
   });
+
+const { run: debouncedSearch } = useDebouncedFn((searchQuery: string) => {
+  search(searchQuery);
+}, 300);
 
 function focusInput() { inputRef.value?.focus(); }
 function setFocused(focusedIndex: number | null) { focused.value = focusedIndex; }
@@ -92,7 +97,7 @@ function onInput(inputEvent: Event) {
   const inputValue = (inputEvent.target as HTMLInputElement).value;
   setQuery(inputValue);
   emit("update:query", inputValue);
-  search(inputValue);
+  debouncedSearch(inputValue);
 }
 function onFocus() { setFocused(-1); }
 function onBlur() { blurComponent(); }
