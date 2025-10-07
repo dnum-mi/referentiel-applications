@@ -244,7 +244,6 @@ onMounted(fetchUsers);
               title="Modifier les permissions de l'utilisateur"
               aria-label="Modifier les permissions de l'utilisateur"
               @click="openEditModal(cell as UserEntity)"
-
             />
           </template>
 
