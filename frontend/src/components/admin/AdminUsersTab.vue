@@ -16,7 +16,7 @@ const errorMessages = {
 
 type ErrorKey = keyof typeof errorMessages;
 
-const userList = ref<UserEntity[]>([]);
+const data = ref<PaginatedResponseDto & { results: UserEntity[] }>({ results: [], total: 0 });
 const isLoading = ref(false);
 const errorKeySet = ref<Set<ErrorKey>>(new Set());
 const isEditModalOpen = ref(false);
@@ -29,9 +29,8 @@ const editingOrganizationId = ref<string>("");
 const sortColumn = ref<string>("Email");
 const isSortDescending = ref<boolean>(false);
 
-const itemsPerPage = ref<number>(10);
+const itemsPerPage = ref<number>(15);
 const currentPage = ref<number>(0);
-const remoteTotalCount = ref<number | null>(null);
 
 const columnToFieldKeyMap: Record<string, string> = {
   Email: "email",
@@ -43,36 +42,21 @@ const columnToFieldKeyMap: Record<string, string> = {
 async function fetchUsers() {
   try {
     isLoading.value = true;
-    const fieldKey = columnToFieldKeyMap[sortColumn.value] ?? "email";
 
     const query: Record<string, any> = {
       search: searchQuery.value.trim() || undefined,
       page: currentPage.value,
       pageSize: itemsPerPage.value,
-      sortBy: fieldKey,
+      sortBy: columnToFieldKeyMap[sortColumn.value],
       order: isSortDescending.value ? "desc" : "asc",
     };
 
     const response = await api.userControllerFindAll({ query });
 
     if (response.response.ok && response.data) {
-      const data = response.data as PaginatedResponseDto & { results: UserEntity[] };
-
-      if (data.results.length === 0 && currentPage.value > 0) {
-        if (remoteTotalCount.value == null) {
-          remoteTotalCount.value = data.total;
-        }
-        currentPage.value = Math.max(0, currentPage.value - 1);
-        await fetchUsers();
-        return;
-      }
-
-      userList.value = data.results;
-      remoteTotalCount.value = data.total;
-
+      data.value = response.data as PaginatedResponseDto & { results: UserEntity[] };
       errorKeySet.value.delete("ERR_LOAD_USERS");
     } else {
-      userList.value = [];
       errorKeySet.value.add("ERR_LOAD_USERS");
       console.error(response.error);
     }
@@ -98,7 +82,7 @@ watch([sortColumn, isSortDescending], () => {
 });
 
 const tableRows = computed(() =>
-  userList.value.map(user => ({
+  data.value.results.map(user => ({
     Email: user.email,
     Organisation: user.organization?.label || "Non renseignée",
     "Dernière connexion": user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
@@ -107,21 +91,6 @@ const tableRows = computed(() =>
       badgeClass: AdminLevelWordingBadgeClass[user.adminLevel],
     },
     Actions: user,
-  })),
-);
-
-const totalRowCount = computed(() => {
-  if (remoteTotalCount.value != null && Number.isFinite(remoteTotalCount.value)) {
-    return remoteTotalCount.value;
-  }
-  return currentPage.value * itemsPerPage.value + userList.value.length;
-});
-const totalPageCount = computed(() => Math.max(1, Math.ceil(totalRowCount.value / itemsPerPage.value)));
-const paginationPages = computed(() =>
-  Array.from({ length: totalPageCount.value }).map((_, index) => ({
-    label: String(index + 1),
-    title: `Page ${index + 1}`,
-    href: `#page-${index + 1}`,
   })),
 );
 
@@ -171,8 +140,7 @@ function updateItemsPerPage(value: number) {
   fetchUsers();
 }
 function updatePage(value: number) {
-  const maxIndex = totalPageCount.value - 1;
-  currentPage.value = Math.max(0, Math.min(value, maxIndex));
+  currentPage.value = value;
   fetchUsers();
 }
 
@@ -184,9 +152,6 @@ onMounted(fetchUsers);
     <h1 class="fr-h1" data-testid="admin-users-title">
       Gestion des utilisateurs
     </h1>
-    <p class="fr-text--lg">
-      Gérez les permissions des utilisateurs de l'application
-    </p>
 
     <div class="fr-mb-4w">
       <DsfrSearchBar
@@ -214,6 +179,7 @@ onMounted(fetchUsers);
         :key="`${currentPage}-${itemsPerPage}-${sortColumn}-${isSortDescending}`"
         v-model:sorted-by="sortColumn"
         v-model:sorted-desc="isSortDescending"
+        :sort-fn="(a, b) => (isSortDescending ? -1 : 1)"
         title="Utilisateurs"
         no-caption
         :headers-row="['Email', 'Organisation', 'Dernière connexion', 'Permissions', 'Actions']"
@@ -253,8 +219,7 @@ onMounted(fetchUsers);
         </template>
       </DsfrDataTable>
       <PaginationFooter
-        :total-filtered="totalRowCount"
-        :pages="paginationPages"
+        :total-filtered="data.total"
         :limit="itemsPerPage"
         :page="currentPage"
         data-testid="admin-users-pagination-footer"
@@ -283,7 +248,6 @@ onMounted(fetchUsers);
         <DsfrRadioButtonSet
           v-model="editingAdminLevel"
           legend="Niveau de privilège"
-          hint=""
           :options="AdminLevelOptions"
           name="admin-level-radio"
           data-testid="admin-level-radio"

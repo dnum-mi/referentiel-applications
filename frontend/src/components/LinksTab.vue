@@ -27,19 +27,9 @@ const isSubmitting = ref(false);
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeLinks"));
 
 const currentPage = ref(0);
-const pageSize = ref(10);
+const pageSize = ref(15);
 
 const getTypeLabel = (type: string) => (linkTypesDict as any)[type] || "Type inconnu";
-
-// Computed properties for pagination
-const pages = computed(() => {
-  const totalPages = Math.ceil(linkStore.total / pageSize.value);
-  return Array.from({ length: totalPages }).map((_, i) => ({
-    label: String(i + 1),
-    title: `Page ${i + 1}`,
-    href: `#page-${i + 1}`,
-  }));
-});
 
 // Pagination handlers
 function handlePageChange(newPage: number) {
@@ -185,7 +175,6 @@ function removeSelectedLinks() {
 
       <PaginationFooter
         :total-filtered="linkStore.total"
-        :pages="pages"
         :limit="pageSize"
         :page="currentPage"
         data-testid="links-pagination-footer"
