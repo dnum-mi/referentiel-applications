@@ -2691,7 +2691,7 @@ components:
           type: string
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation
-        label:
+        path:
           type: string
           example: Direction de la transformation numérique
           description: Nom de l'organisation
@@ -2712,7 +2712,7 @@ components:
           description: L'identifiant de l'organisation parente
       required:
         - id
-        - label
+        - path
         - url
         - sigle
         - parentId
@@ -3437,7 +3437,7 @@ components:
     CreateOrganizationDto:
       type: object
       properties:
-        label:
+        path:
           type: string
           example: Direction de la transformation numérique
           description: Nom de l'organisation
@@ -3454,11 +3454,11 @@ components:
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
       required:
-        - label
+        - path
     PatchOrganizationDto:
       type: object
       properties:
-        label:
+        path:
           type: string
           example: Direction de la transformation numérique
           description: Nom de l'organisation

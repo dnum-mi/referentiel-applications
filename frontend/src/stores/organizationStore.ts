@@ -56,7 +56,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
         if (!organizations.value[id]) {
           const fakeData: OrganizationDto = {
             id,
-            label: "Organisation non trouvée",
+            path: "Organisation non trouvée",
             url: "",
             sigle: "NOT FOUND",
             parentId: null,
@@ -73,7 +73,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
       ids.forEach((id) => {
         const fakeData: OrganizationDto = {
           id,
-          label: "Organisation non trouvée",
+          path: "Organisation non trouvée",
           url: "",
           sigle: "NOT FOUND",
           parentId: null,

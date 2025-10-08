@@ -7,7 +7,7 @@ export class OrganizationFaker {
 
     return await prisma.organization.create({
       data: {
-        label: faker.company.name(),
+        path: faker.company.name(),
         url: faker.internet.url(),
         sigle: faker.string.alpha({ length: 4, casing: "upper" }),
       },
