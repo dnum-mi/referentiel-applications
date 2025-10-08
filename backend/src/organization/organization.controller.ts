@@ -110,12 +110,7 @@ Vous devez fournir les informations suivantes :
   public async findAll(
     @Query() filters: OrganizationFilterDto,
   ): Promise<OrganizationDto[]> {
-    return this.organizationService.findMultiple({
-      ids: filters.ids ? filters.ids.split(",") : [],
-      withAncestors: filters.withAncestors,
-      withChildren: filters.withChildren,
-      search: filters.search,
-    });
+    return this.organizationService.find(filters);
   }
 
   @Patch("/:id")

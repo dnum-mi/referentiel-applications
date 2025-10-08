@@ -41,8 +41,7 @@ const selectOptions = computed(() => {
   });
 
   // Add initial organization if it exists and is not already in the search results
-  if (props.initialOrganization
-    && !organizations.value.find(org => org.id === props.initialOrganization?.id)) {
+  if (props.initialOrganization && !organizations.value.find(org => org.id === props.initialOrganization?.id)) {
     options.push({
       text: props.initialOrganization.label,
       value: props.initialOrganization.id,
@@ -60,9 +59,12 @@ const selectOptions = computed(() => {
 });
 
 // Watch for external model value changes
-watch(() => props.modelValue, (newValue) => {
-  selectedOrganizationId.value = newValue;
-});
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    selectedOrganizationId.value = newValue;
+  },
+);
 
 // Watch for internal selection changes
 watch(selectedOrganizationId, (newValue) => {
@@ -113,29 +115,18 @@ watch(searchQuery, () => {
         label-visible
       >
         <template v-if="searchQuery" #append>
-          <DsfrButton
-            label="Effacer"
-            size="sm"
-            tertiary
-            no-outline
-            @click="clearSearch"
-          />
+          <DsfrButton label="Effacer" size="sm" tertiary no-outline @click="clearSearch" />
         </template>
       </DsfrInput>
     </div>
 
     <div v-if="selectOptions.length > 0" class="fr-mt-1w">
-      <DsfrSelect
-        v-model="selectedOrganizationId"
-        :options="selectOptions"
-        :disabled="isLoading"
-        :label-visible="false"
-      />
+      <DsfrSelect v-model="selectedOrganizationId" :options="selectOptions" :disabled="isLoading" :label-visible="false" />
     </div>
 
     <div v-if="searchQuery && !isLoading && organizations.length > 0" class="fr-mt-1w">
       <p class="fr-text--xs fr-text--mention-grey">
-        {{ organizations.length }} résultat{{ organizations.length > 1 ? 's' : '' }} trouvé{{ organizations.length > 1 ? 's' : '' }}
+        {{ organizations.length }} résultat{{ organizations.length > 1 ? "s" : "" }} trouvé{{ organizations.length > 1 ? "s" : "" }}
       </p>
     </div>
 
