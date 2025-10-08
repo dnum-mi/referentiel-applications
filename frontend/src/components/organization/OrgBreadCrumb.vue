@@ -44,11 +44,11 @@ const unfold = ref(false);
 &nbsp;
     </template>
     <template v-if="clickable">
-      <a v-if="organization.url" :href="organization.url" target="_blank" data-testid="org-breadcrumb-link">{{ organization.label }}</a>
-      <a v-else target="" href="#" data-testid="org-breadcrumb-link">{{ organization.label }}</a>
+      <a v-if="organization.url" :href="organization.url" target="_blank" data-testid="org-breadcrumb-link">{{ organization.path }}</a>
+      <a v-else target="" href="#" data-testid="org-breadcrumb-link">{{ organization.path }}</a>
     </template>
     <template v-else>
-      <span target="" href="#" data-testid="org-breadcrumb-label">{{ organization.label }}</span>
+      <span target="" href="#" data-testid="org-breadcrumb-label">{{ organization.path }}</span>
     </template>
   </template>
 </template>

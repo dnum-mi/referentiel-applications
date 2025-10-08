@@ -8,7 +8,7 @@ export class CreateOrganizationDto {
     required: true,
   })
   @IsString()
-  label: string;
+  path: string;
 
   @ApiProperty({
     example: "",
@@ -51,7 +51,7 @@ export class OrganizationDto {
     example: "Direction de la transformation numérique",
     description: "Nom de l'organisation",
   })
-  label: string;
+  path: string;
 
   @ApiProperty({
     example: "",

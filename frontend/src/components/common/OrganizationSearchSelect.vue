@@ -43,14 +43,14 @@ const selectOptions = computed(() => {
   // Add initial organization if it exists and is not already in the search results
   if (props.initialOrganization && !organizations.value.find(org => org.id === props.initialOrganization?.id)) {
     options.push({
-      text: props.initialOrganization.label,
+      text: props.initialOrganization.path,
       value: props.initialOrganization.id,
     });
   }
 
   organizations.value.forEach((org) => {
     options.push({
-      text: org.label,
+      text: org.path,
       value: org.id,
     });
   });

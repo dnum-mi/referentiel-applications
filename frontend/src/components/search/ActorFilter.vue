@@ -86,7 +86,7 @@ watch(
   />
   <datalist id="organizationSuggestionsList" data-testid="organization-suggestions-list">
     <option v-for="organization in organizations" :key="organization.id" :data-testid="`organization-option-${organization.id}`">
-      {{ organization.label }}
+      {{ organization.path }}
     </option>
   </datalist>
 </template>

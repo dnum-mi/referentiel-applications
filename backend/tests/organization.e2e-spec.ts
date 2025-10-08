@@ -21,7 +21,7 @@ describe("Organizations", () => {
       .post("/organizations")
       .set("Authorization", `Bearer ${TOKEN}`)
       .send({
-        label: "Test Organization",
+        path: "/test/path",
         url: "http://example.com",
         sigle: "TEST",
       })
@@ -49,7 +49,7 @@ describe("Organizations", () => {
     await request(app().getHttpServer())
       .patch(`/organizations/${organization.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .send({ label: "Updated Organization", parentId: organizationParent.id })
+      .send({ path: "/Updated/Organization", parentId: organizationParent.id })
       .expect(200);
   });
 

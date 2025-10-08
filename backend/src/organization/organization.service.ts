@@ -25,7 +25,7 @@ export class OrganizationService extends BaseService<Organization> {
     if (filters.search) {
       const where: Prisma.OrganizationWhereInput = {
         OR: [
-          { label: { contains: filters.search, mode: "insensitive" } },
+          { path: { contains: filters.search, mode: "insensitive" } },
           { sigle: { contains: filters.search, mode: "insensitive" } },
           { url: { contains: filters.search, mode: "insensitive" } },
         ],

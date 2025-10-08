@@ -29,7 +29,7 @@ const isLoading = ref(false);
 const columnToFieldKeyMap: Record<string, string> = {
   Application: "application.label",
   Auteur: "createdBy.email",
-  Organisation: "createdBy.organization.label",
+  Organisation: "createdBy.organization.path",
   Type: "action",
   Date: "createdAt",
   Description: "description",
@@ -154,7 +154,7 @@ const metadataTableRows = computed(() =>
           : undefined,
       },
       Auteur: meta.createdBy?.email ?? "Inconnu",
-      Organisation: (meta.createdBy as any)?.organization?.label ?? "-",
+      Organisation: (meta.createdBy as any)?.organization?.path ?? "-",
       Type: {
         id: meta.id,
         component: "DsfrTag",

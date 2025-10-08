@@ -1,6 +1,6 @@
 model Organization {
   id          String         @id @default(uuid())
-  label       String
+  path       String
   url         String?
   sigle       String?
   description String?

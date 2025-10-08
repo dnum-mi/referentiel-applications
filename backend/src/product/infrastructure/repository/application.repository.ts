@@ -340,7 +340,7 @@ export class ApplicationRepository implements IApplicationRepository {
           actors: {
             include: {
               organization: {
-                select: { id: true, label: true },
+                select: { id: true, path: true },
               },
               actorType: true,
             },
