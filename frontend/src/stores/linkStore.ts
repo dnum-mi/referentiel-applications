@@ -53,9 +53,8 @@ export const useLinkStore = defineStore("linkStore", () => {
       if (!response.response.ok || !response.data) {
         throw new Error("Erreur lors de la création du lien.");
       }
-      const newLink = response.data;
       toaster.addSuccessMessage("Lien créé avec succès !");
-      return newLink;
+      return response.data;
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la création du lien.");
       throw error;
@@ -64,13 +63,20 @@ export const useLinkStore = defineStore("linkStore", () => {
 
   const updateLink = async (applicationId: string, link: UpdateLinkDto & { id: string }) => {
     try {
-      const response = await api.applicationLinksControllerUpdate({ path: { applicationId, id: link.id }, body: link });
+      const updateDto = {
+        link: link.link,
+        type: link.type,
+        description: link.description,
+      };
+      const response = await api.applicationLinksControllerUpdate({
+        path: { applicationId, id: link.id },
+        body: updateDto,
+      });
       if (!response.response.ok || !response.data) {
         throw new Error("Erreur lors de la modification du lien.");
       }
-      const updated = response.data;
       toaster.addSuccessMessage("Lien modifié avec succès !");
-      return updated;
+      return response.data;
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la modification du lien.");
       throw error;
@@ -88,7 +94,6 @@ export const useLinkStore = defineStore("linkStore", () => {
         api.applicationLinksControllerDelete({ path: { applicationId, id: linkId } }),
       ));
       toaster.addSuccessMessage("Liens supprimés avec succès !");
-      // Note: Component should refetch with current pagination state
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la suppression des liens.");
       throw error;
