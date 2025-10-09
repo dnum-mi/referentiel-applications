@@ -1,11 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import { IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class OrganizationFilterDto {
   @IsOptional()
   @IsString()
-  ids?: string;
+  @Transform(({ value }) => value.split(",").filter(id => id.trim() !== ""))
+  ids?: string[];
 
   @IsOptional()
   @Type(() => Boolean)
@@ -28,4 +29,13 @@ export class OrganizationFilterDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @ApiProperty({
+    description: "Renvoi uniquement les organisations utilisées (qui ont des acteurs ou des utilisateurs)",
+    default: false,
+  })
+  @IsBoolean()
+  usedOnly?: boolean;
 }

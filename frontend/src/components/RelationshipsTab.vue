@@ -34,7 +34,7 @@ const {
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="relations-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">
-        Gestion des relations de {{ props.application.label }}
+        Gestion des relations
       </h3>
     </div>
     <div class="fr-col-auto">

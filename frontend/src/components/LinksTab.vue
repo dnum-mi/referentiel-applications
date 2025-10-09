@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, defineProps, watch } from "vue";
+import { ref, computed, defineProps, watch } from "vue";
 import type { ApplicationWithPerms } from "@/models/Application";
 import type { CreateLinkDto, UpdateLinkDto } from "@/client/types.gen";
 import { useLinkStore } from "@/stores/linkStore";
@@ -27,41 +27,31 @@ const isSubmitting = ref(false);
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeLinks"));
 
 const currentPage = ref(0);
-const pageSize = ref(10);
+const pageSize = ref(15);
 
-const formatLink = (url: string) => (!url.startsWith("http") ? `http://${url}` : url);
 const getTypeLabel = (type: string) => (linkTypesDict as any)[type] || "Type inconnu";
 
-// Computed properties for pagination
-const pages = computed(() => {
-  const totalPages = Math.ceil(linkStore.total / pageSize.value);
-  return Array.from({ length: totalPages }).map((_, i) => ({
-    label: String(i + 1),
-    title: `Page ${i + 1}`,
-    href: `#page-${i + 1}`,
-  }));
-});
+// Pagination handlers
+function handlePageChange(newPage: number) {
+  currentPage.value = newPage;
+}
 
-// Watch for pagination changes
+function handlePageSizeChange(newPageSize: number) {
+  pageSize.value = newPageSize;
+  currentPage.value = 0;
+}
+
 watch([currentPage, pageSize], () => {
-  fetchLinks();
-});
-
-function fetchLinks() {
   linkStore.fetchLinks(props.application.id, {
     page: currentPage.value,
     pageSize: pageSize.value,
   });
-}
-
-onMounted(async () => {
-  fetchLinks();
 });
 
 const rows = computed(() =>
   linkStore.links.map(link => [
     link.id,
-    { label: link.link || "Lien vide", to: formatLink(link.link) },
+    { label: link.link || "Lien vide", to: link.link },
     link.description || "Description vide",
     getTypeLabel(link.type),
     {
@@ -75,13 +65,10 @@ const rows = computed(() =>
 async function createLink(newLink: CreateLinkDto) {
   try {
     isSubmitting.value = true;
-    await linkStore.createLink(props.application.id, {
-      ...newLink,
-      link: formatLink(newLink.link),
-    });
+    await linkStore.createLink(props.application.id, newLink);
     linkModal.closeModal();
     emit("update:application", props.application);
-    await fetchLinks();
+    await linkStore.fetchLinks(props.application.id);
   } finally {
     isSubmitting.value = false;
   }
@@ -96,13 +83,12 @@ async function editLink(updatedLink: UpdateLinkDto) {
     }
 
     await linkStore.updateLink(props.application.id, {
-      ...updatedLink,
       id: selectedItem.id,
-      link: updatedLink.link ? formatLink(updatedLink.link) : undefined,
+      ...updatedLink,
     });
     linkModal.closeModal();
     emit("update:application", props.application);
-    await fetchLinks();
+    await linkStore.fetchLinks(props.application.id);
   } finally {
     isSubmitting.value = false;
   }
@@ -113,8 +99,7 @@ async function confirmDelete() {
   selectedLinkIds.value = [];
   showDeleteConfirmation.value = false;
   emit("update:application", props.application);
-  await fetchLinks();
-  emit("update:application", props.application);
+  await linkStore.fetchLinks(props.application.id);
 }
 
 function removeSelectedLinks() {
@@ -123,16 +108,6 @@ function removeSelectedLinks() {
     return;
   }
   showDeleteConfirmation.value = true;
-}
-
-// Pagination handlers
-function handlePageChange(newPage: number) {
-  currentPage.value = newPage;
-}
-
-function handlePageSizeChange(newPageSize: number) {
-  pageSize.value = newPageSize;
-  currentPage.value = 0;
 }
 </script>
 
@@ -200,7 +175,6 @@ function handlePageSizeChange(newPageSize: number) {
 
       <PaginationFooter
         :total-filtered="linkStore.total"
-        :pages="pages"
         :limit="pageSize"
         :page="currentPage"
         data-testid="links-pagination-footer"
@@ -234,17 +208,3 @@ function handlePageSizeChange(newPageSize: number) {
     @cancel="() => (showDeleteConfirmation = false)"
   />
 </template>
-
-<style scoped>
-input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 2px solid var(--dsfr-border, #ccc);
-  transition: all 0.3s ease;
-}
-
-.global-delete {
-  margin-bottom: 1rem;
-}
-</style>

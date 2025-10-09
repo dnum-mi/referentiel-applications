@@ -1,7 +1,8 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from "vue";
+
+const props = defineProps<{
   totalFiltered: number
-  pages: { label: string, title: string, href: string }[]
   limit: number
   page: number
 }>();
@@ -10,6 +11,15 @@ const emit = defineEmits<{
   (e: "update:limit", value: number): void
   (e: "update:page", value: number): void
 }>();
+
+const pages = computed(() => {
+  const totalPages = Math.max(1, Math.ceil(props.totalFiltered / props.limit));
+  return Array.from({ length: totalPages }).map((_, index) => ({
+    label: String(index + 1),
+    title: `Page ${index + 1}`,
+    href: `#page-${index + 1}`,
+  }));
+});
 </script>
 
 <template>

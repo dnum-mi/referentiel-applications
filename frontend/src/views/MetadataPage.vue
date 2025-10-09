@@ -3,6 +3,7 @@ import { onMounted, ref, computed, watch } from "vue";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
 import PaginationFooter from "@/components/PaginationFooter.vue";
+import type { MetadataDto, PaginatedResponseDto } from "@/client/types.gen";
 
 const headers = [
   "Application",
@@ -22,17 +23,8 @@ const createdAtLte = ref<string>("");
 
 const metadataStore = useMetadataStore();
 
-const isLoading = computed(() => metadataStore.isLoading);
-const totalItems = computed(() => metadataStore.total);
-
-const pages = computed(() => {
-  const totalPages = Math.ceil(totalItems.value / pageSize.value);
-  return Array.from({ length: totalPages }).map((_, i) => ({
-    label: String(i + 1),
-    title: `Page ${i + 1}`,
-    href: `#page-${i + 1}`,
-  }));
-});
+const data = ref<PaginatedResponseDto & { results: MetadataDto[] }>({ results: [], total: 0 });
+const isLoading = ref(false);
 
 const columnToFieldKeyMap: Record<string, string> = {
   Application: "application.label",
@@ -59,24 +51,24 @@ function convertLocalToUTC(localDateTimeString: string): string {
 }
 
 function fetchData() {
-  const fieldKey = columnToFieldKeyMap[sortBy.value] ?? "createdAt";
-
   const filters: any = {
     page: currentPage.value,
     pageSize: pageSize.value,
-    sortBy: fieldKey,
+    sortBy: columnToFieldKeyMap[sortBy.value],
     order: isSortDescending.value ? "desc" : "asc",
+    createdAtGte: createdAtGte.value ? convertLocalToUTC(createdAtGte.value) : undefined,
+    createdAtLte: createdAtLte.value ? convertLocalToUTC(createdAtLte.value) : undefined,
   };
 
-  if (createdAtGte.value) {
-    filters.createdAtGte = convertLocalToUTC(createdAtGte.value);
-  }
-
-  if (createdAtLte.value) {
-    filters.createdAtLte = convertLocalToUTC(createdAtLte.value);
-  }
-
-  return metadataStore.fetchMetadatasGlobal(filters);
+  isLoading.value = true;
+  return metadataStore.fetchMetadatasGlobal(filters).then(() => {
+    data.value = {
+      results: metadataStore.metadatas,
+      total: metadataStore.total,
+    } as PaginatedResponseDto & { results: MetadataDto[] };
+  }).finally(() => {
+    isLoading.value = false;
+  });
 }
 
 async function applyFilters() {
@@ -149,7 +141,7 @@ function formatDescription(description: string): { title: string, content: strin
 }
 
 const metadataTableRows = computed(() =>
-  metadataStore.metadatas.map((meta) => {
+  data.value.results.map((meta) => {
     const { title: descTitle, content } = formatDescription(meta.description || "");
 
     return {
@@ -285,8 +277,7 @@ const metadataTableRows = computed(() =>
 
       <!-- Pagination -->
       <PaginationFooter
-        :total-filtered="totalItems"
-        :pages="pages"
+        :total-filtered="data.total"
         :limit="pageSize"
         :page="currentPage"
         data-testid="history-pagination-footer"

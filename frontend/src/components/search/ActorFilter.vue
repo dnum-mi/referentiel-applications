@@ -65,7 +65,7 @@ onMounted(() => {
 watch(
   () => searchStore.filters.organization,
   async (searchTerm) => {
-    organizations.value = await organizationStore.find(searchTerm);
+    organizations.value = await organizationStore.find(searchTerm, true);
   },
   { immediate: true },
 );
