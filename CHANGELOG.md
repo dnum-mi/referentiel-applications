@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.45.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.45.0...v1.45.1) (2025-10-10)
+
+
+### Bug Fixes
+
+* :bug: fix excel export limit to pageSize ([#1171](https://github.com/dnum-mi/referentiel-applications/issues/1171)) ([b060177](https://github.com/dnum-mi/referentiel-applications/commit/b060177c7344f5d22526e10f92e040084e4dd522))
+
 ## [1.45.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.44.0...v1.45.0) (2025-10-09)
 
 
