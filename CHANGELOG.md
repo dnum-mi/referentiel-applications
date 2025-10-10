@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.45.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.44.0...v1.45.0) (2025-10-09)
+
+
+### Features
+
+* :sparkles: add usedOnly filter on organizations ([#1155](https://github.com/dnum-mi/referentiel-applications/issues/1155)) ([745e73c](https://github.com/dnum-mi/referentiel-applications/commit/745e73c9823b25c46d22d0eb6348e6efe7c46610))
+
+
+### Bug Fixes
+
+* :bug: fix application links edition ([#1157](https://github.com/dnum-mi/referentiel-applications/issues/1157)) ([c4a6bb0](https://github.com/dnum-mi/referentiel-applications/commit/c4a6bb010871bad3bdfd41dff35b30220dd9876f))
+* :bug: fix metadata page sorting ([#1156](https://github.com/dnum-mi/referentiel-applications/issues/1156)) ([b0cb800](https://github.com/dnum-mi/referentiel-applications/commit/b0cb800d509f4a48918c79b2a4f61f08c531adf4))
+* **front:** :bug: add tooltip for links and buttons ([a2aa4d4](https://github.com/dnum-mi/referentiel-applications/commit/a2aa4d40c0f6142b235f0eb52115a16cf97fa737))
+* **front:** :bug: align button in header application list ([#1149](https://github.com/dnum-mi/referentiel-applications/issues/1149)) ([5db1dd0](https://github.com/dnum-mi/referentiel-applications/commit/5db1dd04ef4413a044872b9671d6c369bedee8c8))
+* **front:** :bug: disable global signalement for level 0 ([487af59](https://github.com/dnum-mi/referentiel-applications/commit/487af59f0aebb1f537ca0691e3b9501bbeb714d2))
+* **front:** :bug: implement debounced search in AccessibleAutocomplete component ([#1151](https://github.com/dnum-mi/referentiel-applications/issues/1151)) ([9faa76a](https://github.com/dnum-mi/referentiel-applications/commit/9faa76adba934b6990d82da3b6fa1648f84ae7b3))
+
 ## [1.44.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.43.0...v1.44.0) (2025-10-06)
 
 
