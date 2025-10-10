@@ -208,14 +208,6 @@ function selectAndConfirmAt(optionIndex: number) {
 }
 
 .autocomplete__menu {
-  box-sizing: border-box;
-  position: absolute;
-}
-
-.autocomplete .fr-input,
-.autocomplete .autocomplete__input { width: 100%; }
-
-.autocomplete .autocomplete__menu {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -227,21 +219,21 @@ function selectAndConfirmAt(optionIndex: number) {
   box-shadow: 0 6px 18px rgba(0,0,0,.08);
 }
 
-.autocomplete .autocomplete__menu--overlay {
-  position: absolute;
-  top: calc(100% + .25rem);
-  left: 0;
-  width: 100%;
-  z-index: 1000;
-}
-
-.autocomplete .autocomplete__menu--hidden { display: none; }
-.autocomplete .autocomplete__menu--visible { display: block; }
-
 .autocomplete .autocomplete__menu li {
   padding: .5rem .75rem;
   cursor: pointer;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
+
+.autocomplete .autocomplete__menu li div {
+  display: block;
+  width: 100%;
+  white-space: normal;
+  word-break: break-word;
+}
+
 .autocomplete .autocomplete__menu li[aria-selected="true"],
 .autocomplete .autocomplete__menu li:hover {
   background: #f3f4f6;
