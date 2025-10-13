@@ -2,13 +2,12 @@
 import { ref, computed, onMounted } from "vue";
 import type { PropType } from "vue";
 import type { Application } from "@/models/Application";
-import type { OrganizationDto, ActorTypeDto } from "@/client/types.gen.js";
-import type { Actor } from "@/models/Actor";
+import type { OrganizationDto, ActorTypeDto, CreateActorDto } from "@/client/types.gen.js";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 import { useOrganizationStore } from "@/stores/organizationStore";
 
 const props = defineProps({
-  initialData: Object as PropType<Actor>,
+  initialData: Object as PropType<CreateActorDto>,
   isSubmitting: Boolean,
   application: {
     type: Object as PropType<Application>,
@@ -25,8 +24,9 @@ const emit = defineEmits(["submit", "cancel"]);
 const organizationStore = useOrganizationStore();
 const initialOrganization = ref<OrganizationDto | null>(null);
 
-const form = ref<Actor>({
+const form = ref<CreateActorDto>({
   email: "",
+  actorTypeId: "",
   ...props.initialData,
   applicationId: props.application.id,
 });
@@ -58,15 +58,15 @@ onMounted(async () => {
   }
 });
 
-function handleSubmit() {
-  emit("submit", form.value);
-}
+const isFormValid = computed(() => {
+  return form.value.actorTypeId && form.value.actorTypeId !== "";
+});
 </script>
 
 <template>
-  <form data-testid="actor-form" @submit.prevent="handleSubmit">
+  <form data-testid="actor-form" @submit.prevent="emit('submit', form)">
     <div class="fr-input-group fr-mt-3w">
-      <DsfrSelect v-model="form.actorTypeId" label="Type d'acteur" required :options="actorTypeOptions" data-testid="actor-type-select" />
+      <DsfrSelect v-model.trim="form.actorTypeId" label="Type d'acteur" required :options="actorTypeOptions" data-testid="actor-type-select" />
     </div>
 
     <div class="fr-input-group fr-mt-3w">
@@ -103,7 +103,7 @@ function handleSubmit() {
       <DsfrButton type="button" secondary label="Annuler" data-testid="actor-cancel-btn" @click="$emit('cancel')" />
       <DsfrButton
         type="submit"
-        :disabled="isSubmitting"
+        :disabled="isSubmitting || !isFormValid"
         :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
         data-testid="actor-submit-btn"
       >

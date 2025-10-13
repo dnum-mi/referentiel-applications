@@ -34,9 +34,8 @@ export class CreateActorDto {
     description: "ID du type d'acteur lié",
     required: true,
   })
-  @IsOptional()
   @IsString()
-  actorTypeId?: string;
+  actorTypeId: string;
 
   @ApiProperty({
     example: "9965dc19-1c5a-472d-83e3-8bf65093c86c",

@@ -76,7 +76,7 @@ function setInitialValues() {
 watch(() => props.initialHosting, setInitialValues, { immediate: true });
 watch(hostingOptionsList, setInitialValues, { immediate: true });
 
-function handleSubmit() {
+async function handleSubmit() {
   console.log("Submitting hosting form", hostingForm.value);
   isSubmitting.value = true;
   try {
@@ -84,20 +84,19 @@ function handleSubmit() {
       label: hostingForm.value.label,
       hostingOptionId: hostingForm.value.hostingOptionId,
       applicationId: props.applicationId,
-      ...(props.initialHosting ? { id: props.initialHosting.id } : {}),
     };
 
-    let result;
-    if (formData.id) {
-      result = hostingStore.updateHosting(props.applicationId, formData.id, formData);
-      emit("hosting-updated", result);
+    if (props.initialHosting) {
+      await hostingStore.updateHosting(props.applicationId, props.initialHosting.id, formData);
+      emit("hosting-updated");
     } else {
-      result = hostingStore.createHosting(props.applicationId, formData);
-      emit("hosting-created", result);
+      await hostingStore.createHosting(props.applicationId, formData);
+      emit("hosting-created");
     }
-    // emit("close");
+    emit("close");
   } catch (err) {
-    console.error(err);
+    console.error("Error submitting hosting form:", err);
+    toaster.addErrorMessage("Une erreur est survenue lors de l'enregistrement de l'hébergement");
   } finally {
     isSubmitting.value = false;
   }
