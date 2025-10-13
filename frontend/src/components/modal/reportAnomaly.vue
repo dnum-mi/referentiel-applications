@@ -38,7 +38,7 @@ const placeholderText = computed(() =>
 );
 
 async function submitAnomaly() {
-  const desc = description.value.trim();
+  const desc = description.value;
   if (!desc) {
     toaster.addErrorMessage("Veuillez décrire votre signalement.");
     return;
@@ -81,7 +81,7 @@ function closeModal() {
     @close="closeModal"
   >
     <DsfrInput
-      v-model="description"
+      v-model.trim="description"
       is-textarea
       :placeholder="placeholderText"
       required

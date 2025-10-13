@@ -44,7 +44,7 @@ async function fetchUsers() {
     isLoading.value = true;
 
     const query: Record<string, any> = {
-      search: searchQuery.value.trim() || undefined,
+      search: searchQuery.value || undefined,
       page: currentPage.value,
       pageSize: itemsPerPage.value,
       sortBy: columnToFieldKeyMap[sortColumn.value],
@@ -155,7 +155,7 @@ onMounted(fetchUsers);
 
     <div class="fr-mb-4w">
       <DsfrSearchBar
-        v-model="searchQuery"
+        v-model.trim="searchQuery"
         label="Rechercher un utilisateur"
         placeholder="Rechercher par email ou organisation..."
         button-text="Rechercher"
