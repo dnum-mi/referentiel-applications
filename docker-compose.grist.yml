@@ -1,0 +1,17 @@
+services:
+  grist:
+    image: gristlabs/grist
+    ports:
+      - "8484:8484"
+    environment:
+      - PORT=8484
+      - GRIST_SINGLE_ORG=refappli
+      - GRIST_SESSION_SECRET=your-secret-key-change-this
+      - GRIST_CORS_ALLOW_HEADERS="Authorization, Content-Type"
+    volumes:
+      - grist-data:/persist
+    restart: unless-stopped
+
+volumes:
+  grist-data:
+    driver: local
