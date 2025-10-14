@@ -74,6 +74,9 @@ function updateSortedColumn(key: string | undefined) {
 </script>
 
 <template>
+  <p v-if="searchStore.avgIq !== undefined" class="avg-iq" data-testid="sidebar-avg-iq">
+    IQ moyen : {{ searchStore.avgIq.toFixed(1) }}%
+  </p>
   <DsfrDataTable
     v-model:sorted-by="sortBy"
     v-model:sorted-desc="sortedDesc"

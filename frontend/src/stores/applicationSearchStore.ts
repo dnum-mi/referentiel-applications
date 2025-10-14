@@ -16,6 +16,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
   const results = ref<any[]>([]);
   const total = ref(0);
   const isLoading = ref(false);
+  const avgIq = ref<number | undefined>(undefined);
   const error = ref<string | null>(null);
 
   const initialFilters = {
@@ -108,17 +109,19 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
       }
       console.log("🧾 Résultat API /applications →", response.data);
       console.log("📊 Total applications retournées :", response.data.total);
-
+      console.log("📊 IQ moyen :", response.data.avgIq);
       const searchResults = response.data.results;
 
       if (store) {
         results.value = searchResults;
         total.value = response.data.total;
+        avgIq.value = response.data.avgIq;
       }
       return {
         ...response.data,
         results: searchResults,
         total: response.data.total,
+        avgIq: response.data.avgIq,
       };
     } catch (err: any) {
       error.value = err?.message || "Erreur inconnue";
@@ -132,6 +135,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     filters,
     results,
     total,
+    avgIq,
     page,
     pageSize,
     isLoading,

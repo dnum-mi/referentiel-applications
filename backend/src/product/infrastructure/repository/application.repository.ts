@@ -326,7 +326,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
     const orderBy = sortOptions[sortBy] || { shortName: safeOrder };
 
-    const [results, total] = await Promise.all([
+    const [results, total, avgResult] = await Promise.all([
       this.prisma.application.findMany({
         where,
         orderBy,
@@ -350,9 +350,15 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       }),
       this.prisma.application.count({ where }),
+      this.prisma.application.aggregate({
+        _avg: { quality: true },
+        where,
+      }),
     ]);
 
-    return new PaginatedResponseDto(results, total);
+    const avgIq = avgResult._avg.quality ?? undefined;
+
+    return new PaginatedResponseDto(results, total, avgIq);
   }
 
   async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {

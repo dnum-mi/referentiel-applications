@@ -16,8 +16,16 @@ export class PaginatedResponseDto<T> {
   })
   total: number;
 
-  constructor(results: T[], total: number) {
+  @ApiProperty({
+    description: "Average quality index",
+    example: 75.5,
+    required: false,
+  })
+  avgIq?: number;
+
+  constructor(results: T[], total: number, avgIq?: number) {
     this.results = results;
     this.total = total;
+    this.avgIq = avgIq;
   }
 }

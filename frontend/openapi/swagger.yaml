@@ -2664,6 +2664,10 @@ components:
           type: number
           description: Total number of items
           example: 100
+        avgIq:
+          type: number
+          description: Average quality index
+          example: 75.5
       required:
         - results
         - total
@@ -3046,6 +3050,11 @@ components:
           type: number
           description: Nombre total d'applications correspondant aux critères de recherche
           example: 100
+        avgIq:
+          type: number
+          description: Indice de qualité moyen des applications correspondant aux critères
+            de recherche
+          example: 75.5
       required:
         - results
         - total

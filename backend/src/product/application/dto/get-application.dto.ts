@@ -105,6 +105,13 @@ export class ApplicationSearchResultDto {
     example: 100,
   })
   total: number;
+
+  @ApiProperty({
+    description: "Indice de qualité moyen des applications correspondant aux critères de recherche",
+    example: 75.5,
+    required: false,
+  })
+  avgIq?: number;
 }
 
 export class ApplicationMinimalDto extends PickType(ApplicationDto, [
