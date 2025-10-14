@@ -9,7 +9,7 @@ import {
   UseGuards,
   HttpCode,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiParam, ApiCreatedResponse, ApiOkResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiParam, ApiCreatedResponse, ApiOkResponse, ApiConflictResponse } from "@nestjs/swagger";
 import { CompliancesService } from "./compliances.service";
 import { ComplianceDto, CreateComplianceDto } from "./dto/create-compliance.dto";
 import { UpdateComplianceDto } from "./dto/update-compliance.dto";
@@ -52,6 +52,9 @@ export class ApplicationCompliancesController {
   @ApiCreatedResponse({
     description: "Compliance created successfully",
     type: ComplianceDto,
+  })
+  @ApiConflictResponse({
+    description: "A compliance already exists for this application",
   })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   async create(
