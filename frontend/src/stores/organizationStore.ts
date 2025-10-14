@@ -50,38 +50,9 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
           delete resolvers[org.id];
         });
       }
-
-      // Resolve missing with fake orgs
-      ids.forEach((id) => {
-        if (!organizations.value[id]) {
-          const fakeData: OrganizationDto = {
-            id,
-            path: "Organisation non trouvée",
-            url: "",
-            sigle: "NOT FOUND",
-            parentId: null,
-          };
-          organizations.value = { ...organizations.value, [id]: fakeData };
-          resolvers[id]?.(fakeData);
-          delete resolvers[id];
-        }
-      });
     } catch (err: any) {
       console.error("❌ Erreur lors de la récupération des organisations", err);
       error.value = err.message ?? "Erreur inconnue";
-
-      ids.forEach((id) => {
-        const fakeData: OrganizationDto = {
-          id,
-          path: "Organisation non trouvée",
-          url: "",
-          sigle: "NOT FOUND",
-          parentId: null,
-        };
-        organizations.value = { ...organizations.value, [id]: fakeData };
-        resolvers[id]?.(fakeData);
-        delete resolvers[id];
-      });
     }
   }, 10);
 

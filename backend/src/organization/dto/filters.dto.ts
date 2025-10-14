@@ -1,10 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Transform, Type } from "class-transformer";
-import { IsBoolean, IsOptional, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class OrganizationFilterDto {
   @IsOptional()
-  @IsString()
+  @IsArray()
   @Transform(({ value }) => value.split(",").filter(id => id.trim() !== ""))
   ids?: string[];
 
