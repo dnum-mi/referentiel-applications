@@ -126,6 +126,12 @@ const mandatoryLinks = computed(() => [
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
   },
+  {
+    label: "Contacter l’équipe",
+    href: "mailto:support-referentiel-applications@interieur.gouv.fr",
+    target: "_blank",
+    icon: "fr-icon-mail-line",
+  },
   versionLink.value,
 ]);
 const afterMandatoryLinks = [
@@ -178,6 +184,3 @@ function close() {
 
   <AppToaster :messages="toaster.messages" data-testid="toast-container" @close-message="toaster.removeMessage($event)" />
 </template>
-
-<style scoped>
-</style>

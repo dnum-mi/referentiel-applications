@@ -89,7 +89,7 @@ export class UserService {
         },
         {
           organization: {
-            label: {
+            path: {
               contains: filters.search,
               mode: "insensitive",
             },
@@ -103,7 +103,7 @@ export class UserService {
     if (filters.sortBy === "Organisation") {
       orderBy = {
         organization: {
-          label: filters.order || "asc",
+          path: filters.order || "asc",
         },
       };
     } else {

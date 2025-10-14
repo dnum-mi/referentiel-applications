@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.46.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.45.1...v1.46.0) (2025-10-13)
+
+
+### Features
+
+* :wheelchair: accessibility chart app iq ([d9ee03e](https://github.com/dnum-mi/referentiel-applications/commit/d9ee03ee1f47d9a6c8f0ce1e2fc405dde4270b0e))
+* **front:** :sparkles: add functional email contact in footer ([267a50d](https://github.com/dnum-mi/referentiel-applications/commit/267a50d4bf5ea50613768079aa8212744fd7a449))
+
+
+### Bug Fixes
+
+* :bug: fix application hosting edition ([#1178](https://github.com/dnum-mi/referentiel-applications/issues/1178)) ([80c5ac3](https://github.com/dnum-mi/referentiel-applications/commit/80c5ac36a867df9e20239cad870285fa4f8b5a79))
+* **front:** :bug: fix hover and click area for multi-line autocomplete options ([d13d646](https://github.com/dnum-mi/referentiel-applications/commit/d13d6467727fe9feeb3fb6a8fdab4a84789a1301))
+
+## [1.45.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.45.0...v1.45.1) (2025-10-10)
+
+
+### Bug Fixes
+
+* :bug: fix excel export limit to pageSize ([#1171](https://github.com/dnum-mi/referentiel-applications/issues/1171)) ([b060177](https://github.com/dnum-mi/referentiel-applications/commit/b060177c7344f5d22526e10f92e040084e4dd522))
+
 ## [1.45.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.44.0...v1.45.0) (2025-10-09)
 
 

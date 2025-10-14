@@ -20,7 +20,7 @@ export class ActorRepository implements IActorRepository {
         ...rest,
         organizationId: organizationId ?? null,
         applicationId: applicationId ?? null,
-        actorTypeId: actorTypeId ?? null,
+        actorTypeId,
       },
     });
 
@@ -74,7 +74,7 @@ export class ActorRepository implements IActorRepository {
         ...rest,
         ...(organizationId !== undefined && { organizationId: organizationId || null }),
         ...(applicationId !== undefined && { applicationId: applicationId || null }),
-        ...(actorTypeId !== undefined && { actorTypeId: actorTypeId || null }),
+        ...(actorTypeId !== undefined && { actorTypeId }),
       },
     });
 
