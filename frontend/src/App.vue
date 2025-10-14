@@ -19,6 +19,7 @@ const toaster = useToasterStore();
 configureClients(toaster);
 
 const appVersion = import.meta.env.VITE_RDA_APP_VERSION ?? "VITE_RDA_APP_VERSION";
+const envLabel = import.meta.env.VITE_ENV_LABEL ?? "";
 
 const versionLink = computed(() => ({
   label: `📦 ${appVersion}`,
@@ -165,6 +166,9 @@ function close() {
     :quick-links="quickLinks"
     data-testid="main-header"
   >
+    <div v-if="envLabel" class="env-label">
+      {{ envLabel }}
+    </div>
     <div v-if="userStore.authenticated" class="header-container">
       <SearchHeader />
     </div>
