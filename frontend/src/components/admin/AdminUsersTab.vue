@@ -84,7 +84,7 @@ watch([sortColumn, isSortDescending], () => {
 const tableRows = computed(() =>
   data.value.results.map(user => ({
     Email: user.email,
-    Organisation: user.organization?.label || "Non renseignée",
+    Organisation: user.organization?.path || "-",
     "Dernière connexion": user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
     Permissions: {
       label: AdminLevelWording[user.adminLevel],

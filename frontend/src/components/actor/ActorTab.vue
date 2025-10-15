@@ -181,6 +181,7 @@ function cancelDelete() {
         </template>
         <template v-else-if="colKey === 'Email'">
           <a
+            v-if="cell.to"
             :href="cell.to"
             target="_blank"
             rel="noopener noreferrer"
