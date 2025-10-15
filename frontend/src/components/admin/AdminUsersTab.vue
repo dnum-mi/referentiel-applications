@@ -44,7 +44,7 @@ async function fetchUsers() {
     isLoading.value = true;
 
     const query: Record<string, any> = {
-      search: searchQuery.value.trim() || undefined,
+      search: searchQuery.value || undefined,
       page: currentPage.value,
       pageSize: itemsPerPage.value,
       sortBy: columnToFieldKeyMap[sortColumn.value],
@@ -84,7 +84,7 @@ watch([sortColumn, isSortDescending], () => {
 const tableRows = computed(() =>
   data.value.results.map(user => ({
     Email: user.email,
-    Organisation: user.organization?.label || "Non renseignée",
+    Organisation: user.organization?.path || "-",
     "Dernière connexion": user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
     Permissions: {
       label: AdminLevelWording[user.adminLevel],
@@ -155,7 +155,7 @@ onMounted(fetchUsers);
 
     <div class="fr-mb-4w">
       <DsfrSearchBar
-        v-model="searchQuery"
+        v-model.trim="searchQuery"
         label="Rechercher un utilisateur"
         placeholder="Rechercher par email ou organisation..."
         button-text="Rechercher"

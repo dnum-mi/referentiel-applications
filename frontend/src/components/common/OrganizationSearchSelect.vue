@@ -73,7 +73,7 @@ watch(selectedOrganizationId, (newValue) => {
 
 // Search organizations
 async function searchOrganizations() {
-  if (!searchQuery.value.trim()) {
+  if (!searchQuery.value) {
     organizations.value = [];
     return;
   }
@@ -108,7 +108,7 @@ watch(searchQuery, () => {
   <div>
     <div class="fr-form-group">
       <DsfrInput
-        v-model="searchQuery"
+        v-model.trim="searchQuery"
         label="Organisation"
         placeholder="Rechercher une organisation..."
         :description="description"
