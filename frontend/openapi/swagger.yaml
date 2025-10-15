@@ -2992,8 +2992,6 @@ components:
           type: array
           items:
             type: string
-        ownerId:
-          type: string
         quality:
           type: number
           nullable: true
@@ -3006,7 +3004,6 @@ components:
         - targetPopulations
         - purposes
         - tags
-        - ownerId
         - quality
     CountByMonthDto:
       type: object
@@ -3372,8 +3369,11 @@ components:
           type: string
         applicationId:
           type: string
+          nullable: true
         application:
-          $ref: "#/components/schemas/ApplicationDto"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ApplicationDto"
         notifierId:
           type: string
         description:
@@ -3386,6 +3386,7 @@ components:
         - status
         - createdAt
         - id
+        - applicationId
         - application
         - notifierId
         - description
