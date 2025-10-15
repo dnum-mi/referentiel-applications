@@ -13,9 +13,9 @@ export class RelationService {
   async create(
     applicationSourceId: string,
     dto: RelationApplicationDto,
-    ownerId: string,
+    requestorId: string,
   ): Promise<Relation> {
-    return this.relationRepository.create(applicationSourceId, dto, ownerId);
+    return this.relationRepository.create(applicationSourceId, dto, requestorId);
   }
 
   async findAllForApplicationSource(
@@ -37,12 +37,12 @@ export class RelationService {
   async update(
     id: string,
     dto: RelationApplicationDto,
-    ownerId: string,
+    requestorId: string,
   ): Promise<Relation> {
-    return this.relationRepository.update(id, dto, ownerId);
+    return this.relationRepository.update(id, dto, requestorId);
   }
 
-  async delete(id: string, ownerId: string): Promise<void> {
-    return this.relationRepository.delete(id, ownerId);
+  async delete(id: string, requestorId: string): Promise<void> {
+    return this.relationRepository.delete(id, requestorId);
   }
 }

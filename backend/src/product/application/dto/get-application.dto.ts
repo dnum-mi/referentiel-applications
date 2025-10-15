@@ -48,9 +48,6 @@ export class ApplicationDto {
   @IsEnum(Status)
   status?: Status;
 
-  @IsString()
-  ownerId: string;
-
   @ApiProperty({
     enum: priorityRestart,
     required: false,

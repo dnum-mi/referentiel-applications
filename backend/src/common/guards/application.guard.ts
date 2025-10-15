@@ -44,38 +44,30 @@ export class ApplicationGuard implements CanActivate {
     applicationId: string,
     user: Requestor,
   ): Promise<APP_PERMS_MAP> {
-    const [actors, application] = await Promise.all([
-      this.prisma.actor.findMany({
-        where: {
-          applicationId,
-          email: user.email,
-        },
-        include: {
-          actorType: {
-            include: {
-              appPermissions: {
-                omit: {
-                  actorTypeId: true,
-                },
+    const actors = await this.prisma.actor.findMany({
+      where: {
+        applicationId,
+        email: user.email,
+      },
+      include: {
+        actorType: {
+          include: {
+            appPermissions: {
+              omit: {
+                actorTypeId: true,
               },
             },
           },
         },
-        distinct: ["actorTypeId"],
-      }),
-      this.prisma.application.findUnique({
-        where: { id: applicationId },
-      }),
-    ]);
+      },
+      distinct: ["actorTypeId"],
+    });
     // reduce the permissions to a map
 
-    const appPermsSet = new Set<APP_PERMISSIONS>();
-    if (application?.ownerId === user.id || user.adminLevel >= AdminLevel.WRITE) {
-      Object.keys(AppPermissionsRecord).forEach((key) => {
-        appPermsSet.add(key as APP_PERMISSIONS);
-      });
-      return appPermsSet;
+    if (user.adminLevel >= AdminLevel.WRITE) {
+      return new Set<APP_PERMISSIONS>(Object.keys(AppPermissionsRecord) as APP_PERMISSIONS[]);
     }
+    const appPermsSet = new Set<APP_PERMISSIONS>();
     if (user.adminLevel >= AdminLevel.READ) {
       Object.keys(AppPermissionsRecord)
         .filter(key => key.startsWith("read"))

@@ -1,6 +1,4 @@
-import { applicationMap } from "../../application/map/application.map";
 import { ApplicationSearchFilters, IApplicationRepository } from "./application.repository.interface";
-
 import { Injectable } from "@nestjs/common";
 import { CreateApplicationDto } from "../../application/dto/create-application.dto";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -14,15 +12,18 @@ import { PaginatedResponseDto } from "src/common/dto";
 export class ApplicationRepository implements IApplicationRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(application: CreateApplicationDto, ownerId: string) {
-    const mappedData = applicationMap(application, ownerId);
+  public async create(application: CreateApplicationDto) {
     return this.prisma.application.create({
-      data: { ...mappedData.data, quality: 0 },
+      data: {
+        ...application,
+        labels: undefined,
+        quality: 0,
+      },
     });
   }
 
   public async findById(id: string) {
-    return await this.prisma.application.findUnique({
+    return this.prisma.application.findUnique({
       where: { id },
       include: {
         relationsAsSource: {
@@ -37,7 +38,7 @@ export class ApplicationRepository implements IApplicationRepository {
 
   async findApplications(
     filters: ApplicationSearchFilters,
-    ownership?: { actorEmail?: string, ownerId?: string },
+    ownership?: { actorEmail?: string },
   ): Promise<PaginatedResponseDto<ApplicationDto>> {
     const {
       shortName,
@@ -56,9 +57,8 @@ export class ApplicationRepository implements IApplicationRepository {
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
 
     if (ownership) {
-      const ownershipWhere: Prisma.ApplicationWhereInput = { OR: [] };
       if (ownership.actorEmail) {
-        ownershipWhere.OR.push({
+        where.AND.push({
           actors: {
             some: {
               email: {
@@ -68,12 +68,6 @@ export class ApplicationRepository implements IApplicationRepository {
             },
           },
         });
-      }
-      if (ownership.ownerId) {
-        ownershipWhere.OR.push({ ownerId: ownership.ownerId });
-      }
-      if (ownershipWhere.OR.length > 0) {
-        where.AND.push(ownershipWhere);
       }
     }
 
@@ -359,7 +353,6 @@ export class ApplicationRepository implements IApplicationRepository {
     return this.prisma.application.findMany({
       include: {
         metadatas: true,
-        owner: true,
         compliance: true,
         labels: true,
         externalRessource: true,
@@ -402,7 +395,6 @@ export class ApplicationRepository implements IApplicationRepository {
             hostingOption: true,
           },
         },
-        owner: true,
       },
     });
   }

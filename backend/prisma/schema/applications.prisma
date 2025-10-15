@@ -15,9 +15,6 @@ model Application {
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
   hostings            Hosting[]
 
-  ownerId String
-  owner   User   @relation("UserApplications", fields: [ownerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
   relationsAsSource Relation[] @relation("SourceHasTarget")
   relationsAsTarget Relation[] @relation("TargetHasSource")
   labels            Label[]    @relation("ApplicationLabels")

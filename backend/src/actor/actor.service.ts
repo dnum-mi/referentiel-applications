@@ -11,10 +11,10 @@ export class ActorService {
     private readonly applicationService: ApplicationService,
   ) {}
 
-  public async create(createActor: CreateActorDto, ownerId: string) {
+  public async create(createActor: CreateActorDto, requestorId: string) {
     const createdActor = await this.actorRepository.create(
       createActor,
-      ownerId,
+      requestorId,
     );
     await this.applicationService.updateApplicationQuality(
       createdActor.applicationId,
@@ -41,15 +41,15 @@ export class ActorService {
   public async update(params: {
     where: Prisma.ActorWhereUniqueInput
     data: UpdateActorDto
-    ownerId: string
+    requestorId: string
   }): Promise<Actor> {
-    const { where, data, ownerId } = params;
+    const { where, data, requestorId } = params;
 
     await this.findOne(where.id);
     const updatedActor = await this.actorRepository.update(
       where,
       data,
-      ownerId,
+      requestorId,
     );
     await this.applicationService.updateApplicationQuality(
       updatedActor.applicationId,
@@ -57,9 +57,9 @@ export class ActorService {
     return updatedActor;
   }
 
-  public async delete(id: string, ownerId: string) {
+  public async delete(id: string, requestorId: string) {
     const actor = await this.findOne(id);
-    const deletedActor = await this.actorRepository.delete(id, ownerId);
+    const deletedActor = await this.actorRepository.delete(id, requestorId);
     await this.applicationService.updateApplicationQuality(actor.applicationId);
     return deletedActor;
   }

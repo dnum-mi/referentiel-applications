@@ -12,8 +12,8 @@ export class HostingService {
     private readonly applicationService: ApplicationService,
   ) {}
 
-  async create(dto: CreateHostingDto, ownerId: string) {
-    const createdHosting = this.repository.create(dto, ownerId);
+  async create(dto: CreateHostingDto, requestorId: string) {
+    const createdHosting = this.repository.create(dto, requestorId);
     await this.applicationService.updateApplicationQuality(dto.applicationId);
     return createdHosting;
   }
@@ -34,15 +34,15 @@ export class HostingService {
     return this.repository.findDistinctSites();
   }
 
-  async update(id: string, dto: UpdateHostingDto, ownerId: string) {
-    const updatedHosting = await this.repository.update(id, dto, ownerId);
+  async update(id: string, dto: UpdateHostingDto, requestorId: string) {
+    const updatedHosting = await this.repository.update(id, dto, requestorId);
     await this.applicationService.updateApplicationQuality(dto.applicationId);
     return updatedHosting;
   }
 
-  async remove(id: string, ownerId?: string) {
+  async remove(id: string, requestorId?: string) {
     const hosting = await this.repository.findById(id);
-    const deletedHosting = await this.repository.delete(id, ownerId);
+    const deletedHosting = await this.repository.delete(id, requestorId);
     await this.applicationService.updateApplicationQuality(
       hosting.applicationId,
     );

@@ -30,13 +30,10 @@ export class ApplicationService {
   ) { }
 
   public async createApplication(
-    ownerId: string,
+    requestorId: string,
     createApplicationDto: CreateApplicationDto,
   ) {
-    const application = await this.persistApplication(
-      ownerId,
-      createApplicationDto,
-    );
+    const application = await this.applicationRepository.create(createApplicationDto);
 
     await this.updateApplicationQuality(application.id);
 
@@ -47,7 +44,7 @@ export class ApplicationService {
         metadatas: {
           create: {
             applicationId: application.id,
-            createdById: ownerId,
+            createdById: requestorId,
             description: `Ajout du libellé alternatif "${labelDto.value}" à l'application`,
           },
         },
@@ -64,9 +61,9 @@ export class ApplicationService {
   public async update(params: {
     where: Prisma.ApplicationWhereUniqueInput
     data: PatchApplicationDto
-    ownerId: string
+    requestorId: string
   }): Promise<Application> {
-    const { where, data, ownerId } = params;
+    const { where, data, requestorId } = params;
     const applicationUpdates: Prisma.ApplicationUpdateInput = {};
 
     this.applyScalarAndSimpleRelationUpdates(data, applicationUpdates);
@@ -83,7 +80,7 @@ export class ApplicationService {
 
       await this.metadataService.createMetadata({
         applicationId: updatedApplication.id,
-        createdById: ownerId,
+        createdById: requestorId,
         title: "des informations générales",
         fields: {
           label: "libellé",
@@ -206,7 +203,6 @@ export class ApplicationService {
     }
     return this.applicationRepository.findApplications(searchParams, {
       actorEmail: requestor.email,
-      ownerId: requestor.id,
     });
   }
 
@@ -234,24 +230,6 @@ export class ApplicationService {
     }
 
     await this.applicationRepository.delete(id);
-  }
-
-  private async persistApplication(ownerId: string, createApplicationDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: ownerId },
-      select: { email: true, keycloakId: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`User not found for id=${ownerId}`);
-    }
-
-    const application = this.applicationRepository.create(
-      createApplicationDto,
-      ownerId,
-    );
-
-    return application;
   }
 
   private applyScalarAndSimpleRelationUpdates(

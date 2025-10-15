@@ -5,14 +5,14 @@ export interface IRelationRepository {
   create: (
     applicationSourceId: string,
     { applicationTargetId, type }: RelationApplicationDto,
-    ownerId: string,
+    requestorId: string,
   ) => Promise<Relation>
   findAllForApplicationSource: (applicationSourceId: string) => Promise<Relation[]>
   findOne: (id: string) => Promise<Relation>
   update: (
     id: string,
     dto: RelationApplicationDto,
-    ownerId: any,
+    requestorId: any,
   ) => Promise<Relation>
-  delete: (id: string, ownerId: string) => Promise<void>
+  delete: (id: string, requestorId: string) => Promise<void>
 }

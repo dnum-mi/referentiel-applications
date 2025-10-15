@@ -44,11 +44,6 @@ export class ApplicationFaker {
         description: faker.company.catchPhrase(),
         tags: faker.helpers.arrayElements(appTags, { min: 1, max: 3 }),
         priorityRestart: faker.helpers.arrayElement(restartPriorities),
-        owner: {
-          connect: {
-            id: user.id,
-          },
-        },
         metadatas: {
           create: [
             {

@@ -83,10 +83,10 @@ Vous devez fournir les informations suivantes :
   })
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
-    @UserId() userId: string,
+    @UserId() requestorId: string,
   ) {
     const newApplication = await this.applicationService.createApplication(
-      userId,
+      requestorId,
       createApplicationDto,
     );
     return newApplication;
@@ -270,7 +270,7 @@ Le paramètre **id** doit être fourni dans l'URL.
     type: ApplicationDto,
   })
   async update(
-    @UserId() userId: string,
+    @UserId() requestorId: string,
     @Param("applicationId") id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
   ): Promise<ApplicationDto> {
@@ -282,7 +282,7 @@ Le paramètre **id** doit être fourni dans l'URL.
     return this.applicationService.update({
       where: { id },
       data: applicationToUpdate,
-      ownerId: userId,
+      requestorId,
     });
   }
 
