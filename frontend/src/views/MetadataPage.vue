@@ -3,7 +3,7 @@ import { onMounted, ref, computed, watch } from "vue";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
 import PaginationFooter from "@/components/PaginationFooter.vue";
-import type { MetadataDto, PaginatedResponseDto } from "@/client/types.gen";
+import type { MetadataPaginatedResponseDto } from "@/client/types.gen";
 
 const headers = [
   "Application",
@@ -23,7 +23,7 @@ const createdAtLte = ref<string>("");
 
 const metadataStore = useMetadataStore();
 
-const data = ref<PaginatedResponseDto & { results: MetadataDto[] }>({ results: [], total: 0 });
+const data = ref<MetadataPaginatedResponseDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 
 const columnToFieldKeyMap: Record<string, string> = {
@@ -65,7 +65,7 @@ function fetchData() {
     data.value = {
       results: metadataStore.metadatas,
       total: metadataStore.total,
-    } as PaginatedResponseDto & { results: MetadataDto[] };
+    } as MetadataPaginatedResponseDto;
   }).finally(() => {
     isLoading.value = false;
   });

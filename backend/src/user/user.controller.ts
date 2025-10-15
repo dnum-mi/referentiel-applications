@@ -11,11 +11,11 @@ import { UserService } from "./user.service";
 import { ApiTags, ApiOperation, ApiParam, ApiOkResponse, ApiNotFoundResponse, ApiForbiddenResponse } from "@nestjs/swagger";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserFilterDto } from "./dto/filters.dto";
-import { PaginatedResponseDto } from "src/common/dto";
 import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { AdminLevel, UserEntity } from "./entities/user.entity";
 import { User } from "src/common/decorators/user.decorator";
+import { UsersPaginatedResponseDto } from "./dto/users.dto";
 
 @ApiTags("users")
 @Controller("/users")
@@ -64,7 +64,7 @@ export class UserController {
   })
   @ApiOkResponse({
     description: "Liste paginée des utilisateurs",
-    type: PaginatedResponseDto<UserEntity>,
+    type: UsersPaginatedResponseDto,
   })
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",

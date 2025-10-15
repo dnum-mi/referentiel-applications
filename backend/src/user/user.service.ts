@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import type { Prisma, User } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserFilterDto } from "./dto/filters.dto";
 import { UserEntity } from "./entities/user.entity";
 import { paginate } from "src/common/utils/pagination.utils";
 import { PaginatedResponseDto } from "src/common/dto";
+import { UsersPaginatedResponseDto } from "./dto/users.dto";
 
 @Injectable()
 export class UserService {
@@ -68,7 +69,7 @@ export class UserService {
     });
   }
 
-  async findAll(filters: UserFilterDto): Promise<PaginatedResponseDto<User>> {
+  async findAll(filters: UserFilterDto): Promise<UsersPaginatedResponseDto> {
     const where: Prisma.UserWhereInput = {};
 
     where.type = { in: filters.type };

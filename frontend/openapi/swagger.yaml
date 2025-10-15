@@ -201,7 +201,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/MetadataPaginatedResponseDto"
       tags: &a2
         - Metadatas
   /api/v2/applications/{applicationId}/metadatas/first-last:
@@ -282,7 +282,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/MetadataPaginatedResponseDto"
       tags:
         - Metadatas
   /api/v2/users/me:
@@ -400,7 +400,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/UsersPaginatedResponseDto"
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a3
@@ -2428,7 +2428,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/LinksPaginatedResponseDto"
       tags: *a14
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
@@ -2654,21 +2654,6 @@ components:
         - sourceApplication
         - targetApplication
         - type
-    PaginatedResponseDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            type: array
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     MetadataAction:
       type: string
       description: Action effectuée sur la metadata
@@ -2837,6 +2822,21 @@ components:
         - hostingId
         - labelId
         - createdBy
+    MetadataPaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of metadata
+          type: array
+          items:
+            $ref: "#/components/schemas/MetadataDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     FirstLastMetadataDto:
       type: object
       properties:
@@ -2867,6 +2867,21 @@ components:
           type: string
           nullable: true
           description: ID de l'organisation
+    UsersPaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/UserEntity"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     ApplicationPriorityRestart:
       type: string
       enum:
@@ -3043,7 +3058,7 @@ components:
             $ref: "#/components/schemas/ApplicationDto"
         total:
           type: number
-          description: Nombre total d'applications correspondant aux critères de recherche
+          description: Total number of items
           example: 100
       required:
         - results
@@ -3752,39 +3767,67 @@ components:
     CreateLinkDto:
       type: object
       properties:
+        link:
+          type: string
+          description: The URL of the link
         type:
           $ref: "#/components/schemas/ExternalRessourceType"
         description:
           type: string
-        link:
-          type: string
+          description: Optional description of the link
       required:
-        - type
         - link
+        - type
     LinkDto:
       type: object
       properties:
-        type:
-          $ref: "#/components/schemas/ExternalRessourceType"
-        description:
-          type: string
-        link:
-          type: string
         id:
           type: string
+          description: Unique identifier of the link
+        link:
+          type: string
+          description: The URL of the link
+        type:
+          type: string
+          enum:
+            - documentation
+            - supervision
+            - service
+            - audience_metrics
+          description: Type of the external resource
+        description:
+          type: string
+          description: Description of the link
       required:
-        - type
-        - link
         - id
+        - link
+        - type
+    LinksPaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of links
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateLinkDto:
       type: object
       properties:
+        link:
+          type: string
+          description: The URL of the link
         type:
           $ref: "#/components/schemas/ExternalRessourceType"
         description:
           type: string
-        link:
-          type: string
+          description: Optional description of the link
     CreateComplianceDto:
       type: object
       properties:
