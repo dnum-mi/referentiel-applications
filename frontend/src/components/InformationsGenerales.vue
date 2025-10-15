@@ -138,7 +138,10 @@ async function updateApplication(updatedData: any) {
           applicationId: label.applicationId,
           id: label.id,
         },
-        body: label,
+        body: {
+          value: label.value,
+          source: label.source,
+        },
       })));
     }
     if (updatedData.newLabels.length > 0) {
