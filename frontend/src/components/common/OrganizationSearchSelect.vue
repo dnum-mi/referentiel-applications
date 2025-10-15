@@ -17,6 +17,10 @@ const props = defineProps({
     type: Object as PropType<OrganizationDto | null>,
     default: null,
   },
+  required: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits<{
@@ -29,6 +33,16 @@ const searchQuery = ref("");
 const organizations = ref<OrganizationDto[]>([]);
 const isLoading = ref(false);
 const selectedOrganizationId = ref(props.modelValue);
+
+// Computed label for the search input with asterisk if required
+const searchLabel = computed(() => {
+  return props.required ? "Organisation *" : "Organisation";
+});
+
+// Set initial search query to show selected organization name when editing
+if (props.initialOrganization) {
+  searchQuery.value = props.initialOrganization.path;
+}
 
 // Computed options for the select
 const selectOptions = computed(() => {
@@ -69,6 +83,14 @@ watch(
 // Watch for internal selection changes
 watch(selectedOrganizationId, (newValue) => {
   emit("update:modelValue", newValue);
+
+  // Update search query to show selected organization name
+  if (newValue) {
+    const selectedOrg = selectOptions.value.find(option => option.value === newValue);
+    if (selectedOrg && selectedOrg.text) {
+      searchQuery.value = selectedOrg.text;
+    }
+  }
 });
 
 // Search organizations
@@ -93,6 +115,7 @@ async function searchOrganizations() {
 function clearSearch() {
   searchQuery.value = "";
   organizations.value = [];
+  selectedOrganizationId.value = "";
 }
 
 let searchTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -109,7 +132,7 @@ watch(searchQuery, () => {
     <div class="fr-form-group">
       <DsfrInput
         v-model.trim="searchQuery"
-        label="Organisation"
+        :label="searchLabel"
         placeholder="Rechercher une organisation..."
         :description="description"
         label-visible
@@ -121,7 +144,12 @@ watch(searchQuery, () => {
     </div>
 
     <div v-if="selectOptions.length > 0" class="fr-mt-1w">
-      <DsfrSelect v-model="selectedOrganizationId" :options="selectOptions" :disabled="isLoading" :label-visible="false" />
+      <DsfrSelect
+        v-model="selectedOrganizationId"
+        :options="selectOptions"
+        :disabled="isLoading"
+        :label-visible="false"
+      />
     </div>
 
     <div v-if="searchQuery && !isLoading && organizations.length > 0" class="fr-mt-1w">
