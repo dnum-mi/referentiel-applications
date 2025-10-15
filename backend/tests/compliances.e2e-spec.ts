@@ -73,6 +73,18 @@ describe("Compliances", () => {
     expect(response.body.rgpd_has_aipd).toEqual(true);
     expect(response.body.rgpd_dpo_name).toEqual("Jean Dupont");
   });
+
+  it("/POST applications/:applicationId/compliances - should return 409 when compliance already exists", async () => {
+    // Try to create another compliance for the same application
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/compliances`)
+      .send({
+        dima_duration_hours: 24,
+        dima_is_hno: false,
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(409);
+  });
 });
 
 describe("application guard", () => {

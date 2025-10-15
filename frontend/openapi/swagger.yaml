@@ -2505,6 +2505,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
+        "409":
+          description: A compliance already exists for this application
       tags: &a15
         - Compliances
     get:
