@@ -44,6 +44,8 @@ import { User } from "src/common/decorators/user.decorator";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { APP_PERMISSIONS, AppPermissionsValues } from "src/common/utils/types";
+import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
+import { RequiredUserCapability } from "src/common/decorators/user-capability.decorator";
 
 @ApiTags("applications")
 @Controller("applications")
@@ -81,6 +83,8 @@ Vous devez fournir les informations suivantes :
     description: "Application créée avec succès.",
     type: ApplicationDto,
   })
+  @UseGuards(UserCapabilityGuard)
+  @RequiredUserCapability("CreateApplication")
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
     @UserId() requestorId: string,

@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import api from "@/api/index";
-import type { UserEntity, UpdateUserDto, UsersPaginatedResponseDto } from "@/client/types.gen";
-import { useToasterStore } from "@/stores/toasterStore";
-import { AdminLevel } from "@/models/user";
-import { AdminLevelOptions, AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
+import type { UserEntity, UsersPaginatedResponseDto } from "@/client/types.gen";
+import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
 import PaginationFooter from "../PaginationFooter.vue";
-import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
-
-const toaster = useToasterStore();
+import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
+import UserActions from "./UserActions.vue";
 
 const errorMessages = {
   ERR_LOAD_USERS: "Erreur lors du chargement des utilisateurs",
@@ -17,27 +14,41 @@ const errorMessages = {
 type ErrorKey = keyof typeof errorMessages;
 
 const data = ref<UsersPaginatedResponseDto>({ results: [], total: 0 });
+
+const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [{
+  key: "email",
+  label: "Email",
+  isSortable: true,
+}, {
+  key: "organisation",
+  label: "Organisation",
+  isSortable: true,
+}, {
+  key: "lastLogin",
+  label: "Dernière connexion",
+  isSortable: true,
+}, {
+  key: "adminLevel",
+  label: "Niveau d'admin",
+  isSortable: true,
+}, {
+  key: "capabilities",
+  isSortable: true,
+  label: "Nb Cap.",
+}, {
+  key: "actions",
+  label: "Actions",
+}] as const;
+
 const isLoading = ref(false);
 const errorKeySet = ref<Set<ErrorKey>>(new Set());
-const isEditModalOpen = ref(false);
-const selectedUser = ref<UserEntity | null>(null);
-const isSaving = ref(false);
 const searchQuery = ref("");
-const editingAdminLevel = ref<AdminLevel>(AdminLevel.NONE);
-const editingOrganizationId = ref<string>("");
 
-const sortColumn = ref<string>("Email");
+const sortColumn = ref<typeof headers[number]["key"]>("email");
 const isSortDescending = ref<boolean>(false);
 
 const itemsPerPage = ref<number>(15);
 const currentPage = ref<number>(0);
-
-const columnToFieldKeyMap: Record<string, string> = {
-  Email: "email",
-  Organisation: "Organisation",
-  "Dernière connexion": "lastLogin",
-  Permissions: "adminLevel",
-};
 
 async function fetchUsers() {
   try {
@@ -47,14 +58,14 @@ async function fetchUsers() {
       search: searchQuery.value || undefined,
       page: currentPage.value,
       pageSize: itemsPerPage.value,
-      sortBy: columnToFieldKeyMap[sortColumn.value],
+      sortBy: sortColumn.value,
       order: isSortDescending.value ? "desc" : "asc",
     };
 
     const response = await api.userControllerFindAll({ query });
 
     if (response.response.ok && response.data) {
-      data.value = response.data as UsersPaginatedResponseDto;
+      data.value = response.data;
       errorKeySet.value.delete("ERR_LOAD_USERS");
     } else {
       errorKeySet.value.add("ERR_LOAD_USERS");
@@ -83,55 +94,20 @@ watch([sortColumn, isSortDescending], () => {
 
 const tableRows = computed(() =>
   data.value.results.map(user => ({
-    Email: user.email,
-    Organisation: user.organization?.path || "-",
-    "Dernière connexion": user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
-    Permissions: {
+    email: user.email,
+    organisation: user.organization?.path || "-",
+    lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
+    capabilities: user.capabilities,
+    adminLevel: {
       label: AdminLevelWording[user.adminLevel],
       badgeClass: AdminLevelWordingBadgeClass[user.adminLevel],
     },
-    Actions: user,
+    actions: user,
   })),
 );
 
 function onUpdateSortColumn(columnName: string | undefined) {
-  sortColumn.value = columnName || "Email";
-}
-
-async function openEditModal(user: UserEntity) {
-  selectedUser.value = user;
-  editingAdminLevel.value = user.adminLevel;
-  editingOrganizationId.value = user.organizationId || "";
-  isEditModalOpen.value = true;
-}
-
-function closeEditModal() {
-  isEditModalOpen.value = false;
-  selectedUser.value = null;
-  editingAdminLevel.value = AdminLevel.NONE;
-  editingOrganizationId.value = "";
-}
-
-async function savePermissions() {
-  if (!selectedUser.value || !selectedUser.value.keycloakId) return;
-  isSaving.value = true;
-  try {
-    await api.userControllerUpdate({
-      path: { id: selectedUser.value.keycloakId },
-      body: {
-        adminLevel: editingAdminLevel.value,
-        organizationId: editingOrganizationId.value === "" ? null : editingOrganizationId.value,
-      } as UpdateUserDto,
-    });
-    toaster.addSuccessMessage("Utilisateur mis à jour avec succès");
-    closeEditModal();
-    await fetchUsers();
-  } catch (err) {
-    toaster.addErrorMessage("Erreur lors de la mise à jour de l'utilisateur");
-    console.error(err);
-  } finally {
-    isSaving.value = false;
-  }
+  sortColumn.value = columnName || "email";
 }
 
 function updateItemsPerPage(value: number) {
@@ -182,9 +158,10 @@ onMounted(fetchUsers);
         :sort-fn="(a, b) => (isSortDescending ? -1 : 1)"
         title="Utilisateurs"
         no-caption
-        :headers-row="['Email', 'Organisation', 'Dernière connexion', 'Permissions', 'Actions']"
+        :headers-row="headers"
         :rows="tableRows"
-        :sortable-rows="['Email', 'Organisation', 'Dernière connexion', 'Permissions']"
+        row-key="email"
+        :sortable-rows="headers.filter(h => h.isSortable).map(h => h.key)"
         vertical-borders
         :pagination="false"
         data-testid="admin-users-table"
@@ -192,25 +169,19 @@ onMounted(fetchUsers);
       >
         <template #header="header">
           <DsfrTableHeader
-            :header="header.key"
+            :header="header.label"
             :aria-sort="isSortDescending ? 'descending' : 'ascending'"
           />
         </template>
         <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'Permissions'">
-            <span class="fr-badge" :class="(cell as any).badgeClass">{{ (cell as any).label }}</span>
+          <template v-if="colKey === 'adminLevel'">
+            <span class="fr-badge justify-center" :class="(cell as any).badgeClass">{{ (cell as any).label }}</span>
           </template>
-
-          <template v-else-if="colKey === 'Actions'">
-            <DsfrButton
-              label="Modifier"
-              size="sm"
-              secondary
-              data-testid="admin-user-edit-btn"
-              title="Modifier les permissions de l'utilisateur"
-              aria-label="Modifier les permissions de l'utilisateur"
-              @click="openEditModal(cell as UserEntity)"
-            />
+          <template v-else-if="colKey === 'capabilities'">
+            <span v-show="cell.length" class="fr-badge ml-2" :title="cell.join(', ')">{{ cell.length }}</span>
+          </template>
+          <template v-else-if="colKey === 'actions'">
+            <UserActions :user="cell" @user-updated="fetchUsers" />
           </template>
 
           <template v-else>
@@ -227,48 +198,6 @@ onMounted(fetchUsers);
         @update:page="updatePage"
       />
     </div>
-
-    <DsfrModal
-      :opened="isEditModalOpen"
-      title="Modifier l'utilisateur"
-      data-testid="admin-edit-user-modal"
-      @close="closeEditModal"
-    >
-      <div v-if="selectedUser">
-        <p><strong>Utilisateur :</strong> {{ selectedUser.email }}</p>
-
-        <OrganizationSearchSelect
-          v-model="editingOrganizationId"
-          class="fr-mb-2w"
-          description="Recherchez et sélectionnez une organisation pour cet utilisateur"
-          :initial-organization="selectedUser.organization"
-          data-testid="user-organization-search"
-        />
-
-        <DsfrRadioButtonSet
-          v-model="editingAdminLevel"
-          legend="Niveau de privilège"
-          :options="AdminLevelOptions"
-          name="admin-level-radio"
-          data-testid="admin-level-radio"
-        />
-      </div>
-
-      <template #footer>
-        <DsfrButton
-          label="Annuler" secondary data-testid="admin-cancel-btn"
-          title="Annuler la modification"
-          aria-label="Annuler la modification"
-          @click="closeEditModal"
-        />
-        <DsfrButton
-          label="Sauvegarder"
-          title="Sauvegarder les modifications"
-          aria-label="Sauvegarder les modifications"
-          :disabled="isSaving" data-testid="admin-save-perms-btn" @click="savePermissions"
-        />
-      </template>
-    </DsfrModal>
   </div>
 </template>
 

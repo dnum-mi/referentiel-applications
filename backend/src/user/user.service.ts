@@ -1,12 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import type { Prisma } from "@prisma/client";
+import { Prisma, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserFilterDto } from "./dto/filters.dto";
-import { UserEntity } from "./entities/user.entity";
+import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
 import { paginate } from "src/common/utils/pagination.utils";
 import { PaginatedResponseDto } from "src/common/dto";
-import { UsersPaginatedResponseDto } from "./dto/users.dto";
 
 @Injectable()
 export class UserService {
@@ -55,6 +54,7 @@ export class UserService {
         email,
         keycloakId,
         adminLevel: 0, // Default admin level
+        capabilities: [],
       },
       include: {
         organization: true,
@@ -64,12 +64,15 @@ export class UserService {
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     return this.prisma.user.update({
-      where: { keycloakId: id },
-      data: updateUserDto,
+      where: { id },
+      data: {
+        ...updateUserDto,
+        capabilities: [...new Set(updateUserDto.capabilities || [])], // Ensure capabilities are unique
+      },
     });
   }
 
-  async findAll(filters: UserFilterDto): Promise<UsersPaginatedResponseDto> {
+  async findAll(filters: UserFilterDto, requestor: Requestor): Promise<PaginatedResponseDto<User>> {
     const where: Prisma.UserWhereInput = {};
 
     where.type = { in: filters.type };
@@ -101,7 +104,7 @@ export class UserService {
 
     let orderBy: Prisma.UserOrderByWithRelationInput = {};
 
-    if (filters.sortBy === "Organisation") {
+    if (filters.sortBy === "organisation") {
       orderBy = {
         organization: {
           path: filters.order || "asc",
@@ -110,7 +113,7 @@ export class UserService {
     } else {
       const sortField = filters.sortBy || "email";
       orderBy = {
-        [sortField]: filters.order || "asc",
+        [sortField]: filters.order ?? "asc",
       };
     }
 
@@ -122,6 +125,9 @@ export class UserService {
         },
         orderBy,
         ...paginate(filters.page, filters.pageSize),
+        omit: {
+          capabilities: requestor.adminLevel < AdminLevel.ADMIN, // Only admins can see user capabilities
+        },
       }),
       await this.prisma.user.count({ where }),
     );

@@ -10,6 +10,10 @@ export enum AdminLevel {
   ADMIN = 30,
 }
 
+export const UserCapabilities = {
+  CreateApplication: "CreateApplication",
+} as const;
+
 export const UserType = {
   human: "human",
   bot: "bot",
@@ -29,6 +33,9 @@ export class UserEntity {
   @IsNumber()
   @IsEnum(AdminLevel)
   adminLevel: AdminLevel; // Changed from permissions to adminLevel
+
+  @ApiProperty({ required: false, enum: UserCapabilities, enumName: "UserCapabilities", isArray: true, description: "Liste des capacités de l'utilisateur" })
+  capabilities?: (keyof typeof UserCapabilities)[];
 
   @IsString()
   @IsOptional()

@@ -2671,6 +2671,11 @@ components:
       required:
         - id
         - label
+    UserCapabilities:
+      type: string
+      description: Liste des capacités de l'utilisateur
+      enum:
+        - CreateApplication
     OrganizationDto:
       type: object
       properties:
@@ -2711,6 +2716,10 @@ components:
     UserEntity:
       type: object
       properties:
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserCapabilities"
         organization:
           nullable: true
           allOf:
@@ -2863,6 +2872,13 @@ components:
             - 20
             - 30
           type: number
+        capabilities:
+          type: array
+          description: Liste des capacités de l'utilisateur
+          items:
+            type: string
+            enum:
+              - CreateApplication
         organizationId:
           type: string
           nullable: true
