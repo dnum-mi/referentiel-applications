@@ -12,6 +12,7 @@ model User {
   tokensImpersonate   Token[]               @relation("TokenUserImpersonate")
   tokensCreated       Token[]               @relation("TokenUserCreator")
   type                UserType              @default(human)
+  capabilities        CapabilityNames[]
 }
 
 model Actor {
@@ -46,4 +47,8 @@ model ActorType {
 enum UserType {
   human
   bot
+}
+
+enum CapabilityNames {
+  CreateApplication
 }

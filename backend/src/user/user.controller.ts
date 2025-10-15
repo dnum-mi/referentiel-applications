@@ -13,7 +13,7 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { UserFilterDto } from "./dto/filters.dto";
 import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
-import { AdminLevel, UserEntity } from "./entities/user.entity";
+import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
 import { User } from "src/common/decorators/user.decorator";
 import { UsersPaginatedResponseDto } from "./dto/users.dto";
 
@@ -69,7 +69,10 @@ export class UserController {
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",
   })
-  async findAll(@Query() filters: UserFilterDto) {
-    return this.userService.findAll(filters);
+  async findAll(
+    @Query() filters: UserFilterDto,
+    @User() requestor: Requestor,
+  ) {
+    return this.userService.findAll(filters, requestor);
   }
 }
