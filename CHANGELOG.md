@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.46.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.46.1...v1.46.2) (2025-10-16)
+
+
+### Bug Fixes
+
+* :bug: update label in updateApplication ([f7af447](https://github.com/dnum-mi/referentiel-applications/commit/f7af447bebe643e4231a5d6d28c4e86db9ff68a5))
+* :recycle: fix organizations usedOnly filter and add debounce ([#1195](https://github.com/dnum-mi/referentiel-applications/issues/1195)) ([038c818](https://github.com/dnum-mi/referentiel-applications/commit/038c818997e314c4e714bb174400c2cb84ac4d8d))
+
 ## [1.46.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.46.0...v1.46.1) (2025-10-15)
 
 
