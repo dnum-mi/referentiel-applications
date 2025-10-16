@@ -4,6 +4,7 @@ import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { DsfrInput } from "@gouvminint/vue-dsfr";
 import { useOrganizationStore } from "@/stores/organizationStore";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
 import type { OrganizationDto } from "@/client/types.gen";
 
 const searchStore = useApplicationSearchStore();
@@ -62,11 +63,13 @@ onMounted(() => {
   actorTypeStore.fetchAll();
 });
 
+const { run: debouncedOrganizationSearch } = useDebouncedFn(async (searchTerm: string | undefined) => {
+  organizations.value = await organizationStore.find(searchTerm, true);
+}, 300);
+
 watch(
   () => searchStore.filters.organization,
-  async (searchTerm) => {
-    organizations.value = await organizationStore.find(searchTerm, true);
-  },
+  debouncedOrganizationSearch,
   { immediate: true },
 );
 </script>
