@@ -207,7 +207,7 @@ export class ApplicationRepository implements IApplicationRepository {
               organization: {
                 OR: [
                   {
-                    label: {
+                    path: {
                       contains: filters.organization,
                       mode: "insensitive" as const,
                     },
