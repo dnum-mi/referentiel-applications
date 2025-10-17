@@ -4,8 +4,7 @@ import { BaseService } from "../common/base.service";
 import { Link } from "./entities/link.entity";
 import { MetadataService } from "src/metadata/metadata.service";
 import { ApplicationService } from "src/product/application.service";
-import { LinkFiltersDto } from "./dto/link-filters.dto";
-import { PaginatedResponseDto } from "src/common/dto";
+import { LinkFiltersDto, LinksPaginatedResponseDto } from "./dto/links.dto";
 import { paginate } from "src/common/utils/pagination.utils";
 import type { Prisma } from "@prisma/client";
 
@@ -26,12 +25,12 @@ export class LinksService extends BaseService<Link> {
 
   async find(
     filters: LinkFiltersDto & { applicationId: string },
-  ): Promise<PaginatedResponseDto<Link>> {
+  ): Promise<LinksPaginatedResponseDto> {
     const where: Prisma.ExternalRessourceWhereInput = {
       applicationId: filters.applicationId,
     };
 
-    return new PaginatedResponseDto(await this.prisma.externalRessource.findMany({
+    return new LinksPaginatedResponseDto(await this.prisma.externalRessource.findMany({
       where,
       ...paginate(filters.page, filters.pageSize),
       orderBy: filters.sortBy

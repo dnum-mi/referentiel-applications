@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import api from "@/api/index";
-import type { UserEntity, UpdateUserDto, PaginatedResponseDto } from "@/client/types.gen";
+import type { UserEntity, UpdateUserDto, UsersPaginatedResponseDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { AdminLevelOptions, AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
@@ -16,7 +16,7 @@ const errorMessages = {
 
 type ErrorKey = keyof typeof errorMessages;
 
-const data = ref<PaginatedResponseDto & { results: UserEntity[] }>({ results: [], total: 0 });
+const data = ref<UsersPaginatedResponseDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 const errorKeySet = ref<Set<ErrorKey>>(new Set());
 const isEditModalOpen = ref(false);
@@ -54,7 +54,7 @@ async function fetchUsers() {
     const response = await api.userControllerFindAll({ query });
 
     if (response.response.ok && response.data) {
-      data.value = response.data as PaginatedResponseDto & { results: UserEntity[] };
+      data.value = response.data as UsersPaginatedResponseDto;
       errorKeySet.value.delete("ERR_LOAD_USERS");
     } else {
       errorKeySet.value.add("ERR_LOAD_USERS");

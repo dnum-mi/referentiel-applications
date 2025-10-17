@@ -3,8 +3,7 @@ import { Injectable } from "@nestjs/common";
 import isEqual from "lodash/isEqual";
 import { Prisma } from "@prisma/client";
 import { MetadataRepository } from "./infrastructure/metadata.repository";
-import { MetadataFiltersDto } from "./dto/metadata.dto";
-import { PaginatedResponseDto } from "src/common/dto";
+import { MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
 
 @Injectable()
 export class MetadataService {
@@ -13,7 +12,7 @@ export class MetadataService {
     private readonly metadataRepository: MetadataRepository,
   ) { }
 
-  public async find(filters?: MetadataFiltersDto & { applicationId?: string }): Promise<PaginatedResponseDto<any>> {
+  public async find(filters?: MetadataFiltersDto & { applicationId?: string }): Promise<MetadataPaginatedResponseDto> {
     return this.metadataRepository.findAll(filters);
   }
 

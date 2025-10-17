@@ -7,6 +7,7 @@ import {
 } from "class-validator";
 import { priorityRestart, Status } from "@prisma/client";
 import { ApiProperty, PickType } from "@nestjs/swagger";
+import { PaginatedResponseDto } from "../../../common/dto";
 
 export class ApplicationDto {
   @IsString()
@@ -89,19 +90,12 @@ export class CountByIqDto {
   total: number;
 }
 
-export class ApplicationSearchResultDto {
+export class ApplicationSearchResultDto extends PaginatedResponseDto<ApplicationDto> {
   @ApiProperty({
     description: "Liste des applications correspondant aux critères de recherche",
-    type: ApplicationDto,
-    isArray: true,
+    type: [ApplicationDto],
   })
   results: ApplicationDto[];
-
-  @ApiProperty({
-    description: "Nombre total d'applications correspondant aux critères de recherche",
-    example: 100,
-  })
-  total: number;
 }
 
 export class ApplicationMinimalDto extends PickType(ApplicationDto, [
