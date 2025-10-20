@@ -26,6 +26,7 @@ export const AppPermissionsRecord = {
   readAnomalyNotifications: null,
   manageAnomalyNotifications: null,
   postAnomalyNotifications: null,
+  writePriorityRestart: null,
 } as const satisfies Record<APP_PERMISSIONS, null>;
 
 export const AppPermissionsValues: APP_PERMISSIONS[] = Object.keys(AppPermissionsRecord) as APP_PERMISSIONS[];

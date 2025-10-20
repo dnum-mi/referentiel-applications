@@ -33,7 +33,7 @@ const isDeleteModalOpen = ref(false);
 const hostingStore = useHostingStore();
 const applicationStore = useApplicationStore();
 const userStore = useUserStore();
-const canEditBase = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase"));
+const canEditBase = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase") || props.application.myPerms.has("writePriorityRestart"));
 const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
 const canEditHostings = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeHostings"));
 const labels = ref<LabelDto[]>([]);

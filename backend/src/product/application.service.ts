@@ -64,12 +64,23 @@ export class ApplicationService {
   public async update(params: {
     where: Prisma.ApplicationWhereUniqueInput
     data: PatchApplicationDto
-    requestorId: string
+    requestor: Requestor
   }): Promise<Application> {
-    const { where, data, requestorId } = params;
-    const applicationUpdates: Prisma.ApplicationUpdateInput = {};
+    const { where, requestor } = params;
+    let { data } = params;
 
-    this.applyScalarAndSimpleRelationUpdates(data, applicationUpdates);
+    // protect fields based on permissions
+    // priorityRestart field is only writable by users with writePriorityRestart permission
+    if (!requestor.appPerms.includes("writePriorityRestart")) {
+      delete data.priorityRestart;
+      // if the user has writeBase permission, they can write other fields except priorityRestart
+    } else if (!requestor.appPerms.includes("writeBase")) {
+      data = {
+        priorityRestart: data.priorityRestart,
+      };
+    }
+
+    const applicationUpdates = this.applyScalarAndSimpleRelationUpdates(data);
 
     try {
       const oldApp = await this.applicationRepository.findById(where.id);
@@ -83,7 +94,7 @@ export class ApplicationService {
 
       await this.metadataService.createMetadata({
         applicationId: updatedApplication.id,
-        createdById: requestorId,
+        createdById: requestor.id,
         title: "des informations générales",
         fields: {
           label: "libellé",
@@ -237,8 +248,8 @@ export class ApplicationService {
 
   private applyScalarAndSimpleRelationUpdates(
     data: PatchApplicationDto,
-    applicationUpdates: Prisma.ApplicationUpdateInput,
-  ): void {
+  ): Prisma.ApplicationUpdateInput {
+    const applicationUpdates: Prisma.ApplicationUpdateInput = {};
     const scalarFields = [
       "label",
       "shortName",
@@ -259,6 +270,7 @@ export class ApplicationService {
         applicationUpdates[field] = { set: data[field] };
       }
     });
+    return applicationUpdates;
   }
 
   async updateApplicationQuality(applicationId: string) {

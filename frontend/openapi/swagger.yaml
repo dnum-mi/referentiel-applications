@@ -737,6 +737,7 @@ paths:
                     - readAnomalyNotifications
                     - manageAnomalyNotifications
                     - postAnomalyNotifications
+                    - writePriorityRestart
       tags: *a4
   /api/v2/applications/export/excel:
     get:
@@ -3578,6 +3579,8 @@ components:
           type: boolean
         writeBase:
           type: boolean
+        writePriorityRestart:
+          type: boolean
         readActors:
           type: boolean
         writeActors:
@@ -3610,6 +3613,7 @@ components:
         - actorTypeId
         - readBase
         - writeBase
+        - writePriorityRestart
         - readActors
         - writeActors
         - readCompliances

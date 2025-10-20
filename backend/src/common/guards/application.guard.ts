@@ -21,10 +21,12 @@ export class ApplicationGuard implements CanActivate {
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const action = this.reflector.get<string>(
+    const actionParams = this.reflector.get<APP_PERMISSIONS | APP_PERMISSIONS[]>(
       APP_ACTION_KEY,
       context.getHandler(),
     );
+
+    const actions = Array.isArray(actionParams) ? actionParams : [actionParams];
 
     const request = context.switchToHttp().getRequest();
 
@@ -36,12 +38,8 @@ export class ApplicationGuard implements CanActivate {
       user,
     );
     user.appPerms = Array.from(appPermsMap);
-    const authorized = await this.checkAppPermission(
-      user,
-      action as APP_PERMISSIONS,
-    );
 
-    return authorized;
+    return actions.some(action => this.checkAppPermission(user, action));
   }
 
   private async getUserAppPermissions(
@@ -100,10 +98,10 @@ export class ApplicationGuard implements CanActivate {
     return appPermsSet;
   }
 
-  private async checkAppPermission(
+  private checkAppPermission(
     user: Requestor,
     action?: APP_PERMISSIONS,
-  ): Promise<boolean> {
+  ): boolean {
     if (typeof action === "undefined") {
       return true;
     }
