@@ -25,17 +25,18 @@ const reportIssueStore = useReportIssueStore();
 const description = ref("");
 const isSubmitting = ref(false);
 
-const title = computed(() =>
-  props.context === "application"
-    ? "Demander une correction sur cette application"
-    : "Signaler une application manquante",
-);
+const titleMapper = {
+  application: "Demander une correction sur cette application",
+  global: "Signaler une application manquante",
+};
+const title = computed(() => titleMapper[props.context]);
 
-const placeholderText = computed(() =>
-  props.context === "application"
-    ? "Décrivez la correction souhaitée (champ à jour, erreur constatée, etc.)…"
-    : "Décrivez l’application manquante (nom, URL, entité responsable, contexte)…",
-);
+const placeholderMapper = {
+  application: "Décrivez la correction souhaitée (champ à jour, erreur constatée, etc.)…",
+  global: "Décrivez l’application manquante (nom, URL, entité responsable, contexte)…",
+};
+
+const placeholder = computed(() => placeholderMapper[props.context]);
 
 async function submitAnomaly() {
   const desc = description.value;
@@ -83,7 +84,7 @@ function closeModal() {
     <DsfrInput
       v-model.trim="description"
       is-textarea
-      :placeholder="placeholderText"
+      :placeholder="placeholder"
       required
       rows="4"
       data-testid="report-anomaly-description"

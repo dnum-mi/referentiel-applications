@@ -44,7 +44,7 @@ async function exportToExcel() {
         aria-haspopup="dialog"
         aria-controls="modal-report-missing"
         type="button"
-        :disabled="userStore.adminLevel < AdminLevel.WRITE"
+        :disabled="!userStore.user?.capabilities?.includes('CreateGlobalAnomalyNotification') && userStore.adminLevel < AdminLevel.WRITE"
         data-testid="report-missing-app"
         class="fr-mr-1v"
         @click="isReportMissingOpen = true"

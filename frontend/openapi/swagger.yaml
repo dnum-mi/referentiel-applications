@@ -2676,6 +2676,7 @@ components:
       description: Liste des capacités de l'utilisateur
       enum:
         - CreateApplication
+        - CreateGlobalAnomalyNotification
     OrganizationDto:
       type: object
       properties:
@@ -2879,6 +2880,7 @@ components:
             type: string
             enum:
               - CreateApplication
+              - CreateGlobalAnomalyNotification
         organizationId:
           type: string
           nullable: true

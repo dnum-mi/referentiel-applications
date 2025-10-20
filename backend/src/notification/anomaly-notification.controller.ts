@@ -28,12 +28,17 @@ import { GetAnomalyNotificationDto } from "./dto/get-anomaly-notification.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
 import { AnomalyFiltersDto } from "./dto/anomaly-filters.dto";
 import { User } from "src/common/decorators/user.decorator";
-import { Requestor, UserEntity } from "src/user/entities/user.entity";
+import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
+import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
+import { RequiredUserCapability } from "src/common/decorators/user-capability.decorator";
+import { AdminGuard } from "src/common/guards/admin.guard";
+import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
 
 @ApiTags("AnomalyNotifications")
 @Controller("anomaly-notifications")
+@UseGuards(AdminGuard)
 export class AnomalyNotificationsController {
   constructor(protected service: AnomalyNotificationsService) {}
 
@@ -54,7 +59,7 @@ export class AnomalyNotificationsController {
   })
   findAll(
     @Query() filters: AnomalyFiltersDto,
-    @User() requestor: UserEntity,
+    @User() requestor: Requestor,
   ) {
     return this.service.findAll(
       requestor,
@@ -78,6 +83,8 @@ export class AnomalyNotificationsController {
     description: "Notification d'anomalie créée avec succès",
     type: GetAnomalyNotificationDto,
   })
+  @UseGuards(UserCapabilityGuard)
+  @RequiredUserCapability("CreateGlobalAnomalyNotification")
   @HttpCode(HttpStatus.CREATED)
   async create(
     @User() requestor: Requestor,
@@ -98,6 +105,7 @@ export class AnomalyNotificationsController {
    * @returns La notification d'anomalie mise à jour.
    */
   @Patch(":id")
+  @RequiredAdminLevel(AdminLevel.WRITE)
   @ApiOperation({ summary: "Mettre à jour une notification" })
   @AppAction("manageAnomalyNotifications")
   @ApiOkResponse({
@@ -140,14 +148,14 @@ export class ApplicationAnomalyNotificationsController {
     type: GetAnomalyNotificationDto,
   })
   @HttpCode(HttpStatus.CREATED)
+  @AppAction("postAnomalyNotifications")
+  @ApiParam({ name: "applicationId", description: "ID de l'application", type: String, required: true })
   async create(
     @User() requestor: Requestor,
     @Body() requestData: CreateAnomalyNotificationRequestDto,
+    @Param("applicationId") applicationId: string,
   ) {
-    const data: CreateAnomalyNotificationDto = {
-      ...requestData,
-    };
-    return this.service.create(data, requestor);
+    return this.service.create(requestData, requestor, applicationId);
   }
 
   /**

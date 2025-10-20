@@ -17,7 +17,7 @@ describe("Applications", () => {
   let createdApplicationId: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE, capabilities: [] });
+    user = await UserFaker.create({ adminLevel: AdminLevel.READ, capabilities: [] });
     TOKEN = await getToken(user);
   });
 
