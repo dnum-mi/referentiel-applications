@@ -2,6 +2,7 @@
 import { onMounted, ref, unref } from "vue";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import type { AppPermsDto } from "@/client/types.gen";
+import PermissionWritePriorityRestart from "../PermissionWritePriorityRestart.vue";
 
 const props = defineProps<{
   appPermsMatrix: AppPermsDto[]
@@ -19,6 +20,7 @@ onMounted(async () => {
 
 const permissionSuffixes = {
   Base: { label: "Infos", title: "Informations" },
+  PriorityRestart: { label: "Priorit. Redémarr.", title: "Prioritisation et redémarrage" },
   Hostings: { label: "Héberg.", title: "Hébergements" },
   Links: { label: "Liens", title: "Liens" },
   Compliances: { label: "Conformités", title: "Conformités" },
@@ -34,10 +36,19 @@ type PermissionValue = "none" | "read" | "write";
 function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSuffixes, value: PermissionValue) {
   const actorTypeIdx = updatedMatrix.value.findIndex(at => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
+  if (permission === "PriorityRestart") {
+    return;
+  }
   updatedMatrix.value[actorTypeIdx][`read${permission}`] = value === "read" || value === "write";
   if (permission !== "Metadata") {
     updatedMatrix.value[actorTypeIdx][`write${permission}`] = value === "write";
   }
+}
+
+function updateWritePriorityRestart(actorTypeId: string, value: boolean) {
+  const actorTypeIdx = updatedMatrix.value.findIndex(at => at.actorTypeId === actorTypeId);
+  if (actorTypeIdx === -1) return;
+  updatedMatrix.value[actorTypeIdx].writePriorityRestart = value;
 }
 
 type AnomalyPermissionValue = "read" | "post" | "manage";
@@ -101,6 +112,13 @@ function saveAppPermsMatrix() {
           :perm-order="['none', 'read']"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
+        />
+        <PermissionWritePriorityRestart
+          v-else-if="perm === 'PriorityRestart'"
+          :id="`${perms.actorTypeId}-${perm}`"
+          :checked="perms.writePriorityRestart"
+          :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
+          @update:model-value="(value: boolean) => updateWritePriorityRestart(perms.actorTypeId, value)"
         />
         <PermissionSelect
           v-else

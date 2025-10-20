@@ -262,7 +262,7 @@ Le paramètre **id** doit être fourni dans l'URL.
 
   @Patch(":applicationId")
   @UseGuards(ApplicationGuard)
-  @AppAction("writeBase")
+  @AppAction(["writeBase", "writePriorityRestart"])
   @ApiOperation({
     summary: "Mettre à jour une application",
     description: ` Ce endpoint permet de mettre à jour une application existante. 
@@ -274,7 +274,7 @@ Le paramètre **id** doit être fourni dans l'URL.
     type: ApplicationDto,
   })
   async update(
-    @UserId() requestorId: string,
+    @User() requestor: Requestor,
     @Param("applicationId") id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
   ): Promise<ApplicationDto> {
@@ -286,7 +286,7 @@ Le paramètre **id** doit être fourni dans l'URL.
     return this.applicationService.update({
       where: { id },
       data: applicationToUpdate,
-      requestorId,
+      requestor,
     });
   }
 

@@ -17,6 +17,7 @@ function permissionsToObject(permissions: Set<APP_PERMISSIONS>): Record<APP_PERM
     writeLinks: permissions.has("writeLinks"),
     readBase: permissions.has("readBase"),
     writeBase: permissions.has("writeBase"),
+    writePriorityRestart: permissions.has("writePriorityRestart"),
     readAnomalyNotifications: permissions.has("readAnomalyNotifications"),
     postAnomalyNotifications: permissions.has("postAnomalyNotifications"),
     manageAnomalyNotifications: permissions.has("manageAnomalyNotifications"),

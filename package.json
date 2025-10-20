@@ -8,7 +8,7 @@
     "lint": "eslint .",
     "prepare": "husky",
     "commitlint": "commitlint --edit",
-    "gen": "docker compose exec backend pnpm db:generate && docker compose exec client pnpm api:generate"
+    "gen": "docker compose exec backend pnpm gen && docker compose exec client pnpm gen"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.0",
