@@ -2,16 +2,20 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
+  Inject,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { APP_ACTION_KEY } from "../decorators/application.decorator";
 import { PrismaService } from "src/prisma/prisma.service";
 import { APP_PERMISSIONS, APP_PERMS_MAP, AppPermissionsRecord } from "../utils/types";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { appConfig } from "src/config/configs";
+import { ConfigType } from "@nestjs/config";
 
 @Injectable()
 export class ApplicationGuard implements CanActivate {
   constructor(
+    @Inject(appConfig.KEY) private readonly appConf: ConfigType<typeof appConfig>,
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
   ) { }
@@ -67,7 +71,7 @@ export class ApplicationGuard implements CanActivate {
     if (user.adminLevel >= AdminLevel.WRITE) {
       return new Set<APP_PERMISSIONS>(Object.keys(AppPermissionsRecord) as APP_PERMISSIONS[]);
     }
-    const appPermsSet = new Set<APP_PERMISSIONS>();
+    const appPermsSet = new Set<APP_PERMISSIONS>(this.appConf.nonActorPermissions);
     if (user.adminLevel >= AdminLevel.READ) {
       Object.keys(AppPermissionsRecord)
         .filter(key => key.startsWith("read"))
