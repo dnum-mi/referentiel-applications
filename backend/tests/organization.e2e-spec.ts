@@ -12,7 +12,7 @@ describe("Organizations", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create(AdminLevel.WRITE);
+    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
     TOKEN = await getToken(user);
   });
 
