@@ -17,7 +17,7 @@ describe("Applications", () => {
   let createdApplicationId: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create(AdminLevel.WRITE);
+    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE, capabilities: [] });
     TOKEN = await getToken(user);
   });
 
@@ -48,7 +48,24 @@ describe("Applications", () => {
       .expect(200);
   });
 
+  it("/POST applications, with missing capabilities", async () => {
+    await request(app().getHttpServer())
+      .post("/applications")
+      .send({
+        label: faker.company.name(),
+        shortName: "complete-app",
+        description: faker.company.catchPhrase(),
+        purposes: ["finance", "HR", "operations"],
+        tags: ["tag1", "tag2", "tag3"],
+        status: "in_production",
+        labels: [],
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(403);
+  });
+
   it("/POST applications", async () => {
+    await user.update({ capabilities: ["CreateApplication"] });
     const response = await request(app().getHttpServer())
       .post("/applications")
       .send({
@@ -68,7 +85,7 @@ describe("Applications", () => {
   });
 
   it("/DELETE applications/:id - should delete application with all related metadata", async () => {
-    const user = await UserFaker.create(AdminLevel.ADMIN);
+    const user = await UserFaker.create({ adminLevel: AdminLevel.ADMIN });
     const TOKEN = await getToken(user);
 
     await request(app().getHttpServer())

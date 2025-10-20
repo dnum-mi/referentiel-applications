@@ -11,7 +11,7 @@ describe("HostingOptions", () => {
   let user: UserFakerReturnType;
 
   beforeAll(async () => {
-    user = await UserFaker.create(AdminLevel.WRITE);
+    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
   });
 
   it("/GET hosting-options", async () => {

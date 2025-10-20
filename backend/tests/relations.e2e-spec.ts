@@ -27,7 +27,7 @@ describe("Relations End-to-End", () => {
 
   beforeAll(async () => {
     // Given
-    user = await UserFaker.create(AdminLevel.WRITE);
+    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
     TOKEN = await getToken(user);
     applicationSource = await ApplicationFaker.create(user);
     applicationTarget = await ApplicationFaker.create(user);

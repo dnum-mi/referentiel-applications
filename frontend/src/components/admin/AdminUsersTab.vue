@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import api from "@/api/index";
-import type { UserEntity, UsersPaginatedResponseDto } from "@/client/types.gen";
+import type { UsersPaginatedResponseDto } from "@/client/types.gen";
 import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
 import PaginationFooter from "../PaginationFooter.vue";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
