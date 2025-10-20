@@ -654,6 +654,14 @@ paths:
           schema:
             example: id,label,shortName,description
             type: string
+        - name: isActor
+          required: false
+          in: query
+          description: "Ne retourne que les applications dont l'utilisateur est acteur,
+            defaut: false"
+          schema:
+            default: false
+            type: string
       responses:
         "200":
           description: Liste des applications correspondant aux critères de recherche avec
@@ -926,6 +934,14 @@ paths:
           description: Colonnes à inclure dans l'export
           schema:
             example: id,label,shortName,description
+            type: string
+        - name: isActor
+          required: false
+          in: query
+          description: "Ne retourne que les applications dont l'utilisateur est acteur,
+            defaut: false"
+          schema:
+            default: false
             type: string
       responses:
         "200":

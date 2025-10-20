@@ -1,5 +1,5 @@
 import { PrismaService } from "src/prisma/prisma.service";
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Prisma, Application } from "@prisma/client";
 import {
   CreateApplicationDto,
@@ -13,6 +13,8 @@ import { calculateIQ } from "src/common/utils/quality.utils";
 import { ApplicationRights } from "./application/dto/application-rights.dto";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { ApplicationSearchResultDto } from "./application/dto/get-application.dto.js";
+import { appConfig } from "src/config/configs";
+import { ConfigType } from "@nestjs/config";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -27,6 +29,7 @@ export class ApplicationService {
     private readonly applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
     private readonly metadataService: MetadataService,
+    @Inject(appConfig.KEY) private readonly appConf: ConfigType<typeof appConfig>,
   ) { }
 
   public async createApplication(
@@ -197,13 +200,13 @@ export class ApplicationService {
     searchParams: ApplicationSearchDto,
     requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
-    if (requestor.adminLevel >= AdminLevel.READ) {
-      // If the user has read or write permissions, proceed with the search
-      return this.applicationRepository.findApplications(searchParams);
+    if (searchParams.isActor && requestor) {
+      return this.applicationRepository.findApplications(searchParams, { actorEmail: requestor.email });
     }
-    return this.applicationRepository.findApplications(searchParams, {
-      actorEmail: requestor.email,
-    });
+    if (!this.appConf.nonActorPermissions.includes("readBase") && requestor?.adminLevel < AdminLevel.READ) {
+      return this.applicationRepository.findApplications(searchParams, { actorEmail: requestor.email });
+    }
+    return this.applicationRepository.findApplications(searchParams);
   }
 
   public async exportApplications(): Promise<any[]> {
