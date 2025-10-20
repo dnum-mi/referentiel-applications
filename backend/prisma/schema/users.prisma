@@ -51,4 +51,5 @@ enum UserType {
 
 enum CapabilityNames {
   CreateApplication
+  CreateGlobalAnomalyNotification
 }

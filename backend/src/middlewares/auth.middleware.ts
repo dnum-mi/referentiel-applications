@@ -10,7 +10,7 @@ import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { ActionLogService } from "src/action-log/action-log.service";
 import { keycloakConfig } from "src/config/configs";
 import { TokenService } from "src/token/token.service";
-import { Requestor, UserEntity } from "src/user/entities/user.entity";
+import { AdminLevel, Requestor, UserCapabilities, UserEntity } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 import { API_KEY_HEADER } from "src/utils/constants.util";
 
@@ -58,7 +58,11 @@ export class AuthMiddleware implements NestMiddleware {
         res.json({ message: "L'authentification a échoué" });
         return;
       }
-      req.user = user;
+      const capabilities = user.capabilities ?? [];
+      if (user.adminLevel >= AdminLevel.WRITE) {
+        capabilities.push(...Object.keys(UserCapabilities) as (keyof typeof UserCapabilities)[]);
+      }
+      req.user = { ...user, capabilities };
 
       this.actionLogService.updateUserLastLogin(req.user);
 

@@ -63,7 +63,16 @@ async function saveUser() {
 }
 
 const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
-  { label: "Créer une application", value: "CreateApplication" as UserCapabilities, name: "capability-create-application" },
+  {
+    label: "Créer une application",
+    value: "CreateApplication",
+    name: "capability-create-application",
+  },
+  {
+    label: "Créer un signalement global",
+    value: "CreateGlobalAnomalyNotification" as UserCapabilities,
+    name: "capability-create-global-anomaly-notification",
+  },
 ];
 </script>
 

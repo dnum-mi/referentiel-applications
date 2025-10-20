@@ -12,6 +12,7 @@ export enum AdminLevel {
 
 export const UserCapabilities = {
   CreateApplication: "CreateApplication",
+  CreateGlobalAnomalyNotification: "CreateGlobalAnomalyNotification",
 } as const;
 
 export const UserType = {
@@ -62,4 +63,6 @@ export class Requestor extends UserEntity {
   @IsArray()
   @IsOptional()
   appPerms?: APP_PERMISSIONS[]; // Changed from permissions to appPerms
+
+  capabilities: (keyof typeof UserCapabilities)[];
 }

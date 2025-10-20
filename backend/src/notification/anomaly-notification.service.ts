@@ -15,36 +15,30 @@ export class AnomalyNotificationsService {
    * @param data Les données nécessaires pour créer la notification.
    * @returns La notification d'anomalie créée.
    */
-  public async create(data: CreateAnomalyNotificationDto, requestor: Requestor) {
+  public async create(data: CreateAnomalyNotificationDto, requestor: Requestor, applicationId?: string) {
     const hasPostPerm = requestor.appPerms?.includes("postAnomalyNotifications") === true;
-    const isAdminReadOrMore = requestor.adminLevel >= AdminLevel.READ;
-    if (!hasPostPerm && !isAdminReadOrMore) {
-      console.error("Permission denied");
+    const isAdminWriteOrMore = requestor.adminLevel >= AdminLevel.WRITE;
+    if (applicationId) {
+      if (!hasPostPerm && !isAdminWriteOrMore) {
+        throw new ForbiddenException("Vous n'avez pas la permission de créer une notification d'anomalie pour cette application.");
+      }
+    } else if (!requestor.capabilities.includes("CreateGlobalAnomalyNotification")) {
       throw new ForbiddenException("Vous n'avez pas la permission de créer une notification d'anomalie.");
     }
 
-    if (data.applicationId) {
-      return this.prisma.anomalyNotification.create({
-        data: {
+    return this.prisma.anomalyNotification.create({
+      data: {
+        ...(applicationId && {
           application: {
-            connect: { id: data.applicationId },
+            connect: { id: applicationId },
           },
-          notifier: {
-            connect: { id: requestor.id },
-          },
-          description: data.description,
+        }),
+        notifier: {
+          connect: { id: requestor.id },
         },
-      });
-    } else {
-      return this.prisma.anomalyNotification.create({
-        data: {
-          notifier: {
-            connect: { keycloakId: requestor.keycloakId },
-          },
-          description: data.description,
-        },
-      });
-    }
+        description: data.description,
+      },
+    });
   }
 
   /**
