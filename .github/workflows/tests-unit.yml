@@ -45,6 +45,8 @@ jobs:
           exit 1
       - name: Run migrations
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm prisma migrate deploy
+      - name: Set permissions on coverage folder
+        run: chmod -R 777 ./backend/coverage
       - name: Run test coverage
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm test:cov
       - name: Upload vitest coverage artifacts
@@ -53,7 +55,29 @@ jobs:
           name: unit-tests-coverage
           path: ./backend/coverage/
           retention-days: 1
+      # If you wish to fail your job when the Quality Gate is red, uncomment the
+      # following lines. This would typically be used to fail a deployment.
+      # We do not recommend to use this in a pull request. Prefer using pull request
+      # decoration instead.
+      # - uses: SonarSource/sonarqube-quality-gate-action@v1
+      #   timeout-minutes: 5
+      #   env:
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+  code-scan:
+    name: Code Scan
+    needs: test-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checks-out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-tests-coverage
+          path: ./coverage/backend
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
@@ -72,23 +96,18 @@ jobs:
           echo "SONAR_ARGS_PR=-Dsonar.pullrequest.provider=github -Dsonar.pullrequest.key=${{ github.event.number }} -Dsonar.pullrequest.branch=${{ github.head_ref }} -Dsonar.pullrequest.base=${{ github.base_ref }} -Dsonar.pullrequest.github.repository=${{ github.repository }}" >> $GITHUB_OUTPUT
           echo "SONAR_ARGS_BRANCH=-Dsonar.branch.name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
 
-      - uses: SonarSource/sonarqube-scan-action@v5
+      - uses: SonarSource/sonarqube-scan-action@v6
         with:
           args: >
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.javascript.lcov.reportPaths=./backend/coverage/lcov.info
-            -Dsonar.exclusions=**/tests/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/backend/lcov.info
+            -Dsonar.javascript.node.maxspace=4096
+            -Dsonar.sources=backend,frontend
+            -Dsonar.coverage.exclusions=**/tests/**
+            -Dsonar.tests=backend/tests
             -Dsonar.scm.provider=git
             ${{ github.event_name == 'pull_request' && steps.sonar-args.outputs.SONAR_ARGS_PR || steps.sonar-args.outputs.SONAR_ARGS_BRANCH }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         continue-on-error: true
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # We do not recommend to use this in a pull request. Prefer using pull request
-      # decoration instead.
-      # - uses: SonarSource/sonarqube-quality-gate-action@v1
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
