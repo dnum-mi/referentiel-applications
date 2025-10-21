@@ -2,4 +2,5 @@ services:
   backend:
     image: ${IMAGE_TAG}
     command: pnpm start:prod
-    volumes: !reset []
+    volumes: !override
+      - ./backend/coverage:/app/coverage
