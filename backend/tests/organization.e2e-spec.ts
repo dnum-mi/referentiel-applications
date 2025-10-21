@@ -17,7 +17,7 @@ describe("Organizations", () => {
   });
 
   it("/POST organizations", async () => {
-    await request(app().getHttpServer())
+    const response = await request(app().getHttpServer())
       .post("/organizations")
       .set("Authorization", `Bearer ${TOKEN}`)
       .send({
@@ -26,6 +26,7 @@ describe("Organizations", () => {
         sigle: "TEST",
       })
       .expect(201);
+    expect(response.body).toHaveProperty("id");
   });
 
   it("/GET organizations", async () => {
