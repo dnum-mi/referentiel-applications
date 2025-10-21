@@ -44,6 +44,8 @@ import { User } from "src/common/decorators/user.decorator";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { APP_PERMISSIONS, AppPermissionsValues } from "src/common/utils/types";
+import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
+import { RequiredUserCapability } from "src/common/decorators/user-capability.decorator";
 
 @ApiTags("applications")
 @Controller("applications")
@@ -81,12 +83,14 @@ Vous devez fournir les informations suivantes :
     description: "Application créée avec succès.",
     type: ApplicationDto,
   })
+  @UseGuards(UserCapabilityGuard)
+  @RequiredUserCapability("CreateApplication")
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
-    @UserId() userId: string,
+    @UserId() requestorId: string,
   ) {
     const newApplication = await this.applicationService.createApplication(
-      userId,
+      requestorId,
       createApplicationDto,
     );
     return newApplication;
@@ -270,7 +274,7 @@ Le paramètre **id** doit être fourni dans l'URL.
     type: ApplicationDto,
   })
   async update(
-    @UserId() userId: string,
+    @UserId() requestorId: string,
     @Param("applicationId") id: string,
     @Body() applicationToUpdate: PatchApplicationDto,
   ): Promise<ApplicationDto> {
@@ -282,7 +286,7 @@ Le paramètre **id** doit être fourni dans l'URL.
     return this.applicationService.update({
       where: { id },
       data: applicationToUpdate,
-      ownerId: userId,
+      requestorId,
     });
   }
 

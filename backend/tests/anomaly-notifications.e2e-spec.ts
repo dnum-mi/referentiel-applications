@@ -8,7 +8,7 @@ describe("Anomaly Notifications", () => {
   const app = setupTestSuite();
 
   it("/GET anomaly-notifications", async () => {
-    const user = await UserFaker.create(AdminLevel.WRITE);
+    const user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
     const TOKEN = await getToken(user);
     return request(app().getHttpServer())
       .get("/anomaly-notifications")

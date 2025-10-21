@@ -1,5 +1,4 @@
-import type { ApplicationDto, ApplicationStatus, AppPermsDto, RelationType, LinkDto, LabelDto, MetadataDto, ComplianceDto } from "@/client/types.gen";
-import type { Actor } from "./Actor";
+import type { ApplicationDto, ApplicationStatus, AppPermsDto, RelationType, LinkDto, LabelDto, MetadataDto, ComplianceDto, ActorDto } from "@/client/types.gen";
 
 // TODO sortir ce modèle et utiliser ApplicationDto
 export interface Application {
@@ -16,9 +15,8 @@ export interface Application {
 
   purposes?: string[]
   tags?: string[]
-  ownerId?: string
 
-  actors?: Actor[]
+  actors?: ActorDto[]
   compliances?: ComplianceDto[]
   externalRessource?: LinkDto[]
   relationsAsSource?: Relation[]

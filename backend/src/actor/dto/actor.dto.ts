@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEmail } from "class-validator";
+import { IsString, IsOptional, IsEmail, ValidateIf } from "class-validator";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 
 export class CreateActorDto {
@@ -7,8 +7,9 @@ export class CreateActorDto {
     description: "Email de l'acteur (Optionel)",
     required: false,
   })
-  @IsEmail()
   @IsOptional()
+  @ValidateIf(o => o.email !== "")
+  @IsEmail()
   email?: string;
 
   @ApiProperty({

@@ -1,9 +1,8 @@
 import type { Metadata } from "@prisma/client";
-import type { MetadataFiltersDto } from "../dto/metadata.dto";
-import type { PaginatedResponseDto } from "src/common/dto";
+import type { MetadataFiltersDto, MetadataPaginatedResponseDto } from "../dto/metadata.dto";
 
 export interface IMetadataRepository {
-  findAll: (filters?: MetadataFiltersDto & { applicationId?: string }) => Promise<PaginatedResponseDto<any>>
+  findAll: (filters?: MetadataFiltersDto & { applicationId?: string }) => Promise<MetadataPaginatedResponseDto>
 
   findFirstAndLastByApplicationId: (applicationId: string) => Promise<{
     first: Metadata | null

@@ -141,7 +141,7 @@ Informations requises :
     return this.actorService.update({
       where: { id },
       data: { ...actorToUpdate, applicationId },
-      ownerId: userId,
+      requestorId: userId,
     });
   }
 

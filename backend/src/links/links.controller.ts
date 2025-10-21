@@ -12,14 +12,11 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiParam, ApiCreatedResponse, ApiOkResponse, ApiNoContentResponse } from "@nestjs/swagger";
 import { LinksService } from "./links.service";
-import { CreateLinkDto, LinkDto } from "./dto/create-link.dto";
-import { LinkFiltersDto } from "./dto/link-filters.dto";
+import { CreateLinkDto, LinkDto, LinkFiltersDto, UpdateLinkDto, LinksPaginatedResponseDto } from "./dto/links.dto";
 import { UserId } from "../common/decorators/user-id.decorator";
-import { UpdateLinkDto } from "./dto/update-link.dto";
 import { ApplicationService } from "src/product/application.service";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
-import { PaginatedResponseDto } from "src/common/dto";
 
 @ApiTags("Links")
 @UseGuards(ApplicationGuard)
@@ -71,13 +68,13 @@ export class ApplicationLinksController {
   })
   @ApiOkResponse({
     description: "List of links for the application",
-    type: PaginatedResponseDto<LinkDto>,
+    type: LinksPaginatedResponseDto,
   })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   findAll(
     @Param("applicationId") applicationId: string,
     @Query() filters: LinkFiltersDto,
-  ): Promise<PaginatedResponseDto<LinkDto>> {
+  ): Promise<LinksPaginatedResponseDto> {
     return this.service.find({ ...filters, applicationId });
   }
 

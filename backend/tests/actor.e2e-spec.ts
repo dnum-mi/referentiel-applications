@@ -15,7 +15,7 @@ describe("Actor", () => {
   let TOKEN: string;
 
   it("/GET actor", async () => {
-    user = await UserFaker.create(AdminLevel.READ);
+    user = await UserFaker.create({ adminLevel: AdminLevel.READ });
     application = await ApplicationFaker.create(user);
     TOKEN = await getToken(user);
     const response = await request(app().getHttpServer())
@@ -26,7 +26,7 @@ describe("Actor", () => {
   });
 
   it("/POST actor", async () => {
-    user = await UserFaker.create(AdminLevel.WRITE);
+    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
     application = await ApplicationFaker.create(user);
     const actorType = await ActorTypeFaker.create();
     TOKEN = await getToken(user);

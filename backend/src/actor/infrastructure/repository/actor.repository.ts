@@ -12,7 +12,7 @@ export class ActorRepository implements IActorRepository {
     private readonly metadataService: MetadataService,
   ) { }
 
-  public async create(actor: CreateActorDto, ownerId: string) {
+  public async create(actor: CreateActorDto, requestorId: string) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
     const newActor = await this.prisma.actor.create({
@@ -30,7 +30,7 @@ export class ActorRepository implements IActorRepository {
       data: {
         applicationId,
         actorId: actorDatas.id,
-        createdById: ownerId,
+        createdById: requestorId,
         description: `Ajout de l'acteur ${actorDatas.actorType?.code} : ${actorDatas.email}`,
       },
     });
@@ -62,7 +62,7 @@ export class ActorRepository implements IActorRepository {
   public async update(
     where: Prisma.ActorWhereUniqueInput,
     actor: UpdateActorDto,
-    ownerId: string,
+    requestorId: string,
   ) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
 
@@ -82,7 +82,7 @@ export class ActorRepository implements IActorRepository {
 
     await this.metadataService.createMetadata({
       applicationId,
-      createdById: ownerId,
+      createdById: requestorId,
       title: `de l'acteur ${oldActor.actorType?.code}`,
       entity: "actorId",
       entityId: newActor.id,
@@ -100,13 +100,13 @@ export class ActorRepository implements IActorRepository {
     return newActor;
   }
 
-  public async delete(id: string, ownerId: string) {
+  public async delete(id: string, requestorId: string) {
     const actor = await this.findById(id);
 
     await this.prisma.metadata.create({
       data: {
         applicationId: actor.applicationId,
-        createdById: ownerId,
+        createdById: requestorId,
         action: "delete",
         description: `Suppression de l'acteur ${actor.actorType.code} : ${actor.email}`,
       },

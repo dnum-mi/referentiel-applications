@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.46.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.46.1...v1.46.2) (2025-10-16)
+
+
+### Bug Fixes
+
+* :bug: update label in updateApplication ([f7af447](https://github.com/dnum-mi/referentiel-applications/commit/f7af447bebe643e4231a5d6d28c4e86db9ff68a5))
+* :recycle: fix organizations usedOnly filter and add debounce ([#1195](https://github.com/dnum-mi/referentiel-applications/issues/1195)) ([038c818](https://github.com/dnum-mi/referentiel-applications/commit/038c818997e314c4e714bb174400c2cb84ac4d8d))
+
+## [1.46.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.46.0...v1.46.1) (2025-10-15)
+
+
+### Bug Fixes
+
+* :bug: enhance validation for email field and update organization filter to use array type ([#1185](https://github.com/dnum-mi/referentiel-applications/issues/1185)) ([9fde79e](https://github.com/dnum-mi/referentiel-applications/commit/9fde79e26aecc27647eb48a63cde159c117f4f6a))
+* **compliance:** add conflict response for existing compliance creation ([#1188](https://github.com/dnum-mi/referentiel-applications/issues/1188)) ([9b254a3](https://github.com/dnum-mi/referentiel-applications/commit/9b254a361053a3b135dc41942913a47630f5a521))
+* **front:** :bug: delete-label-dead ([#1187](https://github.com/dnum-mi/referentiel-applications/issues/1187)) ([1b4d715](https://github.com/dnum-mi/referentiel-applications/commit/1b4d71523531c323cfeb06b3a7d26addbc41f807))
+* **front:** :bug: update organization display in admin users table ([#1183](https://github.com/dnum-mi/referentiel-applications/issues/1183)) ([87baed6](https://github.com/dnum-mi/referentiel-applications/commit/87baed681c21bec39259c6150ceadc4baa393a7a))
+
 ## [1.46.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.45.1...v1.46.0) (2025-10-13)
 
 
