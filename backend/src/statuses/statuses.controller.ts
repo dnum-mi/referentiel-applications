@@ -1,0 +1,94 @@
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import { AppAction } from "src/common/decorators/application.decorator";
+import { ApplicationGuard } from "src/common/guards/application.guard";
+import { ApplicationService } from "src/product/application.service";
+import { ApplicationStatusDto, CreateApplicationStatusDto } from "./dto/application-status.dto";
+import { UpdateApplicationStatusDto } from "./dto/update-application-status.dto";
+import { StatusesService } from "./statuses.service";
+
+@ApiTags("statuses")
+@Controller("applications/:applicationId/statuses")
+@UseGuards(ApplicationGuard)
+export class StatusesController {
+  constructor(
+    private readonly statusesService: StatusesService,
+    private readonly applicationService: ApplicationService,
+  ) {}
+
+  @Post()
+  @AppAction("writeBase")
+  @HttpCode(201)
+  @ApiOperation({ summary: "Créer un nouveau statut pour une application" })
+  @ApiCreatedResponse({
+    description: "Statut créé avec succès",
+    type: ApplicationStatusDto,
+  })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
+  async create(
+    @Param("applicationId") applicationId: string,
+    @Body() createStatusDto: CreateApplicationStatusDto,
+  ) {
+    const createdStatus = await this.statusesService.create({
+      ...createStatusDto,
+      applicationId,
+    });
+
+    await this.statusesService.updateCurrentStatus(applicationId);
+    await this.applicationService.updateApplicationQuality(applicationId);
+
+    return createdStatus;
+  }
+
+  @Get()
+  @AppAction("readBase")
+  @ApiOperation({ summary: "Récupérer l'historique des statuts d'une application" })
+  @ApiOkResponse({
+    description: "Historique des statuts récupéré avec succès",
+    type: [ApplicationStatusDto],
+  })
+  async find(@Param("applicationId") applicationId: string) {
+    const statuses = await this.statusesService.find({ applicationId });
+    return statuses || [];
+  }
+
+  @Patch(":statusId")
+  @AppAction("writeBase")
+  @ApiOperation({ summary: "Modifier un statut existant" })
+  @ApiOkResponse({
+    description: "Statut modifié avec succès",
+    type: ApplicationStatusDto,
+  })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
+  @ApiParam({ name: "statusId", description: "ID du statut" })
+  async update(
+    @Param("applicationId") applicationId: string,
+    @Param("statusId") statusId: string,
+    @Body() updateStatusDto: UpdateApplicationStatusDto,
+  ) {
+    const updatedStatus = await this.statusesService.update(statusId, updateStatusDto);
+
+    await this.statusesService.updateCurrentStatus(applicationId);
+    await this.applicationService.updateApplicationQuality(applicationId);
+
+    return updatedStatus;
+  }
+
+  @Delete(":statusId")
+  @AppAction("writeBase")
+  @HttpCode(204)
+  @ApiOperation({ summary: "Supprimer un statut" })
+  @ApiNoContentResponse({
+    description: "Statut supprimé avec succès",
+  })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
+  @ApiParam({ name: "statusId", description: "ID du statut" })
+  async delete(
+    @Param("applicationId") applicationId: string,
+    @Param("statusId") statusId: string,
+  ) {
+    await this.statusesService.delete(statusId);
+    await this.statusesService.updateCurrentStatus(applicationId);
+    await this.applicationService.updateApplicationQuality(applicationId);
+  }
+}

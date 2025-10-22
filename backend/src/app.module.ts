@@ -28,6 +28,7 @@ import { ApplicationModule } from "./product/application.module";
 import { RelationModule } from "./relationship/relation.module";
 import { LoggingService } from "./services/logging.service";
 import { StatsModule } from "./stats/stats.module";
+import { StatusesModule } from "./statuses/statuses.module";
 import { TokenModule } from "./token/token.module";
 import { UserModule } from "./user/user.module";
 
@@ -60,6 +61,7 @@ import { UserModule } from "./user/user.module";
     CompliancesModule,
     PrismaModule,
     ConfigModule,
+    StatusesModule,
   ],
   controllers: [AppController],
   providers: [

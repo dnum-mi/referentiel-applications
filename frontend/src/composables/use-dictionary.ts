@@ -113,6 +113,7 @@ export const restartPrioritiesConfig = {
 
 export const statusApplicationDictionary: Record<ApplicationStatus, string> = {
   under_construction: "En construction",
+  poc: "POC (Preuve de concept)",
   in_production_mvp: "MVP en production",
   in_production: "En production",
   in_production_decommissioning: "À décommissionner",

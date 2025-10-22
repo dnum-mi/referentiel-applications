@@ -6,6 +6,7 @@ import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application
 
 import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
+import StatusTab from "./StatusTab.vue";
 import CompliancesAccordionManager from "./compliances/CompliancesAccordionManager.vue";
 import ActorManager from "./actor/ActorTab.vue";
 import Relationships from "./RelationshipsTab.vue";
@@ -124,6 +125,14 @@ const tabs = ref<
     requiredPerms: ["readRelations"],
     loadFn: fetchRelations,
     errorKey: "ERR_LOAD_RELATIONS",
+  },
+  {
+    title: "Statuts",
+    icon: "ri-time-line",
+    tabId: "tab-statuses",
+    panelId: "panel-statuses",
+    component: StatusTab,
+    requiredPerms: ["readBase"],
   },
   {
     title: "Historique",

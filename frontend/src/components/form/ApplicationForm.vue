@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
-import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
-import type { ApplicationPriorityRestart, ApplicationStatus, CreateLabelDto, LabelDto } from "@/client/types.gen";
+import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
+import type { ApplicationPriorityRestart, CreateLabelDto, LabelDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 
 const props = defineProps<{
@@ -20,18 +20,10 @@ const toaster = useToasterStore();
 
 const initialLabels = ref<LabelDto[]>([]);
 
-const statusOptions = computed(() =>
-  Object.keys(statusApplicationDictionary).map(value => ({
-    value,
-    text: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
-  })),
-);
-
 const form = ref<{
   label: string
   shortName: string
   labels: (CreateLabelDto & { id?: string })[]
-  status: ApplicationStatus | null
   description: string
   targetPopulations: string[]
   logo: string
@@ -42,7 +34,6 @@ const form = ref<{
   label: props.initialData?.label ?? "",
   shortName: props.initialData?.shortName ?? "",
   labels: props.labels ? [...props.labels] : [],
-  status: props.initialData?.status ?? null,
   description: props.initialData?.description ?? "",
   targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
   logo: props.initialData?.logo ?? "",
@@ -61,9 +52,10 @@ function handleSubmit() {
     ...form.value,
     purposes: form.value.purposes.filter(p => p.trim() !== ""),
     tags: form.value.tags?.filter(t => t.trim() !== "") ?? [],
+    priorityRestart: form.value.priorityRestart ?? undefined,
   };
 
-  const generalFields = ["label", "shortName", "logo", "description", "status", "targetPopulations", "purposes", "tags", "priorityRestart"];
+  const generalFields: (keyof ApplicationWithPerms)[] = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"];
 
   const isModified = areFieldsModified(props.initialData ?? {}, cleanedForm, generalFields);
 
@@ -116,15 +108,6 @@ onMounted(() => {
       label-visible
       hint="Optionnel - Un nom court pour identifier rapidement l'application"
       data-testid="application-shortname"
-    />
-
-    <DsfrSelect
-      v-model="form.status"
-      :disabled="!initialData?.myPerms.has('writeBase')"
-      :options="statusOptions"
-      label="Status de l'application"
-      default-unselected-text="Sélectionner un status"
-      data-testid="application-status"
     />
 
     <div class="fr-form-group fr-mt-3w">

@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 
 export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
   include: {
+    currentStatus: true;
     metadatas: true;
     compliance: true;
     labels: true;

@@ -25,7 +25,7 @@ export class ExportApplicationsUseCase {
   ) {}
 
   async execute(): Promise<Buffer> {
-    const apps = await this.repository.findAllWithRelations();
+    const apps = await this.repository.findAllWithFullRelations();
     return this.executeWithApps(apps);
   }
 

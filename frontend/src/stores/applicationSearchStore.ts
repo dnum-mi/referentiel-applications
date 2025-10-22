@@ -10,6 +10,7 @@ export type Filters = Exclude<ApplicationControllerSearchData["query"], undefine
   hostingProvider?: string
   hostingBuilding?: string
   hostingRoom?: string
+  currentStatus__in?: Array<"under_construction" | "poc" | "in_production_mvp" | "in_production" | "in_production_decommissioning" | "decommissioned" | "deleted">
 };
 
 export const useApplicationSearchStore = defineStore("applicationSearchStore", () => {
@@ -24,7 +25,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     tag: undefined,
     link: undefined,
     priorityRestart: undefined,
-    status__in: ["under_construction", "in_production_mvp", "in_production", "in_production_decommissioning", "decommissioned"],
+    currentStatus__in: ["under_construction", "poc", "in_production_mvp", "in_production", "in_production_decommissioning", "decommissioned"],
     page: 0,
     pageSize: 15,
     sortBy: "label",
@@ -98,7 +99,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
 
     try {
       const currentFilters = customFilters ?? filters.value;
-      const query = cleanFilters(currentFilters);
+      const query: Filters = cleanFilters(currentFilters);
 
       const response = await api.applicationControllerSearch({
         query,

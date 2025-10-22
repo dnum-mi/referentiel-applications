@@ -7,13 +7,15 @@ model Application {
   targetPopulations   String[]
   purposes            String[]
   tags                String[]
-  status              Status                @default(under_construction)
+  currentStatusId     String?
+  currentStatus       ApplicationStatus?    @relation(fields: [currentStatusId], references: [id], onDelete: SetNull)
   metadatas           Metadata[]            @relation("ApplicationMetadatas")
   actors              Actor[]               @relation("ApplicationActors")
   compliance          Compliance?           @relation("ApplicationCompliance")
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
   hostings            Hosting[]
+  statuses            ApplicationStatus[]   @relation("ApplicationStatuses")
 
   relationsAsSource Relation[] @relation("SourceHasTarget")
   relationsAsTarget Relation[] @relation("TargetHasSource")
@@ -25,6 +27,21 @@ model Application {
   @@unique([label, description])
   @@index([label])
   @@index([shortName])
+  @@index([currentStatusId])
+}
+
+model ApplicationStatus {
+  id            String        @id @default(uuid())
+  applicationId String
+  application   Application   @relation("ApplicationStatuses", fields: [applicationId], references: [id], onDelete: Cascade)
+  status        Status
+  statusDate    DateTime?
+  createdAt     DateTime      @default(now())
+  Application   Application[]
+
+  @@index([applicationId])
+  @@index([statusDate])
+  @@index([createdAt])
 }
 
 model Relation {
@@ -55,6 +72,7 @@ enum priorityRestart {
 
 enum Status {
   under_construction
+  poc
   in_production_mvp
   in_production
   in_production_decommissioning

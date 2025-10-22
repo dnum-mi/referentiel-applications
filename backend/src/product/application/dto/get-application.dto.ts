@@ -1,5 +1,6 @@
 import { ApiProperty, PickType } from "@nestjs/swagger";
 import { priorityRestart, Status } from "@prisma/client";
+import { Type } from "class-transformer";
 import {
   IsArray,
   IsEnum,
@@ -8,6 +9,7 @@ import {
   IsString,
 } from "class-validator";
 import { PaginatedResponseDto } from "../../../common/dto";
+import { ApplicationStatusDto } from "../../../statuses/dto/application-status.dto";
 
 export class ApplicationDto {
   @IsString()
@@ -60,6 +62,16 @@ export class ApplicationDto {
 
   @IsNumber()
   quality: number | null;
+
+  @ApiProperty({
+    type: () => ApplicationStatusDto,
+    description: "Current status of the application with full details",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @Type(() => ApplicationStatusDto)
+  currentStatus?: ApplicationStatusDto | null;
 }
 
 export class CountByMonthDto {

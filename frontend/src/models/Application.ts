@@ -1,4 +1,4 @@
-import type { ActorDto, ApplicationDto, ApplicationStatus, AppPermsDto, ComplianceDto, LabelDto, LinkDto, MetadataDto, RelationType } from "@/client/types.gen";
+import type { ActorDto, ApplicationDto, AppPermsDto, ComplianceDto, LabelDto, LinkDto, MetadataDto, RelationType } from "@/client/types.gen";
 
 // TODO sortir ce modèle et utiliser ApplicationDto
 export interface Application {
@@ -6,7 +6,6 @@ export interface Application {
   label: string
   shortName?: string
   labels?: LabelDto[]
-  status: ApplicationStatus // New field for application status
   description?: string
   targetPopulations?: string[]
   priorityRestart?: string

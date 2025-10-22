@@ -3,7 +3,7 @@ import type { Application, ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
-import { formatDate } from "@/composables/use-date";
+import { formatDate, formatDateFR } from "@/composables/use-date";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
@@ -26,6 +26,7 @@ const applicationLabel = computed(() => application.value?.label ?? "");
 
 async function handleApplicationUpdate(updateData: Application) {
   applicationUpdated.value = updateData;
+  await applicationStore.fetchApplication(id);
   if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
     await metadataStore.getFirstAndLastMetadataByApplication(updateData.id);
   }
@@ -88,7 +89,14 @@ const actions = computed(() => [
         <p v-if="metadataStore.lastMetadata" class="subtitle" data-testid="application-updated-at">
           Dernière modification de la fiche {{ formatDate(metadataStore.lastMetadata.createdAt) || "inconnue" }} ({{ metadataStore.lastMetadata.createdBy?.email }})
         </p>
-        <DsfrTag v-if="application.status" class="fr-mr-2w" :label="statusApplicationDictionary[application.status]" data-testid="application-status-tag" />
+        <DsfrTag 
+          v-if="application.currentStatus?.status" 
+          class="fr-mr-2w" 
+          :label="application.currentStatus.statusDate 
+            ? `${statusApplicationDictionary[application.currentStatus.status]} (${formatDateFR(application.currentStatus.statusDate)})` 
+            : statusApplicationDictionary[application.currentStatus.status]" 
+          data-testid="application-status-tag" 
+        />
         <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" data-testid="application-iq-tag" />
       </h1>
 

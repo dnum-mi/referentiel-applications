@@ -3,15 +3,16 @@ import { CommonModule } from "src/common/common.module";
 import { LabelsModule } from "src/labels/labels.module";
 import { MetadatasModule } from "src/metadatas/metadatas.module";
 import { PrismaModule } from "src/prisma/prisma.module";
-import { ApplicationController } from "./application.controller";
+import { StatusesModule } from "src/statuses/statuses.module";
 
+import { ApplicationController } from "./application.controller";
 import { ApplicationService } from "./application.service";
 import { ExportApplicationsUseCase } from "./application/usecases/application-export.usecase";
 import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
 @Module({
-  imports: [CommonModule, PrismaModule, LabelsModule, MetadatasModule],
+  imports: [CommonModule, PrismaModule, LabelsModule, MetadatasModule, StatusesModule],
   controllers: [ApplicationController],
   providers: [
     ApplicationService,

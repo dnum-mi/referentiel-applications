@@ -36,7 +36,37 @@ export class ApplicationService {
     requestorId: string,
     createApplicationDto: CreateApplicationDto,
   ) {
-    const application = await this.applicationRepository.create(createApplicationDto);
+    const application = await this.prisma.$transaction(async (tx) => {
+      const app = await tx.application.create({
+        data: {
+          label: createApplicationDto.label,
+          shortName: createApplicationDto.shortName ?? null,
+          logo: createApplicationDto.logo ?? null,
+          description: createApplicationDto.description,
+          targetPopulations: createApplicationDto.targetPopulations ?? [],
+          purposes: createApplicationDto.purposes ?? [],
+          tags: createApplicationDto.tags ?? [],
+          priorityRestart: createApplicationDto.priorityRestart ?? null,
+          quality: 0,
+        },
+      });
+
+      const initialStatus = createApplicationDto.status || "under_construction";
+      const statusRecord = await tx.applicationStatus.create({
+        data: {
+          applicationId: app.id,
+          status: initialStatus,
+          statusDate: createApplicationDto.statusDate ?? null,
+        },
+      });
+
+      await tx.application.update({
+        where: { id: app.id },
+        data: { currentStatusId: statusRecord.id },
+      });
+
+      return app;
+    });
 
     await this.updateApplicationQuality(application.id);
 
@@ -100,7 +130,6 @@ export class ApplicationService {
           label: "libellé",
           shortName: "nom court",
           logo: "logo",
-          status: "statut",
           description: "description",
           targetPopulations: "populations cibles",
           priorityRestart: "priorité de redémarrage",
@@ -148,7 +177,11 @@ export class ApplicationService {
   async getApplicationsCountByMonth(lastMonths: number = 6): Promise<{ month: string, total: number }[]> {
     const now = new Date();
     const applications = await this.prisma.application.findMany({
-      where: { status: { not: "deleted" } },
+      where: {
+        currentStatus: {
+          status: { not: "deleted" },
+        },
+      },
       select: {
         metadatas: {
           orderBy: { createdAt: "asc" },
@@ -182,23 +215,20 @@ export class ApplicationService {
   async getApplicationsCountByIq() {
     const result = await this.prisma.application.groupBy({
       by: ["quality"],
-      _count: {
-        _all: true,
-      },
       where: {
-        status: {
-          not: "deleted",
+        currentStatus: {
+          status: { not: "deleted" },
         },
       },
-      orderBy: {
-        quality: "asc",
-      },
+      _count: { _all: true },
     });
 
-    return result.map(r => ({
-      iq: r.quality,
-      total: r._count._all,
-    })).reverse();
+    return result
+      .map(group => ({
+        iq: group.quality,
+        total: group._count._all,
+      }))
+      .sort((a, b) => b.iq - a.iq);
   }
 
   public async getMyPerms(
@@ -221,7 +251,7 @@ export class ApplicationService {
   }
 
   public async exportApplications(): Promise<any[]> {
-    return this.applicationRepository.exportAllApplicationsFull();
+    return this.applicationRepository.findAllWithFullRelations();
   }
 
   public async getApplicationById(applicationId: string) {
@@ -255,7 +285,6 @@ export class ApplicationService {
       "shortName",
       "description",
       "priorityRestart",
-      "status",
     ] as const;
     const arrayFields = ["purposes", "targetPopulations", "tags"] as const;
 
