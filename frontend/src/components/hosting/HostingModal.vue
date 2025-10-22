@@ -9,7 +9,7 @@ const props = defineProps<{
   initialHosting?: HostingDto
 }>();
 
-const emit = defineEmits(["close", "hosting-created", "hosting-updated"]);
+const emit = defineEmits(["close", "hostingCreated", "hostingUpdated"]);
 
 const hostingForm = ref({
   hostingOptionId: "",
@@ -88,10 +88,10 @@ async function handleSubmit() {
 
     if (props.initialHosting) {
       await hostingStore.updateHosting(props.applicationId, props.initialHosting.id, formData);
-      emit("hosting-updated");
+      emit("hostingUpdated");
     } else {
       await hostingStore.createHosting(props.applicationId, formData);
-      emit("hosting-created");
+      emit("hostingCreated");
     }
     emit("close");
   } catch (err) {

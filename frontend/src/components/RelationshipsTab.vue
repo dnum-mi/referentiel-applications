@@ -109,7 +109,7 @@ const {
     :application-id="application.id"
     data-testid="relation-add-modal"
     @close="closeAddRelationModal"
-    @add-relation="
+    @addRelation="
       (relation) =>
         handleCreateRelation({
           applicationTargetId: relation.targetId,
@@ -125,7 +125,7 @@ const {
     :relation="relationToEdit"
     data-testid="relation-edit-modal"
     @close="closeEditRelationModal"
-    @update-relation="handleUpdateRelation"
+    @updateRelation="handleUpdateRelation"
   />
 
   <DeleteConfirmationModal :opened="showDeleteConfirmation" item-name="relations" data-testid="relation-delete-modal" @confirm="confirmDelete" @cancel="cancelDelete" />

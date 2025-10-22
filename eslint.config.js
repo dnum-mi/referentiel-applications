@@ -41,12 +41,6 @@ export default antfu(
       },
     },
     typescript: true,
-    vue: {
-      overrides: {
-        // TODO: Uniformiser les noms d'événements personnalisés en kebab-case ou camelCase
-        "vue/custom-event-name-casing": "off",
-      },
-    },
     yaml: {
       overrides: {
         "yaml/quotes": ["error", { prefer: "double" }],
