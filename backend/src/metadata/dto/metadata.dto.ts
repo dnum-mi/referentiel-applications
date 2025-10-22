@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { MetadataAction } from "@prisma/client";
-import { PaginationDto } from "src/common/dto";
+import { PaginationDto, PaginatedResponseDto } from "src/common/dto";
 import { UserEntity } from "src/user/entities/user.entity";
 import { IsOptional, IsDateString } from "class-validator";
 
@@ -140,4 +140,9 @@ export class FirstLastMetadataDto {
     nullable: true,
   })
   last: MetadataDto | null;
+}
+
+export class MetadataPaginatedResponseDto extends PaginatedResponseDto<MetadataDto> {
+  @ApiProperty({ type: [MetadataDto], description: "Array of metadata" })
+  results: MetadataDto[];
 }

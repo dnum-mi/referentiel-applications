@@ -15,7 +15,7 @@ describe("Labels", () => {
   let user: UserFakerReturnType;
 
   beforeAll(async () => {
-    user = await UserFaker.create(AdminLevel.WRITE);
+    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
     application = await ApplicationFaker.create(user);
   });
 

@@ -23,25 +23,23 @@ export class OrganizationService extends BaseService<Organization> {
 
   async find(filters: OrganizationFilterDto): Promise<Organization[]> {
     if (filters.search) {
-      const where: Prisma.OrganizationWhereInput = {
-        OR: [
-          { path: { contains: filters.search, mode: "insensitive" } },
-          { sigle: { contains: filters.search, mode: "insensitive" } },
-          { url: { contains: filters.search, mode: "insensitive" } },
-        ],
-      };
+      const where: { AND: Prisma.OrganizationWhereInput[] } = { AND: [
+        {
+          OR: [
+            { path: { contains: filters.search, mode: "insensitive" } },
+            { sigle: { contains: filters.search, mode: "insensitive" } },
+            { url: { contains: filters.search, mode: "insensitive" } },
+          ],
+        },
+      ] };
 
-      // Si usedOnly est activé, on ajoute la condition pour filtrer les organisations utilisées
       if (filters.usedOnly) {
-        where.AND = [
-          where,
-          {
-            OR: [
-              { actors: { some: {} } },
-              { users: { some: {} } },
-            ],
-          },
-        ];
+        where.AND.push({
+          OR: [
+            { actors: { some: {} } },
+            { users: { some: {} } },
+          ],
+        });
       }
 
       return this.prisma.organization.findMany({

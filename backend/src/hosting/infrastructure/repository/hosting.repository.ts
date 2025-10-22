@@ -12,7 +12,7 @@ export class HostingRepository implements IHostingRepository {
     private readonly metadataService: MetadataService,
   ) { }
 
-  async create(data: CreateHostingDto, ownerId: string): Promise<Hosting> {
+  async create(data: CreateHostingDto, requestorId: string): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
     return this.prisma.hosting.create({
@@ -25,7 +25,7 @@ export class HostingRepository implements IHostingRepository {
         metadatas: {
           create: {
             applicationId,
-            createdById: ownerId,
+            createdById: requestorId,
             description: `Ajout de l'hébergement : ${rest.label}`,
           },
         },
@@ -56,7 +56,7 @@ export class HostingRepository implements IHostingRepository {
   async update(
     id: string,
     data: UpdateHostingDto,
-    ownerId: string,
+    requestorId: string,
   ): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
@@ -79,7 +79,7 @@ export class HostingRepository implements IHostingRepository {
 
     await this.metadataService.createMetadata({
       applicationId,
-      createdById: ownerId,
+      createdById: requestorId,
       title: `de l'hébergement ${oldHosting.label}`,
       entity: "hostingId",
       entityId: id,
@@ -98,7 +98,7 @@ export class HostingRepository implements IHostingRepository {
     return updatedHosting;
   }
 
-  async delete(id: string, ownerId: string): Promise<void> {
+  async delete(id: string, requestorId: string): Promise<void> {
     const hosting = await this.findById(id);
 
     await this.prisma.metadata.create({
@@ -106,7 +106,7 @@ export class HostingRepository implements IHostingRepository {
         action: "delete",
         applicationId: hosting.applicationId,
         description: `Suppression de l'hébergement : ${hosting.label}`,
-        createdById: ownerId,
+        createdById: requestorId,
       },
     });
 

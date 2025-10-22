@@ -8,7 +8,7 @@ describe("AppController (e2e)", () => {
   const app = setupTestSuite();
 
   it("/ (GET)", async () => {
-    const user = await UserFaker.create(AdminLevel.READ);
+    const user = await UserFaker.create({ adminLevel: AdminLevel.READ });
     const TOKEN = await getToken(user);
     await request(app().getHttpServer())
       .get("/")

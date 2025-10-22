@@ -1,5 +1,5 @@
 import { PrismaService } from "src/prisma/prisma.service";
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Prisma, Application } from "@prisma/client";
 import {
   CreateApplicationDto,
@@ -13,6 +13,8 @@ import { calculateIQ } from "src/common/utils/quality.utils";
 import { ApplicationRights } from "./application/dto/application-rights.dto";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { ApplicationSearchResultDto } from "./application/dto/get-application.dto.js";
+import { appConfig } from "src/config/configs";
+import { ConfigType } from "@nestjs/config";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -27,16 +29,14 @@ export class ApplicationService {
     private readonly applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
     private readonly metadataService: MetadataService,
+    @Inject(appConfig.KEY) private readonly appConf: ConfigType<typeof appConfig>,
   ) { }
 
   public async createApplication(
-    ownerId: string,
+    requestorId: string,
     createApplicationDto: CreateApplicationDto,
   ) {
-    const application = await this.persistApplication(
-      ownerId,
-      createApplicationDto,
-    );
+    const application = await this.applicationRepository.create(createApplicationDto);
 
     await this.updateApplicationQuality(application.id);
 
@@ -47,7 +47,7 @@ export class ApplicationService {
         metadatas: {
           create: {
             applicationId: application.id,
-            createdById: ownerId,
+            createdById: requestorId,
             description: `Ajout du libellé alternatif "${labelDto.value}" à l'application`,
           },
         },
@@ -64,12 +64,23 @@ export class ApplicationService {
   public async update(params: {
     where: Prisma.ApplicationWhereUniqueInput
     data: PatchApplicationDto
-    ownerId: string
+    requestor: Requestor
   }): Promise<Application> {
-    const { where, data, ownerId } = params;
-    const applicationUpdates: Prisma.ApplicationUpdateInput = {};
+    const { where, requestor } = params;
+    let { data } = params;
 
-    this.applyScalarAndSimpleRelationUpdates(data, applicationUpdates);
+    // protect fields based on permissions
+    // priorityRestart field is only writable by users with writePriorityRestart permission
+    if (!requestor.appPerms.includes("writePriorityRestart")) {
+      delete data.priorityRestart;
+      // if the user has writeBase permission, they can write other fields except priorityRestart
+    } else if (!requestor.appPerms.includes("writeBase")) {
+      data = {
+        priorityRestart: data.priorityRestart,
+      };
+    }
+
+    const applicationUpdates = this.applyScalarAndSimpleRelationUpdates(data);
 
     try {
       const oldApp = await this.applicationRepository.findById(where.id);
@@ -83,7 +94,7 @@ export class ApplicationService {
 
       await this.metadataService.createMetadata({
         applicationId: updatedApplication.id,
-        createdById: ownerId,
+        createdById: requestor.id,
         title: "des informations générales",
         fields: {
           label: "libellé",
@@ -200,14 +211,13 @@ export class ApplicationService {
     searchParams: ApplicationSearchDto,
     requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
-    if (requestor.adminLevel >= AdminLevel.READ) {
-      // If the user has read or write permissions, proceed with the search
-      return this.applicationRepository.findApplications(searchParams);
+    if (searchParams.isActor && requestor) {
+      return this.applicationRepository.findApplications(searchParams, { actorEmail: requestor.email });
     }
-    return this.applicationRepository.findApplications(searchParams, {
-      actorEmail: requestor.email,
-      ownerId: requestor.id,
-    });
+    if (!this.appConf.nonActorPermissions.includes("readBase") && requestor?.adminLevel < AdminLevel.READ) {
+      return this.applicationRepository.findApplications(searchParams, { actorEmail: requestor.email });
+    }
+    return this.applicationRepository.findApplications(searchParams);
   }
 
   public async exportApplications(): Promise<any[]> {
@@ -236,28 +246,10 @@ export class ApplicationService {
     await this.applicationRepository.delete(id);
   }
 
-  private async persistApplication(ownerId: string, createApplicationDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: ownerId },
-      select: { email: true, keycloakId: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`User not found for id=${ownerId}`);
-    }
-
-    const application = this.applicationRepository.create(
-      createApplicationDto,
-      ownerId,
-    );
-
-    return application;
-  }
-
   private applyScalarAndSimpleRelationUpdates(
     data: PatchApplicationDto,
-    applicationUpdates: Prisma.ApplicationUpdateInput,
-  ): void {
+  ): Prisma.ApplicationUpdateInput {
+    const applicationUpdates: Prisma.ApplicationUpdateInput = {};
     const scalarFields = [
       "label",
       "shortName",
@@ -278,6 +270,7 @@ export class ApplicationService {
         applicationUpdates[field] = { set: data[field] };
       }
     });
+    return applicationUpdates;
   }
 
   async updateApplicationQuality(applicationId: string) {

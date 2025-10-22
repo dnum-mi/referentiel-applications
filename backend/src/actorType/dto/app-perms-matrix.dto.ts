@@ -16,6 +16,10 @@ export class AppPermsDto {
 
   @ApiProperty()
   @IsBoolean()
+  writePriorityRestart: boolean;
+
+  @ApiProperty()
+  @IsBoolean()
   readActors: boolean;
 
   @ApiProperty()

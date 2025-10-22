@@ -6,13 +6,13 @@ model User {
   organizationId      String?
   organization        Organization?         @relation(fields: [organizationId], references: [id])
   createdSet          Metadata[]            @relation("MetadataCreatedBy")
-  applications        Application[]         @relation("UserApplications")
   dataOwners          Metadata[]            @relation("MetadataDataOwnerBy")
   AnomalyNotification AnomalyNotification[] @relation("UserAnomalyNotification")
   adminLevel          Int                   @default(0)
   tokensImpersonate   Token[]               @relation("TokenUserImpersonate")
   tokensCreated       Token[]               @relation("TokenUserCreator")
   type                UserType              @default(human)
+  capabilities        CapabilityNames[]
 }
 
 model Actor {
@@ -47,4 +47,9 @@ model ActorType {
 enum UserType {
   human
   bot
+}
+
+enum CapabilityNames {
+  CreateApplication
+  CreateGlobalAnomalyNotification
 }

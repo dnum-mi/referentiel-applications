@@ -2,25 +2,31 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
+  Inject,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { APP_ACTION_KEY } from "../decorators/application.decorator";
 import { PrismaService } from "src/prisma/prisma.service";
 import { APP_PERMISSIONS, APP_PERMS_MAP, AppPermissionsRecord } from "../utils/types";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { appConfig } from "src/config/configs";
+import { ConfigType } from "@nestjs/config";
 
 @Injectable()
 export class ApplicationGuard implements CanActivate {
   constructor(
+    @Inject(appConfig.KEY) private readonly appConf: ConfigType<typeof appConfig>,
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
   ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const action = this.reflector.get<string>(
+    const actionParams = this.reflector.get<APP_PERMISSIONS | APP_PERMISSIONS[]>(
       APP_ACTION_KEY,
       context.getHandler(),
     );
+
+    const actions = Array.isArray(actionParams) ? actionParams : [actionParams];
 
     const request = context.switchToHttp().getRequest();
 
@@ -32,50 +38,38 @@ export class ApplicationGuard implements CanActivate {
       user,
     );
     user.appPerms = Array.from(appPermsMap);
-    const authorized = await this.checkAppPermission(
-      user,
-      action as APP_PERMISSIONS,
-    );
 
-    return authorized;
+    return actions.some(action => this.checkAppPermission(user, action));
   }
 
   private async getUserAppPermissions(
     applicationId: string,
     user: Requestor,
   ): Promise<APP_PERMS_MAP> {
-    const [actors, application] = await Promise.all([
-      this.prisma.actor.findMany({
-        where: {
-          applicationId,
-          email: user.email,
-        },
-        include: {
-          actorType: {
-            include: {
-              appPermissions: {
-                omit: {
-                  actorTypeId: true,
-                },
+    const actors = await this.prisma.actor.findMany({
+      where: {
+        applicationId,
+        email: user.email,
+      },
+      include: {
+        actorType: {
+          include: {
+            appPermissions: {
+              omit: {
+                actorTypeId: true,
               },
             },
           },
         },
-        distinct: ["actorTypeId"],
-      }),
-      this.prisma.application.findUnique({
-        where: { id: applicationId },
-      }),
-    ]);
+      },
+      distinct: ["actorTypeId"],
+    });
     // reduce the permissions to a map
 
-    const appPermsSet = new Set<APP_PERMISSIONS>();
-    if (application?.ownerId === user.id || user.adminLevel >= AdminLevel.WRITE) {
-      Object.keys(AppPermissionsRecord).forEach((key) => {
-        appPermsSet.add(key as APP_PERMISSIONS);
-      });
-      return appPermsSet;
+    if (user.adminLevel >= AdminLevel.WRITE) {
+      return new Set<APP_PERMISSIONS>(Object.keys(AppPermissionsRecord) as APP_PERMISSIONS[]);
     }
+    const appPermsSet = new Set<APP_PERMISSIONS>(this.appConf.nonActorPermissions);
     if (user.adminLevel >= AdminLevel.READ) {
       Object.keys(AppPermissionsRecord)
         .filter(key => key.startsWith("read"))
@@ -104,10 +98,10 @@ export class ApplicationGuard implements CanActivate {
     return appPermsSet;
   }
 
-  private async checkAppPermission(
+  private checkAppPermission(
     user: Requestor,
     action?: APP_PERMISSIONS,
-  ): Promise<boolean> {
+  ): boolean {
     if (typeof action === "undefined") {
       return true;
     }

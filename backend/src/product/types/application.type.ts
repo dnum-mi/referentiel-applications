@@ -23,6 +23,5 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
         hostingOption: true;
       };
     };
-    owner: true;
   };
 }>;

@@ -16,7 +16,7 @@ describe("Hostings", () => {
   let application: { id: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create(AdminLevel.WRITE);
+    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
     application = await ApplicationFaker.create(user);
   });
 

@@ -186,4 +186,13 @@ export class ApplicationSearchDto extends PaginationDto {
     return Array.isArray(value) ? value : [value] as string[];
   })
   columns?: string;
+
+  @ApiPropertyOptional({
+    description: "Ne retourne que les applications dont l'utilisateur est acteur, defaut: false",
+    required: false,
+    type: String,
+  })
+  @IsOptional()
+  @Type(() => Boolean)
+  isActor?: boolean = false;
 }

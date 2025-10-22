@@ -31,6 +31,7 @@ services:
       - AUTH_VERIFY_JWT=true
       - DISABLE_PINO_LOGGER=true
       - KEYCLOAK_CLIENT_ID=referentiel-applications
+      # - NON_ACTOR_PERMISSIONS=readBase
     depends_on:
       - postgres
     ports:

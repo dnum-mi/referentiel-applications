@@ -16,7 +16,7 @@ export class RelationRepository implements IRelationRepository {
   public async create(
     applicationSourceId: string,
     { applicationTargetId, type }: RelationApplicationDto,
-    ownerId: string,
+    requestorId: string,
   ): Promise<Relation> {
     const createdRelation = await this.prisma.relation.create({
       data: {
@@ -39,12 +39,12 @@ export class RelationRepository implements IRelationRepository {
         {
           applicationId: createdRelation.sourceApplication.id,
           description: `Relation ajoutée avec ${createdRelation.targetApplication.label}`,
-          createdById: ownerId,
+          createdById: requestorId,
         },
         {
           applicationId: createdRelation.targetApplication.id,
           description: `Relation ajoutée avec ${createdRelation.sourceApplication.label}`,
-          createdById: ownerId,
+          createdById: requestorId,
         },
       ],
     });
@@ -94,7 +94,7 @@ export class RelationRepository implements IRelationRepository {
   public async update(
     id: string,
     dto: RelationApplicationDto,
-    ownerId: string,
+    requestorId: string,
   ): Promise<Relation> {
     const oldRelation = await this.findOne(id);
     const updated = await this.prisma.relation.update({
@@ -112,7 +112,7 @@ export class RelationRepository implements IRelationRepository {
 
     await this.metadataService.createMetadata({
       applicationId: updated.sourceApplication.id,
-      createdById: ownerId,
+      createdById: requestorId,
       title: `de la relation avec ${updated.targetApplication.label}`,
       fields: {
         "sourceApplication.label": "application source",
@@ -124,7 +124,7 @@ export class RelationRepository implements IRelationRepository {
 
     await this.metadataService.createMetadata({
       applicationId: updated.targetApplication.id,
-      createdById: ownerId,
+      createdById: requestorId,
       title: `de la relation avec ${updated.sourceApplication.label}`,
       fields: {
         "sourceApplication.label": "application source",
@@ -137,7 +137,7 @@ export class RelationRepository implements IRelationRepository {
     return updated;
   }
 
-  public async delete(id: string, ownerId: string): Promise<void> {
+  public async delete(id: string, requestorId: string): Promise<void> {
     const deletedRelation = await this.prisma.relation.findFirst({
       where: { id },
       include: {
@@ -158,13 +158,13 @@ export class RelationRepository implements IRelationRepository {
           applicationId: deletedRelation.sourceApplication.id,
           action: "delete",
           description,
-          createdById: ownerId,
+          createdById: requestorId,
         },
         {
           applicationId: deletedRelation.targetApplication.id,
           action: "delete",
           description,
-          createdById: ownerId,
+          createdById: requestorId,
         },
       ],
     });

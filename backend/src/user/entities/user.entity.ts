@@ -10,6 +10,11 @@ export enum AdminLevel {
   ADMIN = 30,
 }
 
+export const UserCapabilities = {
+  CreateApplication: "CreateApplication",
+  CreateGlobalAnomalyNotification: "CreateGlobalAnomalyNotification",
+} as const;
+
 export const UserType = {
   human: "human",
   bot: "bot",
@@ -29,6 +34,9 @@ export class UserEntity {
   @IsNumber()
   @IsEnum(AdminLevel)
   adminLevel: AdminLevel; // Changed from permissions to adminLevel
+
+  @ApiProperty({ required: false, enum: UserCapabilities, enumName: "UserCapabilities", isArray: true, description: "Liste des capacités de l'utilisateur" })
+  capabilities?: (keyof typeof UserCapabilities)[];
 
   @IsString()
   @IsOptional()
@@ -55,4 +63,6 @@ export class Requestor extends UserEntity {
   @IsArray()
   @IsOptional()
   appPerms?: APP_PERMISSIONS[]; // Changed from permissions to appPerms
+
+  capabilities: (keyof typeof UserCapabilities)[];
 }

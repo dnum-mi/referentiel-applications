@@ -6,14 +6,6 @@ export class CreateAnomalyNotificationDto {
   @IsString()
   @IsOptional()
   @ApiProperty({
-    description: "L'ID de l'application associée à la notification d'anomalie",
-    required: false,
-  })
-  applicationId?: string;
-
-  @IsString()
-  @IsOptional()
-  @ApiProperty({
     description: "La description de la notification d'anomalie",
     required: false,
   })

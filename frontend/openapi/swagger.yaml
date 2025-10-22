@@ -201,7 +201,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/MetadataPaginatedResponseDto"
       tags: &a2
         - Metadatas
   /api/v2/applications/{applicationId}/metadatas/first-last:
@@ -282,7 +282,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/MetadataPaginatedResponseDto"
       tags:
         - Metadatas
   /api/v2/users/me:
@@ -400,7 +400,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/UsersPaginatedResponseDto"
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a3
@@ -654,6 +654,14 @@ paths:
           schema:
             example: id,label,shortName,description
             type: string
+        - name: isActor
+          required: false
+          in: query
+          description: "Ne retourne que les applications dont l'utilisateur est acteur,
+            defaut: false"
+          schema:
+            default: false
+            type: string
       responses:
         "200":
           description: Liste des applications correspondant aux critères de recherche avec
@@ -729,6 +737,7 @@ paths:
                     - readAnomalyNotifications
                     - manageAnomalyNotifications
                     - postAnomalyNotifications
+                    - writePriorityRestart
       tags: *a4
   /api/v2/applications/export/excel:
     get:
@@ -926,6 +935,14 @@ paths:
           description: Colonnes à inclure dans l'export
           schema:
             example: id,label,shortName,description
+            type: string
+        - name: isActor
+          required: false
+          in: query
+          description: "Ne retourne que les applications dont l'utilisateur est acteur,
+            defaut: false"
+          schema:
+            default: false
             type: string
       responses:
         "200":
@@ -2428,7 +2445,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/LinksPaginatedResponseDto"
       tags: *a14
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
@@ -2505,6 +2522,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
+        "409":
+          description: A compliance already exists for this application
       tags: &a15
         - Compliances
     get:
@@ -2652,21 +2671,6 @@ components:
         - sourceApplication
         - targetApplication
         - type
-    PaginatedResponseDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            type: array
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     MetadataAction:
       type: string
       description: Action effectuée sur la metadata
@@ -2684,6 +2688,12 @@ components:
       required:
         - id
         - label
+    UserCapabilities:
+      type: string
+      description: Liste des capacités de l'utilisateur
+      enum:
+        - CreateApplication
+        - CreateGlobalAnomalyNotification
     OrganizationDto:
       type: object
       properties:
@@ -2724,6 +2734,10 @@ components:
     UserEntity:
       type: object
       properties:
+        capabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserCapabilities"
         organization:
           nullable: true
           allOf:
@@ -2835,6 +2849,21 @@ components:
         - hostingId
         - labelId
         - createdBy
+    MetadataPaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of metadata
+          type: array
+          items:
+            $ref: "#/components/schemas/MetadataDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     FirstLastMetadataDto:
       type: object
       properties:
@@ -2861,10 +2890,33 @@ components:
             - 20
             - 30
           type: number
+        capabilities:
+          type: array
+          description: Liste des capacités de l'utilisateur
+          items:
+            type: string
+            enum:
+              - CreateApplication
+              - CreateGlobalAnomalyNotification
         organizationId:
           type: string
           nullable: true
           description: ID de l'organisation
+    UsersPaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/UserEntity"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     ApplicationPriorityRestart:
       type: string
       enum:
@@ -2990,8 +3042,6 @@ components:
           type: array
           items:
             type: string
-        ownerId:
-          type: string
         quality:
           type: number
           nullable: true
@@ -3004,7 +3054,6 @@ components:
         - targetPopulations
         - purposes
         - tags
-        - ownerId
         - quality
     CountByMonthDto:
       type: object
@@ -3044,7 +3093,7 @@ components:
             $ref: "#/components/schemas/ApplicationDto"
         total:
           type: number
-          description: Nombre total d'applications correspondant aux critères de recherche
+          description: Total number of items
           example: 100
       required:
         - results
@@ -3370,8 +3419,11 @@ components:
           type: string
         applicationId:
           type: string
+          nullable: true
         application:
-          $ref: "#/components/schemas/ApplicationDto"
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ApplicationDto"
         notifierId:
           type: string
         description:
@@ -3384,6 +3436,7 @@ components:
         - status
         - createdAt
         - id
+        - applicationId
         - application
         - notifierId
         - description
@@ -3526,6 +3579,8 @@ components:
           type: boolean
         writeBase:
           type: boolean
+        writePriorityRestart:
+          type: boolean
         readActors:
           type: boolean
         writeActors:
@@ -3558,6 +3613,7 @@ components:
         - actorTypeId
         - readBase
         - writeBase
+        - writePriorityRestart
         - readActors
         - writeActors
         - readCompliances
@@ -3749,39 +3805,67 @@ components:
     CreateLinkDto:
       type: object
       properties:
+        link:
+          type: string
+          description: The URL of the link
         type:
           $ref: "#/components/schemas/ExternalRessourceType"
         description:
           type: string
-        link:
-          type: string
+          description: Optional description of the link
       required:
-        - type
         - link
+        - type
     LinkDto:
       type: object
       properties:
-        type:
-          $ref: "#/components/schemas/ExternalRessourceType"
-        description:
-          type: string
-        link:
-          type: string
         id:
           type: string
+          description: Unique identifier of the link
+        link:
+          type: string
+          description: The URL of the link
+        type:
+          type: string
+          enum:
+            - documentation
+            - supervision
+            - service
+            - audience_metrics
+          description: Type of the external resource
+        description:
+          type: string
+          description: Description of the link
       required:
-        - type
-        - link
         - id
+        - link
+        - type
+    LinksPaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of links
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateLinkDto:
       type: object
       properties:
+        link:
+          type: string
+          description: The URL of the link
         type:
           $ref: "#/components/schemas/ExternalRessourceType"
         description:
           type: string
-        link:
-          type: string
+          description: Optional description of the link
     CreateComplianceDto:
       type: object
       properties:

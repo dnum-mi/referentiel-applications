@@ -1,14 +1,14 @@
 {
   "name": "referentiel-applications",
   "type": "module",
-  "version": "1.46.0",
+  "version": "1.46.2",
   "packageManager": "pnpm@10.14.0",
   "scripts": {
     "format": "eslint . --fix",
     "lint": "eslint .",
     "prepare": "husky",
     "commitlint": "commitlint --edit",
-    "gen": "docker compose exec backend pnpm db:generate && docker compose exec client pnpm api:generate"
+    "gen": "docker compose exec backend pnpm gen && docker compose exec client pnpm gen"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^5.2.0",

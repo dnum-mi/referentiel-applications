@@ -2,6 +2,8 @@ model AppPermissions {
   readBase  Boolean
   writeBase Boolean
 
+  writePriorityRestart Boolean @default(false)
+
   readActors  Boolean
   writeActors Boolean
 

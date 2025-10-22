@@ -31,7 +31,7 @@ async function exportToExcel() {
         secondary
         icon="fr-icon-add-line"
         type="button"
-        :disabled="userStore.adminLevel < AdminLevel.WRITE"
+        :disabled="userStore.adminLevel < AdminLevel.WRITE && !userStore.user?.capabilities?.includes('CreateApplication')"
         data-testid="create-application-btn"
         class="fr-mr-1v"
         @click="isCreateModalOpen = true"
@@ -44,7 +44,7 @@ async function exportToExcel() {
         aria-haspopup="dialog"
         aria-controls="modal-report-missing"
         type="button"
-        :disabled="userStore.adminLevel < AdminLevel.WRITE"
+        :disabled="!userStore.user?.capabilities?.includes('CreateGlobalAnomalyNotification') && userStore.adminLevel < AdminLevel.WRITE"
         data-testid="report-missing-app"
         class="fr-mr-1v"
         @click="isReportMissingOpen = true"

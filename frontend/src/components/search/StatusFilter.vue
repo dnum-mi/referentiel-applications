@@ -32,7 +32,7 @@ function toggleStatus(value: ApplicationStatus, event: Event) {
 <template>
   <div>
     <legend class="fr-label fr-mb-2w">
-      Priorité de redémarrage
+      Statut de l'application
     </legend>
     <div data-testid="status-filter">
       <label v-for="option in statusOptions" :key="option.value" class="checkbox-item">

@@ -57,7 +57,7 @@ describe("Test Swagger documentation", () => {
             throw new Error(`Missing object: ${method.toUpperCase()} ${path} ${code}: ${error}`);
           }
           // @ts-ignore
-          if (!["202", "204", "404", "403", "503"].includes(code) && !castedResponse.$ref && !castedResponse.content) {
+          if (!["202", "204", "404", "403", "409", "503"].includes(code) && !castedResponse.$ref && !castedResponse.content) {
             throw new Error(`Missing ref or content: ${method.toUpperCase()} ${path} ${code}`);
           }
         }
