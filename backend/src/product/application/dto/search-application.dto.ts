@@ -178,7 +178,7 @@ export class ApplicationSearchDto extends PaginationDto {
       try {
         const parsed = JSON.parse(value);
         return Array.isArray(parsed) ? parsed : [value];
-      } catch (_e) {
+      } catch {
         // If not valid JSON, treat as comma-separated values
         return value.split(",").map(v => v.trim());
       }

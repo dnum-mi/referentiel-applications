@@ -64,7 +64,8 @@ export function useComboboxKeyboard(ctx: {
   function handleHome(e: KeyboardEvent) {
     if (ctx.menuOpen() && ctx.optionsLen()) {
       e.preventDefault();
-      ctx.setSelected(0); ctx.setFocused(0);
+      ctx.setSelected(0);
+      ctx.setFocused(0);
     }
   }
 
@@ -72,7 +73,8 @@ export function useComboboxKeyboard(ctx: {
     const len = ctx.optionsLen();
     if (ctx.menuOpen() && len) {
       e.preventDefault();
-      ctx.setSelected(len - 1); ctx.setFocused(len - 1);
+      ctx.setSelected(len - 1);
+      ctx.setFocused(len - 1);
     }
   }
 
