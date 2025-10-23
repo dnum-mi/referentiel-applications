@@ -1,14 +1,21 @@
 export const routeNames = {
-  LOGOUT: "Logout",
-  Page_404: "404",
-  SIGNIN: "login",
-  CREATEAPP: "create",
-  PROFILEAPP: "application",
+  SIGNIN: "connexion",
+  LOGOUT: "deconnexion",
+  PROFILE: "profil",
+
+  ACCUEIL: "accueil",
   SEARCHAPP: "recherche-application",
-  ISSUELIST: "issue-list",
-  PROFILE: "profile",
-  ADMINPAGE: "administration",
+  PROFILEAPP: "application",
+  CREATEAPP: "creer-application",
+
+  ISSUELIST: "signalements",
   QUALITYPAGE: "qualite-generale",
-  NOTFOUND: "not-found",
-  HISTORY: "history",
+  HISTORY: "historique",
+  ADMINPAGE: "administration",
+
+  SITEMAP: "plan-du-site",
+  ACCESSIBILITE: "accessibilite",
+
+  NOTFOUND: "page-non-trouvee",
+  Page_404: "404",
 } as const;
