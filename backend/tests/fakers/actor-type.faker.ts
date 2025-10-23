@@ -1,6 +1,6 @@
+import type { APP_PERMISSIONS } from "src/common/utils/types";
 import { faker } from "@faker-js/faker";
 import { getPrismaClient } from "./prisma";
-import type { APP_PERMISSIONS } from "src/common/utils/types";
 
 function permissionsToObject(permissions: Set<APP_PERMISSIONS>): Record<APP_PERMISSIONS, boolean> {
   return {

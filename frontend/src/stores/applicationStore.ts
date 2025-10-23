@@ -1,11 +1,11 @@
-import { ref, computed } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
-import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
-import api from "@/api/index";
+import type { Filters } from "./applicationSearchStore";
 import type { ApplicationPriorityRestart, PatchApplicationDto } from "@/client/types.gen";
+import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
+import { computed, ref } from "vue";
+import api from "@/api/index";
 import router from "@/router";
 import { routeNames } from "@/router/route-names";
-import type { Filters } from "./applicationSearchStore";
+import { useToasterStore } from "@/stores/toasterStore";
 
 export const useApplicationStore = defineStore("applicationStore", () => {
   const applicationsById = ref<Record<string, ApplicationWithPerms>>({});

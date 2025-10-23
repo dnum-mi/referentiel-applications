@@ -1,10 +1,10 @@
-// infrastructure/repository/relation.repository.ts
-import { IRelationRepository } from "./relation.repository.interface";
 import { Injectable } from "@nestjs/common";
+import { MetadataService } from "src/metadata/metadata.service";
 import { PrismaService } from "../../../prisma/prisma.service";
 import { RelationApplicationDto } from "../../application/dto/relation-application.dto";
 import { Relation } from "../../domain/relation.entity";
-import { MetadataService } from "src/metadata/metadata.service";
+// infrastructure/repository/relation.repository.ts
+import { IRelationRepository } from "./relation.repository.interface";
 
 @Injectable()
 export class RelationRepository implements IRelationRepository {

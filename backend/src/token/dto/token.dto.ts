@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PickType } from "@nestjs/swagger";
-import { IsString, IsOptional, IsEnum, IsDateString } from "class-validator";
+import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
 import { AdminLevel } from "src/user/entities/user.entity";
 import { TokenStatus } from "../domain/token-status.entity";
 

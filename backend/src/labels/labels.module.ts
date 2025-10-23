@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { LabelsService } from "./labels.service";
-import { LabelsController } from "./labels.controller";
-import { PrismaModule } from "src/prisma/prisma.module";
 import { MetadataModule } from "src/metadata/metadata.module";
+import { PrismaModule } from "src/prisma/prisma.module";
+import { LabelsController } from "./labels.controller";
+import { LabelsService } from "./labels.service";
 
 @Module({
   imports: [MetadataModule, PrismaModule],

@@ -1,8 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { StatsType } from "@prisma/client";
-import { GroupBy } from "../../interfaces/types/stats-entry.type";
 import { StatsAggregator } from "src/stats/infrastructure/helpers/stats.aggregator";
 import { IStatsRepository } from "src/stats/infrastructure/stats.repository-interface";
+import { GroupBy } from "../../interfaces/types/stats-entry.type";
 
 @Injectable()
 export class GetIqAvgGroupedUseCase {

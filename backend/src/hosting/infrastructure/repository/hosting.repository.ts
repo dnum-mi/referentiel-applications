@@ -1,9 +1,9 @@
-import { PrismaService } from "src/prisma/prisma.service";
-import { IHostingRepository } from "./hosting.repository.interface";
 import { Injectable } from "@nestjs/common";
+import { CreateHostingDto, UpdateHostingDto } from "src/hosting/applications/dto/hosting.dto.js";
 import { Hosting } from "src/hosting/domain/hosting.entity";
 import { MetadataService } from "src/metadata/metadata.service";
-import { CreateHostingDto, UpdateHostingDto } from "src/hosting/applications/dto/hosting.dto.js";
+import { PrismaService } from "src/prisma/prisma.service";
+import { IHostingRepository } from "./hosting.repository.interface";
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {

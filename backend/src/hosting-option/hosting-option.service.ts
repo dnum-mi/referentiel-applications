@@ -1,8 +1,8 @@
+import type { HostingOption, Prisma } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
+import { BaseService } from "../common/base.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { HostingOptionFiltersDto } from "./dto/hosting-option.dto";
-import { BaseService } from "../common/base.service";
-import type { HostingOption, Prisma } from "@prisma/client";
 
 @Injectable()
 export class HostingOptionService extends BaseService<HostingOption> {

@@ -1,5 +1,5 @@
-import { getPrismaClient } from "./prisma";
 import { faker } from "@faker-js/faker";
+import { getPrismaClient } from "./prisma";
 
 export class OrganizationFaker {
   static async create() {

@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { expect, test } from "@playwright/test";
 
 const BASE_URL = "http://localhost:5173";
 const KC_USER = "user";

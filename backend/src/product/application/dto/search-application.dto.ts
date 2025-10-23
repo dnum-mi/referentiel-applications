@@ -1,15 +1,15 @@
-import { priorityRestart, Status } from "@prisma/client";
 import { ApiPropertyOptional } from "@nestjs/swagger";
+import { priorityRestart, Status } from "@prisma/client";
+import { Transform, Type } from "class-transformer";
 import {
+  IsArray,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
-  IsArray,
-  Min,
-  IsEnum,
   Max,
+  Min,
 } from "class-validator";
-import { Transform, Type } from "class-transformer";
 import { PaginationDto } from "../../../common/dto";
 
 export class ApplicationSearchDto extends PaginationDto {

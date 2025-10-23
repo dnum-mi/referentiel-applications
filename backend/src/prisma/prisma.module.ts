@@ -1,7 +1,7 @@
 // src/prisma/prisma.module.ts
 import { Global, Module } from "@nestjs/common";
-import { PrismaService } from "./prisma.service";
 import { LoggerModule } from "src/logger/logger.module";
+import { PrismaService } from "./prisma.service";
 
 @Global()
 @Module({

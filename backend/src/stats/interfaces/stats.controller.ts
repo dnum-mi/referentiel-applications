@@ -1,6 +1,4 @@
 import { Controller, Get, Query } from "@nestjs/common";
-import { StatsService } from "../application/stats.service";
-import { GroupBy } from "./types/stats-entry.type";
 import {
   ApiOkResponse,
   ApiOperation,
@@ -8,6 +6,8 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { GetIqAvgGroupedDto } from "../application/dto/get-iq-avg-grouped.dto";
+import { StatsService } from "../application/stats.service";
+import { GroupBy } from "./types/stats-entry.type";
 
 @ApiTags("Stats")
 @Controller("stats")

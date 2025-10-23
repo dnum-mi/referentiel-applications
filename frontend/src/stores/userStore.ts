@@ -1,8 +1,8 @@
+import type { UserEntity } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import { getAuthentication } from "@/services/authentication";
 import client from "@/api/index";
-import type { UserEntity } from "@/client/types.gen";
+import { getAuthentication } from "@/services/authentication";
 
 export const useUserStore = defineStore("userStore", () => {
   const user = ref<UserEntity>();

@@ -1,21 +1,21 @@
 import {
-  Controller,
-  Patch,
   Body,
-  Param,
+  Controller,
   Get,
+  Param,
+  Patch,
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { UserService } from "./user.service";
-import { ApiTags, ApiOperation, ApiParam, ApiOkResponse, ApiNotFoundResponse, ApiForbiddenResponse } from "@nestjs/swagger";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { UserFilterDto } from "./dto/filters.dto";
-import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
+import { ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { User } from "src/common/decorators/user.decorator";
+import { AdminGuard } from "src/common/guards/admin.guard";
+import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
+import { UserFilterDto } from "./dto/filters.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 import { UsersPaginatedResponseDto } from "./dto/users.dto";
+import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
+import { UserService } from "./user.service";
 
 @ApiTags("users")
 @Controller("/users")

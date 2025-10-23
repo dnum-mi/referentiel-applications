@@ -1,8 +1,8 @@
-import { IHostingRepository } from "./infrastructure/repository/hosting.repository.interface";
 import { Inject, Injectable } from "@nestjs/common";
-import { Hosting } from "./domain/hosting.entity";
 import { ApplicationService } from "src/product/application.service";
 import { CreateHostingDto, UpdateHostingDto } from "./applications/dto/hosting.dto.js";
+import { Hosting } from "./domain/hosting.entity";
+import { IHostingRepository } from "./infrastructure/repository/hosting.repository.interface";
 
 @Injectable()
 export class HostingService {

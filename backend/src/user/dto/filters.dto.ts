@@ -1,8 +1,8 @@
-import { IsArray, IsEnum, IsOptional, IsString } from "class-validator";
-import { UserType } from "../entities/user.entity";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
+import { IsArray, IsEnum, IsOptional, IsString } from "class-validator";
 import { PaginationDto } from "../../common/dto";
+import { UserType } from "../entities/user.entity";
 
 export class UserFilterDto extends PaginationDto {
   @IsOptional()

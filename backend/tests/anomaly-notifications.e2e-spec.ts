@@ -1,8 +1,8 @@
-import request from "supertest";
-import { setupTestSuite } from "./setup";
-import { getToken } from "./getToken";
-import { UserFaker } from "./fakers/user.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
+import request from "supertest";
+import { UserFaker } from "./fakers/user.faker";
+import { getToken } from "./getToken";
+import { setupTestSuite } from "./setup";
 
 describe("Anomaly Notifications", () => {
   const app = setupTestSuite();

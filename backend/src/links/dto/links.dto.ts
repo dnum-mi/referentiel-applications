@@ -1,6 +1,6 @@
-import { IsString, IsEnum, IsOptional } from "class-validator";
-import { ExternalRessourceType } from "@prisma/client";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { ExternalRessourceType } from "@prisma/client";
+import { IsEnum, IsOptional, IsString } from "class-validator";
 import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 
 export class CreateLinkDto {

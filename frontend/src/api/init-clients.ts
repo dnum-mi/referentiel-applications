@@ -1,8 +1,8 @@
-import { getAuthentication } from "@/services/authentication";
 import axios from "axios";
+import { client } from "@/client/client.gen";
 import router from "@/router/index.js";
 import { routeNames } from "@/router/route-names";
-import { client } from "@/client/client.gen";
+import { getAuthentication } from "@/services/authentication";
 
 axios.defaults.baseURL = "/api/v2";
 axios.defaults.withCredentials = true;

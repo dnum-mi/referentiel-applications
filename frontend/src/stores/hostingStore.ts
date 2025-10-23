@@ -1,8 +1,8 @@
+import type { CreateHostingDto, HostingDto, HostingOptionControllerFindAllData, HostingOptionDto, UpdateHostingDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index";
-import type { CreateHostingDto, HostingDto, HostingOptionControllerFindAllData, HostingOptionDto, UpdateHostingDto } from "@/client/types.gen";
+import { useToasterStore } from "@/stores/toasterStore";
 
 type HostingOptionFiltersDto = HostingOptionControllerFindAllData["query"];
 export const useHostingStore = defineStore("hostingStore", () => {

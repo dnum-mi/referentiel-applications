@@ -1,3 +1,4 @@
+import type { ApplicationWithAllRelations } from "src/product/types/application.type";
 import { translateEnum } from "src/common/utils/enum.utils";
 import {
   AnomalyNotificationStatusLabels,
@@ -5,7 +6,6 @@ import {
   PriorityRestartLabels,
 } from "src/product/constants/enum-label";
 import { RelationTypeLabelsBidirectional } from "src/product/constants/relation-type-labels";
-import type { ApplicationWithAllRelations } from "src/product/types/application.type";
 
 export function getFullField(
   app: ApplicationWithAllRelations,

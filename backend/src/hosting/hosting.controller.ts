@@ -10,12 +10,12 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { HostingService } from "./hosting.service";
-import { CreateHostingDto, HostingDto, UpdateHostingDto } from "./applications/dto/hosting.dto";
 import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
-import { UserId } from "../common/decorators/user-id.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
+import { ApplicationGuard } from "src/common/guards/application.guard";
+import { UserId } from "../common/decorators/user-id.decorator";
+import { CreateHostingDto, HostingDto, UpdateHostingDto } from "./applications/dto/hosting.dto";
+import { HostingService } from "./hosting.service";
 
 @ApiTags("Hostings")
 @Controller("hostings")

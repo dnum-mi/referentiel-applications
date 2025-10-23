@@ -1,9 +1,9 @@
-import { Injectable, ConflictException } from "@nestjs/common";
+import { ConflictException, Injectable } from "@nestjs/common";
+import { MetadataService } from "src/metadata/metadata.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { ApplicationService } from "src/product/application.service";
 import { BaseService } from "../common/base.service";
 import { Compliance } from "./entities/compliance.entity";
-import { MetadataService } from "src/metadata/metadata.service";
-import { ApplicationService } from "src/product/application.service";
 
 @Injectable()
 export class CompliancesService extends BaseService<Compliance> {

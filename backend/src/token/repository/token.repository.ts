@@ -1,11 +1,11 @@
-import { UserType } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
-import type { CreateTokenParams, ListTokensParams, ITokenRepository, UpdateTokenParams } from "./token.repository.interface";
-import { PrismaService } from "src/prisma/prisma.service";
+import type { CreateTokenParams, ITokenRepository, ListTokensParams, UpdateTokenParams } from "./token.repository.interface";
 import { Injectable } from "@nestjs/common";
-import { TokenEntity } from "../domain/token.entity";
-import { TokenStatus } from "../domain/token-status.entity";
+import { UserType } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
 import { stringToSlug } from "src/utils/functions";
+import { TokenStatus } from "../domain/token-status.entity";
+import { TokenEntity } from "../domain/token.entity";
 
 @Injectable()
 export class TokenRepository implements ITokenRepository {

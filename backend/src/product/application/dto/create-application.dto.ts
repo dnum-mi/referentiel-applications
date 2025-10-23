@@ -1,13 +1,13 @@
+import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { priorityRestart, Status } from "@prisma/client";
+import { Transform, Type } from "class-transformer";
 import {
-  IsString,
-  IsOptional,
   IsArray,
   IsEnum,
+  IsOptional,
+  IsString,
   ValidateNested,
 } from "class-validator";
-import { Type, Transform } from "class-transformer";
-import { ApiProperty, PartialType } from "@nestjs/swagger";
 
 export class CreateLabelDto {
   @ApiProperty({

@@ -1,5 +1,5 @@
-import api from "@/api";
 import type { ConfigDto } from "@/client";
+import api from "@/api";
 
 let config: ConfigDto | Error;
 

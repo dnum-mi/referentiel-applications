@@ -1,9 +1,9 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { StatsType } from "@prisma/client";
-import { GroupBy } from "../interfaces/types/stats-entry.type";
 import { StatsHelper } from "../infrastructure/helpers/stats.helper";
-import { GetIqAvgGroupedUseCase } from "./use-cases/get-iq-avg-grouped.use-case.ts";
 import { IStatsRepository } from "../infrastructure/stats.repository-interface";
+import { GroupBy } from "../interfaces/types/stats-entry.type";
+import { GetIqAvgGroupedUseCase } from "./use-cases/get-iq-avg-grouped.use-case.ts";
 
 @Injectable()
 export class StatsService {

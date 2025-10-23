@@ -1,20 +1,20 @@
-import { PrismaService } from "src/prisma/prisma.service";
 import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { Prisma, Application } from "@prisma/client";
+import { ConfigType } from "@nestjs/config";
+import { Application, Prisma } from "@prisma/client";
+import { calculateIQ } from "src/common/utils/quality.utils";
+import { appConfig } from "src/config/configs";
+import { LabelsService } from "src/labels/labels.service";
+import { MetadataService } from "src/metadata/metadata.service";
+import { PrismaService } from "src/prisma/prisma.service";
+import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { ApplicationRights } from "./application/dto/application-rights.dto";
 import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from "./application/dto/create-application.dto";
-import { ApplicationRepository } from "./infrastructure/repository/application.repository";
-import { ApplicationSearchDto } from "./application/dto/search-application.dto";
-import { LabelsService } from "src/labels/labels.service";
-import { MetadataService } from "src/metadata/metadata.service";
-import { calculateIQ } from "src/common/utils/quality.utils";
-import { ApplicationRights } from "./application/dto/application-rights.dto";
-import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { ApplicationSearchResultDto } from "./application/dto/get-application.dto.js";
-import { appConfig } from "src/config/configs";
-import { ConfigType } from "@nestjs/config";
+import { ApplicationSearchDto } from "./application/dto/search-application.dto";
+import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,

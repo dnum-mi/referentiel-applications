@@ -1,5 +1,5 @@
-import { getPrismaClient } from "./prisma";
 import type { UserFakerReturnType } from "./user.faker";
+import { getPrismaClient } from "./prisma";
 
 export class LinkFaker {
   static async create(application, user: UserFakerReturnType) {

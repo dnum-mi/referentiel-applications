@@ -6,15 +6,15 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
-  ApiTags,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiOkResponse,
+  ApiTags,
 } from "@nestjs/swagger";
-import { MetadataService } from "./metadata.service";
-import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
+import { ApplicationGuard } from "src/common/guards/application.guard";
 import { FirstLastMetadataDto, MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
+import { MetadataService } from "./metadata.service";
 
 @ApiTags("Metadatas")
 @Controller("metadatas")

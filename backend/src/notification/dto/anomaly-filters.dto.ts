@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsBoolean, IsOptional, IsEnum, IsString, IsNumber, Min } from "class-validator";
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Min } from "class-validator";
 
 export enum SortByEnum {
   application = "application",

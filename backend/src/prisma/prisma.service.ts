@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Inject } from "@nestjs/common";
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
 import { PrismaClient } from "@prisma/client";
 import databaseConfig from "src/config/configs/database.config";

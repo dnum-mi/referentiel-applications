@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsEmail, ValidateIf } from "class-validator";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { IsEmail, IsOptional, IsString, ValidateIf } from "class-validator";
 
 export class CreateActorDto {
   @ApiProperty({

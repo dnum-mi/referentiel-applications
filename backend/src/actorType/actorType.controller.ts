@@ -1,23 +1,23 @@
 import {
-  Controller,
-  Post,
-  Get,
-  Patch,
-  Delete,
   Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
   Logger,
   Param,
+  Patch,
+  Post,
   UseGuards,
-  HttpCode,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiOkResponse, ApiCreatedResponse, ApiNoContentResponse } from "@nestjs/swagger";
+import { ApiBody, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { ActorType } from "@prisma/client";
+import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
+import { AdminGuard } from "src/common/guards/admin.guard";
+import { AdminLevel } from "src/user/entities/user.entity";
 import { ActorTypeService } from "./actorType.service";
 import { ActorTypeDto, CreateActorTypeDto, PatchActorTypeDto } from "./dto/actorType.dto";
-import { ActorType } from "@prisma/client";
 import { AppPermsDto } from "./dto/app-perms-matrix.dto";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
-import { AdminLevel } from "src/user/entities/user.entity";
 
 /**
  * Controller la gestion des types d'acteur

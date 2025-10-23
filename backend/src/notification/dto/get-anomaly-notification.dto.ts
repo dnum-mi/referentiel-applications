@@ -1,9 +1,9 @@
-import { IsString, ValidateNested } from "class-validator";
-import { Type } from "class-transformer";
 import { ApiProperty, PickType } from "@nestjs/swagger";
-import { UserEntity } from "src/user/entities/user.entity";
 import { AnomalyNotificationStatus } from "@prisma/client";
+import { Type } from "class-transformer";
+import { IsString, ValidateNested } from "class-validator";
 import { ApplicationDto } from "src/product/application/dto/get-application.dto";
+import { UserEntity } from "src/user/entities/user.entity";
 
 class Notifier extends PickType(UserEntity, ["id", "email"]) {}
 

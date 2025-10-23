@@ -1,5 +1,5 @@
-import { ref, computed } from "vue";
 import type { Ref } from "vue";
+import { computed, ref } from "vue";
 
 export type SyncResults<T> = (options: T[]) => void;
 export type SourceFn<T> = (query: string, syncResults: SyncResults<T>) => void;

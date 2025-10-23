@@ -1,12 +1,12 @@
-import { ApplicationSearchFilters, IApplicationRepository } from "./application.repository.interface";
-import { Injectable } from "@nestjs/common";
-import { CreateApplicationDto } from "../../application/dto/create-application.dto";
-import { PrismaService } from "src/prisma/prisma.service";
 import type { Prisma } from "@prisma/client";
-import { ApplicationWithAllRelations } from "src/product/types/application.type";
-import { ApplicationDto } from "src/product/application/dto/get-application.dto.js";
-import { paginate } from "src/common/utils/pagination.utils";
+import { Injectable } from "@nestjs/common";
 import { PaginatedResponseDto } from "src/common/dto";
+import { paginate } from "src/common/utils/pagination.utils";
+import { PrismaService } from "src/prisma/prisma.service";
+import { ApplicationDto } from "src/product/application/dto/get-application.dto.js";
+import { ApplicationWithAllRelations } from "src/product/types/application.type";
+import { CreateApplicationDto } from "../../application/dto/create-application.dto";
+import { ApplicationSearchFilters, IApplicationRepository } from "./application.repository.interface";
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {

@@ -2,9 +2,9 @@ import {
   Controller,
   Get,
 } from "@nestjs/common";
+import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ConfigService } from "./config.service";
 import { ConfigDto } from "./dto/config.dto";
-import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 
 @ApiTags("Config")
 @Controller("config")

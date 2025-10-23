@@ -1,12 +1,12 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
-import { BaseService } from "../common/base.service";
-import { Link } from "./entities/link.entity";
-import { MetadataService } from "src/metadata/metadata.service";
-import { ApplicationService } from "src/product/application.service";
-import { LinkFiltersDto, LinksPaginatedResponseDto } from "./dto/links.dto";
-import { paginate } from "src/common/utils/pagination.utils";
 import type { Prisma } from "@prisma/client";
+import { Injectable } from "@nestjs/common";
+import { paginate } from "src/common/utils/pagination.utils";
+import { MetadataService } from "src/metadata/metadata.service";
+import { PrismaService } from "src/prisma/prisma.service";
+import { ApplicationService } from "src/product/application.service";
+import { BaseService } from "../common/base.service";
+import { LinkFiltersDto, LinksPaginatedResponseDto } from "./dto/links.dto";
+import { Link } from "./entities/link.entity";
 
 @Injectable()
 export class LinksService extends BaseService<Link> {

@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { ActorType, AppPermissions } from "@prisma/client";
-import { ActorTypeRepository } from "./infrastructure/repository/actorType.repository";
 import { CreateActorTypeDto, PatchActorTypeDto } from "./dto/actorType.dto";
 import { AppPermsDto } from "./dto/app-perms-matrix.dto";
+import { ActorTypeRepository } from "./infrastructure/repository/actorType.repository";
 
 @Injectable()
 export class ActorTypeService {

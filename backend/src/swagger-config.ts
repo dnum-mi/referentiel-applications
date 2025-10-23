@@ -1,10 +1,10 @@
 // src/main.ts
 import type { INestApplication } from "@nestjs/common";
-import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
+import type { KeycloakConfig } from "./config/configs/keycloak.config";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { stringify } from "yaml";
-import type { KeycloakConfig } from "./config/configs/keycloak.config";
 import { API_KEY_HEADER } from "./utils/constants.util";
 
 // Configuration de Swagger

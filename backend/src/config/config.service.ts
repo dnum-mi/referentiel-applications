@@ -1,8 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
+import { appConfig } from "./configs";
 import keycloakConfig from "./configs/keycloak.config";
 import { FrontendConfig } from "./domain/configs.entity";
-import { appConfig } from "./configs";
 
 @Injectable()
 export class ConfigService {

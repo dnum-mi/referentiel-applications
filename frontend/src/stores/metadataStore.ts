@@ -1,8 +1,8 @@
+import type { MetadataDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index";
-import type { MetadataDto } from "@/client/types.gen";
+import { useToasterStore } from "@/stores/toasterStore";
 
 export const useMetadataStore = defineStore("metadataStore", () => {
   const metadatas = ref<MetadataDto[]>([]);

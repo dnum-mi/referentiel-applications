@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "../../prisma/prisma.service";
 import { StatsType } from "@prisma/client";
+import { PrismaService } from "../../prisma/prisma.service";
 import { IStatsRepository } from "./stats.repository-interface";
 
 @Injectable()

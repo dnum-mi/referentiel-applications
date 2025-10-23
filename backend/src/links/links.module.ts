@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
-import { LinksService } from "./links.service";
-import { PrismaModule } from "src/prisma/prisma.module";
-import { ApplicationLinksController } from "./links.controller";
-import { ApplicationModule } from "src/product/application.module";
 import { MetadataModule } from "src/metadata/metadata.module";
+import { PrismaModule } from "src/prisma/prisma.module";
+import { ApplicationModule } from "src/product/application.module";
+import { ApplicationLinksController } from "./links.controller";
+import { LinksService } from "./links.service";
 
 @Module({
   imports: [ApplicationModule, MetadataModule, PrismaModule],

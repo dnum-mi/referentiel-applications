@@ -1,11 +1,12 @@
+import { VIcon } from "@gouvminint/vue-dsfr";
+import { createPinia } from "pinia";
 import { createApp } from "vue";
 import { authenticationInit } from "@/services/authentication";
 import { getConfig } from "@/services/config";
 import App from "./App.vue";
-import { createPinia } from "pinia";
-import router from "./router/index";
-import { VIcon } from "@gouvminint/vue-dsfr";
+import MatomoPlugin from "./plugins/MatomoPlugin";
 
+import router from "./router/index";
 // Importation des styles DSFR et personnalisés
 import "@gouvfr/dsfr/dist/core/core.main.min.css";
 import "@gouvfr/dsfr/dist/component/component.main.min.css";
@@ -14,7 +15,6 @@ import "@gouvminint/vue-dsfr/styles";
 import "@gouvfr/dsfr/dist/scheme/scheme.min.css";
 import "@gouvfr/dsfr/dist/utility/icons/icons.min.css";
 import "./main.css";
-import MatomoPlugin from "./plugins/MatomoPlugin";
 
 const app = createApp(App);
 

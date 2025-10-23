@@ -1,10 +1,10 @@
-import request from "supertest";
-import { setupTestSuite } from "./setup";
-import { getToken } from "./getToken";
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { UserFaker } from "./fakers/user.faker";
-import { OrganizationFaker } from "./fakers/organization.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
+import request from "supertest";
+import { OrganizationFaker } from "./fakers/organization.faker";
+import { UserFaker } from "./fakers/user.faker";
+import { getToken } from "./getToken";
+import { setupTestSuite } from "./setup";
 
 describe("Organizations", () => {
   const app = setupTestSuite();

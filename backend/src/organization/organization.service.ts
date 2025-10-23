@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { PrismaService } from "src/prisma/prisma.service";
-import { CreateOrganizationDto } from "./dto/organization.dto";
 import { Organization, Prisma } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { OrganizationFilterDto } from "./dto/filters.dto";
+import { CreateOrganizationDto } from "./dto/organization.dto";
 
 @Injectable()
 export class OrganizationService extends BaseService<Organization> {

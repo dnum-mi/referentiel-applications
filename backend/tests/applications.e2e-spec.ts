@@ -1,14 +1,14 @@
-import request from "supertest";
-import { setupTestSuite } from "./setup";
-import { getToken } from "./getToken";
-import type { UserFakerReturnType } from "./fakers/user.faker";
-import { UserFaker } from "./fakers/user.faker";
-import { faker } from "@faker-js/faker";
-import { ActorTypeFaker } from "./fakers/actor-type.faker";
-import { ApplicationFaker } from "./fakers/application.faker";
 import type { AsyncReturnType } from "src/utils/types.util";
-import { ActorFaker } from "./fakers/actor.faker";
+import type { UserFakerReturnType } from "./fakers/user.faker";
+import { faker } from "@faker-js/faker";
 import { AdminLevel } from "src/user/entities/user.entity";
+import request from "supertest";
+import { ActorTypeFaker } from "./fakers/actor-type.faker";
+import { ActorFaker } from "./fakers/actor.faker";
+import { ApplicationFaker } from "./fakers/application.faker";
+import { UserFaker } from "./fakers/user.faker";
+import { getToken } from "./getToken";
+import { setupTestSuite } from "./setup";
 
 describe("Applications", () => {
   const app = setupTestSuite();

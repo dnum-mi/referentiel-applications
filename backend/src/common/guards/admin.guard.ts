@@ -1,12 +1,12 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Injectable,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { ADMIN_LEVEL_KEY } from "../decorators/admin.decorator";
 import { AdminLevel } from "src/user/entities/user.entity";
+import { ADMIN_LEVEL_KEY } from "../decorators/admin.decorator";
 
 @Injectable()
 export class AdminGuard implements CanActivate {

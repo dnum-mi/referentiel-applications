@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
-import { PrismaClient } from "@prisma/client";
 import type { DefaultArgs } from "@prisma/client/runtime/library";
+import { PrismaClient } from "@prisma/client";
 
 /**
  * Shared Prisma client instance for all fakers to avoid multiple connections.
