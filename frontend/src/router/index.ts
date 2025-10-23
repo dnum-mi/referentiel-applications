@@ -3,10 +3,16 @@ import { routeNames } from "./route-names";
 
 const routes = [
   {
+    name: routeNames.ACCUEIL,
     path: "/",
-    name: "accueil",
     component: () => import("@/views/HomePage.vue"),
     meta: { requiresAuth: false, title: "Accueil - Référentiel des applications" },
+  },
+  {
+    name: routeNames.SITEMAP,
+    path: "/plan-du-site",
+    component: () => import("@/views/SiteMap.vue"),
+    meta: { requiresAuth: false, title: "Plan du site - Référentiel des applications" },
   },
   {
     name: routeNames.SEARCHAPP,
@@ -15,14 +21,14 @@ const routes = [
     meta: { requiresAuth: true, title: "Recherche d'applications - Référentiel des applications" },
   },
   {
+    name: routeNames.ACCESSIBILITE,
     path: "/accessibilite",
-    name: "accessibilite",
     component: () => import("@/views/AppAccessibility.vue"),
     meta: { requiresAuth: false, title: "Accessibilité - Référentiel des applications" },
   },
   {
     name: routeNames.ISSUELIST,
-    path: "/issue-list",
+    path: "/signalements",
     component: () => import("@/views/IssuePage.vue"),
     meta: { requiresAuth: true, title: "Signalements - Référentiel des applications" },
   },
@@ -34,7 +40,7 @@ const routes = [
   },
   {
     name: routeNames.PROFILE,
-    path: "/profile",
+    path: "/profil",
     component: () => import("@/views/UserProfile.vue"),
     meta: { requiresAuth: true, title: "Profil utilisateur - Référentiel des applications" },
   },

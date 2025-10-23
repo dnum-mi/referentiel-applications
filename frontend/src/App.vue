@@ -121,6 +121,7 @@ const ecosystemLinks = [
 ];
 const mandatoryLinks = computed(() => [
   { label: "Accessibilité : non conforme", to: "accessibilite" },
+  { label: "Plan du site", to: "plan-du-site" },
   {
     label: "Contact Tchap",
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
