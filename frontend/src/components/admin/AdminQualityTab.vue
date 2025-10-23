@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const props = defineProps<{ loading: boolean }>();
-const emit = defineEmits<(e: "recompute-quality") => void>();
+const emit = defineEmits<(e: "recomputeQuality") => void>();
 </script>
 
 <template>
@@ -13,9 +13,9 @@ const emit = defineEmits<(e: "recompute-quality") => void>();
       :icon="{ name: 'ri-refresh-line', animation: props.loading ? 'spin' : undefined }"
       :disabled="props.loading"
       data-testid="admin-quality-recompute-btn"
-      title="Lance le calcul de l’indice de qualité pour toutes les applications"
-      aria-label="Calculer l’indice de qualité"
-      @click="emit('recompute-quality')"
+      title="Lance le calcul de l'indice de qualité pour toutes les applications"
+      aria-label="Calculer l'indice de qualité"
+      @click="emit('recomputeQuality')"
     />
   </div>
 </template>

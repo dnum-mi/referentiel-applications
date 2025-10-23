@@ -354,7 +354,7 @@ watch(
     v-if="isHostingModalOpen"
     :application-id="application.id"
     @close="isHostingModalOpen = false"
-    @hosting-created="isHostingModalOpen = false"
+    @hostingCreated="isHostingModalOpen = false"
   />
 
   <HostingModal
@@ -362,7 +362,7 @@ watch(
     :application-id="application.id"
     :initial-hosting="hostingToEdit"
     @close="hostingToEdit = null"
-    @hosting-updated="hostingToEdit = null"
+    @hostingUpdated="hostingToEdit = null"
   />
   <DeleteConfirmationModal
     v-if="isDeleteModalOpen"

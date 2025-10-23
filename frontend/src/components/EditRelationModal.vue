@@ -19,7 +19,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: "close"): void
-  (e: "update-relation", updatedRelation: RelationDto): void
+  (e: "updateRelation", updatedRelation: RelationDto): void
 }>();
 const toaster = useToasterStore();
 const applicationSearchStore = useApplicationSearchStore();
@@ -136,7 +136,7 @@ async function submitRelationUpdate() {
   if (response.data) {
     const result = response.data;
 
-    emit("update-relation", result);
+    emit("updateRelation", result);
     closeModal();
   }
 }

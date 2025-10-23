@@ -18,7 +18,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: "close"): void
-  (e: "add-relation", payload: { targetId: string, type: string }): void
+  (e: "addRelation", payload: { targetId: string, type: string }): void
 }>();
 const toaster = useToasterStore();
 const applicationSearchStore = useApplicationSearchStore();
@@ -66,7 +66,7 @@ async function submitRelation() {
   }
 
   try {
-    emit("add-relation", {
+    emit("addRelation", {
       targetId: selectedApplicationId.value,
       type: relationType.value,
     });
