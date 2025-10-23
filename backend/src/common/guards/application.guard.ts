@@ -1,16 +1,16 @@
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   Inject,
+  Injectable,
 } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
-import { APP_ACTION_KEY } from "../decorators/application.decorator";
-import { PrismaService } from "src/prisma/prisma.service";
-import { APP_PERMISSIONS, APP_PERMS_MAP, AppPermissionsRecord } from "../utils/types";
-import { AdminLevel, Requestor } from "src/user/entities/user.entity";
-import { appConfig } from "src/config/configs";
 import { ConfigType } from "@nestjs/config";
+import { Reflector } from "@nestjs/core";
+import { appConfig } from "src/config/configs";
+import { PrismaService } from "src/prisma/prisma.service";
+import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { APP_ACTION_KEY } from "../decorators/application.decorator";
+import { APP_PERMISSIONS, APP_PERMS_MAP, AppPermissionsRecord } from "../utils/types";
 
 @Injectable()
 export class ApplicationGuard implements CanActivate {

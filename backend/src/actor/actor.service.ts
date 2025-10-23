@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { ActorRepository } from "./infrastructure/repository/actor.repository";
-import { CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
-import { Prisma, Actor } from "@prisma/client";
+import { Actor, Prisma } from "@prisma/client";
 import { ApplicationService } from "src/product/application.service";
+import { CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
+import { ActorRepository } from "./infrastructure/repository/actor.repository";
 
 @Injectable()
 export class ActorService {

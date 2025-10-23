@@ -1,5 +1,5 @@
-import type { Relation } from "../../domain/relation.entity";
 import type { RelationApplicationDto } from "../../application/dto/relation-application.dto";
+import type { Relation } from "../../domain/relation.entity";
 
 export interface IRelationRepository {
   create: (

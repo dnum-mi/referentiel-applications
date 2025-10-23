@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import { IActorTypeRepository } from "./actorType.repository.interface";
-import { PrismaService } from "src/prisma/prisma.service";
+import { AppPermissions, Prisma } from "@prisma/client";
 import {
   CreateActorTypeDto,
   PatchActorTypeDto,
 } from "src/actorType/dto/actorType.dto";
 import { actorTypeMap } from "src/actorType/map/actorType.map";
-import { AppPermissions, Prisma } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
+import { IActorTypeRepository } from "./actorType.repository.interface";
 
 @Injectable()
 export class ActorTypeRepository implements IActorTypeRepository {

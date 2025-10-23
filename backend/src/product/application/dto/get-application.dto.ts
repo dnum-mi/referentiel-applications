@@ -1,12 +1,12 @@
+import { ApiProperty, PickType } from "@nestjs/swagger";
+import { priorityRestart, Status } from "@prisma/client";
 import {
   IsArray,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
-  IsEnum,
 } from "class-validator";
-import { priorityRestart, Status } from "@prisma/client";
-import { ApiProperty, PickType } from "@nestjs/swagger";
 import { PaginatedResponseDto } from "../../../common/dto";
 
 export class ApplicationDto {

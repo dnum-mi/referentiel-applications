@@ -1,7 +1,7 @@
-import request from "supertest";
-import { setupTestSuite } from "./setup";
 import type { OpenAPIObject } from "@nestjs/swagger";
 import type { ReferenceObject, ResponseObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface.js";
+import request from "supertest";
+import { setupTestSuite } from "./setup";
 
 const methods = ["get", "post", "put", "delete", "patch", "options", "head"] as const;
 describe("Test Swagger documentation", () => {

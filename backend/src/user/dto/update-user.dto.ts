@@ -1,7 +1,7 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { UserCapabilities } from "../entities/user.entity";
 import type { AdminLevel } from "../entities/user.entity";
+import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsInt, IsOptional, IsString } from "class-validator";
+import { UserCapabilities } from "../entities/user.entity";
 
 export class UpdateUserDto {
   @ApiProperty({ required: false })

@@ -1,5 +1,5 @@
-import { SetMetadata } from "@nestjs/common";
 import type { APP_PERMISSIONS } from "../utils/types";
+import { SetMetadata } from "@nestjs/common";
 
 export const APP_ACTION_KEY = "action";
 

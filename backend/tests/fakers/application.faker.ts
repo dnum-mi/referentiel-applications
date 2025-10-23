@@ -1,8 +1,8 @@
-import { priorityRestart } from "@prisma/client";
-import { faker } from "@faker-js/faker";
-import { getPrismaClient } from "./prisma";
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFaker } from "./user.faker";
+import { faker } from "@faker-js/faker";
+import { priorityRestart } from "@prisma/client";
+import { getPrismaClient } from "./prisma";
 
 const appTags = [
   "WEB",

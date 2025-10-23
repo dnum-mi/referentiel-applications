@@ -1,13 +1,12 @@
-// src/main.ts
+import type { AppConfig } from "./config/configs/app.config";
+import type { KeycloakConfig } from "./config/configs/keycloak.config";
 import { Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { Logger as PinoLogger } from "nestjs-pino";
 import { AppModule } from "./app.module";
-import { setupSwagger } from "./swagger-config.js";
-import { ConfigService } from "@nestjs/config";
-import type { AppConfig } from "./config/configs/app.config";
-import type { KeycloakConfig } from "./config/configs/keycloak.config";
 import { setupGlobalValidation } from "./config/app-config";
+import { setupSwagger } from "./swagger-config.js";
 
 async function bootstrap() {
   const globalPrefix = "/api/v2";

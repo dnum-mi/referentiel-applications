@@ -1,7 +1,7 @@
+import type { OrganizationDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
-import type { OrganizationDto } from "@/client/types.gen";
 import { debounce } from "@/utils/debouncer-utils";
 
 export const useOrganizationStore = defineStore("organizationStore", () => {

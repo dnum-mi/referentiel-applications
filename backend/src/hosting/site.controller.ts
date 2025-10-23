@@ -1,9 +1,9 @@
 import { Controller, Get, UseGuards } from "@nestjs/common";
-import { HostingService } from "./hosting.service";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { AdminGuard } from "src/common/guards/admin.guard";
 import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
+import { AdminGuard } from "src/common/guards/admin.guard";
 import { AdminLevel } from "src/user/entities/user.entity";
+import { HostingService } from "./hosting.service";
 
 @ApiTags("Sites")
 @UseGuards(AdminGuard)

@@ -1,6 +1,6 @@
-import { render } from "@testing-library/vue";
-
 import { DsfrButton, VIcon } from "@gouvminint/vue-dsfr";
+
+import { render } from "@testing-library/vue";
 
 import ReloadPrompt from "./ReloadPrompt.vue";
 

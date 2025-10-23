@@ -1,7 +1,7 @@
+import type { AnomalyNotificationsControllerFindAllData, CreateAnomalyNotificationRequestDto, GetAnomalyNotificationDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
-import type { AnomalyNotificationsControllerFindAllData, CreateAnomalyNotificationRequestDto, GetAnomalyNotificationDto } from "@/client/types.gen";
 
 export type reportIssueFilter = Exclude<AnomalyNotificationsControllerFindAllData["query"], undefined>;
 

@@ -9,21 +9,21 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
-  ApiTags,
-  ApiOperation,
-  ApiOkResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
 } from "@nestjs/swagger";
-import { TokenService } from "./token.service";
-import { CreatePersonalTokenDto, CreateServiceTokenDto, ExposedTokenDto, RegenerateTokenDto, TokenDto } from "./dto/token.dto";
-import { AdminGuard } from "src/common/guards/admin.guard";
 import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
+import { User } from "src/common/decorators/user.decorator";
+import { AdminGuard } from "src/common/guards/admin.guard";
 import {
   AdminLevel,
   Requestor,
 } from "src/user/entities/user.entity";
-import { User } from "src/common/decorators/user.decorator";
+import { CreatePersonalTokenDto, CreateServiceTokenDto, ExposedTokenDto, RegenerateTokenDto, TokenDto } from "./dto/token.dto";
+import { TokenService } from "./token.service";
 
 /**
  * Controller la gestion des organisations

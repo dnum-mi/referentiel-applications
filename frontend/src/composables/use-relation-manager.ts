@@ -1,10 +1,10 @@
-import { ref, computed } from "vue";
-import { useRelationStore } from "@/stores/relationStore";
-import { useToasterStore } from "@/stores/toasterStore";
+import type { RelationDto } from "@/client/types.gen";
 import type { Relation } from "@/models/Application";
+import { computed, ref } from "vue";
 import api from "@/api/index";
 import { RelationType } from "@/client/types.gen";
-import type { RelationDto } from "@/client/types.gen";
+import { useRelationStore } from "@/stores/relationStore";
+import { useToasterStore } from "@/stores/toasterStore";
 
 export function useRelationManager() {
   const store = useRelationStore();

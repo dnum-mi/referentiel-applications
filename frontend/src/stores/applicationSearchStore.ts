@@ -1,7 +1,7 @@
-import { ref, computed, watch } from "vue";
-import { defineStore } from "pinia";
-import api from "@/api/index.js";
 import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
+import { defineStore } from "pinia";
+import { computed, ref, watch } from "vue";
+import api from "@/api/index.js";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 
 export type Filters = Exclude<ApplicationControllerSearchData["query"], undefined> & {

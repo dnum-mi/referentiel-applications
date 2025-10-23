@@ -1,8 +1,8 @@
+import type { CreateLinkDto, LinkDto, UpdateLinkDto } from "@/client/types.gen.js";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index.js";
-import type { CreateLinkDto, LinkDto, UpdateLinkDto } from "@/client/types.gen.js";
+import { useToasterStore } from "@/stores/toasterStore";
 
 interface LinkFilters {
   page?: number

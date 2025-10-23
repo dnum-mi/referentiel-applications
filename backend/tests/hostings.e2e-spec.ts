@@ -1,14 +1,14 @@
-import request from "supertest";
-import { setupTestSuite } from "./setup";
-import { getToken } from "./getToken";
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { UserFaker } from "./fakers/user.faker";
-import { HostingFaker } from "./fakers/hosting.faker";
-import { HostingOptionFaker } from "./fakers/hosting-option.faker";
-import { ApplicationFaker } from "./fakers/application.faker";
+import { AdminLevel } from "src/user/entities/user.entity";
+import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { ApplicationFaker } from "./fakers/application.faker";
+import { HostingOptionFaker } from "./fakers/hosting-option.faker";
+import { HostingFaker } from "./fakers/hosting.faker";
+import { UserFaker } from "./fakers/user.faker";
+import { getToken } from "./getToken";
+import { setupTestSuite } from "./setup";
 
 describe("Hostings", () => {
   const app = setupTestSuite();

@@ -1,30 +1,30 @@
 import {
-  Controller,
-  Post,
-  Get,
-  Patch,
-  Delete,
   Body,
-  Param,
-  Logger,
-  UseGuards,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
+  Logger,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
 } from "@nestjs/common";
 import {
   ApiBody,
-  ApiTags,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiNoContentResponse,
+  ApiTags,
 } from "@nestjs/swagger";
-import { ActorDto, CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
-import { ActorService } from "./actor.service";
 import { Actor } from "@prisma/client";
-import { UserId } from "../common/decorators/user-id.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
+import { ApplicationGuard } from "src/common/guards/application.guard";
+import { UserId } from "../common/decorators/user-id.decorator";
+import { ActorService } from "./actor.service";
+import { ActorDto, CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
 
 @ApiTags("Actors")
 @Controller("actors")

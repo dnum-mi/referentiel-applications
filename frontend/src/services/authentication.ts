@@ -1,5 +1,5 @@
-import Keycloak from "keycloak-js";
 import type { KeycloakInitOptions } from "keycloak-js";
+import Keycloak from "keycloak-js";
 import { getConfig } from "./config";
 
 export const keycloakInitOptions: KeycloakInitOptions = {

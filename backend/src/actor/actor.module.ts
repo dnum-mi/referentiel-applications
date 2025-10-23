@@ -1,13 +1,13 @@
 import { Module } from "@nestjs/common";
+import { MetadataModule } from "src/metadata/metadata.module";
 import { PrismaModule } from "src/prisma/prisma.module";
+import { ApplicationModule } from "src/product/application.module";
 import {
-  ApplicationActorsController,
   ActorController,
+  ApplicationActorsController,
 } from "./actor.controller";
 import { ActorService } from "./actor.service";
 import { ActorRepository } from "./infrastructure/repository/actor.repository";
-import { ApplicationModule } from "src/product/application.module";
-import { MetadataModule } from "src/metadata/metadata.module";
 
 @Module({
   imports: [PrismaModule, ApplicationModule, MetadataModule],

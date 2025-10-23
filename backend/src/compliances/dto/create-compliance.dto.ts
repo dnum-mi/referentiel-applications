@@ -1,17 +1,17 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { TestResult, BackupStorage } from "src/enum";
+import { Type } from "class-transformer";
 import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsDateString,
   IsBoolean,
+  IsDateString,
+  IsEnum,
   IsInt,
   IsNumber,
-  Min,
+  IsOptional,
+  IsString,
   Max,
+  Min,
 } from "class-validator";
-import { Type } from "class-transformer";
+import { BackupStorage, TestResult } from "src/enum";
 
 export class CreateComplianceDto {
   // DIMA specific fields

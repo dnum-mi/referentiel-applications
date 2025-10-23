@@ -1,9 +1,9 @@
-import { PrismaService } from "src/prisma/prisma.service";
 import { Injectable } from "@nestjs/common";
-import isEqual from "lodash/isEqual";
 import { Prisma } from "@prisma/client";
-import { MetadataRepository } from "./infrastructure/metadata.repository";
+import isEqual from "lodash/isEqual";
+import { PrismaService } from "src/prisma/prisma.service";
 import { MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
+import { MetadataRepository } from "./infrastructure/metadata.repository";
 
 @Injectable()
 export class MetadataService {

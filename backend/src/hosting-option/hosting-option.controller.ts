@@ -1,22 +1,22 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  Query,
+  Get,
   HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
 } from "@nestjs/common";
-import { HostingOptionService } from "./hosting-option.service";
+import { ApiCreatedResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import {
   CreateHostingOptionDto,
-  UpdateHostingOptionDto,
-  HostingOptionFiltersDto,
   HostingOptionDto,
+  HostingOptionFiltersDto,
+  UpdateHostingOptionDto,
 } from "./dto/hosting-option.dto";
-import { ApiOperation, ApiTags, ApiCreatedResponse, ApiOkResponse, ApiNoContentResponse, ApiNotFoundResponse } from "@nestjs/swagger";
+import { HostingOptionService } from "./hosting-option.service";
 
 @ApiTags("HostingOptions")
 @Controller("hosting-options")

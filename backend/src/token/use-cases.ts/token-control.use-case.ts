@@ -1,8 +1,8 @@
-import { BadRequestException } from "@nestjs/common";
-import { TokenStatus } from "../domain/token-status.entity";
-import type { TokenEntity } from "../domain/token.entity";
 import type { Requestor } from "src/user/entities/user.entity";
+import type { TokenEntity } from "../domain/token.entity";
+import { BadRequestException } from "@nestjs/common";
 import { AdminLevel, UserType } from "src/user/entities/user.entity";
+import { TokenStatus } from "../domain/token-status.entity";
 
 export const tokenInvalidReason = {
   notFound: "notFound",

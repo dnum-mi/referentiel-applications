@@ -1,13 +1,13 @@
-import request from "supertest";
-import { setupTestSuite } from "./setup";
-import { getToken } from "./getToken";
+import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { UserFaker } from "./fakers/user.faker";
-import { ApplicationFaker } from "./fakers/application.faker";
+import { AdminLevel } from "src/user/entities/user.entity";
+import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
-import type { AsyncReturnType } from "src/utils/types.util";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { ApplicationFaker } from "./fakers/application.faker";
+import { UserFaker } from "./fakers/user.faker";
+import { getToken } from "./getToken";
+import { setupTestSuite } from "./setup";
 
 describe("Compliances", () => {
   const app = setupTestSuite();

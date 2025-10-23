@@ -1,6 +1,6 @@
-import { IsEnum, IsString } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { RelationType } from "@prisma/client";
+import { IsEnum, IsString } from "class-validator";
 import { ApplicationMinimalDto } from "src/product/application/dto/get-application.dto";
 
 export class RelationApplicationDto {

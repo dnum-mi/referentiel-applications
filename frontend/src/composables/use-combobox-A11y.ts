@@ -1,5 +1,5 @@
-import { computed } from "vue";
 import type { Ref } from "vue";
+import { computed } from "vue";
 
 export function useComboboxA11y(params: {
   id: string

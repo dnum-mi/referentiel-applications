@@ -1,11 +1,11 @@
 import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
+import type { PrismaClient } from "@prisma/client";
 import { Test } from "@nestjs/testing";
 import { AppModule } from "../src/app.module";
-import { setupSwagger } from "../src/swagger-config";
 import { setupGlobalValidation } from "../src/config/app-config";
+import { setupSwagger } from "../src/swagger-config";
 import { getPrismaClient } from "./fakers/prisma";
-import type { PrismaClient } from "@prisma/client";
 
 export async function setupApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({

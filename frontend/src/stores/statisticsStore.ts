@@ -1,6 +1,6 @@
+import type { GetIqAvgGroupedDto } from "@/client";
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { GetIqAvgGroupedDto } from "@/client";
 import api from "@/api/index";
 
 export const useStatisticsStore = defineStore("statisticsStore", () => {

@@ -1,6 +1,6 @@
+import type { APP_PERMISSIONS } from "src/common/utils/types";
 import { registerAs } from "@nestjs/config";
 import { AppPermissionsRecord } from "src/common/utils/types";
-import type { APP_PERMISSIONS } from "src/common/utils/types";
 
 export interface AppConfig {
   env: string

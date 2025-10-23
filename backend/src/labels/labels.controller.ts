@@ -1,30 +1,30 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
   Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
+  Post,
   UseGuards,
-  HttpStatus,
-  HttpCode,
 } from "@nestjs/common";
 import {
-  ApiTags,
-  ApiOperation,
   ApiBody,
-  ApiParam,
   ApiCreatedResponse,
-  ApiOkResponse,
   ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
 } from "@nestjs/swagger";
-import { LabelsService } from "./labels.service";
-import { CreateLabelDto } from "./dto/create-label.dto";
-import { UserId } from "../common/decorators/user-id.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AppAction } from "src/common/decorators/application.decorator";
+import { ApplicationGuard } from "src/common/guards/application.guard";
+import { UserId } from "../common/decorators/user-id.decorator";
+import { CreateLabelDto } from "./dto/create-label.dto";
 import { LabelDto } from "./dto/label.dto";
+import { LabelsService } from "./labels.service";
 
 @ApiTags("Labels")
 @UseGuards(ApplicationGuard)

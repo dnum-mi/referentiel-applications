@@ -1,9 +1,9 @@
+import type { ComplianceDto, CreateComplianceDto, UpdateComplianceDto } from "@/client/types.gen";
 // src/stores/complianceStore.ts
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index.js";
-import type { ComplianceDto, CreateComplianceDto, UpdateComplianceDto } from "@/client/types.gen";
+import { useToasterStore } from "@/stores/toasterStore";
 
 export const useComplianceStore = defineStore("complianceStore", () => {
   const compliance = ref<ComplianceDto | null>(null);

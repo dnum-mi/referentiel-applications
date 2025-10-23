@@ -1,6 +1,6 @@
-import { PrismaService } from "./../../prisma/prisma.service";
 import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiInternalServerErrorResponse, ApiOkResponse } from "@nestjs/swagger";
+import { ApiInternalServerErrorResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { PrismaService } from "./../../prisma/prisma.service";
 
 @ApiTags("Health Check")
 @Controller("health-check")

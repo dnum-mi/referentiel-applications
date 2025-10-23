@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException, Inject } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { RelationApplicationDto } from "./application/dto/relation-application.dto";
-import { IRelationRepository } from "./infrastructure/repository/relation.repository.interface";
 import { Relation } from "./domain/relation.entity";
+import { IRelationRepository } from "./infrastructure/repository/relation.repository.interface";
 
 @Injectable()
 export class RelationService {

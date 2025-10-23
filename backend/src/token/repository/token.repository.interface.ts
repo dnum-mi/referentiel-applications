@@ -1,6 +1,6 @@
 import type { AdminLevel } from "src/user/entities/user.entity";
-import type { TokenEntity } from "../domain/token.entity";
 import type { TokenStatus } from "../domain/token-status.entity";
+import type { TokenEntity } from "../domain/token.entity";
 
 export interface ListTokensParams {
   createdById?: string

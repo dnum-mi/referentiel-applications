@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { MetadataAction } from "@prisma/client";
-import { PaginationDto, PaginatedResponseDto } from "src/common/dto";
+import { IsDateString, IsOptional } from "class-validator";
+import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 import { UserEntity } from "src/user/entities/user.entity";
-import { IsOptional, IsDateString } from "class-validator";
 
 export class MetadataFiltersDto extends PaginationDto {
   @ApiPropertyOptional({

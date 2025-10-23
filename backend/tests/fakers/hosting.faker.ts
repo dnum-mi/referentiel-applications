@@ -1,6 +1,6 @@
+import type { UserFakerReturnType } from "./user.faker";
 import { faker } from "@faker-js/faker";
 import { getPrismaClient } from "./prisma";
-import type { UserFakerReturnType } from "./user.faker";
 
 export class HostingFaker {
   static async create(override: {

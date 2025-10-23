@@ -1,7 +1,7 @@
+import type { ActorDto, CreateActorDto, UpdateActorDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
-import type { ActorDto, CreateActorDto, UpdateActorDto } from "@/client/types.gen";
 
 export const useActorStore = defineStore("actorStore", () => {
   const actors = ref<ActorDto[]>([]);

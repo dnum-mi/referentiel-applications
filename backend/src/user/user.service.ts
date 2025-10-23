@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
-import { PrismaService } from "src/prisma/prisma.service";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { UserFilterDto } from "./dto/filters.dto";
-import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
-import { paginate } from "src/common/utils/pagination.utils";
 import { PaginatedResponseDto } from "src/common/dto";
+import { paginate } from "src/common/utils/pagination.utils";
+import { PrismaService } from "src/prisma/prisma.service";
+import { UserFilterDto } from "./dto/filters.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
