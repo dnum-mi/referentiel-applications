@@ -7,6 +7,7 @@
   "author": "",
   "license": "UNLICENSED",
   "scripts": {
+    "cmd": "ts-node src/cmd/index.ts",
     "gen": "npm run db:generate",
     "db:generate": "prisma generate",
     "db:reset": "prisma migrate reset",
@@ -43,6 +44,7 @@
     "cache-manager": "^5.7.6",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "commander": "^14.0.1",
     "compression": "^1.8.1",
     "cross-env": "^7.0.3",
     "date-fns": "^4.1.0",
