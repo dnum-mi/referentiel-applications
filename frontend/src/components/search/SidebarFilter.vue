@@ -12,7 +12,7 @@ import { useStatisticsStore } from "@/stores/statisticsStore";
 import StatusFilter from "./StatusFilter.vue";
 import { DsfrButton } from "@gouvminint/vue-dsfr";
 
-const sidebarOpen = ref(true);
+const sidebarOpen = ref(false);
 const searchStore = useApplicationSearchStore();
 const statsStore = useStatisticsStore();
 

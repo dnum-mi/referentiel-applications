@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeMount } from "vue";
+import { ref, watch, onMounted, onBeforeMount, computed } from "vue";
 import type { Component } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useBreakpoints } from "@/composables/use-breakpoint";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 
 import InformationsGenerales from "./InformationsGenerales.vue";
@@ -12,6 +13,7 @@ import ActorManager from "./actor/ActorTab.vue";
 import Relationships from "./RelationshipsTab.vue";
 import NotificationsApplication from "./NotificationsApplication.vue";
 import Quality from "./QualityTab.vue";
+
 import { useActorStore } from "@/stores/actorStore";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useReportIssueStore } from "@/stores/reportIssueStore";
@@ -23,9 +25,13 @@ import { useUserStore } from "@/stores/userStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
+import { BREAKPOINTS } from "@/constants/breakpoint";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
-const emit = defineEmits(["update:application"]);
+const emit = defineEmits<{
+  (e: "update:application", updatedApp: ApplicationWithPerms): void;
+}>();
+
 const hostingStore = useHostingStore();
 const userStore = useUserStore();
 const actorStore = useActorStore();
@@ -34,14 +40,19 @@ const compliancesStore = useComplianceStore();
 const reportIssueStore = useReportIssueStore();
 const relationsStore = useRelationStore();
 const metadataStore = useMetadataStore();
+const toaster = useToasterStore();
 
+// Local reactive state
 const application = ref<ApplicationWithPerms>(props.application);
 const activeTab = ref(0);
 const route = useRoute();
 const router = useRouter();
-const toaster = useToasterStore();
+
+const breakpoints = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX  });
+const isMobile = breakpoints.smaller("mobile");
 
 function updateApplication(updatedApp: ApplicationWithPerms) {
+  // preserve reactivity: update the same object reference
   Object.assign(application.value, updatedApp);
   emit("update:application", updatedApp);
 }
@@ -53,15 +64,16 @@ const errorMessages = {
   ERR_LOAD_LINKS: "Erreur lors du chargement des liens",
   ERR_LOAD_RELATIONS: "Erreur lors du chargement des relations",
   ERR_LOAD_COMPLIANCES: "Erreur lors du chargement des conformités",
-};
+} as const;
 
-const fetchLinks = linkStore.fetchLinks.bind(linkStore, props.application.id);
-const fetchCompliances = compliancesStore.fetchCompliance.bind(compliancesStore, props.application.id);
-const fetchActors = actorStore.fetchActorsByApplication.bind(actorStore, props.application.id);
-const fetchRelations = relationsStore.fetchRelationsByApplication.bind(relationsStore, props.application.id);
+const fetchLinks = () => linkStore.fetchLinks(application.value.id);
+const fetchCompliances = () => compliancesStore.fetchCompliance(application.value.id);
+const fetchActors = () => actorStore.fetchActorsByApplication(application.value.id);
+const fetchRelations = () => relationsStore.fetchRelationsByApplication(application.value.id);
+
 async function fetchHistoryData() {
   if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
-    metadataStore.fetchMetadatasByApplication(application.value.id, {
+    await metadataStore.fetchMetadatasByApplication(application.value.id, {
       page: 0,
       pageSize: 20,
       sortBy: "createdAt",
@@ -69,15 +81,17 @@ async function fetchHistoryData() {
     });
   }
 
-  reportIssueStore.fetchIssueByApplication(props.application.id);
+  await reportIssueStore.fetchIssueByApplication(application.value.id);
 }
 
-const tabs = ref<
-  (Tab<typeof errorMessages> & {
-    component: Component
-    requiredPerms: APP_PERMISSIONS[]
-  })[]
->([
+// Tabs definition — keep the same shape, but ensure errorKey is keyof errorMessages
+const tabs = ref<(
+  Tab<typeof errorMessages> & {
+    component: Component;
+    requiredPerms: APP_PERMISSIONS[];
+    errorKey?: keyof typeof errorMessages;
+  }
+)[]>([
   {
     title: "Informations générales",
     icon: "ri-checkbox-circle-line",
@@ -154,37 +168,49 @@ const tabs = ref<
   },
 ]);
 
+// Read tab from URL using tabId (string) — more stable than using numeric index
 onMounted(() => {
-  const tabParam = route.query.tab;
-  if (tabParam && !Number.isNaN(Number(tabParam))) {
-    const index = Number(tabParam);
-    if (index >= 0 && index < tabs.value.length) {
-      activeTab.value = index;
-    }
+  const raw = Array.isArray(route.query.tab) ? route.query.tab[0] : route.query.tab;
+  if (raw) {
+    const idx = tabs.value.findIndex((t) => t.tabId === raw);
+    if (idx !== -1) activeTab.value = idx;
   }
 });
 
 onBeforeMount(async () => {
+  // filter tabs based on permissions
   tabs.value = tabs.value.filter((tab) => {
     if (!tab.requiredPerms) return true;
     if (userStore.adminLevel >= AdminLevel.READ) return true;
-    return tab.requiredPerms.every(perm => props.application.myPerms.has(perm));
+    return tab.requiredPerms.every((perm) => props.application.myPerms.has(perm));
   });
+
+  // clamp activeTab to valid range
+  if (activeTab.value >= tabs.value.length) activeTab.value = Math.max(0, tabs.value.length - 1);
+
+  // trigger load functions (they use application.value internally)
   tabs.value.forEach((tab) => {
     if (tab.loadFn) {
-      tab.loadFn().catch((err) => {
-        console.error(`Error loading ${tab.title}:`, err);
-        toaster.addErrorMessage(errorMessages[tab.errorKey]);
-      });
+      // call and handle error per-tab
+      tab
+        .loadFn()
+        .catch((err: unknown) => {
+          console.error(`Error loading ${tab.title}:`, err);
+          const msg = tab.errorKey ? errorMessages[tab.errorKey] : "Erreur de chargement";
+          toaster.addErrorMessage(msg);
+        });
     }
   });
+
+  // fetch hostings if allowed
   if (userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings")) {
-    hostingStore.fetchHostings(props.application.id).catch(() => {
+    hostingStore.fetchHostings(application.value.id).catch(() => {
       toaster.addErrorMessage(errorMessages.ERR_LOAD_HOSTINGS);
     });
   }
 });
 
+// keep props -> local ref in sync
 watch(
   () => props.application,
   (newVal) => {
@@ -192,16 +218,19 @@ watch(
   },
 );
 
+// write tabId (not index) to URL to keep it stable
 watch(
   () => activeTab.value,
-  (newVal) => {
-    router.replace({ query: { ...route.query, tab: newVal.toString() } });
+  (newIdx) => {
+    const tabId = tabs.value[newIdx]?.tabId;
+    if (tabId) router.replace({ query: { ...route.query, tab: tabId } });
   },
 );
 </script>
 
 <template>
   <DsfrTabs
+    v-if="!isMobile"
     v-model="activeTab"
     tab-list-name="Informations sur l'application"
     :tab-titles="tabs"
@@ -209,18 +238,45 @@ watch(
   >
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
       <DsfrTabContent
-        v-show="activeTab === index"
         :tab-id="tab.tabId"
         :panel-id="tab.panelId"
         :data-testid="`application-tab-content-${tab.tabId}`"
       >
-        <component
-          :is="tab.component"
-          :application="application"
-          :data-testid="`application-tab-component-${tab.tabId}`"
-          @update:application="updateApplication"
-        />
+        <!-- lazy mount the component to avoid mounting heavy components until the tab is active -->
+        <KeepAlive>
+          <component
+            v-if="activeTab === index"
+            :is="tab.component"
+            :application="application"
+            :data-testid="`application-tab-component-${tab.tabId}`"
+            @update:application="updateApplication"
+          />
+        </KeepAlive>
       </DsfrTabContent>
     </template>
   </DsfrTabs>
+
+  <div v-else class="fr-accordions-group">
+    <h2 class="fr-h4 fr-mb-2w">Informations sur l'application</h2>
+    <!--
+      Note: lazy mounting inside the DSFR accordion depends on the exact API of `DsfrAccordion`.
+      Here we keep behavior similar to your previous code (mounting the component inside the accordion).
+      If `DsfrAccordion` exposes an expanded state or events, we can mount the inner component only
+      when its accordion is opened to reduce initial render cost on mobile.
+    -->
+    <DsfrAccordion
+      v-for="(tab, index) in tabs"
+      :key="tab.tabId"
+      :title="tab.title"
+      :id="`accordion-${tab.panelId}`"
+    >
+      <component
+        :is="tab.component"
+        :application="application"
+        :data-testid="`application-tab-component-${tab.tabId}`"
+        :is-mobile="isMobile"
+        @update:application="updateApplication"
+      />
+    </DsfrAccordion>
+  </div>
 </template>

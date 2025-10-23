@@ -6,7 +6,22 @@ import { RelationType } from "@/client/types.gen";
 import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 
-export function useRelationManager() {
+export interface RelationRow {
+  id: string
+  Sélection: string
+  "Application Source": string
+  Relation: string
+  "Application Cible": {
+    label: string
+    id: string | undefined
+  }
+  Actions: {
+    edit: () => void
+    delete: () => void
+  }
+}
+
+export function useRelationManager(applicationId: string) {
   const store = useRelationStore();
   const toaster = useToasterStore();
 
@@ -32,7 +47,17 @@ export function useRelationManager() {
     return rel ? (isSource ? rel.source : rel.target) : type;
   }
 
-  function createRow(rel: RelationDto & { isSource: boolean }) {
+  function editRelation(rel: RelationDto) {
+    relationToEdit.value = { ...rel };
+    isEditRelationModalOpen.value = true;
+  }
+
+  function deleteSingleRelation(rel: RelationDto) {
+    selectedRelationIds.value = [rel.id];
+    showDeleteConfirmation.value = true;
+  }
+
+  function createRow(rel: RelationDto & { isSource: boolean }): RelationRow {
     const sourceLabel = rel.sourceApplication?.label || rel.applicationSourceId || "❌ Source inconnue";
     const targetLabel = rel.targetApplication?.label || rel.applicationTargetId || "❌ Cible inconnue";
 
@@ -45,16 +70,14 @@ export function useRelationManager() {
         label: rel.isSource ? targetLabel : sourceLabel,
         id: rel.isSource ? rel.applicationTargetId : rel.applicationSourceId,
       },
-      Actions: { edit: () => editRelation(rel) },
+      Actions: {
+        edit: () => editRelation(rel),
+        delete: () => deleteSingleRelation(rel),
+      },
     };
   }
 
-  const rows = computed(() => store.relations.map(rel => createRow(rel)));
-
-  function editRelation(rel: RelationDto) {
-    relationToEdit.value = { ...rel };
-    isEditRelationModalOpen.value = true;
-  }
+  const rows = computed<RelationRow[]>(() => store.relations.map(createRow));
 
   function removeSelectedRelations() {
     if (!selectedRelationIds.value.length) {
@@ -64,12 +87,13 @@ export function useRelationManager() {
     showDeleteConfirmation.value = true;
   }
 
-  async function confirmDelete(applicationSourceId: string) {
+  async function confirmDelete() {
     try {
       await Promise.all(selectedRelationIds.value.map(id => api.relationControllerDelete({
-        path: { applicationId: applicationSourceId, id },
+        path: { applicationId, id },
       })));
-      await store.fetchRelationsByApplication(applicationSourceId);
+
+      await store.fetchRelationsByApplication(applicationId);
       selectedRelationIds.value = [];
       showDeleteConfirmation.value = false;
       toaster.addSuccessMessage("Relations supprimées avec succès !");
@@ -104,10 +128,10 @@ export function useRelationManager() {
     closeEditRelationModal();
   }
 
-  async function handleCreateRelation(updated: Omit<Relation, "id">) {
-    await store.createRelation(updated.applicationSourceId, updated.applicationTargetId, updated.type);
+  async function handleCreateRelation(created: Omit<Relation, "id">) {
+    await store.createRelation(created.applicationSourceId, created.applicationTargetId, created.type);
     toaster.addSuccessMessage("Relation créée avec succès!");
-    closeEditRelationModal();
+    closeAddRelationModal();
   }
 
   return {
@@ -120,7 +144,6 @@ export function useRelationManager() {
     isEditRelationModalOpen,
     relationToEdit,
 
-    editRelation,
     removeSelectedRelations,
     confirmDelete,
     cancelDelete,

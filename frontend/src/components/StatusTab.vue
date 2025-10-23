@@ -10,35 +10,31 @@ import { AdminLevel } from "@/models/user";
 import useModal from "@/composables/use-modal";
 import AppLoader from "./AppLoader.vue";
 import StatusForm from "./form/StatusForm.vue";
+import { useBreakpoints } from "@/composables/use-breakpoint";
+import { BREAKPOINTS } from "@/constants/breakpoint";
 
 interface StatusFormData {
   status: string
   statusDate?: string | null
 }
 
-// Interface for the current status in edit/delete modals
-interface CurrentStatusData {
-  id: string
-  rawStatus: any // Use any since the form expects the raw ApplicationStatus enum
-  rawStatusDate?: string | Date | null
-}
-
 const props = defineProps<{
   application: ApplicationWithPerms
 }>();
 
-const emit = defineEmits(["update:application"]);
+
 const toaster = useToasterStore();
 const userStore = useUserStore();
-const statusModal = useModal();
-const editStatusModal = useModal();
-const deleteStatusModal = useModal();
+
+
+const formModal = useModal<ApplicationStatusDto>();
+const deleteModal = useModal<ApplicationStatusDto>();
 
 const statuses = ref<ApplicationStatusDto[]>([]);
 const isLoading = ref(false);
 const isSubmitting = ref(false);
 const errorMessage = ref("");
-const currentStatus = ref<CurrentStatusData | null>(null);
+
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase"));
 
 async function fetchStatuses() {
@@ -72,7 +68,7 @@ const headers = computed(() => {
   ];
 
   if (canEdit.value) {
-    baseHeaders.push({ key: "actions", label: "Actions" });
+    baseHeaders.push({ key: "actions", label: "Actions", sortable: false });
   }
 
   return baseHeaders;
@@ -81,12 +77,21 @@ const headers = computed(() => {
 const rows = computed(() =>
   statuses.value.map(status => ({
     id: status.id,
-    status: (statusApplicationDictionary as any)[status.status] || status.status,
+    status: (statusApplicationDictionary as Record<string, string>)[status.status] || status.status,
     statusDate: status.statusDate ? new Date(status.statusDate).toLocaleDateString("fr-FR") : "-",
     createdAt: new Date(status.createdAt).toLocaleDateString("fr-FR"),
-    actions: status, // Pass the full status object for actions
+    actions: status, 
   })),
 );
+
+async function handleFormSubmit(formData: StatusFormData) {
+  const isEdit = !!formModal.selectedItem.value;
+  if (isEdit) {
+    await updateStatus(formData);
+  } else {
+    await createStatus(formData);
+  }
+}
 
 async function createStatus(formData: StatusFormData) {
   try {
@@ -102,8 +107,7 @@ async function createStatus(formData: StatusFormData) {
     });
     if (response.response.ok) {
       toaster.addSuccessMessage("Statut créé avec succès");
-      statusModal.closeModal();
-      emit("update:application", props.application);
+      formModal.closeModal();
       await fetchStatuses();
     } else {
       throw new Error("Failed to create status");
@@ -117,17 +121,11 @@ async function createStatus(formData: StatusFormData) {
 }
 
 function openEditModal(status: ApplicationStatusDto) {
-  currentStatus.value = {
-    id: status.id,
-    rawStatus: status.status,
-    rawStatusDate: status.statusDate,
-  };
-  editStatusModal.openCreateModal();
+  formModal.openModal(status);
 }
 
 async function updateStatus(formData: StatusFormData) {
-  if (!currentStatus.value)
-    return;
+  if (!formModal.selectedItem.value) return;
 
   try {
     isSubmitting.value = true;
@@ -139,15 +137,14 @@ async function updateStatus(formData: StatusFormData) {
     const response = await api.statusesControllerUpdate({
       path: {
         applicationId: props.application.id,
-        statusId: currentStatus.value.id,
+        statusId: formModal.selectedItem.value.id,
       },
       body: payload,
     });
 
     if (response.response.ok) {
       toaster.addSuccessMessage("Statut modifié avec succès");
-      editStatusModal.closeModal();
-      emit("update:application", props.application);
+      formModal.closeModal();
       await fetchStatuses();
     } else {
       throw new Error("Failed to update status");
@@ -161,37 +158,28 @@ async function updateStatus(formData: StatusFormData) {
 }
 
 function openDeleteModal(status: ApplicationStatusDto) {
-  // Prevent deletion if it's the only status
   if (isOnlyStatus.value) {
     toaster.addErrorMessage("Impossible de supprimer le dernier statut de l'application");
     return;
   }
-
-  currentStatus.value = {
-    id: status.id,
-    rawStatus: status.status,
-    rawStatusDate: status.statusDate,
-  };
-  deleteStatusModal.openCreateModal();
+  deleteModal.openModal(status);
 }
 
 async function deleteStatus() {
-  if (!currentStatus.value)
-    return;
+  if (!deleteModal.selectedItem.value) return;
 
   try {
     isSubmitting.value = true;
     const response = await api.statusesControllerDelete({
       path: {
         applicationId: props.application.id,
-        statusId: currentStatus.value.id,
+        statusId: deleteModal.selectedItem.value.id,
       },
     });
 
     if (response.response.ok) {
       toaster.addSuccessMessage("Statut supprimé avec succès");
-      deleteStatusModal.closeModal();
-      emit("update:application", props.application);
+      deleteModal.closeModal();
       await fetchStatuses();
     } else {
       throw new Error("Failed to delete status");
@@ -203,6 +191,11 @@ async function deleteStatus() {
     isSubmitting.value = false;
   }
 }
+
+
+const { smaller } = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX }, "max");
+const isMobile = smaller("mobile");
+
 onMounted(() => {
   fetchStatuses();
 });
@@ -219,7 +212,7 @@ onMounted(() => {
       <DsfrButton
         icon="ri-add-line"
         data-testid="add-status-btn"
-        @click="statusModal.openCreateModal()"
+        @click="formModal.openCreateModal()"
       >
         Ajouter un statut
       </DsfrButton>
@@ -227,40 +220,26 @@ onMounted(() => {
   </div>
 
   <DsfrModal
-    :opened="statusModal.isCreateModalOpen.value"
-    title="Ajouter un statut"
-    data-testid="status-modal"
-    @close="statusModal.closeModal"
+    :opened="formModal.isCreateModalOpen.value || formModal.isModalOpen.value"
+    :title="formModal.isCreateModalOpen.value ? 'Ajouter un statut' : 'Modifier un statut'"
+    data-testid="status-form-modal"
+    @close="formModal.closeModal"
   >
     <StatusForm
+      v-if="formModal.isCreateModalOpen.value || formModal.isModalOpen.value"
       :is-submitting="isSubmitting"
-      data-testid="status-form-modal"
-      @submit="createStatus"
-      @cancel="statusModal.closeModal"
-    />
+      :initial-data="formModal.selectedItem.value ? { status: formModal.selectedItem.value.status, statusDate: formModal.selectedItem.value.statusDate } : undefined"
+      data-testid="status-form"
+      @submit="handleFormSubmit"
+      @cancel="formModal.closeModal"
+    ></StatusForm>
   </DsfrModal>
 
   <DsfrModal
-    :opened="editStatusModal.isCreateModalOpen.value"
-    title="Modifier un statut"
-    data-testid="edit-status-modal"
-    @close="editStatusModal.closeModal"
-  >
-    <StatusForm
-      v-if="currentStatus"
-      :is-submitting="isSubmitting"
-      :initial-data="{ status: currentStatus.rawStatus, statusDate: currentStatus.rawStatusDate }"
-      data-testid="edit-status-form-modal"
-      @submit="updateStatus"
-      @cancel="editStatusModal.closeModal"
-    />
-  </DsfrModal>
-
-  <DsfrModal
-    :opened="deleteStatusModal.isCreateModalOpen.value"
+    :opened="deleteModal.isModalOpen.value"
     title="Supprimer un statut"
     data-testid="delete-status-modal"
-    @close="deleteStatusModal.closeModal"
+    @close="deleteModal.closeModal"
   >
     <p>Êtes-vous sûr de vouloir supprimer ce statut ?</p>
     <div class="fr-modal__footer">
@@ -271,7 +250,7 @@ onMounted(() => {
           {
             label: 'Annuler',
             secondary: true,
-            onClick: deleteStatusModal.closeModal,
+            onClick: deleteModal.closeModal,
           },
           {
             label: 'Supprimer',
@@ -279,7 +258,7 @@ onMounted(() => {
             disabled: isSubmitting,
           },
         ]"
-      />
+      ></DsfrButtonGroup>
     </div>
   </DsfrModal>
 
@@ -292,19 +271,19 @@ onMounted(() => {
   </div>
 
   <div v-else>
-    <AppLoader v-if="isLoading" data-testid="statuses-loader" />
+    <AppLoader v-if="isLoading" data-testid="statuses-loader"></AppLoader>
     <div v-else>
-      <DsfrDataTable
-        :headers-row="headers"
-        :rows="rows"
-        row-key="id"
-        :pagination="false"
-        no-caption
-        title="Historique des statuts"
-        data-testid="statuses-table"
-      >
-        <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'actions'">
+      <template v-if="!isMobile">
+        <DsfrDataTable
+          :headers-row="headers"
+          :rows="rows"
+          row-key="id"
+          :pagination="false"
+          no-caption
+          title="Historique des statuts"
+          data-testid="statuses-table"
+        >
+          <template #cell(actions)="{ cell }">
             <DsfrButtonGroup
               :inline-layout-when="true"
               :buttons="[
@@ -328,13 +307,45 @@ onMounted(() => {
                   onClick: () => openDeleteModal(cell),
                 },
               ]"
-            />
+            ></DsfrButtonGroup>
           </template>
-          <template v-else>
-            {{ cell }}
-          </template>
-        </template>
-      </DsfrDataTable>
+        </DsfrDataTable>
+      </template>
+
+      <template v-else>
+        <div data-testid="statuses-cards">
+          <div v-for="status in statuses" :key="status.id" class="fr-mb-2w">
+            <DsfrCard
+              :title="(statusApplicationDictionary as Record<string, string>)[status.status] || status.status"
+              :description="`Créé le: ${new Date(status.createdAt).toLocaleDateString('fr-FR')}`"
+              :detail="status.statusDate ? `Date du statut: ${new Date(status.statusDate).toLocaleDateString('fr-FR')}` : 'Date du statut: -'"
+              :size="'sm'"
+              :buttons="[
+                {
+                  label: 'Modifier',
+                  iconOnly: true,
+                  icon: 'ri-edit-line',
+                  size: 'sm',
+                  tertiary: true,
+                  disabled: !canEdit,
+                  onClick: () => openEditModal(status),
+                },
+                {
+                  label: 'Supprimer',
+                  iconOnly: true,
+                  icon: 'ri-delete-bin-line',
+                  size: 'sm',
+                  tertiary: true,
+                  disabled: !canEdit || isOnlyStatus,
+                  title: isOnlyStatus ? 'Impossible de supprimer le dernier statut' : 'Supprimer ce statut',
+                  onClick: () => openDeleteModal(status),
+                },
+              ]"
+              data-testid="status-card"
+            ></DsfrCard>
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
