@@ -55,7 +55,7 @@ function handleSubmit() {
     priorityRestart: form.value.priorityRestart ?? undefined,
   };
 
-  const generalFields: (keyof ApplicationWithPerms)[] = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"];
+  const generalFields = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"];
 
   const isModified = areFieldsModified(props.initialData ?? {}, cleanedForm, generalFields);
 
