@@ -62,6 +62,8 @@ onMounted(loadData);
       v-show="!isLoading && !errorMessage && !isTableView"
       ref="chartRef"
       data-testid="applications-iq-chart-canvas"
+      role="img"
+      aria-describedby="applications-iq-desc"
     />
     <DsfrDataTable
       v-show="!isLoading && !errorMessage && isTableView"

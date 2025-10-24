@@ -1,6 +1,7 @@
 import type { Ref } from "vue";
 import { Chart, registerables } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import { cssVar } from "./cssVars";
 
 // Register necessary Chart.js components and plugins
 Chart.register(...registerables, ChartDataLabels);
@@ -42,8 +43,8 @@ export function renderChart(
           type,
           label: type === "line" ? "IQ moyen" : "Répartition",
           data,
-          backgroundColor: "#3e95cd",
-          borderColor: "#3e95cd",
+          backgroundColor: cssVar("--background-action-high-blue-france"),
+          borderColor: cssVar("--background-action-high-blue-france"),
           fill: type !== "line",
           tension: type === "line" ? 0.3 : 0,
           pointRadius: type === "line" ? 4 : 0,
