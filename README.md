@@ -70,7 +70,7 @@ Exécutez ces commandes pour préparer la base de données et le client Prisma :
 ```bash
 docker compose exec backend npx prisma generate
 docker compose exec backend npx prisma migrate deploy
-docker compose exec pnpm cmd user create -e admin@example.com -a 30 # Permet de créer un utilisateur administrateur
+docker compose exec backend pnpm cmd user create -e admin@example.com -a 30 # Permet de créer un utilisateur administrateur
 ```
 
 ### 4. Configurer le Client (Frontend)
