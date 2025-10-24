@@ -1,11 +1,29 @@
 {
-  "conventionalCommits.scopes": ["applications", "ci", "api", "front"],
-  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  "editor.formatOnType": false,
+  // Disable the default formatter, use eslint instead
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
+
+  // Auto fix
   "editor.codeActionsOnSave": {
-    "source.fixAll": "always",
-    "source.fixAll.eslint": "always"
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
   },
+
+  // Silent the stylistic rules in your IDE, but still auto fix them
+  "eslint.rules.customizations": [
+    { "rule": "style/*", "severity": "off", "fixable": true },
+    { "rule": "format/*", "severity": "off", "fixable": true },
+    { "rule": "*-indent", "severity": "off", "fixable": true },
+    { "rule": "*-spacing", "severity": "off", "fixable": true },
+    { "rule": "*-spaces", "severity": "off", "fixable": true },
+    { "rule": "*-order", "severity": "off", "fixable": true },
+    { "rule": "*-dangle", "severity": "off", "fixable": true },
+    { "rule": "*-newline", "severity": "off", "fixable": true },
+    { "rule": "*quotes", "severity": "off", "fixable": true },
+    { "rule": "*semi", "severity": "off", "fixable": true }
+  ],
+
+  // Enable eslint for all supported languages
   "eslint.validate": [
     "javascript",
     "javascriptreact",
@@ -17,7 +35,6 @@
     "json",
     "jsonc",
     "yaml",
-    "github-actions-workflow",
     "toml",
     "xml",
     "gql",
@@ -30,38 +47,17 @@
     "pcss",
     "postcss"
   ],
-  "javascript.preferences.quoteStyle": "single",
-  "javascript.preferences.importModuleSpecifierEnding": "js",
   "javascript.suggest.completeJSDocs": true,
   "javascript.suggest.jsdoc.generateReturns": true,
-  "[typescript]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  },
-  "typescript.preferences.quoteStyle": "double",
-  "typescript.preferences.importModuleSpecifierEnding": "minimal",
   "typescript.suggest.completeJSDocs": true,
   "typescript.suggest.jsdoc.generateReturns": true,
-  "[vue]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "stylelint.vscode-stylelint"
-  },
-  "[html]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  },
   "[markdown]": {
     "editor.quickSuggestions": {
       "other": true,
       "comments": true,
       "strings": true
-    },
-    "editor.formatOnSave": true,
-    "editor.formatOnPaste": true,
-    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+    }
   },
-  // conventional commits
-  "conventionalCommits.showNewVersionNotes": false,
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
   }
