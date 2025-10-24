@@ -14,13 +14,13 @@ import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, 
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
-import { CreateHostingDto, HostingDto, UpdateHostingDto } from "./applications/dto/hosting.dto";
-import { HostingService } from "./hosting.service";
+import { CreateHostingDto, HostingDto, UpdateHostingDto } from "./dto/hosting.dto";
+import { HostingsService } from "./hostings.service";
 
 @ApiTags("Hostings")
 @Controller("hostings")
-export class HostingController {
-  constructor(private readonly hostingService: HostingService) {}
+export class HostingsController {
+  constructor(private readonly hostingService: HostingsService) {}
 
   @Get("count")
   @ApiOperation({
@@ -40,7 +40,7 @@ export class HostingController {
 @Controller("applications/:applicationId/hostings")
 @ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
 export class ApplicationHostingsController {
-  constructor(private readonly hostingService: HostingService) {}
+  constructor(private readonly hostingService: HostingsService) {}
 
   @Post()
   @AppAction("writeHostings")

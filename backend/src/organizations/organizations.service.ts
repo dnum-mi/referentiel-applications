@@ -3,10 +3,10 @@ import { Organization, Prisma } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { OrganizationFilterDto } from "./dto/filters.dto";
-import { CreateOrganizationDto } from "./dto/organization.dto";
+import { CreateOrganizationDto } from "./dto/organizations.dto";
 
 @Injectable()
-export class OrganizationService extends BaseService<Organization> {
+export class OrganizationsService extends BaseService<Organization> {
   constructor(prisma: PrismaService) {
     super(prisma.organization, prisma);
   }

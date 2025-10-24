@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { paginate } from "src/common/utils/pagination.utils";
-import { MetadataService } from "src/metadata/metadata.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/product/application.service";
 import { BaseService } from "../common/base.service";
@@ -12,7 +12,7 @@ import { Link } from "./entities/link.entity";
 export class LinksService extends BaseService<Link> {
   constructor(
     prisma: PrismaService,
-    metadataService: MetadataService,
+    metadataService: MetadatasService,
     applicationService: ApplicationService,
   ) {
     super(

@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { MetadataService } from "src/metadata/metadata.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { BaseService } from "../common/base.service";
 import { Label } from "./entities/label.entity";
 
 @Injectable()
 export class LabelsService extends BaseService<Label> {
-  constructor(prisma: PrismaService, metadataService: MetadataService) {
+  constructor(prisma: PrismaService, metadataService: MetadatasService) {
     super(prisma.label, prisma, metadataService);
   }
 

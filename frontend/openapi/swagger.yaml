@@ -138,7 +138,7 @@ paths:
       tags: *a1
   /api/v2/applications/{applicationId}/metadatas:
     get:
-      operationId: ApplicationMetadataController_find
+      operationId: ApplicationMetadatasController_find
       summary: Récupérer toutes les metadatas d'une application
       parameters:
         - name: applicationId
@@ -206,7 +206,7 @@ paths:
         - Metadatas
   /api/v2/applications/{applicationId}/metadatas/first-last:
     get:
-      operationId: ApplicationMetadataController_getFirstAndLastMetadata
+      operationId: ApplicationMetadatasController_getFirstAndLastMetadata
       summary: Retourne la première et la dernière metadata d'une application
       parameters:
         - name: applicationId
@@ -1304,7 +1304,7 @@ paths:
         - Sites
   /api/v2/hostings/count:
     get:
-      operationId: HostingController_countAllHostings
+      operationId: HostingsController_countAllHostings
       summary: Récupérer le nombre total d'hébergements (toutes applications)
       parameters: []
       responses:
@@ -1814,7 +1814,7 @@ paths:
         - Stats
   /api/v2/organizations:
     post:
-      operationId: OrganizationController_create
+      operationId: OrganizationsController_create
       summary: Créer une nouvelle organisation
       description: "
 
@@ -1849,7 +1849,7 @@ paths:
       tags: &a10
         - organizations
     get:
-      operationId: OrganizationController_findAll
+      operationId: OrganizationsController_findAll
       summary: Récupérer toutes les organisations
       description: Ce endpoint permet de récupérer la liste de toutes les organisations.
       parameters:
@@ -1899,7 +1899,7 @@ paths:
       tags: *a10
   /api/v2/organizations/{id}:
     get:
-      operationId: OrganizationController_findOne
+      operationId: OrganizationsController_findOne
       summary: Récupérer une organisation spécifique par ID
       description: Ce endpoint permet de récupérer les détails complets d'une
         organisation en fonction de son identifiant unique.
@@ -1920,7 +1920,7 @@ paths:
           description: Organisation non trouvée
       tags: *a10
     patch:
-      operationId: OrganizationController_update
+      operationId: OrganizationsController_update
       summary: Mettre à jour une organisation
       parameters:
         - name: id
@@ -1943,7 +1943,7 @@ paths:
                 $ref: "#/components/schemas/OrganizationDto"
       tags: *a10
     delete:
-      operationId: OrganizationController_delete
+      operationId: OrganizationsController_delete
       summary: Supprimer une organisation
       parameters:
         - name: id

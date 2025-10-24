@@ -6,7 +6,7 @@ import { MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata
 import { MetadataRepository } from "./infrastructure/metadata.repository";
 
 @Injectable()
-export class MetadataService {
+export class MetadatasService {
   constructor(
     protected readonly prisma: PrismaService,
     private readonly metadataRepository: MetadataRepository,

@@ -1,12 +1,12 @@
 import { Module } from "@nestjs/common";
-import { MetadataModule } from "src/metadata/metadata.module";
+import { MetadatasModule } from "src/metadatas/metadatas.module";
 import { PrismaModule } from "../prisma/prisma.module";
 import { RelationRepository } from "./infrastructure/repository/relation.repository";
 import { RelationController } from "./relation.controller";
 import { RelationService } from "./relation.service";
 
 @Module({
-  imports: [PrismaModule, MetadataModule],
+  imports: [PrismaModule, MetadatasModule],
   controllers: [RelationController],
   providers: [
     RelationService,

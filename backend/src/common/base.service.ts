@@ -1,6 +1,6 @@
 import type { ApplicationService } from "src/product/application.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { MetadataService } from "src/metadata/metadata.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { translateEnum } from "./utils/enum.utils";
 
@@ -9,7 +9,7 @@ export class BaseService<T> {
   constructor(
     protected readonly model: any,
     protected readonly prisma: PrismaService,
-    private readonly metadataService?: MetadataService,
+    private readonly metadataService?: MetadatasService,
     private readonly applicationService?: ApplicationService,
   ) { }
 

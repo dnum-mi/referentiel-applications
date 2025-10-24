@@ -1,5 +1,5 @@
 import { ConflictException, Injectable } from "@nestjs/common";
-import { MetadataService } from "src/metadata/metadata.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/product/application.service";
 import { BaseService } from "../common/base.service";
@@ -9,7 +9,7 @@ import { Compliance } from "./entities/compliance.entity";
 export class CompliancesService extends BaseService<Compliance> {
   constructor(
     prisma: PrismaService,
-    metadataService: MetadataService,
+    metadataService: MetadatasService,
     applicationService: ApplicationService,
   ) {
     super(prisma.compliance, prisma, metadataService, applicationService);

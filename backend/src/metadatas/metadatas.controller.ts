@@ -14,12 +14,12 @@ import {
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { FirstLastMetadataDto, MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
-import { MetadataService } from "./metadata.service";
+import { MetadatasService } from "./metadatas.service";
 
 @ApiTags("Metadatas")
 @Controller("metadatas")
 export class MetadatasController {
-  constructor(private readonly metadataService: MetadataService) { }
+  constructor(private readonly metadataService: MetadatasService) { }
 
   @Get()
   @ApiOperation({ summary: "Récupérer toutes les metadatas" })
@@ -35,8 +35,8 @@ export class MetadatasController {
 @ApiTags("Metadatas")
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/metadatas")
-export class ApplicationMetadataController {
-  constructor(private readonly metadataService: MetadataService) { }
+export class ApplicationMetadatasController {
+  constructor(private readonly metadataService: MetadatasService) { }
 
   @Get()
   @AppAction("readMetadata")

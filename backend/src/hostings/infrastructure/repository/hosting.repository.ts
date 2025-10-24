@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
-import { CreateHostingDto, UpdateHostingDto } from "src/hosting/applications/dto/hosting.dto.js";
-import { Hosting } from "src/hosting/domain/hosting.entity";
-import { MetadataService } from "src/metadata/metadata.service";
+import { CreateHostingDto, UpdateHostingDto } from "src/hostings/dto/hosting.dto";
+import { Hosting } from "src/hostings/entities/hosting.entity";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { IHostingRepository } from "./hosting.repository.interface";
 
@@ -9,7 +9,7 @@ import { IHostingRepository } from "./hosting.repository.interface";
 export class HostingRepository implements IHostingRepository {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly metadataService: MetadataService,
+    private readonly metadataService: MetadatasService,
   ) { }
 
   async create(data: CreateHostingDto, requestorId: string): Promise<Hosting> {

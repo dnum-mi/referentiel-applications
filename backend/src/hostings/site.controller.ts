@@ -3,13 +3,13 @@ import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { AdminLevel } from "src/user/entities/user.entity";
-import { HostingService } from "./hosting.service";
+import { HostingsService } from "./hostings.service";
 
 @ApiTags("Sites")
 @UseGuards(AdminGuard)
 @Controller("sites")
 export class SitesController {
-  constructor(private readonly hostingService: HostingService) {}
+  constructor(private readonly hostingService: HostingsService) {}
 
   @Get()
   @RequiredAdminLevel(AdminLevel.NONE)

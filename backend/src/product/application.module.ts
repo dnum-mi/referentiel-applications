@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { CommonModule } from "src/common/common.module";
 import { LabelsModule } from "src/labels/labels.module";
-import { MetadataModule } from "src/metadata/metadata.module";
+import { MetadatasModule } from "src/metadatas/metadatas.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { ApplicationController } from "./application.controller";
 
@@ -11,7 +11,7 @@ import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
 @Module({
-  imports: [CommonModule, PrismaModule, LabelsModule, MetadataModule],
+  imports: [CommonModule, PrismaModule, LabelsModule, MetadatasModule],
   controllers: [ApplicationController],
   providers: [
     ApplicationService,

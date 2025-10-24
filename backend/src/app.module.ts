@@ -15,14 +15,14 @@ import { ConfigModule } from "./config/config.module";
 import { configs } from "./config/configs/index";
 import { HealthCheckModule } from "./health/health-check.module";
 import { HostingOptionModule } from "./hosting-option/hosting-option.module";
-import { HostingModule } from "./hosting/hosting.module";
+import { HostingsModule } from "./hostings/hostings.module";
 import { LabelsModule } from "./labels/labels.module";
 import { LinksModule } from "./links/links.module";
 import { LoggerModule } from "./logger/logger.module";
-import { MetadataModule } from "./metadata/metadata.module";
+import { MetadatasModule } from "./metadatas/metadatas.module";
 import { AuthMiddleware } from "./middlewares/auth.middleware";
 import { AnomalyNotificationModule } from "./notification/anomaly-notification.module";
-import { OrganizationModule } from "./organization/organization.module";
+import { OrganizationsModule } from "./organizations/organizations.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ApplicationModule } from "./product/application.module";
 import { RelationModule } from "./relationship/relation.module";
@@ -44,17 +44,17 @@ import { UserModule } from "./user/user.module";
     RelationModule,
     UserModule,
     ApplicationModule,
-    HostingModule,
+    HostingsModule,
     TokenModule,
     AnomalyNotificationModule,
     LoggerModule,
     HealthCheckModule,
     StatsModule,
-    OrganizationModule,
+    OrganizationsModule,
     ActorTypeModule,
     ActorModule,
     HostingOptionModule,
-    MetadataModule,
+    MetadatasModule,
     LinksModule,
     LabelsModule,
     CompliancesModule,
