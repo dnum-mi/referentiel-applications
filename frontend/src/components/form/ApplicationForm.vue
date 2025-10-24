@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
@@ -15,7 +15,8 @@ const props = defineProps<{
 
 // TODO typé les emits
 const emit = defineEmits(["update:application", "submit", "cancel"]);
-
+const labelError = ref<string | undefined>(undefined);
+const descriptionError = ref<string | undefined>(undefined);
 const toaster = useToasterStore();
 
 const initialLabels = ref<LabelDto[]>([]);
@@ -42,9 +43,26 @@ const form = ref<{
   priorityRestart: props.initialData?.priorityRestart ?? null,
 });
 
+
 function handleSubmit() {
+  labelError.value = undefined;
+  descriptionError.value = undefined;
+  let hasError = false;
+
+  if (form.value.label.trim() === "") {
+    labelError.value = "Le nom de l'application est obligatoire.";
+    hasError = true;
+  }
+  if (form.value.description.trim() === "") {
+    descriptionError.value = "La description est obligatoire.";
+    hasError = true;
+  }
   if (!validateAllTags()) {
     toaster.addErrorMessage("Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
+    hasError = true;
+  }
+
+  if (hasError) {
     return;
   }
 
@@ -88,8 +106,20 @@ function isTagValid(tag: string) {
 }
 
 function validateAllTags(): boolean {
-  return form.value.tags.every(tag => isTagValid(tag));
+ return form.value.tags.every(tag => isTagValid(tag));
 }
+
+watch(() => form.value.label, (newValue) => {
+  if (newValue && newValue.trim() !== "") {
+    labelError.value = undefined;
+  }
+});
+
+watch(() => form.value.description, (newValue) => {
+  if (newValue && newValue.trim() !== "") {
+    descriptionError.value = undefined;
+  }
+});
 
 onMounted(() => {
   initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
@@ -98,7 +128,17 @@ onMounted(() => {
 
 <template>
   <form data-testid="application-form" @submit.prevent="handleSubmit">
-    <DsfrInputGroup v-model="form.label" label="Nom de l'application" label-visible required data-testid="application-label" />
+    <DsfrInputGroup
+      v-model="form.label"
+      hint="Doit contenir au moins une lettre.
+Seuls les lettres (avec accents), chiffres, espaces, points et tirets sont autorisés.
+Aucun espace en début ou en fin."
+      label="Nom de l'application"
+      label-visible
+      required
+      :error-message="labelError"
+      data-testid="application-label"
+    />
 
     <DsfrInputGroup
       v-model="form.shortName"
@@ -133,7 +173,13 @@ onMounted(() => {
           <div class="fr-col-auto">
             <DsfrButton
               :disabled="!initialData?.myPerms.has('writeBase')"
-              type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-alt-label-remove-${index}`" @click="form.labels.splice(index, 1)"
+              type="button"
+              tertiary
+              size="sm"
+              icon="delete-line"
+              label="Supprimer"
+              :data-testid="`application-alt-label-remove-${index}`"
+              @click="form.labels.splice(index, 1)"
             />
           </div>
         </div>
@@ -149,7 +195,13 @@ onMounted(() => {
       </div>
     </div>
     <br>
-    <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required>
+    <DsfrInputGroup
+      class="fr-mt-3w"
+      label="Description"
+      label-visible
+      required
+      :error-message="descriptionError"
+    >
       <MarkdownEditor
         v-model="form.description"
         :disabled="!initialData?.myPerms.has('writeBase')"
@@ -197,7 +249,12 @@ onMounted(() => {
         </div>
         <DsfrButton
           :disabled="!initialData?.myPerms.has('writeBase')"
-          type="button" secondary icon="add-line" label="Ajouter une population" data-testid="application-population-add" @click="form.targetPopulations.push('')"
+          type="button"
+          secondary
+          icon="add-line"
+          label="Ajouter une population"
+          data-testid="application-population-add"
+          @click="form.targetPopulations.push('')"
         />
       </div>
     </div>
@@ -222,19 +279,31 @@ onMounted(() => {
             <DsfrInput
               v-model="form.purposes[index]"
               :disabled="!initialData?.myPerms.has('writeBase')"
-              :placeholder="`Objectif ${index + 1}`" :data-testid="`application-purpose-${index}`"
+              :placeholder="`Objectif ${index + 1}`"
+              :data-testid="`application-purpose-${index}`"
             />
           </div>
           <div class="fr-col-auto">
             <DsfrButton
               :disabled="!initialData?.myPerms.has('writeBase')"
-              type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-purpose-remove-${index}`" @click="form.purposes.splice(index, 1)"
+              type="button"
+              tertiary
+              size="sm"
+              icon="delete-line"
+              label="Supprimer"
+              :data-testid="`application-purpose-remove-${index}`"
+              @click="form.purposes.splice(index, 1)"
             />
           </div>
         </div>
         <DsfrButton
           :disabled="!initialData?.myPerms.has('writeBase')"
-          type="button" secondary icon="add-line" label="Ajouter un objectif" data-testid="application-purpose-add" @click="form.purposes.push('')"
+          type="button"
+          secondary
+          icon="add-line"
+          label="Ajouter un objectif"
+          data-testid="application-purpose-add"
+          @click="form.purposes.push('')"
         />
       </div>
     </div>
@@ -249,26 +318,44 @@ onMounted(() => {
             <DsfrInput
               v-model="form.tags[index]"
               :disabled="!initialData?.myPerms.has('writeBase')"
-              :placeholder="`Tag ${index + 1}`" :data-testid="`application-tag-${index}`"
+              :placeholder="`Tag ${index + 1}`"
+              :data-testid="`application-tag-${index}`"
             />
           </div>
           <div class="fr-col-auto">
             <DsfrButton
               :disabled="!initialData?.myPerms.has('writeBase')"
-              type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-tag-remove-${index}`" @click="form.tags.splice(index, 1)"
+              type="button"
+              tertiary
+              size="sm"
+              icon="delete-line"
+              label="Supprimer"
+              :data-testid="`application-tag-remove-${index}`"
+              @click="form.tags.splice(index, 1)"
             />
           </div>
         </div>
         <DsfrButton
           :disabled="!initialData?.myPerms.has('writeBase')"
-          type="button" secondary icon="add-line" label="Ajouter un tag" data-testid="application-tag-add" @click="form.tags.push('')"
+          type="button"
+          secondary
+          icon="add-line"
+          label="Ajouter un tag"
+          data-testid="application-tag-add"
+          @click="form.tags.push('')"
         />
       </div>
     </div>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton type="button" secondary label="Annuler" data-testid="application-cancel-btn" @click="$emit('cancel')" />
-      <DsfrButton type="button" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" data-testid="application-submit-btn" @click="handleSubmit">
+      <DsfrButton
+        type="button"
+        :disabled="isSubmitting"
+        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
+        data-testid="application-submit-btn"
+        @click="handleSubmit"
+      >
         <template v-if="isSubmitting">
           <span class="fr-loading fr-loading--sm" data-testid="application-submit-loading">
             <span class="fr-loading__icon" aria-hidden="true" />
