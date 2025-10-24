@@ -51,15 +51,14 @@ onMounted(() => {
     </div>
     <div v-else data-testid="global-stats-data">
       <h3>Informations au : {{ new Date().toLocaleDateString("fr-FR") }}</h3>
-      <DsfrAlert
+      <DsfrHighlight
         v-for="(description, index) in datasGroup"
         :key="index"
-        type="info"
-        :description="description"
-        title-tag="h3"
         :small="true"
         :data-testid="`global-stats-item-${index}`"
-      />
+    >
+        {{ description }}
+      </DsfrHighlight>
     </div>
   </div>
 </template>
