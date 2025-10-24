@@ -4,7 +4,7 @@ import { Application, Prisma } from "@prisma/client";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { appConfig } from "src/config/configs";
 import { LabelsService } from "src/labels/labels.service";
-import { MetadataService } from "src/metadata/metadata.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { ApplicationRights } from "./application/dto/application-rights.dto";
@@ -12,7 +12,7 @@ import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from "./application/dto/create-application.dto";
-import { ApplicationSearchResultDto } from "./application/dto/get-application.dto.js";
+import { ApplicationSearchResultDto } from "./application/dto/get-application.dto";
 import { ApplicationSearchDto } from "./application/dto/search-application.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
@@ -28,7 +28,7 @@ export class ApplicationService {
     private readonly prisma: PrismaService,
     private readonly applicationRepository: ApplicationRepository,
     private readonly labelsService: LabelsService,
-    private readonly metadataService: MetadataService,
+    private readonly metadataService: MetadatasService,
     @Inject(appConfig.KEY) private readonly appConf: ConfigType<typeof appConfig>,
   ) { }
 

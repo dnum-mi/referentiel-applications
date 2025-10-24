@@ -1,5 +1,5 @@
 import type { OpenAPIObject } from "@nestjs/swagger";
-import type { ReferenceObject, ResponseObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface.js";
+import type { ReferenceObject, ResponseObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
 import request from "supertest";
 import { setupTestSuite } from "./setup";
 

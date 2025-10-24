@@ -4,7 +4,6 @@ import {
   CreateActorTypeDto,
   PatchActorTypeDto,
 } from "src/actorType/dto/actorType.dto";
-import { actorTypeMap } from "src/actorType/map/actorType.map";
 import { PrismaService } from "src/prisma/prisma.service";
 import { IActorTypeRepository } from "./actorType.repository.interface";
 
@@ -13,8 +12,7 @@ export class ActorTypeRepository implements IActorTypeRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   public async create(actorType: CreateActorTypeDto) {
-    const mappedData = actorTypeMap(actorType);
-    return await this.prisma.actorType.create(mappedData);
+    return await this.prisma.actorType.create({ data: actorType });
   }
 
   public async getPermsMatrix(): Promise<AppPermissions[]> {

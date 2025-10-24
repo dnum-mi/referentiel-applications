@@ -6,7 +6,7 @@ import { NestFactory } from "@nestjs/core";
 import { Logger as PinoLogger } from "nestjs-pino";
 import { AppModule } from "./app.module";
 import { setupGlobalValidation } from "./config/app-config";
-import { setupSwagger } from "./swagger-config.js";
+import { setupSwagger } from "./swagger-config";
 
 async function bootstrap() {
   const globalPrefix = "/api/v2";

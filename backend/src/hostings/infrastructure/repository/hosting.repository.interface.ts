@@ -1,5 +1,5 @@
-import type { CreateHostingDto, UpdateHostingDto } from "src/hosting/applications/dto/hosting.dto.js";
-import type { Hosting } from "src/hosting/domain/hosting.entity";
+import type { CreateHostingDto, UpdateHostingDto } from "src/hostings/dto/hosting.dto";
+import type { Hosting } from "src/hostings/entities/hosting.entity";
 
 export interface IHostingRepository {
   create: (data: CreateHostingDto, requestorId: string) => Promise<Hosting>

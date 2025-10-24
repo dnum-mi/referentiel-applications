@@ -1,24 +1,24 @@
 import { Module } from "@nestjs/common";
-import { MetadataModule } from "src/metadata/metadata.module";
+import { MetadatasModule } from "src/metadatas/metadatas.module";
 import { ApplicationModule } from "src/product/application.module";
 import { PrismaModule } from "../prisma/prisma.module";
 import {
   ApplicationHostingsController,
-  HostingController,
-} from "./hosting.controller";
-import { HostingService } from "./hosting.service";
+  HostingsController,
+} from "./hostings.controller";
+import { HostingsService } from "./hostings.service";
 import { HostingRepository } from "./infrastructure/repository/hosting.repository";
 import { SitesController } from "./site.controller";
 
 @Module({
-  imports: [PrismaModule, MetadataModule, ApplicationModule],
+  imports: [PrismaModule, MetadatasModule, ApplicationModule],
   controllers: [
     ApplicationHostingsController,
     SitesController,
-    HostingController,
+    HostingsController,
   ],
   providers: [
-    HostingService,
+    HostingsService,
     {
       provide: "IHostingRepository",
       useClass: HostingRepository,
@@ -26,4 +26,4 @@ import { SitesController } from "./site.controller";
   ],
   exports: ["IHostingRepository"],
 })
-export class HostingModule { }
+export class HostingsModule { }

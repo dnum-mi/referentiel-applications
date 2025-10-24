@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 import { APP_PERMISSIONS } from "src/common/utils/types";
-import { OrganizationDto } from "src/organization/dto/organization.dto";
+import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 
 export enum AdminLevel {
   NONE = 0,

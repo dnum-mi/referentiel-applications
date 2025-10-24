@@ -18,8 +18,8 @@ import {
   CreateOrganizationDto,
   OrganizationDto,
   PatchOrganizationDto,
-} from "./dto/organization.dto";
-import { OrganizationService } from "./organization.service";
+} from "./dto/organizations.dto";
+import { OrganizationsService } from "./organizations.service";
 
 /**
  * Controller la gestion des organisations
@@ -27,8 +27,8 @@ import { OrganizationService } from "./organization.service";
  */
 @ApiTags("organizations")
 @Controller("organizations")
-export class OrganizationController {
-  constructor(private readonly organizationService: OrganizationService) {}
+export class OrganizationsController {
+  constructor(private readonly organizationService: OrganizationsService) {}
 
   /**
    * Crée une nouvelle organisation

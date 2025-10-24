@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { CreateActorDto, UpdateActorDto } from "src/actor/dto/actor.dto";
-import { MetadataService } from "src/metadata/metadata.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { IActorRepository } from "./actor.repository.interface";
 
@@ -9,7 +9,7 @@ import { IActorRepository } from "./actor.repository.interface";
 export class ActorRepository implements IActorRepository {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly metadataService: MetadataService,
+    private readonly metadataService: MetadatasService,
   ) { }
 
   public async create(actor: CreateActorDto, requestorId: string) {
