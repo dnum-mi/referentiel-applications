@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.47.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.46.2...v1.47.0) (2025-10-24)
+
+
+### Features
+
+* :sparkles: add applications statutes history ([#1206](https://github.com/dnum-mi/referentiel-applications/issues/1206)) ([f73d532](https://github.com/dnum-mi/referentiel-applications/commit/f73d532d80bd6787868acd9dc6c15823a6723f85))
+* :sparkles: add CreateGlobalAnomalyNotification capability and update related permissions ([72e0111](https://github.com/dnum-mi/referentiel-applications/commit/72e0111c2ddf2c51fac5c32f0e475045f9013064))
+* :sparkles: add nonActorPermissions configuration ([a97ecab](https://github.com/dnum-mi/referentiel-applications/commit/a97ecab5e19c7e60fa17c7af25c1de537b68e2c2))
+* :sparkles: add user capabilities and permissions management ([efc2c6a](https://github.com/dnum-mi/referentiel-applications/commit/efc2c6a0af4492bc1308e71c545f3f2469bb5424))
+* :sparkles: add writePriorityRestart permission and update related functionality ([69d3308](https://github.com/dnum-mi/referentiel-applications/commit/69d3308742e3740ad0b139056bff59e856cb6c3a))
+* **cmd:** :sparkles: implement user management CLI with create user functionality ([4f5e5fb](https://github.com/dnum-mi/referentiel-applications/commit/4f5e5fb91906506d292eadbf1c3d60e3134a91d2))
+* **front:** :lipstick: add sitemap ([4389153](https://github.com/dnum-mi/referentiel-applications/commit/4389153e0a5c9a6c6cf71648e365dcd1c22fc842))
+* **front:** :wheelchair: add accessibility to the buttons, canvas and add a table ([c7325c3](https://github.com/dnum-mi/referentiel-applications/commit/c7325c3422b283cd70315796e93110eb289667ad))
+
+
+### Bug Fixes
+
+* :label: fix paginated types and swagger by using child paginated classes ([#1193](https://github.com/dnum-mi/referentiel-applications/issues/1193)) ([8add699](https://github.com/dnum-mi/referentiel-applications/commit/8add699f5e2c366d0c59775d77c3b339a7b76b45))
+
 ## [1.46.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.46.1...v1.46.2) (2025-10-16)
 
 
