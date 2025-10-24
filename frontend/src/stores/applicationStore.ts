@@ -43,7 +43,6 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     const payload: PatchApplicationDto = {
       label: app.label,
       shortName: app.shortName ?? undefined,
-      status: app.status,
       description: app.description,
       targetPopulations: app.targetPopulations,
       purposes: app.purposes,

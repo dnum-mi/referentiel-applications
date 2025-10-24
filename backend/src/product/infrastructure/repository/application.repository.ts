@@ -12,11 +12,10 @@ import { ApplicationSearchFilters, IApplicationRepository } from "./application.
 export class ApplicationRepository implements IApplicationRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(application: CreateApplicationDto) {
+  public async create(application: Omit<CreateApplicationDto, "status" | "statusDate" | "labels">) {
     return this.prisma.application.create({
       data: {
         ...application,
-        labels: undefined,
         quality: 0,
       },
     });
@@ -26,6 +25,7 @@ export class ApplicationRepository implements IApplicationRepository {
     return this.prisma.application.findUnique({
       where: { id },
       include: {
+        currentStatus: true, // Include the current status via FK
         relationsAsSource: {
           include: { targetApplication: { select: { id: true, label: true } } },
         },
@@ -284,9 +284,11 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
       {
-        condition: filters.status__in?.length,
+        condition: filters.currentStatus__in?.length,
         whereClause: {
-          status: { in: filters.status__in },
+          currentStatus: {
+            status: { in: filters.currentStatus__in },
+          },
         },
       },
     ];
@@ -326,6 +328,7 @@ export class ApplicationRepository implements IApplicationRepository {
         orderBy,
         ...paginate(page, pageSize),
         include: {
+          currentStatus: true,
           hostings: {
             include: {
               hostingOption: true,
@@ -349,9 +352,10 @@ export class ApplicationRepository implements IApplicationRepository {
     return new PaginatedResponseDto(results, total);
   }
 
-  async findAllWithRelations(): Promise<ApplicationWithAllRelations[]> {
-    return this.prisma.application.findMany({
+  async findAllWithFullRelations(): Promise<ApplicationWithAllRelations[]> {
+    return await this.prisma.application.findMany({
       include: {
+        currentStatus: true,
         metadatas: true,
         compliance: true,
         labels: true,
@@ -372,28 +376,6 @@ export class ApplicationRepository implements IApplicationRepository {
         },
         relationsAsTarget: {
           include: { sourceApplication: true },
-        },
-      },
-    });
-  }
-
-  async exportAllApplicationsFull(): Promise<any[]> {
-    return this.prisma.application.findMany({
-      include: {
-        metadatas: true,
-        compliance: true,
-        labels: true,
-        actors: true,
-        relationsAsSource: {
-          include: { targetApplication: true },
-        },
-        relationsAsTarget: {
-          include: { sourceApplication: true },
-        },
-        hostings: {
-          include: {
-            hostingOption: true,
-          },
         },
       },
     });

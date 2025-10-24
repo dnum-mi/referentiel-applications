@@ -74,12 +74,12 @@ export class ApplicationSearchDto extends PaginationDto {
   @ApiPropertyOptional({
     type: [String],
     enum: Status,
-    description: "Filtrer par un ou plusieurs status",
+    description: "Filtrer par un ou plusieurs status du statut courant",
   })
   @IsOptional()
   @IsEnum(Status, { each: true })
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
-  status__in?: Status[];
+  currentStatus__in?: Status[];
 
   @ApiPropertyOptional({
     description: "Nom de l'organisation liée à l'application",

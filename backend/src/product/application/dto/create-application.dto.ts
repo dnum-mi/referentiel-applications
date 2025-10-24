@@ -1,4 +1,4 @@
-import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { ApiProperty, OmitType, PartialType } from "@nestjs/swagger";
 import { priorityRestart, Status } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
@@ -110,8 +110,18 @@ export class CreateApplicationDto {
   status?: Status;
 
   @ApiProperty({
+    example: "2024-01-15T10:30:00Z",
+    description: "Date optionnelle du changement de statut",
+    required: false,
+    type: Date,
+  })
+  @IsOptional()
+  @Type(() => Date)
+  statusDate?: Date;
+
+  @ApiProperty({
     type: [CreateLabelDto],
-    description: "Liste des labels alternatifs associés à l’application",
+    description: "Liste des labels alternatifs associés à l'application",
     example: [
       {
         source: "",
@@ -126,4 +136,6 @@ export class CreateApplicationDto {
   labels: CreateLabelDto[];
 }
 
-export class PatchApplicationDto extends PartialType(CreateApplicationDto) {}
+export class PatchApplicationDto extends PartialType(
+  OmitType(CreateApplicationDto, ["status", "statusDate"] as const),
+) {}

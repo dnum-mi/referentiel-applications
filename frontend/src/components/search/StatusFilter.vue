@@ -13,19 +13,19 @@ const statusOptions = Object.keys(statusApplicationDictionary)
     name: value,
   }));
 
-const selectedStatus = computed(() => searchStore.filters.status__in);
+const selectedStatus = computed(() => searchStore.filters.currentStatus__in);
 
 function toggleStatus(value: ApplicationStatus, event: Event) {
   const checked = (event.target as HTMLInputElement).checked;
 
-  const selected = new Set<ApplicationStatus>(searchStore.filters.status__in || []);
+  const selected = new Set<ApplicationStatus>(searchStore.filters.currentStatus__in || []);
   if (checked) {
     selected.add(value);
   } else {
     selected.delete(value);
   }
 
-  searchStore.setFilter({ status__in: Array.from(selected) });
+  searchStore.setFilter({ currentStatus__in: Array.from(selected) });
 }
 </script>
 
