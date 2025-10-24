@@ -103,6 +103,40 @@ describe("Applications", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(404);
   });
+
+  it("/POST applications - should fail with empty label", async () => {
+    await user.update({ capabilities: ["CreateApplication"] });
+
+    const response = await request(app().getHttpServer())
+      .post("/applications")
+      .send({
+        label: " ",
+        description: faker.company.catchPhrase(),
+        status: "in_production",
+        tags: [],
+        labels: [],
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(400);
+
+    expect(response.body.message).toContain("Le label ne peut pas être vide ou contenir uniquement des espaces");
+  });
+
+  it("/POST applications - should fail with empty description", async () => {
+    await user.update({ capabilities: ["CreateApplication"] });
+
+    await request(app().getHttpServer())
+      .post("/applications")
+      .send({
+        label: faker.company.name(),
+        description: "",
+        status: "in_production",
+        tags: [],
+        labels: [],
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(400);
+  });
 });
 
 describe("application guard", () => {
