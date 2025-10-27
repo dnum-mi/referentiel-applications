@@ -2,6 +2,7 @@
 import { onMounted, ref, computed, watch } from "vue";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
+import { metadataActionLabels } from "@/composables/use-dictionary";
 import PaginationFooter from "@/components/PaginationFooter.vue";
 import type { MetadataPaginatedResponseDto } from "@/client/types.gen";
 
@@ -158,7 +159,7 @@ const metadataTableRows = computed(() =>
       Type: {
         id: meta.id,
         component: "DsfrTag",
-        label: meta.action,
+        label: metadataActionLabels[meta.action],
         class: meta.action,
       },
       Date: formatDate(meta.createdAt),
