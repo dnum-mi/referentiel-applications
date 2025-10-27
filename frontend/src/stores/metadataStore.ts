@@ -14,7 +14,7 @@ export const useMetadataStore = defineStore("metadataStore", () => {
 
   async function getFirstAndLastMetadataByApplication(applicationId: string) {
     isLoading.value = true;
-    const response = await api.applicationMetadataControllerGetFirstAndLastMetadata({
+    const response = await api.applicationMetadatasControllerGetFirstAndLastMetadata({
       path: { applicationId },
     });
     isLoading.value = false;
@@ -34,7 +34,7 @@ export const useMetadataStore = defineStore("metadataStore", () => {
 
   const fetchMetadatasByApplication = async (applicationId: string, query: { page?: number, pageSize?: number, sortBy?: string, order?: "asc" | "desc", createdAtGte?: string, createdAtLte?: string } = {}) => {
     isLoading.value = true;
-    const response = await api.applicationMetadataControllerFind({
+    const response = await api.applicationMetadatasControllerFind({
       path: { applicationId },
       query,
     });

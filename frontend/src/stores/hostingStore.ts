@@ -13,7 +13,7 @@ export const useHostingStore = defineStore("hostingStore", () => {
 
   async function countHostings() {
     isLoading.value = true;
-    const response = await api.hostingControllerCountAllHostings();
+    const response = await api.hostingsControllerCountAllHostings();
     isLoading.value = false;
     if (!response.response.ok) {
       toaster.addErrorMessage("Erreur lors de la récupération du nombre d'hébergements");
