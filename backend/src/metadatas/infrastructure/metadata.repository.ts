@@ -100,4 +100,20 @@ export class MetadataRepository implements IMetadataRepository {
 
     return { first, last };
   }
+
+  findOne(id: string) {
+    return this.prisma.metadata.findUnique({
+      where: { id },
+      include: {
+        createdBy: {
+          include: {
+            organization: true,
+          },
+        },
+        application: {
+          select: { id: true, label: true },
+        },
+      },
+    });
+  }
 }

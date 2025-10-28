@@ -6,6 +6,7 @@ import { useToasterStore } from "@/stores/toasterStore";
 
 export const useMetadataStore = defineStore("metadataStore", () => {
   const metadatas = ref<MetadataDto[]>([]);
+  const currentMetadata = ref<MetadataDto | null>(null);
   const firstMetadata = ref<MetadataDto | null>(null);
   const lastMetadata = ref<MetadataDto | null>(null);
   const total = ref(0);
@@ -87,6 +88,7 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     firstMetadata,
     lastMetadata,
     metadatas,
+    currentMetadata,
     total,
     isLoading,
     getFirstAndLastMetadataByApplication,

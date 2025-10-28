@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { useReportIssueStore } from "@/stores/reportIssueStore";
 import { computed } from "vue";
-import type { ApplicationWithPerms, Metadata } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
+import { useRoute } from 'vue-router';
+const route = useRoute();
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
 const reportStore = useReportIssueStore();
 const metadataStore = useMetadataStore();
 
-const headers = ["Date", "Auteur", "Description"];
+const headers = ["Date", "Auteur", "Titre", "Actions"];
 const currentPage = ref(0);
 const activeAccordion = ref<number>();
 const userStore = useUserStore();
@@ -21,39 +23,9 @@ const canPost = computed(() => {
     || userStore.adminLevel >= AdminLevel.WRITE;
 });
 
-function formatDescription(description: string): { title: string, content: string } {
-  const oldMatch = description.match(/Ancienne\(s\) valeur\(s\):\s*(\{.*?\})/s);
-  const newMatch = description.match(/Nouvelle\(s\) valeur\(s\):\s*(\{.*\})/s);
 
-  const title = description.split("\n")[0];
-
-  if (!oldMatch && !newMatch) {
-    return { title, content: description };
-  }
-
-  try {
-    let formatted = "";
-
-    if (newMatch) {
-      const newObj = JSON.parse(newMatch[1]);
-      const newLine = Object.entries(newObj)
-        .map(([k, v]) => `${k}='${Array.isArray(v) ? v.join(", ") : v}'`)
-        .join(" ");
-      formatted += `Nouvelle(s) valeur(s): ${newLine}\n`;
-    }
-
-    if (oldMatch) {
-      const oldObj = JSON.parse(oldMatch[1]);
-      const oldLine = Object.entries(oldObj)
-        .map(([k, v]) => `${k}='${Array.isArray(v) ? v.join(", ") : v}'`)
-        .join(" ");
-      formatted += `Ancienne(s) valeur(s): ${oldLine}`;
-    }
-
-    return { title, content: formatted };
-  } catch (_e) {
-    return { title, content: description };
-  }
+function getTitle(meta: any): string {
+  return (meta.description || '').split('\n')[0];
 }
 
 const rows = computed(() => {
@@ -61,17 +33,24 @@ const rows = computed(() => {
   const reports = (reportStore.issues || []).map((report: any) => ({
     sortKey: new Date(report.createdAt).getTime(),
     Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
-    Auteur: report.notifier.email,
-    Description: { title, content: report.description || "" },
+  Auteur: report.notifier.email,
+  Titre: title,
+  Actions: {
+    id: report.id,
+    isMetadata: false,
+  },
   }));
 
   const modifications = (metadataStore.metadatas || []).map((metadata: Metadata) => {
-    const { title, content } = formatDescription(metadata.description || "");
     return {
       sortKey: new Date(metadata.createdAt).getTime(),
       Date: new Date(metadata.createdAt).toLocaleDateString("fr-FR"),
       Auteur: metadata.createdBy?.email || "Inconnu",
-      Description: { title, content },
+      Titre: getTitle(metadata),
+      Actions: {
+        id: metadata.id,
+        isMetadata: true,
+      },
     };
   });
 
@@ -99,12 +78,14 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
       data-testid="notifications-table"
     >
       <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Description'">
-          <DsfrAccordion :id="cell.index" :title="cell.title" data-testid="notifications-accordion">
-            <div class="full-description">
-              <pre class="formatted-description" data-testid="notifications-description">{{ cell.content }}</pre>
-            </div>
-          </DsfrAccordion>
+        <template v-if="colKey === 'Actions' && cell.isMetadata">
+          <router-link
+            :to="{ name: 'metadata-detail', params: { id: cell.id }, query: { from: route.fullPath } }"
+            class="fr-btn fr-btn--secondary fr-btn--sm"
+            data-testid="notifications-see-more-button"
+          >
+            Voir plus
+          </router-link>
         </template>
         <template v-else>
           {{ cell }}
