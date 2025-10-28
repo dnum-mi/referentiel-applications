@@ -5,20 +5,24 @@ import useModal from "@/composables/use-modal";
 import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import ActorForm from "./ActorForm.vue";
+import OrgBreadCrumb from "../organization/OrgBreadCrumb.vue";
 
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import type { CreateActorDto } from "@/client/types.gen";
+import type { CreateActorDto, Actor } from "@/client/types.gen";
 
-const props = defineProps<{ application: ApplicationWithPerms }>();
-const emit = defineEmits(["update:application"]);
+const props = defineProps<{
+  application: ApplicationWithPerms,
+  isMobile?: boolean,
+}>();
+
 
 const actorStore = useActorStore();
 const userStore = useUserStore();
 const actorTypeStore = useActorTypeStore();
 const toaster = useToasterStore();
-const actorModal = useModal();
+const actorModal = useModal<Actor>();
 
 const selectedActorIds = ref<string[]>([]);
 const currentPage = ref(0);
@@ -30,27 +34,27 @@ const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props
 const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
 
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
+function getActorTypeLabel(typeId: string): string {
+  const type = actorTypesList.value.find(t => t.id === typeId);
+  return type ? type.label : "Type inconnu";
+}
 
 const tableRows = computed(() =>
-  actorStore.actors.map(actor => [
-    actor.id,
-    actor.organizationId ?? undefined,
-    (() => {
-      const type = actorTypesList.value.find(t => t.id === actor.actorTypeId);
-      return type ? type.label : "Type inconnu";
-    })(),
-    {
+  actorStore.actors.map(actor => ({
+    id: actor.id,
+    Sélection: actor.id,
+    Organisation: actor.organizationId ?? undefined,
+    Type: getActorTypeLabel(actor.actorTypeId),
+    Email: {
       label: actor.email || "",
       to: actor.email ? `mailto:${actor.email}` : "",
     },
-    actor.firstname || "",
-    actor.lastname || "",
-    {
-      component: "DsfrButton",
-      label: "Modifier",
-      onClick: () => actorModal.openModal(actor),
+    Prénom: actor.firstname || "",
+    Nom: actor.lastname || "",
+    Actions: {
+      edit: () => actorModal.openModal(actor),
     },
-  ]),
+  })),
 );
 
 onBeforeMount(async () => {
@@ -69,27 +73,13 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
     }
     await actorStore.fetchActorsByApplication(props.application.id);
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
-    emit("update:application", props.application);
+    
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
     console.error("❌ Erreur handleSaveActors :", error.response?.data || error);
   } finally {
     loading.value = false;
   }
-}
-
-async function confirmDelete() {
-  const actorsToDelete = actorStore.actors.filter(actor => selectedActorIds.value.includes(actor.id));
-
-  for (const actor of actorsToDelete) {
-    await actorStore.deleteActor(actor.id, props.application.id);
-  }
-
-  await actorStore.fetchActorsByApplication(props.application.id);
-  selectedActorIds.value = [];
-  showDeleteConfirmation.value = false;
-  toaster.addSuccessMessage("Acteurs supprimés avec succès !");
-  emit("update:application", props.application);
 }
 
 function removeSelectedActors() {
@@ -100,8 +90,63 @@ function removeSelectedActors() {
   showDeleteConfirmation.value = true;
 }
 
+
+async function confirmDelete() {
+  const actorsToDelete = actorStore.actors.filter(actor => selectedActorIds.value.includes(actor.id));
+
+  if (actorsToDelete.length === 0) {
+    showDeleteConfirmation.value = false;
+    return;
+  }
+
+  try {
+    const deletePromises = actorsToDelete.map(actor =>
+      actorStore.deleteActor(actor.id, props.application.id)
+    );
+    
+    await Promise.all(deletePromises);
+
+    await actorStore.fetchActorsByApplication(props.application.id);
+    selectedActorIds.value = [];
+    showDeleteConfirmation.value = false;
+    toaster.addSuccessMessage("Acteurs supprimés avec succès !");
+
+  } catch (error) {
+    console.error("❌ Erreur confirmDelete :", error);
+    toaster.addErrorMessage("Erreur lors de la suppression d'un ou plusieurs acteurs.");
+  }
+}
+
 function cancelDelete() {
   showDeleteConfirmation.value = false;
+}
+
+function getCardButtons(actor: Actor) { 
+  return [
+    {
+      label: "Modifier",
+      icon: "fr-icon-edit-line",
+      tertiary: true,
+      size: "sm",
+      disabled: !canEdit.value,
+      onClick: (event?: Event) => {
+        if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+        actorModal.openModal(actor);
+      },
+    },
+    {
+      label: "Supprimer",
+      icon: "fr-icon-delete-line",
+      tertiary: true,
+      size: "sm",
+      disabled: !canEdit.value,
+      onClick: (event?: Event) => {
+        if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+        selectedActorIds.value = [actor.id];
+        showDeleteConfirmation.value = true;
+      },
+    },
+  ];
 }
 </script>
 
@@ -127,12 +172,12 @@ function cancelDelete() {
     </div>
   </div>
 
-  <div v-if="!loading && tableRows.length === 0" class="text-center" data-testid="actor-empty-state">
+  <div v-if="!loading && actorStore.actors.length === 0" class="text-center" data-testid="actor-empty-state">
     <p>Aucun acteur enregistré.</p>
   </div>
 
   <div v-else>
-    <div class="global-delete">
+    <div v-if="!props.isMobile" class="global-delete">
       <DsfrButton
         type="button"
         tertiary
@@ -147,68 +192,113 @@ function cancelDelete() {
       </DsfrButton>
     </div>
 
-    <AppLoader v-if="loading" data-testid="actor-loader" />
+    <AppLoader v-if="loading" data-testid="actor-loader"></AppLoader>
 
-    <DsfrDataTable
-      v-else
-      v-model:selection="selectedActorIds"
-      v-model:current-page="currentPage"
-      :headers-row="headers"
-      :rows="tableRows"
-      row-key="id"
-      title="Liste des acteurs associés"
-      pagination
-      :rows-per-page="5"
-      :pagination-options="[5, 10, 20, 30]"
-      bottom-action-bar-class="bottom-action-bar-class"
-      pagination-wrapper-class="pagination-wrapper-class"
-      sorted="id"
-      :sortable-rows="['id']"
-      data-testid="actor-table"
-    >
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Sélection'">
-          <input
-            v-model="selectedActorIds"
-            type="checkbox" :value="cell" :data-testid="`actor-row-select-${cell}`"
-          >
-        </template>
-        <template v-else-if="colKey === 'Organisation'">
-          <OrgBreadCrumb v-if="cell" :organization-id="cell" />
+    <template v-if="!loading && !props.isMobile">
+      <DsfrDataTable
+        v-model:selection="selectedActorIds"
+        v-model:current-page="currentPage"
+        :headers-row="headers"
+        :rows="tableRows"
+        row-key="id"
+        title="Liste des acteurs associés"
+        pagination
+        :rows-per-page="5"
+        :pagination-options="[5, 10, 20, 30]"
+        bottom-action-bar-class="bottom-action-bar-class"
+        pagination-wrapper-class="pagination-wrapper-class"
+        sorted="id"
+        :sortable-rows="['id']"
+        data-testid="actor-table"
+      >
+        <template #cell="{ colKey, cell }">
+          <template v-if="colKey === 'Sélection'">
+            <input
+              v-model="selectedActorIds"
+              type="checkbox" :value="cell" :data-testid="`actor-row-select-${cell}`"
+            >
+          </template>
+
+          <template v-else-if="colKey === 'Organisation'">
+            <OrgBreadCrumb v-if="cell" :organization-id="cell"></OrgBreadCrumb>
+            <template v-else>
+              Aucune organisation
+            </template>
+          </template>
+
+          <template v-else-if="colKey === 'Email'">
+            <a
+              v-if="cell.to"
+              :href="cell.to"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="actor-email-link"
+              :title="`Envoyer un email à ${cell.label}`"
+              :aria-label="`Envoyer un email à ${cell.label}`"
+            >
+              {{ cell.label }}
+            </a>
+          </template>
+
+          <template v-else-if="colKey === 'Actions'">
+            <DsfrButton
+              title="Modifier les informations de l’acteur"
+              aria-label="Modifier l’acteur"
+              tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="actor-edit-btn" @click="cell.edit"
+            >
+              Modifier
+            </DsfrButton>
+          </template>
+
+          <template v-else-if="colKey === 'Type'">
+            <DsfrTag v-if="cell" :label="String(cell)" small class="actor-type-tag" :data-testid="`actor-type-tag-${cell}`"></DsfrTag>
+            <template v-else>
+              Type inconnu
+            </template>
+          </template>
+
           <template v-else>
-            Aucune organisation
+            {{ cell }}
           </template>
         </template>
-        <template v-else-if="colKey === 'Email'">
-          <a
-            v-if="cell.to"
-            :href="cell.to"
-            target="_blank"
-            rel="noopener noreferrer"
-            data-testid="actor-email-link"
-            title="Envoyer un email à {{ cell.label }}"
-            aria-label="Envoyer un email à {{ cell.label }}"
-          >
-            {{ cell.label }}
-          </a>
+      </DsfrDataTable>
+    </template>
+
+    <div v-if="props.isMobile" class="actor-card-list">
+      <DsfrCard
+        v-for="actor in actorStore.actors"
+        :key="actor.id"
+        :title="`${actor.firstname || ''} ${actor.lastname || ''}`.trim() || '—'"
+        :description="actor.email || ''"
+        :buttons="getCardButtons(actor)"
+        size="sm"
+        :noArrow="true"
+        class="fr-mb-2w"
+        :data-testid="`actor-card-${actor.id}`"
+      >
+        <template #start-details>
+          <DsfrTag
+            :label="getActorTypeLabel(actor.actorTypeId)"
+            small
+            class="fr-mr-2w"
+            :data-testid="`actor-type-tag-${actor.id}`"
+          ></DsfrTag>
         </template>
-        <template v-else-if="colKey === 'Actions'">
-          <DsfrButton
-            title="Modifier les informations de l’acteur"
-            aria-label="Modifier l’acteur"
-            tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="actor-edit-btn" @click="cell.onClick"
-          >
-            {{ cell.label }}
-          </DsfrButton>
+
+        <template #end-details>
+          <div class="fr-text--sm">
+            <strong class="fr-mr-1w">Organisation :</strong>
+            <OrgBreadCrumb v-if="actor.organizationId" :organization-id="actor.organizationId"></OrgBreadCrumb>
+            <span v-else>Aucune organisation</span>
+            <div v-if="actor.email" class="fr-mt-1v">
+              <a :href="`mailto:${actor.email}`" data-testid="actor-email-link" :title="`Envoyer un email à ${actor.email}`" :aria-label="`Envoyer un email à ${actor.email}`">
+                {{ actor.email }}
+              </a>
+            </div>
+          </div>
         </template>
-        <template v-else-if="colKey === 'Type' || colKey === 'Organisation'">
-          <span class="truncate" :title="cell">{{ cell }}</span>
-        </template>
-        <template v-else>
-          {{ cell }}
-        </template>
-      </template>
-    </DsfrDataTable>
+      </DsfrCard>
+    </div>
   </div>
 
   <DsfrModal
@@ -224,7 +314,7 @@ function cancelDelete() {
       data-testid="actor-form-container"
       @submit="handleSaveActors"
       @cancel="actorModal.closeModal"
-    />
+    ></ActorForm>
   </DsfrModal>
 
   <DeleteConfirmationModal
@@ -233,7 +323,7 @@ function cancelDelete() {
     data-testid="actor-delete-modal"
     @confirm="confirmDelete"
     @cancel="cancelDelete"
-  />
+  ></DeleteConfirmationModal>
 </template>
 
 <style scoped>
@@ -254,5 +344,13 @@ input[type="checkbox"] {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.actor-card-list {
+  display: flex;
+  flex-direction: column;
+}
+.actor-type-tag {
+  display: inline-block;
 }
 </style>

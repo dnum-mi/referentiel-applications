@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, defineProps, watch } from "vue";
+import { ref, computed, withDefaults, defineProps, watch } from "vue";
 import type { ApplicationWithPerms } from "@/models/Application";
-import type { CreateLinkDto, UpdateLinkDto } from "@/client/types.gen";
+import type { CreateLinkDto, UpdateLinkDto, Link } from "@/client/types.gen";
 import { useLinkStore } from "@/stores/linkStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
@@ -11,15 +11,19 @@ import { linkTypesDict } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 
-const props = defineProps<{
-  application: ApplicationWithPerms
-}>();
+const props = withDefaults(defineProps<{
+  application: ApplicationWithPerms,
+  isMobile?: boolean,
+}>(), {
+  isMobile: false,
+});
 
-const emit = defineEmits(["update:application"]);
+// emit est supprimé car nous ne l'utilisons plus
 const toaster = useToasterStore();
 const linkStore = useLinkStore();
 const userStore = useUserStore();
-const linkModal = useModal();
+// Amélioration 2 : Typer le composable useModal
+const linkModal = useModal<Link>();
 
 const selectedLinkIds = ref<string[]>([]);
 const showDeleteConfirmation = ref(false);
@@ -29,9 +33,13 @@ const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props
 const currentPage = ref(0);
 const pageSize = ref(15);
 
-const getTypeLabel = (type: string) => (linkTypesDict as any)[type] || "Type inconnu";
+// L'utilisation de 'as any' est moins idéale, mais acceptable si linkTypesDict est un objet simple
+const getTypeLabel = (type: string) => (linkTypesDict as Record<string, string>)[type] || "Type inconnu";
 
-// Pagination handlers
+watch(() => props.isMobile, (isMobile) => {
+  if (isMobile) selectedLinkIds.value = [];
+});
+
 function handlePageChange(newPage: number) {
   currentPage.value = newPage;
 }
@@ -48,18 +56,20 @@ watch([currentPage, pageSize], () => {
   });
 });
 
+// Amélioration 1 : Remplacer 'rows' par un tableau d'objets
+const headers = ["Sélection", "Lien", "Description", "Type de lien", "Actions"];
+
 const rows = computed(() =>
-  linkStore.links.map(link => [
-    link.id,
-    { label: link.link || "Lien vide", to: link.link },
-    link.description || "Description vide",
-    getTypeLabel(link.type),
-    {
-      component: "DsfrButton",
-      label: "Modifier",
-      onClick: () => linkModal.openModal(link),
+  linkStore.links.map(link => ({
+    id: link.id,
+    Sélection: link.id, // Utilisé pour le v-model de DsfrDataTable
+    Lien: { label: link.link || "Lien vide", to: link.link },
+    Description: link.description || "Description vide",
+    "Type de lien": getTypeLabel(link.type),
+    Actions: {
+      edit: () => linkModal.openModal(link), // Action pour le bouton
     },
-  ]),
+  })),
 );
 
 async function createLink(newLink: CreateLinkDto) {
@@ -67,8 +77,8 @@ async function createLink(newLink: CreateLinkDto) {
     isSubmitting.value = true;
     await linkStore.createLink(props.application.id, newLink);
     linkModal.closeModal();
-    emit("update:application", props.application);
-    await linkStore.fetchLinks(props.application.id);
+    // Amélioration 3 : 'emit' supprimé
+    await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
   } finally {
     isSubmitting.value = false;
   }
@@ -77,7 +87,8 @@ async function createLink(newLink: CreateLinkDto) {
 async function editLink(updatedLink: UpdateLinkDto) {
   try {
     isSubmitting.value = true;
-    const selectedItem = linkModal.selectedItem.value as any;
+    // Amélioration 2 : 'selectedItem' est maintenant typé
+    const selectedItem = linkModal.selectedItem.value;
     if (!selectedItem?.id) {
       throw new Error("Aucun élément sélectionné pour la modification.");
     }
@@ -87,19 +98,38 @@ async function editLink(updatedLink: UpdateLinkDto) {
       ...updatedLink,
     });
     linkModal.closeModal();
-    emit("update:application", props.application);
-    await linkStore.fetchLinks(props.application.id);
+    // Amélioration 3 : 'emit' supprimé
+    await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
   } finally {
     isSubmitting.value = false;
   }
 }
 
 async function confirmDelete() {
-  await linkStore.deleteLinks(props.application.id, selectedLinkIds.value);
-  selectedLinkIds.value = [];
-  showDeleteConfirmation.value = false;
-  emit("update:application", props.application);
-  await linkStore.fetchLinks(props.application.id);
+  if (!selectedLinkIds.value.length) {
+    showDeleteConfirmation.value = false;
+    return;
+  }
+
+  try {
+    isSubmitting.value = true;
+    await linkStore.deleteLinks(props.application.id, selectedLinkIds.value);
+    selectedLinkIds.value = [];
+    showDeleteConfirmation.value = false;
+    await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
+
+    // Cette logique de pagination est parfaite, on n'y touche pas
+    if (linkStore.links.length === 0 && (linkStore.total ?? 0) > 0 && currentPage.value > 0) {
+      currentPage.value = Math.max(0, currentPage.value - 1);
+      await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
+    }
+    // Amélioration 3 : 'emit' supprimé
+  } catch (err) {
+    toaster.addErrorMessage("Erreur lors de la suppression.");
+    console.error("confirmDelete error:", err);
+  } finally {
+    isSubmitting.value = false;
+  }
 }
 
 function removeSelectedLinks() {
@@ -108,6 +138,35 @@ function removeSelectedLinks() {
     return;
   }
   showDeleteConfirmation.value = true;
+}
+
+// Cette fonction est bien écrite et correspond au style des autres composants.
+function getCardButtons(link: Link) { // On peut utiliser le type Link ici
+  return [
+    {
+      label: "Modifier",
+      icon: "fr-icon-edit-line",
+      tertiary: true,
+      size: "sm",
+      disabled: !canEdit.value,
+      onClick: (event?: Event) => {
+        event?.stopPropagation();
+        linkModal.openModal(link);
+      },
+    },
+    {
+      label: "Supprimer",
+      icon: "fr-icon-delete-line",
+      tertiary: true,
+      size: "sm",
+      disabled: !canEdit.value,
+      onClick: (event?: Event) => {
+        event?.stopPropagation();
+        selectedLinkIds.value = [link.id];
+        showDeleteConfirmation.value = true;
+      },
+    },
+  ];
 }
 </script>
 
@@ -125,66 +184,107 @@ function removeSelectedLinks() {
     </div>
   </div>
 
-  <div v-if="!linkStore.isLoading && rows.length === 0" class="text-center" data-testid="links-empty">
+  <div v-if="!linkStore.isLoading && linkStore.links.length === 0" class="text-center" data-testid="links-empty">
     <p>Aucun lien enregistré.</p>
   </div>
 
   <div v-else>
-    <div class="global-delete">
-      <DsfrButton
-        type="button"
-        tertiary
-        icon="fr-icon-delete-line"
-        data-testid="link-delete-selected-btn"
-        :disabled="!selectedLinkIds.length || !canEdit"
-        @click="removeSelectedLinks"
-      >
-        Supprimer la sélection
-      </DsfrButton>
-    </div>
-
     <AppLoader v-if="linkStore.isLoading" data-testid="links-loader" />
 
     <div v-else>
-      <DsfrDataTable
-        v-model:selection="selectedLinkIds"
-        :headers-row="['Sélection', 'Lien', 'Description', 'Type de lien', 'Actions']"
-        :rows="rows"
-        row-key="id"
-        :pagination="false"
-        title="Liste des liens"
-        data-testid="links-table"
-      >
-        <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'Sélection'">
-            <input v-model="selectedLinkIds" type="checkbox" :value="cell">
-          </template>
-          <template v-else-if="colKey === 'Lien'">
-            <a :href="(cell as any).to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ (cell as any).label }}</a>
-          </template>
-          <template v-else-if="colKey === 'Actions'">
-            <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="link-edit-btn" @click="(cell as any).onClick">
-              {{ (cell as any).label }}
-            </DsfrButton>
-          </template>
-          <template v-else>
-            {{ cell }}
-          </template>
-        </template>
-      </DsfrDataTable>
+      <template v-if="!props.isMobile">
+        <div class="global-delete" style="margin-bottom: 1rem;">
+          <DsfrButton
+            type="button"
+            secondary
+            icon="fr-icon-delete-line"
+            data-testid="link-delete-selected-btn"
+            :disabled="!selectedLinkIds.length || !canEdit"
+            @click="removeSelectedLinks"
+            :title="!selectedLinkIds.length ? 'Sélectionnez des éléments pour activer' : 'Supprimer la sélection'"
+          >
+            Supprimer la sélection
+          </DsfrButton>
 
-      <PaginationFooter
-        :total-filtered="linkStore.total"
-        :limit="pageSize"
-        :page="currentPage"
-        data-testid="links-pagination-footer"
-        @update:limit="handlePageSizeChange"
-        @update:page="handlePageChange"
-      />
+          <div class="sr-only" aria-live="polite" aria-atomic="true">
+            {{ selectedLinkIds.length > 0 ? `${selectedLinkIds.length} élément(s) sélectionné(s)` : '' }}
+          </div>
+        </div>
+
+
+        <DsfrDataTable
+          v-model:selection="selectedLinkIds"
+          :headers-row="headers"
+          :rows="rows"
+          row-key="id"
+          :pagination="false"
+          title="Liste des liens"
+          data-testid="links-table"
+        >
+          <template #cell="{ colKey, cell }">
+            <template v-if="colKey === 'Sélection'">
+              <input v-model="selectedLinkIds" type="checkbox" :aria-label="`Sélectionner lien ${cell}`" :value="cell" />
+            </template>
+            
+            <template v-else-if="colKey === 'Lien'">
+              <a :href="cell.to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ cell.label }}</a>
+            </template>
+            
+            <template v-else-if="colKey === 'Type de lien'">
+              <DsfrTag :label="cell" :title="cell" />
+            </template>
+            
+            <template v-else-if="colKey === 'Actions'">
+              <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="link-edit-btn" @click="cell.edit">
+                Modifier
+              </DsfrButton>
+            </template>
+            
+            <template v-else>
+              {{ cell }}
+            </template>
+          </template>
+        </DsfrDataTable>
+        <PaginationFooter
+          :total-filtered="linkStore.total"
+          :limit="pageSize"
+          :page="currentPage"
+          data-testid="links-pagination-footer"
+          @update:limit="handlePageSizeChange"
+          @update:page="handlePageChange"
+        />
+      </template>
+
+      <div v-else class="link-card-list">
+        <DsfrCard
+          v-for="link in linkStore.links"
+          :key="link.id"
+          :title="link.description || 'Description vide'"
+          :description="link.link"
+          :link="link.link"
+          :buttons="getCardButtons(link)"
+          size="sm"
+          :noArrow="true"
+          class="fr-mb-2w"
+          data-testid="link-card"
+        >
+          <template #end-details>
+            <DsfrTag :label="getTypeLabel(link.type)" :title="getTypeLabel(link.type)" />
+          </template>
+        </DsfrCard>
+
+        <PaginationFooter
+          :total-filtered="linkStore.total"
+          :limit="pageSize"
+          :page="currentPage"
+          data-testid="links-pagination-footer"
+          @update:limit="handlePageSizeChange"
+          @update:page="handlePageChange"
+        />
+      </div>
     </div>
   </div>
 
-  <!-- Modals -->
   <DsfrModal
     :opened="linkModal.isModalOpen.value || linkModal.isCreateModalOpen.value"
     :title="linkModal.isCreateModalOpen.value ? 'Ajouter un lien' : 'Modifier le lien'"
@@ -208,3 +308,43 @@ function removeSelectedLinks() {
     @cancel="() => (showDeleteConfirmation = false)"
   />
 </template>
+
+<style scoped>
+.link-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fr-mb-2w {
+  margin-bottom: 1rem;
+}
+
+.sr-only {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
+}
+
+.link-card-list ::v-deep(.fr-card__footer) {
+  position: relative;
+  z-index: 2;
+}
+
+.link-card-list ::v-deep(.fr-card__footer .fr-btn) {
+  min-height: 32px; 
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.link-card-list ::v-deep(.fr-card__footer .fr-btn__icon),
+.link-card-list ::v-deep(.fr-card__footer .fr-icon) {
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+</style>

@@ -8,6 +8,7 @@ import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
 import CreateApplicationModal from "@/components/modal/CreateApplicationModal.vue";
+import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue";
 
 const statsStore = useStatisticsStore();
 const searchStore = useApplicationSearchStore();
@@ -16,12 +17,10 @@ const currentSortedColumn = ref("label");
 const isMobile = ref(false);
 const isCreateModalOpen = ref(false);
 
-// Mode mobile ou desktop
 function updateMode() {
   isMobile.value = window.matchMedia("(max-width: 768px)").matches;
 }
 
-// Mise à jour du tri (colonne cliquée)
 watch(currentSortedColumn, (val) => {
   searchStore.setFilter({ sortBy: val });
 });
@@ -42,36 +41,44 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 
 <template>
   <div class="layout" data-testid="application-view">
+
+    <a class="skip-link" href="#application-results">Aller au contenu</a>
+
     <SidebarFilters data-testid="application-filters" />
 
-    <main class="main-content">
+    <main class="main-content" id="main-content" data-testid="main-content" role="main">
       <h1 class="fr-h1" data-testid="application-search-title">
         Recherche d'applications
       </h1>
 
-      <div v-if="searchStore.isLoading" class="loader" data-testid="application-loader">
+      <div v-if="searchStore.isLoading" class="loader" data-testid="application-loader" role="status" aria-live="polite" aria-atomic="true">
         <AppLoader />
-      </div>
-      <div class="fr-mb-5w">
-        <DsfrToggleSwitch
-          v-model="isMobile" active-text="Mode Tuiles" title="Changer le mode d'affichage (tuiles/tableau)"
-          aria-label="Changer le mode d'affichage (tuiles/tableau)" inactive-text="Mode Tableau" data-testid="application-toggle-view"
-        />
+        <span class="sr-only">Chargement des résultats…</span>
       </div>
 
-      <ApplicationSearchActions />
+      <div class="search-actions-wrapper" data-testid="application-search-actions-wrapper">
+        <ApplicationSearchActions />
+      </div>
 
       <CreateApplicationModal
         :opened="isCreateModalOpen"
         @close="isCreateModalOpen = false"
       />
 
-      <ApplicationTableView
-        v-if="displayMode === 'table'"
-        v-model:sorted-by="currentSortedColumn"
-        data-testid="application-table-view"
-      />
-      <ApplicationCardView v-else data-testid="application-card-view" />
+      <section
+        id="application-results"
+        class="application-results"
+        aria-live="polite"
+        :aria-busy="searchStore.isLoading"
+        tabindex="-1"
+      >
+        <ApplicationTableView
+          v-if="displayMode === 'table'"
+          v-model:sorted-by="currentSortedColumn"
+          data-testid="application-table-view"
+        />
+        <ApplicationCardView v-else data-testid="application-card-view" />
+      </section>
     </main>
   </div>
 </template>
@@ -80,6 +87,28 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 .layout {
   display: flex;
   min-height: 100%;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: -9999;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 1000;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 0.75rem;
+  background: #005ea5;
+  color: #fff;
+  border-radius: 4px;
+  text-decoration: none;
 }
 
 @media (max-width: 768px) {
@@ -98,5 +127,24 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
   display: flex;
   justify-content: center;
   margin-top: 3rem;
+}
+
+.search-actions-wrapper {
+  margin: 1.25rem 0;
+}
+
+.application-results {
+  margin-top: 0.5rem;
+}
+
+.sr-only {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
 }
 </style>
