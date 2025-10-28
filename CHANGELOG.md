@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.48.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.47.0...v1.48.0) (2025-10-28)
+
+
+### Features
+
+* :sparkles: update action labels in metadata page and improve translations ([#1226](https://github.com/dnum-mi/referentiel-applications/issues/1226)) ([58642fe](https://github.com/dnum-mi/referentiel-applications/commit/58642fe9cb182be423a18f7469117a10c3d7d706))
+* **front:** :wheelchair: improve keyboard nav and chart reading on quality page ([b1e3c7d](https://github.com/dnum-mi/referentiel-applications/commit/b1e3c7d21888ac87e0ba7a7565b312634ba21885))
+
+
+### Bug Fixes
+
+* :bug: correct API endpoint names in hosting and metadata stores ([#1230](https://github.com/dnum-mi/referentiel-applications/issues/1230)) ([e28e120](https://github.com/dnum-mi/referentiel-applications/commit/e28e1200433908c1bd668240e8d616d0a3d46d54))
+* **front:** :bug: fix: validate required fields on application form submit ([c7b39e1](https://github.com/dnum-mi/referentiel-applications/commit/c7b39e17bd578dc3d2d02bd298b850b57711f1b0))
+
 ## [1.47.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.46.2...v1.47.0) (2025-10-24)
 
 
