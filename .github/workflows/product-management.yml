@@ -1,0 +1,20 @@
+name: Issue Flow Management
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+
+jobs:
+  run_detector:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Run Duplicate Finder
+        uses: carolinedanslesnuages/Duplicated-issue-detector@v1.0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          threshold: "0.70"
+          duplicate-label: potential-duplicate
