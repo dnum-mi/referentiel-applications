@@ -6,6 +6,7 @@ import { appConfig } from "src/config/configs";
 import { LabelsService } from "src/labels/labels.service";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { TagsService } from "src/tag/tags.service";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { ApplicationRights } from "./application/dto/application-rights.dto";
 import {
@@ -27,6 +28,7 @@ export class ApplicationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly applicationRepository: ApplicationRepository,
+    private readonly tagsService: TagsService,
     private readonly labelsService: LabelsService,
     private readonly metadataService: MetadatasService,
     @Inject(appConfig.KEY) private readonly appConf: ConfigType<typeof appConfig>,
@@ -36,6 +38,8 @@ export class ApplicationService {
     requestorId: string,
     createApplicationDto: CreateApplicationDto,
   ) {
+    const existingTags = await this.tagsService.findByNames(createApplicationDto.tags);
+
     const application = await this.prisma.$transaction(async (tx) => {
       const app = await tx.application.create({
         data: {
@@ -45,7 +49,9 @@ export class ApplicationService {
           description: createApplicationDto.description,
           targetPopulations: createApplicationDto.targetPopulations ?? [],
           purposes: createApplicationDto.purposes ?? [],
-          tags: createApplicationDto.tags ?? [],
+          tags: {
+            connect: existingTags,
+          },
           priorityRestart: createApplicationDto.priorityRestart ?? null,
           quality: 0,
         },
@@ -112,12 +118,18 @@ export class ApplicationService {
 
     const applicationUpdates = this.applyScalarAndSimpleRelationUpdates(data);
 
+    if (data.tags) {
+      const existingTags = await this.tagsService.findByNames(data.tags);
+      applicationUpdates.tags = { set: existingTags };
+    }
+
     try {
       const oldApp = await this.applicationRepository.findById(where.id);
 
       const updatedApplication = await this.prisma.application.update({
         where,
         data: applicationUpdates,
+        include: { tags: true },
       });
 
       await this.updateApplicationQuality(updatedApplication.id);
@@ -286,7 +298,7 @@ export class ApplicationService {
       "description",
       "priorityRestart",
     ] as const;
-    const arrayFields = ["purposes", "targetPopulations", "tags"] as const;
+    const arrayFields = ["purposes", "targetPopulations"] as const;
 
     scalarFields.forEach((field) => {
       if (data[field] !== undefined) {

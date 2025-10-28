@@ -5,6 +5,7 @@ import { paginate } from "src/common/utils/pagination.utils";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationDto } from "src/product/application/dto/get-application.dto";
 import { ApplicationWithAllRelations } from "src/product/types/application.type";
+import { CreateTagDto } from "src/tag/dto/tag.dto";
 import { CreateApplicationDto } from "../../application/dto/create-application.dto";
 import { ApplicationSearchFilters, IApplicationRepository } from "./application.repository.interface";
 
@@ -12,11 +13,18 @@ import { ApplicationSearchFilters, IApplicationRepository } from "./application.
 export class ApplicationRepository implements IApplicationRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(application: Omit<CreateApplicationDto, "status" | "statusDate" | "labels">) {
+  public async create(application: Omit<CreateApplicationDto, "status" | "statusDate" | "labels">, existingTags: CreateTagDto[]) {
     return this.prisma.application.create({
       data: {
         ...application,
+        tags: {
+          connect: existingTags,
+        },
+        labels: undefined,
         quality: 0,
+      },
+      include: {
+        tags: true,
       },
     });
   }
@@ -32,17 +40,17 @@ export class ApplicationRepository implements IApplicationRepository {
         relationsAsTarget: {
           include: { sourceApplication: { select: { id: true, label: true } } },
         },
+        tags: true,
       },
     });
   }
 
-  async findApplications(
+  public async findApplications(
     filters: ApplicationSearchFilters,
     ownership?: { actorEmail?: string },
   ): Promise<PaginatedResponseDto<ApplicationDto>> {
     const {
       shortName,
-      tag,
       priorityRestart,
       page,
       pageSize,
@@ -51,7 +59,6 @@ export class ApplicationRepository implements IApplicationRepository {
     } = filters;
 
     const safeOrder = order === "desc" ? "desc" : "asc";
-    const upperCaseTags = tag?.map(t => t.toUpperCase()) || [];
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
@@ -266,15 +273,22 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
       {
-        condition: shortName,
+        condition: filters.tag?.length,
         whereClause: {
-          shortName: { contains: shortName, mode: "insensitive" as const },
+          tags: {
+            some: {
+              name: {
+                in: filters.tag,
+                mode: "insensitive" as const,
+              },
+            },
+          },
         },
       },
       {
-        condition: tag?.length,
+        condition: shortName,
         whereClause: {
-          tags: { hasSome: upperCaseTags },
+          shortName: { contains: shortName, mode: "insensitive" as const },
         },
       },
       {
@@ -344,6 +358,7 @@ export class ApplicationRepository implements IApplicationRepository {
           },
           labels: true,
           externalRessource: true,
+          tags: true,
         },
       }),
       this.prisma.application.count({ where }),
@@ -359,6 +374,7 @@ export class ApplicationRepository implements IApplicationRepository {
         metadatas: true,
         compliance: true,
         labels: true,
+        tags: true,
         externalRessource: true,
         anomalyNotification: true,
         actors: {

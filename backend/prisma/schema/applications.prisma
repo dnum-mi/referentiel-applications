@@ -6,7 +6,6 @@ model Application {
   description         String
   targetPopulations   String[]
   purposes            String[]
-  tags                String[]
   currentStatusId     String?
   currentStatus       ApplicationStatus?    @relation(fields: [currentStatusId], references: [id], onDelete: SetNull)
   metadatas           Metadata[]            @relation("ApplicationMetadatas")
@@ -20,6 +19,7 @@ model Application {
   relationsAsSource Relation[] @relation("SourceHasTarget")
   relationsAsTarget Relation[] @relation("TargetHasSource")
   labels            Label[]    @relation("ApplicationLabels")
+  tags              Tag[]
 
   priorityRestart priorityRestart?
   quality         Int

@@ -6,6 +6,7 @@ import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
 import { ApplicationFaker } from "./fakers/application.faker";
+import { TagFaker } from "./fakers/tag.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
@@ -56,7 +57,7 @@ describe("Applications", () => {
         shortName: "complete-app",
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
-        tags: ["tag1", "tag2", "tag3"],
+        tags: [],
         status: "in_production",
         labels: [],
       })
@@ -66,6 +67,8 @@ describe("Applications", () => {
 
   it("/POST applications", async () => {
     await user.update({ capabilities: ["CreateApplication"] });
+    const tag1 = await TagFaker.create();
+    const tag2 = await TagFaker.create();
     const response = await request(app().getHttpServer())
       .post("/applications")
       .send({
@@ -73,7 +76,7 @@ describe("Applications", () => {
         shortName: "complete-app",
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
-        tags: ["tag1", "tag2", "tag3"],
+        tags: [tag1.name, tag2.name],
         status: "in_production",
         labels: [],
       })

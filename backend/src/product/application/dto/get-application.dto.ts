@@ -39,9 +39,6 @@ export class ApplicationDto {
   @IsArray()
   purposes: string[];
 
-  @IsArray()
-  tags: string[];
-
   @ApiProperty({
     name: "status",
     enum: Status,

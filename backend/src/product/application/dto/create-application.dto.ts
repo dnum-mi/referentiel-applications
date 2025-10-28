@@ -84,6 +84,18 @@ export class CreateApplicationDto {
 
   @ApiProperty({
     type: [String],
+    example: ["tag1", "tag2"],
+    description: "standardized tag names associated with the application",
+    required: false,
+  })
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  @Transform(({ value }) => value.map((v: string) => v.toLowerCase()))
+  tags?: string[];
+
+  @ApiProperty({
+    type: [String],
     example: ["finance", "HR"],
     description: "Purposes of the application",
     required: false,
@@ -92,18 +104,6 @@ export class CreateApplicationDto {
   @IsOptional()
   @IsString({ each: true })
   purposes?: string[];
-
-  @ApiProperty({
-    type: [String],
-    example: ["tag1", "tag2"],
-    description: "Tags associated with the application",
-    required: false,
-  })
-  @IsArray()
-  @IsOptional()
-  @IsString({ each: true })
-  @Transform(({ value }) => value.map(v => v.toUpperCase()))
-  tags?: string[];
 
   @ApiProperty({
     enum: Status,

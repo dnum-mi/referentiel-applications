@@ -59,7 +59,7 @@ const rows = computed(() => {
           .join(", ") || "-",
     },
     Tags: {
-      tags: app.tags?.join(", ") || "-",
+      tags: app.tags?.map(tag => tag.name).join(", ") || "-",
     },
   }));
   if (searchStore.filters.order === "desc") {
