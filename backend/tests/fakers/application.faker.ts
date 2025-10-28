@@ -5,34 +5,6 @@ import { faker } from "@faker-js/faker";
 import { priorityRestart } from "@prisma/client";
 import { getPrismaClient } from "./prisma";
 
-const appTags = [
-  "WEB",
-  "MOBILE",
-  "API",
-  "DESKTOP",
-  "CLOUD",
-  "DATABASE",
-  "MICROSERVICE",
-  "FRONTEND",
-  "BACKEND",
-  "FULLSTACK",
-  "ANALYTICS",
-  "MONITORING",
-  "SECURITY",
-  "INTEGRATION",
-  "LEGACY",
-  "MODERN",
-  "CRITICAL",
-  "INTERNAL",
-  "EXTERNAL",
-  "DEVELOPMENT",
-  "PRODUCTION",
-  "STAGING",
-  "TEST",
-  "BUSINESS",
-  "TECHNICAL",
-];
-
 const restartPriorities = Object.values(priorityRestart);
 export class ApplicationFaker {
   static async create(user: AsyncReturnType<typeof UserFaker.create>) {
@@ -45,7 +17,6 @@ export class ApplicationFaker {
         label: faker.company.name(),
         shortName: faker.company.name(),
         description: faker.company.catchPhrase(),
-        tags: faker.helpers.arrayElements(appTags, { min: 1, max: 3 }),
         priorityRestart: faker.helpers.arrayElement(restartPriorities),
         metadatas: {
           create: [

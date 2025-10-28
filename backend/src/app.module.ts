@@ -29,6 +29,7 @@ import { RelationModule } from "./relationship/relation.module";
 import { LoggingService } from "./services/logging.service";
 import { StatsModule } from "./stats/stats.module";
 import { StatusesModule } from "./statuses/statuses.module";
+import { TagsModule } from "./tag/tags.module";
 import { TokenModule } from "./token/token.module";
 import { UserModule } from "./user/user.module";
 
@@ -59,6 +60,7 @@ import { UserModule } from "./user/user.module";
     LinksModule,
     LabelsModule,
     CompliancesModule,
+    TagsModule,
     PrismaModule,
     ConfigModule,
     StatusesModule,

@@ -17,7 +17,6 @@ import api from "@/api/index.js";
 
 const props = defineProps<{
   application: ApplicationWithPerms
-  tags: string[]
   targetPopulations: string[]
   small?: boolean
 }>();
@@ -268,7 +267,7 @@ watch(
               </h4>
               <ul v-if="application.tags?.length" class="fr-tags-group" data-testid="info-tags">
                 <li v-for="tag in application.tags" :key="tag">
-                  <DsfrTag :label="tag" :small="small" />
+                  <DsfrTag :label="tag.name" :small="small" />
                 </li>
               </ul>
             </div>

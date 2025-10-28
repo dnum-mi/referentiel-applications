@@ -4,6 +4,7 @@ import { LabelsModule } from "src/labels/labels.module";
 import { MetadatasModule } from "src/metadatas/metadatas.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { StatusesModule } from "src/statuses/statuses.module";
+import { TagsModule } from "src/tag/tags.module";
 
 import { ApplicationController } from "./application.controller";
 import { ApplicationService } from "./application.service";
@@ -12,7 +13,7 @@ import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
 @Module({
-  imports: [CommonModule, PrismaModule, LabelsModule, MetadatasModule, StatusesModule],
+  imports: [CommonModule, PrismaModule, LabelsModule, MetadatasModule, StatusesModule, TagsModule],
   controllers: [ApplicationController],
   providers: [
     ApplicationService,

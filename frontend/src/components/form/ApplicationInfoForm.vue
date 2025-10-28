@@ -2,7 +2,6 @@
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
-import { regexFormatTag } from "@/utils/regex";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 import api from "@/api/index";
@@ -37,7 +36,7 @@ const form = ref<FormData>({
   description: "",
   targetPopulations: [""],
   purposes: [""],
-  tags: [""],
+  tags: [],
   status: undefined,
   priorityRestart: undefined,
   labels: [],
@@ -45,11 +44,6 @@ const form = ref<FormData>({
 });
 
 async function handleSubmit() {
-  if (!validateAllTags()) {
-    emit("errorMessage", "Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
-    return;
-  }
-
   // Filter out empty values, handle undefined arrays
   const filterEmpty = (arr: string[] | undefined) => arr?.filter(item => item.trim() !== "");
 
@@ -57,7 +51,7 @@ async function handleSubmit() {
     ...form.value,
     targetPopulations: filterEmpty(form.value.targetPopulations),
     purposes: filterEmpty(form.value.purposes),
-    tags: filterEmpty(form.value.tags),
+    tags: form.value.tags,
     status: form.value.status!,
     priorityRestart: form.value.priorityRestart!,
   };
@@ -85,18 +79,6 @@ function addPurpose() {
 
 function removePurpose(index: number) {
   form.value.purposes.splice(index, 1);
-}
-
-function addTag() {
-  form.value.tags.push("");
-}
-
-function validateAllTags(): boolean {
-  return form.value.tags.every(tag => tag === "" || regexFormatTag.test(tag));
-}
-
-function removeTag(index: number) {
-  form.value.tags.splice(index, 1);
 }
 
 function addPopulation() {
@@ -184,20 +166,12 @@ function removePopulation(index: number) {
       </div>
     </div>
 
-    <div class="fr-form-group fr-mt-3w">
+    <div class="fr-form-group fr-mt-3w autocomplete-tags">
       <legend class="fr-label">
         Tags
       </legend>
-      <div class="fr-mt-2w">
-        <div v-for="(tag, index) in form.tags" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-          <div class="fr-col">
-            <DsfrInput v-model="form.tags![index]" :placeholder="`Tag ${index + 1}`" :data-testid="`application-info-tag-${index}`" />
-          </div>
-          <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer ce tag" aria-label="Supprimer ce tag" :data-testid="`application-info-tag-remove-${index}`" @click="removeTag(index)" />
-          </div>
-        </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" title="Ajouter un nouveau tag" aria-label="Ajouter un tag" data-testid="application-info-tag-add" @click="addTag" />
+      <div class="fr-mt-2w fr-col">
+        <TagSearchSelect v-model:tags="form.tags" />
       </div>
     </div>
 

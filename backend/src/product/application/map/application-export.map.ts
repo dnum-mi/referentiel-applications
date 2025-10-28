@@ -41,7 +41,7 @@ export function mapApplications(apps: ApplicationWithAllRelations[]) {
     shortName: app.shortName ?? "",
     logo: app.logo ?? "",
     description: app.description,
-    tags: app.tags?.join(", ") ?? "",
+    tags: app.tags?.map(tag => tag.name).join(", ") ?? "",
     purposes: app.purposes?.join(", ") ?? "",
     targetPopulations: app.targetPopulations?.join(", ") ?? "",
     priorityRestart: translateEnum(PriorityRestartLabels, app.priorityRestart),

@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
-import { regexFormatTag } from "@/utils/regex";
 import { areFieldsModified } from "@/utils/fieldComparison";
 import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 import type { ApplicationPriorityRestart, CreateLabelDto, LabelDto } from "@/client/types.gen";
@@ -38,10 +37,9 @@ const form = ref<{
   targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
   logo: props.initialData?.logo ?? "",
   purposes: [...(props.initialData?.purposes ?? [""])],
-  tags: [...(props.initialData?.tags ?? [""])],
+  tags: props.initialData?.tags?.map(tag => tag.name) ?? [],
   priorityRestart: props.initialData?.priorityRestart ?? null,
 });
-
 
 function handleSubmit() {
   labelError.value = undefined;
@@ -56,19 +54,19 @@ function handleSubmit() {
     descriptionError.value = "La description est obligatoire.";
     hasError = true;
   }
-  if (!validateAllTags()) {
-    emit("errorMessage", "Certains tags sont invalides : un seul mot, uniquement lettres, chiffres ou tiret.");
+
+  if (hasError) {
     return;
   }
 
   const cleanedForm = {
     ...form.value,
     purposes: form.value.purposes.filter(p => p.trim() !== ""),
-    tags: form.value.tags?.filter(t => t.trim() !== "") ?? [],
+    tags: form.value.tags,
     priorityRestart: form.value.priorityRestart ?? undefined,
   };
 
-  const generalFields = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "tags", "priorityRestart"];
+  const generalFields = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "priorityRestart", "tags"];
 
   const isModified = areFieldsModified(props.initialData ?? {}, cleanedForm, generalFields);
 
@@ -95,26 +93,6 @@ function handleSubmit() {
       : null,
   });
 }
-
-function isTagValid(tag: string) {
-  return regexFormatTag.test(tag);
-}
-
-function validateAllTags(): boolean {
- return form.value.tags.every(tag => isTagValid(tag));
-}
-
-watch(() => form.value.label, (newValue) => {
-  if (newValue && newValue.trim() !== "") {
-    labelError.value = undefined;
-  }
-});
-
-watch(() => form.value.description, (newValue) => {
-  if (newValue && newValue.trim() !== "") {
-    descriptionError.value = undefined;
-  }
-});
 
 onMounted(() => {
   initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
@@ -315,46 +293,12 @@ Aucun espace en début ou en fin."
       </div>
     </div>
 
-    <div class="fr-form-group fr-mt-3w">
+    <div class="fr-form-group fr-mt-3w autocomplete-tags">
       <legend class="fr-label">
         Tags
       </legend>
-      <div class="fr-mt-2w">
-        <div v-for="(tag, index) in form.tags" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-          <div class="fr-col">
-            <DsfrInput
-              v-model="form.tags[index]"
-              :disabled="!initialData?.myPerms.has('writeBase')"
-              :placeholder="`Tag ${index + 1}`"
-              :data-testid="`application-tag-${index}`"
-            />
-          </div>
-          <div class="fr-col-auto">
-            <DsfrButton
-              :disabled="!initialData?.myPerms.has('writeBase')"
-              type="button"
-              tertiary
-              size="sm"
-              icon="delete-line"
-              label="Supprimer"
-              title="Supprimer ce tag"
-              aria-label="Supprimer ce tag"
-              :data-testid="`application-tag-remove-${index}`"
-              @click="form.tags.splice(index, 1)"
-            />
-          </div>
-        </div>
-        <DsfrButton
-          :disabled="!initialData?.myPerms.has('writeBase')"
-          type="button"
-          secondary
-          icon="add-line"
-          label="Ajouter un tag"
-          title="Ajouter un nouveau tag"
-          aria-label="Ajouter un nouveau tag"
-          data-testid="application-tag-add"
-          @click="form.tags.push('')"
-        />
+      <div class="fr-mt-2w fr-col">
+        <TagSearchSelect v-model:tags="form.tags" />
       </div>
     </div>
 

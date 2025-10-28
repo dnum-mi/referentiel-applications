@@ -40,7 +40,8 @@ watch(
 <template>
   <div class="filter-section">
     <DsfrInput v-model="searchStore.filters.label" label-visible label="Nom de l'application" data-testid="application-filter-label" />
-    <DsfrInput v-model="searchStore.filters.tag" label-visible label="Tag" data-testid="application-filter-tag" />
+    <legend class="fr-label"> Tags </legend>
+    <TagSearchSelect v-model:tags="searchStore.filters.tag" data-testid="application-filter-tag" />
     <DsfrInput v-model="searchStore.filters.link" label-visible label="Lien externe" data-testid="application-filter-link" />
   </div>
 </template>
