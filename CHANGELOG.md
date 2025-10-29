@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.49.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.48.0...v1.49.0) (2025-10-29)
+
+
+### Features
+
+* :wheelchair: improve metadatas details accessibility in tables ([#1235](https://github.com/dnum-mi/referentiel-applications/issues/1235)) ([aaa5152](https://github.com/dnum-mi/referentiel-applications/commit/aaa51523cae460e06f75e818fce572dd168b80cb))
+* update for a mobile responsive ([9235d06](https://github.com/dnum-mi/referentiel-applications/commit/9235d0676009eecd5ea1dd62940b4096523898c3))
+
+
+### Bug Fixes
+
+* :bug: correct API endpoint name for fetching organizations ([#1240](https://github.com/dnum-mi/referentiel-applications/issues/1240)) ([53cd7d8](https://github.com/dnum-mi/referentiel-applications/commit/53cd7d84a6bc8692952f747b2143ad39766ecd14))
+
 ## [1.48.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.47.0...v1.48.0) (2025-10-28)
 
 
