@@ -1,18 +1,21 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import isEqual from "lodash/isEqual";
+import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
 import { MetadataRepository } from "./infrastructure/metadata.repository";
 
 @Injectable()
-export class MetadatasService {
+export class MetadatasService extends BaseService<any> {
   constructor(
     protected readonly prisma: PrismaService,
     private readonly metadataRepository: MetadataRepository,
-  ) { }
+  ) {
+    super(prisma.metadata, prisma);
+  }
 
-  public async find(filters?: MetadataFiltersDto & { applicationId?: string }): Promise<MetadataPaginatedResponseDto> {
+  find(filters?: MetadataFiltersDto & { applicationId?: string }): Promise<MetadataPaginatedResponseDto> {
     return this.metadataRepository.findAll(filters);
   }
 

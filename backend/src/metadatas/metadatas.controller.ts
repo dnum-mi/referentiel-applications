@@ -13,7 +13,7 @@ import {
 } from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
-import { FirstLastMetadataDto, MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
+import { FirstLastMetadataDto, MetadataDto, MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
 import { MetadatasService } from "./metadatas.service";
 
 @ApiTags("Metadatas")
@@ -27,8 +27,19 @@ export class MetadatasController {
     description: "Récupérer toutes les metadatas",
     type: MetadataPaginatedResponseDto,
   })
-  public async find(@Query() filters: MetadataFiltersDto): Promise<MetadataPaginatedResponseDto> {
+  find(@Query() filters: MetadataFiltersDto): Promise<MetadataPaginatedResponseDto> {
     return this.metadataService.find(filters);
+  }
+
+  @Get(":id")
+  @ApiOperation({ summary: "Récupérer une metadata par son ID" })
+  @ApiParam({ name: "id", description: "ID de la metadata" })
+  @ApiOkResponse({
+    description: "Détails de la metadata",
+    type: MetadataDto,
+  })
+  findOne(@Param("id") id: string) {
+    return this.metadataService.findOne(id, { application: true, createdBy: true });
   }
 }
 
@@ -46,7 +57,7 @@ export class ApplicationMetadatasController {
     description: "Liste des metadatas",
     type: MetadataPaginatedResponseDto,
   })
-  public find(
+  find(
     @Param("applicationId") applicationId: string,
     @Query() filters: MetadataFiltersDto,
   ): Promise<MetadataPaginatedResponseDto> {

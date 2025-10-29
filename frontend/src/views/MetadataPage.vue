@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from "vue";
+import { useRoute } from 'vue-router';
+const route = useRoute();
 import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
 import { metadataActionLabels } from "@/composables/use-dictionary";
@@ -12,7 +14,8 @@ const headers = [
   "Organisation",
   "Type",
   "Date",
-  "Description",
+  "Titre",
+  "Actions",
 ];
 
 const currentPage = ref(0);
@@ -103,48 +106,12 @@ onMounted(async () => {
   await fetchData();
 });
 
-function formatDescription(description: string): { title: string, content: string } {
-  const title = description.split("\n")[0];
-
-  const newMatch = description.match(/Nouvelle\(s\) valeur\(s\):\s*(\{[\s\S]*?\})(?:\n|$)/);
-  const oldMatch = description.match(/Ancienne\(s\) valeur\(s\):\s*(\{[\s\S]*?\})(?:\n|$)/);
-
-  if (!newMatch && !oldMatch) {
-    return { title, content: description };
-  }
-
-  try {
-    const segments: { pos: number, label: string, obj: any }[] = [];
-
-    if (newMatch) {
-      segments.push({ pos: newMatch.index || 0, label: "Nouvelle(s) valeur(s):", obj: JSON.parse(newMatch[1]) });
-    }
-    if (oldMatch) {
-      segments.push({ pos: oldMatch.index || 0, label: "Ancienne(s) valeur(s):", obj: JSON.parse(oldMatch[1]) });
-    }
-
-    segments.sort((a, b) => a.pos - b.pos);
-
-    const content = segments
-      .map(seg =>
-        `${seg.label
-        } ${
-          Object.entries(seg.obj)
-            .map(([k, v]) => `${k}='${Array.isArray(v) ? v.join(", ") : (typeof v === "object" && v !== null ? JSON.stringify(v) : v)}'`)
-            .join(" ")}`,
-      )
-      .join("\n");
-
-    return { title, content };
-  } catch {
-    return { title, content: description };
-  }
+function getDescriptionSummary(meta: any): string {
+  return (meta.description || '').split('\n')[0];
 }
 
 const metadataTableRows = computed(() =>
   data.value.results.map((meta) => {
-    const { title: descTitle, content } = formatDescription(meta.description || "");
-
     return {
       id: meta.id,
       Application: {
@@ -162,12 +129,11 @@ const metadataTableRows = computed(() =>
         label: metadataActionLabels[meta.action],
         class: meta.action,
       },
-      Date: formatDate(meta.createdAt),
-      Description: {
-        id: meta.id,
-        title: descTitle,
-        content,
-      },
+  Date: formatDate(meta.createdAt),
+  Titre: getDescriptionSummary(meta),
+  Actions: {
+    id: meta.id,
+  },
     };
   }),
 );
@@ -250,12 +216,14 @@ const metadataTableRows = computed(() =>
         @update:sorted-by="onUpdateSortColumn"
       >
         <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'Description'">
-            <DsfrAccordion :id="`meta-${(cell as any).id}`" :title="(cell as any).title" data-testid="history-description-accordion">
-              <div class="formatted-description" data-testid="history-description-content">
-                {{ (cell as any).content }}
-              </div>
-            </DsfrAccordion>
+          <template v-if="colKey === 'Actions'">
+            <router-link
+              :to="{ name: 'metadata-detail', params: { id: (cell as any).id }, query: { from: route.fullPath } }"
+              class="fr-btn fr-btn--secondary fr-btn--sm"
+              data-testid="history-see-more-button"
+            >
+              Voir plus
+            </router-link>
           </template>
           <template v-else-if="colKey === 'Application'">
             <template v-if="cell && (cell as any).to">
@@ -293,10 +261,4 @@ const metadataTableRows = computed(() =>
 .add { background-color: #e6f8ea; color: #1aa779; }
 .update { background-color: #f8f3e6; color: #a7791a; }
 .delete { background-color: #f8e6e6; color: #a71a1a; }
-
-.formatted-description {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
 </style>

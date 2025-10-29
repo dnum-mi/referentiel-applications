@@ -62,6 +62,12 @@ const routes = [
     component: () => import("@/views/MetadataPage.vue"),
     meta: { requiresAuth: true, title: "Historique global - Référentiel des applications" },
   },
+  {
+    name: routeNames.METADATADETAIL,
+    path: "/metadatas/:id",
+    component: () => import("@/views/MetadataDetailPage.vue"),
+    meta: { requiresAuth: true, title: "Détails de la modification - Référentiel des applications" },
+  },
 
   {
     path: "/:pathMatch(.*)*",

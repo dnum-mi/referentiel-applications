@@ -4,6 +4,8 @@ import type { MetadataFiltersDto, MetadataPaginatedResponseDto } from "../dto/me
 export interface IMetadataRepository {
   findAll: (filters?: MetadataFiltersDto & { applicationId?: string }) => Promise<MetadataPaginatedResponseDto>
 
+  findOne: (id: string) => Promise<Metadata | null>
+
   findFirstAndLastByApplicationId: (applicationId: string) => Promise<{
     first: Metadata | null
     last: Metadata | null

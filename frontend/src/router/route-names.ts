@@ -11,6 +11,7 @@ export const routeNames = {
   ISSUELIST: "signalements",
   QUALITYPAGE: "qualite-generale",
   HISTORY: "historique",
+  METADATADETAIL: "metadata-detail",
   ADMINPAGE: "administration",
 
   SITEMAP: "plan-du-site",

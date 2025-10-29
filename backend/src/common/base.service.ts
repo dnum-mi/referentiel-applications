@@ -13,8 +13,8 @@ export class BaseService<T> {
     private readonly applicationService?: ApplicationService,
   ) { }
 
-  async findOne(id: string): Promise<T> {
-    const object = await this.model.findUnique({ where: { id } });
+  async findOne(id: string, include = {}): Promise<T> {
+    const object = await this.model.findUnique({ where: { id }, include });
     if (!object) {
       throw new NotFoundException(`${this.model.name} with ID ${id} not found`);
     }
