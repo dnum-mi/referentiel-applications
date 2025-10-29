@@ -16,7 +16,7 @@ export class MetadatasService {
     return this.metadataRepository.findAll(filters);
   }
 
-  async getFirstAndLastMetadata(
+  getFirstAndLastMetadata(
     applicationId: string,
   ) {
     return this.metadataRepository.findFirstAndLastByApplicationId(applicationId);

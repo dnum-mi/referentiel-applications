@@ -35,7 +35,7 @@ export class ActorService {
   }
 
   public async findAll(applicationId?: string) {
-    return await this.actorRepository.findAll(applicationId);
+    return this.actorRepository.findAll(applicationId);
   }
 
   public async update(params: {

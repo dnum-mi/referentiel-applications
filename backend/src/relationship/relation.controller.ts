@@ -35,7 +35,7 @@ export class RelationController {
     summary: "Créer une nouvelle relation",
     description: "Permet de créer une relation entre deux applications.",
   })
-  async create(
+  create(
     @Param("applicationId") applicationId: string,
     @Body() dto: RelationApplicationDto,
     @UserId() userId: string,
@@ -54,7 +54,7 @@ export class RelationController {
     summary: "Récupérer toutes les relations d'une application",
     description: "Renvoie la liste de toutes les relations d'une application donnée.",
   })
-  async findAll(
+  findAll(
     @Param("applicationId") applicationId: string,
   ): Promise<Relation[]> {
     return this.relationService.findAllForApplicationSource(applicationId);
@@ -85,7 +85,7 @@ export class RelationController {
     type: RelationDto,
     description: "Relation mise à jour avec succès",
   })
-  async update(
+  update(
     @UserId() userId: string,
     @Param("id") id: string,
     @Param("applicationId") _applicationId: string,
