@@ -72,7 +72,7 @@ Informations requises :
     description: "Acteur créé avec succès",
     type: ActorDto,
   })
-  public async create(
+  public create(
     @Body() createActorDto: CreateActorDto,
     @UserId() userId: string,
   ) {
@@ -81,8 +81,7 @@ Informations requises :
       userId,
       action: "create",
     });
-
-    return await this.actorService.create(createActorDto, userId);
+    return this.actorService.create(createActorDto, userId);
   }
 
   @Get(":id")
@@ -97,7 +96,7 @@ Informations requises :
     description: "ID de l'acteur",
   })
   public async findOne(@Param("id") id: string): Promise<Actor> {
-    return await this.actorService.findOne(id);
+    return this.actorService.findOne(id);
   }
 
   @Get()
@@ -109,10 +108,10 @@ Informations requises :
     isArray: true,
   })
   @ApiOkResponse({ description: "Liste des acteurs" })
-  public async findAll(
+  public findAll(
     @Param("applicationId") applicationId: string,
   ): Promise<Actor[]> {
-    return await this.actorService.findAll(applicationId);
+    return this.actorService.findAll(applicationId);
   }
 
   @Patch(":id")

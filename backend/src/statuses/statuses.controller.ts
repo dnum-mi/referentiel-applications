@@ -48,8 +48,7 @@ export class StatusesController {
     type: [ApplicationStatusDto],
   })
   async find(@Param("applicationId") applicationId: string) {
-    const statuses = await this.statusesService.find({ applicationId });
-    return statuses || [];
+    return this.statusesService.find({ applicationId }) || [];
   }
 
   @Patch(":statusId")

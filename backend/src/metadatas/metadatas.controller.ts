@@ -46,7 +46,7 @@ export class ApplicationMetadatasController {
     description: "Liste des metadatas",
     type: MetadataPaginatedResponseDto,
   })
-  public async find(
+  public find(
     @Param("applicationId") applicationId: string,
     @Query() filters: MetadataFiltersDto,
   ): Promise<MetadataPaginatedResponseDto> {
@@ -64,8 +64,8 @@ export class ApplicationMetadatasController {
     description: "La première et la dernière metadata",
     type: FirstLastMetadataDto,
   })
-  async getFirstAndLastMetadata(
-        @Param("applicationId") applicationId: string,
+  getFirstAndLastMetadata(
+    @Param("applicationId") applicationId: string,
   ): Promise<FirstLastMetadataDto> {
     return this.metadataService.getFirstAndLastMetadata(applicationId);
   }

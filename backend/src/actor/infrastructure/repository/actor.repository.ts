@@ -43,13 +43,13 @@ export class ActorRepository implements IActorRepository {
   }
 
   public async findAll(applicationId?: string) {
-    return await this.prisma.actor.findMany({
+    return this.prisma.actor.findMany({
       where: { applicationId },
     });
   }
 
   public async findById(id: string) {
-    return await this.prisma.actor.findUnique({
+    return this.prisma.actor.findUnique({
       where: { id },
       include: {
         organization: true,
@@ -112,6 +112,6 @@ export class ActorRepository implements IActorRepository {
       },
     });
 
-    return await this.prisma.actor.delete({ where: { id } });
+    return this.prisma.actor.delete({ where: { id } });
   }
 }
