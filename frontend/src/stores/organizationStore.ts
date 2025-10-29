@@ -18,7 +18,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
   }
 
   async function find(search?: string, usedOnly?: boolean): Promise<OrganizationDto[]> {
-    const response = await api.organizationControllerFindAll({
+    const response = await api.organizationsControllerFindAll({
       query: { search, usedOnly },
     });
     if (!response.response.ok) {
@@ -38,7 +38,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
     pendingIds.clear();
 
     try {
-      const response = await api.organizationControllerFindAll({
+      const response = await api.organizationsControllerFindAll({
         query: { ids: ids.join(","), withAncestors: true },
       });
 
