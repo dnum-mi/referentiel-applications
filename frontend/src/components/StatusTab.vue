@@ -212,6 +212,8 @@ onMounted(() => {
       <DsfrButton
         icon="ri-add-line"
         data-testid="add-status-btn"
+        title="Ajouter un nouveau statut"
+        aria-label="Ajouter un statut"
         @click="formModal.openCreateModal()"
       >
         Ajouter un statut
