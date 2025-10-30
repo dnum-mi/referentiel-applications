@@ -147,6 +147,7 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
       tertiary: true,
       size: "sm",
       disabled: !canEdit.value,
+      title: "Modifier le lien",
       onClick: (event?: Event) => {
         event?.stopPropagation();
         linkModal.openModal(link);
@@ -158,6 +159,7 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
       tertiary: true,
       size: "sm",
       disabled: !canEdit.value,
+      title: "Supprimer le lien",
       onClick: (event?: Event) => {
         event?.stopPropagation();
         selectedLinkIds.value = [link.id];
@@ -198,8 +200,9 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
             icon="fr-icon-delete-line"
             data-testid="link-delete-selected-btn"
             :disabled="!selectedLinkIds.length || !canEdit"
-            @click="removeSelectedLinks"
             :title="!selectedLinkIds.length ? 'Sélectionnez des éléments pour activer' : 'Supprimer la sélection'"
+            :aria-label="!selectedLinkIds.length ? 'Supprimer la sélection (désactivé, aucun élément sélectionné)' : 'Supprimer la sélection'"
+            @click="removeSelectedLinks"
           >
             Supprimer la sélection
           </DsfrButton>
@@ -233,7 +236,7 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
             </template>
             
             <template v-else-if="colKey === 'Actions'">
-              <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="link-edit-btn" @click="cell.edit">
+              <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="link-edit-btn" title="Modifier le lien" aria-label="Modifier le lien" @click="cell.edit">
                 Modifier
               </DsfrButton>
             </template>

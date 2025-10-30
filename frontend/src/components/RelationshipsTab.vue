@@ -68,6 +68,8 @@ const isDeleteDisabled = computed(() => {
       icon="fr-icon-delete-line"
       :disabled="isDeleteDisabled || !canEdit"
       data-testid="relation-delete-selected-btn"
+      title="Supprimer les relations sélectionnées"
+      aria-label="Supprimer la sélection"
       @click="removeSelectedRelations"
     >
       Supprimer la sélection
@@ -111,7 +113,7 @@ const isDeleteDisabled = computed(() => {
           </template>
 
           <template v-else-if="colKey === 'Actions'">
-            <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="relation-edit-btn" @click="cell.edit">
+            <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="relation-edit-btn" title="Modifier la relation" aria-label="Modifier la relation" @click="cell.edit">
               Modifier
             </DsfrButton>
           </template>
@@ -142,6 +144,7 @@ const isDeleteDisabled = computed(() => {
               tertiary: true,
               size: 'sm' as const,
               disabled: !canEdit,
+              title: 'Modifier la relation',
               onClick: (event?: Event) => {
                 event?.stopPropagation();
                 row.Actions.edit(); 
@@ -153,6 +156,7 @@ const isDeleteDisabled = computed(() => {
               tertiary: true,
               size: 'sm' as const,
               disabled: !canEdit,
+              title: 'Supprimer la relation',
               onClick: (event?: Event) => {
                 event?.stopPropagation();
                 row.Actions.delete(); 

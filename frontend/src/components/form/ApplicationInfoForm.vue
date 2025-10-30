@@ -160,10 +160,10 @@ function removePopulation(index: number) {
             <DsfrInput v-model="form.targetPopulations![index]" :placeholder="`Population ${index + 1}`" :data-testid="`application-info-population-${index}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-info-population-remove-${index}`" @click="removePopulation(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cette population" aria-label="Supprimer cette population" :data-testid="`application-info-population-remove-${index}`" @click="removePopulation(index)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" data-testid="application-info-population-add" @click="addPopulation" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" title="Ajouter une nouvelle population" aria-label="Ajouter une population" data-testid="application-info-population-add" @click="addPopulation" />
       </div>
     </div>
 
@@ -177,10 +177,10 @@ function removePopulation(index: number) {
             <DsfrInput v-model="form.purposes![index]" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-info-purpose-${index}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-info-purpose-remove-${index}`" @click="removePurpose(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cet objectif" aria-label="Supprimer cet objectif" :data-testid="`application-info-purpose-remove-${index}`" @click="removePurpose(index)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" data-testid="application-info-purpose-add" @click="addPurpose" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" title="Ajouter un nouvel objectif" aria-label="Ajouter un objectif" data-testid="application-info-purpose-add" @click="addPurpose" />
       </div>
     </div>
 
@@ -194,10 +194,10 @@ function removePopulation(index: number) {
             <DsfrInput v-model="form.tags![index]" :placeholder="`Tag ${index + 1}`" :data-testid="`application-info-tag-${index}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" :data-testid="`application-info-tag-remove-${index}`" @click="removeTag(index)" />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer ce tag" aria-label="Supprimer ce tag" :data-testid="`application-info-tag-remove-${index}`" @click="removeTag(index)" />
           </div>
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" data-testid="application-info-tag-add" @click="addTag" />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un tag" title="Ajouter un nouveau tag" aria-label="Ajouter un tag" data-testid="application-info-tag-add" @click="addTag" />
       </div>
     </div>
 

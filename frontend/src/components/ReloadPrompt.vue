@@ -20,10 +20,10 @@ interface EventTypes {
     </div>
 
     <div class="actions">
-      <DsfrButton v-if="needRefresh" class="button" icon="ri-refresh-line" icon-right data-testid="reload-refresh-btn" @click="$emit('updateServiceWorker')">
+      <DsfrButton v-if="needRefresh" class="button" icon="ri-refresh-line" icon-right data-testid="reload-refresh-btn" title="Recharger l'application pour mettre à jour" aria-label="Recharger l'application" @click="$emit('updateServiceWorker')">
         Recharger
       </DsfrButton>
-      <DsfrButton class="button" icon="ri-close-line" icon-right secondary data-testid="reload-close-btn" @click="$emit('close')">
+      <DsfrButton class="button" icon="ri-close-line" icon-right secondary data-testid="reload-close-btn" title="Fermer cette notification" aria-label="Fermer" @click="$emit('close')">
         Fermer
       </DsfrButton>
     </div>
