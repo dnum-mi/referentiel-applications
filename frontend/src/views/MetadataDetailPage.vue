@@ -92,7 +92,7 @@ onMounted(() => {
       class="fr-mb-3w"
       data-testid="back-button"
       title="Retour à la page d'historique"
-      aria-label="Retour à l'historique"
+      aria-label="Retour à la page d'historique"
       @click="router.push(route.query.from as string);"
     />
 

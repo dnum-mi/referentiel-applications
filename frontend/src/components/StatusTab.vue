@@ -213,7 +213,7 @@ onMounted(() => {
         icon="ri-add-line"
         data-testid="add-status-btn"
         title="Ajouter un nouveau statut"
-        aria-label="Ajouter un statut"
+        aria-label="Ajouter un nouveau statut"
         @click="formModal.openCreateModal()"
       >
         Ajouter un statut
