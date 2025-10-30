@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
+import { PaginatedResponseDto } from "src/common/dto";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { PrismaService } from "../prisma/prisma.service";
 import { AnomalyFiltersDto, SortByEnum } from "./dto/anomaly-filters.dto";
@@ -119,13 +120,15 @@ export class AnomalyNotificationsService {
 
     const orderBy = sortOptions[sortBy];
 
-    return this.prisma.anomalyNotification.findMany({
+    const results = await this.prisma.anomalyNotification.findMany({
       where,
       orderBy,
       skip: page * limit,
       take: limit,
       include: { history: true, application: true, notifier: true },
     });
+    const total = await this.prisma.anomalyNotification.count({ where });
+    return new PaginatedResponseDto(results, total);
   }
 
   /**

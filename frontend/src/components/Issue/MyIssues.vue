@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, watch } from "vue";
 import { routeNames } from "@/router/route-names";
 import { formatDate } from "@/composables/use-date";
-import { useReportIssueStore } from "@/stores/reportIssueStore";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
-import type { DsfrDataTableHeaderCell, DsfrDataTableRow } from "@gouvminint/vue-dsfr";
+import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
+import PaginationFooter from "../PaginationFooter.vue";
 import ReportStatusTag from "./ReportStatusTag.vue";
-import type { GenericRow } from "@/utils/types";
+import api from "@/api";
+import type { AnomalyNotificationPaginatedResponseDto, AnomalyNotificationDto } from "@/client/types.gen";
 
 const title = "Liste de mes signalements d'applications";
 const headers = [
@@ -16,23 +17,39 @@ const headers = [
   { key: "status", label: "Statut" },
 ] as const satisfies DsfrDataTableHeaderCell[];
 
-const reportStore = useReportIssueStore();
+
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
+const itemsPerPage = ref(15);
 const isLoading = ref(true);
+const data = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total: 0 });
 
-const { run: debouncedSearch } = useDebouncedFn(() => {
-  reportStore.fetchMyReports();
-}, 300);
-
-onMounted(async () => {
+const fetchMyReports = async () => {
   isLoading.value = true;
-  isLoading.value = false;
+  try {
+    const query = {
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+    };
+    const response = await api.anomalyNotificationsControllerFindAll({ query });
+    data.value = response.data as AnomalyNotificationPaginatedResponseDto;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const { run: debouncedSearch } = useDebouncedFn(fetchMyReports, 300);
+
+watch([currentPage, itemsPerPage], () => {
   debouncedSearch();
 });
 
-const rows = computed<DsfrDataTableRow[]>(() =>
-  reportStore.userReports.map((report): GenericRow<typeof headers> => ({
+onMounted(async () => {
+  await fetchMyReports();
+});
+
+const rows = computed(() =>
+  (data.value.results || []).map((report: AnomalyNotificationDto) => ({
     id: report.id,
     application: {
       label: report.application?.label,
@@ -48,40 +65,31 @@ const rows = computed<DsfrDataTableRow[]>(() =>
     status: {
       report,
     },
-  })),
+  }))
 );
 </script>
 
 <template>
   <AppLoader v-if="isLoading" data-testid="my-issues-loader" />
-  <div v-else-if="!rows.length" class="text-center" data-testid="my-issues-empty">
-    <p>Aucune correction recensée.</p>
-  </div>
   <DsfrDataTable
     v-else
     v-model:selection="selection"
-    v-model:current-page="currentPage"
     data-testid="my-issues-table"
     :headers-row="headers"
     :rows="rows"
     row-key="id"
     :title="title"
-    pagination
-    :rows-per-page="10"
-    :pagination-options="[10, 20, 30, 50]"
-    bottom-action-bar-class="bottom-action-bar-class"
-    pagination-wrapper-class="pagination-wrapper-class"
-    sorted="id"
+    :sortable-rows="true"
   >
     <template #cell="{ colKey, cell }">
       <template v-if="colKey === 'application'">
-        <template v-if="cell && cell.to && cell.to.params && cell.to.params.id">
-          <router-link :to="cell.to" data-testid="my-issues-application-link">
-            {{ cell.label || 'Voir l’application' }}
+        <template v-if="cell && (cell as any).to && (cell as any).to.params && (cell as any).to.params.id">
+          <router-link :to="(cell as any).to" data-testid="my-issues-application-link">
+            {{ (cell as any).label || 'Voir l’application' }}
           </router-link>
         </template>
         <template v-else>
-          <span data-testid="my-issues-application-link">{{ cell.label || 'Signalement global' }}</span>
+          <span data-testid="my-issues-application-link">{{ (cell as any).label || 'Signalement global' }}</span>
         </template>
       </template>
       <template v-else-if="colKey === 'description'">
@@ -90,30 +98,20 @@ const rows = computed<DsfrDataTableRow[]>(() =>
         </p>
       </template>
       <template v-else-if="colKey === 'status'">
-        <ReportStatusTag :report="cell.report" :is-editing="false" @refresh="reportStore.fetchMyReports()" />
+        <ReportStatusTag :report="(cell as any).report" :is-editing="false" @refresh="fetchMyReports" />
       </template>
     </template>
   </DsfrDataTable>
+  <PaginationFooter
+    :total-filtered="data.total"
+    :limit="itemsPerPage"
+    :page="currentPage"
+    @update:limit="val => { itemsPerPage = val; currentPage = 0; }"
+    @update:page="val => { currentPage = val; }"
+  />
 </template>
 
 <style scoped>
-.text-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  color: #555;
-  font-size: 1.2rem;
-  font-weight: 500;
-  background-color: #f9f9f9;
-  border: 1px dashed #ccc;
-  border-radius: 8px;
-  padding: 20px;
-  margin: 20px auto;
-  width: 80%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 .text-wrap {
   width: auto;
   white-space: normal;
