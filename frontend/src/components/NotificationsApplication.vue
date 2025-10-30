@@ -1,3 +1,4 @@
+import PaginationFooter from "./PaginationFooter.vue";
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -114,17 +115,11 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
 
   <DsfrAccordionsGroup v-else v-model="activeAccordion">
     <DsfrDataTable
-        :headers-row="headers"
-        :rows="rows"
-        title="Liste des signalements et modifications"
-        :pagination="true"
-        :rows-per-page="pageSize"
-        :pagination-options="[5, 10, 20, 30]"
-        :current-page="currentPage"
-        @update:rows-per-page="val => { pageSize = val; currentPage = 0; }"
-        @update:current-page="val => { currentPage = val; }"
-        data-testid="notifications-table"
-      >
+      :headers-row="headers"
+      :rows="rows"
+      title="Liste des signalements et modifications"
+      data-testid="notifications-table"
+    >
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Actions' && (cell as any).isMetadata">
           <router-link
@@ -140,6 +135,13 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
         </template>
       </template>
     </DsfrDataTable>
+    <PaginationFooter
+      :total-filtered="issues.total"
+      :limit="pageSize"
+      :page="currentPage"
+      @update:limit="val => { pageSize = val; currentPage = 0; fetchIssues(); }"
+      @update:page="val => { currentPage = val; fetchIssues(); }"
+    />
   </DsfrAccordionsGroup>
   <div v-if="canPost" data-testid="notifications-report-issue">
     <h4>Proposer une correction</h4>
