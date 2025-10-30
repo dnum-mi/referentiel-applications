@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { useReportIssueStore } from "@/stores/reportIssueStore";
-import { computed } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
+import { useToasterStore } from "@/stores/toasterStore";
+import api from "@/api";
+import type { AnomalyNotificationDto, AnomalyNotificationPaginatedResponseDto, MetadataDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useRoute } from 'vue-router';
-const route = useRoute();
 
+const route = useRoute();
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
-const reportStore = useReportIssueStore();
 const metadataStore = useMetadataStore();
+const toaster = useToasterStore();
+
+const issues = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total: 0 });
+const isLoading = ref(false);
+const currentPage = ref(0);
+const pageSize = ref(5);
 
 const headers = ["Date", "Auteur", "Titre", "Actions"];
-const currentPage = ref(0);
 const activeAccordion = ref<number>();
 const userStore = useUserStore();
 
@@ -23,6 +29,46 @@ const canPost = computed(() => {
     || userStore.adminLevel >= AdminLevel.WRITE;
 });
 
+async function fetchIssues() {
+  isLoading.value = true;
+  try {
+    const query = {
+      page: currentPage.value,
+      limit: pageSize.value,
+    };
+    const response = await api.applicationAnomalyNotificationsControllerFindAll({
+      path: { applicationId: props.application.id },
+      query,
+    });
+    issues.value = response.data as AnomalyNotificationPaginatedResponseDto;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+watch([currentPage, pageSize], fetchIssues);
+onMounted(fetchIssues);
+
+const correctionText = ref("");
+const submitting = ref(false);
+
+async function submitCorrection() {
+  try {
+    submitting.value = true;
+    const applicationId = props.application?.id;
+    if (!applicationId) throw new Error("Application ID is undefined");
+
+    await api.anomalyNotificationsControllerCreate({ body: { applicationId, description: correctionText.value } });
+    await fetchIssues();
+
+    correctionText.value = "";
+    toaster.addSuccessMessage("Votre proposition sera prise en compte prochainement.");
+  } catch (_error) {
+    toaster.addErrorMessage("Oops ! Une erreur est survenue, contactez l’administrateur du référentiel si le problème persiste.");
+  } finally {
+    submitting.value = false;
+  }
+}
 
 function getTitle(meta: any): string {
   return (meta.description || '').split('\n')[0];
@@ -30,18 +76,18 @@ function getTitle(meta: any): string {
 
 const rows = computed(() => {
   const title = "Signalement";
-  const reports = (reportStore.issues || []).map((report: any) => ({
+  const reports = (issues.value.results).map((report: AnomalyNotificationDto) => ({
     sortKey: new Date(report.createdAt).getTime(),
     Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
-  Auteur: report.notifier.email,
-  Titre: title,
-  Actions: {
-    id: report.id,
-    isMetadata: false,
-  },
+    Auteur: report.notifier?.email || "Inconnu",
+    Titre: title,
+    Actions: {
+      id: report.id,
+      isMetadata: false,
+    },
   }));
 
-  const modifications = (metadataStore.metadatas || []).map((metadata: Metadata) => {
+  const modifications = (metadataStore.metadatas || []).map((metadata: MetadataDto) => {
     return {
       sortKey: new Date(metadata.createdAt).getTime(),
       Date: new Date(metadata.createdAt).toLocaleDateString("fr-FR"),
@@ -57,7 +103,7 @@ const rows = computed(() => {
   return [...reports, ...modifications].sort((a, b) => b.sortKey - a.sortKey).map((item, index) => ({ ...item, index }));
 });
 
-const loading = computed(() => reportStore.isLoading || metadataStore.isLoading);
+const loading = computed(() => isLoading.value || metadataStore.isLoading);
 </script>
 
 <template>
@@ -68,19 +114,21 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
 
   <DsfrAccordionsGroup v-else v-model="activeAccordion">
     <DsfrDataTable
-      v-model:current-page="currentPage"
-      :headers-row="headers"
-      :rows="rows"
-      title="Liste des signalements et modifications"
-      pagination
-      :rows-per-page="5"
-      :pagination-options="[5, 10, 20, 30]"
-      data-testid="notifications-table"
-    >
+        :headers-row="headers"
+        :rows="rows"
+        title="Liste des signalements et modifications"
+        :pagination="true"
+        :rows-per-page="pageSize"
+        :pagination-options="[5, 10, 20, 30]"
+        :current-page="currentPage"
+        @update:rows-per-page="val => { pageSize = val; currentPage = 0; }"
+        @update:current-page="val => { currentPage = val; }"
+        data-testid="notifications-table"
+      >
       <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Actions' && cell.isMetadata">
+        <template v-if="colKey === 'Actions' && (cell as any).isMetadata">
           <router-link
-            :to="{ name: 'metadata-detail', params: { id: cell.id }, query: { from: route.fullPath } }"
+            :to="{ name: 'metadata-detail', params: { id: (cell as any).id }, query: { from: route.fullPath } }"
             class="fr-btn fr-btn--secondary fr-btn--sm"
             data-testid="notifications-see-more-button"
           >
@@ -93,18 +141,19 @@ const loading = computed(() => reportStore.isLoading || metadataStore.isLoading)
       </template>
     </DsfrDataTable>
   </DsfrAccordionsGroup>
-  <ReportIssue v-if="canPost" :application="application" data-testid="notifications-report-issue" />
+  <div v-if="canPost" data-testid="notifications-report-issue">
+    <h4>Proposer une correction</h4>
+    <DsfrInput
+      v-model="correctionText"
+      is-textarea
+      placeholder="Écrivez votre correction..."
+      required
+      class="fr-mb-1w"
+      rows="2"
+      data-testid="report-issue-textarea"
+    />
+    <DsfrButton :disabled="!correctionText || submitting" data-testid="report-issue-submit-btn" @click="submitCorrection">
+      Proposer ma correction
+    </DsfrButton>
+  </div>
 </template>
-
-<style scoped>
-.full-description {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  margin-top: 0.5rem;
-}
-
-.formatted-description {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-</style>

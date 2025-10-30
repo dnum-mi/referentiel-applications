@@ -29,11 +29,11 @@ import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { AnomalyNotificationsService } from "./anomaly-notification.service";
 import { AnomalyFiltersDto } from "./dto/anomaly-filters.dto";
+import { AnomalyNotificationDto, AnomalyNotificationPaginatedResponseDto } from "./dto/anomaly-notification.dto";
 import {
   CreateAnomalyNotificationDto,
   CreateAnomalyNotificationRequestDto,
 } from "./dto/create-anomaly-notification.dto";
-import { GetAnomalyNotificationDto } from "./dto/get-anomaly-notification.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
 
 @ApiTags("AnomalyNotifications")
@@ -54,8 +54,7 @@ export class AnomalyNotificationsController {
   })
   @ApiOkResponse({
     description: "Liste des notifications d'anomalies",
-    type: GetAnomalyNotificationDto,
-    isArray: true,
+    type: AnomalyNotificationPaginatedResponseDto,
   })
   findAll(
     @Query() filters: AnomalyFiltersDto,
@@ -81,7 +80,7 @@ export class AnomalyNotificationsController {
   })
   @ApiCreatedResponse({
     description: "Notification d'anomalie créée avec succès",
-    type: GetAnomalyNotificationDto,
+    type: AnomalyNotificationDto,
   })
   @UseGuards(UserCapabilityGuard)
   @RequiredUserCapability("CreateGlobalAnomalyNotification")
@@ -110,7 +109,7 @@ export class AnomalyNotificationsController {
   @AppAction("manageAnomalyNotifications")
   @ApiOkResponse({
     description: "Notification mise à jour avec succès",
-    type: GetAnomalyNotificationDto,
+    type: AnomalyNotificationDto,
   })
   update(
     @Param("id") id: string,
@@ -145,7 +144,7 @@ export class ApplicationAnomalyNotificationsController {
   })
   @ApiCreatedResponse({
     description: "Notification d'anomalie créée avec succès",
-    type: GetAnomalyNotificationDto,
+    type: AnomalyNotificationDto,
   })
   @HttpCode(HttpStatus.CREATED)
   @AppAction("postAnomalyNotifications")
@@ -166,18 +165,17 @@ export class ApplicationAnomalyNotificationsController {
   @Get()
   @ApiOperation({
     summary: "Récupérer toutes les notifications d'anomalies pour une application",
-    description: "Renvoie la liste de toutes les notifications d'anomalies pour une application donnée.",
+    description: "Renvoie la liste paginée des notifications d'anomalies pour une application donnée.",
   })
   @ApiOkResponse({
-    description: "Liste des notifications d'anomalies pour l'application",
-    type: GetAnomalyNotificationDto,
-    isArray: true,
+    description: "Liste paginée des notifications d'anomalies pour l'application",
+    type: AnomalyNotificationPaginatedResponseDto,
   })
   findAll(
     @Query() filters: AnomalyFiltersDto,
     @User() requestor: Requestor,
     @Param("applicationId") applicationId: string,
-  ) {
+  ): Promise<AnomalyNotificationPaginatedResponseDto> {
     return this.service.findAll(
       requestor,
       filters,
@@ -194,7 +192,7 @@ export class ApplicationAnomalyNotificationsController {
   @Get(":id")
   @ApiOperation({ summary: "Récupérer une notification spécifique par ID" })
   @ApiOkResponse({
-    type: GetAnomalyNotificationDto,
+    type: AnomalyNotificationDto,
     description: "Notification trouvée avec succès",
   })
   findOne(
@@ -216,7 +214,7 @@ export class ApplicationAnomalyNotificationsController {
   @AppAction("manageAnomalyNotifications")
   @ApiOkResponse({
     description: "Notification mise à jour avec succès",
-    type: GetAnomalyNotificationDto,
+    type: AnomalyNotificationDto,
   })
   update(
     @Param("id") id: string,

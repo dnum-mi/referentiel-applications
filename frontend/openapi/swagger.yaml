@@ -1620,9 +1620,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GetAnomalyNotificationDto"
+                $ref: "#/components/schemas/AnomalyNotificationPaginatedResponseDto"
       tags: &a10
         - AnomalyNotifications
     post:
@@ -1641,7 +1639,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+                $ref: "#/components/schemas/AnomalyNotificationDto"
       tags: *a10
   /api/v2/anomaly-notifications/{id}:
     patch:
@@ -1665,7 +1663,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+                $ref: "#/components/schemas/AnomalyNotificationDto"
       tags: *a10
   /api/v2/applications/{applicationId}/anomaly-notifications:
     post:
@@ -1690,13 +1688,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+                $ref: "#/components/schemas/AnomalyNotificationDto"
       tags: &a11
         - ApplicationNotifications
     get:
       operationId: ApplicationAnomalyNotificationsController_findAll
       summary: Récupérer toutes les notifications d'anomalies pour une application
-      description: Renvoie la liste de toutes les notifications d'anomalies pour une
+      description: Renvoie la liste paginée des notifications d'anomalies pour une
         application donnée.
       parameters:
         - name: all
@@ -1750,13 +1748,11 @@ paths:
             type: string
       responses:
         "200":
-          description: Liste des notifications d'anomalies pour l'application
+          description: Liste paginée des notifications d'anomalies pour l'application
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GetAnomalyNotificationDto"
+                $ref: "#/components/schemas/AnomalyNotificationPaginatedResponseDto"
       tags: *a11
   /api/v2/applications/{applicationId}/anomaly-notifications/{id}:
     get:
@@ -1780,7 +1776,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+                $ref: "#/components/schemas/AnomalyNotificationDto"
       tags: *a11
     patch:
       operationId: ApplicationAnomalyNotificationsController_update
@@ -1809,7 +1805,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetAnomalyNotificationDto"
+                $ref: "#/components/schemas/AnomalyNotificationDto"
       tags: *a11
     delete:
       operationId: ApplicationAnomalyNotificationsController_remove
@@ -3577,7 +3573,7 @@ components:
         - in_pending
         - in_progress
         - done
-    GetAnomalyNotificationDto:
+    AnomalyNotificationDto:
       type: object
       properties:
         notifier:
@@ -3616,6 +3612,21 @@ components:
         - notifierId
         - description
         - updatedAt
+    AnomalyNotificationPaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of metadata
+          type: array
+          items:
+            $ref: "#/components/schemas/AnomalyNotificationDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     CreateAnomalyNotificationRequestDto:
       type: object
       properties:

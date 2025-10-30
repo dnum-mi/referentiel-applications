@@ -78,8 +78,6 @@ async function fetchHistoryData() {
       order: "desc",
     });
   }
-
-  await reportIssueStore.fetchIssueByApplication(application.value.id);
 }
 
 // Tabs definition — keep the same shape, but ensure errorKey is keyof errorMessages

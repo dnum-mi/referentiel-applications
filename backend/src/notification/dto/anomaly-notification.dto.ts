@@ -1,20 +1,20 @@
 import { ApiProperty, PickType } from "@nestjs/swagger";
 import { AnomalyNotificationStatus } from "@prisma/client";
 import { Type } from "class-transformer";
-import { IsString, ValidateNested } from "class-validator";
+import { IsString } from "class-validator";
+import { PaginatedResponseDto } from "src/common/dto";
 import { ApplicationDto } from "src/product/application/dto/get-application.dto";
 import { UserEntity } from "src/user/entities/user.entity";
 
 class Notifier extends PickType(UserEntity, ["id", "email"]) {}
 
-export class GetAnomalyNotificationDto {
+export class AnomalyNotificationDto {
   @IsString()
   id: string;
 
   @IsString()
   applicationId: string | null;
 
-  @ValidateNested()
   @Type(() => ApplicationDto)
   application: ApplicationDto | null;
 
@@ -46,4 +46,9 @@ export class GetAnomalyNotificationDto {
 
   @IsString()
   updatedAt: Date;
+}
+
+export class AnomalyNotificationPaginatedResponseDto extends PaginatedResponseDto<AnomalyNotificationDto> {
+  @ApiProperty({ type: [AnomalyNotificationDto], description: "Array of metadata" })
+  results: AnomalyNotificationDto[];
 }

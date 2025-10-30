@@ -3,12 +3,15 @@ import { onMounted, computed, ref, watch } from "vue";
 import { routeNames } from "@/router/route-names";
 import { useUserStore } from "@/stores/userStore";
 import { formatDate } from "@/composables/use-date";
-import { useReportIssueStore } from "@/stores/reportIssueStore";
+import api from "@/api";
+import PaginationFooter from "../PaginationFooter.vue";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
-import type { DsfrDataTableHeaderCell, DsfrDataTableRow } from "@gouvminint/vue-dsfr";
+import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
+import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
 import type { GenericRow } from "@/utils/types";
+import type { AnomalyNotificationPaginatedResponseDto } from "@/client/types.gen";
 
-const title = "Liste de toutes les corrections d'applications";
+const title = "Liste de tous les signalements d'applications";
 const headers = [
   { key: "application", label: "Application" },
   { key: "notifier", label: "Signalant" },
@@ -18,21 +21,19 @@ const headers = [
 ] as const satisfies DsfrDataTableHeaderCell[];
 
 const userStore = useUserStore();
-const reportStore = useReportIssueStore();
 
+const data = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total: 0 });
+const isLoading = ref(false);
 const isEditing = ref<boolean>(false);
-
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
-const searchReport = ref(reportStore.filters.searchReport);
+const itemsPerPage = ref(15);
+const searchReport = ref("");
+const sortBy = ref<"application" | "description" | "date" | "status" | "signalant">("date");
+const sortedDesc = ref<boolean>(true);
 
-const sortBy = ref<string>("date");
-const sortedDesc = ref<boolean>(reportStore.filters.order === "desc");
-
-const isLoading = computed(() => reportStore.isLoading);
-
-const rows = computed<DsfrDataTableRow[]>(() =>
-  (reportStore.allReports || []).map((report): GenericRow<typeof headers> => ({
+const rows = computed(() =>
+  (data.value.results || []).map((report: any): GenericRow<typeof headers> => ({
     id: report.id,
     application: {
       label: report.application?.label,
@@ -47,49 +48,65 @@ const rows = computed<DsfrDataTableRow[]>(() =>
       report,
       isEditing: isEditing.value,
     },
-  })),
+  }))
 );
 
-const { run: debouncedSearch } = useDebouncedFn(() => {
-  reportStore.fetchAllReports();
+const { run: debouncedSearch } = useDebouncedFn(async () => {
+  await fetchAllReportsDirect();
 }, 300);
 
-watch(searchReport, (val) => {
-  reportStore.setFilter("searchReport", val);
-  reportStore.setFilter("page", 0);
+async function fetchAllReportsDirect() {
+  isLoading.value = true;
+  try {
+    const query = {
+      all: true,
+      searchReport: searchReport.value,
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+      sortBy: sortBy.value,
+      order: (sortedDesc.value ? "desc" : "asc") as "desc" | "asc",
+    };
+    const response = await api.anomalyNotificationsControllerFindAll({ query });
+    data.value = response.data as AnomalyNotificationPaginatedResponseDto;
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+watch(searchReport, () => {
+  currentPage.value = 0;
   debouncedSearch();
 });
 
-watch(reportStore.filters, () => {
-  searchReport.value = reportStore.filters.searchReport;
-}, { deep: true });
+watch([currentPage, itemsPerPage, sortBy, sortedDesc], fetchAllReportsDirect);
 
 onMounted(async () => {
-  debouncedSearch();
+  await fetchAllReportsDirect();
 });
 </script>
 
 <template>
-  <div class="fr-my-2v w-[800px]">
-    <AppLoader v-if="isLoading" />
+  <AppLoader v-if="isLoading" />
     <div v-else>
       <div v-if="userStore.adminLevel >= 30">
         <div v-if="!isEditing && rows.length" class="toRight">
-          <DsfrButton label="Modifier" class="fr-mr-1w" :onclick="() => { isEditing = true }" />
+          <DsfrButton label="Modifier" class="fr-mb-1w" :onclick="() => { isEditing = true }" />
         </div>
         <div v-else-if="rows.length" class="toRight">
           <DsfrButton
             label="Arreter de  modifier" :onclick="() => { isEditing = false }"
           />
         </div>
-
-        <div class="searchBar">
-          <span class="fr-text--lg fr-text--bold">Rechercher un Report</span>
-          <DsfrInput
-            v-model="searchReport"
-            class="fr-mt-3w"
-          />
-        </div>
+      </div>
+      <div class="fr-mb-4w">
+        <DsfrSearchBar
+          v-model.trim="searchReport"
+          label="Rechercher un report"
+          placeholder="Recherche par description ou par email du signalant"
+          button-text="Rechercher"
+          class="fr-col-12"
+          data-testid="issues-search-bar"
+        />
       </div>
       <div v-if="!rows.length" class="text-center">
         <p>Aucune correction recensée.</p>
@@ -97,7 +114,6 @@ onMounted(async () => {
       <DsfrDataTable
         v-else
         v-model:selection="selection"
-        v-model:current-page="currentPage"
         v-model:sorted-by="sortBy"
         v-model:sorted-desc="sortedDesc"
         data-testid="issues-table"
@@ -105,12 +121,7 @@ onMounted(async () => {
         :rows="rows"
         row-key="id"
         :title="title"
-        pagination
-        :rows-per-page="10"
-        :pagination-options="[10, 20, 30, 50]"
-        bottom-action-bar-class="bottom-action-bar-class"
-        pagination-wrapper-class="pagination-wrapper-class"
-        sortable-rows
+        :sortable-rows="true"
       >
         <template #header="{ key, label }">
           <div :class="{ 'select-status': key === 'status' }">
@@ -119,13 +130,13 @@ onMounted(async () => {
         </template>
         <template #cell="{ colKey, cell }">
           <template v-if="colKey === 'application'">
-            <template v-if="cell && cell.to && cell.to.params && cell.to.params.id">
-              <router-link :to="cell.to" :data-testid="`issues-row-${cell.id}-application`">
-                {{ cell.label || 'Voir l’application' }}
+            <template v-if="cell && (cell as any).to && (cell as any).to.params && (cell as any).to.params.id">
+              <router-link :to="(cell as any).to" :data-testid="`issues-row-${(cell as any).id}-application`">
+                {{ (cell as any).label || 'Voir l’application' }}
               </router-link>
             </template>
             <template v-else>
-              <span :data-testid="`issues-row-${cell.id}-application`">{{ cell.label || 'Signalement global' }}</span>
+              <span :data-testid="`issues-row-${(cell as any).id}-application`">{{ (cell as any).label || 'Signalement global' }}</span>
             </template>
           </template>
           <template v-else-if="colKey === 'description'">
@@ -134,25 +145,24 @@ onMounted(async () => {
             </p>
           </template>
           <template v-else-if="colKey === 'status'">
-            <ReportStatusTag :report="cell.report" :is-editing="cell.isEditing" class="select-status" @refresh="reportStore.fetchAllReports()" />
+            <ReportStatusTag :report="(cell as any).report" :is-editing="(cell as any).isEditing" class="select-status" @refresh="fetchAllReportsDirect()" />
           </template>
           <template v-else>
             {{ cell }}
           </template>
         </template>
       </DsfrDataTable>
+      <PaginationFooter
+        :total-filtered="data.total"
+        :limit="itemsPerPage"
+        :page="currentPage"
+        @update:limit="val => { itemsPerPage = val; currentPage = 0; fetchAllReportsDirect(); }"
+        @update:page="val => { currentPage = val; fetchAllReportsDirect(); }"
+      />
     </div>
-  </div>
 </template>
 
 <style scoped>
-.toRight {
-  justify-self: end;
-}
-
-.toRight button {
-  margin-right: 1vw;
-}
 
 .text-wrap {
   width: auto;
@@ -160,12 +170,4 @@ onMounted(async () => {
   word-wrap: break-word;
 }
 
-.searchBar {
-  justify-self: baseline;
-  width: 15vw;
-}
-
-.select-status {
-  width: 8rem;
-}
 </style>
