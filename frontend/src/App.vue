@@ -112,7 +112,7 @@ const serviceTitle = "Référentiel des Applications";
 const homeTo = "/applications";
 const operatorTo = "/applications";
 const ecosystemLinks = [
-  { label: "CCT", href: "http://cct.sg.minint.fr/accueil/Accueil.html" },
+  { label: "Cadre de Cohérence Technique (CCT)", href: "http://cct.sg.minint.fr/accueil/Accueil.html" },
   { label: "Code source", href: "http://github.com/dnum-mi/referentiel-applications" },
   {
     label: "Api du référentiel",

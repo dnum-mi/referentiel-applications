@@ -28,12 +28,12 @@ const isMobile = smaller("mobile");
 type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd";
 const types: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
 const labels: Record<ComplianceType, string> = {
-  dima: "DIMA",
-  pdma: "PDMA",
+  dima: "Délai d'Indisponibilité Maximale Admissible (DIMA)",
+  pdma: "Plan de Conduite d’Activité (PDMA)",
   homologation: "Homologation",
-  rgaa: "RGAA",
-  dsfr: "DSFR",
-  rgpd: "RGPD",
+  rgaa: "Référentiel général d’amélioration de l’accessibilité (RGAA)",
+  dsfr: "Design Système de l'état (DSFR)",
+  rgpd: "Règlement Général sur la Protection des Données (RGPD)",
 };
 
 const compliances = computed(() => {
