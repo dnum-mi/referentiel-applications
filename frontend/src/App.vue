@@ -112,23 +112,36 @@ const serviceTitle = "Référentiel des Applications";
 const homeTo = "/applications";
 const operatorTo = "/applications";
 const ecosystemLinks = [
-  { label: "Cadre de Cohérence Technique (CCT)", href: "http://cct.sg.minint.fr/accueil/Accueil.html" },
-  { label: "Code source", href: "http://github.com/dnum-mi/referentiel-applications" },
+  { label: "Cadre de Cohérence Technique (CCT)", 
+    title: "Aller au Cadre de Cohérence Technique (CCT)",
+    href: "http://cct.sg.minint.fr/accueil/Accueil.html" 
+  },
+
+  { label: "Code source", 
+    title: "Aller au code source de l'application",
+   href: "http://github.com/dnum-mi/referentiel-applications" },
   {
     label: "Api du référentiel",
+    title: "Aller à la documentation de l'API du référentiel",
     href: "/api/v2/swagger/",
   },
 ];
 const mandatoryLinks = computed(() => [
-  { label: "Accessibilité : non conforme", to: "accessibilite" },
-  { label: "Plan du site", to: "plan-du-site" },
+  { label: "Accessibilité : non conforme", 
+    title: "Aller à la page d'accessibilité",
+  to: "accessibilite" },
+  { label: "Plan du site", 
+    title: "Aller au plan du site",
+   to: "plan-du-site" },
   {
     label: "Contact Tchap",
+    title: "Aller au contact Tchap",
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
     target: "_blank",
   },
   {
     label: "Contacter l’équipe",
+    title: "Envoyer un email à l’équipe du Référentiel des Applications",
     href: "mailto:support-referentiel-applications@interieur.gouv.fr",
     target: "_blank",
     icon: "fr-icon-mail-line",
@@ -179,7 +192,12 @@ function close() {
     <RouterView :key="route.params.id" />
   </div>
 
-  <DsfrFooter :logo-text :home-to :ecosystem-links :mandatory-links :after-mandatory-links :operator-to data-testid="footer" />
+  <DsfrFooter 
+  :logo-text 
+  :home-to :ecosystem-links 
+  :mandatory-links 
+  :after-mandatory-links 
+  :operator-to data-testid="footer" />
 
   <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" data-testid="pwa-reload-prompt" @close="close" @update-service-worker="updateServiceWorker" />
 
