@@ -12,7 +12,7 @@
       <p class="fr-col-md-9">
         Le référentiel des applications représente l'ensemble des produits numériques et logiciels utilisés au sein du système
         d'information; Il permet de centraliser, structurer, et gérer efficacement pour un accès et une utilisation optimisés;
-        Il "participe à la protection, à la défense et à la résilience du système d’information"(*). Il est adressé à l'ensemble
+        Il "participe à la protection, à la défense et à la résilience du système d’information". Il est adressé à l'ensemble
         des acteurs du Système d'information.
       </p>
     </div>
