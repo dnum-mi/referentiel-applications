@@ -60,5 +60,8 @@
   },
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
-  }
+  },
+
+  // disable import module specifier endings (ex: .js, .ts, etc.)
+  "typescript.preferences.importModuleSpecifierEnding": "none"
 }
