@@ -1,0 +1,116 @@
+name: Advanced Accessibility Check (Local Build)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  accessibility-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: ./frontend
+      - name: Generate API client
+        run: pnpm run api:generate
+        working-directory: ./frontend
+      - name: Build application
+        run: pnpm run build-only
+        working-directory: ./frontend
+
+      - name: Install static server
+        run: pnpm install -g serve
+
+      - name: Start static server
+        run: serve -s dist &
+        working-directory: ./frontend
+
+      - name: Wait for server to start
+        run: sleep 15
+
+      - name: Install Axe CLI
+        run: pnpm install -g @axe-core/cli
+
+      - name: Run Axe scan on localhost
+        run: axe http://localhost:3000 --timeout 60 --save report.json --tags wcag2aa || true
+        working-directory: ./frontend
+
+      - name: List files in the frontend directory
+        run: ls -la
+        working-directory: ./frontend
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report
+          path: frontend/report.json
+
+  build-report:
+    runs-on: ubuntu-latest
+    needs: accessibility-test
+    outputs:
+      markdown_report: ${{ steps.create_report.outputs.report }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: a11y-report
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Create Markdown report
+        id: create_report
+        run: |
+          REPORT_BODY=$(node -e '
+            const fs = require("fs");
+            const reportData = fs.readFileSync("report.json", "utf-8");
+            const report = JSON.parse(reportData) || { violations: };
+            const violations = report.violations;
+            let markdown = `## ♿ Rapport d''Analyse d''Accessibilité\n\n`;
+            if (violations.length === 0) {
+              markdown += "🎉 Aucune violation d''accessibilité détectée!";
+            } else {
+              markdown += `**${violations.length}** violation(s) trouvée(s).\n\n`;
+              markdown += `| Impact | Règle | Description |\n`;
+              markdown += `|---|---|---|\n`;
+              for (const violation of violations) {
+                markdown += `| ${violation.impact} | \`${violation.id}\` | [${violation.description}](${violation.helpUrl}) |\n`;
+              }
+            }
+            console.log(markdown);
+          ')
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          echo "$REPORT_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+  post-comment:
+    runs-on: ubuntu-latest
+    needs: build-report
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "Rapport d'Analyse d'Accessibilité"
+
+      - name: Create or Update Comment
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ needs.build-report.outputs.markdown_report }}
+          edit-mode: replace
