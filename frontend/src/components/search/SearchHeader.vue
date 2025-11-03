@@ -88,6 +88,10 @@ function onConfirm(selection: { id?: string | number, label?: string } | string)
 </script>
 
 <template>
+  <label class="fr-sr-only" for="app-search">
+    Recherche d’une application avec autocomplétion
+  </label>
+  
   <AccessibleAutocomplete
     id="app-search"
     ref="searchRef"
