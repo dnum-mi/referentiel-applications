@@ -94,7 +94,6 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
   }
 
   async function searchApplications(customFilters?: Filters, store: boolean = true) {
-    isLoading.value = true;
     error.value = null;
 
     try {
@@ -124,8 +123,6 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     } catch (err: any) {
       error.value = err?.message || "Erreur inconnue";
       throw err;
-    } finally {
-      isLoading.value = false;
     }
   }
 
