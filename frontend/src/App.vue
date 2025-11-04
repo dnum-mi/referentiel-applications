@@ -175,7 +175,14 @@ function close() {
 </script>
 
 <template>
-  <SkipLinks data-testid="skip-links" />
+  <DsfrSkipLinks
+    :links="[
+      { id: 'header-search', text: 'Aller à la recherche' },
+      { id: 'header-nav', text: 'Aller à la navigation' },
+      { id: 'main-content', text: 'Aller au contenu principal' },
+      { id: 'footer', text: 'Aller au pied de page' },
+    ]"
+  />
   <DsfrHeader
     :service-description="serviceDescription"
     :service-title="serviceTitle"
@@ -183,16 +190,17 @@ function close() {
     :quick-links="quickLinks"
     data-testid="main-header"
   >
-    <div v-if="userStore.authenticated" class="header-container">
-      <SearchHeader />
+    <div class="header-container" id="header-search">
+      <SearchHeader v-if="userStore.authenticated" />
     </div>
 
     <template #mainnav>
-      <DsfrNavigation :nav-items="navItemsComputed" data-testid="main-navigation" />
+      <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
+      <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
     </template>
   </DsfrHeader>
 
-  <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w">
+  <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content">
     <RouterView :key="route.params.id" />
   </div>
 
