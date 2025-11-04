@@ -42,8 +42,6 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 <template>
   <div class="layout" data-testid="application-view">
 
-    <a class="skip-link" href="#application-results">Aller au contenu</a>
-
     <SidebarFilters data-testid="application-filters" />
 
     <main class="main-content" id="main-content" data-testid="main-content" role="main">
