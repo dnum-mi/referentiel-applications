@@ -13,7 +13,7 @@ import { ApplicationSearchFilters, IApplicationRepository } from "./application.
 export class ApplicationRepository implements IApplicationRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(application: Omit<CreateApplicationDto, "status" | "statusDate" | "labels">, existingTags: CreateTagDto[]) {
+  public async create(application: Omit<CreateApplicationDto, "status" | "labels">, existingTags: CreateTagDto[]) {
     return this.prisma.application.create({
       data: {
         ...application,

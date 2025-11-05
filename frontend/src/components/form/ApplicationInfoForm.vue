@@ -5,13 +5,11 @@ import { useToasterStore } from "@/stores/toasterStore";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 import api from "@/api/index";
-import type { CreateApplicationDto, ApplicationDto } from "@/client/types.gen";
-
-type FormData = Omit<CreateApplicationDto, "targetPopulations" | "purposes" | "tags"> & {
-  targetPopulations: string[]
-  purposes: string[]
-  tags: string[]
-};
+import type {
+  ApplicationDto,
+  ApplicationStatus,
+  CreateApplicationDto,
+} from "@/client/types.gen";
 
 const emit = defineEmits<{
   success: [application: ApplicationDto]
@@ -24,23 +22,23 @@ const router = useRouter();
 const isSubmitting = ref(false);
 
 const statusOptions = computed(() =>
-  Object.keys(statusApplicationDictionary).map(value => ({
-    value,
-    text: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
+  Object.entries(statusApplicationDictionary).map(([value, text]) => ({
+    value: value as ApplicationStatus,
+    text,
   })),
 );
 
-const form = ref<FormData>({
+const form = ref<CreateApplicationDto>({
   label: "",
   shortName: "",
   description: "",
   targetPopulations: [""],
   purposes: [""],
   tags: [],
-  status: undefined,
-  priorityRestart: undefined,
   labels: [],
-  logo: undefined,
+  status: {
+    status: "under_construction"
+  }
 });
 
 async function handleSubmit() {
@@ -51,15 +49,14 @@ async function handleSubmit() {
     ...form.value,
     targetPopulations: filterEmpty(form.value.targetPopulations),
     purposes: filterEmpty(form.value.purposes),
-    tags: form.value.tags,
-    status: form.value.status!,
-    priorityRestart: form.value.priorityRestart!,
   };
 
   isSubmitting.value = true;
 
   try {
-    const response = await api.applicationControllerCreate({ body: applicationData });
+    const response = await api.applicationControllerCreate({
+      body: applicationData,
+    });
     const application = response.data as ApplicationDto;
 
     toaster.addSuccessMessage("Application créée avec succès !");
@@ -98,10 +95,10 @@ function removePopulation(index: number) {
     class="fr-mb-3w"
   />
   <form data-testid="application-info-form" @submit.prevent="handleSubmit">
-    <DsfrInputGroup v-model="form.label" label="Label" label-visible required data-testid="application-info-label" />
+    <DsfrInputGroup v-model.trim="form.label" label="Label" label-visible required data-testid="application-info-label" />
 
     <DsfrInputGroup
-      v-model="form.shortName"
+      v-model.trim="form.shortName"
       class="fr-mt-3w"
       label="Nom court"
       label-visible
@@ -110,7 +107,7 @@ function removePopulation(index: number) {
     />
 
     <DsfrSelect
-      v-model="form.status"
+      v-model="form.status.status"
       :options="statusOptions"
       label="Status de l'application"
       default-unselected-text="Sélectionner un status"
@@ -118,7 +115,7 @@ function removePopulation(index: number) {
     />
 
     <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required>
-      <MarkdownEditor v-model="form.description" data-testid="application-info-description" />
+    <MarkdownEditor v-model="form.description" :disabled="isSubmitting" data-testid="application-info-description" />
     </DsfrInputGroup>
 
     <DsfrSelect
@@ -139,7 +136,7 @@ function removePopulation(index: number) {
       <div class="fr-mt-2w">
         <div v-for="(targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput v-model="form.targetPopulations![index]" :placeholder="`Population ${index + 1}`" :data-testid="`application-info-population-${index}`" />
+            <DsfrInput v-model.trim="form.targetPopulations[index]" :placeholder="`Population ${index + 1}`" :data-testid="`application-info-population-${index}`" />
           </div>
           <div class="fr-col-auto">
             <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cette population" aria-label="Supprimer cette population" :data-testid="`application-info-population-remove-${index}`" @click="removePopulation(index)" />
@@ -156,7 +153,7 @@ function removePopulation(index: number) {
       <div class="fr-mt-2w">
         <div v-for="(purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput v-model="form.purposes![index]" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-info-purpose-${index}`" />
+            <DsfrInput v-model.trim="form.purposes[index]" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-info-purpose-${index}`" />
           </div>
           <div class="fr-col-auto">
             <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cet objectif" aria-label="Supprimer cet objectif" :data-testid="`application-info-purpose-remove-${index}`" @click="removePurpose(index)" />

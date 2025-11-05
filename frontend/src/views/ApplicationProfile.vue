@@ -127,9 +127,9 @@ const actions = computed(() => [
 
       <div class="status-tags" aria-hidden="false" data-testid="application-tags">
         <DsfrTag
-          v-if="application.status"
+          v-if="application.currentStatus?.statusDate"
           class="fr-mr-2w"
-          :label="statusApplicationDictionary[application.status]"
+          :label="`${statusApplicationDictionary[application.currentStatus?.status]} depuis le ${formatDateFR(application.currentStatus?.statusDate)}`"
           data-testid="application-status-tag"
         ></DsfrTag>
 
