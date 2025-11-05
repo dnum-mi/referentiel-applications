@@ -72,7 +72,7 @@ describe("Applications", () => {
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
         tags: [],
-        status: "in_production",
+        status: { status: "in_production" },
         labels: [],
       })
       .set("Authorization", `Bearer ${TOKEN}`)
@@ -91,7 +91,7 @@ describe("Applications", () => {
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
         tags: [tag1.name, tag2.name],
-        status: "in_production",
+        status: { status: "in_production" },
         labels: [],
       })
       .set("Authorization", `Bearer ${TOKEN}`)
@@ -129,7 +129,7 @@ describe("Applications", () => {
       .send({
         label: " ",
         description: faker.company.catchPhrase(),
-        status: "in_production",
+        status: { status: "in_production" },
         tags: [],
         labels: [],
       })
@@ -147,7 +147,7 @@ describe("Applications", () => {
       .send({
         label: sanitizeLabel(faker.company.name()),
         description: "",
-        status: "in_production",
+        status: { status: "in_production" },
         tags: [],
         labels: [],
       })

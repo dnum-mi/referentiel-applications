@@ -14,7 +14,6 @@ export class StatusesService extends BaseService<ApplicationStatus> {
       where: { applicationId: filters.applicationId },
       orderBy: [
         { statusDate: "desc" },
-        { createdAt: "desc" },
       ],
     });
   }
@@ -24,7 +23,6 @@ export class StatusesService extends BaseService<ApplicationStatus> {
       where: { applicationId },
       orderBy: [
         { statusDate: "desc" },
-        { createdAt: "desc" },
       ],
     });
 

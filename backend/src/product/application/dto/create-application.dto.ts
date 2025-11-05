@@ -10,6 +10,7 @@ import {
   Matches,
   ValidateNested,
 } from "class-validator";
+import { CreateApplicationStatusDto } from "src/statuses/dto/application-status.dto";
 
 const LABEL_STRING_REGEX = /^(?=.*\p{Script=Latin})(?!\s)(?!.+\s$)[\p{Script=Latin}0-9 .-]+$/u;
 export class CreateLabelDto {
@@ -84,18 +85,6 @@ export class CreateApplicationDto {
 
   @ApiProperty({
     type: [String],
-    example: ["tag1", "tag2"],
-    description: "standardized tag names associated with the application",
-    required: false,
-  })
-  @IsArray()
-  @IsOptional()
-  @IsString({ each: true })
-  @Transform(({ value }) => value.map((v: string) => v.toLowerCase()))
-  tags?: string[];
-
-  @ApiProperty({
-    type: [String],
     example: ["finance", "HR"],
     description: "Purposes of the application",
     required: false,
@@ -108,22 +97,28 @@ export class CreateApplicationDto {
   @ApiProperty({
     enum: Status,
     description: "Statut de cycle de vie (défaut under_construction)",
+    type: [String],
+    example: ["tag1", "tag2"],
     required: false,
-    enumName: "ApplicationStatus",
   })
+  @IsArray()
   @IsOptional()
-  @IsEnum(Status)
-  status?: Status;
+  @IsString({ each: true })
+  @Transform(({ value }) => value.map(v => v.toUpperCase()))
+  tags?: string[];
 
   @ApiProperty({
-    example: "2024-01-15T10:30:00Z",
-    description: "Date optionnelle du changement de statut",
+    description: "Statut initial de l'application",
     required: false,
-    type: Date,
+    example: {
+      status: "under_construction",
+      statusDate: "2024-01-15T10:30:00Z",
+    },
+    type: () => CreateApplicationStatusDto,
   })
-  @IsOptional()
-  @Type(() => Date)
-  statusDate?: Date;
+  @ValidateNested()
+  @Type(() => CreateApplicationStatusDto)
+  status: CreateApplicationStatusDto;
 
   @ApiProperty({
     type: [CreateLabelDto],
@@ -143,5 +138,5 @@ export class CreateApplicationDto {
 }
 
 export class PatchApplicationDto extends PartialType(
-  OmitType(CreateApplicationDto, ["status", "statusDate"] as const),
+  OmitType(CreateApplicationDto, ["status"]),
 ) {}

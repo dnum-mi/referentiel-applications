@@ -61,6 +61,33 @@ paths:
                 items:
                   $ref: "#/components/schemas/RelationDto"
       tags: *a1
+  /api/v2/applications/{applicationId}/relations/graph:
+    get:
+      operationId: RelationController_getRelationGraph
+      summary: Récupérer le graphe des relations d'une application
+      description: Renvoie un graphe des relations de l'application avec possibilité
+        de limiter la profondeur. Les applications supprimées sont exclues.
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: depth
+          required: false
+          in: query
+          description: "Profondeur maximale de traversée du graphe (par défaut: 2)"
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Graphe des relations de l'application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationGraphDto"
+      tags: *a1
   /api/v2/applications/{applicationId}/relations/{id}:
     get:
       operationId: RelationController_findOne
@@ -2933,6 +2960,70 @@ components:
         - sourceApplication
         - targetApplication
         - type
+    Status:
+      type: string
+      enum:
+        - under_construction
+        - poc
+        - in_production_mvp
+        - in_production
+        - in_production_decommissioning
+        - decommissioned
+        - deleted
+    GraphNodeDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        status:
+          $ref: "#/components/schemas/Status"
+      required:
+        - id
+        - label
+    GraphEdgeDto:
+      type: object
+      properties:
+        id:
+          type: string
+        sourceId:
+          type: string
+        sourceLabel:
+          type: string
+        targetId:
+          type: string
+        targetLabel:
+          type: string
+        type:
+          $ref: "#/components/schemas/relationType"
+      required:
+        - id
+        - sourceId
+        - sourceLabel
+        - targetId
+        - targetLabel
+        - type
+    RelationGraphDto:
+      type: object
+      properties:
+        nodes:
+          description: Liste des applications (nœuds du graphe)
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphNodeDto"
+        edges:
+          description: Liste des relations (arêtes du graphe)
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphEdgeDto"
+        rootId:
+          type: string
+          description: ID de l'application racine
+      required:
+        - nodes
+        - edges
+        - rootId
     MetadataAction:
       type: string
       description: Action effectuée sur la metadata
@@ -3198,6 +3289,18 @@ components:
         - in_production_decommissioning
         - decommissioned
         - deleted
+    CreateApplicationStatusDto:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/ApplicationStatus"
+        statusDate:
+          format: date-time
+          type: string
+          nullable: true
+          description: Date optionnelle du changement de statut
+      required:
+        - status
     CreateLabelDto:
       type: object
       properties:
@@ -3243,32 +3346,40 @@ components:
             type: string
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
-        tags:
-          example: &a20
-            - tag1
-            - tag2
-          description: standardized tag names associated with the application
-          type: array
-          items:
-            type: string
         purposes:
-          example: &a21
+          example: &a20
             - finance
             - HR
           description: Purposes of the application
           type: array
           items:
             type: string
+        tags:
+          type: array
+          description: Statut de cycle de vie (défaut under_construction)
+          example: &a21
+            - tag1
+            - tag2
+          items: &a22
+            type: string
+            enum:
+              - under_construction
+              - poc
+              - in_production_mvp
+              - in_production
+              - in_production_decommissioning
+              - decommissioned
+              - deleted
         status:
-          $ref: "#/components/schemas/ApplicationStatus"
-        statusDate:
-          format: date-time
-          type: string
-          example: 2024-01-15T10:30:00Z
-          description: Date optionnelle du changement de statut
+          description: Statut initial de l'application
+          example:
+            status: under_construction
+            statusDate: 2024-01-15T10:30:00Z
+          allOf:
+            - $ref: "#/components/schemas/CreateApplicationStatusDto"
         labels:
           description: Liste des labels alternatifs associés à l'application
-          example: &a22
+          example: &a23
             - source: ""
               value: My App
           type: array
@@ -3292,17 +3403,12 @@ components:
         statusDate:
           format: date-time
           type: string
-          nullable: true
-          description: Date optionnelle du changement de statut
-        createdAt:
-          format: date-time
-          type: string
-          description: Date de création de cet enregistrement
+          description: Date du changement de statut
       required:
         - id
         - applicationId
         - status
-        - createdAt
+        - statusDate
     ApplicationDto:
       type: object
       properties:
@@ -3337,10 +3443,6 @@ components:
           type: array
           items:
             type: string
-        tags:
-          type: array
-          items:
-            type: string
         quality:
           type: number
           nullable: true
@@ -3352,7 +3454,6 @@ components:
         - description
         - targetPopulations
         - purposes
-        - tags
         - quality
     CountByMonthDto:
       type: object
@@ -3425,21 +3526,20 @@ components:
             type: string
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
-        tags:
-          example: *a20
-          description: standardized tag names associated with the application
-          type: array
-          items:
-            type: string
         purposes:
-          example: *a21
+          example: *a20
           description: Purposes of the application
           type: array
           items:
             type: string
+        tags:
+          type: array
+          description: Statut de cycle de vie (défaut under_construction)
+          example: *a21
+          items: *a22
         labels:
           description: Liste des labels alternatifs associés à l'application
-          example: *a22
+          example: *a23
           type: array
           items:
             $ref: "#/components/schemas/CreateLabelDto"
@@ -3468,18 +3568,6 @@ components:
         - value
         - id
         - applicationId
-    CreateApplicationStatusDto:
-      type: object
-      properties:
-        status:
-          $ref: "#/components/schemas/ApplicationStatus"
-        statusDate:
-          format: date-time
-          type: string
-          nullable: true
-          description: Date optionnelle du changement de statut
-      required:
-        - status
     UpdateApplicationStatusDto:
       type: object
       properties:
@@ -3613,7 +3701,7 @@ components:
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
         adminLevel:
-          enum: &a23
+          enum: &a24
             - 0
             - 10
             - 20
@@ -3680,7 +3768,7 @@ components:
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
         adminLevel:
-          enum: *a23
+          enum: *a24
           type: number
           example: 10
           description: Niveau d'administration du token
@@ -4272,7 +4360,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a24
+          enum: &a25
             - OK
             - KO
           type: string
@@ -4298,7 +4386,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a25
+          enum: &a26
             - S3
             - LOCAL
             - EXTERNE
@@ -4309,7 +4397,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a26
+          enum: &a27
             - OK
             - KO
           type: string
@@ -4388,7 +4476,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a24
+          enum: *a25
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -4412,7 +4500,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a25
+          enum: *a26
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -4420,7 +4508,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a26
+          enum: *a27
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -4503,7 +4591,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a24
+          enum: *a25
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -4527,7 +4615,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a25
+          enum: *a26
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -4535,7 +4623,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a26
+          enum: *a27
           type: string
           description: PDMA test result
         pdma_restoration_manager:

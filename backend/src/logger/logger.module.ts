@@ -25,6 +25,8 @@ const logLevel = process.env.LOG_LEVEL || "info";
               }
             : undefined,
         level: logLevel,
+        // Silence HTTP logs during tests
+        enabled: process.env.NODE_ENV !== "test",
       },
     }),
   ],

@@ -57,18 +57,16 @@ export class ApplicationService {
         },
       });
 
-      const initialStatus = createApplicationDto.status || "under_construction";
-      const statusRecord = await tx.applicationStatus.create({
+      const status = await tx.applicationStatus.create({
         data: {
+          status: createApplicationDto.status.status,
           applicationId: app.id,
-          status: initialStatus,
-          statusDate: createApplicationDto.statusDate ?? null,
         },
       });
 
       await tx.application.update({
         where: { id: app.id },
-        data: { currentStatusId: statusRecord.id },
+        data: { currentStatusId: status.id },
       });
 
       return app;

@@ -25,21 +25,12 @@ export class ApplicationStatusDto {
   status: Status;
 
   @ApiProperty({
-    description: "Date optionnelle du changement de statut",
-    required: false,
-    nullable: true,
-    type: Date,
-  })
-  @IsOptional()
-  @Type(() => Date)
-  statusDate?: Date | null;
-
-  @ApiProperty({
-    description: "Date de création de cet enregistrement",
+    description: "Date du changement de statut",
+    required: true,
     type: Date,
   })
   @Type(() => Date)
-  createdAt: Date;
+  statusDate: Date;
 }
 
 export class CreateApplicationStatusDto {

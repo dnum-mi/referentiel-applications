@@ -2,7 +2,6 @@ import type { INestApplication } from "@nestjs/common";
 import type { TestingModule } from "@nestjs/testing";
 import type { PrismaClient } from "@prisma/client";
 import { Test } from "@nestjs/testing";
-import { Logger as PinoLogger } from "nestjs-pino";
 import { AppModule } from "../src/app.module";
 import { setupGlobalValidation } from "../src/config/app-config";
 import { setupSwagger } from "../src/swagger-config";
@@ -14,9 +13,6 @@ export async function setupApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
-
-  // Ensure Pino is used as Nest logger in tests so debug logs are emitted
-  app.useLogger(app.get(PinoLogger));
 
   // Use the same validation configuration as the main app
   setupGlobalValidation(app);

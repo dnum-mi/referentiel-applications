@@ -4,6 +4,7 @@ import type { ApplicationWithPerms } from "@/models/Application";
 import type { ApplicationStatusDto } from "@/client/types.gen";
 import api from "@/api/index";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { formatDateFR } from "@/composables/use-date";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
@@ -12,10 +13,11 @@ import AppLoader from "./AppLoader.vue";
 import StatusForm from "./form/StatusForm.vue";
 import { useBreakpoints } from "@/composables/use-breakpoint";
 import { BREAKPOINTS } from "@/constants/breakpoint";
+import { useApplicationStore } from "@/stores/applicationStore";
 
 interface StatusFormData {
-  status: string
-  statusDate?: string | null
+  status: ApplicationStatusDto["status"]
+  statusDate?: string
 }
 
 const props = defineProps<{
@@ -25,10 +27,14 @@ const props = defineProps<{
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
+const applicationStore = useApplicationStore();
 
 
-const formModal = useModal<ApplicationStatusDto>();
-const deleteModal = useModal<ApplicationStatusDto>();
+const formModal = useModal();
+const deleteModal = useModal();
+
+const selectedStatus = computed<ApplicationStatusDto | null>(() => formModal.selectedItem.value as ApplicationStatusDto | null);
+const statusPendingDeletion = computed<ApplicationStatusDto | null>(() => deleteModal.selectedItem.value as ApplicationStatusDto | null);
 
 const statuses = ref<ApplicationStatusDto[]>([]);
 const isLoading = ref(false);
@@ -36,6 +42,18 @@ const isSubmitting = ref(false);
 const errorMessage = ref("");
 
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase"));
+const deleteModalActions = computed(() => [
+  {
+    label: "Annuler",
+    secondary: true,
+    onClick: deleteModal.closeModal,
+  },
+  {
+    label: isSubmitting.value ? "Suppression..." : "Supprimer",
+    onClick: deleteStatus,
+    disabled: isSubmitting.value,
+  },
+]);
 
 async function fetchStatuses() {
   isLoading.value = true;
@@ -58,34 +76,80 @@ async function fetchStatuses() {
   }
 }
 
-const isOnlyStatus = computed(() => statuses.value.length === 1);
-
 const headers = computed(() => {
-  const baseHeaders = [
-    { key: "status", label: "Statut" },
-    { key: "statusDate", label: "Date du statut" },
-    { key: "createdAt", label: "Date de création" },
-  ];
+  const baseHeaders: string[] = ["Statut", "Date du statut"];
 
   if (canEdit.value) {
-    baseHeaders.push({ key: "actions", label: "Actions", sortable: false });
+    baseHeaders.push("Actions");
   }
 
   return baseHeaders;
 });
 
 const rows = computed(() =>
-  statuses.value.map(status => ({
-    id: status.id,
-    status: (statusApplicationDictionary as Record<string, string>)[status.status] || status.status,
-    statusDate: status.statusDate ? new Date(status.statusDate).toLocaleDateString("fr-FR") : "-",
-    createdAt: new Date(status.createdAt).toLocaleDateString("fr-FR"),
-    actions: status, 
-  })),
+  statuses.value.map(status => {
+    const row: Record<string, unknown> = {
+      id: status.id,
+      Statut: getStatusLabel(status),
+      "Date du statut": formatStatusDateDisplay(status.statusDate),
+    };
+
+    if (canEdit.value) {
+      row.Actions = status;
+    }
+
+    return row;
+  }),
 );
 
+function getStatusLabel(status: ApplicationStatusDto): string {
+  return (statusApplicationDictionary as Record<string, string>)[status.status] ?? status.status;
+}
+
+function formatStatusDateDisplay(statusDate: string | Date): string {
+  return formatDateFR(statusDate);
+}
+
+function getStatusCardButtons(status: ApplicationStatusDto) {
+  return [
+    {
+      label: "Modifier",
+      icon: "ri-edit-line",
+      tertiary: true,
+      size: "sm" as const,
+      disabled: !canEdit.value,
+      "data-testid": "status-card-edit-btn",
+      onClick: (event: MouseEvent) => {
+        event.stopPropagation();
+        if (!canEdit.value) {
+          return;
+        }
+
+        openEditModal(status);
+      },
+    },
+    {
+      label: "Supprimer",
+      icon: "ri-delete-bin-line",
+      tertiary: true,
+      size: "sm" as const,
+      disabled: !canEdit.value,
+      title: "Supprimer ce statut",
+      "data-testid": "status-card-delete-btn",
+      onClick: (event: MouseEvent) => {
+        event.stopPropagation();
+        if (!canEdit.value) {
+          return;
+        }
+
+        openDeleteModal(status);
+      },
+    },
+  ];
+}
+
 async function handleFormSubmit(formData: StatusFormData) {
-  const isEdit = !!formModal.selectedItem.value;
+  const isEdit = !!selectedStatus.value;
   if (isEdit) {
     await updateStatus(formData);
   } else {
@@ -96,10 +160,7 @@ async function handleFormSubmit(formData: StatusFormData) {
 async function createStatus(formData: StatusFormData) {
   try {
     isSubmitting.value = true;
-    const payload = {
-      status: formData.status,
-      statusDate: formData.statusDate ? new Date(formData.statusDate) : null,
-    };
+    const payload = buildStatusPayload(formData);
 
     const response = await api.statusesControllerCreate({
       path: { applicationId: props.application.id },
@@ -109,6 +170,7 @@ async function createStatus(formData: StatusFormData) {
       toaster.addSuccessMessage("Statut créé avec succès");
       formModal.closeModal();
       await fetchStatuses();
+      await applicationStore.fetchApplication(props.application.id);
     } else {
       throw new Error("Failed to create status");
     }
@@ -125,19 +187,17 @@ function openEditModal(status: ApplicationStatusDto) {
 }
 
 async function updateStatus(formData: StatusFormData) {
-  if (!formModal.selectedItem.value) return;
+  const currentStatus = selectedStatus.value;
+  if (!currentStatus) return;
 
   try {
     isSubmitting.value = true;
-    const payload = {
-      status: formData.status,
-      statusDate: formData.statusDate ? new Date(formData.statusDate) : null,
-    };
+    const payload = buildStatusPayload(formData);
 
     const response = await api.statusesControllerUpdate({
       path: {
         applicationId: props.application.id,
-        statusId: formModal.selectedItem.value.id,
+        statusId: currentStatus.id,
       },
       body: payload,
     });
@@ -146,6 +206,7 @@ async function updateStatus(formData: StatusFormData) {
       toaster.addSuccessMessage("Statut modifié avec succès");
       formModal.closeModal();
       await fetchStatuses();
+      await applicationStore.fetchApplication(props.application.id);
     } else {
       throw new Error("Failed to update status");
     }
@@ -158,22 +219,19 @@ async function updateStatus(formData: StatusFormData) {
 }
 
 function openDeleteModal(status: ApplicationStatusDto) {
-  if (isOnlyStatus.value) {
-    toaster.addErrorMessage("Impossible de supprimer le dernier statut de l'application");
-    return;
-  }
   deleteModal.openModal(status);
 }
 
 async function deleteStatus() {
-  if (!deleteModal.selectedItem.value) return;
+  const statusToDelete = statusPendingDeletion.value;
+  if (!statusToDelete) return;
 
   try {
     isSubmitting.value = true;
     const response = await api.statusesControllerDelete({
       path: {
         applicationId: props.application.id,
-        statusId: deleteModal.selectedItem.value.id,
+        statusId: statusToDelete.id,
       },
     });
 
@@ -181,6 +239,7 @@ async function deleteStatus() {
       toaster.addSuccessMessage("Statut supprimé avec succès");
       deleteModal.closeModal();
       await fetchStatuses();
+      await applicationStore.fetchApplication(props.application.id);
     } else {
       throw new Error("Failed to delete status");
     }
@@ -192,6 +251,17 @@ async function deleteStatus() {
   }
 }
 
+function buildStatusPayload(formData: StatusFormData) {
+  const payload: { status: ApplicationStatusDto["status"]; statusDate?: Date } = {
+    status: formData.status,
+  };
+
+  if (formData.statusDate) {
+    payload.statusDate = new Date(formData.statusDate);
+  }
+
+  return payload;
+}
 
 const { smaller } = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX }, "max");
 const isMobile = smaller("mobile");
@@ -230,7 +300,7 @@ onMounted(() => {
     <StatusForm
       v-if="formModal.isCreateModalOpen.value || formModal.isModalOpen.value"
       :is-submitting="isSubmitting"
-      :initial-data="formModal.selectedItem.value ? { status: formModal.selectedItem.value.status, statusDate: formModal.selectedItem.value.statusDate } : undefined"
+      :initial-data="selectedStatus ? { status: selectedStatus.status, statusDate: selectedStatus.statusDate ?? undefined } : undefined"
       data-testid="status-form"
       @submit="handleFormSubmit"
       @cancel="formModal.closeModal"
@@ -240,28 +310,11 @@ onMounted(() => {
   <DsfrModal
     :opened="deleteModal.isModalOpen.value"
     title="Supprimer un statut"
+    :actions="deleteModalActions"
     data-testid="delete-status-modal"
     @close="deleteModal.closeModal"
   >
     <p>Êtes-vous sûr de vouloir supprimer ce statut ?</p>
-    <div class="fr-modal__footer">
-      <DsfrButtonGroup
-        :inline-layout-when="true"
-        :reverse="true"
-        :buttons="[
-          {
-            label: 'Annuler',
-            secondary: true,
-            onClick: deleteModal.closeModal,
-          },
-          {
-            label: 'Supprimer',
-            onClick: deleteStatus,
-            disabled: isSubmitting,
-          },
-        ]"
-      ></DsfrButtonGroup>
-    </div>
   </DsfrModal>
 
   <div v-if="errorMessage" class="fr-alert fr-alert--error" data-testid="statuses-error">
@@ -285,69 +338,65 @@ onMounted(() => {
           title="Historique des statuts"
           data-testid="statuses-table"
         >
-          <template #cell(actions)="{ cell }">
-            <DsfrButtonGroup
-              :inline-layout-when="true"
-              :buttons="[
-                {
-                  label: 'Modifier',
-                  iconOnly: true,
-                  icon: 'ri-edit-line',
-                  size: 'sm',
-                  tertiary: true,
-                  disabled: !canEdit,
-                  onClick: () => openEditModal(cell),
-                },
-                {
-                  label: 'Supprimer',
-                  iconOnly: true,
-                  icon: 'ri-delete-bin-line',
-                  size: 'sm',
-                  tertiary: true,
-                  disabled: !canEdit || isOnlyStatus,
-                  title: isOnlyStatus ? 'Impossible de supprimer le dernier statut' : 'Supprimer ce statut',
-                  onClick: () => openDeleteModal(cell),
-                },
-              ]"
-            ></DsfrButtonGroup>
+          <template #cell="{ colKey, cell }">
+            <template v-if="typeof colKey === 'string' && colKey === 'Actions'">
+              <div class="fr-btns-group fr-btns-group--inline-sm">
+                <DsfrButton
+                  size="sm"
+                  tertiary
+                  icon="ri-edit-line"
+                  :disabled="!canEdit"
+                  data-testid="status-edit-btn"
+                  title="Modifier le statut"
+                  aria-label="Modifier le statut"
+                  @click="() => openEditModal(cell as ApplicationStatusDto)"
+                >
+                  Modifier
+                </DsfrButton>
+                <DsfrButton
+                  size="sm"
+                  tertiary
+                  icon="ri-delete-bin-line"
+                  :disabled="!canEdit"
+                  title="Supprimer ce statut"
+                  aria-label="Supprimer ce statut"
+                  data-testid="status-delete-btn"
+                  @click="() => openDeleteModal(cell as ApplicationStatusDto)"
+                >
+                  Supprimer
+                </DsfrButton>
+              </div>
+            </template>
+            <template v-else>
+              {{ cell }}
+            </template>
           </template>
         </DsfrDataTable>
       </template>
 
       <template v-else>
-        <div data-testid="statuses-cards">
-          <div v-for="status in statuses" :key="status.id" class="fr-mb-2w">
-            <DsfrCard
-              :title="(statusApplicationDictionary as Record<string, string>)[status.status] || status.status"
-              :description="`Créé le: ${new Date(status.createdAt).toLocaleDateString('fr-FR')}`"
-              :detail="status.statusDate ? `Date du statut: ${new Date(status.statusDate).toLocaleDateString('fr-FR')}` : 'Date du statut: -'"
-              :size="'sm'"
-              :buttons="[
-                {
-                  label: 'Modifier',
-                  iconOnly: true,
-                  icon: 'ri-edit-line',
-                  size: 'sm',
-                  tertiary: true,
-                  disabled: !canEdit,
-                  onClick: () => openEditModal(status),
-                },
-                {
-                  label: 'Supprimer',
-                  iconOnly: true,
-                  icon: 'ri-delete-bin-line',
-                  size: 'sm',
-                  tertiary: true,
-                  disabled: !canEdit || isOnlyStatus,
-                  title: isOnlyStatus ? 'Impossible de supprimer le dernier statut' : 'Supprimer ce statut',
-                  onClick: () => openDeleteModal(status),
-                },
-              ]"
-              data-testid="status-card"
-            ></DsfrCard>
-          </div>
+        <div class="status-card-list" data-testid="statuses-cards">
+          <DsfrCard
+            v-for="status in statuses"
+            :key="status.id"
+            :title="getStatusLabel(status)"
+            :description="`Date du statut : ${formatStatusDateDisplay(status.statusDate!)}`"
+            :buttons="getStatusCardButtons(status)"
+            size="sm"
+            :no-arrow="true"
+            :title-link-attrs="{}"
+            data-testid="status-card"
+          ></DsfrCard>
         </div>
       </template>
     </div>
   </div>
 </template>
+
+<style scoped>
+.status-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+</style>

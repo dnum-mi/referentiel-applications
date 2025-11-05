@@ -133,6 +133,7 @@
       "/dist/"
     ],
     "maxWorkers": 2,
-    "testTimeout": 30000
+    "testTimeout": 30000,
+    "setupFiles": ["<rootDir>/tests/jest.setup.js"]
   }
 }

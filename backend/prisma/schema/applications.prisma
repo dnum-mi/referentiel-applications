@@ -35,13 +35,11 @@ model ApplicationStatus {
   applicationId String
   application   Application   @relation("ApplicationStatuses", fields: [applicationId], references: [id], onDelete: Cascade)
   status        Status
-  statusDate    DateTime?
-  createdAt     DateTime      @default(now())
+  statusDate    DateTime     @default(now())
   Application   Application[]
 
   @@index([applicationId])
   @@index([statusDate])
-  @@index([createdAt])
 }
 
 model Relation {
