@@ -67,8 +67,12 @@ function resetAllFilters() {
           <QualityFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(3)" title="Statut" data-testid="sidebar-accordion-status" @click="toggle(4)">
+        <DsfrAccordion :selected="openAccordions.includes(4)" title="Statut" data-testid="sidebar-accordion-status" @click="toggle(4)">
           <StatusFilter />
+        </DsfrAccordion>
+
+        <DsfrAccordion :selected="openAccordions.includes(5)" title="Conformité" data-testid="sidebar-accordion-compliance" @click="toggle(5)">
+          <ComplianceFilter />
         </DsfrAccordion>
       </div>
     </aside>

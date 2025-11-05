@@ -307,6 +307,46 @@ export class ApplicationRepository implements IApplicationRepository {
       },
     ];
 
+    filters.compliance__in?.forEach((compliance) => {
+      switch (compliance) {
+        case "homologation":
+          where.AND.push({
+            compliance: {
+              homologation_date_end: { not: null },
+            },
+          });
+          break;
+        case "dsfr":
+          where.AND.push({
+            compliance: {
+              dsfr_implemented: true,
+            },
+          });
+          break;
+        case "rgaa":
+          where.AND.push({
+            compliance: {
+              rgaa_audit_date: { not: null },
+            },
+          });
+          break;
+        case "pdma":
+          where.AND.push({
+            compliance: {
+              pdma_duration_hours: { not: null },
+            },
+          });
+          break;
+        case "dima":
+          where.AND.push({
+            compliance: {
+              dima_duration_hours: { not: null },
+            },
+          });
+          break;
+      }
+    });
+
     // Apply all filters using the configuration array
     filterConfigs.forEach(({ condition, whereClause }) => {
       if (condition) {

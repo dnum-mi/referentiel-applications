@@ -139,6 +139,16 @@ export class ApplicationSearchDto extends PaginationDto {
   hostingRoom?: string;
 
   @ApiPropertyOptional({
+    description: "Filtrer par conformité",
+    type: [String],
+    enum: ["dima", "pdma", "homologation", "rgaa", "dsfr"],
+  })
+  @IsOptional()
+  @IsEnum(["dima", "pdma", "homologation", "rgaa", "dsfr"], { each: true })
+  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  compliance__in?: string[];
+
+  @ApiPropertyOptional({
     description: "Recherche par lien (ressource externe)",
   })
   @IsOptional()
