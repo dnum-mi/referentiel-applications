@@ -1,241 +1,197 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import StatusAnnouncer from "./StatusAnnouncer.vue";
-import { useAutocompleteSource } from "@/composables/use-autocomplete-source";
-import { useComboboxA11y } from "@/composables/use-combobox-A11y";
-import { useComboboxKeyboard } from "@/composables/use-combobox-keyboard";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { ref, watch, computed, onMounted, defineExpose } from "vue";
 
-const props = withDefaults(defineProps<{
-  id: string
-  source: any
-  autoselect?: boolean
-  cssNamespace?: string
-  displayMenu?: "inline" | "overlay"
-  minLength?: number
-  name?: string
-  placeholder?: string
-  required?: boolean
-  templates?: { inputValue?: (v: any) => string, suggestion?: (v: any) => string }
-}>(), { autoselect: false, cssNamespace: "autocomplete", displayMenu: "inline", minLength: 0 });
-const emit = defineEmits<{ (e: "confirm", payload: any): void, (e: "update:query", v: string): void }>();
-
-const ROLE_COMBOBOX = "combobox";
-const ROLE_LISTBOX = "listbox";
-const ROLE_OPTION = "option";
-
-const inputRef = ref<HTMLInputElement | null>(null);
-const focused = ref<number | null>(null);
-
-const { options, menuOpen, selected, query, setQuery, search, openAll, close }
-  = useAutocompleteSource({
-    source: props.source,
-    minLength: props.minLength!,
-    showAllValues: false,
-  });
-
-const { run: debouncedSearch } = useDebouncedFn((searchQuery: string) => {
-  search(searchQuery);
-}, 300);
-
-function focusInput() { inputRef.value?.focus(); }
-function setFocused(focusedIndex: number | null) { focused.value = focusedIndex; }
-function setSelected(selectedIndex: number) { selected.value = selectedIndex; }
-function clear() {
-  setQuery("");
-  emit("update:query", "");
-  setSelected(-1);
-  close();
-  focusInput();
+interface Props<T> {
+  id?: string;
+  search: (query: string) => Promise<T[]>;
+  displayLabel: (item: T | null) => string;
+  placeholder?: string;
+  displayNoResult?: boolean;
+  isSearch?: boolean;
+  onChange?: (item: T | null) => void;
 }
 
-defineExpose({ clear });
+const props = defineProps<Props<any>>();
+const emit = defineEmits(["onChange", "onInputValueChange"]);
 
-function submitSearch() {
-  if (selected.value >= 0) {
-    emit("confirm", options.value[selected.value]);
-  } else {
-    emit("confirm", query.value);
+const inputValue = ref("");
+const results = ref<any[]>([]);
+const highlightedIndex = ref(-1);
+const loading = ref(false);
+const showList = ref(false);
+const inputEl = ref<HTMLInputElement | null>(null);
+
+async function doSearch(query: string) {
+  if (!query) {
+    results.value = [];
+    return;
+  }
+  loading.value = true;
+  try {
+    const searchResults = await props.search(query);
+    results.value = searchResults;
+  } finally {
+    loading.value = false;
   }
 }
-function blurComponent() {
-  close();
-  setFocused(null);
+
+function onInput(event: Event) {
+  const value = (event.target as HTMLInputElement).value;
+  inputValue.value = value;
+  emit("onInputValueChange", value);
+  doSearch(value);
+  showList.value = true;
 }
 
-const a11y = useComboboxA11y({
-  id: props.id,
-  cssNamespace: props.cssNamespace!,
-  displayMenu: props.displayMenu!,
-  inputClasses: null,
-  hintClasses: null,
-  menuClasses: null,
-  showAllValues: false,
-}, {
-  focused,
-  menuOpen,
+function select(item: any) {
+  props.onChange?.(item);
+  emit("onChange", item);
+  inputValue.value = props.displayLabel(item);
+  showList.value = false;
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if (!showList.value) return;
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    highlightedIndex.value = (highlightedIndex.value + 1) % results.value.length;
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    highlightedIndex.value =
+      (highlightedIndex.value - 1 + results.value.length) % results.value.length;
+  } else if (e.key === "Enter" && highlightedIndex.value >= 0) {
+    e.preventDefault();
+    select(results.value[highlightedIndex.value]);
+  } else if (e.key === "Escape") {
+    showList.value = false;
+  }
+}
+
+function clear() {
+  inputValue.value = "";
+  results.value = [];
+  highlightedIndex.value = -1;
+  showList.value = false;
+}
+defineExpose({ clear });
+
+onMounted(() => {
+  if (props.isSearch) inputEl.value?.setAttribute("role", "searchbox");
 });
 
-const { onKeydown } = useComboboxKeyboard({
-  menuOpen: () => menuOpen.value,
-  optionsLen: () => options.value.length,
-  focused: () => focused.value,
-  selected: () => selected.value,
-  query: () => query.value,
-  setFocused,
-  setSelected,
-  openAll,
-  search,
-  close,
-  submitSearch,
-  selectAndConfirmAt,
-  blurComponent,
-  focusInput,
+const hasResults = computed(() => results.value.length > 0);
+
+const ariaActiveDescendant = computed(() => {
+  if (highlightedIndex.value >= 0 && showList.value) {
+    return `autocomplete-item-${highlightedIndex.value}`;
+  }
+  return undefined;
 });
 
-function onInput(inputEvent: Event) {
-  const inputValue = (inputEvent.target as HTMLInputElement).value;
-  setQuery(inputValue);
-  emit("update:query", inputValue);
-  debouncedSearch(inputValue);
-}
-function onFocus() { setFocused(-1); }
-function onBlur() { blurComponent(); }
+const ariaDescribedById = computed(() => {
+  return props.id ? `${props.id}-helptext` : undefined;
+});
 
-function inputValueOf(optionItem: any) {
-  return props.templates?.inputValue ? props.templates.inputValue(optionItem) : String(optionItem ?? "");
-}
-
-function selectAndConfirmAt(optionIndex: number) {
-  const selectedOption = options.value[optionIndex];
-  const newQuery = props.templates?.inputValue
-    ? props.templates.inputValue(selectedOption)
-    : String(selectedOption ?? "");
-
-  close();
-  setQuery(newQuery);
-  emit("update:query", newQuery);
-  setSelected(-1);
-  emit("confirm", selectedOption);
-}
+const liveRegionText = computed(() => {
+  if (!showList.value) return '';
+  if (results.value.length === 0) {
+    return props.displayNoResult ? 'Aucun résultat' : '';
+  }
+  return `${results.value.length} résultat${results.value.length > 1 ? 's' : ''} disponible${results.value.length > 1 ? 's' : ''}`;
+});
 </script>
 
 <template>
-  <div class="container-bar fr-search-bar" role="search" data-testid="container-input">
-    <label class="fr-label" :for="id" data-testid="autocomplete-label">Rechercher</label>
-
-    <StatusAnnouncer
-      :id="`${id}__status`"
-      data-testid="autocomplete-status-announcer"
-      :length="options.length"
-      :query-length="query.length"
-      :min-query-length="props.minLength ?? 0"
-      :selected-option="selected >= 0 ? inputValueOf(options[selected]) : ''"
-      :selected-option-index="selected >= 0 ? selected : -1"
-      :valid-choice-made="false"
-      :is-in-focus="focused !== null"
-      :t-query-too-short="(m) => `Tapez ${m} caractères ou plus`"
-      :t-no-results="() => 'Aucun résultat'"
-      :t-selected-option="(s, l, i) => `${s} ${i + 1}/${l} sélectionné`"
-      :t-results="(l, sel) => `${l} résultat(s). ${sel}`"
+  <div class="autocomplete" @keydown="onKeydown">
+    <input
+      :id="id"
+      ref="inputEl"
+      type="text"
+      class="fr-input"
+      :placeholder="placeholder"
+      v-model="inputValue"
+      @input="onInput"
+      autocomplete="off"
+      role="combobox"
+      :aria-controls="id ? id + '-list' : 'autocomplete-list'"
+      :aria-activedescendant="ariaActiveDescendant"
+      :aria-expanded="showList.toString()"
+      :aria-describedby="ariaDescribedById"
     />
-
-    <div class="autocomplete" :style="null" data-testid="autocomplete-root">
-      <input
-        v-bind="a11y.ariaProps"
-        :id="id"
-        ref="inputRef" data-testid="autocomplete-input"
-        class="fr-input" :class="[a11y.inputClassList]"
-        type="search"
-        :value="query"
-        autocomplete="off"
-        :placeholder="props.placeholder ?? ''"
-        :role="ROLE_COMBOBOX"
-        :aria-expanded="menuOpen ? 'true' : 'false'"
-        :aria-controls="`${id}__listbox`"
-        aria-haspopup="listbox"
-        aria-autocomplete="list"
-        :aria-activedescendant="(focused !== null && focused !== -1) ? `${id}__option--${focused}` : undefined"
-        @keydown="onKeydown"
-        @input="onInput"
-        @focus="onFocus"
-        @blur="onBlur"
-      >
-
-      <ul
-        v-show="menuOpen && options.length > 0"
-        v-bind="a11y.computedMenuAttributes"
-        :id="`${id}__listbox`"
-        data-testid="autocomplete-menu"
-        class="autocomplete__menu" :class="[a11y.menuClassList]"
-        :role="ROLE_LISTBOX"
-        @mouseleave="() => setFocused(-1)"
-      >
-        <li
-          v-for="(optionItem, optionIndex) in options"
-          :id="`${id}__option--${optionIndex}`"
-          :key="optionIndex"
-          :role="ROLE_OPTION"
-          data-testid="autocomplete-option"
-          :aria-selected="focused === optionIndex ? 'true' : 'false'"
-          tabindex="-1"
-          @mousedown.prevent
-          @click="() => selectAndConfirmAt(optionIndex)"
-        >
-          <span v-html="(templates?.suggestion ? templates.suggestion(optionItem) : String(optionItem))" />
-        </li>
-      </ul>
+    <div v-if="id" :id="ariaDescribedById" class="visually-hidden">
+      Utilisez les flèches haut et bas pour naviguer dans la liste, Entrée pour sélectionner.
     </div>
+
+    <ul
+      v-if="showList && (hasResults || displayNoResult)"
+      :id="id ? id + '-list' : 'autocomplete-list'"
+      class="autocomplete-list"
+      role="listbox"
+    >
+      <li
+        v-for="(item, index) in results"
+        :key="index"
+        class="autocomplete-item"
+        :id="`autocomplete-item-${index}`"
+        :class="{ highlighted: index === highlightedIndex }"
+        @mousedown.prevent="select(item)"
+        role="option"
+        :aria-selected="index === highlightedIndex ? 'true' : 'false'"
+      >
+        <slot name="suggestion" :item="item">
+          {{ props.displayLabel(item) }}
+        </slot>
+      </li>
+
+      <li v-if="!hasResults && displayNoResult" class="no-result" role="option" aria-disabled="true">
+        Aucun résultat
+      </li>
+    </ul>
+
+    <div class="visually-hidden" aria-live="polite" aria-atomic="true">{{ liveRegionText }}</div>
   </div>
 </template>
 
-<style>
-.container-bar {
-  margin-bottom: 1.5rem;
-  display: flex;
-  justify-content: flex-end;
-}
-.aa-search {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
+<style scoped>
 .autocomplete {
-  --aa-width: 28rem;
   position: relative;
-  width: min(var(--aa-width), 100%);
 }
-
-.autocomplete__menu {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.fr-input {
+  width: 100%;
+}
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
+  width: 100%;
   background: white;
-  border: 1px solid #dcdfe3;
-  border-radius: .375rem;
+  border: 1px solid #dcdcdc;
+  border-radius: 0 0 0.5rem 0.5rem;
   max-height: 18rem;
-  overflow: auto;
-  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  overflow-y: auto;
 }
-
-.autocomplete .autocomplete__menu li {
-  padding: .5rem .75rem;
+.autocomplete-item {
+  padding: 0.5rem 0.75rem;
   cursor: pointer;
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
 }
-
-.autocomplete .autocomplete__menu li div {
-  display: block;
-  width: 100%;
-  white-space: normal;
-  word-break: break-word;
+.autocomplete-item.highlighted,
+.autocomplete-item:hover {
+  background: #e5e7eb;
 }
-
-.autocomplete .autocomplete__menu li[aria-selected="true"],
-.autocomplete .autocomplete__menu li:hover {
-  background: #f3f4f6;
+.no-result {
+  padding: 0.5rem 0.75rem;
+  color: #6b7280;
+}
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; 
+  width: 1px; 
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px); 
+  white-space: nowrap; 
+  border: 0;
+  padding: 0;
+  margin: -1px;
 }
 </style>
