@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useComplianceStore } from "@/stores/complianceStore";
 import ComplianceForm from "./ComplianceForm.vue";
-import { testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
+import { testResultsDict, backupStorageDict, complianceFieldLabels, type ComplianceType } from "@/composables/use-dictionary";
 import { formatDateFR } from "@/composables/use-date";
 import { filterEmpty } from "@/composables/use-filter-watcher";
 import { useBreakpoints } from "@/composables/use-breakpoint";
@@ -25,7 +25,6 @@ const detailsList = ref<{ key: string; label: string; value: string }[]>([]);
 const { smaller } = useBreakpoints({ mobile: BREAKPOINTS.SMALL_CARD_MAX }, "max");
 const isMobile = smaller("mobile"); 
 
-type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd";
 const types: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
 const labels: Record<ComplianceType, string> = {
   dima: "Délai d'Indisponibilité Maximale Admissible (DIMA)",
