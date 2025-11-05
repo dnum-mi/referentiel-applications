@@ -1,108 +1,199 @@
 <script setup lang="ts">
-import { getCurrentInstance, ref } from "vue";
+import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 
 interface ApplicationOption {
-  id: string | number
-  label: string
-  shortName?: string
-  organization?: string
+  id: string | number;
+  label: string;
+  shortName?: string;
+  organization?: string;
 }
 
-interface SearchResponse {
-  results: ApplicationOption[]
-  total?: number
-}
-const searchRef = ref<{ clear: () => void } | null>(null);
-const instance = getCurrentInstance();
 const router = useRouter();
-let lastQuery = "";
-
 const appStore = useApplicationSearchStore();
-const { initialFilters } = appStore;
+const searchRef = ref<{ clear?: () => void } | null>(null);
+const inputRef = ref<HTMLInputElement | null>(null);
+const isMobile = ref(window.innerWidth <= 768);
+const showInput = ref(!isMobile.value);
 
-function escapeHtml(text: string = "") {
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll("\"", "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function trackSearch(query: string, origin: string, resultCount: number) {
-  const matomo = (instance?.proxy as any)?.$matomo;
-  if (!matomo) return;
-  const encodedQuery = encodeURIComponent(query.trim());
-  matomo.setCustomUrl(`/search?q=${encodedQuery}`);
-  matomo.trackSiteSearch(query.trim(), "Applications", resultCount);
-  matomo.trackPageView(`Recherche depuis ${origin} : ${query}`);
-}
-
-async function source(query: string, syncResults: (rows: ApplicationOption[]) => void) {
-  try {
-    const response = (await appStore.searchApplications(
-      {
-        ...initialFilters,
-        search: query.trim() || undefined,
-        page: 0,
-        pageSize: 8,
-      } as any,
-      false,
-    )) as Partial<SearchResponse> | undefined;
-
-    const results = (response?.results ?? []) as ApplicationOption[];
-    const totalCount = (response && (response.total ?? results.length)) || results.length;
-    // Ignore stale responses if user kept typing
-    if (query.trim() !== lastQuery.trim()) return;
-    trackSearch(query, "header", totalCount);
-
-    syncResults(results);
-  } catch {
-    if (query.trim() === lastQuery.trim()) {
-      syncResults([]);
-    }
+function handleResize() {
+  isMobile.value = window.innerWidth <= 768;
+  if (!isMobile.value) {
+    showInput.value = true;
+  } else {
+    showInput.value = false;
   }
 }
 
-const templates = {
-  inputValue: (application: ApplicationOption) => application?.label ?? application?.shortName ?? "",
-  suggestion: (application: ApplicationOption) => {
-    const label = escapeHtml(application?.label ?? "");
-    const short = application?.shortName ? ` <small>(${escapeHtml(application.shortName)})</small>` : "";
-    const org = application?.organization ? ` — <em>${escapeHtml(application.organization)}</em>` : "";
-    return `${label}${short}${org}`;
-  },
-};
+onMounted(() => {
+  window.addEventListener("resize", handleResize);
+});
 
-function onUpdateQuery(query: string) { lastQuery = query; }
+onUnmounted(() => {
+  window.removeEventListener("resize", handleResize);
+});
 
-function onConfirm(selection: { id?: string | number, label?: string } | string) {
-  if (typeof selection !== "string" && selection?.id) {
-    router.push({ name: "application", params: { id: selection.id } });
-    searchRef.value?.clear();
+async function onLoupeClick() {
+  showInput.value = true;
+  await nextTick();
+  if (inputRef.value) {
+    inputRef.value.focus();
+  }
+}
+
+function closeSearch() {
+  showInput.value = false;
+  searchRef.value?.clear?.();
+}
+
+async function searchApplications(searchQuery: string): Promise<ApplicationOption[]> {
+  const trimmedQuery = searchQuery.trim();
+  if (!trimmedQuery) return [];
+  try {
+    const response = await appStore.searchApplications(
+      {
+        search: trimmedQuery,
+        page: 0,
+        pageSize: 8,
+      } as any,
+      false
+    );
+    return (response?.results ?? []) as ApplicationOption[];
+  } catch (err) {
+    console.error("Erreur lors de la recherche :", err);
+    return [];
+  }
+}
+
+function displayLabel(application: ApplicationOption | null) {
+  return application ? application.label ?? application.shortName ?? "" : "";
+}
+
+function onConfirm(selection: ApplicationOption | null) {
+  if (!selection) return;
+  if (selection.id != null) {
+    const applicationId = selection.id;
+    router.push({ name: "application", params: { id: applicationId } });
+    searchRef.value?.clear?.();
+    if (isMobile.value) closeSearch();
   }
 }
 </script>
 
 <template>
-  <label class="fr-sr-only" for="app-search">
-    Recherche d’une application avec autocomplétion
-  </label>
-  
-  <AccessibleAutocomplete
-    id="app-search"
-    ref="searchRef"
-    data-testid="search-header"
-    :source="source"
-    :templates="templates"
-    name="app-search"
-    display-menu="overlay"
-    placeholder="Rechercher une application"
-    :min-length="1"
-    @confirm="onConfirm"
-    @update:query="onUpdateQuery"
-  />
+  <div class="search-header">
+    <label class="fr-sr-only" for="app-search">Recherche d’une application</label>
+
+    <DsfrButton
+      v-show="isMobile"
+      @click="onLoupeClick"
+      tertiary
+      class="loupe-button" 
+      aria-label="Ouvrir la recherche"
+      data-testid="open-search-btn"
+    >
+    <v-icon name="ri-search-line" />
+    </DsfrButton>
+
+    <AccessibleAutocomplete
+      v-if="!isMobile"
+      ref="searchRef"
+      id="app-search"
+      :search="searchApplications"
+      :displayLabel="displayLabel"
+      :onChange="onConfirm"
+      :displayNoResult="true"
+      :isSearch="true"
+      placeholder="Rechercher une application…"
+      :inputRef="inputRef"
+    >
+      <template #suggestion="{ item }">
+        <div class="suggestion">
+          <strong>{{ item.label }}</strong>
+          <template v-if="item.shortName || item.organization">
+            <small v-if="item.shortName"> ({{ item.shortName }})</small>
+            <em v-if="item.organization"> — {{ item.organization }}</em>
+          </template>
+        </div>
+      </template>
+    </AccessibleAutocomplete>
+  </div>
 </template>
+
+<style scoped>
+
+.search-header {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  margin: 1em;
+  align-items: center;
+}
+
+.loupe-button {
+  position: relative;
+  margin-top: -18.99em;
+  z-index: 999;
+  margin-right: 1.2em;
+
+}
+
+
+.close-search {
+  margin-left: 0.5rem;
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+}
+.suggestion small, .suggestion em {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+
+@media (max-width: 768px) {
+
+  .search-header {
+    justify-content: flex-end;
+  }
+  .fr-input {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+.mobile-search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.overlay-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.close-overlay {
+  margin-left: 0.5rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+</style>
