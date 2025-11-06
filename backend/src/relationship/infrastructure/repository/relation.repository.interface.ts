@@ -1,4 +1,4 @@
-import type { RelationApplicationDto } from "../../application/dto/relation-application.dto";
+import type { RelationApplicationDto, RelationGraphDto } from "../../application/dto/relation-application.dto";
 import type { Relation } from "../../domain/relation.entity";
 
 export interface IRelationRepository {
@@ -15,4 +15,5 @@ export interface IRelationRepository {
     requestorId: any,
   ) => Promise<Relation>
   delete: (id: string, requestorId: string) => Promise<void>
+  getRelationGraph: (applicationId: string, maxDepth: number) => Promise<RelationGraphDto>
 }

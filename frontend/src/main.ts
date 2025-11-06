@@ -1,13 +1,13 @@
 import { VIcon } from "@gouvminint/vue-dsfr";
 import { createPinia } from "pinia";
 import { createApp } from "vue";
+import { vUseMermaid } from "@/composables/use-mermaid";
 import { authenticationInit } from "@/services/authentication";
 import { getConfig } from "@/services/config";
 import App from "./App.vue";
 import MatomoPlugin from "./plugins/MatomoPlugin";
 
 import router from "./router/index";
-// Importation des styles DSFR et personnalisés
 import "@gouvfr/dsfr/dist/core/core.main.min.css";
 import "@gouvfr/dsfr/dist/component/component.main.min.css";
 import "@gouvfr/dsfr/dist/utility/utility.main.min.css";
@@ -40,6 +40,7 @@ app.use(createPinia());
 app.use(router);
 
 app.component("VIcon", VIcon);
+app.directive("use-mermaid", vUseMermaid);
 
 getConfig().then(() => {
   authenticationInit().then(() => {

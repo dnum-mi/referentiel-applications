@@ -1,4 +1,4 @@
-import type { ApplicationPriorityRestart, ApplicationStatus } from "@/client/types.gen.js";
+import type { ApplicationPriorityRestart, ApplicationStatus, RelationType } from "@/client/types.gen.js";
 
 export const statusDictionary = {
   in_pending: "En attente",
@@ -156,4 +156,11 @@ export const metadataActionLabels: Record<string, string> = {
   add: "Ajout",
   update: "Modification",
   delete: "Suppression",
+};
+
+export const relationTypeLabels: Record<RelationType, string> = {
+  is_part_of: "fait partie de",
+  in_replacement_of: "remplace",
+  is_service_user_of: "utilise le service de",
+  is_data_user_of: "utilise les données de",
 };
