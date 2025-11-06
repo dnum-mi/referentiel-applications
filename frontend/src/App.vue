@@ -86,25 +86,29 @@ const quickLinks = computed<QuickLink[]>(() => {
   return authenticatedQuickLinks.value;
 });
 
-const navItems = [
-  {
-    id: "nav-home",
-    to: { name: routeNames.SEARCHAPP },
-    text: "Applications",
-  },
-  {
-    to: { name: routeNames.QUALITYPAGE },
-    text: "Qualité Générale",
-  },
-  {
-    to: { name: routeNames.ISSUELIST },
-    text: "Signalements",
-  },
-  {
-    to: { name: routeNames.HISTORY },
-    text: "Modifications",
-  },
+const baseNavItems = [
+  { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
+  { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
+  { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
+  { to: { name: routeNames.ISSUELIST }, text: "Signalements" },
+  { to: { name: routeNames.HISTORY }, text: "Modifications" },
 ];
+
+const publicNavItems = computed(() => {
+  const items: Array<any> = [
+    { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
+  ];
+
+  if (loginRedirectUrl.value) {
+    items.push({ href: loginRedirectUrl.value, text: "Se connecter" });
+  }
+
+  return items;
+});
+
+const navItemsComputed = computed(() => {
+  return userStore.authenticated ? baseNavItems : publicNavItems.value;
+});
 
 const logoText = ["Ministère", "de l’intérieur"];
 const serviceDescription = "Une application pour les réunir toutes";
@@ -184,7 +188,7 @@ function close() {
     </div>
 
     <template #mainnav>
-      <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItems" data-testid="main-navigation" />
+      <DsfrNavigation :nav-items="navItemsComputed" data-testid="main-navigation" />
     </template>
   </DsfrHeader>
 
