@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { RelationType } from "@prisma/client";
+import { RelationType, Status } from "@prisma/client";
 import { IsEnum, IsString } from "class-validator";
 import { ApplicationMinimalDto } from "src/product/application/dto/get-application.dto";
 
@@ -41,4 +41,64 @@ export class RelationDto {
   @IsString()
   @IsEnum(RelationType)
   type: RelationType;
+}
+
+export class GraphNodeDto {
+  @ApiProperty()
+  @IsString()
+  id: string;
+
+  @ApiProperty()
+  @IsString()
+  label: string;
+
+  @ApiProperty({ enum: Status, enumName: "Status" })
+  @IsEnum(Status)
+  status?: Status;
+}
+
+export class GraphEdgeDto {
+  @ApiProperty()
+  @IsString()
+  id: string;
+
+  @ApiProperty()
+  @IsString()
+  sourceId: string;
+
+  @ApiProperty()
+  @IsString()
+  sourceLabel: string;
+
+  @ApiProperty()
+  @IsString()
+  targetId: string;
+
+  @ApiProperty()
+  @IsString()
+  targetLabel: string;
+
+  @ApiProperty({ enum: RelationType, enumName: "relationType" })
+  @IsString()
+  @IsEnum(RelationType)
+  type: RelationType;
+}
+
+export class RelationGraphDto {
+  @ApiProperty({
+    type: [GraphNodeDto],
+    description: "Liste des applications (nœuds du graphe)",
+  })
+  nodes: GraphNodeDto[];
+
+  @ApiProperty({
+    type: [GraphEdgeDto],
+    description: "Liste des relations (arêtes du graphe)",
+  })
+  edges: GraphEdgeDto[];
+
+  @ApiProperty({
+    description: "ID de l'application racine",
+  })
+  rootId: string;
 }

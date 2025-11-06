@@ -7,13 +7,14 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
-import { RelationApplicationDto, RelationDto } from "./application/dto/relation-application.dto";
+import { RelationApplicationDto, RelationDto, RelationGraphDto } from "./application/dto/relation-application.dto";
 import { Relation } from "./domain/relation.entity";
 import { RelationService } from "./relation.service";
 
@@ -58,6 +59,30 @@ export class RelationController {
     @Param("applicationId") applicationId: string,
   ): Promise<Relation[]> {
     return this.relationService.findAllForApplicationSource(applicationId);
+  }
+
+  @Get("graph")
+  @AppAction("readRelations")
+  @ApiOkResponse({
+    description: "Graphe des relations de l'application",
+    type: RelationGraphDto,
+  })
+  @ApiOperation({
+    summary: "Récupérer le graphe des relations d'une application",
+    description: "Renvoie un graphe des relations de l'application avec possibilité de limiter la profondeur. Les applications supprimées sont exclues.",
+  })
+  @ApiQuery({
+    name: "depth",
+    description: "Profondeur maximale de traversée du graphe (par défaut: 2)",
+    required: false,
+    type: Number,
+  })
+  getRelationGraph(
+    @Param("applicationId") applicationId: string,
+    @Query("depth") depth?: number,
+  ): Promise<RelationGraphDto> {
+    const maxDepth = depth ? Math.max(1, Math.min(Number(depth), 10)) : 2;
+    return this.relationService.getRelationGraph(applicationId, maxDepth);
   }
 
   @Get(":id")
