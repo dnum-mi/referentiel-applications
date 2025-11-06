@@ -6,6 +6,13 @@ services:
     ports:
       - "5432:5432"
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
@@ -34,8 +41,14 @@ services:
       - KEYCLOAK_CLIENT_ID=referentiel-applications
       - LOG_LEVEL=debug
       # - NON_ACTOR_PERMISSIONS=readBase
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_SECURE=false
+      - SMTP_FROM=noreply@example.local
+      - SMTP_ENABLED=true
     depends_on:
       - postgres
+      - mailpit
     ports:
       - "3500:3500"
     volumes:

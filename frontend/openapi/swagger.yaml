@@ -348,6 +348,28 @@ paths:
           description: Utilisateur non trouvé
       tags: &a4
         - users
+    patch:
+      operationId: UserController_updateMe
+      summary: Mettre à jour ses propres préférences utilisateur
+      description: "Permet à un utilisateur de modifier ses propres préférences (ex:
+        notifications par email)."
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserPreferencesDto"
+      responses:
+        "200":
+          description: Préférences mises à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEntity"
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a4
   /api/v2/users/{id}:
     patch:
       operationId: UserController_update
@@ -3150,6 +3172,10 @@ components:
             - $ref: "#/components/schemas/OrganizationDto"
         type:
           $ref: "#/components/schemas/UserType"
+        emailNotificationsEnabled:
+          type: boolean
+          description: Préférence de notification par email
+          default: true
         id:
           type: string
         keycloakId:
@@ -3286,6 +3312,13 @@ components:
       required:
         - first
         - last
+    UpdateUserPreferencesDto:
+      type: object
+      properties:
+        emailNotificationsEnabled:
+          type: boolean
+          description: Indique si les notifications par email sont activées pour
+            l'utilisateur
     UpdateUserDto:
       type: object
       properties:

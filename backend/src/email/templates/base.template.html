@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <style>
+        /* Les styles ici sont des "fallbacks" ou des styles pour le body. */
+        /* La plupart des styles importants sont "inlinés" pour la compatibilité. */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+            background-color: #f6f6f6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+        img {
+            border: 0;
+            outline: none;
+            text-decoration: none;
+            display: block;
+        }
+        /* Liens */
+        a {
+            color: #000091; /* DSFR Blue */
+            text-decoration: underline;
+        }
+        /* Fix pour Outlook */
+        .ExternalClass {
+            width: 100%;
+        }
+        .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {
+            line-height: 100%;
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f6f6f6; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;">
+    <!-- Wrapper table pour la compatibilité -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f6f6;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                
+                <!-- Conteneur principal -->
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border: 1px solid #eeeeee;">
+                    
+                    <!-- En-tête (Header) DSFR -->
+                    <tr>
+                        <td style="background-color: #ffffff; padding: 24px 40px; text-align: left; border-bottom: 1px solid #eeeeee;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td>
+                                        <!-- Logo Graphique (remplace le logo texte) -->
+                                      
+                                        <div style="margin-top: 20px; color: #161616; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 18px; font-weight: 700;">
+                                            Référentiel des Applications
+                                        </div>
+                                        <!-- Tagline (inspiré de votre code) -->
+                                        <div style="margin-top: 4px; color: #666666; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 14px; font-weight: 400;">
+                                            Une application pour les réunir toutes
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td style="padding: 40px 40px; color: #161616; font-size: 16px; line-height: 1.5;">
+                            {{content}}
+                        </td>
+                    </tr>
+                    
+                    <!-- Pied de page (Footer) DSFR -->
+                    <tr>
+                        <!-- Le pied de page DSFR est typiquement gris clair -->
+                        <td style="background-color: #f6f6f6; padding: 30px 40px; border-top: 1px solid #dddddd;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td style="color: #666666; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 14px; line-height: 1.5; text-align: left;">
+                                        
+                                        <!-- Bloc Marque (graphique) -->
+                                        <img src="https://www.service-public.fr/P10017/images/Min_Interieur_2020.jpg" 
+                                             width="87" 
+                                             height="70" 
+                                             alt="Logo Ministère de l'intérieur" 
+                                             style="border: 0; outline: none; text-decoration: none; display: block; height: 70px; width: 87px; margin-bottom: 10px;">
+                                        
+                                        <!-- Gardons vos informations spécifiques -->
+                                        <p style="margin: 0 0 10px 0; font-weight: 700; color: #161616; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 14px;">
+                                            Référentiel des Applications
+                                        </p>
+                                        <p style="margin: 0 0 10px 0; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 14px;">
+                                            Ministère de l'Intérieur et des Outre-mer
+                                        </p>
+                                        <p style="margin: 0; font-size: 12px; color: #666666; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;">
+                                            Cet email a été envoyé automatiquement, merci de ne pas y répondre.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Spacer / Copyright -->
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%;">
+                    <tr>
+                        <!-- Alignement gauche pour être conforme DSFR -->
+                        <td style="padding: 20px 40px; text-align: left; color: #666666; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; font-size: 12px;">
+                            <p style="margin: 0;">
+                                © Référentiel des Applications - Tous droits réservés
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
