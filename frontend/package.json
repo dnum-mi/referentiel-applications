@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@gouvfr/dsfr": "~1.14.0",
-    "@gouvminint/vue-dsfr": "^8.6.0",
+    "@gouvminint/vue-dsfr": "^8.10.0",
     "axios": "^1.13.0",
     "chart.js": "^4.5.0",
     "chartjs-plugin-datalabels": "^2.2.0",

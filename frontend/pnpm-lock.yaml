@@ -12,8 +12,8 @@ importers:
         specifier: ~1.14.0
         version: 1.14.0
       '@gouvminint/vue-dsfr':
-        specifier: ^8.6.0
-        version: 8.6.0(@iconify/vue@4.3.0(vue@3.5.18(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))
+        specifier: ^8.10.0
+        version: 8.10.1(@iconify/vue@4.3.0(vue@3.5.18(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))
       axios:
         specifier: ^1.13.0
         version: 1.13.0
@@ -945,8 +945,8 @@ packages:
     resolution: {integrity: sha512-lF02JujHsr4J39gnC7y+qe0LLnh01cb6JwbMIKK2YcNjzvmfb26C0uW0+gyugD41wjFQQcIFWz07g6ynqxjNzA==}
     engines: {node: '>=22.14.0'}
 
-  '@gouvminint/vue-dsfr@8.6.0':
-    resolution: {integrity: sha512-XE8DO285iFR+3yVk6f94jO4BCT6TMLqGVreDK+1hdrA+m0Es+gTohzX/+XfKMD28bK0/sRcJKN3kR2NimHPDMA==}
+  '@gouvminint/vue-dsfr@8.10.1':
+    resolution: {integrity: sha512-qPCE3Uojmf2EgAZEhJmMcV/PLQ4+5c7IgatvrRhGOCyeYrKjXK5bewsVC2gqFkaYV50a0+8auxbTiqeSPFJQVg==}
     engines: {node: '>=20.x.x', npm: '>=10.x.x'}
     hasBin: true
     peerDependencies:
@@ -5195,7 +5195,7 @@ snapshots:
 
   '@gouvfr/dsfr@1.14.0': {}
 
-  '@gouvminint/vue-dsfr@8.6.0(@iconify/vue@4.3.0(vue@3.5.18(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))':
+  '@gouvminint/vue-dsfr@8.10.1(@iconify/vue@4.3.0(vue@3.5.18(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))':
     dependencies:
       '@gouvfr/dsfr': 1.13.2
       '@iconify/vue': 4.3.0(vue@3.5.18(typescript@5.8.3))
