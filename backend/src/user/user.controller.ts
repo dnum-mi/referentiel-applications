@@ -12,7 +12,7 @@ import { User } from "src/common/decorators/user.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
 import { UserFilterDto } from "./dto/filters.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
 import { UsersPaginatedResponseDto } from "./dto/users.dto";
 import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
 import { UserService } from "./user.service";
@@ -31,6 +31,20 @@ export class UserController {
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
   findMe(@User() user: UserEntity) {
     return this.userService.getCurrentUser(user);
+  }
+
+  @Patch("me")
+  @ApiOperation({
+    summary: "Mettre à jour ses propres préférences utilisateur",
+    description: "Permet à un utilisateur de modifier ses propres préférences (ex: notifications par email).",
+  })
+  @ApiOkResponse({
+    description: "Préférences mises à jour avec succès",
+    type: UserEntity,
+  })
+  @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
+  async updateMe(@User() user: UserEntity, @Body() UpdateUserPreferencesDto: UpdateUserPreferencesDto) {
+    return this.userService.updateOwnPreferences(user.id, UpdateUserPreferencesDto);
   }
 
   @Patch(":id")

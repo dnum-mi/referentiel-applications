@@ -4,7 +4,7 @@ import { PaginatedResponseDto } from "src/common/dto";
 import { paginate } from "src/common/utils/pagination.utils";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
 import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
 
 @Injectable()
@@ -68,6 +68,15 @@ export class UserService {
       data: {
         ...updateUserDto,
         capabilities: [...new Set(updateUserDto.capabilities || [])], // Ensure capabilities are unique
+      },
+    });
+  }
+
+  async updateOwnPreferences(id: string, UpdateUserPreferencesDto: UpdateUserPreferencesDto) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        emailNotificationsEnabled: UpdateUserPreferencesDto.emailNotificationsEnabled,
       },
     });
   }

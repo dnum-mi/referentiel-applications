@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 import { APP_PERMISSIONS } from "src/common/utils/types";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 
@@ -53,6 +53,15 @@ export class UserEntity {
   @IsString()
   @IsEnum(UserType)
   type: keyof typeof UserType;
+
+  @ApiProperty({
+    description: "Préférence de notification par email",
+    required: false,
+    default: true,
+  })
+  @IsBoolean()
+  @IsOptional()
+  emailNotificationsEnabled?: boolean;
 }
 
 export class Requestor extends UserEntity {

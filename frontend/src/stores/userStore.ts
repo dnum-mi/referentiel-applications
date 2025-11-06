@@ -18,10 +18,21 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
+  async function updateEmailPreferences(emailNotificationsEnabled: boolean) {
+    const response = await client.userControllerUpdateMe({
+      body: { emailNotificationsEnabled },
+    });
+
+    if (response.data && response.response.ok) {
+      user.value = response.data;
+    }
+  }
+
   return {
     user,
     adminLevel,
     authenticated,
     fetchUser,
+    updateEmailPreferences,
   };
 });
