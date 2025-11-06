@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.50.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.49.0...v1.50.0) (2025-11-06)
+
+
+### Features
+
+* :sparkles: add relation graph ([fe41f48](https://github.com/dnum-mi/referentiel-applications/commit/fe41f4809ea32a2d779862562cebff9724934968))
+* :wheelchair: improve pagination display on application history tab ([f4be035](https://github.com/dnum-mi/referentiel-applications/commit/f4be0352b3d82c44a5b78fc6e528ed6f9ca8fd89))
+* **accessibility:** add tooltips to interactive buttons in main components ([abf55be](https://github.com/dnum-mi/referentiel-applications/commit/abf55bef66ba0024e1a199035b82d1f96d1006c7))
+* **accessibility:** add tooltips to remaining form and navigation buttons ([7f79588](https://github.com/dnum-mi/referentiel-applications/commit/7f7958838ae332cb15aba64423ab9bd2267910d9))
+* **front:** :sparkles: adjust error presentation to use an alert ([a930c1d](https://github.com/dnum-mi/referentiel-applications/commit/a930c1d1c3ae700c88277a49d5b99730214d1ebd))
+* implement anomaly notification pagination and update related DTOs ([ebed4ab](https://github.com/dnum-mi/referentiel-applications/commit/ebed4abd9bde1d1ed1a585df65beb2db162b8184))
+* **tags:** :sparkles: add tag table and update application tag management ([742cc96](https://github.com/dnum-mi/referentiel-applications/commit/742cc96ef3cbb914bf07212985a9d8072a152b92))
+
+
+### Bug Fixes
+
+* :bug: add title in link footer ([43320be](https://github.com/dnum-mi/referentiel-applications/commit/43320be52c52bf194f218885afb06cf7290c96d5))
+* :bug: fix main navigation adapt based on user authentication ([7248e31](https://github.com/dnum-mi/referentiel-applications/commit/7248e31dd12b345c08106f24bef30d3fc921e04f))
+* :bug: fix voice over autocomplete ([487a8e3](https://github.com/dnum-mi/referentiel-applications/commit/487a8e31bebc5697c5392f90b2cc2d3368049ac9))
+* :bug: replace the acronyms with their full names ([f28efb9](https://github.com/dnum-mi/referentiel-applications/commit/f28efb94a15c4a18ec49ec85af9ef803f71f9d5e))
+* :wheelchair: add hidden label to header search field for accessibility ([7ab48fb](https://github.com/dnum-mi/referentiel-applications/commit/7ab48fb673a3b56b3134ea3adc1521cde78acab3))
+* :wheelchair: replace non-dsfr tables with dsfr vue component and correct invalid html structure ([f191d7b](https://github.com/dnum-mi/referentiel-applications/commit/f191d7beb82f752864dedca2d2671aaad76d24a5))
+* :wheelchair: update skip link anchors to header, main content and footer id's ([a5e9bbf](https://github.com/dnum-mi/referentiel-applications/commit/a5e9bbf79fd131f859aeac2ed91ea5a56c4eb6a2))
+* **accessibility:** make aria-label consistent with title attributes ([0ff8b7b](https://github.com/dnum-mi/referentiel-applications/commit/0ff8b7b5a675cf48d2a3df905c1e2159922b17ad))
+
 ## [1.49.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.48.0...v1.49.0) (2025-10-29)
 
 
