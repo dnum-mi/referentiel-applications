@@ -63,8 +63,17 @@ const formattedDescription = computed(() => {
         details.push(`${label}:`);
         for (const [key, value] of Object.entries(obj)) {
           const formattedValue = Array.isArray(value)
-            ? value.join(", ")
-            : (typeof value === "object" && value !== null ? JSON.stringify(value) : String(value));
+            ? (
+                value.every(v => typeof v === "string")
+                  ? value.join(", ")
+                  : value.map(v => v.name).join(", ")
+              )
+            : (
+                typeof value === "object" && value !== null
+                  ? JSON.stringify(value)
+                  : String(value)
+              );
+
           details.push(`  • ${key}: ${formattedValue}`);
         }
       } catch {
