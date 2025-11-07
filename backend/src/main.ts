@@ -15,9 +15,7 @@ async function bootstrap() {
   const appConfig = configService.get<AppConfig>("app");
   const keycloakConfig = configService.get<KeycloakConfig>("keycloak");
 
-  if (!process.env.DISABLE_PINO_LOGGER) {
-    app.useLogger(app.get(PinoLogger));
-  }
+  app.useLogger(app.get(PinoLogger));
   app.setGlobalPrefix(globalPrefix);
 
   const globalLogger = new Logger("Bootstrap");

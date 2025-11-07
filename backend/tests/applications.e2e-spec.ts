@@ -17,6 +17,20 @@ describe("Applications", () => {
   let TOKEN: string;
   let createdApplicationId: string;
 
+  // Ensure generated labels comply with LABEL_STRING_REGEX used in DTO
+  // Allowed: Latin script letters (with diacritics), digits, space, dot, hyphen
+  function sanitizeLabel(input: string): string {
+    // Normalize, replace forbidden chars with spaces, collapse spaces, and trim
+    let s = input.normalize("NFC");
+    s = s.replace(/[^\p{Script=Latin}0-9 .-]+/gu, " ");
+    s = s.replace(/\s+/g, " ").trim();
+    // Ensure at least one Latin char and non-empty
+    if (!/\p{Script=Latin}/u.test(s) || s.length === 0) {
+      s = "Application";
+    }
+    return s;
+  }
+
   beforeAll(async () => {
     user = await UserFaker.create({ adminLevel: AdminLevel.READ, capabilities: [] });
     TOKEN = await getToken(user);
@@ -53,7 +67,7 @@ describe("Applications", () => {
     await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: faker.company.name(),
+        label: sanitizeLabel(faker.company.name()),
         shortName: "complete-app",
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
@@ -72,7 +86,7 @@ describe("Applications", () => {
     const response = await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: faker.company.name(),
+        label: sanitizeLabel(faker.company.name()),
         shortName: "complete-app",
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
@@ -131,7 +145,7 @@ describe("Applications", () => {
     await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: faker.company.name(),
+        label: sanitizeLabel(faker.company.name()),
         description: "",
         status: "in_production",
         tags: [],
