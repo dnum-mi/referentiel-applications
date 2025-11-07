@@ -1,5 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import { ValidationPipe } from "@nestjs/common";
+import { ValidationExceptionFilter } from "../common/filters/validation-exception.filter";
 
 /**
  * Configure global validation pipe for the application
@@ -16,4 +17,7 @@ export function setupGlobalValidation(app: INestApplication): void {
       },
     }),
   );
+
+  // Add global exception filter to log validation errors
+  app.useGlobalFilters(new ValidationExceptionFilter());
 }

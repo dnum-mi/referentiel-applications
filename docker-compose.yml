@@ -29,8 +29,8 @@ services:
       - KEYCLOAK_REALM=referentiel-applications
       - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
       - AUTH_VERIFY_JWT=true
-      - DISABLE_PINO_LOGGER=true
       - KEYCLOAK_CLIENT_ID=referentiel-applications
+      - LOG_LEVEL=debug
       # - NON_ACTOR_PERMISSIONS=readBase
     depends_on:
       - postgres
