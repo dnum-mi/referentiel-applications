@@ -61,33 +61,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/RelationDto"
       tags: *a1
-  /api/v2/applications/{applicationId}/relations/graph:
-    get:
-      operationId: RelationController_getRelationGraph
-      summary: Récupérer le graphe des relations d'une application
-      description: Renvoie un graphe des relations de l'application avec possibilité
-        de limiter la profondeur. Les applications supprimées sont exclues.
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-        - name: depth
-          required: false
-          in: query
-          description: "Profondeur maximale de traversée du graphe (par défaut: 2)"
-          schema:
-            type: number
-      responses:
-        "200":
-          description: Graphe des relations de l'application
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RelationGraphDto"
-      tags: *a1
   /api/v2/applications/{applicationId}/relations/{id}:
     get:
       operationId: RelationController_findOne
@@ -2960,70 +2933,6 @@ components:
         - sourceApplication
         - targetApplication
         - type
-    Status:
-      type: string
-      enum:
-        - under_construction
-        - poc
-        - in_production_mvp
-        - in_production
-        - in_production_decommissioning
-        - decommissioned
-        - deleted
-    GraphNodeDto:
-      type: object
-      properties:
-        id:
-          type: string
-        label:
-          type: string
-        status:
-          $ref: "#/components/schemas/Status"
-      required:
-        - id
-        - label
-    GraphEdgeDto:
-      type: object
-      properties:
-        id:
-          type: string
-        sourceId:
-          type: string
-        sourceLabel:
-          type: string
-        targetId:
-          type: string
-        targetLabel:
-          type: string
-        type:
-          $ref: "#/components/schemas/relationType"
-      required:
-        - id
-        - sourceId
-        - sourceLabel
-        - targetId
-        - targetLabel
-        - type
-    RelationGraphDto:
-      type: object
-      properties:
-        nodes:
-          description: Liste des applications (nœuds du graphe)
-          type: array
-          items:
-            $ref: "#/components/schemas/GraphNodeDto"
-        edges:
-          description: Liste des relations (arêtes du graphe)
-          type: array
-          items:
-            $ref: "#/components/schemas/GraphEdgeDto"
-        rootId:
-          type: string
-          description: ID de l'application racine
-      required:
-        - nodes
-        - edges
-        - rootId
     MetadataAction:
       type: string
       description: Action effectuée sur la metadata
@@ -3428,6 +3337,10 @@ components:
           type: array
           items:
             type: string
+        tags:
+          type: array
+          items:
+            type: string
         quality:
           type: number
           nullable: true
@@ -3439,6 +3352,7 @@ components:
         - description
         - targetPopulations
         - purposes
+        - tags
         - quality
     CountByMonthDto:
       type: object
