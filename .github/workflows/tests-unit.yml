@@ -25,12 +25,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    env:
-      IMAGE_TAG: ${{ inputs.backend_image_tag }}
     steps:
       - uses: actions/checkout@v4
       - name: Start stack using docker compose
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend keycloak postgres -d
+        run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend keycloak postgres -d
       - name: Wait for Keycloak to be ready
         run: |
           for i in {1..30}; do
