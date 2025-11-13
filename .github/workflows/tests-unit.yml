@@ -55,6 +55,15 @@ jobs:
           name: unit-tests-coverage
           path: ./backend/coverage/
           retention-days: 1
+      - name: Produce coverage report
+        uses: insightsengineering/coverage-action@v2
+        with:
+          coverage-summary-title: Backend Coverage Summary
+          path: ./backend/coverage/cobertura-coverage.xml
+          threshold: 70
+          publish: true
+          diff: true
+          diff-storage: _xml_coverage_reports_backend
       # If you wish to fail your job when the Quality Gate is red, uncomment the
       # following lines. This would typically be used to fail a deployment.
       # We do not recommend to use this in a pull request. Prefer using pull request
