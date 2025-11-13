@@ -17,6 +17,7 @@ import { UserId } from "../common/decorators/user-id.decorator";
 import { CompliancesService } from "./compliances.service";
 import { ComplianceDto, CreateComplianceDto } from "./dto/create-compliance.dto";
 import { UpdateComplianceDto } from "./dto/update-compliance.dto";
+import { detectCompliances } from "./utils/compliance.utils";
 
 @ApiTags("Compliances")
 @Controller("compliances")
@@ -62,6 +63,8 @@ export class ApplicationCompliancesController {
     @Body() createComplianceDto: CreateComplianceDto,
     @Param("applicationId") applicationId: string,
   ) {
+    const sections = detectCompliances(Object.keys(createComplianceDto));
+    const sectionSuffix = sections.length ? ` (${sections.join(", ")})` : "";
     const createdCompliance = await this.compliancesService.create({
       ...createComplianceDto,
       application: {
@@ -73,7 +76,7 @@ export class ApplicationCompliancesController {
         create: {
           applicationId,
           createdById: userId,
-          description: "Ajout de la conformité",
+          description: `Ajout ${sections.length > 1 ? "des conformités" : "d'une première conformité"} ${sectionSuffix}`,
         },
       },
     });
@@ -112,13 +115,14 @@ export class ApplicationCompliancesController {
     if (!compliance) {
       throw new NotFoundException("No compliance found for this application");
     }
-
+    const sections = detectCompliances(Object.keys(updateComplianceDto));
+    const sectionSuffix = sections.length ? ` (${sections.join(", ")})` : "";
     const result = await this.compliancesService.updateWithMetadata({
       id: compliance.id,
       data: updateComplianceDto,
       userId,
       applicationId,
-      gender: "de la conformité",
+      gender: sections.length > 1 ? "des conformités" : "de la conformité",
       entityName: "complianceId",
       metadataFields: {
         // DIMA fields
@@ -154,7 +158,7 @@ export class ApplicationCompliancesController {
         rgpd_has_aipd: "AIPD RGPD",
         rgpd_dpo_name: "nom DPO RGPD",
       },
-      getName: () => "Conformité",
+      getName: () => `${sectionSuffix}`,
       triggerQualityUpdate: true,
     });
 
