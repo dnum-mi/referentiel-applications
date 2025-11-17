@@ -77,7 +77,8 @@ paths:
         - name: depth
           required: false
           in: query
-          description: "Profondeur maximale de traversée du graphe (par défaut: 2)"
+          description: "Profondeur maximale de traversée du graphe (par défaut: 2, max:
+            100)"
           schema:
             type: number
       responses:

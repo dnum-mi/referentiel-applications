@@ -73,7 +73,7 @@ export class RelationController {
   })
   @ApiQuery({
     name: "depth",
-    description: "Profondeur maximale de traversée du graphe (par défaut: 2)",
+    description: "Profondeur maximale de traversée du graphe (par défaut: 2, max: 100)",
     required: false,
     type: Number,
   })
@@ -81,7 +81,7 @@ export class RelationController {
     @Param("applicationId") applicationId: string,
     @Query("depth") depth?: number,
   ): Promise<RelationGraphDto> {
-    const maxDepth = depth ? Math.max(1, Math.min(Number(depth), 10)) : 2;
+    const maxDepth = depth ? Math.max(1, Math.min(Number(depth), 100)) : 2;
     return this.relationService.getRelationGraph(applicationId, maxDepth);
   }
 
