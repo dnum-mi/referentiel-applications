@@ -20,7 +20,7 @@ const graphData = ref<RelationGraphDto | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const depth = ref(2);
-const maxDepth = 10;
+const maxDepth = 100;
 const minDepth = 1;
 
 
