@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AdminUsersTab from "@/components/admin/AdminUsersTab.vue";
+import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminQualityTab from "@/components/admin/AdminQualityTab.vue";
 import { ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
@@ -20,6 +21,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-users",
     panelId: "panel-users",
     component: AdminUsersTab,
+  },
+  {
+    title: "Gestions des tags",
+    icon: "ri-price-tag-line",
+    tabId: "tab-tags",
+    panelId: "panel-tags",
+    component: AdminTagsTab,
   },
   {
     title: "Indice de qualité",

@@ -13,7 +13,11 @@ const emit = defineEmits<{
 const tagStore = useTagStore();
 
 async function getTagsOptions(query: string){
-  return await tagStore.find(query.trim());
+  return await tagStore.find({
+      name: query.trim(),
+      page: 0,
+      pageSize: 10,
+    });
 }
 
 function addTag(selection: TagDto) {

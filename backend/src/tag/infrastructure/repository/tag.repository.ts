@@ -1,7 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
+import { PaginatedResponseDto } from "src/common/dto";
+import { paginate } from "src/common/utils/pagination.utils";
 import { PrismaService } from "src/prisma/prisma.service";
-import { CreateTagDto, TagDto, TagFiltersDto, UpdateTagDto } from "src/tag/dto/tag.dto";
+import { CreateTagDto, TagFiltersDto, UpdateTagDto } from "src/tag/dto/tag.dto";
+import { Tag } from "src/tag/entities/tag.entity";
 import { ITagRepository } from "./tag.repository.interface";
 
 @Injectable()
@@ -16,32 +19,35 @@ export class TagRepository implements ITagRepository {
     });
   }
 
-  async findAll(filters: TagFiltersDto): Promise<TagDto[]> {
-    const where: Prisma.TagWhereInput = {};
+  public async findAll(filters: TagFiltersDto): Promise<PaginatedResponseDto<Tag>> {
+    const where: Prisma.TagWhereInput = filters.name
+      ? { name: { startsWith: filters.name, mode: "insensitive" } }
+      : {};
 
-    if (filters.name) {
-      where.name = {
-        contains: filters.name,
-        mode: "insensitive",
+    let orderBy: Prisma.TagOrderByWithRelationInput = {
+      applications: { _count: "desc" },
+    };
+
+    if (filters.sortBy) {
+      const sortField = filters.sortBy === "createdAt" ? "createdAt" : "name";
+      const sortOrder: Prisma.SortOrder = filters.order === "desc" ? "desc" : "asc";
+
+      orderBy = {
+        [sortField]: sortOrder,
       };
     }
 
-    return await this.prisma.tag.findMany({
-      where,
-      take: 10,
-      include: {
-        _count: {
-          select: {
-            applications: true,
-          },
+    return new PaginatedResponseDto(
+      await this.prisma.tag.findMany({
+        where,
+        orderBy,
+        ...paginate(filters.page, filters.pageSize),
+        include: {
+          _count: { select: { applications: true } },
         },
-      },
-      orderBy: {
-        applications: {
-          _count: "desc",
-        },
-      },
-    });
+      }),
+      await this.prisma.tag.count({ where }),
+    );
   }
 
   public async findById(id: string) {
