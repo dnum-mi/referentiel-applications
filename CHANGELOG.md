@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.51.0...v1.51.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* :bug: set initial state of sidebar to open ([326d9d4](https://github.com/dnum-mi/referentiel-applications/commit/326d9d4d44d1e455b3f2e02cbe741d51b9858d7c))
+
 ## [1.51.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.50.0...v1.51.0) (2025-11-18)
 
 
