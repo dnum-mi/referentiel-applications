@@ -265,16 +265,14 @@ export class ApplicationService {
   }
 
   public async getApplicationById(applicationId: string) {
-    const application
-      = await this.applicationRepository.findById(applicationId);
+    const application = await this.applicationRepository.findById(applicationId);
 
     if (!application) {
       throw new NotFoundException(
         `Application non trouvée pour l'ID: ${applicationId}`,
       );
     }
-
-    return application;
+    return { ...application, tags: application.tags.map(tag => tag.name) };
   }
 
   public async deleteApplication(id: string): Promise<void> {

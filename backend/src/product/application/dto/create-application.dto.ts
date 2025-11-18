@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType, PartialType } from "@nestjs/swagger";
-import { priorityRestart, Status } from "@prisma/client";
-import { Transform, Type } from "class-transformer";
+import { priorityRestart } from "@prisma/client";
+import { Type } from "class-transformer";
 import {
   IsArray,
   IsEnum,
@@ -95,8 +95,6 @@ export class CreateApplicationDto {
   purposes?: string[];
 
   @ApiProperty({
-    enum: Status,
-    description: "Statut de cycle de vie (défaut under_construction)",
     type: [String],
     example: ["tag1", "tag2"],
     required: false,
@@ -104,7 +102,6 @@ export class CreateApplicationDto {
   @IsArray()
   @IsOptional()
   @IsString({ each: true })
-  @Transform(({ value }) => value.map(v => v.toUpperCase()))
   tags?: string[];
 
   @ApiProperty({

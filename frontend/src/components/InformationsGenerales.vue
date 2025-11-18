@@ -12,7 +12,6 @@ import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import type { HostingDto, LabelDto } from "@/client/types.gen";
 import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
-import { useApplicationStore } from "@/stores/applicationStore";
 import api from "@/api/index.js";
 
 const props = defineProps<{
@@ -21,9 +20,7 @@ const props = defineProps<{
   small?: boolean
 }>();
 const emit = defineEmits(["update:application"]);
-const isSubmitting = ref(false);
 const toaster = useToasterStore();
-const loading = ref(false);
 const errorMessage = ref<string>("");
 
 const isHostingModalOpen = ref(false);
@@ -31,7 +28,6 @@ const hostingToEdit = ref<HostingDto | null>(null);
 const hostingToDelete = ref<HostingDto | null>(null);
 const isDeleteModalOpen = ref(false);
 const hostingStore = useHostingStore();
-const applicationStore = useApplicationStore();
 const userStore = useUserStore();
 const canEditBase = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase") || props.application.myPerms.has("writePriorityRestart"));
 const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
@@ -111,59 +107,10 @@ function getPriorityBadgeType(priority?: string) {
       };
 }
 
-async function updateApplication(updatedData: any) {
-  isSubmitting.value = true;
-  try {
-    loading.value = true;
-    applicationModal.closeModal();
-
-    let updatedApplication = props.application;
-    if (updatedData.updatedInfo) {
-      updatedApplication = await applicationStore.patchApplication({
-        ...props.application,
-        ...updatedData.updatedInfo,
-      });
-    }
-    if (updatedData.deletedLabels.length > 0) {
-      await Promise.all(updatedData.deletedLabels.map((label: LabelDto) => api.labelsControllerDelete({
-        path: {
-          applicationId: label.applicationId,
-          id: label.id,
-        },
-      })));
-    }
-    if (updatedData.updatedLabels.length > 0) {
-      await Promise.all(updatedData.updatedLabels.map((label: LabelDto) => api.labelsControllerUpdate({
-        path: {
-          applicationId: label.applicationId,
-          id: label.id,
-        },
-        body: {
-          value: label.value,
-          source: label.source,
-        },
-      })));
-    }
-    if (updatedData.newLabels.length > 0) {
-      await Promise.all(updatedData.newLabels.map((label: LabelDto) => api.labelsControllerCreate({
-        path: {
-          applicationId: props.application.id,
-        },
-        body: label,
-      })));
-    }
-
-    application.value = updatedApplication;
-    emit("update:application", updatedApplication);
-    await fetchLabels();
-    toaster.addSuccessMessage("Application mise à jour avec succès");
-  } catch (error) {
-    console.error(error);
-    errorMessage.value = "Erreur lors de la mise à jour de l'application";
-  } finally {
-    isSubmitting.value = false;
-    loading.value = false;
-  }
+async function updateApplication() {
+  applicationModal.closeModal();
+  await fetchLabels();
+  emit("update:application", props.application);
 }
 
 function openEditHosting(hosting: HostingDto) {
@@ -227,9 +174,7 @@ watch(
               </div>
             </div>
 
-            <AppLoader v-if="loading" data-testid="info-loader" />
-
-            <div v-else>
+            <div>
               <h4>ID de l'application</h4>
               <p data-testid="info-application-id">
                 {{ application.id }}
@@ -253,21 +198,17 @@ watch(
               <h4>Description</h4>
               <MarkdownDisplay :content="application.description" data-testid="info-description" />
 
-              <h4 class="fr-mt-3w">
-                Objectifs
-              </h4>
-              <ul v-if="application.purposes?.length" data-testid="info-purposes">
+              <h4 class="fr-mt-3w">Objectifs</h4>
+              <ul data-testid="info-purposes">
                 <li v-for="purpose in application.purposes" :key="purpose">
                   {{ purpose }}
                 </li>
               </ul>
 
-              <h4 class="fr-mt-3w">
-                Tags
-              </h4>
-              <ul v-if="application.tags?.length" class="fr-tags-group" data-testid="info-tags">
+              <h4 class="fr-mt-3w">Tags</h4>
+              <ul class="fr-tags-group" data-testid="info-tags">
                 <li v-for="tag in application.tags" :key="tag">
-                  <DsfrTag :label="tag.name" :small="small" />
+                  <DsfrTag :label="tag" :small="small" />
                 </li>
               </ul>
             </div>
@@ -375,23 +316,13 @@ watch(
   />
 
   <DsfrModal size="lg" :opened="isModalOpened" title="Modifier l'application" data-testid="info-edit-modal" @close="applicationModal.closeModal">
-    <DsfrAlert
-      v-show="errorMessage.length > 0"
-      class="mb-4"
-      tabindex="-1"
-      type="error"
-      role="alert"
-      aria-live="assertive"
-      title="Une erreur est survenue"
-      :description="errorMessage"
-    />
     <ApplicationForm
-      v-bind="{ initialData: application, labels }"
-      :is-submitting="isSubmitting"
+      mode="edit"
+      :initial-data="{ ...application, labels: labels }"
+      :labels="labels"
       data-testid="info-edit-form"
-      @submit="updateApplication"
+      @success="updateApplication"
       @cancel="applicationModal.closeModal"
-      @errorMessage="(msg: string) => (errorMessage = msg)"
     />
   </DsfrModal>
 </template>

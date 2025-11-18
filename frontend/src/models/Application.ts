@@ -1,4 +1,4 @@
-import type { ActorDto, ApplicationDto, AppPermsDto, ComplianceDto, LabelDto, LinkDto, MetadataDto, RelationType } from "@/client/types.gen";
+import type { ActorDto, AppPermsDto, ComplianceDto, CreateApplicationDto, LabelDto, LinkDto, MetadataDto, RelationType } from "@/client/types.gen";
 
 // TODO sortir ce modèle et utiliser ApplicationDto
 export interface Application {
@@ -23,7 +23,7 @@ export interface Application {
   metadatas: MetadataDto[]
 }
 
-export type ApplicationWithPerms = ApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
+export type ApplicationWithPerms = CreateApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
 
 export interface Relation {
   id: string

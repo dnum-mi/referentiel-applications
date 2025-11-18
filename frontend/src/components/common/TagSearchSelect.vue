@@ -3,56 +3,29 @@ import type { TagDto } from '@/client';
 import { useTagStore } from '@/stores/tagStore';
 
 const props = defineProps<{
-  tags?: string[]
+  tags: string[]
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:tags', value: string[]): void;
+  'update:tags': [value: string[]]
 }>();
 
 const tagStore = useTagStore();
-const searchRef = ref<{ clear: () => void } | null>(null);
-const inputRef = ref<HTMLInputElement | null>(null);
 
-async function getTagsOptions(query: string): Promise<TagDto[]> {
-  const trimmedQuery = query.trim();
-  if (!trimmedQuery) return [];
-  try {
-    const response = await tagStore.find(query.trim());
-
-    return response;
-  } catch {
-    return [];
-  }
+async function getTagsOptions(query: string){
+  return await tagStore.find(query.trim());
 }
 
-function addTag(selection: TagDto | string) {
-  const name =
-    typeof selection === "string"
-      ? selection
-      : selection?.name;
-
-  if (!name) return;
-
-  const newTags = props.tags ? [...props.tags] : [];
-
-  if (!newTags.includes(name)) {
-    newTags.push(name);
-    emit("update:tags", newTags);
+function addTag(selection: TagDto) {
+  if (!props.tags.includes(selection.name)) {
+    emit("update:tags", [...props.tags, selection.name]);
   }
-
-  searchRef.value?.clear();
 }
 
 function removeTag(index: number) {
-  const newTags = [...props.tags];
-  newTags.splice(index, 1);
-  emit("update:tags", newTags);
+  emit("update:tags", props.tags.filter((_, i) => i !== index));
 }
 
-function displayLabel(tag: TagDto | null) {
-  return tag ? tag.name : "";
-}
 </script>
 <template>
   <ul class="fr-tags-group" data-testid="info-tags">
@@ -67,7 +40,6 @@ function displayLabel(tag: TagDto | null) {
   </ul>
   <AccessibleAutocomplete
     id="tag-search"
-    ref="searchRef"
     data-testid="search-tags"
     :search="getTagsOptions"
     display-menu="overlay"
@@ -76,26 +48,6 @@ function displayLabel(tag: TagDto | null) {
     :onChange="addTag"
     :displayNoResult="true"
     :isSearch="true"
-    :displayLabel="displayLabel"
-    :inputRef="inputRef"
-  >
-    <template #suggestion="{ item }">
-      <div class="suggestion">
-        <strong>{{ item.name }}</strong>
-      </div>
-    </template>
-  </AccessibleAutocomplete>
+    :displayLabel="(item) => item.name"
+  />
 </template>
-<style>
-.autocomplete-tags {
-  width: 100%;
-  display: block;
-}
-
-.autocomplete-tags .autocomplete , .autocomplete-tags .autocomplete__input,
-.autocomplete-tags .accessible-autocomplete__input {
-  width: 100% !important;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-</style>
