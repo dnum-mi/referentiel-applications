@@ -110,11 +110,13 @@ onMounted(fetchTags);
 
 <template>
   <div>
+    <div class="header-row">
       <h1 class="fr-h1" data-testid="admin-tags-title">
         Gestion des tags
       </h1>
 
       <TagActions :tag="{}" @tag-updated="fetchTags" :isCreating="true" />
+    </div>
 
     <div class="fr-mb-4w">
       <DsfrSearchBar
@@ -189,5 +191,10 @@ onMounted(fetchTags);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>

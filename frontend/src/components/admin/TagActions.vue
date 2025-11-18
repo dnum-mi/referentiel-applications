@@ -102,7 +102,7 @@ async function deleteTag() {
         @click="openEditModal"
       />
 
-    <div v-if="!props.isCreating" class="button-row">
+    <div v-else class="button-row">
       <DsfrButton
         label="Modifier"
         size="sm"
