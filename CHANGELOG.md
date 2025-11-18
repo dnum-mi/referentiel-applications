@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.51.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.50.0...v1.51.0) (2025-11-18)
+
+
+### Features
+
+* :sparkles: add compliance filter for the applications search ([f3c0f4b](https://github.com/dnum-mi/referentiel-applications/commit/f3c0f4b63de25eafd0c2ce5c8cd7da4bc0c7ed46))
+* :sparkles: add coverage report generation step to CI workflow ([856a596](https://github.com/dnum-mi/referentiel-applications/commit/856a596b48966cf26b6e3de348e15a331d5906fd))
+* :sparkles: add validation exception filter and integrate it into global error handling ([9d981d0](https://github.com/dnum-mi/referentiel-applications/commit/9d981d0c5864cfee201a6e0cef5de7f9deae14ea))
+
+
+### Bug Fixes
+
+* :bug: correct environment variable assignment for IMAGE_TAG in CI workflow ([b9b6c50](https://github.com/dnum-mi/referentiel-applications/commit/b9b6c50dae871828d2f66f0ec161c9af25438042))
+* :bug: fix metadata description to display tag names instead of objects ([b159c9e](https://github.com/dnum-mi/referentiel-applications/commit/b159c9eb78e877bd98a4d8d482511855606e0ef0))
+* :bug: Increase graph depth limit from 10 to 100 for application relations ([2713ea5](https://github.com/dnum-mi/referentiel-applications/commit/2713ea5ffb42382bc094c69cf0b3f182bf51dd39))
+* :bug: remove unused header template from ApplicationTableView component ([c8924a4](https://github.com/dnum-mi/referentiel-applications/commit/c8924a415b1a0defb30486dcd1645efc8a74498c))
+* :fire: remove application status created at field ([c999647](https://github.com/dnum-mi/referentiel-applications/commit/c9996473b196375248b1bdbaf2ec6fcad92d0b8a))
+* :package: update @gouvminint/vue-dsfr dependency to version ^8.10.0 ([c2f0784](https://github.com/dnum-mi/referentiel-applications/commit/c2f0784563faea3b1dc4f74288e274d9c979eb35))
+* :recycle: streamline application form handling and remove unused ApplicationInfoForm component ([ff92f6f](https://github.com/dnum-mi/referentiel-applications/commit/ff92f6f5b3c67ea3764c26972734c9f98735c48e))
+
 ## [1.50.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.49.0...v1.50.0) (2025-11-06)
 
 
