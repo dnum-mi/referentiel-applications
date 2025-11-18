@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { IsDateString, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
+import { Tag } from "../entities/tag.entity";
 
 export class CreateTagDto {
   @ApiProperty({
@@ -45,7 +47,7 @@ export class TagDto {
   createdAt: Date;
 }
 
-export class TagFiltersDto {
+export class TagFiltersDto extends PaginationDto {
   @ApiPropertyOptional({
     description: "Recherche sur le nom",
     example: "tag1",
@@ -54,4 +56,9 @@ export class TagFiltersDto {
   @IsOptional()
   @IsString()
   name?: string;
+}
+
+export class TagsPaginatedResponseDto extends PaginatedResponseDto<Tag> {
+  @ApiProperty({ type: [TagDto] })
+  results: TagDto[];
 }

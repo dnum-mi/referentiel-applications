@@ -16,7 +16,7 @@ import { AppAction } from "src/common/decorators/application.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AdminLevel } from "src/user/entities/user.entity";
-import { CreateTagDto, TagDto, TagFiltersDto, UpdateTagDto } from "./dto/tag.dto";
+import { CreateTagDto, TagDto, TagFiltersDto, TagsPaginatedResponseDto, UpdateTagDto } from "./dto/tag.dto";
 import { TagsService } from "./tags.service";
 
 @ApiTags("Tags")
@@ -69,16 +69,25 @@ Information requise :
   @AppAction("readBase")
   @ApiOperation({
     summary: "Rechercher des tags.",
-    description: "Rechercher et filtrer les tags via le nom.",
+    description: `
+  Cette route permet de rechercher selon les paramètres fournis :
+  
+  - Retourne une liste paginée ou non de tags.
+  - Filtrage possible par nom.
+  - Tri possible par :
+    - \`popularité\` (défaut)
+    - \`name\`
+    - \`createdAt\`
+  - Ordre : \`asc\` ou \`desc\`.
+  `,
   })
   @ApiOkResponse({
     description: "Liste des tags trouvés",
-    type: TagDto,
-    isArray: true,
+    type: TagsPaginatedResponseDto,
   })
   findAll(
     @Query() filters: TagFiltersDto,
-  ): Promise<TagDto[]> {
+  ) {
     return this.tagsService.findAll(filters); ;
   }
 

@@ -1376,8 +1376,62 @@ paths:
     get:
       operationId: TagsController_findAll
       summary: Rechercher des tags.
-      description: Rechercher et filtrer les tags via le nom.
+      description: "
+
+        \  Cette route permet de rechercher selon les paramètres fournis :
+
+        \ \ 
+
+        \  - Retourne une liste paginée ou non de tags.
+
+        \  - Filtrage possible par nom.
+
+        \  - Tri possible par :
+
+        \    - `popularité` (défaut)
+
+        \    - `name`
+
+        \    - `createdAt`
+
+        \  - Ordre : `asc` ou `desc`.
+
+        \  "
       parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
         - name: name
           required: false
           in: query
@@ -1391,9 +1445,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TagDto"
+                $ref: "#/components/schemas/TagsPaginatedResponseDto"
       tags: *a8
   /api/v2/tags/{id}:
     get:
@@ -3603,6 +3655,21 @@ components:
         - id
         - name
         - createdAt
+    TagsPaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/TagDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateTagDto:
       type: object
       properties:
