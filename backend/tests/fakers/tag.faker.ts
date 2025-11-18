@@ -7,7 +7,7 @@ export class TagFaker {
 
     return await prisma.tag.create({
       data: {
-        name: `${faker.word.noun({ length: { min: 2, max: 128 } }).replace(/[^a-z._-]/g, "")}`.toUpperCase(),
+        name: `${faker.word.noun({ length: { min: 2, max: 128 } }).replace(/[^a-z._-]/g, "")}`,
       },
     });
   }

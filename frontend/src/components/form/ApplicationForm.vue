@@ -1,56 +1,82 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
-import { areFieldsModified } from "@/utils/fieldComparison";
-import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
-import type { ApplicationPriorityRestart, CreateLabelDto, LabelDto } from "@/client/types.gen";
+import { useApplicationStore } from "@/stores/applicationStore";
+import MarkdownEditor from "@/components/MarkdownEditor.vue";
+import TagSearchSelect from "@/components/common/TagSearchSelect.vue";
+import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
+import api from "@/api/index";
+import type {
+  ApplicationDto,
+  ApplicationStatus,
+  CreateApplicationDto,
+  LabelDto,
+} from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 
-const props = defineProps<{
-  initialData?: ApplicationWithPerms
-  labels: LabelDto[]
-  isSubmitting?: boolean
-}>();
+interface Props {
+  mode?: "create" | "edit"
+  initialData: ApplicationWithPerms
+  labels?: LabelDto[]
+}
 
-const emit = defineEmits(["update:application", "submit", "cancel", "errorMessage"]);
-const labelError = ref<string | undefined>(undefined);
-const descriptionError = ref<string | undefined>(undefined);
-const toaster = useToasterStore();
-
-const initialLabels = ref<LabelDto[]>([]);
-
-const form = ref<{
-  label: string
-  shortName: string
-  labels: (CreateLabelDto & { id?: string })[]
-  description: string
-  targetPopulations: string[]
-  logo: string
-  purposes: string[]
-  tags: string[]
-  priorityRestart: ApplicationPriorityRestart | null
-}>({
-  label: props.initialData?.label ?? "",
-  shortName: props.initialData?.shortName ?? "",
-  labels: props.labels ? [...props.labels] : [],
-  description: props.initialData?.description ?? "",
-  targetPopulations: [...(props.initialData?.targetPopulations ?? [""])],
-  logo: props.initialData?.logo ?? "",
-  purposes: [...(props.initialData?.purposes ?? [""])],
-  tags: props.initialData?.tags?.map(tag => tag.name) ?? [],
-  priorityRestart: props.initialData?.priorityRestart ?? null,
+const props = withDefaults(defineProps<Props>(), {
+  mode: "create",
+  labels: () => [],
 });
 
-function handleSubmit() {
+const emit = defineEmits<{
+  success: [application: ApplicationDto]
+  cancel: []
+}>();
+
+const toaster = useToasterStore();
+const applicationStore = useApplicationStore();
+const router = useRouter();
+const isSubmitting = ref(false);
+const labelError = ref<string | undefined>(undefined);
+const descriptionError = ref<string | undefined>(undefined);
+const globalError = ref<string | undefined>(undefined);
+const initialLabels = ref<LabelDto[]>([]);
+
+const isCreateMode = computed(() => props.mode === "create");
+const canEditBase = computed(() => isCreateMode.value || props.initialData?.myPerms.has("writeBase"));
+const canEditPriorityRestart = computed(() => isCreateMode.value || props.initialData?.myPerms.has("writePriorityRestart"));
+
+const filterEmpty = (arr: string[] | undefined) => arr?.filter(item => item.trim() !== "") ?? [];
+
+const statusOptions = computed(() =>
+  Object.entries(statusApplicationDictionary).map(([value, text]) => ({
+    value: value as ApplicationStatus,
+    text,
+  })),
+);
+
+const form = ref<CreateApplicationDto>(props.initialData ?? {
+  label: "",
+  shortName: "",
+  description: "",
+  logo: "",
+  status: { status: "IN_PROGRESS" },
+  purposes: [],
+  targetPopulations: [],
+  priorityRestart: null,
+  tags: [],
+  labels: [],
+});
+
+async function handleSubmit() {
   labelError.value = undefined;
   descriptionError.value = undefined;
+  globalError.value = undefined;
   let hasError = false;
 
-  if (form.value.label.trim() === "") {
+  if (form.value.label === "") {
     labelError.value = "Le nom de l'application est obligatoire.";
     hasError = true;
   }
-  if (form.value.description.trim() === "") {
+  if (form.value.description === "") {
     descriptionError.value = "La description est obligatoire.";
     hasError = true;
   }
@@ -59,39 +85,99 @@ function handleSubmit() {
     return;
   }
 
-  const cleanedForm = {
-    ...form.value,
-    purposes: form.value.purposes.filter(p => p.trim() !== ""),
-    tags: form.value.tags,
-    priorityRestart: form.value.priorityRestart ?? undefined,
-  };
+  isSubmitting.value = true;
 
-  const generalFields = ["label", "shortName", "logo", "description", "targetPopulations", "purposes", "priorityRestart", "tags"];
+  // Filter out empty purposes and target populations
+  form.value.purposes = filterEmpty(form.value.purposes);
+  form.value.targetPopulations = filterEmpty(form.value.targetPopulations);
 
-  const isModified = areFieldsModified(props.initialData ?? {}, cleanedForm, generalFields);
+  try {
+    if (isCreateMode.value) {
+      await handleCreate();
+    } else {
+      await handleUpdate();
+    }
+  } finally {
+    isSubmitting.value = false;
+  }
+}
 
-  const currentLabels = form.value.labels;
+async function handleCreate() {
+  try {
+    const response = await api.applicationControllerCreate({ body: form.value});
 
-  const deletedLabels = initialLabels.value.filter(initial => !currentLabels.some(label => label.id === initial.id));
-  const newLabels = currentLabels.filter(label => !initialLabels.value.some(initial => initial.id === label.id));
-  const updatedLabels = currentLabels.filter((label) => {
+    if (!response.response.ok || !response.data) {
+      throw response.error;
+    }
+
+    const application = response.data as ApplicationDto;
+
+    toaster.addSuccessMessage("Application créée avec succès !");
+    emit("success", application);
+    router.push({ name: "application", params: { id: application.id } });
+  } catch (error) {
+    globalError.value = error.message.join(", ");
+  }
+}
+
+async function handleUpdate() {
+  const deletedLabels = initialLabels.value.filter(initial => !form.value.labels.some(label => label.id === initial.id));
+  const newLabels = form.value.labels.filter(label => !initialLabels.value.some(initial => initial.id === label.id));
+  const updatedLabels = form.value.labels.filter((label) => {
     const initial = initialLabels.value.find(i => i.id === label.id);
-    return initial && areFieldsModified(initial, label, ["value", "source"]);
+    return initial && (initial.value !== label.value || initial.source !== label.source);
   });
 
-  emit("submit", {
-    deletedLabels,
-    updatedLabels,
-    newLabels,
-    updatedInfo: isModified
-      ? {
-          ...cleanedForm,
-          shortName: cleanedForm.shortName || null,
-          logo: cleanedForm.logo || null,
-          priorityRestart: cleanedForm.priorityRestart || null,
-        }
-      : null,
-  });
+  try {
+    // Handle labels updates
+    for (const label of deletedLabels) {
+      if (label.id) {
+        await api.labelsControllerDelete({
+          path: { applicationId: props.initialData.id, id: label.id },
+        });
+      }
+    }
+
+    for (const label of newLabels) {
+      await api.labelsControllerCreate({
+        path: { applicationId: props.initialData.id },
+        body: { source: label.source, value: label.value },
+      });
+    }
+
+    for (const label of updatedLabels) {
+      if (label.id) {
+        await api.labelsControllerUpdate({
+          path: { applicationId: props.initialData.id, id: label.id },
+          body: { source: label.source, value: label.value },
+        });
+      }
+    }
+
+    const updatedApp = await applicationStore.patchApplication(form.value);
+    applicationStore.applicationsById[props.initialData.id] = updatedApp;
+
+    toaster.addSuccessMessage("Application mise à jour avec succès !");
+    emit("success", props.initialData as ApplicationDto);
+  } catch (error) {
+    globalError.value = error.message.join(", ");
+  }
+}
+
+function addPurpose() {
+  form.value.purposes.push("");
+}
+
+function removePurpose(index: number) {
+  form.value.purposes.splice(index, 1);
+}
+
+function addPopulation() {
+  form.value.targetPopulations.push("");
+}
+
+function removePopulation(index: number) {
+  form.value.targetPopulations.splice(index, 1);
 }
 
 onMounted(() => {
@@ -100,9 +186,18 @@ onMounted(() => {
 </script>
 
 <template>
+  <DsfrAlert
+    v-if="globalError"
+    :description="globalError"
+    type="error"
+    class="fr-mb-3w"
+    closeable
+    @close="globalError = undefined"
+  />
   <form data-testid="application-form" @submit.prevent="handleSubmit">
     <DsfrInputGroup
-      v-model="form.label"
+      v-model.trim="form.label"
+      :disabled="!canEditBase"
       hint="Doit contenir au moins une lettre.
 Seuls les lettres (avec accents), chiffres, espaces, points et tirets sont autorisés.
 Aucun espace en début ou en fin."
@@ -114,8 +209,8 @@ Aucun espace en début ou en fin."
     />
 
     <DsfrInputGroup
-      v-model="form.shortName"
-      :disabled="!initialData?.myPerms.has('writeBase')"
+      v-model.trim="form.shortName"
+      :disabled="!canEditBase"
       class="fr-mt-3w"
       label="Nom court"
       label-visible
@@ -123,29 +218,39 @@ Aucun espace en début ou en fin."
       data-testid="application-shortname"
     />
 
-    <div class="fr-form-group fr-mt-3w">
+    <DsfrSelect
+      v-if="isCreateMode"
+      v-model="form.status.status"
+      :options="statusOptions"
+      label="Status de l'application"
+      default-unselected-text="Sélectionner un status"
+      data-testid="application-status"
+    />
+
+    <div v-if="!isCreateMode" class="fr-form-group fr-mt-3w">
       <legend class="fr-label">
         Noms alternatifs
       </legend>
       <div class="fr-mt-2w">
         <div v-for="(_label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-          <div v-if="form.labels.length > 0" class="fr-col">
+          <div class="fr-col">
             <DsfrInput
-              v-model="form.labels[index].source"
-              :disabled="!initialData?.myPerms.has('writeBase')"
+              :model-value="form.labels[index].source ?? ''"
+              :disabled="!canEditBase"
               :placeholder="`Reférentiel externe ${index + 1} (optionnel)`"
               :data-testid="`application-alt-label-source-${index}`"
+              @update:model-value="form.labels[index].source = (typeof $event === 'string' ? $event : null) || null"
             />
             <DsfrInput
-              v-model="form.labels[index].value"
-              :disabled="!initialData?.myPerms.has('writeBase')"
+              v-model.trim="form.labels[index].value"
+              :disabled="!canEditBase"
               :placeholder="`Nom ou identifiant externe ${index + 1}`"
               :data-testid="`application-alt-label-value-${index}`"
             />
           </div>
           <div class="fr-col-auto">
             <DsfrButton
-              :disabled="!initialData?.myPerms.has('writeBase')"
+              :disabled="!canEditBase"
               type="button"
               tertiary
               size="sm"
@@ -159,7 +264,7 @@ Aucun espace en début ou en fin."
           </div>
         </div>
         <DsfrButton
-          :disabled="!initialData?.myPerms.has('writeBase')"
+          :disabled="!canEditBase"
           type="button"
           secondary
           icon="add-line"
@@ -171,24 +276,14 @@ Aucun espace en début ou en fin."
         />
       </div>
     </div>
-    <br>
-    <DsfrInputGroup
-      class="fr-mt-3w"
-      label="Description"
-      label-visible
-      required
-      :error-message="descriptionError"
-    >
-      <MarkdownEditor
-        v-model="form.description"
-        :disabled="!initialData?.myPerms.has('writeBase')"
-        data-testid="application-description"
-      />
+
+    <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required :error-message="descriptionError">
+      <MarkdownEditor v-model.trim="form.description" :disabled="!canEditBase" data-testid="application-description" />
     </DsfrInputGroup>
 
     <DsfrSelect
       v-model="form.priorityRestart"
-      :disabled="!initialData?.myPerms.has('writePriorityRestart')"
+      :disabled="!canEditPriorityRestart"
       :options="priorityRestartLabelsOptions"
       label="Priorité de redémarrage"
       default-unselected-text="Sélectionner une priorité"
@@ -205,44 +300,20 @@ Aucun espace en début ou en fin."
       <div class="fr-mt-2w">
         <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput
-              v-model="form.targetPopulations[index]"
-              :disabled="!initialData?.myPerms.has('writeBase')"
-              :data-testid="`application-population-${index}`"
-            />
+            <DsfrInput v-model.trim="form.targetPopulations[index]" :disabled="!canEditBase" :data-testid="`application-population-${index}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton
-              type="button"
-              :disabled="!initialData?.myPerms.has('writeBase')"
-              tertiary
-              size="sm"
-              icon="delete-line"
-              label="Supprimer"
-              title="Supprimer cette population"
-              aria-label="Supprimer cette population"
-              :data-testid="`application-population-remove-${index}`"
-              @click="form.targetPopulations.splice(index, 1)"
-            />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cette population" aria-label="Supprimer cette population" :disabled="!canEditBase" :data-testid="`application-population-remove-${index}`" @click="removePopulation(index)" />
           </div>
         </div>
-        <DsfrButton
-          :disabled="!initialData?.myPerms.has('writeBase')"
-          type="button"
-          secondary
-          icon="add-line"
-          label="Ajouter une population"
-          title="Ajouter une nouvelle population"
-          aria-label="Ajouter une nouvelle population"
-          data-testid="application-population-add"
-          @click="form.targetPopulations.push('')"
-        />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" title="Ajouter une nouvelle population" aria-label="Ajouter une population" :disabled="!canEditBase" data-testid="application-population-add" @click="addPopulation" />
       </div>
     </div>
 
     <DsfrInputGroup
-      v-model="form.logo"
-      :disabled="!initialData?.myPerms.has('writeBase')"
+      v-if="!isCreateMode"
+      v-model.trim="form.logo"
+      :disabled="!canEditBase"
       class="fr-mt-3w"
       label="URL du logo"
       label-visible
@@ -255,41 +326,15 @@ Aucun espace en début ou en fin."
         Objectifs
       </legend>
       <div class="fr-mt-2w">
-        <div v-for="(purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+        <div v-for="(_purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
           <div class="fr-col">
-            <DsfrInput
-              v-model="form.purposes[index]"
-              :disabled="!initialData?.myPerms.has('writeBase')"
-              :placeholder="`Objectif ${index + 1}`"
-              :data-testid="`application-purpose-${index}`"
-            />
+            <DsfrInput v-model.trim="form.purposes[index]" :disabled="!canEditBase" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-purpose-${index}`" />
           </div>
           <div class="fr-col-auto">
-            <DsfrButton
-              :disabled="!initialData?.myPerms.has('writeBase')"
-              type="button"
-              tertiary
-              size="sm"
-              icon="delete-line"
-              label="Supprimer"
-              title="Supprimer cet objectif"
-              aria-label="Supprimer cet objectif"
-              :data-testid="`application-purpose-remove-${index}`"
-              @click="form.purposes.splice(index, 1)"
-            />
+            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cet objectif" aria-label="Supprimer cet objectif" :disabled="!canEditBase" :data-testid="`application-purpose-remove-${index}`" @click="removePurpose(index)" />
           </div>
         </div>
-        <DsfrButton
-          :disabled="!initialData?.myPerms.has('writeBase')"
-          type="button"
-          secondary
-          icon="add-line"
-          label="Ajouter un objectif"
-          title="Ajouter un nouvel objectif"
-          aria-label="Ajouter un nouvel objectif"
-          data-testid="application-purpose-add"
-          @click="form.purposes.push('')"
-        />
+        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" title="Ajouter un nouvel objectif" aria-label="Ajouter un objectif" :disabled="!canEditBase" data-testid="application-purpose-add" @click="addPurpose" />
       </div>
     </div>
 
@@ -304,13 +349,7 @@ Aucun espace en début ou en fin."
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton type="button" secondary label="Annuler" data-testid="application-cancel-btn" @click="$emit('cancel')" />
-      <DsfrButton
-        type="button"
-        :disabled="isSubmitting"
-        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
-        data-testid="application-submit-btn"
-        @click="handleSubmit"
-      >
+      <DsfrButton type="submit" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" data-testid="application-submit-btn">
         <template v-if="isSubmitting">
           <span class="fr-loading fr-loading--sm" data-testid="application-submit-loading">
             <span class="fr-loading__icon" aria-hidden="true" />

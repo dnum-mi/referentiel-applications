@@ -3356,21 +3356,12 @@ components:
           items:
             type: string
         tags:
-          type: array
-          description: Statut de cycle de vie (défaut under_construction)
           example: &a21
             - tag1
             - tag2
-          items: &a22
+          type: array
+          items:
             type: string
-            enum:
-              - under_construction
-              - poc
-              - in_production_mvp
-              - in_production
-              - in_production_decommissioning
-              - decommissioned
-              - deleted
         status:
           description: Statut initial de l'application
           example:
@@ -3380,7 +3371,7 @@ components:
             - $ref: "#/components/schemas/CreateApplicationStatusDto"
         labels:
           description: Liste des labels alternatifs associés à l'application
-          example: &a23
+          example: &a22
             - source: ""
               value: My App
           type: array
@@ -3534,13 +3525,13 @@ components:
           items:
             type: string
         tags:
-          type: array
-          description: Statut de cycle de vie (défaut under_construction)
           example: *a21
-          items: *a22
+          type: array
+          items:
+            type: string
         labels:
           description: Liste des labels alternatifs associés à l'application
-          example: *a23
+          example: *a22
           type: array
           items:
             $ref: "#/components/schemas/CreateLabelDto"
@@ -3702,7 +3693,7 @@ components:
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
         adminLevel:
-          enum: &a24
+          enum: &a23
             - 0
             - 10
             - 20
@@ -3769,7 +3760,7 @@ components:
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
         adminLevel:
-          enum: *a24
+          enum: *a23
           type: number
           example: 10
           description: Niveau d'administration du token
@@ -4361,7 +4352,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a25
+          enum: &a24
             - OK
             - KO
           type: string
@@ -4387,7 +4378,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a26
+          enum: &a25
             - S3
             - LOCAL
             - EXTERNE
@@ -4398,7 +4389,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a27
+          enum: &a26
             - OK
             - KO
           type: string
@@ -4477,7 +4468,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a25
+          enum: *a24
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -4501,7 +4492,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a26
+          enum: *a25
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -4509,7 +4500,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a27
+          enum: *a26
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -4592,7 +4583,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a25
+          enum: *a24
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -4616,7 +4607,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a26
+          enum: *a25
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -4624,7 +4615,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a27
+          enum: *a26
           type: string
           description: PDMA test result
         pdma_restoration_manager:

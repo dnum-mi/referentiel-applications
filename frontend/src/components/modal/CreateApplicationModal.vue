@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ApplicationInfoForm from "@/components/form/ApplicationInfoForm.vue";
+import ApplicationForm from "@/components/form/ApplicationForm.vue";
 
 interface Props {
   opened: boolean
@@ -19,7 +19,8 @@ const emit = defineEmits<{
     data-testid="create-application-modal"
     @close="emit('close');"
   >
-    <ApplicationInfoForm
+    <ApplicationForm
+      mode="create"
       data-testid="create-application-form"
       @success="emit('close')"
       @cancel="emit('close')"

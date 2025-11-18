@@ -39,7 +39,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     }
   };
 
-  const patchApplication = async (app: ApplicationWithPerms): Promise<ApplicationWithPerms> => {
+  const patchApplication = async (app: PatchApplicationDto): Promise<ApplicationWithPerms> => {
     const payload: PatchApplicationDto = {
       label: app.label,
       shortName: app.shortName ?? undefined,
@@ -55,7 +55,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
       body: payload,
     });
     if (!response.response.ok || !response.data) {
-      throw new Error(`Failed to update application: ${response.response.statusText}`);
+      throw response.error;
     }
     const myPerms: Set<APP_PERMISSIONS> | undefined = applicationsById.value[app.id]?.myPerms ?? await getMyPerms(app.id);
 
