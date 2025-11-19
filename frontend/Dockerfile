@@ -19,6 +19,7 @@ CMD ["pnpm" , "run" , "dev"]
 
 FROM base AS build
 ARG VERSION
+ENV VERSION=${VERSION:-main}
 
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
