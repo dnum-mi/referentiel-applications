@@ -12,6 +12,9 @@ import VueDevTools from "vite-plugin-vue-devtools";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.VERSION || "development"),
+  },
   plugins: [
     vue(),
     vueJsx(),
