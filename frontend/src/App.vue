@@ -18,7 +18,7 @@ const toaster = useToasterStore();
 
 configureClients(toaster);
 
-const appVersion = import.meta.env.VITE_RDA_APP_VERSION ?? "VITE_RDA_APP_VERSION";
+const appVersion = __APP_VERSION__;
 
 const versionLink = computed(() => ({
   label: `📦 ${appVersion}`,

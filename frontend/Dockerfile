@@ -1,14 +1,13 @@
 FROM node:24-slim AS base
 
+ARG VERSION
+ENV VERSION=${VERSION:-main}
+
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y jq \
     && apt-get clean
 RUN npm install -g pnpm
-
-COPY ../package.json ./package-root.json
-RUN export APP_VERSION=$(jq -r '.version' package-root.json)
 
 # Copy necessary files
 COPY package.json pnpm-lock.yaml ./
@@ -19,6 +18,8 @@ CMD ["pnpm" , "run" , "dev"]
 
 
 FROM base AS build
+ARG VERSION
+
 RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
 

@@ -26,6 +26,7 @@ build-backend:
     WORKING_DIR: ./backend
     DOCKERFILE: ./backend/Dockerfile
     IMAGE_NAMES: ref-app-back:${CI_COMMIT_SHORT_SHA} ref-app-back:${CI_COMMIT_REF_NAME}
+    BUILD_ARGS: --build-arg VERSION=${CI_COMMIT_REF_NAME}
     EXTRA_BUILD_ARGS: --registry-mirror registry.dso.interieur.rie.gouv.fr/dockerhub
   stage: docker-build
   extends:
@@ -40,6 +41,7 @@ build-frontend:
     WORKING_DIR: ./frontend
     DOCKERFILE: ./frontend/Dockerfile
     IMAGE_NAMES: ref-app-front:${CI_COMMIT_SHORT_SHA} ref-app-front:${CI_COMMIT_REF_NAME}
+    BUILD_ARGS: --build-arg VERSION=${CI_COMMIT_REF_NAME}
     EXTRA_BUILD_ARGS: --registry-mirror registry.dso.interieur.rie.gouv.fr/dockerhub
   stage: docker-build
   extends:

@@ -45,3 +45,5 @@ jobs:
           pull: true
           tags: ${{ steps.meta.outputs.tags }}
           target: ${{ inputs.target }}
+          build-args: |
+            VERSION=${{ github.ref_name }}
