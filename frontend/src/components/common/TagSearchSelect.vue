@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TagDto } from '@/client';
-import { useTagStore } from '@/stores/tagStore';
+import api from '@/api';
 
 const props = defineProps<{
   tags: string[]
@@ -10,14 +10,26 @@ const emit = defineEmits<{
   'update:tags': [value: string[]]
 }>();
 
-const tagStore = useTagStore();
+interface TagsPaginatedResponse {
+  results: TagDto[];
+  total: number;
+}
 
 async function getTagsOptions(query: string){
-  return await tagStore.find({
+  const response = await api.tagsControllerFindAll({ 
+    query: {
       name: query.trim(),
       page: 0,
       pageSize: 10,
-    });
+    },
+  });
+
+  if (!response.response.ok) {
+    throw new Error("Failed to fetch tags");
+  }
+
+  const data = response.data as TagsPaginatedResponse;
+  return data.results;
 }
 
 function addTag(selection: TagDto) {

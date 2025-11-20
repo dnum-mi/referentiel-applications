@@ -3629,7 +3629,6 @@ components:
           type: string
           minLength: 2
           maxLength: 128
-          pattern: /^[a-z._-]+$/
           description: Nom unique du tag
           example: securite
       required:
@@ -3677,7 +3676,6 @@ components:
           type: string
           minLength: 2
           maxLength: 128
-          pattern: /^[a-z._-]+$/
           description: Nom unique du tag
           example: securite
     CreateHostingDto:
