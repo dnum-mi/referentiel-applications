@@ -2,13 +2,10 @@ name: Test and scan
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
   workflow_call:
     inputs:
       backend_image_tag:
-        required: false
+        required: true
         type: string
     secrets:
       SONAR_TOKEN:
