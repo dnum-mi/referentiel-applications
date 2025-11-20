@@ -1,21 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
-import type { TagsPaginatedResponseDto } from "@/client/types.gen";
+import type { TagDto, TagsPaginatedResponseDto } from "@/client/types.gen";
 import PaginationFooter from "../PaginationFooter.vue";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import TagActions from "./TagActions.vue";
-import { useTagStore } from "@/stores/tagStore";
+import api from "@/api";
 import { debounce } from "@/utils/debouncer-utils";
 
-const errorMessages = {
-  ERR_LOAD_TAGS: "Erreur lors du chargement des tags",
-} as const;
-
-type ErrorKey = keyof typeof errorMessages;
-
-const data = ref<TagsPaginatedResponseDto>({ results: [], total: 0 });
-
-const tagStore = useTagStore();
+const data = ref<TagsPaginatedResponseDto>({ results: [] as TagDto[], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [{
   key: "name",
@@ -35,7 +27,6 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [{
 }] as const;
 
 const isLoading = ref(false);
-const errorKeySet = ref<Set<ErrorKey>>(new Set());
 const searchQuery = ref("");
 
 const sortColumn = ref<typeof headers[number]["key"]>();
@@ -45,26 +36,20 @@ const itemsPerPage = ref(15);
 const currentPage = ref(0);
 
 async function fetchTags() {
-  try {
-    isLoading.value = true;
+  isLoading.value = true;
 
-    const query: Record<string, any> = {
-      name: searchQuery.value || undefined,
-      page: currentPage.value,
-      pageSize: itemsPerPage.value,
-      sortBy: sortColumn.value,
-      order: isSortDescending.value ? "desc" : "asc",
-    };
+  const query: Record<string, any> = {
+    name: searchQuery.value || undefined,
+    page: currentPage.value,
+    pageSize: itemsPerPage.value,
+    sortBy: sortColumn.value,
+    order: isSortDescending.value ? "desc" : "asc",
+  };
+
+  const response = await api.tagsControllerFindAll({ query });
+  data.value = response.data as TagsPaginatedResponseDto;
   
-    const response = await tagStore.find(query);
-    data.value = response;
-    errorKeySet.value.delete("ERR_LOAD_TAGS");
-  } catch (err) {
-    errorKeySet.value.add("ERR_LOAD_TAGS");
-    console.error(err);
-  } finally {
-    isLoading.value = false;
-  }
+  isLoading.value = false;
 }
 
 const debouncedFetch = debounce(async () => {
@@ -82,7 +67,7 @@ watch([sortColumn, isSortDescending], () => {
 });
 
 const tableRows = computed(() =>
-  data.value.results.map(tag => ({
+  data.value.results.map((tag) => ({
     name: tag.name,
     createdAt: tag.createdAt ? new Date(tag.createdAt).toLocaleString("fr-FR") : "",
     count: tag._count?.applications ?? 0,
@@ -113,7 +98,7 @@ onMounted(fetchTags);
       Gestion des tags
     </h1>
 
-    <TagActions :tag="{}" @tag-updated="fetchTags" :isCreating="true" />
+    <TagActions @fetch-tags="fetchTags" :isCreating="true" />
   </div>
 
   <div class="fr-mb-4w">
@@ -129,12 +114,6 @@ onMounted(fetchTags);
 
   <div v-if="isLoading" class="fr-alert fr-alert--info" data-testid="admin-tags-loading">
     <p>Chargement des tags...</p>
-  </div>
-
-  <div v-else-if="errorKeySet.size" class="fr-alert fr-alert--error" data-testid="admin-tags-error">
-    <p v-for="errorKey in Array.from(errorKeySet.keys())" :key="errorKey">
-      {{ errorMessages[errorKey] }}
-    </p>
   </div>
 
   <div v-else>
@@ -162,7 +141,7 @@ onMounted(fetchTags);
       </template>
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'actions'">
-          <TagActions :tag="cell" @tag-updated="fetchTags" />
+          <TagActions :tag="cell" @fetch-tags="fetchTags" />
         </template>
 
         <template v-else>
