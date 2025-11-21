@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.51.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.51.1...v1.51.2) (2025-11-21)
+
+
+### Bug Fixes
+
+* :bug: refactor version display ([e82f260](https://github.com/dnum-mi/referentiel-applications/commit/e82f260a9397a95626444e9dbd0ff0635e0b48a4))
+
 ## [1.51.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.51.0...v1.51.1) (2025-11-18)
 
 
