@@ -3,14 +3,17 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useApplicationStore } from "@/stores/applicationStore";
+import { useActorTypeStore } from "@/stores/actorTypeStore";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import TagSearchSelect from "@/components/common/TagSearchSelect.vue";
+import OrganizationSearchSelect from "@/components/common/OrganizationSearchSelect.vue";
 import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
 import api from "@/api/index";
 import type {
   ApplicationDto,
   ApplicationStatus,
   CreateApplicationDto,
+  CreateActorDto,
   LabelDto,
 } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
@@ -33,16 +36,47 @@ const emit = defineEmits<{
 
 const toaster = useToasterStore();
 const applicationStore = useApplicationStore();
+const actorTypeStore = useActorTypeStore();
 const router = useRouter();
 const isSubmitting = ref(false);
 const labelError = ref<string | undefined>(undefined);
 const descriptionError = ref<string | undefined>(undefined);
+const moaError = ref<string | undefined>(undefined);
+const moeError = ref<string | undefined>(undefined);
 const globalError = ref<string | undefined>(undefined);
 const initialLabels = ref<LabelDto[]>([]);
+
+// MOA and MOE actor forms
+const moaActor = ref<CreateActorDto>({
+  actorTypeId: "",
+  organizationId: undefined,
+  email: "",
+  firstname: "",
+  lastname: "",
+});
+
+const moeActor = ref<CreateActorDto>({
+  actorTypeId: "",
+  organizationId: undefined,
+  email: "",
+  firstname: "",
+  lastname: "",
+});
 
 const isCreateMode = computed(() => props.mode === "create");
 const canEditBase = computed(() => isCreateMode.value || props.initialData?.myPerms.has("writeBase"));
 const canEditPriorityRestart = computed(() => isCreateMode.value || props.initialData?.myPerms.has("writePriorityRestart"));
+
+// Computed properties to handle null -> undefined conversion for OrganizationSearchSelect
+const moaOrganizationId = computed({
+  get: () => moaActor.value.organizationId ?? undefined,
+  set: (value) => { moaActor.value.organizationId = value ?? undefined; },
+});
+
+const moeOrganizationId = computed({
+  get: () => moeActor.value.organizationId ?? undefined,
+  set: (value) => { moeActor.value.organizationId = value ?? undefined; },
+});
 
 const filterEmpty = (arr: string[] | undefined) => arr?.filter(item => item.trim() !== "") ?? [];
 
@@ -53,25 +87,28 @@ const statusOptions = computed(() =>
   })),
 );
 
-const form = ref<CreateApplicationDto>(props.initialData ?? {
-  label: "",
-  shortName: "",
-  description: "",
-  logo: "",
-  status: { status: "IN_PROGRESS" },
-  purposes: [],
-  targetPopulations: [],
-  priorityRestart: null,
-  tags: [],
-  labels: [],
+const form = ref<CreateApplicationDto>({
+  label: props.initialData?.label ?? "",
+  shortName: props.initialData?.shortName ?? "",
+  description: props.initialData?.description ?? "",
+  logo: props.initialData?.logo ?? "",
+  status: props.initialData?.status ?? { status: "under_construction" as ApplicationStatus },
+  purposes: props.initialData?.purposes ?? [],
+  targetPopulations: props.initialData?.targetPopulations ?? [],
+  priorityRestart: props.initialData?.priorityRestart,
+  tags: props.initialData?.tags ?? [],
+  labels: props.initialData?.labels ?? [],
 });
 
-async function handleSubmit() {
+function isFormValid(): boolean {
   labelError.value = undefined;
   descriptionError.value = undefined;
+  moaError.value = undefined;
+  moeError.value = undefined;
   globalError.value = undefined;
   let hasError = false;
 
+  // Validation des champs de base
   if (form.value.label === "") {
     labelError.value = "Le nom de l'application est obligatoire.";
     hasError = true;
@@ -81,7 +118,48 @@ async function handleSubmit() {
     hasError = true;
   }
 
-  if (hasError) {
+  // Validation MOA et MOE uniquement en mode création
+  if (isCreateMode.value) {
+    const moaErrors: string[] = [];
+    const moeErrors: string[] = [];
+
+    if (!moaActor.value.organizationId) {
+      moaErrors.push("L'organisation MOA est obligatoire.");
+    }
+    if (!moaActor.value.email) {
+      moaErrors.push("L'email du contact MOA est obligatoire.");
+    }
+    if (!moaActor.value.firstname) {
+      moaErrors.push("Le prénom du contact MOA est obligatoire.");
+    }
+    if (!moaActor.value.lastname) {
+      moaErrors.push("Le nom du contact MOA est obligatoire.");
+    }
+    if (!moeActor.value.organizationId) {
+      moeErrors.push("L'organisation MOE est obligatoire.");
+    }
+    if (!moeActor.value.email) {
+      moeErrors.push("L'email du contact MOE est obligatoire.");
+    }
+    if (!moeActor.value.firstname) {
+      moeErrors.push("Le prénom du contact MOE est obligatoire.");
+    }
+    if (!moeActor.value.lastname) {
+      moeErrors.push("Le nom du contact MOE est obligatoire.");
+    }
+    if (moeErrors.length > 0 || moaErrors.length > 0) {
+      hasError = true;
+    }
+
+    moaError.value = moaErrors.length > 0 ? moaErrors.join(" ") : undefined;
+    moeError.value = moeErrors.length > 0 ? moeErrors.join(" ") : undefined;
+  }
+
+  return !hasError;
+}
+
+async function handleSubmit() {
+  if (!isFormValid()) {
     return;
   }
 
@@ -112,12 +190,52 @@ async function handleCreate() {
 
     const application = response.data as ApplicationDto;
 
+    // Créer les acteurs MOA et MOE
+    try {
+      await createActors(application.id);
+    } catch (actorError) {
+      toaster.addErrorMessage("Application créée mais erreur lors de l'ajout des acteurs MOA/MOE. Vous pouvez les ajouter manuellement.");
+      throw actorError;
+    }
+
     toaster.addSuccessMessage("Application créée avec succès !");
     emit("success", application);
     router.push({ name: "application", params: { id: application.id } });
-  } catch (error) {
-    globalError.value = error.message.join(", ");
+  } catch (error: any) {
+    globalError.value = error.message?.join?.(", ") || "Une erreur est survenue";
   }
+}
+
+async function createActors(applicationId: string) {
+  // Créer l'acteur MOA
+  const moaPayload: CreateActorDto = {
+    actorTypeId: moaActor.value.actorTypeId,
+    organizationId: moaActor.value.organizationId || undefined,
+    email: moaActor.value.email || undefined,
+    firstname: moaActor.value.firstname || undefined,
+    lastname: moaActor.value.lastname || undefined,
+    applicationId,
+  };
+
+  await api.applicationActorsControllerCreate({
+    path: { applicationId },
+    body: moaPayload,
+  });
+
+  // Créer l'acteur MOE
+  const moePayload: CreateActorDto = {
+    actorTypeId: moeActor.value.actorTypeId,
+    organizationId: moeActor.value.organizationId || undefined,
+    email: moeActor.value.email || undefined,
+    firstname: moeActor.value.firstname || undefined,
+    lastname: moeActor.value.lastname || undefined,
+    applicationId,
+  };
+
+  await api.applicationActorsControllerCreate({
+    path: { applicationId },
+    body: moePayload,
+  });
 }
 
 async function handleUpdate() {
@@ -180,8 +298,26 @@ function removePopulation(index: number) {
   form.value.targetPopulations.splice(index, 1);
 }
 
-onMounted(() => {
+onMounted(async () => {
   initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
+  
+  // Charger les types d'acteurs et les présélectionner si en mode création
+  if (isCreateMode.value) {
+    if (actorTypeStore.actorTypes.length === 0) {
+      await actorTypeStore.fetchAll();
+    }
+    
+    // Présélectionner les types d'acteurs par code
+    const moaType = actorTypeStore.actorTypes.find(t => t.code === "MOA");
+    const moeType = actorTypeStore.actorTypes.find(t => t.code === "MOE");
+    
+    if (moaType) {
+      moaActor.value.actorTypeId = moaType.id;
+    }
+    if (moeType) {
+      moeActor.value.actorTypeId = moeType.id;
+    }
+  }
 });
 </script>
 
@@ -195,167 +331,278 @@ onMounted(() => {
     @close="globalError = undefined"
   />
   <form data-testid="application-form" @submit.prevent="handleSubmit">
-    <DsfrInputGroup
-      v-model.trim="form.label"
-      :disabled="!canEditBase"
-      hint="Doit contenir au moins une lettre.
+    <!-- Informations principales de l'application -->
+    <div class="fr-card fr-p-3w">
+      <h3 class="fr-mb-3w">
+        Informations principales
+      </h3>
+      
+      <DsfrInputGroup
+        v-model.trim="form.label"
+        :disabled="!canEditBase"
+        hint="Doit contenir au moins une lettre.
 Seuls les lettres (avec accents), chiffres, espaces, points et tirets sont autorisés.
 Aucun espace en début ou en fin."
-      label="Nom de l'application"
-      label-visible
-      required
-      :error-message="labelError"
-      data-testid="application-label"
-    />
+        label="Nom de l'application"
+        label-visible
+        required
+        :error-message="labelError"
+        data-testid="application-label"
+      />
 
-    <DsfrInputGroup
-      v-model.trim="form.shortName"
-      :disabled="!canEditBase"
-      class="fr-mt-3w"
-      label="Nom court"
-      label-visible
-      hint="Optionnel - Un nom court pour identifier rapidement l'application"
-      data-testid="application-shortname"
-    />
+      <DsfrInputGroup
+        v-model.trim="form.shortName"
+        :disabled="!canEditBase"
+        class="fr-mt-3w"
+        label="Nom court"
+        label-visible
+        hint="Optionnel - Un nom court pour identifier rapidement l'application"
+        data-testid="application-shortname"
+      />
 
-    <DsfrSelect
-      v-if="isCreateMode"
-      v-model="form.status.status"
-      :options="statusOptions"
-      label="Status de l'application"
-      default-unselected-text="Sélectionner un status"
-      data-testid="application-status"
-    />
+      <DsfrSelect
+        v-if="isCreateMode"
+        v-model="form.status.status"
+        :options="statusOptions"
+        label="Status de l'application"
+        default-unselected-text="Sélectionner un status"
+        data-testid="application-status"
+      />
 
-    <div v-if="!isCreateMode" class="fr-form-group fr-mt-3w">
-      <legend class="fr-label">
-        Noms alternatifs
-      </legend>
-      <div class="fr-mt-2w">
-        <div v-for="(_label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-          <div class="fr-col">
-            <DsfrInput
-              :model-value="form.labels[index].source ?? ''"
-              :disabled="!canEditBase"
-              :placeholder="`Reférentiel externe ${index + 1} (optionnel)`"
-              :data-testid="`application-alt-label-source-${index}`"
-              @update:model-value="form.labels[index].source = (typeof $event === 'string' ? $event : null) || null"
-            />
-            <DsfrInput
-              v-model.trim="form.labels[index].value"
-              :disabled="!canEditBase"
-              :placeholder="`Nom ou identifiant externe ${index + 1}`"
-              :data-testid="`application-alt-label-value-${index}`"
-            />
+      <div v-if="!isCreateMode" class="fr-form-group fr-mt-3w">
+        <legend class="fr-label">
+          Noms alternatifs
+        </legend>
+        <div class="fr-mt-2w">
+          <div v-for="(_label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+            <div class="fr-col">
+              <DsfrInput
+                :model-value="form.labels[index].source ?? ''"
+                :disabled="!canEditBase"
+                :placeholder="`Reférentiel externe ${index + 1} (optionnel)`"
+                :data-testid="`application-alt-label-source-${index}`"
+                @update:model-value="form.labels[index].source = (typeof $event === 'string' ? $event : null) || null"
+              />
+              <DsfrInput
+                v-model.trim="form.labels[index].value"
+                :disabled="!canEditBase"
+                :placeholder="`Nom ou identifiant externe ${index + 1}`"
+                :data-testid="`application-alt-label-value-${index}`"
+              />
+            </div>
+            <div class="fr-col-auto">
+              <DsfrButton
+                :disabled="!canEditBase"
+                type="button"
+                tertiary
+                size="sm"
+                icon="delete-line"
+                label="Supprimer"
+                title="Supprimer ce libellé alternatif"
+                aria-label="Supprimer ce libellé alternatif"
+                :data-testid="`application-alt-label-remove-${index}`"
+                @click="form.labels.splice(index, 1)"
+              />
+            </div>
           </div>
-          <div class="fr-col-auto">
-            <DsfrButton
-              :disabled="!canEditBase"
-              type="button"
-              tertiary
-              size="sm"
-              icon="delete-line"
-              label="Supprimer"
-              title="Supprimer ce libellé alternatif"
-              aria-label="Supprimer ce libellé alternatif"
-              :data-testid="`application-alt-label-remove-${index}`"
-              @click="form.labels.splice(index, 1)"
-            />
-          </div>
+          <DsfrButton
+            :disabled="!canEditBase"
+            type="button"
+            secondary
+            icon="add-line"
+            label="Ajouter un libellé"
+            title="Ajouter un nouveau libellé alternatif"
+            aria-label="Ajouter un nouveau libellé alternatif"
+            data-testid="application-alt-label-add"
+            @click="form.labels.push({ source: '', value: '' })"
+          />
         </div>
-        <DsfrButton
-          :disabled="!canEditBase"
-          type="button"
-          secondary
-          icon="add-line"
-          label="Ajouter un libellé"
-          title="Ajouter un nouveau libellé alternatif"
-          aria-label="Ajouter un nouveau libellé alternatif"
-          data-testid="application-alt-label-add"
-          @click="form.labels.push({ source: '', value: '' })"
-        />
+      </div>
+
+      <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required :error-message="descriptionError">
+        <MarkdownEditor v-model.trim="form.description" :disabled="!canEditBase" data-testid="application-description" />
+      </DsfrInputGroup>
+
+      <DsfrInputGroup
+        v-if="!isCreateMode"
+        v-model.trim="form.logo"
+        :disabled="!canEditBase"
+        class="fr-mt-3w"
+        label="URL du logo"
+        label-visible
+        hint="Optionnel - URL d'une image représentant l'application"
+        data-testid="application-logo"
+      />
+    </div>
+
+    <!-- Détails de l'application -->
+    <div class="fr-card fr-mt-3w fr-p-3w">
+      <h3 class="fr-mb-3w">
+        Détails de l'application
+      </h3>
+
+      <DsfrSelect
+        v-model="form.priorityRestart"
+        :disabled="!canEditPriorityRestart"
+        :options="priorityRestartLabelsOptions"
+        label="Priorité de redémarrage"
+        default-unselected-text="Sélectionner une priorité"
+        data-testid="application-priority-restart"
+      />
+
+      <div class="fr-form-group fr-mt-3w">
+        <legend class="fr-label">
+          Population
+        </legend>
+        <p class="fr-hint-text">
+          Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)
+        </p>
+        <div class="fr-mt-2w">
+          <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+            <div class="fr-col">
+              <DsfrInput v-model.trim="form.targetPopulations[index]" :disabled="!canEditBase" :data-testid="`application-population-${index}`" />
+            </div>
+            <div class="fr-col-auto">
+              <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cette population" aria-label="Supprimer cette population" :disabled="!canEditBase" :data-testid="`application-population-remove-${index}`" @click="removePopulation(index)" />
+            </div>
+          </div>
+          <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" title="Ajouter une nouvelle population" aria-label="Ajouter une population" :disabled="!canEditBase" data-testid="application-population-add" @click="addPopulation" />
+        </div>
+      </div>
+
+      <div class="fr-form-group fr-mt-3w">
+        <legend class="fr-label">
+          Objectifs
+        </legend>
+        <div class="fr-mt-2w">
+          <div v-for="(_purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
+            <div class="fr-col">
+              <DsfrInput v-model.trim="form.purposes[index]" :disabled="!canEditBase" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-purpose-${index}`" />
+            </div>
+            <div class="fr-col-auto">
+              <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cet objectif" aria-label="Supprimer cet objectif" :disabled="!canEditBase" :data-testid="`application-purpose-remove-${index}`" @click="removePurpose(index)" />
+            </div>
+          </div>
+          <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" title="Ajouter un nouvel objectif" aria-label="Ajouter un objectif" :disabled="!canEditBase" data-testid="application-purpose-add" @click="addPurpose" />
+        </div>
+      </div>
+
+      <div class="fr-form-group fr-mt-3w autocomplete-tags">
+        <legend class="fr-label">
+          Tags
+        </legend>
+        <div class="fr-mt-2w fr-col">
+          <TagSearchSelect v-model:tags="form.tags" />
+        </div>
       </div>
     </div>
 
-    <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required :error-message="descriptionError">
-      <MarkdownEditor v-model.trim="form.description" :disabled="!canEditBase" data-testid="application-description" />
-    </DsfrInputGroup>
-
-    <DsfrSelect
-      v-model="form.priorityRestart"
-      :disabled="!canEditPriorityRestart"
-      :options="priorityRestartLabelsOptions"
-      label="Priorité de redémarrage"
-      default-unselected-text="Sélectionner une priorité"
-      data-testid="application-priority-restart"
-    />
-
-    <div class="fr-form-group fr-mt-3w">
-      <legend class="fr-label">
-        Population
-      </legend>
-      <p class="fr-hint-text">
-        Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)
+    <!-- MOA Section -->
+    <div v-if="isCreateMode" class="fr-card fr-mt-3w fr-p-3w">
+      <h3 class="fr-mb-3w">
+        MOA (Maîtrise d'Ouvrage)
+      </h3>
+      <p v-if="moaError" class="fr-error-text fr-mb-2w">
+        {{ moaError }}
       </p>
-      <div class="fr-mt-2w">
-        <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-          <div class="fr-col">
-            <DsfrInput v-model.trim="form.targetPopulations[index]" :disabled="!canEditBase" :data-testid="`application-population-${index}`" />
-          </div>
-          <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cette population" aria-label="Supprimer cette population" :disabled="!canEditBase" :data-testid="`application-population-remove-${index}`" @click="removePopulation(index)" />
-          </div>
+      <p class="fr-text--sm fr-mb-3w">
+        <span class="fr-icon-information-line fr-mr-1w" aria-hidden="true" />
+        Toutes les informations du contact MOA sont obligatoires.
+      </p>
+      <OrganizationSearchSelect
+        v-model="moaOrganizationId"
+        label="Organisation MOA"
+        class="fr-mb-3w"
+        required
+        data-testid="application-moa-organization"
+      />
+      <DsfrInputGroup
+        v-model.trim="moaActor.email"
+        label="Email du contact MOA"
+        label-visible
+        required
+        type="email"
+        data-testid="application-moa-email"
+      />
+      <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col-6">
+          <DsfrInputGroup
+            v-model.trim="moaActor.firstname"
+            label="Prénom du contact MOA"
+            label-visible
+            required
+            data-testid="application-moa-firstname"
+          />
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" title="Ajouter une nouvelle population" aria-label="Ajouter une population" :disabled="!canEditBase" data-testid="application-population-add" @click="addPopulation" />
+        <div class="fr-col-6">
+          <DsfrInputGroup
+            v-model.trim="moaActor.lastname"
+            label="Nom du contact MOA"
+            label-visible
+            required
+            data-testid="application-moa-lastname"
+          />
+        </div>
       </div>
     </div>
 
-    <DsfrInputGroup
-      v-if="!isCreateMode"
-      v-model.trim="form.logo"
-      :disabled="!canEditBase"
-      class="fr-mt-3w"
-      label="URL du logo"
-      label-visible
-      hint="Optionnel - URL d'une image représentant l'application"
-      data-testid="application-logo"
-    />
-
-    <div class="fr-form-group fr-mt-3w">
-      <legend class="fr-label">
-        Objectifs
-      </legend>
-      <div class="fr-mt-2w">
-        <div v-for="(_purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-          <div class="fr-col">
-            <DsfrInput v-model.trim="form.purposes[index]" :disabled="!canEditBase" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-purpose-${index}`" />
-          </div>
-          <div class="fr-col-auto">
-            <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cet objectif" aria-label="Supprimer cet objectif" :disabled="!canEditBase" :data-testid="`application-purpose-remove-${index}`" @click="removePurpose(index)" />
-          </div>
+    <!-- MOE Section -->
+    <div v-if="isCreateMode" class="fr-card fr-mt-3w fr-p-3w">
+      <h3 class="fr-mb-3w">
+        MOE (Maîtrise d'Œuvre)
+      </h3>
+      <p v-if="moeError" class="fr-error-text fr-mb-2w">
+        {{ moeError }}
+      </p>
+      <p class="fr-text--sm fr-mb-3w">
+        <span class="fr-icon-information-line fr-mr-1w" aria-hidden="true" />
+        Toutes les informations du contact MOE sont obligatoires.
+      </p>
+      <OrganizationSearchSelect
+        v-model="moeOrganizationId"
+        label="Organisation MOE"
+        required
+        class="fr-mb-3w"
+        data-testid="application-moe-organization"
+      />
+      <DsfrInputGroup
+        v-model.trim="moeActor.email"
+        label="Email du contact MOE"
+        label-visible
+        required
+        type="email"
+        data-testid="application-moe-email"
+      />
+      <div class="fr-grid-row fr-grid-row--gutters">
+        <div class="fr-col-6">
+          <DsfrInputGroup
+            v-model.trim="moeActor.firstname"
+            label="Prénom du contact MOE"
+            label-visible
+            required
+            data-testid="application-moe-firstname"
+          />
         </div>
-        <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" title="Ajouter un nouvel objectif" aria-label="Ajouter un objectif" :disabled="!canEditBase" data-testid="application-purpose-add" @click="addPurpose" />
-      </div>
-    </div>
-
-    <div class="fr-form-group fr-mt-3w autocomplete-tags">
-      <legend class="fr-label">
-        Tags
-      </legend>
-      <div class="fr-mt-2w fr-col">
-        <TagSearchSelect v-model:tags="form.tags" />
+        <div class="fr-col-6">
+          <DsfrInputGroup
+            v-model.trim="moeActor.lastname"
+            label="Nom du contact MOE"
+            label-visible
+            required
+            data-testid="application-moe-lastname"
+          />
+        </div>
       </div>
     </div>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton type="button" secondary label="Annuler" data-testid="application-cancel-btn" @click="$emit('cancel')" />
-      <DsfrButton type="submit" :disabled="isSubmitting" :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" data-testid="application-submit-btn">
-        <template v-if="isSubmitting">
-          <span class="fr-loading fr-loading--sm" data-testid="application-submit-loading">
-            <span class="fr-loading__icon" aria-hidden="true" />
-          </span>
-        </template>
-      </DsfrButton>
+      <DsfrButton 
+        type="submit" 
+        :disabled="isSubmitting" 
+        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" 
+        data-testid="application-submit-btn" 
+      />
     </div>
   </form>
 </template>

@@ -7,7 +7,6 @@ import ApplicationTableView from "@/components/ApplicationTableView.vue";
 import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
-import CreateApplicationModal from "@/components/modal/CreateApplicationModal.vue";
 import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue";
 
 const statsStore = useStatisticsStore();
@@ -15,7 +14,6 @@ const searchStore = useApplicationSearchStore();
 
 const currentSortedColumn = ref("label");
 const isMobile = ref(false);
-const isCreateModalOpen = ref(false);
 
 function updateMode() {
   isMobile.value = window.matchMedia("(max-width: 768px)").matches;
@@ -57,11 +55,6 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
       <div class="search-actions-wrapper" data-testid="application-search-actions-wrapper">
         <ApplicationSearchActions />
       </div>
-
-      <CreateApplicationModal
-        :opened="isCreateModalOpen"
-        @close="isCreateModalOpen = false"
-      />
 
       <section
         id="application-results"
