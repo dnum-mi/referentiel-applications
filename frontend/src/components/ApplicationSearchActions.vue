@@ -1,21 +1,22 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import type { Ref } from "vue";
+import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
-import { useToasterStore } from "@/stores/toasterStore"; // Importé
+import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
+import { routeNames } from "@/router/route-names";
 import ReportAnomaly from "@/components/modal/reportAnomaly.vue";
-import CreateApplicationModal from "@/components/modal/CreateApplicationModal.vue";
 
+const router = useRouter();
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 const searchStore = useApplicationSearchStore();
-const toaster = useToasterStore(); // Initialisé
+const toaster = useToasterStore();
 
 const isReportMissingOpen = ref(false);
-const isCreateModalOpen = ref(false);
 
 const reportStatusMessage = ref("");
 
@@ -36,13 +37,11 @@ function createModalHandlers(isOpen: Ref<boolean>) {
 }
 
 const { open: openReport, close: closeReport } = createModalHandlers(isReportMissingOpen);
-const { open: openCreate, close: closeCreate } = createModalHandlers(isCreateModalOpen);
 
 async function exportToExcel() {
   try {
     await applicationStore.downloadExcel(searchStore.filters);
   } catch (error) {
-    console.error("Excel export error:", error);
     toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }
 }
@@ -61,9 +60,8 @@ async function exportToExcel() {
         :disabled="userStore.adminLevel < AdminLevel.WRITE && !userStore.user?.capabilities?.includes('CreateApplication')"
         data-testid="create-application-btn"
         class="action-btn icon-left"
-        @click="openCreate"
+        @click="router.push({ name: routeNames.CREATEAPP })"
         title="Créer une application"
-        :aria-expanded="isCreateModalOpen ? 'true' : 'false'"
       >
         Créer une application
       </DsfrButton>
@@ -119,8 +117,6 @@ async function exportToExcel() {
     @status="(s: string) => (reportStatusMessage = s)"
     @busy="(b: boolean) => (reportStatusMessage = b ? 'En cours...' : '')"
   ></ReportAnomaly>
-
-  <CreateApplicationModal :opened="isCreateModalOpen" @close="closeCreate"></CreateApplicationModal>
 </template>
 
 <style scoped>

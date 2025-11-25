@@ -21,6 +21,12 @@ const routes = [
     meta: { requiresAuth: true, title: "Recherche d'applications - Référentiel des applications" },
   },
   {
+    name: routeNames.CREATEAPP,
+    path: "/applications/creer",
+    component: () => import("@/views/CreateApplicationPage.vue"),
+    meta: { requiresAuth: true, title: "Créer une application - Référentiel des applications" },
+  },
+  {
     name: routeNames.ACCESSIBILITE,
     path: "/accessibilite",
     component: () => import("@/views/AppAccessibility.vue"),
