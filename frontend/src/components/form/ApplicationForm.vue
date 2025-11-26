@@ -379,7 +379,7 @@ Aucun espace en début ou en fin."
               <DsfrInput
                 :model-value="form.labels[index].source ?? ''"
                 :disabled="!canEditBase"
-                :placeholder="`Reférentiel externe ${index + 1} (optionnel)`"
+                :placeholder="`Référentiel externe ${index + 1} (optionnel)`"
                 :data-testid="`application-alt-label-source-${index}`"
                 @update:model-value="form.labels[index].source = (typeof $event === 'string' ? $event : null) || null"
               />
