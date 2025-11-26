@@ -551,7 +551,7 @@ Aucun espace en début ou en fin."
       <h3 class="fr-mb-3w">
         MOE (Maîtrise d'Œuvre)
       </h3>
-      <p v-if="moeError" class="fr-error-text fr-mb-2w">
+      <p v-if="moeError" class="fr-error-text fr-mb-2w" role="alert">
         {{ moeError }}
       </p>
       <p class="fr-text--sm fr-mb-3w">
