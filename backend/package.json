@@ -23,7 +23,6 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:seed": "prisma db seed",
     "migrate:hosting": "ts-node src/scripts/migrate-hostings.ts"
   },
@@ -136,8 +135,10 @@
     ],
     "maxWorkers": 2,
     "testTimeout": 30000,
-    "setupFiles": [
-      "<rootDir>/tests/jest.setup.js"
+    "globalSetup": "<rootDir>/tests/global-setup.ts",
+    "globalTeardown": "<rootDir>/tests/global-teardown.ts",
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/jest.setup.ts"
     ]
   }
 }
