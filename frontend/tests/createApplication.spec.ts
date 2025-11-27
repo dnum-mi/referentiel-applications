@@ -1,30 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { faker } from "@faker-js/faker";
-
-const BASE_URL = "http://localhost:5173";
-const KC_USER = process.env.KC_USER ?? "admin";
-const KC_PASS = process.env.KC_PASS ?? "pass";
-
-async function login(page: Page) {
-  await page.goto(`${BASE_URL}/`);
-  await page
-    .getByRole("banner")
-    .getByRole("link", { name: /Se connecter|Sign in/i })
-    .click();
-
-  await page.waitForURL(/\/realms\/.+\/protocol\/openid-connect\/auth/i, { timeout: 15_000 });
-
-  await page.locator('#username, #kc-username, input[name="username"]').first().fill(KC_USER);
-  await page.locator('#password, #kc-password, input[name="password"]').first().fill(KC_PASS);
-
-  await Promise.all([
-    page.waitForURL(new RegExp(`^${BASE_URL.replace(/\//g, "\\/")}`), { timeout: 20_000 }),
-    page.locator('#kc-login, button[name="login"], input[type="submit"]').first().click(),
-  ]);
-
-  await expect(page.getByTestId("main-navigation")).toBeVisible({ timeout: 15_000 });
-}
+import { BASE_URL, login } from "./utils";
 
 async function openCreatePage(page: Page) {
   await mockOrganizations(page);
