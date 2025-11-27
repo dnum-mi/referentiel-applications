@@ -104,7 +104,7 @@ async function deleteTag() {
 
 <template>
   <DsfrButton
-  v-if="tag?.id"
+  v-if="!tag?.id"
       class="fr-btn--icon-left fr-icon-add-line"
       label="Créer un tag"
       data-testid="admin-create-tag-btn"
@@ -136,8 +136,8 @@ async function deleteTag() {
 
   <DsfrModal
     :opened="isEditModalOpen"
-    :title="tag?.id ? 'Créer un tag' : 'Modifier le tag'"
-    :data-testid="tag?.id ? 'admin-create-tag-modal' : 'admin-edit-tag-modal'"
+    :title="!tag?.id ? 'Créer un tag' : 'Modifier le tag'"
+    :data-testid="!tag?.id ? 'admin-create-tag-modal' : 'admin-edit-tag-modal'"
     @close="closeEditModal"
   >
     <DsfrInputGroup
