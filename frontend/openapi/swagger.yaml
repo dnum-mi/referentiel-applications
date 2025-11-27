@@ -551,14 +551,8 @@ paths:
         - name: search
           required: false
           in: query
-          description: Recherche plein texte sur tous les champs
-          schema:
-            example: Mon Application
-            type: string
-        - name: label
-          required: false
-          in: query
-          description: Recherche par label
+          description: Recherche sur le nom de l'application, son shortName ou ses noms
+            alternatifs
           schema:
             example: Mon Application
             type: string
@@ -848,14 +842,8 @@ paths:
         - name: search
           required: false
           in: query
-          description: Recherche plein texte sur tous les champs
-          schema:
-            example: Mon Application
-            type: string
-        - name: label
-          required: false
-          in: query
-          description: Recherche par label
+          description: Recherche sur le nom de l'application, son shortName ou ses noms
+            alternatifs
           schema:
             example: Mon Application
             type: string

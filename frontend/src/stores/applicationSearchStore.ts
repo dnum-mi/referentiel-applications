@@ -1,4 +1,4 @@
-import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
+import type { ApplicationControllerSearchData, ApplicationStatus } from "@/client/types.gen.js";
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
 import api from "@/api/index.js";
@@ -10,7 +10,7 @@ export type Filters = Exclude<ApplicationControllerSearchData["query"], undefine
   hostingProvider?: string
   hostingBuilding?: string
   hostingRoom?: string
-  currentStatus__in?: Array<"under_construction" | "poc" | "in_production_mvp" | "in_production" | "in_production_decommissioning" | "decommissioned" | "deleted">
+  currentStatus__in?: Array<ApplicationStatus>
   compliance__in?: Array<"dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd">
 };
 
@@ -21,7 +21,6 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
   const error = ref<string | null>(null);
 
   const initialFilters = {
-    label: undefined,
     shortName: undefined,
     tag: [],
     link: undefined,

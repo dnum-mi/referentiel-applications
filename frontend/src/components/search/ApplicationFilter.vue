@@ -4,13 +4,13 @@ import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
 
 const searchStore = useApplicationSearchStore();
 
-const label = toRef(searchStore.filters.label);
+const search = toRef(searchStore.filters.search);
 const shortName = ref(searchStore.filters.shortName);
 const tag = ref(searchStore.filters.tag);
 const link = ref(searchStore.filters.link);
 
-watch(label, (val) => {
-  searchStore.setFilter({ label: val, page: 0 });
+watch(search, (val) => {
+  searchStore.setFilter({ search: val, page: 0 });
 });
 
 watch(shortName, (val) => {
@@ -28,7 +28,7 @@ watch(link, (val) => {
 watch(
   searchStore.filters,
   () => {
-    label.value = searchStore.filters.label;
+    search.value = searchStore.filters.search;
     shortName.value = searchStore.filters.shortName;
     tag.value = searchStore.filters.tag;
     link.value = searchStore.filters.link;
@@ -39,7 +39,7 @@ watch(
 
 <template>
   <div class="filter-section">
-    <DsfrInput v-model="searchStore.filters.label" label-visible label="Nom de l'application" data-testid="application-filter-label" />
+    <DsfrInput v-model="searchStore.filters.search" label-visible label="Nom de l'application" data-testid="application-filter-label" />
     <legend class="fr-label"> Tags </legend>
     <TagSearchSelect v-model:tags="searchStore.filters.tag" data-testid="application-filter-tag" />
     <DsfrInput v-model="searchStore.filters.link" label-visible label="Lien externe" data-testid="application-filter-link" />

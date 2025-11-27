@@ -51,23 +51,13 @@ describe("Applications", () => {
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
-
-    await request(app().getHttpServer())
-      .get("/applications")
-      .query({
-        label: "test app",
-        sortBy: "label",
-        order: "asc",
-      })
-      .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
   });
 
   it("/POST applications, with missing capabilities", async () => {
     await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: sanitizeLabel(faker.company.name()),
+        search: sanitizeLabel(faker.company.name()),
         shortName: "complete-app",
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
@@ -86,7 +76,7 @@ describe("Applications", () => {
     const response = await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: sanitizeLabel(faker.company.name()),
+        search: sanitizeLabel(faker.company.name()),
         shortName: "complete-app",
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
@@ -127,7 +117,7 @@ describe("Applications", () => {
     const response = await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: " ",
+        search: " ",
         description: faker.company.catchPhrase(),
         status: { status: "in_production" },
         tags: [],
@@ -145,7 +135,7 @@ describe("Applications", () => {
     await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: sanitizeLabel(faker.company.name()),
+        search: sanitizeLabel(faker.company.name()),
         description: "",
         status: { status: "in_production" },
         tags: [],

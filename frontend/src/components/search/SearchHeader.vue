@@ -48,7 +48,7 @@ function closeSearch() {
   searchRef.value?.clear?.();
 }
 
-async function searchApplications(searchQuery: string): Promise<ApplicationOption[]> {
+async function searchApplications(searchQuery: string): Promise<ApplicationOption[] | Error> {
   const trimmedQuery = searchQuery.trim();
   if (!trimmedQuery) return [];
   try {
@@ -60,7 +60,7 @@ async function searchApplications(searchQuery: string): Promise<ApplicationOptio
       } as any,
       false
     );
-    return (response?.results ?? []) as ApplicationOption[];
+    return response.results as ApplicationOption[];
   } catch (err) {
     console.error("Erreur lors de la recherche :", err);
     return [];
@@ -68,7 +68,9 @@ async function searchApplications(searchQuery: string): Promise<ApplicationOptio
 }
 
 function displayLabel(application: ApplicationOption | null) {
-  return application ? application.label ?? application.shortName ?? "" : "";
+  return application
+    ? application.label ?? application.shortName ?? ""
+    : "";
 }
 
 function onConfirm(selection: ApplicationOption | null) {

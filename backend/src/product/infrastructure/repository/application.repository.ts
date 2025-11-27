@@ -80,29 +80,6 @@ export class ApplicationRepository implements IApplicationRepository {
 
     const filterConfigs = [
       {
-        condition: filters.label,
-        whereClause: {
-          OR: [
-            {
-              label: {
-                contains: filters.label,
-                mode: "insensitive" as const,
-              },
-            },
-            {
-              labels: {
-                some: {
-                  value: {
-                    contains: filters.label,
-                    mode: "insensitive" as const,
-                  },
-                },
-              },
-            },
-          ],
-        },
-      },
-      {
         condition: filters.search,
         whereClause: {
           OR: [

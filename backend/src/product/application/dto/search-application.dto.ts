@@ -14,21 +14,13 @@ import { PaginationDto } from "../../../common/dto";
 
 export class ApplicationSearchDto extends PaginationDto {
   @ApiPropertyOptional({
-    description: "Recherche plein texte sur tous les champs",
+    description: "Recherche sur le nom de l'application, son shortName ou ses noms alternatifs",
     example: "Mon Application",
     required: false,
   })
   @IsOptional()
   @IsString()
   search?: string;
-
-  @ApiPropertyOptional({
-    description: "Recherche par label",
-    example: "Mon Application",
-  })
-  @IsOptional()
-  @IsString()
-  label?: string;
 
   @ApiPropertyOptional({ description: "Recherche par shortName" })
   @IsOptional()

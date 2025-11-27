@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, defineExpose } from "vue";
+import { ref, computed, onMounted, defineExpose } from "vue";
 
 interface Props<T> {
   id?: string;
-  search: (query: string) => Promise<T[]>;
+  search: (query: string) => Promise<T[] | Error>;
   displayLabel: (item: T | null) => string;
   placeholder?: string;
   displayNoResult?: boolean;
@@ -15,7 +15,7 @@ const props = defineProps<Props<any>>();
 const emit = defineEmits(["onChange", "onInputValueChange"]);
 
 const inputValue = ref("");
-const results = ref<any[]>([]);
+const results = ref<any[] | Error>([]);
 const highlightedIndex = ref(-1);
 const loading = ref(false);
 const showList = ref(false);
@@ -28,8 +28,7 @@ async function doSearch(query: string) {
   }
   loading.value = true;
   try {
-    const searchResults = await props.search(query);
-    results.value = searchResults;
+    results.value = await props.search(query);
   } finally {
     loading.value = false;
   }
@@ -52,6 +51,7 @@ function select(item: any) {
 
 function onKeydown(e: KeyboardEvent) {
   if (!showList.value) return;
+  if (results.value instanceof Error) return;
   if (e.key === "ArrowDown") {
     e.preventDefault();
     highlightedIndex.value = (highlightedIndex.value + 1) % results.value.length;
@@ -79,7 +79,10 @@ onMounted(() => {
   if (props.isSearch) inputEl.value?.setAttribute("role", "searchbox");
 });
 
-const hasResults = computed(() => results.value.length > 0);
+const hasResults = computed(() => results.value instanceof Error
+  ? false 
+  : results.value.length > 0
+);
 
 const ariaActiveDescendant = computed(() => {
   if (highlightedIndex.value >= 0 && showList.value) {
@@ -94,6 +97,7 @@ const ariaDescribedById = computed(() => {
 
 const liveRegionText = computed(() => {
   if (!showList.value) return '';
+  if (results.value instanceof Error) return '';
   if (results.value.length === 0) {
     return props.displayNoResult ? 'Aucun résultat' : '';
   }
@@ -103,50 +107,38 @@ const liveRegionText = computed(() => {
 
 <template>
   <div class="autocomplete" @keydown="onKeydown">
-    <input
-      :id="id"
-      ref="inputEl"
-      type="text"
-      class="fr-input"
-      :placeholder="placeholder"
-      v-model="inputValue"
-      @input="onInput"
-      autocomplete="off"
-      role="combobox"
-      :aria-controls="id ? id + '-list' : 'autocomplete-list'"
-      :aria-activedescendant="ariaActiveDescendant"
-      :aria-expanded="showList.toString()"
-      :aria-describedby="ariaDescribedById"
-    />
+    <input :id="id" ref="inputEl" type="text" class="fr-input" :placeholder="placeholder" v-model="inputValue"
+      @input="onInput" autocomplete="off" role="combobox" :aria-controls="id ? id + '-list' : 'autocomplete-list'"
+      :aria-activedescendant="ariaActiveDescendant" :aria-expanded="showList.toString()"
+      :aria-describedby="ariaDescribedById" />
     <div v-if="id" :id="ariaDescribedById" class="visually-hidden">
       Utilisez les flèches haut et bas pour naviguer dans la liste, Entrée pour sélectionner.
     </div>
 
-    <ul
-      v-if="showList && (hasResults || displayNoResult)"
-      :id="id ? id + '-list' : 'autocomplete-list'"
-      class="autocomplete-list"
-      role="listbox"
-    >
-      <li
-        v-for="(item, index) in results"
-        :key="index"
-        class="autocomplete-item"
-        :id="`autocomplete-item-${index}`"
-        :class="{ highlighted: index === highlightedIndex }"
-        @mousedown.prevent="select(item)"
-        role="option"
-        :aria-selected="index === highlightedIndex ? 'true' : 'false'"
-      >
-        <slot name="suggestion" :item="item">
-          {{ props.displayLabel(item) }}
-        </slot>
-      </li>
+    <template v-if="(results instanceof Error)">
+      <ul class="autocomplete-list" role="listbox">
+        <li class="autocomplete-item" role="option" aria-disabled="true">
+          {{ results.message }}
+        </li>
+      </ul>
+    </template>
 
-      <li v-if="!hasResults && displayNoResult" class="no-result" role="option" aria-disabled="true">
-        Aucun résultat
-      </li>
-    </ul>
+    <template v-if="Array.isArray(results)">
+      <ul v-if="showList && (hasResults || displayNoResult)" :id="id ? id + '-list' : 'autocomplete-list'"
+        class="autocomplete-list" role="listbox">
+        <li v-for="(item, index) in results" :key="index" class="autocomplete-item" :id="`autocomplete-item-${index}`"
+          :class="{ highlighted: index === highlightedIndex }" @mousedown.prevent="select(item)" role="option"
+          :aria-selected="index === highlightedIndex ? 'true' : 'false'">
+          <slot name="suggestion" :item="item">
+            {{ props.displayLabel(item) }}
+          </slot>
+        </li>
+
+        <li v-if="!hasResults && displayNoResult" class="no-result" role="option" aria-disabled="true">
+          Aucun résultat
+        </li>
+      </ul>
+    </template>
 
     <div class="visually-hidden" aria-live="polite" aria-atomic="true">{{ liveRegionText }}</div>
   </div>
@@ -156,40 +148,45 @@ const liveRegionText = computed(() => {
 .autocomplete {
   position: relative;
 }
+
 .fr-input {
   width: 100%;
 }
+
 .autocomplete-list {
   position: absolute;
   top: 100%;
   left: 0;
   z-index: 10;
   width: 100%;
-  background: white;
+  background: var(--background-default-grey);
   border: 1px solid #dcdcdc;
   border-radius: 0 0 0.5rem 0.5rem;
   max-height: 18rem;
   overflow-y: auto;
 }
+
 .autocomplete-item {
   padding: 0.5rem 0.75rem;
   cursor: pointer;
 }
+
 .autocomplete-item.highlighted,
 .autocomplete-item:hover {
-  background: #e5e7eb;
+  background: var(--background-alt-grey);
 }
+
 .no-result {
   padding: 0.5rem 0.75rem;
-  color: #6b7280;
 }
+
 .visually-hidden {
   position: absolute !important;
-  height: 1px; 
-  width: 1px; 
+  height: 1px;
+  width: 1px;
   overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px); 
-  white-space: nowrap; 
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
   border: 0;
   padding: 0;
   margin: -1px;
