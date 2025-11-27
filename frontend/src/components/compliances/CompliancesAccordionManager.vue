@@ -28,7 +28,7 @@ const isMobile = smaller("mobile");
 const types: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
 const labels: Record<ComplianceType, string> = {
   dima: "Délai d'Indisponibilité Maximale Admissible (DIMA)",
-  pdma: "Plan de Conduite d’Activité (PDMA)",
+  pdma: "Perte de données maximale admissible (PDMA)",
   homologation: "Homologation",
   rgaa: "Référentiel général d’amélioration de l’accessibilité (RGAA)",
   dsfr: "Design Système de l'état (DSFR)",
