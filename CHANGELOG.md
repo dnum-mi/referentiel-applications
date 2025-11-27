@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.52.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.51.2...v1.52.0) (2025-11-27)
+
+
+### Features
+
+* **admin:** :sparkles: add admin tags management tab ([ae2d8b1](https://github.com/dnum-mi/referentiel-applications/commit/ae2d8b13f1d27a77ac4ec73ea65d92aec7e031ee))
+
+
+### Bug Fixes
+
+* :bug: correct tag creation and editing modal conditions ([b715037](https://github.com/dnum-mi/referentiel-applications/commit/b715037d6d1671495e7af34b1c721f633f59f690))
+* :bug: fix search tag query ([ba1ce61](https://github.com/dnum-mi/referentiel-applications/commit/ba1ce614d44b24480459eb578ae91abc7eab07f0))
+* :bug: fix wording pdma ([48c0046](https://github.com/dnum-mi/referentiel-applications/commit/48c0046ee525c84e187c133c0404949d588d2565))
+* :bug: stop running tests-unit alone on main branch ([d6f3a1d](https://github.com/dnum-mi/referentiel-applications/commit/d6f3a1db669038ffeedbc454dc3084622b87b2be))
+
 ## [1.51.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.51.1...v1.51.2) (2025-11-21)
 
 
