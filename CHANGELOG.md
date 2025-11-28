@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.53.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.52.0...v1.53.0) (2025-11-28)
+
+
+### Features
+
+* :sparkles: add user information and tokens tabs to user profile ([bfb1892](https://github.com/dnum-mi/referentiel-applications/commit/bfb1892e00a7c6582722bebc68fee7e628ae8198))
+* :sparkles: mandatory moe and moa on application creation ([62eff4c](https://github.com/dnum-mi/referentiel-applications/commit/62eff4cb85d71df8ecc76babd0a0aadfa106813b))
+
+
+### Bug Fixes
+
+* :bug: Fix tag search: handle undefined props.tags to prevent includes error ([1b4ab2b](https://github.com/dnum-mi/referentiel-applications/commit/1b4ab2bafe81e870e9f9d0b067845059a59e50c8))
+
 ## [1.52.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.51.2...v1.52.0) (2025-11-27)
 
 
