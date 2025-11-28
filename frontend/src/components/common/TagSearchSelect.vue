@@ -2,9 +2,11 @@
 import type { TagDto } from '@/client';
 import api from '@/api';
 
-const props = defineProps<{
-  tags: string[]
-}>();
+  const props = withDefaults(defineProps<{
+    tags?: string[]
+  }>(), {
+    tags: () => []
+  });
 
 const emit = defineEmits<{
   'update:tags': [value: string[]]
@@ -45,7 +47,7 @@ function removeTag(index: number) {
 </script>
 <template>
   <ul class="fr-tags-group" data-testid="info-tags">
-    <li v-for="(tag, index) in props.tags" :key="index" class="tag-item" >
+    <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
       <DsfrTag
         :label="tag"
         selectable
