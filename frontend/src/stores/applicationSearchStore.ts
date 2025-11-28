@@ -23,7 +23,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
   const initialFilters = {
     label: undefined,
     shortName: undefined,
-    tag: undefined,
+    tag: [],
     link: undefined,
     priorityRestart: undefined,
     currentStatus__in: ["under_construction", "poc", "in_production_mvp", "in_production", "in_production_decommissioning", "decommissioned"],
