@@ -16,7 +16,13 @@ export function useMermaidGraph() {
       const label = sanitizeLabel(node.label?.trim() || node.id.slice(0, 8));
       const nodeId = sanitizeNodeId(node.id);
       const shape = isRoot ? styles.root.shape : styles.node.shape;
-      mermaid += `    ${nodeId}${shape === "ellipse" ? "(\"" : "["}"${label}"${shape === "ellipse" ? "\")" : "]"}`;
+      // Ensure label is properly quoted/escaped for mermaid by using JSON.stringify
+      const quotedLabel = JSON.stringify(label);
+      if (shape === "ellipse") {
+        mermaid += `    ${nodeId}(${quotedLabel})`;
+      } else {
+        mermaid += `    ${nodeId}[${quotedLabel}]`;
+      }
       mermaid += isRoot ? ":::root\n" : ":::node\n";
     });
 
