@@ -15,6 +15,10 @@ const route = useRoute();
 
 const userStore = useUserStore();
 const toaster = useToasterStore();
+const isClosed = ref(false);
+function closeNotice() {
+  isClosed.value = true;
+}
 
 configureClients(toaster);
 
@@ -199,7 +203,21 @@ function close() {
       <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
     </template>
   </DsfrHeader>
-
+      <DsfrNotice
+      v-if="!isClosed"
+      closeable
+      title="questionnaire utilisateur"
+      @close="closeNotice"
+    >
+      Merci de contribuer à l’amélioration du Référentiel des Applications en répondant à notre
+      <a
+        href="https://example.com/questionnaire"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        questionnaire utilisateur
+      </a>
+    </DsfrNotice>
   <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content">
     <RouterView :key="route.params.id" />
   </div>
