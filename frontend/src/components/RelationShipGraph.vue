@@ -7,6 +7,7 @@ import type { RelationGraphDto } from "@/client";
 import { useMermaidGraph } from "@/composables/use-mermaid-graph";
 import { useGraphStyles } from "@/composables/use-graph-style";
 import { relationTypeLabels } from "@/composables/use-dictionary";
+import { sanitizeNodeId } from "@/composables/use-sanitize-utils";
 
 const props = defineProps<{ applicationId: string }>();
 const router = useRouter();
@@ -66,7 +67,9 @@ async function renderGraph() {
     await renderDiagram(graphContainer.value, mermaidCode);
 
     nodes.forEach((node) => {
-      const nodeEl = graphContainer.value?.querySelector(`#${node.id.replace(/[^a-zA-Z0-9]/g, "_")}`);
+      const sanitizedId = sanitizeNodeId(node.id);
+      const selector = '#' + (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(sanitizedId) : sanitizedId);
+      const nodeEl = graphContainer.value?.querySelector(selector);
       if (nodeEl) nodeEl.addEventListener("click", () => callNodeLink(node.id));
     });
   } catch {
