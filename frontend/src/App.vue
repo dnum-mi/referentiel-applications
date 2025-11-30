@@ -69,7 +69,8 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
 });
 
 const loginRedirectUrl = ref<string>("");
-
+const operatorImgSrc = "/assets/logotitle2.svg";
+const operatorImgAlt = "Ministère de l’intérieur - Référentiel des Applications";
 getAuthentication().createLoginUrl({
   redirectUri: window.location.href,
 }).then((url) => {
@@ -222,12 +223,17 @@ function close() {
     <RouterView :key="route.params.id" />
   </div>
 
-  <DsfrFooter 
-  :logo-text 
-  :home-to :ecosystem-links 
-  :mandatory-links 
-  :after-mandatory-links 
-  :operator-to data-testid="footer" />
+  <DsfrFooter
+  :logo-text="logoText"
+  :operator-img-src="operatorImgSrc"
+  :operator-img-alt="operatorImgAlt"
+  :home-to="homeTo"
+  :ecosystem-links="ecosystemLinks"
+  :mandatory-links="mandatoryLinks"
+  :after-mandatory-links="afterMandatoryLinks"
+  :operator-to="operatorTo"
+  data-testid="footer"
+/>
 
   <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" data-testid="pwa-reload-prompt" @close="close" @update-service-worker="updateServiceWorker" />
 
