@@ -272,7 +272,7 @@ async function handleUpdate() {
       }
     }
 
-    const updatedApp = await applicationStore.patchApplication(form.value);
+    const updatedApp = await applicationStore.patchApplication({ ...form.value, id: props.initialData.id });
     applicationStore.applicationsById[props.initialData.id] = updatedApp;
 
     toaster.addSuccessMessage("Application mise à jour avec succès !");

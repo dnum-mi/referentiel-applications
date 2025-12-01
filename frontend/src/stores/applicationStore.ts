@@ -39,7 +39,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     }
   };
 
-  const patchApplication = async (app: PatchApplicationDto): Promise<ApplicationWithPerms> => {
+  const patchApplication = async (app: PatchApplicationDto & { id: string }): Promise<ApplicationWithPerms> => {
     const payload: PatchApplicationDto = {
       label: app.label,
       shortName: app.shortName ?? undefined,
