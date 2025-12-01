@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.54.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.53.0...v1.54.0) (2025-12-01)
+
+
+### Features
+
+* :lipstick: add notice for answer user ([6b7146d](https://github.com/dnum-mi/referentiel-applications/commit/6b7146d96ecdc5eb60e3c558b55e98e195c19757))
+* :sparkles: add answers question ([e317182](https://github.com/dnum-mi/referentiel-applications/commit/e317182971602119596ccbbc59b58895981386e3))
+* :sparkles: send email on actor add ([1cac2c7](https://github.com/dnum-mi/referentiel-applications/commit/1cac2c7d6eb8908808e18ea96176dcef422d35a9))
+
+
+### Bug Fixes
+
+* :bug: add svg title in footer ([44126cf](https://github.com/dnum-mi/referentiel-applications/commit/44126cf7b9a7a730f22f1968fccb4c23b743bb67))
+* :bug: add title in footer ([92ed0df](https://github.com/dnum-mi/referentiel-applications/commit/92ed0df6eb79073947b77a8e4db441191707ead1))
+* :bug: fix mermaid composables ([d56878a](https://github.com/dnum-mi/referentiel-applications/commit/d56878a0601481fe3ebcba9d59563754b61f3bc4))
+
 ## [1.53.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.52.0...v1.53.0) (2025-11-28)
 
 
