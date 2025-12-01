@@ -212,7 +212,7 @@ function close() {
     >
       Merci de contribuer à l’amélioration du Référentiel des Applications en répondant à notre
       <a
-        href="https://example.com/questionnaire"
+        href="https://grist.numerique.gouv.fr/o/retourutilisateur/forms/oJTuNbEchqS9ymzhzCXubN/4"
         rel="noopener noreferrer"
         target="_blank"
       >
