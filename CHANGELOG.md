@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.54.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.54.1...v1.54.2) (2025-12-02)
+
+
+### Bug Fixes
+
+* :bug: fix send mail ([0593a3d](https://github.com/dnum-mi/referentiel-applications/commit/0593a3d1418461651cc022cf162e434b4472df18))
+
 ## [1.54.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.54.0...v1.54.1) (2025-12-02)
 
 
