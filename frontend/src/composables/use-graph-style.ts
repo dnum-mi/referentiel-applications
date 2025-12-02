@@ -1,25 +1,30 @@
 export function useGraphStyles() {
   const getGraphStyles = () => {
-    const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const root = isDark
-      ? { fill: "#1E40AF", stroke: "#60A5FA", text: "#FFFFFF", shape: "roundrect" }
-      : { fill: "#2563EB", stroke: "#1D4ED8", text: "#FFFFFF", shape: "roundrect" };
-    const node = isDark
-      ? { fill: "#374151", stroke: "#9CA3AF", text: "#F3F4F6", shape: "ellipse" }
-      : { fill: "#E5E7EB", stroke: "#9CA3AF", text: "#111827", shape: "ellipse" };
-    const edge = isDark
-      ? {
-          is_part_of: { color: "#60A5FA", style: "solid" },
-          in_replacement_of: { color: "#F59E0B", style: "dashed" },
-          is_service_user_of: { color: "#10B981", style: "solid" },
-          is_data_user_of: { color: "#F43F5E", style: "dotted" },
-        }
-      : {
-          is_part_of: { color: "#2563EB", style: "solid" },
-          in_replacement_of: { color: "#D97706", style: "dashed" },
-          is_service_user_of: { color: "#059669", style: "solid" },
-          is_data_user_of: { color: "#B91C1C", style: "dotted" },
-        };
+    const root = {
+      fill: "var(--background-action-low-blue-france, #e7eaf0ff)",
+      stroke: "var(--border-default-blue-france, #e6e9f0ff)",
+      text: "var(--text-default-grey, #1D1D1D)",
+      width: 160,
+      height: 80,
+      borderRadius: 1,
+    };
+
+    const node = {
+      fill: "var(--background-default-grey, #FFFFFF)",
+      stroke: "var(--border-default-grey, #D1D5DB)",
+      text: "var(--text-default-grey, #1D1D1D)",
+      width: 140,
+      height: 70,
+      borderRadius: 1,
+    };
+
+    const edge = {
+      is_part_of: { color: "var(--blue-france-600, #2563EB)", style: "solid", width: 2 },
+      in_replacement_of: { color: "var(--grey-500, #929292)", style: "dashed", width: 2 },
+      is_service_user_of: { color: "var(--green-600, #00A97E)", style: "solid", width: 2 },
+      is_data_user_of: { color: "var(--red-marianne-600, #DB2777)", style: "dotted", width: 2 },
+    };
+
     return { root, node, edge };
   };
 
