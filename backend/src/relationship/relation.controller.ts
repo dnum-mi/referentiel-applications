@@ -81,7 +81,7 @@ export class RelationController {
     @Param("applicationId") applicationId: string,
     @Query("depth") depth?: number,
   ): Promise<RelationGraphDto> {
-    const maxDepth = depth ? Math.max(1, Math.min(Number(depth), 100)) : 2;
+    const maxDepth = depth ? Math.max(1, Math.min(Number(depth), 100)) : 1;
     return this.relationService.getRelationGraph(applicationId, maxDepth);
   }
 

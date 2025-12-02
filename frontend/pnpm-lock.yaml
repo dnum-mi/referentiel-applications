@@ -14,6 +14,9 @@ importers:
       '@gouvminint/vue-dsfr':
         specifier: ^8.12.1
         version: 8.12.1(@iconify/vue@4.3.0(vue@3.5.18(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))
+      '@types/d3':
+        specifier: ^7.4.3
+        version: 7.4.3
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -23,6 +26,9 @@ importers:
       chartjs-plugin-datalabels:
         specifier: ^2.2.0
         version: 2.2.0(chart.js@4.5.0)
+      d3:
+        specifier: ^7.9.0
+        version: 7.9.0
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0

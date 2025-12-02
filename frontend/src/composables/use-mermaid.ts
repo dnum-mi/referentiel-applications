@@ -6,8 +6,10 @@ mermaid.initialize({
   theme: "default",
   securityLevel: "loose",
   flowchart: {
-    useMaxWidth: true,
+    useMaxWidth: false,
     htmlLabels: true,
+    nodeSpacing: 100,
+    rankSpacing: 100,
   },
 });
 
