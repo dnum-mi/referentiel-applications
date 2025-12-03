@@ -3,6 +3,9 @@ import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, 
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { ApplicationService } from "src/product/application.service";
+import { User } from "../common/decorators/user.decorator";
+import { MetadatasService } from "../metadatas/metadatas.service";
+import { Requestor } from "../user/entities/user.entity";
 import { ApplicationStatusDto, CreateApplicationStatusDto } from "./dto/application-status.dto";
 import { UpdateApplicationStatusDto } from "./dto/update-application-status.dto";
 import { StatusesService } from "./statuses.service";
@@ -14,6 +17,7 @@ export class StatusesController {
   constructor(
     private readonly statusesService: StatusesService,
     private readonly applicationService: ApplicationService,
+    private readonly metadataService: MetadatasService,
   ) {}
 
   @Post()
@@ -28,6 +32,7 @@ export class StatusesController {
   async create(
     @Param("applicationId") applicationId: string,
     @Body() createStatusDto: CreateApplicationStatusDto,
+    @User() requestor: Requestor,
   ) {
     const createdStatus = await this.statusesService.create({
       ...createStatusDto,
@@ -36,6 +41,18 @@ export class StatusesController {
 
     await this.statusesService.updateCurrentStatus(applicationId);
     await this.applicationService.updateApplicationQuality(applicationId);
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: requestor.id,
+      title: "du statut de l'application",
+      fields: {
+        status: "Statut",
+        statusDate: "Date du statut",
+      },
+      type: "add",
+      oldData: null,
+      newData: createdStatus,
+    });
 
     return createdStatus;
   }
@@ -64,11 +81,25 @@ export class StatusesController {
     @Param("applicationId") applicationId: string,
     @Param("statusId") statusId: string,
     @Body() updateStatusDto: UpdateApplicationStatusDto,
+    @User() requestor: Requestor,
   ) {
+    const oldData = await this.statusesService.findOne(statusId);
+
     const updatedStatus = await this.statusesService.update(statusId, updateStatusDto);
 
     await this.statusesService.updateCurrentStatus(applicationId);
     await this.applicationService.updateApplicationQuality(applicationId);
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: requestor.id,
+      title: "du statut de l'application",
+      fields: {
+        status: "Statut",
+        statusDate: "Date du statut",
+      },
+      oldData,
+      newData: updatedStatus,
+    });
 
     return updatedStatus;
   }
@@ -85,9 +116,31 @@ export class StatusesController {
   async delete(
     @Param("applicationId") applicationId: string,
     @Param("statusId") statusId: string,
+    @User() requestor: Requestor,
   ) {
+    const statusToDelete = await this.statusesService.find({ applicationId }).then(statuses =>
+      statuses.find(status => status.id === statusId),
+    );
+
+    if (!statusToDelete) {
+      return;
+    }
+
     await this.statusesService.delete(statusId);
     await this.statusesService.updateCurrentStatus(applicationId);
     await this.applicationService.updateApplicationQuality(applicationId);
+
+    await this.metadataService.createMetadata({
+      applicationId,
+      createdById: requestor.id,
+      title: "du statut de l'application",
+      fields: {
+        status: "Statut",
+        statusDate: "Date du statut",
+      },
+      type: "delete",
+      oldData: statusToDelete,
+      newData: null,
+    });
   }
 }
