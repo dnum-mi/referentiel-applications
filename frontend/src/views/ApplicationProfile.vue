@@ -22,6 +22,26 @@ const application = computed<ApplicationWithPerms>(() => applicationStore.applic
 const isLoading = ref(false);
 const errorMessage = ref("");
 
+const isSubscriptionLoading = ref(false);
+const isSubscribed = computed(() => userStore.isSubscribed(id));
+
+async function toggleSubscription() {
+  isSubscriptionLoading.value = true;
+  try {
+    if (isSubscribed.value) {
+      
+      await userStore.unsubscribeFromApp(id);
+
+    } else {
+      await userStore.subscribeToApp(id);
+    }
+  } catch (err) {
+    console.error("Erreur lors de la modification de l'abonnement", err);
+  } finally {
+    isSubscriptionLoading.value = false;
+  }
+}
+
 const deleteModalOpened = ref(false);
 const deleteConfirmationInput = ref("");
 const applicationLabel = computed(() => application.value?.label ?? "");
@@ -106,7 +126,7 @@ const actions = computed(() => [
       <h1 id="application-title" data-testid="application-title" class="application-title">
         {{ application.label }}
       </h1>
-
+      
       <DsfrHighlight v-if="metadataStore.firstMetadata || metadataStore.lastMetadata" class="metadata-highlight" data-testid="application-metadata-highlight">
         <template #default>
           <div class="metadata-content">
@@ -124,7 +144,15 @@ const actions = computed(() => [
           </div>
         </template>
       </DsfrHighlight>
-
+            <DsfrButton
+          class="fr-btn--tertiary-no-outline fr-btn--icon-left"
+          :class="isSubscribed ? 'fr-icon-notification-3-fill' : 'fr-icon-notification-3-line'"
+          :disabled="isSubscriptionLoading"
+          @click="toggleSubscription"
+          :title="isSubscribed ? 'Ne plus recevoir de notifications pour cette application' : 'Recevoir des notifications lors des modifications'"
+        >
+          {{ isSubscribed ? 'Abonné(e)' : "S'abonner" }}
+      </DsfrButton>
       <div class="status-tags" aria-hidden="false" data-testid="application-tags">
         <DsfrTag
           v-if="application.currentStatus?.statusDate"
@@ -145,6 +173,7 @@ const actions = computed(() => [
         @update:application="handleApplicationUpdate"
       ></ApplicationOverview>
 
+
       <DsfrButton
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         class="application-delete-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
@@ -155,7 +184,7 @@ const actions = computed(() => [
       >
         Supprimer l’application
       </DsfrButton>
-    </div>
+      </div>
 
     <DsfrModal
       :opened="deleteModalOpened"

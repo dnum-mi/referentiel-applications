@@ -1,4 +1,4 @@
-import type { UserEntity } from "@/client/types.gen";
+import type { UserEntity, UserFollowedApplicationDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import client from "@/api/index";
@@ -28,11 +28,38 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
+  function isSubscribed(appId: string): boolean {
+    return user.value?.followedApplications?.some((app: UserFollowedApplicationDto) => app.id === appId) ?? false;
+  }
+
+  async function subscribeToApp(appId: string) {
+    const response = await client.userControllerSubscribe({
+      path: { appId },
+    });
+
+    if (response.data && response.response.ok) {
+      user.value = response.data;
+    }
+  }
+
+  async function unsubscribeFromApp(appId: string) {
+    const response = await client.userControllerUnsubscribe({
+      path: { appId },
+    });
+
+    if (response.data && response.response.ok) {
+      user.value = response.data;
+    }
+  }
+
   return {
     user,
     adminLevel,
     authenticated,
     fetchUser,
     updateEmailPreferences,
+    isSubscribed,
+    subscribeToApp,
+    unsubscribeFromApp,
   };
 });

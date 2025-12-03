@@ -22,6 +22,7 @@ export class UserService {
       where: { keycloakId },
       include: {
         organization: true,
+        followedApplications: true,
       },
     });
 
@@ -34,6 +35,7 @@ export class UserService {
       where: { email },
       include: {
         organization: true,
+        followedApplications: true,
       },
     });
 
@@ -44,6 +46,7 @@ export class UserService {
         data: { keycloakId },
         include: {
           organization: true,
+          followedApplications: true,
         },
       });
     }
@@ -58,6 +61,37 @@ export class UserService {
       },
       include: {
         organization: true,
+        followedApplications: true,
+      },
+    });
+  }
+
+  async subscribe(userId: string, applicationId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        followedApplications: {
+          connect: { id: applicationId },
+        },
+      },
+      include: {
+        organization: true,
+        followedApplications: true,
+      },
+    });
+  }
+
+  async unsubscribe(userId: string, applicationId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        followedApplications: {
+          disconnect: { id: applicationId },
+        },
+      },
+      include: {
+        organization: true,
+        followedApplications: true,
       },
     });
   }

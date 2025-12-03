@@ -3,9 +3,9 @@ import { CommonModule } from "src/common/common.module";
 import { LabelsModule } from "src/labels/labels.module";
 import { MetadatasModule } from "src/metadatas/metadatas.module";
 import { PrismaModule } from "src/prisma/prisma.module";
+
 import { StatusesModule } from "src/statuses/statuses.module";
 import { TagsModule } from "src/tag/tags.module";
-
 import { ApplicationController } from "./application.controller";
 import { ApplicationService } from "./application.service";
 import { ExportApplicationsUseCase } from "./application/usecases/application-export.usecase";

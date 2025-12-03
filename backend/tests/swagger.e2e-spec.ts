@@ -27,14 +27,21 @@ describe("Test Swagger documentation", () => {
   });
 
   it("test all paths and responses", () => {
+    const pathsAllowedWithoutBody = [
+      "/users/me/subscribe/{appId}",
+    ];
     for (const [path, pathObject] of Object.entries(openapiSpec.paths)) {
       for (const method of methods) {
         if (!pathObject[method]) {
           continue;
         }
-        // check that post like method also define a request body
-        if (["post", "put", "patch"].includes(method) && !pathObject[method].requestBody) {
-          throw new Error(`Missing request body: ${method.toUpperCase()} ${path}`);
+
+        const isMutationMethod = ["post", "put", "patch"].includes(method);
+        const hasBody = !!pathObject[method].requestBody;
+        const isException = pathsAllowedWithoutBody.includes(path);
+
+        if (isMutationMethod && !hasBody && !isException) {
+          throw new Error(`Missing request body: ${method.toUpperCase()} ${path}. If this is intentional, add "${path}" to pathsAllowedWithoutBody in the test file.`);
         }
 
         try {
