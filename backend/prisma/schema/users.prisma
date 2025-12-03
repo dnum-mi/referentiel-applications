@@ -1,5 +1,5 @@
 model User {
-  id                  String                @unique @default(uuid())
+  id                  String                @id @default(uuid())
   keycloakId          String?               @unique
   email               String                @unique
   lastLogin           DateTime?             @default(now())
@@ -13,6 +13,7 @@ model User {
   tokensCreated       Token[]               @relation("TokenUserCreator")
   type                UserType              @default(human)
   capabilities        CapabilityNames[]
+  followedApplications Application[] @relation("UserFollowedApplications")
   emailNotificationsEnabled Boolean         @default(true)
 }
 
