@@ -11,6 +11,7 @@ export type Filters = Exclude<ApplicationControllerSearchData["query"], undefine
   hostingBuilding?: string
   hostingRoom?: string
   currentStatus__in?: Array<"under_construction" | "poc" | "in_production_mvp" | "in_production" | "in_production_decommissioning" | "decommissioned" | "deleted">
+  currentStatus__isNull?: boolean
   compliance__in?: Array<"dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd">
 };
 
@@ -27,6 +28,7 @@ export const useApplicationSearchStore = defineStore("applicationSearchStore", (
     link: undefined,
     priorityRestart: undefined,
     currentStatus__in: ["under_construction", "poc", "in_production_mvp", "in_production", "in_production_decommissioning", "decommissioned"],
+    currentStatus__isNull: undefined,
     compliance__in: undefined,
     page: 0,
     pageSize: 15,

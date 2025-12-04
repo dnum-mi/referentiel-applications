@@ -12,8 +12,10 @@ const statusOptions = Object.keys(statusApplicationDictionary)
     label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
     name: value,
   }));
+const allStatusValues = statusOptions.map(option => option.value as ApplicationStatus);
 
 const selectedStatus = computed(() => searchStore.filters.currentStatus__in);
+const isWithoutStatusActive = computed(() => Boolean(searchStore.filters.currentStatus__isNull));
 
 function toggleStatus(value: ApplicationStatus, event: Event) {
   const checked = (event.target as HTMLInputElement).checked;
@@ -25,7 +27,34 @@ function toggleStatus(value: ApplicationStatus, event: Event) {
     selected.delete(value);
   }
 
-  searchStore.setFilter({ currentStatus__in: Array.from(selected) });
+  searchStore.setFilter(
+    selected.size === 0
+      ? {
+          currentStatus__in: undefined,
+          currentStatus__isNull: true,
+        }
+      : {
+          currentStatus__in: Array.from(selected),
+          ...(searchStore.filters.currentStatus__isNull
+            ? { currentStatus__isNull: undefined }
+            : {}),
+        },
+  );
+}
+
+function toggleWithoutStatus(event: Event) {
+  const checked = (event.target as HTMLInputElement).checked;
+  searchStore.setFilter(
+    checked
+      ? {
+          currentStatus__isNull: true,
+          currentStatus__in: undefined,
+        }
+      : {
+          currentStatus__isNull: undefined,
+          currentStatus__in: allStatusValues,
+        },
+  );
 }
 </script>
 
@@ -35,7 +64,23 @@ function toggleStatus(value: ApplicationStatus, event: Event) {
       Statut de l'application
     </legend>
     <div data-testid="status-filter">
-      <label v-for="option in statusOptions" :key="option.value" class="checkbox-item">
+      <label class="checkbox-item without-status-option">
+        <input
+          type="checkbox"
+          :checked="isWithoutStatusActive"
+          data-testid="status-option-none"
+          aria-describedby="withoutStatusDescriptionId"
+          @change="toggleWithoutStatus"
+        >
+        Sans statut
+        <span id="withoutStatusDescriptionId" class="sr-only">Filtrer les applications sans statut</span>
+      </label>
+
+      <label
+        v-for="option in statusOptions"
+        :key="option.value"
+        class="checkbox-item"
+      >
         <input
           type="checkbox"
           :value="option.value"
@@ -48,3 +93,29 @@ function toggleStatus(value: ApplicationStatus, event: Event) {
     </div>
   </div>
 </template>
+
+<style scoped>
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.without-status-option {
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.75rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+</style>

@@ -645,6 +645,13 @@ paths:
                 - in_production_decommissioning
                 - decommissioned
                 - deleted
+        - name: currentStatus__isNull
+          required: false
+          in: query
+          description: Filtrer les applications sans statut
+          schema:
+            example: true
+            type: boolean
         - name: organization
           required: false
           in: query
@@ -942,6 +949,13 @@ paths:
                 - in_production_decommissioning
                 - decommissioned
                 - deleted
+        - name: currentStatus__isNull
+          required: false
+          in: query
+          description: Filtrer les applications sans statut
+          schema:
+            example: true
+            type: boolean
         - name: organization
           required: false
           in: query
