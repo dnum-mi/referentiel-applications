@@ -2,7 +2,7 @@
 import { ref } from "vue";
 import SuggestionsInput from "../SuggestionsInput.vue";
 import { RelationType } from "@/client/types.gen";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore.js";
+import { useApplicationSearch } from "@/composables/use-application-search";
 
 const props = withDefaults(
   defineProps<{
@@ -19,7 +19,7 @@ const emit = defineEmits<{
   (e: "close"): void
   (e: "addRelation", payload: { targetId: string, type: string }): void
 }>();
-const applicationSearchStore = useApplicationSearchStore();
+const { searchApplications } = useApplicationSearch();
 const selectedApplicationId = ref<string>("");
 const relationType = ref<RelationType>(RelationType.IS_PART_OF);
 const relationTypesForSelect = [
@@ -36,7 +36,7 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading!.value = true;
     try {
-      const response = await applicationSearchStore.searchApplications({ search: query, pageSize: 10 }, false);
+      const response = await searchApplications({ search: query, pageSize: 10 }, false);
       return response.results;
     } catch (error) {
       console.error(error);

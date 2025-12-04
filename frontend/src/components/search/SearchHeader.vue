@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { useApplicationSearch } from "@/composables/use-application-search";
 
 interface ApplicationOption {
   id: string | number;
@@ -12,7 +12,7 @@ interface ApplicationOption {
 }
 
 const router = useRouter();
-const appStore = useApplicationSearchStore();
+const { searchApplications } = useApplicationSearch();
 const searchRef = ref<{ clear?: () => void } | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
 const isMobile = ref(window.innerWidth <= 768);
@@ -20,27 +20,16 @@ const showInput = ref(!isMobile.value);
 
 function handleResize() {
   isMobile.value = window.innerWidth <= 768;
-  if (!isMobile.value) {
-    showInput.value = true;
-  } else {
-    showInput.value = false;
-  }
+  showInput.value = !isMobile.value;
 }
 
-onMounted(() => {
-  window.addEventListener("resize", handleResize);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("resize", handleResize);
-});
+onMounted(() => window.addEventListener("resize", handleResize));
+onUnmounted(() => window.removeEventListener("resize", handleResize));
 
 async function onLoupeClick() {
   showInput.value = true;
   await nextTick();
-  if (inputRef.value) {
-    inputRef.value.focus();
-  }
+  inputRef.value?.focus();
 }
 
 function closeSearch() {
@@ -48,21 +37,13 @@ function closeSearch() {
   searchRef.value?.clear?.();
 }
 
-async function searchApplications(searchQuery: string): Promise<ApplicationOption[]> {
+async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[]> {
   const trimmedQuery = searchQuery.trim();
   if (!trimmedQuery) return [];
   try {
-    const response = await appStore.searchApplications(
-      {
-        search: trimmedQuery,
-        page: 0,
-        pageSize: 8,
-      } as any,
-      false
-    );
+    const response = await searchApplications({ search: trimmedQuery, page: 0, pageSize: 8 }, false);
     return (response?.results ?? []) as ApplicationOption[];
-  } catch (err) {
-    console.error("Erreur lors de la recherche :", err);
+  } catch {
     return [];
   }
 }
@@ -101,7 +82,7 @@ function onConfirm(selection: ApplicationOption | null) {
       v-if="!isMobile"
       ref="searchRef"
       id="app-search"
-      :search="searchApplications"
+      :search="fetchSuggestions"
       :displayLabel="displayLabel"
       :onChange="onConfirm"
       :displayNoResult="true"

@@ -1,5 +1,5 @@
-import type { Filters } from "./applicationSearchStore";
 import type { ApplicationPriorityRestart, PatchApplicationDto } from "@/client/types.gen";
+import type { Filters } from "@/composables/use-application-search";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 import { computed, ref } from "vue";
 import api from "@/api/index";

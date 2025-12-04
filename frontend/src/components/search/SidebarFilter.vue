@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
-
+import { useApplicationSearch } from "@/composables/use-application-search";
 import ActorFilter from "@/components/search/ActorFilter.vue";
 import HostingFilter from "@/components/search/HostingFilter.vue";
 import QualityFilter from "@/components/search/QualityFilter.vue";
@@ -13,31 +12,23 @@ import StatusFilter from "./StatusFilter.vue";
 import { DsfrButton } from "@gouvminint/vue-dsfr";
 
 const sidebarOpen = ref(true);
-const searchStore = useApplicationSearchStore();
+const { total, resetFilters } = useApplicationSearch();
 const statsStore = useStatisticsStore();
 
 const { openAccordions, toggle } = useAccordionManager(3, true);
-
-function toggleSidebar() {
-  sidebarOpen.value = !sidebarOpen.value;
-}
-
-function resetAllFilters() {
-  searchStore.resetFilters();
-}
 </script>
 
 <template>
   <Transition name="sidebar-width">
     <aside v-if="sidebarOpen" class="sidebar" data-testid="sidebar-filter">
       <div class="filters-wrapper">
-        <DsfrButton tertiary size="small" class="reset-link" data-testid="sidebar-reset-filters-button" @click="resetAllFilters">
+        <DsfrButton tertiary size="small" class="reset-link" data-testid="sidebar-reset-filters-button" @click="resetFilters">
           ✕ Réinitialiser
         </DsfrButton>
 
         <h5>Filtres</h5>
         <p class="total-count" data-testid="sidebar-total-count">
-          {{ searchStore.total }} application(s) trouvée(s) sur {{ statsStore.totalApplications }}
+          {{ total }} application(s) trouvée(s) sur {{ statsStore.totalApplications }}
         </p>
 
         <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">
@@ -82,7 +73,7 @@ function resetAllFilters() {
     class="sidebar-toggle"
     data-testid="sidebar-toggle"
     :aria-label="sidebarOpen ? 'Fermer les filtres' : 'Ouvrir les filtres'"
-    @click="toggleSidebar"
+    @click="sidebarOpen = !sidebarOpen"
   >
     <VIcon :name="sidebarOpen ? 'ri-arrow-left-s-line' : 'ri-arrow-right-s-line'" class="sidebar-toggle-icon" />
   </button>
