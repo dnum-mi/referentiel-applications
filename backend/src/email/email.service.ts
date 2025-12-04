@@ -25,6 +25,9 @@ export class EmailService {
       host,
       port,
       secure,
+      tls: {
+        rejectUnauthorized: false,
+      },
     });
 
     this.logger.log(`Email service initialized (enabled: ${this.enabled})`);
