@@ -3,6 +3,7 @@ import { priorityRestart, Status } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -80,6 +81,15 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsEnum(Status, { each: true })
   @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
   currentStatus__in?: Status[];
+
+  @ApiPropertyOptional({
+    description: "Filtrer les applications sans statut",
+    example: true,
+  })
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  currentStatus__isNull?: boolean;
 
   @ApiPropertyOptional({
     description: "Nom de l'organisation liée à l'application",
