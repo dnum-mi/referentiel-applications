@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage lines-valid="2734" lines-covered="2063" line-rate="0.7545000000000001" branches-valid="531" branches-covered="197" branch-rate="0.3709" timestamp="1764946947671" complexity="0" version="0.1">
+<coverage lines-valid="2734" lines-covered="2063" line-rate="0.7545000000000001" branches-valid="531" branches-covered="197" branch-rate="0.3709" timestamp="1764948663516" complexity="0" version="0.1">
   <sources>
     <source>/app</source>
   </sources>
@@ -6725,14 +6725,14 @@
                 <line number="5" hits="9"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="6" signature="()V">
+            <method name="(anonymous_1)" hits="4" signature="()V">
               <lines>
-                <line number="32" hits="6"/>
+                <line number="32" hits="4"/>
               </lines>
             </method>
-            <method name="(anonymous_2)" hits="8" signature="()V">
+            <method name="(anonymous_2)" hits="4" signature="()V">
               <lines>
-                <line number="35" hits="8"/>
+                <line number="35" hits="4"/>
               </lines>
             </method>
           </methods>
@@ -6744,8 +6744,8 @@
             <line number="8" hits="9" branch="false"/>
             <line number="15" hits="9" branch="false"/>
             <line number="26" hits="9" branch="false"/>
-            <line number="32" hits="6" branch="false"/>
-            <line number="35" hits="8" branch="false"/>
+            <line number="32" hits="4" branch="false"/>
+            <line number="35" hits="4" branch="false"/>
           </lines>
         </class>
         <class name="hosting.faker.ts" filename="tests/fakers/hosting.faker.ts" line-rate="1" branch-rate="1">
