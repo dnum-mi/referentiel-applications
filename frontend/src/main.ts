@@ -8,6 +8,7 @@ import App from "./App.vue";
 import MatomoPlugin from "./plugins/MatomoPlugin";
 
 import router from "./router/index";
+import { logDsfrVersion } from "./utils/log-dsfr-version";
 import "@gouvfr/dsfr/dist/core/core.main.min.css";
 import "@gouvfr/dsfr/dist/component/component.main.min.css";
 import "@gouvfr/dsfr/dist/utility/utility.main.min.css";
@@ -15,6 +16,8 @@ import "@gouvminint/vue-dsfr/styles";
 import "@gouvfr/dsfr/dist/scheme/scheme.min.css";
 import "@gouvfr/dsfr/dist/utility/icons/icons.min.css";
 import "./main.css";
+
+logDsfrVersion();
 
 const app = createApp(App);
 
