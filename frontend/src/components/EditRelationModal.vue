@@ -3,7 +3,7 @@ import { ref, watch } from "vue";
 import api from "@/api/index";
 import { RelationType } from "@/client/types.gen";
 import type { ApplicationDto, RelationDto } from "@/client/types.gen";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore.js";
+import { useApplicationSearch } from "@/composables/use-application-search";
 
 const props = withDefaults(
   defineProps<{
@@ -20,7 +20,7 @@ const emit = defineEmits<{
   (e: "close"): void
   (e: "updateRelation", updatedRelation: RelationDto): void
 }>();
-const applicationSearchStore = useApplicationSearchStore();
+const { searchApplications } = useApplicationSearch();
 const searchText = ref("");
 const suggestions = ref<ApplicationDto[]>([]);
 const selectedApplication = ref<Required<Pick<ApplicationDto, "id" | "label">> | null>(null);
@@ -47,7 +47,7 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading.value = true;
     try {
-      const response = await applicationSearchStore.searchApplications({
+      const response = await searchApplications({
         search: query,
         pageSize: 10,
       }, false);

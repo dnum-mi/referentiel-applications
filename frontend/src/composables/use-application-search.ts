@@ -1,0 +1,206 @@
+import type { LocationQueryValue } from "vue-router";
+import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import api from "@/api/index.js";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
+
+export type Filters = NonNullable<ApplicationControllerSearchData["query"]>;
+
+const DEFAULT_FILTERS: Filters = {
+  label: undefined,
+  tag: [],
+  link: undefined,
+  priorityRestart: undefined,
+  currentStatus__in: ["under_construction", "poc", "in_production_mvp", "in_production", "in_production_decommissioning", "decommissioned"],
+  currentStatus__isNull: undefined,
+  compliance__in: undefined,
+  page: 0,
+  pageSize: 15,
+  sortBy: "label",
+  order: "asc",
+  hostingSite: undefined,
+  hostingPlatform: undefined,
+  hostingProvider: undefined,
+  hostingBuilding: undefined,
+  hostingRoom: undefined,
+  organization: undefined,
+  actorType: undefined,
+  actorEmail: undefined,
+  iqGte: 0,
+  iqLte: 100,
+  search: undefined,
+};
+
+// Shared state across components (singleton pattern)
+const results = ref<any[]>([]);
+const total = ref(0);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+
+function parseQueryParam(value: LocationQueryValue | LocationQueryValue[]): string | undefined {
+  if (Array.isArray(value)) return value[0] ?? undefined;
+  return value ?? undefined;
+}
+
+function parseQueryParamNumber(value: LocationQueryValue | LocationQueryValue[]): number | undefined {
+  const str = parseQueryParam(value);
+  if (!str) return undefined;
+  const num = Number.parseInt(str, 10);
+  return Number.isNaN(num) ? undefined : num;
+}
+
+function parseQueryParamArray(value: LocationQueryValue | LocationQueryValue[]): string[] | undefined {
+  if (!value) return undefined;
+  const arr = Array.isArray(value) ? value : [value];
+  const filtered = arr.filter((v): v is string => v !== null);
+  return filtered.length > 0 ? filtered : undefined;
+}
+
+function filtersToQuery(filters: Filters): Record<string, string | string[]> {
+  const query: Record<string, string | string[]> = {};
+
+  for (const [key, value] of Object.entries(filters)) {
+    if (value === undefined || value === null || value === "") continue;
+    if (Array.isArray(value)) {
+      if (value.length === 0) continue;
+      // Compare with defaults for arrays
+      const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
+      if (Array.isArray(defaultValue) && JSON.stringify(value.slice().sort()) === JSON.stringify(defaultValue.slice().sort())) continue;
+      query[key] = value.map(String);
+    } else if (typeof value === "number") {
+      const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
+      if (value === defaultValue) continue;
+      query[key] = String(value);
+    } else {
+      const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
+      if (value === defaultValue) continue;
+      query[key] = String(value);
+    }
+  }
+
+  return query;
+}
+
+function queryToFilters(query: Record<string, LocationQueryValue | LocationQueryValue[]>): Filters {
+  return {
+    ...DEFAULT_FILTERS,
+    label: parseQueryParam(query.label),
+    tag: parseQueryParamArray(query.tag) ?? [],
+    link: parseQueryParam(query.link),
+    priorityRestart: parseQueryParamArray(query.priorityRestart) as Filters["priorityRestart"],
+    currentStatus__in: (parseQueryParamArray(query.currentStatus__in) ?? DEFAULT_FILTERS.currentStatus__in) as Filters["currentStatus__in"],
+    currentStatus__isNull: parseQueryParam(query.currentStatus__isNull) === "true" ? true : parseQueryParam(query.currentStatus__isNull) === "false" ? false : undefined,
+    compliance__in: parseQueryParamArray(query.compliance__in) as Filters["compliance__in"],
+    page: parseQueryParamNumber(query.page) ?? 0,
+    pageSize: parseQueryParamNumber(query.pageSize) ?? 15,
+    sortBy: parseQueryParam(query.sortBy) ?? "label",
+    order: (parseQueryParam(query.order) ?? "asc") as "asc" | "desc",
+    hostingSite: parseQueryParam(query.hostingSite),
+    hostingPlatform: parseQueryParam(query.hostingPlatform),
+    hostingProvider: parseQueryParam(query.hostingProvider),
+    hostingBuilding: parseQueryParam(query.hostingBuilding),
+    hostingRoom: parseQueryParam(query.hostingRoom),
+    organization: parseQueryParam(query.organization),
+    actorType: parseQueryParam(query.actorType),
+    actorEmail: parseQueryParam(query.actorEmail),
+    iqGte: parseQueryParamNumber(query.iqGte) ?? 0,
+    iqLte: parseQueryParamNumber(query.iqLte) ?? 100,
+    search: parseQueryParam(query.search),
+  };
+}
+
+function cleanFilters(filters: Filters): Filters {
+  const cleaned: Filters = { ...filters };
+  for (const [key, value] of Object.entries(cleaned)) {
+    if (typeof value === "number") continue;
+    if (value == null || value === "" || (Array.isArray(value) && value.length === 0)) {
+      delete cleaned[key as keyof Filters];
+    }
+  }
+  return cleaned;
+}
+
+export function useApplicationSearch() {
+  const route = useRoute();
+  const router = useRouter();
+
+  // Parse filters from URL
+  const filters = computed<Filters>({
+    get: () => queryToFilters(route.query),
+    set: (newFilters) => {
+      router.replace({ query: filtersToQuery(newFilters) });
+    },
+  });
+
+  const page = computed({
+    get: () => filters.value.page!,
+    set: val => setFilter({ page: val }),
+  });
+
+  const pageSize = computed({
+    get: () => filters.value.pageSize!,
+    set: val => setFilter({ pageSize: val }),
+  });
+
+  function setFilter<T extends keyof Filters>(values: Partial<Pick<Filters, T>>) {
+    const newFilters = { ...filters.value, ...values };
+    router.replace({ query: filtersToQuery(newFilters) });
+  }
+
+  function setOrder(ascending: boolean) {
+    setFilter({ order: ascending ? "asc" : "desc" });
+  }
+
+  function resetFilters() {
+    router.replace({ query: {} });
+  }
+
+  async function searchApplications(customFilters?: Partial<Filters>, store = true) {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const currentFilters = { ...filters.value, ...customFilters };
+      const query = cleanFilters(currentFilters);
+
+      const response = await api.applicationControllerSearch({ query });
+
+      if (!response.response.ok || !response.data) {
+        throw new Error("Erreur lors de la recherche d'applications");
+      }
+
+      if (store) {
+        results.value = response.data.results;
+        total.value = response.data.total;
+      }
+
+      return { ...response.data, results: response.data.results, total: response.data.total };
+    } catch (err: any) {
+      error.value = err?.message || "Erreur inconnue";
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  const { run: debouncedSearch } = useDebouncedFn(() => searchApplications(), 300);
+
+  // Auto-search when filters change
+  watch(() => route.query, () => debouncedSearch(), { deep: true });
+
+  return {
+    filters,
+    results,
+    total,
+    page,
+    pageSize,
+    isLoading,
+    error,
+    DEFAULT_FILTERS,
+    searchApplications,
+    setFilter,
+    setOrder,
+    resetFilters,
+  };
+}

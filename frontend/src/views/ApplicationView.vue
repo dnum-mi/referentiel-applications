@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from "vue";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { ref, onMounted, computed } from "vue";
+import { useApplicationSearch } from "@/composables/use-application-search";
 import { useStatisticsStore } from "@/stores/statisticsStore";
-
 import ApplicationTableView from "@/components/ApplicationTableView.vue";
 import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
@@ -10,28 +9,17 @@ import AppLoader from "@/components/AppLoader.vue";
 import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue";
 
 const statsStore = useStatisticsStore();
-const searchStore = useApplicationSearchStore();
+const { isLoading, searchApplications } = useApplicationSearch();
 
-const currentSortedColumn = ref("label");
 const isMobile = ref(false);
 
-function updateMode() {
+onMounted(() => {
   isMobile.value = window.matchMedia("(max-width: 768px)").matches;
-}
-
-watch(currentSortedColumn, (val) => {
-  searchStore.setFilter({ sortBy: val });
-});
-
-watch([() => searchStore.page, () => searchStore.pageSize], () => {
-  searchStore.searchApplications();
-});
-
-onMounted(async () => {
-  updateMode();
-  window.addEventListener("resize", updateMode);
+  window.addEventListener("resize", () => {
+    isMobile.value = window.matchMedia("(max-width: 768px)").matches;
+  });
   statsStore.countApplications();
-  searchStore.searchApplications();
+  searchApplications();
 });
 
 const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
@@ -47,7 +35,7 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         Recherche d'applications
       </h1>
 
-      <div v-if="searchStore.isLoading" class="loader" data-testid="application-loader" role="status" aria-live="polite" aria-atomic="true">
+      <div v-if="isLoading" class="loader" data-testid="application-loader" role="status" aria-live="polite" aria-atomic="true">
         <AppLoader />
         <span class="sr-only">Chargement des résultats…</span>
       </div>
@@ -60,14 +48,10 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         id="application-results"
         class="application-results"
         aria-live="polite"
-        :aria-busy="searchStore.isLoading"
+        :aria-busy="isLoading"
         tabindex="-1"
       >
-        <ApplicationTableView
-          v-if="displayMode === 'table'"
-          v-model:sorted-by="currentSortedColumn"
-          data-testid="application-table-view"
-        />
+        <ApplicationTableView v-if="displayMode === 'table'" data-testid="application-table-view" />
         <ApplicationCardView v-else data-testid="application-card-view" />
       </section>
     </main>

@@ -1,68 +1,45 @@
 <script lang="ts" setup>
 import { computed } from "vue";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { useApplicationSearch } from "@/composables/use-application-search";
 import type { ApplicationStatus } from "@/client/types.gen";
 
-const searchStore = useApplicationSearchStore();
+const { filters, setFilter } = useApplicationSearch();
 
-const statusOptions = Object.keys(statusApplicationDictionary)
-  .map(value => ({
-    value,
-    label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
-    name: value,
-  }));
+const statusOptions = Object.keys(statusApplicationDictionary).map(value => ({
+  value,
+  label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
+}));
 const allStatusValues = statusOptions.map(option => option.value as ApplicationStatus);
 
-const selectedStatus = computed(() => searchStore.filters.currentStatus__in);
-const isWithoutStatusActive = computed(() => Boolean(searchStore.filters.currentStatus__isNull));
+const isWithoutStatusActive = computed(() => Boolean(filters.value.currentStatus__isNull));
 
-function toggleStatus(value: ApplicationStatus, event: Event) {
-  const checked = (event.target as HTMLInputElement).checked;
+function toggleStatus(value: ApplicationStatus, checked: boolean) {
+  const selected = new Set<ApplicationStatus>(filters.value.currentStatus__in || []);
+  checked ? selected.add(value) : selected.delete(value);
 
-  const selected = new Set<ApplicationStatus>(searchStore.filters.currentStatus__in || []);
-  if (checked) {
-    selected.add(value);
+  if (selected.size === 0) {
+    setFilter({ currentStatus__in: undefined, currentStatus__isNull: true });
   } else {
-    selected.delete(value);
+    setFilter({
+      currentStatus__in: Array.from(selected),
+      ...(filters.value.currentStatus__isNull ? { currentStatus__isNull: undefined } : {}),
+    });
   }
-
-  searchStore.setFilter(
-    selected.size === 0
-      ? {
-          currentStatus__in: undefined,
-          currentStatus__isNull: true,
-        }
-      : {
-          currentStatus__in: Array.from(selected),
-          ...(searchStore.filters.currentStatus__isNull
-            ? { currentStatus__isNull: undefined }
-            : {}),
-        },
-  );
 }
 
-function toggleWithoutStatus(event: Event) {
-  const checked = (event.target as HTMLInputElement).checked;
-  searchStore.setFilter(
+function toggleWithoutStatus(checked: boolean) {
+  setFilter(
     checked
-      ? {
-          currentStatus__isNull: true,
-          currentStatus__in: undefined,
-        }
-      : {
-          currentStatus__isNull: undefined,
-          currentStatus__in: allStatusValues,
-        },
+      ? { currentStatus__isNull: true, currentStatus__in: undefined }
+      : { currentStatus__isNull: undefined, currentStatus__in: allStatusValues },
   );
 }
 </script>
 
 <template>
   <div>
-    <legend class="fr-label fr-mb-2w">
-      Statut de l'application
-    </legend>
+    <legend class="fr-label fr-mb-2w">Statut de l'application</legend>
     <div data-testid="status-filter">
       <label class="checkbox-item without-status-option">
         <input
@@ -70,7 +47,7 @@ function toggleWithoutStatus(event: Event) {
           :checked="isWithoutStatusActive"
           data-testid="status-option-none"
           aria-describedby="withoutStatusDescriptionId"
-          @change="toggleWithoutStatus"
+          @change="(e) => toggleWithoutStatus((e.target as HTMLInputElement).checked)"
         >
         Sans statut
         <span id="withoutStatusDescriptionId" class="sr-only">Filtrer les applications sans statut</span>
@@ -84,9 +61,9 @@ function toggleWithoutStatus(event: Event) {
         <input
           type="checkbox"
           :value="option.value"
-          :checked="selectedStatus?.includes(option.value as ApplicationStatus)"
+          :checked="filters.currentStatus__in?.includes(option.value as ApplicationStatus)"
           :data-testid="`status-option-${option.value}`"
-          @change="(e) => toggleStatus(option.value as ApplicationStatus, e)"
+          @change="(e) => toggleStatus(option.value as ApplicationStatus, (e.target as HTMLInputElement).checked)"
         >
         {{ option.label }}
       </label>
