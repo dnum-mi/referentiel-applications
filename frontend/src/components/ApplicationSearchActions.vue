@@ -4,7 +4,7 @@ import type { Ref } from "vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useApplicationStore } from "@/stores/applicationStore";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { useApplicationSearch } from "@/composables/use-application-search";
 import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { routeNames } from "@/router/route-names";
@@ -13,7 +13,7 @@ import ReportAnomaly from "@/components/modal/reportAnomaly.vue";
 const router = useRouter();
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
-const searchStore = useApplicationSearchStore();
+const { filters } = useApplicationSearch();
 const toaster = useToasterStore();
 
 const isReportMissingOpen = ref(false);
@@ -40,7 +40,7 @@ const { open: openReport, close: closeReport } = createModalHandlers(isReportMis
 
 async function exportToExcel() {
   try {
-    await applicationStore.downloadExcel(searchStore.filters);
+    await applicationStore.downloadExcel(filters.value);
   } catch (error) {
     toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }

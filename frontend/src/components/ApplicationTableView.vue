@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { computed, watch, ref } from "vue";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { computed, ref, watch } from "vue";
+import { useApplicationSearch } from "@/composables/use-application-search";
 import { restartPrioritiesConfig } from "@/composables/use-dictionary";
 import PaginationFooter from "./PaginationFooter.vue";
 
-const searchStore = useApplicationSearchStore();
+const { filters, results, total, page, pageSize, setFilter, setOrder } = useApplicationSearch();
 
-const sortBy = ref(searchStore.filters.sortBy || "label");
-const sortedDesc = ref(searchStore.filters.order === "desc");
-
-const lastValidColumn = ref(sortBy.value);
+const sortBy = ref(filters.value.sortBy || "label");
+const sortedDesc = ref(filters.value.order === "desc");
 
 const columnToFieldMap: Record<string, string> = {
   IQ: "quality",
@@ -19,58 +17,25 @@ const columnToFieldMap: Record<string, string> = {
   Tags: "tag",
 };
 
-watch(
-  [sortBy, sortedDesc],
-  ([col, desc]) => {
-    let actualColumn = col;
-    if (!col) {
-      actualColumn = lastValidColumn.value;
-      sortBy.value = actualColumn;
-    } else {
-      lastValidColumn.value = col;
-    }
+watch([sortBy, sortedDesc], ([col, desc]) => {
+  const sortField = columnToFieldMap[col || "label"] || col || "label";
+  setFilter({ sortBy: sortField, order: desc ? "desc" : "asc" });
+}, { flush: "post" });
 
-    const sortField = columnToFieldMap[actualColumn] || actualColumn;
-    const orderValue = desc === true ? "desc" : "asc";
-
-    searchStore.setFilter({ sortBy: sortField, order: orderValue });
-  },
-  {
-    flush: "post",
-  },
-);
-
-const rows = computed(() => {
-  const rows = searchStore.results.map((app: any) => ({
+const rows = computed(() =>
+  results.value.map((app: any) => ({
     IQ: { value: app.quality !== null ? `${app.quality}%` : "0%" },
     Nom: app,
     Priorité: app,
     Hébergement: {
-      hosting:
-        app.hostings
-          ?.map((h: any) => {
-            const site = h.hostingOption?.site || h.site || "";
-            const building = h.hostingOption?.building || "";
-            const room = h.hostingOption?.room || "";
-
-            const parts = [site, building, room].filter(Boolean);
-            return parts.length ? parts.join(" - ") : "-";
-          })
-          .join(", ") || "-",
+      hosting: app.hostings?.map((h: any) => {
+        const parts = [h.hostingOption?.site || h.site, h.hostingOption?.building, h.hostingOption?.room].filter(Boolean);
+        return parts.length ? parts.join(" - ") : "-";
+      }).join(", ") || "-",
     },
-    Tags: {
-      tags: app.tags?.map(tag => tag.name).join(", ") || "-",
-    },
-  }));
-  if (searchStore.filters.order === "desc") {
-    rows.reverse();
-  }
-  return rows;
-});
-
-function updateSortedColumn(key: string | undefined) {
-  searchStore.setFilter({ sortBy: key || "label", page: 0 });
-}
+    Tags: { tags: app.tags?.map((tag: any) => tag.name).join(", ") || "-" },
+  })),
+);
 </script>
 
 <template>
@@ -84,8 +49,7 @@ function updateSortedColumn(key: string | undefined) {
     sortable-rows
     vertical-borders
     data-testid="application-table"
-    @update:sorted-by="updateSortedColumn"
-    @update:sorted-desc="searchStore.setOrder"
+    @update:sorted-desc="setOrder"
   >
     <template #cell="{ colKey, cell }">
       <template v-if="colKey === 'Nom'">
@@ -121,12 +85,12 @@ function updateSortedColumn(key: string | undefined) {
   </DsfrDataTable>
 
   <PaginationFooter
-    :total-filtered="searchStore.total ?? 0"
-    :limit="searchStore.pageSize ?? 0"
-    :page="searchStore.page ?? 0"
+    :total-filtered="total"
+    :limit="pageSize"
+    :page="page"
     data-testid="application-pagination-footer"
-    @update:limit="searchStore.pageSize = $event"
-    @update:page="searchStore.page = $event"
+    @update:limit="pageSize = $event"
+    @update:page="page = $event"
   />
 </template>
 

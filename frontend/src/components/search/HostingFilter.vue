@@ -1,167 +1,86 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { useApplicationSearch } from "@/composables/use-application-search";
 import { DsfrSelect } from "@gouvminint/vue-dsfr";
 import { useHostingStore } from "@/stores/hostingStore";
 import type { HostingOptionDto } from "@/client/types.gen";
+import type { Filters } from "@/composables/use-application-search";
 
-const searchStore = useApplicationSearchStore();
+const { filters, setFilter } = useApplicationSearch();
 const hostingStore = useHostingStore();
 
 const allHostingOptions = ref<HostingOptionDto[]>([]);
 const isLoading = ref(false);
 
-// Simple computed filters that read/write directly to the store
-const selectedSite = computed({
-  get: () => searchStore.filters.hostingSite || "",
-  set: (value) => {
-    searchStore.filters.hostingSite = value || undefined;
-    searchStore.filters.page = 0;
-  },
-});
+type HostingField = "site" | "platform" | "provider" | "building" | "room";
+type FilterKey = "hostingSite" | "hostingPlatform" | "hostingProvider" | "hostingBuilding" | "hostingRoom";
 
-const selectedPlatform = computed({
-  get: () => searchStore.filters.hostingPlatform || "",
-  set: (value) => {
-    searchStore.filters.hostingPlatform = value || undefined;
-    searchStore.filters.page = 0;
-  },
-});
+const hostingFields: { field: HostingField; filterKey: FilterKey; label: string; testId: string }[] = [
+  { field: "site", filterKey: "hostingSite", label: "Tous les sites", testId: "hosting-site-select" },
+  { field: "platform", filterKey: "hostingPlatform", label: "Toutes les plateformes", testId: "hosting-platform-select" },
+  { field: "provider", filterKey: "hostingProvider", label: "Tous les fournisseurs", testId: "hosting-provider-select" },
+  { field: "building", filterKey: "hostingBuilding", label: "Tous les bâtiments", testId: "hosting-building-select" },
+  { field: "room", filterKey: "hostingRoom", label: "Toutes les pièces", testId: "hosting-room-select" },
+];
 
-const selectedProvider = computed({
-  get: () => searchStore.filters.hostingProvider || "",
-  set: (value) => {
-    searchStore.filters.hostingProvider = value || undefined;
-    searchStore.filters.page = 0;
-  },
-});
+function getFilteredOptions(excludeField: HostingField) {
+  return allHostingOptions.value.filter((o) => {
+    for (const { field, filterKey } of hostingFields) {
+      if (field === excludeField) continue;
+      const filterValue = filters.value[filterKey];
+      if (filterValue && o[field] !== filterValue) return false;
+    }
+    return true;
+  });
+}
 
-const selectedBuilding = computed({
-  get: () => searchStore.filters.hostingBuilding || "",
-  set: (value) => {
-    searchStore.filters.hostingBuilding = value || undefined;
-    searchStore.filters.page = 0;
-  },
-});
+function createOptions(field: HostingField, defaultLabel: string) {
+  return computed(() => {
+    const options = getFilteredOptions(field);
+    const values = [...new Set(options.map(o => o[field]).filter(Boolean))].sort() as string[];
+    return [{ value: "", text: defaultLabel }, ...values.map(v => ({ value: v, text: v }))];
+  });
+}
 
-const selectedRoom = computed({
-  get: () => searchStore.filters.hostingRoom || "",
-  set: (value) => {
-    searchStore.filters.hostingRoom = value || undefined;
-    searchStore.filters.page = 0;
-  },
-});
+const optionsMap = Object.fromEntries(
+  hostingFields.map(({ field, label }) => [field, createOptions(field, label)]),
+) as Record<HostingField, ReturnType<typeof createOptions>>;
 
-// Filter options based on selections - bidirectional filtering
-const siteOptions = computed(() => {
-  let options = allHostingOptions.value;
-  if (selectedPlatform.value) options = options.filter(o => o.platform === selectedPlatform.value);
-  if (selectedProvider.value) options = options.filter(o => o.provider === selectedProvider.value);
-  if (selectedBuilding.value) options = options.filter(o => o.building === selectedBuilding.value);
-  if (selectedRoom.value) options = options.filter(o => o.room === selectedRoom.value);
-
-  const sites = [...new Set(options.map(o => o.site))].sort();
-  return [{ value: "", text: "Tous les sites" }, ...sites.map(s => ({ value: s, text: s }))];
-});
-
-const platformOptions = computed(() => {
-  let options = allHostingOptions.value;
-  if (selectedSite.value) options = options.filter(o => o.site === selectedSite.value);
-  if (selectedProvider.value) options = options.filter(o => o.provider === selectedProvider.value);
-  if (selectedBuilding.value) options = options.filter(o => o.building === selectedBuilding.value);
-  if (selectedRoom.value) options = options.filter(o => o.room === selectedRoom.value);
-
-  const platforms = [...new Set(options.map(o => o.platform))].sort();
-  return [{ value: "", text: "Toutes les plateformes" }, ...platforms.map(p => ({ value: p, text: p }))];
-});
-
-const providerOptions = computed(() => {
-  let options = allHostingOptions.value;
-  if (selectedSite.value) options = options.filter(o => o.site === selectedSite.value);
-  if (selectedPlatform.value) options = options.filter(o => o.platform === selectedPlatform.value);
-  if (selectedBuilding.value) options = options.filter(o => o.building === selectedBuilding.value);
-  if (selectedRoom.value) options = options.filter(o => o.room === selectedRoom.value);
-
-  const providers = [...new Set(options.map(o => o.provider))].sort();
-  return [{ value: "", text: "Tous les fournisseurs" }, ...providers.map(p => ({ value: p, text: p }))];
-});
-
-const buildingOptions = computed(() => {
-  let options = allHostingOptions.value;
-  if (selectedSite.value) options = options.filter(o => o.site === selectedSite.value);
-  if (selectedPlatform.value) options = options.filter(o => o.platform === selectedPlatform.value);
-  if (selectedProvider.value) options = options.filter(o => o.provider === selectedProvider.value);
-  if (selectedRoom.value) options = options.filter(o => o.room === selectedRoom.value);
-
-  const buildings = [...new Set(options.map(o => o.building).filter((b): b is string => Boolean(b)))].sort();
-  return [{ value: "", text: "Tous les bâtiments" }, ...buildings.map(b => ({ value: b, text: b }))];
-});
-
-const roomOptions = computed(() => {
-  let options = allHostingOptions.value;
-  if (selectedSite.value) options = options.filter(o => o.site === selectedSite.value);
-  if (selectedPlatform.value) options = options.filter(o => o.platform === selectedPlatform.value);
-  if (selectedProvider.value) options = options.filter(o => o.provider === selectedProvider.value);
-  if (selectedBuilding.value) options = options.filter(o => o.building === selectedBuilding.value);
-
-  const rooms = [...new Set(options.map(o => o.room).filter((r): r is string => Boolean(r)))].sort();
-  return [{ value: "", text: "Toutes les pièces" }, ...rooms.map(r => ({ value: r, text: r }))];
-});
+function updateFilter(filterKey: FilterKey, value: string) {
+  setFilter({ [filterKey]: value || undefined, page: 0 } as Partial<Filters>);
+}
 
 async function loadHostingOptions() {
   isLoading.value = true;
   try {
     allHostingOptions.value = await hostingStore.getAllHostingOptions();
-  } catch (error) {
-    console.error("Error loading hosting options:", error);
   } finally {
     isLoading.value = false;
   }
 }
 
 onMounted(loadHostingOptions);
+
+const labels: Record<HostingField, string> = {
+  site: "Site",
+  platform: "Plateforme",
+  provider: "Fournisseur",
+  building: "Bâtiment",
+  room: "Pièce",
+};
 </script>
 
 <template>
   <div class="hosting-filters">
     <DsfrSelect
-      v-model="selectedSite"
-      label="Site"
-      :options="siteOptions"
+      v-for="{ field, filterKey, testId } in hostingFields"
+      :key="field"
+      :model-value="filters[filterKey] || ''"
+      :label="labels[field]"
+      :options="optionsMap[field].value"
       :disabled="isLoading"
-      data-testid="hosting-site-select"
-    />
-
-    <DsfrSelect
-      v-model="selectedPlatform"
-      label="Plateforme"
-      :options="platformOptions"
-      :disabled="isLoading"
-      data-testid="hosting-platform-select"
-    />
-
-    <DsfrSelect
-      v-model="selectedProvider"
-      label="Fournisseur"
-      :options="providerOptions"
-      :disabled="isLoading"
-      data-testid="hosting-provider-select"
-    />
-
-    <DsfrSelect
-      v-model="selectedBuilding"
-      label="Bâtiment"
-      :options="buildingOptions"
-      :disabled="isLoading"
-      data-testid="hosting-building-select"
-    />
-
-    <DsfrSelect
-      v-model="selectedRoom"
-      label="Pièce"
-      :options="roomOptions"
-      :disabled="isLoading"
-      data-testid="hosting-room-select"
+      :data-testid="testId"
+      @update:model-value="updateFilter(filterKey, $event)"
     />
   </div>
 </template>

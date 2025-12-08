@@ -1,21 +1,14 @@
 <script setup lang="ts">
-import { computed, watch } from "vue";
-import { useApplicationSearchStore } from "@/stores/applicationSearchStore";
+import { useApplicationSearch } from "@/composables/use-application-search";
 import PaginationFooter from "./PaginationFooter.vue";
 
-const searchStore = useApplicationSearchStore();
-
-const paginatedResults = computed(() => searchStore.results);
-
-watch([() => searchStore.page, () => searchStore.pageSize], () => {
-  searchStore.searchApplications();
-});
+const { results, total, page, pageSize } = useApplicationSearch();
 </script>
 
 <template>
   <div class="card-container" data-testid="application-card-container">
     <DsfrCard
-      v-for="app in paginatedResults"
+      v-for="app in results"
       :key="app.id"
       :title="app.label || 'Application'"
       :img-src="app.logo || ''"
@@ -27,12 +20,12 @@ watch([() => searchStore.page, () => searchStore.pageSize], () => {
   </div>
 
   <PaginationFooter
-    :total-filtered="searchStore.total ?? 0"
-    :limit="searchStore.pageSize ?? 10"
-    :page="searchStore.page ?? 0"
+    :total-filtered="total"
+    :limit="pageSize"
+    :page="page"
     data-testid="application-pagination-footer"
-    @update:limit="searchStore.pageSize = $event"
-    @update:page="searchStore.page = $event"
+    @update:limit="pageSize = $event"
+    @update:page="page = $event"
   />
 </template>
 
