@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.55.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.54.2...v1.55.0) (2025-12-08)
+
+
+### Features
+
+* :sparkles: add  follow app and send email ([8859c60](https://github.com/dnum-mi/referentiel-applications/commit/8859c609b5e1b75ea1fc78bc47c7c1ebc52b0a05))
+* :sparkles: add "sans statut" checkbox filter to the applications search filter ([d0da566](https://github.com/dnum-mi/referentiel-applications/commit/d0da5667b0e0f8f8b76665ba55b904391f8c3183))
+* :sparkles: allow applications search sharing by using url filters ([9de6060](https://github.com/dnum-mi/referentiel-applications/commit/9de60607b1c2e05ce6ab6fc76cea549249688a46))
+* :sparkles: show dsfr version in browser console ([c50f5d4](https://github.com/dnum-mi/referentiel-applications/commit/c50f5d4013ebaef79b36bf3c5d10920d45976cf7))
+
 ## [1.54.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.54.1...v1.54.2) (2025-12-02)
 
 
