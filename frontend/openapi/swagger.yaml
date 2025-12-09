@@ -370,6 +370,49 @@ paths:
         "404":
           description: Utilisateur non trouvé
       tags: *a4
+  /api/v2/users/me/subscribe/{appId}:
+    post:
+      operationId: UserController_subscribe
+      summary: S'abonner aux notifications d'une application
+      parameters:
+        - name: appId
+          required: true
+          in: path
+          description: ID de l'application à suivre
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Abonnement pris en compte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEntity"
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+      tags: *a4
+    delete:
+      operationId: UserController_unsubscribe
+      summary: Se désabonner des notifications d'une application
+      parameters:
+        - name: appId
+          required: true
+          in: path
+          description: ID de l'application à ne plus suivre
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Désabonnement pris en compte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEntity"
+      tags: *a4
   /api/v2/users/{id}:
     patch:
       operationId: UserController_update
@@ -3173,6 +3216,16 @@ components:
       enum:
         - human
         - bot
+    UserFollowedApplicationDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+      required:
+        - id
+        - label
     UserEntity:
       type: object
       properties:
@@ -3190,6 +3243,11 @@ components:
           type: boolean
           description: Préférence de notification par email
           default: true
+        followedApplications:
+          description: Applications suivies par l'utilisateur
+          type: array
+          items:
+            $ref: "#/components/schemas/UserFollowedApplicationDto"
         id:
           type: string
         keycloakId:

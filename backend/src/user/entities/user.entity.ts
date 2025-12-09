@@ -3,6 +3,14 @@ import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from "clas
 import { APP_PERMISSIONS } from "src/common/utils/types";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 
+export class UserFollowedApplicationDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  label: string;
+}
+
 export enum AdminLevel {
   NONE = 0,
   READ = 10,
@@ -62,6 +70,14 @@ export class UserEntity {
   @IsBoolean()
   @IsOptional()
   emailNotificationsEnabled?: boolean;
+
+  @ApiProperty({
+    description: "Applications suivies par l'utilisateur",
+    required: false,
+    type: () => [UserFollowedApplicationDto],
+  })
+  @IsOptional()
+  followedApplications?: UserFollowedApplicationDto[];
 }
 
 export class Requestor extends UserEntity {

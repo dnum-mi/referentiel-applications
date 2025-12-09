@@ -14,6 +14,7 @@ model Application {
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
   hostings            Hosting[]
+  subscribers User[] @relation("UserFollowedApplications")
   statuses            ApplicationStatus[]   @relation("ApplicationStatuses")
 
   relationsAsSource Relation[] @relation("SourceHasTarget")

@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from "@nestjs/common";
@@ -45,6 +47,28 @@ export class UserController {
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
   async updateMe(@User() user: UserEntity, @Body() UpdateUserPreferencesDto: UpdateUserPreferencesDto) {
     return this.userService.updateOwnPreferences(user.id, UpdateUserPreferencesDto);
+  }
+
+  @Post("me/subscribe/:appId")
+  @ApiOperation({ summary: "S'abonner aux notifications d'une application" })
+  @ApiParam({ name: "appId", description: "ID de l'application à suivre" })
+  @ApiOkResponse({
+    description: "Abonnement pris en compte",
+    type: UserEntity,
+  })
+  async subscribe(@User() user: UserEntity, @Param("appId") appId: string) {
+    return this.userService.subscribe(user.id, appId);
+  }
+
+  @Delete("me/subscribe/:appId")
+  @ApiOperation({ summary: "Se désabonner des notifications d'une application" })
+  @ApiParam({ name: "appId", description: "ID de l'application à ne plus suivre" })
+  @ApiOkResponse({
+    description: "Désabonnement pris en compte",
+    type: UserEntity,
+  })
+  async unsubscribe(@User() user: UserEntity, @Param("appId") appId: string) {
+    return this.userService.unsubscribe(user.id, appId);
   }
 
   @Patch(":id")
