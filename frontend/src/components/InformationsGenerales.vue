@@ -7,10 +7,12 @@ import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
 import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
+import TechnicalDebtCard from "./technical-debt/TechnicalDebtCard.vue";
+import TechnicalDebtModal from "./technical-debt/TechnicalDebtModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import type { HostingDto, LabelDto } from "@/client/types.gen";
+import type { HostingDto, LabelDto, TechnicalDebtInfoDto } from "@/client/types.gen";
 import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
 import api from "@/api/index.js";
 
@@ -34,6 +36,35 @@ const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ |
 const canEditHostings = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeHostings"));
 const labels = ref<LabelDto[]>([]);
 
+const isTechnicalDebtModalOpen = ref(false);
+const technicalDebtInfo = ref<TechnicalDebtInfoDto | null>(null);
+
+async function fetchTechnicalDebtInfo() {
+  const response = await api.applicationTechnicalDebtInfoControllerFindOne({ path: { applicationId: props.application.id } });
+  if (response.response.status === 404) {
+    technicalDebtInfo.value = null;
+    return;
+  }
+  if (!response.response.ok) {
+    toaster.addErrorMessage("Erreur lors de la récupération des informations de dette technique.");
+    return;
+  }
+  technicalDebtInfo.value = response.data ?? null;
+}
+
+function openTechnicalDebtModal() {
+  isTechnicalDebtModalOpen.value = true;
+}
+
+function closeTechnicalDebtModal() {
+  isTechnicalDebtModalOpen.value = false;
+}
+
+function onTechnicalDebtSaved(data: TechnicalDebtInfoDto) {
+  technicalDebtInfo.value = data;
+  closeTechnicalDebtModal();
+}
+
 async function fetchLabels() {
   const response = await api.labelsControllerFindAllSorted({ path: { applicationId: props.application.id } });
   if (!response.data) {
@@ -43,7 +74,10 @@ async function fetchLabels() {
   labels.value = response.data;
 };
 
-onMounted(fetchLabels);
+onMounted(() => {
+  fetchLabels();
+  fetchTechnicalDebtInfo();
+});
 const application = ref<ApplicationWithPerms>({
   ...props.application,
 });
@@ -288,6 +322,15 @@ watch(
           </div>
         </div>
       </div>
+
+      <TechnicalDebtCard
+        :technical-debt-info="technicalDebtInfo"
+        :can-edit="canEditBase"
+        :small="small"
+        data-testid="info-technical-debt"
+        @create="openTechnicalDebtModal"
+        @edit="openTechnicalDebtModal"
+      />
     </div>
   </div>
 
@@ -325,6 +368,14 @@ watch(
       @cancel="applicationModal.closeModal"
     />
   </DsfrModal>
+
+  <TechnicalDebtModal
+    v-if="isTechnicalDebtModalOpen"
+    :application-id="application.id"
+    :initial-data="technicalDebtInfo"
+    @close="closeTechnicalDebtModal"
+    @saved="onTechnicalDebtSaved"
+  />
 </template>
 
 <style scoped>

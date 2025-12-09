@@ -14,13 +14,14 @@ model Application {
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
   hostings            Hosting[]
-  subscribers User[] @relation("UserFollowedApplications")
+  subscribers         User[]                @relation("UserFollowedApplications")
   statuses            ApplicationStatus[]   @relation("ApplicationStatuses")
 
-  relationsAsSource Relation[] @relation("SourceHasTarget")
-  relationsAsTarget Relation[] @relation("TargetHasSource")
-  labels            Label[]    @relation("ApplicationLabels")
+  relationsAsSource Relation[]         @relation("SourceHasTarget")
+  relationsAsTarget Relation[]         @relation("TargetHasSource")
+  labels            Label[]            @relation("ApplicationLabels")
   tags              Tag[]
+  technicalDebtInfo TechnicalDebtInfo? @relation("ApplicationTechnicalDebtInfo")
 
   priorityRestart priorityRestart?
   quality         Int
@@ -36,7 +37,7 @@ model ApplicationStatus {
   applicationId String
   application   Application   @relation("ApplicationStatuses", fields: [applicationId], references: [id], onDelete: Cascade)
   status        Status
-  statusDate    DateTime     @default(now())
+  statusDate    DateTime      @default(now())
   Application   Application[]
 
   @@index([applicationId])

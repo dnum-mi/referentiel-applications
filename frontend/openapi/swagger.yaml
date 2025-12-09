@@ -3003,6 +3003,76 @@ paths:
                 type: number
       tags:
         - Compliances
+  /api/v2/applications/{applicationId}/technical-debt-info:
+    post:
+      operationId: ApplicationTechnicalDebtInfoController_create
+      summary: Create technical debt info for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTechnicalDebtInfoDto"
+      responses:
+        "201":
+          description: Technical debt info created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechnicalDebtInfoDto"
+        "409":
+          description: Technical debt info already exists for this application
+      tags: &a19
+        - Technical Debt Info
+    get:
+      operationId: ApplicationTechnicalDebtInfoController_findOne
+      summary: Retrieve the technical debt info for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Technical debt info found successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechnicalDebtInfoDto"
+      tags: *a19
+    patch:
+      operationId: ApplicationTechnicalDebtInfoController_update
+      summary: Update the technical debt info for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTechnicalDebtInfoDto"
+      responses:
+        "200":
+          description: Technical debt info updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechnicalDebtInfoDto"
+      tags: *a19
   /api/v2/config:
     get:
       operationId: getConfig
@@ -3495,7 +3565,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a19
+          example: &a20
             - population 1
             - population 2
           description: population associated with the application
@@ -3505,7 +3575,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a20
+          example: &a21
             - finance
             - HR
           description: Purposes of the application
@@ -3513,7 +3583,7 @@ components:
           items:
             type: string
         tags:
-          example: &a21
+          example: &a22
             - tag1
             - tag2
           type: array
@@ -3528,7 +3598,7 @@ components:
             - $ref: "#/components/schemas/CreateApplicationStatusDto"
         labels:
           description: Liste des labels alternatifs associés à l'application
-          example: &a22
+          example: &a23
             - source: ""
               value: My App
           type: array
@@ -3668,7 +3738,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a19
+          example: *a20
           description: population associated with the application
           type: array
           items:
@@ -3676,19 +3746,19 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a20
+          example: *a21
           description: Purposes of the application
           type: array
           items:
             type: string
         tags:
-          example: *a21
+          example: *a22
           type: array
           items:
             type: string
         labels:
           description: Liste des labels alternatifs associés à l'application
-          example: *a22
+          example: *a23
           type: array
           items:
             $ref: "#/components/schemas/CreateLabelDto"
@@ -3863,7 +3933,7 @@ components:
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
         adminLevel:
-          enum: &a23
+          enum: &a24
             - 0
             - 10
             - 20
@@ -3930,7 +4000,7 @@ components:
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
         adminLevel:
-          enum: *a23
+          enum: *a24
           type: number
           example: 10
           description: Niveau d'administration du token
@@ -4522,7 +4592,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a24
+          enum: &a25
             - OK
             - KO
           type: string
@@ -4548,7 +4618,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a25
+          enum: &a26
             - S3
             - LOCAL
             - EXTERNE
@@ -4559,7 +4629,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a26
+          enum: &a27
             - OK
             - KO
           type: string
@@ -4638,7 +4708,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a24
+          enum: *a25
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -4662,7 +4732,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a25
+          enum: *a26
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -4670,7 +4740,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a26
+          enum: *a27
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -4753,7 +4823,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a24
+          enum: *a25
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -4777,7 +4847,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a25
+          enum: *a26
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -4785,7 +4855,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a26
+          enum: *a27
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -4834,6 +4904,80 @@ components:
           type: string
           example: Pierre Durand
           description: RGPD DPO name
+    CreateTechnicalDebtInfoDto:
+      type: object
+      properties:
+        technicalMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 3
+          description: Technical maturity score (0-5)
+        businessMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 4
+          description: Business maturity score (0-5)
+        costMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 2
+          description: Cost maturity score (0-5)
+    TechnicalDebtInfoDto:
+      type: object
+      properties:
+        technicalMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 3
+          description: Technical maturity score (0-5)
+        businessMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 4
+          description: Business maturity score (0-5)
+        costMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 2
+          description: Cost maturity score (0-5)
+        id:
+          type: string
+          example: uuid-example
+          description: Unique identifier
+        applicationId:
+          type: string
+          example: uuid-example
+          description: Application ID
+      required:
+        - id
+        - applicationId
+    UpdateTechnicalDebtInfoDto:
+      type: object
+      properties:
+        technicalMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 3
+          description: Technical maturity score (0-5)
+        businessMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 4
+          description: Business maturity score (0-5)
+        costMaturity:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 2
+          description: Cost maturity score (0-5)
     ConfigDto:
       type: object
       properties:

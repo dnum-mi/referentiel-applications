@@ -1,20 +1,20 @@
 model User {
-  id                  String                @id @default(uuid())
-  keycloakId          String?               @unique
-  email               String                @unique
-  lastLogin           DateTime?             @default(now())
-  organizationId      String?
-  organization        Organization?         @relation(fields: [organizationId], references: [id])
-  createdSet          Metadata[]            @relation("MetadataCreatedBy")
-  dataOwners          Metadata[]            @relation("MetadataDataOwnerBy")
-  AnomalyNotification AnomalyNotification[] @relation("UserAnomalyNotification")
-  adminLevel          Int                   @default(0)
-  tokensImpersonate   Token[]               @relation("TokenUserImpersonate")
-  tokensCreated       Token[]               @relation("TokenUserCreator")
-  type                UserType              @default(human)
-  capabilities        CapabilityNames[]
-  followedApplications Application[] @relation("UserFollowedApplications")
-  emailNotificationsEnabled Boolean         @default(true)
+  id                        String                @id @default(uuid())
+  keycloakId                String?               @unique
+  email                     String                @unique
+  lastLogin                 DateTime?             @default(now())
+  organizationId            String?
+  organization              Organization?         @relation(fields: [organizationId], references: [id])
+  createdSet                Metadata[]            @relation("MetadataCreatedBy")
+  dataOwners                Metadata[]            @relation("MetadataDataOwnerBy")
+  AnomalyNotification       AnomalyNotification[] @relation("UserAnomalyNotification")
+  adminLevel                Int                   @default(0)
+  tokensImpersonate         Token[]               @relation("TokenUserImpersonate")
+  tokensCreated             Token[]               @relation("TokenUserCreator")
+  type                      UserType              @default(human)
+  capabilities              CapabilityNames[]
+  followedApplications      Application[]         @relation("UserFollowedApplications")
+  emailNotificationsEnabled Boolean               @default(true)
 }
 
 model Actor {
