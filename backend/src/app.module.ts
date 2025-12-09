@@ -30,6 +30,7 @@ import { LoggingService } from "./services/logging.service";
 import { StatsModule } from "./stats/stats.module";
 import { StatusesModule } from "./statuses/statuses.module";
 import { TagsModule } from "./tag/tags.module";
+import { TechnicalDebtInfoModule } from "./technical-debt-info/technical-debt-info.module";
 import { TokenModule } from "./token/token.module";
 import { UserModule } from "./user/user.module";
 
@@ -61,6 +62,7 @@ import { UserModule } from "./user/user.module";
     LabelsModule,
     CompliancesModule,
     TagsModule,
+    TechnicalDebtInfoModule,
     PrismaModule,
     ConfigModule,
     StatusesModule,

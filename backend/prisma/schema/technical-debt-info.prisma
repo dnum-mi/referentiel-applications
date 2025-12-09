@@ -1,0 +1,10 @@
+model TechnicalDebtInfo {
+  id            String      @id @default(uuid())
+  applicationId String      @unique
+  application   Application @relation("ApplicationTechnicalDebtInfo", fields: [applicationId], references: [id], onDelete: Cascade)
+  metadatas     Metadata[]  @relation("TechnicalDebtInfoMetadata")
+
+  technicalMaturity Int? @db.SmallInt
+  businessMaturity  Int? @db.SmallInt
+  costMaturity      Int? @db.SmallInt
+}

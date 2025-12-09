@@ -28,6 +28,9 @@ model Metadata {
 
   hostingId String?
   hosting   Hosting? @relation("HostingMetadata", fields: [hostingId], references: [id])
+
+  technicalDebtInfoId String?
+  technicalDebtInfo   TechnicalDebtInfo? @relation("TechnicalDebtInfoMetadata", fields: [technicalDebtInfoId], references: [id])
 }
 
 enum MetadataAction {
