@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { ConfigDto } from "@/client";
 import { ref, computed } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
 import { getAuthentication } from "./services/authentication";
+import { getConfig } from "./services/config";
 import router from "./router/index";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
@@ -14,6 +16,7 @@ import SearchHeader from "./components/search/SearchHeader.vue";
 const route = useRoute();
 
 const userStore = useUserStore();
+const appConfig = ref<ConfigDto>();
 const toaster = useToasterStore();
 const isClosed = ref(false);
 function closeNotice() {
@@ -39,6 +42,12 @@ interface QuickLink {
 if (getAuthentication().authenticated) {
   userStore.fetchUser();
 }
+
+getConfig().then((config) => {
+  if (!(config instanceof Error)) {
+    appConfig.value = config;
+  }
+});
 
 const authenticatedQuickLinks = computed<QuickLink[]>(() => {
   const baseLinks: QuickLink[] = [
@@ -120,21 +129,26 @@ const serviceDescription = "Une application pour les réunir toutes";
 const serviceTitle = "Référentiel des Applications";
 const homeTo = "/applications";
 const operatorTo = "/applications";
-const ecosystemLinks = [
-  { label: "Cadre de Cohérence Technique (CCT)", 
-    title: "Aller au Cadre de Cohérence Technique (CCT)",
-    href: "http://cct.sg.minint.fr/accueil/Accueil.html" 
-  },
-
-  { label: "Code source", 
-    title: "Aller au code source de l'application",
-   href: "http://github.com/dnum-mi/referentiel-applications" },
-  {
-    label: "Api du référentiel",
-    title: "Aller à la documentation de l'API du référentiel",
-    href: "/api/v2/swagger/",
-  },
-];
+const ecosystemLinks = computed(() => {
+  const links = [
+    { label: "Cadre de Cohérence Technique (CCT)", 
+      title: "Aller au Cadre de Cohérence Technique (CCT)",
+      href: "http://cct.sg.minint.fr/accueil/Accueil.html" 
+    },
+    { label: "Code source", 
+      title: "Aller au code source de l'application",
+      href: "http://github.com/dnum-mi/referentiel-applications" },
+    {
+      label: "Api du référentiel",
+      title: "Aller à la documentation de l'API du référentiel",
+      href: "/api/v2/swagger/",
+    },
+  ];
+  if (appConfig.value?.footerLinks) {
+    links.push(...appConfig.value.footerLinks);
+  }
+  return links;
+});
 const mandatoryLinks = computed(() => [
   { label: "Accessibilité : non conforme", 
     title: "Aller à la page d'accessibilité",

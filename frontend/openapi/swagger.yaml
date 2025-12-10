@@ -4978,6 +4978,25 @@ components:
           maximum: 5
           example: 2
           description: Cost maturity score (0-5)
+    FooterLinkDto:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Link label
+          example: Documentation
+        title:
+          type: string
+          description: Link title (tooltip)
+          example: Aller à la documentation
+        href:
+          type: string
+          description: Link URL
+          example: https://documentation.example.com
+      required:
+        - label
+        - title
+        - href
     ConfigDto:
       type: object
       properties:
@@ -4997,11 +5016,17 @@ components:
           type: string
           description: Backend version
           example: 1.0.0
+        footerLinks:
+          description: Footer links to display in the application footer
+          type: array
+          items:
+            $ref: "#/components/schemas/FooterLinkDto"
       required:
         - keycloakUrl
         - keycloakRealm
         - keycloakClientId
         - version
+        - footerLinks
 security:
   - oauth2: []
   - api_key: []
