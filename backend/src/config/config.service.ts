@@ -17,6 +17,7 @@ export class ConfigService {
       keycloakRealm: this.keycloak.realm,
       keycloakClientId: this.keycloak.clientId,
       version: this.app.version,
+      footerLinks: this.app.footerLinks,
     };
   }
 }
