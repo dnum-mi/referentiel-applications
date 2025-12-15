@@ -14,9 +14,6 @@ importers:
       '@gouvminint/vue-dsfr':
         specifier: ^8.12.1
         version: 8.12.1(@iconify/vue@4.3.0(vue@3.5.18(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))
-      '@types/d3':
-        specifier: ^7.4.3
-        version: 7.4.3
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -69,6 +66,9 @@ importers:
       '@tsconfig/node20':
         specifier: ^20.1.6
         version: 20.1.6
+      '@types/d3':
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/jsdom':
         specifier: ^21.1.7
         version: 21.1.7

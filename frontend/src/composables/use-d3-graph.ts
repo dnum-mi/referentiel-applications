@@ -162,15 +162,15 @@ export function useD3Graph() {
       .attr("stroke-width", d => (d.isRoot ? 3 : 2));
 
     // Cache for text layout calculations
-    const textLayoutCache = new Map<string, {lines: string[], fontSize: number, totalHeight: number}>();
+    const textLayoutCache = new Map<string, { lines: string[], fontSize: number, totalHeight: number }>();
 
     function getTextLayout(
       label: string,
       isRoot: boolean,
       status: string | undefined,
       styles: any,
-      textElem: SVGTextElement
-    ): {lines: string[], fontSize: number, totalHeight: number} {
+      textElem: SVGTextElement,
+    ): { lines: string[], fontSize: number, totalHeight: number } {
       const cacheKey = JSON.stringify([label, isRoot, status]);
       if (textLayoutCache.has(cacheKey)) {
         return textLayoutCache.get(cacheKey)!;
@@ -182,7 +182,7 @@ export function useD3Graph() {
       let fontSize = 11;
       const minFontSize = 6;
       let maxLines = Math.floor(maxHeight / fontSize / lineHeight);
-      let lines: string[] = [];
+      const lines: string[] = [];
       let line = "";
       let lineNumber = 0;
 
@@ -221,7 +221,7 @@ export function useD3Graph() {
       // Remove all tspans after measurement
       text.selectAll("tspan").remove();
       const totalHeight = (lines.length - 1) * lineHeight;
-      const result = {lines, fontSize, totalHeight};
+      const result = { lines, fontSize, totalHeight };
       textLayoutCache.set(cacheKey, result);
       return result;
     }
@@ -235,12 +235,12 @@ export function useD3Graph() {
       .each(function (d) {
         const text = d3.select(this);
         // Use memoized layout calculation
-        const {lines, fontSize, totalHeight} = getTextLayout(
+        const { lines, fontSize, totalHeight } = getTextLayout(
           d.label,
           d.isRoot,
           d.status,
           styles,
-          this as SVGTextElement
+          this as SVGTextElement,
         );
         text.attr("font-size", `${fontSize}px`);
         text.text("");
@@ -251,7 +251,7 @@ export function useD3Graph() {
             .text(line);
         });
         // Adjust dy based on status and totalHeight
-        text.attr("dy", d.status ? `-${totalHeight / 2 + 0.5}em` : `-${totalHeight / 2}em`);
+        text.attr("dy", d.status ? `-${totalHeight / 2 - 0.6}em` : `-${totalHeight / 2}em`);
         text.append("title").text(d.label);
       });
 
@@ -265,7 +265,7 @@ export function useD3Graph() {
         return statusLabel || "";
       })
       .attr("text-anchor", "middle")
-      .attr("dy", "1.5em")
+      .attr("dy", "-1.2em")
       .attr("font-size", "9px")
       .attr("font-style", "italic")
       .attr("fill", d => (d.isRoot ? styles.root.text : styles.node.text))
