@@ -146,6 +146,7 @@ export class ApplicationCompliancesController {
         // Homologation fields
         homologation_date_end: "date fin homologation",
         homologation_rssi_id: "RSSI homologation",
+        homologation_status: "statut d'homologation",
         // RGAA fields
         rgaa_audit_date: "date audit RGAA",
         rgaa_service_url: "URL service RGAA",

@@ -4638,6 +4638,13 @@ components:
           type: string
           example: Marie Martin
           description: PDMA restoration manager
+        homologation_status:
+          enum: &a28
+            - homologuee
+            - en_cours
+            - dispensee
+          type: string
+          description: Homologation status
         homologation_date_end:
           type: string
           example: 2023-01-01
@@ -4747,6 +4754,10 @@ components:
           type: string
           example: Marie Martin
           description: PDMA restoration manager
+        homologation_status:
+          enum: *a28
+          type: string
+          description: Homologation status
         homologation_date_end:
           type: string
           example: 2023-01-01
@@ -4862,6 +4873,10 @@ components:
           type: string
           example: Marie Martin
           description: PDMA restoration manager
+        homologation_status:
+          enum: *a28
+          type: string
+          description: Homologation status
         homologation_date_end:
           type: string
           example: 2023-01-01

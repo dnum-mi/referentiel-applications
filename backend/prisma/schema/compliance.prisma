@@ -21,6 +21,7 @@ model Compliance {
   pdma_last_test_date      DateTime?
   pdma_test_result         TestResult?
   pdma_restoration_manager String?
+  homologation_status      HomologationStatus?
   homologation_date_end    DateTime?
   homologation_rssi_id     String?
   homologation_rssi        Actor?         @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
@@ -46,4 +47,10 @@ enum BackupStorage {
   S3
   LOCAL
   EXTERNE
+}
+
+enum HomologationStatus {
+  homologuee
+  en_cours
+  dispensee
 }

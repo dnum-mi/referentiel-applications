@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, defineProps, defineEmits } from "vue";
+import { ref, watch, onMounted, defineProps, defineEmits, computed } from "vue";
 import { useComplianceStore } from "@/stores/complianceStore";
-import { dimaDurationHoursOptions, pdmaDurationHoursOptions, testResultsDict, backupStorageDict, complianceFieldLabels } from "@/composables/use-dictionary";
+import { dimaDurationHoursOptions, pdmaDurationHoursOptions, testResultsDict, backupStorageDict, homologationStatusDict, complianceFieldLabels } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
@@ -24,6 +24,14 @@ const userStore = useUserStore();
 const form = ref<Record<string, any>>({});
 const loading = ref(false);
 const submitting = ref(false);
+
+const HOMOLOGATION_STATUS = {
+  HOMOLOGUEE: "homologuee",
+} as const;
+
+const isHomologationHomologuee = computed(
+  () => form.value.status === HOMOLOGATION_STATUS.HOMOLOGUEE,
+);
 
 const canEdit = computed(
   () =>
@@ -196,7 +204,25 @@ async function save() {
       </template>
 
       <template v-else-if="type === 'homologation'">
-        <DsfrInput v-model="form.date_end" :label="complianceFieldLabels.date_end" type="date" label-visible />
+        <DsfrSelect
+          v-model="form.status"
+          :options="Object.entries(homologationStatusDict).map(([v, t]) => ({ value: v, text: t }))"
+          :label="complianceFieldLabels.status"
+          label-visible
+          default-unselected-text="Choisir..."
+          :disabled="!canEdit"
+          data-testid="compliance-homologation-status"
+        />
+        <DsfrInput
+          v-if="isHomologationHomologuee"
+          v-model="form.date_end"
+          :label="complianceFieldLabels.date_end"
+          type="date"
+          label-visible
+          :disabled="!canEdit"
+          hint="Date de fin d'homologation"
+          data-testid="compliance-homologation-date-end"
+        />
       </template>
 
       <template v-else-if="type === 'rgaa'">

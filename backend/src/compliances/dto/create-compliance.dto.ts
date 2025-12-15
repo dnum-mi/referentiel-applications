@@ -11,7 +11,7 @@ import {
   Max,
   Min,
 } from "class-validator";
-import { BackupStorage, TestResult } from "src/enum";
+import { BackupStorage, HomologationStatus, TestResult } from "src/enum";
 
 export class CreateComplianceDto {
   // DIMA specific fields
@@ -159,6 +159,15 @@ export class CreateComplianceDto {
   @IsOptional()
   @IsString()
   pdma_restoration_manager?: string;
+
+  @ApiProperty({
+    enum: HomologationStatus,
+    description: "Homologation status",
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(HomologationStatus)
+  homologation_status?: HomologationStatus;
 
   @ApiProperty({
     example: "2023-01-01",
