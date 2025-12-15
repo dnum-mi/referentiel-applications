@@ -2,7 +2,7 @@ export function useGraphStyles() {
   const getGraphStyles = () => {
     const root = {
       fill: "var(--background-action-low-blue-france, #e7eaf0ff)",
-      stroke: "var(--border-default-blue-france, #e6e9f0ff)",
+      stroke: "var(--background-action-low-blue-france, #e7eaf0ff)",
       text: "var(--text-default-grey, #1D1D1D)",
       width: 160,
       height: 80,
