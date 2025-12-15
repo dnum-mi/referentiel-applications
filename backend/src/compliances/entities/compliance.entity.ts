@@ -27,6 +27,7 @@ export class Compliance {
   // Homologation specific fields
   homologation_date_end?: Date;
   homologation_rssi_id?: string;
+  homologation_status?: string;
 
   // RGAA specific fields
   rgaa_audit_date?: Date;

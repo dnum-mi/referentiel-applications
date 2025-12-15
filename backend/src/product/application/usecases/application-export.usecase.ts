@@ -236,6 +236,7 @@ export class ExportApplicationsUseCase {
           pdma_test_result: null,
           pdma_restoration_manager: null,
           homologation_date_end: null,
+          homologation_status: null,
           homologation_rssi_id: null,
           rgaa_audit_date: null,
           rgaa_service_url: null,

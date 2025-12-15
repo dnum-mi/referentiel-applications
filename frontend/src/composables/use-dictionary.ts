@@ -46,6 +46,12 @@ export const backupStorageDict = {
   EXTERNE: "Externe",
 };
 
+export const homologationStatusDict = {
+  homologuee: "Homologuée",
+  en_cours: "En cours d'homologation",
+  dispensee: "Dispensée d'homologation",
+};
+
 export const dimaDurationHoursOptions = [
   { value: 1, text: "1H" },
   { value: 4, text: "4H" },
@@ -128,6 +134,7 @@ export const priorityRestartLabelsOptions = Object.entries(restartPrioritiesConf
 
 export const complianceFieldLabels: Record<string, string> = {
   duration_hours: "Durée (heures)",
+  status: "Statut d'homologation",
   date_end: "Date de fin d'homologation",
   test_result: "Résultat du dernier test",
   last_test_date: "Date du dernier test",

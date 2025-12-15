@@ -3,7 +3,13 @@ import { ref, computed, onMounted } from "vue";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useComplianceStore } from "@/stores/complianceStore";
 import ComplianceForm from "./ComplianceForm.vue";
-import { testResultsDict, backupStorageDict, complianceFieldLabels, type ComplianceType } from "@/composables/use-dictionary";
+import {
+  testResultsDict,
+  backupStorageDict,
+  homologationStatusDict,
+  complianceFieldLabels,
+  type ComplianceType,
+} from "@/composables/use-dictionary";
 import { formatDateFR } from "@/composables/use-date";
 import { filterEmpty } from "@/composables/use-filter-watcher";
 import { useBreakpoints } from "@/composables/use-breakpoint";
@@ -98,6 +104,9 @@ function renderValue(type: string, key: string, val: any): string {
   }
   if (type === "pdma" && key === "backup_storage") {
     return backupStorageDict[val];
+  }
+  if (type === "homologation" && key === "status") {
+    return homologationStatusDict[val] ?? val;
   }
   if (type === "dima" && key === "is_hno") {
     return val ? "Oui" : "Non";

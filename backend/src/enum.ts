@@ -10,6 +10,12 @@ export enum BackupStorage {
   EXTERNE = "EXTERNE",
 }
 
+export enum HomologationStatus {
+  HOMOLOGUEE = "homologuee",
+  EN_COURS = "en_cours",
+  DISPENSEE = "dispensee",
+}
+
 export enum AnomalyNotificationStatus {
   PENDING = "in_pending",
   INPROGRESS = "in_progress",
