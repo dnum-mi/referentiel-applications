@@ -161,58 +161,97 @@ export function useD3Graph() {
       .attr("stroke", d => (d.isRoot ? styles.root.stroke : styles.node.stroke))
       .attr("stroke-width", d => (d.isRoot ? 3 : 2));
 
+    // Cache for text layout calculations
+    const textLayoutCache = new Map<string, {lines: string[], fontSize: number, totalHeight: number}>();
+
+    function getTextLayout(
+      label: string,
+      isRoot: boolean,
+      status: string | undefined,
+      styles: any,
+      textElem: SVGTextElement
+    ): {lines: string[], fontSize: number, totalHeight: number} {
+      const cacheKey = JSON.stringify([label, isRoot, status]);
+      if (textLayoutCache.has(cacheKey)) {
+        return textLayoutCache.get(cacheKey)!;
+      }
+      const maxTextWidth = isRoot ? styles.root.width - 10 : styles.node.width - 10;
+      const maxHeight = isRoot ? styles.root.height - 20 : styles.node.height - 20;
+      const words = label.split(/\s+/);
+      const lineHeight = 1.1;
+      let fontSize = 11;
+      const minFontSize = 6;
+      let maxLines = Math.floor(maxHeight / fontSize / lineHeight);
+      let lines: string[] = [];
+      let line = "";
+      let lineNumber = 0;
+
+      // Create a temporary tspan for measurement
+      const text = d3.select(textElem);
+      text.text("");
+      let tspan = text.append("tspan").attr("x", 0).attr("dy", "0em").text("");
+
+      for (const word of words) {
+        const testLine = line + (line === "" ? "" : " ") + word;
+        tspan.text(testLine);
+        if (tspan.node()!.getComputedTextLength() > maxTextWidth && line !== "") {
+          lines.push(line);
+          lineNumber++;
+          if (lineNumber >= maxLines) {
+            lines[lines.length - 1] = `${line}…`;
+            break;
+          }
+          tspan = text.append("tspan").attr("x", 0).attr("dy", `${lineHeight}em`).text(word);
+          line = word;
+        } else {
+          line = testLine;
+        }
+      }
+      if (line && lines.length < maxLines) {
+        lines.push(line);
+      }
+
+      // Adjust font size if needed
+      text.attr("font-size", `${fontSize}px`);
+      while (text.node()!.getBBox().width > maxTextWidth && fontSize > minFontSize) {
+        fontSize--;
+        text.attr("font-size", `${fontSize}px`);
+        maxLines = Math.floor(maxHeight / fontSize / lineHeight);
+      }
+      // Remove all tspans after measurement
+      text.selectAll("tspan").remove();
+      const totalHeight = (lines.length - 1) * lineHeight;
+      const result = {lines, fontSize, totalHeight};
+      textLayoutCache.set(cacheKey, result);
+      return result;
+    }
+
     node
       .append("text")
-      .text(d => d.label)
       .attr("text-anchor", "middle")
-      .attr("dy", d => d.status ? "-0.5em" : "0.3em")
-      .attr("font-size", "11px")
       .attr("font-weight", d => (d.isRoot ? "bold" : "normal"))
       .attr("fill", d => (d.isRoot ? styles.root.text : styles.node.text))
       .attr("pointer-events", "none")
       .each(function (d) {
         const text = d3.select(this);
-        const maxTextWidth = d.isRoot ? styles.root.width - 10 : styles.node.width - 10;
-        const maxHeight = d.isRoot ? styles.root.height - 20 : styles.node.height - 20;
-        const words = d.label.split(/\s+/);
-        const lineHeight = 1.1;
-        let fontSize = 11;
-        const minFontSize = 6;
-
+        // Use memoized layout calculation
+        const {lines, fontSize, totalHeight} = getTextLayout(
+          d.label,
+          d.isRoot,
+          d.status,
+          styles,
+          this as SVGTextElement
+        );
         text.attr("font-size", `${fontSize}px`);
-        let maxLines = Math.floor(maxHeight / fontSize / lineHeight);
-
         text.text("");
-        let tspan = text.append("tspan").attr("x", 0).attr("dy", "0em").text("");
-        let line = "";
-        let lineNumber = 0;
-
-        for (const word of words) {
-          const testLine = line + (line === "" ? "" : " ") + word;
-          tspan.text(testLine);
-
-          if (tspan.node()!.getComputedTextLength() > maxTextWidth && line !== "") {
-            lineNumber++;
-            if (lineNumber >= maxLines) {
-              tspan.text(`${line}…`);
-              break;
-            }
-            tspan = text.append("tspan").attr("x", 0).attr("dy", `${lineHeight}em`).text(word);
-            line = word;
-          } else {
-            line = testLine;
-          }
-        }
-
-        while (text.node()!.getBBox().width > maxTextWidth && fontSize > minFontSize) {
-          fontSize--;
-          text.attr("font-size", `${fontSize}px`);
-          maxLines = Math.floor(maxHeight / fontSize / lineHeight);
-        }
-
-        const totalHeight = lineNumber * lineHeight;
+        lines.forEach((line, i) => {
+          text.append("tspan")
+            .attr("x", 0)
+            .attr("dy", i === 0 ? "0em" : "1.1em")
+            .text(line);
+        });
+        // Adjust dy based on status and totalHeight
         text.attr("dy", d.status ? `-${totalHeight / 2 + 0.5}em` : `-${totalHeight / 2}em`);
-
         text.append("title").text(d.label);
       });
 
