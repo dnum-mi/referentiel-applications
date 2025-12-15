@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.56.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.55.0...v1.56.0) (2025-12-15)
+
+
+### Features
+
+* :sparkles: add footer links management in configuration ([824f89b](https://github.com/dnum-mi/referentiel-applications/commit/824f89bee6fbd20c0ea775dca6a0e12093e87e0e))
+* :sparkles: add Technical Debt Info management ([ae95ed9](https://github.com/dnum-mi/referentiel-applications/commit/ae95ed969cf482de77e337346ff67dbb9e88b3fb))
+
+
+### Bug Fixes
+
+* :bug: fix metadata from statuses that weren’t working well ([b99a9aa](https://github.com/dnum-mi/referentiel-applications/commit/b99a9aae737a5a42db31ce5807ef90bbac7684f2))
+* :bug: fix-ui-and-deep-relation-in-graph ([9bc6ef2](https://github.com/dnum-mi/referentiel-applications/commit/9bc6ef212dceda1798e817d0183a9f863d4ac0de))
+
 ## [1.55.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.54.2...v1.55.0) (2025-12-08)
 
 
