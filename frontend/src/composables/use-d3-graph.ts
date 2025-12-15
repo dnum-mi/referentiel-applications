@@ -279,7 +279,7 @@ export function useD3Graph() {
 
     node
       .on("mouseenter", function () {
-        d3.select(this).select("rect").attr("stroke-width", 4).attr("stroke", "var(--border-action-high-blue-france, #000091)"); // Couleur d'action DSFR
+        d3.select(this).select("rect").attr("stroke-width", 4).attr("stroke", "var(--border-action-high-blue-france, #000091)");
       })
       .on("mouseleave", function (event, d) {
         d3.select(this)
