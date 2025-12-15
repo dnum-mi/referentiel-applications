@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage lines-valid="2947" lines-covered="2156" line-rate="0.7315" branches-valid="581" branches-covered="205" branch-rate="0.3528" timestamp="1765791937601" complexity="0" version="0.1">
+<coverage lines-valid="2947" lines-covered="2156" line-rate="0.7315" branches-valid="581" branches-covered="205" branch-rate="0.3528" timestamp="1765791991635" complexity="0" version="0.1">
   <sources>
     <source>/app</source>
   </sources>
@@ -7035,9 +7035,9 @@
                 <line number="30" hits="9"/>
               </lines>
             </method>
-            <method name="(anonymous_2)" hits="36" signature="()V">
+            <method name="(anonymous_2)" hits="30" signature="()V">
               <lines>
-                <line number="36" hits="36"/>
+                <line number="36" hits="30"/>
               </lines>
             </method>
             <method name="(anonymous_3)" hits="29" signature="()V">
@@ -7060,7 +7060,7 @@
             <line number="31" hits="9" branch="false"/>
             <line number="32" hits="9" branch="false"/>
             <line number="34" hits="9" branch="false"/>
-            <line number="36" hits="36" branch="false"/>
+            <line number="36" hits="30" branch="false"/>
             <line number="37" hits="9" branch="false"/>
             <line number="41" hits="9" branch="false"/>
             <line number="52" hits="9" branch="true" condition-coverage="0% (0/1)"/>
@@ -7107,9 +7107,9 @@
                 <line number="10" hits="26"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="11" signature="()V">
+            <method name="(anonymous_1)" hits="9" signature="()V">
               <lines>
-                <line number="38" hits="11"/>
+                <line number="38" hits="9"/>
               </lines>
             </method>
             <method name="(anonymous_2)" hits="2" signature="()V">
@@ -7128,7 +7128,7 @@
             <line number="14" hits="26" branch="false"/>
             <line number="15" hits="26" branch="false"/>
             <line number="33" hits="26" branch="false"/>
-            <line number="38" hits="11" branch="true" condition-coverage="100% (2/2)"/>
+            <line number="38" hits="9" branch="true" condition-coverage="100% (2/2)"/>
             <line number="43" hits="26" branch="false"/>
             <line number="48" hits="26" branch="false"/>
             <line number="52" hits="2" branch="false"/>
@@ -7142,14 +7142,14 @@
                 <line number="5" hits="9"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="6" signature="()V">
+            <method name="(anonymous_1)" hits="8" signature="()V">
               <lines>
-                <line number="32" hits="6"/>
+                <line number="32" hits="8"/>
               </lines>
             </method>
-            <method name="(anonymous_2)" hits="3" signature="()V">
+            <method name="(anonymous_2)" hits="5" signature="()V">
               <lines>
-                <line number="35" hits="3"/>
+                <line number="35" hits="5"/>
               </lines>
             </method>
           </methods>
@@ -7161,8 +7161,8 @@
             <line number="8" hits="9" branch="false"/>
             <line number="15" hits="9" branch="false"/>
             <line number="26" hits="9" branch="false"/>
-            <line number="32" hits="6" branch="false"/>
-            <line number="35" hits="3" branch="false"/>
+            <line number="32" hits="8" branch="false"/>
+            <line number="35" hits="5" branch="false"/>
           </lines>
         </class>
         <class name="hosting.faker.ts" filename="tests/fakers/hosting.faker.ts" line-rate="1" branch-rate="1">
