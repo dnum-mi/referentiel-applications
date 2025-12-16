@@ -703,6 +703,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -1028,6 +1029,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -3246,6 +3248,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -3464,6 +3467,7 @@ components:
       type: string
       enum:
         - under_construction
+        - to_validate
         - poc
         - in_production_mvp
         - in_production
@@ -3803,6 +3807,7 @@ components:
       description: Statut de l'application
       enum:
         - under_construction
+        - to_validate
         - poc
         - in_production_mvp
         - in_production

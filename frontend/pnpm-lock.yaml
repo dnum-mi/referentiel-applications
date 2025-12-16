@@ -60,6 +60,9 @@ importers:
         specifier: ^4.6.4
         version: 4.6.4(vue@3.5.27(typescript@5.8.3))
     devDependencies:
+      '@faker-js/faker':
+        specifier: ^9.9.0
+        version: 9.9.0
       '@hey-api/openapi-ts':
         specifier: ^0.80.18
         version: 0.80.18(typescript@5.8.3)
@@ -891,6 +894,10 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@faker-js/faker@9.9.0':
+    resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
+    engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
   '@gouvfr/dsfr@1.14.3':
     resolution: {integrity: sha512-UTplClQLp635J4vRHx/rJ7SKEi+bepc1FisvzTS8efQGQ3Gm8LttZf11NJ+4XhEMYLbCf8TBvFFwWBZ9ztRFkg==}
@@ -5024,6 +5031,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.27.2':
     optional: true
+
+  '@faker-js/faker@9.9.0': {}
 
   '@gouvfr/dsfr@1.14.3': {}
 
