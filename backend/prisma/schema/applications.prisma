@@ -73,6 +73,7 @@ enum priorityRestart {
 
 enum Status {
   under_construction
+  to_validate
   poc
   in_production_mvp
   in_production
