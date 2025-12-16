@@ -38,9 +38,10 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@hey-api/openapi-ts": "^0.80.18",
-    "@playwright/test": "^1.57.0",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@faker-js/faker": "^9.9.0",
+    "@hey-api/openapi-ts": "^0.80.6",
+    "@playwright/test": "^1.54.2",
+    "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/vue": "^8.1.0",
     "@tsconfig/node20": "^20.1.8",
     "@types/d3": "^7.4.3",

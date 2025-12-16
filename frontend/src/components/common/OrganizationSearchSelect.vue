@@ -21,6 +21,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  errorMessage: {
+    type: String,
+    default: "",
+  },
 });
 
 const emit = defineEmits<{
@@ -130,17 +134,18 @@ watch(searchQuery, () => {
 <template>
   <div>
     <div class="fr-form-group">
-      <DsfrInput
+      <DsfrInputGroup
         v-model.trim="searchQuery"
         :label="searchLabel"
         placeholder="Rechercher une organisation..."
         :description="description"
+        :error-message="errorMessage"
         label-visible
       >
         <template v-if="searchQuery" #append>
           <DsfrButton label="Effacer" size="sm" tertiary no-outline @click="clearSearch" />
         </template>
-      </DsfrInput>
+      </DsfrInputGroup>
     </div>
 
     <div v-if="selectOptions.length > 0" class="fr-mt-1w">

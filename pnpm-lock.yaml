@@ -36,8 +36,331 @@ importers:
         specifier: 3.6.2
         version: 3.6.2
       typescript-eslint:
-        specifier: ^8.53.1
-        version: 8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.2)
+        specifier: ^8.39.0
+        version: 8.39.0(eslint@9.33.0(jiti@2.5.1))(typescript@5.9.2)
+
+  backend:
+    dependencies:
+      "@nestjs/cache-manager":
+        specifier: ^2.3.0
+        version: 2.3.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.20)(cache-manager@5.7.6)(rxjs@7.8.2)
+      "@nestjs/common":
+        specifier: ^10.4.20
+        version: 10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+      "@nestjs/config":
+        specifier: ^3.3.0
+        version: 3.3.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(rxjs@7.8.2)
+      "@nestjs/core":
+        specifier: ^10.4.20
+        version: 10.4.20(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/platform-express@10.4.20)(encoding@0.1.13)(reflect-metadata@0.1.14)(rxjs@7.8.2)
+      "@nestjs/jwt":
+        specifier: ^10.2.0
+        version: 10.2.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))
+      "@nestjs/mapped-types":
+        specifier: ^2.1.0
+        version: 2.1.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)
+      "@nestjs/passport":
+        specifier: ^10.0.3
+        version: 10.0.3(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(passport@0.6.0)
+      "@nestjs/platform-express":
+        specifier: ^10.4.20
+        version: 10.4.20(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.20)
+      "@nestjs/schedule":
+        specifier: ^6.0.0
+        version: 6.0.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.20)
+      "@nestjs/swagger":
+        specifier: ^7.4.2
+        version: 7.4.2(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.20)(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)
+      "@nestjs/terminus":
+        specifier: ^11.0.0
+        version: 11.0.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.20)(@prisma/client@6.3.0(prisma@6.3.0(typescript@5.9.2))(typescript@5.9.2))(reflect-metadata@0.1.14)(rxjs@7.8.2)
+      "@nestjs/throttler":
+        specifier: ^6.4.0
+        version: 6.4.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.20)(reflect-metadata@0.1.14)
+      "@prisma/client":
+        specifier: 6.3.0
+        version: 6.3.0(prisma@6.3.0(typescript@5.9.2))(typescript@5.9.2)
+      cache-manager:
+        specifier: ^5.7.6
+        version: 5.7.6
+      class-transformer:
+        specifier: ^0.5.1
+        version: 0.5.1
+      class-validator:
+        specifier: ^0.14.2
+        version: 0.14.2
+      compression:
+        specifier: ^1.8.1
+        version: 1.8.1
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      date-fns-tz:
+        specifier: ^3.2.0
+        version: 3.2.0(date-fns@4.1.0)
+      dotenv:
+        specifier: ^16.6.1
+        version: 16.6.1
+      exceljs:
+        specifier: ^4.4.0
+        version: 4.4.0
+      express-session:
+        specifier: ^1.18.2
+        version: 1.18.2
+      helmet:
+        specifier: ^7.2.0
+        version: 7.2.0
+      jose:
+        specifier: ^5.10.0
+        version: 5.10.0
+      jwks-rsa:
+        specifier: ^3.2.0
+        version: 3.2.0
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      moment:
+        specifier: ^2.30.1
+        version: 2.30.1
+      nestjs-pino:
+        specifier: ^4.4.0
+        version: 4.4.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(pino-http@10.5.0)(pino@9.8.0)(rxjs@7.8.2)
+      nestjs-prisma:
+        specifier: ^0.23.0
+        version: 0.23.0(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@prisma/client@6.3.0(prisma@6.3.0(typescript@5.9.2))(typescript@5.9.2))(chokidar@3.6.0)(prisma@6.3.0(typescript@5.9.2))
+      passport:
+        specifier: ^0.6.0
+        version: 0.6.0
+      passport-jwt:
+        specifier: ^4.0.1
+        version: 4.0.1
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
+      pino-http:
+        specifier: ^10.5.0
+        version: 10.5.0
+      pino-pretty:
+        specifier: ^13.1.1
+        version: 13.1.1
+      prisma:
+        specifier: 6.3.0
+        version: 6.3.0(typescript@5.9.2)
+      reflect-metadata:
+        specifier: ^0.1.14
+        version: 0.1.14
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.0
+      yaml:
+        specifier: ^2.8.1
+        version: 2.8.1
+      yn:
+        specifier: ^3.1.1
+        version: 3.1.1
+    devDependencies:
+      "@faker-js/faker":
+        specifier: ^9.9.0
+        version: 9.9.0
+      "@nestjs/cli":
+        specifier: ^10.4.9
+        version: 10.4.9(@swc/cli@0.1.65(@swc/core@1.13.3)(chokidar@3.6.0))(@swc/core@1.13.3)
+      "@nestjs/schematics":
+        specifier: ^10.2.3
+        version: 10.2.3(chokidar@3.6.0)(typescript@5.9.2)
+      "@nestjs/testing":
+        specifier: ^10.4.20
+        version: 10.4.20(@nestjs/common@10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.20)(@nestjs/platform-express@10.4.20)
+      "@swc/cli":
+        specifier: ^0.1.65
+        version: 0.1.65(@swc/core@1.13.3)(chokidar@3.6.0)
+      "@swc/core":
+        specifier: ^1.13.3
+        version: 1.13.3
+      "@types/compression":
+        specifier: ^1.8.1
+        version: 1.8.1
+      "@types/express":
+        specifier: ^4.17.23
+        version: 4.17.23
+      "@types/jest":
+        specifier: ^29.5.14
+        version: 29.5.14
+      "@types/lodash":
+        specifier: ^4.17.20
+        version: 4.17.20
+      "@types/lodash-es":
+        specifier: ^4.17.12
+        version: 4.17.12
+      "@types/node":
+        specifier: ^20.19.10
+        version: 20.19.10
+      "@types/passport-jwt":
+        specifier: ^3.0.13
+        version: 3.0.13
+      "@types/supertest":
+        specifier: ^2.0.16
+        version: 2.0.16
+      "@types/uuid":
+        specifier: ^9.0.8
+        version: 9.0.8
+      "@vue/tsconfig":
+        specifier: ^0.7.0
+        version: 0.7.0(typescript@5.9.2)(vue@3.5.18(typescript@5.9.2))
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@20.19.10)(ts-node@10.9.2(@swc/core@1.13.3)(@types/node@20.19.10)(typescript@5.9.2))
+      prisma-case-format:
+        specifier: ^2.2.1
+        version: 2.2.1(encoding@0.1.13)
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+      sqlite3:
+        specifier: ^5.1.7
+        version: 5.1.7
+      supertest:
+        specifier: ^6.3.4
+        version: 6.3.4
+      swagger-themes:
+        specifier: ^1.4.3
+        version: 1.4.3
+      ts-jest:
+        specifier: ^29.4.1
+        version: 29.4.1(@babel/core@7.28.0)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.28.0))(jest-util@29.7.0)(jest@29.7.0(@types/node@20.19.10)(ts-node@10.9.2(@swc/core@1.13.3)(@types/node@20.19.10)(typescript@5.9.2)))(typescript@5.9.2)
+      ts-loader:
+        specifier: ^9.5.2
+        version: 9.5.2(typescript@5.9.2)(webpack@5.97.1(@swc/core@1.13.3))
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@swc/core@1.13.3)(@types/node@20.19.10)(typescript@5.9.2)
+      tsconfig-paths:
+        specifier: ^4.2.0
+        version: 4.2.0
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+
+  frontend:
+    dependencies:
+      "@gouvfr/dsfr":
+        specifier: ~1.14.0
+        version: 1.14.0
+      "@gouvminint/vue-dsfr":
+        specifier: ^8.6.0
+        version: 8.6.0(@iconify/vue@4.3.0(vue@3.5.18(typescript@5.8.3)))(vue-router@4.5.1(vue@3.5.18(typescript@5.8.3)))(vue@3.5.18(typescript@5.8.3))
+      axios:
+        specifier: ^1.11.0
+        version: 1.11.0
+      chart.js:
+        specifier: ^4.5.0
+        version: 4.5.0
+      chartjs-plugin-datalabels:
+        specifier: ^2.2.0
+        version: 2.2.0(chart.js@4.5.0)
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
+      dompurify:
+        specifier: ^3.2.6
+        version: 3.2.6
+      keycloak-js:
+        specifier: ^26.2.0
+        version: 26.2.0
+      marked:
+        specifier: ^16.1.2
+        version: 16.1.2
+      mermaid:
+        specifier: ^11.9.0
+        version: 11.9.0
+      pinia:
+        specifier: ^3.0.3
+        version: 3.0.3(typescript@5.8.3)(vue@3.5.18(typescript@5.8.3))
+      vue:
+        specifier: ^3.5.18
+        version: 3.5.18(typescript@5.8.3)
+      vue-router:
+        specifier: ^4.5.1
+        version: 4.5.1(vue@3.5.18(typescript@5.8.3))
+    devDependencies:
+      "@faker-js/faker":
+        specifier: ^9.9.0
+        version: 9.9.0
+      "@hey-api/openapi-ts":
+        specifier: ^0.80.6
+        version: 0.80.6(typescript@5.8.3)
+      "@playwright/test":
+        specifier: ^1.54.2
+        version: 1.54.2
+      "@testing-library/jest-dom":
+        specifier: ^6.6.4
+        version: 6.6.4
+      "@testing-library/vue":
+        specifier: ^8.1.0
+        version: 8.1.0(@vue/compiler-sfc@3.5.18)(vue@3.5.18(typescript@5.8.3))
+      "@tsconfig/node20":
+        specifier: ^20.1.6
+        version: 20.1.6
+      "@types/jsdom":
+        specifier: ^21.1.7
+        version: 21.1.7
+      "@types/node":
+        specifier: ^24.2.1
+        version: 24.2.1
+      "@vitejs/plugin-vue":
+        specifier: ^6.0.1
+        version: 6.0.1(vite@7.1.1(@types/node@24.2.1)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1))(vue@3.5.18(typescript@5.8.3))
+      "@vitejs/plugin-vue-jsx":
+        specifier: ^5.0.1
+        version: 5.0.1(vite@7.1.1(@types/node@24.2.1)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1))(vue@3.5.18(typescript@5.8.3))
+      "@vue/test-utils":
+        specifier: ^2.4.6
+        version: 2.4.6
+      "@vue/tsconfig":
+        specifier: ^0.5.1
+        version: 0.5.1
+      cypress:
+        specifier: ^14.5.4
+        version: 14.5.4
+      jsdom:
+        specifier: ^26.1.0
+        version: 26.1.0
+      npm-run-all2:
+        specifier: ^8.0.4
+        version: 8.0.4
+      typescript:
+        specifier: ~5.8.3
+        version: 5.8.3
+      unplugin-auto-import:
+        specifier: ^19.3.0
+        version: 19.3.0
+      unplugin-vue-components:
+        specifier: ^28.8.0
+        version: 28.8.0(@babel/parser@7.28.0)(vue@3.5.18(typescript@5.8.3))
+      vite:
+        specifier: ^7.1.1
+        version: 7.1.1(@types/node@24.2.1)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1)
+      vite-plugin-pwa:
+        specifier: ^1.0.2
+        version: 1.0.2(vite@7.1.1(@types/node@24.2.1)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1))(workbox-build@7.3.0(@types/babel__core@7.20.5))(workbox-window@7.3.0)
+      vite-plugin-vue-devtools:
+        specifier: ^7.7.7
+        version: 7.7.7(rollup@2.79.2)(vite@7.1.1(@types/node@24.2.1)(jiti@2.5.1)(terser@5.43.1)(yaml@2.8.1))(vue@3.5.18(typescript@5.8.3))
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.2.1)(jiti@2.5.1)(jsdom@26.1.0)(terser@5.43.1)(yaml@2.8.1)
+      vue-tsc:
+        specifier: ^3.0.5
+        version: 3.0.5(typescript@5.8.3)
+      workbox-window:
+        specifier: ^7.3.0
+        version: 7.3.0
 
 packages:
 
