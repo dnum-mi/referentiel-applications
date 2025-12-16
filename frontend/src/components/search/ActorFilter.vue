@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
-import { useApplicationSearch } from "@/composables/use-application-search";
+import { useApplicationSearch, type Filters } from "@/composables/use-application-search";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
-import { DsfrInput } from "@gouvminint/vue-dsfr";
+import { DsfrInput, DsfrSelect } from "@gouvminint/vue-dsfr";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 import type { OrganizationDto } from "@/client/types.gen";
@@ -13,26 +13,38 @@ const organizationStore = useOrganizationStore();
 
 const organizations = ref<OrganizationDto[]>([]);
 
+const actorTypeOptions = computed(() => [
+  { text: "Tous", value: "" },
+  ...actorTypeStore.actorTypes.map((actor) => ({ text: actor.label, value: actor.id })),
+  { text: "Sans Maîtrise d'Ouvrage (MOA)", value: "missingMoa" },
+  { text: "Sans Maîtrise d'Œuvre (MOE)", value: "missingMoe" },
+]);
+
 const selectedActorTypeId = computed({
   get: () => {
+    if (filters.value.missingMoa) return "missingMoa";
+    if (filters.value.missingMoe) return "missingMoe";
     const currentCode = filters.value.actorType;
     if (!currentCode) return "";
     return actorTypeStore.actorTypes.find((actor) => actor.code === currentCode)?.id ?? "";
   },
   set: (value: string) => {
     if (!value) {
-      setFilter({ actorType: undefined, page: 0 });
+      setFilter({ actorType: undefined, missingMoa: undefined, missingMoe: undefined, page: 0 });
+      return;
+    }
+    if (value === "missingMoa") {
+      setFilter({ actorType: undefined, missingMoa: true, missingMoe: undefined, page: 0 });
+      return;
+    }
+    if (value === "missingMoe") {
+      setFilter({ actorType: undefined, missingMoa: undefined, missingMoe: true, page: 0 });
       return;
     }
     const selected = actorTypeStore.actorTypes.find((actor) => actor.id === value);
-    if (selected) setFilter({ actorType: selected.code, page: 0 });
+    if (selected) setFilter({ actorType: selected.code, missingMoa: undefined, missingMoe: undefined, page: 0 });
   },
 });
-
-const actorTypeOptions = computed(() => [
-  { text: "Tous", value: "" },
-  ...actorTypeStore.actorTypes.map((actor) => ({ text: actor.label, value: actor.id })),
-]);
 
 onMounted(() => actorTypeStore.fetchAll());
 

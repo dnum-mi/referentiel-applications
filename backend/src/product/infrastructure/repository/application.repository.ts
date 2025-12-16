@@ -266,6 +266,44 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
       {
+        condition: filters.missingMoa,
+        whereClause: {
+          actors: {
+            none: {
+              actorType: {
+                code: {
+                  equals: "MOA",
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.missingMoe,
+        whereClause: {
+          actors: {
+            none: {
+              actorType: {
+                code: {
+                  equals: "MOE",
+                  mode: "insensitive" as const,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.missingHosting,
+        whereClause: {
+          hostings: {
+            none: {},
+          },
+        },
+      },
+      {
         condition: filters.link,
         whereClause: {
           externalRessource: {

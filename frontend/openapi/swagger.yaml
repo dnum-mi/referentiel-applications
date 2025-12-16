@@ -672,6 +672,27 @@ paths:
           schema:
             example: user@example.com
             type: string
+        - name: missingMoa
+          required: false
+          in: query
+          description: Filtrer les applications sans MOA
+          schema:
+            example: true
+            type: boolean
+        - name: missingMoe
+          required: false
+          in: query
+          description: Filtrer les applications sans MOE
+          schema:
+            example: true
+            type: boolean
+        - name: missingHosting
+          required: false
+          in: query
+          description: Filtrer les applications sans hébergement
+          schema:
+            example: true
+            type: boolean
         - name: currentStatus__in
           required: false
           in: query
@@ -976,6 +997,27 @@ paths:
           schema:
             example: user@example.com
             type: string
+        - name: missingMoa
+          required: false
+          in: query
+          description: Filtrer les applications sans MOA
+          schema:
+            example: true
+            type: boolean
+        - name: missingMoe
+          required: false
+          in: query
+          description: Filtrer les applications sans MOE
+          schema:
+            example: true
+            type: boolean
+        - name: missingHosting
+          required: false
+          in: query
+          description: Filtrer les applications sans hébergement
+          schema:
+            example: true
+            type: boolean
         - name: currentStatus__in
           required: false
           in: query

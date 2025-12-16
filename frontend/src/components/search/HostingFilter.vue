@@ -51,6 +51,10 @@ function updateFilter(filterKey: FilterKey, value: string) {
   setFilter({ [filterKey]: value || undefined, page: 0 } as Partial<Filters>);
 }
 
+function toggleMissingHosting(checked: boolean) {
+  setFilter({ missingHosting: checked ? true : undefined, page: 0 });
+}
+
 async function loadHostingOptions() {
   isLoading.value = true;
   try {
@@ -73,6 +77,16 @@ const labels: Record<HostingField, string> = {
 
 <template>
   <div class="hosting-filters">
+    <label class="checkbox-item">
+      <input
+        type="checkbox"
+        :checked="Boolean(filters.missingHosting)"
+        data-testid="hosting-missing-checkbox"
+        @change="(e) => toggleMissingHosting((e.target as HTMLInputElement).checked)"
+      />
+      Sans hébergement
+    </label>
+
     <DsfrSelect
       v-for="{ field, filterKey, testId } in hostingFields"
       :key="field"
@@ -90,5 +104,12 @@ const labels: Record<HostingField, string> = {
 .hosting-filters {
   display: flex;
   flex-direction: column;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 </style>
