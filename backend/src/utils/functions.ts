@@ -25,3 +25,9 @@ export function stringToSlug(str: string): string {
 
   return str;
 }
+
+export function stringToBoolean(value: string): boolean | undefined {
+  if (value.toLowerCase() === "true") return true;
+  if (value.toLowerCase() === "false") return false;
+  return undefined;
+}

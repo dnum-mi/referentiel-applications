@@ -12,6 +12,7 @@ import {
   Min,
 } from "class-validator";
 import { PaginationDto } from "../../../common/dto";
+import { stringToBoolean } from "../../../utils/functions";
 
 export class ApplicationSearchDto extends PaginationDto {
   private static toArray(value: unknown): string[] {
@@ -82,6 +83,36 @@ export class ApplicationSearchDto extends PaginationDto {
   actorEmail?: string;
 
   @ApiPropertyOptional({
+    description: "Filtrer les applications sans MOA",
+    example: true,
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => stringToBoolean(value))
+  @IsBoolean()
+  missingMoa?: boolean;
+
+  @ApiPropertyOptional({
+    description: "Filtrer les applications sans MOE",
+    example: true,
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => stringToBoolean(value))
+  @IsBoolean()
+  missingMoe?: boolean;
+
+  @ApiPropertyOptional({
+    description: "Filtrer les applications sans hébergement",
+    example: true,
+    required: false,
+  })
+  @IsOptional()
+  @Transform(({ value }) => stringToBoolean(value))
+  @IsBoolean()
+  missingHosting?: boolean;
+
+  @ApiPropertyOptional({
     type: [String],
     enum: Status,
     description: "Filtrer par un ou plusieurs status du statut courant",
@@ -96,10 +127,7 @@ export class ApplicationSearchDto extends PaginationDto {
     example: true,
   })
   @IsOptional()
-  @Transform(({ value }) => {
-    if (value === "true") return true;
-    if (value === "false") return false;
-  })
+  @Transform(({ value }) => stringToBoolean(value))
   @IsBoolean()
   currentStatus__isNull?: boolean;
 

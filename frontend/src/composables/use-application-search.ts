@@ -31,6 +31,9 @@ const DEFAULT_FILTERS: Filters = {
   iqGte: 0,
   iqLte: 100,
   search: undefined,
+  missingMoa: undefined,
+  missingMoe: undefined,
+  missingHosting: undefined,
 };
 
 // Shared state across components (singleton pattern)
@@ -44,6 +47,13 @@ type QueryParam = LocationQueryValue | LocationQueryValue[];
 function parseQueryParam(value: QueryParam): string | undefined {
   if (Array.isArray(value)) return value[0] ?? undefined;
   return value ?? undefined;
+}
+
+function parseQueryParamBoolean(value: QueryParam): boolean | undefined {
+  const str = parseQueryParam(value);
+  if (str === "true") return true;
+  if (str === "false") return false;
+  return undefined;
 }
 
 function parseQueryParamNumber(value: QueryParam): number | undefined {
@@ -131,6 +141,9 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     iqGte: parseQueryParamNumber(query.iqGte) ?? 0,
     iqLte: parseQueryParamNumber(query.iqLte) ?? 100,
     search: parseQueryParam(query.search),
+    missingMoa: parseQueryParamBoolean(query.missingMoa),
+    missingMoe: parseQueryParamBoolean(query.missingMoe),
+    missingHosting: parseQueryParamBoolean(query.missingHosting),
   };
 }
 
