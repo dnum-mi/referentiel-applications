@@ -214,6 +214,14 @@ watch(
                 {{ application.id }}
               </p>
 
+              <div v-if="application.shortName">
+                <h4>Nom court</h4>
+                <p data-testid="info-short-name">
+                  {{ application.shortName }}
+                </p>
+              </div>
+
+
               <div v-if="labels.length > 0" data-testid="info-alt-labels">
                 <h4>Noms Alternatifs</h4>
                 <p>
