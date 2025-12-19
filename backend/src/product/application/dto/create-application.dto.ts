@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType, PartialType } from "@nestjs/swagger";
-import { priorityRestart } from "@prisma/client";
+import { ApplicationType, priorityRestart } from "@prisma/client";
 import { Type } from "class-transformer";
 import {
   IsArray,
@@ -93,6 +93,17 @@ export class CreateApplicationDto {
   @IsOptional()
   @IsString({ each: true })
   purposes?: string[];
+
+  @ApiProperty({
+    enum: ApplicationType,
+    required: false,
+    enumName: "ApplicationType",
+    description: "Type of the application",
+    example: "business",
+  })
+  @IsOptional()
+  @IsEnum(ApplicationType)
+  type?: ApplicationType;
 
   @ApiProperty({
     type: [String],

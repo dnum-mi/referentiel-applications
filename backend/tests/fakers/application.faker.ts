@@ -2,10 +2,11 @@ import type { Status } from "@prisma/client";
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFaker } from "./user.faker";
 import { faker } from "@faker-js/faker";
-import { priorityRestart } from "@prisma/client";
+import { ApplicationType, priorityRestart } from "@prisma/client";
 import { getPrismaClient } from "./prisma";
 
 const restartPriorities = Object.values(priorityRestart);
+const applicationTypes = Object.values(ApplicationType);
 export class ApplicationFaker {
   static async create(user: AsyncReturnType<typeof UserFaker.create>) {
     const prisma = getPrismaClient();
@@ -18,6 +19,7 @@ export class ApplicationFaker {
         shortName: faker.company.name(),
         description: faker.company.catchPhrase(),
         priorityRestart: faker.helpers.arrayElement(restartPriorities),
+        type: faker.helpers.maybe(() => faker.helpers.arrayElement(applicationTypes), { probability: 0.5 }),
         metadatas: {
           create: [
             {

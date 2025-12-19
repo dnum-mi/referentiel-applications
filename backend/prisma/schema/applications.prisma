@@ -6,6 +6,7 @@ model Application {
   description         String
   targetPopulations   String[]
   purposes            String[]
+  type                ApplicationType?
   currentStatusId     String?
   currentStatus       ApplicationStatus?    @relation(fields: [currentStatusId], references: [id], onDelete: SetNull)
   metadatas           Metadata[]            @relation("ApplicationMetadatas")
@@ -78,4 +79,12 @@ enum Status {
   in_production_decommissioning
   decommissioned
   deleted
+}
+
+enum ApplicationType {
+  business
+  core_service
+  sso
+  website_communication
+  intranet_communication_website
 }

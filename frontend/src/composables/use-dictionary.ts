@@ -1,4 +1,4 @@
-import type { ApplicationPriorityRestart, ApplicationStatus, RelationType } from "@/client/types.gen.js";
+import type { ApplicationPriorityRestart, ApplicationStatus, ApplicationType, RelationType } from "@/client/types.gen.js";
 
 export const statusDictionary = {
   in_pending: "En attente",
@@ -172,3 +172,11 @@ export const relationTypeLabels: Record<RelationType, string> = {
   is_data_user_of: "utilise les données de",
 };
 export type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd";
+
+export const typeApplicationDictionary: Record<ApplicationType, string> = {
+  business: "Métier",
+  core_service: "Service cœur",
+  sso: "SSO",
+  website_communication: "Site web / communication",
+  intranet_communication_website: "Intranet / site de communication",
+};

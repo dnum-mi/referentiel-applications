@@ -1,4 +1,4 @@
-import type { ApplicationPriorityRestart, PatchApplicationDto } from "@/client/types.gen";
+import type { ApplicationPriorityRestart, ApplicationType, PatchApplicationDto } from "@/client/types.gen";
 import type { Filters } from "@/composables/use-application-search";
 import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 import { computed, ref } from "vue";
@@ -47,6 +47,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
       targetPopulations: app.targetPopulations,
       purposes: app.purposes,
       tags: app.tags,
+      type: app.type as ApplicationType,
       priorityRestart: app.priorityRestart as ApplicationPriorityRestart,
     };
 
