@@ -46,7 +46,14 @@ const moeError = ref<string | undefined>(undefined);
 const globalError = ref<string | undefined>(undefined);
 const initialLabels = ref<LabelDto[]>([]);
 
-// MOA and MOE actor forms
+const steps = [
+  "Informations principales",
+  "Détails de l'application",
+  "Contact MOA",
+  "Contact MOE",
+];
+const currentStep = ref(1);
+
 const moaActor = ref<CreateActorDto>({
   actorTypeId: "",
   organizationId: undefined,
@@ -67,7 +74,6 @@ const isCreateMode = computed(() => props.mode === "create");
 const canEditBase = computed(() => isCreateMode.value || props.initialData?.myPerms.has("writeBase"));
 const canEditPriorityRestart = computed(() => isCreateMode.value || props.initialData?.myPerms.has("writePriorityRestart"));
 
-// Computed properties to handle null -> undefined conversion for OrganizationSearchSelect
 const moaOrganizationId = computed({
   get: () => moaActor.value.organizationId ?? undefined,
   set: (value) => { moaActor.value.organizationId = value ?? undefined; },
@@ -100,6 +106,104 @@ const form = ref<CreateApplicationDto>({
   labels: props.initialData?.labels ?? [],
 });
 
+function validateStep1(): boolean {
+  labelError.value = undefined;
+  descriptionError.value = undefined;
+  
+  if (form.value.label === "") {
+    labelError.value = "Le nom de l'application est obligatoire.";
+    return false;
+  }
+  if (form.value.description === "") {
+    descriptionError.value = "La description est obligatoire.";
+    return false;
+  }
+  return true;
+}
+
+function validateStep2(): boolean {
+  return true;
+}
+
+function validateStep3(): boolean {
+  moaError.value = undefined;
+  const moaErrors: string[] = [];
+
+  if (!moaActor.value.organizationId) {
+    moaErrors.push("L'organisation MOA est obligatoire.");
+  }
+  if (!moaActor.value.email) {
+    moaErrors.push("L'email du contact MOA est obligatoire.");
+  }
+  if (!moaActor.value.firstname) {
+    moaErrors.push("Le prénom du contact MOA est obligatoire.");
+  }
+  if (!moaActor.value.lastname) {
+    moaErrors.push("Le nom du contact MOA est obligatoire.");
+  }
+
+  if (moaErrors.length > 0) {
+    moaError.value = moaErrors.join(" ");
+    return false;
+  }
+  return true;
+}
+
+function validateStep4(): boolean {
+  moeError.value = undefined;
+  const moeErrors: string[] = [];
+
+  if (!moeActor.value.organizationId) {
+    moeErrors.push("L'organisation MOE est obligatoire.");
+  }
+  if (!moeActor.value.email) {
+    moeErrors.push("L'email du contact MOE est obligatoire.");
+  }
+  if (!moeActor.value.firstname) {
+    moeErrors.push("Le prénom du contact MOE est obligatoire.");
+  }
+  if (!moeActor.value.lastname) {
+    moeErrors.push("Le nom du contact MOE est obligatoire.");
+  }
+
+  if (moeErrors.length > 0) {
+    moeError.value = moeErrors.join(" ");
+    return false;
+  }
+  return true;
+}
+
+function validateCurrentStep(): boolean {
+  if (!isCreateMode.value) {
+    return isFormValid();
+  }
+  
+  switch (currentStep.value) {
+    case 1:
+      return validateStep1();
+    case 2:
+      return validateStep2();
+    case 3:
+      return validateStep3();
+    case 4:
+      return validateStep4();
+    default:
+      return false;
+  }
+}
+
+function nextStep() {
+  if (validateCurrentStep() && currentStep.value < steps.length) {
+    currentStep.value++;
+  }
+}
+
+function previousStep() {
+  if (currentStep.value > 1) {
+    currentStep.value--;
+  }
+}
+
 function isFormValid(): boolean {
   labelError.value = undefined;
   descriptionError.value = undefined;
@@ -108,7 +212,6 @@ function isFormValid(): boolean {
   globalError.value = undefined;
   let hasError = false;
 
-  // Validation des champs de base
   if (form.value.label === "") {
     labelError.value = "Le nom de l'application est obligatoire.";
     hasError = true;
@@ -118,7 +221,6 @@ function isFormValid(): boolean {
     hasError = true;
   }
 
-  // Validation MOA et MOE uniquement en mode création
   if (isCreateMode.value) {
     const moaErrors: string[] = [];
     const moeErrors: string[] = [];
@@ -165,7 +267,6 @@ async function handleSubmit() {
 
   isSubmitting.value = true;
 
-  // Filter out empty purposes and target populations
   form.value.purposes = filterEmpty(form.value.purposes);
   form.value.targetPopulations = filterEmpty(form.value.targetPopulations);
 
@@ -190,7 +291,6 @@ async function handleCreate() {
 
     const application = response.data as ApplicationDto;
 
-    // Créer les acteurs MOA et MOE
     try {
       await createActors(application.id);
     } catch (actorError) {
@@ -207,7 +307,6 @@ async function handleCreate() {
 }
 
 async function createActors(applicationId: string) {
-  // Créer l'acteur MOA
   const moaPayload: CreateActorDto = {
     actorTypeId: moaActor.value.actorTypeId,
     organizationId: moaActor.value.organizationId || undefined,
@@ -222,7 +321,6 @@ async function createActors(applicationId: string) {
     body: moaPayload,
   });
 
-  // Créer l'acteur MOE
   const moePayload: CreateActorDto = {
     actorTypeId: moeActor.value.actorTypeId,
     organizationId: moeActor.value.organizationId || undefined,
@@ -247,7 +345,6 @@ async function handleUpdate() {
   });
 
   try {
-    // Handle labels updates
     for (const label of deletedLabels) {
       if (label.id) {
         await api.labelsControllerDelete({
@@ -301,13 +398,11 @@ function removePopulation(index: number) {
 onMounted(async () => {
   initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
   
-  // Charger les types d'acteurs et les présélectionner si en mode création
   if (isCreateMode.value) {
     if (actorTypeStore.actorTypes.length === 0) {
       await actorTypeStore.fetchAll();
     }
     
-    // Présélectionner les types d'acteurs par code
     const moaType = actorTypeStore.actorTypes.find(t => t.code === "MOA");
     const moeType = actorTypeStore.actorTypes.find(t => t.code === "MOE");
     
@@ -330,9 +425,18 @@ onMounted(async () => {
     closeable
     @close="globalError = undefined"
   />
+  
+  <!-- Stepper for create mode -->
+  <DsfrStepper
+    v-if="isCreateMode"
+    :steps="steps"
+    :current-step="currentStep"
+    class="fr-mb-4w"
+  />
+  
   <form data-testid="application-form" @submit.prevent="handleSubmit">
-    <!-- Informations principales de l'application -->
-    <div class="fr-card fr-p-3w">
+    <!-- Step 1: Informations principales de l'application -->
+    <div v-if="!isCreateMode || currentStep === 1" class="fr-card fr-p-3w">
       <h3 class="fr-mb-3w">
         Informations principales
       </h3>
@@ -435,8 +539,8 @@ Aucun espace en début ou en fin."
       />
     </div>
 
-    <!-- Détails de l'application -->
-    <div class="fr-card fr-mt-3w fr-p-3w">
+    <!-- Step 2: Détails de l'application -->
+    <div v-if="!isCreateMode || currentStep === 2" class="fr-card fr-mt-3w fr-p-3w">
       <h3 class="fr-mb-3w">
         Détails de l'application
       </h3>
@@ -497,8 +601,8 @@ Aucun espace en début ou en fin."
       </div>
     </div>
 
-    <!-- MOA Section -->
-    <div v-if="isCreateMode" class="fr-card fr-mt-3w fr-p-3w">
+    <!-- Step 3: MOA Section -->
+    <div v-if="isCreateMode && currentStep === 3" class="fr-card fr-mt-3w fr-p-3w">
       <h3 class="fr-mb-3w">
         MOA (Maîtrise d'Ouvrage)
       </h3>
@@ -546,8 +650,8 @@ Aucun espace en début ou en fin."
       </div>
     </div>
 
-    <!-- MOE Section -->
-    <div v-if="isCreateMode" class="fr-card fr-mt-3w fr-p-3w">
+    <!-- Step 4: MOE Section -->
+    <div v-if="isCreateMode && currentStep === 4" class="fr-card fr-mt-3w fr-p-3w">
       <h3 class="fr-mb-3w">
         MOE (Maîtrise d'Œuvre)
       </h3>
@@ -595,7 +699,43 @@ Aucun espace en début ou en fin."
       </div>
     </div>
 
-    <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
+    <!-- Navigation buttons -->
+    <div v-if="isCreateMode" class="fr-btns-group fr-btns-group--right fr-mt-4w">
+      <DsfrButton 
+        type="button" 
+        secondary 
+        label="Annuler" 
+        data-testid="application-cancel-btn" 
+        @click="$emit('cancel')" 
+      />
+      <DsfrButton 
+        v-if="currentStep > 1"
+        type="button" 
+        label="Précédent" 
+        icon="ri-arrow-left-line"
+        data-testid="application-previous-btn" 
+        @click="previousStep" 
+      />
+      <DsfrButton 
+        v-if="currentStep < steps.length"
+        type="button" 
+        label="Suivant" 
+        icon="ri-arrow-right-line"
+        icon-right
+        data-testid="application-next-btn" 
+        @click="nextStep" 
+      />
+      <DsfrButton 
+        v-if="currentStep === steps.length"
+        type="submit" 
+        :disabled="isSubmitting" 
+        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" 
+        data-testid="application-submit-btn" 
+      />
+    </div>
+    
+    <!-- Edit mode buttons -->
+    <div v-else class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton type="button" secondary label="Annuler" data-testid="application-cancel-btn" @click="$emit('cancel')" />
       <DsfrButton 
         type="submit" 
