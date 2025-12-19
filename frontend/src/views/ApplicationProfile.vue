@@ -4,13 +4,14 @@ import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { formatDateFR } from "@/composables/use-date";
-import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { statusApplicationDictionary, typeApplicationDictionary } from "@/composables/use-dictionary";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import { useBreakpoints } from "@/composables/use-breakpoint";
 import { BREAKPOINTS } from "@/constants/breakpoint";
+import type { ApplicationType } from "@/client";
 
 
 const userStore = useUserStore();
@@ -24,6 +25,13 @@ const errorMessage = ref("");
 
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
+
+const TypeOptions  = computed(() =>
+  Object.entries(typeApplicationDictionary).map(([value, text]) => ({
+    value: value as ApplicationType,
+    text,
+  })),
+);
 
 async function toggleSubscription() {
   isSubscriptionLoading.value = true;
@@ -144,7 +152,7 @@ const actions = computed(() => [
           </div>
         </template>
       </DsfrHighlight>
-            <DsfrButton
+        <DsfrButton
           class="fr-btn--tertiary-no-outline fr-btn--icon-left"
           :class="isSubscribed ? 'fr-icon-notification-3-fill' : 'fr-icon-notification-3-line'"
           :disabled="isSubscriptionLoading"
@@ -164,6 +172,12 @@ const actions = computed(() => [
         <DsfrTag
           :label="`IQ: ${application.quality ?? 'non renseigné'}%`"
           data-testid="application-iq-tag"
+        ></DsfrTag>
+
+        <DsfrTag
+          v-if="application.type"
+          :label="`Type: ${typeApplicationDictionary[application.type]}`"
+          data-testid="application-type-tag"
         ></DsfrTag>
       </div>
 

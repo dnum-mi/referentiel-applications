@@ -49,6 +49,7 @@ export class ApplicationService {
           description: createApplicationDto.description,
           targetPopulations: createApplicationDto.targetPopulations ?? [],
           purposes: createApplicationDto.purposes ?? [],
+          type: createApplicationDto.type ?? null,
           tags: {
             connect: existingTags,
           },
@@ -145,6 +146,7 @@ export class ApplicationService {
           priorityRestart: "priorité de redémarrage",
           tags: "tags",
           purposes: "objectifs",
+          type: "type d'application",
         },
         oldData: oldApp,
         newData: updatedApplication,
@@ -293,6 +295,7 @@ export class ApplicationService {
       "shortName",
       "description",
       "priorityRestart",
+      "type",
     ] as const;
     const arrayFields = ["purposes", "targetPopulations"] as const;
 

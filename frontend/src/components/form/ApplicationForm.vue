@@ -7,7 +7,7 @@ import { useActorTypeStore } from "@/stores/actorTypeStore";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import TagSearchSelect from "@/components/common/TagSearchSelect.vue";
 import OrganizationSearchSelect from "@/components/common/OrganizationSearchSelect.vue";
-import { statusApplicationDictionary, priorityRestartLabelsOptions } from "@/composables/use-dictionary";
+import { statusApplicationDictionary, priorityRestartLabelsOptions, typeApplicationDictionary } from "@/composables/use-dictionary";
 import api from "@/api/index";
 import type {
   ApplicationDto,
@@ -15,6 +15,7 @@ import type {
   CreateApplicationDto,
   CreateActorDto,
   LabelDto,
+  ApplicationType,
 } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 
@@ -89,6 +90,13 @@ const filterEmpty = (arr: string[] | undefined) => arr?.filter(item => item.trim
 const statusOptions = computed(() =>
   Object.entries(statusApplicationDictionary).map(([value, text]) => ({
     value: value as ApplicationStatus,
+    text,
+  })),
+);
+
+const TypeOptions  = computed(() =>
+  Object.entries(typeApplicationDictionary).map(([value, text]) => ({
+    value: value as ApplicationType,
     text,
   })),
 );
@@ -471,6 +479,15 @@ Aucun espace en début ou en fin."
         label="Status de l'application"
         default-unselected-text="Sélectionner un status"
         data-testid="application-status"
+      />
+
+      <DsfrSelect
+        v-if="isCreateMode"
+        v-model="form.type"
+        :options="TypeOptions"
+        label="Type d'application"
+        default-unselected-text="Sélectionner un type"
+        data-testid="application-type"
       />
 
       <div v-if="!isCreateMode" class="fr-form-group fr-mt-3w">

@@ -3506,6 +3506,15 @@ components:
         - R1_STAR
         - R2
         - R3
+    ApplicationType:
+      type: string
+      description: Type of the application
+      enum:
+        - business
+        - core_service
+        - sso
+        - website_communication
+        - intranet_communication_website
     ApplicationStatus:
       type: string
       description: Statut de l'application
@@ -3582,6 +3591,9 @@ components:
           type: array
           items:
             type: string
+        type:
+          example: business
+          $ref: "#/components/schemas/ApplicationType"
         tags:
           example: &a22
             - tag1
@@ -3751,6 +3763,9 @@ components:
           type: array
           items:
             type: string
+        type:
+          example: business
+          $ref: "#/components/schemas/ApplicationType"
         tags:
           example: *a22
           type: array
