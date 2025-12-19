@@ -5,11 +5,12 @@ import type { CreateLinkDto, UpdateLinkDto, Link } from "@/client/types.gen";
 import { useLinkStore } from "@/stores/linkStore";
 import useModal from "@/composables/use-modal";
 import LinkForm from "./form/LinkForm.vue";
-import PaginationFooter from "./PaginationFooter.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import { useToasterStore } from "@/stores/toasterStore.js";
+import RefAppTable from "./RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 const props = withDefaults(
   defineProps<{
@@ -33,10 +34,19 @@ const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props
 
 const currentPage = ref(0);
 const pageSize = ref(15);
+const firstIndex = computed(() => currentPage.value * pageSize.value);
 
 const errorMessage = ref("");
 
 const getTypeLabel = (type: string) => (linkTypesDict as Record<string, string>)[type] || "Type inconnu";
+
+const tableColumns: TableColumn[] = [
+  { field: "selection", header: "Sélection", sortable: false },
+  { field: "lien", header: "Lien", sortable: false },
+  { field: "description", header: "Description", sortable: false },
+  { field: "typeDeLien", header: "Type de lien", sortable: false },
+  { field: "actions", header: "Actions", sortable: false },
+];
 
 watch(
   () => props.isMobile,
@@ -45,13 +55,13 @@ watch(
   },
 );
 
-function handlePageChange(newPage: number) {
-  currentPage.value = newPage;
-}
-
-function handlePageSizeChange(newPageSize: number) {
-  pageSize.value = newPageSize;
-  currentPage.value = 0;
+function onPage(event: any) {
+  currentPage.value = event.page;
+  pageSize.value = event.rows;
+  linkStore.fetchLinks(props.application.id, {
+    page: currentPage.value,
+    pageSize: pageSize.value,
+  });
 }
 
 watch([currentPage, pageSize], () => {
@@ -61,17 +71,15 @@ watch([currentPage, pageSize], () => {
   });
 });
 
-// Amélioration 1 : Remplacer 'rows' par un tableau d'objets
-const headers = ["Sélection", "Lien", "Description", "Type de lien", "Actions"];
-
+// Amélioration 1 : Remplacer 'rows' par un tableau d'objets avec noms de champs normalisés
 const rows = computed(() =>
   linkStore.links.map((link) => ({
     id: link.id,
-    Sélection: link.id, // Utilisé pour le v-model de DsfrDataTable
-    Lien: { label: link.link || "Lien vide", to: link.link },
-    Description: link.description || "Description vide",
-    "Type de lien": getTypeLabel(link.type),
-    Actions: {
+    selection: link.id, // Utilisé pour le v-model de checkboxes
+    lien: { label: link.link || "Lien vide", to: link.link },
+    description: link.description || "Description vide",
+    typeDeLien: getTypeLabel(link.type),
+    actions: {
       edit: () => linkModal.openModal(link), // Action pour le bouton
     },
   })),
@@ -224,56 +232,44 @@ function getCardButtons(link: Link) {
           </div>
         </div>
 
-        <DsfrDataTable
-          v-model:selection="selectedLinkIds"
-          :headers-row="headers"
-          :rows="rows"
-          row-key="id"
-          :pagination="false"
-          title="Liste des liens"
+        <RefAppTable
+          :items="rows"
+          :columns="tableColumns"
+          :paginator="true"
+          :lazy="true"
+          :rows="pageSize"
+          :first="firstIndex"
+          :total-records="linkStore.total"
           data-testid="links-table"
+          @page="onPage"
         >
-          <template #cell="{ colKey, cell }">
-            <template v-if="colKey === 'Sélection'">
-              <input v-model="selectedLinkIds" type="checkbox" :aria-label="`Sélectionner lien ${cell}`" :value="cell" />
-            </template>
-
-            <template v-else-if="colKey === 'Lien'">
-              <a :href="cell.to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ cell.label }}</a>
-            </template>
-
-            <template v-else-if="colKey === 'Type de lien'">
-              <DsfrTag :label="cell" :title="cell" />
-            </template>
-
-            <template v-else-if="colKey === 'Actions'">
-              <DsfrButton
-                tertiary
-                size="sm"
-                icon="fr-icon-edit-line"
-                :disabled="!canEdit"
-                data-testid="link-edit-btn"
-                title="Modifier le lien"
-                aria-label="Modifier le lien"
-                @click="cell.edit"
-              >
-                Modifier
-              </DsfrButton>
-            </template>
-
-            <template v-else>
-              {{ cell }}
-            </template>
+          <template #body-selection="{ data }">
+            <input v-model="selectedLinkIds" type="checkbox" :aria-label="`Sélectionner lien ${data.selection}`" :value="data.selection" />
           </template>
-        </DsfrDataTable>
-        <PaginationFooter
-          :total-filtered="linkStore.total"
-          :limit="pageSize"
-          :page="currentPage"
-          data-testid="links-pagination-footer"
-          @update:limit="handlePageSizeChange"
-          @update:page="handlePageChange"
-        />
+
+          <template #body-lien="{ data }">
+            <a :href="data.lien.to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ data.lien.label }}</a>
+          </template>
+
+          <template #body-typeDeLien="{ data }">
+            <DsfrTag :label="data.typeDeLien" :title="data.typeDeLien" />
+          </template>
+
+          <template #body-actions="{ data }">
+            <DsfrButton
+              tertiary
+              size="sm"
+              icon="fr-icon-edit-line"
+              :disabled="!canEdit"
+              data-testid="link-edit-btn"
+              title="Modifier le lien"
+              aria-label="Modifier le lien"
+              @click="data.actions.edit"
+            >
+              Modifier
+            </DsfrButton>
+          </template>
+        </RefAppTable>
       </template>
 
       <div v-else class="link-card-list">
@@ -293,15 +289,6 @@ function getCardButtons(link: Link) {
             <DsfrTag :label="getTypeLabel(link.type)" :title="getTypeLabel(link.type)" />
           </template>
         </DsfrCard>
-
-        <PaginationFooter
-          :total-filtered="linkStore.total"
-          :limit="pageSize"
-          :page="currentPage"
-          data-testid="links-pagination-footer"
-          @update:limit="handlePageSizeChange"
-          @update:page="handlePageChange"
-        />
       </div>
     </div>
   </div>

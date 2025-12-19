@@ -3,6 +3,8 @@ import { ref, onMounted } from "vue";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import type { Chart } from "chart.js";
 import { renderChart } from "@/utils/chart";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 const chartRef = ref<HTMLCanvasElement | null>(null);
 let chartInstance: Chart | null = null;
@@ -11,6 +13,11 @@ const isLoading = ref(false);
 const isTableView = ref(false);
 const errorMessage = ref("");
 const countApplicationsByIq = ref<{ iq: number; total: number }[]>([]);
+
+const tableColumns: TableColumn[] = [
+  { field: "iq", header: "Tranche d'IQ", sortable: false },
+  { field: "total", header: "Nombre d'applications", sortable: false },
+];
 
 const statisticsStore = useStatisticsStore();
 
@@ -62,20 +69,12 @@ onMounted(loadData);
       v-show="!isLoading && !errorMessage && !isTableView"
       ref="chartRef"
       data-testid="applications-iq-chart-canvas"
-      role="img"
       aria-describedby="applications-iq-desc"
     />
-    <DsfrDataTable
+    <RefAppTable
       v-show="!isLoading && !errorMessage && isTableView"
-      :rows="countApplicationsByIq"
-      :headers-row="[
-        { key: 'iq', label: 'Tranche d\'IQ', sortable: false },
-        { key: 'total', label: 'Nombre d\'applications', sortable: false },
-      ]"
-      :sortable-rows="false"
-      row-key="iq"
-      aria-label="Répartition des applications par IQ (tableau)"
-      aria-describedby="applications-iq-desc"
+      :items="countApplicationsByIq"
+      :columns="tableColumns"
       data-testid="applications-iq-chart-table"
     />
   </section>

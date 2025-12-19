@@ -6,6 +6,8 @@ import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import ActorForm from "./ActorForm.vue";
 import OrgBreadCrumb from "../organization/OrgBreadCrumb.vue";
+import RefAppTable from "../RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
@@ -30,7 +32,18 @@ const isSubmitting = ref(false);
 const loading = ref(false);
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeActors"));
 
-const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom", "Actions"];
+const columns: TableColumn[] = [
+  { field: "Sélection", header: "Sélection", sortable: false },
+  { field: "Organisation", header: "Organisation", sortable: false },
+  { field: "Type", header: "Type", sortable: false },
+  { field: "Email", header: "Email", sortable: false },
+  { field: "Prénom", header: "Prénom", sortable: false },
+  { field: "Nom", header: "Nom", sortable: false },
+  { field: "Actions", header: "Actions", sortable: false },
+];
+
+const pageSize = ref(5);
+const firstIndex = computed(() => currentPage.value * pageSize.value);
 
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 function getActorTypeLabel(typeId: string): string {
@@ -74,7 +87,7 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
-    console.error("❌ Erreur handleSaveActors :", error.response?.data || error);
+    console.error(" Erreur handleSaveActors :", error.response?.data || error);
   } finally {
     loading.value = false;
   }
@@ -113,6 +126,11 @@ async function confirmDelete() {
 
 function cancelDelete() {
   showDeleteConfirmation.value = false;
+}
+
+function onPage(event: any) {
+  currentPage.value = event.page;
+  pageSize.value = event.rows;
 }
 
 function getCardButtons(actor: Actor) {
@@ -187,71 +205,66 @@ function getCardButtons(actor: Actor) {
     <AppLoader v-if="loading" data-testid="actor-loader"></AppLoader>
 
     <template v-if="!loading && !props.isMobile">
-      <DsfrDataTable
-        v-model:selection="selectedActorIds"
-        v-model:current-page="currentPage"
-        :headers-row="headers"
-        :rows="tableRows"
-        row-key="id"
-        title="Liste des acteurs associés"
-        pagination
-        :rows-per-page="5"
-        :pagination-options="[5, 10, 20, 30]"
-        bottom-action-bar-class="bottom-action-bar-class"
-        pagination-wrapper-class="pagination-wrapper-class"
-        sorted="id"
-        :sortable-rows="['id']"
-        data-testid="actor-table"
+      <RefAppTable
+        :items="tableRows"
+        :columns="columns"
+        :paginator="true"
+        :rows="pageSize"
+        :first="firstIndex"
+        :total-records="actorStore.actors.length"
+        data-test-id="actor-table"
+        empty-message="Aucun acteur enregistré."
+        @page="onPage"
       >
-        <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'Sélection'">
-            <input v-model="selectedActorIds" type="checkbox" :value="cell" :data-testid="`actor-row-select-${cell}`" />
-          </template>
-
-          <template v-else-if="colKey === 'Organisation'">
-            <OrgBreadCrumb v-if="cell" :organization-id="cell"></OrgBreadCrumb>
-            <template v-else> Aucune organisation </template>
-          </template>
-
-          <template v-else-if="colKey === 'Email'">
-            <a
-              v-if="cell.to"
-              :href="cell.to"
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="actor-email-link"
-              :title="`Envoyer un email à ${cell.label}`"
-              :aria-label="`Envoyer un email à ${cell.label}`"
-            >
-              {{ cell.label }}
-            </a>
-          </template>
-
-          <template v-else-if="colKey === 'Actions'">
-            <DsfrButton
-              title="Modifier les informations de l’acteur"
-              aria-label="Modifier l’acteur"
-              tertiary
-              size="sm"
-              icon="fr-icon-edit-line"
-              :disabled="!canEdit"
-              data-testid="actor-edit-btn"
-              @click="cell.edit"
-            >
-              Modifier
-            </DsfrButton>
-          </template>
-
-          <template v-else-if="colKey === 'Type'">
-            <DsfrTag v-if="cell" :label="String(cell)" small class="actor-type-tag" :data-testid="`actor-type-tag-${cell}`"></DsfrTag>
-            <template v-else> Type inconnu </template>
-          </template>
-
-          <template v-else>
-            {{ cell }}
-          </template>
+        <template #body-Sélection="{ data }">
+          <input v-model="selectedActorIds" type="checkbox" :value="data.Sélection" :data-testid="`actor-row-select-${data.Sélection}`" />
         </template>
-      </DsfrDataTable>
+
+        <template #body-Organisation="{ data }">
+          <OrgBreadCrumb v-if="data.Organisation" :organization-id="data.Organisation"></OrgBreadCrumb>
+          <template v-else> Aucune organisation </template>
+        </template>
+
+        <template #body-Email="{ data }">
+          <a
+            v-if="data.Email.to"
+            :href="data.Email.to"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="actor-email-link"
+            :title="`Envoyer un email à ${data.Email.label}`"
+            :aria-label="`Envoyer un email à ${data.Email.label}`"
+          >
+            {{ data.Email.label }}
+          </a>
+        </template>
+
+        <template #body-Actions="{ data }">
+          <DsfrButton
+            title="Modifier les informations de l'acteur"
+            aria-label="Modifier l'acteur"
+            tertiary
+            size="sm"
+            icon="fr-icon-edit-line"
+            :disabled="!canEdit"
+            data-testid="actor-edit-btn"
+            @click="data.Actions.edit"
+          >
+            Modifier
+          </DsfrButton>
+        </template>
+
+        <template #body-Type="{ data }">
+          <DsfrTag
+            v-if="data.Type"
+            :label="String(data.Type)"
+            small
+            class="actor-type-tag"
+            :data-testid="`actor-type-tag-${data.Type}`"
+          ></DsfrTag>
+          <template v-else> Type inconnu </template>
+        </template>
+      </RefAppTable>
     </template>
 
     <div v-if="props.isMobile" class="actor-card-list">

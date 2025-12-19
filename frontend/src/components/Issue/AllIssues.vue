@@ -4,12 +4,14 @@ import { routeNames } from "@/router/route-names";
 import { useUserStore } from "@/stores/userStore";
 import { formatDate } from "@/composables/use-date";
 import api from "@/api";
-import PaginationFooter from "../PaginationFooter.vue";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
 import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
 import type { GenericRow } from "@/utils/types";
 import type { AnomalyNotificationPaginatedResponseDto } from "@/client/types.gen";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn, TableSortEvent } from "@/types/table";
+import ReportStatusTag from "./ReportStatusTag.vue";
 
 const title = "Liste de tous les signalements d'applications";
 const headers = [
@@ -20,6 +22,12 @@ const headers = [
   { key: "status", label: "Statut" },
 ] as const satisfies DsfrDataTableHeaderCell[];
 
+const tableColumns: TableColumn[] = headers.map((h) => ({
+  field: h.key,
+  header: h.label,
+  sortable: true,
+}));
+
 const userStore = useUserStore();
 
 const data = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total: 0 });
@@ -28,6 +36,7 @@ const isEditing = ref<boolean>(false);
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
 const itemsPerPage = ref(15);
+const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 const searchReport = ref("");
 const sortBy = ref<"application" | "description" | "date" | "status" | "signalant">("date");
 const sortedDesc = ref<boolean>(true);
@@ -80,6 +89,16 @@ watch(searchReport, () => {
 
 watch([currentPage, itemsPerPage, sortBy, sortedDesc], fetchAllReportsDirect);
 
+function onSort(event: TableSortEvent) {
+  sortBy.value = event.sortField as typeof sortBy.value;
+  sortedDesc.value = event.sortOrder === -1;
+}
+
+function onPage(event: any) {
+  currentPage.value = event.page;
+  itemsPerPage.value = event.rows;
+}
+
 onMounted(async () => {
   await fetchAllReportsDirect();
 });
@@ -124,70 +143,43 @@ onMounted(async () => {
     <div v-if="!rows.length" class="text-center">
       <p>Aucune correction recensée.</p>
     </div>
-    <DsfrDataTable
+    <RefAppTable
       v-else
-      v-model:selection="selection"
-      v-model:sorted-by="sortBy"
-      v-model:sorted-desc="sortedDesc"
+      :items="rows"
+      :columns="tableColumns"
+      :paginator="true"
+      :lazy="true"
+      :rows="itemsPerPage"
+      :first="firstIndex"
+      :total-records="data.total"
+      :sort-field="sortBy"
+      :sort-order="sortedDesc ? -1 : 1"
       data-testid="issues-table"
-      :headers-row="headers"
-      :rows="rows"
-      row-key="id"
-      :title="title"
-      :sortable-rows="true"
+      @sort="onSort"
+      @page="onPage"
     >
-      <template #header="{ key, label }">
-        <div :class="{ 'select-status': key === 'status' }">
-          <em>{{ label }}</em>
-        </div>
+      <template #body-application="{ data }">
+        <router-link v-if="data.application.to" :to="data.application.to" :data-testid="`issues-row-${data.id}-application`">
+          {{ data.application.label || "Voir l'application" }}
+        </router-link>
+        <span v-else :data-testid="`issues-row-${data.id}-application`">{{ data.application.label || "Signalement global" }}</span>
       </template>
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'application'">
-          <template v-if="cell && (cell as any).to && (cell as any).to.params && (cell as any).to.params.id">
-            <router-link :to="(cell as any).to" :data-testid="`issues-row-${(cell as any).id}-application`">
-              {{ (cell as any).label || "Voir l’application" }}
-            </router-link>
-          </template>
-          <template v-else>
-            <span :data-testid="`issues-row-${(cell as any).id}-application`">{{ (cell as any).label || "Signalement global" }}</span>
-          </template>
-        </template>
-        <template v-else-if="colKey === 'description'">
-          <p class="text-wrap">
-            {{ cell }}
-          </p>
-        </template>
-        <template v-else-if="colKey === 'status'">
-          <ReportStatusTag
-            :report="(cell as any).report"
-            :is-editing="(cell as any).isEditing"
-            class="select-status"
-            @refresh="fetchAllReportsDirect()"
-          />
-        </template>
-        <template v-else>
-          {{ cell }}
-        </template>
+
+      <template #body-description="{ data }">
+        <p class="text-wrap">
+          {{ data.description }}
+        </p>
       </template>
-    </DsfrDataTable>
-    <PaginationFooter
-      :total-filtered="data.total"
-      :limit="itemsPerPage"
-      :page="currentPage"
-      @update:limit="
-        (val) => {
-          itemsPerPage = val;
-          currentPage = 0;
-          fetchAllReportsDirect();
-        }
-      "
-      @update:page="
-        (val) => {
-          currentPage = val;
-          fetchAllReportsDirect();
-        }
-      "
-    />
+
+      <template #body-status="{ data }">
+        <ReportStatusTag
+          :report="data.status.report"
+          :is-editing="data.status.isEditing"
+          class="select-status"
+          @refresh="fetchAllReportsDirect()"
+        />
+      </template>
+    </RefAppTable>
   </div>
 </template>
 

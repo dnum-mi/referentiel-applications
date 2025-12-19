@@ -14,6 +14,8 @@ import { formatDateFR } from "@/composables/use-date";
 import { filterEmpty } from "@/composables/use-filter-watcher";
 import { useBreakpoints } from "@/composables/use-breakpoint";
 import { BREAKPOINTS } from "@/constants/breakpoint";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const applicationId = props.application.id;
@@ -40,6 +42,11 @@ const labels: Record<ComplianceType, string> = {
   dsfr: "Design Système de l'état (DSFR)",
   rgpd: "Règlement Général sur la Protection des Données (RGPD)",
 };
+const tableColumns: TableColumn[] = [
+  { field: "Type", header: "Type", sortable: false },
+  { field: "Résumé", header: "Résumé", sortable: false },
+  { field: "Actions", header: "Actions", sortable: false },
+];
 
 const compliances = computed(() => {
   const result: Record<ComplianceType, Record<string, any>> = {};
@@ -229,57 +236,44 @@ const tableRows = computed(() =>
     </div>
 
     <div v-if="!isMobile && typesWithData.length > 0">
-      <DsfrDataTable
-        :headers-row="['Type', 'Résumé', 'Actions']"
-        :rows="tableRows"
-        row-key="Type"
-        :pagination="false"
-        title="Conformités"
-        data-testid="compliance-table"
-      >
-        <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'Type'">
-            <strong>{{ cell }}</strong>
-          </template>
-
-          <template v-else-if="colKey === 'Résumé'">
-            <DsfrTag v-if="cell" :label="cell"></DsfrTag>
-            <span v-else>-</span>
-          </template>
-
-          <template v-else-if="colKey === 'Actions'">
-            <div class="fr-btns-group">
-              <DsfrButton
-                size="sm"
-                tertiary
-                icon="ri-eye-line"
-                data-testid="compliance-view-btn"
-                @click="() => openDetails(cell.typeKey)"
-                title="Voir les détails"
-                aria-label="Voir les détails"
-              >
-                Voir
-              </DsfrButton>
-
-              <DsfrButton
-                size="sm"
-                tertiary
-                icon="ri-edit-line"
-                data-testid="compliance-edit-btn"
-                @click="() => onEditClick(cell.typeKey)"
-                title="Modifier"
-                aria-label="Modifier"
-              >
-                Modifier
-              </DsfrButton>
-            </div>
-          </template>
-
-          <template v-else>
-            {{ cell }}
-          </template>
+      <RefAppTable :items="tableRows" :columns="tableColumns" data-testid="compliance-table">
+        <template #body-Type="{ data }">
+          <strong>{{ data.Type }}</strong>
         </template>
-      </DsfrDataTable>
+
+        <template #body-Résumé="{ data }">
+          <DsfrTag v-if="data.Résumé" :label="data.Résumé"></DsfrTag>
+          <span v-else>-</span>
+        </template>
+
+        <template #body-Actions="{ data }">
+          <div class="fr-btns-group">
+            <DsfrButton
+              size="sm"
+              tertiary
+              icon="ri-eye-line"
+              data-testid="compliance-view-btn"
+              @click="() => openDetails(data.Actions.typeKey)"
+              title="Voir les détails"
+              aria-label="Voir les détails"
+            >
+              Voir
+            </DsfrButton>
+
+            <DsfrButton
+              size="sm"
+              tertiary
+              icon="ri-edit-line"
+              data-testid="compliance-edit-btn"
+              @click="() => onEditClick(data.Actions.typeKey)"
+              title="Modifier"
+              aria-label="Modifier"
+            >
+              Modifier
+            </DsfrButton>
+          </div>
+        </template>
+      </RefAppTable>
     </div>
 
     <div v-else class="compliance-cards" data-testid="compliance-cards">

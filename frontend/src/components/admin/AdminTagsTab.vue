@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import type { TagDto, TagsPaginatedResponseDto } from "@/client/types.gen";
-import PaginationFooter from "../PaginationFooter.vue";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import TagActions from "./TagActions.vue";
 import api from "@/api";
 import { debounce } from "@/utils/debouncer-utils";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn, TableSortEvent } from "@/types/table";
 
 const data = ref<TagsPaginatedResponseDto>({ results: [] as TagDto[], total: 0 });
 
@@ -31,6 +32,12 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   },
 ] as const;
 
+const tableColumns: TableColumn[] = headers.map((h) => ({
+  field: h.key,
+  header: h.label,
+  sortable: h.isSortable || false,
+}));
+
 const isLoading = ref(false);
 const searchQuery = ref("");
 
@@ -39,6 +46,7 @@ const isSortDescending = ref(false);
 
 const itemsPerPage = ref(15);
 const currentPage = ref(0);
+const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 
 async function fetchTags() {
   isLoading.value = true;
@@ -80,17 +88,14 @@ const tableRows = computed(() =>
   })),
 );
 
-function onUpdateSortColumn(columnName: string | undefined) {
-  sortColumn.value = columnName;
+function onSort(event: TableSortEvent) {
+  sortColumn.value = event.sortField as (typeof headers)[number]["key"];
+  isSortDescending.value = event.sortOrder === -1;
 }
 
-function updateItemsPerPage(value: number) {
-  itemsPerPage.value = value;
-  currentPage.value = 0;
-  fetchTags();
-}
-function updatePage(value: number) {
-  currentPage.value = value;
+function onPage(event: any) {
+  currentPage.value = event.page;
+  itemsPerPage.value = event.rows;
   fetchTags();
 }
 
@@ -120,43 +125,24 @@ onMounted(fetchTags);
   </div>
 
   <div v-else>
-    <DsfrDataTable
-      :key="`${currentPage}-${itemsPerPage}-${sortColumn}-${isSortDescending}`"
-      v-model:sorted-by="sortColumn"
-      v-model:sorted-desc="isSortDescending"
-      :sort-fn="(a, b) => (isSortDescending ? -1 : 1)"
-      title="Tags"
-      no-caption
-      :headers-row="headers"
-      :rows="tableRows"
-      row-key="name"
-      :sortable-rows="headers.filter((h) => h.isSortable).map((h) => h.key)"
-      vertical-borders
-      :pagination="false"
+    <RefAppTable
+      :items="tableRows"
+      :columns="tableColumns"
+      :paginator="true"
+      :lazy="true"
+      :rows="itemsPerPage"
+      :first="firstIndex"
+      :total-records="data.total"
+      :sort-field="sortColumn"
+      :sort-order="isSortDescending ? -1 : 1"
       data-testid="admin-tags-table"
-      @update:sorted-by="onUpdateSortColumn"
+      @sort="onSort"
+      @page="onPage"
     >
-      <template #header="header">
-        <DsfrTableHeader :header="header.label" :aria-sort="isSortDescending ? 'descending' : 'ascending'" />
+      <template #body-actions="{ data }">
+        <TagActions :tag="data.actions" @fetch-tags="fetchTags" />
       </template>
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'actions'">
-          <TagActions :tag="cell" @fetch-tags="fetchTags" />
-        </template>
-
-        <template v-else>
-          <span class="truncate">{{ cell }}</span>
-        </template>
-      </template>
-    </DsfrDataTable>
-    <PaginationFooter
-      :total-filtered="data.total"
-      :limit="itemsPerPage"
-      :page="currentPage"
-      data-testid="admin-tags-pagination-footer"
-      @update:limit="updateItemsPerPage"
-      @update:page="updatePage"
-    />
+    </RefAppTable>
   </div>
 </template>
 

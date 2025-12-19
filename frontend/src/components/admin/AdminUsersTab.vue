@@ -3,9 +3,10 @@ import { ref, computed, watch, onMounted } from "vue";
 import api from "@/api/index";
 import type { UsersPaginatedResponseDto } from "@/client/types.gen";
 import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
-import PaginationFooter from "../PaginationFooter.vue";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import UserActions from "./UserActions.vue";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn, TableSortEvent } from "@/types/table";
 
 const errorMessages = {
   ERR_LOAD_USERS: "Erreur lors du chargement des utilisateurs",
@@ -47,6 +48,12 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   },
 ] as const;
 
+const tableColumns: TableColumn[] = headers.map((h) => ({
+  field: h.key,
+  header: h.label,
+  sortable: h.isSortable || false,
+}));
+
 const isLoading = ref(false);
 const errorKeySet = ref<Set<ErrorKey>>(new Set());
 const searchQuery = ref("");
@@ -56,6 +63,7 @@ const isSortDescending = ref<boolean>(false);
 
 const itemsPerPage = ref<number>(15);
 const currentPage = ref<number>(0);
+const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 
 async function fetchUsers() {
   try {
@@ -113,17 +121,14 @@ const tableRows = computed(() =>
   })),
 );
 
-function onUpdateSortColumn(columnName: string | undefined) {
-  sortColumn.value = columnName || "email";
+function onSort(event: TableSortEvent) {
+  sortColumn.value = (event.sortField as (typeof headers)[number]["key"]) || "email";
+  isSortDescending.value = event.sortOrder === -1;
 }
 
-function updateItemsPerPage(value: number) {
-  itemsPerPage.value = value;
-  currentPage.value = 0;
-  fetchUsers();
-}
-function updatePage(value: number) {
-  currentPage.value = value;
+function onPage(event: any) {
+  currentPage.value = event.page;
+  itemsPerPage.value = event.rows;
   fetchUsers();
 }
 
@@ -156,49 +161,34 @@ onMounted(fetchUsers);
     </div>
 
     <div v-else>
-      <DsfrDataTable
-        :key="`${currentPage}-${itemsPerPage}-${sortColumn}-${isSortDescending}`"
-        v-model:sorted-by="sortColumn"
-        v-model:sorted-desc="isSortDescending"
-        :sort-fn="(a, b) => (isSortDescending ? -1 : 1)"
-        title="Utilisateurs"
-        no-caption
-        :headers-row="headers"
-        :rows="tableRows"
-        row-key="email"
-        :sortable-rows="headers.filter((h) => h.isSortable).map((h) => h.key)"
-        vertical-borders
-        :pagination="false"
+      <RefAppTable
+        :items="tableRows"
+        :columns="tableColumns"
+        :paginator="true"
+        :lazy="true"
+        :rows="itemsPerPage"
+        :first="firstIndex"
+        :total-records="data.total"
+        :sort-field="sortColumn"
+        :sort-order="isSortDescending ? -1 : 1"
         data-testid="admin-users-table"
-        @update:sorted-by="onUpdateSortColumn"
+        @sort="onSort"
+        @page="onPage"
       >
-        <template #header="header">
-          <DsfrTableHeader :header="header.label" :aria-sort="isSortDescending ? 'descending' : 'ascending'" />
+        <template #body-adminLevel="{ data }">
+          <span class="fr-badge justify-center" :class="data.adminLevel.badgeClass">{{ data.adminLevel.label }}</span>
         </template>
-        <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'adminLevel'">
-            <span class="fr-badge justify-center" :class="(cell as any).badgeClass">{{ (cell as any).label }}</span>
-          </template>
-          <template v-else-if="colKey === 'capabilities'">
-            <span v-show="cell.length" class="fr-badge ml-2" :title="cell.join(', ')">{{ cell.length }}</span>
-          </template>
-          <template v-else-if="colKey === 'actions'">
-            <UserActions :user="cell" @user-updated="fetchUsers" />
-          </template>
 
-          <template v-else>
-            <span class="truncate">{{ cell }}</span>
-          </template>
+        <template #body-capabilities="{ data }">
+          <span v-show="data.capabilities.length" class="fr-badge ml-2" :title="data.capabilities.join(', ')">{{
+            data.capabilities.length
+          }}</span>
         </template>
-      </DsfrDataTable>
-      <PaginationFooter
-        :total-filtered="data.total"
-        :limit="itemsPerPage"
-        :page="currentPage"
-        data-testid="admin-users-pagination-footer"
-        @update:limit="updateItemsPerPage"
-        @update:page="updatePage"
-      />
+
+        <template #body-actions="{ data }">
+          <UserActions :user="data.actions" @user-updated="fetchUsers" />
+        </template>
+      </RefAppTable>
     </div>
   </div>
 </template>

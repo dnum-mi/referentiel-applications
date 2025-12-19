@@ -5,6 +5,8 @@ import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import RelationshipGraph from "./RelationShipGraph.vue";
+import RefAppTable from "./RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 const props = defineProps<{ application: ApplicationWithPerms; isMobile?: boolean }>();
 
@@ -31,7 +33,37 @@ const {
   handleUpdateRelation,
 } = relationManager;
 
+// Convert headers array to TableColumn[] and normalize field names
+const fieldMap: Record<string, string> = {
+  Sélection: "selection",
+  "Application Source": "applicationSource",
+  Relation: "relation",
+  "Application Cible": "applicationCible",
+  Actions: "actions",
+};
+
+const tableColumns: TableColumn[] = headers.map((header: string) => ({
+  field: fieldMap[header] || header,
+  header: header,
+  sortable: false,
+}));
+
+// Transform rows to use normalized field names
+const normalizedRows = computed(() =>
+  rows.value.map((row) => ({
+    selection: row.Sélection,
+    applicationSource: row["Application Source"],
+    relation: row.Relation,
+    applicationCible: row["Application Cible"],
+    actions: row.Actions,
+    originalRow: row, // Keep original for reference
+  })),
+);
+
 const isDeleteDisabled = computed(() => selectedRelationIds.value.length === 0);
+
+const pageSize = ref(10);
+const firstIndex = computed(() => currentPage.value * pageSize.value);
 
 const viewMode = ref<"list" | "graph">("list");
 function setViewMode(mode: "list" | "graph") {
@@ -83,6 +115,11 @@ function onAddRelation(relation: { targetId: number; type: string }) {
     applicationSourceId: props.application.id,
   });
 }
+
+function onPage(event: any) {
+  currentPage.value = event.page;
+  pageSize.value = event.rows;
+}
 </script>
 
 <template>
@@ -128,52 +165,52 @@ function onAddRelation(relation: { targetId: number; type: string }) {
 
     <!-- Data table for desktop -->
     <div v-else-if="!props.isMobile">
-      <DsfrDataTable
-        v-model:selection="selectedRelationIds"
-        v-model:current-page="currentPage"
-        :headers-row="headers"
-        :rows="rows"
-        row-key="Sélection"
-        title="Liste des relations associées"
-        pagination
-        :rows-per-page="5"
-        :pagination-options="[5, 10, 20, 30]"
-        sorted="Sélection"
-        :sortable-rows="['Sélection']"
+      <RefAppTable
+        :items="normalizedRows"
+        :columns="tableColumns"
+        :paginator="true"
+        :rows="pageSize"
+        :first="firstIndex"
+        :total-records="normalizedRows.length"
         data-testid="relations-table"
+        @page="onPage"
       >
-        <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'Sélection'">
-            <input v-model="selectedRelationIds" type="checkbox" :value="cell" />
-          </template>
-          <template v-else-if="colKey === 'Application Cible'">
-            <a :href="`/applications/${cell.id}`" class="fr-link" data-testid="relation-target-link">
-              {{ cell.label }}
-            </a>
-          </template>
-          <template v-else-if="colKey === 'Relation'">
-            <DsfrTag v-if="cell" :label="String(cell)" small class="relation-type-tag" :data-testid="`relation-type-tag-${cell}`" />
-            <template v-else>Type inconnu</template>
-          </template>
-          <template v-else-if="colKey === 'Actions'">
-            <DsfrButton
-              tertiary
-              size="sm"
-              icon="fr-icon-edit-line"
-              :disabled="!canEdit"
-              data-testid="relation-edit-btn"
-              title="Modifier la relation"
-              aria-label="Modifier la relation"
-              @click="() => onEditRelation(cell)"
-            >
-              Modifier
-            </DsfrButton>
-          </template>
-          <template v-else>
-            {{ cell }}
-          </template>
+        <template #body-selection="{ data }">
+          <input v-model="selectedRelationIds" type="checkbox" :value="data.selection" />
         </template>
-      </DsfrDataTable>
+
+        <template #body-applicationCible="{ data }">
+          <a :href="`/applications/${data.applicationCible.id}`" class="fr-link" data-testid="relation-target-link">
+            {{ data.applicationCible.label }}
+          </a>
+        </template>
+
+        <template #body-relation="{ data }">
+          <DsfrTag
+            v-if="data.relation"
+            :label="String(data.relation)"
+            small
+            class="relation-type-tag"
+            :data-testid="`relation-type-tag-${data.relation}`"
+          />
+          <template v-else>Type inconnu</template>
+        </template>
+
+        <template #body-actions="{ data }">
+          <DsfrButton
+            tertiary
+            size="sm"
+            icon="fr-icon-edit-line"
+            :disabled="!canEdit"
+            data-testid="relation-edit-btn"
+            title="Modifier la relation"
+            aria-label="Modifier la relation"
+            @click="() => data.actions.edit()"
+          >
+            Modifier
+          </DsfrButton>
+        </template>
+      </RefAppTable>
     </div>
 
     <!-- Mobile cards -->
