@@ -14,6 +14,8 @@ import StatusForm from "./form/StatusForm.vue";
 import { useBreakpoints } from "@/composables/use-breakpoint";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import { useApplicationStore } from "@/stores/applicationStore";
+import RefAppTable from "./RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 interface StatusFormData {
   status: ApplicationStatusDto["status"];
@@ -75,10 +77,13 @@ async function fetchStatuses() {
 }
 
 const headers = computed(() => {
-  const baseHeaders: string[] = ["Statut", "Date du statut"];
+  const baseHeaders: TableColumn[] = [
+    { field: "Statut", header: "Statut", sortable: false },
+    { field: "Date du statut", header: "Date du statut", sortable: false },
+  ];
 
   if (canEdit.value) {
-    baseHeaders.push("Actions");
+    baseHeaders.push({ field: "Actions", header: "Actions", sortable: false });
   }
 
   return baseHeaders;
@@ -325,49 +330,36 @@ onMounted(() => {
     <AppLoader v-if="isLoading" data-testid="statuses-loader"></AppLoader>
     <div v-else>
       <template v-if="!isMobile">
-        <DsfrDataTable
-          :headers-row="headers"
-          :rows="rows"
-          row-key="id"
-          :pagination="false"
-          no-caption
-          title="Historique des statuts"
-          data-testid="statuses-table"
-        >
-          <template #cell="{ colKey, cell }">
-            <template v-if="typeof colKey === 'string' && colKey === 'Actions'">
-              <div class="fr-btns-group fr-btns-group--inline-sm">
-                <DsfrButton
-                  size="sm"
-                  tertiary
-                  icon="ri-edit-line"
-                  :disabled="!canEdit"
-                  data-testid="status-edit-btn"
-                  title="Modifier le statut"
-                  aria-label="Modifier le statut"
-                  @click="() => openEditModal(cell as ApplicationStatusDto)"
-                >
-                  Modifier
-                </DsfrButton>
-                <DsfrButton
-                  size="sm"
-                  tertiary
-                  icon="ri-delete-bin-line"
-                  :disabled="!canEdit"
-                  title="Supprimer ce statut"
-                  aria-label="Supprimer ce statut"
-                  data-testid="status-delete-btn"
-                  @click="() => openDeleteModal(cell as ApplicationStatusDto)"
-                >
-                  Supprimer
-                </DsfrButton>
-              </div>
-            </template>
-            <template v-else>
-              {{ cell }}
-            </template>
+        <RefAppTable :items="rows" :columns="headers" empty-message="Aucun statut enregistré." data-testid="statuses-table">
+          <template #body-Actions="{ data }">
+            <div class="fr-btns-group fr-btns-group--inline-sm">
+              <DsfrButton
+                size="sm"
+                tertiary
+                icon="ri-edit-line"
+                :disabled="!canEdit"
+                data-testid="status-edit-btn"
+                title="Modifier le statut"
+                aria-label="Modifier le statut"
+                @click="() => openEditModal(data.Actions as ApplicationStatusDto)"
+              >
+                Modifier
+              </DsfrButton>
+              <DsfrButton
+                size="sm"
+                tertiary
+                icon="ri-delete-bin-line"
+                :disabled="!canEdit"
+                title="Supprimer ce statut"
+                aria-label="Supprimer ce statut"
+                data-testid="status-delete-btn"
+                @click="() => openDeleteModal(data.Actions as ApplicationStatusDto)"
+              >
+                Supprimer
+              </DsfrButton>
+            </div>
           </template>
-        </DsfrDataTable>
+        </RefAppTable>
       </template>
 
       <template v-else>

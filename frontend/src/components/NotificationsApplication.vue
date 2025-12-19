@@ -1,4 +1,3 @@
-import PaginationFooter from "./PaginationFooter.vue";
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -9,6 +8,8 @@ import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useRoute } from "vue-router";
+import RefAppTable from "./RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 const route = useRoute();
 const props = defineProps<{ application: ApplicationWithPerms }>();
@@ -20,8 +21,15 @@ const issues = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total
 const isLoading = ref(false);
 const currentPage = ref(0);
 const pageSize = ref(5);
+const firstIndex = computed(() => currentPage.value * pageSize.value);
 
-const headers = ["Date", "Auteur", "Titre", "Actions"];
+const tableColumns: TableColumn[] = [
+  { field: "Date", header: "Date", sortable: false },
+  { field: "Auteur", header: "Auteur", sortable: false },
+  { field: "Titre", header: "Titre", sortable: false },
+  { field: "Actions", header: "Actions", sortable: false },
+];
+
 const activeAccordion = ref<number>();
 const userStore = useUserStore();
 
@@ -48,6 +56,11 @@ async function fetchIssues() {
 
 watch([currentPage, pageSize], fetchIssues);
 onMounted(fetchIssues);
+
+function onPage(event: any) {
+  currentPage.value = event.page;
+  pageSize.value = event.rows;
+}
 
 const correctionText = ref("");
 const submitting = ref(false);
@@ -113,40 +126,28 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
   </div>
 
   <DsfrAccordionsGroup v-else v-model="activeAccordion">
-    <DsfrDataTable :headers-row="headers" :rows="rows" title="Liste des signalements et modifications" data-testid="notifications-table">
-      <template #cell="{ colKey, cell }">
-        <template v-if="colKey === 'Actions' && (cell as any).isMetadata">
-          <router-link
-            :to="{ name: 'metadata-detail', params: { id: (cell as any).id }, query: { from: route.fullPath } }"
-            class="fr-btn fr-btn--secondary fr-btn--sm"
-            data-testid="notifications-see-more-button"
-          >
-            Voir plus
-          </router-link>
-        </template>
-        <template v-else>
-          {{ cell }}
-        </template>
+    <RefAppTable
+      :items="rows"
+      :columns="tableColumns"
+      :paginator="true"
+      :lazy="true"
+      :rows="pageSize"
+      :first="firstIndex"
+      :total-records="issues.total"
+      data-testid="notifications-table"
+      @page="onPage"
+    >
+      <template #body-Actions="{ data }">
+        <router-link
+          v-if="data.Actions.isMetadata"
+          :to="{ name: 'metadata-detail', params: { id: data.Actions.id }, query: { from: route.fullPath } }"
+          class="fr-btn fr-btn--secondary fr-btn--sm"
+          data-testid="notifications-see-more-button"
+        >
+          Voir plus
+        </router-link>
       </template>
-    </DsfrDataTable>
-    <PaginationFooter
-      :total-filtered="issues.total"
-      :limit="pageSize"
-      :page="currentPage"
-      @update:limit="
-        (val) => {
-          pageSize = val;
-          currentPage = 0;
-          fetchIssues();
-        }
-      "
-      @update:page="
-        (val) => {
-          currentPage = val;
-          fetchIssues();
-        }
-      "
-    />
+    </RefAppTable>
   </DsfrAccordionsGroup>
   <div v-if="canPost" data-testid="notifications-report-issue">
     <h4>Proposer une correction</h4>

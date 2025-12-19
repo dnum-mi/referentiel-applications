@@ -1,122 +1,186 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch } from "vue";
+import { onMounted, computed, ref, watch } from "vue";
 import { routeNames } from "@/router/route-names";
+import { useUserStore } from "@/stores/userStore";
 import { formatDate } from "@/composables/use-date";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
-import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
-import PaginationFooter from "../PaginationFooter.vue";
-import ReportStatusTag from "./ReportStatusTag.vue";
 import api from "@/api";
-import type { AnomalyNotificationPaginatedResponseDto, AnomalyNotificationDto } from "@/client/types.gen";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
+import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
+import type { GenericRow } from "@/utils/types";
+import type { AnomalyNotificationPaginatedResponseDto } from "@/client/types.gen";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn, TableSortEvent } from "@/types/table";
+import ReportStatusTag from "./ReportStatusTag.vue";
 
-const title = "Liste de mes signalements d'applications";
+const title = "Liste de tous les signalements d'applications";
 const headers = [
   { key: "application", label: "Application" },
+  { key: "notifier", label: "Signalant" },
   { key: "description", label: "Description" },
   { key: "date", label: "Date" },
   { key: "status", label: "Statut" },
 ] as const satisfies DsfrDataTableHeaderCell[];
 
+const tableColumns: TableColumn[] = headers.map((h) => ({
+  field: h.key,
+  header: h.label,
+  sortable: true,
+}));
+
+const userStore = useUserStore();
+
+const data = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total: 0 });
+const isLoading = ref(false);
+const isEditing = ref<boolean>(false);
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
 const itemsPerPage = ref(15);
-const isLoading = ref(true);
-const data = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total: 0 });
+const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
+const searchReport = ref("");
+const sortBy = ref<"application" | "description" | "date" | "status" | "signalant">("date");
+const sortedDesc = ref<boolean>(true);
 
-const fetchMyReports = async () => {
+const rows = computed(() =>
+  (data.value.results || []).map(
+    (report: any): GenericRow<typeof headers> => ({
+      id: report.id,
+      application: {
+        label: report.application?.label,
+        to: report.application?.id ? { name: routeNames.PROFILEAPP, params: { id: report.application.id } } : undefined,
+      },
+      notifier: report.notifier?.email || "Inconnu",
+      description: report.description,
+      date: formatDate(report.createdAt),
+      status: {
+        report,
+        isEditing: isEditing.value,
+      },
+    }),
+  ),
+);
+
+const { run: debouncedSearch } = useDebouncedFn(async () => {
+  await fetchAllReportsDirect();
+}, 300);
+
+async function fetchAllReportsDirect() {
   isLoading.value = true;
   try {
     const query = {
+      all: true,
+      searchReport: searchReport.value,
       page: currentPage.value,
       limit: itemsPerPage.value,
+      sortBy: sortBy.value,
+      order: (sortedDesc.value ? "desc" : "asc") as "desc" | "asc",
     };
     const response = await api.anomalyNotificationsControllerFindAll({ query });
     data.value = response.data as AnomalyNotificationPaginatedResponseDto;
   } finally {
     isLoading.value = false;
   }
-};
+}
 
-const { run: debouncedSearch } = useDebouncedFn(fetchMyReports, 300);
-
-watch([currentPage, itemsPerPage], () => {
+watch(searchReport, () => {
+  currentPage.value = 0;
   debouncedSearch();
 });
 
-onMounted(async () => {
-  await fetchMyReports();
-});
+watch([currentPage, itemsPerPage, sortBy, sortedDesc], fetchAllReportsDirect);
 
-const rows = computed(() =>
-  (data.value.results || []).map((report: AnomalyNotificationDto) => ({
-    id: report.id,
-    application: {
-      label: report.application?.label,
-      to: report.application?.id
-        ? {
-            name: routeNames.PROFILEAPP,
-            params: { id: report.application.id },
-          }
-        : undefined,
-    },
-    description: report.description,
-    date: formatDate(report.createdAt),
-    status: {
-      report,
-    },
-  })),
-);
+function onSort(event: TableSortEvent) {
+  sortBy.value = event.sortField as typeof sortBy.value;
+  sortedDesc.value = event.sortOrder === -1;
+}
+
+function onPage(event: any) {
+  currentPage.value = event.page;
+  itemsPerPage.value = event.rows;
+}
+
+onMounted(async () => {
+  await fetchAllReportsDirect();
+});
 </script>
 
 <template>
-  <AppLoader v-if="isLoading" data-testid="my-issues-loader" />
-  <DsfrDataTable
-    v-else
-    v-model:selection="selection"
-    data-testid="my-issues-table"
-    :headers-row="headers"
-    :rows="rows"
-    row-key="id"
-    :title="title"
-    :sortable-rows="true"
-  >
-    <template #cell="{ colKey, cell }">
-      <template v-if="colKey === 'application'">
-        <template v-if="cell && (cell as any).to && (cell as any).to.params && (cell as any).to.params.id">
-          <router-link :to="(cell as any).to" data-testid="my-issues-application-link">
-            {{ (cell as any).label || "Voir l’application" }}
-          </router-link>
-        </template>
-        <template v-else>
-          <span data-testid="my-issues-application-link">{{ (cell as any).label || "Signalement global" }}</span>
-        </template>
+  <AppLoader v-if="isLoading" />
+  <div v-else>
+    <div v-if="userStore.adminLevel >= 30">
+      <div v-if="!isEditing && rows.length" class="toRight">
+        <DsfrButton
+          label="Modifier"
+          class="fr-mb-1w"
+          :onclick="
+            () => {
+              isEditing = true;
+            }
+          "
+        />
+      </div>
+      <div v-else-if="rows.length" class="toRight">
+        <DsfrButton
+          label="Arreter de  modifier"
+          :onclick="
+            () => {
+              isEditing = false;
+            }
+          "
+        />
+      </div>
+    </div>
+    <div class="fr-mb-4w">
+      <DsfrSearchBar
+        v-model.trim="searchReport"
+        label="Rechercher un report"
+        placeholder="Recherche par description ou par email du signalant"
+        button-text="Rechercher"
+        class="fr-col-12"
+        data-testid="issues-search-bar"
+      />
+    </div>
+    <div v-if="!rows.length" class="text-center">
+      <p>Aucune correction recensée.</p>
+    </div>
+    <RefAppTable
+      v-else
+      :items="rows"
+      :columns="tableColumns"
+      :paginator="true"
+      :lazy="true"
+      :rows="itemsPerPage"
+      :first="firstIndex"
+      :total-records="data.total"
+      :sort-field="sortBy"
+      :sort-order="sortedDesc ? -1 : 1"
+      data-testid="issues-table"
+      @sort="onSort"
+      @page="onPage"
+    >
+      <template #body-application="{ data }">
+        <router-link v-if="data.application.to" :to="data.application.to" :data-testid="`issues-row-${data.id}-application`">
+          {{ data.application.label || "Voir l'application" }}
+        </router-link>
+        <span v-else :data-testid="`issues-row-${data.id}-application`">{{ data.application.label || "Signalement global" }}</span>
       </template>
-      <template v-else-if="colKey === 'description'">
+
+      <template #body-description="{ data }">
         <p class="text-wrap">
-          {{ cell }}
+          {{ data.description }}
         </p>
       </template>
-      <template v-else-if="colKey === 'status'">
-        <ReportStatusTag :report="(cell as any).report" :is-editing="false" @refresh="fetchMyReports" />
+
+      <template #body-status="{ data }">
+        <ReportStatusTag
+          :report="data.status.report"
+          :is-editing="data.status.isEditing"
+          class="select-status"
+          @refresh="fetchAllReportsDirect()"
+        />
       </template>
-    </template>
-  </DsfrDataTable>
-  <PaginationFooter
-    :total-filtered="data.total"
-    :limit="itemsPerPage"
-    :page="currentPage"
-    @update:limit="
-      (val) => {
-        itemsPerPage = val;
-        currentPage = 0;
-      }
-    "
-    @update:page="
-      (val) => {
-        currentPage = val;
-      }
-    "
-  />
+    </RefAppTable>
+  </div>
 </template>
 
 <style scoped>

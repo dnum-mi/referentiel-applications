@@ -1,112 +1,95 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { restartPrioritiesConfig } from "@/composables/use-dictionary";
-import PaginationFooter from "./PaginationFooter.vue";
+import RefAppTable from "./RefAppTable.vue";
+import type { TableColumn, TableSortEvent } from "@/types/table";
 
-const { filters, results, total, page, pageSize, setFilter, setOrder } = useApplicationSearch();
+const { filters, results, total, page, pageSize, setFilter, isLoading } = useApplicationSearch();
 
-const sortBy = ref(filters.value.sortBy || "label");
-const sortedDesc = ref(filters.value.order === "desc");
+// Calcul essentiel pour PrimeVue : (Page 0 -> 0, Page 1 -> 15, Page 2 -> 30...)
+const firstIndex = computed(() => page.value * pageSize.value);
 
-const columnToFieldMap: Record<string, string> = {
-  IQ: "quality",
-  Nom: "label",
-  Priorité: "priorityRestart",
-  Hébergement: "hostingSite",
-  Tags: "tag",
-};
+const sortField = ref(filters.value.sortBy || "label");
+const sortOrder = ref(filters.value.order === "desc" ? -1 : 1);
 
-watch(
-  [sortBy, sortedDesc],
-  ([col, desc]) => {
-    const sortField = columnToFieldMap[col || "label"] || col || "label";
-    setFilter({ sortBy: sortField, order: desc ? "desc" : "asc" });
-  },
-  { flush: "post" },
-);
+const columns: TableColumn[] = [
+  { field: "quality", header: "IQ", sortable: true, width: "80px" },
+  { field: "label", header: "Nom", sortable: true, width: "300px" },
+  { field: "priorityRestart", header: "Priorité", sortable: true, width: "160px" },
+  { field: "hostingSite", header: "Hébergement", sortable: true, width: "280px" },
+  { field: "tag", header: "Tags", sortable: true, width: "240px" },
+];
 
-const rows = computed(() =>
+const applications = computed(() =>
   results.value.map((app: any) => ({
-    IQ: { value: app.quality !== null ? `${app.quality}%` : "0%" },
-    Nom: app,
-    Priorité: app,
-    Hébergement: {
-      hosting:
-        app.hostings
-          ?.map((h: any) => {
-            const parts = [h.hostingOption?.site || h.site, h.hostingOption?.building, h.hostingOption?.room].filter(Boolean);
-            return parts.length ? parts.join(" - ") : "-";
-          })
-          .join(", ") || "-",
-    },
-    Tags: { tags: app.tags?.map((tag: any) => tag.name).join(", ") || "-" },
+    ...app,
+    qualityDisplay: app.quality !== null ? `${app.quality}%` : "0%",
+    hostingDisplay: app.hostings?.map((h: any) => h.hostingOption?.site || h.site).join(", ") || "-",
+    tagsDisplay: app.tags?.map((tag: any) => tag.name).join(", ") || "-",
+    priorityConfig: app.priorityRestart ? restartPrioritiesConfig[app.priorityRestart as keyof typeof restartPrioritiesConfig] : null,
   })),
 );
+
+function onSort(event: TableSortEvent) {
+  sortField.value = event.sortField || "label";
+  sortOrder.value = event.sortOrder || 1;
+
+  setFilter({
+    sortBy: sortField.value,
+    order: sortOrder.value === -1 ? "desc" : "asc",
+    page: 0, // Reset to first page when sorting
+  });
+}
+
+function onPage(event: any) {
+  // event.page is 0-indexed from PrimeVue, and the API also expects 0-indexed pages
+  setFilter({
+    page: event.page,
+    pageSize: event.rows,
+  });
+}
 </script>
 
 <template>
-  <DsfrDataTable
-    v-model:sorted-by="sortBy"
-    v-model:sorted-desc="sortedDesc"
-    title="Liste des applications"
-    no-caption
-    :headers-row="['IQ', 'Nom', 'Priorité', 'Hébergement', 'Tags']"
-    :rows="rows"
-    sortable-rows
-    vertical-borders
-    data-testid="application-table"
-    @update:sorted-desc="setOrder"
+  <RefAppTable
+    :items="applications"
+    :columns="columns"
+    :loading="isLoading"
+    :lazy="true"
+    :paginator="true"
+    :total-records="total"
+    :sort-field="sortField"
+    :sort-order="sortOrder"
+    :rows="pageSize"
+    :first="firstIndex"
+    data-test-id="application-table"
+    @sort="onSort"
+    @page="onPage"
   >
-    <template #cell="{ colKey, cell }">
-      <template v-if="colKey === 'Nom'">
-        <router-link
-          :to="{ name: 'application', params: { id: cell.id } }"
-          class="truncate"
-          :data-testid="`application-row-${cell.id}-link`"
-        >
-          {{ cell.label }}
-        </router-link>
-      </template>
-
-      <template v-else-if="colKey === 'Priorité'">
-        <DsfrBadge
-          v-if="cell.priorityRestart"
-          :label="restartPrioritiesConfig[cell.priorityRestart].shortLabel"
-          :type="restartPrioritiesConfig[cell.priorityRestart].type"
-          :title="restartPrioritiesConfig[cell.priorityRestart].tooltip"
-          :data-testid="`application-row-${cell.id}-priority`"
-        />
-        <span v-else>-</span>
-      </template>
-
-      <template v-else>
-        <span
-          class="truncate"
-          :data-testid="`application-row-${cell.id}-${colKey === 'Hébergement' ? 'hosting' : colKey === 'Tags' ? 'tags' : 'iq'}`"
-        >
-          {{ Object.values(cell)[0] }}
-        </span>
-      </template>
+    <template #body-quality="{ data }">
+      {{ data.qualityDisplay }}
     </template>
-  </DsfrDataTable>
 
-  <PaginationFooter
-    :total-filtered="total"
-    :limit="pageSize"
-    :page="page"
-    data-testid="application-pagination-footer"
-    @update:limit="pageSize = $event"
-    @update:page="page = $event"
-  />
+    <template #body-label="{ data }">
+      <router-link :to="{ name: 'application', params: { id: data.id } }">
+        {{ data.label }}
+      </router-link>
+    </template>
+
+    <template #body-priorityRestart="{ data }">
+      <DsfrBadge v-if="data.priorityConfig" :label="data.priorityConfig.shortLabel" :type="data.priorityConfig.type" />
+      <span v-else>-</span>
+    </template>
+  </RefAppTable>
 </template>
 
 <style scoped>
 .truncate {
   display: inline-block;
   max-width: 80vh;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 </style>

@@ -1,5 +1,7 @@
 import { VIcon } from "@gouvminint/vue-dsfr";
+import Aura from "@primevue/themes/aura";
 import { createPinia } from "pinia";
+import PrimeVue from "primevue/config";
 import { createApp } from "vue";
 import { vUseMermaid } from "@/composables/use-mermaid";
 import { authenticationInit } from "@/services/authentication";
@@ -41,6 +43,11 @@ app.use(MatomoPlugin, {
 
 app.use(createPinia());
 app.use(router);
+app.use(PrimeVue, {
+  theme: {
+    preset: Aura,
+  },
+});
 
 app.component("VIcon", VIcon);
 app.directive("use-mermaid", vUseMermaid);

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { Chart, registerables } from "chart.js";
 import { storeToRefs } from "pinia";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { renderChart } from "@/utils/chart";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 Chart.register(...registerables);
 
@@ -14,6 +16,13 @@ const statsStore = useStatisticsStore();
 const { iqStats, isLoading, error } = storeToRefs(statsStore);
 
 const isTableView = ref(false);
+
+const tableColumns: TableColumn[] = [
+  { field: "date", header: "Date", sortable: true },
+  { field: "iq_moyen", header: "IQ moyen", sortable: true },
+];
+
+const tableData = computed(() => iqStats.value.map((s) => ({ date: s.label, iq_moyen: s.moyenne })));
 
 const today = new Date();
 const fromDefault = new Date(today.getFullYear(), today.getMonth() - 5, 1);
@@ -100,7 +109,7 @@ onMounted(async () => {
           </div>
         </div>
         <div class="fr-col-12">
-          <output v-if="isLoading" data-testid="iq-chart-loading" aria-live="polite" role="status"> Chargement... </output>
+          <output v-if="isLoading" data-testid="iq-chart-loading" aria-live="polite"> Chargement... </output>
           <div v-else-if="error" data-testid="iq-chart-error" role="alert" aria-live="assertive">
             {{ error }}
           </div>
@@ -111,20 +120,10 @@ onMounted(async () => {
             <figcaption class="fr-sr-only">
               Graphique linéaire représentant l’évolution de l’IQ moyen, avec l’axe des X pour la date et l’axe des Y pour l’IQ moyen.
             </figcaption>
-            <canvas ref="chartRef" data-testid="iq-chart-canvas" role="img" aria-describedby="iq-chart-desc" />
+            <canvas ref="chartRef" data-testid="iq-chart-canvas" aria-describedby="iq-chart-desc" />
           </figure>
           <div v-show="!isLoading && !error && isTableView" data-testid="iq-chart-table">
-            <DsfrDataTable
-              :rows="iqStats.map((s) => ({ date: s.label, iq_moyen: s.moyenne }))"
-              :headers-row="[
-                { key: 'date', label: 'Date' },
-                { key: 'iq_moyen', label: 'IQ moyen' },
-              ]"
-              title="Données tabulaires de l’évolution de l’IQ moyen"
-              aria-label="Évolution de l’IQ moyen (tableau)"
-              aria-describedby="iq-chart-desc"
-              data-testid="iq-chart-datatable"
-            />
+            <RefAppTable :items="tableData" :columns="tableColumns" data-testid="iq-chart-datatable" />
           </div>
         </div>
       </div>

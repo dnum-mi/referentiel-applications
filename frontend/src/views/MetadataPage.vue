@@ -6,14 +6,24 @@ import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
 import { metadataActionLabels } from "@/composables/use-dictionary";
 import PaginationFooter from "@/components/PaginationFooter.vue";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { MetadataPaginatedResponseDto } from "@/client/types.gen";
 
-const headers = ["Application", "Auteur", "Organisation", "Type", "Date", "Titre", "Actions"];
+const columns: TableColumn[] = [
+  { field: "Application", header: "Application", sortable: true },
+  { field: "Auteur", header: "Auteur", sortable: true },
+  { field: "Organisation", header: "Organisation", sortable: true },
+  { field: "Type", header: "Type", sortable: true },
+  { field: "Date", header: "Date", sortable: true },
+  { field: "Titre", header: "Titre", sortable: false },
+  { field: "Actions", header: "Actions", sortable: false },
+];
 
 const currentPage = ref(0);
 const pageSize = ref(15);
-const sortBy = ref("Date");
-const isSortDescending = ref(true);
+const sortField = ref("Date");
+const sortOrder = ref(-1);
 const createdAtGte = ref<string>("");
 const createdAtLte = ref<string>("");
 
@@ -35,11 +45,6 @@ watch([currentPage, pageSize], () => {
   fetchData();
 });
 
-watch([sortBy, isSortDescending], () => {
-  currentPage.value = 0;
-  fetchData();
-});
-
 function convertLocalToUTC(localDateTimeString: string): string {
   if (!localDateTimeString) return "";
   const localDate = new Date(localDateTimeString);
@@ -50,8 +55,8 @@ function fetchData() {
   const filters: any = {
     page: currentPage.value,
     pageSize: pageSize.value,
-    sortBy: columnToFieldKeyMap[sortBy.value],
-    order: isSortDescending.value ? "desc" : "asc",
+    sortBy: columnToFieldKeyMap[sortField.value],
+    order: sortOrder.value === -1 ? "desc" : "asc",
     createdAtGte: createdAtGte.value ? convertLocalToUTC(createdAtGte.value) : undefined,
     createdAtLte: createdAtLte.value ? convertLocalToUTC(createdAtLte.value) : undefined,
   };
@@ -78,8 +83,8 @@ async function applyFilters() {
 function clearFilters() {
   createdAtGte.value = "";
   createdAtLte.value = "";
-  sortBy.value = "Date";
-  isSortDescending.value = true;
+  sortField.value = "Date";
+  sortOrder.value = -1;
   applyFilters();
 }
 
@@ -93,8 +98,11 @@ function handlePageSizeChange(newPageSize: number) {
   currentPage.value = 0;
 }
 
-function onUpdateSortColumn(columnName: string | undefined) {
-  sortBy.value = columnName || "Date";
+function onSort(event: TableSortEvent) {
+  sortField.value = event.sortField || "Date";
+  sortOrder.value = event.sortOrder;
+  currentPage.value = 0;
+  fetchData();
 }
 
 onMounted(async () => {
@@ -179,59 +187,49 @@ const metadataTableRows = computed(() =>
       </div>
     </form>
 
-    <div v-if="isLoading" class="fr-mb-3w">
-      <AppLoader data-testid="history-loader" />
-    </div>
-
-    <div v-else-if="metadataTableRows.length === 0" class="text-center fr-mb-3w" data-testid="history-empty">
+    <div v-if="metadataTableRows.length === 0" class="text-center fr-mb-3w" data-testid="history-empty">
       <p>Aucune donnée recensée.</p>
     </div>
 
     <div v-else>
-      <DsfrDataTable
-        :key="`${currentPage}-${pageSize}-${sortBy}-${isSortDescending}`"
-        v-model:sorted-by="sortBy"
-        v-model:sorted-desc="isSortDescending"
-        :sort-fn="(a, b) => (isSortDescending ? -1 : 1)"
-        :headers-row="headers"
-        :rows="metadataTableRows"
-        :sortable-rows="['Application', 'Auteur', 'Organisation', 'Type', 'Date']"
-        row-key="id"
-        :pagination="false"
-        title="Données"
-        data-testid="history-table"
-        @update:sorted-by="onUpdateSortColumn"
+      <RefAppTable
+        :items="metadataTableRows"
+        :columns="columns"
+        :loading="isLoading"
+        :lazy="true"
+        :total-records="data.total"
+        :sort-field="sortField"
+        :sort-order="sortOrder"
+        data-test-id="history-table"
+        empty-message="Aucune donnée recensée."
+        @sort="onSort"
       >
-        <template #cell="{ colKey, cell }">
-          <template v-if="colKey === 'Actions'">
-            <router-link
-              :to="{ name: 'metadata-detail', params: { id: (cell as any).id }, query: { from: route.fullPath } }"
-              class="fr-btn fr-btn--secondary fr-btn--sm"
-              data-testid="history-see-more-button"
-            >
-              Voir plus
+        <template #body-Actions="{ data }">
+          <router-link
+            :to="{ name: 'metadata-detail', params: { id: data.Actions.id }, query: { from: route.fullPath } }"
+            class="fr-btn fr-btn--secondary fr-btn--sm"
+            data-testid="history-see-more-button"
+          >
+            Voir plus
+          </router-link>
+        </template>
+
+        <template #body-Application="{ data }">
+          <template v-if="data.Application && data.Application.to">
+            <router-link :to="data.Application.to" :data-testid="`history-row-${data.Application.id}-application`">
+              {{ data.Application.label }}
             </router-link>
           </template>
-          <template v-else-if="colKey === 'Application'">
-            <template v-if="cell && (cell as any).to">
-              <router-link :to="(cell as any).to" :data-testid="`history-row-${(cell as any).id}-application`">
-                {{ (cell as any).label }}
-              </router-link>
-            </template>
-            <template v-else>
-              <span :data-testid="`history-row-${(cell as any).id}-application`">{{ (cell as any).label }}</span>
-            </template>
-          </template>
-          <template v-else-if="colKey === 'Type'">
-            <DsfrTag :class="(cell as any).class" :label="(cell as any).label" :data-testid="`history-row-${(cell as any).id}-type`" />
-          </template>
           <template v-else>
-            {{ cell }}
+            <span :data-testid="`history-row-${data.Application.id}-application`">{{ data.Application.label }}</span>
           </template>
         </template>
-      </DsfrDataTable>
 
-      <!-- Pagination -->
+        <template #body-Type="{ data }">
+          <DsfrTag :class="data.Type.class" :label="data.Type.label" :data-testid="`history-row-${data.Type.id}-type`" />
+        </template>
+      </RefAppTable>
+
       <PaginationFooter
         :total-filtered="data.total"
         :limit="pageSize"

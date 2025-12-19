@@ -21,6 +21,7 @@
   "dependencies": {
     "@gouvfr/dsfr": "~1.14.0",
     "@gouvminint/vue-dsfr": "^8.12.1",
+    "@primevue/themes": "^4.5.4",
     "axios": "^1.13.2",
     "chart.js": "^4.5.0",
     "chartjs-plugin-datalabels": "^2.2.0",
@@ -31,6 +32,8 @@
     "marked": "^16.1.2",
     "mermaid": "^11.12.1",
     "pinia": "^3.0.3",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.4",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
   },

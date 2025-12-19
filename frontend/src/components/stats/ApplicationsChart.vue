@@ -3,6 +3,8 @@ import { ref, onMounted, computed } from "vue";
 import type { Chart } from "chart.js";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { renderChart } from "@/utils/chart";
+import RefAppTable from "@/components/RefAppTable.vue";
+import type { TableColumn } from "@/types/table";
 
 const chartRef = ref<HTMLCanvasElement | null>(null);
 let chartInstance: Chart | null = null;
@@ -12,6 +14,11 @@ const errorMessage = ref("");
 const isTableView = ref(false);
 
 const applicationsByMonth = ref<{ month: string; total: number }[]>([]);
+
+const tableColumns: TableColumn[] = [
+  { field: "mois", header: "Mois", sortable: false },
+  { field: "total", header: "Nombre d'applications", sortable: false },
+];
 
 const tableRows = computed(() =>
   applicationsByMonth.value.map(({ month, total }) => ({
@@ -50,7 +57,7 @@ onMounted(() => {
   <section aria-labelledby="applications-chart-title" data-testid="applications-chart">
     <h3 id="applications-chart-title">Nombre d'applications référencées</h3>
     <p id="applications-chart-desc" class="fr-sr-only">Ce graphique présente l’évolution mensuelle du nombre d’applications référencées.</p>
-    <output v-if="isLoading" data-testid="applications-chart-loading" aria-live="polite" role="status"> Chargement... </output>
+    <output v-if="isLoading" data-testid="applications-chart-loading" aria-live="polite"> Chargement... </output>
     <div v-else-if="errorMessage" data-testid="applications-chart-error" role="alert">
       {{ errorMessage }}
     </div>
@@ -68,20 +75,12 @@ onMounted(() => {
       v-show="!isLoading && !errorMessage && !isTableView"
       ref="chartRef"
       data-testid="applications-chart-canvas"
-      role="img"
       aria-describedby="applications-chart-desc"
     />
-    <DsfrDataTable
+    <RefAppTable
       v-show="!isLoading && !errorMessage && isTableView"
-      :rows="tableRows"
-      :headers-row="[
-        { key: 'mois', label: 'Mois', sortable: false },
-        { key: 'total', label: 'Nombre d\'applications', sortable: false },
-      ]"
-      :sortable-rows="false"
-      row-key="mois"
-      aria-label="Nombre d'applications référencées par mois (tableau)"
-      aria-describedby="applications-chart-desc"
+      :items="tableRows"
+      :columns="tableColumns"
       data-testid="applications-chart-table"
     />
   </section>
