@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
 
 interface ApplicationOption {
   id: string | number;
@@ -17,6 +18,8 @@ const searchRef = ref<{ clear?: () => void } | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
 const isMobile = ref(window.innerWidth <= 768);
 const showInput = ref(!isMobile.value);
+const suggestions = ref<ApplicationOption[]>([]);
+const trimmedQuery = ref("");
 
 function handleResize() {
   isMobile.value = window.innerWidth <= 768;
@@ -38,15 +41,24 @@ function closeSearch() {
 }
 
 async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[]> {
-  const trimmedQuery = searchQuery.trim();
-  if (!trimmedQuery) return [];
-  try {
-    const response = await searchApplications({ search: trimmedQuery, page: 0, pageSize: 8 }, false);
-    return (response?.results ?? []) as ApplicationOption[];
-  } catch {
-    return [];
-  }
+  trimmedQuery.value = searchQuery.trim();
+  if (!trimmedQuery.value) return [];
+
+  return new Promise(resolve => {
+    debouncedSearch(resolve);
+  });
 }
+
+const { run: debouncedSearch } = useDebouncedFn(async (resolve: (res: ApplicationOption[]) => void) => {
+  const response = await searchApplications(
+    { search: trimmedQuery.value, page: 0, pageSize: 8 },
+    false
+  );
+
+  suggestions.value = (response?.results ?? []) as ApplicationOption[];
+
+  resolve(suggestions.value);
+}, 400);
 
 function displayLabel(application: ApplicationOption | null) {
   return application ? application.label ?? application.shortName ?? "" : "";

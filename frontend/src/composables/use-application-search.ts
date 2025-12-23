@@ -125,12 +125,11 @@ export function useApplicationSearch() {
   const route = useRoute();
   const router = useRouter();
 
-  // Parse filters from URL
-  const filters = computed<Filters>({
-    get: () => queryToFilters(route.query),
-    set: (newFilters) => {
-      router.replace({ query: filtersToQuery(newFilters) });
-    },
+  const { run: debouncedSearch } = useDebouncedFn(() => searchApplications(), 300);
+
+  const filters = ref<Filters>({
+    ...DEFAULT_FILTERS,
+    ...queryToFilters(route.query),
   });
 
   const page = computed({
@@ -143,9 +142,17 @@ export function useApplicationSearch() {
     set: val => setFilter({ pageSize: val }),
   });
 
-  function setFilter<T extends keyof Filters>(values: Partial<Pick<Filters, T>>) {
-    const newFilters = { ...filters.value, ...values };
-    router.replace({ query: filtersToQuery(newFilters) });
+  function setFilter(values: Partial<Filters>) {
+    Object.assign(filters.value, values);
+
+    router.replace({
+      query: {
+        ...route.query,
+        ...filtersToQuery(filters.value),
+      },
+    });
+
+    debouncedSearch();
   }
 
   function setOrder(ascending: boolean) {
@@ -153,7 +160,9 @@ export function useApplicationSearch() {
   }
 
   function resetFilters() {
+    filters.value = { ...DEFAULT_FILTERS };
     router.replace({ query: {} });
+    searchApplications();
   }
 
   async function searchApplications(customFilters?: Partial<Filters>, store = true) {
@@ -184,10 +193,13 @@ export function useApplicationSearch() {
     }
   }
 
-  const { run: debouncedSearch } = useDebouncedFn(() => searchApplications(), 300);
-
   // Auto-search when filters change
-  watch(() => route.query, () => debouncedSearch(), { deep: true });
+  watch(() => route.query, (q) => {
+    filters.value = {
+      ...DEFAULT_FILTERS,
+      ...queryToFilters(q),
+    };
+  });
 
   return {
     filters,
