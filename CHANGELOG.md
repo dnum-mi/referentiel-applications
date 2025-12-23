@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.57.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.56.0...v1.57.0) (2025-12-23)
+
+
+### Features
+
+* :sparkles: add status for homologation ([e6f909b](https://github.com/dnum-mi/referentiel-applications/commit/e6f909ba66d95830c5a6c96c389011577bdb3a2f))
+* :sparkles: add stepper for create application ([7e83f46](https://github.com/dnum-mi/referentiel-applications/commit/7e83f46c29714b0ed0f934c535364e5f9b064543))
+* :sparkles: add type for application ([4791c1f](https://github.com/dnum-mi/referentiel-applications/commit/4791c1fca19c7df7bb26957bf88da2c635236cce))
+
+
+### Bug Fixes
+
+* **search:** :bug: add debounced autocomplete and fix multi-filter requests ([58469fc](https://github.com/dnum-mi/referentiel-applications/commit/58469fc8568505db4a60af0b48af86f313962cb3))
+
 ## [1.56.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.55.0...v1.56.0) (2025-12-15)
 
 
