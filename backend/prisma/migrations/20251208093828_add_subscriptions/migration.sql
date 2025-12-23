@@ -1,6 +1,6 @@
 -- AlterTable
 ALTER TABLE "User" ALTER COLUMN id SET NOT NULL;
-ALTER TABLE "User" ADD CONSTRAINT "User_pkey" PRIMARY KEY USING INDEX "User_id_key";
+-- ALTER TABLE "User" ADD CONSTRAINT "User_pkey" PRIMARY KEY USING INDEX "User_id_key";
 
 -- CreateTable
 CREATE TABLE "_UserFollowedApplications" (
