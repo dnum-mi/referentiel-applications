@@ -4,20 +4,20 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { EmailService } from "../email.service";
 
 interface ApplicationChange {
-  applicationId: string
-  applicationLabel: string
+  applicationId: string;
+  applicationLabel: string;
   changes: {
-    action: string
-    description: string
-    createdAt: Date
-  }[]
+    action: string;
+    description: string;
+    createdAt: Date;
+  }[];
 }
 
 interface UserDigestMap {
   [userId: string]: {
-    email: string
-    applications: ApplicationChange[]
-  }
+    email: string;
+    applications: ApplicationChange[];
+  };
 }
 
 @Injectable()
@@ -41,7 +41,9 @@ export class EmailDigestCronService {
       const endOfYesterday = new Date(yesterday);
       endOfYesterday.setHours(23, 59, 59, 999);
 
-      Logger.log(`Scanning metadata from ${startOfYesterday.toISOString()} to ${endOfYesterday.toISOString()}`);
+      Logger.log(
+        `Scanning metadata from ${startOfYesterday.toISOString()} to ${endOfYesterday.toISOString()}`,
+      );
 
       const yesterdayMetadata = await this.prisma.metadata.findMany({
         where: {
@@ -67,29 +69,34 @@ export class EmailDigestCronService {
         return;
       }
 
-      const modifiedAppIds = [...new Set(yesterdayMetadata.map(m => m.applicationId))];
-      Logger.log(`Found ${modifiedAppIds.length} modified applications with ${yesterdayMetadata.length} total changes`);
+      const modifiedAppIds = [
+        ...new Set(yesterdayMetadata.map((m) => m.applicationId)),
+      ];
+      Logger.log(
+        `Found ${modifiedAppIds.length} modified applications with ${yesterdayMetadata.length} total changes`,
+      );
 
-      const applicationsWithSubscribers = await this.prisma.application.findMany({
-        where: {
-          id: {
-            in: modifiedAppIds,
-          },
-        },
-        select: {
-          id: true,
-          label: true,
-          subscribers: {
-            where: {
-              emailNotificationsEnabled: true,
-            },
-            select: {
-              id: true,
-              email: true,
+      const applicationsWithSubscribers =
+        await this.prisma.application.findMany({
+          where: {
+            id: {
+              in: modifiedAppIds,
             },
           },
-        },
-      });
+          select: {
+            id: true,
+            label: true,
+            subscribers: {
+              where: {
+                emailNotificationsEnabled: true,
+              },
+              select: {
+                id: true,
+                email: true,
+              },
+            },
+          },
+        });
 
       const userDigestMap: UserDigestMap = {};
 
@@ -115,7 +122,7 @@ export class EmailDigestCronService {
           userDigestMap[subscriber.id].applications.push({
             applicationId: app.id,
             applicationLabel: app.label,
-            changes: appMetadata.map(m => ({
+            changes: appMetadata.map((m) => ({
               action: m.action,
               description: m.description || "",
               createdAt: m.createdAt,
@@ -132,14 +139,18 @@ export class EmailDigestCronService {
         return;
       }
 
-      const emailTasks = Object.values(userDigestMap).map(digest =>
+      const emailTasks = Object.values(userDigestMap).map((digest) =>
         this.sendEmailWithRetry(digest.email, digest.applications),
       );
 
       const results = await Promise.allSettled(emailTasks);
 
-      const successCount = results.filter(r => r.status === "fulfilled").length;
-      const failureCount = results.filter(r => r.status === "rejected").length;
+      const successCount = results.filter(
+        (r) => r.status === "fulfilled",
+      ).length;
+      const failureCount = results.filter(
+        (r) => r.status === "rejected",
+      ).length;
 
       Logger.log(
         `Daily digest completed: ${successCount} emails sent successfully, ${failureCount} failed, ${yesterdayMetadata.length} changes processed`,
@@ -158,21 +169,30 @@ export class EmailDigestCronService {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        await this.emailService.sendDailyDigestNotification(email, applications);
+        await this.emailService.sendDailyDigestNotification(
+          email,
+          applications,
+        );
         Logger.log(`Email sent successfully to ${email} on attempt ${attempt}`);
         return;
       } catch (error) {
         lastError = error as Error;
-        Logger.warn(`Failed to send email to ${email} on attempt ${attempt}/${maxRetries}`, error);
+        Logger.warn(
+          `Failed to send email to ${email} on attempt ${attempt}/${maxRetries}`,
+          error,
+        );
 
         if (attempt < maxRetries) {
           const delay = 2 ** (attempt - 1) * 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
 
-    Logger.error(`Failed to send email to ${email} after ${maxRetries} attempts`, lastError);
+    Logger.error(
+      `Failed to send email to ${email} after ${maxRetries} attempts`,
+      lastError,
+    );
     throw lastError;
   }
 }

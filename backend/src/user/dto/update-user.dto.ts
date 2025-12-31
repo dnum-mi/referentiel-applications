@@ -1,6 +1,12 @@
 import type { AdminLevel } from "../entities/user.entity";
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsBoolean, IsInt, IsOptional, IsString } from "class-validator";
+import {
+  IsArray,
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+} from "class-validator";
 import { UserCapabilities } from "../entities/user.entity";
 
 export class UpdateUserDto {
@@ -18,7 +24,11 @@ export class UpdateUserDto {
   @IsArray()
   capabilities?: (keyof typeof UserCapabilities)[];
 
-  @ApiProperty({ required: false, description: "ID de l'organisation", nullable: true })
+  @ApiProperty({
+    required: false,
+    description: "ID de l'organisation",
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   organizationId?: string | null;
@@ -26,7 +36,8 @@ export class UpdateUserDto {
 
 export class UpdateUserPreferencesDto {
   @ApiProperty({
-    description: "Indique si les notifications par email sont activées pour l'utilisateur",
+    description:
+      "Indique si les notifications par email sont activées pour l'utilisateur",
   })
   @IsOptional()
   @IsBoolean()

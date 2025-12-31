@@ -6,11 +6,11 @@ import type { ApplicationStatus } from "@/client/types.gen";
 
 const { filters, setFilter } = useApplicationSearch();
 
-const statusOptions = Object.keys(statusApplicationDictionary).map(value => ({
+const statusOptions = Object.keys(statusApplicationDictionary).map((value) => ({
   value,
   label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
 }));
-const allStatusValues = statusOptions.map(option => option.value as ApplicationStatus);
+const allStatusValues = statusOptions.map((option) => option.value as ApplicationStatus);
 
 const isWithoutStatusActive = computed(() => Boolean(filters.value.currentStatus__isNull));
 
@@ -48,23 +48,19 @@ function toggleWithoutStatus(checked: boolean) {
           data-testid="status-option-none"
           aria-describedby="withoutStatusDescriptionId"
           @change="(e) => toggleWithoutStatus((e.target as HTMLInputElement).checked)"
-        >
+        />
         Sans statut
         <span id="withoutStatusDescriptionId" class="sr-only">Filtrer les applications sans statut</span>
       </label>
 
-      <label
-        v-for="option in statusOptions"
-        :key="option.value"
-        class="checkbox-item"
-      >
+      <label v-for="option in statusOptions" :key="option.value" class="checkbox-item">
         <input
           type="checkbox"
           :value="option.value"
           :checked="filters.currentStatus__in?.includes(option.value as ApplicationStatus)"
           :data-testid="`status-option-${option.value}`"
           @change="(e) => toggleStatus(option.value as ApplicationStatus, (e.target as HTMLInputElement).checked)"
-        >
+        />
         {{ option.label }}
       </label>
     </div>

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from "@prisma/client";
 
 export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
   include: {
@@ -6,7 +6,7 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
     metadatas: true;
     compliance: true;
     labels: true;
-    tags: true,
+    tags: true;
     actors: {
       include: {
         actorType: true;

@@ -6,11 +6,11 @@ import { ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 
 interface DsfrTab {
-  title: string
-  icon?: string
-  tabId: string
-  panelId: string
-  component: any
+  title: string;
+  icon?: string;
+  tabId: string;
+  panelId: string;
+  component: any;
 }
 
 const activeTab = ref(0);

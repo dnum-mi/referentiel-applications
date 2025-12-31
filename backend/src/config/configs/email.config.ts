@@ -6,7 +6,7 @@ export const emailConfig = registerAs("email", () => ({
   secure: process.env.SMTP_SECURE === "true",
   from: process.env.SMTP_FROM!,
   enabled:
-    process.env.SMTP_ENABLED === "true"
-    && Boolean(process.env.SMTP_HOST)
-    && Boolean(process.env.SMTP_PORT),
+    process.env.SMTP_ENABLED === "true" &&
+    Boolean(process.env.SMTP_HOST) &&
+    Boolean(process.env.SMTP_PORT),
 }));

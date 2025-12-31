@@ -1,5 +1,10 @@
 import type { Prisma } from "@prisma/client";
-import type { CreateTokenParams, ITokenRepository, ListTokensParams, UpdateTokenParams } from "./token.repository.interface";
+import type {
+  CreateTokenParams,
+  ITokenRepository,
+  ListTokensParams,
+  UpdateTokenParams,
+} from "./token.repository.interface";
 import { Injectable } from "@nestjs/common";
 import { UserType } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -9,13 +14,9 @@ import { TokenEntity } from "../domain/token.entity";
 
 @Injectable()
 export class TokenRepository implements ITokenRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  async list({
-    createdById,
-  }: ListTokensParams) {
+  async list({ createdById }: ListTokensParams) {
     const where: Prisma.TokenWhereInput = {
       status: {
         not: "revoked",

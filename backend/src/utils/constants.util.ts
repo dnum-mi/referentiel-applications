@@ -2,7 +2,10 @@ import type { MetadataAction } from "@prisma/client";
 
 export const API_KEY_HEADER = "x-refapp-token";
 
-export const MetadataTypes: Record<string, { label: string, dbAction: MetadataAction }> = {
+export const MetadataTypes: Record<
+  string,
+  { label: string; dbAction: MetadataAction }
+> = {
   add: {
     label: "Création",
     dbAction: "add",

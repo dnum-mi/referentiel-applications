@@ -3,13 +3,13 @@ import { ref, watch, computed, nextTick } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 
-const props = defineProps<{ modelValue: string, disabled: boolean }>();
+const props = defineProps<{ modelValue: string; disabled: boolean }>();
 const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
 
 const localValue = ref(props.modelValue);
 watch(
   () => props.modelValue,
-  val => (localValue.value = val),
+  (val) => (localValue.value = val),
 );
 
 const currentTab = ref<"edit" | "preview">("edit");
@@ -38,7 +38,7 @@ function insertAtStart(prefix: string) {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const lines = localValue.value.slice(start, end).split("\n");
-  const newText = lines.map(line => prefix + line).join("\n");
+  const newText = lines.map((line) => prefix + line).join("\n");
   localValue.value = localValue.value.slice(0, start) + newText + localValue.value.slice(end);
   emitChange();
   nextTick(() => {

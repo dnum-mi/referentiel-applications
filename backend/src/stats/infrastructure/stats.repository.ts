@@ -12,7 +12,7 @@ export class StatsRepository implements IStatsRepository {
     from: Date,
     to: Date,
     type: StatsType,
-  ): Promise<{ date: Date, valeur: number }[]> {
+  ): Promise<{ date: Date; valeur: number }[]> {
     return this.prisma.stats.findMany({
       where: {
         type,
@@ -31,7 +31,7 @@ export class StatsRepository implements IStatsRepository {
 
     // Filtrer les valeurs non-null
     const valid = records
-      .map(r => r.quality)
+      .map((r) => r.quality)
       .filter((q): q is number => q !== null && q !== undefined);
 
     if (valid.length === 0) {

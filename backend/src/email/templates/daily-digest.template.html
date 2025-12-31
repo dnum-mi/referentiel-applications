@@ -1,51 +1,83 @@
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr>
-        <td style="padding-bottom: 20px;">
-            <p style="margin: 0; font-size: 16px; color: #161616;">
-                Bonjour,
+<table
+  role="presentation"
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+>
+  <tr>
+    <td style="padding-bottom: 20px">
+      <p style="margin: 0; font-size: 16px; color: #161616">Bonjour,</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom: 20px">
+      <p style="margin: 0; font-size: 16px; color: #161616; line-height: 1.5">
+        Voici le résumé des modifications du
+        <strong style="color: #000091">{{date}}</strong> pour les applications
+        que vous suivez.
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom: 20px">
+      <table
+        role="presentation"
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+        style="
+          background-color: #f6f6f6;
+          border: 1px solid #dddddd;
+          border-radius: 4px;
+        "
+      >
+        <tr>
+          <td style="padding: 15px">
+            <p style="margin: 0; font-size: 14px; color: #666666">
+              <strong style="color: #161616; font-size: 16px"
+                >{{totalChanges}} modification{{totalChanges > 1 ? "s" :
+                ""}}</strong
+              >
+              sur
+              <strong style="color: #161616"
+                >{{applicationsCount}} application{{applicationsCount > 1 ? "s"
+                : ""}}</strong
+              >
             </p>
-        </td>
-    </tr>
-    <tr>
-        <td style="padding-bottom: 20px;">
-            <p style="margin: 0; font-size: 16px; color: #161616; line-height: 1.5;">
-                Voici le résumé des modifications du <strong style="color: #000091;">{{date}}</strong> pour les applications que vous suivez.
-            </p>
-        </td>
-    </tr>
-    <tr>
-        <td style="padding-bottom: 20px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f6f6f6; border: 1px solid #dddddd; border-radius: 4px;">
-                <tr>
-                    <td style="padding: 15px;">
-                        <p style="margin: 0; font-size: 14px; color: #666666;">
-                            <strong style="color: #161616; font-size: 16px;">{{totalChanges}} modification{{totalChanges > 1 ? "s" : ""}}</strong> sur <strong style="color: #161616;">{{applicationsCount}} application{{applicationsCount > 1 ? "s" : ""}}</strong>
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-    <tr>
-        <td style="padding-bottom: 20px;">
-            {{applicationsSummary}}
-        </td>
-    </tr>
-    <tr>
-        <td style="padding: 20px 0; border-top: 1px solid #dddddd; border-bottom: 1px solid #dddddd;">
-            <p style="margin: 0; font-size: 14px; color: #666666; line-height: 1.5;">
-                Cet email récapitulatif vous a été envoyé car vous êtes abonné aux notifications de ces applications.
-                Vous recevez ce résumé une fois par jour pour vous tenir informé de toutes les modifications.
-                Vous pouvez gérer vos abonnements depuis votre profil.
-            </p>
-        </td>
-    </tr>
-    <tr>
-        <td style="padding-top: 20px;">
-            <p style="margin: 0; font-size: 16px; color: #161616;">
-                Cordialement,<br>
-                <strong style="color: #000091;">L'équipe Référentiel des Applications</strong>
-            </p>
-        </td>
-    </tr>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom: 20px">{{applicationsSummary}}</td>
+  </tr>
+  <tr>
+    <td
+      style="
+        padding: 20px 0;
+        border-top: 1px solid #dddddd;
+        border-bottom: 1px solid #dddddd;
+      "
+    >
+      <p style="margin: 0; font-size: 14px; color: #666666; line-height: 1.5">
+        Cet email récapitulatif vous a été envoyé car vous êtes abonné aux
+        notifications de ces applications. Vous recevez ce résumé une fois par
+        jour pour vous tenir informé de toutes les modifications. Vous pouvez
+        gérer vos abonnements depuis votre profil.
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-top: 20px">
+      <p style="margin: 0; font-size: 16px; color: #161616">
+        Cordialement,<br />
+        <strong style="color: #000091"
+          >L'équipe Référentiel des Applications</strong
+        >
+      </p>
+    </td>
+  </tr>
 </table>

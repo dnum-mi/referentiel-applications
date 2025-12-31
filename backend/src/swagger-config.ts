@@ -11,8 +11,8 @@ import { API_KEY_HEADER } from "./utils/constants.util";
 export function setupSwagger(
   app: INestApplication<any>,
   options: {
-    writeYaml?: boolean
-    onlyWriteSwagger?: boolean
+    writeYaml?: boolean;
+    onlyWriteSwagger?: boolean;
   },
   keycloakConfig: Pick<KeycloakConfig, "baseUrl" | "realm" | "clientId">,
 ) {
@@ -38,12 +38,15 @@ export function setupSwagger(
       },
       "oauth2",
     )
-    .addApiKey({
-      type: "apiKey",
-      name: API_KEY_HEADER,
-      in: "header",
-      description: "Token authentication",
-    }, "api_key")
+    .addApiKey(
+      {
+        type: "apiKey",
+        name: API_KEY_HEADER,
+        in: "header",
+        description: "Token authentication",
+      },
+      "api_key",
+    )
     .addSecurityRequirements("oauth2")
     .addSecurityRequirements("api_key")
     .build();
@@ -65,16 +68,19 @@ export function setupSwagger(
   });
 
   if (options.writeYaml) {
-    const yamlContent = stringify(document, { });
+    const yamlContent = stringify(document, {});
     // Écriture au format YAML
     setTimeout(() => {
-      writeFile(join(__dirname, "../..", "openapi", "swagger.yaml"), yamlContent)
+      writeFile(
+        join(__dirname, "../..", "openapi", "swagger.yaml"),
+        yamlContent,
+      )
         .catch((error) => {
           console.error("Error writing Swagger YAML file:", error);
         })
         .finally(() => {
           if (options.onlyWriteSwagger) {
-          // Si on ne veut que générer le fichier YAML et pas démarrer l'application
+            // Si on ne veut que générer le fichier YAML et pas démarrer l'application
             process.exit(0);
           }
         });

@@ -10,17 +10,33 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
-import { RelationApplicationDto, RelationDto, RelationGraphDto } from "./application/dto/relation-application.dto";
+import {
+  RelationApplicationDto,
+  RelationDto,
+  RelationGraphDto,
+} from "./application/dto/relation-application.dto";
 import { Relation } from "./domain/relation.entity";
 import { RelationService } from "./relation.service";
 
 @ApiTags("relation")
 @UseGuards(ApplicationGuard)
-@ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
+@ApiParam({
+  name: "applicationId",
+  description: "ID de l'application",
+  type: String,
+})
 @Controller("applications/:applicationId/relations")
 export class RelationController {
   constructor(private readonly relationService: RelationService) {}
@@ -53,11 +69,10 @@ export class RelationController {
   })
   @ApiOperation({
     summary: "Récupérer toutes les relations d'une application",
-    description: "Renvoie la liste de toutes les relations d'une application donnée.",
+    description:
+      "Renvoie la liste de toutes les relations d'une application donnée.",
   })
-  findAll(
-    @Param("applicationId") applicationId: string,
-  ): Promise<Relation[]> {
+  findAll(@Param("applicationId") applicationId: string): Promise<Relation[]> {
     return this.relationService.findAllForApplicationSource(applicationId);
   }
 
@@ -69,11 +84,13 @@ export class RelationController {
   })
   @ApiOperation({
     summary: "Récupérer le graphe des relations d'une application",
-    description: "Renvoie un graphe des relations de l'application avec possibilité de limiter la profondeur. Les applications supprimées sont exclues.",
+    description:
+      "Renvoie un graphe des relations de l'application avec possibilité de limiter la profondeur. Les applications supprimées sont exclues.",
   })
   @ApiQuery({
     name: "depth",
-    description: "Profondeur maximale de traversée du graphe (par défaut: 2, max: 100)",
+    description:
+      "Profondeur maximale de traversée du graphe (par défaut: 2, max: 100)",
     required: false,
     type: Number,
   })

@@ -9,27 +9,32 @@ import { debounce } from "@/utils/debouncer-utils";
 
 const data = ref<TagsPaginatedResponseDto>({ results: [] as TagDto[], total: 0 });
 
-const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [{
-  key: "name",
-  label: "Nom",
-  isSortable: true,
-}, {
-  key: "createdAt",
-  isSortable: true,
-  label: "Date de création",
-}, {
-  key: "count",
-  isSortable: false,
-  label: "Applications liées",
-}, {
-  key: "actions",
-  label: "Actions",
-}] as const;
+const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
+  {
+    key: "name",
+    label: "Nom",
+    isSortable: true,
+  },
+  {
+    key: "createdAt",
+    isSortable: true,
+    label: "Date de création",
+  },
+  {
+    key: "count",
+    isSortable: false,
+    label: "Applications liées",
+  },
+  {
+    key: "actions",
+    label: "Actions",
+  },
+] as const;
 
 const isLoading = ref(false);
 const searchQuery = ref("");
 
-const sortColumn = ref<typeof headers[number]["key"]>();
+const sortColumn = ref<(typeof headers)[number]["key"]>();
 const isSortDescending = ref(false);
 
 const itemsPerPage = ref(15);
@@ -48,7 +53,7 @@ async function fetchTags() {
 
   const response = await api.tagsControllerFindAll({ query });
   data.value = response.data as TagsPaginatedResponseDto;
-  
+
   isLoading.value = false;
 }
 
@@ -94,9 +99,7 @@ onMounted(fetchTags);
 
 <template>
   <div class="header-row">
-    <h1 class="fr-h1" data-testid="admin-tags-title">
-      Gestion des tags
-    </h1>
+    <h1 class="fr-h1" data-testid="admin-tags-title">Gestion des tags</h1>
 
     <TagActions @fetch-tags="fetchTags" :isCreating="true" />
   </div>
@@ -127,17 +130,14 @@ onMounted(fetchTags);
       :headers-row="headers"
       :rows="tableRows"
       row-key="name"
-      :sortable-rows="headers.filter(h => h.isSortable).map(h => h.key)"
+      :sortable-rows="headers.filter((h) => h.isSortable).map((h) => h.key)"
       vertical-borders
       :pagination="false"
       data-testid="admin-tags-table"
       @update:sorted-by="onUpdateSortColumn"
     >
       <template #header="header">
-        <DsfrTableHeader
-          :header="header.label"
-          :aria-sort="isSortDescending ? 'descending' : 'ascending'"
-        />
+        <DsfrTableHeader :header="header.label" :aria-sort="isSortDescending ? 'descending' : 'ascending'" />
       </template>
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'actions'">

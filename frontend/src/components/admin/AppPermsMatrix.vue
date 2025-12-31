@@ -5,12 +5,12 @@ import type { AppPermsDto } from "@/client/types.gen";
 import PermissionWritePriorityRestart from "../PermissionWritePriorityRestart.vue";
 
 const props = defineProps<{
-  appPermsMatrix: AppPermsDto[]
+  appPermsMatrix: AppPermsDto[];
 }>();
 
 const emits = defineEmits<{
-  (e: "update:appPermsMatrix", value: AppPermsDto[]): void
-  (e: "reload"): void
+  (e: "update:appPermsMatrix", value: AppPermsDto[]): void;
+  (e: "reload"): void;
 }>();
 const actorTypeStore = useActorTypeStore();
 
@@ -27,14 +27,14 @@ const permissionSuffixes = {
   Actors: { label: "Acteurs", title: "Acteurs" },
   Relations: { label: "Relations", title: "Relations" },
   Metadata: { label: "Historique", title: "Historique" },
-} as const satisfies Record<string, { label: string, title: string }>;
+} as const satisfies Record<string, { label: string; title: string }>;
 const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissionSuffixes)[];
 
 const updatedMatrix = ref<AppPermsDto[]>(unref(props.appPermsMatrix));
 
 type PermissionValue = "none" | "read" | "write";
 function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSuffixes, value: PermissionValue) {
-  const actorTypeIdx = updatedMatrix.value.findIndex(at => at.actorTypeId === actorTypeId);
+  const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
   if (permission === "PriorityRestart") {
     return;
@@ -46,14 +46,14 @@ function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSu
 }
 
 function updateWritePriorityRestart(actorTypeId: string, value: boolean) {
-  const actorTypeIdx = updatedMatrix.value.findIndex(at => at.actorTypeId === actorTypeId);
+  const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
   updatedMatrix.value[actorTypeIdx].writePriorityRestart = value;
 }
 
 type AnomalyPermissionValue = "read" | "post" | "manage";
 function updateAnomalyMatrix(actorTypeId: string, values: AnomalyPermissionValue[]) {
-  const actorTypeIdx = updatedMatrix.value.findIndex(at => at.actorTypeId === actorTypeId);
+  const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
 
   updatedMatrix.value[actorTypeIdx].readAnomalyNotifications = values.includes("read") || values.includes("manage");
@@ -73,27 +73,16 @@ function saveAppPermsMatrix() {
   <DsfrTable title="Tableau des permissions des applications" data-testid="app-perms-table">
     <template #header>
       <tr>
-        <th scope="col">
-          Type d'acteur
-        </th>
-        <th
-          v-for="perm in permissionSuffixes" :key="perm.label" scope="col"
-          style="min-width: 6rem;"
-          :title="perm.title"
-        >
+        <th scope="col">Type d'acteur</th>
+        <th v-for="perm in permissionSuffixes" :key="perm.label" scope="col" style="min-width: 6rem" :title="perm.title">
           {{ perm.label }}
         </th>
-        <th scope="col">
-          Anomalies
-        </th>
+        <th scope="col">Anomalies</th>
       </tr>
     </template>
-    <tr v-for="perms in (updatedMatrix as AppPermsDto[])" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
+    <tr v-for="perms in updatedMatrix as AppPermsDto[]" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
       <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
-      <td
-        v-for="perm in permissionKeys"
-        :key="perm"
-      >
+      <td v-for="perm in permissionKeys" :key="perm">
         <PermissionSelect
           v-if="perm === 'Base'"
           :id="`${perms.actorTypeId}-${perm}`"
@@ -130,7 +119,7 @@ function saveAppPermsMatrix() {
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
       </td>
-      <td style="min-width: 15rem;">
+      <td style="min-width: 15rem">
         <AnomalyPermissionSelect
           :id="`${perms.actorTypeId}`"
           :read="perms.readAnomalyNotifications"
@@ -154,7 +143,8 @@ function saveAppPermsMatrix() {
       Enregistrer les modifications
     </DsfrButton>
     <DsfrButton
-      class="fr-mt-2w fr-ml-2w" data-testid="app-perms-reload-btn"
+      class="fr-mt-2w fr-ml-2w"
+      data-testid="app-perms-reload-btn"
       title="Recharger la matrice des permissions"
       aria-label="Recharger la matrice des permissions"
       @click="$emit('reload')"

@@ -131,23 +131,23 @@ _**Les tests unitaires se trouvent dans le dossier `/backend/test`. Pour ajouter
 
 1. Créez une branche depuis `main` en suivant la convention de nommage :
 
-    ```bash
-    # Pour une nouvelle fonctionnalité
-    git switch -c feature/nom-de-la-feature
+   ```bash
+   # Pour une nouvelle fonctionnalité
+   git switch -c feature/nom-de-la-feature
 
-    # Pour une correction de bug
-    git switch -c fix/nom-du-fix
-    ```
+   # Pour une correction de bug
+   git switch -c fix/nom-du-fix
+   ```
 
 2. Assurez-vous que votre code respecte les normes de formatage avant de commit :
 
-    ```bash
-    pnpm run format
-    ```
+   ```bash
+   pnpm run format
+   ```
 
 3. Avant de soumettre une PR :
-    - Vérifiez que tous les tests passent
-    - Vérifiez que le code est correctement formaté
+   - Vérifiez que tous les tests passent
+   - Vérifiez que le code est correctement formaté
 
 ### Conventional Commits
 

@@ -10,8 +10,7 @@ export class UserFilterDto extends PaginationDto {
   search?: string;
 
   @ApiPropertyOptional({
-    description:
-      "Type d'utilisateur. Utiliser les valeurs de /userTypes",
+    description: "Type d'utilisateur. Utiliser les valeurs de /userTypes",
     enum: UserType,
     isArray: true,
     example: ["human"],

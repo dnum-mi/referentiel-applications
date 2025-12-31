@@ -3,14 +3,14 @@ import { computed } from "vue";
 import type { TechnicalDebtInfoDto } from "@/client/types.gen";
 
 const props = defineProps<{
-  technicalDebtInfo: TechnicalDebtInfoDto | null
-  canEdit: boolean
-  small?: boolean
+  technicalDebtInfo: TechnicalDebtInfoDto | null;
+  canEdit: boolean;
+  small?: boolean;
 }>();
 
 defineEmits<{
-  create: []
-  edit: []
+  create: [];
+  edit: [];
 }>();
 
 const maturityLabels: Record<number, string> = {
@@ -23,7 +23,7 @@ const maturityLabels: Record<number, string> = {
 };
 
 function getMaturityLabel(value: number | null | undefined): string {
-  return value != null ? maturityLabels[value] ?? "Non défini" : "Non défini";
+  return value != null ? (maturityLabels[value] ?? "Non défini") : "Non défini";
 }
 
 function getMaturityBadgeType(value: number | null | undefined): "error" | "warning" | "info" | "success" {
@@ -47,9 +47,7 @@ const maturityFields = computed(() => [
       <div class="fr-card__content">
         <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
           <div class="fr-col">
-            <h3 class="fr-card__title">
-              Dette technique
-            </h3>
+            <h3 class="fr-card__title">Dette technique</h3>
           </div>
           <div class="fr-col-auto">
             <DsfrButton
@@ -80,9 +78,7 @@ const maturityFields = computed(() => [
           </div>
         </template>
         <template v-else>
-          <p class="fr-text--sm fr-text--italic" data-testid="technical-debt-empty">
-            Aucune information de dette technique définie.
-          </p>
+          <p class="fr-text--sm fr-text--italic" data-testid="technical-debt-empty">Aucune information de dette technique définie.</p>
         </template>
       </div>
     </div>

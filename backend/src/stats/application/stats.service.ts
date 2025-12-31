@@ -24,7 +24,7 @@ export class StatsService {
     return this.getIqAvgGroupedUseCase.execute(fromDate, toDate, groupBy);
   }
 
-  async computeAndStoreDailyIqAvg(): Promise<{ date: Date, valeur: number }> {
+  async computeAndStoreDailyIqAvg(): Promise<{ date: Date; valeur: number }> {
     const now = new Date();
     const date = StatsHelper.getUtcMidnightForParis(now);
     Logger.log(
@@ -46,8 +46,8 @@ export class StatsService {
     }
 
     // 2) Calculer la moyenne de 'quality' via la méthode du repository
-    const moyenneQuality
-      = await this.statsRepository.getAverageApplicationQuality();
+    const moyenneQuality =
+      await this.statsRepository.getAverageApplicationQuality();
     Logger.log(`➗ Quality moyenne calculée = ${moyenneQuality}`);
 
     // 3) Enregistrer la stat via la méthode du repository

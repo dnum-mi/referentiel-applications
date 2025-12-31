@@ -5,18 +5,16 @@ type Breakpoints = Record<string, number | string>;
 type Mode = "max" | "min";
 
 interface ExtendedMediaQueryList extends MediaQueryList {
-  addListener?: (callback: ((this: MediaQueryList, ev: MediaQueryListEvent) => any) | null) => void
-  removeListener?: (callback: ((this: MediaQueryList, ev: MediaQueryListEvent) => any) | null) => void
+  addListener?: (callback: ((this: MediaQueryList, ev: MediaQueryListEvent) => any) | null) => void;
+  removeListener?: (callback: ((this: MediaQueryList, ev: MediaQueryListEvent) => any) | null) => void;
 }
 
 export function useBreakpoints(breakpoints: Breakpoints, mode: Mode = "max") {
   const isClient = typeof window !== "undefined" && typeof window.matchMedia === "function";
 
-  const matches = reactive<Record<string, boolean>>(
-    Object.fromEntries(Object.keys(breakpoints).map(key => [key, false])),
-  );
+  const matches = reactive<Record<string, boolean>>(Object.fromEntries(Object.keys(breakpoints).map((key) => [key, false])));
 
-  const mqls: { mql: ExtendedMediaQueryList, listener: (e: MediaQueryListEvent) => void }[] = [];
+  const mqls: { mql: ExtendedMediaQueryList; listener: (e: MediaQueryListEvent) => void }[] = [];
 
   const toQuery = (v: number | string) => (typeof v === "number" ? `${v}px` : String(v));
 
@@ -57,9 +55,7 @@ export function useBreakpoints(breakpoints: Breakpoints, mode: Mode = "max") {
 
   const larger = (key: string): ComputedRef<boolean> => computed(() => !(matches[key] ?? false));
 
-  const current = (): ComputedRef<string[]> => computed(() =>
-    Object.keys(matches).filter(k => !!matches[k]),
-  );
+  const current = (): ComputedRef<string[]> => computed(() => Object.keys(matches).filter((k) => !!matches[k]));
 
   return {
     matches,

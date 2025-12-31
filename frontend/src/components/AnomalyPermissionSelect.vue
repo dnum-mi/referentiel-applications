@@ -4,14 +4,14 @@ import { defineProps } from "vue";
 
 type AnomalyValue = "read" | "post" | "manage";
 const props = defineProps<{
-  read: boolean
-  post: boolean
-  manage: boolean
-  id: string
+  read: boolean;
+  post: boolean;
+  manage: boolean;
+  id: string;
 }>();
 
 const emits = defineEmits<{
-  (e: "update:model-value", value: AnomalyValue[]): void
+  (e: "update:model-value", value: AnomalyValue[]): void;
 }>();
 
 const canManage = ref(props.manage);

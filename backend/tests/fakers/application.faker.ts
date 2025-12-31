@@ -19,7 +19,10 @@ export class ApplicationFaker {
         shortName: faker.company.name(),
         description: faker.company.catchPhrase(),
         priorityRestart: faker.helpers.arrayElement(restartPriorities),
-        type: faker.helpers.maybe(() => faker.helpers.arrayElement(applicationTypes), { probability: 0.5 }),
+        type: faker.helpers.maybe(
+          () => faker.helpers.arrayElement(applicationTypes),
+          { probability: 0.5 },
+        ),
         metadatas: {
           create: [
             {
@@ -37,7 +40,9 @@ export class ApplicationFaker {
         applicationId: application.id,
         status: initialStatus,
         statusDate:
-          faker.helpers.maybe(() => faker.date.past({ years: 1 }), { probability: 0.4 }) || undefined,
+          faker.helpers.maybe(() => faker.date.past({ years: 1 }), {
+            probability: 0.4,
+          }) || undefined,
       },
     });
 

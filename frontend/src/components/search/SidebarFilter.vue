@@ -62,7 +62,12 @@ const { openAccordions, toggle } = useAccordionManager(3, true);
           <StatusFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(5)" title="Conformité" data-testid="sidebar-accordion-compliance" @click="toggle(5)">
+        <DsfrAccordion
+          :selected="openAccordions.includes(5)"
+          title="Conformité"
+          data-testid="sidebar-accordion-compliance"
+          @click="toggle(5)"
+        >
           <ComplianceFilter />
         </DsfrAccordion>
       </div>

@@ -24,7 +24,6 @@ const minDepth = 1;
 
 let graphInstance: ReturnType<typeof createInteractiveGraph> | null = null;
 
-
 async function fetchGraphData() {
   isLoading.value = true;
   error.value = null;
@@ -43,21 +42,19 @@ async function fetchGraphData() {
   }
 }
 
-
 function callNodeLink(nodeId: string) {
   router.push({ name: "application", params: { id: nodeId } });
 }
-
 
 async function renderGraph() {
   if (!graphContainer.value) await nextTick();
   if (!graphContainer.value || !graphData.value) return;
 
   const { nodes, edges, rootId } = graphData.value;
-  const filteredEdges = edges.filter(e => enabledEdgeTypes.value.has(e.type));
+  const filteredEdges = edges.filter((e) => enabledEdgeTypes.value.has(e.type));
 
   const visibleNodeIds = new Set<string>();
-  filteredEdges.forEach(edge => {
+  filteredEdges.forEach((edge) => {
     visibleNodeIds.add(edge.sourceId);
     visibleNodeIds.add(edge.targetId);
   });
@@ -72,19 +69,11 @@ async function renderGraph() {
       graphInstance.cleanup();
     }
 
-    graphInstance = createInteractiveGraph(
-      graphContainer.value,
-      nodes,
-      filteredEdges,
-      rootId,
-      callNodeLink,
-      visibleNodeIds
-    );
+    graphInstance = createInteractiveGraph(graphContainer.value, nodes, filteredEdges, rootId, callNodeLink, visibleNodeIds);
   } catch {
     error.value = "Erreur lors du rendu du graphe";
   }
 }
-
 
 function handleDepthChange() {
   if (depth.value < minDepth) depth.value = minDepth;
@@ -117,17 +106,16 @@ function toggleEdgeType(type: string) {
 watch(graphData, () => renderGraph());
 watch(enabledEdgeTypes, () => renderGraph(), { deep: true });
 
-
 function getLineStyle(type: string): string {
   const style = graphStyles.edge[type as keyof typeof graphStyles.edge]?.style;
   switch (style) {
-    case 'dashed':
-      return 'line-style-dashed';
-    case 'dotted':
-      return 'line-style-dotted';
-    case 'solid':
+    case "dashed":
+      return "line-style-dashed";
+    case "dotted":
+      return "line-style-dotted";
+    case "solid":
     default:
-      return 'line-style-solid';
+      return "line-style-solid";
   }
 }
 
@@ -145,7 +133,6 @@ onBeforeUnmount(() => {
 <template>
   <div class="relation-graph-wrapper fr-p-2w">
     <div class="sidebar fr-p-2w fr-card fr-shadow">
-      
       <div class="depth-controls fr-input-group">
         <label class="fr-label" for="depthRange">Profondeur du graphe : **{{ depth }}**</label>
         <input
@@ -170,25 +157,18 @@ onBeforeUnmount(() => {
       <div class="graph-controls">
         <h3 class="fr-h4">Contrôles du graphe</h3>
         <div class="control-buttons">
-          <DsfrButton
-            secondary
-            @click="handleResetZoom"
-            title="Réinitialiser le zoom"
-          >
+          <DsfrButton secondary @click="handleResetZoom" title="Réinitialiser le zoom">
             <span class="fr-icon-refresh-line" aria-hidden="true"></span>
             Réinitialiser zoom
           </DsfrButton>
-          <DsfrButton
-            secondary
-            @click="handleExportSVG"
-            title="Exporter le graphe en SVG"
-          >
+          <DsfrButton secondary @click="handleExportSVG" title="Exporter le graphe en SVG">
             <span class="fr-icon-download-line" aria-hidden="true"></span>
             Exporter en SVG
           </DsfrButton>
         </div>
         <p class="help-text">
-          💡 Utilisez la molette pour **zoomer/dézoomer**, cliquez-glissez pour **déplacer la vue**, et glissez les nœuds pour **réorganiser** le graphe.
+          💡 Utilisez la molette pour **zoomer/dézoomer**, cliquez-glissez pour **déplacer la vue**, et glissez les nœuds pour
+          **réorganiser** le graphe.
         </p>
         <div v-if="isLoading" class="fr-text--info loading">Chargement du graphe...</div>
         <div v-if="error" class="fr-text--error error">{{ error }}</div>
@@ -199,36 +179,29 @@ onBeforeUnmount(() => {
         <ul class="fr-p-0 fr-m-0 fr-list--unstyled">
           <li v-for="(label, type) in relationTypeLabels" :key="type">
             <div class="fr-checkbox-group">
-                <input
-                    type="checkbox"
-                    :checked="enabledEdgeTypes.has(type)"
-                    @change="toggleEdgeType(type)"
-                    :id="'legend-' + type"
-                />
-                <label :for="'legend-' + type" class="legend-label">
-                    <span 
-                        class="legend-line" 
-                        :class="getLineStyle(type)"
-                        :style="{ backgroundColor: graphStyles.edge[type as keyof typeof graphStyles.edge]?.color || 'var(--text-default-grey)' }"
-                    ></span>
-                    <span class="legend-text">{{ label }}</span>
-                </label>
+              <input type="checkbox" :checked="enabledEdgeTypes.has(type)" @change="toggleEdgeType(type)" :id="'legend-' + type" />
+              <label :for="'legend-' + type" class="legend-label">
+                <span
+                  class="legend-line"
+                  :class="getLineStyle(type)"
+                  :style="{ backgroundColor: graphStyles.edge[type as keyof typeof graphStyles.edge]?.color || 'var(--text-default-grey)' }"
+                ></span>
+                <span class="legend-text">{{ label }}</span>
+              </label>
             </div>
           </li>
         </ul>
       </div>
     </div>
 
-    <div ref="graphContainer" class="graph-container fr-card fr-shadow">
-      </div>
+    <div ref="graphContainer" class="graph-container fr-card fr-shadow"></div>
   </div>
 </template>
 
 <style scoped>
-
 .relation-graph-wrapper {
   display: flex;
-  gap: 1.5rem; 
+  gap: 1.5rem;
   min-height: 80vh;
 }
 
@@ -236,9 +209,9 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  width: 300px; 
+  width: 300px;
   flex-shrink: 0;
-  border: none; 
+  border: none;
 }
 
 .graph-container {
@@ -309,11 +282,11 @@ onBeforeUnmount(() => {
 }
 
 .legend-line {
-    display: inline-block;
-    width: 30px; 
-    height: 3px;
-    border-radius: 1px;
-    background-color: currentColor;
+  display: inline-block;
+  width: 30px;
+  height: 3px;
+  border-radius: 1px;
+  background-color: currentColor;
 }
 
 .line-style-dashed {
@@ -324,15 +297,15 @@ onBeforeUnmount(() => {
 .line-style-dotted {
   background-image: linear-gradient(to right, currentColor 30%, transparent 30%);
   background-size: 5px 100%;
-  border-radius: 50%; 
-  height: 5px; 
+  border-radius: 50%;
+  height: 5px;
 }
 
 .fr-checkbox-group {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 .fr-checkbox-group input[type="checkbox"] {
-    margin-right: 0.5rem;
+  margin-right: 0.5rem;
 }
 </style>

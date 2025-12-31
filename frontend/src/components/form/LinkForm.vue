@@ -43,15 +43,7 @@ function handleSubmit() {
       required
       data-testid="link-type-select"
     />
-    <DsfrInput
-      v-model="form.link"
-      class="fr-mb-3w"
-      label="URL"
-      type="url"
-      label-visible
-      required
-      data-testid="link-url-input"
-    />
+    <DsfrInput v-model="form.link" class="fr-mb-3w" label="URL" type="url" label-visible required data-testid="link-url-input" />
     <DsfrInput
       v-model="form.description"
       class="fr-mb-3w"
@@ -63,13 +55,7 @@ function handleSubmit() {
     />
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-      <DsfrButton
-        type="button"
-        secondary
-        label="Annuler"
-        data-testid="link-cancel-btn"
-        @click="$emit('cancel')"
-      />
+      <DsfrButton type="button" secondary label="Annuler" data-testid="link-cancel-btn" @click="$emit('cancel')" />
       <DsfrButton
         type="submit"
         :disabled="isSubmitting"

@@ -5,20 +5,20 @@ import { useGraphStyles } from "./use-graph-style";
 import { sanitizeLabel } from "./use-sanitize-utils";
 
 export interface D3Node extends d3.SimulationNodeDatum {
-  id: string
-  label: string
-  isRoot: boolean
-  status?: string
-  x?: number
-  y?: number
-  fx?: number | null
-  fy?: number | null
+  id: string;
+  label: string;
+  isRoot: boolean;
+  status?: string;
+  x?: number;
+  y?: number;
+  fx?: number | null;
+  fy?: number | null;
 }
 
 export interface D3Link extends d3.SimulationLinkDatum<D3Node> {
-  source: string | D3Node
-  target: string | D3Node
-  type: string
+  source: string | D3Node;
+  target: string | D3Node;
+  type: string;
 }
 
 export function useD3Graph() {
@@ -51,7 +51,7 @@ export function useD3Graph() {
 
     const defs = svg.append("defs");
 
-    const edgeStyles = styles.edge as Record<string, { color: string, style: string, width: number }>;
+    const edgeStyles = styles.edge as Record<string, { color: string; style: string; width: number }>;
 
     Object.keys(edgeStyles).forEach((type) => {
       const safeType = type.replace(/[^\w-]/g, "_");
@@ -61,7 +61,7 @@ export function useD3Graph() {
         .append("marker")
         .attr("id", `arrow-${safeType}`)
         .attr("viewBox", "0 -5 10 10")
-        .attr("refX", (styles.node.width / 2) + 10)
+        .attr("refX", styles.node.width / 2 + 10)
         .attr("refY", 0)
         .attr("markerWidth", 4)
         .attr("markerHeight", 4)
@@ -74,7 +74,8 @@ export function useD3Graph() {
 
     const g = svg.append("g");
 
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
+    const zoom = d3
+      .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
       .on("zoom", (event) => {
         g.attr("transform", event.transform);
@@ -82,14 +83,14 @@ export function useD3Graph() {
 
     svg.call(zoom);
 
-    const d3Nodes: D3Node[] = nodes.map(node => ({
+    const d3Nodes: D3Node[] = nodes.map((node) => ({
       id: node.id,
       label: sanitizeLabel(node.label?.trim() || node.id.slice(0, 8)),
       isRoot: node.id === rootId,
       status: node.status,
     }));
 
-    const d3Links: D3Link[] = edges.map(edge => ({
+    const d3Links: D3Link[] = edges.map((edge) => ({
       source: edge.sourceId,
       target: edge.targetId,
       type: edge.type,
@@ -99,8 +100,9 @@ export function useD3Graph() {
       .forceSimulation<D3Node>(d3Nodes)
       .force(
         "link",
-        d3.forceLink<D3Node, D3Link>(d3Links)
-          .id(d => d.id)
+        d3
+          .forceLink<D3Node, D3Link>(d3Links)
+          .id((d) => d.id)
           .distance(150),
       )
       .force("charge", d3.forceManyBody().strength(-300))
@@ -113,8 +115,8 @@ export function useD3Graph() {
       .selectAll("line")
       .data(d3Links)
       .join("line")
-      .attr("stroke-width", d => edgeStyles[d.type]?.width || 2)
-      .attr("stroke", d => edgeStyles[d.type]?.color || styles.node.stroke)
+      .attr("stroke-width", (d) => edgeStyles[d.type]?.width || 2)
+      .attr("stroke", (d) => edgeStyles[d.type]?.color || styles.node.stroke)
       .attr("stroke-dasharray", (d) => {
         if (edgeStyles[d.type]?.style === "dashed") return "6, 4";
         if (edgeStyles[d.type]?.style === "dotted") return "2, 3";
@@ -141,28 +143,23 @@ export function useD3Graph() {
         if (!visibleNodeIds || visibleNodeIds.size === 0) return "auto";
         return visibleNodeIds.has(d.id) ? "auto" : "none";
       })
-      .call(
-        d3.drag<SVGGElement, D3Node>()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended),
-      );
+      .call(d3.drag<SVGGElement, D3Node>().on("start", dragstarted).on("drag", dragged).on("end", dragended));
 
     // Add rectangles for nodes
     node
       .append("rect")
-      .attr("width", d => (d.isRoot ? styles.root.width : styles.node.width))
-      .attr("height", d => (d.isRoot ? styles.root.height : styles.node.height))
-      .attr("x", d => (d.isRoot ? -styles.root.width / 2 : -styles.node.width / 2))
-      .attr("y", d => (d.isRoot ? -styles.root.height / 2 : -styles.node.height / 2))
-      .attr("rx", d => (d.isRoot ? styles.root.borderRadius : styles.node.borderRadius))
-      .attr("ry", d => (d.isRoot ? styles.root.borderRadius : styles.node.borderRadius))
-      .attr("fill", d => (d.isRoot ? styles.root.fill : styles.node.fill))
-      .attr("stroke", d => (d.isRoot ? styles.root.stroke : styles.node.stroke))
-      .attr("stroke-width", d => (d.isRoot ? 3 : 2));
+      .attr("width", (d) => (d.isRoot ? styles.root.width : styles.node.width))
+      .attr("height", (d) => (d.isRoot ? styles.root.height : styles.node.height))
+      .attr("x", (d) => (d.isRoot ? -styles.root.width / 2 : -styles.node.width / 2))
+      .attr("y", (d) => (d.isRoot ? -styles.root.height / 2 : -styles.node.height / 2))
+      .attr("rx", (d) => (d.isRoot ? styles.root.borderRadius : styles.node.borderRadius))
+      .attr("ry", (d) => (d.isRoot ? styles.root.borderRadius : styles.node.borderRadius))
+      .attr("fill", (d) => (d.isRoot ? styles.root.fill : styles.node.fill))
+      .attr("stroke", (d) => (d.isRoot ? styles.root.stroke : styles.node.stroke))
+      .attr("stroke-width", (d) => (d.isRoot ? 3 : 2));
 
     // Cache for text layout calculations
-    const textLayoutCache = new Map<string, { lines: string[], fontSize: number, totalHeight: number }>();
+    const textLayoutCache = new Map<string, { lines: string[]; fontSize: number; totalHeight: number }>();
 
     function getTextLayout(
       label: string,
@@ -170,7 +167,7 @@ export function useD3Graph() {
       status: string | undefined,
       styles: any,
       textElem: SVGTextElement,
-    ): { lines: string[], fontSize: number, totalHeight: number } {
+    ): { lines: string[]; fontSize: number; totalHeight: number } {
       const cacheKey = JSON.stringify([label, isRoot, status]);
       if (textLayoutCache.has(cacheKey)) {
         return textLayoutCache.get(cacheKey)!;
@@ -229,23 +226,18 @@ export function useD3Graph() {
     node
       .append("text")
       .attr("text-anchor", "middle")
-      .attr("font-weight", d => (d.isRoot ? "bold" : "normal"))
-      .attr("fill", d => (d.isRoot ? styles.root.text : styles.node.text))
+      .attr("font-weight", (d) => (d.isRoot ? "bold" : "normal"))
+      .attr("fill", (d) => (d.isRoot ? styles.root.text : styles.node.text))
       .attr("pointer-events", "none")
       .each(function (d) {
         const text = d3.select(this);
         // Use memoized layout calculation
-        const { lines, fontSize, totalHeight } = getTextLayout(
-          d.label,
-          d.isRoot,
-          d.status,
-          styles,
-          this as SVGTextElement,
-        );
+        const { lines, fontSize, totalHeight } = getTextLayout(d.label, d.isRoot, d.status, styles, this as SVGTextElement);
         text.attr("font-size", `${fontSize}px`);
         text.text("");
         lines.forEach((line, i) => {
-          text.append("tspan")
+          text
+            .append("tspan")
             .attr("x", 0)
             .attr("dy", i === 0 ? "0em" : "1.1em")
             .text(line);
@@ -256,19 +248,20 @@ export function useD3Graph() {
       });
 
     node
-      .filter(d => d.status)
+      .filter((d) => d.status)
       .append("text")
       .text((d) => {
-        const statusLabel = (d.status && d.status in statusApplicationDictionary)
-          ? statusApplicationDictionary[d.status as keyof typeof statusApplicationDictionary]
-          : d.status;
+        const statusLabel =
+          d.status && d.status in statusApplicationDictionary
+            ? statusApplicationDictionary[d.status as keyof typeof statusApplicationDictionary]
+            : d.status;
         return statusLabel || "";
       })
       .attr("text-anchor", "middle")
       .attr("dy", "-1.2em")
       .attr("font-size", "9px")
       .attr("font-style", "italic")
-      .attr("fill", d => (d.isRoot ? styles.root.text : styles.node.text))
+      .attr("fill", (d) => (d.isRoot ? styles.root.text : styles.node.text))
       .attr("opacity", 0.8)
       .attr("pointer-events", "none");
 
@@ -290,12 +283,12 @@ export function useD3Graph() {
 
     simulation.on("tick", () => {
       link
-        .attr("x1", d => (d.source as D3Node).x ?? 0)
-        .attr("y1", d => (d.source as D3Node).y ?? 0)
-        .attr("x2", d => (d.target as D3Node).x ?? 0)
-        .attr("y2", d => (d.target as D3Node).y ?? 0);
+        .attr("x1", (d) => (d.source as D3Node).x ?? 0)
+        .attr("y1", (d) => (d.source as D3Node).y ?? 0)
+        .attr("x2", (d) => (d.target as D3Node).x ?? 0)
+        .attr("y2", (d) => (d.target as D3Node).y ?? 0);
 
-      node.attr("transform", d => `translate(${d.x},${d.y})`);
+      node.attr("transform", (d) => `translate(${d.x},${d.y})`);
     });
 
     function dragstarted(event: d3.D3DragEvent<SVGGElement, D3Node, D3Node>, d: D3Node) {
@@ -323,10 +316,7 @@ export function useD3Graph() {
         d3.select(container).selectAll("*").remove();
       },
       resetZoom: () => {
-        svg
-          .transition()
-          .duration(750)
-          .call(zoom.transform, d3.zoomIdentity);
+        svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
       },
       exportSVG: () => {
         const svgElement = svg.node();
@@ -339,8 +329,8 @@ export function useD3Graph() {
           svgString = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${svgString}`;
         }
 
-        if (!svgString.includes("xmlns=\"http://www.w3.org/2000/svg\"")) {
-          svgString = svgString.replace("<svg", "<svg xmlns=\"http://www.w3.org/2000/svg\"");
+        if (!svgString.includes('xmlns="http://www.w3.org/2000/svg"')) {
+          svgString = svgString.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
         }
 
         const styleElement = `

@@ -10,22 +10,35 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { ApiCreatedResponse, ApiForbiddenResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { AdminLevel } from "src/user/entities/user.entity";
-import { CreateTagDto, TagDto, TagFiltersDto, TagsPaginatedResponseDto, UpdateTagDto } from "./dto/tag.dto";
+import {
+  CreateTagDto,
+  TagDto,
+  TagFiltersDto,
+  TagsPaginatedResponseDto,
+  UpdateTagDto,
+} from "./dto/tag.dto";
 import { TagsService } from "./tags.service";
 
 @ApiTags("Tags")
 @UseGuards(ApplicationGuard)
 @Controller("tags")
 export class TagsController {
-  constructor(
-    private readonly tagsService: TagsService,
-  ) {}
+  constructor(private readonly tagsService: TagsService) {}
 
   @Post()
   @UseGuards(AdminGuard)
@@ -47,9 +60,7 @@ Information requise :
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",
   })
-  create(
-    @Body() createTagDto: CreateTagDto,
-  ) {
+  create(@Body() createTagDto: CreateTagDto) {
     return this.tagsService.create(createTagDto);
   }
 
@@ -59,9 +70,7 @@ Information requise :
   @ApiOkResponse({ description: "Tag trouvé avec succès", type: TagDto })
   @ApiNotFoundResponse({ description: "Tag non trouvé" })
   @ApiParam({ name: "id", description: "ID du tag à trouver" })
-  findOne(
-    @Param("id") id: string,
-  ) {
+  findOne(@Param("id") id: string) {
     return this.tagsService.findOne(id);
   }
 
@@ -85,10 +94,8 @@ Information requise :
     description: "Liste des tags trouvés",
     type: TagsPaginatedResponseDto,
   })
-  findAll(
-    @Query() filters: TagFiltersDto,
-  ) {
-    return this.tagsService.findAll(filters); ;
+  findAll(@Query() filters: TagFiltersDto) {
+    return this.tagsService.findAll(filters);
   }
 
   @Patch(":id")
@@ -101,10 +108,7 @@ Information requise :
   })
   @ApiNotFoundResponse({ description: "Tag non trouvé" })
   @ApiParam({ name: "id", description: "ID du tag à modifier" })
-  update(
-    @Param("id") id: string,
-    @Body() updateTagDto: UpdateTagDto,
-  ) {
+  update(@Param("id") id: string, @Body() updateTagDto: UpdateTagDto) {
     return this.tagsService.update(id, updateTagDto);
   }
 
@@ -119,9 +123,7 @@ Information requise :
   })
   @ApiNotFoundResponse({ description: "Tag non trouvé" })
   @ApiParam({ name: "id", description: "ID du tag à supprimer" })
-  delete(
-    @Param("id") id: string,
-  ) {
+  delete(@Param("id") id: string) {
     return this.tagsService.delete(id);
   }
 }

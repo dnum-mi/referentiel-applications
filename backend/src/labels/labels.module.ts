@@ -10,4 +10,4 @@ import { LabelsService } from "./labels.service";
   providers: [LabelsService],
   exports: [LabelsService],
 })
-export class LabelsModule { }
+export class LabelsModule {}

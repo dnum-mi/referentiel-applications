@@ -10,13 +10,24 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ApiBody, ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import { ActorType } from "@prisma/client";
 import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { AdminLevel } from "src/user/entities/user.entity";
 import { ActorTypeService } from "./actorType.service";
-import { ActorTypeDto, CreateActorTypeDto, PatchActorTypeDto } from "./dto/actorType.dto";
+import {
+  ActorTypeDto,
+  CreateActorTypeDto,
+  PatchActorTypeDto,
+} from "./dto/actorType.dto";
 import { AppPermsDto } from "./dto/app-perms-matrix.dto";
 
 /**
@@ -57,9 +68,7 @@ Vous devez fournir les informations suivantes :
     description: "type d’acteur créé avec succes",
     type: ActorTypeDto,
   })
-  public async create(
-    @Body() CreateActorTypeDto: CreateActorTypeDto,
-  ) {
+  public async create(@Body() CreateActorTypeDto: CreateActorTypeDto) {
     return this.actorTypeService.create(CreateActorTypeDto);
   }
 
@@ -67,7 +76,8 @@ Vous devez fournir les informations suivantes :
   @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
     summary: "Récupérer la matrice des permissions",
-    description: "Cet endpoint permet de récupérer la matrice des permissions pour les types d’acteurs.",
+    description:
+      "Cet endpoint permet de récupérer la matrice des permissions pour les types d’acteurs.",
   })
   @ApiOkResponse({
     type: AppPermsDto,
@@ -94,7 +104,8 @@ Vous devez fournir les informations suivantes :
   })
   @ApiOperation({
     summary: "Récupérer un type d’acteur spécifique par ID",
-    description: "Cet endpoint permet de récupérer les détails complets d'un type d’acteur en fonction de son identifiant unique.",
+    description:
+      "Cet endpoint permet de récupérer les détails complets d'un type d’acteur en fonction de son identifiant unique.",
   })
   public async findOne(@Param("id") id: string): Promise<ActorType> {
     return this.actorTypeService.findOne(id);
@@ -103,7 +114,8 @@ Vous devez fournir les informations suivantes :
   @Patch("/perms-matrix")
   @ApiOperation({
     summary: "Mettre à jour la matrice des permissions",
-    description: "Cet endpoint permet de mettre à jour la matrice des permissions pour les types d’acteurs.",
+    description:
+      "Cet endpoint permet de mettre à jour la matrice des permissions pour les types d’acteurs.",
   })
   @ApiOkResponse({
     type: AppPermsDto,
@@ -113,7 +125,8 @@ Vous devez fournir les informations suivantes :
   @ApiBody({
     type: AppPermsDto,
     isArray: true,
-    description: "Liste des permissions à mettre à jour pour les types d’acteurs",
+    description:
+      "Liste des permissions à mettre à jour pour les types d’acteurs",
   })
   public async updateMatrix(
     @Body() appPermsMatrix: AppPermsDto[],
@@ -125,7 +138,8 @@ Vous devez fournir les informations suivantes :
   @RequiredAdminLevel(AdminLevel.NONE)
   @ApiOperation({
     summary: "Récupérer tous les types d’acteurs",
-    description: "Ce endpoint permet de récupérer la liste de tous les types d’acteurs disponibles.",
+    description:
+      "Ce endpoint permet de récupérer la liste de tous les types d’acteurs disponibles.",
   })
   @ApiOkResponse({
     description: "Liste les types d’acteurs",

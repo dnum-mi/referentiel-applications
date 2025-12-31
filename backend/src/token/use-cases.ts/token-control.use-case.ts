@@ -12,7 +12,9 @@ export const tokenInvalidReason = {
   notActive: "notActive",
 } as const;
 
-export function isTokenInvalid(token?: TokenEntity): keyof typeof tokenInvalidReason | false {
+export function isTokenInvalid(
+  token?: TokenEntity,
+): keyof typeof tokenInvalidReason | false {
   if (!token) {
     return "notFound";
   }
@@ -30,19 +32,26 @@ export function isTokenInvalid(token?: TokenEntity): keyof typeof tokenInvalidRe
 
 export type newTokenInvalidReason = BadRequestException;
 
-export function isNewTokenInvalid(token: Pick<TokenEntity, "expiresAt">): newTokenInvalidReason | false {
+export function isNewTokenInvalid(
+  token: Pick<TokenEntity, "expiresAt">,
+): newTokenInvalidReason | false {
   if (token.expiresAt < new Date()) {
     return new BadRequestException("The expiration date must be in the future");
   }
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() + 1);
   if (token.expiresAt > maxDate) {
-    return new BadRequestException("The expiration date must be less than 1 year");
+    return new BadRequestException(
+      "The expiration date must be less than 1 year",
+    );
   }
   return false;
 }
 
-export function isRequestorAllowedToUpdateToken(token?: TokenEntity, requestor?: Requestor): boolean {
+export function isRequestorAllowedToUpdateToken(
+  token?: TokenEntity,
+  requestor?: Requestor,
+): boolean {
   // first check if the token exists and if the requestor is defined
   if (!token || !requestor?.id) {
     return false;

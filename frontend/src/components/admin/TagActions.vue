@@ -5,13 +5,13 @@ import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
 
 interface BadRequestResponse {
-  error: string
+  error: string;
   message: string[];
   statusCode: number;
 }
 
-const props = defineProps<{ 
-  tag?: TagDto
+const props = defineProps<{
+  tag?: TagDto;
 }>();
 
 const emit = defineEmits<{
@@ -50,7 +50,7 @@ function closeDeleteModal() {
 async function saveTag() {
   isSaving.value = true;
   errorMessage.value = "";
-  
+
   const response = !props.tag?.id
     ? await api.tagsControllerCreate({
         body: {
@@ -68,15 +68,11 @@ async function saveTag() {
     if (response.response.status === 400) {
       const error = response.error as BadRequestResponse;
       errorMessage.value = error.message.join(", ");
-    }
-    else {
+    } else {
       errorMessage.value = "Erreur lors de la sauvegarde du tag";
     }
-  }
-  else {
-    toaster.addSuccessMessage(
-      !props.tag?.id ? "Tag créé avec succès" : "Tag mis à jour avec succès"
-    );
+  } else {
+    toaster.addSuccessMessage(!props.tag?.id ? "Tag créé avec succès" : "Tag mis à jour avec succès");
 
     closeEditModal();
     emit("fetchTags");
@@ -86,14 +82,13 @@ async function saveTag() {
 
 async function deleteTag() {
   if (!props.tag?.id) return;
-  
+
   isDeleting.value = true;
-  
+
   const response = await api.tagsControllerDelete({ path: { id: props.tag.id } });
   if (!response.response.ok) {
     toaster.addErrorMessage("Erreur lors de la suppression du tag");
-  }
-  else {
+  } else {
     toaster.addSuccessMessage("Tag supprimé avec succès");
     closeDeleteModal();
     emit("fetchTags");
@@ -104,14 +99,14 @@ async function deleteTag() {
 
 <template>
   <DsfrButton
-  v-if="!tag?.id"
-      class="fr-btn--icon-left fr-icon-add-line"
-      label="Créer un tag"
-      data-testid="admin-create-tag-btn"
-      title="Créer un nouveau tag"
-      aria-label="Créer un nouveau tag"
-      @click="openEditModal"
-    />
+    v-if="!tag?.id"
+    class="fr-btn--icon-left fr-icon-add-line"
+    label="Créer un tag"
+    data-testid="admin-create-tag-btn"
+    title="Créer un nouveau tag"
+    aria-label="Créer un nouveau tag"
+    @click="openEditModal"
+  />
 
   <div v-else class="button-row">
     <DsfrButton
@@ -140,17 +135,13 @@ async function deleteTag() {
     :data-testid="!tag?.id ? 'admin-create-tag-modal' : 'admin-edit-tag-modal'"
     @close="closeEditModal"
   >
-    <DsfrInputGroup
-      v-model="editingName"
-      class="fr-mb-2w"
-      label="Nom du tag"
-      :error-message="errorMessage"
-      data-testid="tag-name"
-    />
+    <DsfrInputGroup v-model="editingName" class="fr-mb-2w" label="Nom du tag" :error-message="errorMessage" data-testid="tag-name" />
 
     <template #footer>
       <DsfrButton
-        label="Annuler" secondary data-testid="admin-cancel-btn"
+        label="Annuler"
+        secondary
+        data-testid="admin-cancel-btn"
         title="Annuler la modification"
         aria-label="Annuler la modification"
         @click="closeEditModal"
@@ -159,18 +150,17 @@ async function deleteTag() {
         label="Sauvegarder"
         title="Sauvegarder les modifications"
         aria-label="Sauvegarder les modifications"
-        :disabled="isSaving" data-testid="admin-save-perms-btn" @click="saveTag"
+        :disabled="isSaving"
+        data-testid="admin-save-perms-btn"
+        @click="saveTag"
       />
     </template>
   </DsfrModal>
 
-  <DsfrModal
-    :opened="isDeleteModalOpen"
-    title="Supprimer le tag"
-    data-testid="admin-delete-tag-modal"
-    @close="closeDeleteModal"
-  >
-    <p>Êtes-vous sûr de vouloir supprimer le tag <strong>{{ tag?.name }}</strong> ?</p>
+  <DsfrModal :opened="isDeleteModalOpen" title="Supprimer le tag" data-testid="admin-delete-tag-modal" @close="closeDeleteModal">
+    <p>
+      Êtes-vous sûr de vouloir supprimer le tag <strong>{{ tag?.name }}</strong> ?
+    </p>
 
     <template #footer>
       <DsfrButton

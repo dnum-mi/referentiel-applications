@@ -5,9 +5,9 @@ import { useToasterStore } from "@/stores/toasterStore";
 
 const props = withDefaults(
   defineProps<{
-    opened?: boolean
-    context?: "global" | "application"
-    applicationId?: string
+    opened?: boolean;
+    context?: "global" | "application";
+    applicationId?: string;
   }>(),
   {
     opened: false,
@@ -16,7 +16,7 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: "close"): void
+  (e: "close"): void;
 }>();
 
 const toaster = useToasterStore();
@@ -76,12 +76,7 @@ function closeModal() {
 </script>
 
 <template>
-  <DsfrModal
-    :opened="props.opened"
-    :title="title"
-    data-testid="report-anomaly-modal"
-    @close="closeModal"
-  >
+  <DsfrModal :opened="props.opened" :title="title" data-testid="report-anomaly-modal" @close="closeModal">
     <DsfrAlert
       v-show="errorMessage.length > 0"
       class="mb-4"

@@ -1,13 +1,18 @@
 import type { Metadata } from "@prisma/client";
-import type { MetadataFiltersDto, MetadataPaginatedResponseDto } from "../dto/metadata.dto";
+import type {
+  MetadataFiltersDto,
+  MetadataPaginatedResponseDto,
+} from "../dto/metadata.dto";
 
 export interface IMetadataRepository {
-  findAll: (filters?: MetadataFiltersDto & { applicationId?: string }) => Promise<MetadataPaginatedResponseDto>
+  findAll: (
+    filters?: MetadataFiltersDto & { applicationId?: string },
+  ) => Promise<MetadataPaginatedResponseDto>;
 
-  findOne: (id: string) => Promise<Metadata | null>
+  findOne: (id: string) => Promise<Metadata | null>;
 
   findFirstAndLastByApplicationId: (applicationId: string) => Promise<{
-    first: Metadata | null
-    last: Metadata | null
-  }>
+    first: Metadata | null;
+    last: Metadata | null;
+  }>;
 }

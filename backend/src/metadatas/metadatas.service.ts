@@ -4,7 +4,10 @@ import isEqual from "lodash/isEqual";
 import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MetadataTypes } from "../utils/constants.util";
-import { MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
+import {
+  MetadataFiltersDto,
+  MetadataPaginatedResponseDto,
+} from "./dto/metadata.dto";
 import { MetadataRepository } from "./infrastructure/metadata.repository";
 
 @Injectable()
@@ -16,26 +19,28 @@ export class MetadatasService extends BaseService<any> {
     super(prisma.metadata, prisma);
   }
 
-  find(filters?: MetadataFiltersDto & { applicationId?: string }): Promise<MetadataPaginatedResponseDto> {
+  find(
+    filters?: MetadataFiltersDto & { applicationId?: string },
+  ): Promise<MetadataPaginatedResponseDto> {
     return this.metadataRepository.findAll(filters);
   }
 
-  getFirstAndLastMetadata(
-    applicationId: string,
-  ) {
-    return this.metadataRepository.findFirstAndLastByApplicationId(applicationId);
+  getFirstAndLastMetadata(applicationId: string) {
+    return this.metadataRepository.findFirstAndLastByApplicationId(
+      applicationId,
+    );
   }
 
   public async createMetadata<T = any>(options: {
-    applicationId: string
-    createdById: string
-    title: string
-    entity?: string
-    entityId?: string
-    fields?: Record<string, string>
-    type?: keyof typeof MetadataTypes
-    oldData: T
-    newData: T
+    applicationId: string;
+    createdById: string;
+    title: string;
+    entity?: string;
+    entityId?: string;
+    fields?: Record<string, string>;
+    type?: keyof typeof MetadataTypes;
+    oldData: T;
+    newData: T;
   }) {
     const {
       applicationId,
@@ -63,14 +68,17 @@ export class MetadatasService extends BaseService<any> {
       }
 
       if (Array.isArray(value)) {
-        return value.map(item => formattingValue(item));
+        return value.map((item) => formattingValue(item));
       }
 
       if (typeof value === "object") {
-        return Object.keys(value).reduce((acc, key) => {
-          acc[key] = formattingValue(value[key]);
-          return acc;
-        }, {} as Record<string, any>);
+        return Object.keys(value).reduce(
+          (acc, key) => {
+            acc[key] = formattingValue(value[key]);
+            return acc;
+          },
+          {} as Record<string, any>,
+        );
       }
 
       return value;
@@ -97,9 +105,13 @@ export class MetadatasService extends BaseService<any> {
 
     if (type === "add" || type === "delete") {
       if (Object.keys(newValues).length > 0 && type === "add") {
-        descriptionLines.push(`Nouvelle(s) valeur(s) : ${JSON.stringify(formattingValue(newValues))}`);
+        descriptionLines.push(
+          `Nouvelle(s) valeur(s) : ${JSON.stringify(formattingValue(newValues))}`,
+        );
       } else if (type === "delete") {
-        descriptionLines.push(`Valeur(s) supprimée(s) : ${JSON.stringify(formattingValue(oldValues))}`);
+        descriptionLines.push(
+          `Valeur(s) supprimée(s) : ${JSON.stringify(formattingValue(oldValues))}`,
+        );
       }
 
       prismaData = {

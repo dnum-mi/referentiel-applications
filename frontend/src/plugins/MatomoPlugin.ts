@@ -3,37 +3,37 @@ import type { Router } from "vue-router";
 
 declare global {
   interface Window {
-    _paq: any[]
+    _paq: any[];
   }
 }
 
 export interface MatomoOptions {
-  host: string
-  siteId: number
-  trackerFileName?: string
-  trackerScriptUrl?: string
-  trackerUrl?: string
-  router?: Router
-  enableLinkTracking?: boolean
-  enableHeartBeatTimer?: boolean
-  heartBeatTimerInterval?: number
-  disableCookies?: boolean
-  requireConsent?: boolean
-  userId?: string
-  debug?: boolean
+  host: string;
+  siteId: number;
+  trackerFileName?: string;
+  trackerScriptUrl?: string;
+  trackerUrl?: string;
+  router?: Router;
+  enableLinkTracking?: boolean;
+  enableHeartBeatTimer?: boolean;
+  heartBeatTimerInterval?: number;
+  disableCookies?: boolean;
+  requireConsent?: boolean;
+  userId?: string;
+  debug?: boolean;
 }
 
 interface MatomoInstance {
-  trackPageView: (title?: string) => void
-  trackEvent: (category: string, action: string, name?: string, value?: number) => void
-  trackSiteSearch: (keyword: string, category?: string, resultsCount?: number) => void
-  setCustomUrl: (url: string) => void
-  setReferrerUrl: (url: string) => void
-  enableLinkTracking: () => void
+  trackPageView: (title?: string) => void;
+  trackEvent: (category: string, action: string, name?: string, value?: number) => void;
+  trackSiteSearch: (keyword: string, category?: string, resultsCount?: number) => void;
+  setCustomUrl: (url: string) => void;
+  setReferrerUrl: (url: string) => void;
+  enableLinkTracking: () => void;
 }
 
 interface MatomoPluginProperties {
-  $matomo: MatomoInstance
+  $matomo: MatomoInstance;
 }
 
 declare module "@vue/runtime-core" {

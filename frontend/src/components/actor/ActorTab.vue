@@ -13,10 +13,9 @@ import { AdminLevel } from "@/models/user";
 import type { CreateActorDto, Actor } from "@/client/types.gen";
 
 const props = defineProps<{
-  application: ApplicationWithPerms,
-  isMobile?: boolean,
+  application: ApplicationWithPerms;
+  isMobile?: boolean;
 }>();
-
 
 const actorStore = useActorStore();
 const userStore = useUserStore();
@@ -35,12 +34,12 @@ const headers = ["Sélection", "Organisation", "Type", "Email", "Prénom", "Nom"
 
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 function getActorTypeLabel(typeId: string): string {
-  const type = actorTypesList.value.find(t => t.id === typeId);
+  const type = actorTypesList.value.find((t) => t.id === typeId);
   return type ? type.label : "Type inconnu";
 }
 
 const tableRows = computed(() =>
-  actorStore.actors.map(actor => ({
+  actorStore.actors.map((actor) => ({
     id: actor.id,
     Sélection: actor.id,
     Organisation: actor.organizationId ?? undefined,
@@ -73,7 +72,6 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
     }
     await actorStore.fetchActorsByApplication(props.application.id);
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
-    
   } catch (error) {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
     console.error("❌ Erreur handleSaveActors :", error.response?.data || error);
@@ -90,9 +88,8 @@ function removeSelectedActors() {
   showDeleteConfirmation.value = true;
 }
 
-
 async function confirmDelete() {
-  const actorsToDelete = actorStore.actors.filter(actor => selectedActorIds.value.includes(actor.id));
+  const actorsToDelete = actorStore.actors.filter((actor) => selectedActorIds.value.includes(actor.id));
 
   if (actorsToDelete.length === 0) {
     showDeleteConfirmation.value = false;
@@ -100,17 +97,14 @@ async function confirmDelete() {
   }
 
   try {
-    const deletePromises = actorsToDelete.map(actor =>
-      actorStore.deleteActor(actor.id, props.application.id)
-    );
-    
+    const deletePromises = actorsToDelete.map((actor) => actorStore.deleteActor(actor.id, props.application.id));
+
     await Promise.all(deletePromises);
 
     await actorStore.fetchActorsByApplication(props.application.id);
     selectedActorIds.value = [];
     showDeleteConfirmation.value = false;
     toaster.addSuccessMessage("Acteurs supprimés avec succès !");
-
   } catch (error) {
     console.error("❌ Erreur confirmDelete :", error);
     toaster.addErrorMessage("Erreur lors de la suppression d'un ou plusieurs acteurs.");
@@ -121,7 +115,7 @@ function cancelDelete() {
   showDeleteConfirmation.value = false;
 }
 
-function getCardButtons(actor: Actor) { 
+function getCardButtons(actor: Actor) {
   return [
     {
       label: "Modifier",
@@ -153,9 +147,7 @@ function getCardButtons(actor: Actor) {
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="actor-tab">
     <div class="fr-col">
-      <h3 class="fr-mb-0">
-        Gestion des acteurs
-      </h3>
+      <h3 class="fr-mb-0">Gestion des acteurs</h3>
     </div>
     <div class="fr-col-auto">
       <DsfrButton
@@ -213,17 +205,12 @@ function getCardButtons(actor: Actor) {
       >
         <template #cell="{ colKey, cell }">
           <template v-if="colKey === 'Sélection'">
-            <input
-              v-model="selectedActorIds"
-              type="checkbox" :value="cell" :data-testid="`actor-row-select-${cell}`"
-            >
+            <input v-model="selectedActorIds" type="checkbox" :value="cell" :data-testid="`actor-row-select-${cell}`" />
           </template>
 
           <template v-else-if="colKey === 'Organisation'">
             <OrgBreadCrumb v-if="cell" :organization-id="cell"></OrgBreadCrumb>
-            <template v-else>
-              Aucune organisation
-            </template>
+            <template v-else> Aucune organisation </template>
           </template>
 
           <template v-else-if="colKey === 'Email'">
@@ -244,7 +231,12 @@ function getCardButtons(actor: Actor) {
             <DsfrButton
               title="Modifier les informations de l’acteur"
               aria-label="Modifier l’acteur"
-              tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="actor-edit-btn" @click="cell.edit"
+              tertiary
+              size="sm"
+              icon="fr-icon-edit-line"
+              :disabled="!canEdit"
+              data-testid="actor-edit-btn"
+              @click="cell.edit"
             >
               Modifier
             </DsfrButton>
@@ -252,9 +244,7 @@ function getCardButtons(actor: Actor) {
 
           <template v-else-if="colKey === 'Type'">
             <DsfrTag v-if="cell" :label="String(cell)" small class="actor-type-tag" :data-testid="`actor-type-tag-${cell}`"></DsfrTag>
-            <template v-else>
-              Type inconnu
-            </template>
+            <template v-else> Type inconnu </template>
           </template>
 
           <template v-else>
@@ -291,7 +281,12 @@ function getCardButtons(actor: Actor) {
             <OrgBreadCrumb v-if="actor.organizationId" :organization-id="actor.organizationId"></OrgBreadCrumb>
             <span v-else>Aucune organisation</span>
             <div v-if="actor.email" class="fr-mt-1v">
-              <a :href="`mailto:${actor.email}`" data-testid="actor-email-link" :title="`Envoyer un email à ${actor.email}`" :aria-label="`Envoyer un email à ${actor.email}`">
+              <a
+                :href="`mailto:${actor.email}`"
+                data-testid="actor-email-link"
+                :title="`Envoyer un email à ${actor.email}`"
+                :aria-label="`Envoyer un email à ${actor.email}`"
+              >
                 {{ actor.email }}
               </a>
             </div>

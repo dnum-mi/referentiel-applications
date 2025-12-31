@@ -5,13 +5,13 @@ import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index.js";
 
 const props = defineProps<{
-  applicationId: string
-  initialData?: TechnicalDebtInfoDto | null
+  applicationId: string;
+  initialData?: TechnicalDebtInfoDto | null;
 }>();
 
 const emit = defineEmits<{
-  close: []
-  saved: [data: TechnicalDebtInfoDto]
+  close: [];
+  saved: [data: TechnicalDebtInfoDto];
 }>();
 
 const toaster = useToasterStore();
@@ -47,9 +47,7 @@ async function handleSubmit() {
     costMaturity: toNullable(form.value.costMaturity),
   };
 
-  const apiCall = isEditMode.value
-    ? api.applicationTechnicalDebtInfoControllerUpdate
-    : api.applicationTechnicalDebtInfoControllerCreate;
+  const apiCall = isEditMode.value ? api.applicationTechnicalDebtInfoControllerUpdate : api.applicationTechnicalDebtInfoControllerCreate;
 
   const response = await apiCall({ path: { applicationId: props.applicationId }, body });
 
@@ -98,13 +96,7 @@ async function handleSubmit() {
         />
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
-        <DsfrButton
-          type="button"
-          secondary
-          label="Annuler"
-          data-testid="technical-debt-cancel-btn"
-          @click="$emit('close')"
-        />
+        <DsfrButton type="button" secondary label="Annuler" data-testid="technical-debt-cancel-btn" @click="$emit('close')" />
         <DsfrButton
           type="submit"
           :disabled="isSubmitting"

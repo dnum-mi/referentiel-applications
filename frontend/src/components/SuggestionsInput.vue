@@ -3,21 +3,21 @@ import { generateId } from "@/utils/generator-utils";
 import { ref, watch, defineEmits, onBeforeMount } from "vue";
 
 const props = defineProps<{
-  searchData?: Array<{ id: string, label: string }>
-  searchDataFunction?: (query: string) => Promise<Array<{ id: string, label: string }>>
-  returnData: string
-  label: string
-  placeholder: string
+  searchData?: Array<{ id: string; label: string }>;
+  searchDataFunction?: (query: string) => Promise<Array<{ id: string; label: string }>>;
+  returnData: string;
+  label: string;
+  placeholder: string;
 }>();
 
 const emit = defineEmits(["update:returnData"]);
 const inputId = generateId("suggestions-input");
 const searchSuggestion = ref("");
 const isLoading = ref(false);
-const suggestions = ref<Array<{ id: string, label: string }>>([]);
+const suggestions = ref<Array<{ id: string; label: string }>>([]);
 const defaultData = ref(props.returnData);
 
-function selectSuggestion(suggestion: { id: string, label: string }) {
+function selectSuggestion(suggestion: { id: string; label: string }) {
   searchSuggestion.value = suggestion.label;
   emit("update:returnData", suggestion.id);
   suggestions.value = [];
@@ -32,7 +32,7 @@ watch(searchSuggestion, (newValue) => {
         isLoading.value = false;
       });
     } else {
-      suggestions.value = (props.searchData || []).filter(sug => sug?.label?.toLowerCase().includes(newValue.toLowerCase()));
+      suggestions.value = (props.searchData || []).filter((sug) => sug?.label?.toLowerCase().includes(newValue.toLowerCase()));
       isLoading.value = false;
     }
   } else {
@@ -44,14 +44,14 @@ watch(
   () => props.returnData,
   (newValue) => {
     defaultData.value = newValue;
-    const foundSuggestion = (props.searchData || []).find(sug => sug.id === newValue);
+    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === newValue);
     searchSuggestion.value = foundSuggestion?.label ?? "";
   },
 );
 
 onBeforeMount(() => {
   if (defaultData.value) {
-    const foundSuggestion = (props.searchData || []).find(sug => sug.id === defaultData.value);
+    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === defaultData.value);
     foundSuggestion ? (searchSuggestion.value = foundSuggestion.label) : (searchSuggestion.value = "");
   }
 });
@@ -60,16 +60,9 @@ onBeforeMount(() => {
 <template>
   <div data-testid="suggestions-input">
     <label class="fr-label" :for="inputId">{{ props.label }}</label>
-    <DsfrInput
-      :id="inputId"
-      v-model="searchSuggestion"
-      :label="props.label"
-      :placeholder="props.placeholder"
-    />
+    <DsfrInput :id="inputId" v-model="searchSuggestion" :label="props.label" :placeholder="props.placeholder" />
 
-    <div v-if="isLoading" data-testid="suggestions-loading">
-      Chargement ...
-    </div>
+    <div v-if="isLoading" data-testid="suggestions-loading">Chargement ...</div>
 
     <ul v-if="suggestions.length" class="suggestions-list" data-testid="suggestions-list">
       <li

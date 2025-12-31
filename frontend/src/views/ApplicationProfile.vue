@@ -13,7 +13,6 @@ import { useBreakpoints } from "@/composables/use-breakpoint";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import type { ApplicationType } from "@/client";
 
-
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 const metadataStore = useMetadataStore();
@@ -26,7 +25,7 @@ const errorMessage = ref("");
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
 
-const TypeOptions  = computed(() =>
+const TypeOptions = computed(() =>
   Object.entries(typeApplicationDictionary).map(([value, text]) => ({
     value: value as ApplicationType,
     text,
@@ -37,9 +36,7 @@ async function toggleSubscription() {
   isSubscriptionLoading.value = true;
   try {
     if (isSubscribed.value) {
-      
       await userStore.unsubscribeFromApp(id);
-
     } else {
       await userStore.subscribeToApp(id);
     }
@@ -77,14 +74,13 @@ async function loadApplication() {
     if (canReadMetadata.value) {
       await metadataStore.getFirstAndLastMetadataByApplication(id);
     }
-  } catch (err) { 
+  } catch (err) {
     console.error("Failed to load application:", err);
     errorMessage.value = "Impossible de charger les données de l'application.";
   } finally {
     isLoading.value = false;
   }
 }
-
 
 onMounted(() => {
   loadApplication();
@@ -128,14 +124,18 @@ const actions = computed(() => [
       v-else-if="application"
       class="application-profile"
       data-testid="application-profile"
-      style="position: relative; margin: 2rem 1rem;"
+      style="position: relative; margin: 2rem 1rem"
       aria-labelledby="application-title"
     >
       <h1 id="application-title" data-testid="application-title" class="application-title">
         {{ application.label }}
       </h1>
-      
-      <DsfrHighlight v-if="metadataStore.firstMetadata || metadataStore.lastMetadata" class="metadata-highlight" data-testid="application-metadata-highlight">
+
+      <DsfrHighlight
+        v-if="metadataStore.firstMetadata || metadataStore.lastMetadata"
+        class="metadata-highlight"
+        data-testid="application-metadata-highlight"
+      >
         <template #default>
           <div class="metadata-content">
             <p v-if="metadataStore.firstMetadata" class="subtitle" data-testid="application-created-at">
@@ -152,14 +152,16 @@ const actions = computed(() => [
           </div>
         </template>
       </DsfrHighlight>
-        <DsfrButton
-          class="fr-btn--tertiary-no-outline fr-btn--icon-left"
-          :class="isSubscribed ? 'fr-icon-notification-3-fill' : 'fr-icon-notification-3-line'"
-          :disabled="isSubscriptionLoading"
-          @click="toggleSubscription"
-          :title="isSubscribed ? 'Ne plus recevoir de notifications pour cette application' : 'Recevoir des notifications lors des modifications'"
-        >
-          {{ isSubscribed ? 'Abonné(e)' : "S'abonner" }}
+      <DsfrButton
+        class="fr-btn--tertiary-no-outline fr-btn--icon-left"
+        :class="isSubscribed ? 'fr-icon-notification-3-fill' : 'fr-icon-notification-3-line'"
+        :disabled="isSubscriptionLoading"
+        @click="toggleSubscription"
+        :title="
+          isSubscribed ? 'Ne plus recevoir de notifications pour cette application' : 'Recevoir des notifications lors des modifications'
+        "
+      >
+        {{ isSubscribed ? "Abonné(e)" : "S'abonner" }}
       </DsfrButton>
       <div class="status-tags" aria-hidden="false" data-testid="application-tags">
         <DsfrTag
@@ -169,10 +171,7 @@ const actions = computed(() => [
           data-testid="application-status-tag"
         ></DsfrTag>
 
-        <DsfrTag
-          :label="`IQ: ${application.quality ?? 'non renseigné'}%`"
-          data-testid="application-iq-tag"
-        ></DsfrTag>
+        <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" data-testid="application-iq-tag"></DsfrTag>
 
         <DsfrTag
           v-if="application.type"
@@ -187,7 +186,6 @@ const actions = computed(() => [
         @update:application="handleApplicationUpdate"
       ></ApplicationOverview>
 
-
       <DsfrButton
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
         class="application-delete-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
@@ -198,7 +196,7 @@ const actions = computed(() => [
       >
         Supprimer l’application
       </DsfrButton>
-      </div>
+    </div>
 
     <DsfrModal
       :opened="deleteModalOpened"
@@ -216,7 +214,7 @@ const actions = computed(() => [
         class="fr-mb-3w"
         data-testid="application-delete-alert"
       ></DsfrAlert>
-      
+
       <DsfrInput
         v-model="deleteConfirmationInput"
         type="text"
@@ -235,8 +233,6 @@ const actions = computed(() => [
   position: relative;
   padding-bottom: 1rem;
 }
-
-
 
 .subtitle {
   font-weight: 600;
@@ -281,7 +277,8 @@ const actions = computed(() => [
 
 .sr-only {
   position: absolute !important;
-  height: 1px; width: 1px;
+  height: 1px;
+  width: 1px;
   overflow: hidden;
   clip: rect(1px, 1px, 1px, 1px);
   white-space: nowrap;

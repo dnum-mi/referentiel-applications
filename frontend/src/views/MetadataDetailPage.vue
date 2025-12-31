@@ -9,7 +9,6 @@ import type { MetadataDto } from "@/client/types.gen";
 const route = useRoute();
 const router = useRouter();
 
-
 const metadata = ref<MetadataDto | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
@@ -45,7 +44,6 @@ async function fetchMetadata() {
   }
 }
 
-
 const formattedDescription = computed(() => {
   const description = metadata.value?.description || "";
   const lines = description.split("\n");
@@ -63,16 +61,12 @@ const formattedDescription = computed(() => {
         details.push(`${label}:`);
         for (const [key, value] of Object.entries(obj)) {
           const formattedValue = Array.isArray(value)
-            ? (
-                value.every(v => typeof v === "string")
-                  ? value.join(", ")
-                  : value.map(v => v.name).join(", ")
-              )
-            : (
-                typeof value === "object" && value !== null
-                  ? JSON.stringify(value)
-                  : String(value)
-              );
+            ? value.every((v) => typeof v === "string")
+              ? value.join(", ")
+              : value.map((v) => v.name).join(", ")
+            : typeof value === "object" && value !== null
+              ? JSON.stringify(value)
+              : String(value);
 
           details.push(`  • ${key}: ${formattedValue}`);
         }
@@ -85,7 +79,6 @@ const formattedDescription = computed(() => {
   }
   return { title, details };
 });
-
 
 onMounted(() => {
   fetchMetadata();
@@ -102,7 +95,7 @@ onMounted(() => {
       data-testid="back-button"
       title="Retour à la page d'historique"
       aria-label="Retour à la page d'historique"
-      @click="router.push(route.query.from as string);"
+      @click="router.push(route.query.from as string)"
     />
 
     <h1>Détails de la modification</h1>
@@ -115,15 +108,11 @@ onMounted(() => {
       <p>{{ error }}</p>
     </div>
 
-
     <div v-else-if="metadata" class="metadata-details">
       <div class="fr-mb-3w">
         <h2 class="fr-h6">Application</h2>
         <template v-if="metadata.application">
-          <router-link
-            :to="{ name: 'application', params: { id: metadata.applicationId } }"
-            data-testid="metadata-application-link"
-          >
+          <router-link :to="{ name: 'application', params: { id: metadata.applicationId } }" data-testid="metadata-application-link">
             {{ metadata.application.label }}
           </router-link>
         </template>
@@ -137,11 +126,7 @@ onMounted(() => {
 
       <div class="fr-mb-3w">
         <h2 class="fr-h6">Type</h2>
-        <DsfrTag
-          :class="metadata.action"
-          :label="metadataActionLabels[metadata.action]"
-          data-testid="metadata-type"
-        />
+        <DsfrTag :class="metadata.action" :label="metadataActionLabels[metadata.action]" data-testid="metadata-type" />
       </div>
 
       <div class="fr-mb-3w">
@@ -154,11 +139,7 @@ onMounted(() => {
         <div class="metadata-description" data-testid="metadata-description">
           <h3 class="fr-text--lg fr-mb-2w">{{ formattedDescription.title }}</h3>
           <div class="description-details">
-            <p
-              v-for="(detail, index) in formattedDescription.details"
-              :key="index"
-              class="detail-line"
-            >
+            <p v-for="(detail, index) in formattedDescription.details" :key="index" class="detail-line">
               {{ detail }}
             </p>
           </div>
@@ -173,9 +154,18 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.add { background-color: #e6f8ea; color: #1aa779; }
-.update { background-color: #f8f3e6; color: #a7791a; }
-.delete { background-color: #f8e6e6; color: #a71a1a; }
+.add {
+  background-color: #e6f8ea;
+  color: #1aa779;
+}
+.update {
+  background-color: #f8f3e6;
+  color: #a7791a;
+}
+.delete {
+  background-color: #f8e6e6;
+  color: #a71a1a;
+}
 
 .metadata-description {
   background-color: var(--background-alt-grey);
@@ -193,5 +183,4 @@ onMounted(() => {
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
-
 </style>

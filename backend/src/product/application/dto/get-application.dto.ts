@@ -101,7 +101,8 @@ export class CountByIqDto {
 
 export class ApplicationSearchResultDto extends PaginatedResponseDto<ApplicationDto> {
   @ApiProperty({
-    description: "Liste des applications correspondant aux critères de recherche",
+    description:
+      "Liste des applications correspondant aux critères de recherche",
     type: [ApplicationDto],
   })
   results: ApplicationDto[];

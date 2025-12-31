@@ -14,9 +14,9 @@ export function getFullField(
   const value = field.split(".").reduce((obj, key) => obj?.[key], app);
 
   if (
-    typeof value === "string"
-    || typeof value === "number"
-    || typeof value === "boolean"
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
   ) {
     return String(value);
   }
@@ -35,13 +35,13 @@ export function getFullField(
 }
 
 export function mapApplications(apps: ApplicationWithAllRelations[]) {
-  return apps.map(app => ({
+  return apps.map((app) => ({
     id: app.id,
     label: app.label,
     shortName: app.shortName ?? "",
     logo: app.logo ?? "",
     description: app.description,
-    tags: app.tags?.map(tag => tag.name).join(", ") ?? "",
+    tags: app.tags?.map((tag) => tag.name).join(", ") ?? "",
     purposes: app.purposes?.join(", ") ?? "",
     targetPopulations: app.targetPopulations?.join(", ") ?? "",
     priorityRestart: translateEnum(PriorityRestartLabels, app.priorityRestart),
@@ -50,7 +50,7 @@ export function mapApplications(apps: ApplicationWithAllRelations[]) {
 
 export function mapHostings(app: ApplicationWithAllRelations) {
   return (
-    app.hostings?.map(h => ({
+    app.hostings?.map((h) => ({
       applicationId: app.id,
       applicationLabel: app.label,
       label: h.label || "",
@@ -65,7 +65,7 @@ export function mapHostings(app: ApplicationWithAllRelations) {
 
 export function mapActors(app: ApplicationWithAllRelations) {
   return (
-    app.actors?.map(a => ({
+    app.actors?.map((a) => ({
       applicationId: app.id,
       applicationLabel: app.label,
       firstname: a.firstname,
@@ -103,7 +103,7 @@ export function mapCompliances(app: ApplicationWithAllRelations) {
 
 export function mapLabels(app: ApplicationWithAllRelations) {
   return (
-    app.labels?.map(l => ({
+    app.labels?.map((l) => ({
       applicationId: app.id,
       applicationLabel: app.label,
       source: l.source,
@@ -114,7 +114,7 @@ export function mapLabels(app: ApplicationWithAllRelations) {
 
 export function mapExternalResources(app: ApplicationWithAllRelations) {
   return (
-    app.externalRessource?.map(r => ({
+    app.externalRessource?.map((r) => ({
       applicationId: app.id,
       applicationLabel: app.label,
       link: r.link,
@@ -126,7 +126,7 @@ export function mapExternalResources(app: ApplicationWithAllRelations) {
 
 export function mapAnomalyNotifications(app: ApplicationWithAllRelations) {
   return (
-    app.anomalyNotification?.map(n => ({
+    app.anomalyNotification?.map((n) => ({
       applicationId: app.id,
       applicationLabel: app.label,
       description: n.description,
@@ -137,7 +137,7 @@ export function mapAnomalyNotifications(app: ApplicationWithAllRelations) {
 
 export function mapRelationsOut(app: ApplicationWithAllRelations) {
   return (
-    app.relationsAsSource?.map(rel => ({
+    app.relationsAsSource?.map((rel) => ({
       applicationId: app.id,
       applicationLabel: app.label,
       sourceId: app.id,
@@ -150,7 +150,7 @@ export function mapRelationsOut(app: ApplicationWithAllRelations) {
 
 export function mapRelationsIn(app: ApplicationWithAllRelations) {
   return (
-    app.relationsAsTarget?.map(rel => ({
+    app.relationsAsTarget?.map((rel) => ({
       applicationId: app.id,
       applicationLabel: app.label,
       targetId: app.id,

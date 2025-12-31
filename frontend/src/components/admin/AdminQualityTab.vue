@@ -5,9 +5,7 @@ const emit = defineEmits<(e: "recomputeQuality") => void>();
 
 <template>
   <div>
-    <h1 class="fr-h1">
-      Gestion de l'indice de qualité
-    </h1>
+    <h1 class="fr-h1">Gestion de l'indice de qualité</h1>
     <DsfrButton
       :label="props.loading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
       :icon="{ name: 'ri-refresh-line', animation: props.loading ? 'spin' : undefined }"

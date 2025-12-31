@@ -7,18 +7,18 @@ import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 
 export interface RelationRow {
-  id: string
-  Sélection: string
-  "Application Source": string
-  Relation: string
+  id: string;
+  Sélection: string;
+  "Application Source": string;
+  Relation: string;
   "Application Cible": {
-    label: string
-    id: string | undefined
-  }
+    label: string;
+    id: string | undefined;
+  };
   Actions: {
-    edit: () => void
-    delete: () => void
-  }
+    edit: () => void;
+    delete: () => void;
+  };
 }
 
 export function useRelationManager(applicationId: string) {
@@ -35,7 +35,7 @@ export function useRelationManager(applicationId: string) {
 
   const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Actions"];
 
-  const relationTypes: Record<RelationType, { source: string, target: string }> = {
+  const relationTypes: Record<RelationType, { source: string; target: string }> = {
     [RelationType.IS_PART_OF]: { source: "Fait partie de", target: "A comme sous‑élément" },
     [RelationType.IN_REPLACEMENT_OF]: { source: "Remplace", target: "est remplacé par" },
     [RelationType.IS_SERVICE_USER_OF]: { source: "Utilise le service de", target: "Fournit le service à" },
@@ -89,9 +89,13 @@ export function useRelationManager(applicationId: string) {
 
   async function confirmDelete() {
     try {
-      await Promise.all(selectedRelationIds.value.map(id => api.relationControllerDelete({
-        path: { applicationId, id },
-      })));
+      await Promise.all(
+        selectedRelationIds.value.map((id) =>
+          api.relationControllerDelete({
+            path: { applicationId, id },
+          }),
+        ),
+      );
 
       await store.fetchRelationsByApplication(applicationId);
       selectedRelationIds.value = [];

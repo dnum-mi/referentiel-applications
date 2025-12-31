@@ -23,7 +23,7 @@ function toggleCompliance(value: ComplianceType, checked: boolean) {
           :checked="filters.compliance__in?.includes(option)"
           :data-testid="`compliance-option-${option}`"
           @change="(e) => toggleCompliance(option, (e.target as HTMLInputElement).checked)"
-        >
+        />
         {{ option.toUpperCase() }}
       </label>
     </div>

@@ -4,8 +4,8 @@ import { routeNames } from "@/router/route-names";
 import { useUserStore } from "@/stores/userStore.js";
 
 interface SkipLink {
-  text: string
-  to: { name: string }
+  text: string;
+  to: { name: string };
 }
 const userStore = useUserStore();
 

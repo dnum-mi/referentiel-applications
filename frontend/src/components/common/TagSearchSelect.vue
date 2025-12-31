@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import type { TagDto } from '@/client';
-import api from '@/api';
+import type { TagDto } from "@/client";
+import api from "@/api";
 
-  const props = withDefaults(defineProps<{
-    tags?: string[]
-  }>(), {
-    tags: () => []
-  });
+const props = withDefaults(
+  defineProps<{
+    tags?: string[];
+  }>(),
+  {
+    tags: () => [],
+  },
+);
 
 const emit = defineEmits<{
-  'update:tags': [value: string[]]
+  "update:tags": [value: string[]];
 }>();
 
 interface TagsPaginatedResponse {
@@ -17,8 +20,8 @@ interface TagsPaginatedResponse {
   total: number;
 }
 
-async function getTagsOptions(query: string){
-  const response = await api.tagsControllerFindAll({ 
+async function getTagsOptions(query: string) {
+  const response = await api.tagsControllerFindAll({
     query: {
       name: query.trim(),
       page: 0,
@@ -41,19 +44,16 @@ function addTag(selection: TagDto) {
 }
 
 function removeTag(index: number) {
-  emit("update:tags", props.tags.filter((_, i) => i !== index));
+  emit(
+    "update:tags",
+    props.tags.filter((_, i) => i !== index),
+  );
 }
-
 </script>
 <template>
   <ul class="fr-tags-group" data-testid="info-tags">
     <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
-      <DsfrTag
-        :label="tag"
-        selectable
-        @click.stop.prevent="removeTag(index)"
-        class="fr-tag--dismiss"
-      />
+      <DsfrTag :label="tag" selectable @click.stop.prevent="removeTag(index)" class="fr-tag--dismiss" />
     </li>
   </ul>
   <AccessibleAutocomplete

@@ -9,9 +9,7 @@ import { ITagRepository } from "./tag.repository.interface";
 
 @Injectable()
 export class TagRepository implements ITagRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   public async create(tag: CreateTagDto) {
     return await this.prisma.tag.create({
@@ -19,7 +17,9 @@ export class TagRepository implements ITagRepository {
     });
   }
 
-  public async findAll(filters: TagFiltersDto): Promise<PaginatedResponseDto<Tag>> {
+  public async findAll(
+    filters: TagFiltersDto,
+  ): Promise<PaginatedResponseDto<Tag>> {
     const where: Prisma.TagWhereInput = filters.name
       ? { name: { startsWith: filters.name, mode: "insensitive" } }
       : {};
@@ -30,7 +30,8 @@ export class TagRepository implements ITagRepository {
 
     if (filters.sortBy) {
       const sortField = filters.sortBy === "createdAt" ? "createdAt" : "name";
-      const sortOrder: Prisma.SortOrder = filters.order === "desc" ? "desc" : "asc";
+      const sortOrder: Prisma.SortOrder =
+        filters.order === "desc" ? "desc" : "asc";
 
       orderBy = {
         [sortField]: sortOrder,
@@ -57,13 +58,12 @@ export class TagRepository implements ITagRepository {
   }
 
   public async findByNames(tagNames: string[]) {
-    return tagNames ? await this.prisma.tag.findMany({ where: { name: { in: tagNames } } }) : [];
+    return tagNames
+      ? await this.prisma.tag.findMany({ where: { name: { in: tagNames } } })
+      : [];
   }
 
-  public async update(
-    id: string,
-    tag: UpdateTagDto,
-  ) {
+  public async update(id: string, tag: UpdateTagDto) {
     return await this.prisma.tag.update({
       where: { id },
       data: tag,

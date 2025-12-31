@@ -17,10 +17,14 @@ const columnToFieldMap: Record<string, string> = {
   Tags: "tag",
 };
 
-watch([sortBy, sortedDesc], ([col, desc]) => {
-  const sortField = columnToFieldMap[col || "label"] || col || "label";
-  setFilter({ sortBy: sortField, order: desc ? "desc" : "asc" });
-}, { flush: "post" });
+watch(
+  [sortBy, sortedDesc],
+  ([col, desc]) => {
+    const sortField = columnToFieldMap[col || "label"] || col || "label";
+    setFilter({ sortBy: sortField, order: desc ? "desc" : "asc" });
+  },
+  { flush: "post" },
+);
 
 const rows = computed(() =>
   results.value.map((app: any) => ({
@@ -28,10 +32,13 @@ const rows = computed(() =>
     Nom: app,
     Priorité: app,
     Hébergement: {
-      hosting: app.hostings?.map((h: any) => {
-        const parts = [h.hostingOption?.site || h.site, h.hostingOption?.building, h.hostingOption?.room].filter(Boolean);
-        return parts.length ? parts.join(" - ") : "-";
-      }).join(", ") || "-",
+      hosting:
+        app.hostings
+          ?.map((h: any) => {
+            const parts = [h.hostingOption?.site || h.site, h.hostingOption?.building, h.hostingOption?.room].filter(Boolean);
+            return parts.length ? parts.join(" - ") : "-";
+          })
+          .join(", ") || "-",
     },
     Tags: { tags: app.tags?.map((tag: any) => tag.name).join(", ") || "-" },
   })),

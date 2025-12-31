@@ -1,10 +1,10 @@
 import { registerAs } from "@nestjs/config";
 
 export interface KeycloakConfig {
-  jwksUrl: string
-  baseUrl: string
-  realm: string
-  clientId: string
+  jwksUrl: string;
+  baseUrl: string;
+  realm: string;
+  clientId: string;
 }
 
 export default registerAs("keycloak", (): KeycloakConfig => {

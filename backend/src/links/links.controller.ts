@@ -10,12 +10,25 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { ApplicationService } from "src/product/application.service";
 import { UserId } from "../common/decorators/user-id.decorator";
-import { CreateLinkDto, LinkDto, LinkFiltersDto, LinksPaginatedResponseDto, UpdateLinkDto } from "./dto/links.dto";
+import {
+  CreateLinkDto,
+  LinkDto,
+  LinkFiltersDto,
+  LinksPaginatedResponseDto,
+  UpdateLinkDto,
+} from "./dto/links.dto";
 import { LinksService } from "./links.service";
 
 @ApiTags("Links")
@@ -102,7 +115,7 @@ export class ApplicationLinksController {
         type: "type",
         description: "description",
       },
-      getName: entity => entity.link,
+      getName: (entity) => entity.link,
       triggerQualityUpdate: true,
     });
   }

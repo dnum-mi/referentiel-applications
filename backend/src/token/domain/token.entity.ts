@@ -19,4 +19,7 @@ export class ExposedTokenEntity extends TokenEntity {
   password: string;
 }
 
-export type NewTokenEntity = Pick<TokenEntity, "name" | "description" | "expiresAt" | "adminLevel">;
+export type NewTokenEntity = Pick<
+  TokenEntity,
+  "name" | "description" | "expiresAt" | "adminLevel"
+>;

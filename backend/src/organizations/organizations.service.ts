@@ -23,22 +23,21 @@ export class OrganizationsService extends BaseService<Organization> {
 
   async find(filters: OrganizationFilterDto): Promise<Organization[]> {
     if (filters.search) {
-      const where: { AND: Prisma.OrganizationWhereInput[] } = { AND: [
-        {
-          OR: [
-            { path: { contains: filters.search, mode: "insensitive" } },
-            { sigle: { contains: filters.search, mode: "insensitive" } },
-            { url: { contains: filters.search, mode: "insensitive" } },
-          ],
-        },
-      ] };
+      const where: { AND: Prisma.OrganizationWhereInput[] } = {
+        AND: [
+          {
+            OR: [
+              { path: { contains: filters.search, mode: "insensitive" } },
+              { sigle: { contains: filters.search, mode: "insensitive" } },
+              { url: { contains: filters.search, mode: "insensitive" } },
+            ],
+          },
+        ],
+      };
 
       if (filters.usedOnly) {
         where.AND.push({
-          OR: [
-            { actors: { some: {} } },
-            { users: { some: {} } },
-          ],
+          OR: [{ actors: { some: {} } }, { users: { some: {} } }],
         });
       }
 
@@ -72,11 +71,13 @@ export class OrganizationsService extends BaseService<Organization> {
       select: { ancestor: true, descendant: true },
     });
 
-    return Object.values(closures.reduce((acc, relation) => {
-      acc[relation.ancestor.id] = relation.ancestor;
-      acc[relation.descendant.id] = relation.descendant;
-      return acc;
-    }, {}));
+    return Object.values(
+      closures.reduce((acc, relation) => {
+        acc[relation.ancestor.id] = relation.ancestor;
+        acc[relation.descendant.id] = relation.descendant;
+        return acc;
+      }, {}),
+    );
   }
 
   async update(

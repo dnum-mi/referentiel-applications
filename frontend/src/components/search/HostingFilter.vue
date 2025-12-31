@@ -37,14 +37,15 @@ function getFilteredOptions(excludeField: HostingField) {
 function createOptions(field: HostingField, defaultLabel: string) {
   return computed(() => {
     const options = getFilteredOptions(field);
-    const values = [...new Set(options.map(o => o[field]).filter(Boolean))].sort() as string[];
-    return [{ value: "", text: defaultLabel }, ...values.map(v => ({ value: v, text: v }))];
+    const values = [...new Set(options.map((o) => o[field]).filter(Boolean))].sort() as string[];
+    return [{ value: "", text: defaultLabel }, ...values.map((v) => ({ value: v, text: v }))];
   });
 }
 
-const optionsMap = Object.fromEntries(
-  hostingFields.map(({ field, label }) => [field, createOptions(field, label)]),
-) as Record<HostingField, ReturnType<typeof createOptions>>;
+const optionsMap = Object.fromEntries(hostingFields.map(({ field, label }) => [field, createOptions(field, label)])) as Record<
+  HostingField,
+  ReturnType<typeof createOptions>
+>;
 
 function updateFilter(filterKey: FilterKey, value: string) {
   setFilter({ [filterKey]: value || undefined, page: 0 } as Partial<Filters>);

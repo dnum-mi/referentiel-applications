@@ -33,10 +33,10 @@ const versionLink = computed(() => ({
 }));
 
 interface QuickLink {
-  label: string
-  to: { name: string } | string
-  icon?: string
-  iconAttrs?: Record<string, string>
+  label: string;
+  to: { name: string } | string;
+  icon?: string;
+  iconAttrs?: Record<string, string>;
 }
 
 if (getAuthentication().authenticated) {
@@ -80,18 +80,22 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
 const loginRedirectUrl = ref<string>("");
 const operatorImgSrc = "/assets/logotitle2.svg";
 const operatorImgAlt = "Ministère de l’intérieur - Référentiel des Applications";
-getAuthentication().createLoginUrl({
-  redirectUri: window.location.href,
-}).then((url) => {
-  loginRedirectUrl.value = url;
-});
+getAuthentication()
+  .createLoginUrl({
+    redirectUri: window.location.href,
+  })
+  .then((url) => {
+    loginRedirectUrl.value = url;
+  });
 
-const unauthenticatedQuickLinks = computed<QuickLink[]>(() => ([{
-  label: "Se connecter",
-  to: loginRedirectUrl.value,
-  icon: "ri-lock-line",
-  iconAttrs: { title: "Se connecter" },
-}]));
+const unauthenticatedQuickLinks = computed<QuickLink[]>(() => [
+  {
+    label: "Se connecter",
+    to: loginRedirectUrl.value,
+    icon: "ri-lock-line",
+    iconAttrs: { title: "Se connecter" },
+  },
+]);
 
 const quickLinks = computed<QuickLink[]>(() => {
   if (!userStore.authenticated) {
@@ -109,9 +113,7 @@ const baseNavItems = [
 ];
 
 const publicNavItems = computed(() => {
-  const items: Array<any> = [
-    { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
-  ];
+  const items: Array<any> = [{ to: { name: routeNames.ACCUEIL }, text: "Accueil" }];
 
   if (loginRedirectUrl.value) {
     items.push({ href: loginRedirectUrl.value, text: "Se connecter" });
@@ -131,13 +133,12 @@ const homeTo = "/applications";
 const operatorTo = "/applications";
 const ecosystemLinks = computed(() => {
   const links = [
-    { label: "Cadre de Cohérence Technique (CCT)", 
+    {
+      label: "Cadre de Cohérence Technique (CCT)",
       title: "Aller au Cadre de Cohérence Technique (CCT)",
-      href: "http://cct.sg.minint.fr/accueil/Accueil.html" 
+      href: "http://cct.sg.minint.fr/accueil/Accueil.html",
     },
-    { label: "Code source", 
-      title: "Aller au code source de l'application",
-      href: "http://github.com/dnum-mi/referentiel-applications" },
+    { label: "Code source", title: "Aller au code source de l'application", href: "http://github.com/dnum-mi/referentiel-applications" },
     {
       label: "Api du référentiel",
       title: "Aller à la documentation de l'API du référentiel",
@@ -150,12 +151,8 @@ const ecosystemLinks = computed(() => {
   return links;
 });
 const mandatoryLinks = computed(() => [
-  { label: "Accessibilité : non conforme", 
-    title: "Aller à la page d'accessibilité",
-  to: "accessibilite" },
-  { label: "Plan du site", 
-    title: "Aller au plan du site",
-   to: "plan-du-site" },
+  { label: "Accessibilité : non conforme", title: "Aller à la page d'accessibilité", to: "accessibilite" },
+  { label: "Plan du site", title: "Aller au plan du site", to: "plan-du-site" },
   {
     label: "Contact Tchap",
     title: "Aller au contact Tchap",
@@ -218,38 +215,35 @@ function close() {
       <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
     </template>
   </DsfrHeader>
-      <DsfrNotice
-      v-if="!isClosed"
-      closeable
-      title="questionnaire utilisateur"
-      @close="closeNotice"
-    >
-      Merci de contribuer à l’amélioration du Référentiel des Applications en répondant à notre
-      <a
-        href="https://grist.numerique.gouv.fr/o/retourutilisateur/forms/oJTuNbEchqS9ymzhzCXubN/4"
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        questionnaire utilisateur
-      </a>
-    </DsfrNotice>
+  <DsfrNotice v-if="!isClosed" closeable title="questionnaire utilisateur" @close="closeNotice">
+    Merci de contribuer à l’amélioration du Référentiel des Applications en répondant à notre
+    <a href="https://grist.numerique.gouv.fr/o/retourutilisateur/forms/oJTuNbEchqS9ymzhzCXubN/4" rel="noopener noreferrer" target="_blank">
+      questionnaire utilisateur
+    </a>
+  </DsfrNotice>
   <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content">
     <RouterView :key="route.params.id" />
   </div>
 
   <DsfrFooter
-  :logo-text="logoText"
-  :operator-img-src="operatorImgSrc"
-  :operator-img-alt="operatorImgAlt"
-  :home-to="homeTo"
-  :ecosystem-links="ecosystemLinks"
-  :mandatory-links="mandatoryLinks"
-  :after-mandatory-links="afterMandatoryLinks"
-  :operator-to="operatorTo"
-  data-testid="footer"
-/>
+    :logo-text="logoText"
+    :operator-img-src="operatorImgSrc"
+    :operator-img-alt="operatorImgAlt"
+    :home-to="homeTo"
+    :ecosystem-links="ecosystemLinks"
+    :mandatory-links="mandatoryLinks"
+    :after-mandatory-links="afterMandatoryLinks"
+    :operator-to="operatorTo"
+    data-testid="footer"
+  />
 
-  <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" data-testid="pwa-reload-prompt" @close="close" @update-service-worker="updateServiceWorker" />
+  <ReloadPrompt
+    :offline-ready="offlineReady"
+    :need-refresh="needRefresh"
+    data-testid="pwa-reload-prompt"
+    @close="close"
+    @update-service-worker="updateServiceWorker"
+  />
 
   <AppToaster :messages="toaster.messages" data-testid="toast-container" @close-message="toaster.removeMessage($event)" />
 </template>

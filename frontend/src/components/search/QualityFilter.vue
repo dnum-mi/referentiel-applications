@@ -28,7 +28,7 @@ function updateMax(value: string) {
 <template>
   <div data-testid="quality-filter">
     <legend class="fr-label fr-mb-2w">
-      Indice de qualité<br>
+      Indice de qualité<br />
       <small>entre {{ filters.iqGte ?? 0 }}% et {{ filters.iqLte ?? 100 }}%</small>
     </legend>
     <DsfrInputGroup>

@@ -1,17 +1,15 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-} from "@nestjs/common";
+import { CanActivate, ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { AdminLevel, Requestor, UserCapabilities } from "src/user/entities/user.entity";
+import {
+  AdminLevel,
+  Requestor,
+  UserCapabilities,
+} from "src/user/entities/user.entity";
 import { USER_CAPABILITY_KEY } from "../decorators/user-capability.decorator";
 
 @Injectable()
 export class UserCapabilityGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-  ) { }
+  constructor(private readonly reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const action = this.reflector.get<string>(
@@ -30,6 +28,9 @@ export class UserCapabilityGuard implements CanActivate {
       return true;
     }
 
-    return user?.capabilities?.includes(action as keyof typeof UserCapabilities) || false;
+    return (
+      user?.capabilities?.includes(action as keyof typeof UserCapabilities) ||
+      false
+    );
   }
 }

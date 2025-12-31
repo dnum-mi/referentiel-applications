@@ -7,9 +7,9 @@ import { useApplicationSearch } from "@/composables/use-application-search";
 
 const props = withDefaults(
   defineProps<{
-    opened?: boolean
-    title: string
-    relation: RelationDto | null
+    opened?: boolean;
+    title: string;
+    relation: RelationDto | null;
   }>(),
   {
     opened: false,
@@ -17,8 +17,8 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: "close"): void
-  (e: "updateRelation", updatedRelation: RelationDto): void
+  (e: "close"): void;
+  (e: "updateRelation", updatedRelation: RelationDto): void;
 }>();
 const { searchApplications } = useApplicationSearch();
 const searchText = ref("");
@@ -47,10 +47,13 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading.value = true;
     try {
-      const response = await searchApplications({
-        search: query,
-        pageSize: 10,
-      }, false);
+      const response = await searchApplications(
+        {
+          search: query,
+          pageSize: 10,
+        },
+        false,
+      );
       suggestions.value = response.results || [];
     } catch (error) {
       console.error(error);
@@ -173,9 +176,7 @@ function closeModal() {
         placeholder="Tapez au moins 3 caractères"
         data-testid="edit-relation-search-input"
       />
-      <div v-if="isLoading" data-testid="edit-relation-loading">
-        Chargement...
-      </div>
+      <div v-if="isLoading" data-testid="edit-relation-loading">Chargement...</div>
       <ul v-if="suggestions.length" class="suggestions-list" data-testid="edit-relation-suggestions">
         <li v-for="app in suggestions" :key="app.id" class="suggestion-item">
           <button

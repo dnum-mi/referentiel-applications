@@ -120,7 +120,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
         source: "source",
         value: "valeur",
       },
-      getName: entity => entity.value,
+      getName: (entity) => entity.value,
     });
   }
 

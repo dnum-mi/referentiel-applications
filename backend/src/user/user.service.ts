@@ -9,9 +9,7 @@ import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOrCreateByEmail(
     email: string,
@@ -106,16 +104,23 @@ export class UserService {
     });
   }
 
-  async updateOwnPreferences(id: string, UpdateUserPreferencesDto: UpdateUserPreferencesDto) {
+  async updateOwnPreferences(
+    id: string,
+    UpdateUserPreferencesDto: UpdateUserPreferencesDto,
+  ) {
     return this.prisma.user.update({
       where: { id },
       data: {
-        emailNotificationsEnabled: UpdateUserPreferencesDto.emailNotificationsEnabled,
+        emailNotificationsEnabled:
+          UpdateUserPreferencesDto.emailNotificationsEnabled,
       },
     });
   }
 
-  async findAll(filters: UserFilterDto, requestor: Requestor): Promise<PaginatedResponseDto<User>> {
+  async findAll(
+    filters: UserFilterDto,
+    requestor: Requestor,
+  ): Promise<PaginatedResponseDto<User>> {
     const where: Prisma.UserWhereInput = {};
 
     where.type = { in: filters.type };

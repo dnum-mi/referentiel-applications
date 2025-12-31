@@ -8,7 +8,7 @@ import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
-import { useRoute } from 'vue-router';
+import { useRoute } from "vue-router";
 
 const route = useRoute();
 const props = defineProps<{ application: ApplicationWithPerms }>();
@@ -26,8 +26,7 @@ const activeAccordion = ref<number>();
 const userStore = useUserStore();
 
 const canPost = computed(() => {
-  return props.application.myPerms.has("postAnomalyNotifications")
-    || userStore.adminLevel >= AdminLevel.WRITE;
+  return props.application.myPerms.has("postAnomalyNotifications") || userStore.adminLevel >= AdminLevel.WRITE;
 });
 
 async function fetchIssues() {
@@ -72,12 +71,12 @@ async function submitCorrection() {
 }
 
 function getTitle(meta: any): string {
-  return (meta.description || '').split('\n')[0];
+  return (meta.description || "").split("\n")[0];
 }
 
 const rows = computed(() => {
   const title = "Signalement";
-  const reports = (issues.value.results).map((report: AnomalyNotificationDto) => ({
+  const reports = issues.value.results.map((report: AnomalyNotificationDto) => ({
     sortKey: new Date(report.createdAt).getTime(),
     Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
     Auteur: report.notifier?.email || "Inconnu",
@@ -114,12 +113,7 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
   </div>
 
   <DsfrAccordionsGroup v-else v-model="activeAccordion">
-    <DsfrDataTable
-      :headers-row="headers"
-      :rows="rows"
-      title="Liste des signalements et modifications"
-      data-testid="notifications-table"
-    >
+    <DsfrDataTable :headers-row="headers" :rows="rows" title="Liste des signalements et modifications" data-testid="notifications-table">
       <template #cell="{ colKey, cell }">
         <template v-if="colKey === 'Actions' && (cell as any).isMetadata">
           <router-link
@@ -139,8 +133,19 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
       :total-filtered="issues.total"
       :limit="pageSize"
       :page="currentPage"
-      @update:limit="val => { pageSize = val; currentPage = 0; fetchIssues(); }"
-      @update:page="val => { currentPage = val; fetchIssues(); }"
+      @update:limit="
+        (val) => {
+          pageSize = val;
+          currentPage = 0;
+          fetchIssues();
+        }
+      "
+      @update:page="
+        (val) => {
+          currentPage = val;
+          fetchIssues();
+        }
+      "
     />
   </DsfrAccordionsGroup>
   <div v-if="canPost" data-testid="notifications-report-issue">

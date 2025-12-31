@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
-import { IsDateString, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import {
+  IsDateString,
+  IsOptional,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from "class-validator";
 import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 import { Tag } from "../entities/tag.entity";
 
@@ -9,8 +16,12 @@ export class CreateTagDto {
     example: "securite",
     required: true,
   })
-  @MinLength(2, { message: "Le nom du tag doit contenir au moins 2 caractères." })
-  @MaxLength(128, { message: "Le nom du tag doit contenir au maximum 128 caractères." })
+  @MinLength(2, {
+    message: "Le nom du tag doit contenir au moins 2 caractères.",
+  })
+  @MaxLength(128, {
+    message: "Le nom du tag doit contenir au maximum 128 caractères.",
+  })
   @IsString()
   name: string;
 }
@@ -27,10 +38,15 @@ export class TagDto {
     example: "securite",
     required: true,
   })
-  @MinLength(2, { message: "Le nom du tag doit contenir au moins 2 caractères." })
-  @MaxLength(128, { message: "Le nom du tag doit contenir au maximum 128 caractères." })
+  @MinLength(2, {
+    message: "Le nom du tag doit contenir au moins 2 caractères.",
+  })
+  @MaxLength(128, {
+    message: "Le nom du tag doit contenir au maximum 128 caractères.",
+  })
   @Matches(/^[a-z._-]+$/, {
-    message: "Le nom du tag ne peut contenir que des minuscules, ou les caractères '.', '_' et '-'",
+    message:
+      "Le nom du tag ne peut contenir que des minuscules, ou les caractères '.', '_' et '-'",
   })
   @IsString()
   name: string;

@@ -37,7 +37,7 @@ async function fetchQuality() {
 
 function hasActorType(typeCode: string): boolean {
   return actorStore.actors.some((actor) => {
-    const type = actorTypesList.value.find(t => t.id === actor.actorTypeId);
+    const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
     return type?.code === typeCode;
   });
 }
@@ -64,7 +64,7 @@ function hasCompliance(complianceType: string): boolean {
 }
 
 function hasLink(linkValue: string): boolean {
-  return linkStore.links.some(l => l.link?.toLowerCase().includes(linkValue.toLowerCase()));
+  return linkStore.links.some((l) => l.link?.toLowerCase().includes(linkValue.toLowerCase()));
 }
 
 // To refactor later
@@ -110,16 +110,18 @@ onMounted(async () => {
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
     <div class="fr-col">
-      <h2 class="fr-mb-0" data-testid="quality-title">
-        Informations de qualité
-      </h2>
+      <h2 class="fr-mb-0" data-testid="quality-title">Informations de qualité</h2>
     </div>
   </div>
   <AppLoader v-if="loading" data-testid="quality-loader" />
   <div v-else class="fr-grid-row fr-grid-row--gutters">
     <div class="fr-col-12 fr-col-md-4" data-testid="quality-general">
       <h4>Général</h4>
-      <DsfrHighlight data-testid="quality-description" :color="!!props.application.description ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+      <DsfrHighlight
+        data-testid="quality-description"
+        :color="!!props.application.description ? 'green-emeraude' : 'yellow-tournesol'"
+        :small="true"
+      >
         Description : {{ !!props.application.description ? "oui" : "non" }}
       </DsfrHighlight>
       <DsfrHighlight data-testid="quality-hosting" :color="hostings.length > 0 ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
@@ -172,9 +174,7 @@ onMounted(async () => {
     </div>
   </div>
 
-  <DsfrHighlight :large="true" data-testid="quality-index">
-    INDICE QUALITE: {{ props.application.quality ?? 0 }}%
-  </DsfrHighlight>
+  <DsfrHighlight :large="true" data-testid="quality-index"> INDICE QUALITE: {{ props.application.quality ?? 0 }}% </DsfrHighlight>
 </template>
 
 <style scoped></style>

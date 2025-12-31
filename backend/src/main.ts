@@ -35,6 +35,8 @@ async function bootstrap() {
   setupGlobalValidation(app);
 
   await app.listen(appConfig.port, appConfig.host);
-  globalLogger.log(`Application is running on: http://${appConfig.host}:${appConfig.port}`);
+  globalLogger.log(
+    `Application is running on: http://${appConfig.host}:${appConfig.port}`,
+  );
 }
 bootstrap();

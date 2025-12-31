@@ -1,6 +1,6 @@
 export const RelationTypeLabelsBidirectional: Record<
   string,
-  { source: string, target: string }
+  { source: string; target: string }
 > = {
   is_part_of: {
     source: "Fait partie de",

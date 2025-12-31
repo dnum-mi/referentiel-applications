@@ -44,21 +44,13 @@ const unsubscribe = async (appId: string) => {
           <td colspan="2">Aucune application suivie</td>
         </tr>
 
-        <tr
-          v-for="app in userStore.user.followedApplications"
-          :key="app.id"
-          class="fr-mb-1w"
-        >
-          <th scope="row" style="width: 100%;">
-            <RouterLink
-              :to="{ name: 'application', params: { id: app.id } }"
-              class="fr-link"
-            >
+        <tr v-for="app in userStore.user.followedApplications" :key="app.id" class="fr-mb-1w">
+          <th scope="row" style="width: 100%">
+            <RouterLink :to="{ name: 'application', params: { id: app.id } }" class="fr-link">
               {{ app.label }}
             </RouterLink>
-
           </th>
-          <td style="white-space: nowrap;">
+          <td style="white-space: nowrap">
             <DsfrButton
               class="fr-btn--secondary fr-btn--sm"
               :disabled="isUpdating"

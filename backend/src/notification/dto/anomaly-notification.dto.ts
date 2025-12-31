@@ -21,7 +21,10 @@ export class AnomalyNotificationDto {
   @IsString()
   notifierId: string;
 
-  @ApiProperty({ type: Notifier, description: "The user who reported the issue" })
+  @ApiProperty({
+    type: Notifier,
+    description: "The user who reported the issue",
+  })
   notifier: Notifier;
 
   @IsString()
@@ -49,6 +52,9 @@ export class AnomalyNotificationDto {
 }
 
 export class AnomalyNotificationPaginatedResponseDto extends PaginatedResponseDto<AnomalyNotificationDto> {
-  @ApiProperty({ type: [AnomalyNotificationDto], description: "Array of metadata" })
+  @ApiProperty({
+    type: [AnomalyNotificationDto],
+    description: "Array of metadata",
+  })
   results: AnomalyNotificationDto[];
 }

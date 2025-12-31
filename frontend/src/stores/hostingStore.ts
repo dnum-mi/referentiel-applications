@@ -1,4 +1,10 @@
-import type { CreateHostingDto, HostingDto, HostingOptionControllerFindAllData, HostingOptionDto, UpdateHostingDto } from "@/client/types.gen";
+import type {
+  CreateHostingDto,
+  HostingDto,
+  HostingOptionControllerFindAllData,
+  HostingOptionDto,
+  UpdateHostingDto,
+} from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";

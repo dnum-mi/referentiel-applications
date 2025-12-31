@@ -1,15 +1,15 @@
 import type { RelationType } from "@prisma/client";
 
 export interface Relation {
-  applicationSourceId: string
-  applicationTargetId: string
+  applicationSourceId: string;
+  applicationTargetId: string;
   sourceApplication: {
-    id: string
-    label: string
-  }
+    id: string;
+    label: string;
+  };
   targetApplication: {
-    id: string
-    label: string
-  }
-  type: RelationType
+    id: string;
+    label: string;
+  };
+  type: RelationType;
 }

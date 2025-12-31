@@ -15,36 +15,43 @@ type ErrorKey = keyof typeof errorMessages;
 
 const data = ref<UsersPaginatedResponseDto>({ results: [], total: 0 });
 
-const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [{
-  key: "email",
-  label: "Email",
-  isSortable: true,
-}, {
-  key: "organisation",
-  label: "Organisation",
-  isSortable: true,
-}, {
-  key: "lastLogin",
-  label: "Dernière connexion",
-  isSortable: true,
-}, {
-  key: "adminLevel",
-  label: "Niveau d'admin",
-  isSortable: true,
-}, {
-  key: "capabilities",
-  isSortable: true,
-  label: "Nb Cap.",
-}, {
-  key: "actions",
-  label: "Actions",
-}] as const;
+const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
+  {
+    key: "email",
+    label: "Email",
+    isSortable: true,
+  },
+  {
+    key: "organisation",
+    label: "Organisation",
+    isSortable: true,
+  },
+  {
+    key: "lastLogin",
+    label: "Dernière connexion",
+    isSortable: true,
+  },
+  {
+    key: "adminLevel",
+    label: "Niveau d'admin",
+    isSortable: true,
+  },
+  {
+    key: "capabilities",
+    isSortable: true,
+    label: "Nb Cap.",
+  },
+  {
+    key: "actions",
+    label: "Actions",
+  },
+] as const;
 
 const isLoading = ref(false);
 const errorKeySet = ref<Set<ErrorKey>>(new Set());
 const searchQuery = ref("");
 
-const sortColumn = ref<typeof headers[number]["key"]>("email");
+const sortColumn = ref<(typeof headers)[number]["key"]>("email");
 const isSortDescending = ref<boolean>(false);
 
 const itemsPerPage = ref<number>(15);
@@ -93,7 +100,7 @@ watch([sortColumn, isSortDescending], () => {
 });
 
 const tableRows = computed(() =>
-  data.value.results.map(user => ({
+  data.value.results.map((user) => ({
     email: user.email,
     organisation: user.organization?.path || "-",
     lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
@@ -125,9 +132,7 @@ onMounted(fetchUsers);
 
 <template>
   <div>
-    <h1 class="fr-h1" data-testid="admin-users-title">
-      Gestion des utilisateurs
-    </h1>
+    <h1 class="fr-h1" data-testid="admin-users-title">Gestion des utilisateurs</h1>
 
     <div class="fr-mb-4w">
       <DsfrSearchBar
@@ -161,17 +166,14 @@ onMounted(fetchUsers);
         :headers-row="headers"
         :rows="tableRows"
         row-key="email"
-        :sortable-rows="headers.filter(h => h.isSortable).map(h => h.key)"
+        :sortable-rows="headers.filter((h) => h.isSortable).map((h) => h.key)"
         vertical-borders
         :pagination="false"
         data-testid="admin-users-table"
         @update:sorted-by="onUpdateSortColumn"
       >
         <template #header="header">
-          <DsfrTableHeader
-            :header="header.label"
-            :aria-sort="isSortDescending ? 'descending' : 'ascending'"
-          />
+          <DsfrTableHeader :header="header.label" :aria-sort="isSortDescending ? 'descending' : 'ascending'" />
         </template>
         <template #cell="{ colKey, cell }">
           <template v-if="colKey === 'adminLevel'">

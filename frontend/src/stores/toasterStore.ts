@@ -19,15 +19,15 @@ function getRandomString(length: number) {
 }
 
 export interface Message {
-  id: string
-  title?: string
-  description: string
-  type?: "info" | "success" | "warning" | "error"
-  closeable?: boolean
-  titleTag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6"
-  timeout: number
-  style?: Record<string, string>
-  class?: string | Record<string, string> | Array<string | Record<string, string>>
+  id: string;
+  title?: string;
+  description: string;
+  type?: "info" | "success" | "warning" | "error";
+  closeable?: boolean;
+  titleTag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+  timeout: number;
+  style?: Record<string, string>;
+  class?: string | Record<string, string> | Array<string | Record<string, string>>;
 }
 
 const timeouts: Record<string, NodeJS.Timeout> = {};
@@ -57,7 +57,7 @@ export const useToasterStore = defineStore("toaster", () => {
   const messages = ref<Message[]>([]);
 
   const removeMessage = (id: string) => {
-    messages.value = messages.value.filter(message => message.id !== id);
+    messages.value = messages.value.filter((message) => message.id !== id);
     clearTimeout(timeouts[id]);
     delete timeouts[id];
   };

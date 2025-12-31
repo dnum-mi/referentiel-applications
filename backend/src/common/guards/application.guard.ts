@@ -10,21 +10,25 @@ import { appConfig } from "src/config/configs";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { APP_ACTION_KEY } from "../decorators/application.decorator";
-import { APP_PERMISSIONS, APP_PERMS_MAP, AppPermissionsRecord } from "../utils/types";
+import {
+  APP_PERMISSIONS,
+  APP_PERMS_MAP,
+  AppPermissionsRecord,
+} from "../utils/types";
 
 @Injectable()
 export class ApplicationGuard implements CanActivate {
   constructor(
-    @Inject(appConfig.KEY) private readonly appConf: ConfigType<typeof appConfig>,
+    @Inject(appConfig.KEY)
+    private readonly appConf: ConfigType<typeof appConfig>,
     private readonly reflector: Reflector,
     private readonly prisma: PrismaService,
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const actionParams = this.reflector.get<APP_PERMISSIONS | APP_PERMISSIONS[]>(
-      APP_ACTION_KEY,
-      context.getHandler(),
-    );
+    const actionParams = this.reflector.get<
+      APP_PERMISSIONS | APP_PERMISSIONS[]
+    >(APP_ACTION_KEY, context.getHandler());
 
     const actions = Array.isArray(actionParams) ? actionParams : [actionParams];
 
@@ -39,7 +43,7 @@ export class ApplicationGuard implements CanActivate {
     );
     user.appPerms = Array.from(appPermsMap);
 
-    return actions.some(action => this.checkAppPermission(user, action));
+    return actions.some((action) => this.checkAppPermission(user, action));
   }
 
   private async getUserAppPermissions(
@@ -67,12 +71,16 @@ export class ApplicationGuard implements CanActivate {
     // reduce the permissions to a map
 
     if (user.adminLevel >= AdminLevel.WRITE) {
-      return new Set<APP_PERMISSIONS>(Object.keys(AppPermissionsRecord) as APP_PERMISSIONS[]);
+      return new Set<APP_PERMISSIONS>(
+        Object.keys(AppPermissionsRecord) as APP_PERMISSIONS[],
+      );
     }
-    const appPermsSet = new Set<APP_PERMISSIONS>(this.appConf.nonActorPermissions);
+    const appPermsSet = new Set<APP_PERMISSIONS>(
+      this.appConf.nonActorPermissions,
+    );
     if (user.adminLevel >= AdminLevel.READ) {
       Object.keys(AppPermissionsRecord)
-        .filter(key => key.startsWith("read"))
+        .filter((key) => key.startsWith("read"))
         .forEach((key) => {
           appPermsSet.add(key as APP_PERMISSIONS);
         });
@@ -109,6 +117,6 @@ export class ApplicationGuard implements CanActivate {
     if (action.startsWith("read") && user.adminLevel >= AdminLevel.READ)
       return true;
 
-    return (user.appPerms.includes(action)) ?? false;
+    return user.appPerms.includes(action) ?? false;
   }
 }

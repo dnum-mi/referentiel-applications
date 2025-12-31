@@ -2,18 +2,18 @@
 import { ref, watchEffect, onBeforeUnmount } from "vue";
 
 const props = defineProps<{
-  id: string
-  length: number
-  queryLength: number
-  minQueryLength: number
-  selectedOption?: string
-  selectedOptionIndex?: number
-  validChoiceMade?: boolean
-  isInFocus?: boolean
-  tQueryTooShort: (min: number) => string
-  tNoResults: () => string
-  tSelectedOption: (sel: string, len: number, index: number) => string
-  tResults: (len: number, contentSelected: string) => string
+  id: string;
+  length: number;
+  queryLength: number;
+  minQueryLength: number;
+  selectedOption?: string;
+  selectedOptionIndex?: number;
+  validChoiceMade?: boolean;
+  isInFocus?: boolean;
+  tQueryTooShort: (min: number) => string;
+  tNoResults: () => string;
+  tSelectedOption: (sel: string, len: number, index: number) => string;
+  tResults: (len: number, contentSelected: string) => string;
 }>();
 
 // Noms explicites
@@ -49,10 +49,10 @@ onBeforeUnmount(() => {
 <template>
   <div class="fr-sr-only">
     <output :id="`${id}__status--A`" aria-live="polite" aria-atomic="true">
-      {{ (!isSilenced && isDebounced && statusSlotToggle) ? buildLiveRegionMessage() : '' }}
+      {{ !isSilenced && isDebounced && statusSlotToggle ? buildLiveRegionMessage() : "" }}
     </output>
     <output :id="`${id}__status--B`" aria-live="polite" aria-atomic="true">
-      {{ (!isSilenced && isDebounced && !statusSlotToggle) ? buildLiveRegionMessage() : '' }}
+      {{ !isSilenced && isDebounced && !statusSlotToggle ? buildLiveRegionMessage() : "" }}
     </output>
   </div>
 </template>

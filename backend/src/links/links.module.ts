@@ -10,4 +10,4 @@ import { LinksService } from "./links.service";
   controllers: [ApplicationLinksController],
   providers: [LinksService],
 })
-export class LinksModule { }
+export class LinksModule {}

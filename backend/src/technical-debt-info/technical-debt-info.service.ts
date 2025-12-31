@@ -12,7 +12,12 @@ export class TechnicalDebtInfoService extends BaseService<TechnicalDebtInfo> {
     metadataService: MetadatasService,
     applicationService: ApplicationService,
   ) {
-    super(prisma.technicalDebtInfo, prisma, metadataService, applicationService);
+    super(
+      prisma.technicalDebtInfo,
+      prisma,
+      metadataService,
+      applicationService,
+    );
   }
 
   async create(createDto): Promise<TechnicalDebtInfo> {
@@ -20,13 +25,17 @@ export class TechnicalDebtInfoService extends BaseService<TechnicalDebtInfo> {
     if (applicationId) {
       const existing = await this.findByApplicationId(applicationId);
       if (existing) {
-        throw new ConflictException("A technical debt info already exists for this application");
+        throw new ConflictException(
+          "A technical debt info already exists for this application",
+        );
       }
     }
     return super.create(createDto);
   }
 
-  async findByApplicationId(applicationId: string): Promise<TechnicalDebtInfo | null> {
+  async findByApplicationId(
+    applicationId: string,
+  ): Promise<TechnicalDebtInfo | null> {
     return this.model.findFirst({ where: { applicationId } });
   }
 }

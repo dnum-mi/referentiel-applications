@@ -32,7 +32,10 @@ describe("Applications", () => {
   }
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.READ, capabilities: [] });
+    user = await UserFaker.create({
+      adminLevel: AdminLevel.READ,
+      capabilities: [],
+    });
     TOKEN = await getToken(user);
   });
 
@@ -136,7 +139,9 @@ describe("Applications", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(400);
 
-    expect(response.body.message).toContain("Le label ne peut pas être vide ou contenir uniquement des espaces");
+    expect(response.body.message).toContain(
+      "Le label ne peut pas être vide ou contenir uniquement des espaces",
+    );
   });
 
   it("/POST applications - should fail with empty description", async () => {

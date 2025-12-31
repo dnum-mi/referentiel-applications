@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
@@ -16,15 +20,26 @@ export class AnomalyNotificationsService {
    * @param data Les données nécessaires pour créer la notification.
    * @returns La notification d'anomalie créée.
    */
-  public async create(data: CreateAnomalyNotificationDto, requestor: Requestor, applicationId?: string) {
-    const hasPostPerm = requestor.appPerms?.includes("postAnomalyNotifications") === true;
+  public async create(
+    data: CreateAnomalyNotificationDto,
+    requestor: Requestor,
+    applicationId?: string,
+  ) {
+    const hasPostPerm =
+      requestor.appPerms?.includes("postAnomalyNotifications") === true;
     const isAdminWriteOrMore = requestor.adminLevel >= AdminLevel.WRITE;
     if (applicationId) {
       if (!hasPostPerm && !isAdminWriteOrMore) {
-        throw new ForbiddenException("Vous n'avez pas la permission de créer une notification d'anomalie pour cette application.");
+        throw new ForbiddenException(
+          "Vous n'avez pas la permission de créer une notification d'anomalie pour cette application.",
+        );
       }
-    } else if (!requestor.capabilities.includes("CreateGlobalAnomalyNotification")) {
-      throw new ForbiddenException("Vous n'avez pas la permission de créer une notification d'anomalie.");
+    } else if (
+      !requestor.capabilities.includes("CreateGlobalAnomalyNotification")
+    ) {
+      throw new ForbiddenException(
+        "Vous n'avez pas la permission de créer une notification d'anomalie.",
+      );
     }
 
     return this.prisma.anomalyNotification.create({
@@ -61,7 +76,9 @@ export class AnomalyNotificationsService {
     } = filters;
 
     // Controle des permissions
-    const hasApplicationReadPerms = requestor.appPerms?.includes("readAnomalyNotifications");
+    const hasApplicationReadPerms = requestor.appPerms?.includes(
+      "readAnomalyNotifications",
+    );
     const isAdminRead = requestor.adminLevel >= AdminLevel.READ;
     const canReadAll = hasApplicationReadPerms || isAdminRead;
 
@@ -110,7 +127,10 @@ export class AnomalyNotificationsService {
       });
     }
 
-    const sortOptions: Record<keyof typeof SortByEnum, Prisma.AnomalyNotificationOrderByWithRelationInput> = {
+    const sortOptions: Record<
+      keyof typeof SortByEnum,
+      Prisma.AnomalyNotificationOrderByWithRelationInput
+    > = {
       application: { application: { label: order } },
       description: { description: order },
       date: { createdAt: order },
@@ -138,10 +158,10 @@ export class AnomalyNotificationsService {
    * @throws NotFoundException Si la notification n'est pas trouvée.
    */
   async findOne(id: string, requestor: Requestor) {
-    const hasApplicationReadPerms
-    = requestor.appPerms?.includes("readAnomalyNotifications")
-      || requestor.appPerms?.includes("manageAnomalyNotifications")
-      || requestor.adminLevel >= AdminLevel.READ;
+    const hasApplicationReadPerms =
+      requestor.appPerms?.includes("readAnomalyNotifications") ||
+      requestor.appPerms?.includes("manageAnomalyNotifications") ||
+      requestor.adminLevel >= AdminLevel.READ;
 
     const where: Prisma.AnomalyNotificationWhereUniqueInput = {
       id,

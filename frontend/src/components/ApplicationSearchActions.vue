@@ -45,7 +45,6 @@ async function exportToExcel() {
     toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }
 }
-
 </script>
 
 <template>
@@ -122,7 +121,8 @@ async function exportToExcel() {
 <style scoped>
 .sr-only {
   position: absolute !important;
-  height: 1px; width: 1px;
+  height: 1px;
+  width: 1px;
   overflow: hidden;
   clip: rect(1px, 1px, 1px, 1px);
   white-space: nowrap;

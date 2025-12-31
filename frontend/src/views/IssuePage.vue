@@ -26,12 +26,15 @@ const tabs = [
 
 <template>
   <div data-testid="issue-page">
-    <h1 class="fr-h1" data-testid="issue-page-title">
-      Signalements
-    </h1>
+    <h1 class="fr-h1" data-testid="issue-page-title">Signalements</h1>
     <DsfrTabs v-model="activeTab" :tab-list-name="applicationTabListName" :tab-titles="tabs" data-testid="issues-tabs">
       <template v-for="(tab, index) in tabs" :key="tab.panelId">
-        <DsfrTabContent v-show="activeTab === index" :tab-id="tab.tabId" :panel-id="tab.panelId" :data-testid="`issues-tab-content-${tab.tabId}`">
+        <DsfrTabContent
+          v-show="activeTab === index"
+          :tab-id="tab.tabId"
+          :panel-id="tab.panelId"
+          :data-testid="`issues-tab-content-${tab.tabId}`"
+        >
           <component :is="tab.component" :data-testid="`issues-tab-component-${tab.tabId}`" />
         </DsfrTabContent>
       </template>

@@ -10,24 +10,23 @@ const successMessage = ref("");
 const errorMessage = ref("");
 
 async function handleToggleEmailNotifications() {
-  
   isUpdating.value = true;
   successMessage.value = "";
   errorMessage.value = "";
-  
+
   const SUCCESS_MESSAGE_TIMEOUT = 3000;
 
-    try {
-      await userStore.updateEmailPreferences(emailNotificationsEnabled.value);
-      successMessage.value = "Vos préférences de notification ont été mises à jour avec succès.";
-      
-      setTimeout(() => {
-        successMessage.value = "";
-      }, SUCCESS_MESSAGE_TIMEOUT);
+  try {
+    await userStore.updateEmailPreferences(emailNotificationsEnabled.value);
+    successMessage.value = "Vos préférences de notification ont été mises à jour avec succès.";
+
+    setTimeout(() => {
+      successMessage.value = "";
+    }, SUCCESS_MESSAGE_TIMEOUT);
   } catch (error) {
     console.error("Error updating email preferences:", error);
     errorMessage.value = "Erreur lors de la mise à jour de vos préférences. Veuillez réessayer.";
-    
+
     emailNotificationsEnabled.value = !emailNotificationsEnabled.value;
   } finally {
     isUpdating.value = false;
@@ -36,7 +35,6 @@ async function handleToggleEmailNotifications() {
 
 onMounted(async () => {
   await userStore.fetchUser();
-
 });
 </script>
 
@@ -44,33 +42,25 @@ onMounted(async () => {
   <div v-if="userStore.user" class="fr-mt-3w" data-testid="user-profile-card">
     <DsfrTable title="Informations personnelles" data-testid="user-profile-table">
       <tr>
-        <th scope="row">
-          ID Keycloak
-        </th>
+        <th scope="row">ID Keycloak</th>
         <td data-testid="user-profile-keycloak">
           {{ userStore.user.keycloakId }}
         </td>
       </tr>
       <tr>
-        <th scope="row">
-          Organisation
-        </th>
+        <th scope="row">Organisation</th>
         <td data-testid="user-profile-organization">
           {{ userStore.user.organization?.path || "Non renseignée" }}
         </td>
       </tr>
       <tr>
-        <th scope="row">
-          Email
-        </th>
+        <th scope="row">Email</th>
         <td data-testid="user-profile-email">
           {{ userStore.user.email }}
         </td>
       </tr>
       <tr>
-        <th scope="row">
-          Type
-        </th>
+        <th scope="row">Type</th>
         <td>
           <span class="fr-badge fr-mr-1w" :class="AdminLevelWordingBadgeClass[userStore.adminLevel]" data-testid="user-profile-type">
             {{ AdminLevelWording[userStore.adminLevel] }}
@@ -80,14 +70,14 @@ onMounted(async () => {
     </DsfrTable>
     <div class="fr-mt-4w">
       <h2 class="fr-h6">Préférences de notification</h2>
-        <DsfrToggleSwitch
-          v-model="emailNotificationsEnabled"
-          label="Recevoir les notifications par email"
-          hint="Recevoir des notifications par email lorsque vous êtes ajouté ou modifié en tant qu'acteur dans une application"
-          data-testid="user-profile-email-notifications-checkbox"
-          :disabled="isUpdating"
-          @update:model-value="handleToggleEmailNotifications"
-        />
+      <DsfrToggleSwitch
+        v-model="emailNotificationsEnabled"
+        label="Recevoir les notifications par email"
+        hint="Recevoir des notifications par email lorsque vous êtes ajouté ou modifié en tant qu'acteur dans une application"
+        data-testid="user-profile-email-notifications-checkbox"
+        :disabled="isUpdating"
+        @update:model-value="handleToggleEmailNotifications"
+      />
     </div>
   </div>
 </template>

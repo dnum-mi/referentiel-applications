@@ -57,8 +57,7 @@ function onKeydown(e: KeyboardEvent) {
     highlightedIndex.value = (highlightedIndex.value + 1) % results.value.length;
   } else if (e.key === "ArrowUp") {
     e.preventDefault();
-    highlightedIndex.value =
-      (highlightedIndex.value - 1 + results.value.length) % results.value.length;
+    highlightedIndex.value = (highlightedIndex.value - 1 + results.value.length) % results.value.length;
   } else if (e.key === "Enter" && highlightedIndex.value >= 0) {
     e.preventDefault();
     select(results.value[highlightedIndex.value]);
@@ -93,11 +92,11 @@ const ariaDescribedById = computed(() => {
 });
 
 const liveRegionText = computed(() => {
-  if (!showList.value) return '';
+  if (!showList.value) return "";
   if (results.value.length === 0) {
-    return props.displayNoResult ? 'Aucun résultat' : '';
+    return props.displayNoResult ? "Aucun résultat" : "";
   }
-  return `${results.value.length} résultat${results.value.length > 1 ? 's' : ''} disponible${results.value.length > 1 ? 's' : ''}`;
+  return `${results.value.length} résultat${results.value.length > 1 ? "s" : ""} disponible${results.value.length > 1 ? "s" : ""}`;
 });
 </script>
 
@@ -143,9 +142,7 @@ const liveRegionText = computed(() => {
         </slot>
       </li>
 
-      <li v-if="!hasResults && displayNoResult" class="no-result" role="option" aria-disabled="true">
-        Aucun résultat
-      </li>
+      <li v-if="!hasResults && displayNoResult" class="no-result" role="option" aria-disabled="true">Aucun résultat</li>
     </ul>
 
     <div class="visually-hidden" aria-live="polite" aria-atomic="true">{{ liveRegionText }}</div>
@@ -185,11 +182,11 @@ const liveRegionText = computed(() => {
 }
 .visually-hidden {
   position: absolute !important;
-  height: 1px; 
-  width: 1px; 
+  height: 1px;
+  width: 1px;
   overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px); 
-  white-space: nowrap; 
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
   border: 0;
   padding: 0;
   margin: -1px;

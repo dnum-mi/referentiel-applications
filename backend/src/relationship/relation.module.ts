@@ -17,4 +17,4 @@ import { RelationService } from "./relation.service";
   ],
   exports: ["IRelationRepository"],
 })
-export class RelationModule { }
+export class RelationModule {}
