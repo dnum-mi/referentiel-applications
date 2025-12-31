@@ -2,7 +2,9 @@ import type { APP_PERMISSIONS } from "src/common/utils/types";
 import { faker } from "@faker-js/faker";
 import { getPrismaClient } from "./prisma";
 
-function permissionsToObject(permissions: Set<APP_PERMISSIONS>): Record<APP_PERMISSIONS, boolean> {
+function permissionsToObject(
+  permissions: Set<APP_PERMISSIONS>,
+): Record<APP_PERMISSIONS, boolean> {
   return {
     readActors: permissions.has("readActors"),
     writeActors: permissions.has("writeActors"),
@@ -33,7 +35,7 @@ export class ActorTypeFaker {
     // obtain a random label and transform to title case
     const label = faker.company
       .buzzPhrase()
-      .replace(/\b\w/g, c => c.toUpperCase());
+      .replace(/\b\w/g, (c) => c.toUpperCase());
     const code = label
       .replace(/[a-z\s]+/g, "")
       .toUpperCase()

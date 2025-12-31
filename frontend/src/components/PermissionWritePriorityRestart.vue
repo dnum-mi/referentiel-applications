@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-const props = withDefaults(defineProps<{
-  checked: boolean
-  id: string
-}>(), {
-});
+const props = withDefaults(
+  defineProps<{
+    checked: boolean;
+    id: string;
+  }>(),
+  {},
+);
 
 const emit = defineEmits<{
-  "update:model-value": [value: boolean]
+  "update:model-value": [value: boolean];
 }>();
 
-const value = computed(() => props.checked ? "write" : "read");
+const value = computed(() => (props.checked ? "write" : "read"));
 
 const permDict = {
   read: {

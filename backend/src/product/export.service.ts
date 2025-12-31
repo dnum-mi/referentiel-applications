@@ -17,13 +17,14 @@ export class ApplicationExportService {
   async exportSearchResultsToExcel(
     searchParams: ApplicationSearchDto,
   ): Promise<Buffer> {
-    const allMatchingApps = await this.repository.findApplications(searchParams);
+    const allMatchingApps =
+      await this.repository.findApplications(searchParams);
 
     // Get full relations for the filtered applications
-    const filteredIds = allMatchingApps.results.map(app => app.id);
-    const applicationsWithRelations
-      = await this.repository.findAllWithFullRelations();
-    const filteredApplications = applicationsWithRelations.filter(app =>
+    const filteredIds = allMatchingApps.results.map((app) => app.id);
+    const applicationsWithRelations =
+      await this.repository.findAllWithFullRelations();
+    const filteredApplications = applicationsWithRelations.filter((app) =>
       filteredIds.includes(app.id),
     );
 

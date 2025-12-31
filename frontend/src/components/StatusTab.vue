@@ -16,19 +16,17 @@ import { BREAKPOINTS } from "@/constants/breakpoint";
 import { useApplicationStore } from "@/stores/applicationStore";
 
 interface StatusFormData {
-  status: ApplicationStatusDto["status"]
-  statusDate?: string
+  status: ApplicationStatusDto["status"];
+  statusDate?: string;
 }
 
 const props = defineProps<{
-  application: ApplicationWithPerms
+  application: ApplicationWithPerms;
 }>();
-
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
-
 
 const formModal = useModal();
 const deleteModal = useModal();
@@ -87,7 +85,7 @@ const headers = computed(() => {
 });
 
 const rows = computed(() =>
-  statuses.value.map(status => {
+  statuses.value.map((status) => {
     const row: Record<string, unknown> = {
       id: status.id,
       Statut: getStatusLabel(status),
@@ -274,9 +272,7 @@ onMounted(() => {
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="statuses-header">
     <div class="fr-col">
-      <h3 class="fr-mb-0">
-        Historique des statuts
-      </h3>
+      <h3 class="fr-mb-0">Historique des statuts</h3>
     </div>
     <div v-if="canEdit" class="fr-col-auto">
       <DsfrButton

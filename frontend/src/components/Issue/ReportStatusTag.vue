@@ -5,17 +5,17 @@ import { useReportIssueStore } from "@/stores/reportIssueStore";
 import { watch, ref } from "vue";
 
 const props = defineProps<{
-  report: GetAnomalyNotificationDto
-  isEditing: boolean
+  report: GetAnomalyNotificationDto;
+  isEditing: boolean;
 }>();
 
 const emit = defineEmits<{
-  refresh: []
+  refresh: [];
 }>();
 
 const statusValue = ref(props.report.status);
 
-const options: { value: AnomalyNotificationStatus, text: (typeof statusDictionary)[AnomalyNotificationStatus] }[] = [
+const options: { value: AnomalyNotificationStatus; text: (typeof statusDictionary)[AnomalyNotificationStatus] }[] = [
   {
     value: "in_pending",
     text: "En attente",
@@ -53,7 +53,13 @@ watch(statusValue, (newVal, oldVal) => {
 </script>
 
 <template>
-  <DsfrTag v-if="!isEditing" :icon="statusIconClasses[report.status]" :class="report.status" :label="statusDictionary[report.status]" :data-testid="`issues-row-${report.id}-status`" />
+  <DsfrTag
+    v-if="!isEditing"
+    :icon="statusIconClasses[report.status]"
+    :class="report.status"
+    :label="statusDictionary[report.status]"
+    :data-testid="`issues-row-${report.id}-status`"
+  />
   <DsfrSelect v-else v-model="statusValue" :options="options" />
 </template>
 

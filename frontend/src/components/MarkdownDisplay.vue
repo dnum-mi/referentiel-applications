@@ -4,7 +4,7 @@ import { marked } from "marked";
 import DOMPurify from "dompurify";
 
 const props = defineProps<{
-  content: string | null | undefined
+  content: string | null | undefined;
 }>();
 
 const renderedHtml = computed(() => {

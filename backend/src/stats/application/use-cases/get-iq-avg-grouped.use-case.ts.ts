@@ -17,7 +17,7 @@ export class GetIqAvgGroupedUseCase {
       to,
       StatsType.iqAvg,
     );
-    const entries = rawStats.map(s => ({ date: s.date, valeur: s.valeur }));
+    const entries = rawStats.map((s) => ({ date: s.date, valeur: s.valeur }));
     return StatsAggregator.groupByPeriod(entries, groupBy);
   }
 }

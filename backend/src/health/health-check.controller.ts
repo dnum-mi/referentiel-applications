@@ -1,5 +1,10 @@
 import { Controller, Get, HttpException, HttpStatus } from "@nestjs/common";
-import { ApiInternalServerErrorResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiInternalServerErrorResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import { PrismaService } from "../prisma/prisma.service";
 
 @ApiTags("Health Check")
@@ -31,7 +36,7 @@ export class HealthCheckController {
       },
     },
   })
-  async checkHealth(): Promise<{ status: string, message?: string }> {
+  async checkHealth(): Promise<{ status: string; message?: string }> {
     try {
       await this.prismaService.$queryRaw`SELECT 1`;
       return { status: "ok" };

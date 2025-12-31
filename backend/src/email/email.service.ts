@@ -19,9 +19,15 @@ export class EmailService {
     const host = this.configService.get<string>("email.host");
     const port = this.configService.get<number>("email.port");
     const secure = this.configService.get<boolean>("email.secure");
-    this.from = this.configService.get<string>("email.from", "noreply@example.com");
+    this.from = this.configService.get<string>(
+      "email.from",
+      "noreply@example.com",
+    );
     this.enabled = this.configService.get<boolean>("email.enabled", true);
-    this.appUrl = this.configService.get<string>("APP_URL", "http://localhost:5173");
+    this.appUrl = this.configService.get<string>(
+      "APP_URL",
+      "http://localhost:5173",
+    );
 
     this.transporter = nodemailer.createTransport({
       host,
@@ -69,11 +75,18 @@ export class EmailService {
         text,
         html,
       });
-      this.logger.log(`Actor added notification email sent successfully to ${to}`);
+      this.logger.log(
+        `Actor added notification email sent successfully to ${to}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send actor added email to ${to}:`, error as Error);
+      this.logger.error(
+        `Failed to send actor added email to ${to}:`,
+        error as Error,
+      );
 
-      this.logger.warn(`Email delivery failed for ${to} but was ignored due to configuration.`);
+      this.logger.warn(
+        `Email delivery failed for ${to} but was ignored due to configuration.`,
+      );
     }
   }
 
@@ -84,12 +97,16 @@ export class EmailService {
     changedFields?: string,
   ): Promise<void> {
     if (!this.enabled) {
-      this.logger.log(`Email sending disabled. Would have sent modification email to ${to}`);
+      this.logger.log(
+        `Email sending disabled. Would have sent modification email to ${to}`,
+      );
       return;
     }
 
     if (!to) {
-      this.logger.warn("Cannot send modification email: recipient address is empty");
+      this.logger.warn(
+        "Cannot send modification email: recipient address is empty",
+      );
       return;
     }
 
@@ -113,27 +130,36 @@ export class EmailService {
         text,
         html,
       });
-      this.logger.log(`Actor modified notification email sent successfully to ${to}. Changed fields: ${changedFields ? "included" : "not available"}`);
+      this.logger.log(
+        `Actor modified notification email sent successfully to ${to}. Changed fields: ${changedFields ? "included" : "not available"}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send actor modified email to ${to}:`, error as Error);
-      this.logger.warn(`Email delivery failed for ${to} but was ignored due to configuration.`);
+      this.logger.error(
+        `Failed to send actor modified email to ${to}:`,
+        error as Error,
+      );
+      this.logger.warn(
+        `Email delivery failed for ${to} but was ignored due to configuration.`,
+      );
     }
   }
 
   async sendDailyDigestNotification(
     recipient: string,
     applications: Array<{
-      applicationId: string
-      applicationLabel: string
+      applicationId: string;
+      applicationLabel: string;
       changes: Array<{
-        action: string
-        description: string
-        createdAt: Date
-      }>
+        action: string;
+        description: string;
+        createdAt: Date;
+      }>;
     }>,
   ): Promise<void> {
     if (!this.enabled) {
-      this.logger.log(`Email sending disabled. Would have sent daily digest to ${recipient}`);
+      this.logger.log(
+        `Email sending disabled. Would have sent daily digest to ${recipient}`,
+      );
       return;
     }
 
@@ -147,7 +173,10 @@ export class EmailService {
       return;
     }
 
-    const totalChanges = applications.reduce((sum, app) => sum + app.changes.length, 0);
+    const totalChanges = applications.reduce(
+      (sum, app) => sum + app.changes.length,
+      0,
+    );
     const date = new Date().toLocaleDateString("fr-FR");
     const subject = `Résumé quotidien : ${totalChanges} modification${totalChanges > 1 ? "s" : ""} sur ${applications.length} application${applications.length > 1 ? "s" : ""}`;
 
@@ -156,11 +185,19 @@ export class EmailService {
       .map((app) => {
         const changesHtml = app.changes
           .map((change) => {
-            const time = new Date(change.createdAt).toLocaleTimeString("fr-FR", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
-            const actionLabel = change.action === "add" ? "Ajout" : change.action === "update" ? "Modification" : "Suppression";
+            const time = new Date(change.createdAt).toLocaleTimeString(
+              "fr-FR",
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+              },
+            );
+            const actionLabel =
+              change.action === "add"
+                ? "Ajout"
+                : change.action === "update"
+                  ? "Modification"
+                  : "Suppression";
             return `<li style="margin-bottom: 8px;"><strong>${time}</strong> - ${actionLabel}: ${change.description}</li>`;
           })
           .join("");
@@ -198,9 +235,14 @@ export class EmailService {
         text,
         html,
       });
-      this.logger.log(`Daily digest email sent successfully to ${recipient} (${totalChanges} changes)`);
+      this.logger.log(
+        `Daily digest email sent successfully to ${recipient} (${totalChanges} changes)`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to send daily digest to ${recipient}:`, error as Error);
+      this.logger.error(
+        `Failed to send daily digest to ${recipient}:`,
+        error as Error,
+      );
       throw error;
     }
   }

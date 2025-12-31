@@ -3,20 +3,20 @@ import { registerAs } from "@nestjs/config";
 import { AppPermissionsRecord } from "src/common/utils/types";
 
 export interface FooterLink {
-  label: string
-  title: string
-  href: string
+  label: string;
+  title: string;
+  href: string;
 }
 
 export interface AppConfig {
-  env: string
-  port: number
-  host: string
-  onlyWriteSwagger: boolean
-  writeYaml: boolean
-  version: string
-  footerLinks: FooterLink[]
-  nonActorPermissions: APP_PERMISSIONS[]
+  env: string;
+  port: number;
+  host: string;
+  onlyWriteSwagger: boolean;
+  writeYaml: boolean;
+  version: string;
+  footerLinks: FooterLink[];
+  nonActorPermissions: APP_PERMISSIONS[];
 }
 export default registerAs("app", (): AppConfig => {
   const env = process.env.NODE_ENV ?? "development";
@@ -33,7 +33,7 @@ export default registerAs("app", (): AppConfig => {
   }
   const nonActorPermissions = (process.env.NON_ACTOR_PERMISSIONS ?? "")
     .split(",")
-    .filter(perm => (perm in AppPermissionsRecord)) as APP_PERMISSIONS[];
+    .filter((perm) => perm in AppPermissionsRecord) as APP_PERMISSIONS[];
 
   return {
     env,

@@ -13,7 +13,14 @@ import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
 @Module({
-  imports: [CommonModule, PrismaModule, LabelsModule, MetadatasModule, StatusesModule, TagsModule],
+  imports: [
+    CommonModule,
+    PrismaModule,
+    LabelsModule,
+    MetadatasModule,
+    StatusesModule,
+    TagsModule,
+  ],
   controllers: [ApplicationController],
   providers: [
     ApplicationService,
@@ -27,4 +34,4 @@ import { ApplicationRepository } from "./infrastructure/repository/application.r
     ApplicationService,
   ],
 })
-export class ApplicationModule { }
+export class ApplicationModule {}

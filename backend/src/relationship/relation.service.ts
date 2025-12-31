@@ -1,5 +1,8 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { RelationApplicationDto, RelationGraphDto } from "./application/dto/relation-application.dto";
+import {
+  RelationApplicationDto,
+  RelationGraphDto,
+} from "./application/dto/relation-application.dto";
 import { Relation } from "./domain/relation.entity";
 import { IRelationRepository } from "./infrastructure/repository/relation.repository.interface";
 
@@ -15,7 +18,11 @@ export class RelationService {
     dto: RelationApplicationDto,
     requestorId: string,
   ): Promise<Relation> {
-    return this.relationRepository.create(applicationSourceId, dto, requestorId);
+    return this.relationRepository.create(
+      applicationSourceId,
+      dto,
+      requestorId,
+    );
   }
 
   async findAllForApplicationSource(

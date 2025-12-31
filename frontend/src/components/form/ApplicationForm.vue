@@ -20,9 +20,9 @@ import type {
 import type { ApplicationWithPerms } from "@/models/Application";
 
 interface Props {
-  mode?: "create" | "edit"
-  initialData: ApplicationWithPerms
-  labels?: LabelDto[]
+  mode?: "create" | "edit";
+  initialData: ApplicationWithPerms;
+  labels?: LabelDto[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -31,8 +31,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  success: [application: ApplicationDto]
-  cancel: []
+  success: [application: ApplicationDto];
+  cancel: [];
 }>();
 
 const toaster = useToasterStore();
@@ -47,12 +47,7 @@ const moeError = ref<string | undefined>(undefined);
 const globalError = ref<string | undefined>(undefined);
 const initialLabels = ref<LabelDto[]>([]);
 
-const steps = [
-  "Informations principales",
-  "Détails de l'application",
-  "Contact MOA",
-  "Contact MOE",
-];
+const steps = ["Informations principales", "Détails de l'application", "Contact MOA", "Contact MOE"];
 const currentStep = ref(1);
 
 const moaActor = ref<CreateActorDto>({
@@ -77,15 +72,19 @@ const canEditPriorityRestart = computed(() => isCreateMode.value || props.initia
 
 const moaOrganizationId = computed({
   get: () => moaActor.value.organizationId ?? undefined,
-  set: (value) => { moaActor.value.organizationId = value ?? undefined; },
+  set: (value) => {
+    moaActor.value.organizationId = value ?? undefined;
+  },
 });
 
 const moeOrganizationId = computed({
   get: () => moeActor.value.organizationId ?? undefined,
-  set: (value) => { moeActor.value.organizationId = value ?? undefined; },
+  set: (value) => {
+    moeActor.value.organizationId = value ?? undefined;
+  },
 });
 
-const filterEmpty = (arr: string[] | undefined) => arr?.filter(item => item.trim() !== "") ?? [];
+const filterEmpty = (arr: string[] | undefined) => arr?.filter((item) => item.trim() !== "") ?? [];
 
 const statusOptions = computed(() =>
   Object.entries(statusApplicationDictionary).map(([value, text]) => ({
@@ -94,7 +93,7 @@ const statusOptions = computed(() =>
   })),
 );
 
-const TypeOptions  = computed(() =>
+const TypeOptions = computed(() =>
   Object.entries(typeApplicationDictionary).map(([value, text]) => ({
     value: value as ApplicationType,
     text,
@@ -117,7 +116,7 @@ const form = ref<CreateApplicationDto>({
 function validateStep1(): boolean {
   labelError.value = undefined;
   descriptionError.value = undefined;
-  
+
   if (form.value.label === "") {
     labelError.value = "Le nom de l'application est obligatoire.";
     return false;
@@ -185,7 +184,7 @@ function validateCurrentStep(): boolean {
   if (!isCreateMode.value) {
     return isFormValid();
   }
-  
+
   switch (currentStep.value) {
     case 1:
       return validateStep1();
@@ -291,7 +290,7 @@ async function handleSubmit() {
 
 async function handleCreate() {
   try {
-    const response = await api.applicationControllerCreate({ body: form.value});
+    const response = await api.applicationControllerCreate({ body: form.value });
 
     if (!response.response.ok || !response.data) {
       throw response.error;
@@ -345,10 +344,10 @@ async function createActors(applicationId: string) {
 }
 
 async function handleUpdate() {
-  const deletedLabels = initialLabels.value.filter(initial => !form.value.labels.some(label => label.id === initial.id));
-  const newLabels = form.value.labels.filter(label => !initialLabels.value.some(initial => initial.id === label.id));
+  const deletedLabels = initialLabels.value.filter((initial) => !form.value.labels.some((label) => label.id === initial.id));
+  const newLabels = form.value.labels.filter((label) => !initialLabels.value.some((initial) => initial.id === label.id));
   const updatedLabels = form.value.labels.filter((label) => {
-    const initial = initialLabels.value.find(i => i.id === label.id);
+    const initial = initialLabels.value.find((i) => i.id === label.id);
     return initial && (initial.value !== label.value || initial.source !== label.source);
   });
 
@@ -405,15 +404,15 @@ function removePopulation(index: number) {
 
 onMounted(async () => {
   initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
-  
+
   if (isCreateMode.value) {
     if (actorTypeStore.actorTypes.length === 0) {
       await actorTypeStore.fetchAll();
     }
-    
-    const moaType = actorTypeStore.actorTypes.find(t => t.code === "MOA");
-    const moeType = actorTypeStore.actorTypes.find(t => t.code === "MOE");
-    
+
+    const moaType = actorTypeStore.actorTypes.find((t) => t.code === "MOA");
+    const moeType = actorTypeStore.actorTypes.find((t) => t.code === "MOE");
+
     if (moaType) {
       moaActor.value.actorTypeId = moaType.id;
     }
@@ -425,30 +424,16 @@ onMounted(async () => {
 </script>
 
 <template>
-  <DsfrAlert
-    v-if="globalError"
-    :description="globalError"
-    type="error"
-    class="fr-mb-3w"
-    closeable
-    @close="globalError = undefined"
-  />
-  
+  <DsfrAlert v-if="globalError" :description="globalError" type="error" class="fr-mb-3w" closeable @close="globalError = undefined" />
+
   <!-- Stepper for create mode -->
-  <DsfrStepper
-    v-if="isCreateMode"
-    :steps="steps"
-    :current-step="currentStep"
-    class="fr-mb-4w"
-  />
-  
+  <DsfrStepper v-if="isCreateMode" :steps="steps" :current-step="currentStep" class="fr-mb-4w" />
+
   <form data-testid="application-form" @submit.prevent="handleSubmit">
     <!-- Step 1: Informations principales de l'application -->
     <div v-if="!isCreateMode || currentStep === 1" class="fr-card fr-p-3w">
-      <h3 class="fr-mb-3w">
-        Informations principales
-      </h3>
-      
+      <h3 class="fr-mb-3w">Informations principales</h3>
+
       <DsfrInputGroup
         v-model.trim="form.label"
         :disabled="!canEditBase"
@@ -491,9 +476,7 @@ Aucun espace en début ou en fin."
       />
 
       <div v-if="!isCreateMode" class="fr-form-group fr-mt-3w">
-        <legend class="fr-label">
-          Noms alternatifs
-        </legend>
+        <legend class="fr-label">Noms alternatifs</legend>
         <div class="fr-mt-2w">
           <div v-for="(_label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
             <div class="fr-col">
@@ -558,9 +541,7 @@ Aucun espace en début ou en fin."
 
     <!-- Step 2: Détails de l'application -->
     <div v-if="!isCreateMode || currentStep === 2" class="fr-card fr-mt-3w fr-p-3w">
-      <h3 class="fr-mb-3w">
-        Détails de l'application
-      </h3>
+      <h3 class="fr-mb-3w">Détails de l'application</h3>
 
       <DsfrSelect
         v-model="form.priorityRestart"
@@ -572,46 +553,89 @@ Aucun espace en début ou en fin."
       />
 
       <div class="fr-form-group fr-mt-3w">
-        <legend class="fr-label">
-          Population
-        </legend>
-        <p class="fr-hint-text">
-          Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)
-        </p>
+        <legend class="fr-label">Population</legend>
+        <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
         <div class="fr-mt-2w">
           <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
             <div class="fr-col">
-              <DsfrInput v-model.trim="form.targetPopulations[index]" :disabled="!canEditBase" :data-testid="`application-population-${index}`" />
+              <DsfrInput
+                v-model.trim="form.targetPopulations[index]"
+                :disabled="!canEditBase"
+                :data-testid="`application-population-${index}`"
+              />
             </div>
             <div class="fr-col-auto">
-              <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cette population" aria-label="Supprimer cette population" :disabled="!canEditBase" :data-testid="`application-population-remove-${index}`" @click="removePopulation(index)" />
+              <DsfrButton
+                type="button"
+                tertiary
+                size="sm"
+                icon="delete-line"
+                label="Supprimer"
+                title="Supprimer cette population"
+                aria-label="Supprimer cette population"
+                :disabled="!canEditBase"
+                :data-testid="`application-population-remove-${index}`"
+                @click="removePopulation(index)"
+              />
             </div>
           </div>
-          <DsfrButton type="button" secondary icon="add-line" label="Ajouter une population" title="Ajouter une nouvelle population" aria-label="Ajouter une population" :disabled="!canEditBase" data-testid="application-population-add" @click="addPopulation" />
+          <DsfrButton
+            type="button"
+            secondary
+            icon="add-line"
+            label="Ajouter une population"
+            title="Ajouter une nouvelle population"
+            aria-label="Ajouter une population"
+            :disabled="!canEditBase"
+            data-testid="application-population-add"
+            @click="addPopulation"
+          />
         </div>
       </div>
 
       <div class="fr-form-group fr-mt-3w">
-        <legend class="fr-label">
-          Objectifs
-        </legend>
+        <legend class="fr-label">Objectifs</legend>
         <div class="fr-mt-2w">
           <div v-for="(_purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
             <div class="fr-col">
-              <DsfrInput v-model.trim="form.purposes[index]" :disabled="!canEditBase" :placeholder="`Objectif ${index + 1}`" :data-testid="`application-purpose-${index}`" />
+              <DsfrInput
+                v-model.trim="form.purposes[index]"
+                :disabled="!canEditBase"
+                :placeholder="`Objectif ${index + 1}`"
+                :data-testid="`application-purpose-${index}`"
+              />
             </div>
             <div class="fr-col-auto">
-              <DsfrButton type="button" tertiary size="sm" icon="delete-line" label="Supprimer" title="Supprimer cet objectif" aria-label="Supprimer cet objectif" :disabled="!canEditBase" :data-testid="`application-purpose-remove-${index}`" @click="removePurpose(index)" />
+              <DsfrButton
+                type="button"
+                tertiary
+                size="sm"
+                icon="delete-line"
+                label="Supprimer"
+                title="Supprimer cet objectif"
+                aria-label="Supprimer cet objectif"
+                :disabled="!canEditBase"
+                :data-testid="`application-purpose-remove-${index}`"
+                @click="removePurpose(index)"
+              />
             </div>
           </div>
-          <DsfrButton type="button" secondary icon="add-line" label="Ajouter un objectif" title="Ajouter un nouvel objectif" aria-label="Ajouter un objectif" :disabled="!canEditBase" data-testid="application-purpose-add" @click="addPurpose" />
+          <DsfrButton
+            type="button"
+            secondary
+            icon="add-line"
+            label="Ajouter un objectif"
+            title="Ajouter un nouvel objectif"
+            aria-label="Ajouter un objectif"
+            :disabled="!canEditBase"
+            data-testid="application-purpose-add"
+            @click="addPurpose"
+          />
         </div>
       </div>
 
       <div class="fr-form-group fr-mt-3w autocomplete-tags">
-        <legend class="fr-label">
-          Tags
-        </legend>
+        <legend class="fr-label">Tags</legend>
         <div class="fr-mt-2w fr-col">
           <TagSearchSelect v-model:tags="form.tags" />
         </div>
@@ -620,9 +644,7 @@ Aucun espace en début ou en fin."
 
     <!-- Step 3: MOA Section -->
     <div v-if="isCreateMode && currentStep === 3" class="fr-card fr-mt-3w fr-p-3w">
-      <h3 class="fr-mb-3w">
-        MOA (Maîtrise d'Ouvrage)
-      </h3>
+      <h3 class="fr-mb-3w">MOA (Maîtrise d'Ouvrage)</h3>
       <p v-if="moaError" class="fr-error-text fr-mb-2w">
         {{ moaError }}
       </p>
@@ -669,9 +691,7 @@ Aucun espace en début ou en fin."
 
     <!-- Step 4: MOE Section -->
     <div v-if="isCreateMode && currentStep === 4" class="fr-card fr-mt-3w fr-p-3w">
-      <h3 class="fr-mb-3w">
-        MOE (Maîtrise d'Œuvre)
-      </h3>
+      <h3 class="fr-mb-3w">MOE (Maîtrise d'Œuvre)</h3>
       <p v-if="moeError" class="fr-error-text fr-mb-2w" role="alert">
         {{ moeError }}
       </p>
@@ -718,47 +738,41 @@ Aucun espace en début ou en fin."
 
     <!-- Navigation buttons -->
     <div v-if="isCreateMode" class="fr-btns-group fr-btns-group--right fr-mt-4w">
-      <DsfrButton 
-        type="button" 
-        secondary 
-        label="Annuler" 
-        data-testid="application-cancel-btn" 
-        @click="$emit('cancel')" 
-      />
-      <DsfrButton 
+      <DsfrButton type="button" secondary label="Annuler" data-testid="application-cancel-btn" @click="$emit('cancel')" />
+      <DsfrButton
         v-if="currentStep > 1"
-        type="button" 
-        label="Précédent" 
+        type="button"
+        label="Précédent"
         icon="ri-arrow-left-line"
-        data-testid="application-previous-btn" 
-        @click="previousStep" 
+        data-testid="application-previous-btn"
+        @click="previousStep"
       />
-      <DsfrButton 
+      <DsfrButton
         v-if="currentStep < steps.length"
-        type="button" 
-        label="Suivant" 
+        type="button"
+        label="Suivant"
         icon="ri-arrow-right-line"
         icon-right
-        data-testid="application-next-btn" 
-        @click="nextStep" 
+        data-testid="application-next-btn"
+        @click="nextStep"
       />
-      <DsfrButton 
+      <DsfrButton
         v-if="currentStep === steps.length"
-        type="submit" 
-        :disabled="isSubmitting" 
-        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" 
-        data-testid="application-submit-btn" 
+        type="submit"
+        :disabled="isSubmitting"
+        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
+        data-testid="application-submit-btn"
       />
     </div>
-    
+
     <!-- Edit mode buttons -->
     <div v-else class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton type="button" secondary label="Annuler" data-testid="application-cancel-btn" @click="$emit('cancel')" />
-      <DsfrButton 
-        type="submit" 
-        :disabled="isSubmitting" 
-        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'" 
-        data-testid="application-submit-btn" 
+      <DsfrButton
+        type="submit"
+        :disabled="isSubmitting"
+        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
+        data-testid="application-submit-btn"
       />
     </div>
   </form>

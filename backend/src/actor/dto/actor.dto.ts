@@ -8,7 +8,7 @@ export class CreateActorDto {
     required: false,
   })
   @IsOptional()
-  @ValidateIf(o => o.email !== "")
+  @ValidateIf((o) => o.email !== "")
   @IsEmail()
   email?: string;
 

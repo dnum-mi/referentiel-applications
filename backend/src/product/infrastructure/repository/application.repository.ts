@@ -7,13 +7,19 @@ import { ApplicationDto } from "src/product/application/dto/get-application.dto"
 import { ApplicationWithAllRelations } from "src/product/types/application.type";
 import { CreateTagDto } from "src/tag/dto/tag.dto";
 import { CreateApplicationDto } from "../../application/dto/create-application.dto";
-import { ApplicationSearchFilters, IApplicationRepository } from "./application.repository.interface";
+import {
+  ApplicationSearchFilters,
+  IApplicationRepository,
+} from "./application.repository.interface";
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
   constructor(private prisma: PrismaService) {}
 
-  public async create(application: Omit<CreateApplicationDto, "status" | "labels">, existingTags: CreateTagDto[]) {
+  public async create(
+    application: Omit<CreateApplicationDto, "status" | "labels">,
+    existingTags: CreateTagDto[],
+  ) {
     return this.prisma.application.create({
       data: {
         ...application,
@@ -298,7 +304,8 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       },
       {
-        condition: filters.currentStatus__in?.length && !filters.currentStatus__isNull,
+        condition:
+          filters.currentStatus__in?.length && !filters.currentStatus__isNull,
         whereClause: {
           currentStatus: {
             status: { in: filters.currentStatus__in },

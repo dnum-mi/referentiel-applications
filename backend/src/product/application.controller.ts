@@ -42,7 +42,12 @@ import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from "./application/dto/create-application.dto";
-import { ApplicationDto, ApplicationSearchResultDto, CountByIqDto, CountByMonthDto } from "./application/dto/get-application.dto";
+import {
+  ApplicationDto,
+  ApplicationSearchResultDto,
+  CountByIqDto,
+  CountByMonthDto,
+} from "./application/dto/get-application.dto";
 import { ApplicationSearchDto } from "./application/dto/search-application.dto";
 import { ExportApplicationsUseCase } from "./application/usecases/application-export.usecase";
 import { ApplicationExportService } from "./export.service";
@@ -54,7 +59,7 @@ export class ApplicationController {
     private readonly applicationService: ApplicationService,
     private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly applicationExportService: ApplicationExportService,
-  ) { }
+  ) {}
 
   @Post()
   @ApiBody({ type: CreateApplicationDto })
@@ -163,9 +168,7 @@ Vous devez fournir les informations suivantes :
     required: true,
     type: String,
   })
-  getMyPerms(
-    @User() user: Requestor,
-  ): Promise<APP_PERMISSIONS[]> {
+  getMyPerms(@User() user: Requestor): Promise<APP_PERMISSIONS[]> {
     return this.applicationService.getMyPerms(user);
   }
 
@@ -197,8 +200,8 @@ Vous devez fournir les informations suivantes :
     @Query() searchParams: ApplicationSearchDto,
     @Res() res: Response,
   ) {
-    const buffer
-      = Object.keys(searchParams).length > 0
+    const buffer =
+      Object.keys(searchParams).length > 0
         ? await this.applicationExportService.exportSearchResultsToExcel(
             searchParams,
           )
@@ -230,9 +233,7 @@ Le paramètre **id** doit être fourni dans l'URL.
     description: "Application trouvée avec succès",
     type: ApplicationDto,
   })
-  async findOne(
-    @Param("applicationId") id: string,
-  ): Promise<ApplicationDto> {
+  async findOne(@Param("applicationId") id: string): Promise<ApplicationDto> {
     return this.applicationService.getApplicationById(id);
   }
 
@@ -302,9 +303,7 @@ Le paramètre **id** doit être fourni dans l'URL.
   })
   @ApiNotFoundResponse({ description: "Application non trouvée." })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(
-    @Param("applicationId") id: string,
-  ) {
+  async remove(@Param("applicationId") id: string) {
     await this.applicationService.deleteApplication(id);
     return { message: "Application supprimée avec succès." };
   }

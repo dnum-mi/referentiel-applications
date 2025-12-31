@@ -30,12 +30,15 @@ export class LinksService extends BaseService<Link> {
       applicationId: filters.applicationId,
     };
 
-    return new LinksPaginatedResponseDto(await this.prisma.externalRessource.findMany({
-      where,
-      ...paginate(filters.page, filters.pageSize),
-      orderBy: filters.sortBy
-        ? { [filters.sortBy]: filters.order || "asc" }
-        : { link: "asc" },
-    }), await this.prisma.externalRessource.count({ where }));
+    return new LinksPaginatedResponseDto(
+      await this.prisma.externalRessource.findMany({
+        where,
+        ...paginate(filters.page, filters.pageSize),
+        orderBy: filters.sortBy
+          ? { [filters.sortBy]: filters.order || "asc" }
+          : { link: "asc" },
+      }),
+      await this.prisma.externalRessource.count({ where }),
+    );
   }
 }

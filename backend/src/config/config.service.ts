@@ -8,7 +8,8 @@ import { FrontendConfig } from "./domain/configs.entity";
 export class ConfigService {
   constructor(
     @Inject(appConfig.KEY) private readonly app: ConfigType<typeof appConfig>,
-    @Inject(keycloakConfig.KEY) private readonly keycloak: ConfigType<typeof keycloakConfig>,
+    @Inject(keycloakConfig.KEY)
+    private readonly keycloak: ConfigType<typeof keycloakConfig>,
   ) {}
 
   getFrontendConfig(): FrontendConfig {

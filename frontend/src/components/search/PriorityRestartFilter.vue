@@ -23,7 +23,7 @@ function togglePriority(value: ApplicationPriorityRestart, checked: boolean) {
           :checked="filters.priorityRestart?.includes(option.value)"
           :data-testid="`priority-restart-option-${option.value}`"
           @change="(e) => togglePriority(option.value, (e.target as HTMLInputElement).checked)"
-        >
+        />
         {{ option.text }}
       </label>
     </div>

@@ -1,6 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import {
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
 
 export enum SortByEnum {
   application = "application",
@@ -20,7 +27,8 @@ export class AnomalyFiltersDto {
   @IsBoolean()
   @Type(() => Boolean)
   @ApiProperty({
-    description: "Filtrer les notifications d'anomalies pour l'utilisateur connecté",
+    description:
+      "Filtrer les notifications d'anomalies pour l'utilisateur connecté",
     default: false,
   })
   all?: boolean;

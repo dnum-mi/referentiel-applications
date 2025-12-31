@@ -3,17 +3,20 @@ import { defineProps } from "vue";
 
 type PermissionValue = "none" | "read" | "write";
 
-const props = withDefaults(defineProps<{
-  read?: boolean
-  write?: boolean
-  id: string
-  permOrder?: PermissionValue[]
-}>(), {
-  permOrder: () => ["none", "read", "write"] as PermissionValue[],
-});
+const props = withDefaults(
+  defineProps<{
+    read?: boolean;
+    write?: boolean;
+    id: string;
+    permOrder?: PermissionValue[];
+  }>(),
+  {
+    permOrder: () => ["none", "read", "write"] as PermissionValue[],
+  },
+);
 
 const emit = defineEmits<{
-  (e: "update:model-value", value: PermissionValue): void
+  (e: "update:model-value", value: PermissionValue): void;
 }>();
 
 const permDict = {
@@ -32,9 +35,7 @@ const permDict = {
 };
 const permOrder = props.permOrder;
 
-const permIndex = ref(
-  permOrder.findIndex(option => option === (props.write ? "write" : props.read ? "read" : "none")),
-);
+const permIndex = ref(permOrder.findIndex((option) => option === (props.write ? "write" : props.read ? "read" : "none")));
 
 function togglePermission() {
   if (permIndex.value >= permOrder.length - 1) {

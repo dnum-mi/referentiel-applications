@@ -27,13 +27,10 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 
 <template>
   <div class="layout" data-testid="application-view">
-
     <SidebarFilters data-testid="application-filters" />
 
     <main class="main-content" id="main-content" data-testid="main-content" role="main">
-      <h1 class="fr-h1" data-testid="application-search-title">
-        Recherche d'applications
-      </h1>
+      <h1 class="fr-h1" data-testid="application-search-title">Recherche d'applications</h1>
 
       <div v-if="isLoading" class="loader" data-testid="application-loader" role="status" aria-live="polite" aria-atomic="true">
         <AppLoader />
@@ -44,13 +41,7 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
         <ApplicationSearchActions />
       </div>
 
-      <section
-        id="application-results"
-        class="application-results"
-        aria-live="polite"
-        :aria-busy="isLoading"
-        tabindex="-1"
-      >
+      <section id="application-results" class="application-results" aria-live="polite" :aria-busy="isLoading" tabindex="-1">
         <ApplicationTableView v-if="displayMode === 'table'" data-testid="application-table-view" />
         <ApplicationCardView v-else data-testid="application-card-view" />
       </section>
@@ -114,7 +105,8 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 
 .sr-only {
   position: absolute !important;
-  height: 1px; width: 1px;
+  height: 1px;
+  width: 1px;
   overflow: hidden;
   clip: rect(1px, 1px, 1px, 1px);
   white-space: nowrap;

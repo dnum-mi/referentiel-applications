@@ -17,21 +17,21 @@ const selectedActorTypeId = computed({
   get: () => {
     const currentCode = filters.value.actorType;
     if (!currentCode) return "";
-    return actorTypeStore.actorTypes.find(actor => actor.code === currentCode)?.id ?? "";
+    return actorTypeStore.actorTypes.find((actor) => actor.code === currentCode)?.id ?? "";
   },
   set: (value: string) => {
     if (!value) {
       setFilter({ actorType: undefined, page: 0 });
       return;
     }
-    const selected = actorTypeStore.actorTypes.find(actor => actor.id === value);
+    const selected = actorTypeStore.actorTypes.find((actor) => actor.id === value);
     if (selected) setFilter({ actorType: selected.code, page: 0 });
   },
 });
 
 const actorTypeOptions = computed(() => [
   { text: "Tous", value: "" },
-  ...actorTypeStore.actorTypes.map(actor => ({ text: actor.label, value: actor.id })),
+  ...actorTypeStore.actorTypes.map((actor) => ({ text: actor.label, value: actor.id })),
 ]);
 
 onMounted(() => actorTypeStore.fetchAll());

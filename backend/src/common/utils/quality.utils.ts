@@ -18,35 +18,33 @@ export async function calculateIQ(
   const rules = [
     { value: Boolean(application.description), importance: 1 },
     { value: Boolean(hosting), importance: 1 },
-    { value: actors.some(a => a.actorType?.code === "MOA"), importance: 1 },
-    { value: actors.some(a => a.actorType?.code === "MOE"), importance: 2 },
-    { value: actors.some(a => a.actorType?.code === "TMA"), importance: 2 },
-    { value: actors.some(a => a.actorType?.code === "HEB"), importance: 3 },
-    { value: actors.some(a => a.actorType?.code === "REP"), importance: 3 },
+    { value: actors.some((a) => a.actorType?.code === "MOA"), importance: 1 },
+    { value: actors.some((a) => a.actorType?.code === "MOE"), importance: 2 },
+    { value: actors.some((a) => a.actorType?.code === "TMA"), importance: 2 },
+    { value: actors.some((a) => a.actorType?.code === "HEB"), importance: 3 },
+    { value: actors.some((a) => a.actorType?.code === "REP"), importance: 3 },
     {
       value: Boolean(
-        compliance?.pdma_duration_hours
-        || compliance?.pdma_data_types
-        || compliance?.pdma_backup_frequency,
+        compliance?.pdma_duration_hours ||
+          compliance?.pdma_data_types ||
+          compliance?.pdma_backup_frequency,
       ),
       importance: 3,
     },
     {
       value: Boolean(
-        compliance?.dima_duration_hours
-        || compliance?.dima_business_impact
-        || compliance?.dima_recovery_plan,
+        compliance?.dima_duration_hours ||
+          compliance?.dima_business_impact ||
+          compliance?.dima_recovery_plan,
       ),
       importance: 3,
     },
     {
-      value: Boolean(
-        compliance?.homologation_date_end,
-      ),
+      value: Boolean(compliance?.homologation_date_end),
       importance: 3,
     },
     {
-      value: links.some(l => l.link.toLowerCase().includes("snapvisu")),
+      value: links.some((l) => l.link.toLowerCase().includes("snapvisu")),
       importance: 3,
     },
   ];

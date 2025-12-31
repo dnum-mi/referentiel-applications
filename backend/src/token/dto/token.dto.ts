@@ -39,7 +39,8 @@ export class TokenDto {
 
   @ApiPropertyOptional({
     example: "2023-12-31T23:59:59.999Z",
-    description: "Date d'expiration du token, au format ISO 8601, maximum 1 an dans le futur",
+    description:
+      "Date d'expiration du token, au format ISO 8601, maximum 1 an dans le futur",
     required: true,
   })
   @IsDateString({ strict: true })
@@ -57,7 +58,8 @@ export class TokenDto {
 export class ExposedTokenDto extends TokenDto {
   @ApiProperty({
     example: "xyz987uvw654rst321opq098nml765kj",
-    description: "Valeur du token (ne sera pas stockée, à afficher une seule fois)",
+    description:
+      "Valeur du token (ne sera pas stockée, à afficher une seule fois)",
     required: true,
   })
   @IsString()
@@ -84,7 +86,8 @@ export class CreatePersonalTokenDto extends PickType(TokenDto, [
 ] as const) {
   @ApiProperty({
     required: false,
-    description: "Niveau d'administration du token personnel (optionnel). Il ne pourra pas être supérieur à celui de l'utilisateur créant le token.",
+    description:
+      "Niveau d'administration du token personnel (optionnel). Il ne pourra pas être supérieur à celui de l'utilisateur créant le token.",
   })
   @IsOptional()
   adminLevel?: AdminLevel;
@@ -92,5 +95,4 @@ export class CreatePersonalTokenDto extends PickType(TokenDto, [
 
 export class RegenerateTokenDto extends PickType(TokenDto, [
   "expiresAt",
-] as const) {
-}
+] as const) {}

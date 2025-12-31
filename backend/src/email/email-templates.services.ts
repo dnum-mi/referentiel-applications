@@ -14,13 +14,19 @@ export class EmailTemplateService {
   }
 
   private loadBaseTemplate(): void {
-    const baseTemplatePath = path.join(this.templatesPath, "base.template.html");
+    const baseTemplatePath = path.join(
+      this.templatesPath,
+      "base.template.html",
+    );
     this.logger.log(`Loading base template from: ${baseTemplatePath}`);
     try {
       this.baseTemplate = fs.readFileSync(baseTemplatePath, "utf-8");
       this.logger.log("Base email template loaded successfully");
     } catch (error) {
-      this.logger.error(`Failed to load base email template from ${baseTemplatePath}:`, error);
+      this.logger.error(
+        `Failed to load base email template from ${baseTemplatePath}:`,
+        error,
+      );
       this.logger.warn("Using fallback base template");
       this.baseTemplate = `<!DOCTYPE html>
 <html>
@@ -33,27 +39,37 @@ export class EmailTemplateService {
     }
   }
 
-  public render(templateName: string, variables: Record<string, string>): string {
+  public render(
+    templateName: string,
+    variables: Record<string, string>,
+  ): string {
     const contentTemplatePath = path.join(
       this.templatesPath,
       `${templateName}.template.html`,
     );
 
-    this.logger.log(`Loading template ${templateName} from: ${contentTemplatePath}`);
+    this.logger.log(
+      `Loading template ${templateName} from: ${contentTemplatePath}`,
+    );
     let content: string;
     try {
       content = fs.readFileSync(contentTemplatePath, "utf-8");
       this.logger.log(`Template ${templateName} loaded successfully`);
     } catch (error) {
-      this.logger.error(`Failed to load template ${templateName} from ${contentTemplatePath}:`, error);
+      this.logger.error(
+        `Failed to load template ${templateName} from ${contentTemplatePath}:`,
+        error,
+      );
       this.logger.warn(`Using fallback content for template ${templateName}`);
-      content = "<p>Message automatique du système référentiel des applications</p>";
+      content =
+        "<p>Message automatique du système référentiel des applications</p>";
     }
 
     content = this.replaceVariables(content, variables);
 
     const html = this.replaceVariables(this.baseTemplate, {
-      title: variables.title || "Notification from Référentiel des Applications",
+      title:
+        variables.title || "Notification from Référentiel des Applications",
       headerTitle: variables.headerTitle || "Notification",
       content,
     });
@@ -96,7 +112,7 @@ export class EmailTemplateService {
       .replace(/&amp;/g, "&")
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, "\"")
+      .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'");
 
     text = text.replace(/\n\s*\n\s*\n/g, "\n\n");

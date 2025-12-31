@@ -11,7 +11,7 @@ import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 const props = defineProps<{ user: Required<UserEntity> }>();
 
 const emit = defineEmits<{
-  userUpdated: [user: UserEntity]
+  userUpdated: [user: UserEntity];
 }>();
 
 const toaster = useToasterStore();
@@ -88,12 +88,7 @@ const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
       @click="openEditModal"
     />
 
-    <DsfrModal
-      :opened="isEditModalOpen"
-      title="Modifier l'utilisateur"
-      data-testid="admin-edit-user-modal"
-      @close="closeEditModal"
-    >
+    <DsfrModal :opened="isEditModalOpen" title="Modifier l'utilisateur" data-testid="admin-edit-user-modal" @close="closeEditModal">
       <p><strong>Utilisateur :</strong> {{ user.email }}</p>
 
       <OrganizationSearchSelect
@@ -120,7 +115,9 @@ const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
 
       <template #footer>
         <DsfrButton
-          label="Annuler" secondary data-testid="admin-cancel-btn"
+          label="Annuler"
+          secondary
+          data-testid="admin-cancel-btn"
           title="Annuler la modification"
           aria-label="Annuler la modification"
           @click="closeEditModal"
@@ -129,7 +126,9 @@ const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
           label="Sauvegarder"
           title="Sauvegarder les modifications"
           aria-label="Sauvegarder les modifications"
-          :disabled="isSaving" data-testid="admin-save-perms-btn" @click="saveUser"
+          :disabled="isSaving"
+          data-testid="admin-save-perms-btn"
+          @click="saveUser"
         />
       </template>
     </DsfrModal>

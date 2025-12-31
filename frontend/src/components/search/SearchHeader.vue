@@ -44,16 +44,13 @@ async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[
   trimmedQuery.value = searchQuery.trim();
   if (!trimmedQuery.value) return [];
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     debouncedSearch(resolve);
   });
 }
 
 const { run: debouncedSearch } = useDebouncedFn(async (resolve: (res: ApplicationOption[]) => void) => {
-  const response = await searchApplications(
-    { search: trimmedQuery.value, page: 0, pageSize: 8 },
-    false
-  );
+  const response = await searchApplications({ search: trimmedQuery.value, page: 0, pageSize: 8 }, false);
 
   suggestions.value = (response?.results ?? []) as ApplicationOption[];
 
@@ -61,7 +58,7 @@ const { run: debouncedSearch } = useDebouncedFn(async (resolve: (res: Applicatio
 }, 400);
 
 function displayLabel(application: ApplicationOption | null) {
-  return application ? application.label ?? application.shortName ?? "" : "";
+  return application ? (application.label ?? application.shortName ?? "") : "";
 }
 
 function onConfirm(selection: ApplicationOption | null) {
@@ -83,11 +80,11 @@ function onConfirm(selection: ApplicationOption | null) {
       v-show="isMobile"
       @click="onLoupeClick"
       tertiary
-      class="loupe-button" 
+      class="loupe-button"
       aria-label="Ouvrir la recherche"
       data-testid="open-search-btn"
     >
-    <v-icon name="ri-search-line" />
+      <v-icon name="ri-search-line" />
     </DsfrButton>
 
     <AccessibleAutocomplete
@@ -116,7 +113,6 @@ function onConfirm(selection: ApplicationOption | null) {
 </template>
 
 <style scoped>
-
 .search-header {
   position: relative;
   display: flex;
@@ -130,9 +126,7 @@ function onConfirm(selection: ApplicationOption | null) {
   margin-top: -18.99em;
   z-index: 999;
   margin-right: 1.2em;
-
 }
-
 
 .close-search {
   margin-left: 0.5rem;
@@ -143,14 +137,13 @@ function onConfirm(selection: ApplicationOption | null) {
   flex-direction: column;
   font-size: 0.95rem;
 }
-.suggestion small, .suggestion em {
+.suggestion small,
+.suggestion em {
   color: #6b7280;
   font-size: 0.85rem;
 }
 
-
 @media (max-width: 768px) {
-
   .search-header {
     justify-content: flex-end;
   }
@@ -186,7 +179,11 @@ function onConfirm(selection: ApplicationOption | null) {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style>

@@ -11,7 +11,7 @@ const isLoading = ref(false);
 const errorMessage = ref("");
 const isTableView = ref(false);
 
-const applicationsByMonth = ref<{ month: string, total: number }[]>([]);
+const applicationsByMonth = ref<{ month: string; total: number }[]>([]);
 
 const tableRows = computed(() =>
   applicationsByMonth.value.map(({ month, total }) => ({
@@ -31,7 +31,7 @@ async function loadData() {
       const date = new Date(m.month);
       return date.toLocaleString("fr-FR", { month: "short", year: "numeric" });
     });
-    const data = applicationsByMonth.value.map(m => m.total);
+    const data = applicationsByMonth.value.map((m) => m.total);
 
     chartInstance = renderChart(chartRef, chartInstance, labels, data, "bar");
   } catch {
@@ -49,12 +49,8 @@ onMounted(() => {
 <template>
   <section aria-labelledby="applications-chart-title" data-testid="applications-chart">
     <h3 id="applications-chart-title">Nombre d'applications référencées</h3>
-    <p id="applications-chart-desc" class="fr-sr-only">
-      Ce graphique présente l’évolution mensuelle du nombre d’applications référencées.
-    </p>
-    <output v-if="isLoading" data-testid="applications-chart-loading" aria-live="polite" role="status">
-      Chargement...
-    </output>
+    <p id="applications-chart-desc" class="fr-sr-only">Ce graphique présente l’évolution mensuelle du nombre d’applications référencées.</p>
+    <output v-if="isLoading" data-testid="applications-chart-loading" aria-live="polite" role="status"> Chargement... </output>
     <div v-else-if="errorMessage" data-testid="applications-chart-error" role="alert">
       {{ errorMessage }}
     </div>
@@ -62,7 +58,11 @@ onMounted(() => {
       :label="isTableView ? 'Voir le graphique' : 'Voir le tableau'"
       class="fr-mb-2v"
       data-testid="applications-chart-toggle-view"
-      @click="() => { isTableView = !isTableView }"
+      @click="
+        () => {
+          isTableView = !isTableView;
+        }
+      "
     />
     <canvas
       v-show="!isLoading && !errorMessage && !isTableView"

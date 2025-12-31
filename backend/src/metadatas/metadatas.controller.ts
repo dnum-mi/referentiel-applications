@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Query,
-  UseGuards,
-} from "@nestjs/common";
+import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import {
   ApiOkResponse,
   ApiOperation,
@@ -13,13 +7,18 @@ import {
 } from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
-import { FirstLastMetadataDto, MetadataDto, MetadataFiltersDto, MetadataPaginatedResponseDto } from "./dto/metadata.dto";
+import {
+  FirstLastMetadataDto,
+  MetadataDto,
+  MetadataFiltersDto,
+  MetadataPaginatedResponseDto,
+} from "./dto/metadata.dto";
 import { MetadatasService } from "./metadatas.service";
 
 @ApiTags("Metadatas")
 @Controller("metadatas")
 export class MetadatasController {
-  constructor(private readonly metadataService: MetadatasService) { }
+  constructor(private readonly metadataService: MetadatasService) {}
 
   @Get()
   @ApiOperation({ summary: "Récupérer toutes les metadatas" })
@@ -27,7 +26,9 @@ export class MetadatasController {
     description: "Récupérer toutes les metadatas",
     type: MetadataPaginatedResponseDto,
   })
-  find(@Query() filters: MetadataFiltersDto): Promise<MetadataPaginatedResponseDto> {
+  find(
+    @Query() filters: MetadataFiltersDto,
+  ): Promise<MetadataPaginatedResponseDto> {
     return this.metadataService.find(filters);
   }
 
@@ -39,7 +40,10 @@ export class MetadatasController {
     type: MetadataDto,
   })
   findOne(@Param("id") id: string) {
-    return this.metadataService.findOne(id, { application: true, createdBy: true });
+    return this.metadataService.findOne(id, {
+      application: true,
+      createdBy: true,
+    });
   }
 }
 
@@ -47,7 +51,7 @@ export class MetadatasController {
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/metadatas")
 export class ApplicationMetadatasController {
-  constructor(private readonly metadataService: MetadatasService) { }
+  constructor(private readonly metadataService: MetadatasService) {}
 
   @Get()
   @AppAction("readMetadata")

@@ -200,15 +200,16 @@ export class ApplicationSearchDto extends PaginationDto {
         return Array.isArray(parsed) ? parsed : [value];
       } catch {
         // If not valid JSON, treat as comma-separated values
-        return value.split(",").map(v => v.trim());
+        return value.split(",").map((v) => v.trim());
       }
     }
-    return Array.isArray(value) ? value : [value] as string[];
+    return Array.isArray(value) ? value : ([value] as string[]);
   })
   columns?: string;
 
   @ApiPropertyOptional({
-    description: "Ne retourne que les applications dont l'utilisateur est acteur, defaut: false",
+    description:
+      "Ne retourne que les applications dont l'utilisateur est acteur, defaut: false",
     required: false,
     type: String,
   })

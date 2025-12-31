@@ -1,5 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from "class-validator";
 import { APP_PERMISSIONS } from "src/common/utils/types";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 
@@ -43,7 +50,13 @@ export class UserEntity {
   @IsEnum(AdminLevel)
   adminLevel: AdminLevel; // Changed from permissions to adminLevel
 
-  @ApiProperty({ required: false, enum: UserCapabilities, enumName: "UserCapabilities", isArray: true, description: "Liste des capacités de l'utilisateur" })
+  @ApiProperty({
+    required: false,
+    enum: UserCapabilities,
+    enumName: "UserCapabilities",
+    isArray: true,
+    description: "Liste des capacités de l'utilisateur",
+  })
   capabilities?: (keyof typeof UserCapabilities)[];
 
   @IsString()

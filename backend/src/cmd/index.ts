@@ -8,5 +8,4 @@ program
 
 userCommand(program);
 
-program
-  .parse();
+program.parse();

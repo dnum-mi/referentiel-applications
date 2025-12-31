@@ -46,9 +46,9 @@ export class ActorService {
   }
 
   public async update(params: {
-    where: Prisma.ActorWhereUniqueInput
-    data: UpdateActorDto
-    requestorId: string
+    where: Prisma.ActorWhereUniqueInput;
+    data: UpdateActorDto;
+    requestorId: string;
   }): Promise<Actor> {
     const { where, data, requestorId } = params;
 
@@ -67,9 +67,15 @@ export class ActorService {
       updatedActor.applicationId,
     );
 
-    const changedFields = oldActor ? this.getChangedFieldsHtml(oldActor, updatedActor) : "";
+    const changedFields = oldActor
+      ? this.getChangedFieldsHtml(oldActor, updatedActor)
+      : "";
 
-    await this.sendActorNotificationIfEnabled(updatedActor, "updated", changedFields);
+    await this.sendActorNotificationIfEnabled(
+      updatedActor,
+      "updated",
+      changedFields,
+    );
 
     return updatedActor;
   }
@@ -122,19 +128,23 @@ export class ActorService {
     const emailNotificationsEnabled = user?.emailNotificationsEnabled ?? true;
 
     if (!emailNotificationsEnabled) {
-      Logger.log(`Email notifications disabled for user ${actor.email}. Skipping notification.`);
+      Logger.log(
+        `Email notifications disabled for user ${actor.email}. Skipping notification.`,
+      );
       return;
     }
 
-    const actorName = [actor.firstname, actor.lastname]
-      .filter(Boolean)
-      .join(" ") || actor.email;
+    const actorName =
+      [actor.firstname, actor.lastname].filter(Boolean).join(" ") ||
+      actor.email;
 
     let applicationName: string | undefined;
 
     if (actor.applicationId) {
       try {
-        const application = await this.applicationService.getApplicationById(actor.applicationId);
+        const application = await this.applicationService.getApplicationById(
+          actor.applicationId,
+        );
         applicationName = application?.label;
       } catch (error) {
         Logger.warn(

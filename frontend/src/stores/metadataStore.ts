@@ -33,7 +33,10 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     }
   }
 
-  const fetchMetadatasByApplication = async (applicationId: string, query: { page?: number, pageSize?: number, sortBy?: string, order?: "asc" | "desc", createdAtGte?: string, createdAtLte?: string } = {}) => {
+  const fetchMetadatasByApplication = async (
+    applicationId: string,
+    query: { page?: number; pageSize?: number; sortBy?: string; order?: "asc" | "desc"; createdAtGte?: string; createdAtLte?: string } = {},
+  ) => {
     isLoading.value = true;
     const response = await api.applicationMetadatasControllerFind({
       path: { applicationId },
@@ -57,7 +60,9 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     total.value = responseData.total ?? 0;
   };
 
-  const fetchMetadatas = async (query: { page?: number, pageSize?: number, sortBy?: string, order?: "asc" | "desc", createdAtGte?: string, createdAtLte?: string } = {}) => {
+  const fetchMetadatas = async (
+    query: { page?: number; pageSize?: number; sortBy?: string; order?: "asc" | "desc"; createdAtGte?: string; createdAtLte?: string } = {},
+  ) => {
     isLoading.value = true;
     try {
       console.log("Fetching global metadatas...");

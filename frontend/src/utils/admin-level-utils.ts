@@ -15,10 +15,10 @@ export const AdminLevelWordingBadgeClass: Record<AdminLevel, string> = {
 };
 
 export const AdminLevelOptions: {
-  value: AdminLevel
-  label: (typeof AdminLevelWording)[keyof typeof AdminLevelWording]
-  id: string
-  hint: string
+  value: AdminLevel;
+  label: (typeof AdminLevelWording)[keyof typeof AdminLevelWording];
+  id: string;
+  hint: string;
 }[] = [
   { value: 0, label: AdminLevelWording[0], id: "admin-level-0", hint: "Utilisateur standard" },
   { value: 10, label: AdminLevelWording[10], id: "admin-level-10", hint: "Accès en lecture sur toutes les applications" },

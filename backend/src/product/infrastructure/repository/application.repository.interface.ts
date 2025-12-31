@@ -10,11 +10,11 @@ export type ApplicationSearchFilters = ApplicationSearchDto;
 export interface IApplicationRepository {
   create: (
     application: CreateApplicationDto,
-    existingTags: CreateTagDto[]
-  ) => Promise<Application>
-  delete: (id: string) => Promise<void>
+    existingTags: CreateTagDto[],
+  ) => Promise<Application>;
+  delete: (id: string) => Promise<void>;
   findApplications: (
     search: ApplicationSearchFilters,
     ownership?: { actorEmail?: string },
-  ) => Promise<PaginatedResponseDto<ApplicationDto>>
+  ) => Promise<PaginatedResponseDto<ApplicationDto>>;
 }

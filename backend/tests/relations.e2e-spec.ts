@@ -12,16 +12,16 @@ import { setupTestSuite } from "./setup";
 
 describe("Relations End-to-End", () => {
   const app = setupTestSuite();
-  let applicationSource: { id: string, label: string };
-  let applicationTarget: { id: string, label: string };
-  let applicationUpdates: { id: string, label: string };
+  let applicationSource: { id: string; label: string };
+  let applicationTarget: { id: string; label: string };
+  let applicationUpdates: { id: string; label: string };
   let user: UserFakerReturnType;
   let TOKEN: string;
   let relation: {
-    id: string
-    applicationSourceId: string
-    applicationTargetId: string
-    type: string
+    id: string;
+    applicationSourceId: string;
+    applicationTargetId: string;
+    type: string;
   };
 
   beforeAll(async () => {
@@ -137,11 +137,11 @@ describe("Relations Graph End-to-End", () => {
   const app = setupTestSuite();
   let user: UserFakerReturnType;
   let TOKEN: string;
-  let rootApp: { id: string, label: string };
-  let childApp1: { id: string, label: string };
-  let childApp2: { id: string, label: string };
-  let grandchildApp: { id: string, label: string };
-  let deletedApp: { id: string, label: string };
+  let rootApp: { id: string; label: string };
+  let childApp1: { id: string; label: string };
+  let childApp2: { id: string; label: string };
+  let grandchildApp: { id: string; label: string };
+  let deletedApp: { id: string; label: string };
 
   beforeAll(async () => {
     user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
@@ -201,7 +201,7 @@ describe("Relations Graph End-to-End", () => {
     expect(Array.isArray(response.body.nodes)).toBeTruthy();
     expect(Array.isArray(response.body.edges)).toBeTruthy();
 
-    const nodeIds = response.body.nodes.map(n => n.id);
+    const nodeIds = response.body.nodes.map((n) => n.id);
     expect(nodeIds).toContain(rootApp.id);
     expect(nodeIds).toContain(childApp1.id);
     expect(nodeIds).toContain(childApp2.id);
@@ -215,7 +215,7 @@ describe("Relations Graph End-to-End", () => {
       .expect(200);
 
     // Then
-    const nodeIds = response.body.nodes.map(n => n.id);
+    const nodeIds = response.body.nodes.map((n) => n.id);
     expect(nodeIds).toContain(rootApp.id);
     expect(nodeIds).toContain(childApp1.id);
     expect(nodeIds).toContain(childApp2.id);
@@ -230,7 +230,7 @@ describe("Relations Graph End-to-End", () => {
       .expect(200);
 
     // Then
-    const nodeIds = response.body.nodes.map(n => n.id);
+    const nodeIds = response.body.nodes.map((n) => n.id);
     expect(nodeIds).toContain(rootApp.id);
     expect(nodeIds).toContain(childApp1.id);
     expect(nodeIds).toContain(childApp2.id);
@@ -249,7 +249,9 @@ describe("Relations Graph End-to-End", () => {
       expect(node).toHaveProperty("id");
       expect(node).toHaveProperty("label");
       expect(typeof node.label).toBe("string");
-      expect(node.label).not.toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      expect(node.label).not.toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      );
     });
   });
 

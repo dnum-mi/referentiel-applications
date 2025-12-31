@@ -11,7 +11,7 @@ export class BaseService<T> {
     protected readonly prisma: PrismaService,
     private readonly metadataService?: MetadatasService,
     private readonly applicationService?: ApplicationService,
-  ) { }
+  ) {}
 
   async findOne(id: string, include = {}): Promise<T> {
     const object = await this.model.findUnique({ where: { id }, include });
@@ -46,15 +46,15 @@ export class BaseService<T> {
   }
 
   async updateWithMetadata(options: {
-    id: string
-    data: any
-    userId: string
-    applicationId: string
-    gender: string
-    entityName: string
-    metadataFields: Record<string, string>
-    getName?: (entity: T) => string
-    triggerQualityUpdate?: boolean
+    id: string;
+    data: any;
+    userId: string;
+    applicationId: string;
+    gender: string;
+    entityName: string;
+    metadataFields: Record<string, string>;
+    getName?: (entity: T) => string;
+    triggerQualityUpdate?: boolean;
   }): Promise<T> {
     const oldEntity = await this.findOne(options.id);
 
@@ -88,13 +88,13 @@ export class BaseService<T> {
   }
 
   async deleteWithMetadata(options: {
-    id: string
-    userId: string
-    applicationId: string
-    name: string
-    gender?: string
-    translateMap?: Record<string, string>
-    triggerQualityUpdate?: boolean
+    id: string;
+    userId: string;
+    applicationId: string;
+    name: string;
+    gender?: string;
+    translateMap?: Record<string, string>;
+    triggerQualityUpdate?: boolean;
   }): Promise<void> {
     const entity = await this.findOne(options.id);
     if (!entity) {

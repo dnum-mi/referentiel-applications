@@ -31,14 +31,17 @@ export class ApplicationService {
     private readonly tagsService: TagsService,
     private readonly labelsService: LabelsService,
     private readonly metadataService: MetadatasService,
-    @Inject(appConfig.KEY) private readonly appConf: ConfigType<typeof appConfig>,
-  ) { }
+    @Inject(appConfig.KEY)
+    private readonly appConf: ConfigType<typeof appConfig>,
+  ) {}
 
   public async createApplication(
     requestorId: string,
     createApplicationDto: CreateApplicationDto,
   ) {
-    const existingTags = await this.tagsService.findByNames(createApplicationDto.tags);
+    const existingTags = await this.tagsService.findByNames(
+      createApplicationDto.tags,
+    );
 
     const application = await this.prisma.$transaction(async (tx) => {
       const app = await tx.application.create({
@@ -97,9 +100,9 @@ export class ApplicationService {
   }
 
   public async update(params: {
-    where: Prisma.ApplicationWhereUniqueInput
-    data: PatchApplicationDto
-    requestor: Requestor
+    where: Prisma.ApplicationWhereUniqueInput;
+    data: PatchApplicationDto;
+    requestor: Requestor;
   }): Promise<Application> {
     const { where, requestor } = params;
     let { data } = params;
@@ -169,7 +172,7 @@ export class ApplicationService {
   private async updateAllApplicationsQuality(): Promise<void> {
     const applications = await this.prisma.application.findMany();
     await Promise.all(
-      applications.map(app => this.updateApplicationQuality(app.id)),
+      applications.map((app) => this.updateApplicationQuality(app.id)),
     );
     Logger.log(`${applications.length} applications mises à jour.`);
   }
@@ -186,7 +189,9 @@ export class ApplicationService {
     return range;
   }
 
-  async getApplicationsCountByMonth(lastMonths: number = 6): Promise<{ month: string, total: number }[]> {
+  async getApplicationsCountByMonth(
+    lastMonths: number = 6,
+  ): Promise<{ month: string; total: number }[]> {
     const now = new Date();
     const applications = await this.prisma.application.findMany({
       where: {
@@ -236,16 +241,14 @@ export class ApplicationService {
     });
 
     return result
-      .map(group => ({
+      .map((group) => ({
         iq: group.quality,
         total: group._count._all,
       }))
       .sort((a, b) => b.iq - a.iq);
   }
 
-  public async getMyPerms(
-    requestor: Requestor,
-  ): Promise<ApplicationRights> {
+  public async getMyPerms(requestor: Requestor): Promise<ApplicationRights> {
     return requestor.appPerms;
   }
 
@@ -254,10 +257,17 @@ export class ApplicationService {
     requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
     if (searchParams.isActor && requestor) {
-      return this.applicationRepository.findApplications(searchParams, { actorEmail: requestor.email });
+      return this.applicationRepository.findApplications(searchParams, {
+        actorEmail: requestor.email,
+      });
     }
-    if (!this.appConf.nonActorPermissions.includes("readBase") && requestor?.adminLevel < AdminLevel.READ) {
-      return this.applicationRepository.findApplications(searchParams, { actorEmail: requestor.email });
+    if (
+      !this.appConf.nonActorPermissions.includes("readBase") &&
+      requestor?.adminLevel < AdminLevel.READ
+    ) {
+      return this.applicationRepository.findApplications(searchParams, {
+        actorEmail: requestor.email,
+      });
     }
     return this.applicationRepository.findApplications(searchParams);
   }
@@ -267,14 +277,15 @@ export class ApplicationService {
   }
 
   public async getApplicationById(applicationId: string) {
-    const application = await this.applicationRepository.findById(applicationId);
+    const application =
+      await this.applicationRepository.findById(applicationId);
 
     if (!application) {
       throw new NotFoundException(
         `Application non trouvée pour l'ID: ${applicationId}`,
       );
     }
-    return { ...application, tags: application.tags.map(tag => tag.name) };
+    return { ...application, tags: application.tags.map((tag) => tag.name) };
   }
 
   public async deleteApplication(id: string): Promise<void> {

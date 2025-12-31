@@ -17,9 +17,9 @@ import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
 import api from "@/api/index.js";
 
 const props = defineProps<{
-  application: ApplicationWithPerms
-  targetPopulations: string[]
-  small?: boolean
+  application: ApplicationWithPerms;
+  targetPopulations: string[];
+  small?: boolean;
 }>();
 const emit = defineEmits(["update:application"]);
 const toaster = useToasterStore();
@@ -31,7 +31,12 @@ const hostingToDelete = ref<HostingDto | null>(null);
 const isDeleteModalOpen = ref(false);
 const hostingStore = useHostingStore();
 const userStore = useUserStore();
-const canEditBase = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase") || props.application.myPerms.has("writePriorityRestart"));
+const canEditBase = computed(
+  () =>
+    userStore.adminLevel >= AdminLevel.WRITE ||
+    props.application.myPerms.has("writeBase") ||
+    props.application.myPerms.has("writePriorityRestart"),
+);
 const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
 const canEditHostings = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeHostings"));
 const labels = ref<LabelDto[]>([]);
@@ -72,7 +77,7 @@ async function fetchLabels() {
     return;
   }
   labels.value = response.data;
-};
+}
 
 onMounted(() => {
   fetchLabels();
@@ -129,7 +134,7 @@ const priorityConfigOptions = [
     },
   ],
 ] as const;
-const priorityConfig = new Map<string, { type: DsfrAlertType, label: string, tooltip: string }>(priorityConfigOptions);
+const priorityConfig = new Map<string, { type: DsfrAlertType; label: string; tooltip: string }>(priorityConfigOptions);
 
 function getPriorityBadgeType(priority?: string) {
   return priority
@@ -191,9 +196,7 @@ watch(
           <div class="fr-card__content">
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
               <div class="fr-col">
-                <h3 class="fr-mb-0">
-                  Informations générales
-                </h3>
+                <h3 class="fr-mb-0">Informations générales</h3>
               </div>
               <div class="fr-col-auto">
                 <DsfrButton
@@ -220,7 +223,6 @@ watch(
                   {{ application.shortName }}
                 </p>
               </div>
-
 
               <div v-if="labels.length > 0" data-testid="info-alt-labels">
                 <h4>Noms Alternatifs</h4>
@@ -263,9 +265,7 @@ watch(
       <div class="fr-card">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <h3 class="fr-card__title">
-              Priorité de redémarrage
-            </h3>
+            <h3 class="fr-card__title">Priorité de redémarrage</h3>
             <div class="fr-card__desc">
               <template v-if="application.priorityRestart">
                 <DsfrBadge
@@ -278,9 +278,7 @@ watch(
                 />
               </template>
               <template v-else>
-                <p class="fr-text--sm fr-text--italic" data-testid="info-priority-empty">
-                  Aucune priorité définie.
-                </p>
+                <p class="fr-text--sm fr-text--italic" data-testid="info-priority-empty">Aucune priorité définie.</p>
               </template>
             </div>
           </div>
@@ -292,9 +290,7 @@ watch(
           <div class="fr-card__content">
             <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
               <div class="fr-col">
-                <h3 class="fr-card__title">
-                  Hébergement
-                </h3>
+                <h3 class="fr-card__title">Hébergement</h3>
               </div>
               <div class="fr-col-auto">
                 <DsfrButton
@@ -317,9 +313,7 @@ watch(
       <div v-if="(application.targetPopulations ?? []).length > 0" class="fr-card" data-testid="info-population">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <h3 class="fr-card__title">
-              Population
-            </h3>
+            <h3 class="fr-card__title">Population</h3>
             <div class="fr-card__desc">
               <ul class="fr-tags-group">
                 <li v-for="targetPopulation in application.targetPopulations" :key="targetPopulation">
@@ -366,7 +360,13 @@ watch(
     @cancel="cancelDeletionHosting"
   />
 
-  <DsfrModal size="lg" :opened="isModalOpened" title="Modifier l'application" data-testid="info-edit-modal" @close="applicationModal.closeModal">
+  <DsfrModal
+    size="lg"
+    :opened="isModalOpened"
+    title="Modifier l'application"
+    data-testid="info-edit-modal"
+    @close="applicationModal.closeModal"
+  >
     <ApplicationForm
       mode="edit"
       :initial-data="{ ...application, labels: labels }"

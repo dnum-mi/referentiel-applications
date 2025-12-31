@@ -5,7 +5,7 @@ import { IsArray, IsBoolean, IsOptional, IsString } from "class-validator";
 export class OrganizationFilterDto {
   @IsOptional()
   @IsArray()
-  @Transform(({ value }) => value.split(",").filter(id => id.trim() !== ""))
+  @Transform(({ value }) => value.split(",").filter((id) => id.trim() !== ""))
   ids?: string[];
 
   @IsOptional()
@@ -33,7 +33,8 @@ export class OrganizationFilterDto {
   @IsOptional()
   @Type(() => Boolean)
   @ApiProperty({
-    description: "Renvoi uniquement les organisations utilisées (qui ont des acteurs ou des utilisateurs)",
+    description:
+      "Renvoi uniquement les organisations utilisées (qui ont des acteurs ou des utilisateurs)",
     default: false,
   })
   @IsBoolean()

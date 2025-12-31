@@ -6,7 +6,7 @@ export function useAccordionManager(totalSections: number, openAll = false) {
 
   function toggle(index: number) {
     if (openAccordions.value.includes(index)) {
-      openAccordions.value = openAccordions.value.filter(i => i !== index);
+      openAccordions.value = openAccordions.value.filter((i) => i !== index);
     } else {
       openAccordions.value.push(index);
     }
@@ -19,7 +19,7 @@ export function useAccordionManager(totalSections: number, openAll = false) {
   }
 
   function close(index: number) {
-    openAccordions.value = openAccordions.value.filter(i => i !== index);
+    openAccordions.value = openAccordions.value.filter((i) => i !== index);
   }
 
   function openAllSections() {

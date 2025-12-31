@@ -47,7 +47,9 @@ describe("Tags", () => {
     await request(app().getHttpServer())
       .patch(`/tags/${tag.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .send({ name: `updated_${faker.word.noun({ length: { min: 2, max: 128 } }).replace(/[^a-z._-]/g, "")}` })
+      .send({
+        name: `updated_${faker.word.noun({ length: { min: 2, max: 128 } }).replace(/[^a-z._-]/g, "")}`,
+      })
       .expect(200);
   });
 

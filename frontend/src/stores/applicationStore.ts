@@ -58,7 +58,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     if (!response.response.ok || !response.data) {
       throw response.error;
     }
-    const myPerms: Set<APP_PERMISSIONS> | undefined = applicationsById.value[app.id]?.myPerms ?? await getMyPerms(app.id);
+    const myPerms: Set<APP_PERMISSIONS> | undefined = applicationsById.value[app.id]?.myPerms ?? (await getMyPerms(app.id));
 
     return {
       ...response.data,

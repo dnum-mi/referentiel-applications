@@ -2,13 +2,13 @@
  * Common pagination utility for database queries
  */
 export interface PaginationOptions {
-  page?: number
-  pageSize?: number
+  page?: number;
+  pageSize?: number;
 }
 
 export interface PaginationResult {
-  skip: number | undefined
-  take: number | undefined
+  skip: number | undefined;
+  take: number | undefined;
 }
 
 /**
@@ -17,7 +17,10 @@ export interface PaginationResult {
  * @param pageSize - Number of items per page (0 or negative disables pagination)
  * @returns Object with skip and take values for Prisma queries
  */
-export function paginate(page: number = 0, pageSize?: number): PaginationResult {
+export function paginate(
+  page: number = 0,
+  pageSize?: number,
+): PaginationResult {
   if (!pageSize || pageSize <= 0) {
     return { skip: undefined, take: undefined };
   }

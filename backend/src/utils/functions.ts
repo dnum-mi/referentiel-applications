@@ -1,6 +1,9 @@
-export function generateRandomPassword(length = 24, chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_") {
+export function generateRandomPassword(
+  length = 24,
+  chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_",
+) {
   return Array.from(crypto.getRandomValues(new Uint32Array(length)))
-    .map(x => chars[x % chars.length])
+    .map((x) => chars[x % chars.length])
     .join("");
 }
 
@@ -15,7 +18,8 @@ export function stringToSlug(str: string): string {
     str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
   }
 
-  str = str.replace(/[^a-z0-9 -]/g, "") // remove invalid chars
+  str = str
+    .replace(/[^a-z0-9 -]/g, "") // remove invalid chars
     .replace(/\s+/g, "-") // collapse whitespace and replace by -
     .replace(/-+/g, "-"); // collapse dashes
 

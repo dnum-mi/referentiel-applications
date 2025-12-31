@@ -4,10 +4,10 @@ import { getPrismaClient } from "./prisma";
 
 export class HostingFaker {
   static async create(override: {
-    hostingOption: { id: string }
-    application: { id: string }
-    user: UserFakerReturnType
-    [key: string]: any
+    hostingOption: { id: string };
+    application: { id: string };
+    user: UserFakerReturnType;
+    [key: string]: any;
   }) {
     const prisma = getPrismaClient();
 

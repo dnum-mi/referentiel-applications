@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 import * as ExcelJS from "exceljs";
 
 export interface ExcelSheetConfig {
-  name: string
-  columns: { header: string, key: string, width?: number }[]
-  rows: Record<string, any>[]
+  name: string;
+  columns: { header: string; key: string; width?: number }[];
+  rows: Record<string, any>[];
 }
 
 @Injectable()
@@ -15,7 +15,7 @@ export class ExcelBuilderService {
     for (const { name, columns, rows } of sheets) {
       const sheet = workbook.addWorksheet(name);
       sheet.columns = columns;
-      rows.forEach(row => sheet.addRow(row));
+      rows.forEach((row) => sheet.addRow(row));
 
       sheet.autoFilter = {
         from: { row: 1, column: 1 },
@@ -25,7 +25,7 @@ export class ExcelBuilderService {
       sheet.views = [{ state: "frozen", ySplit: 1 }];
 
       const hasApplicationId = columns.some(
-        col => col.key === "id" || col.key === "applicationId",
+        (col) => col.key === "id" || col.key === "applicationId",
       );
 
       if (hasApplicationId) {
@@ -45,7 +45,7 @@ export class ExcelBuilderService {
 
     const appIdKeys = ["applicationId", "id", "Application", "ID Application"];
     const appIdColIndex = headerValues.findIndex(
-      val => typeof val === "string" && appIdKeys.includes(val),
+      (val) => typeof val === "string" && appIdKeys.includes(val),
     );
 
     if (appIdColIndex === -1) return;

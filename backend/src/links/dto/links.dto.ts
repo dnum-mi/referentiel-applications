@@ -9,12 +9,19 @@ export class CreateLinkDto {
   link: string;
 
   @IsEnum(ExternalRessourceType)
-  @ApiProperty({ enum: ExternalRessourceType, description: "Type of the external resource", enumName: "ExternalRessourceType" })
+  @ApiProperty({
+    enum: ExternalRessourceType,
+    description: "Type of the external resource",
+    enumName: "ExternalRessourceType",
+  })
   type: ExternalRessourceType;
 
   @IsString()
   @IsOptional()
-  @ApiProperty({ required: false, description: "Optional description of the link" })
+  @ApiProperty({
+    required: false,
+    description: "Optional description of the link",
+  })
   description?: string;
 }
 
@@ -27,7 +34,10 @@ export class LinkDto {
   @ApiProperty({ description: "The URL of the link" })
   link: string;
 
-  @ApiProperty({ enum: ExternalRessourceType, description: "Type of the external resource" })
+  @ApiProperty({
+    enum: ExternalRessourceType,
+    description: "Type of the external resource",
+  })
   type: ExternalRessourceType;
 
   @ApiProperty({ description: "Description of the link", required: false })

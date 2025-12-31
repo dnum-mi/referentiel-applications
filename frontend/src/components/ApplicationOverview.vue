@@ -46,7 +46,7 @@ const activeTab = ref(0);
 const route = useRoute();
 const router = useRouter();
 
-const breakpoints = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX  });
+const breakpoints = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX });
 const isMobile = breakpoints.smaller("mobile");
 
 function updateApplication(updatedApp: ApplicationWithPerms) {
@@ -81,13 +81,13 @@ async function fetchHistoryData() {
 }
 
 // Tabs definition — keep the same shape, but ensure errorKey is keyof errorMessages
-const tabs = ref<(
-  Tab<typeof errorMessages> & {
+const tabs = ref<
+  (Tab<typeof errorMessages> & {
     component: Component;
     requiredPerms: APP_PERMISSIONS[];
     errorKey?: keyof typeof errorMessages;
-  }
-)[]>([
+  })[]
+>([
   {
     title: "Informations générales",
     icon: "ri-checkbox-circle-line",
@@ -188,12 +188,10 @@ onBeforeMount(async () => {
   tabs.value.forEach((tab) => {
     if (tab.loadFn) {
       // call and handle error per-tab
-      tab
-        .loadFn()
-        .catch((err: unknown) => {
-          console.error(`Error loading ${tab.title}:`, err);
-          const msg = tab.errorKey ? errorMessages[tab.errorKey] : "Erreur de chargement";
-          emit("errorMessage", msg);
+      tab.loadFn().catch((err: unknown) => {
+        console.error(`Error loading ${tab.title}:`, err);
+        const msg = tab.errorKey ? errorMessages[tab.errorKey] : "Erreur de chargement";
+        emit("errorMessage", msg);
       });
     }
   });
@@ -233,11 +231,7 @@ watch(
     data-testid="application-tabs"
   >
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
-      <DsfrTabContent
-        :tab-id="tab.tabId"
-        :panel-id="tab.panelId"
-        :data-testid="`application-tab-content-${tab.tabId}`"
-      >
+      <DsfrTabContent :tab-id="tab.tabId" :panel-id="tab.panelId" :data-testid="`application-tab-content-${tab.tabId}`">
         <!-- lazy mount the component to avoid mounting heavy components until the tab is active -->
         <KeepAlive>
           <component
@@ -260,12 +254,7 @@ watch(
       If `DsfrAccordion` exposes an expanded state or events, we can mount the inner component only
       when its accordion is opened to reduce initial render cost on mobile.
     -->
-    <DsfrAccordion
-      v-for="(tab, index) in tabs"
-      :key="tab.tabId"
-      :title="tab.title"
-      :id="`accordion-${tab.panelId}`"
-    >
+    <DsfrAccordion v-for="(tab, index) in tabs" :key="tab.tabId" :title="tab.title" :id="`accordion-${tab.panelId}`">
       <component
         :is="tab.component"
         :application="application"

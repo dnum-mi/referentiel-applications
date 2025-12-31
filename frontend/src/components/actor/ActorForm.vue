@@ -30,7 +30,7 @@ const form = ref<CreateActorDto>({
   applicationId: props.application.id,
 });
 
-const actorTypeOptions = props.actorTypes.map(type => ({
+const actorTypeOptions = props.actorTypes.map((type) => ({
   text: type.label,
   value: type.id,
 }));
@@ -58,8 +58,7 @@ onMounted(async () => {
 });
 
 const isFormValid = computed(() => {
-  return form.value.actorTypeId && form.value.actorTypeId !== ""
-    && organizationId.value && organizationId.value !== "";
+  return form.value.actorTypeId && form.value.actorTypeId !== "" && organizationId.value && organizationId.value !== "";
 });
 
 function handleSubmit() {

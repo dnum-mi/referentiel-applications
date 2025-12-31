@@ -9,11 +9,14 @@ import { getPrismaClient } from "./prisma";
 const keycloakService = new KeycloakService();
 export type UserFakerReturnType = AsyncReturnType<typeof UserFaker.create>;
 interface UserFakerParams {
-  adminLevel?: AdminLevel
-  capabilities?: (keyof typeof UserCapabilities)[]
+  adminLevel?: AdminLevel;
+  capabilities?: (keyof typeof UserCapabilities)[];
 }
 export class UserFaker {
-  static async create({ adminLevel = AdminLevel.NONE, capabilities = [] }: UserFakerParams = {}) {
+  static async create({
+    adminLevel = AdminLevel.NONE,
+    capabilities = [],
+  }: UserFakerParams = {}) {
     const prisma = getPrismaClient();
     const email = faker.internet.email();
     const username = email;

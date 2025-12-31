@@ -5,10 +5,10 @@ import api from "@/api/index.js";
 import { useToasterStore } from "@/stores/toasterStore";
 
 interface LinkFilters {
-  page?: number
-  pageSize?: number
-  sortBy?: string
-  order?: "asc" | "desc"
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  order?: "asc" | "desc";
 }
 
 export const useLinkStore = defineStore("linkStore", () => {
@@ -22,9 +22,7 @@ export const useLinkStore = defineStore("linkStore", () => {
       isLoading.value = true;
 
       // Remove undefined values
-      const cleanParams = Object.fromEntries(
-        Object.entries(filters).filter(([_, value]) => value !== undefined),
-      );
+      const cleanParams = Object.fromEntries(Object.entries(filters).filter(([_, value]) => value !== undefined));
 
       const response = await api.applicationLinksControllerFindAll({
         path: { applicationId },
@@ -90,9 +88,7 @@ export const useLinkStore = defineStore("linkStore", () => {
         return;
       }
 
-      await Promise.all(linkIds.map(linkId =>
-        api.applicationLinksControllerDelete({ path: { applicationId, id: linkId } }),
-      ));
+      await Promise.all(linkIds.map((linkId) => api.applicationLinksControllerDelete({ path: { applicationId, id: linkId } })));
       toaster.addSuccessMessage("Liens supprimés avec succès !");
     } catch (error) {
       toaster.addErrorMessage("Erreur lors de la suppression des liens.");

@@ -193,7 +193,11 @@ export class ExportApplicationsUseCase {
             width: 25,
           },
           // HOMOLOGATION fields
-          { header: "Homologation Date Fin", key: "homologation_date_end", width: 20 },
+          {
+            header: "Homologation Date Fin",
+            key: "homologation_date_end",
+            width: 20,
+          },
           {
             header: "Homologation RSSI ID",
             key: "homologation_rssi_id",

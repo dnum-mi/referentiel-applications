@@ -5,9 +5,9 @@ import type { OrganizationDto } from "@/client/types.gen";
 
 const props = withDefaults(
   defineProps<{
-    organizationId: string
-    hideHierarchy?: boolean
-    clickable?: boolean
+    organizationId: string;
+    hideHierarchy?: boolean;
+    clickable?: boolean;
   }>(),
   {
     hideHierarchy: false,
@@ -30,8 +30,8 @@ const unfold = ref(false);
   <template v-if="!hideHierarchy && organization?.parentId">
     <template v-if="unfold">
       <OrgBreadCrumb :organization-id="organization.parentId">
-        <a class="fr-link" href="#" data-testid="org-breadcrumb-collapse" @click="unfold = false"> - </a>
-      </OrgBreadCrumb>&nbsp;
+        <a class="fr-link" href="#" data-testid="org-breadcrumb-collapse" @click="unfold = false"> - </a> </OrgBreadCrumb
+      >&nbsp;
     </template>
     <template v-else>
       <a class="fr-link" href="#" title="Voir le parent" data-testid="org-breadcrumb-expand" @click="unfold = true"> + </a>
@@ -40,9 +40,7 @@ const unfold = ref(false);
   <template v-else />
   <a v-if="unfold" target="" href="#" title="Refermer l'arborescence" data-testid="org-breadcrumb-close" @click="unfold = false">–</a>
   <template v-if="organization">
-    <template v-if="!hideHierarchy && organization?.parentId">
-&nbsp;
-    </template>
+    <template v-if="!hideHierarchy && organization?.parentId"> &nbsp; </template>
     <template v-if="clickable">
       <a v-if="organization.url" :href="organization.url" target="_blank" data-testid="org-breadcrumb-link">{{ organization.path }}</a>
       <a v-else target="" href="#" data-testid="org-breadcrumb-link">{{ organization.path }}</a>

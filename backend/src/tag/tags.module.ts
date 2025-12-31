@@ -14,9 +14,6 @@ import { TagsService } from "./tags.service";
       useClass: TagRepository,
     },
   ],
-  exports: [
-    TagsService,
-    "ITagRepository",
-  ],
+  exports: [TagsService, "ITagRepository"],
 })
 export class TagsModule {}

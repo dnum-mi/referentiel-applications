@@ -21,8 +21,8 @@ export class StatsHelper {
       minute: "2-digit",
     });
     const parts = formatter.formatToParts(new Date(utcMidnightTs));
-    const hourPart = parts.find(p => p.type === "hour")!.value;
-    const minutePart = parts.find(p => p.type === "minute")!.value;
+    const hourPart = parts.find((p) => p.type === "hour")!.value;
+    const minutePart = parts.find((p) => p.type === "minute")!.value;
     const offsetMinutes = Number(hourPart) * 60 + Number(minutePart);
 
     // 3) On convertit cet offset en millisecondes et on le retire du timestamp UTC

@@ -18,11 +18,14 @@ import {
 import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
+import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import {
-  AdminLevel,
-  Requestor,
-} from "src/user/entities/user.entity";
-import { CreatePersonalTokenDto, CreateServiceTokenDto, ExposedTokenDto, RegenerateTokenDto, TokenDto } from "./dto/token.dto";
+  CreatePersonalTokenDto,
+  CreateServiceTokenDto,
+  ExposedTokenDto,
+  RegenerateTokenDto,
+  TokenDto,
+} from "./dto/token.dto";
 import { TokenService } from "./token.service";
 
 /**
@@ -39,7 +42,8 @@ export class TokenController {
   @RequiredAdminLevel(AdminLevel.ADMIN)
   @ApiOperation({
     summary: "Récupère tous les tokens de service",
-    description: "Cette méthode permet de récupérer tous les tokens de service.",
+    description:
+      "Cette méthode permet de récupérer tous les tokens de service.",
   })
   @ApiOkResponse({
     description: "Liste des tokens récupérée avec succès",
@@ -53,7 +57,8 @@ export class TokenController {
   @Get("personal")
   @ApiOperation({
     summary: "Récupère tous les tokens personnels",
-    description: "Cette méthode permet de récupérer tous les tokens personnels.",
+    description:
+      "Cette méthode permet de récupérer tous les tokens personnels.",
   })
   @ApiOkResponse({
     description: "Liste des tokens récupérée avec succès",
@@ -79,7 +84,10 @@ export class TokenController {
     @User() requestor: Requestor,
     @Body() data: CreateServiceTokenDto,
   ) {
-    return this.tokenService.create(requestor, false, { ...data, expiresAt: new Date(data.expiresAt) });
+    return this.tokenService.create(requestor, false, {
+      ...data,
+      expiresAt: new Date(data.expiresAt),
+    });
   }
 
   @Post("personal")
@@ -95,7 +103,10 @@ export class TokenController {
     @User() requestor: Requestor,
     @Body() data: CreatePersonalTokenDto,
   ) {
-    return this.tokenService.create(requestor, true, { ...data, expiresAt: new Date(data.expiresAt) });
+    return this.tokenService.create(requestor, true, {
+      ...data,
+      expiresAt: new Date(data.expiresAt),
+    });
   }
 
   @Post(":id/regenerate")
@@ -114,38 +125,38 @@ export class TokenController {
     @Param("id") id: string,
     @Body() body: RegenerateTokenDto,
   ) {
-    return this.tokenService.regenerate(requestor, id, new Date(body.expiresAt));
+    return this.tokenService.regenerate(
+      requestor,
+      id,
+      new Date(body.expiresAt),
+    );
   }
 
   @Delete(":id")
   @ApiOperation({
     summary: "Supprime (révoque) un token de service",
-    description: "Cette méthode permet de supprimer (révoquer) un token de service.",
+    description:
+      "Cette méthode permet de supprimer (révoquer) un token de service.",
   })
   @ApiNoContentResponse({
     description: "Token supprimé avec succès",
   })
   @HttpCode(204)
-  async delete(
-    @User() requestor: Requestor,
-    @Param("id") id: string,
-  ) {
+  async delete(@User() requestor: Requestor, @Param("id") id: string) {
     return this.tokenService.delete(requestor, id);
   }
 
   @Delete("personal/:id")
   @ApiOperation({
     summary: "Supprime (révoque) un token personnel",
-    description: "Cette méthode permet de supprimer (révoquer) un token personnel.",
+    description:
+      "Cette méthode permet de supprimer (révoquer) un token personnel.",
   })
   @ApiNoContentResponse({
     description: "Token supprimé avec succès",
   })
   @HttpCode(204)
-  async deletePersonal(
-    @User() requestor: Requestor,
-    @Param("id") id: string,
-  ) {
+  async deletePersonal(@User() requestor: Requestor, @Param("id") id: string) {
     return this.tokenService.delete(requestor, id);
   }
 }

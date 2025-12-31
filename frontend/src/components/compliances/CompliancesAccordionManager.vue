@@ -29,7 +29,7 @@ const detailsTitle = ref("");
 const detailsList = ref<{ key: string; label: string; value: string }[]>([]);
 
 const { smaller } = useBreakpoints({ mobile: BREAKPOINTS.SMALL_CARD_MAX }, "max");
-const isMobile = smaller("mobile"); 
+const isMobile = smaller("mobile");
 
 const types: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
 const labels: Record<ComplianceType, string> = {
@@ -199,7 +199,7 @@ const tableRows = computed(() =>
       Résumé: getPreview(type as ComplianceType) || "",
       Actions: { typeKey: type },
     };
-  })
+  }),
 );
 </script>
 
@@ -305,12 +305,7 @@ const tableRows = computed(() =>
     </div>
   </div>
 
-  <DsfrModal
-    :opened="showDetailsModal"
-    :title="detailsTitle"
-    data-testid="compliance-details-modal"
-    @close="closeDetails"
-  >
+  <DsfrModal :opened="showDetailsModal" :title="detailsTitle" data-testid="compliance-details-modal" @close="closeDetails">
     <div class="fr-mb-2w" data-testid="compliance-details-content">
       <template v-if="detailsList.length">
         <ul class="compliance-details-modal-list">

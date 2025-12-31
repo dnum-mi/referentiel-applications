@@ -10,7 +10,7 @@ export class ActorRepository implements IActorRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly metadataService: MetadatasService,
-  ) { }
+  ) {}
 
   public async create(actor: CreateActorDto, requestorId: string) {
     const { organizationId, applicationId, actorTypeId, ...rest } = actor;
@@ -72,8 +72,12 @@ export class ActorRepository implements IActorRepository {
       where,
       data: {
         ...rest,
-        ...(organizationId !== undefined && { organizationId: organizationId || null }),
-        ...(applicationId !== undefined && { applicationId: applicationId || null }),
+        ...(organizationId !== undefined && {
+          organizationId: organizationId || null,
+        }),
+        ...(applicationId !== undefined && {
+          applicationId: applicationId || null,
+        }),
         ...(actorTypeId !== undefined && { actorTypeId }),
       },
     });

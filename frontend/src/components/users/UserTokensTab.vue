@@ -33,14 +33,14 @@ function resetMessages() {
 async function fetchTokens() {
   isLoading.value = true;
   error.value = null;
-  
+
   const response = await api.tokenControllerFindPersonal();
   if (response.error) {
     error.value = "Erreur lors du chargement des tokens";
     isLoading.value = false;
     return;
   }
-  
+
   tokens.value = response.data || [];
   isLoading.value = false;
 }
@@ -49,14 +49,14 @@ async function createToken() {
   isLoading.value = true;
   newlyCreatedToken.value = null;
   resetMessages();
-  
+
   const response = await api.tokenControllerCreatePersonal({ body: newToken.value });
   if (response.error) {
     error.value = "Erreur lors de la création du token";
     isLoading.value = false;
     return;
   }
-  
+
   if (!response.data) {
     error.value = "Erreur lors de la création du token";
     isLoading.value = false;
@@ -152,21 +152,12 @@ onMounted(() => {
 
 <template>
   <div class="fr-mt-3w">
-    <h2 class="fr-h3 fr-mb-2w">
-      Tokens applicatifs
-    </h2>
+    <h2 class="fr-h3 fr-mb-2w">Tokens applicatifs</h2>
     <p class="fr-text--sm fr-mb-3w">
       Les tokens applicatifs vous permettent d'accéder à l'API du référentiel. Vous pouvez créer jusqu'à 5 tokens personnels.
     </p>
 
-    <DsfrAlert
-      v-if="error"
-      type="error"
-      :title="error"
-      class="fr-mb-2w"
-      closeable
-      @close="error = null"
-    />
+    <DsfrAlert v-if="error" type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
 
     <DsfrAlert
       v-if="successMessage && !newlyCreatedToken"
@@ -177,48 +168,23 @@ onMounted(() => {
       @close="successMessage = null"
     />
 
-    <DsfrAlert
-      v-if="newlyCreatedToken"
-      type="success"
-      title="Token créé avec succès"
-      class="fr-mb-2w"
-      closeable
-      @close="dismissNewToken"
-    >
-      <p class="fr-mb-1w">
-        <strong>Attention :</strong> Copiez ce token maintenant, il ne sera plus affiché.
-      </p>
+    <DsfrAlert v-if="newlyCreatedToken" type="success" title="Token créé avec succès" class="fr-mb-2w" closeable @close="dismissNewToken">
+      <p class="fr-mb-1w"><strong>Attention :</strong> Copiez ce token maintenant, il ne sera plus affiché.</p>
       <div class="token-display fr-mb-1w">
         <code class="token-value">{{ newlyCreatedToken.password }}</code>
-        <DsfrButton
-          size="sm"
-          secondary
-          icon="ri-file-copy-line"
-          @click="copyToClipboard(newlyCreatedToken.password)"
-        >
-          Copier
-        </DsfrButton>
+        <DsfrButton size="sm" secondary icon="ri-file-copy-line" @click="copyToClipboard(newlyCreatedToken.password)"> Copier </DsfrButton>
       </div>
     </DsfrAlert>
 
     <div class="fr-mb-3w">
-      <DsfrButton
-        v-if="!showCreateForm"
-        icon="ri-add-line"
-        :disabled="maxTokensReached"
-        @click="toggleCreateForm"
-      >
+      <DsfrButton v-if="!showCreateForm" icon="ri-add-line" :disabled="maxTokensReached" @click="toggleCreateForm">
         Créer un nouveau token
       </DsfrButton>
-      <span v-if="maxTokensReached" class="fr-ml-2w fr-text--sm fr-text--bold">
-        Limite de 5 tokens atteinte
-      </span>
+      <span v-if="maxTokensReached" class="fr-ml-2w fr-text--sm fr-text--bold"> Limite de 5 tokens atteinte </span>
     </div>
 
     <div v-if="showCreateForm" class="fr-card fr-p-3w fr-mb-3w">
-      <h3 class="fr-h5 fr-mb-2w">
-        Nouveau token
-      </h3>
+      <h3 class="fr-h5 fr-mb-2w">Nouveau token</h3>
       <form @submit.prevent="createToken">
         <DsfrInputGroup
           v-model.trim="newToken.name"
@@ -246,32 +212,16 @@ onMounted(() => {
         />
 
         <div class="fr-mt-2w">
-          <DsfrButton
-            type="submit"
-            :disabled="isLoading"
-          >
-            Créer le token
-          </DsfrButton>
-          <DsfrButton
-            type="button"
-            secondary
-            class="fr-ml-2w"
-            @click="toggleCreateForm"
-          >
-            Annuler
-          </DsfrButton>
+          <DsfrButton type="submit" :disabled="isLoading"> Créer le token </DsfrButton>
+          <DsfrButton type="button" secondary class="fr-ml-2w" @click="toggleCreateForm"> Annuler </DsfrButton>
         </div>
       </form>
     </div>
 
-    <div v-if="isLoading && tokens.length === 0" class="fr-py-6w fr-text--center">
-      Chargement...
-    </div>
+    <div v-if="isLoading && tokens.length === 0" class="fr-py-6w fr-text--center">Chargement...</div>
 
     <div v-else-if="tokens.length === 0" class="fr-card fr-p-3w">
-      <p class="fr-text--center fr-mb-0">
-        Aucun token créé pour le moment.
-      </p>
+      <p class="fr-text--center fr-mb-0">Aucun token créé pour le moment.</p>
     </div>
 
     <DsfrTable
@@ -285,24 +235,9 @@ onMounted(() => {
         <td>{{ token.description }}</td>
         <td>{{ formatDate(token.expiresAt) }}</td>
         <td>
-          <span
-            v-if="isExpired(token.expiresAt)"
-            class="fr-badge fr-badge--error"
-          >
-            Expiré
-          </span>
-          <span
-            v-else-if="isRevoked(token)"
-            class="fr-badge fr-badge--warning"
-          >
-            Révoqué
-          </span>
-          <span
-            v-else
-            class="fr-badge fr-badge--success"
-          >
-            Actif
-          </span>
+          <span v-if="isExpired(token.expiresAt)" class="fr-badge fr-badge--error"> Expiré </span>
+          <span v-else-if="isRevoked(token)" class="fr-badge fr-badge--warning"> Révoqué </span>
+          <span v-else class="fr-badge fr-badge--success"> Actif </span>
         </td>
         <td>
           <DsfrButton
@@ -317,24 +252,12 @@ onMounted(() => {
       </tr>
     </DsfrTable>
 
-    <DsfrModal
-      :opened="showDeleteConfirmation"
-      title="Confirmer la révocation"
-      size="sm"
-      @close="cancelRevokeToken"
-    >
+    <DsfrModal :opened="showDeleteConfirmation" title="Confirmer la révocation" size="sm" @close="cancelRevokeToken">
       <p>Êtes-vous sûr de vouloir révoquer ce token ? Cette action est irréversible.</p>
       <template #footer>
         <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
-          <DsfrButton
-            label="Annuler"
-            secondary
-            @click="cancelRevokeToken"
-          />
-          <DsfrButton
-            label="Révoquer"
-            @click="confirmRevokeToken"
-          />
+          <DsfrButton label="Annuler" secondary @click="cancelRevokeToken" />
+          <DsfrButton label="Révoquer" @click="confirmRevokeToken" />
         </DsfrButtonGroup>
       </template>
     </DsfrModal>

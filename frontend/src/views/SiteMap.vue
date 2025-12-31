@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import router from '@/router'
-import { useUserStore } from '@/stores/userStore'
-import { routeNames } from '@/router/route-names'
-import { AdminLevel } from '@/models/user' 
+import { computed } from "vue";
+import router from "@/router";
+import { useUserStore } from "@/stores/userStore";
+import { routeNames } from "@/router/route-names";
+import { AdminLevel } from "@/models/user";
 
+const userStore = useUserStore();
 
-const userStore = useUserStore()
-
-
-import type { RouteRecordNormalized } from 'vue-router'
+import type { RouteRecordNormalized } from "vue-router";
 
 interface PageItem {
   label: string;
@@ -19,10 +17,10 @@ interface PageItem {
 function getRouteTitle(currentRoute: RouteRecordNormalized): string {
   const pageTitleFromMeta = currentRoute.meta?.title as string;
   if (pageTitleFromMeta) {
-    const titleSeparator = ' - ';
+    const titleSeparator = " - ";
     const titleParts = pageTitleFromMeta.split(titleSeparator);
     const mainTitle = titleParts[0];
-    
+
     return mainTitle;
   }
   const routeName = currentRoute.name as string;
@@ -30,12 +28,8 @@ function getRouteTitle(currentRoute: RouteRecordNormalized): string {
   return routeName || routePath;
 }
 
-
 function baseRouteFilter(currentRoute: RouteRecordNormalized): boolean {
-  const routesToExclude: string[] = [
-    routeNames.NOTFOUND,
-    routeNames.SITEMAP,
-  ];
+  const routesToExclude: string[] = [routeNames.NOTFOUND, routeNames.SITEMAP];
   const routeName = currentRoute.name as string;
 
   if (!routeName) {
@@ -45,7 +39,7 @@ function baseRouteFilter(currentRoute: RouteRecordNormalized): boolean {
     return false;
   }
   const routePath = currentRoute.path;
-  const hasDynamicSegment = routePath.includes(':');
+  const hasDynamicSegment = routePath.includes(":");
   if (hasDynamicSegment) {
     return false;
   }
@@ -56,15 +50,15 @@ function baseRouteFilter(currentRoute: RouteRecordNormalized): boolean {
 const publicPages = computed(() => {
   const allRoutes = router.getRoutes();
 
-  const filteredPublicRoutes = allRoutes.filter(currentRoute => {
+  const filteredPublicRoutes = allRoutes.filter((currentRoute) => {
     const passesBaseFilter = baseRouteFilter(currentRoute);
-    
+
     const isNotProtected = !currentRoute.meta.requiresAuth;
 
     return passesBaseFilter && isNotProtected;
   });
 
-  const formattedPages = filteredPublicRoutes.map(routeDetails => {
+  const formattedPages = filteredPublicRoutes.map((routeDetails) => {
     return {
       label: getRouteTitle(routeDetails),
       to: { name: routeDetails.name },
@@ -80,12 +74,12 @@ const publicPages = computed(() => {
 
 const protectedPages = computed(() => {
   if (!userStore.authenticated) {
-    return []; 
+    return [];
   }
 
   const allRoutes = router.getRoutes();
 
-  const filteredProtectedRoutes = allRoutes.filter(currentRoute => {
+  const filteredProtectedRoutes = allRoutes.filter((currentRoute) => {
     const passesBaseFilter = baseRouteFilter(currentRoute);
     const isProtectedRoute = currentRoute.meta.requiresAuth === true;
     const isNotAdminPage = currentRoute.name !== routeNames.ADMINPAGE;
@@ -94,7 +88,7 @@ const protectedPages = computed(() => {
     return passesBaseFilter && isProtectedRoute && passesAdminCheck;
   });
 
-  const formattedPages = filteredProtectedRoutes.map(routeDetails => {
+  const formattedPages = filteredProtectedRoutes.map((routeDetails) => {
     return {
       label: getRouteTitle(routeDetails),
       to: { name: routeDetails.name },
@@ -112,34 +106,22 @@ const protectedPages = computed(() => {
   <div class="fr-container fr-my-5w">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-lg-10 fr-col-xl-8">
-        <h1 class="fr-mb-5w">
-          Plan du site
-        </h1>
+        <h1 class="fr-mb-5w">Plan du site</h1>
 
-        <h2 class="fr-h4 fr-mb-3w">
-          Pages publiques
-        </h2>
+        <h2 class="fr-h4 fr-mb-3w">Pages publiques</h2>
         <ul class="fr-links-group fr-links-group--lg">
           <li v-for="page in publicPages" :key="page.to.name">
-            <RouterLink
-              :to="page.to"
-              class="fr-link"
-            >
+            <RouterLink :to="page.to" class="fr-link">
               {{ page.label }}
             </RouterLink>
           </li>
         </ul>
 
         <div v-if="protectedPages.length > 0" class="fr-mt-5w">
-          <h2 class="fr-h4 fr-mb-3w">
-            Espace connecté
-          </h2>
+          <h2 class="fr-h4 fr-mb-3w">Espace connecté</h2>
           <ul class="fr-links-group fr-links-group--lg">
             <li v-for="page in protectedPages" :key="page.to.name">
-              <RouterLink
-                :to="page.to"
-                class="fr-link"
-              >
+              <RouterLink :to="page.to" class="fr-link">
                 {{ page.label }}
               </RouterLink>
             </li>

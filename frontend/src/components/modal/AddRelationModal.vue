@@ -6,9 +6,9 @@ import { useApplicationSearch } from "@/composables/use-application-search";
 
 const props = withDefaults(
   defineProps<{
-    opened?: boolean
-    title: string
-    applicationId: string
+    opened?: boolean;
+    title: string;
+    applicationId: string;
   }>(),
   {
     opened: false,
@@ -16,8 +16,8 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: "close"): void
-  (e: "addRelation", payload: { targetId: string, type: string }): void
+  (e: "close"): void;
+  (e: "addRelation", payload: { targetId: string; type: string }): void;
 }>();
 const { searchApplications } = useApplicationSearch();
 const selectedApplicationId = ref<string>("");

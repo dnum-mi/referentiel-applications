@@ -25,8 +25,10 @@ export class TagsService {
     const existingTags = await this.repository.findByNames(tagNames);
 
     if (existingTags.length !== tagNames.length) {
-      const existingNames = existingTags.map(tag => tag.name);
-      const missingNames = tagNames.filter(name => !existingNames.includes(name));
+      const existingNames = existingTags.map((tag) => tag.name);
+      const missingNames = tagNames.filter(
+        (name) => !existingNames.includes(name),
+      );
 
       throw new BadRequestException({
         message: "Certains tags n’existent pas.",
@@ -34,7 +36,7 @@ export class TagsService {
       });
     }
 
-    return existingTags.map(tag => ({ name: tag.name }));
+    return existingTags.map((tag) => ({ name: tag.name }));
   }
 
   update(id: string, dto: UpdateTagDto) {

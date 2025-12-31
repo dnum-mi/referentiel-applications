@@ -10,7 +10,7 @@ let chartInstance: Chart | null = null;
 const isLoading = ref(false);
 const isTableView = ref(false);
 const errorMessage = ref("");
-const countApplicationsByIq = ref<{ iq: number, total: number }[]>([]);
+const countApplicationsByIq = ref<{ iq: number; total: number }[]>([]);
 
 const statisticsStore = useStatisticsStore();
 
@@ -22,7 +22,7 @@ async function loadData() {
     const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`).reverse();
     const data: number[] = Array.from({ length: 21 }).fill(0);
 
-    countApplicationsByIq.value.forEach(({ iq, total }: { iq: number, total: number }) => {
+    countApplicationsByIq.value.forEach(({ iq, total }: { iq: number; total: number }) => {
       const index = Math.floor(Math.round(iq) / 5);
       if (index >= 0 && index <= 20) data[index] += total;
     });
@@ -40,12 +40,8 @@ onMounted(loadData);
 
 <template>
   <section aria-labelledby="applications-iq-title">
-    <h3 id="applications-iq-title">
-      Répartition des applications par IQ
-    </h3>
-    <output v-if="isLoading" data-testid="applications-iq-chart-loading">
-      Chargement...
-    </output>
+    <h3 id="applications-iq-title">Répartition des applications par IQ</h3>
+    <output v-if="isLoading" data-testid="applications-iq-chart-loading"> Chargement... </output>
     <div v-else-if="errorMessage" role="alert" data-testid="applications-iq-chart-error">
       {{ errorMessage }}
     </div>
@@ -56,7 +52,11 @@ onMounted(loadData);
       :label="isTableView ? 'Voir le graphique' : 'Voir le tableau'"
       class="fr-mb-2v"
       data-testid="applications-iq-chart-toggle-view"
-      @click="() => { isTableView = !isTableView }"
+      @click="
+        () => {
+          isTableView = !isTableView;
+        }
+      "
     />
     <canvas
       v-show="!isLoading && !errorMessage && !isTableView"

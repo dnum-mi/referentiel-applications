@@ -21,7 +21,9 @@ export class CompliancesService extends BaseService<Compliance> {
     if (applicationId) {
       const existingCompliance = await this.findByApplicationId(applicationId);
       if (existingCompliance) {
-        throw new ConflictException("A compliance already exists for this application");
+        throw new ConflictException(
+          "A compliance already exists for this application",
+        );
       }
     }
     return super.create(createDto);

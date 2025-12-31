@@ -1,12 +1,32 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from "@nestjs/common";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { ApplicationService } from "src/product/application.service";
 import { User } from "../common/decorators/user.decorator";
 import { MetadatasService } from "../metadatas/metadatas.service";
 import { Requestor } from "../user/entities/user.entity";
-import { ApplicationStatusDto, CreateApplicationStatusDto } from "./dto/application-status.dto";
+import {
+  ApplicationStatusDto,
+  CreateApplicationStatusDto,
+} from "./dto/application-status.dto";
 import { UpdateApplicationStatusDto } from "./dto/update-application-status.dto";
 import { StatusesService } from "./statuses.service";
 
@@ -59,7 +79,9 @@ export class StatusesController {
 
   @Get()
   @AppAction("readBase")
-  @ApiOperation({ summary: "Récupérer l'historique des statuts d'une application" })
+  @ApiOperation({
+    summary: "Récupérer l'historique des statuts d'une application",
+  })
   @ApiOkResponse({
     description: "Historique des statuts récupéré avec succès",
     type: [ApplicationStatusDto],
@@ -85,7 +107,10 @@ export class StatusesController {
   ) {
     const oldData = await this.statusesService.findOne(statusId);
 
-    const updatedStatus = await this.statusesService.update(statusId, updateStatusDto);
+    const updatedStatus = await this.statusesService.update(
+      statusId,
+      updateStatusDto,
+    );
 
     await this.statusesService.updateCurrentStatus(applicationId);
     await this.applicationService.updateApplicationQuality(applicationId);
@@ -118,9 +143,9 @@ export class StatusesController {
     @Param("statusId") statusId: string,
     @User() requestor: Requestor,
   ) {
-    const statusToDelete = await this.statusesService.find({ applicationId }).then(statuses =>
-      statuses.find(status => status.id === statusId),
-    );
+    const statusToDelete = await this.statusesService
+      .find({ applicationId })
+      .then((statuses) => statuses.find((status) => status.id === statusId));
 
     if (!statusToDelete) {
       return;

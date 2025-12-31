@@ -11,7 +11,15 @@ import {
   Query,
   Request,
 } from "@nestjs/common";
-import { ApiBody, ApiCreatedResponse, ApiNoContentResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Organization } from "@prisma/client";
 import { OrganizationFilterDto } from "./dto/filters.dto";
 import {
@@ -83,7 +91,8 @@ Vous devez fournir les informations suivantes :
   @Get("/:id")
   @ApiOperation({
     summary: "Récupérer une organisation spécifique par ID",
-    description: "Ce endpoint permet de récupérer les détails complets d'une organisation en fonction de son identifiant unique.",
+    description:
+      "Ce endpoint permet de récupérer les détails complets d'une organisation en fonction de son identifiant unique.",
   })
   @ApiOkResponse({
     status: 200,
@@ -91,16 +100,15 @@ Vous devez fournir les informations suivantes :
     type: OrganizationDto,
   })
   @ApiNotFoundResponse({ description: "Organisation non trouvée" })
-  public async findOne(
-    @Param("id") id: string,
-  ): Promise<Organization> {
+  public async findOne(@Param("id") id: string): Promise<Organization> {
     return await this.organizationService.findOne(id);
   }
 
   @Get()
   @ApiOperation({
     summary: "Récupérer toutes les organisations",
-    description: "Ce endpoint permet de récupérer la liste de toutes les organisations.",
+    description:
+      "Ce endpoint permet de récupérer la liste de toutes les organisations.",
   })
   @ApiOkResponse({
     description: "Liste des organisations",

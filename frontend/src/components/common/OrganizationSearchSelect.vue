@@ -24,7 +24,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits<{
-  "update:modelValue": [value: string]
+  "update:modelValue": [value: string];
 }>();
 
 const organizationStore = useOrganizationStore();
@@ -55,7 +55,7 @@ const selectOptions = computed(() => {
   });
 
   // Add initial organization if it exists and is not already in the search results
-  if (props.initialOrganization && !organizations.value.find(org => org.id === props.initialOrganization?.id)) {
+  if (props.initialOrganization && !organizations.value.find((org) => org.id === props.initialOrganization?.id)) {
     options.push({
       text: props.initialOrganization.path,
       value: props.initialOrganization.id,
@@ -86,7 +86,7 @@ watch(selectedOrganizationId, (newValue) => {
 
   // Update search query to show selected organization name
   if (newValue) {
-    const selectedOrg = selectOptions.value.find(option => option.value === newValue);
+    const selectedOrg = selectOptions.value.find((option) => option.value === newValue);
     if (selectedOrg && selectedOrg.text) {
       searchQuery.value = selectedOrg.text;
     }
@@ -144,12 +144,7 @@ watch(searchQuery, () => {
     </div>
 
     <div v-if="selectOptions.length > 0" class="fr-mt-1w">
-      <DsfrSelect
-        v-model="selectedOrganizationId"
-        :options="selectOptions"
-        :disabled="isLoading"
-        :label-visible="false"
-      />
+      <DsfrSelect v-model="selectedOrganizationId" :options="selectOptions" :disabled="isLoading" :label-visible="false" />
     </div>
 
     <div v-if="searchQuery && !isLoading && organizations.length > 0" class="fr-mt-1w">
@@ -159,15 +154,11 @@ watch(searchQuery, () => {
     </div>
 
     <div v-if="isLoading" class="fr-mt-1w">
-      <p class="fr-text--sm">
-        Recherche en cours...
-      </p>
+      <p class="fr-text--sm">Recherche en cours...</p>
     </div>
 
     <div v-else-if="searchQuery && organizations.length === 0" class="fr-mt-1w">
-      <p class="fr-text--xs fr-text--mention-grey">
-        Aucune organisation trouvée
-      </p>
+      <p class="fr-text--xs fr-text--mention-grey">Aucune organisation trouvée</p>
     </div>
   </div>
 </template>

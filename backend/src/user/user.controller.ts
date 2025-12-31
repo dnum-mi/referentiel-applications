@@ -9,7 +9,14 @@ import {
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { ApiForbiddenResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { User } from "src/common/decorators/user.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
@@ -38,15 +45,22 @@ export class UserController {
   @Patch("me")
   @ApiOperation({
     summary: "Mettre à jour ses propres préférences utilisateur",
-    description: "Permet à un utilisateur de modifier ses propres préférences (ex: notifications par email).",
+    description:
+      "Permet à un utilisateur de modifier ses propres préférences (ex: notifications par email).",
   })
   @ApiOkResponse({
     description: "Préférences mises à jour avec succès",
     type: UserEntity,
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
-  async updateMe(@User() user: UserEntity, @Body() UpdateUserPreferencesDto: UpdateUserPreferencesDto) {
-    return this.userService.updateOwnPreferences(user.id, UpdateUserPreferencesDto);
+  async updateMe(
+    @User() user: UserEntity,
+    @Body() UpdateUserPreferencesDto: UpdateUserPreferencesDto,
+  ) {
+    return this.userService.updateOwnPreferences(
+      user.id,
+      UpdateUserPreferencesDto,
+    );
   }
 
   @Post("me/subscribe/:appId")
@@ -61,8 +75,13 @@ export class UserController {
   }
 
   @Delete("me/subscribe/:appId")
-  @ApiOperation({ summary: "Se désabonner des notifications d'une application" })
-  @ApiParam({ name: "appId", description: "ID de l'application à ne plus suivre" })
+  @ApiOperation({
+    summary: "Se désabonner des notifications d'une application",
+  })
+  @ApiParam({
+    name: "appId",
+    description: "ID de l'application à ne plus suivre",
+  })
   @ApiOkResponse({
     description: "Désabonnement pris en compte",
     type: UserEntity,
@@ -107,10 +126,7 @@ export class UserController {
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",
   })
-  async findAll(
-    @Query() filters: UserFilterDto,
-    @User() requestor: Requestor,
-  ) {
+  async findAll(@Query() filters: UserFilterDto, @User() requestor: Requestor) {
     return this.userService.findAll(filters, requestor);
   }
 }

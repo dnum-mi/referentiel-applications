@@ -7,9 +7,7 @@ import IqChart from "@/components/stats/IqChart.vue";
 
 <template>
   <div class="fr-container" data-testid="quality-page">
-    <h1 data-testid="quality-page-title">
-      Qualité générale
-    </h1>
+    <h1 data-testid="quality-page-title">Qualité générale</h1>
     <div class="fr-grid-row fr-grid-row--gutters">
       <div class="fr-col-12 fr-col-md-6">
         <GlobalStats data-testid="quality-global-stats" />

@@ -90,7 +90,12 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     link: parseQueryParam(query.link),
     priorityRestart: parseQueryParamArray(query.priorityRestart) as Filters["priorityRestart"],
     currentStatus__in: (parseQueryParamArray(query.currentStatus__in) ?? DEFAULT_FILTERS.currentStatus__in) as Filters["currentStatus__in"],
-    currentStatus__isNull: parseQueryParam(query.currentStatus__isNull) === "true" ? true : parseQueryParam(query.currentStatus__isNull) === "false" ? false : undefined,
+    currentStatus__isNull:
+      parseQueryParam(query.currentStatus__isNull) === "true"
+        ? true
+        : parseQueryParam(query.currentStatus__isNull) === "false"
+          ? false
+          : undefined,
     compliance__in: parseQueryParamArray(query.compliance__in) as Filters["compliance__in"],
     page: parseQueryParamNumber(query.page) ?? 0,
     pageSize: parseQueryParamNumber(query.pageSize) ?? 15,
@@ -134,12 +139,12 @@ export function useApplicationSearch() {
 
   const page = computed({
     get: () => filters.value.page!,
-    set: val => setFilter({ page: val }),
+    set: (val) => setFilter({ page: val }),
   });
 
   const pageSize = computed({
     get: () => filters.value.pageSize!,
-    set: val => setFilter({ pageSize: val }),
+    set: (val) => setFilter({ pageSize: val }),
   });
 
   function setFilter(values: Partial<Filters>) {
@@ -194,12 +199,15 @@ export function useApplicationSearch() {
   }
 
   // Auto-search when filters change
-  watch(() => route.query, (q) => {
-    filters.value = {
-      ...DEFAULT_FILTERS,
-      ...queryToFilters(q),
-    };
-  });
+  watch(
+    () => route.query,
+    (q) => {
+      filters.value = {
+        ...DEFAULT_FILTERS,
+        ...queryToFilters(q),
+      };
+    },
+  );
 
   return {
     filters,

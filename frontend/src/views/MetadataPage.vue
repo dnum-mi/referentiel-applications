@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from "vue";
-import { useRoute } from 'vue-router';
+import { useRoute } from "vue-router";
 const route = useRoute();
 import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
@@ -8,15 +8,7 @@ import { metadataActionLabels } from "@/composables/use-dictionary";
 import PaginationFooter from "@/components/PaginationFooter.vue";
 import type { MetadataPaginatedResponseDto } from "@/client/types.gen";
 
-const headers = [
-  "Application",
-  "Auteur",
-  "Organisation",
-  "Type",
-  "Date",
-  "Titre",
-  "Actions",
-];
+const headers = ["Application", "Auteur", "Organisation", "Type", "Date", "Titre", "Actions"];
 
 const currentPage = ref(0);
 const pageSize = ref(15);
@@ -65,14 +57,17 @@ function fetchData() {
   };
 
   isLoading.value = true;
-  return metadataStore.fetchMetadatasGlobal(filters).then(() => {
-    data.value = {
-      results: metadataStore.metadatas,
-      total: metadataStore.total,
-    } as MetadataPaginatedResponseDto;
-  }).finally(() => {
-    isLoading.value = false;
-  });
+  return metadataStore
+    .fetchMetadatasGlobal(filters)
+    .then(() => {
+      data.value = {
+        results: metadataStore.metadatas,
+        total: metadataStore.total,
+      } as MetadataPaginatedResponseDto;
+    })
+    .finally(() => {
+      isLoading.value = false;
+    });
 }
 
 async function applyFilters() {
@@ -107,7 +102,7 @@ onMounted(async () => {
 });
 
 function getDescriptionSummary(meta: any): string {
-  return (meta.description || '').split('\n')[0];
+  return (meta.description || "").split("\n")[0];
 }
 
 const metadataTableRows = computed(() =>
@@ -117,9 +112,7 @@ const metadataTableRows = computed(() =>
       Application: {
         id: meta.id,
         label: meta.application?.label ?? "Application inconnue",
-        to: meta.applicationId
-          ? { name: "application", params: { id: meta.applicationId } }
-          : undefined,
+        to: meta.applicationId ? { name: "application", params: { id: meta.applicationId } } : undefined,
       },
       Auteur: meta.createdBy?.email ?? "Inconnu",
       Organisation: (meta.createdBy as any)?.organization?.path ?? "-",
@@ -129,11 +122,11 @@ const metadataTableRows = computed(() =>
         label: metadataActionLabels[meta.action],
         class: meta.action,
       },
-  Date: formatDate(meta.createdAt),
-  Titre: getDescriptionSummary(meta),
-  Actions: {
-    id: meta.id,
-  },
+      Date: formatDate(meta.createdAt),
+      Titre: getDescriptionSummary(meta),
+      Actions: {
+        id: meta.id,
+      },
     };
   }),
 );
@@ -159,13 +152,7 @@ const metadataTableRows = computed(() =>
           />
         </div>
         <div class="fr-col-12 fr-col-md-4">
-          <DsfrInput
-            v-model="createdAtLte"
-            label="Date de fin"
-            label-visible
-            type="datetime-local"
-            data-testid="history-filter-date-to"
-          />
+          <DsfrInput v-model="createdAtLte" label="Date de fin" label-visible type="datetime-local" data-testid="history-filter-date-to" />
         </div>
       </div>
 
@@ -258,7 +245,16 @@ const metadataTableRows = computed(() =>
 </template>
 
 <style scoped>
-.add { background-color: #e6f8ea; color: #1aa779; }
-.update { background-color: #f8f3e6; color: #a7791a; }
-.delete { background-color: #f8e6e6; color: #a71a1a; }
+.add {
+  background-color: #e6f8ea;
+  color: #1aa779;
+}
+.update {
+  background-color: #f8f3e6;
+  color: #a7791a;
+}
+.delete {
+  background-color: #f8e6e6;
+  color: #a71a1a;
+}
 </style>

@@ -1,4 +1,4 @@
-export type GroupBy = 'day' | 'week' | 'month' | 'year';
+export type GroupBy = "day" | "week" | "month" | "year";
 
 export interface StatEntry {
   date: Date;

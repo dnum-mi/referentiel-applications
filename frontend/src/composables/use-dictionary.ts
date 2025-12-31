@@ -115,7 +115,7 @@ export const restartPrioritiesConfig = {
     shortLabel: "R3",
     tooltip: "Les applications qui peuvent rester indisponibles sans conséquences opérationnelles (travaux en HO seulement)",
   },
-} as const satisfies Record<ApplicationPriorityRestart, { type: string, label: string, shortLabel: string, tooltip: string }>;
+} as const satisfies Record<ApplicationPriorityRestart, { type: string; label: string; shortLabel: string; tooltip: string }>;
 
 export const statusApplicationDictionary: Record<ApplicationStatus, string> = {
   under_construction: "En construction",

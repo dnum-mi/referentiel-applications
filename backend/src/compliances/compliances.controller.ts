@@ -9,13 +9,23 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ApiConflictResponse, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { ApplicationService } from "src/product/application.service";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { CompliancesService } from "./compliances.service";
-import { ComplianceDto, CreateComplianceDto } from "./dto/create-compliance.dto";
+import {
+  ComplianceDto,
+  CreateComplianceDto,
+} from "./dto/create-compliance.dto";
 import { UpdateComplianceDto } from "./dto/update-compliance.dto";
 import { detectCompliances } from "./utils/compliance.utils";
 
@@ -110,8 +120,8 @@ export class ApplicationCompliancesController {
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
     // Find the existing compliance for this application
-    const compliance
-      = await this.compliancesService.findByApplicationId(applicationId);
+    const compliance =
+      await this.compliancesService.findByApplicationId(applicationId);
     if (!compliance) {
       throw new NotFoundException("No compliance found for this application");
     }

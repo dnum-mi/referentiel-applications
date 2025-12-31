@@ -2,7 +2,12 @@ import { Injectable } from "@nestjs/common";
 import { Status } from "@prisma/client";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "../../../prisma/prisma.service";
-import { GraphEdgeDto, GraphNodeDto, RelationApplicationDto, RelationGraphDto } from "../../application/dto/relation-application.dto";
+import {
+  GraphEdgeDto,
+  GraphNodeDto,
+  RelationApplicationDto,
+  RelationGraphDto,
+} from "../../application/dto/relation-application.dto";
 import { Relation } from "../../domain/relation.entity";
 import { IRelationRepository } from "./relation.repository.interface";
 
@@ -11,7 +16,7 @@ export class RelationRepository implements IRelationRepository {
   constructor(
     private readonly prisma: PrismaService,
     private readonly metadataService: MetadatasService,
-  ) { }
+  ) {}
 
   public async create(
     applicationSourceId: string,
@@ -253,8 +258,8 @@ export class RelationRepository implements IRelationRepository {
 
         for (const rel of relations) {
           if (
-            rel.sourceApplication.currentStatus?.status === Status.deleted
-            || rel.targetApplication.currentStatus?.status === Status.deleted
+            rel.sourceApplication.currentStatus?.status === Status.deleted ||
+            rel.targetApplication.currentStatus?.status === Status.deleted
           ) {
             continue;
           }
@@ -287,9 +292,10 @@ export class RelationRepository implements IRelationRepository {
             });
           }
 
-          const nextAppId = rel.applicationSourceId === currentAppId
-            ? rel.applicationTargetId
-            : rel.applicationSourceId;
+          const nextAppId =
+            rel.applicationSourceId === currentAppId
+              ? rel.applicationTargetId
+              : rel.applicationSourceId;
 
           await traverse(nextAppId, depth + 1);
         }

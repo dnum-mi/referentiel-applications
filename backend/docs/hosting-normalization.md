@@ -41,21 +41,18 @@ erDiagram
 ## Modifications apportées
 
 1. **Schéma Prisma** : Ajout de nouveaux modèles dans `prisma/schema/hosting.prisma`
-
    - Provider
    - Platform
    - HostingSite
    - Modification du modèle Hosting pour ajouter une référence à Platform
 
 2. **Entités, DTOs, et Repos** : Création de classes pour chaque nouveau modèle
-
    - Entités dans `src/{provider|platform|hosting-site}/entities/`
    - DTOs dans `src/{provider|platform|hosting-site}/dto/`
    - Interfaces de repository dans `src/{provider|platform|hosting-site}/infrastructure/repository/`
    - Implémentations des repositories
 
 3. **Services et Contrôleurs** : Création des services et contrôleurs REST pour chaque nouveau modèle
-
    - Modules NestJS configurés pour injecter les dépendances
    - API RESTful exposées pour la gestion des entités
 

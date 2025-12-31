@@ -6,9 +6,7 @@ import { TokenService } from "./token.service";
 
 @Module({
   imports: [PrismaModule],
-  controllers: [
-    TokenController,
-  ],
+  controllers: [TokenController],
   providers: [
     TokenService,
     {

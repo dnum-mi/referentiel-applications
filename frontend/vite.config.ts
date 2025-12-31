@@ -31,7 +31,6 @@ export default defineConfig({
             handler: "NetworkOnly",
           },
         ],
-
       },
       manifest: {
         name: "Dummy app",
@@ -51,9 +50,7 @@ export default defineConfig({
           },
         ],
         display: "standalone",
-
       },
-
     }),
     AutoImport({
       include: [/\.[tj]sx?$/, /\.vue$/, /\.vue\?vue/],
@@ -97,7 +94,7 @@ export default defineConfig({
       "/auth": {
         target: "http://localhost:8082",
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/auth/, ""),
+        rewrite: (path) => path.replace(/^\/auth/, ""),
       },
       "/api": {
         target: process.env.API_BASE_URL ?? "http://backend:3500",

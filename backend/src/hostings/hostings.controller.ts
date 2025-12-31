@@ -10,11 +10,22 @@ import {
   Post,
   UseGuards,
 } from "@nestjs/common";
-import { ApiCreatedResponse, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
-import { CreateHostingDto, HostingDto, UpdateHostingDto } from "./dto/hosting.dto";
+import {
+  CreateHostingDto,
+  HostingDto,
+  UpdateHostingDto,
+} from "./dto/hosting.dto";
 import { HostingsService } from "./hostings.service";
 
 @ApiTags("Hostings")
@@ -38,7 +49,11 @@ export class HostingsController {
 @ApiTags("Hostings")
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/hostings")
-@ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
+@ApiParam({
+  name: "applicationId",
+  description: "ID de l'application",
+  type: String,
+})
 export class ApplicationHostingsController {
   constructor(private readonly hostingService: HostingsService) {}
 
@@ -90,7 +105,6 @@ export class ApplicationHostingsController {
   @AppAction("writeHostings")
   @ApiOperation({
     summary: "Mettre à jour un hébergement pour une application",
-
   })
   @ApiOkResponse({
     description: "Hébergement mis à jour",
@@ -110,10 +124,7 @@ export class ApplicationHostingsController {
   @ApiOperation({ summary: "Supprimer un hébergement pour une application" })
   @ApiNoContentResponse({ description: "Hébergement supprimé" })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(
-    @UserId() userId: string,
-    @Param("id") id: string,
-  ) {
+  async remove(@UserId() userId: string, @Param("id") id: string) {
     await this.hostingService.remove(id, userId);
   }
 }

@@ -26,4 +26,4 @@ import { SitesController } from "./site.controller";
   ],
   exports: ["IHostingRepository"],
 })
-export class HostingsModule { }
+export class HostingsModule {}

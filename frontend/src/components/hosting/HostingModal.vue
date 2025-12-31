@@ -5,9 +5,9 @@ import { useToasterStore } from "@/stores/toasterStore";
 import type { HostingDto, HostingOptionDto } from "@/client/types.gen";
 
 const props = defineProps<{
-  applicationId: string
-  initialHosting?: HostingDto
-  errorMessage: string
+  applicationId: string;
+  initialHosting?: HostingDto;
+  errorMessage: string;
 }>();
 
 const emit = defineEmits(["close", "hostingCreated", "hostingUpdated"]);
@@ -29,13 +29,13 @@ function formatOptionText(option: HostingOptionDto): string {
 }
 
 const isFormValid = computed(() => {
-  const exactMatch = hostingOptionsList.value.some(option => formatOptionText(option) === hostingOptionSearch.value);
+  const exactMatch = hostingOptionsList.value.some((option) => formatOptionText(option) === hostingOptionSearch.value);
 
   return !!hostingForm.value.hostingOptionId && exactMatch;
 });
 
 watch(hostingOptionSearch, (newValue) => {
-  const matchedOption = hostingOptionsList.value.find(option => formatOptionText(option) === newValue);
+  const matchedOption = hostingOptionsList.value.find((option) => formatOptionText(option) === newValue);
 
   hostingForm.value.hostingOptionId = matchedOption?.id || "";
 });
@@ -67,7 +67,7 @@ function setInitialValues() {
   };
 
   if (props.initialHosting.hostingOptionId && hostingOptionsList.value.length > 0) {
-    const selectedOption = hostingOptionsList.value.find(option => option.id === props.initialHosting?.hostingOptionId);
+    const selectedOption = hostingOptionsList.value.find((option) => option.id === props.initialHosting?.hostingOptionId);
     if (selectedOption) {
       hostingOptionSearch.value = formatOptionText(selectedOption);
     }
@@ -105,7 +105,12 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <DsfrModal :opened="true" :title="props.initialHosting ? 'Modifier un hébergement' : 'Créer un hébergement'" data-testid="hosting-modal" @close="$emit('close')">
+  <DsfrModal
+    :opened="true"
+    :title="props.initialHosting ? 'Modifier un hébergement' : 'Créer un hébergement'"
+    data-testid="hosting-modal"
+    @close="$emit('close')"
+  >
     <DsfrAlert
       v-show="props.initialHosting && props.errorMessage.length > 0"
       class="mb-4"

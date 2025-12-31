@@ -1,22 +1,29 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, defineProps, defineEmits, computed } from "vue";
 import { useComplianceStore } from "@/stores/complianceStore";
-import { dimaDurationHoursOptions, pdmaDurationHoursOptions, testResultsDict, backupStorageDict, homologationStatusDict, complianceFieldLabels } from "@/composables/use-dictionary";
+import {
+  dimaDurationHoursOptions,
+  pdmaDurationHoursOptions,
+  testResultsDict,
+  backupStorageDict,
+  homologationStatusDict,
+  complianceFieldLabels,
+} from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{
-  applicationId: string
-  application: ApplicationWithPerms
-  type: string
-  mode: "create" | "edit"
-  initialData: Record<string, any> | null
-  opened: boolean
+  applicationId: string;
+  application: ApplicationWithPerms;
+  type: string;
+  mode: "create" | "edit";
+  initialData: Record<string, any> | null;
+  opened: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: "saved"): void
+  (e: "saved"): void;
 }>();
 
 const store = useComplianceStore();
@@ -29,15 +36,9 @@ const HOMOLOGATION_STATUS = {
   HOMOLOGUEE: "homologuee",
 } as const;
 
-const isHomologationHomologuee = computed(
-  () => form.value.status === HOMOLOGATION_STATUS.HOMOLOGUEE,
-);
+const isHomologationHomologuee = computed(() => form.value.status === HOMOLOGATION_STATUS.HOMOLOGUEE);
 
-const canEdit = computed(
-  () =>
-    userStore.adminLevel >= AdminLevel.WRITE
-    || props.application.myPerms.has("writeCompliances"),
-);
+const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeCompliances"));
 
 async function loadForm() {
   loading.value = true;
@@ -52,7 +53,7 @@ async function loadForm() {
 onMounted(loadForm);
 watch(
   () => props.opened,
-  open => open && loadForm(),
+  (open) => open && loadForm(),
 );
 watch(
   () => props.initialData,
@@ -62,7 +63,7 @@ watch(
 async function save() {
   submitting.value = true;
 
-  const schema: Record<string, { numberKeys: string[], dateKeys: string[] }> = {
+  const schema: Record<string, { numberKeys: string[]; dateKeys: string[] }> = {
     dima: {
       numberKeys: ["duration_hours"],
       dateKeys: ["last_test_date"],
@@ -133,9 +134,27 @@ async function save() {
           :disabled="!canEdit"
           data-testid="compliance-dima-duration"
         />
-        <DsfrCheckbox v-model="form.is_hno" :label="complianceFieldLabels.is_hno" :value="true" :disabled="!canEdit" data-testid="compliance-dima-hno" />
-        <DsfrInput v-model="form.business_impact" :label="complianceFieldLabels.business_impact" label-visible :disabled="!canEdit" data-testid="compliance-dima-business-impact" />
-        <DsfrCheckbox v-model="form.recovery_plan" :label="complianceFieldLabels.recovery_plan" :value="true" :disabled="!canEdit" data-testid="compliance-dima-recovery-plan" />
+        <DsfrCheckbox
+          v-model="form.is_hno"
+          :label="complianceFieldLabels.is_hno"
+          :value="true"
+          :disabled="!canEdit"
+          data-testid="compliance-dima-hno"
+        />
+        <DsfrInput
+          v-model="form.business_impact"
+          :label="complianceFieldLabels.business_impact"
+          label-visible
+          :disabled="!canEdit"
+          data-testid="compliance-dima-business-impact"
+        />
+        <DsfrCheckbox
+          v-model="form.recovery_plan"
+          :label="complianceFieldLabels.recovery_plan"
+          :value="true"
+          :disabled="!canEdit"
+          data-testid="compliance-dima-recovery-plan"
+        />
         <DsfrInput
           v-model="form.recovery_solutions"
           :label="complianceFieldLabels.recovery_solutions"
@@ -180,8 +199,19 @@ async function save() {
           default-unselected-text="Choisir..."
           data-testid="compliance-pdma-duration"
         />
-        <DsfrInput v-model="form.data_types" :label="complianceFieldLabels.data_types" is-textarea label-visible data-testid="compliance-pdma-data-types" />
-        <DsfrInput v-model="form.backup_frequency" :label="complianceFieldLabels.backup_frequency" label-visible data-testid="compliance-pdma-backup-frequency" />
+        <DsfrInput
+          v-model="form.data_types"
+          :label="complianceFieldLabels.data_types"
+          is-textarea
+          label-visible
+          data-testid="compliance-pdma-data-types"
+        />
+        <DsfrInput
+          v-model="form.backup_frequency"
+          :label="complianceFieldLabels.backup_frequency"
+          label-visible
+          data-testid="compliance-pdma-backup-frequency"
+        />
         <DsfrSelect
           v-model="form.backup_storage"
           :options="Object.entries(backupStorageDict).map(([v, t]) => ({ value: v, text: t }))"
@@ -190,7 +220,13 @@ async function save() {
           default-unselected-text="Choisir..."
           data-testid="compliance-pdma-backup-storage"
         />
-        <DsfrInput v-model="form.last_test_date" label="Date du dernier test" type="date" label-visible data-testid="compliance-pdma-last-test-date" />
+        <DsfrInput
+          v-model="form.last_test_date"
+          label="Date du dernier test"
+          type="date"
+          label-visible
+          data-testid="compliance-pdma-last-test-date"
+        />
         <DsfrSelect
           v-model="form.test_result"
           :options="Object.entries(testResultsDict).map(([v, t]) => ({ value: v, text: t }))"
@@ -199,8 +235,20 @@ async function save() {
           default-unselected-text="Choisir..."
           data-testid="compliance-pdma-test-result"
         />
-        <DsfrInput v-model="form.backup_method" :label="complianceFieldLabels.backup_method" type="text" label-visible data-testid="compliance-pdma-backup-method" />
-        <DsfrInput v-model="form.restoration_manager" :label="complianceFieldLabels.restoration_manager" type="text" label-visible data-testid="compliance-pdma-restoration-manager" />
+        <DsfrInput
+          v-model="form.backup_method"
+          :label="complianceFieldLabels.backup_method"
+          type="text"
+          label-visible
+          data-testid="compliance-pdma-backup-method"
+        />
+        <DsfrInput
+          v-model="form.restoration_manager"
+          :label="complianceFieldLabels.restoration_manager"
+          type="text"
+          label-visible
+          data-testid="compliance-pdma-restoration-manager"
+        />
       </template>
 
       <template v-else-if="type === 'homologation'">
@@ -226,9 +274,27 @@ async function save() {
       </template>
 
       <template v-else-if="type === 'rgaa'">
-        <DsfrInput v-model="form.audit_date" :label="complianceFieldLabels.audit_date" type="date" label-visible data-testid="compliance-rgaa-audit-date" />
-        <DsfrInput v-model="form.service_url" :label="complianceFieldLabels.service_url" type="url" label-visible data-testid="compliance-rgaa-service-url" />
-        <DsfrInput v-model="form.accessibility_url" :label="complianceFieldLabels.accessibility_url" type="url" label-visible data-testid="compliance-rgaa-accessibility-url" />
+        <DsfrInput
+          v-model="form.audit_date"
+          :label="complianceFieldLabels.audit_date"
+          type="date"
+          label-visible
+          data-testid="compliance-rgaa-audit-date"
+        />
+        <DsfrInput
+          v-model="form.service_url"
+          :label="complianceFieldLabels.service_url"
+          type="url"
+          label-visible
+          data-testid="compliance-rgaa-service-url"
+        />
+        <DsfrInput
+          v-model="form.accessibility_url"
+          :label="complianceFieldLabels.accessibility_url"
+          type="url"
+          label-visible
+          data-testid="compliance-rgaa-accessibility-url"
+        />
         <DsfrInput
           v-model="form.score_percentage"
           :label="complianceFieldLabels.score_percentage"
@@ -243,7 +309,12 @@ async function save() {
       </template>
 
       <template v-else-if="type === 'dsfr'">
-        <DsfrCheckbox v-model="form.implemented" :label="complianceFieldLabels.implemented" :value="true" data-testid="compliance-dsfr-implemented" />
+        <DsfrCheckbox
+          v-model="form.implemented"
+          :label="complianceFieldLabels.implemented"
+          :value="true"
+          data-testid="compliance-dsfr-implemented"
+        />
         <DsfrInput v-model="form.version" :label="complianceFieldLabels.version" label-visible data-testid="compliance-dsfr-version" />
       </template>
 

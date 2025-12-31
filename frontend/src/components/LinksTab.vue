@@ -9,14 +9,17 @@ import PaginationFooter from "./PaginationFooter.vue";
 import { linkTypesDict } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import { useToasterStore } from '@/stores/toasterStore.js';
+import { useToasterStore } from "@/stores/toasterStore.js";
 
-const props = withDefaults(defineProps<{
-  application: ApplicationWithPerms,
-  isMobile?: boolean,
-}>(), {
-  isMobile: false,
-});
+const props = withDefaults(
+  defineProps<{
+    application: ApplicationWithPerms;
+    isMobile?: boolean;
+  }>(),
+  {
+    isMobile: false,
+  },
+);
 
 const linkStore = useLinkStore();
 const userStore = useUserStore();
@@ -35,9 +38,12 @@ const errorMessage = ref("");
 
 const getTypeLabel = (type: string) => (linkTypesDict as Record<string, string>)[type] || "Type inconnu";
 
-watch(() => props.isMobile, (isMobile) => {
-  if (isMobile) selectedLinkIds.value = [];
-});
+watch(
+  () => props.isMobile,
+  (isMobile) => {
+    if (isMobile) selectedLinkIds.value = [];
+  },
+);
 
 function handlePageChange(newPage: number) {
   currentPage.value = newPage;
@@ -59,7 +65,7 @@ watch([currentPage, pageSize], () => {
 const headers = ["Sélection", "Lien", "Description", "Type de lien", "Actions"];
 
 const rows = computed(() =>
-  linkStore.links.map(link => ({
+  linkStore.links.map((link) => ({
     id: link.id,
     Sélection: link.id, // Utilisé pour le v-model de DsfrDataTable
     Lien: { label: link.link || "Lien vide", to: link.link },
@@ -139,7 +145,8 @@ function removeSelectedLinks() {
 }
 
 // Cette fonction est bien écrite et correspond au style des autres composants.
-function getCardButtons(link: Link) { // On peut utiliser le type Link ici
+function getCardButtons(link: Link) {
+  // On peut utiliser le type Link ici
   return [
     {
       label: "Modifier",
@@ -173,12 +180,15 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
 <template>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="links-header">
     <div class="fr-col">
-      <h3 class="fr-mb-0">
-        Gestion des liens
-      </h3>
+      <h3 class="fr-mb-0">Gestion des liens</h3>
     </div>
     <div class="fr-col-auto">
-      <DsfrButton class="fr-btn--icon-left fr-icon-add-line" data-testid="link-add-btn" :disabled="!canEdit" @click="linkModal.openCreateModal()">
+      <DsfrButton
+        class="fr-btn--icon-left fr-icon-add-line"
+        data-testid="link-add-btn"
+        :disabled="!canEdit"
+        @click="linkModal.openCreateModal()"
+      >
         Ajouter un lien
       </DsfrButton>
     </div>
@@ -193,7 +203,7 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
 
     <div v-else>
       <template v-if="!props.isMobile">
-        <div class="global-delete" style="margin-bottom: 1rem;">
+        <div class="global-delete" style="margin-bottom: 1rem">
           <DsfrButton
             type="button"
             secondary
@@ -201,17 +211,18 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
             data-testid="link-delete-selected-btn"
             :disabled="!selectedLinkIds.length || !canEdit"
             :title="!selectedLinkIds.length ? 'Sélectionnez des éléments pour activer' : 'Supprimer la sélection'"
-            :aria-label="!selectedLinkIds.length ? 'Supprimer la sélection (désactivé, aucun élément sélectionné)' : 'Supprimer la sélection'"
+            :aria-label="
+              !selectedLinkIds.length ? 'Supprimer la sélection (désactivé, aucun élément sélectionné)' : 'Supprimer la sélection'
+            "
             @click="removeSelectedLinks"
           >
             Supprimer la sélection
           </DsfrButton>
 
           <div class="sr-only" aria-live="polite" aria-atomic="true">
-            {{ selectedLinkIds.length > 0 ? `${selectedLinkIds.length} élément(s) sélectionné(s)` : '' }}
+            {{ selectedLinkIds.length > 0 ? `${selectedLinkIds.length} élément(s) sélectionné(s)` : "" }}
           </div>
         </div>
-
 
         <DsfrDataTable
           v-model:selection="selectedLinkIds"
@@ -226,21 +237,30 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
             <template v-if="colKey === 'Sélection'">
               <input v-model="selectedLinkIds" type="checkbox" :aria-label="`Sélectionner lien ${cell}`" :value="cell" />
             </template>
-            
+
             <template v-else-if="colKey === 'Lien'">
               <a :href="cell.to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ cell.label }}</a>
             </template>
-            
+
             <template v-else-if="colKey === 'Type de lien'">
               <DsfrTag :label="cell" :title="cell" />
             </template>
-            
+
             <template v-else-if="colKey === 'Actions'">
-              <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" :disabled="!canEdit" data-testid="link-edit-btn" title="Modifier le lien" aria-label="Modifier le lien" @click="cell.edit">
+              <DsfrButton
+                tertiary
+                size="sm"
+                icon="fr-icon-edit-line"
+                :disabled="!canEdit"
+                data-testid="link-edit-btn"
+                title="Modifier le lien"
+                aria-label="Modifier le lien"
+                @click="cell.edit"
+              >
                 Modifier
               </DsfrButton>
             </template>
-            
+
             <template v-else>
               {{ cell }}
             </template>
@@ -333,7 +353,8 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
 
 .sr-only {
   position: absolute !important;
-  height: 1px; width: 1px;
+  height: 1px;
+  width: 1px;
   overflow: hidden;
   clip: rect(1px, 1px, 1px, 1px);
   white-space: nowrap;
@@ -348,7 +369,7 @@ function getCardButtons(link: Link) { // On peut utiliser le type Link ici
 }
 
 .link-card-list ::v-deep(.fr-card__footer .fr-btn) {
-  min-height: 32px; 
+  min-height: 32px;
   padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
 }

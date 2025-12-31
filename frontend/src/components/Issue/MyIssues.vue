@@ -17,7 +17,6 @@ const headers = [
   { key: "status", label: "Statut" },
 ] as const satisfies DsfrDataTableHeaderCell[];
 
-
 const selection = ref<string[]>([]);
 const currentPage = ref(0);
 const itemsPerPage = ref(15);
@@ -65,7 +64,7 @@ const rows = computed(() =>
     status: {
       report,
     },
-  }))
+  })),
 );
 </script>
 
@@ -85,11 +84,11 @@ const rows = computed(() =>
       <template v-if="colKey === 'application'">
         <template v-if="cell && (cell as any).to && (cell as any).to.params && (cell as any).to.params.id">
           <router-link :to="(cell as any).to" data-testid="my-issues-application-link">
-            {{ (cell as any).label || 'Voir l’application' }}
+            {{ (cell as any).label || "Voir l’application" }}
           </router-link>
         </template>
         <template v-else>
-          <span data-testid="my-issues-application-link">{{ (cell as any).label || 'Signalement global' }}</span>
+          <span data-testid="my-issues-application-link">{{ (cell as any).label || "Signalement global" }}</span>
         </template>
       </template>
       <template v-else-if="colKey === 'description'">
@@ -106,8 +105,17 @@ const rows = computed(() =>
     :total-filtered="data.total"
     :limit="itemsPerPage"
     :page="currentPage"
-    @update:limit="val => { itemsPerPage = val; currentPage = 0; }"
-    @update:page="val => { currentPage = val; }"
+    @update:limit="
+      (val) => {
+        itemsPerPage = val;
+        currentPage = 0;
+      }
+    "
+    @update:page="
+      (val) => {
+        currentPage = val;
+      }
+    "
   />
 </template>
 

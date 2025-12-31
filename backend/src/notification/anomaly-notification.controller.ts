@@ -29,7 +29,10 @@ import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { AnomalyNotificationsService } from "./anomaly-notification.service";
 import { AnomalyFiltersDto } from "./dto/anomaly-filters.dto";
-import { AnomalyNotificationDto, AnomalyNotificationPaginatedResponseDto } from "./dto/anomaly-notification.dto";
+import {
+  AnomalyNotificationDto,
+  AnomalyNotificationPaginatedResponseDto,
+} from "./dto/anomaly-notification.dto";
 import {
   CreateAnomalyNotificationDto,
   CreateAnomalyNotificationRequestDto,
@@ -56,14 +59,8 @@ export class AnomalyNotificationsController {
     description: "Liste des notifications d'anomalies",
     type: AnomalyNotificationPaginatedResponseDto,
   })
-  findAll(
-    @Query() filters: AnomalyFiltersDto,
-    @User() requestor: Requestor,
-  ) {
-    return this.service.findAll(
-      requestor,
-      filters,
-    );
+  findAll(@Query() filters: AnomalyFiltersDto, @User() requestor: Requestor) {
+    return this.service.findAll(requestor, filters);
   }
 
   /**
@@ -124,7 +121,11 @@ export class AnomalyNotificationsController {
  * Il permet de créer, récupérer, mettre à jour et supprimer des notifications d'anomalies.
  */
 @ApiTags("ApplicationNotifications")
-@ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
+@ApiParam({
+  name: "applicationId",
+  description: "ID de l'application",
+  type: String,
+})
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/anomaly-notifications")
 export class ApplicationAnomalyNotificationsController {
@@ -148,7 +149,12 @@ export class ApplicationAnomalyNotificationsController {
   })
   @HttpCode(HttpStatus.CREATED)
   @AppAction("postAnomalyNotifications")
-  @ApiParam({ name: "applicationId", description: "ID de l'application", type: String, required: true })
+  @ApiParam({
+    name: "applicationId",
+    description: "ID de l'application",
+    type: String,
+    required: true,
+  })
   async create(
     @User() requestor: Requestor,
     @Body() requestData: CreateAnomalyNotificationRequestDto,
@@ -164,11 +170,14 @@ export class ApplicationAnomalyNotificationsController {
    */
   @Get()
   @ApiOperation({
-    summary: "Récupérer toutes les notifications d'anomalies pour une application",
-    description: "Renvoie la liste paginée des notifications d'anomalies pour une application donnée.",
+    summary:
+      "Récupérer toutes les notifications d'anomalies pour une application",
+    description:
+      "Renvoie la liste paginée des notifications d'anomalies pour une application donnée.",
   })
   @ApiOkResponse({
-    description: "Liste paginée des notifications d'anomalies pour l'application",
+    description:
+      "Liste paginée des notifications d'anomalies pour l'application",
     type: AnomalyNotificationPaginatedResponseDto,
   })
   findAll(
@@ -176,11 +185,7 @@ export class ApplicationAnomalyNotificationsController {
     @User() requestor: Requestor,
     @Param("applicationId") applicationId: string,
   ): Promise<AnomalyNotificationPaginatedResponseDto> {
-    return this.service.findAll(
-      requestor,
-      filters,
-      applicationId,
-    );
+    return this.service.findAll(requestor, filters, applicationId);
   }
 
   /**
@@ -195,10 +200,7 @@ export class ApplicationAnomalyNotificationsController {
     type: AnomalyNotificationDto,
     description: "Notification trouvée avec succès",
   })
-  findOne(
-    @Param("id") id: string,
-    @User() requestor: Requestor,
-  ) {
+  findOne(@Param("id") id: string, @User() requestor: Requestor) {
     return this.service.findOne(id, requestor);
   }
 

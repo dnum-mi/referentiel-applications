@@ -7,4 +7,4 @@ import { ConfigService } from "./config.service";
   controllers: [ConfigController],
   providers: [ConfigService],
 })
-export class ConfigModule { }
+export class ConfigModule {}

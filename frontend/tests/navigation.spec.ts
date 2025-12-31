@@ -8,22 +8,25 @@ const KC_PASS = "pass";
 
 async function login(page) {
   await page.goto(`${BASE_URL}/`);
-  await page.getByRole("banner").getByRole("link", { name: /Se connecter|Sign in/i }).click();
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: /Se connecter|Sign in/i })
+    .click();
 
   // Page d'auth Keycloak
   await page.waitForURL(/\/realms\/.+\/protocol\/openid-connect\/auth/i, { timeout: 15_000 });
 
-  await page.locator("#username, #kc-username, input[name=\"username\"]").first().fill(KC_USER);
-  await page.locator("#password, #kc-password, input[name=\"password\"]").first().fill(KC_PASS);
+  await page.locator('#username, #kc-username, input[name="username"]').first().fill(KC_USER);
+  await page.locator('#password, #kc-password, input[name="password"]').first().fill(KC_PASS);
 
   await Promise.all([
     page.waitForURL(new RegExp(`^${BASE_URL.replace(/\//g, "\\/")}`), { timeout: 20_000 }),
-    page.locator("#kc-login, button[name=\"login\"], input[type=\"submit\"]").first().click(),
+    page.locator('#kc-login, button[name="login"], input[type="submit"]').first().click(),
   ]);
 }
 
 function searchInput(page) {
-  return page.getByRole("banner").locator("input[type=\"search\"]");
+  return page.getByRole("banner").locator('input[type="search"]');
 }
 
 test.describe("App.vue — Guest navigation", () => {

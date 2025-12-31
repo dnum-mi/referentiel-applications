@@ -3,9 +3,9 @@ import { getPrismaClient } from "./prisma";
 
 export class ActorFaker {
   static async link(actor: {
-    userEmail: string
-    actorTypeId: string
-    applicationId: string
+    userEmail: string;
+    actorTypeId: string;
+    applicationId: string;
   }) {
     const prisma = getPrismaClient();
     const newActor = await prisma.actor.create({

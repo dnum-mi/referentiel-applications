@@ -16,4 +16,4 @@ import { ActorRepository } from "./infrastructure/repository/actor.repository";
   providers: [ActorService, ActorRepository],
   exports: [ActorRepository],
 })
-export class ActorModule { }
+export class ActorModule {}

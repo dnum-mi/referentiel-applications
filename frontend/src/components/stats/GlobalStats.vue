@@ -43,20 +43,13 @@ onMounted(() => {
 
 <template>
   <div class="cell alerts-cell">
-    <div v-if="isLoading" data-testid="global-stats-loading">
-      Chargement...
-    </div>
+    <div v-if="isLoading" data-testid="global-stats-loading">Chargement...</div>
     <div v-else-if="errorMessage" data-testid="global-stats-error">
       {{ errorMessage }}
     </div>
     <div v-else data-testid="global-stats-data">
       <h3>Informations au : {{ new Date().toLocaleDateString("fr-FR") }}</h3>
-      <DsfrHighlight
-        v-for="(description, index) in datasGroup"
-        :key="index"
-        :small="true"
-        :data-testid="`global-stats-item-${index}`"
-    >
+      <DsfrHighlight v-for="(description, index) in datasGroup" :key="index" :small="true" :data-testid="`global-stats-item-${index}`">
         {{ description }}
       </DsfrHighlight>
     </div>

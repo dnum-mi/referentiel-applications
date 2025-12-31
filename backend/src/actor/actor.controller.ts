@@ -46,7 +46,11 @@ export class ActorController {
 
 @ApiTags("Actors")
 @UseGuards(ApplicationGuard)
-@ApiParam({ name: "applicationId", description: "ID de l'application", type: String })
+@ApiParam({
+  name: "applicationId",
+  description: "ID de l'application",
+  type: String,
+})
 @Controller("applications/:applicationId/actors")
 export class ApplicationActorsController {
   constructor(private readonly actorService: ActorService) {}

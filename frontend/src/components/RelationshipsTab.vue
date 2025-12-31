@@ -28,49 +28,59 @@ const {
   closeAddRelationModal,
   handleCreateRelation,
   closeEditRelationModal,
-  handleUpdateRelation
+  handleUpdateRelation,
 } = relationManager;
 
 const isDeleteDisabled = computed(() => selectedRelationIds.value.length === 0);
 
 const viewMode = ref<"list" | "graph">("list");
-function setViewMode(mode: "list" | "graph") { viewMode.value = mode; }
+function setViewMode(mode: "list" | "graph") {
+  viewMode.value = mode;
+}
 
 // --- Boutons principaux ---
 const mainButtons = computed(() => [
   {
-    label: 'Liste',
-    title: 'Vue liste des relations',
-    icon: 'fr-icon-list-unordered',
-    onClick: () => setViewMode('list'),
-    tertiary: viewMode.value !== 'list',
+    label: "Liste",
+    title: "Vue liste des relations",
+    icon: "fr-icon-list-unordered",
+    onClick: () => setViewMode("list"),
+    tertiary: viewMode.value !== "list",
   },
   {
-    label: 'Graphe',
-    title: 'Vue graphe des relations',
-    icon: 'fr-icon-eye-line',
-    onClick: () => setViewMode('graph'),
-    tertiary: viewMode.value !== 'graph',
-  }
+    label: "Graphe",
+    title: "Vue graphe des relations",
+    icon: "fr-icon-eye-line",
+    onClick: () => setViewMode("graph"),
+    tertiary: viewMode.value !== "graph",
+  },
 ]);
 
 const addRelationButton = computed(() => ({
-  label: 'Ajouter une relation',
-  icon: 'fr-icon-add-line',
+  label: "Ajouter une relation",
+  icon: "fr-icon-add-line",
   onClick: onAddRelationClick,
-  disabled: !canEdit.value
+  disabled: !canEdit.value,
 }));
 
 // --- Fonctions actions ---
-function onAddRelationClick() { openAddRelationModal(); }
-function onDeleteSelectedClick() { removeSelectedRelations(); }
-function onEditRelation(row: RelationRow) { row.Actions.edit(); }
-function onDeleteRelation(row: RelationRow) { row.Actions.delete(); }
+function onAddRelationClick() {
+  openAddRelationModal();
+}
+function onDeleteSelectedClick() {
+  removeSelectedRelations();
+}
+function onEditRelation(row: RelationRow) {
+  row.Actions.edit();
+}
+function onDeleteRelation(row: RelationRow) {
+  row.Actions.delete();
+}
 function onAddRelation(relation: { targetId: number; type: string }) {
   handleCreateRelation({
     applicationTargetId: relation.targetId,
     type: relation.type,
-    applicationSourceId: props.application.id
+    applicationSourceId: props.application.id,
   });
 }
 </script>
@@ -83,11 +93,10 @@ function onAddRelation(relation: { targetId: number; type: string }) {
     </div>
     <div class="fr-col main-buttons-row" aria-hidden="false">
       <div>
-         <DsfrButtonGroup :buttons="mainButtons" />  
+        <DsfrButtonGroup :buttons="mainButtons" />
         <DsfrButton v-bind="addRelationButton" />
       </div>
     </div>
-
   </div>
   <!-- Graph View Desktop Only -->
   <div v-if="viewMode === 'graph' && !props.isMobile">
@@ -169,7 +178,7 @@ function onAddRelation(relation: { targetId: number; type: string }) {
 
     <!-- Mobile cards -->
     <div v-else class="relation-card-list">
-      <div v-for="row in (rows as RelationRow[])" :key="row.id" class="relation-card fr-mb-2w" data-testid="relation-card">
+      <div v-for="row in rows as RelationRow[]" :key="row.id" class="relation-card fr-mb-2w" data-testid="relation-card">
         <DsfrCard
           :title="row['Application Cible'].label || '—'"
           :titleLinkAttrs="{ 'data-testid': `relation-card-link-${row.id}` }"
@@ -182,7 +191,10 @@ function onAddRelation(relation: { targetId: number; type: string }) {
               size: 'sm',
               disabled: !canEdit,
               title: 'Modifier la relation',
-              onClick: (event?: Event) => { event?.stopPropagation(); onEditRelation(row); }
+              onClick: (event?: Event) => {
+                event?.stopPropagation();
+                onEditRelation(row);
+              },
             },
             {
               label: 'Supprimer',
@@ -191,8 +203,11 @@ function onAddRelation(relation: { targetId: number; type: string }) {
               size: 'sm',
               disabled: !canEdit,
               title: 'Supprimer la relation',
-              onClick: (event?: Event) => { event?.stopPropagation(); onDeleteRelation(row); }
-            }
+              onClick: (event?: Event) => {
+                event?.stopPropagation();
+                onDeleteRelation(row);
+              },
+            },
           ]"
           size="sm"
           :noArrow="true"
@@ -200,13 +215,18 @@ function onAddRelation(relation: { targetId: number; type: string }) {
           :data-testid="`relation-card-${row.id}`"
         >
           <template #start-details>
-            <DsfrTag :label="row['Relation'] || 'Type inconnu'" small class="fr-mr-2w relation-type-tag" :data-testid="`relation-type-tag-${row.id}`" />
+            <DsfrTag
+              :label="row['Relation'] || 'Type inconnu'"
+              small
+              class="fr-mr-2w relation-type-tag"
+              :data-testid="`relation-type-tag-${row.id}`"
+            />
           </template>
           <template #end-details>
             <div class="fr-text--sm">
               <strong>Application Cible: </strong>
               <a :href="`/applications/${row['Application Cible'].id}`" class="fr-link" data-testid="relation-target-link">
-                {{ row['Application Cible'].label }}
+                {{ row["Application Cible"].label }}
               </a>
             </div>
           </template>

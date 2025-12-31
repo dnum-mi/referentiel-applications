@@ -5,8 +5,8 @@ import api from "@/api/index";
 
 export const useRelationStore = defineStore("relationStore", () => {
   const relations = ref<(RelationDto & { isSource: boolean })[]>([]);
-  const relationsAsSource = computed(() => relations.value.filter(rel => rel.isSource));
-  const relationsAsTarget = computed(() => relations.value.filter(rel => !rel.isSource));
+  const relationsAsSource = computed(() => relations.value.filter((rel) => rel.isSource));
+  const relationsAsTarget = computed(() => relations.value.filter((rel) => !rel.isSource));
 
   async function fetchRelationsByApplication(applicationId: string) {
     const response = await api.relationControllerFindAll({
@@ -20,7 +20,7 @@ export const useRelationStore = defineStore("relationStore", () => {
       return;
     }
     // Map the relations to include isSource property based on applicationId
-    relations.value = response.data.map(rel => ({
+    relations.value = response.data.map((rel) => ({
       ...rel,
       isSource: rel.applicationSourceId === applicationId,
     }));
@@ -34,7 +34,7 @@ export const useRelationStore = defineStore("relationStore", () => {
     await fetchRelationsByApplication(applicationSourceId);
   }
 
-  async function updateRelation(applicationSourceId: string, id: string, data: { type: RelationType, applicationTargetId: string }) {
+  async function updateRelation(applicationSourceId: string, id: string, data: { type: RelationType; applicationTargetId: string }) {
     await api.relationControllerUpdate({
       path: { applicationId: applicationSourceId, id },
       body: data,

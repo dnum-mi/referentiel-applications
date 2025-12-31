@@ -11,7 +11,8 @@ const error = ref<string | null>(null);
 const appPermsMatrix = ref<AppPermsDto[] | null>(null);
 
 async function load() {
-  loading.value = true; error.value = null;
+  loading.value = true;
+  error.value = null;
   try {
     const res = await api.actorTypeControllerGetMatrix();
     if (!res.response.ok || !res.data) throw res.error ?? new Error("HTTP error");
@@ -42,25 +43,11 @@ onMounted(load);
 
 <template>
   <div>
-    <div v-if="loading" class="fr-alert fr-alert--info">
-      Chargement…
-    </div>
+    <div v-if="loading" class="fr-alert fr-alert--info">Chargement…</div>
     <div v-else-if="error" class="fr-alert fr-alert--error">
       {{ error }}
-      <DsfrButton
-        size="sm" class="fr-ml-2w"
-        title="R"
-        aria-label="R"
-        @click="load"
-      >
-        Réessayer
-      </DsfrButton>
+      <DsfrButton size="sm" class="fr-ml-2w" title="R" aria-label="R" @click="load"> Réessayer </DsfrButton>
     </div>
-    <AppPermsMatrix
-      v-else-if="appPermsMatrix"
-      :app-perms-matrix="appPermsMatrix"
-      @reload="load"
-      @update:app-perms-matrix="save"
-    />
+    <AppPermsMatrix v-else-if="appPermsMatrix" :app-perms-matrix="appPermsMatrix" @reload="load" @update:app-perms-matrix="save" />
   </div>
 </template>

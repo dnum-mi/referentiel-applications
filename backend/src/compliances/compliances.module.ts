@@ -13,4 +13,4 @@ import { CompliancesService } from "./compliances.service";
   controllers: [ApplicationCompliancesController, ComplianceController],
   providers: [CompliancesService],
 })
-export class CompliancesModule { }
+export class CompliancesModule {}

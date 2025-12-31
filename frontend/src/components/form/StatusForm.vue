@@ -19,9 +19,7 @@ const emit = defineEmits(["submit", "cancel"]);
 
 const form = ref({
   status: props.initialData?.status || "",
-  statusDate: props.initialData?.statusDate
-    ? new Date(props.initialData.statusDate).toISOString().split("T")[0]
-    : "",
+  statusDate: props.initialData?.statusDate ? new Date(props.initialData.statusDate).toISOString().split("T")[0] : "",
 });
 
 const statusOptions = computed(() => [
@@ -59,21 +57,10 @@ function handleSubmit() {
     />
 
     <div class="fr-btns-group fr-btns-group--inline-sm fr-mt-3w">
-      <DsfrButton
-        type="submit"
-        :disabled="isSubmitting"
-        data-testid="status-submit-btn"
-      >
+      <DsfrButton type="submit" :disabled="isSubmitting" data-testid="status-submit-btn">
         {{ isSubmitting ? "En cours..." : "Enregistrer" }}
       </DsfrButton>
-      <DsfrButton
-        secondary
-        type="button"
-        data-testid="status-cancel-btn"
-        @click="emit('cancel')"
-      >
-        Annuler
-      </DsfrButton>
+      <DsfrButton secondary type="button" data-testid="status-cancel-btn" @click="emit('cancel')"> Annuler </DsfrButton>
     </div>
   </form>
 </template>

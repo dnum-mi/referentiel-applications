@@ -15,11 +15,14 @@ function handleDelete(hosting: HostingDto) {
 </script>
 
 <template>
-  <div v-if="hostings.length === 0" class="fr-text--sm fr-text--italic" data-testid="hosting-empty">
-    Aucun hébergement enregistré.
-  </div>
+  <div v-if="hostings.length === 0" class="fr-text--sm fr-text--italic" data-testid="hosting-empty">Aucun hébergement enregistré.</div>
   <div v-else>
-    <div v-for="hosting in hostings" :key="hosting.id" class="fr-mb-2w fr-pb-1w fr-border--bottom" :data-testid="`hosting-item-${hosting.id}`">
+    <div
+      v-for="hosting in hostings"
+      :key="hosting.id"
+      class="fr-mb-2w fr-pb-1w fr-border--bottom"
+      :data-testid="`hosting-item-${hosting.id}`"
+    >
       <div class="fr-grid-row fr-grid-row--middle">
         <div class="fr-col">
           <p class="fr-mb-0">
@@ -41,8 +44,23 @@ function handleDelete(hosting: HostingDto) {
           </div>
         </div>
         <div class="fr-col-auto">
-          <DsfrButton tertiary size="sm" icon="fr-icon-edit-line" title="Modifier" class="fr-mr-1w" data-testid="hosting-edit-btn" @click="handleEdit(hosting)" />
-          <DsfrButton tertiary size="sm" icon="fr-icon-delete-bin-line" title="Supprimer" data-testid="hosting-delete-btn" @click="handleDelete(hosting)" />
+          <DsfrButton
+            tertiary
+            size="sm"
+            icon="fr-icon-edit-line"
+            title="Modifier"
+            class="fr-mr-1w"
+            data-testid="hosting-edit-btn"
+            @click="handleEdit(hosting)"
+          />
+          <DsfrButton
+            tertiary
+            size="sm"
+            icon="fr-icon-delete-bin-line"
+            title="Supprimer"
+            data-testid="hosting-delete-btn"
+            @click="handleDelete(hosting)"
+          />
         </div>
       </div>
     </div>

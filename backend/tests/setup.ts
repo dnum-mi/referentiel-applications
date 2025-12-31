@@ -17,14 +17,18 @@ export async function setupApp(): Promise<INestApplication> {
   // Use the same validation configuration as the main app
   setupGlobalValidation(app);
 
-  setupSwagger(app, {
-    writeYaml: false,
-    onlyWriteSwagger: false,
-  }, {
-    baseUrl: process.env.KEYCLOAK_BASE_URL,
-    realm: process.env.KEYCLOAK_REALM,
-    clientId: process.env.KEYCLOAK_CLIENT_ID,
-  });
+  setupSwagger(
+    app,
+    {
+      writeYaml: false,
+      onlyWriteSwagger: false,
+    },
+    {
+      baseUrl: process.env.KEYCLOAK_BASE_URL,
+      realm: process.env.KEYCLOAK_REALM,
+      clientId: process.env.KEYCLOAK_CLIENT_ID,
+    },
+  );
   await app.init();
   return app;
 }

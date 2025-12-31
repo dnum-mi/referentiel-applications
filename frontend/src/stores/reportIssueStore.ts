@@ -53,7 +53,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     } catch (error) {
       console.log("Erreur lors de l'enregistrement des modifications : ", error);
     }
-  };
+  }
 
   return {
     proposeCorrection,
