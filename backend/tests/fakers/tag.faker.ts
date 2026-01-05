@@ -5,10 +5,15 @@ export class TagFaker {
   static async create() {
     const prisma = getPrismaClient();
 
-    return await prisma.tag.create({
-      data: {
-        name: `${faker.word.noun({ length: { min: 2, max: 128 } }).replace(/[^a-z._-]/g, "")}`,
-      },
+    const name = faker.word
+      .noun({ length: { min: 2, max: 128 } })
+      .replace(/[^a-z._-]/g, "");
+
+    // Upsert to avoid failures when the generated name already exists
+    return await prisma.tag.upsert({
+      where: { name },
+      update: {},
+      create: { name },
     });
   }
 }
