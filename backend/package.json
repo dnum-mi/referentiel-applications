@@ -26,6 +26,9 @@
     "db:seed": "prisma db seed",
     "migrate:hosting": "ts-node src/scripts/migrate-hostings.ts"
   },
+  "prisma": {
+    "seed": "ts-node -r tsconfig-paths/register prisma/seed.ts"
+  },
   "dependencies": {
     "@nestjs/cache-manager": "^2.3.0",
     "@nestjs/common": "^10.4.20",
