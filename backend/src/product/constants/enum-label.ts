@@ -41,3 +41,13 @@ export const NatureLabels: Record<string, string> = {
   CLOUD: "Cloud",
   BARRE_METAL: "Bare metal",
 };
+
+export const ApplicationStatusLabels: Record<string, string> = {
+  under_construction: "En construction",
+  poc: "POC",
+  in_production_mvp: "En production (MVP)",
+  in_production: "En production",
+  in_production_decommissioning: "En décommissionnement",
+  decommissioned: "Décommissionnée",
+  deleted: "Supprimée",
+};

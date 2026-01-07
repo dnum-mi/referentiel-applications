@@ -2,6 +2,7 @@ import type { ApplicationWithAllRelations } from "src/product/types/application.
 import { translateEnum } from "src/common/utils/enum.utils";
 import {
   AnomalyNotificationStatusLabels,
+  ApplicationStatusLabels,
   ExternalRessourceTypeLabels,
   PriorityRestartLabels,
 } from "src/product/constants/enum-label";
@@ -45,6 +46,7 @@ export function mapApplications(apps: ApplicationWithAllRelations[]) {
     purposes: app.purposes?.join(", ") ?? "",
     targetPopulations: app.targetPopulations?.join(", ") ?? "",
     priorityRestart: translateEnum(PriorityRestartLabels, app.priorityRestart),
+    currentStatusId: app.currentStatusId ?? "",
   }));
 }
 
@@ -157,6 +159,17 @@ export function mapRelationsIn(app: ApplicationWithAllRelations) {
       sourceId: rel.sourceApplication?.id,
       sourceLabel: rel.sourceApplication?.label,
       type: RelationTypeLabelsBidirectional[rel.type]?.target ?? rel.type,
+    })) ?? []
+  );
+}
+
+export function mapStatuses(app: ApplicationWithAllRelations) {
+  return (
+    app.statuses?.map((status) => ({
+      applicationId: app.id,
+      applicationLabel: app.label,
+      status: translateEnum(ApplicationStatusLabels, status.status),
+      statusDate: new Date(status.statusDate).toISOString().split("T")[0],
     })) ?? []
   );
 }
