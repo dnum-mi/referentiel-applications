@@ -69,7 +69,7 @@ services:
       - "5555:5555"
 
   keycloak:
-    image: quay.io/keycloak/keycloak
+    image: quay.io/keycloak/keycloak:26.4
     command: [start-dev, --import-realm]
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin

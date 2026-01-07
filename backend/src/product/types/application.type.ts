@@ -7,6 +7,7 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
     compliance: true;
     labels: true;
     tags: true;
+    statuses: true;
     actors: {
       include: {
         actorType: true;
