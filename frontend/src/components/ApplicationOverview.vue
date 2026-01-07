@@ -28,7 +28,7 @@ import { BREAKPOINTS } from "@/constants/breakpoint";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const emit = defineEmits<{
-  (e: "update:application", updatedApp: ApplicationWithPerms): void;
+  (e: "update:application"): void;
   (e: "errorMessage", message: string): void;
 }>();
 const hostingStore = useHostingStore();
@@ -49,10 +49,8 @@ const router = useRouter();
 const breakpoints = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX });
 const isMobile = breakpoints.smaller("mobile");
 
-function updateApplication(updatedApp: ApplicationWithPerms) {
-  // preserve reactivity: update the same object reference
-  Object.assign(application.value, updatedApp);
-  emit("update:application", updatedApp);
+function updateApplication() {
+  emit("update:application");
 }
 
 const errorMessages = {

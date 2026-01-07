@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Application, ApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
@@ -9,9 +9,6 @@ import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import { useBreakpoints } from "@/composables/use-breakpoint";
-import { BREAKPOINTS } from "@/constants/breakpoint";
-import type { ApplicationType } from "@/client";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
@@ -24,13 +21,6 @@ const errorMessage = ref("");
 
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
-
-const TypeOptions = computed(() =>
-  Object.entries(typeApplicationDictionary).map(([value, text]) => ({
-    value: value as ApplicationType,
-    text,
-  })),
-);
 
 async function toggleSubscription() {
   isSubscriptionLoading.value = true;
@@ -51,18 +41,14 @@ const deleteModalOpened = ref(false);
 const deleteConfirmationInput = ref("");
 const applicationLabel = computed(() => application.value?.label ?? "");
 
-const { smaller: isMobile } = useBreakpoints({
-  mobile: BREAKPOINTS.MOBILE_MAX,
-});
-
 const canReadMetadata = computed(() => {
   return application.value?.myPerms?.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ;
 });
 
-async function handleApplicationUpdate(updateData: Application) {
+async function fetchApplicationMetadata() {
   await applicationStore.fetchApplication(id);
   if (canReadMetadata.value) {
-    await metadataStore.getFirstAndLastMetadataByApplication(updateData.id);
+    await metadataStore.getFirstAndLastMetadataByApplication(id);
   }
 }
 
@@ -70,10 +56,7 @@ async function loadApplication() {
   isLoading.value = true;
   errorMessage.value = "";
   try {
-    await applicationStore.fetchApplication(id);
-    if (canReadMetadata.value) {
-      await metadataStore.getFirstAndLastMetadataByApplication(id);
-    }
+    await fetchApplicationMetadata();
   } catch (err) {
     console.error("Failed to load application:", err);
     errorMessage.value = "Impossible de charger les données de l'application.";
@@ -120,13 +103,7 @@ const actions = computed(() => [
       {{ errorMessage }}
     </div>
 
-    <div
-      v-else-if="application"
-      class="application-profile"
-      data-testid="application-profile"
-      style="position: relative; margin: 2rem 1rem"
-      aria-labelledby="application-title"
-    >
+    <div v-else-if="application" class="application-profile" data-testid="application-profile" aria-labelledby="application-title">
       <h1 id="application-title" data-testid="application-title" class="application-title">
         {{ application.label }}
       </h1>
@@ -166,25 +143,22 @@ const actions = computed(() => [
       <div class="status-tags" aria-hidden="false" data-testid="application-tags">
         <DsfrTag
           v-if="application.currentStatus?.statusDate"
-          class="fr-mr-2w"
+          class="fr-mr-1v"
           :label="`${statusApplicationDictionary[application.currentStatus?.status]} depuis le ${formatDateFR(application.currentStatus?.statusDate)}`"
           data-testid="application-status-tag"
-        ></DsfrTag>
+        />
 
-        <DsfrTag :label="`IQ: ${application.quality ?? 'non renseigné'}%`" data-testid="application-iq-tag"></DsfrTag>
+        <DsfrTag class="fr-mr-1v" :label="`IQ: ${application.quality ?? 'non renseigné'}%`" data-testid="application-iq-tag" />
 
         <DsfrTag
           v-if="application.type"
+          class="fr-mr-1v"
           :label="`Type: ${typeApplicationDictionary[application.type]}`"
           data-testid="application-type-tag"
-        ></DsfrTag>
+        />
       </div>
 
-      <ApplicationOverview
-        :application="application"
-        data-testid="application-overview"
-        @update:application="handleApplicationUpdate"
-      ></ApplicationOverview>
+      <ApplicationOverview :application="application" data-testid="application-overview" @update:application="fetchApplicationMetadata" />
 
       <DsfrButton
         v-if="userStore.adminLevel >= AdminLevel.ADMIN"
@@ -231,6 +205,7 @@ const actions = computed(() => [
 <style scoped>
 .application-profile {
   position: relative;
+  margin: 2rem 1rem;
   padding-bottom: 1rem;
 }
 
@@ -246,7 +221,6 @@ const actions = computed(() => [
 }
 
 .application-delete-btn {
-  position: static;
   margin-top: 1rem;
 }
 
