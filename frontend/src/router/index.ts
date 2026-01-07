@@ -11,13 +11,13 @@ const routes = [
   {
     name: routeNames.SITEMAP,
     path: "/plan-du-site",
-    component: () => import("@/views/SiteMap.vue"),
+    component: () => import("@/views/SiteMapPage.vue"),
     meta: { requiresAuth: false, title: "Plan du site - Référentiel des applications" },
   },
   {
     name: routeNames.SEARCHAPP,
     path: "/recherche-application",
-    component: () => import("@/views/ApplicationView.vue"),
+    component: () => import("@/views/ApplicationSearchPage.vue"),
     meta: { requiresAuth: true, title: "Recherche d'applications - Référentiel des applications" },
   },
   {
@@ -29,7 +29,7 @@ const routes = [
   {
     name: routeNames.ACCESSIBILITE,
     path: "/accessibilite",
-    component: () => import("@/views/AppAccessibility.vue"),
+    component: () => import("@/views/AccessibilityPage.vue"),
     meta: { requiresAuth: false, title: "Accessibilité - Référentiel des applications" },
   },
   {
@@ -41,13 +41,13 @@ const routes = [
   {
     name: routeNames.PROFILEAPP,
     path: "/applications/:id",
-    component: () => import("@/views/ApplicationProfile.vue"),
+    component: () => import("@/views/ApplicationPage.vue"),
     meta: { requiresAuth: true, title: "Profil d'application - Référentiel des applications" },
   },
   {
     name: routeNames.PROFILE,
     path: "/profil",
-    component: () => import("@/views/UserProfile.vue"),
+    component: () => import("@/views/UserProfilePage.vue"),
     meta: { requiresAuth: true, title: "Profil utilisateur - Référentiel des applications" },
   },
   {
@@ -78,7 +78,7 @@ const routes = [
   {
     path: "/:pathMatch(.*)*",
     name: routeNames.NOTFOUND,
-    component: () => import("@/views/NotFound.vue"),
+    component: () => import("@/views/NotFoundPage.vue"),
     meta: { requiresAuth: false, title: "Page non trouvée - Référentiel des applications" },
   },
 ];
