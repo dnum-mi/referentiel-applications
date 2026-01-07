@@ -149,7 +149,7 @@ function getPriorityBadgeType(priority?: string) {
 async function updateApplication() {
   applicationModal.closeModal();
   await fetchLabels();
-  emit("update:application", props.application);
+  emit("update:application");
 }
 
 function openEditHosting(hosting: HostingDto) {

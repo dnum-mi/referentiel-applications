@@ -109,6 +109,7 @@ const form = ref<CreateApplicationDto>({
   purposes: props.initialData?.purposes ?? [],
   targetPopulations: props.initialData?.targetPopulations ?? [],
   priorityRestart: props.initialData?.priorityRestart,
+  type: props.initialData?.type,
   tags: props.initialData?.tags ?? [],
   labels: props.initialData?.labels ?? [],
 });
@@ -467,9 +468,9 @@ Aucun espace en début ou en fin."
       />
 
       <DsfrSelect
-        v-if="isCreateMode"
         v-model="form.type"
         :options="TypeOptions"
+        :disabled="!canEditBase"
         label="Type d'application"
         default-unselected-text="Sélectionner un type"
         data-testid="application-type"
