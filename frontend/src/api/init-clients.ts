@@ -62,6 +62,14 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
       Accept: "application/json",
       "Content-Type": "application/json",
     },
+    // Serialize arrays as CSV (e.g. currentStatus__in=a,b,c) instead of repeating keys.
+    // Some proxies/query parsers only keep the last repeated key.
+    querySerializer: {
+      array: {
+        explode: false,
+        style: "form",
+      },
+    },
   });
 
   client.interceptors.response.use(responseInterceptor);

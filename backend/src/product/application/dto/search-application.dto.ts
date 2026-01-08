@@ -14,6 +14,15 @@ import {
 import { PaginationDto } from "../../../common/dto";
 
 export class ApplicationSearchDto extends PaginationDto {
+  private static toArray(value: unknown): string[] {
+    if (value == null) return [];
+    const raw = Array.isArray(value) ? value : [value];
+    return raw
+      .flatMap((v) => String(v).split(","))
+      .map((v) => v.trim())
+      .filter(Boolean);
+  }
+
   @ApiPropertyOptional({
     description: "Recherche plein texte sur tous les champs",
     example: "Mon Application",
@@ -40,7 +49,7 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @Transform(({ value }) => ApplicationSearchDto.toArray(value))
   tag?: string[];
 
   @ApiPropertyOptional({
@@ -53,7 +62,7 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsOptional()
   @IsArray()
   @IsEnum(priorityRestart, { each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @Transform(({ value }) => ApplicationSearchDto.toArray(value))
   priorityRestart?: priorityRestart[];
 
   @ApiPropertyOptional({
@@ -79,7 +88,7 @@ export class ApplicationSearchDto extends PaginationDto {
   })
   @IsOptional()
   @IsEnum(Status, { each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @Transform(({ value }) => ApplicationSearchDto.toArray(value))
   currentStatus__in?: Status[];
 
   @ApiPropertyOptional({
@@ -155,7 +164,7 @@ export class ApplicationSearchDto extends PaginationDto {
   })
   @IsOptional()
   @IsEnum(["dima", "pdma", "homologation", "rgaa", "dsfr"], { each: true })
-  @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
+  @Transform(({ value }) => ApplicationSearchDto.toArray(value))
   compliance__in?: string[];
 
   @ApiPropertyOptional({

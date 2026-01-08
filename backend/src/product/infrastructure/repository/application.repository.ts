@@ -305,17 +305,19 @@ export class ApplicationRepository implements IApplicationRepository {
       },
       {
         condition:
-          filters.currentStatus__in?.length && !filters.currentStatus__isNull,
+          filters.currentStatus__in?.length || filters.currentStatus__isNull,
         whereClause: {
-          currentStatus: {
-            status: { in: filters.currentStatus__in },
-          },
-        },
-      },
-      {
-        condition: filters.currentStatus__isNull,
-        whereClause: {
-          currentStatusId: null,
+          OR: [
+            {
+              currentStatus: {
+                status: { in: filters.currentStatus__in ?? [] },
+              },
+            },
+            {
+              currentStatus:
+                filters.currentStatus__isNull === true ? null : undefined,
+            },
+          ],
         },
       },
     ];
