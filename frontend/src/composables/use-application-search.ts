@@ -1,5 +1,6 @@
 import type { LocationQueryValue } from "vue-router";
 import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
+import type { ApplicationDto } from "@/client/types.gen";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
@@ -33,32 +34,48 @@ const DEFAULT_FILTERS: Filters = {
 };
 
 // Shared state across components (singleton pattern)
-const results = ref<any[]>([]);
+const results = ref<ApplicationDto[]>([]);
 const total = ref(0);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 
-function parseQueryParam(value: LocationQueryValue | LocationQueryValue[]): string | undefined {
+type QueryParam = LocationQueryValue | LocationQueryValue[];
+
+function parseQueryParam(value: QueryParam): string | undefined {
   if (Array.isArray(value)) return value[0] ?? undefined;
   return value ?? undefined;
 }
 
-function parseQueryParamNumber(value: LocationQueryValue | LocationQueryValue[]): number | undefined {
+function parseQueryParamNumber(value: QueryParam): number | undefined {
   const str = parseQueryParam(value);
   if (!str) return undefined;
   const num = Number.parseInt(str, 10);
   return Number.isNaN(num) ? undefined : num;
 }
 
-function parseQueryParamArray(value: LocationQueryValue | LocationQueryValue[]): string[] | undefined {
+function parseQueryParamArray(value: QueryParam): string[] | undefined {
   if (!value) return undefined;
   const arr = Array.isArray(value) ? value : [value];
   const filtered = arr.filter((v): v is string => v !== null);
-  return filtered.length > 0 ? filtered : undefined;
+  const normalized = filtered
+    .flatMap((v) => v.split(","))
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  return normalized.length > 0 ? normalized : undefined;
 }
 
-function filtersToQuery(filters: Filters): Record<string, string | string[]> {
-  const query: Record<string, string | string[]> = {};
+function sortAsStrings(values: readonly unknown[]): string[] {
+  return values.map(String).slice().sort();
+}
+
+function sameStringArray(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((v, i) => v === b[i]);
+}
+
+function filtersToQuery(filters: Filters): Record<string, string> {
+  const query: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(filters)) {
     if (value === undefined || value === null || value === "") continue;
@@ -66,8 +83,10 @@ function filtersToQuery(filters: Filters): Record<string, string | string[]> {
       if (value.length === 0) continue;
       // Compare with defaults for arrays
       const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
-      if (Array.isArray(defaultValue) && JSON.stringify(value.slice().sort()) === JSON.stringify(defaultValue.slice().sort())) continue;
-      query[key] = value.map(String);
+      const sorted = sortAsStrings(value);
+      if (Array.isArray(defaultValue) && sameStringArray(sorted, sortAsStrings(defaultValue))) continue;
+      // Store arrays in the URL as CSV (more compact than explode).
+      query[key] = sorted.join(",");
     } else if (typeof value === "number") {
       const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
       if (value === defaultValue) continue;
@@ -150,12 +169,14 @@ export function useApplicationSearch() {
   function setFilter(values: Partial<Filters>) {
     Object.assign(filters.value, values);
 
-    router.replace({
-      query: {
-        ...route.query,
-        ...filtersToQuery(filters.value),
-      },
-    });
+    // Avoid keeping stale filter params in the URL when a filter is cleared.
+    const nextQuery: Record<string, LocationQueryValue | LocationQueryValue[]> = { ...route.query };
+    for (const key of Object.keys(DEFAULT_FILTERS)) {
+      delete nextQuery[key];
+    }
+    Object.assign(nextQuery, filtersToQuery(filters.value));
+
+    router.replace({ query: nextQuery });
 
     debouncedSearch();
   }
@@ -189,9 +210,9 @@ export function useApplicationSearch() {
         total.value = response.data.total;
       }
 
-      return { ...response.data, results: response.data.results, total: response.data.total };
-    } catch (err: any) {
-      error.value = err?.message || "Erreur inconnue";
+      return response.data;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : "Erreur inconnue";
       throw err;
     } finally {
       isLoading.value = false;

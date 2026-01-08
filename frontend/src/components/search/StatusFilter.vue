@@ -18,22 +18,24 @@ function toggleStatus(value: ApplicationStatus, checked: boolean) {
   const selected = new Set<ApplicationStatus>(filters.value.currentStatus__in || []);
   checked ? selected.add(value) : selected.delete(value);
 
-  if (selected.size === 0) {
-    setFilter({ currentStatus__in: undefined, currentStatus__isNull: true });
-  } else {
-    setFilter({
-      currentStatus__in: Array.from(selected),
-      ...(filters.value.currentStatus__isNull ? { currentStatus__isNull: undefined } : {}),
-    });
-  }
+  setFilter({
+    currentStatus__in: selected.size > 0 ? Array.from(selected) : undefined,
+    ...(selected.size === 0 ? { currentStatus__isNull: true } : {}),
+  });
 }
 
 function toggleWithoutStatus(checked: boolean) {
-  setFilter(
-    checked
-      ? { currentStatus__isNull: true, currentStatus__in: undefined }
-      : { currentStatus__isNull: undefined, currentStatus__in: allStatusValues },
-  );
+  const hasSelectedStatuses = Boolean(filters.value.currentStatus__in?.length);
+
+  if (checked) {
+    setFilter({ currentStatus__isNull: true });
+    return;
+  }
+
+  setFilter({
+    currentStatus__isNull: undefined,
+    ...(hasSelectedStatuses ? {} : { currentStatus__in: allStatusValues }),
+  });
 }
 </script>
 
