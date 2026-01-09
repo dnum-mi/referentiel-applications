@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.58.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.57.0...v1.58.0) (2026-01-09)
+
+
+### Features
+
+* :sparkles: add application status table in global export ([4da997d](https://github.com/dnum-mi/referentiel-applications/commit/4da997d21400c8acd7456055326fd35d78db63ab))
+* :technologist: add seed script following prisma convention ([d1b7c35](https://github.com/dnum-mi/referentiel-applications/commit/d1b7c3565b90715ce6d480ccf89c844a754c7d4a))
+
+
+### Bug Fixes
+
+* :bug: improve application search filters and serialization handling ([c73562c](https://github.com/dnum-mi/referentiel-applications/commit/c73562c81f76476b958387a4a645d7eacdf54e55))
+* :bug: update application type  from "Service cœur" to "Service socle" ([7b02b86](https://github.com/dnum-mi/referentiel-applications/commit/7b02b8644486445c1b97a08e6e130351f93f6418))
+
 ## [1.57.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.56.0...v1.57.0) (2025-12-23)
 
 
