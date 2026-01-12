@@ -96,7 +96,10 @@ export class ApplicationSearchDto extends PaginationDto {
     example: true,
   })
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === "true") return true;
+    if (value === "false") return false;
+  })
   @IsBoolean()
   currentStatus__isNull?: boolean;
 

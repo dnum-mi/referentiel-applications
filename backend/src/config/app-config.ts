@@ -12,7 +12,7 @@ export function setupGlobalValidation(app: INestApplication): void {
       forbidNonWhitelisted: true,
       transform: true,
       transformOptions: {
-        enableImplicitConversion: true,
+        enableImplicitConversion: false,
       },
     }),
   );
