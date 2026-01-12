@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { computed } from "vue";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import type { ApplicationStatus } from "@/client/types.gen";
@@ -10,9 +9,6 @@ const statusOptions = Object.keys(statusApplicationDictionary).map((value) => ({
   value,
   label: statusApplicationDictionary[value as keyof typeof statusApplicationDictionary],
 }));
-const allStatusValues = statusOptions.map((option) => option.value as ApplicationStatus);
-
-const isWithoutStatusActive = computed(() => Boolean(filters.value.currentStatus__isNull));
 
 function toggleStatus(value: ApplicationStatus, checked: boolean) {
   const selected = new Set<ApplicationStatus>(filters.value.currentStatus__in || []);
@@ -25,47 +21,35 @@ function toggleStatus(value: ApplicationStatus, checked: boolean) {
 }
 
 function toggleWithoutStatus(checked: boolean) {
-  const hasSelectedStatuses = Boolean(filters.value.currentStatus__in?.length);
-
-  if (checked) {
-    setFilter({ currentStatus__isNull: true });
-    return;
-  }
-
-  setFilter({
-    currentStatus__isNull: undefined,
-    ...(hasSelectedStatuses ? {} : { currentStatus__in: allStatusValues }),
-  });
+  setFilter({ currentStatus__isNull: checked });
 }
 </script>
 
 <template>
-  <div>
-    <legend class="fr-label fr-mb-2w">Statut de l'application</legend>
-    <div data-testid="status-filter">
-      <label class="checkbox-item without-status-option">
-        <input
-          type="checkbox"
-          :checked="isWithoutStatusActive"
-          data-testid="status-option-none"
-          aria-describedby="withoutStatusDescriptionId"
-          @change="(e) => toggleWithoutStatus((e.target as HTMLInputElement).checked)"
-        />
-        Sans statut
-        <span id="withoutStatusDescriptionId" class="sr-only">Filtrer les applications sans statut</span>
-      </label>
+  <legend class="fr-label fr-mb-2w">Statut de l'application</legend>
+  <div data-testid="status-filter">
+    <label class="checkbox-item without-status-option">
+      <input
+        type="checkbox"
+        :checked="filters.currentStatus__isNull"
+        data-testid="status-option-none"
+        aria-describedby="withoutStatusDescriptionId"
+        @change="(e) => toggleWithoutStatus((e.target as HTMLInputElement).checked)"
+      />
+      Sans statut
+      <span id="withoutStatusDescriptionId" class="sr-only">Filtrer les applications sans statut</span>
+    </label>
 
-      <label v-for="option in statusOptions" :key="option.value" class="checkbox-item">
-        <input
-          type="checkbox"
-          :value="option.value"
-          :checked="filters.currentStatus__in?.includes(option.value as ApplicationStatus)"
-          :data-testid="`status-option-${option.value}`"
-          @change="(e) => toggleStatus(option.value as ApplicationStatus, (e.target as HTMLInputElement).checked)"
-        />
-        {{ option.label }}
-      </label>
-    </div>
+    <label v-for="option in statusOptions" :key="option.value" class="checkbox-item">
+      <input
+        type="checkbox"
+        :value="option.value"
+        :checked="filters.currentStatus__in?.includes(option.value as ApplicationStatus)"
+        :data-testid="`status-option-${option.value}`"
+        @change="(e) => toggleStatus(option.value as ApplicationStatus, (e.target as HTMLInputElement).checked)"
+      />
+      {{ option.label }}
+    </label>
   </div>
 </template>
 
