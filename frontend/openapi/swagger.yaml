@@ -3558,7 +3558,7 @@ components:
       properties:
         label:
           type: string
-          pattern: LABEL_STRING_REGEX
+          minLength: 2
           example: My Application
           description: Label of the application
         shortName:
@@ -3734,7 +3734,7 @@ components:
       properties:
         label:
           type: string
-          pattern: LABEL_STRING_REGEX
+          minLength: 2
           example: My Application
           description: Label of the application
         shortName:
