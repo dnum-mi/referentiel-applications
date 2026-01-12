@@ -17,20 +17,6 @@ describe("Applications", () => {
   let TOKEN: string;
   let createdApplicationId: string;
 
-  // Ensure generated labels comply with LABEL_STRING_REGEX used in DTO
-  // Allowed: Latin script letters (with diacritics), digits, space, dot, hyphen
-  function sanitizeLabel(input: string): string {
-    // Normalize, replace forbidden chars with spaces, collapse spaces, and trim
-    let s = input.normalize("NFC");
-    s = s.replace(/[^\p{Script=Latin}0-9 .-]+/gu, " ");
-    s = s.replace(/\s+/g, " ").trim();
-    // Ensure at least one Latin char and non-empty
-    if (!/\p{Script=Latin}/u.test(s) || s.length === 0) {
-      s = "Application";
-    }
-    return s;
-  }
-
   beforeAll(async () => {
     user = await UserFaker.create({
       adminLevel: AdminLevel.READ,
@@ -70,7 +56,7 @@ describe("Applications", () => {
     await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: sanitizeLabel(faker.company.name()),
+        label: faker.company.name(),
         shortName: "complete-app",
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
@@ -89,7 +75,7 @@ describe("Applications", () => {
     const response = await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: sanitizeLabel(faker.company.name()),
+        label: faker.company.name(),
         shortName: "complete-app",
         description: faker.company.catchPhrase(),
         purposes: ["finance", "HR", "operations"],
@@ -102,6 +88,24 @@ describe("Applications", () => {
 
     // Store the created application ID for the delete test
     createdApplicationId = response.body.id;
+  });
+
+  it("/POST applications - should accept missing priorityRestart", async () => {
+    await user.update({ capabilities: ["CreateApplication"] });
+
+    const response = await request(app().getHttpServer())
+      .post("/applications")
+      .send({
+        label: "Application (sans priorité)",
+        description: faker.company.catchPhrase(),
+        status: { status: "in_production" },
+        tags: [],
+        labels: [],
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+
+    expect(response.body.priorityRestart).toBeNull();
   });
 
   it("/DELETE applications/:id - should delete application with all related metadata", async () => {
@@ -130,7 +134,7 @@ describe("Applications", () => {
     const response = await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: " ",
+        label: "",
         description: faker.company.catchPhrase(),
         status: { status: "in_production" },
         tags: [],
@@ -140,7 +144,7 @@ describe("Applications", () => {
       .expect(400);
 
     expect(response.body.message).toContain(
-      "Le label ne peut pas être vide ou contenir uniquement des espaces",
+      "Le label doit contenir au moins 2 caractères",
     );
   });
 
@@ -150,7 +154,7 @@ describe("Applications", () => {
     await request(app().getHttpServer())
       .post("/applications")
       .send({
-        label: sanitizeLabel(faker.company.name()),
+        label: faker.company.name(),
         description: "",
         status: { status: "in_production" },
         tags: [],
