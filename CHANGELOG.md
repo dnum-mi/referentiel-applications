@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.58.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.58.0...v1.58.1) (2026-01-13)
+
+
+### Bug Fixes
+
+* update validation and search filters for application status handling ([73063df](https://github.com/dnum-mi/referentiel-applications/commit/73063dff1a38373970d1184bfe8c91a22191f60b))
+
 ## [1.58.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.57.0...v1.58.0) (2026-01-09)
 
 
