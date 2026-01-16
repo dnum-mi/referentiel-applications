@@ -12,7 +12,7 @@ const emptyApplication = ref<ApplicationWithPerms>({
   shortName: "",
   description: "",
   logo: "",
-  status: { status: "under_construction" as const },
+  status: { status: "to_validate" as const },
   purposes: [],
   targetPopulations: [],
   priorityRestart: undefined,
