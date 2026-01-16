@@ -105,7 +105,7 @@ const form = ref<CreateApplicationDto>({
   shortName: props.initialData?.shortName ?? "",
   description: props.initialData?.description ?? "",
   logo: props.initialData?.logo ?? "",
-  status: props.initialData?.status ?? { status: "under_construction" as ApplicationStatus },
+  status: props.initialData?.status ?? { status: "to_validate" as ApplicationStatus },
   purposes: props.initialData?.purposes ?? [],
   targetPopulations: props.initialData?.targetPopulations ?? [],
   priorityRestart: props.initialData?.priorityRestart,
