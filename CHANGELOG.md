@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.59.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.58.1...v1.59.0) (2026-01-19)
+
+
+### Features
+
+* :sparkles: add application with "a valider" status ([1a15314](https://github.com/dnum-mi/referentiel-applications/commit/1a1531445a99017c2819040ec36e147f4a8ae6b0))
+* :sparkles: add custom column in table applications ([8b004a7](https://github.com/dnum-mi/referentiel-applications/commit/8b004a7c2b527803a528be64ad131aeb475149fd))
+* :sparkles: adding filter to search for missing moe, moa and hosting ([a73dffa](https://github.com/dnum-mi/referentiel-applications/commit/a73dffa5772b37c760ec11844c3acb5da7bc054d))
+* add technical debt information and chart to application search ([ac061dc](https://github.com/dnum-mi/referentiel-applications/commit/ac061dc16cc145b11df9869ce2a42bc31ed2c952))
+
 ## [1.58.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.58.0...v1.58.1) (2026-01-13)
 
 
