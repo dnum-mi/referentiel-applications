@@ -10,6 +10,7 @@ import {
 } from "class-validator";
 import { PaginatedResponseDto } from "../../../common/dto";
 import { ApplicationStatusDto } from "../../../statuses/dto/application-status.dto";
+import { TechnicalDebtInfoDto } from "../../../technical-debt-info/dto/create-technical-debt-info.dto";
 
 export class ApplicationDto {
   @IsString()
@@ -69,6 +70,16 @@ export class ApplicationDto {
   @IsOptional()
   @Type(() => ApplicationStatusDto)
   currentStatus?: ApplicationStatusDto | null;
+
+  @ApiProperty({
+    type: () => TechnicalDebtInfoDto,
+    description: "Technical debt information for the application",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @Type(() => TechnicalDebtInfoDto)
+  technicalDebtInfo?: TechnicalDebtInfoDto | null;
 }
 
 export class CountByMonthDto {
