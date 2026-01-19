@@ -7,11 +7,13 @@ import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
 import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue";
+import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
 
 const statsStore = useStatisticsStore();
-const { isLoading, searchApplications } = useApplicationSearch();
+const { isLoading, searchApplications, results } = useApplicationSearch();
 
 const isMobile = ref(false);
+const showChart = ref(false);
 
 onMounted(() => {
   isMobile.value = window.matchMedia("(max-width: 768px)").matches;
@@ -23,6 +25,19 @@ onMounted(() => {
 });
 
 const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
+
+const chartData = computed(() => {
+  return results.value
+    .filter((app) => app.technicalDebtInfo)
+    .map((app) => ({
+      id: app.id,
+      applicationId: app.id,
+      applicationLabel: app.label,
+      technicalMaturity: app.technicalDebtInfo?.technicalMaturity ?? 0,
+      businessMaturity: app.technicalDebtInfo?.businessMaturity ?? 0,
+      costMaturity: app.technicalDebtInfo?.costMaturity ?? 0,
+    }));
+});
 </script>
 
 <template>
@@ -38,8 +53,17 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
       </div>
 
       <div class="search-actions-wrapper" data-testid="application-search-actions-wrapper">
-        <ApplicationSearchActions />
+        <ApplicationSearchActions :show-chart="showChart" :has-chart-data="chartData.length > 0" @toggle-chart="showChart = !showChart" />
       </div>
+
+      <section
+        v-if="showChart && chartData.length > 0"
+        id="technical-debt-chart"
+        class="chart-section"
+        data-testid="technical-debt-chart-section"
+      >
+        <TechnicalDebtChart :data="chartData" />
+      </section>
 
       <section id="application-results" class="application-results" aria-live="polite" :aria-busy="isLoading" tabindex="-1">
         <ApplicationTableView v-if="displayMode === 'table'" data-testid="application-table-view" />
@@ -97,6 +121,17 @@ const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 
 .search-actions-wrapper {
   margin: 1.25rem 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chart-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: var(--background-default-grey);
+  border-radius: 0.5rem;
 }
 
 .application-results {

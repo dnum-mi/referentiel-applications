@@ -10,6 +10,15 @@ import { AdminLevel } from "@/models/user";
 import { routeNames } from "@/router/route-names";
 import ReportAnomaly from "@/components/modal/reportAnomaly.vue";
 
+const props = defineProps<{
+  showChart?: boolean;
+  hasChartData?: boolean;
+}>();
+
+const emit = defineEmits<{
+  "toggle-chart": [];
+}>();
+
 const router = useRouter();
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
@@ -105,6 +114,20 @@ async function exportToExcel() {
         aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
         title="Exporter en excel les applications correspondant aux filtres actuels"
       ></DsfrButton>
+
+      <DsfrButton
+        v-if="hasChartData"
+        secondary
+        type="button"
+        data-testid="toggle-chart-btn"
+        class="action-btn"
+        @click="emit('toggle-chart')"
+        :aria-expanded="showChart"
+        aria-controls="technical-debt-chart"
+        :title="showChart ? 'Masquer le graphique TIME (MDIT)' : 'Afficher le graphique TIME (MDIT)'"
+      >
+        {{ showChart ? "Masquer le graphique TIME (MDIT)" : "Afficher le graphique TIME (MDIT)" }}
+      </DsfrButton>
     </div>
   </div>
 

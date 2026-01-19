@@ -436,6 +436,7 @@ export class ApplicationRepository implements IApplicationRepository {
         ...paginate(page, pageSize),
         include: {
           currentStatus: true,
+          technicalDebtInfo: true,
           hostings: {
             include: {
               hostingOption: true,
