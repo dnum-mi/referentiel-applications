@@ -119,7 +119,7 @@ function drawChart() {
           `<strong>${d.applicationShortName ?? d.applicationLabel}</strong><br/>` +
             `Technique: ${d.technicalMaturity ?? "-"}/5<br/>` +
             `Metier: ${d.businessMaturity ?? "-"}/5<br/>` +
-            `Cout MCO: ${cost}/5`,
+            `Coût MCO: ${cost}/5`,
         );
     })
     .on("mousemove", (event) => {
