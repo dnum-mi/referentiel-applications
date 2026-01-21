@@ -17,8 +17,8 @@ const columns: TableColumn[] = [
   { field: "quality", header: "IQ", sortable: true, width: "80px" },
   { field: "label", header: "Nom", sortable: true, width: "300px" },
   { field: "priorityRestart", header: "Priorité", sortable: true, width: "160px" },
-  { field: "hostingSite", header: "Hébergement", sortable: true, width: "280px" },
-  { field: "tag", header: "Tags", sortable: true, width: "240px" },
+  { field: "hostingDisplay", header: "Hébergement", sortable: false, width: "280px" },
+  { field: "tag", header: "Tags", sortable: false, width: "240px" },
 ];
 
 const applications = computed(() =>
