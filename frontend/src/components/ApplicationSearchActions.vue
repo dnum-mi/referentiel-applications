@@ -9,6 +9,7 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { routeNames } from "@/router/route-names";
 import ReportAnomaly from "@/components/modal/reportAnomaly.vue";
+import ColumnCustomization from "@/components/ColumnCustomization.vue";
 
 const props = defineProps<{
   showChart?: boolean;
@@ -128,6 +129,8 @@ async function exportToExcel() {
       >
         {{ showChart ? "Masquer le graphique TIME (MDIT)" : "Afficher le graphique TIME (MDIT)" }}
       </DsfrButton>
+
+      <ColumnCustomization data-testid="column-customization" />
     </div>
   </div>
 

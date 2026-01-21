@@ -498,11 +498,12 @@ export class ApplicationRepository implements IApplicationRepository {
           actors: {
             include: {
               organization: {
-                select: { id: true, path: true },
+                select: { id: true, path: true, sigle: true },
               },
               actorType: true,
             },
           },
+          compliance: true,
           labels: true,
           externalRessource: true,
           tags: true,

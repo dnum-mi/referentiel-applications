@@ -37,15 +37,14 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   sort: [event: TableSortEvent];
   page: [event: DataTablePageEvent];
+  columnResize: [event: { field: string; width: string }];
 }>();
 
-// État local pour l'UI du tri (synchronisé avec les props)
 const internalSortField = ref(props.sortField);
 const internalSortOrder = ref(props.sortOrder);
 const isSorting = ref(false);
 const skeletonTimeout = ref<number | null>(null);
 
-// Synchronisation si le parent change le tri (ex: reset filtres)
 watch([() => props.sortField, () => props.sortOrder], ([newField, newOrder]) => {
   internalSortField.value = newField;
   internalSortOrder.value = newOrder as number;
@@ -74,11 +73,19 @@ function onSort(event: DataTableSortEvent) {
 }
 
 function onPage(event: DataTablePageEvent) {
-  // On transmet l'événement brut à l'étage supérieur
   emit("page", event);
 }
 
-// Gestion de la fin du chargement pour le skeleton
+function onColumnResize(event: any) {
+  if (event.element && event.element.style) {
+    const field = event.element.getAttribute("data-p-column-field") || event.element.getAttribute("aria-label");
+    const width = event.element.style.width;
+    if (field && width) {
+      emit("columnResize", { field, width });
+    }
+  }
+}
+
 watch(
   () => props.items,
   () => {
@@ -93,7 +100,7 @@ watch(
 </script>
 
 <template>
-  <div class="fr-table">
+  <div class="fr-table" role="region" :aria-label="`Tableau de ${totalRecords} éléments`">
     <DataTable
       :value="items"
       :lazy="lazy"
@@ -109,12 +116,18 @@ watch(
       :loading="loading && !isSorting"
       :data-testid="dataTestId"
       striped-rows
+      resizableColumns
+      columnResizeMode="fit"
+      responsiveLayout="scroll"
+      aria-live="polite"
+      :aria-busy="loading || isSorting"
       @sort="onSort"
       @page="onPage"
+      @column-resize-end="onColumnResize"
       tableStyle="min-width: 50rem"
     >
       <template #empty>
-        <div class="fr-py-2w fr-text--center">{{ emptyMessage }}</div>
+        <div class="fr-py-2w fr-text--center" role="status" aria-live="polite">{{ emptyMessage }}</div>
       </template>
 
       <Column
@@ -124,9 +137,10 @@ watch(
         :header="column.header"
         :sortable="column.sortable"
         :style="column.width ? { width: column.width } : undefined"
+        :aria-label="column.header"
       >
         <template #body="slotProps">
-          <Skeleton v-if="isSorting" width="80%" height="1rem" />
+          <Skeleton v-if="isSorting" width="80%" height="1rem" aria-label="Chargement en cours" />
           <slot v-else :name="`body-${column.field}`" v-bind="slotProps">
             {{ slotProps.data[column.field] }}
           </slot>

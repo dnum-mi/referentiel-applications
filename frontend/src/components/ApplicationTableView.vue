@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
-import { restartPrioritiesConfig } from "@/composables/use-dictionary";
+import { useColumnPreferences } from "@/composables/use-column-preferences";
+import { restartPrioritiesConfig, statusApplicationDictionary } from "@/composables/use-dictionary";
 import RefAppTable from "./RefAppTable.vue";
-import type { TableColumn, TableSortEvent } from "@/types/table";
+import type { TableSortEvent } from "@/types/table";
+import type { ApplicationStatus } from "@/client/types.gen.js";
 
 const { filters, results, total, page, pageSize, setFilter, isLoading } = useApplicationSearch();
+const { tableColumns, setColumnWidth } = useColumnPreferences();
 
 // Calcul essentiel pour PrimeVue : (Page 0 -> 0, Page 1 -> 15, Page 2 -> 30...)
 const firstIndex = computed(() => page.value * pageSize.value);
@@ -13,22 +16,87 @@ const firstIndex = computed(() => page.value * pageSize.value);
 const sortField = ref(filters.value.sortBy || "label");
 const sortOrder = ref(filters.value.order === "desc" ? -1 : 1);
 
-const columns: TableColumn[] = [
-  { field: "quality", header: "IQ", sortable: true, width: "80px" },
-  { field: "label", header: "Nom", sortable: true, width: "300px" },
-  { field: "priorityRestart", header: "Priorité", sortable: true, width: "160px" },
-  { field: "hostingDisplay", header: "Hébergement", sortable: false, width: "280px" },
-  { field: "tag", header: "Tags", sortable: false, width: "240px" },
-];
+const formatActors = (actors: any[], actorTypeCode: string): string => {
+  if (!actors || actors.length === 0) return "-";
+
+  const filteredActors = actors.filter((actor) => actor.actorType?.code === actorTypeCode);
+
+  if (filteredActors.length === 0) return "-";
+
+  return filteredActors
+    .map((actor) => {
+      let name = "";
+      if (actor.organization) {
+        name = actor.organization.sigle || actor.organization.path || "";
+      }
+
+      if (!name) {
+        const fullName = [actor.firstname, actor.lastname].filter(Boolean).join(" ").trim();
+        name = fullName || actor.email || "Acteur sans nom";
+      }
+
+      const email = actor.email && !name.includes(actor.email) ? ` (${actor.email})` : "";
+      return `${name}${email}`;
+    })
+    .join("\n");
+};
+
+const getComplianceField = (compliances: any[], field: string): string => {
+  if (!compliances || compliances.length === 0) return "-";
+
+  const compliance = compliances[0];
+  if (!compliance) return "-";
+
+  switch (field) {
+    case "dima":
+      return compliance.dima_duration_hours !== null && compliance.dima_duration_hours !== undefined
+        ? `${compliance.dima_duration_hours}h`
+        : "-";
+    case "pdma":
+      return compliance.pdma_duration_hours !== null && compliance.pdma_duration_hours !== undefined
+        ? `${compliance.pdma_duration_hours}h`
+        : "-";
+    case "rgaa":
+      return compliance.rgaa_score_percentage !== null && compliance.rgaa_score_percentage !== undefined
+        ? `${compliance.rgaa_score_percentage}%`
+        : "-";
+    case "dsfr":
+      return compliance.dsfr_implemented !== null && compliance.dsfr_implemented !== undefined
+        ? compliance.dsfr_implemented
+          ? "Oui"
+          : "Non"
+        : "-";
+    case "homologation":
+      return compliance.homologation_status || "-";
+    default:
+      return "-";
+  }
+};
 
 const applications = computed(() =>
-  results.value.map((app: any) => ({
-    ...app,
-    qualityDisplay: app.quality !== null ? `${app.quality}%` : "0%",
-    hostingDisplay: app.hostings?.map((h: any) => h.hostingOption?.site || h.site).join(", ") || "-",
-    tagsDisplay: app.tags?.map((tag: any) => tag.name).join(", ") || "-",
-    priorityConfig: app.priorityRestart ? restartPrioritiesConfig[app.priorityRestart as keyof typeof restartPrioritiesConfig] : null,
-  })),
+  results.value.map((app: any) => {
+    console.log("Application actors:", app.actors);
+    console.log("APP hostings:", app.hostings);
+    return {
+      ...app,
+      qualityDisplay: app.quality !== null ? `${app.quality}%` : "0%",
+      hostingDisplay: app.hostings?.map((h: any) => h.hostingOption?.site || h.site).join(", ") || "-",
+      tagsDisplay: app.tags?.map((tag: any) => tag.name).join(", ") || "-",
+      priorityConfig: app.priorityRestart ? restartPrioritiesConfig[app.priorityRestart as keyof typeof restartPrioritiesConfig] : null,
+      moaDisplay: formatActors(app.actors, "MOA"),
+      moeDisplay: formatActors(app.actors, "MOE"),
+      hostingManagerDisplay: formatActors(app.actors, "HEB"),
+      rsimmDisplay: formatActors(app.actors, "RSSI"),
+      dimaDisplay: app.compliance ? getComplianceField([app.compliance], "dima") : "-",
+      pdmaDisplay: app.compliance ? getComplianceField([app.compliance], "pdma") : "-",
+      rgaaDisplay: app.compliance ? getComplianceField([app.compliance], "rgaa") : "-",
+      dsfrDisplay: app.compliance ? getComplianceField([app.compliance], "dsfr") : "-",
+      homologationDisplay: app.compliance ? getComplianceField([app.compliance], "homologation") : "-",
+      statusDisplay: app.currentStatus?.status
+        ? statusApplicationDictionary[app.currentStatus.status as ApplicationStatus] || app.currentStatus.status
+        : "-",
+    };
+  }),
 );
 
 function onSort(event: TableSortEvent) {
@@ -38,23 +106,26 @@ function onSort(event: TableSortEvent) {
   setFilter({
     sortBy: sortField.value,
     order: sortOrder.value === -1 ? "desc" : "asc",
-    page: 0, // Reset to first page when sorting
+    page: 0,
   });
 }
 
 function onPage(event: any) {
-  // event.page is 0-indexed from PrimeVue, and the API also expects 0-indexed pages
   setFilter({
     page: event.page,
     pageSize: event.rows,
   });
+}
+
+function onColumnResize(event: { field: string; width: string }) {
+  setColumnWidth(event.field, event.width);
 }
 </script>
 
 <template>
   <RefAppTable
     :items="applications"
-    :columns="columns"
+    :columns="tableColumns"
     :loading="isLoading"
     :lazy="true"
     :paginator="true"
@@ -66,6 +137,7 @@ function onPage(event: any) {
     data-test-id="application-table"
     @sort="onSort"
     @page="onPage"
+    @column-resize="onColumnResize"
   >
     <template #body-quality="{ data }">
       {{ data.qualityDisplay }}
@@ -81,6 +153,54 @@ function onPage(event: any) {
       <DsfrBadge v-if="data.priorityConfig" :label="data.priorityConfig.shortLabel" :type="data.priorityConfig.type" />
       <span v-else>-</span>
     </template>
+
+    <template #body-hostingSite="{ data }">
+      {{ data.hostingDisplay }}
+    </template>
+
+    <template #body-tag="{ data }">
+      {{ data.tagsDisplay }}
+    </template>
+
+    <template #body-moa="{ data }">
+      <span class="multiline-cell">{{ data.moaDisplay }}</span>
+    </template>
+
+    <template #body-moe="{ data }">
+      <span class="multiline-cell">{{ data.moeDisplay }}</span>
+    </template>
+
+    <template #body-hostingManager="{ data }">
+      <span class="multiline-cell">{{ data.hostingManagerDisplay }}</span>
+    </template>
+
+    <template #body-rsimm="{ data }">
+      <span class="multiline-cell">{{ data.rsimmDisplay }}</span>
+    </template>
+
+    <template #body-dima="{ data }">
+      {{ data.dimaDisplay }}
+    </template>
+
+    <template #body-pdma="{ data }">
+      {{ data.pdmaDisplay }}
+    </template>
+
+    <template #body-rgaa="{ data }">
+      {{ data.rgaaDisplay }}
+    </template>
+
+    <template #body-dsfr="{ data }">
+      {{ data.dsfrDisplay }}
+    </template>
+
+    <template #body-homologation="{ data }">
+      {{ data.homologationDisplay }}
+    </template>
+
+    <template #body-status="{ data }">
+      {{ data.statusDisplay }}
+    </template>
   </RefAppTable>
 </template>
 
@@ -91,5 +211,10 @@ function onPage(event: any) {
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+
+.multiline-cell {
+  white-space: pre-line;
+  display: block;
 }
 </style>
