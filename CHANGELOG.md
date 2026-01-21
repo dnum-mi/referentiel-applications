@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.59.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.59.0...v1.59.1) (2026-01-21)
+
+
+### Bug Fixes
+
+* :bug: fix hosting not displayed in apps search ([06f9e4e](https://github.com/dnum-mi/referentiel-applications/commit/06f9e4e699b138d132c53eec3c8a3633e5bb0cdb))
+* :bug: fix technical debt chart ([a9119a0](https://github.com/dnum-mi/referentiel-applications/commit/a9119a0f823a42901fbfe7ffa8e90c5df1d7a140))
+
 ## [1.59.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.58.1...v1.59.0) (2026-01-19)
 
 
