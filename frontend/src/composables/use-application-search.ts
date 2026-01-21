@@ -1,10 +1,15 @@
 import type { LocationQueryValue } from "vue-router";
-import type { ApplicationControllerSearchData } from "@/client/types.gen.js";
-import type { ApplicationDto } from "@/client/types.gen";
+import type {
+  ApplicationControllerSearchData,
+  ApplicationDto,
+  TechnicalDebtControllerGetTechnicalDebtPointsResponses,
+} from "@/client/types.gen";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
+
+export type TechnicalDebtPoint = TechnicalDebtControllerGetTechnicalDebtPointsResponses extends (infer Item)[] ? Item : never;
 
 export type Filters = NonNullable<ApplicationControllerSearchData["query"]>;
 
@@ -232,6 +237,18 @@ export function useApplicationSearch() {
     }
   }
 
+  async function fetchTechnicalDebtPoints(customFilters?: Partial<Filters>) {
+    const currentFilters = { ...filters.value, ...customFilters };
+    const { page, pageSize, ...query } = cleanFilters(currentFilters);
+    const response = await api.technicalDebtControllerGetTechnicalDebtPoints({
+      query,
+      responseStyle: "data",
+      throwOnError: true,
+    });
+
+    return response ?? [];
+  }
+
   // Auto-search when filters change
   watch(
     () => route.query,
@@ -253,6 +270,7 @@ export function useApplicationSearch() {
     error,
     DEFAULT_FILTERS,
     searchApplications,
+    fetchTechnicalDebtPoints,
     setFilter,
     setOrder,
     resetFilters,

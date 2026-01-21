@@ -15,6 +15,7 @@ import {
 } from "./application/dto/create-application.dto";
 import { ApplicationSearchResultDto } from "./application/dto/get-application.dto";
 import { ApplicationSearchDto } from "./application/dto/search-application.dto";
+import { TechnicalDebtPointDto } from "./application/dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
@@ -270,6 +271,26 @@ export class ApplicationService {
       });
     }
     return this.applicationRepository.findApplications(searchParams);
+  }
+
+  public async getTechnicalDebtPoints(
+    searchParams: ApplicationSearchDto,
+    requestor?: Requestor,
+  ): Promise<TechnicalDebtPointDto[]> {
+    if (searchParams.isActor && requestor) {
+      return this.applicationRepository.findTechnicalDebtPoints(searchParams, {
+        actorEmail: requestor.email,
+      });
+    }
+    if (
+      !this.appConf.nonActorPermissions.includes("readBase") &&
+      requestor?.adminLevel < AdminLevel.READ
+    ) {
+      return this.applicationRepository.findTechnicalDebtPoints(searchParams, {
+        actorEmail: requestor.email,
+      });
+    }
+    return this.applicationRepository.findTechnicalDebtPoints(searchParams);
   }
 
   public async exportApplications(): Promise<any[]> {
