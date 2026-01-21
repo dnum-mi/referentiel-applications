@@ -161,3 +161,53 @@ describe("TechnicalDebtInfo - application guard", () => {
       .expect(403);
   });
 });
+
+describe("TechnicalDebts", () => {
+  const app = setupTestSuite();
+  let user: UserFakerReturnType;
+  let TOKEN: string;
+  let applicationA: AsyncReturnType<typeof ApplicationFaker.create>;
+  let applicationB: AsyncReturnType<typeof ApplicationFaker.create>;
+
+  beforeAll(async () => {
+    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    TOKEN = await getToken(user);
+    applicationA = await ApplicationFaker.create(user);
+    applicationB = await ApplicationFaker.create(user);
+
+    await request(app().getHttpServer())
+      .post(`/applications/${applicationA.id}/technical-debt-info`)
+      .send({
+        technicalMaturity: 2,
+        businessMaturity: 3,
+        costMaturity: 4,
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+
+    await request(app().getHttpServer())
+      .post(`/applications/${applicationB.id}/technical-debt-info`)
+      .send({
+        technicalMaturity: 1,
+        businessMaturity: 2,
+        costMaturity: 3,
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+  });
+
+  it("/GET technical-debts - should return points and honor filters", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/technical-debts")
+      .query({ label: applicationA.label })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(Array.isArray(response.body)).toBe(true);
+    expect(response.body.length).toBeGreaterThanOrEqual(1);
+
+    const resultIds = response.body.map((item: { id: string }) => item.id);
+    expect(resultIds).toContain(applicationA.id);
+    expect(resultIds).not.toContain(applicationB.id);
+  });
+});

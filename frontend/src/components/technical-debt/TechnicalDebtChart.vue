@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as d3 from "d3";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import type { TechnicalDebtPoint } from "@/services/technicalDebt";
+import type { TechnicalDebtPoint } from "@/composables/use-application-search";
 
 const props = defineProps<{
   data: TechnicalDebtPoint[];
@@ -14,7 +14,9 @@ const resizeObserver = ref<ResizeObserver>();
 
 const chartHeight = computed(() => props.height ?? 460);
 
-const filteredData = computed(() => props.data.filter((item) => item.technicalMaturity != null && item.businessMaturity != null));
+const filteredData = computed(() =>
+  props.data.filter((item) => item.technicalDebtInfo?.technicalMaturity != null && item.technicalDebtInfo?.businessMaturity != null),
+);
 
 function destroyChart() {
   if (svgRef.value) {
@@ -103,22 +105,22 @@ function drawChart() {
     .data(filteredData.value)
     .enter()
     .append("circle")
-    .attr("cx", (d) => x(Number(d.technicalMaturity)))
-    .attr("cy", (d) => y(Number(d.businessMaturity)))
+    .attr("cx", (d) => x(Number(d.technicalDebtInfo?.technicalMaturity)))
+    .attr("cy", (d) => y(Number(d.technicalDebtInfo?.businessMaturity)))
     .attr("r", 8)
-    .attr("fill", (d) => color(d.costMaturity ?? 0))
+    .attr("fill", (d) => color(d.technicalDebtInfo?.costMaturity ?? 0))
     .attr("opacity", 0.9)
     .attr("stroke", "#0d6efd")
     .attr("stroke-width", 0.6)
     .attr("data-testid", "technical-debt-point")
     .on("mouseenter", (_, d) => {
-      const cost = d.costMaturity ?? "-";
+      const cost = d.technicalDebtInfo?.costMaturity ?? "-";
       tooltip
         .style("display", "block")
         .html(
-          `<strong>${d.applicationShortName ?? d.applicationLabel}</strong><br/>` +
-            `Technique: ${d.technicalMaturity ?? "-"}/5<br/>` +
-            `Metier: ${d.businessMaturity ?? "-"}/5<br/>` +
+          `<strong>${d.shortName ?? d.label}</strong><br/>` +
+            `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}/5<br/>` +
+            `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}/5<br/>` +
             `Coût MCO: ${cost}/5`,
         );
     })
@@ -133,7 +135,7 @@ function drawChart() {
     .append("title")
     .text(
       (d) =>
-        `${d.applicationShortName ?? d.applicationLabel} - T:${d.technicalMaturity ?? "-"} / M:${d.businessMaturity ?? "-"} / C:${d.costMaturity ?? "-"}`,
+        `${d.shortName ?? d.label} - T:${d.technicalDebtInfo?.technicalMaturity ?? "-"} / M:${d.technicalDebtInfo?.businessMaturity ?? "-"} / C:${d.technicalDebtInfo?.costMaturity ?? "-"}`,
     );
 
   const legendWidth = 180;

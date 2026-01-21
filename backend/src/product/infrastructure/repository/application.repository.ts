@@ -4,6 +4,7 @@ import { PaginatedResponseDto } from "src/common/dto";
 import { paginate } from "src/common/utils/pagination.utils";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationDto } from "src/product/application/dto/get-application.dto";
+import { TechnicalDebtPointDto } from "src/product/application/dto/technical-debt-point.dto";
 import { ApplicationWithAllRelations } from "src/product/types/application.type";
 import { CreateTagDto } from "src/tag/dto/tag.dto";
 import { CreateApplicationDto } from "../../application/dto/create-application.dto";
@@ -51,37 +52,26 @@ export class ApplicationRepository implements IApplicationRepository {
     });
   }
 
-  public async findApplications(
+  private buildSearchWhere(
     filters: ApplicationSearchFilters,
     ownership?: { actorEmail?: string },
-  ): Promise<PaginatedResponseDto<ApplicationDto>> {
-    const {
-      shortName,
-      priorityRestart,
-      page,
-      pageSize,
-      sortBy = "shortName",
-      order = "asc",
-    } = filters;
-
-    const safeOrder = order === "desc" ? "desc" : "asc";
+  ) {
+    const { shortName, priorityRestart } = filters;
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
 
-    if (ownership) {
-      if (ownership.actorEmail) {
-        where.AND.push({
-          actors: {
-            some: {
-              email: {
-                equals: ownership.actorEmail,
-                mode: "insensitive" as const,
-              },
+    if (ownership?.actorEmail) {
+      where.AND.push({
+        actors: {
+          some: {
+            email: {
+              equals: ownership.actorEmail,
+              mode: "insensitive" as const,
             },
           },
-        });
-      }
+        },
+      });
     }
 
     const filterConfigs = [
@@ -207,6 +197,49 @@ export class ApplicationRepository implements IApplicationRepository {
                   contains: filters.hostingRoom,
                   mode: "insensitive" as const,
                 },
+              },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.hostingSearch,
+        whereClause: {
+          hostings: {
+            some: {
+              hostingOption: {
+                OR: [
+                  {
+                    site: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    platform: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    provider: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    building: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    room: {
+                      contains: filters.hostingSearch,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                ],
               },
             },
           },
@@ -415,6 +448,15 @@ export class ApplicationRepository implements IApplicationRepository {
       },
     });
 
+    return where;
+  }
+
+  private buildOrderBy(
+    sortBy: string | undefined,
+    order: "asc" | "desc" | undefined,
+  ): Prisma.ApplicationOrderByWithRelationInput {
+    const safeOrder = order === "desc" ? "desc" : "asc";
+
     // Handle different sorting options with fallback
     const sortOptions: Record<
       string,
@@ -427,7 +469,18 @@ export class ApplicationRepository implements IApplicationRepository {
       label: { label: safeOrder },
     };
 
-    const orderBy = sortOptions[sortBy] || { shortName: safeOrder };
+    const sortKey = sortBy ?? "shortName";
+
+    return sortOptions[sortKey] || { shortName: safeOrder };
+  }
+
+  public async findApplications(
+    filters: ApplicationSearchFilters,
+    ownership?: { actorEmail?: string },
+  ): Promise<PaginatedResponseDto<ApplicationDto>> {
+    const { page, pageSize, sortBy = "shortName", order = "asc" } = filters;
+    const where = this.buildSearchWhere(filters, ownership);
+    const orderBy = this.buildOrderBy(sortBy, order);
 
     const [results, total] = await Promise.all([
       this.prisma.application.findMany({
@@ -459,6 +512,34 @@ export class ApplicationRepository implements IApplicationRepository {
     ]);
 
     return new PaginatedResponseDto(results, total);
+  }
+
+  public async findTechnicalDebtPoints(
+    filters: ApplicationSearchFilters,
+    ownership?: { actorEmail?: string },
+  ): Promise<TechnicalDebtPointDto[]> {
+    const where = this.buildSearchWhere(filters, ownership);
+    where.AND.push({ technicalDebtInfo: { isNot: null } });
+    const orderBy = this.buildOrderBy(filters.sortBy, filters.order);
+
+    const results = await this.prisma.application.findMany({
+      where,
+      orderBy,
+      select: {
+        id: true,
+        label: true,
+        shortName: true,
+        technicalDebtInfo: {
+          select: {
+            technicalMaturity: true,
+            businessMaturity: true,
+            costMaturity: true,
+          },
+        },
+      },
+    });
+
+    return results;
   }
 
   async findAllWithFullRelations(): Promise<ApplicationWithAllRelations[]> {

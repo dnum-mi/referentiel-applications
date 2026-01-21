@@ -62,7 +62,7 @@ async function main() {
   // Create applications
   console.log("📱 Creating applications...");
   const applications = [];
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 100; i++) {
     const user = i % 2 === 0 ? adminUser : regularUser;
     const app = await ApplicationFaker.create(user);
     applications.push(app);
