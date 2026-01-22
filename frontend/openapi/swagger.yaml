@@ -703,6 +703,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -1028,6 +1029,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -3246,6 +3248,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -3464,6 +3467,7 @@ components:
       type: string
       enum:
         - under_construction
+        - to_validate
         - poc
         - in_production_mvp
         - in_production
@@ -3818,6 +3822,7 @@ components:
       description: Statut de l'application
       enum:
         - under_construction
+        - to_validate
         - poc
         - in_production_mvp
         - in_production
@@ -4061,9 +4066,16 @@ components:
           type: number
           description: Total number of items
           example: 100
+        averageIq:
+          type: number
+          nullable: true
+          description: IQ moyen calculé sur l'ensemble des applications correspondant aux
+            critères (toutes pages confondues)
+          example: 72.5
       required:
         - results
         - total
+        - averageIq
     PatchApplicationDto:
       type: object
       properties:
