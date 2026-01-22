@@ -14,10 +14,6 @@ const resizeObserver = ref<ResizeObserver>();
 
 const chartHeight = computed(() => props.height ?? 460);
 
-const filteredData = computed(() =>
-  props.data.filter((item) => item.technicalDebtInfo?.technicalMaturity != null && item.technicalDebtInfo?.businessMaturity != null),
-);
-
 function destroyChart() {
   if (svgRef.value) {
     d3.select(svgRef.value).selectAll("*").remove();
@@ -102,26 +98,25 @@ function drawChart() {
 
   const points = g
     .selectAll("circle")
-    .data(filteredData.value)
+    .data(props.data)
     .enter()
     .append("circle")
-    .attr("cx", (d) => x(Number(d.technicalDebtInfo?.technicalMaturity)))
-    .attr("cy", (d) => y(Number(d.technicalDebtInfo?.businessMaturity)))
+    .attr("cx", (d) => x(d.technicalDebtInfo.technicalMaturity))
+    .attr("cy", (d) => y(d.technicalDebtInfo.businessMaturity))
     .attr("r", 8)
-    .attr("fill", (d) => color(d.technicalDebtInfo?.costMaturity ?? 0))
+    .attr("fill", (d) => color(d.technicalDebtInfo.costMaturity))
     .attr("opacity", 0.9)
     .attr("stroke", "#0d6efd")
     .attr("stroke-width", 0.6)
     .attr("data-testid", "technical-debt-point")
     .on("mouseenter", (_, d) => {
-      const cost = d.technicalDebtInfo?.costMaturity ?? "-";
       tooltip
         .style("display", "block")
         .html(
           `<strong>${d.shortName ?? d.label}</strong><br/>` +
-            `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}/5<br/>` +
-            `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}/5<br/>` +
-            `Coût MCO: ${cost}/5`,
+            `Technique: ${d.technicalDebtInfo.technicalMaturity}<br/>` +
+            `Metier: ${d.technicalDebtInfo.businessMaturity}<br/>` +
+            `Coût MCO: ${d.technicalDebtInfo.costMaturity}`,
         );
     })
     .on("mousemove", (event) => {
@@ -135,7 +130,7 @@ function drawChart() {
     .append("title")
     .text(
       (d) =>
-        `${d.shortName ?? d.label} - T:${d.technicalDebtInfo?.technicalMaturity ?? "-"} / M:${d.technicalDebtInfo?.businessMaturity ?? "-"} / C:${d.technicalDebtInfo?.costMaturity ?? "-"}`,
+        `${d.shortName ?? d.label} - T:${d.technicalDebtInfo.technicalMaturity} / M:${d.technicalDebtInfo.businessMaturity} / C:${d.technicalDebtInfo.costMaturity}`,
     );
 
   const legendWidth = 180;
@@ -206,7 +201,7 @@ onBeforeUnmount(() => {
 });
 
 watch(
-  () => filteredData.value,
+  () => props.data,
   () => {
     nextTick(drawChart);
   },
@@ -216,7 +211,7 @@ watch(
 
 <template>
   <div ref="containerRef" class="technical-debt-scatter">
-    <svg v-if="filteredData.length" ref="svgRef" role="img" aria-label="Graphique de maturite TIME" />
+    <svg v-if="props.data.length" ref="svgRef" role="img" aria-label="Graphique de maturite TIME"></svg>
     <p v-else class="fr-text--sm fr-text--italic fr-mt-2w" data-testid="technical-debt-empty">
       Aucune donnee TIME disponible pour vos applications autorisees.
     </p>

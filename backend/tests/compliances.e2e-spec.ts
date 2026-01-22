@@ -68,7 +68,7 @@ describe("Compliances", () => {
       .expect(200);
 
     expect(response.body.id).toBeDefined();
-    expect(response.body.rgaa_score_percentage).toEqual("85.2");
+    expect(response.body.rgaa_score_percentage).toEqual(85.2);
     expect(response.body.rgaa_service_url).toEqual("https://example.com");
     expect(response.body.rgpd_has_aipd).toEqual(true);
     expect(response.body.rgpd_dpo_name).toEqual("Jean Dupont");

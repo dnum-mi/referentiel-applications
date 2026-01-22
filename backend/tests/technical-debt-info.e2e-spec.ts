@@ -32,17 +32,17 @@ describe("TechnicalDebtInfo", () => {
     const response = await request(app().getHttpServer())
       .post(`/applications/${application.id}/technical-debt-info`)
       .send({
-        technicalMaturity: 3,
-        businessMaturity: 4,
-        costMaturity: 2,
+        technicalMaturity: 3.25,
+        businessMaturity: 4.1,
+        costMaturity: 2.75,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
 
     expect(response.body.id).toBeDefined();
-    expect(response.body.technicalMaturity).toEqual(3);
-    expect(response.body.businessMaturity).toEqual(4);
-    expect(response.body.costMaturity).toEqual(2);
+    expect(response.body.technicalMaturity).toEqual(3.25);
+    expect(response.body.businessMaturity).toEqual(4.1);
+    expect(response.body.costMaturity).toEqual(2.75);
   });
 
   it("/GET applications/:applicationId/technical-debt-info - should return the technical debt info", async () => {
@@ -52,25 +52,25 @@ describe("TechnicalDebtInfo", () => {
       .expect(200);
 
     expect(response.body.id).toBeDefined();
-    expect(response.body.technicalMaturity).toEqual(3);
-    expect(response.body.businessMaturity).toEqual(4);
-    expect(response.body.costMaturity).toEqual(2);
+    expect(response.body.technicalMaturity).toEqual(3.25);
+    expect(response.body.businessMaturity).toEqual(4.1);
+    expect(response.body.costMaturity).toEqual(2.75);
   });
 
   it("/PATCH applications/:applicationId/technical-debt-info - update technical debt info", async () => {
     const response = await request(app().getHttpServer())
       .patch(`/applications/${application.id}/technical-debt-info`)
       .send({
-        technicalMaturity: 5,
-        costMaturity: null,
+        technicalMaturity: 4.5,
+        costMaturity: 0,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     expect(response.body.id).toBeDefined();
-    expect(response.body.technicalMaturity).toEqual(5);
-    expect(response.body.businessMaturity).toEqual(4);
-    expect(response.body.costMaturity).toBeNull();
+    expect(response.body.technicalMaturity).toEqual(4.5);
+    expect(response.body.businessMaturity).toEqual(4.1);
+    expect(response.body.costMaturity).toEqual(0);
   });
 
   it("/POST applications/:applicationId/technical-debt-info - should return 409 when already exists", async () => {
@@ -146,11 +146,11 @@ describe("TechnicalDebtInfo - application guard", () => {
     const technicalDebtInfo = await request(app().getHttpServer())
       .post(`/applications/${application.id}/technical-debt-info`)
       .send({
-        technicalMaturity: 3,
+        technicalMaturity: 3.4,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
-    expect(technicalDebtInfo.body.technicalMaturity).toEqual(3);
+    expect(technicalDebtInfo.body.technicalMaturity).toEqual(3.4);
 
     // remove all permission
     await actorType.update([], { reset: true });
@@ -178,9 +178,9 @@ describe("TechnicalDebts", () => {
     await request(app().getHttpServer())
       .post(`/applications/${applicationA.id}/technical-debt-info`)
       .send({
-        technicalMaturity: 2,
-        businessMaturity: 3,
-        costMaturity: 4,
+        technicalMaturity: 2.2,
+        businessMaturity: 3.15,
+        costMaturity: 4.05,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
@@ -188,9 +188,9 @@ describe("TechnicalDebts", () => {
     await request(app().getHttpServer())
       .post(`/applications/${applicationB.id}/technical-debt-info`)
       .send({
-        technicalMaturity: 1,
-        businessMaturity: 2,
-        costMaturity: 3,
+        technicalMaturity: 1.1,
+        businessMaturity: 2.25,
+        costMaturity: 3.5,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);

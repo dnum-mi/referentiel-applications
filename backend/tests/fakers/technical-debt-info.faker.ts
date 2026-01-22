@@ -30,13 +30,19 @@ export class TechnicalDebtInfoFaker {
         },
         technicalMaturity:
           restOverride.technicalMaturity ??
-          faker.helpers.maybe(() => faker.number.int({ min: 0, max: 5 })),
+          faker.helpers.maybe(() =>
+            faker.number.float({ min: 0, max: 5, multipleOf: 0.01 }),
+          ),
         businessMaturity:
           restOverride.businessMaturity ??
-          faker.helpers.maybe(() => faker.number.int({ min: 0, max: 5 })),
+          faker.helpers.maybe(() =>
+            faker.number.float({ min: 0, max: 5, multipleOf: 0.01 }),
+          ),
         costMaturity:
           restOverride.costMaturity ??
-          faker.helpers.maybe(() => faker.number.int({ min: 0, max: 5 })),
+          faker.helpers.maybe(() =>
+            faker.number.float({ min: 0, max: 5, multipleOf: 0.01 }),
+          ),
       },
     });
   }

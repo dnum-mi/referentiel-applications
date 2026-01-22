@@ -1,42 +1,42 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, IsOptional, Max, Min } from "class-validator";
+import { IsNumber, IsOptional, Max, Min } from "class-validator";
 
 export class CreateTechnicalDebtInfoDto {
   @ApiProperty({
-    example: 3,
+    example: 3.2,
     description: "Technical maturity score (0-5)",
     required: false,
     minimum: 0,
     maximum: 5,
   })
   @IsOptional()
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(5)
   technicalMaturity?: number;
 
   @ApiProperty({
-    example: 4,
+    example: 4.5,
     description: "Business maturity score (0-5)",
     required: false,
     minimum: 0,
     maximum: 5,
   })
   @IsOptional()
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(5)
   businessMaturity?: number;
 
   @ApiProperty({
-    example: 2,
+    example: 2.75,
     description: "Cost maturity score (0-5)",
     required: false,
     minimum: 0,
     maximum: 5,
   })
   @IsOptional()
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(5)
   costMaturity?: number;
