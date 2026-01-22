@@ -23,7 +23,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "safari-pinned-tab.svg"],
       workbox: {
-        maximumFileSizeToCacheInBytes: 3000000, // Pour le CSS du DSFR :-/
+        maximumFileSizeToCacheInBytes: 5000000, // Pour le CSS du DSFR :-/
         navigateFallbackDenylist: [/^\/api*/],
         runtimeCaching: [
           {
