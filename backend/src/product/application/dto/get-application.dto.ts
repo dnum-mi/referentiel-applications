@@ -117,6 +117,14 @@ export class ApplicationSearchResultDto extends PaginatedResponseDto<Application
     type: [ApplicationDto],
   })
   results: ApplicationDto[];
+
+  @ApiProperty({
+    description:
+      "IQ moyen calculé sur l'ensemble des applications correspondant aux critères (toutes pages confondues)",
+    example: 72.5,
+    nullable: false,
+  })
+  averageIq: number;
 }
 
 export class ApplicationMinimalDto extends PickType(ApplicationDto, [

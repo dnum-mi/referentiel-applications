@@ -1,9 +1,11 @@
 import type { Prisma } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
-import { PaginatedResponseDto } from "src/common/dto";
 import { paginate } from "src/common/utils/pagination.utils";
 import { PrismaService } from "src/prisma/prisma.service";
-import { ApplicationDto } from "src/product/application/dto/get-application.dto";
+import {
+  ApplicationDto,
+  ApplicationSearchResultDto,
+} from "src/product/application/dto/get-application.dto";
 import { TechnicalDebtPointDto } from "src/product/application/dto/technical-debt-point.dto";
 import { ApplicationWithAllRelations } from "src/product/types/application.type";
 import { CreateTagDto } from "src/tag/dto/tag.dto";
@@ -477,12 +479,12 @@ export class ApplicationRepository implements IApplicationRepository {
   public async findApplications(
     filters: ApplicationSearchFilters,
     ownership?: { actorEmail?: string },
-  ): Promise<PaginatedResponseDto<ApplicationDto>> {
+  ): Promise<ApplicationSearchResultDto> {
     const { page, pageSize, sortBy = "shortName", order = "asc" } = filters;
     const where = this.buildSearchWhere(filters, ownership);
     const orderBy = this.buildOrderBy(sortBy, order);
 
-    const [results, total] = await Promise.all([
+    const [results, total, average] = await Promise.all([
       this.prisma.application.findMany({
         where,
         orderBy,
@@ -510,13 +512,17 @@ export class ApplicationRepository implements IApplicationRepository {
         },
       }),
       this.prisma.application.count({ where }),
+      this.prisma.application.aggregate({
+        where,
+        _avg: { quality: true },
+      }),
     ]);
 
-    // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
-    return new PaginatedResponseDto(
-      results as unknown as ApplicationDto[],
-      total,
-    );
+    return {
+      results: results as unknown as ApplicationDto[],
+      total: total,
+      averageIq: average._avg.quality ?? 0,
+    };
   }
 
   public async findTechnicalDebtPoints(
