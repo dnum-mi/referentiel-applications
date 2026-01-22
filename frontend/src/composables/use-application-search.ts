@@ -2,6 +2,7 @@ import type { LocationQueryValue } from "vue-router";
 import type {
   ApplicationControllerSearchData,
   ApplicationDto,
+  ApplicationSearchResultDto,
   TechnicalDebtControllerGetTechnicalDebtPointsResponses,
 } from "@/client/types.gen";
 import { computed, ref, watch } from "vue";
@@ -44,6 +45,7 @@ const DEFAULT_FILTERS: Filters = {
 // Shared state across components (singleton pattern)
 const results = ref<ApplicationDto[]>([]);
 const total = ref(0);
+const averageIq = ref<number>(0);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 
@@ -224,8 +226,13 @@ export function useApplicationSearch() {
       }
 
       if (store) {
+        const dataWithAverage = response.data as ApplicationSearchResultDto & {
+          averageIq?: number;
+        };
         results.value = response.data.results;
         total.value = response.data.total;
+        averageIq.value =
+          typeof dataWithAverage.averageIq === "number" && Number.isFinite(dataWithAverage.averageIq) ? dataWithAverage.averageIq : 0;
       }
 
       return response.data;
@@ -264,6 +271,7 @@ export function useApplicationSearch() {
     filters,
     results,
     total,
+    averageIq,
     page,
     pageSize,
     isLoading,

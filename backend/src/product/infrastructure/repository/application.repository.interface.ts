@@ -1,7 +1,6 @@
 import type { Application } from "@prisma/client";
-import type { PaginatedResponseDto } from "src/common/dto";
 import type { CreateApplicationDto } from "src/product/application/dto/create-application.dto";
-import type { ApplicationDto } from "src/product/application/dto/get-application.dto";
+import type { ApplicationSearchResultDto } from "src/product/application/dto/get-application.dto";
 import type { TechnicalDebtPointDto } from "src/product/application/dto/technical-debt-point.dto";
 import type { ApplicationSearchDto } from "src/product/application/dto/search-application.dto";
 import type { CreateTagDto } from "src/tag/dto/tag.dto";
@@ -17,7 +16,7 @@ export interface IApplicationRepository {
   findApplications: (
     search: ApplicationSearchFilters,
     ownership?: { actorEmail?: string },
-  ) => Promise<PaginatedResponseDto<ApplicationDto>>;
+  ) => Promise<ApplicationSearchResultDto>;
   findTechnicalDebtPoints: (
     search: ApplicationSearchFilters,
     ownership?: { actorEmail?: string },
