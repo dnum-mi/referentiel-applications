@@ -22,12 +22,12 @@ const maturityLabels: Record<number, string> = {
   5: "Excellent",
 };
 
-function getMaturityLabel(value: number | null | undefined): string {
-  return value != null ? (maturityLabels[value] ?? "Non défini") : "Non défini";
+function getMaturityLabel(value: number): string {
+  const rounded = Math.min(5, Math.max(0, Math.round(value)));
+  return maturityLabels[rounded] ?? "Non défini";
 }
 
-function getMaturityBadgeType(value: number | null | undefined): "error" | "warning" | "info" | "success" {
-  if (value == null) return "info";
+function getMaturityBadgeType(value: number): "error" | "warning" | "info" | "success" {
   if (value <= 1) return "error";
   if (value <= 2) return "warning";
   if (value <= 3) return "info";
@@ -35,9 +35,9 @@ function getMaturityBadgeType(value: number | null | undefined): "error" | "warn
 }
 
 const maturityFields = computed(() => [
-  { key: "technicalMaturity", label: "Maturité technique", value: props.technicalDebtInfo?.technicalMaturity },
-  { key: "businessMaturity", label: "Maturité métier", value: props.technicalDebtInfo?.businessMaturity },
-  { key: "costMaturity", label: "Maturité des coûts", value: props.technicalDebtInfo?.costMaturity },
+  { key: "technicalMaturity", label: "Maturité technique", value: props.technicalDebtInfo?.technicalMaturity ?? 0 },
+  { key: "businessMaturity", label: "Maturité métier", value: props.technicalDebtInfo?.businessMaturity ?? 0 },
+  { key: "costMaturity", label: "Maturité des coûts", value: props.technicalDebtInfo?.costMaturity ?? 0 },
 ]);
 </script>
 
@@ -69,7 +69,7 @@ const maturityFields = computed(() => [
                 {{ field.label }}
               </p>
               <DsfrBadge
-                :label="`${field.value ?? '-'}/5 - ${getMaturityLabel(field.value)}`"
+                :label="`${field.value}/5 - ${getMaturityLabel(field.value)}`"
                 :type="getMaturityBadgeType(field.value)"
                 :small="small"
                 :data-testid="`${field.key}-badge`"

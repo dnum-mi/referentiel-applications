@@ -4,7 +4,7 @@ model TechnicalDebtInfo {
   application   Application @relation("ApplicationTechnicalDebtInfo", fields: [applicationId], references: [id], onDelete: Cascade)
   metadatas     Metadata[]  @relation("TechnicalDebtInfoMetadata")
 
-  technicalMaturity Int? @db.SmallInt
-  businessMaturity  Int? @db.SmallInt
-  costMaturity      Int? @db.SmallInt
+  technicalMaturity Decimal @default(0) @db.Decimal(3, 2)
+  businessMaturity  Decimal @default(0) @db.Decimal(3, 2)
+  costMaturity      Decimal @default(0) @db.Decimal(3, 2)
 }

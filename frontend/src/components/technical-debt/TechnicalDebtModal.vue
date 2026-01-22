@@ -18,33 +18,40 @@ const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const isEditMode = computed(() => !!props.initialData);
 
-const maturityOptions = [
-  { value: "", text: "Non défini" },
-  { value: 0, text: "0 - Très faible" },
-  { value: 1, text: "1 - Faible" },
-  { value: 2, text: "2 - Moyen" },
-  { value: 3, text: "3 - Correct" },
-  { value: 4, text: "4 - Bon" },
-  { value: 5, text: "5 - Excellent" },
-];
+function toInputValue(value: number | string | null | undefined): string {
+  if (value == null) return "0";
+  return String(value);
+}
 
 const form = ref({
-  technicalMaturity: props.initialData?.technicalMaturity ?? "",
-  businessMaturity: props.initialData?.businessMaturity ?? "",
-  costMaturity: props.initialData?.costMaturity ?? "",
+  technicalMaturity: toInputValue(props.initialData?.technicalMaturity),
+  businessMaturity: toInputValue(props.initialData?.businessMaturity),
+  costMaturity: toInputValue(props.initialData?.costMaturity),
 });
 
-function toNullable(value: number | string): number | null {
-  return value === "" || Number.isNaN(value) ? null : Number(value);
+function toNumberOrZero(value: string): number {
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function isValidScore(value: string): boolean {
+  const parsed = Number(value);
+  return !Number.isNaN(parsed) && parsed >= 0 && parsed <= 5;
 }
 
 async function handleSubmit() {
   isSubmitting.value = true;
 
+  if (!isValidScore(form.value.technicalMaturity) || !isValidScore(form.value.businessMaturity) || !isValidScore(form.value.costMaturity)) {
+    isSubmitting.value = false;
+    toaster.addErrorMessage("Les valeurs de maturité doivent être comprises entre 0 et 5.");
+    return;
+  }
+
   const body: CreateTechnicalDebtInfoDto = {
-    technicalMaturity: toNullable(form.value.technicalMaturity),
-    businessMaturity: toNullable(form.value.businessMaturity),
-    costMaturity: toNullable(form.value.costMaturity),
+    technicalMaturity: toNumberOrZero(form.value.technicalMaturity),
+    businessMaturity: toNumberOrZero(form.value.businessMaturity),
+    costMaturity: toNumberOrZero(form.value.costMaturity),
   };
 
   const apiCall = isEditMode.value ? api.applicationTechnicalDebtInfoControllerUpdate : api.applicationTechnicalDebtInfoControllerCreate;
@@ -73,24 +80,39 @@ async function handleSubmit() {
   >
     <form data-testid="technical-debt-form" @submit.prevent="handleSubmit">
       <div class="fr-form-group">
-        <DsfrSelect
-          v-model.number="form.technicalMaturity"
+        <DsfrInput
+          v-model="form.technicalMaturity"
           label="Maturité technique"
-          :options="maturityOptions"
+          label-visible
+          type="number"
+          min="0"
+          max="5"
+          step=".01"
+          hint="Entre 0 et 5, avec 2 décimales (ex : 1,20)"
           class="fr-mb-3w"
           data-testid="technical-maturity-select"
         />
-        <DsfrSelect
-          v-model.number="form.businessMaturity"
+        <DsfrInput
+          v-model="form.businessMaturity"
           label="Maturité métier"
-          :options="maturityOptions"
+          label-visible
+          type="number"
+          min="0"
+          max="5"
+          step=".01"
+          hint="Entre 0 et 5, avec 2 décimales (ex : 1,20)"
           class="fr-mb-3w"
           data-testid="business-maturity-select"
         />
-        <DsfrSelect
-          v-model.number="form.costMaturity"
+        <DsfrInput
+          v-model="form.costMaturity"
           label="Maturité des coûts"
-          :options="maturityOptions"
+          label-visible
+          type="number"
+          min="0"
+          max="5"
+          step=".01"
+          hint="Entre 0 et 5, avec 2 décimales (ex : 1,20)"
           class="fr-mb-3w"
           data-testid="cost-maturity-select"
         />

@@ -3945,19 +3945,19 @@ components:
           type: number
           minimum: 0
           maximum: 5
-          example: 3
+          example: 3.2
           description: Technical maturity score (0-5)
         businessMaturity:
           type: number
           minimum: 0
           maximum: 5
-          example: 4
+          example: 4.5
           description: Business maturity score (0-5)
         costMaturity:
           type: number
           minimum: 0
           maximum: 5
-          example: 2
+          example: 2.75
           description: Cost maturity score (0-5)
         id:
           type: string
@@ -5276,19 +5276,19 @@ components:
           type: number
           minimum: 0
           maximum: 5
-          example: 3
+          example: 3.2
           description: Technical maturity score (0-5)
         businessMaturity:
           type: number
           minimum: 0
           maximum: 5
-          example: 4
+          example: 4.5
           description: Business maturity score (0-5)
         costMaturity:
           type: number
           minimum: 0
           maximum: 5
-          example: 2
+          example: 2.75
           description: Cost maturity score (0-5)
     UpdateTechnicalDebtInfoDto:
       type: object
@@ -5297,19 +5297,19 @@ components:
           type: number
           minimum: 0
           maximum: 5
-          example: 3
+          example: 3.2
           description: Technical maturity score (0-5)
         businessMaturity:
           type: number
           minimum: 0
           maximum: 5
-          example: 4
+          example: 4.5
           description: Business maturity score (0-5)
         costMaturity:
           type: number
           minimum: 0
           maximum: 5
-          example: 2
+          example: 2.75
           description: Cost maturity score (0-5)
     TechnicalDebtPointDto:
       type: object

@@ -512,7 +512,11 @@ export class ApplicationRepository implements IApplicationRepository {
       this.prisma.application.count({ where }),
     ]);
 
-    return new PaginatedResponseDto(results, total);
+    // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
+    return new PaginatedResponseDto(
+      results as unknown as ApplicationDto[],
+      total,
+    );
   }
 
   public async findTechnicalDebtPoints(
@@ -540,7 +544,8 @@ export class ApplicationRepository implements IApplicationRepository {
       },
     });
 
-    return results;
+    // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
+    return results as unknown as TechnicalDebtPointDto[];
   }
 
   async findAllWithFullRelations(): Promise<ApplicationWithAllRelations[]> {

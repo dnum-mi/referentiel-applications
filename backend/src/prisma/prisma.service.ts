@@ -5,9 +5,40 @@ import {
   OnModuleInit,
 } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import databaseConfig from "src/config/configs/database.config";
 import { LoggerService } from "src/logger/logger.service";
+
+function convertDecimals(value: unknown): unknown {
+  if (Prisma.Decimal.isDecimal(value)) {
+    return value.toNumber();
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(convertDecimals);
+  }
+
+  if (value && typeof value === "object") {
+    if (value instanceof Date) return value;
+    return Object.fromEntries(
+      Object.entries(value).map(([key, val]) => [key, convertDecimals(val)]),
+    );
+  }
+
+  return value;
+}
+
+const decimalToNumberExtension = Prisma.defineExtension({
+  name: "decimalToNumber",
+  query: {
+    $allModels: {
+      async $allOperations({ args, query }) {
+        const result = await query(args);
+        return convertDecimals(result);
+      },
+    },
+  },
+});
 
 @Injectable()
 export class PrismaService
@@ -26,6 +57,8 @@ export class PrismaService
         },
       },
     });
+
+    Object.assign(this, this.$extends(decimalToNumberExtension));
   }
 
   async onModuleInit() {
