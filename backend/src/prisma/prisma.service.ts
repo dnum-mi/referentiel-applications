@@ -8,41 +8,21 @@ import { ConfigType } from "@nestjs/config";
 import { Prisma, PrismaClient } from "@prisma/client";
 import databaseConfig from "src/config/configs/database.config";
 import { LoggerService } from "src/logger/logger.service";
+import { decimalToNumberExtension } from "./extensions/decimal-to-number.extension";
+import { paginationExtension } from "./extensions/pagination.extension";
 
-function convertDecimals(value: unknown): unknown {
-  if (Prisma.Decimal.isDecimal(value)) {
-    return value.toNumber();
-  }
+export type { PrismaPaginationArgs } from "./extensions/pagination.extension";
 
-  if (Array.isArray(value)) {
-    return value.map(convertDecimals);
-  }
+const withExtensions = (client: PrismaClient) =>
+  client.$extends(decimalToNumberExtension).$extends(paginationExtension);
 
-  if (value && typeof value === "object") {
-    if (value instanceof Date) return value;
-    return Object.fromEntries(
-      Object.entries(value).map(([key, val]) => [key, convertDecimals(val)]),
-    );
-  }
-
-  return value;
-}
-
-const decimalToNumberExtension = Prisma.defineExtension({
-  name: "decimalToNumber",
-  query: {
-    $allModels: {
-      async $allOperations({ args, query }) {
-        const result = await query(args);
-        return convertDecimals(result);
-      },
-    },
-  },
-});
+const ExtendedPrismaClient = PrismaClient as unknown as new (
+  options: Prisma.PrismaClientOptions,
+) => ReturnType<typeof withExtensions>;
 
 @Injectable()
 export class PrismaService
-  extends PrismaClient
+  extends ExtendedPrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
   constructor(
@@ -57,8 +37,7 @@ export class PrismaService
         },
       },
     });
-
-    Object.assign(this, this.$extends(decimalToNumberExtension));
+    Object.assign(this, withExtensions(this as unknown as PrismaClient));
   }
 
   async onModuleInit() {

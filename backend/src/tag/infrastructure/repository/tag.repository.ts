@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
-import { paginate } from "src/common/utils/pagination.utils";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateTagDto, TagFiltersDto, UpdateTagDto } from "src/tag/dto/tag.dto";
 import { Tag } from "src/tag/entities/tag.entity";
@@ -38,17 +37,15 @@ export class TagRepository implements ITagRepository {
       };
     }
 
-    return {
-      results: await this.prisma.tag.findMany({
-        where,
-        orderBy,
-        ...paginate(filters.page, filters.pageSize),
-        include: {
-          _count: { select: { applications: true } },
-        },
-      }),
-      total: await this.prisma.tag.count({ where }),
-    };
+    return this.prisma.tag.paginate({
+      where,
+      orderBy,
+      page: filters.page,
+      pageSize: filters.pageSize,
+      include: {
+        _count: { select: { applications: true } },
+      },
+    });
   }
 
   public async findById(id: string) {
