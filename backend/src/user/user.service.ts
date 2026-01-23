@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
-import { paginate } from "src/common/utils/pagination.utils";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
@@ -165,20 +164,18 @@ export class UserService {
       };
     }
 
-    return {
-      results: await this.prisma.user.findMany({
-        where,
-        include: {
-          organization: true,
-        },
-        orderBy,
-        ...paginate(filters.page, filters.pageSize),
-        omit: {
-          capabilities: requestor.adminLevel < AdminLevel.ADMIN, // Only admins can see user capabilities
-        },
-      }),
-      total: await this.prisma.user.count({ where }),
-    };
+    return this.prisma.user.paginate({
+      where,
+      include: {
+        organization: true,
+      },
+      orderBy,
+      page: filters.page,
+      pageSize: filters.pageSize,
+      omit: {
+        capabilities: requestor.adminLevel < AdminLevel.ADMIN, // Only admins can see user capabilities
+      },
+    });
   }
 
   getCurrentUser(requestor: UserEntity): UserEntity {

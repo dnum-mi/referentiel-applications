@@ -139,15 +139,13 @@ export class AnomalyNotificationsService {
 
     const orderBy = sortOptions[sortBy];
 
-    const results = await this.prisma.anomalyNotification.findMany({
+    return this.prisma.anomalyNotification.paginate({
       where,
       orderBy,
-      skip: page * limit,
-      take: limit,
+      page,
+      pageSize: limit,
       include: { history: true, application: true, notifier: true },
     });
-    const total = await this.prisma.anomalyNotification.count({ where });
-    return { results, total };
   }
 
   /**
