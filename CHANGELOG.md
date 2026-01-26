@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.60.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.59.1...v1.60.0) (2026-01-26)
+
+
+### Features
+
+* :sparkles: add custom column in application list ([0f1afa6](https://github.com/dnum-mi/referentiel-applications/commit/0f1afa617f8805a6fed4d3036df34f1f4d3b624b))
+* :sparkles: update technical maturity fields to use Decimal type and enhance related components ([00e8f46](https://github.com/dnum-mi/referentiel-applications/commit/00e8f46dd6a2fdcecfbdc5c8c637888aff09120e))
+
 ## [1.59.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.59.0...v1.59.1) (2026-01-21)
 
 
