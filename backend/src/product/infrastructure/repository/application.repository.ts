@@ -518,11 +518,11 @@ export class ApplicationRepository implements IApplicationRepository {
       }),
     ]);
 
-    return new ApplicationSearchResultDto(
-      results as unknown as ApplicationDto[],
-      total,
-      average._avg.quality ?? 0,
-    );
+    return {
+      results: results,
+      total: total,
+      averageIq: average._avg.quality,
+    };
   }
 
   public async findTechnicalDebtPoints(

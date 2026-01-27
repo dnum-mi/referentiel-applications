@@ -125,11 +125,6 @@ export class ApplicationSearchResultDto extends PaginatedResponseDto<Application
     nullable: true,
   })
   averageIq: number;
-
-  constructor(results: ApplicationDto[], total: number, averageIq: number) {
-    super(results, total);
-    this.averageIq = averageIq;
-  }
 }
 
 export class ApplicationMinimalDto extends PickType(ApplicationDto, [
