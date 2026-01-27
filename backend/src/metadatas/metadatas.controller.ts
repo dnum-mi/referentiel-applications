@@ -11,9 +11,9 @@ import {
   FirstLastMetadataDto,
   MetadataDto,
   MetadataFiltersDto,
-  MetadataPaginatedResponseDto,
 } from "./dto/metadata.dto";
 import { MetadatasService } from "./metadatas.service";
+import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
 @ApiTags("Metadatas")
 @Controller("metadatas")
@@ -24,11 +24,11 @@ export class MetadatasController {
   @ApiOperation({ summary: "Récupérer toutes les metadatas" })
   @ApiOkResponse({
     description: "Récupérer toutes les metadatas",
-    type: MetadataPaginatedResponseDto,
+    type: PaginatedResponseDto<MetadataDto>,
   })
   find(
     @Query() filters: MetadataFiltersDto,
-  ): Promise<MetadataPaginatedResponseDto> {
+  ): Promise<PaginatedResponseDto<MetadataDto>> {
     return this.metadataService.find(filters);
   }
 
@@ -59,12 +59,12 @@ export class ApplicationMetadatasController {
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiOkResponse({
     description: "Liste des metadatas",
-    type: MetadataPaginatedResponseDto,
+    type: PaginatedResponseDto<MetadataDto>,
   })
   find(
     @Param("applicationId") applicationId: string,
     @Query() filters: MetadataFiltersDto,
-  ): Promise<MetadataPaginatedResponseDto> {
+  ): Promise<PaginatedResponseDto<MetadataDto>> {
     return this.metadataService.find({ ...filters, applicationId });
   }
 

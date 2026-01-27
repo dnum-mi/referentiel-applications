@@ -15,9 +15,4 @@ export class PaginatedResponseDto<T> {
     example: 100,
   })
   total: number;
-
-  constructor(results: T[], total: number) {
-    this.results = results;
-    this.total = total;
-  }
 }

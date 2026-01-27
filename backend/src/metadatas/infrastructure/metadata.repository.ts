@@ -2,11 +2,9 @@ import type { Prisma } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { paginate } from "src/common/utils/pagination.utils";
 import { PrismaService } from "src/prisma/prisma.service";
-import {
-  MetadataFiltersDto,
-  MetadataPaginatedResponseDto,
-} from "../dto/metadata.dto";
+import { MetadataFiltersDto, MetadataDto } from "../dto/metadata.dto";
 import { IMetadataRepository } from "./metadata.repository.interface";
+import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
 @Injectable()
 export class MetadataRepository implements IMetadataRepository {
@@ -14,7 +12,7 @@ export class MetadataRepository implements IMetadataRepository {
 
   public async findAll(
     filters?: MetadataFiltersDto & { applicationId?: string },
-  ): Promise<MetadataPaginatedResponseDto> {
+  ): Promise<PaginatedResponseDto<MetadataDto>> {
     const where: Prisma.MetadataWhereInput = {};
 
     if (filters?.applicationId) {
@@ -71,11 +69,8 @@ export class MetadataRepository implements IMetadataRepository {
         },
       },
     });
-
-    return new MetadataPaginatedResponseDto(
-      results,
-      await this.prisma.metadata.count({ where }),
-    );
+    const total = await this.prisma.metadata.count({ where });
+    return { results, total };
   }
 
   async findFirstAndLastByApplicationId(applicationId: string) {

@@ -165,8 +165,8 @@ export class UserService {
       };
     }
 
-    return new PaginatedResponseDto(
-      await this.prisma.user.findMany({
+    return {
+      results: await this.prisma.user.findMany({
         where,
         include: {
           organization: true,
@@ -177,8 +177,8 @@ export class UserService {
           capabilities: requestor.adminLevel < AdminLevel.ADMIN, // Only admins can see user capabilities
         },
       }),
-      await this.prisma.user.count({ where }),
-    );
+      total: await this.prisma.user.count({ where }),
+    };
   }
 
   getCurrentUser(requestor: UserEntity): UserEntity {

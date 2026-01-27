@@ -4,11 +4,9 @@ import isEqual from "lodash/isEqual";
 import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MetadataTypes } from "../utils/constants.util";
-import {
-  MetadataFiltersDto,
-  MetadataPaginatedResponseDto,
-} from "./dto/metadata.dto";
+import { MetadataDto, MetadataFiltersDto } from "./dto/metadata.dto";
 import { MetadataRepository } from "./infrastructure/metadata.repository";
+import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
 @Injectable()
 export class MetadatasService extends BaseService<any> {
@@ -21,7 +19,7 @@ export class MetadatasService extends BaseService<any> {
 
   find(
     filters?: MetadataFiltersDto & { applicationId?: string },
-  ): Promise<MetadataPaginatedResponseDto> {
+  ): Promise<PaginatedResponseDto<MetadataDto>> {
     return this.metadataRepository.findAll(filters);
   }
 

@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import { PaginatedResponseDto } from "src/common/dto";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { PrismaService } from "../prisma/prisma.service";
 import { AnomalyFiltersDto, SortByEnum } from "./dto/anomaly-filters.dto";
@@ -148,7 +147,7 @@ export class AnomalyNotificationsService {
       include: { history: true, application: true, notifier: true },
     });
     const total = await this.prisma.anomalyNotification.count({ where });
-    return new PaginatedResponseDto(results, total);
+    return { results, total };
   }
 
   /**

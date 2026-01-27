@@ -38,8 +38,8 @@ export class TagRepository implements ITagRepository {
       };
     }
 
-    return new PaginatedResponseDto(
-      await this.prisma.tag.findMany({
+    return {
+      results: await this.prisma.tag.findMany({
         where,
         orderBy,
         ...paginate(filters.page, filters.pageSize),
@@ -47,8 +47,8 @@ export class TagRepository implements ITagRepository {
           _count: { select: { applications: true } },
         },
       }),
-      await this.prisma.tag.count({ where }),
-    );
+      total: await this.prisma.tag.count({ where }),
+    };
   }
 
   public async findById(id: string) {
