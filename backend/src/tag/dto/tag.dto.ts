@@ -7,8 +7,7 @@ import {
   MaxLength,
   MinLength,
 } from "class-validator";
-import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
-import { Tag } from "../entities/tag.entity";
+import { PaginationDto } from "src/common/dto";
 
 export class CreateTagDto {
   @ApiProperty({
@@ -69,9 +68,4 @@ export class TagFiltersDto extends PaginationDto {
   @IsOptional()
   @IsString()
   name?: string;
-}
-
-export class TagsPaginatedResponseDto extends PaginatedResponseDto<Tag> {
-  @ApiProperty({ type: [TagDto] })
-  results: TagDto[];
 }

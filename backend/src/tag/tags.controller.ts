@@ -29,10 +29,10 @@ import {
   CreateTagDto,
   TagDto,
   TagFiltersDto,
-  TagsPaginatedResponseDto,
   UpdateTagDto,
 } from "./dto/tag.dto";
 import { TagsService } from "./tags.service";
+import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
 @ApiTags("Tags")
 @UseGuards(ApplicationGuard)
@@ -92,7 +92,7 @@ Information requise :
   })
   @ApiOkResponse({
     description: "Liste des tags trouvés",
-    type: TagsPaginatedResponseDto,
+    type: PaginatedResponseDto<TagDto>,
   })
   findAll(@Query() filters: TagFiltersDto) {
     return this.tagsService.findAll(filters);

@@ -26,10 +26,10 @@ import {
   CreateLinkDto,
   LinkDto,
   LinkFiltersDto,
-  LinksPaginatedResponseDto,
   UpdateLinkDto,
 } from "./dto/links.dto";
 import { LinksService } from "./links.service";
+import { PaginatedResponseDto } from "src/common/dto";
 
 @ApiTags("Links")
 @UseGuards(ApplicationGuard)
@@ -81,13 +81,13 @@ export class ApplicationLinksController {
   })
   @ApiOkResponse({
     description: "List of links for the application",
-    type: LinksPaginatedResponseDto,
+    type: PaginatedResponseDto<LinkDto>,
   })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   findAll(
     @Param("applicationId") applicationId: string,
     @Query() filters: LinkFiltersDto,
-  ): Promise<LinksPaginatedResponseDto> {
+  ): Promise<PaginatedResponseDto<LinkDto>> {
     return this.service.find({ ...filters, applicationId });
   }
 

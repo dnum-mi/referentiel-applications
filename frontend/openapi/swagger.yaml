@@ -229,7 +229,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MetadataPaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: &a2
         - Metadatas
   /api/v2/applications/{applicationId}/metadatas/first-last:
@@ -310,7 +310,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MetadataPaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: &a3
         - Metadatas
   /api/v2/metadatas/{id}:
@@ -512,7 +512,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UsersPaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a4
@@ -703,7 +703,6 @@ paths:
               type: string
               enum:
                 - under_construction
-                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -1029,7 +1028,6 @@ paths:
               type: string
               enum:
                 - under_construction
-                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -1568,7 +1566,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TagsPaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: *a8
   /api/v2/tags/{id}:
     get:
@@ -2910,7 +2908,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LinksPaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: *a17
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
@@ -3248,7 +3246,6 @@ paths:
               type: string
               enum:
                 - under_construction
-                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -3467,7 +3464,6 @@ components:
       type: string
       enum:
         - under_construction
-        - to_validate
         - poc
         - in_production_mvp
         - in_production
@@ -3528,6 +3524,21 @@ components:
         - nodes
         - edges
         - rootId
+    PaginatedResponseDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            type: array
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     MetadataAction:
       type: string
       description: Action effectuée sur la metadata
@@ -3725,21 +3736,6 @@ components:
         - hostingId
         - labelId
         - createdBy
-    MetadataPaginatedResponseDto:
-      type: object
-      properties:
-        results:
-          description: Array of metadata
-          type: array
-          items:
-            $ref: "#/components/schemas/MetadataDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     FirstLastMetadataDto:
       type: object
       properties:
@@ -3785,21 +3781,6 @@ components:
           type: string
           nullable: true
           description: ID de l'organisation
-    UsersPaginatedResponseDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/UserEntity"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     ApplicationPriorityRestart:
       type: string
       enum:
@@ -3822,7 +3803,6 @@ components:
       description: Statut de l'application
       enum:
         - under_construction
-        - to_validate
         - poc
         - in_production_mvp
         - in_production
@@ -4068,10 +4048,10 @@ components:
           example: 100
         averageIq:
           type: number
-          nullable: true
           description: IQ moyen calculé sur l'ensemble des applications correspondant aux
             critères (toutes pages confondues)
           example: 72.5
+          nullable: false
       required:
         - results
         - total
@@ -4191,21 +4171,6 @@ components:
         - id
         - name
         - createdAt
-    TagsPaginatedResponseDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/TagDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     UpdateTagDto:
       type: object
       properties:
@@ -4900,21 +4865,6 @@ components:
         - id
         - link
         - type
-    LinksPaginatedResponseDto:
-      type: object
-      properties:
-        results:
-          description: Array of links
-          type: array
-          items:
-            $ref: "#/components/schemas/LinkDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     UpdateLinkDto:
       type: object
       properties:
