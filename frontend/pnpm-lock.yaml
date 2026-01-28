@@ -64,13 +64,13 @@ importers:
         specifier: ^9.9.0
         version: 9.9.0
       '@hey-api/openapi-ts':
-        specifier: ^0.80.18
+        specifier: ^0.80.6
         version: 0.80.18(typescript@5.8.3)
       '@playwright/test':
-        specifier: ^1.57.0
+        specifier: ^1.54.2
         version: 1.57.0
       '@testing-library/jest-dom':
-        specifier: ^6.9.1
+        specifier: ^6.6.4
         version: 6.9.1
       '@testing-library/vue':
         specifier: ^8.1.0
@@ -899,9 +899,9 @@ packages:
     resolution: {integrity: sha512-OEl393iCOoo/z8bMezRlJu+GlRGlsKbUAN7jKB6LhnKoqKve5DXRpalbItIIcwnCjs1k/FOPjFzcA6Qn+H+YbA==}
     engines: {node: '>=18.0.0', npm: '>=9.0.0'}
 
-  '@gouvfr/dsfr@1.13.2':
-    resolution: {integrity: sha512-4Q9ggFFzwD/KFr37sJO1hFH9PcqlZ7F3jMiFJXnBLJfkH1+s28vnQp/oXoY8TosWsLMSjdhNCrxvrUdm5XzBlg==}
-    engines: {node: '>=18.16.1'}
+  '@gouvfr/dsfr@1.14.3':
+    resolution: {integrity: sha512-UTplClQLp635J4vRHx/rJ7SKEi+bepc1FisvzTS8efQGQ3Gm8LttZf11NJ+4XhEMYLbCf8TBvFFwWBZ9ztRFkg==}
+    engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
 
   '@gouvminint/vue-dsfr@8.13.1':
     resolution: {integrity: sha512-BejnuRuFrEfVbl+hUweOk8k5lUhFRCNf4OPR7qTKLHSvvbAZehCvciBpu92GYrv9nuVW61AtPgbqjY/9CqGCNQ==}
@@ -5034,7 +5034,7 @@ snapshots:
 
   '@faker-js/faker@9.9.0': {}
 
-  '@gouvfr/dsfr@1.13.2': {}
+  '@gouvfr/dsfr@1.14.3': {}
 
   '@gouvminint/vue-dsfr@8.13.1(@iconify/vue@4.3.0(vue@3.5.27(typescript@5.8.3)))(vue-router@4.6.4(vue@3.5.27(typescript@5.8.3)))(vue@3.5.27(typescript@5.8.3))':
     dependencies:

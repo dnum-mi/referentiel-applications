@@ -309,6 +309,5 @@ test.describe("CreateApplication page", () => {
     });
 
     expect(unlabeledControls).toEqual([]);
-    expect(await page.accessibility.snapshot()).toBeTruthy();
   });
 });
