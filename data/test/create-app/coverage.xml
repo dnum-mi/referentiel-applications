@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage lines-valid="3108" lines-covered="2196" line-rate="0.7065" branches-valid="613" branches-covered="229" branch-rate="0.3735" timestamp="1769683022238" complexity="0" version="0.1">
+<coverage lines-valid="3108" lines-covered="2196" line-rate="0.7065" branches-valid="613" branches-covered="229" branch-rate="0.3735" timestamp="1769695763677" complexity="0" version="0.1">
   <sources>
     <source>/app</source>
   </sources>
@@ -4107,14 +4107,14 @@
         </class>
         <class name="prisma.service.ts" filename="src/prisma/prisma.service.ts" line-rate="1" branch-rate="1">
           <methods>
-            <method name="convertDecimals" hits="9495" signature="()V">
+            <method name="convertDecimals" hits="9505" signature="()V">
               <lines>
-                <line number="12" hits="9495"/>
+                <line number="12" hits="9505"/>
               </lines>
             </method>
-            <method name="(anonymous_6)" hits="8356" signature="()V">
+            <method name="(anonymous_6)" hits="8364" signature="()V">
               <lines>
-                <line number="24" hits="8356"/>
+                <line number="24" hits="8364"/>
               </lines>
             </method>
             <method name="(anonymous_7)" hits="858" signature="()V">
@@ -4143,15 +4143,15 @@
             <line number="8" hits="16" branch="false"/>
             <line number="9" hits="16" branch="false"/>
             <line number="10" hits="16" branch="false"/>
-            <line number="13" hits="9495" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="13" hits="9505" branch="true" condition-coverage="100% (1/1)"/>
             <line number="14" hits="34" branch="false"/>
-            <line number="17" hits="9461" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="17" hits="9471" branch="true" condition-coverage="100% (1/1)"/>
             <line number="18" hits="910" branch="false"/>
-            <line number="21" hits="8551" branch="true" condition-coverage="100% (3/3)"/>
-            <line number="22" hits="1483" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="23" hits="1149" branch="false"/>
-            <line number="24" hits="8356" branch="false"/>
-            <line number="28" hits="7068" branch="false"/>
+            <line number="21" hits="8561" branch="true" condition-coverage="100% (3/3)"/>
+            <line number="22" hits="1484" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="23" hits="1150" branch="false"/>
+            <line number="24" hits="8364" branch="false"/>
+            <line number="28" hits="7077" branch="false"/>
             <line number="31" hits="16" branch="false"/>
             <line number="36" hits="858" branch="false"/>
             <line number="37" hits="858" branch="false"/>
@@ -7434,9 +7434,9 @@
                 <line number="11" hits="28"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="15" signature="()V">
+            <method name="(anonymous_1)" hits="16" signature="()V">
               <lines>
-                <line number="23" hits="15"/>
+                <line number="23" hits="16"/>
               </lines>
             </method>
             <method name="(anonymous_2)" hits="10" signature="()V">
@@ -7460,7 +7460,7 @@
             <line number="12" hits="28" branch="false"/>
             <line number="15" hits="28" branch="false"/>
             <line number="16" hits="28" branch="false"/>
-            <line number="23" hits="15" branch="false"/>
+            <line number="23" hits="16" branch="false"/>
             <line number="38" hits="28" branch="false"/>
             <line number="43" hits="10" branch="true" condition-coverage="100% (2/2)"/>
             <line number="50" hits="28" branch="false"/>
@@ -7481,9 +7481,9 @@
                 <line number="32" hits="5"/>
               </lines>
             </method>
-            <method name="(anonymous_2)" hits="6" signature="()V">
+            <method name="(anonymous_2)" hits="3" signature="()V">
               <lines>
-                <line number="35" hits="6"/>
+                <line number="35" hits="3"/>
               </lines>
             </method>
           </methods>
@@ -7496,7 +7496,7 @@
             <line number="15" hits="9" branch="false"/>
             <line number="26" hits="9" branch="false"/>
             <line number="32" hits="5" branch="false"/>
-            <line number="35" hits="6" branch="false"/>
+            <line number="35" hits="3" branch="false"/>
           </lines>
         </class>
         <class name="hosting.faker.ts" filename="tests/fakers/hosting.faker.ts" line-rate="1" branch-rate="1">
@@ -7506,9 +7506,9 @@
                 <line number="6" hits="4"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="3" signature="()V">
+            <method name="(anonymous_1)" hits="1" signature="()V">
               <lines>
-                <line number="34" hits="3"/>
+                <line number="34" hits="1"/>
               </lines>
             </method>
           </methods>
@@ -7519,7 +7519,7 @@
             <line number="12" hits="4" branch="false"/>
             <line number="14" hits="4" branch="false"/>
             <line number="16" hits="4" branch="false"/>
-            <line number="34" hits="3" branch="false"/>
+            <line number="34" hits="1" branch="false"/>
           </lines>
         </class>
         <class name="link.faker.ts" filename="tests/fakers/link.faker.ts" line-rate="1" branch-rate="1">
