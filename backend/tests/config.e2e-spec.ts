@@ -10,9 +10,8 @@ describe("Config", () => {
       .expect(200);
 
     expect(response.body).toMatchObject({
-      keycloakClientId: expect.any(String),
-      keycloakRealm: expect.any(String),
-      keycloakUrl: expect.any(String),
+      oidcClientId: expect.any(String),
+      oidcConfigUrl: expect.any(String),
       version: expect.any(String),
     });
   });

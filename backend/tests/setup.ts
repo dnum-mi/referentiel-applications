@@ -24,9 +24,8 @@ export async function setupApp(): Promise<INestApplication> {
       onlyWriteSwagger: false,
     },
     {
-      baseUrl: process.env.KEYCLOAK_BASE_URL,
-      realm: process.env.KEYCLOAK_REALM,
-      clientId: process.env.KEYCLOAK_CLIENT_ID,
+      configUrl: process.env.OIDC_CONFIG_URL,
+      clientId: process.env.OIDC_CLIENT_ID,
     },
   );
   await app.init();

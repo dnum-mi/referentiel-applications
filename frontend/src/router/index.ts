@@ -1,7 +1,39 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { routeNames } from "./route-names";
+import { USER_MANAGER } from "@/services/authentication";
+
+const oidcRoutes = [
+  {
+    name: routeNames.AUTH_CALLBACK,
+    path: "callback",
+    beforeEnter: async () => {
+      await USER_MANAGER.signinCallback();
+      // L'événement userLoaded met à jour le store et appelle fetchUser automatiquement
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin");
+      sessionStorage.removeItem("redirectAfterLogin");
+      return redirectPath || { name: routeNames.ACCUEIL };
+    },
+    meta: { requiresAuth: false, title: "Authentification - Référentiel des applications" },
+  },
+  {
+    name: routeNames.SIGNIN,
+    path: "login",
+    beforeEnter: async () => USER_MANAGER.signinRedirect(),
+    meta: { requiresAuth: false, title: "Connexion - Référentiel des applications" },
+  },
+  {
+    name: routeNames.LOGOUT,
+    path: "logout",
+    beforeEnter: async () => USER_MANAGER.signoutRedirect(),
+    meta: { requiresAuth: false, title: "Déconnexion - Référentiel des applications" },
+  },
+];
 
 const routes = [
+  {
+    path: "/oidc",
+    children: oidcRoutes,
+  },
   {
     name: routeNames.ACCUEIL,
     path: "/",
@@ -86,6 +118,18 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env?.BASE_URL || ""),
   routes,
+});
+
+// Guard to protect routes that require authentication
+router.beforeEach(async (to) => {
+  if (to.meta.requiresAuth) {
+    const user = await USER_MANAGER.getUser();
+    if (!user) {
+      // Store the intended destination to redirect after login
+      sessionStorage.setItem("redirectAfterLogin", to.fullPath);
+      return { name: routeNames.SIGNIN };
+    }
+  }
 });
 
 // Update document title when navigating

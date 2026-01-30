@@ -23,22 +23,17 @@ export class FooterLinkDto implements FooterLink {
 
 export class ConfigDto implements FrontendConfig {
   @ApiProperty({
-    description: "Keycloak base URL",
-    example: "https://keycloak.example.com",
+    description: "OIDC configuration URL",
+    example:
+      "https://auth.sso.interieur.rie.gouv.fr/.well-known/openid-configuration",
   })
-  keycloakUrl: string;
+  oidcConfigUrl: string;
 
   @ApiProperty({
-    description: "Keycloak realm",
-    example: "my-realm",
-  })
-  keycloakRealm: string;
-
-  @ApiProperty({
-    description: "Keycloak client ID",
+    description: "OIDC client ID",
     example: "my-client-id",
   })
-  keycloakClientId: string;
+  oidcClientId: string;
 
   @ApiProperty({
     description: "Backend version",

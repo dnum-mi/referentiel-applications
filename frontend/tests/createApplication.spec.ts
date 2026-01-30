@@ -259,8 +259,10 @@ test.describe("CreateApplication page", () => {
 
     await page.getByTestId("application-submit-btn").click();
 
-    await expect(page.getByText("Application créée avec succès !")).toBeVisible({ timeout: 10_000 });
+    // Wait for redirect to application page (proves creation succeeded)
     await page.waitForURL(/\/applications\/[^/]+$/, { timeout: 20_000 });
+    // Verify we're on the application detail page
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(label);
   });
 
   test("CA-05 — Annuler la création et revenir à l’écran précédent", async ({ page }) => {

@@ -91,11 +91,6 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
-      "/auth": {
-        target: "http://localhost:8082",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/auth/, ""),
-      },
       "/api": {
         target: process.env.API_BASE_URL ?? "http://backend:3500",
         changeOrigin: true,

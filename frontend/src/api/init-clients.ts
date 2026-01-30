@@ -2,7 +2,7 @@ import axios from "axios";
 import { client } from "@/client/client.gen";
 import router from "@/router/index.js";
 import { routeNames } from "@/router/route-names";
-import { getAuthentication } from "@/services/authentication";
+import { USER_MANAGER } from "@/services/authentication";
 
 axios.defaults.baseURL = "/api/v2";
 axios.defaults.withCredentials = true;
@@ -11,9 +11,9 @@ axios.defaults.headers.common["Content-Type"] = "application/json";
 axios.defaults.timeout = 10000;
 
 type ReqInterceptor = Parameters<typeof client.interceptors.request.use>[0];
-const requestInterceptor: ReqInterceptor = (req) => {
-  const keycloak = getAuthentication();
-  const token = keycloak.token;
+const requestInterceptor: ReqInterceptor = async (req) => {
+  const user = await USER_MANAGER.getUser();
+  const token = user?.access_token;
   if (token) {
     req.headers.set("Authorization", `Bearer ${token}`);
   }
@@ -29,9 +29,9 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
     // 401 → relance du login
     if (status === 401) {
       console.log("User is unauthorized");
-      const authentication = getAuthentication();
-      if (!authentication.authenticated) {
-        authentication.login();
+      const user = await USER_MANAGER.getUser();
+      if (!user) {
+        USER_MANAGER.signinRedirect();
       }
       return Promise.reject(new Error("Unauthorized"));
     }

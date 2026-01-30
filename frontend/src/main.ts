@@ -4,8 +4,6 @@ import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
 import { createApp } from "vue";
 import { vUseMermaid } from "@/composables/use-mermaid";
-import { authenticationInit } from "@/services/authentication";
-import { getConfig } from "@/services/config";
 import App from "./App.vue";
 import MatomoPlugin from "./plugins/MatomoPlugin";
 
@@ -52,11 +50,7 @@ app.use(PrimeVue, {
 app.component("VIcon", VIcon);
 app.directive("use-mermaid", vUseMermaid);
 
-getConfig().then(() => {
-  authenticationInit().then(() => {
-    app.mount("#app");
-  });
-});
+app.mount("#app");
 
 router.afterEach((to) => {
   console.log("trackPageView", to.fullPath);
