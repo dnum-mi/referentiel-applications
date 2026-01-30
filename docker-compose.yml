@@ -34,11 +34,10 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/postgres
       - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080,http://krakend:8080
-      - KEYCLOAK_BASE_URL=http://localhost:8082
-      - KEYCLOAK_REALM=referentiel-applications
-      - KEYCLOAK_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
+      - OIDC_CONFIG_URL=http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration
+      - OIDC_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
+      - OIDC_CLIENT_ID=referentiel-applications
       - AUTH_VERIFY_JWT=true
-      - KEYCLOAK_CLIENT_ID=referentiel-applications
       - LOG_LEVEL=debug
       # - NON_ACTOR_PERMISSIONS=readBase
       - SMTP_HOST=mailpit
@@ -62,7 +61,7 @@ services:
     command: npx prisma studio
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/postgres
-      - KEYCLOAK_BASE_URL=http://localhost:8082
+      - OIDC_CONFIG_URL=http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration
     depends_on:
       - postgres
     ports:

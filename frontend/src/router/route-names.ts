@@ -1,6 +1,7 @@
 export const routeNames = {
   SIGNIN: "connexion",
   LOGOUT: "deconnexion",
+  AUTH_CALLBACK: "auth-callback",
   PROFILE: "profil",
 
   ACCUEIL: "accueil",

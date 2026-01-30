@@ -14,8 +14,16 @@ export function setupSwagger(
     writeYaml?: boolean;
     onlyWriteSwagger?: boolean;
   },
-  keycloakConfig: Pick<KeycloakConfig, "baseUrl" | "realm" | "clientId">,
+  keycloakConfig: Pick<KeycloakConfig, "configUrl" | "clientId">,
 ) {
+  // Extract the base URL from OIDC_CONFIG_URL by removing the .well-known path
+  // e.g., "https://auth.sso.interieur.rie.gouv.fr/.well-known/openid-configuration"
+  // becomes "https://auth.sso.interieur.rie.gouv.fr"
+  const baseUrl = keycloakConfig.configUrl.replace(
+    /.well-known\/openid-configuration$/,
+    "",
+  );
+
   const config = new DocumentBuilder()
     .setTitle("API Référentiel Applications")
     .setDescription("API pour la gestion des applications")
@@ -23,12 +31,12 @@ export function setupSwagger(
     .addOAuth2(
       {
         type: "oauth2",
-        description: "OAuth2 authentication using Keycloak",
+        description: "OAuth2 authentication using OIDC",
         flows: {
           authorizationCode: {
-            authorizationUrl: `${keycloakConfig.baseUrl}/realms/${keycloakConfig.realm}/protocol/openid-connect/auth`,
-            tokenUrl: `${keycloakConfig.baseUrl}/realms/${keycloakConfig.realm}/protocol/openid-connect/token`,
-            refreshUrl: `${keycloakConfig.baseUrl}/realms/${keycloakConfig.realm}/protocol/openid-connect/token`,
+            authorizationUrl: `${baseUrl}/protocol/openid-connect/auth`,
+            tokenUrl: `${baseUrl}/protocol/openid-connect/token`,
+            refreshUrl: `${baseUrl}/protocol/openid-connect/token`,
             scopes: {
               openid: "OpenID scope",
               profile: "Profile scope",

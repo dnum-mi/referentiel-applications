@@ -4,14 +4,14 @@ import { ref, computed } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
-import { getAuthentication } from "./services/authentication";
 import { getConfig } from "./services/config";
-import router from "./router/index";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "./models/user";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
+import { useScheme } from "@gouvminint/vue-dsfr";
+import ReloadPrompt from "./components/ReloadPrompt.vue";
 
 const route = useRoute();
 
@@ -39,10 +39,6 @@ interface QuickLink {
   iconAttrs?: Record<string, string>;
 }
 
-if (getAuthentication().authenticated) {
-  userStore.fetchUser();
-}
-
 getConfig().then((config) => {
   if (!(config instanceof Error)) {
     appConfig.value = config;
@@ -59,9 +55,7 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
     },
     {
       label: "Déconnexion",
-      to: getAuthentication().createLogoutUrl({
-        redirectUri: window.location.origin + router.resolve({ name: "accueil" }).href,
-      }),
+      to: { name: routeNames.LOGOUT },
       icon: "ri-logout-box-r-line",
       iconAttrs: { title: "Déconnexion" },
     },
@@ -77,21 +71,13 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
   return baseLinks;
 });
 
-const loginRedirectUrl = ref<string>("");
 const operatorImgSrc = "/assets/logotitle2.svg";
-const operatorImgAlt = "Ministère de l’intérieur - Référentiel des Applications";
-getAuthentication()
-  .createLoginUrl({
-    redirectUri: window.location.href,
-  })
-  .then((url) => {
-    loginRedirectUrl.value = url;
-  });
+const operatorImgAlt = "Ministère de l'intérieur - Référentiel des Applications";
 
 const unauthenticatedQuickLinks = computed<QuickLink[]>(() => [
   {
     label: "Se connecter",
-    to: loginRedirectUrl.value,
+    to: { name: routeNames.SIGNIN },
     icon: "ri-lock-line",
     iconAttrs: { title: "Se connecter" },
   },
@@ -113,20 +99,14 @@ const baseNavItems = [
 ];
 
 const publicNavItems = computed(() => {
-  const items: Array<any> = [{ to: { name: routeNames.ACCUEIL }, text: "Accueil" }];
-
-  if (loginRedirectUrl.value) {
-    items.push({ href: loginRedirectUrl.value, text: "Se connecter" });
-  }
-
-  return items;
+  return [{ to: { name: routeNames.ACCUEIL }, text: "Accueil" }];
 });
 
 const navItemsComputed = computed(() => {
   return userStore.authenticated ? baseNavItems : publicNavItems.value;
 });
 
-const logoText = ["Ministère", "de l’intérieur"];
+const logoText = ["Ministère", "de l'intérieur"];
 const serviceDescription = "Une application pour les réunir toutes";
 const serviceTitle = "Référentiel des Applications";
 const homeTo = "/applications";
@@ -157,20 +137,22 @@ const mandatoryLinks = computed(() => [
     label: "Contact Tchap",
     title: "Aller au contact Tchap",
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
+    to: "",
     target: "_blank",
   },
   {
-    label: "Contacter l’équipe",
-    title: "Envoyer un email à l’équipe du Référentiel des Applications",
+    label: "Contacter l'équipe",
+    title: "Envoyer un email à l'équipe du Référentiel des Applications",
     href: "mailto:support-referentiel-applications@interieur.gouv.fr",
+    to: "",
     target: "_blank",
     icon: "fr-icon-mail-line",
   },
-  versionLink.value,
+  { ...versionLink.value, to: "" },
 ]);
 const afterMandatoryLinks = [
   {
-    label: "Paramètres d’affichage",
+    label: "Paramètres d'affichage",
     button: true,
     class: "fr-icon-theme-fill fr-link--icon-left fr-px-2v",
     to: "/settings",
@@ -178,9 +160,10 @@ const afterMandatoryLinks = [
   },
 ];
 
-const { setScheme, theme } = useScheme();
+const scheme = useScheme();
 function changeTheme() {
-  setScheme(theme.value === "light" ? "dark" : "light");
+  if (!scheme) return;
+  scheme.setScheme(scheme.theme.value === "light" ? "dark" : "light");
 }
 
 const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW();
@@ -216,13 +199,13 @@ function close() {
     </template>
   </DsfrHeader>
   <DsfrNotice v-if="!isClosed" closeable title="questionnaire utilisateur" @close="closeNotice">
-    Merci de contribuer à l’amélioration du Référentiel des Applications en répondant à notre
+    Merci de contribuer à l'amélioration du Référentiel des Applications en répondant à notre
     <a href="https://grist.numerique.gouv.fr/o/retourutilisateur/forms/oJTuNbEchqS9ymzhzCXubN/4" rel="noopener noreferrer" target="_blank">
       questionnaire utilisateur
     </a>
   </DsfrNotice>
   <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content">
-    <RouterView :key="route.params.id" />
+    <RouterView :key="String(route.params.id ?? '')" />
   </div>
 
   <DsfrFooter
@@ -237,13 +220,9 @@ function close() {
     data-testid="footer"
   />
 
-  <ReloadPrompt
-    :offline-ready="offlineReady"
-    :need-refresh="needRefresh"
-    data-testid="pwa-reload-prompt"
-    @close="close"
-    @update-service-worker="updateServiceWorker"
-  />
-
-  <AppToaster :messages="toaster.messages" data-testid="toast-container" @close-message="toaster.removeMessage($event)" />
+  <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" @update="updateServiceWorker(true)" @close="close" />
 </template>
+
+<style>
+@import "./main.css";
+</style>

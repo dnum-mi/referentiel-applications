@@ -5,9 +5,8 @@ export class FooterLink {
 }
 
 export class FrontendConfig {
-  keycloakUrl: string;
-  keycloakRealm: string;
-  keycloakClientId: string;
+  oidcConfigUrl: string;
+  oidcClientId: string;
   version: string;
   footerLinks: FooterLink[];
 }

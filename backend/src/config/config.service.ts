@@ -14,9 +14,8 @@ export class ConfigService {
 
   getFrontendConfig(): FrontendConfig {
     return {
-      keycloakUrl: this.keycloak.baseUrl,
-      keycloakRealm: this.keycloak.realm,
-      keycloakClientId: this.keycloak.clientId,
+      oidcConfigUrl: this.keycloak.configUrl,
+      oidcClientId: this.keycloak.clientId,
       version: this.app.version,
       footerLinks: this.app.footerLinks,
     };

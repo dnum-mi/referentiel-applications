@@ -3401,13 +3401,13 @@ components:
       type: oauth2
       flows:
         authorizationCode:
-          authorizationUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/auth
-          tokenUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/token
-          refreshUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/token
+          authorizationUrl: http://localhost:8082/realms/referentiel-applications//protocol/openid-connect/auth
+          tokenUrl: http://localhost:8082/realms/referentiel-applications//protocol/openid-connect/token
+          refreshUrl: http://localhost:8082/realms/referentiel-applications//protocol/openid-connect/token
           scopes:
             openid: OpenID scope
             profile: Profile scope
-      description: OAuth2 authentication using Keycloak
+      description: OAuth2 authentication using OIDC
     api_key:
       type: apiKey
       in: header
@@ -5319,17 +5319,13 @@ components:
     ConfigDto:
       type: object
       properties:
-        keycloakUrl:
+        oidcConfigUrl:
           type: string
-          description: Keycloak base URL
-          example: https://keycloak.example.com
-        keycloakRealm:
+          description: OIDC configuration URL
+          example: https://auth.sso.interieur.rie.gouv.fr/.well-known/openid-configuration
+        oidcClientId:
           type: string
-          description: Keycloak realm
-          example: my-realm
-        keycloakClientId:
-          type: string
-          description: Keycloak client ID
+          description: OIDC client ID
           example: my-client-id
         version:
           type: string
@@ -5341,9 +5337,8 @@ components:
           items:
             $ref: "#/components/schemas/FooterLinkDto"
       required:
-        - keycloakUrl
-        - keycloakRealm
-        - keycloakClientId
+        - oidcConfigUrl
+        - oidcClientId
         - version
         - footerLinks
 security:
