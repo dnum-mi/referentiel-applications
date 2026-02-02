@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.61.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.60.0...v1.61.0) (2026-02-02)
+
+
+### Features
+
+* :bricks: change from keycloak-js to oidc-client-ts for Passage2 compatibility ([5ade3e4](https://github.com/dnum-mi/referentiel-applications/commit/5ade3e4af45971a8e14fa669075ade67eb3ee5db))
+* :sparkles: Show average IQ on app search page ([4848605](https://github.com/dnum-mi/referentiel-applications/commit/48486050179dfe5a96ab97660a73060449955242))
+
 ## [1.60.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.59.1...v1.60.0) (2026-01-26)
 
 
