@@ -26,6 +26,7 @@ import { User } from "src/common/decorators/user.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
+import { EmailService } from "src/email/email.service";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { AnomalyNotificationsService } from "./anomaly-notification.service";
 import { AnomalyFiltersDto } from "./dto/anomaly-filters.dto";
@@ -37,13 +38,19 @@ import {
   CreateAnomalyNotificationDto,
   CreateAnomalyNotificationRequestDto,
 } from "./dto/create-anomaly-notification.dto";
+import { UpdateAnomalyNotifyQuery } from "./dto/notify-query.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
+import { UserNotificationService } from "./user-notification.service";
 
 @ApiTags("AnomalyNotifications")
 @Controller("anomaly-notifications")
 @UseGuards(AdminGuard)
 export class AnomalyNotificationsController {
-  constructor(protected service: AnomalyNotificationsService) {}
+  constructor(
+    protected service: AnomalyNotificationsService,
+    protected emailService: EmailService,
+    protected notifyUserService: UserNotificationService,
+  ) {}
 
   /**
    * Récupère toutes les notifications d'anomalie.
@@ -108,11 +115,17 @@ export class AnomalyNotificationsController {
     description: "Notification mise à jour avec succès",
     type: AnomalyNotificationDto,
   })
-  update(
+  async update(
     @Param("id") id: string,
     @Body() updateDto: UpdateAnomalyNotificationDto,
+    @Query() query: UpdateAnomalyNotifyQuery,
   ) {
-    return this.service.update(id, updateDto);
+    const anomalyNotification = await this.service.update(id, updateDto);
+    await this.notifyUserService.notifyUserOnStatusChange(
+      query.notify,
+      anomalyNotification,
+    );
+    return anomalyNotification;
   }
 }
 

@@ -1,8 +1,11 @@
-import type { Transporter } from "nodemailer";
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import type { Transporter } from "nodemailer";
 import * as nodemailer from "nodemailer";
 import { EmailTemplateService } from "./email-templates.services";
+import { MailSendException } from "./error/mail-send.exception";
+import { AnomalyNotificationStatus } from "@prisma/client";
+import { AnomalyNotificationStatusLabels } from "src/applications/constants/enum-label";
 
 @Injectable()
 export class EmailService {
@@ -244,6 +247,43 @@ export class EmailService {
         error as Error,
       );
       throw error;
+    }
+  }
+
+  async sendSignalementUpdateEmail({
+    recipientEmail,
+    description,
+    status,
+    applicationName,
+  }: {
+    recipientEmail: string;
+    description: string;
+    status: AnomalyNotificationStatus;
+    applicationName?: string;
+  }) {
+    const subject = "Anomalie notification update";
+    const html = this.templateService.render("anomaly-notification-notify", {
+      title: subject,
+      headerTitle: "Référentiel des Applications",
+      applicationName: applicationName || "Signalement global",
+      description,
+      status: AnomalyNotificationStatusLabels[status],
+    });
+
+    const text = this.templateService.htmlToText(html);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to: recipientEmail,
+        subject,
+        text,
+        html,
+      });
+    } catch (error) {
+      throw new MailSendException(
+        `Failed to send  anomaly update email to ${recipientEmail}:`,
+      );
     }
   }
 }

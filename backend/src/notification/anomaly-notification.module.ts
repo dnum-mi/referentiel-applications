@@ -6,14 +6,16 @@ import {
   ApplicationAnomalyNotificationsController,
 } from "./anomaly-notification.controller";
 import { AnomalyNotificationsService } from "./anomaly-notification.service";
+import { EmailModule } from "src/email/email.module";
+import { UserNotificationService } from "./user-notification.service";
 
 @Module({
-  imports: [PrismaModule, UserModule],
+  imports: [PrismaModule, UserModule, EmailModule],
   controllers: [
     AnomalyNotificationsController,
     ApplicationAnomalyNotificationsController,
   ],
-  providers: [AnomalyNotificationsService],
+  providers: [AnomalyNotificationsService, UserNotificationService],
   exports: [AnomalyNotificationsService],
 })
 export class AnomalyNotificationModule {}

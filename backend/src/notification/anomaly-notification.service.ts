@@ -187,6 +187,10 @@ export class AnomalyNotificationsService {
     return this.prisma.anomalyNotification.update({
       where: { id },
       data,
+      include: {
+        notifier: true,
+        application: true,
+      },
     });
   }
 
