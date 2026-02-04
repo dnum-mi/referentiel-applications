@@ -4,145 +4,41 @@ import { faker } from "@faker-js/faker";
 import { BASE_URL, login } from "./utils";
 
 async function openCreatePage(page: Page) {
-  await mockOrganizations(page);
-  await mockActorTypes(page);
-  await mockApplications(page);
   await login(page);
   await page.goto(`${BASE_URL}/applications/creer`);
-  await page.waitForURL(/\/applications\/creer/, { timeout: 20_000 });
-  await expect(page.getByTestId("application-form")).toBeVisible({ timeout: 15_000 });
-}
-
-async function mockOrganizations(page: Page) {
-  const organization = {
-    id: faker.string.uuid(),
-    path: `Org ${faker.company.name()} ${faker.string.alphanumeric({ length: 6 })}`,
-    url: faker.internet.url(),
-    sigle: faker.string.alpha({ length: 4, casing: "upper" }),
-    parentId: null,
-  };
-
-  await page.route(/\/api\/v2\/organizations(\?.*)?$/, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify([organization]),
-    });
-  });
-
-  return organization;
-}
-
-async function mockActorTypes(page: Page) {
-  const actorTypes = [
-    { id: faker.string.uuid(), code: "MOA", label: "MOA" },
-    { id: faker.string.uuid(), code: "MOE", label: "MOE" },
-  ];
-
-  await page.route(/\/api\/v2\/actorTypes(\?.*)?$/, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(actorTypes),
-    });
-  });
-
-  return actorTypes;
-}
-
-async function mockApplications(page: Page) {
-  let createdApplicationId = faker.string.uuid();
-  let createdApplicationBody: Record<string, any> | null = null;
-
-  await page.route(/\/api\/v2\/applications$/, async (route) => {
-    if (route.request().method() !== "POST") {
-      await route.continue();
-      return;
-    }
-
-    const requestBody = (await route.request().postDataJSON()) as Record<string, any>;
-    createdApplicationId = faker.string.uuid();
-    createdApplicationBody = requestBody;
-
-    const responseBody = {
-      id: createdApplicationId,
-      label: requestBody.label ?? `App ${faker.company.name()}`,
-      shortName: requestBody.shortName ?? null,
-      description: requestBody.description ?? "",
-      targetPopulations: requestBody.targetPopulations ?? [],
-      purposes: requestBody.purposes ?? [],
-      quality: null,
-      logo: null,
-    };
-
-    await route.fulfill({
-      status: 201,
-      contentType: "application/json",
-      body: JSON.stringify(responseBody),
-    });
-  });
-
-  await page.route(/\/api\/v2\/applications\/[^/]+\/actors$/, async (route) => {
-    if (route.request().method() !== "POST") {
-      await route.continue();
-      return;
-    }
-    await route.fulfill({
-      status: 201,
-      contentType: "application/json",
-      body: JSON.stringify({}),
-    });
-  });
-
-  await page.route(/\/api\/v2\/applications\/[^/]+$/, async (route) => {
-    if (route.request().method() !== "GET") {
-      await route.continue();
-      return;
-    }
-
-    const responseBody = createdApplicationBody
-      ? {
-          id: createdApplicationId,
-          label: createdApplicationBody.label ?? `App ${faker.company.name()}`,
-          shortName: createdApplicationBody.shortName ?? null,
-          description: createdApplicationBody.description ?? "",
-          targetPopulations: createdApplicationBody.targetPopulations ?? [],
-          purposes: createdApplicationBody.purposes ?? [],
-          quality: null,
-          logo: null,
-        }
-      : {
-          id: createdApplicationId,
-          label: `App ${faker.company.name()}`,
-          shortName: null,
-          description: "",
-          targetPopulations: [],
-          purposes: [],
-          quality: null,
-          logo: null,
-        };
-
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(responseBody),
-    });
-  });
+  await expect(page.getByTestId("application-form")).toBeVisible();
 }
 
 async function selectFirstOrganization(page: Page, testId: string, search?: string) {
   const root = page.getByTestId(testId);
-  const searchValue = search ?? faker.string.alpha({ length: 1, casing: "lower" });
+  const searchTerms = search ? [search] : ["a", "e", "i", "o", "u", "n", "r", "s", "t", "l"];
+  const select = root.locator("select");
 
-  await root.getByRole("textbox").fill(searchValue);
+  await expect(select).toBeVisible();
 
-  const option = root.locator("select option:not([value=''])").first();
-  await option.waitFor({ state: "attached", timeout: 10_000 });
+  for (const searchValue of searchTerms) {
+    await root.getByRole("textbox").fill(searchValue);
 
-  const value = await option.getAttribute("value");
-  expect(value, `Aucune organisation trouvée pour ${testId}`).not.toBeNull();
+    let hasOption = false;
+    try {
+      await expect.poll(async () => (await root.locator("select option:not([value=''])").count()) > 0, { timeout: 4000 }).toBeTruthy();
+      hasOption = true;
+    } catch {
+      hasOption = false;
+    }
 
-  await root.locator("select").selectOption(value ?? "");
+    if (!hasOption) continue;
+
+    const option = root.locator("select option:not([value=''])").first();
+    const value = await option.getAttribute("value");
+    expect(value, `Aucune organisation trouvée pour ${testId}`).not.toBeNull();
+
+    await expect(select).toBeEnabled();
+    await select.selectOption(value ?? "");
+    return;
+  }
+
+  throw new Error(`Aucune organisation trouvée pour ${testId} (termes testés: ${searchTerms.join(", ")})`);
 }
 
 async function fillRequiredFields(page: Page, { label, moaEmail, moeEmail }: { label: string; moaEmail?: string; moeEmail?: string }) {
@@ -159,18 +55,23 @@ async function fillRequiredFields(page: Page, { label, moaEmail, moeEmail }: { l
   await page.getByTestId("application-next-btn").click();
 
   // ignore app details
+  await expect(page.getByTestId("application-priority-restart")).toBeVisible();
   await page.getByTestId("application-next-btn").click();
 
+  await expect(page.getByTestId("application-moa-organization")).toBeVisible();
   await selectFirstOrganization(page, "application-moa-organization");
 
+  await expect(page.getByTestId("application-moa-email")).toBeVisible();
   await page.getByTestId("application-moa-email").fill(moaEmailValue);
   await page.getByTestId("application-moa-firstname").fill(moaFirstName);
   await page.getByTestId("application-moa-lastname").fill(moaLastName);
 
   await page.getByTestId("application-next-btn").click();
 
+  await expect(page.getByTestId("application-moe-organization")).toBeVisible();
   await selectFirstOrganization(page, "application-moe-organization");
 
+  await expect(page.getByTestId("application-moe-email")).toBeVisible();
   await page.getByTestId("application-moe-email").fill(moeEmailValue);
   await page.getByTestId("application-moe-firstname").fill(moeFirstName);
   await page.getByTestId("application-moe-lastname").fill(moeLastName);
@@ -234,12 +135,19 @@ test.describe("CreateApplication page", () => {
     const label = `Application E2E ${faker.string.alphanumeric({ length: 8 })}`;
     await fillRequiredFields(page, { label });
 
-    await page.getByTestId("application-submit-btn").click();
+    const submit = page.getByTestId("application-submit-btn");
+    await expect(submit).toBeEnabled();
+    const createApp = page.waitForResponse(
+      (response) => response.url().includes("/api/v2/applications") && response.request().method() === "POST",
+    );
+    await submit.click();
+    await createApp;
 
-    // Wait for redirect to application page (proves creation succeeded)
-    await page.waitForURL(/\/applications\/[^/]+$/, { timeout: 20_000 });
-    // Verify we're on the application detail page
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(label);
+    await page.waitForURL(/\/applications\/[^/]+$/);
+    const title = page.getByTestId("application-title");
+    await title.waitFor({ state: "visible" });
+    await expect(title).toBeVisible();
+    await expect(title).toHaveText(label);
   });
 
   test("CA-05 — Annuler la création et revenir à l’écran précédent", async ({ page }) => {

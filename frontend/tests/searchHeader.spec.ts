@@ -32,6 +32,8 @@ test.describe("App.vue — Guest navigation", () => {
 
   test("should show footer with links", async ({ page }) => {
     await page.goto(`${BASE_URL}/`);
+    await expect(page.getByRole("banner")).toBeVisible();
+
     const footer = page.getByRole("contentinfo");
     await expect(footer).toBeVisible();
 
@@ -58,6 +60,7 @@ test.describe("App.vue — Authenticated navigation", () => {
   });
 
   test("should saves authenticated storageState to file", async ({ page, browserName }) => {
+    await expect(page.getByTestId("main-navigation")).toBeVisible();
     const out = resolve(process.cwd(), "frontend/storage/auth.json");
     await page.context().storageState({ path: out });
     expect(existsSync(out), `storageState not created for ${browserName}`).toBeTruthy();

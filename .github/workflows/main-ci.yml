@@ -65,6 +65,17 @@ jobs:
       - uses: actions/checkout@v3
       - name: Start stack using docker compose
         run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend postgres keycloak -d
+      - name: Seed backend database for E2E
+        run: |
+          for i in {1..10}; do
+            if docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed; then
+              exit 0
+            fi
+            echo "Seed attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "Database seed failed after retries"
+          exit 1
       - name: Install dependencies
         working-directory: ./frontend
         run: npm install -g pnpm && pnpm install --frozen-lockfile

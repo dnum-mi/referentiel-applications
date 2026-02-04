@@ -10,6 +10,7 @@ import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "./models/user";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
+import AppToaster from "./components/AppToaster.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import ReloadPrompt from "./components/ReloadPrompt.vue";
 
@@ -220,6 +221,7 @@ function close() {
     data-testid="footer"
   />
 
+  <AppToaster :messages="toaster.messages" data-testid="app-toaster" @close-message="toaster.removeMessage($event)" />
   <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" @update="updateServiceWorker(true)" @close="close" />
 </template>
 

@@ -375,3 +375,4 @@ components.d.ts
 
 # autogen client
 frontend/src/client
+**/storage/auth.json
