@@ -1,8 +1,16 @@
+/// Label/étiquette attaché à une application.
+///
+/// @namespace Applications
 model Label {
+  /// Identifiant unique
   id            String      @id @default(uuid())
+  /// Système source qui a fourni ce label
   source        String?
+  /// Valeur du label
   value         String
+  /// Entrées de métadonnées pour ce label
   metadatas     Metadata[]  @relation("LabelMetadata")
   applicationId String
+  /// Application à laquelle ce label appartient
   application   Application @relation("ApplicationLabels", fields: [applicationId], references: [id], onDelete: Cascade)
 }

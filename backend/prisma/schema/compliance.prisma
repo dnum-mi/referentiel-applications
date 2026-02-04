@@ -1,56 +1,109 @@
+/// Informations de conformité pour une application.
+/// Suit l'état de conformité DIMA, PDMA, homologation, RGAA, DSFR et RGPD.
+///
+/// @namespace Compliance
 model Compliance {
+  /// Identifiant unique
   id            String      @id @default(uuid())
+  /// Identifiant de l'application
   applicationId String      @unique
+  /// Application à laquelle ces données de conformité appartiennent
   application   Application @relation("ApplicationCompliance", fields: [applicationId], references: [id], onDelete: Cascade)
+  /// Entrées de métadonnées pour cet enregistrement de conformité
   metadatas     Metadata[]  @relation("ComplianceMetadata")
 
+  /// DIMA : Délai d'Indisponibilité Maximale Admissible en heures
   dima_duration_hours     Int?
+  /// DIMA : Si c'est un service en heures non ouvrées
   dima_is_hno             Boolean?
+  /// DIMA : Description de l'impact métier
   dima_business_impact    String?
+  /// DIMA : Si un plan de reprise existe
   dima_recovery_plan      Boolean?
+  /// DIMA : Solutions de reprise disponibles
   dima_recovery_solutions String?
+  /// DIMA : Date du dernier test de reprise
   dima_last_test_date     DateTime?
+  /// DIMA : Résultat du dernier test de reprise
   dima_test_result        TestResult?
+  /// DIMA : Personne responsable de la reprise
   dima_recovery_manager   String?
 
+  /// PDMA : Perte de données maximale admissible (PDMA)
   pdma_duration_hours      Int?
+  /// PDMA : Types de données sauvegardées
   pdma_data_types          String?
+  /// PDMA : Fréquence des sauvegardes
   pdma_backup_frequency    String?
+  /// PDMA : Méthode utilisée pour les sauvegardes
   pdma_backup_method       String?
+  /// PDMA : Où les sauvegardes sont stockées
   pdma_backup_storage      BackupStorage?
+  /// PDMA : Date du dernier test de restauration
   pdma_last_test_date      DateTime?
+  /// PDMA : Résultat du dernier test de restauration
   pdma_test_result         TestResult?
+  /// PDMA : Personne responsable de la restauration
   pdma_restoration_manager String?
+  /// Statut d'homologation
   homologation_status      HomologationStatus?
+  /// Date de fin d'homologation
   homologation_date_end    DateTime?
+  /// Identifiant du RSSI (Responsable de la Sécurité des Systèmes d'Information) pour l'homologation
   homologation_rssi_id     String?
+  /// RSSI (Responsable de la Sécurité des Systèmes d'Information) pour l'homologation
   homologation_rssi        Actor?         @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
 
+  /// RGAA : Date de l'audit d'accessibilité
   rgaa_audit_date        DateTime?
+  /// RGAA : URL du service
   rgaa_service_url       String?
+  /// RGAA : URL de la déclaration d'accessibilité
   rgaa_accessibility_url String?
+  /// RGAA : Score d'accessibilité en pourcentage
   rgaa_score_percentage  Decimal?  @db.Decimal(5, 2)
 
+  /// DSFR : Si le Système de Design de l'État est implémenté
   dsfr_implemented Boolean?
+  /// DSFR : Version du Système de Design de l'État utilisée
   dsfr_version     String?
 
+  /// RGPD : Si une Analyse d'Impact sur la Protection des Données existe
   rgpd_has_aipd Boolean?
+  /// RGPD : Nom du Délégué à la Protection des Données
   rgpd_dpo_name String?
 }
 
+/// Résultat d'un test (OK ou KO)
+///
+/// @namespace Compliance
 enum TestResult {
+  /// Test réussi
   OK
+  /// Test échoué
   KO
 }
 
+/// Où les sauvegardes sont stockées
+///
+/// @namespace Compliance
 enum BackupStorage {
+  /// Amazon S3 ou compatible
   S3
+  /// Stockage local
   LOCAL
+  /// Fournisseur de stockage externe
   EXTERNE
 }
 
+/// Statut du processus d'homologation de sécurité
+///
+/// @namespace Compliance
 enum HomologationStatus {
+  /// Homologation terminée
   homologuee
+  /// Homologation en cours
   en_cours
+  /// Homologation dispensée/exemptée
   dispensee
 }

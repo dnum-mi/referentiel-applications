@@ -1,16 +1,33 @@
+/// Lien vers une ressource externe pour une application.
+/// Peut être de la documentation, du monitoring, des métriques, etc.
+///
+/// @namespace Applications
 model ExternalRessource {
+  /// Identifiant unique
   id            String                @id @default(uuid())
+  /// URL vers la ressource externe
   link          String
+  /// Description de ce qu'est cette ressource
   description   String?
+  /// Type de ressource externe
   type          ExternalRessourceType
   applicationId String
+  /// Application à laquelle cette ressource appartient
   application   Application           @relation("ApplicationExternalsRessource", fields: [applicationId], references: [id], onDelete: Cascade)
+  /// Entrées de métadonnées pour cette ressource
   metadatas     Metadata[]            @relation("ExternalRessourceMetadata")
 }
 
+/// Types de ressources externes
+///
+/// @namespace Applications
 enum ExternalRessourceType {
+  /// Site web de documentation ou wiki
   documentation
+  /// Tableau de bord de monitoring/supervision
   supervision
+  /// Point de terminaison de service ou API
   service
+  /// Métriques d'audience/analytics
   audience_metrics
 }

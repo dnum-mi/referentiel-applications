@@ -1,30 +1,58 @@
+/// Application représente une application logicielle suivie dans le référentiel des applications.
+/// C'est l'entité centrale qui relie toutes les autres informations.
+///
+/// @namespace Applications
 model Application {
+  /// Identifiant unique de l'application
   id                  String                @id @default(uuid())
+  /// Nom complet de l'application
   label               String
+  /// Nom court ou acronyme de l'application
   shortName           String?
+  /// URL du logo de l'application
   logo                String?
+  /// Description détaillée du but de l'application
   description         String
+  /// Populations cibles utilisatrices de cette application
   targetPopulations   String[]
+  /// Finalités métier servies par cette application
   purposes            String[]
+  /// Type/catégorie de l'application (métier, service, etc.)
   type                ApplicationType?
   currentStatusId     String?
+  /// Statut actuel de l'application
   currentStatus       ApplicationStatus?    @relation(fields: [currentStatusId], references: [id], onDelete: SetNull)
+  /// Entrées de métadonnées associées à cette application
   metadatas           Metadata[]            @relation("ApplicationMetadatas")
+  /// Acteurs - (personnes, entités) impliqués avec cette application
   actors              Actor[]               @relation("ApplicationActors")
+  /// Informations de conformité pour cette application
   compliance          Compliance?           @relation("ApplicationCompliance")
+  /// Notifications de signalements pour cette application
   anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
+  /// Ressources externes liées à cette application
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
+  /// Configurations d'hébergement pour cette application
   hostings            Hosting[]
+  /// Utilisateurs abonnés aux mises à jour de cette application
   subscribers         User[]                @relation("UserFollowedApplications")
+  /// Historique des statuts pour cette application
   statuses            ApplicationStatus[]   @relation("ApplicationStatuses")
 
+  /// Applications dont cette application dépend
   relationsAsSource Relation[]         @relation("SourceHasTarget")
+  /// Applications qui dépendent de cette application
   relationsAsTarget Relation[]         @relation("TargetHasSource")
+  /// Différents labels associés à cette application
   labels            Label[]            @relation("ApplicationLabels")
+  /// Tags pour la catégorisation
   tags              Tag[]
+  /// Informations sur la dette technique
   technicalDebtInfo TechnicalDebtInfo? @relation("ApplicationTechnicalDebtInfo")
 
+  /// Niveau de priorité pour les opérations de redémarrage
   priorityRestart priorityRestart?
+  /// Score de qualité de la fiche de l' application
   quality         Int
 
   @@unique([label, description])
@@ -33,59 +61,112 @@ model Application {
   @@index([currentStatusId])
 }
 
+/// Suit l'historique des statuts d'une application.
+/// Chaque enregistrement représente un événement de changement de statut.
+///
+/// @namespace Applications
 model ApplicationStatus {
+  /// Identifiant unique pour cet enregistrement de statut
   id            String        @id @default(uuid())
+  /// Identifiant de l'application associée
   applicationId String
+  /// L'application à laquelle ce statut appartient
   application   Application   @relation("ApplicationStatuses", fields: [applicationId], references: [id], onDelete: Cascade)
+  /// La valeur du statut à ce moment
   status        Status
+  /// Quand ce statut a été défini
   statusDate    DateTime      @default(now())
+  /// Application associée à ce statut
   Application   Application[]
 
   @@index([applicationId])
   @@index([statusDate])
 }
 
+/// Définit les relations entre applications.
+/// Exemples : dépendances, remplacements, flux de données
+///
+/// @namespace Applications
 model Relation {
+  /// Identifiant unique pour cette relation
   id                  String       @id @default(uuid())
+  /// Le type de relation (dépendance, remplacement, etc.)
   type                RelationType
+  /// Identifiant de l'application source dans cette relation
   applicationSourceId String
+  /// Identifiant de l'application cible dans cette relation
   applicationTargetId String
+  /// L'application source dans cette relation
   sourceApplication   Application  @relation("SourceHasTarget", fields: [applicationSourceId], references: [id], onDelete: Cascade)
+  /// L'application cible dans cette relation
   targetApplication   Application  @relation("TargetHasSource", fields: [applicationTargetId], references: [id], onDelete: Cascade)
 
   @@unique([applicationSourceId, applicationTargetId, type])
 }
 
+/// Types de relations entre applications
+///
+/// @namespace Applications
 enum RelationType {
+  /// L'application fait partie d'une autre application
   is_part_of
+  /// L'application remplace une autre application
   in_replacement_of
+  /// L'application utilise des services d'une autre application
   is_service_user_of
+  /// L'application utilise des données d'une autre application
   is_data_user_of
 }
 
+/// Niveaux de priorité pour le redémarrage des applications
+///
+/// @namespace Applications
 enum priorityRestart {
+  /// Priorité de redémarrage - Immédiat (H24)
   R0
+  /// Priorité de redémarrage - Dès que le socle technique est rétabli (H24
   R1
+  /// Priorité de redémarrage - R1* - Selon période d'activité
   R1_STAR
+  /// Priorité de redémarrage - Dès que possible (H24)
   R2
+  /// Priorité de redémarrage - Quand le plus urgent est réalisé (H0)
   R3
 }
 
+
+/// Statut du cycle de vie d'une application
+///
+/// @namespace Applications
 enum Status {
+  /// Application en cours de construction
   under_construction
-  to_validate
+  /// Phase de preuve de concept
   poc
+  /// Produit minimum viable en production
   in_production_mvp
+  /// Entièrement en production
   in_production
+  /// En cours de décommissionnement
   in_production_decommissioning
+  /// Décommissionnée
   decommissioned
+  /// Marquée pour suppression 
   deleted
 }
 
+/// Catégories d'applications
+///
+/// @namespace Applications
 enum ApplicationType {
+  /// Application métier
   business
+  /// Service socle
   core_service
+  /// Single Sign-On /
   sso
+  /// Site web / communication
   website_communication
+  /// Intranet / site de communication
   intranet_communication_website
 }

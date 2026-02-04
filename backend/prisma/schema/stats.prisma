@@ -1,11 +1,23 @@
+/// Type de statistique suivie
+///
+/// @namespace Statistics
 enum StatsType {
+  /// Indice de qualité moyen
   iqAvg
 }
 
+/// Point de données statistiques.
+/// Stocke les métriques agrégées au fil du temps.
+///
+/// @namespace Statistics
 model Stats {
+  /// Identifiant unique
   id     String    @id @default(uuid())
+  /// Valeur numérique de cette statistique
   valeur Float
+  /// Type de statistique
   type   StatsType
+  /// Date à laquelle cette statistique s'applique
   date   DateTime
 
   @@unique([date, type])
