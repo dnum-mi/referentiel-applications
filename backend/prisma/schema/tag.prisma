@@ -1,7 +1,15 @@
+/// Tag pour catégoriser les applications.
+/// Les tags sont globaux et peuvent être partagés entre applications.
+///
+/// @namespace Applications
 model Tag {
+  /// Identifiant unique
   id        String   @id @default(uuid())
+  /// Nom du tag (doit être unique)
   name      String   @unique
+  /// Quand ce tag a été créé
   createdAt DateTime @default(now())
 
+  /// Applications avec ce tag
   applications Application[]
 }

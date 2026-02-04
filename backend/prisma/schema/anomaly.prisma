@@ -1,29 +1,59 @@
+/// Problème ou anomalie signalée pour une fiche application.
+/// Suit les signalements de la création à la résolution.
+///
+/// @namespace Signalements
 model AnomalyNotification {
+  /// Identifiant unique
   id            String                    @id @default(uuid())
+  /// Identifiant de la fiche application affectée
   applicationId String?
+  /// Identifiant de l'utilisateur qui a  fait le signalement
   notifierId    String
+  /// Utilisateur qui a fait le signalement
   notifier      User                      @relation("UserAnomalyNotification", fields: [notifierId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  /// Description du problème signalé
   description   String
+  /// Statut actuel du signalement
   status        AnomalyNotificationStatus @default(in_pending)
+  /// Quand le signalement a été créé
   createdAt     DateTime                  @default(now())
+  /// Quand le signalement a été mis à jour pour la dernière fois
   updatedAt     DateTime                  @updatedAt
 
+  /// Historique des changements de statut et actions
   history     AnomalyNotificationHistory[]
+  /// Application affectée par ce signalement
   application Application?                 @relation("ApplicationAnomalyNotification", fields: [applicationId], references: [id], onDelete: Cascade)
 }
 
+/// Enregistrement historique des changements d'une notification de signalement.
+/// Suit les transitions de statut et les actions prises.
+///
+/// @namespace Signalements
 model AnomalyNotificationHistory {
+  /// Identifiant unique
   id                  String                    @id @default(uuid())
+  /// Identifiant de la notification de signalement associée
   issueNotificationId String
+  /// Action prise
   action              String
+  /// Statut après l'action
   status              AnomalyNotificationStatus
+  /// Quand cette action s'est produite
   date                DateTime                  @default(now())
 
+  /// La notification de signalement à laquelle cette entrée d'historique appartient
   issueNotification AnomalyNotification @relation(fields: [issueNotificationId], references: [id])
 }
 
+/// Statut d'une notification de signalement.
+///
+/// @namespace Signalements
 enum AnomalyNotificationStatus {
+  /// En attente de révision
   in_pending
+  /// En cours de traitement
   in_progress
+  /// Résolue
   done
 }

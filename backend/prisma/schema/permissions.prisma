@@ -1,30 +1,52 @@
+/// Permissions accordées à un type d'acteur.
+/// Définit quelles actions les acteurs de ce type peuvent effectuer.
+///
+/// @namespace Users
 model AppPermissions {
+  /// Peut lire les informations de base de l'application
   readBase  Boolean
+  /// Peut écrire les informations de base de l'application
   writeBase Boolean
 
+  /// Peut mettre à jour les paramètres de priorité de redémarrage
   writePriorityRestart Boolean @default(false)
 
+  /// Peut lire les informations des acteurs
   readActors  Boolean
+  /// Peut écrire les informations des acteurs
   writeActors Boolean
 
+  /// Peut lire les informations de conformité
   readCompliances  Boolean
+  /// Peut écrire les informations de conformité
   writeCompliances Boolean
 
+  /// Peut lire les informations d'hébergement
   readHostings  Boolean
+  /// Peut écrire les informations d'hébergement
   writeHostings Boolean
 
+  /// Peut lire les métadonnées
   readMetadata Boolean
 
+  /// Peut lire les relations d'application
   readRelations  Boolean
+  /// Peut écrire les relations d'application
   writeRelations Boolean
 
+  /// Peut lire les liens externes
   readLinks  Boolean
+  /// Peut écrire les liens externes
   writeLinks Boolean
 
+  /// Peut lire les notifications d'anomalies
   readAnomalyNotifications   Boolean @default(false)
+  /// Peut créer des notifications d'anomalies
   postAnomalyNotifications   Boolean @default(true)
+  /// Peut gérer (mettre à jour/supprimer) les notifications d'anomalies
   manageAnomalyNotifications Boolean @default(false)
 
   actorTypeId String    @unique
+  /// Type d'acteur auquel ces permissions s'appliquent
   actorType   ActorType @relation(fields: [actorTypeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }

@@ -1,25 +1,47 @@
+/// Unité organisationnelle (département, service, etc.).
+/// Forme une structure arborescente hiérarchique.
+///
+/// @namespace Organizations
 model Organization {
+  /// Identifiant unique
   id          String         @id @default(uuid())
+  /// Chemin complet dans la hiérarchie (ex: "/MI/DNUM/SG")
   path        String
+  /// URL du site web pour cette organisation
   url         String?
+  /// Acronyme ou nom court
   sigle       String?
+  /// Description complète de l'organisation
   description String?
   parentId    String?
+  /// Organisation parente dans la hiérarchie
   parent      Organization?  @relation("OrganizationParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  /// Organisations enfants
   children    Organization[] @relation("OrganizationParent")
+  /// Utilisateurs appartenant à cette organisation
   users       User[]
+  /// Acteurs associés à cette organisation
   actors      Actor[]
 
+  /// Entrées de table de fermeture où ceci est un ancêtre
   OrganizationClosureAncestor   OrganizationClosure[] @relation("OrganizationClosureAncestor")
+  /// Entrées de table de fermeture où ceci est un descendant
   OrganizationClosureDescendant OrganizationClosure[] @relation("OrganizationClosureDescendant")
 }
 
+/// Table de fermeture pour des requêtes hiérarchiques efficaces.
+/// Stocke toutes les relations ancêtre-descendant avec la profondeur.
+///
+/// @namespace Organizations
 model OrganizationClosure {
   ancestorId   String
   descendantId String
+  /// Distance entre ancêtre et descendant (0 = même nœud)
   depth        Int
 
+  /// L'organisation ancêtre
   ancestor   Organization @relation("OrganizationClosureAncestor", fields: [ancestorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  /// L'organisation descendante
   descendant Organization @relation("OrganizationClosureDescendant", fields: [descendantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([ancestorId, descendantId])

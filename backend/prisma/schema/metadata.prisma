@@ -1,40 +1,63 @@
+/// Entrée des metadata pour les changements apportés aux entités.
+/// Enregistre qui a fait les changements et quand les changements ont été faits.
+///
+/// @namespace Metadata
 model Metadata {
+  /// Identifiant unique
   id          String   @id @default(uuid())
+  /// Quand cette entrée de métadonnée a été créée
   createdAt   DateTime @default(now())
+  /// Description ou raison optionnelle du changement
   description String?
 
+  /// Type d'action (ajout, mise à jour, suppression)
   action MetadataAction @default(add)
 
   applicationId String
+  /// Application à laquelle cette métadonnée appartient
   application   Application @relation("ApplicationMetadatas", fields: [applicationId], references: [id], onDelete: Cascade)
 
   createdById String
+  /// Utilisateur qui a créé cette entrée de métadonnée
   createdBy   User   @relation("MetadataCreatedBy", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   dataOwnerId String?
+  /// Propriétaire des données pour ce changement
   dataOwner   User?   @relation("MetadataDataOwnerBy", fields: [dataOwnerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   complianceId String?
+  /// Enregistrement de conformité associé
   compliance   Compliance? @relation("ComplianceMetadata", fields: [complianceId], references: [id])
 
   labelId String?
+  /// Label associé
   label   Label?  @relation("LabelMetadata", fields: [labelId], references: [id])
 
   actorId String?
+  /// Acteur associé
   actor   Actor?  @relation("ActorMetadata", fields: [actorId], references: [id])
 
   externalRessourceId String?
+  /// Ressource externe associée
   externalRessource   ExternalRessource? @relation("ExternalRessourceMetadata", fields: [externalRessourceId], references: [id])
 
   hostingId String?
+  /// Hébergement associé
   hosting   Hosting? @relation("HostingMetadata", fields: [hostingId], references: [id])
 
   technicalDebtInfoId String?
+  /// Info de dette technique associée
   technicalDebtInfo   TechnicalDebtInfo? @relation("TechnicalDebtInfoMetadata", fields: [technicalDebtInfoId], references: [id])
 }
 
+/// Type d'action de métadonnée
+///
+/// @namespace Metadata
 enum MetadataAction {
+  /// Ajout de nouvelle information
   add
+  /// Mise à jour d'information existante
   update
+  /// Suppression d'information
   delete
 }

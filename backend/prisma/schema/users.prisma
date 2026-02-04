@@ -1,57 +1,128 @@
+/// Compte utilisateur dans le référentiel des applications.
+/// Peut être soit un utilisateur humain soit un compte de service.
+///
+/// @namespace Users
 model User {
+  /// Identifiant unique
   id                        String                @id @default(uuid())
+  /// Identifiant SSO Keycloak
   keycloakId                String?               @unique
+  /// Adresse email de l'utilisateur
   email                     String                @unique
+  /// Horodatage de la dernière connexion
   lastLogin                 DateTime?             @default(now())
+  /// Id de l'organisation à laquelle l'utilisateur appartient
   organizationId            String?
+  /// Organisation à laquelle l'utilisateur appartient
   organization              Organization?         @relation(fields: [organizationId], references: [id])
+  /// Entrées de métadonnées créées par cet utilisateur
   createdSet                Metadata[]            @relation("MetadataCreatedBy")
+  /// Entrées de métadonnées où cet utilisateur est le propriétaire des données
   dataOwners                Metadata[]            @relation("MetadataDataOwnerBy")
+  /// Notifications d'anomalies pour cet utilisateur
   AnomalyNotification       AnomalyNotification[] @relation("UserAnomalyNotification")
+  /// Niveau de permission admin de 0 à 30
   adminLevel                Int                   @default(0)
+  /// Tokens API qui se font passer pour cet utilisateur
   tokensImpersonate         Token[]               @relation("TokenUserImpersonate")
+  /// Tokens API créés par cet utilisateur
   tokensCreated             Token[]               @relation("TokenUserCreator")
+  /// Type de compte utilisateur (humain ou bot)
   type                      UserType              @default(human)
+  /// Capacités spéciales accordées à cet utilisateur
   capabilities              CapabilityNames[]
+  /// Applications suivies par cet utilisateur pour les notifications
   followedApplications      Application[]         @relation("UserFollowedApplications")
+  /// Si les notifications par email sont activées
   emailNotificationsEnabled Boolean               @default(true)
 }
 
+/// Personne ou entité impliquée avec une application.
+/// Peut avoir différents rôles définis par ActorType.
+///
+/// @namespace Users
 model Actor {
+  /// Identifiant unique
   id             String        @id @default(uuid())
+  /// Prénom de l'acteur
   firstname      String?
+  /// Nom de l'acteur
   lastname       String?
+  /// Email de contact
   email          String?
+  /// id de l'organisation
   organizationId String?
+  /// Organisation à laquelle cet acteur appartient
   organization   Organization? @relation(fields: [organizationId], references: [id])
+  /// id de l'application dont l'utilisateur est acteur
   applicationId  String?
+  /// Application à laquelle cet acteur est associé
   application    Application?  @relation("ApplicationActors", fields: [applicationId], references: [id], onDelete: Cascade)
+  /// id du type de cet acteur
   actorTypeId    String?
+  /// Rôle/type de cet acteur
   actorType      ActorType?    @relation(fields: [actorTypeId], references: [id])
+  /// Entrées de métadonnées pour cet acteur
   metadatas      Metadata[]    @relation("ActorMetadata")
+  /// Enregistrements de conformité
   compliances    Compliance[]  @relation("ComplianceHomologationRSSI")
 
   @@index([applicationId, actorTypeId])
 }
 
+/// Définit les différents rôles que les acteurs peuvent avoir.
+/// ### Codes des acteurs possibles
+/// | Code | Rôle / Description |
+/// | :--- | :--- |
+/// | **MOA** | Maîtrise d’Ouvrage (MOA) |
+/// | **MOE** | Maîtrise d’Œuvre (MOE) |
+/// | **RSSI** | Responsable de la Sécurité des Systèmes d’Information (RSSI) |
+/// | **ArchitecteApplicatif** | Architecte applicatif |
+/// | **ArchitecteTechnique** | Architecte technique |
+/// | **TMA** | Tierce Maintenance Applicative (TMA) |
+/// | **Exploitation** | Responsable d'exploitation opérationnel |
+/// | **RSIMM** | Responsables des SI Métier et de la Modernisation (RSIMM) |
+/// | **CPD** | Correspondant à la protection des données (CPD) |
+/// | **OrganismeBeneficiaire** | Correspondant Stratégique Métier (CSM) |
+/// | **ProductOwner** | Product Owner (PO) |
+/// | **ProductManager** | Product Manager (PM) |
+/// | **Hebergement** | Responsable de l'hébergement |
+/// | **Autre** | Autre |
+/// @namespace Users
 model ActorType {
+  /// Identifiant unique
   id          String  @id @default(uuid())
+  /// Code court pour le rôle
   code        String?
+  /// Nom d'affichage du rôle
   label       String
+  /// Description des responsabilités de ce rôle
   description String?
 
+  /// Acteurs avec ce type
   actors         Actor[]
+  /// Permissions associées à ce type d'acteur
   appPermissions AppPermissions[]
 
   @@unique([code])
 }
 
+/// Type de compte utilisateur
+///
+/// @namespace Users
 enum UserType {
+  /// Utilisateur humain régulier
   human
+  /// Bot automatisé ou compte de service
   bot
 }
 
+/// Capacités spéciales pouvant être accordées aux utilisateurs
+///
+/// @namespace Users
 enum CapabilityNames {
+  /// Capacité de créer de nouvelles applications
   CreateApplication
+  /// Capacité de créer des notifications d'anomalies globales
   CreateGlobalAnomalyNotification
 }

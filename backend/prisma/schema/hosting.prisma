@@ -1,28 +1,56 @@
+/// Modèle de configuration d'hébergement.
+/// Définit les options d'hébergement disponibles (plateforme, fournisseur, emplacement).
+///
+/// @namespace Hosting
 model HostingOption {
+  /// Identifiant unique
   id       String    @id @default(cuid())
+  /// Emplacement salle/rack
   room     String?
+  /// Bâtiment où est hébergé
   building String?
+  /// Emplacement site/datacenter
   site     String
+  /// Plateforme/technologie utilisée
   platform String
+  /// Nom du fournisseur d'hébergement
   provider String
+  /// Applications utilisant cette option d'hébergement
   hostings Hosting[]
 }
 
+/// Instance d'hébergement spécifique pour une application.
+/// Lie une application à une option d'hébergement.
+///
+/// @namespace Hosting
 model Hosting {
+  /// Identifiant unique
   id    String  @id @default(cuid())
+  /// Label personnalisé pour cette instance d'hébergement
   label String?
 
   hostingOptionId String?
+  /// Le modèle d'option d'hébergement utilisé
   hostingOption   HostingOption? @relation(fields: [hostingOptionId], references: [id])
   applicationId   String
+  /// Application hébergée
   application     Application    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// Entrées de métadonnées pour cet hébergement
   metadatas       Metadata[]     @relation("HostingMetadata")
 }
 
+/// Nature/type d'infrastructure d'hébergement
+///
+/// @namespace Hosting
 enum Nature {
+  /// Non défini
   NON_DEFINIE
+  /// Serveur physique
   PHYSIQUE
+  /// Machine virtuelle
   VIRTUEL
+  /// Service cloud
   CLOUD
+  /// Serveur bare metal
   BARRE_METAL
 }

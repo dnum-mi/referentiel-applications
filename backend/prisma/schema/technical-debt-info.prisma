@@ -1,10 +1,20 @@
+/// Évaluation de la dette technique pour une application.
+/// Suit les niveaux de maturité à travers différentes dimensions.
+///
+/// @namespace Applications
 model TechnicalDebtInfo {
+  /// Identifiant unique
   id            String      @id @default(uuid())
   applicationId String      @unique
+  /// Application à laquelle cette évaluation appartient
   application   Application @relation("ApplicationTechnicalDebtInfo", fields: [applicationId], references: [id], onDelete: Cascade)
+  /// Entrées de métadonnées pour cette évaluation
   metadatas     Metadata[]  @relation("TechnicalDebtInfoMetadata")
 
+  /// Score de maturité technique (0-1)
   technicalMaturity Decimal @default(0) @db.Decimal(3, 2)
+  /// Score de maturité métier (0-1)
   businessMaturity  Decimal @default(0) @db.Decimal(3, 2)
+  /// Score de maturité des coûts (0-1)
   costMaturity      Decimal @default(0) @db.Decimal(3, 2)
 }
