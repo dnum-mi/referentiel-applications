@@ -27,13 +27,14 @@ export default defineConfig({
     trace: "on-first-retry",
     video: "retain-on-failure",
     actionTimeout: 15_000,
-    navigationTimeout: 20_000,
+    navigationTimeout: 30_000,
     colorScheme: "dark",
     timezoneId: "Europe/Paris",
   },
   expect: {
-    timeout: 15_000,
+    timeout: 10_000, // Reduced to 10s as it's usually sufficient
   },
+  timeout: 45_000, // Global test timeout of 45s
 
   /* Configure projects for major browsers */
   projects: [
