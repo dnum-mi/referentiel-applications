@@ -4,18 +4,14 @@ import {
   UpdateHostingDto,
 } from "src/hostings/dto/hosting.dto";
 import { Hosting } from "src/hostings/entities/hosting.entity";
-import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { IHostingRepository } from "./hosting.repository.interface";
 
 @Injectable()
 export class HostingRepository implements IHostingRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly metadataService: MetadatasService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateHostingDto, requestorId: string): Promise<Hosting> {
+  async create(data: CreateHostingDto): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
     return this.prisma.hosting.create({
@@ -25,13 +21,6 @@ export class HostingRepository implements IHostingRepository {
         ...(hostingOptionId && {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
-        metadatas: {
-          create: {
-            applicationId,
-            createdById: requestorId,
-            description: `Ajout de l'hébergement : ${rest.label}`,
-          },
-        },
       },
       include: {
         hostingOption: true,
@@ -56,16 +45,10 @@ export class HostingRepository implements IHostingRepository {
     });
   }
 
-  async update(
-    id: string,
-    data: UpdateHostingDto,
-    requestorId: string,
-  ): Promise<Hosting> {
+  async update(id: string, data: UpdateHostingDto): Promise<Hosting> {
     const { applicationId, hostingOptionId, ...rest } = data;
 
-    const oldHosting = await this.findById(id);
-
-    const updatedHosting = await this.prisma.hosting.update({
+    return await this.prisma.hosting.update({
       where: { id },
       data: {
         ...rest,
@@ -76,43 +59,13 @@ export class HostingRepository implements IHostingRepository {
           hostingOption: { connect: { id: hostingOptionId } },
         }),
       },
-    });
-
-    const newHosting = await this.findById(id);
-
-    await this.metadataService.createMetadata({
-      applicationId,
-      createdById: requestorId,
-      title: `de l'hébergement ${oldHosting.label}`,
-      entity: "hostingId",
-      entityId: id,
-      fields: {
-        label: "libellé",
-        "hostingOption.site": "site",
-        "hostingOption.platform": "plateforme",
-        "hostingOption.provider": "fournisseur",
-        "hostingOption.building": "bâtiment",
-        "hostingOption.room": "pièce",
+      include: {
+        hostingOption: true,
       },
-      oldData: oldHosting,
-      newData: newHosting,
     });
-
-    return updatedHosting;
   }
 
-  async delete(id: string, requestorId: string): Promise<void> {
-    const hosting = await this.findById(id);
-
-    await this.prisma.metadata.create({
-      data: {
-        action: "delete",
-        applicationId: hosting.applicationId,
-        description: `Suppression de l'hébergement : ${hosting.label}`,
-        createdById: requestorId,
-      },
-    });
-
+  async delete(id: string): Promise<void> {
     await this.prisma.hosting.delete({ where: { id } });
   }
 

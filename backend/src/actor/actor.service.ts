@@ -5,21 +5,30 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/product/application.service";
 import { CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
 import { ActorRepository } from "./infrastructure/repository/actor.repository";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 
 @Injectable()
 export class ActorService {
   constructor(
     private readonly actorRepository: ActorRepository,
     private readonly applicationService: ApplicationService,
+    private readonly metadataService: MetadatasService,
     private readonly emailService: EmailService,
     private readonly prisma: PrismaService,
   ) {}
 
   public async create(createActor: CreateActorDto, requestorId: string) {
-    const createdActor = await this.actorRepository.create(
-      createActor,
-      requestorId,
-    );
+    const createdActor = await this.actorRepository.create(createActor);
+
+    await this.metadataService.createMetadata({
+      applicationId: createActor.applicationId,
+      createdById: requestorId,
+      entity: "actorId",
+      entityId: createdActor.id,
+      title: `de l'acteur ${createdActor.actorType?.code} : ${createdActor.email}`,
+      type: "add",
+    });
+
     await this.applicationService.updateApplicationQuality(
       createdActor.applicationId,
     );
@@ -52,20 +61,30 @@ export class ActorService {
   }): Promise<Actor> {
     const { where, data, requestorId } = params;
 
-    let oldActor: Actor | undefined;
-    if ("id" in where && typeof where.id === "string" && where.id) {
-      oldActor = await this.findOne(where.id);
-    }
+    let oldActor = await this.findOne(where.id);
 
-    const updatedActor = await this.actorRepository.update(
-      where,
-      data,
-      requestorId,
-    );
+    const updatedActor = await this.actorRepository.update(where, data);
 
     await this.applicationService.updateApplicationQuality(
       updatedActor.applicationId,
     );
+
+    await this.metadataService.createMetadata({
+      applicationId: updatedActor.applicationId,
+      createdById: requestorId,
+      title: `de l'acteur ${oldActor.actorType?.code}`,
+      entity: "actorId",
+      entityId: updatedActor.id,
+      fields: {
+        lastname: "nom",
+        firstname: "prénom",
+        email: "email",
+        "organization.sigle": "organisation",
+        "actorType.label": "rôle",
+      },
+      oldData: oldActor,
+      newData: updatedActor,
+    });
 
     const changedFields = oldActor
       ? this.getChangedFieldsHtml(oldActor, updatedActor)
@@ -106,9 +125,19 @@ export class ActorService {
 
   public async delete(id: string, requestorId: string) {
     const actor = await this.findOne(id);
-    const deletedActor = await this.actorRepository.delete(id, requestorId);
+
+    await this.metadataService.createMetadata({
+      applicationId: actor.applicationId,
+      createdById: requestorId,
+      entity: "actorId",
+      entityId: actor.id,
+      title: `de l'acteur ${actor.actorType.code} : ${actor.email}`,
+      type: "delete",
+    });
+
     await this.applicationService.updateApplicationQuality(actor.applicationId);
-    return deletedActor;
+
+    return await this.actorRepository.delete(id);
   }
 
   private async sendActorNotificationIfEnabled(

@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Metadata, Prisma } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -114,5 +114,9 @@ export class MetadataRepository implements IMetadataRepository {
         },
       },
     });
+  }
+
+  create(data: Prisma.MetadataUncheckedCreateInput): Promise<Metadata> {
+    return this.prisma.metadata.create({ data });
   }
 }

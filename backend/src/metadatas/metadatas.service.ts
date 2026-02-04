@@ -37,8 +37,8 @@ export class MetadatasService extends BaseService<any> {
     entityId?: string;
     fields?: Record<string, string>;
     type?: keyof typeof MetadataTypes;
-    oldData: T;
-    newData: T;
+    oldData?: T;
+    newData?: T;
   }) {
     const {
       applicationId,
@@ -57,17 +57,12 @@ export class MetadatasService extends BaseService<any> {
     };
 
     const formattingValue = (value: any): any => {
-      if (value == null) {
-        return value;
-      }
+      if (value == null) return value;
 
-      if (value instanceof Date) {
-        return value.toISOString();
-      }
+      if (value instanceof Date) return value.toISOString();
 
-      if (Array.isArray(value)) {
+      if (Array.isArray(value))
         return value.map((item) => formattingValue(item));
-      }
 
       if (typeof value === "object") {
         return Object.keys(value).reduce(
@@ -91,43 +86,24 @@ export class MetadatasService extends BaseService<any> {
       return result;
     };
 
-    const oldValues = oldData ? buildValueMap(oldData) : {};
-    const newValues = newData ? buildValueMap(newData) : {};
-
-    const changedOldValues: Record<string, any> = {};
-    const changedNewValues: Record<string, any> = {};
-
     const descriptionLines = [`${MetadataTypes[type].label} ${title}`];
 
-    let prismaData: Prisma.MetadataUncheckedCreateInput;
+    if (type === "update") {
+      const oldValues = oldData ? buildValueMap(oldData) : {};
+      const newValues = newData ? buildValueMap(newData) : {};
 
-    if (type === "add" || type === "delete") {
-      if (Object.keys(newValues).length > 0 && type === "add") {
-        descriptionLines.push(
-          `Nouvelle(s) valeur(s) : ${JSON.stringify(formattingValue(newValues))}`,
-        );
-      } else if (type === "delete") {
-        descriptionLines.push(
-          `Valeur(s) supprimée(s) : ${JSON.stringify(formattingValue(oldValues))}`,
-        );
-      }
+      const changedOldValues: Record<string, any> = {};
+      const changedNewValues: Record<string, any> = {};
 
-      prismaData = {
-        applicationId,
-        createdById,
-        action: MetadataTypes[type].dbAction,
-        description: descriptionLines.join("\n"),
-      };
-    } else {
       for (const key in newValues) {
         if (!isEqual(oldValues[key], newValues[key])) {
-          changedOldValues[key] = oldValues[key];
-          changedNewValues[key] = newValues[key];
+          changedOldValues[key] = formattingValue(oldValues[key]);
+          changedNewValues[key] = formattingValue(newValues[key]);
         }
       }
 
       if (Object.keys(changedOldValues).length === 0) {
-        descriptionLines.push("Aucune modification détectée.");
+        return null;
       } else {
         descriptionLines.push(
           `Ancienne(s) valeur(s): ${JSON.stringify(changedOldValues)}`,
@@ -136,19 +112,18 @@ export class MetadatasService extends BaseService<any> {
           `Nouvelle(s) valeur(s): ${JSON.stringify(changedNewValues)}`,
         );
       }
-
-      prismaData = {
-        applicationId,
-        createdById,
-        action: MetadataTypes[type].dbAction,
-        description: descriptionLines.join("\n"),
-      };
-
-      if (entity && entityId) {
-        prismaData[entity] = entityId;
-      }
     }
 
-    return this.prisma.metadata.create({ data: prismaData });
+    let prismaData: Prisma.MetadataUncheckedCreateInput = {
+      applicationId,
+      createdById,
+      action: MetadataTypes[type].dbAction,
+      description: descriptionLines.join("\n"),
+    };
+
+    if (entity && entityId) {
+      prismaData[entity] = entityId;
+    }
+    return await this.metadataRepository.create(prismaData);
   }
 }
