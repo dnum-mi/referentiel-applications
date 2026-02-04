@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { Status } from "@prisma/client";
-import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "../../../prisma/prisma.service";
 import {
   GraphEdgeDto,
@@ -13,17 +12,13 @@ import { IRelationRepository } from "./relation.repository.interface";
 
 @Injectable()
 export class RelationRepository implements IRelationRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly metadataService: MetadatasService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   public async create(
     applicationSourceId: string,
     { applicationTargetId, type }: RelationApplicationDto,
-    requestorId: string,
   ): Promise<Relation> {
-    const createdRelation = await this.prisma.relation.create({
+    return await this.prisma.relation.create({
       data: {
         applicationSourceId,
         applicationTargetId,
@@ -38,23 +33,6 @@ export class RelationRepository implements IRelationRepository {
         },
       },
     });
-
-    await this.prisma.metadata.createMany({
-      data: [
-        {
-          applicationId: createdRelation.sourceApplication.id,
-          description: `Relation ajoutée avec ${createdRelation.targetApplication.label}`,
-          createdById: requestorId,
-        },
-        {
-          applicationId: createdRelation.targetApplication.id,
-          description: `Relation ajoutée avec ${createdRelation.sourceApplication.label}`,
-          createdById: requestorId,
-        },
-      ],
-    });
-
-    return createdRelation;
   }
 
   public async findAllForApplicationSource(
@@ -99,10 +77,8 @@ export class RelationRepository implements IRelationRepository {
   public async update(
     id: string,
     dto: RelationApplicationDto,
-    requestorId: string,
   ): Promise<Relation> {
-    const oldRelation = await this.findOne(id);
-    const updated = await this.prisma.relation.update({
+    return await this.prisma.relation.update({
       where: { id },
       data: dto,
       include: {
@@ -114,66 +90,9 @@ export class RelationRepository implements IRelationRepository {
         },
       },
     });
-
-    await this.metadataService.createMetadata({
-      applicationId: updated.sourceApplication.id,
-      createdById: requestorId,
-      title: `de la relation avec ${updated.targetApplication.label}`,
-      fields: {
-        "sourceApplication.label": "application source",
-        "targetApplication.label": "application visée",
-      },
-      newData: updated,
-      oldData: oldRelation,
-    });
-
-    await this.metadataService.createMetadata({
-      applicationId: updated.targetApplication.id,
-      createdById: requestorId,
-      title: `de la relation avec ${updated.sourceApplication.label}`,
-      fields: {
-        "sourceApplication.label": "application source",
-        "targetApplication.label": "application visée",
-      },
-      newData: updated,
-      oldData: oldRelation,
-    });
-
-    return updated;
   }
 
-  public async delete(id: string, requestorId: string): Promise<void> {
-    const deletedRelation = await this.prisma.relation.findFirst({
-      where: { id },
-      include: {
-        sourceApplication: {
-          select: { id: true, label: true },
-        },
-        targetApplication: {
-          select: { id: true, label: true },
-        },
-      },
-    });
-
-    const description = `Relation supprimée entre ${deletedRelation.sourceApplication.label} et ${deletedRelation.targetApplication.label}`;
-
-    await this.prisma.metadata.createMany({
-      data: [
-        {
-          applicationId: deletedRelation.sourceApplication.id,
-          action: "delete",
-          description,
-          createdById: requestorId,
-        },
-        {
-          applicationId: deletedRelation.targetApplication.id,
-          action: "delete",
-          description,
-          createdById: requestorId,
-        },
-      ],
-    });
-
+  public async delete(id: string): Promise<void> {
     await this.prisma.relation.delete({
       where: { id },
     });
