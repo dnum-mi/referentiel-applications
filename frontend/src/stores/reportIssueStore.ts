@@ -42,13 +42,22 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     }
   };
 
-  async function updateReport(id: string, applicationId: string, status: "in_pending" | "in_progress" | "done") {
+  async function updateReport(id: string, applicationId: string, status: "in_pending" | "in_progress" | "done", notify: boolean = false) {
     try {
       if (applicationId) {
         await api.applicationAnomalyNotificationsControllerUpdate({ path: { applicationId, id }, body: { status } });
       } else {
-        await api.anomalyNotificationsControllerUpdate({ path: { id }, body: { status } });
+        await api.anomalyNotificationsControllerUpdate({ path: { id }, body: { status }, query: { notify } });
       }
+      return true;
+    } catch (error) {
+      console.log("Erreur lors de l'enregistrement des modifications : ", error);
+    }
+  }
+
+  async function updateDescription(id: string, description: string, notify: boolean = false) {
+    try {
+      await api.anomalyNotificationsControllerUpdate({ path: { id }, body: { description }, query: { notify } });
       return true;
     } catch (error) {
       console.log("Erreur lors de l'enregistrement des modifications : ", error);
@@ -59,5 +68,6 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     proposeCorrection,
     proposeAnomaly,
     updateReport,
+    updateDescription,
   };
 });

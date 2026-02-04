@@ -2002,6 +2002,13 @@ paths:
           in: path
           schema:
             type: string
+        - name: notify
+          required: true
+          in: query
+          description: Send Notification Email
+          schema:
+            example: "true"
+            type: boolean
       requestBody:
         required: true
         content:

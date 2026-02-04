@@ -12,6 +12,7 @@ import type { AnomalyNotificationPaginatedResponseDto } from "@/client/types.gen
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import ReportStatusTag from "./ReportStatusTag.vue";
+import Description from "./Description.vue";
 
 const title = "Liste de tous les signalements d'applications";
 const headers = [
@@ -167,7 +168,12 @@ onMounted(async () => {
 
       <template #body-description="{ data }">
         <p class="text-wrap">
-          {{ data.description }}
+          <Description
+            :description="data.description"
+            :report-id="data.status.report.id"
+            :is-editing="data.status.isEditing"
+            @refresh="fetchAllReportsDirect()"
+          />
         </p>
       </template>
 
