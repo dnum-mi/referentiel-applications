@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { onMounted, computed, ref, watch } from "vue";
-import { routeNames } from "@/router/route-names";
-import { useUserStore } from "@/stores/userStore";
-import { formatDate } from "@/composables/use-date";
 import api from "@/api";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
-import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
-import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
-import type { GenericRow } from "@/utils/types";
 import type { AnomalyNotificationPaginatedResponseDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
+import { formatDate } from "@/composables/use-date";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { routeNames } from "@/router/route-names";
+import { useUserStore } from "@/stores/userStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
-import ReportStatusTag from "./ReportStatusTag.vue";
-import Description from "./Description.vue";
+import type { GenericRow } from "@/utils/types";
+import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
+import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
+import { computed, ref, watch } from "vue";
+
+const props = defineProps<{
+  isActive: boolean;
+}>();
 
 const title = "Liste de tous les signalements d'applications";
 const headers = [
@@ -100,9 +102,13 @@ function onPage(event: any) {
   itemsPerPage.value = event.rows;
 }
 
-onMounted(async () => {
-  await fetchAllReportsDirect();
-});
+watch(
+  () => props.isActive,
+  async () => {
+    await fetchAllReportsDirect();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

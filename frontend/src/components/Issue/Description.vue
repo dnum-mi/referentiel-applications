@@ -44,7 +44,7 @@ const { isOpen, openDialog, handleReset, submit, editedDescription, handleClose 
 .container {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 15px;
 }
 </style>
