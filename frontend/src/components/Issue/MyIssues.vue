@@ -104,8 +104,10 @@ function onPage(event: any) {
 
 watch(
   () => props.isActive,
-  async () => {
-    await fetchAllReportsDirect();
+  async (isActive) => {
+    if (isActive) {
+      await fetchAllReportsDirect();
+    }
   },
   { immediate: true },
 );
