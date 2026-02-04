@@ -255,11 +255,13 @@ export class EmailService {
     description,
     status,
     applicationName,
+    notes,
   }: {
     recipientEmail: string;
     description: string;
     status: AnomalyNotificationStatus;
     applicationName?: string;
+    notes: string;
   }) {
     const subject = "Anomalie notification update";
     const html = this.templateService.render("anomaly-notification-notify", {
@@ -268,6 +270,7 @@ export class EmailService {
       applicationName: applicationName || "Signalement global",
       description,
       status: AnomalyNotificationStatusLabels[status],
+      notes,
     });
 
     const text = this.templateService.htmlToText(html);

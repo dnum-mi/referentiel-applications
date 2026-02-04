@@ -19,6 +19,14 @@ export class CreateAnomalyNotificationDto {
     required: false,
   })
   status?: AnomalyNotificationStatus;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({
+    description: "La note de la notification d'anomalie",
+    required: false,
+  })
+  notes?: string;
 }
 
 export class CreateAnomalyNotificationRequestDto {
@@ -28,4 +36,8 @@ export class CreateAnomalyNotificationRequestDto {
 
   @IsString()
   description: string;
+
+  @IsString()
+  @IsOptional()
+  notes?: string = "";
 }

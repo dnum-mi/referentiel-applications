@@ -21,6 +21,7 @@ const headers = [
   { key: "application", label: "Application" },
   { key: "notifier", label: "Signalant" },
   { key: "description", label: "Description" },
+  { key: "notes", label: "Notes" },
   { key: "date", label: "Date" },
   { key: "status", label: "Statut" },
 ] as const satisfies DsfrDataTableHeaderCell[];
@@ -41,7 +42,7 @@ const currentPage = ref(0);
 const itemsPerPage = ref(15);
 const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 const searchReport = ref("");
-const sortBy = ref<"application" | "description" | "date" | "status" | "signalant">("date");
+const sortBy = ref<"application" | "description" | "date" | "status" | "signalant" | "notes">("date");
 const sortedDesc = ref<boolean>(true);
 
 const rows = computed(() =>
@@ -54,6 +55,7 @@ const rows = computed(() =>
       },
       notifier: report.notifier?.email || "Inconnu",
       description: report.description,
+      notes: report.notes,
       date: formatDate(report.updatedAt),
       status: {
         report,
@@ -176,8 +178,14 @@ watch(
 
       <template #body-description="{ data }">
         <p class="text-wrap">
-          <Description
-            :description="data.description"
+          {{ data.description }}
+        </p>
+      </template>
+
+      <template #body-notes="{ data }">
+        <p class="text-wrap">
+          <Notes
+            :notes="data.notes"
             :report-id="data.status.report.id"
             :is-editing="data.status.isEditing"
             @refresh="fetchAllReportsDirect()"

@@ -55,9 +55,9 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     }
   }
 
-  async function updateDescription(id: string, description: string, notify: boolean = false) {
+  async function updateNotes(id: string, notes: string = "", notify: boolean = false) {
     try {
-      await api.anomalyNotificationsControllerUpdate({ path: { id }, body: { description }, query: { notify } });
+      await api.anomalyNotificationsControllerUpdate({ path: { id }, body: { notes }, query: { notify } });
       return true;
     } catch (error) {
       console.log("Erreur lors de l'enregistrement des modifications : ", error);
@@ -68,6 +68,6 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
     proposeCorrection,
     proposeAnomaly,
     updateReport,
-    updateDescription,
+    updateNotes,
   };
 });

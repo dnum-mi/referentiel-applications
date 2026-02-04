@@ -135,6 +135,7 @@ export class AnomalyNotificationsService {
       date: { createdAt: order },
       status: { status: order },
       signalant: { notifier: { email: order } },
+      notes: { notes: order },
     };
 
     const orderBy = sortOptions[sortBy];

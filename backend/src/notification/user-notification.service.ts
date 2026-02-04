@@ -26,6 +26,7 @@ export class UserNotificationService {
         description: anomalyNotification.description,
         status: anomalyNotification.status,
         applicationName: anomalyNotification.application?.shortName,
+        notes: anomalyNotification.notes,
       });
     }
   }

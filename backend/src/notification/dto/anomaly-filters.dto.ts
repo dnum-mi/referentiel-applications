@@ -15,6 +15,7 @@ export enum SortByEnum {
   date = "date",
   description = "description",
   signalant = "signalant",
+  notes = "notes",
 }
 
 enum OrderEnum {
