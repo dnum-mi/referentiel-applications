@@ -54,7 +54,7 @@ const rows = computed(() =>
       },
       notifier: report.notifier?.email || "Inconnu",
       description: report.description,
-      date: formatDate(report.createdAt),
+      date: formatDate(report.updatedAt),
       status: {
         report,
         isEditing: isEditing.value,
