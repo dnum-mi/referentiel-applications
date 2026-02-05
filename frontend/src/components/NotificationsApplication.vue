@@ -146,6 +146,8 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
         >
           Voir plus
         </router-link>
+        <span v-else></span
+        ><!-- for Actions without any metadata -->
       </template>
     </RefAppTable>
   </DsfrAccordionsGroup>
