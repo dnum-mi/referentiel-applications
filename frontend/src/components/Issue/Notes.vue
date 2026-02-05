@@ -18,7 +18,7 @@ const { isOpen, openDialog, handleReset, submit, editedNotes, handleClose } = us
 );
 </script>
 <template>
-  <div class="container">
+  <div class="container" :style="isEditing ? 'justify-content: flex-end;' : 'justify-content: center;'">
     {{ notes }}
     <DsfrButton
       v-if="isEditing"
@@ -44,7 +44,6 @@ const { isOpen, openDialog, handleReset, submit, editedNotes, handleClose } = us
 .container {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 15px;
 }
 </style>
