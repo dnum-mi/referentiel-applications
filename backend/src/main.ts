@@ -1,5 +1,5 @@
 import type { AppConfig } from "./config/configs/app.config";
-import type { KeycloakConfig } from "./config/configs/keycloak.config";
+import type { OidcConfig } from "./config/configs/oidc.config";
 import { Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
@@ -13,7 +13,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const configService = app.get(ConfigService);
   const appConfig = configService.get<AppConfig>("app");
-  const keycloakConfig = configService.get<KeycloakConfig>("keycloak");
+  const oidcConfig = configService.get<OidcConfig>("oidc");
 
   app.useLogger(app.get(PinoLogger));
   app.setGlobalPrefix(globalPrefix);
@@ -29,7 +29,7 @@ async function bootstrap() {
   });
 
   // Configuration de Swagger
-  setupSwagger(app, appConfig, keycloakConfig);
+  setupSwagger(app, appConfig, oidcConfig);
 
   // Setup global validation
   setupGlobalValidation(app);

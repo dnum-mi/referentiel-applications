@@ -5,8 +5,6 @@
 model User {
   /// Identifiant unique
   id                        String                @id @default(uuid())
-  /// Identifiant SSO Keycloak
-  keycloakId                String?               @unique
   /// Adresse email de l'utilisateur
   email                     String                @unique
   /// Horodatage de la dernière connexion

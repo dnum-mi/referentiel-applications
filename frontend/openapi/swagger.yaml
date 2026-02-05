@@ -423,7 +423,7 @@ paths:
         - name: id
           required: true
           in: path
-          description: ID Keycloak de l'utilisateur
+          description: ID de l'utilisateur
           schema:
             type: string
       requestBody:
@@ -449,8 +449,7 @@ paths:
       operationId: UserController_findAll
       summary: Lister tous les utilisateurs
       description: Récupère la liste de tous les utilisateurs avec leurs permissions.
-        Supporte la recherche par email et ID Keycloak. Accès limité aux
-        administrateurs.
+        Supporte la recherche par email. Accès limité aux administrateurs.
       parameters:
         - name: page
           required: false
@@ -703,6 +702,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -1028,6 +1028,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -3246,6 +3247,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -3464,6 +3466,7 @@ components:
       type: string
       enum:
         - under_construction
+        - to_validate
         - poc
         - in_production_mvp
         - in_production
@@ -3633,8 +3636,6 @@ components:
             $ref: "#/components/schemas/UserFollowedApplicationDto"
         id:
           type: string
-        keycloakId:
-          type: string
         email:
           type: string
         adminLevel:
@@ -3803,6 +3804,7 @@ components:
       description: Statut de l'application
       enum:
         - under_construction
+        - to_validate
         - poc
         - in_production_mvp
         - in_production

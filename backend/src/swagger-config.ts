@@ -1,6 +1,6 @@
 // src/main.ts
 import type { INestApplication } from "@nestjs/common";
-import type { KeycloakConfig } from "./config/configs/keycloak.config";
+import type { OidcConfig } from "./config/configs/oidc.config";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -14,12 +14,12 @@ export function setupSwagger(
     writeYaml?: boolean;
     onlyWriteSwagger?: boolean;
   },
-  keycloakConfig: Pick<KeycloakConfig, "configUrl" | "clientId">,
+  oidcConfig: Pick<OidcConfig, "configUrl" | "clientId">,
 ) {
   // Extract the base URL from OIDC_CONFIG_URL by removing the .well-known path
   // e.g., "https://auth.sso.interieur.rie.gouv.fr/.well-known/openid-configuration"
   // becomes "https://auth.sso.interieur.rie.gouv.fr"
-  const baseUrl = keycloakConfig.configUrl.replace(
+  const baseUrl = oidcConfig.configUrl.replace(
     /.well-known\/openid-configuration$/,
     "",
   );
@@ -70,7 +70,7 @@ export function setupSwagger(
       usePkceWithAuthorizationCodeGrant: true,
       initOAuth: {
         scopes: ["openid", "profile"],
-        clientId: keycloakConfig.clientId,
+        clientId: oidcConfig.clientId,
       },
     },
   });

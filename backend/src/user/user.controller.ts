@@ -98,7 +98,7 @@ export class UserController {
     description:
       "Permet de modifier les permissions d'un utilisateur. Accès limité aux administrateurs.",
   })
-  @ApiParam({ name: "id", description: "ID Keycloak de l'utilisateur" })
+  @ApiParam({ name: "id", description: "ID de l'utilisateur" })
   @ApiOkResponse({
     description: "Utilisateur mis à jour avec succès",
     type: UserEntity,
@@ -117,7 +117,7 @@ export class UserController {
   @ApiOperation({
     summary: "Lister tous les utilisateurs",
     description:
-      "Récupère la liste de tous les utilisateurs avec leurs permissions. Supporte la recherche par email et ID Keycloak. Accès limité aux administrateurs.",
+      "Récupère la liste de tous les utilisateurs avec leurs permissions. Supporte la recherche par email. Accès limité aux administrateurs.",
   })
   @ApiOkResponse({
     description: "Liste paginée des utilisateurs",
