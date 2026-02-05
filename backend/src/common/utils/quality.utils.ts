@@ -1,8 +1,8 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaService } from "src/prisma/prisma.service";
 
 export async function calculateIQ(
   applicationId: string,
-  prisma: PrismaClient,
+  prisma: PrismaService,
 ): Promise<number> {
   const [application, hosting, actors, compliance, links] = await Promise.all([
     prisma.application.findUnique({ where: { id: applicationId } }),
