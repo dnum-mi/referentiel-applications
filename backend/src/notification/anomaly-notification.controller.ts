@@ -34,10 +34,7 @@ import {
   AnomalyNotificationDto,
   AnomalyNotificationPaginatedResponseDto,
 } from "./dto/anomaly-notification.dto";
-import {
-  CreateAnomalyNotificationDto,
-  CreateAnomalyNotificationRequestDto,
-} from "./dto/create-anomaly-notification.dto";
+import { CreateAnomalyNotificationRequestDto } from "./dto/create-anomaly-notification.dto";
 import { UpdateAnomalyNotifyQuery } from "./dto/notify-query.dto";
 import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
 import { UserNotificationService } from "./user-notification.service";
@@ -93,11 +90,11 @@ export class AnomalyNotificationsController {
     @User() requestor: Requestor,
     @Body() requestData: CreateAnomalyNotificationRequestDto,
   ) {
-    const data: CreateAnomalyNotificationDto = {
-      ...requestData,
-      description: requestData.description,
-    };
-    return this.service.create(data, requestor);
+    return this.service.create(
+      requestData,
+      requestor,
+      requestData.applicationId,
+    );
   }
 
   /**
