@@ -8,7 +8,7 @@ import { ConfigType } from "@nestjs/config";
 import { NextFunction, Request, Response } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { ActionLogService } from "src/action-log/action-log.service";
-import { keycloakConfig } from "src/config/configs";
+import { oidcConfig } from "src/config/configs";
 import { TokenService } from "src/token/token.service";
 import {
   AdminLevel,
@@ -30,13 +30,13 @@ export class AuthMiddleware implements NestMiddleware {
   private readonly jwks: ReturnType<typeof createRemoteJWKSet>;
 
   constructor(
-    @Inject(keycloakConfig.KEY)
-    private readonly keycloak: ConfigType<typeof keycloakConfig>,
+    @Inject(oidcConfig.KEY)
+    private readonly oidc: ConfigType<typeof oidcConfig>,
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
     private readonly actionLogService: ActionLogService,
   ) {
-    this.jwks = createRemoteJWKSet(new URL(this.keycloak.jwksUrl));
+    this.jwks = createRemoteJWKSet(new URL(this.oidc.jwksUrl));
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
@@ -49,12 +49,11 @@ export class AuthMiddleware implements NestMiddleware {
       if (token) {
         user = await this.tokenService.findUserByToken(token);
       } else if (authorization) {
-        const payload = process.env.AUTH_VERIFY_JWT
-          ? (await jwtVerify(authorization, this.jwks)).payload
-          : decodeJwt(authorization);
+        const payload = process.env.DISABLE_JWT_VALIDATION
+          ? decodeJwt(authorization)
+          : (await jwtVerify(authorization, this.jwks)).payload;
         user = await this.userService.findOrCreateByEmail(
           payload.email as string,
-          payload.sub as string,
         );
       }
 

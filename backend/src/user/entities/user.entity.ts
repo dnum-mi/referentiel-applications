@@ -40,10 +40,6 @@ export class UserEntity {
   id: string;
 
   @IsString()
-  @IsOptional()
-  keycloakId?: string;
-
-  @IsString()
   email: string;
 
   @IsNumber()

@@ -10,25 +10,9 @@ import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findOrCreateByEmail(
-    email: string,
-    keycloakId: string,
-  ): Promise<UserEntity | null> {
-    // Check if a user exists with the given keycloakId
-    const existingUserByKeycloakId = await this.prisma.user.findUnique({
-      where: { keycloakId },
-      include: {
-        organization: true,
-        followedApplications: true,
-      },
-    });
-
-    if (existingUserByKeycloakId) {
-      return existingUserByKeycloakId; // Return the user if found by keycloakId
-    }
-
+  async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
     // Check if a user exists with the given email
-    const existingUserByEmail = await this.prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { email },
       include: {
         organization: true,
@@ -36,24 +20,15 @@ export class UserService {
       },
     });
 
-    if (existingUserByEmail) {
-      // Update the keycloakId for the existing user
-      return this.prisma.user.update({
-        where: { email },
-        data: { keycloakId },
-        include: {
-          organization: true,
-          followedApplications: true,
-        },
-      });
+    if (existingUser) {
+      return existingUser;
     }
 
     // If no user exists, create a new one
     return this.prisma.user.create({
       data: {
         email,
-        keycloakId,
-        adminLevel: 0, // Default admin level
+        adminLevel: 0,
         capabilities: [],
       },
       include: {
@@ -128,12 +103,6 @@ export class UserService {
       where.OR = [
         {
           email: {
-            contains: filters.search,
-            mode: "insensitive",
-          },
-        },
-        {
-          keycloakId: {
             contains: filters.search,
             mode: "insensitive",
           },

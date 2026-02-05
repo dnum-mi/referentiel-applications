@@ -1,12 +1,12 @@
 import { registerAs } from "@nestjs/config";
 
-export interface KeycloakConfig {
+export interface OidcConfig {
   jwksUrl: string;
   configUrl: string;
   clientId: string;
 }
 
-export default registerAs("keycloak", (): KeycloakConfig => {
+export default registerAs("oidc", (): OidcConfig => {
   const jwksUrl = process.env.OIDC_JWKS_URL;
   const configUrl = process.env.OIDC_CONFIG_URL;
   const clientId = process.env.OIDC_CLIENT_ID;

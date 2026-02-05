@@ -37,7 +37,6 @@ services:
       - OIDC_CONFIG_URL=http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration
       - OIDC_JWKS_URL=http://keycloak:8080/realms/referentiel-applications/protocol/openid-connect/certs
       - OIDC_CLIENT_ID=referentiel-applications
-      - AUTH_VERIFY_JWT=true
       - LOG_LEVEL=debug
       # - NON_ACTOR_PERMISSIONS=readBase
       - SMTP_HOST=mailpit
