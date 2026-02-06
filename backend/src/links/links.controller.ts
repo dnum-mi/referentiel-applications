@@ -20,7 +20,6 @@ import {
 } from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
-import { ApplicationService } from "src/product/application.service";
 import { UserId } from "../common/decorators/user-id.decorator";
 import {
   CreateLinkDto,
@@ -35,10 +34,7 @@ import { PaginatedResponseDto } from "src/common/dto";
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/links")
 export class ApplicationLinksController {
-  constructor(
-    private readonly service: LinksService,
-    private readonly applicationService: ApplicationService,
-  ) {}
+  constructor(private readonly service: LinksService) {}
 
   @Post()
   @AppAction("writeLinks")
@@ -54,23 +50,24 @@ export class ApplicationLinksController {
     @Body() createLinkDto: CreateLinkDto,
     @Param("applicationId") applicationId: string,
   ) {
-    const createdLink = await this.service.create({
-      ...createLinkDto,
-      application: {
-        connect: {
-          id: applicationId,
+    return await this.service.create(
+      {
+        ...createLinkDto,
+        application: {
+          connect: { id: applicationId },
         },
       },
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          description: `Ajout du lien : ${createLinkDto.link}`,
+      {
+        applicationId,
+        triggerQualityUpdate: true,
+        metadata: {
+          userId,
+          gender: "du lien",
+          getColumn: (entity) => entity.link,
+          entity: "externalRessourceId",
         },
       },
-    });
-    await this.applicationService.updateApplicationQuality(applicationId);
-    return createdLink;
+    );
   }
 
   @Get()
@@ -103,20 +100,20 @@ export class ApplicationLinksController {
     @Param("id") id: string,
     @Body() updateLinkDto: UpdateLinkDto,
   ) {
-    return this.service.updateWithMetadata({
-      id,
-      data: updateLinkDto,
-      userId,
+    return this.service.update(id, updateLinkDto, {
       applicationId,
-      gender: "du lien",
-      entityName: "externalRessourceId",
-      metadataFields: {
-        link: "lien",
-        type: "type",
-        description: "description",
-      },
-      getName: (entity) => entity.link,
       triggerQualityUpdate: true,
+      metadata: {
+        userId,
+        gender: "du lien",
+        getColumn: (entity) => entity.link,
+        entity: "externalRessourceId",
+        fields: {
+          link: "lien",
+          type: "type",
+          description: "description",
+        },
+      },
     });
   }
 
@@ -132,13 +129,15 @@ export class ApplicationLinksController {
     @Param("applicationId") applicationId: string,
     @Param("id") id: string,
   ) {
-    return this.service.deleteWithMetadata({
-      id,
-      userId,
+    return this.service.delete(id, {
       applicationId,
-      gender: "du lien",
-      name: "link",
       triggerQualityUpdate: true,
+      metadata: {
+        userId,
+        gender: "du lien",
+        getColumn: (entity) => entity.link,
+        entity: "externalRessourceId",
+      },
     });
   }
 }

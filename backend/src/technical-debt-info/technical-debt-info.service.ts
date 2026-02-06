@@ -4,6 +4,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/product/application.service";
 import { BaseService } from "../common/base.service";
 import { TechnicalDebtInfo } from "./entities/technical-debt-info.entity";
+import { ServiceOptions } from "src/common/utils/types";
 
 @Injectable()
 export class TechnicalDebtInfoService extends BaseService<TechnicalDebtInfo> {
@@ -20,7 +21,10 @@ export class TechnicalDebtInfoService extends BaseService<TechnicalDebtInfo> {
     );
   }
 
-  async create(createDto): Promise<TechnicalDebtInfo> {
+  async create(
+    createDto,
+    options?: ServiceOptions<TechnicalDebtInfo>,
+  ): Promise<TechnicalDebtInfo> {
     const applicationId = createDto.application.connect.id;
     if (applicationId) {
       const existing = await this.findByApplicationId(applicationId);
@@ -30,7 +34,7 @@ export class TechnicalDebtInfoService extends BaseService<TechnicalDebtInfo> {
         );
       }
     }
-    return super.create(createDto);
+    return super.create(createDto, options);
   }
 
   async findByApplicationId(
