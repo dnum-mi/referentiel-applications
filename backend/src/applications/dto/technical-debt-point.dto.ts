@@ -1,5 +1,5 @@
 import { ApiPropertyOptional, PickType } from "@nestjs/swagger";
-import { CreateTechnicalDebtInfoDto } from "../../../technical-debt-info/dto/create-technical-debt-info.dto";
+import { CreateTechnicalDebtInfoDto } from "src/technical-debt-info/dto/create-technical-debt-info.dto";
 import { ApplicationDto } from "./get-application.dto";
 
 export class TechnicalDebtPointDto extends PickType(ApplicationDto, [

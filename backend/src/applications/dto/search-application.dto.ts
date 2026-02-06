@@ -11,8 +11,8 @@ import {
   Max,
   Min,
 } from "class-validator";
-import { PaginationDto } from "../../../common/dto";
-import { stringToBoolean } from "../../../utils/functions";
+import { PaginationDto } from "src/common/dto";
+import { stringToBoolean } from "src/utils/functions";
 
 export class ApplicationSearchDto extends PaginationDto {
   private static toArray(value: unknown): string[] {

@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Actor, Prisma } from "@prisma/client";
 import { EmailService } from "src/email/email.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { ApplicationService } from "src/product/application.service";
+import { ApplicationService } from "src/applications/application.service";
 import { CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
 import { ActorRepository } from "./infrastructure/repository/actor.repository";
 import { MetadatasService } from "src/metadatas/metadatas.service";

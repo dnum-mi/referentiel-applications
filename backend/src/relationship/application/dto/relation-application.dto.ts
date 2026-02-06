@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RelationType, Status } from "@prisma/client";
 import { IsEnum, IsString } from "class-validator";
-import { ApplicationMinimalDto } from "src/product/application/dto/get-application.dto";
+import { ApplicationMinimalDto } from "src/applications/dto/get-application.dto";
 
 export class RelationApplicationDto {
   @ApiProperty()

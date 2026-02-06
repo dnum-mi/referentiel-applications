@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from "@nestjs/common";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { ApplicationService } from "src/product/application.service";
+import { ApplicationService } from "src/applications/application.service";
 import { BaseService } from "../common/base.service";
 import { TechnicalDebtInfo } from "./entities/technical-debt-info.entity";
 import { ServiceOptions } from "src/common/utils/types";

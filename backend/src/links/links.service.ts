@@ -3,7 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { PaginatedResponseDto } from "src/common/dto";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { ApplicationService } from "src/product/application.service";
+import { ApplicationService } from "src/applications/application.service";
 import { BaseService } from "../common/base.service";
 import { LinkDto, LinkFiltersDto } from "./dto/links.dto";
 import { Link } from "./entities/link.entity";

@@ -1,8 +1,8 @@
 import type { Application } from "@prisma/client";
-import type { CreateApplicationDto } from "src/product/application/dto/create-application.dto";
-import type { ApplicationSearchResultDto } from "src/product/application/dto/get-application.dto";
-import type { TechnicalDebtPointDto } from "src/product/application/dto/technical-debt-point.dto";
-import type { ApplicationSearchDto } from "src/product/application/dto/search-application.dto";
+import type { CreateApplicationDto } from "src/applications/dto/create-application.dto";
+import type { ApplicationSearchResultDto } from "src/applications/dto/get-application.dto";
+import type { TechnicalDebtPointDto } from "src/applications/dto/technical-debt-point.dto";
+import type { ApplicationSearchDto } from "src/applications/dto/search-application.dto";
 import type { CreateTagDto } from "src/tag/dto/tag.dto";
 
 export type ApplicationSearchFilters = ApplicationSearchDto;

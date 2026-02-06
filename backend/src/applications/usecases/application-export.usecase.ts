@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { ExcelBuilderService } from "src/common/service/excel-builder.service";
-import { sheetLabels } from "src/product/constants/application-export.sheet-labels";
-import { ApplicationWithAllRelations } from "src/product/types/application.type";
-import { columnLabels } from "../../columnLabels/application-export.columnLabels";
-import { ApplicationRepository } from "../../infrastructure/repository/application.repository";
+import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
+import { ApplicationWithAllRelations } from "src/applications/types/application.type";
+import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
+import { ApplicationRepository } from "src/applications/infrastructure/repository/application.repository";
 import {
   mapActors,
   mapAnomalyNotifications,

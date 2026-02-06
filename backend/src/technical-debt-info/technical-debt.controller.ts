@@ -2,9 +2,9 @@ import { Controller, Get, Query } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { User } from "src/common/decorators/user.decorator";
 import { Requestor } from "src/user/entities/user.entity";
-import { ApplicationSearchDto } from "src/product/application/dto/search-application.dto";
-import { TechnicalDebtPointDto } from "src/product/application/dto/technical-debt-point.dto";
-import { ApplicationService } from "src/product/application.service";
+import { ApplicationSearchDto } from "src/applications/dto/search-application.dto";
+import { TechnicalDebtPointDto } from "src/applications/dto/technical-debt-point.dto";
+import { ApplicationService } from "src/applications/application.service";
 
 @ApiTags("technical-debts")
 @Controller("technical-debts")

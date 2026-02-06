@@ -8,9 +8,9 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
-import { PaginatedResponseDto } from "../../../common/dto";
-import { ApplicationStatusDto } from "../../../statuses/dto/application-status.dto";
-import { TechnicalDebtInfoDto } from "../../../technical-debt-info/dto/create-technical-debt-info.dto";
+import { PaginatedResponseDto } from "src/common/dto";
+import { ApplicationStatusDto } from "src/statuses/dto/application-status.dto";
+import { TechnicalDebtInfoDto } from "src/technical-debt-info/dto/create-technical-debt-info.dto";
 
 export class ApplicationDto {
   @IsString()
