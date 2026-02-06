@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { ApplicationSearchDto } from "./application/dto/search-application.dto";
-import { ExportApplicationsUseCase } from "./application/usecases/application-export.usecase";
+import { ApplicationSearchDto } from "./dto/search-application.dto";
+import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
 @Injectable()

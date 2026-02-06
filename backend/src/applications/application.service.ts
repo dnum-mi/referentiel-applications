@@ -8,14 +8,14 @@ import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TagsService } from "src/tag/tags.service";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
-import { ApplicationRights } from "./application/dto/application-rights.dto";
+import { ApplicationRights } from "./dto/application-rights.dto";
 import {
   CreateApplicationDto,
   PatchApplicationDto,
-} from "./application/dto/create-application.dto";
-import { ApplicationSearchResultDto } from "./application/dto/get-application.dto";
-import { ApplicationSearchDto } from "./application/dto/search-application.dto";
-import { TechnicalDebtPointDto } from "./application/dto/technical-debt-point.dto";
+} from "./dto/create-application.dto";
+import { ApplicationSearchResultDto } from "./dto/get-application.dto";
+import { ApplicationSearchDto } from "./dto/search-application.dto";
+import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 
 export function objectEntries<Obj extends Record<string, unknown>>(

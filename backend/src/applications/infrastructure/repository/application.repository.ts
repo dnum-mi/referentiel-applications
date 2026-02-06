@@ -1,11 +1,11 @@
 import type { Prisma } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
-import { ApplicationSearchResultDto } from "src/product/application/dto/get-application.dto";
-import { TechnicalDebtPointDto } from "src/product/application/dto/technical-debt-point.dto";
-import { ApplicationWithAllRelations } from "src/product/types/application.type";
+import { ApplicationSearchResultDto } from "src/applications/dto/get-application.dto";
+import { TechnicalDebtPointDto } from "src/applications/dto/technical-debt-point.dto";
+import { ApplicationWithAllRelations } from "src/applications/types/application.type";
 import { CreateTagDto } from "src/tag/dto/tag.dto";
-import { CreateApplicationDto } from "../../application/dto/create-application.dto";
+import { CreateApplicationDto } from "src/applications/dto/create-application.dto";
 import {
   ApplicationSearchFilters,
   IApplicationRepository,

@@ -1,4 +1,4 @@
-import type { ApplicationService } from "src/product/application.service";
+import type { ApplicationService } from "src/applications/application.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";

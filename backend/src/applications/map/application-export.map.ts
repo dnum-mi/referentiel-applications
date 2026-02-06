@@ -1,12 +1,12 @@
-import type { ApplicationWithAllRelations } from "src/product/types/application.type";
+import type { ApplicationWithAllRelations } from "src/applications/types/application.type";
 import { translateEnum } from "src/common/utils/enum.utils";
 import {
   AnomalyNotificationStatusLabels,
   ApplicationStatusLabels,
   ExternalRessourceTypeLabels,
   PriorityRestartLabels,
-} from "src/product/constants/enum-label";
-import { RelationTypeLabelsBidirectional } from "src/product/constants/relation-type-labels";
+} from "src/applications/constants/enum-label";
+import { RelationTypeLabelsBidirectional } from "src/applications/constants/relation-type-labels";
 
 export function getFullField(
   app: ApplicationWithAllRelations,

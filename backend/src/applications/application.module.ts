@@ -8,7 +8,7 @@ import { StatusesModule } from "src/statuses/statuses.module";
 import { TagsModule } from "src/tag/tags.module";
 import { ApplicationController } from "./application.controller";
 import { ApplicationService } from "./application.service";
-import { ExportApplicationsUseCase } from "./application/usecases/application-export.usecase";
+import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 

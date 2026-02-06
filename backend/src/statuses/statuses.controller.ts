@@ -19,7 +19,7 @@ import {
 } from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
-import { ApplicationService } from "src/product/application.service";
+import { ApplicationService } from "src/applications/application.service";
 import { User } from "../common/decorators/user.decorator";
 import { MetadatasService } from "../metadatas/metadatas.service";
 import { Requestor } from "../user/entities/user.entity";

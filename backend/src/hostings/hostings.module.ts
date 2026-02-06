@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MetadatasModule } from "src/metadatas/metadatas.module";
-import { ApplicationModule } from "src/product/application.module";
+import { ApplicationModule } from "src/applications/application.module";
 import { PrismaModule } from "../prisma/prisma.module";
 import {
   ApplicationHostingsController,

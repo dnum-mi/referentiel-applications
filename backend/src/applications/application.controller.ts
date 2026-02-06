@@ -41,15 +41,15 @@ import { ApplicationService } from "./application.service";
 import {
   CreateApplicationDto,
   PatchApplicationDto,
-} from "./application/dto/create-application.dto";
+} from "./dto/create-application.dto";
 import {
   ApplicationDto,
   ApplicationSearchResultDto,
   CountByIqDto,
   CountByMonthDto,
-} from "./application/dto/get-application.dto";
-import { ApplicationSearchDto } from "./application/dto/search-application.dto";
-import { ExportApplicationsUseCase } from "./application/usecases/application-export.usecase";
+} from "./dto/get-application.dto";
+import { ApplicationSearchDto } from "./dto/search-application.dto";
+import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 import { ApplicationExportService } from "./export.service";
 
 @ApiTags("applications")

@@ -20,7 +20,7 @@ import { AuthMiddleware } from "./middlewares/auth.middleware";
 import { AnomalyNotificationModule } from "./notification/anomaly-notification.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { PrismaModule } from "./prisma/prisma.module";
-import { ApplicationModule } from "./product/application.module";
+import { ApplicationModule } from "./applications/application.module";
 import { RelationModule } from "./relationship/relation.module";
 import { LoggingService } from "./services/logging.service";
 import { StatsModule } from "./stats/stats.module";

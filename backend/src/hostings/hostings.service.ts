@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { ApplicationService } from "src/product/application.service";
+import { ApplicationService } from "src/applications/application.service";
 import { CreateHostingDto, UpdateHostingDto } from "./dto/hosting.dto";
 import { Hosting } from "./entities/hosting.entity";
 import { IHostingRepository } from "./infrastructure/repository/hosting.repository.interface";
