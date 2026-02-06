@@ -55,21 +55,25 @@ Vous devez fournir les informations suivantes :
     @Body() createLabelDto: CreateLabelDto,
     @Param("applicationId") applicationId: string,
   ): Promise<LabelDto> {
-    return this.service.create({
-      ...createLabelDto,
-      application: {
-        connect: {
-          id: applicationId,
+    return this.service.create(
+      {
+        ...createLabelDto,
+        application: {
+          connect: {
+            id: applicationId,
+          },
         },
       },
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          description: `Ajout du libellé : ${createLabelDto.value}`,
+      {
+        applicationId,
+        metadata: {
+          userId,
+          gender: "du libellé alternatif",
+          getColumn: (entity) => entity.value,
+          entity: "labelId",
         },
       },
-    });
+    );
   }
 
   @Get()
@@ -109,18 +113,18 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     @Param("id") id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    return this.service.updateWithMetadata({
-      id,
-      data: updateLabelDto,
-      userId,
+    return this.service.update(id, updateLabelDto, {
       applicationId,
-      gender: "du libellé alternatif",
-      entityName: "labelId",
-      metadataFields: {
-        source: "source",
-        value: "valeur",
+      metadata: {
+        userId,
+        entity: "labelId",
+        gender: "du libellé alternatif",
+        getColumn: (entity) => entity.value,
+        fields: {
+          source: "source",
+          value: "valeur",
+        },
       },
-      getName: (entity) => entity.value,
     });
   }
 
@@ -141,12 +145,14 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     @Param("applicationId") applicationId: string,
     @Param("id") id: string,
   ) {
-    await this.service.deleteWithMetadata({
-      id,
-      userId,
+    await this.service.delete(id, {
       applicationId,
-      gender: "du libellé alternatif",
-      name: "value",
+      metadata: {
+        userId,
+        gender: "du libellé alternatif",
+        getColumn: (entity) => entity.value,
+        entity: "labelId",
+      },
     });
   }
 }

@@ -32,3 +32,16 @@ export const AppPermissionsRecord = {
 export const AppPermissionsValues: APP_PERMISSIONS[] = Object.keys(
   AppPermissionsRecord,
 ) as APP_PERMISSIONS[];
+
+export type MetadataConfig<T> = {
+  userId: string;
+  getColumn?: (entity: T) => string;
+  entity: string;
+  gender: string;
+  fields?: Record<string, string>;
+};
+export type ServiceOptions<T> = {
+  applicationId: string;
+  triggerQualityUpdate?: boolean;
+  metadata?: MetadataConfig<T>;
+};

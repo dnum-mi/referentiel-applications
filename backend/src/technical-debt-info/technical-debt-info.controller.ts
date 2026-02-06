@@ -52,22 +52,24 @@ export class ApplicationTechnicalDebtInfoController {
     @Body() createDto: CreateTechnicalDebtInfoDto,
     @Param("applicationId") applicationId: string,
   ) {
-    const created = await this.technicalDebtInfoService.create({
-      ...createDto,
-      application: {
-        connect: {
-          id: applicationId,
+    return await this.technicalDebtInfoService.create(
+      {
+        ...createDto,
+        application: {
+          connect: {
+            id: applicationId,
+          },
         },
       },
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          description: "Ajout des informations de dette technique",
+      {
+        applicationId,
+        metadata: {
+          userId,
+          gender: "des informations de dette technique",
+          entity: "technicalDebtInfoId",
         },
       },
-    });
-    return created;
+    );
   }
 
   @Get()
@@ -113,21 +115,18 @@ export class ApplicationTechnicalDebtInfoController {
         "No technical debt info found for this application",
       );
     }
-    const result = await this.technicalDebtInfoService.updateWithMetadata({
-      id: existing.id,
-      data: updateDto,
-      userId,
+    return await this.technicalDebtInfoService.update(existing.id, updateDto, {
       applicationId,
-      gender: "de la dette technique",
-      entityName: "technicalDebtInfoId",
-      metadataFields: {
-        technicalMaturity: "maturité technique",
-        businessMaturity: "maturité métier",
-        costMaturity: "maturité des coûts",
+      metadata: {
+        userId,
+        gender: "de la dette technique",
+        entity: "technicalDebtInfoId",
+        fields: {
+          technicalMaturity: "maturité technique",
+          businessMaturity: "maturité métier",
+          costMaturity: "maturité des coûts",
+        },
       },
-      getName: () => "",
-      triggerQualityUpdate: false,
     });
-    return result;
   }
 }

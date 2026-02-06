@@ -19,7 +19,6 @@ import {
 } from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
-import { ApplicationService } from "src/product/application.service";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { CompliancesService } from "./compliances.service";
 import {
@@ -51,10 +50,7 @@ export class ComplianceController {
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/compliances")
 export class ApplicationCompliancesController {
-  constructor(
-    private readonly compliancesService: CompliancesService,
-    private readonly applicationService: ApplicationService,
-  ) {}
+  constructor(private readonly compliancesService: CompliancesService) {}
 
   @Post()
   @AppAction("writeCompliances")
@@ -75,23 +71,26 @@ export class ApplicationCompliancesController {
   ) {
     const sections = detectCompliances(Object.keys(createComplianceDto));
     const sectionSuffix = sections.length ? ` (${sections.join(", ")})` : "";
-    const createdCompliance = await this.compliancesService.create({
-      ...createComplianceDto,
-      application: {
-        connect: {
-          id: applicationId,
+    return await this.compliancesService.create(
+      {
+        ...createComplianceDto,
+        application: {
+          connect: {
+            id: applicationId,
+          },
         },
       },
-      metadatas: {
-        create: {
-          applicationId,
-          createdById: userId,
-          description: `Ajout ${sections.length > 1 ? "des conformités" : "d'une première conformité"} ${sectionSuffix}`,
+      {
+        applicationId,
+        triggerQualityUpdate: true,
+        metadata: {
+          userId,
+          gender: "de la conformité",
+          getColumn: (entity) => sectionSuffix,
+          entity: "complianceId",
         },
       },
-    });
-    await this.applicationService.updateApplicationQuality(applicationId);
-    return createdCompliance;
+    );
   }
 
   @Get()
@@ -127,53 +126,55 @@ export class ApplicationCompliancesController {
     }
     const sections = detectCompliances(Object.keys(updateComplianceDto));
     const sectionSuffix = sections.length ? ` (${sections.join(", ")})` : "";
-    const result = await this.compliancesService.updateWithMetadata({
-      id: compliance.id,
-      data: updateComplianceDto,
-      userId,
-      applicationId,
-      gender: sections.length > 1 ? "des conformités" : "de la conformité",
-      entityName: "complianceId",
-      metadataFields: {
-        // DIMA fields
-        dima_duration_hours: "durée DIMA (heures)",
-        dima_is_hno: "HNO DIMA",
-        dima_business_impact: "impact métier DIMA",
-        dima_recovery_plan: "plan de reprise DIMA",
-        dima_recovery_solutions: "solutions de reprise DIMA",
-        dima_last_test_date: "date dernier test DIMA",
-        dima_test_result: "résultat test DIMA",
-        dima_recovery_manager: "responsable reprise DIMA",
-        // PDMA fields
-        pdma_duration_hours: "durée PDMA (heures)",
-        pdma_data_types: "types de données PDMA",
-        pdma_backup_frequency: "fréquence sauvegarde PDMA",
-        pdma_backup_method: "méthode sauvegarde PDMA",
-        pdma_backup_storage: "stockage sauvegarde PDMA",
-        pdma_last_test_date: "date dernier test PDMA",
-        pdma_test_result: "résultat test PDMA",
-        pdma_restoration_manager: "responsable restauration PDMA",
-        // Homologation fields
-        homologation_date_end: "date fin homologation",
-        homologation_rssi_id: "RSSI homologation",
-        homologation_status: "statut d'homologation",
-        // RGAA fields
-        rgaa_audit_date: "date audit RGAA",
-        rgaa_service_url: "URL service RGAA",
-        rgaa_accessibility_url: "URL accessibilité RGAA",
-        rgaa_score_percentage: "score RGAA (%)",
-        // DSFR fields
-        dsfr_implemented: "DSFR implémenté",
-        dsfr_version: "version DSFR",
-        // RGPD fields
-        rgpd_has_aipd: "AIPD RGPD",
-        rgpd_dpo_name: "nom DPO RGPD",
+    const result = await this.compliancesService.update(
+      compliance.id,
+      updateComplianceDto,
+      {
+        applicationId,
+        triggerQualityUpdate: true,
+        metadata: {
+          userId,
+          gender: "de la conformité",
+          entity: "complianceId",
+          getColumn: () => sectionSuffix,
+          fields: {
+            // DIMA fields
+            dima_duration_hours: "durée DIMA (heures)",
+            dima_is_hno: "HNO DIMA",
+            dima_business_impact: "impact métier DIMA",
+            dima_recovery_plan: "plan de reprise DIMA",
+            dima_recovery_solutions: "solutions de reprise DIMA",
+            dima_last_test_date: "date dernier test DIMA",
+            dima_test_result: "résultat test DIMA",
+            dima_recovery_manager: "responsable reprise DIMA",
+            // PDMA fields
+            pdma_duration_hours: "durée PDMA (heures)",
+            pdma_data_types: "types de données PDMA",
+            pdma_backup_frequency: "fréquence sauvegarde PDMA",
+            pdma_backup_method: "méthode sauvegarde PDMA",
+            pdma_backup_storage: "stockage sauvegarde PDMA",
+            pdma_last_test_date: "date dernier test PDMA",
+            pdma_test_result: "résultat test PDMA",
+            pdma_restoration_manager: "responsable restauration PDMA",
+            // Homologation fields
+            homologation_date_end: "date fin homologation",
+            homologation_rssi_id: "RSSI homologation",
+            homologation_status: "statut d'homologation",
+            // RGAA fields
+            rgaa_audit_date: "date audit RGAA",
+            rgaa_service_url: "URL service RGAA",
+            rgaa_accessibility_url: "URL accessibilité RGAA",
+            rgaa_score_percentage: "score RGAA (%)",
+            // DSFR fields
+            dsfr_implemented: "DSFR implémenté",
+            dsfr_version: "version DSFR",
+            // RGPD fields
+            rgpd_has_aipd: "AIPD RGPD",
+            rgpd_dpo_name: "nom DPO RGPD",
+          },
+        },
       },
-      getName: () => `${sectionSuffix}`,
-      triggerQualityUpdate: true,
-    });
-
-    await this.applicationService.updateApplicationQuality(applicationId);
+    );
     return result;
   }
 }

@@ -2,7 +2,7 @@ import type { ApplicationService } from "src/product/application.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { translateEnum } from "./utils/enum.utils";
+import { ServiceOptions } from "./utils/types";
 
 @Injectable()
 export class BaseService<T> {
@@ -29,105 +29,62 @@ export class BaseService<T> {
     return this.model.findMany({ where: filters });
   }
 
-  async create(createDto: any): Promise<T> {
-    return this.model.create({ data: createDto });
+  async create(data: any, options?: ServiceOptions<T>): Promise<T> {
+    const created = await this.model.create({ data });
+
+    if (options)
+      await this.handleMetadataAndQuality(created, "add", options, created.id);
+    return created;
   }
 
-  async update(id: string, data: any): Promise<T> {
-    return this.model.update({
-      where: { id },
-      data,
-    });
+  async update(id: string, data: any, options?: ServiceOptions<T>): Promise<T> {
+    const oldEntity = await this.findOne(id);
+    const updated = await this.model.update({ where: { id }, data });
+
+    if (options)
+      await this.handleMetadataAndQuality(
+        updated,
+        "update",
+        options,
+        id,
+        oldEntity,
+      );
+    return updated;
   }
 
-  async delete(id: string): Promise<T> {
-    await this.findOne(id);
-    return this.model.delete({ where: { id } });
+  async delete(id: string, options?: ServiceOptions<T>): Promise<void> {
+    const deleted = await this.findOne(id);
+    if (options)
+      await this.handleMetadataAndQuality(deleted, "delete", options, id);
+
+    await this.model.delete({ where: { id } });
   }
 
-  async updateWithMetadata(options: {
-    id: string;
-    data: any;
-    userId: string;
-    applicationId: string;
-    gender: string;
-    entityName: string;
-    metadataFields: Record<string, string>;
-    getName?: (entity: T) => string;
-    triggerQualityUpdate?: boolean;
-  }): Promise<T> {
-    const oldEntity = await this.findOne(options.id);
-
-    const updatedEntity = await this.update(options.id, options.data);
-
-    if (options.triggerQualityUpdate) {
+  private async handleMetadataAndQuality(
+    entity: T,
+    type: "add" | "update" | "delete",
+    options: ServiceOptions<T>,
+    entityId: string,
+    oldEntity?: T,
+  ) {
+    if (options.triggerQualityUpdate && options.applicationId)
       await this.applicationService.updateApplicationQuality(
         options.applicationId,
       );
-    }
 
-    try {
+    if (options.metadata && options.applicationId)
       await this.metadataService.createMetadata({
         applicationId: options.applicationId,
-        createdById: options.userId,
-        title: `${options.gender} ${options.getName?.(updatedEntity) ?? ""}`,
-        entity: options.entityName,
-        entityId: options.id,
-        fields: options.metadataFields,
+        createdById: options.metadata.userId,
+        entity: options.metadata.entity,
+        entityId: entityId,
+        title: options.metadata.getColumn?.(entity)
+          ? `${options.metadata.gender} : ${options.metadata.getColumn?.(entity)}`
+          : options.metadata.gender,
+        type,
+        fields: options.metadata.fields,
         oldData: oldEntity,
-        newData: updatedEntity,
+        newData: entity,
       });
-    } catch (err) {
-      console.error(
-        "Erreur lors de la création des métadonnées (update):",
-        err,
-      );
-    }
-
-    return updatedEntity;
-  }
-
-  async deleteWithMetadata(options: {
-    id: string;
-    userId: string;
-    applicationId: string;
-    name: string;
-    gender?: string;
-    translateMap?: Record<string, string>;
-    triggerQualityUpdate?: boolean;
-  }): Promise<void> {
-    const entity = await this.findOne(options.id);
-    if (!entity) {
-      throw new NotFoundException(`${options.id ?? "Élément"} introuvable`);
-    }
-    await this.model.delete({ where: { id: options.id } });
-
-    const entityNameValue = (entity as any)[options.name] ?? "";
-
-    const value = options.translateMap
-      ? translateEnum(options.translateMap, entityNameValue)
-      : entityNameValue;
-
-    if (options.triggerQualityUpdate) {
-      await this.applicationService.updateApplicationQuality(
-        options.applicationId,
-      );
-    }
-
-    try {
-      await this.prisma.metadata.create({
-        data: {
-          applicationId: options.applicationId,
-          createdById: options.userId,
-          action: "delete",
-          description: `Suppression ${options.gender} ${value}`,
-        },
-      });
-    } catch (err) {
-      console.error(
-        "Erreur lors de la création des métadonnées (delete):",
-        err,
-      );
-    }
   }
 }
