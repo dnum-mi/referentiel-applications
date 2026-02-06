@@ -1,48 +1,28 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ActorType, AppPermissions } from "@prisma/client";
-import { CreateActorTypeDto, PatchActorTypeDto } from "./dto/actorType.dto";
+import { BaseService } from "src/common/base.service";
+import { PrismaService } from "src/prisma/prisma.service";
 import { AppPermsDto } from "./dto/app-perms-matrix.dto";
-import { ActorTypeRepository } from "./infrastructure/repository/actorType.repository";
 
 @Injectable()
-export class ActorTypeService {
-  constructor(private readonly ActorTypeRepository: ActorTypeRepository) {}
-
-  public async create(createActorType: CreateActorTypeDto) {
-    return await this.ActorTypeRepository.create(createActorType);
+export class ActorTypeService extends BaseService<ActorType> {
+  constructor(prisma: PrismaService) {
+    super(prisma.actorType, prisma);
   }
 
-  public async findOne(id: string) {
-    const actorType = await this.ActorTypeRepository.findById(id);
-    if (!actorType) {
-      throw new NotFoundException(`Type d'acteur non trouvée pour l'ID ${id}`);
-    }
-    return actorType;
-  }
-
-  public async findAll() {
-    return await this.ActorTypeRepository.findAll();
-  }
-
-  public async getPermsMatrix() {
-    return this.ActorTypeRepository.getPermsMatrix();
+  public async getPermsMatrix(): Promise<AppPermissions[]> {
+    return this.prisma.appPermissions.findMany();
   }
 
   public async updatePermsMatrix(
     matrix: AppPermsDto[],
   ): Promise<AppPermissions[]> {
-    return this.ActorTypeRepository.updatePermsMatrix(
-      matrix as AppPermissions[],
-    );
-  }
-
-  public async update(id: string, data: PatchActorTypeDto): Promise<ActorType> {
-    await this.findOne(id);
-    return this.ActorTypeRepository.update({ id }, data);
-  }
-
-  public async delete(id: string) {
-    await this.findOne(id);
-    return this.ActorTypeRepository.delete(id);
+    for (const perm of matrix) {
+      await this.prisma.appPermissions.update({
+        where: { actorTypeId: perm.actorTypeId },
+        data: perm as AppPermissions,
+      });
+    }
+    return this.getPermsMatrix();
   }
 }
