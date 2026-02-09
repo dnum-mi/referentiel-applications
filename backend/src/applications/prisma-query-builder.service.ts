@@ -401,15 +401,7 @@ export class PrismaQueryBuilder {
       },
     });
 
-    where.AND.push(
-      this.buildRelationsQuery({
-        relationAppId: undefined,
-        is_part_of: "I",
-        in_replacement_of: "N",
-        is_service_user_of: "N",
-        is_data_user_of: "N",
-      }),
-    );
+    where.AND.push(this.buildRelationsQuery(filters));
 
     return where;
   }
