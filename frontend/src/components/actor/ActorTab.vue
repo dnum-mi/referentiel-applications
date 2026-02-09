@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeMount, defineProps, defineEmits } from "vue";
+import { ref, computed, onBeforeMount } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
 import { useActorStore } from "@/stores/actorStore";

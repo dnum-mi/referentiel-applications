@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, watch, onMounted, computed } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { HostingDto, HostingOptionDto } from "@/client/types.gen";

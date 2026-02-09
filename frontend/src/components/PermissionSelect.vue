@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { defineProps } from "vue";
-
 type PermissionValue = "none" | "read" | "write";
 
 const props = withDefaults(

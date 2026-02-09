@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, withDefaults, defineProps, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import type { ApplicationWithPerms } from "@/models/Application";
 import type { CreateLinkDto, UpdateLinkDto, Link } from "@/client/types.gen";
 import { useLinkStore } from "@/stores/linkStore";

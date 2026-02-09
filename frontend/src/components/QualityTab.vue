@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, defineProps } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { Application } from "@/models/Application";
 import { useActorStore } from "@/stores/actorStore";
