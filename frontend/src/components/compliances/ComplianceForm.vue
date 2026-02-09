@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, defineProps, defineEmits, computed } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useComplianceStore } from "@/stores/complianceStore";
 import {
   dimaDurationHoursOptions,

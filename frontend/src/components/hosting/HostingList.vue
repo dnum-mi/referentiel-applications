@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { defineProps } from "vue";
 import type { HostingDto } from "@/client/types.gen";
 
 defineProps<{ hostings: HostingDto[] }>();

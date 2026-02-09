@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed, onMounted, defineExpose } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 
 interface Props<T> {
   id?: string;

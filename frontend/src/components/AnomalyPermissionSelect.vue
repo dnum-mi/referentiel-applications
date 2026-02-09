@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
-import { defineProps } from "vue";
 
 type AnomalyValue = "read" | "post" | "manage";
 const props = defineProps<{
