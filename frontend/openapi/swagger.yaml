@@ -816,6 +816,52 @@ paths:
           schema:
             default: false
             type: string
+        - name: is_part_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Fait partie de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: in_replacement_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Remplace
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: is_service_user_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise le service de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: is_data_user_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise la donnée de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: relationAppId
+          required: false
+          in: query
+          description: Filtrage des relations sur cette app
+          schema:
+            type: string
       responses:
         "200":
           description: Liste des applications correspondant aux critères de recherche avec
@@ -1140,6 +1186,52 @@ paths:
             defaut: false"
           schema:
             default: false
+            type: string
+        - name: is_part_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Fait partie de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: in_replacement_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Remplace
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: is_service_user_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise le service de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: is_data_user_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise la donnée de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: relationAppId
+          required: false
+          in: query
+          description: Filtrage des relations sur cette app
+          schema:
             type: string
       responses:
         "200":
@@ -3367,6 +3459,52 @@ paths:
             defaut: false"
           schema:
             default: false
+            type: string
+        - name: is_part_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Fait partie de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: in_replacement_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Remplace
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: is_service_user_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise le service de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: is_data_user_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise la donnée de
+          schema:
+            enum:
+              - N
+              - I
+              - E
+            type: string
+        - name: relationAppId
+          required: false
+          in: query
+          description: Filtrage des relations sur cette app
+          schema:
             type: string
       responses:
         "200":

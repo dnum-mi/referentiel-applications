@@ -12,6 +12,7 @@ import {
   Min,
 } from "class-validator";
 import { PaginationDto } from "src/common/dto";
+import { RelationTypeFilter } from "src/product/application/dto/relation-type.dto";
 import { stringToBoolean } from "src/utils/functions";
 
 export class ApplicationSearchDto extends PaginationDto {
@@ -256,4 +257,43 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsOptional()
   @Type(() => Boolean)
   isActor?: boolean = false;
+
+  @ApiPropertyOptional({
+    description: "Filtrée sur la relation de type Fait partie de",
+    enum: ["N", "I", "E"],
+  })
+  @IsOptional()
+  @IsEnum(["N", "I", "E"])
+  is_part_of?: RelationTypeFilter;
+
+  @ApiPropertyOptional({
+    description: "Filtrée sur la relation de type Remplace",
+    enum: ["N", "I", "E"],
+  })
+  @IsOptional()
+  @IsEnum(["N", "I", "E"])
+  in_replacement_of?: RelationTypeFilter;
+
+  @ApiPropertyOptional({
+    description: "Filtrée sur la relation de type Utilise le service de",
+    enum: ["N", "I", "E"],
+  })
+  @IsOptional()
+  @IsEnum(["N", "I", "E"])
+  is_service_user_of?: RelationTypeFilter;
+
+  @ApiPropertyOptional({
+    description: "Filtrée sur la relation de type Utilise la donnée de",
+    enum: ["N", "I", "E"],
+  })
+  @IsOptional()
+  @IsEnum(["N", "I", "E"])
+  is_data_user_of?: RelationTypeFilter;
+
+  @ApiPropertyOptional({
+    description: "Filtrage des relations sur cette app",
+  })
+  @IsOptional()
+  @IsString()
+  relationAppId?: string;
 }

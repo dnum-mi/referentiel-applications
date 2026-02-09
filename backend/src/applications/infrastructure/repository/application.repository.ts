@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, RelationType } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationSearchResultDto } from "src/applications/dto/get-application.dto";
@@ -10,6 +10,7 @@ import {
   ApplicationSearchFilters,
   IApplicationRepository,
 } from "./application.repository.interface";
+import { RelationTypeFilter } from "src/product/application/dto/relation-type.dto";
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
@@ -446,7 +447,90 @@ export class ApplicationRepository implements IApplicationRepository {
       },
     });
 
+    // where.AND.push(this.buildRelationsQuery({
+    //   relationAppId: '89579e84-b183-4ac7-b16a-7776b3637b5f',
+    //   is_part_of: 'E',
+    //   in_replacement_of: 'E',
+    //   is_service_user_of: 'E',
+    //   is_data_user_of: 'E',
+    // }))
+
     return where;
+  }
+
+  private buildRelationsQuery(
+    filters: ApplicationSearchFilters,
+  ): Prisma.ApplicationWhereInput {
+    const includeQueries: Prisma.ApplicationWhereInput[] = [];
+    const excludeQueries: Prisma.ApplicationWhereInput[] = [];
+    const RELATION_TYPE_TO_SIDE = {
+      is_part_of: {
+        side: "relationsAsSource",
+        foreignKey: "applicationTargetId",
+      },
+      in_replacement_of: {
+        side: "relationsAsTarget",
+        foreignKey: "applicationSourceId",
+      },
+      is_service_user_of: {
+        side: "relationsAsSource",
+        foreignKey: "applicationTargetId",
+      },
+      is_data_user_of: {
+        side: "relationsAsSource",
+        foreignKey: "applicationTargetId",
+      },
+    } as const;
+
+    const buildRelationQuery = (
+      type: RelationType,
+      value?: RelationTypeFilter,
+      relationAppId?: string,
+    ) => {
+      const relationTypeToSide = RELATION_TYPE_TO_SIDE[type];
+      const query: Prisma.ApplicationWhereInput = {
+        [relationTypeToSide.side]: {
+          some: {
+            [relationTypeToSide.foreignKey]: relationAppId,
+            type,
+          },
+        },
+      };
+      switch (value) {
+        case "I":
+          includeQueries.push(query);
+          return;
+        case "E":
+          excludeQueries.push({
+            NOT: query,
+          });
+          return;
+        case "N":
+        default:
+          return;
+      }
+    };
+
+    buildRelationQuery("is_part_of", filters.is_part_of, filters.relationAppId);
+    buildRelationQuery(
+      "in_replacement_of",
+      filters.in_replacement_of,
+      filters.relationAppId,
+    );
+    buildRelationQuery(
+      "is_service_user_of",
+      filters.is_service_user_of,
+      filters.relationAppId,
+    );
+    buildRelationQuery(
+      "is_data_user_of",
+      filters.is_data_user_of,
+      filters.relationAppId,
+    );
+
+    return {
+      AND: [...excludeQueries, { OR: includeQueries }],
+    };
   }
 
   private buildOrderBy(
