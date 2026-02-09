@@ -12,6 +12,7 @@ import { ExportApplicationsUseCase } from "./usecases/application-export.usecase
 import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { ApplicationViewService } from "./view.service";
+import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ApplicationViewService } from "./view.service";
     ApplicationViewService,
     ExportApplicationsUseCase,
     ApplicationRepository,
+    PrismaQueryBuilder,
   ],
   exports: [
     ApplicationExportService,

@@ -18,6 +18,7 @@ import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { ApplicationViewService } from "./view.service";
+import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -34,6 +35,7 @@ export class ApplicationService {
     private readonly labelsService: LabelsService,
     private readonly metadataService: MetadatasService,
     private readonly applicationViewService: ApplicationViewService,
+    private readonly prismaQueryBuilder: PrismaQueryBuilder,
     @Inject(appConfig.KEY)
     private readonly appConf: ConfigType<typeof appConfig>,
   ) {}
@@ -260,28 +262,38 @@ export class ApplicationService {
     requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
     let paginatedResult: ApplicationSearchResultDto;
+    const { sortBy = "shortName", order = "asc" } = searchParams;
+    const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
     if (searchParams.isActor && requestor) {
+      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
+        actorEmail: requestor.email,
+      });
       paginatedResult = await this.applicationRepository.findApplications(
         searchParams,
-        {
-          actorEmail: requestor.email,
-        },
+        where,
+        orderBy,
       );
-    } else if (
+    }
+    if (
       !this.appConf.nonActorPermissions.includes("readBase") &&
       requestor?.adminLevel < AdminLevel.READ
     ) {
+      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
+        actorEmail: requestor.email,
+      });
       paginatedResult = await this.applicationRepository.findApplications(
         searchParams,
-        {
-          actorEmail: requestor.email,
-        },
+        where,
+        orderBy,
       );
-    } else {
-      paginatedResult =
-        await this.applicationRepository.findApplications(searchParams);
     }
+    const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
+    paginatedResult = await this.applicationRepository.findApplications(
+      searchParams,
+      where,
+      orderBy,
+    );
 
     const dataWithViews = paginatedResult.results.map((app: any) => {
       const { _count, ...rest } = app;
@@ -302,20 +314,35 @@ export class ApplicationService {
     searchParams: ApplicationSearchDto,
     requestor?: Requestor,
   ): Promise<TechnicalDebtPointDto[]> {
+    const { sortBy = "shortName", order = "asc" } = searchParams;
+    const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
+
     if (searchParams.isActor && requestor) {
-      return this.applicationRepository.findTechnicalDebtPoints(searchParams, {
+      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
         actorEmail: requestor.email,
       });
+      const whereBuildTechnicalDebtInfo =
+        this.prismaQueryBuilder.buildTechnicalDebtInfo();
+      where.AND.push(whereBuildTechnicalDebtInfo);
+      return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
     if (
       !this.appConf.nonActorPermissions.includes("readBase") &&
       requestor?.adminLevel < AdminLevel.READ
     ) {
-      return this.applicationRepository.findTechnicalDebtPoints(searchParams, {
+      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
         actorEmail: requestor.email,
       });
+      const whereBuildTechnicalDebtInfo =
+        this.prismaQueryBuilder.buildTechnicalDebtInfo();
+      where.AND.push(whereBuildTechnicalDebtInfo);
+      return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
-    return this.applicationRepository.findTechnicalDebtPoints(searchParams);
+    const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
+    const whereBuildTechnicalDebtInfo =
+      this.prismaQueryBuilder.buildTechnicalDebtInfo();
+    where.AND.push(whereBuildTechnicalDebtInfo);
+    return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
   }
 
   public async exportApplications(): Promise<any[]> {
