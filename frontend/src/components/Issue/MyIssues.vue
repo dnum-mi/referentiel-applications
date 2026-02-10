@@ -1,23 +1,27 @@
 <script setup lang="ts">
-import { onMounted, computed, ref, watch } from "vue";
-import { routeNames } from "@/router/route-names";
-import { useUserStore } from "@/stores/userStore";
-import { formatDate } from "@/composables/use-date";
 import api from "@/api";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
-import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
-import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
-import type { GenericRow } from "@/utils/types";
 import type { AnomalyNotificationPaginatedResponseDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
+import { formatDate } from "@/composables/use-date";
+import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { routeNames } from "@/router/route-names";
+import { useUserStore } from "@/stores/userStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
-import ReportStatusTag from "./ReportStatusTag.vue";
+import type { GenericRow } from "@/utils/types";
+import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
+import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
+import { computed, ref, watch } from "vue";
+
+const props = defineProps<{
+  isActive: boolean;
+}>();
 
 const title = "Liste de tous les signalements d'applications";
 const headers = [
   { key: "application", label: "Application" },
   { key: "notifier", label: "Signalant" },
   { key: "description", label: "Description" },
+  { key: "notes", label: "Notes" },
   { key: "date", label: "Date" },
   { key: "status", label: "Statut" },
 ] as const satisfies DsfrDataTableHeaderCell[];
@@ -51,7 +55,8 @@ const rows = computed(() =>
       },
       notifier: report.notifier?.email || "Inconnu",
       description: report.description,
-      date: formatDate(report.createdAt),
+      notes: report.notes,
+      date: formatDate(report.updatedAt),
       status: {
         report,
         isEditing: isEditing.value,
@@ -99,9 +104,15 @@ function onPage(event: any) {
   itemsPerPage.value = event.rows;
 }
 
-onMounted(async () => {
-  await fetchAllReportsDirect();
-});
+watch(
+  () => props.isActive,
+  async (isActive) => {
+    if (isActive) {
+      await fetchAllReportsDirect();
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -168,6 +179,17 @@ onMounted(async () => {
       <template #body-description="{ data }">
         <p class="text-wrap">
           {{ data.description }}
+        </p>
+      </template>
+
+      <template #body-notes="{ data }">
+        <p class="text-wrap">
+          <Notes
+            :notes="data.notes"
+            :report-id="data.status.report.id"
+            :is-editing="data.status.isEditing"
+            @refresh="fetchAllReportsDirect()"
+          />
         </p>
       </template>
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import allIssues from "@/components/Issue/AllIssues.vue";
 import MyIssues from "@/components/Issue/MyIssues.vue";
+import { ref } from "vue";
 
 const activeTab = ref(0);
 const applicationTabListName = "Informations sur les signalements";
@@ -35,7 +35,7 @@ const tabs = [
           :panel-id="tab.panelId"
           :data-testid="`issues-tab-content-${tab.tabId}`"
         >
-          <component :is="tab.component" :data-testid="`issues-tab-component-${tab.tabId}`" />
+          <component :is="tab.component" :data-testid="`issues-tab-component-${tab.tabId}`" :is-active="activeTab === index" />
         </DsfrTabContent>
       </template>
     </DsfrTabs>

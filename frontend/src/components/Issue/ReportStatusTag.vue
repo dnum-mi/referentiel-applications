@@ -35,9 +35,9 @@ const reportStore = useReportIssueStore();
 async function updateStatus(newValue: AnomalyNotificationStatus) {
   try {
     if (props.report.applicationId) {
-      await reportStore.updateReport(props.report.id, props.report.applicationId, newValue);
+      await reportStore.updateReport(props.report.id, props.report.applicationId, newValue, true);
     } else {
-      await reportStore.updateReport(props.report.id, "", newValue);
+      await reportStore.updateReport(props.report.id, "", newValue, true);
     }
   } catch (err) {
     console.error("Erreur lors de la mise à jour du statut :", err);

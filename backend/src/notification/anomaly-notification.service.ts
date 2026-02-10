@@ -135,6 +135,7 @@ export class AnomalyNotificationsService {
       date: { createdAt: order },
       status: { status: order },
       signalant: { notifier: { email: order } },
+      notes: { notes: order },
     };
 
     const orderBy = sortOptions[sortBy];
@@ -187,6 +188,10 @@ export class AnomalyNotificationsService {
     return this.prisma.anomalyNotification.update({
       where: { id },
       data,
+      include: {
+        notifier: true,
+        application: true,
+      },
     });
   }
 

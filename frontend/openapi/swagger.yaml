@@ -1944,6 +1944,7 @@ paths:
               - date
               - description
               - signalant
+              - notes
             type: string
         - name: order
           required: false
@@ -2002,6 +2003,13 @@ paths:
           in: path
           schema:
             type: string
+        - name: notify
+          required: true
+          in: query
+          description: Send Notification Email
+          schema:
+            example: "true"
+            type: boolean
       requestBody:
         required: true
         content:
@@ -2070,6 +2078,7 @@ paths:
               - date
               - description
               - signalant
+              - notes
             type: string
         - name: order
           required: false
@@ -4475,6 +4484,9 @@ components:
           type: string
         description:
           type: string
+        notes:
+          type: string
+          default: ""
       required:
         - description
     UpdateAnomalyNotificationDto:
@@ -4490,6 +4502,9 @@ components:
             - in_pending
             - in_progress
             - done
+        notes:
+          type: string
+          description: La note de la notification d'anomalie
     GetIqAvgGroupedDto:
       type: object
       properties:
