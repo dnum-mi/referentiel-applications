@@ -91,6 +91,12 @@ erDiagram
   String applicationSourceId FK
   String applicationTargetId FK
 }
+"ApplicationView" {
+  String id PK
+  DateTime createdAt
+  String userId FK
+  String applicationId FK
+}
 "ExternalRessource" {
   String id PK
   String link
@@ -132,6 +138,7 @@ erDiagram
 "ApplicationStatus" }o--|| "Application" : application
 "Relation" }o--|| "Application" : sourceApplication
 "Relation" }o--|| "Application" : targetApplication
+"ApplicationView" }o--|| "Application" : application
 "ExternalRessource" }o--|| "Application" : application
 "Label" }o--|| "Application" : application
 "TechnicalDebtInfo" |o--|| "Application" : application
@@ -184,6 +191,17 @@ Properties as follows:
 - `type`: Le type de relation (dépendance, remplacement, etc.)
 - `applicationSourceId`: Identifiant de l'application source dans cette relation
 - `applicationTargetId`: Identifiant de l'application cible dans cette relation
+
+### `ApplicationView`
+
+Log de consultation des applications
+
+Properties as follows:
+
+- `id`: Identifiant unique du log de consultation
+- `createdAt`: Quand ce log a été créé
+- `userId`: Identifiant de l'utilisateur qui a consulté dans ce log
+- `applicationId`: Identifiant de l'application consultée
 
 ### `ExternalRessource`
 
@@ -509,7 +527,6 @@ erDiagram
 }
 "User" {
   String id PK
-  String keycloakId UK "nullable"
   String email UK
   DateTime lastLogin "nullable"
   String organizationId FK "nullable"
@@ -597,7 +614,6 @@ Peut être soit un utilisateur humain soit un compte de service.
 Properties as follows:
 
 - `id`: Identifiant unique
-- `keycloakId`: Identifiant SSO Keycloak
 - `email`: Adresse email de l'utilisateur
 - `lastLogin`: Horodatage de la dernière connexion
 - `organizationId`: Id de l'organisation à laquelle l'utilisateur appartient

@@ -201,6 +201,10 @@ function onColumnResize(event: { field: string; width: string }) {
     <template #body-status="{ data }">
       {{ data.statusDisplay }}
     </template>
+
+    <template #body-applicationViews="{ data }">
+      {{ data.applicationViews }}
+    </template>
   </RefAppTable>
 </template>
 

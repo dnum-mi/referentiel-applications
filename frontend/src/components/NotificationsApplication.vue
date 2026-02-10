@@ -126,6 +126,8 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
   </div>
 
   <DsfrAccordionsGroup v-else v-model="activeAccordion">
+    <p>Nombre de consultations de l'application sur les 12 derniers mois : {{ props.application?.views }}</p>
+    <h4>Historique des modifications et demande de corrections</h4>
     <RefAppTable
       :items="rows"
       :columns="tableColumns"

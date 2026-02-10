@@ -17,6 +17,7 @@ import { ApplicationSearchResultDto } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
+import { ApplicationViewService } from "./view.service";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -32,6 +33,7 @@ export class ApplicationService {
     private readonly tagsService: TagsService,
     private readonly labelsService: LabelsService,
     private readonly metadataService: MetadatasService,
+    private readonly applicationViewService: ApplicationViewService,
     @Inject(appConfig.KEY)
     private readonly appConf: ConfigType<typeof appConfig>,
   ) {}
@@ -257,20 +259,43 @@ export class ApplicationService {
     searchParams: ApplicationSearchDto,
     requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
+    let paginatedResult: ApplicationSearchResultDto;
+
     if (searchParams.isActor && requestor) {
-      return this.applicationRepository.findApplications(searchParams, {
-        actorEmail: requestor.email,
-      });
-    }
-    if (
+      paginatedResult = await this.applicationRepository.findApplications(
+        searchParams,
+        {
+          actorEmail: requestor.email,
+        },
+      );
+    } else if (
       !this.appConf.nonActorPermissions.includes("readBase") &&
       requestor?.adminLevel < AdminLevel.READ
     ) {
-      return this.applicationRepository.findApplications(searchParams, {
-        actorEmail: requestor.email,
-      });
+      paginatedResult = await this.applicationRepository.findApplications(
+        searchParams,
+        {
+          actorEmail: requestor.email,
+        },
+      );
+    } else {
+      paginatedResult =
+        await this.applicationRepository.findApplications(searchParams);
     }
-    return this.applicationRepository.findApplications(searchParams);
+
+    const dataWithViews = paginatedResult.results.map((app: any) => {
+      const { _count, ...rest } = app;
+
+      return {
+        ...rest,
+        applicationViews: _count?.applicationViews ?? 0,
+      };
+    });
+
+    return {
+      ...paginatedResult,
+      results: dataWithViews,
+    };
   }
 
   public async getTechnicalDebtPoints(
@@ -297,7 +322,7 @@ export class ApplicationService {
     return this.applicationRepository.findAllWithFullRelations();
   }
 
-  public async getApplicationById(applicationId: string) {
+  public async getApplicationById(applicationId: string, user?: Requestor) {
     const application =
       await this.applicationRepository.findById(applicationId);
 
@@ -306,7 +331,16 @@ export class ApplicationService {
         `Application non trouvée pour l'ID: ${applicationId}`,
       );
     }
-    return { ...application, tags: application.tags.map((tag) => tag.name) };
+
+    if (user)
+      await this.applicationViewService.createView(applicationId, user.id);
+
+    const views = await this.applicationViewService.getView(applicationId);
+    return {
+      ...application,
+      tags: application.tags.map((tag) => tag.name),
+      views,
+    };
   }
 
   public async deleteApplication(id: string): Promise<void> {

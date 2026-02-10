@@ -11,6 +11,7 @@ import { ApplicationService } from "./application.service";
 import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
+import { ApplicationViewService } from "./view.service";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ApplicationRepository } from "./infrastructure/repository/application.r
   providers: [
     ApplicationService,
     ApplicationExportService,
+    ApplicationViewService,
     ExportApplicationsUseCase,
     ApplicationRepository,
   ],

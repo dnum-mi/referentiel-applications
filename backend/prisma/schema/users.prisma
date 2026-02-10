@@ -31,6 +31,8 @@ model User {
   capabilities              CapabilityNames[]
   /// Applications suivies par cet utilisateur pour les notifications
   followedApplications      Application[]         @relation("UserFollowedApplications")
+  /// Applications consultées par cet utilisateur
+  applicationViews          ApplicationView[]
   /// Si les notifications par email sont activées
   emailNotificationsEnabled Boolean               @default(true)
 }
