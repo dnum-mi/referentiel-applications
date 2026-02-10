@@ -52,7 +52,7 @@ model Compliance {
   /// Identifiant du RSSI (Responsable de la Sécurité des Systèmes d'Information) pour l'homologation
   homologation_rssi_id     String?
   /// RSSI (Responsable de la Sécurité des Systèmes d'Information) pour l'homologation
-  homologation_rssi        Actor?         @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
+  homologation_rssi        Actor?              @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
 
   /// RGAA : Date de l'audit d'accessibilité
   rgaa_audit_date        DateTime?

@@ -465,6 +465,11 @@ export class ApplicationRepository implements IApplicationRepository {
       priorityRestart: { priorityRestart: safeOrder },
       quality: { quality: safeOrder },
       label: { label: safeOrder },
+      applicationViews: {
+        applicationViews: {
+          _count: safeOrder,
+        },
+      },
     };
 
     const sortKey = sortBy ?? "shortName";
@@ -479,6 +484,9 @@ export class ApplicationRepository implements IApplicationRepository {
     const { page, pageSize, sortBy = "shortName", order = "asc" } = filters;
     const where = this.buildSearchWhere(filters, ownership);
     const orderBy = this.buildOrderBy(sortBy, order);
+
+    const since = new Date();
+    since.setMonth(since.getMonth() - 12);
 
     const paginatedResult = await this.prisma.application.paginate({
       where,
@@ -505,6 +513,15 @@ export class ApplicationRepository implements IApplicationRepository {
         labels: true,
         externalRessource: true,
         tags: true,
+        _count: {
+          select: {
+            applicationViews: {
+              where: {
+                createdAt: { gte: since },
+              },
+            },
+          },
+        },
       },
     });
 

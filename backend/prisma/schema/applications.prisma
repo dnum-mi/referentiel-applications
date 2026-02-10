@@ -47,6 +47,8 @@ model Application {
   labels            Label[]            @relation("ApplicationLabels")
   /// Tags pour la catégorisation
   tags              Tag[]
+  /// Consultations de l'application
+  applicationViews  ApplicationView[]
   /// Informations sur la dette technique
   technicalDebtInfo TechnicalDebtInfo? @relation("ApplicationTechnicalDebtInfo")
 
@@ -134,13 +136,14 @@ enum priorityRestart {
   R3
 }
 
-
 /// Statut du cycle de vie d'une application
 ///
 /// @namespace Applications
 enum Status {
   /// Application en cours de construction
   under_construction
+  /// Application à valider
+  to_validate
   /// Phase de preuve de concept
   poc
   /// Produit minimum viable en production
@@ -169,4 +172,26 @@ enum ApplicationType {
   website_communication
   /// Intranet / site de communication
   intranet_communication_website
+}
+
+/// Log de consultation des applications
+///
+/// @namespace Applications
+model ApplicationView {
+  /// Identifiant unique du log de consultation
+  id            String      @id @default(cuid())
+  /// Quand ce log a été créé
+  createdAt     DateTime    @default(now())
+  /// Identifiant de l'utilisateur qui a consulté dans ce log
+  userId        String
+  /// Identifiant de l'application consultée
+  applicationId String
+  /// L'utilisateur qui a consulté dans ce log
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// L'application consultée dans ce log
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
+  @@index([userId, createdAt])
+  @@index([applicationId, userId, createdAt])
 }

@@ -131,6 +131,14 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     visible: false,
     alwaysAvailable: true,
   },
+  {
+    field: "applicationViews",
+    header: "Nombre de consultations",
+    sortable: true,
+    defaultWidth: "100px",
+    visible: false,
+    alwaysAvailable: true,
+  },
 ];
 
 export const DEFAULT_VISIBLE_COLUMNS = AVAILABLE_COLUMNS.filter((col) => col.visible).map((col) => col.field);

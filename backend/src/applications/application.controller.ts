@@ -233,8 +233,11 @@ Le paramètre **id** doit être fourni dans l'URL.
     description: "Application trouvée avec succès",
     type: ApplicationDto,
   })
-  async findOne(@Param("applicationId") id: string): Promise<ApplicationDto> {
-    return this.applicationService.getApplicationById(id);
+  async findOne(
+    @Param("applicationId") id: string,
+    @User() user: Requestor,
+  ): Promise<ApplicationDto> {
+    return this.applicationService.getApplicationById(id, user);
   }
 
   @Get("data-quality/update")
