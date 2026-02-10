@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, toRef, watch } from "vue";
 import api from "@/api/index";
 import { RelationType } from "@/client/types.gen";
 import type { ApplicationDto, RelationDto } from "@/client/types.gen";
@@ -21,10 +21,21 @@ const emit = defineEmits<{
   (e: "updateRelation", updatedRelation: RelationDto): void;
 }>();
 const { searchApplications } = useApplicationSearch();
-const searchText = ref("");
 const suggestions = ref<ApplicationDto[]>([]);
 const selectedApplication = ref<Required<Pick<ApplicationDto, "id" | "label">> | null>(null);
 const relationTypeSelected = ref<RelationType>(RelationType.IS_PART_OF);
+
+watch(
+  () => props.relation,
+  (newRelation) => {
+    if (newRelation) {
+      selectedApplication.value = newRelation.targetApplication ?? null;
+      relationTypeSelected.value = newRelation.type ?? RelationType.IS_PART_OF;
+    }
+  },
+  { immediate: true },
+);
+
 const relationTypesForSelect = [
   { value: RelationType.IS_PART_OF, text: "Fait partie de" },
   { value: RelationType.IN_REPLACEMENT_OF, text: "Remplace" },
@@ -35,71 +46,38 @@ const errorMessage = ref<string>("");
 
 const isLoading = ref(false);
 
-function debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
-  let timeout: ReturnType<typeof setTimeout>;
-  return function (this: any, ...args: any[]) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func.apply(this, args), delay);
-  } as T;
-}
-
 async function performSearch(query: string) {
   if (query && query.length >= 3) {
-    isLoading.value = true;
+    isLoading!.value = true;
     try {
       const response = await searchApplications(
         {
           search: query,
           pageSize: 10,
+          is_part_of: "N",
+          is_data_user_of: "N",
+          is_service_user_of: "N",
+          in_replacement_of: "N",
+          relationAppId: undefined,
         },
         false,
       );
-      suggestions.value = response.results || [];
+      return response.results;
     } catch (error) {
       console.error(error);
       errorMessage.value = "Erreur lors de la recherche d'applications.";
-      suggestions.value = [];
+      return [];
     } finally {
       isLoading.value = false;
     }
-  } else {
-    suggestions.value = [];
   }
+  return [];
 }
 
-const debouncedSearch = debounce(performSearch, 300);
-
-watch(searchText, (newVal) => {
-  debouncedSearch(newVal);
-});
-
-watch(
-  () => props.relation,
-  (newRelation) => {
-    if (newRelation) {
-      relationTypeSelected.value = newRelation.type;
-      if (newRelation.targetApplication) {
-        selectedApplication.value = {
-          id: newRelation.targetApplication.id,
-          label: newRelation.targetApplication.label,
-        };
-        searchText.value = newRelation.targetApplication.label;
-      } else {
-        selectedApplication.value = null;
-        searchText.value = "";
-      }
-    } else {
-      relationTypeSelected.value = RelationType.IS_PART_OF;
-      selectedApplication.value = null;
-      searchText.value = "";
-    }
-  },
-  { immediate: true },
-);
-
-function selectApplication(app: ApplicationDto) {
-  selectedApplication.value = app;
-  searchText.value = app.label;
+function selectApplication(app?: Pick<ApplicationDto, "id" | "label">) {
+  if (app) {
+    selectedApplication.value = app;
+  }
   suggestions.value = [];
 }
 
@@ -170,25 +148,17 @@ function closeModal() {
           data-testid="edit-relation-type-select"
         />
       </div>
-      <DsfrInput
-        v-model="searchText"
+      <SuggestionsInput
+        @update:selected-value="selectApplication"
+        :search-data-function="performSearch"
         label="Rechercher une application"
         placeholder="Tapez au moins 3 caractères"
-        data-testid="edit-relation-search-input"
-      />
-      <div v-if="isLoading" data-testid="edit-relation-loading">Chargement...</div>
-      <ul v-if="suggestions.length" class="suggestions-list" data-testid="edit-relation-suggestions">
-        <li v-for="app in suggestions" :key="app.id" class="suggestion-item">
-          <button
-            type="button"
-            class="suggestion-button"
-            :data-testid="`edit-relation-suggestion-${app.id}`"
-            @click="selectApplication(app)"
-          >
-            {{ app.label }}
-          </button>
-        </li>
-      </ul>
+        data-testid="relation-suggestions-input"
+      >
+        <template v-slot:application-label>
+          <DsfrTag v-if="selectedApplication?.label" :label="selectedApplication.label" :small="false" style="margin-top: 15px" />
+        </template>
+      </SuggestionsInput>
     </template>
     <template #footer>
       <DsfrButton label="Sauvegarder" data-testid="edit-relation-save-btn" @click="submitRelationUpdate" />
