@@ -1,69 +1,58 @@
 <script lang="ts" setup>
+import type { ApplicationDto } from "@/client";
 import { generateId } from "@/utils/generator-utils";
-import { ref, watch, defineEmits, onBeforeMount } from "vue";
+import { ref, watch } from "vue";
 
 const props = defineProps<{
   searchData?: Array<{ id: string; label: string }>;
   searchDataFunction?: (query: string) => Promise<Array<{ id: string; label: string }>>;
-  returnData: string;
   label: string;
   placeholder: string;
 }>();
 
-const emit = defineEmits(["update:returnData"]);
+const emit = defineEmits<{
+  "update:selectedValue": [application?: Pick<ApplicationDto, "id" | "label">];
+}>();
 const inputId = generateId("suggestions-input");
 const searchSuggestion = ref("");
 const isLoading = ref(false);
 const suggestions = ref<Array<{ id: string; label: string }>>([]);
-const defaultData = ref(props.returnData);
 
-function selectSuggestion(suggestion: { id: string; label: string }) {
+const input = ref("");
+
+function selectSuggestion(suggestion: Pick<ApplicationDto, "id" | "label">) {
   searchSuggestion.value = suggestion.label;
-  emit("update:returnData", suggestion.id);
+  emit("update:selectedValue", suggestion);
   suggestions.value = [];
+  input.value = "";
 }
 
-watch(searchSuggestion, (newValue) => {
-  if (newValue.length >= 3) {
-    isLoading.value = true;
-    if (props.searchDataFunction) {
-      props.searchDataFunction(newValue).then((data) => {
+watch(input, (newValue) => {
+  isLoading.value = true;
+  if (props.searchDataFunction) {
+    props
+      .searchDataFunction(newValue)
+      .then((data) => {
         suggestions.value = data;
+      })
+      .finally(() => {
         isLoading.value = false;
       });
-    } else {
-      suggestions.value = (props.searchData || []).filter((sug) => sug?.label?.toLowerCase().includes(newValue.toLowerCase()));
-      isLoading.value = false;
-    }
-  } else {
-    suggestions.value = [];
   }
 });
 
-watch(
-  () => props.returnData,
-  (newValue) => {
-    defaultData.value = newValue;
-    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === newValue);
-    searchSuggestion.value = foundSuggestion?.label ?? "";
-  },
-);
-
-onBeforeMount(() => {
-  if (defaultData.value) {
-    const foundSuggestion = (props.searchData || []).find((sug) => sug.id === defaultData.value);
-    foundSuggestion ? (searchSuggestion.value = foundSuggestion.label) : (searchSuggestion.value = "");
-  }
-});
+const resetInput = () => {
+  searchSuggestion.value = "";
+  emit("update:selectedValue", undefined);
+};
 </script>
 
 <template>
   <div data-testid="suggestions-input">
     <label class="fr-label" :for="inputId">{{ props.label }}</label>
-    <DsfrInput :id="inputId" v-model="searchSuggestion" :label="props.label" :placeholder="props.placeholder" />
+    <DsfrInput :id="inputId" v-model="input" :label="props.label" :placeholder="props.placeholder" />
 
     <div v-if="isLoading" data-testid="suggestions-loading">Chargement ...</div>
-
     <ul v-if="suggestions.length" class="suggestions-list" data-testid="suggestions-list">
       <li
         v-for="suggestion in suggestions"
@@ -75,6 +64,18 @@ onBeforeMount(() => {
         {{ suggestion.label }}
       </li>
     </ul>
+    <slot name="application-label">
+      <DsfrTag
+        v-if="searchSuggestion"
+        :label="searchSuggestion"
+        :selected="false"
+        :value="searchSuggestion"
+        selectable
+        style="margin-top: 15px"
+        @select="resetInput"
+        class="fr-tag--dismiss"
+      />
+    </slot>
   </div>
 </template>
 

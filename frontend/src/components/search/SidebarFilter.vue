@@ -70,6 +70,15 @@ const { openAccordions, toggle } = useAccordionManager(3, true);
         >
           <ComplianceFilter />
         </DsfrAccordion>
+
+        <DsfrAccordion
+          :selected="openAccordions.includes(5)"
+          title="Relations"
+          data-testid="sidebar-accordion-relations"
+          @click="toggle(5)"
+        >
+          <RelationFilter />
+        </DsfrAccordion>
       </div>
     </aside>
   </Transition>

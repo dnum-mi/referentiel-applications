@@ -61,6 +61,10 @@ function parseQueryParam(value: QueryParam): string | undefined {
   return value ?? undefined;
 }
 
+function parseQueryParamsEnum<const T extends string>(value: QueryParam): T | undefined {
+  return parseQueryParam(value) as T | undefined;
+}
+
 function parseQueryParamBoolean(value: QueryParam): boolean | undefined {
   const str = parseQueryParam(value);
   if (str === "true") return true;
@@ -156,6 +160,11 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     missingMoa: parseQueryParamBoolean(query.missingMoa),
     missingMoe: parseQueryParamBoolean(query.missingMoe),
     missingHosting: parseQueryParamBoolean(query.missingHosting),
+    is_part_of: parseQueryParamsEnum(query.is_part_of) ?? DEFAULT_FILTERS.is_part_of,
+    in_replacement_of: parseQueryParamsEnum(query.in_replacement_of) ?? DEFAULT_FILTERS.in_replacement_of,
+    is_service_user_of: parseQueryParamsEnum(query.is_service_user_of) ?? DEFAULT_FILTERS.is_service_user_of,
+    is_data_user_of: parseQueryParamsEnum(query.is_data_user_of) ?? DEFAULT_FILTERS.is_data_user_of,
+    relationAppId: parseQueryParam(query.relationAppId),
   };
 }
 
