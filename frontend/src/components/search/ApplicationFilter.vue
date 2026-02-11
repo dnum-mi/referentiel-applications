@@ -7,11 +7,11 @@ const { filters, setFilter } = useApplicationSearch();
 <template>
   <div class="filter-section">
     <DsfrInput
-      :model-value="filters.label"
+      :model-value="filters.search"
       label-visible
       label="Nom de l'application"
       data-testid="application-filter-label"
-      @update:model-value="setFilter({ label: $event, page: 0 })"
+      @update:model-value="setFilter({ search: $event, page: 0 })"
     />
     <legend class="fr-label">Tags</legend>
     <TagSearchSelect :tags="filters.tag" data-testid="application-filter-tag" @update:tags="setFilter({ tag: $event, page: 0 })" />
