@@ -8,6 +8,7 @@ const props = defineProps<{
   searchDataFunction?: (query: string) => Promise<Array<{ id: string; label: string }>>;
   label: string;
   placeholder: string;
+  defaultValue?: string;
 }>();
 
 const emit = defineEmits<{
@@ -40,6 +41,17 @@ watch(input, (newValue) => {
       });
   }
 });
+
+watch(
+  () => props.defaultValue,
+  (defaultValue) => {
+    if (!defaultValue) {
+      return;
+    }
+    searchSuggestion.value = defaultValue;
+  },
+  { once: true },
+);
 
 const resetInput = () => {
   searchSuggestion.value = "";

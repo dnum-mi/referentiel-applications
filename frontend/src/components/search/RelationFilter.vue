@@ -7,6 +7,7 @@ const { searchApplications, setFilter, filters } = useApplicationSearch();
 const isLoading = ref(false);
 const errorMessage = ref("");
 const componentKey = ref(0);
+const defaultValue = ref<undefined | string>(undefined);
 
 async function performSearch(query: string) {
   if (query && query.length >= 3) {
@@ -94,6 +95,20 @@ const updateFilter = (filterKey: RelationType, value: string | number) => {
     setFilter({ [filterKey]: value || undefined });
   }
 };
+
+watch(
+  () => filters.value.relationAppId,
+  async (relationAppId) => {
+    if (!relationAppId) return;
+    const response = await api.applicationControllerFindOne({
+      path: { applicationId: relationAppId },
+    });
+    if (response.data) {
+      defaultValue.value = response.data.label;
+    }
+  },
+  { once: true, immediate: true },
+);
 </script>
 
 <template>
@@ -101,6 +116,7 @@ const updateFilter = (filterKey: RelationType, value: string | number) => {
     <SuggestionsInput
       :key="componentKey"
       @update:selected-value="updateSelectedValue"
+      :default-value="defaultValue"
       :search-data-function="performSearch"
       label="Rechercher une application"
       placeholder="Tapez au moins 3 caractères"
