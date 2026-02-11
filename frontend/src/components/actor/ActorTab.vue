@@ -237,6 +237,10 @@ function getCardButtons(actor: Actor) {
           >
             {{ data.Email.label }}
           </a>
+
+          <span v-else>
+            {{ data.Email.label }}
+          </span>
         </template>
 
         <template #body-Actions="{ data }">
