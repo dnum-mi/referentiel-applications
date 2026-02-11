@@ -1,1 +1,1 @@
-export type RelationTypeFilter = "N" | "I" | "E"; // neutre inclure exclure
+export type RelationTypeFilter = "NEUTRAL" | "INCLUDE" | "EXCLUDE"; // neutre inclure exclure

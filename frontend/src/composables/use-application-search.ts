@@ -40,10 +40,10 @@ const DEFAULT_FILTERS: Filters = {
   missingMoa: undefined,
   missingMoe: undefined,
   missingHosting: undefined,
-  is_part_of: "E",
-  in_replacement_of: "N",
-  is_service_user_of: "N",
-  is_data_user_of: "N",
+  is_part_of: "EXCLUDE",
+  in_replacement_of: "NEUTRAL",
+  is_service_user_of: "NEUTRAL",
+  is_data_user_of: "NEUTRAL",
   relationAppId: undefined,
 };
 

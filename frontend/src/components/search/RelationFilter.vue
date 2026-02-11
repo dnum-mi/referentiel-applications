@@ -17,10 +17,10 @@ async function performSearch(query: string) {
         {
           search: query,
           pageSize: 10,
-          is_part_of: "N",
-          is_data_user_of: "N",
-          is_service_user_of: "N",
-          in_replacement_of: "N",
+          is_part_of: "NEUTRAL",
+          is_data_user_of: "NEUTRAL",
+          is_service_user_of: "NEUTRAL",
+          in_replacement_of: "NEUTRAL",
           relationAppId: undefined,
         },
         false,
@@ -44,7 +44,6 @@ const updateSelectedValue = (application?: Pick<ApplicationDto, "label" | "id">)
 };
 
 watch([() => filters.value.relationAppId], ([relationAppId]) => {
-  console.log(relationAppId);
   if (!relationAppId) {
     componentKey.value++;
   }
@@ -75,23 +74,23 @@ const relationFields: { field: RelationField; filterKey: FilterKey; label: strin
   },
 ];
 
-const optionsMap = [
+const optionsMap: { text: string; value: "NEUTRAL" | "INCLUDE" | "EXCLUDE" }[] = [
   {
     text: "Neutre",
-    value: "N",
+    value: "NEUTRAL",
   },
   {
     text: "Inclure",
-    value: "I",
+    value: "INCLUDE",
   },
   {
     text: "Exclure",
-    value: "E",
+    value: "EXCLUDE",
   },
 ];
 
 const updateFilter = (filterKey: RelationType, value: string | number) => {
-  if (typeof value === "string" && ["N", "I", "E"].includes(value)) {
+  if (typeof value === "string" && ["NEUTRAL", "INCLUDE", "EXCLUDE"].includes(value)) {
     setFilter({ [filterKey]: value || undefined });
   }
 };
@@ -110,7 +109,7 @@ const updateFilter = (filterKey: RelationType, value: string | number) => {
     <DsfrSelect
       v-for="{ field, filterKey, testId, label } in relationFields"
       :key="field"
-      :model-value="filters[filterKey] || 'N'"
+      :model-value="filters[filterKey] || 'NEUTRAL'"
       :label="label"
       :options="optionsMap"
       :disabled="isLoading"

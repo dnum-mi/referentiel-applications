@@ -260,34 +260,34 @@ export class ApplicationSearchDto extends PaginationDto {
 
   @ApiPropertyOptional({
     description: "Filtrée sur la relation de type Fait partie de",
-    enum: ["N", "I", "E"],
+    enum: ["NEUTRAL", "INCLUDE", "EXCLUDE"],
   })
   @IsOptional()
-  @IsEnum(["N", "I", "E"])
+  @IsEnum(["NEUTRAL", "INCLUDE", "EXCLUDE"])
   is_part_of?: RelationTypeFilter;
 
   @ApiPropertyOptional({
     description: "Filtrée sur la relation de type Remplace",
-    enum: ["N", "I", "E"],
+    enum: ["NEUTRAL", "INCLUDE", "EXCLUDE"],
   })
   @IsOptional()
-  @IsEnum(["N", "I", "E"])
+  @IsEnum(["NEUTRAL", "INCLUDE", "EXCLUDE"])
   in_replacement_of?: RelationTypeFilter;
 
   @ApiPropertyOptional({
     description: "Filtrée sur la relation de type Utilise le service de",
-    enum: ["N", "I", "E"],
+    enum: ["NEUTRAL", "INCLUDE", "EXCLUDE"],
   })
   @IsOptional()
-  @IsEnum(["N", "I", "E"])
+  @IsEnum(["NEUTRAL", "INCLUDE", "EXCLUDE"])
   is_service_user_of?: RelationTypeFilter;
 
   @ApiPropertyOptional({
     description: "Filtrée sur la relation de type Utilise la donnée de",
-    enum: ["N", "I", "E"],
+    enum: ["NEUTRAL", "INCLUDE", "EXCLUDE"],
   })
   @IsOptional()
-  @IsEnum(["N", "I", "E"])
+  @IsEnum(["NEUTRAL", "INCLUDE", "EXCLUDE"])
   is_data_user_of?: RelationTypeFilter;
 
   @ApiPropertyOptional({

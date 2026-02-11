@@ -822,9 +822,9 @@ paths:
           description: Filtrée sur la relation de type Fait partie de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: in_replacement_of
           required: false
@@ -832,9 +832,9 @@ paths:
           description: Filtrée sur la relation de type Remplace
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: is_service_user_of
           required: false
@@ -842,9 +842,9 @@ paths:
           description: Filtrée sur la relation de type Utilise le service de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: is_data_user_of
           required: false
@@ -852,9 +852,9 @@ paths:
           description: Filtrée sur la relation de type Utilise la donnée de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: relationAppId
           required: false
@@ -1193,9 +1193,9 @@ paths:
           description: Filtrée sur la relation de type Fait partie de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: in_replacement_of
           required: false
@@ -1203,9 +1203,9 @@ paths:
           description: Filtrée sur la relation de type Remplace
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: is_service_user_of
           required: false
@@ -1213,9 +1213,9 @@ paths:
           description: Filtrée sur la relation de type Utilise le service de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: is_data_user_of
           required: false
@@ -1223,9 +1223,9 @@ paths:
           description: Filtrée sur la relation de type Utilise la donnée de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: relationAppId
           required: false
@@ -3466,9 +3466,9 @@ paths:
           description: Filtrée sur la relation de type Fait partie de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: in_replacement_of
           required: false
@@ -3476,9 +3476,9 @@ paths:
           description: Filtrée sur la relation de type Remplace
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: is_service_user_of
           required: false
@@ -3486,9 +3486,9 @@ paths:
           description: Filtrée sur la relation de type Utilise le service de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: is_data_user_of
           required: false
@@ -3496,9 +3496,9 @@ paths:
           description: Filtrée sur la relation de type Utilise la donnée de
           schema:
             enum:
-              - N
-              - I
-              - E
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
         - name: relationAppId
           required: false

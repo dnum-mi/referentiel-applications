@@ -445,15 +445,15 @@ export class PrismaQueryBuilder {
         },
       };
       switch (value) {
-        case "I":
+        case "INCLUDE":
           includeQueries.push(query);
           return;
-        case "E":
+        case "EXCLUDE":
           excludeQueries.push({
             NOT: query,
           });
           return;
-        case "N":
+        case "NEUTRAL":
         default:
           return;
       }
