@@ -4,6 +4,7 @@ import api from "@/api/index";
 import { RelationType } from "@/client/types.gen";
 import type { ApplicationDto, RelationDto } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 
 const props = withDefaults(
   defineProps<{
@@ -54,10 +55,10 @@ async function performSearch(query: string) {
         {
           search: query,
           pageSize: 10,
-          is_part_of: "N",
-          is_data_user_of: "N",
-          is_service_user_of: "N",
-          in_replacement_of: "N",
+          is_part_of: RELATION_TYPE_FILTERS.neutral,
+          is_data_user_of: RELATION_TYPE_FILTERS.neutral,
+          is_service_user_of: RELATION_TYPE_FILTERS.neutral,
+          in_replacement_of: RELATION_TYPE_FILTERS.neutral,
           relationAppId: undefined,
         },
         false,

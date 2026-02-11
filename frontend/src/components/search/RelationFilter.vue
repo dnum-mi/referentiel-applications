@@ -2,6 +2,9 @@
 import { watch } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { RelationType, type ApplicationDto } from "@/client";
+import api from "@/api";
+import { RELATION_TYPE_FILTERS, RELATION_TYPE_FILTERS_ARRAY, type RelationTypeFilter } from "@/types/relation-type-filter";
+import { typeguardIncludes } from "@/utils/typeguard-includes";
 
 const { searchApplications, setFilter, filters } = useApplicationSearch();
 const isLoading = ref(false);
@@ -18,10 +21,10 @@ async function performSearch(query: string) {
         {
           search: query,
           pageSize: 10,
-          is_part_of: "NEUTRAL",
-          is_data_user_of: "NEUTRAL",
-          is_service_user_of: "NEUTRAL",
-          in_replacement_of: "NEUTRAL",
+          is_part_of: RELATION_TYPE_FILTERS.neutral,
+          is_data_user_of: RELATION_TYPE_FILTERS.neutral,
+          is_service_user_of: RELATION_TYPE_FILTERS.neutral,
+          in_replacement_of: RELATION_TYPE_FILTERS.neutral,
           relationAppId: undefined,
         },
         false,
@@ -75,7 +78,7 @@ const relationFields: { field: RelationField; filterKey: FilterKey; label: strin
   },
 ];
 
-const optionsMap: { text: string; value: "NEUTRAL" | "INCLUDE" | "EXCLUDE" }[] = [
+const optionsMap: { text: string; value: RelationTypeFilter }[] = [
   {
     text: "Neutre",
     value: "NEUTRAL",
@@ -91,7 +94,7 @@ const optionsMap: { text: string; value: "NEUTRAL" | "INCLUDE" | "EXCLUDE" }[] =
 ];
 
 const updateFilter = (filterKey: RelationType, value: string | number) => {
-  if (typeof value === "string" && ["NEUTRAL", "INCLUDE", "EXCLUDE"].includes(value)) {
+  if (typeof value === "string" && typeguardIncludes(value, RELATION_TYPE_FILTERS_ARRAY)) {
     setFilter({ [filterKey]: value || undefined });
   }
 };
@@ -125,7 +128,7 @@ watch(
     <DsfrSelect
       v-for="{ field, filterKey, testId, label } in relationFields"
       :key="field"
-      :model-value="filters[filterKey] || 'NEUTRAL'"
+      :model-value="filters[filterKey] || RELATION_TYPE_FILTERS.neutral"
       :label="label"
       :options="optionsMap"
       :disabled="isLoading"

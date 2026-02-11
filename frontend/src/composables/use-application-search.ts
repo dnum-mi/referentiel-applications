@@ -9,6 +9,7 @@ import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 
 export type TechnicalDebtPoint = TechnicalDebtControllerGetTechnicalDebtPointsResponses extends (infer Item)[] ? Item : never;
 
@@ -40,10 +41,10 @@ const DEFAULT_FILTERS: Filters = {
   missingMoa: undefined,
   missingMoe: undefined,
   missingHosting: undefined,
-  is_part_of: "EXCLUDE",
-  in_replacement_of: "NEUTRAL",
-  is_service_user_of: "NEUTRAL",
-  is_data_user_of: "NEUTRAL",
+  is_part_of: RELATION_TYPE_FILTERS.exclude,
+  in_replacement_of: RELATION_TYPE_FILTERS.neutral,
+  is_service_user_of: RELATION_TYPE_FILTERS.neutral,
+  is_data_user_of: RELATION_TYPE_FILTERS.neutral,
   relationAppId: undefined,
 };
 

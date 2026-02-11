@@ -3,6 +3,7 @@ import { ref } from "vue";
 import SuggestionsInput from "../SuggestionsInput.vue";
 import { RelationType, type ApplicationDto } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 
 const props = withDefaults(
   defineProps<{
@@ -40,10 +41,10 @@ async function performSearch(query: string) {
         {
           search: query,
           pageSize: 10,
-          is_part_of: "NEUTRAL",
-          is_data_user_of: "NEUTRAL",
-          is_service_user_of: "NEUTRAL",
-          in_replacement_of: "NEUTRAL",
+          is_part_of: RELATION_TYPE_FILTERS.neutral,
+          is_data_user_of: RELATION_TYPE_FILTERS.neutral,
+          is_service_user_of: RELATION_TYPE_FILTERS.neutral,
+          in_replacement_of: RELATION_TYPE_FILTERS.neutral,
           relationAppId: undefined,
         },
         false,
