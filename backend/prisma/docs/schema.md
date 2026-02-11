@@ -20,6 +20,7 @@ erDiagram
   String applicationId FK "nullable"
   String notifierId FK
   String description
+  String notes
   AnomalyNotificationStatus status
   DateTime createdAt
   DateTime updatedAt
@@ -45,6 +46,7 @@ Properties as follows:
 - `applicationId`: Identifiant de la fiche application affectée
 - `notifierId`: Identifiant de l'utilisateur qui a fait le signalement
 - `description`: Description du problème signalé
+- `notes`:
 - `status`: Statut actuel du signalement
 - `createdAt`: Quand le signalement a été créé
 - `updatedAt`: Quand le signalement a été mis à jour pour la dernière fois
