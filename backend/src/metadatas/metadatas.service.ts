@@ -7,6 +7,7 @@ import { MetadataTypes } from "../utils/constants.util";
 import { MetadataDto, MetadataFiltersDto } from "./dto/metadata.dto";
 import { MetadataRepository } from "./infrastructure/metadata.repository";
 import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
+import { ALL_ENUM_LABELS } from "src/applications/constants/enum-label";
 
 @Injectable()
 export class MetadatasService extends BaseService<any> {
@@ -59,12 +60,13 @@ export class MetadatasService extends BaseService<any> {
     const formattingValue = (value: any): any => {
       if (value == null) return value;
 
-      if (value instanceof Date) return value.toISOString();
-
+      if (typeof value === "boolean") return value ? "Oui" : "Non";
+      if (value instanceof Date) return value.toLocaleDateString("fr-FR");
+      if (typeof value === "string")
+        return ALL_ENUM_LABELS[value] ? ALL_ENUM_LABELS[value] : value;
       if (Array.isArray(value))
         return value.map((item) => formattingValue(item));
-
-      if (typeof value === "object") {
+      if (typeof value === "object")
         return Object.keys(value).reduce(
           (acc, key) => {
             acc[key] = formattingValue(value[key]);
@@ -72,7 +74,6 @@ export class MetadatasService extends BaseService<any> {
           },
           {} as Record<string, any>,
         );
-      }
 
       return value;
     };

@@ -52,3 +52,13 @@ export const ApplicationStatusLabels: Record<string, string> = {
   decommissioned: "Décommissionnée",
   deleted: "Supprimée",
 };
+
+export const ALL_ENUM_LABELS: Record<string, string> = {
+  ...AnomalyNotificationStatusLabels,
+  ...RelationTypeLabels,
+  ...PriorityRestartLabels,
+  ...EventTypeLabels,
+  ...ExternalRessourceTypeLabels,
+  ...NatureLabels,
+  ...ApplicationStatusLabels,
+};
