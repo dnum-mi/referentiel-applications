@@ -1,4 +1,4 @@
-import type { Application } from "@prisma/client";
+import type { Application, Prisma } from "@prisma/client";
 import type { CreateApplicationDto } from "src/applications/dto/create-application.dto";
 import type { ApplicationSearchResultDto } from "src/applications/dto/get-application.dto";
 import type { TechnicalDebtPointDto } from "src/applications/dto/technical-debt-point.dto";
@@ -14,11 +14,12 @@ export interface IApplicationRepository {
   ) => Promise<Application>;
   delete: (id: string) => Promise<void>;
   findApplications: (
-    search: ApplicationSearchFilters,
-    ownership?: { actorEmail?: string },
+    filters: ApplicationSearchFilters,
+    where: Prisma.ApplicationWhereInput,
+    orderBy: Prisma.ApplicationOrderByWithRelationInput,
   ) => Promise<ApplicationSearchResultDto>;
   findTechnicalDebtPoints: (
-    search: ApplicationSearchFilters,
-    ownership?: { actorEmail?: string },
+    where: Prisma.ApplicationWhereInput,
+    orderBy: Prisma.ApplicationOrderByWithRelationInput,
   ) => Promise<TechnicalDebtPointDto[]>;
 }

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import SuggestionsInput from "../SuggestionsInput.vue";
-import { RelationType } from "@/client/types.gen";
+import { RelationType, type ApplicationDto } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 
 const props = withDefaults(
   defineProps<{
@@ -36,7 +37,18 @@ async function performSearch(query: string) {
   if (query && query.length >= 3) {
     isLoading!.value = true;
     try {
-      const response = await searchApplications({ search: query, pageSize: 10 }, false);
+      const response = await searchApplications(
+        {
+          search: query,
+          pageSize: 10,
+          is_part_of: RELATION_TYPE_FILTERS.neutral,
+          is_data_user_of: RELATION_TYPE_FILTERS.neutral,
+          is_service_user_of: RELATION_TYPE_FILTERS.neutral,
+          in_replacement_of: RELATION_TYPE_FILTERS.neutral,
+          relationAppId: undefined,
+        },
+        false,
+      );
       return response.results;
     } catch (error) {
       console.error(error);
@@ -78,6 +90,10 @@ async function submitRelation() {
 function closeModal() {
   emit("close");
 }
+
+function updateSelectedValue(application?: Pick<ApplicationDto, "label" | "id">) {
+  selectedApplicationId.value = application?.id ?? "";
+}
 </script>
 
 <template>
@@ -104,7 +120,7 @@ function closeModal() {
       </div>
 
       <SuggestionsInput
-        v-model:return-data="selectedApplicationId"
+        @update:selected-value="updateSelectedValue"
         :search-data-function="performSearch"
         label="Rechercher une application"
         placeholder="Tapez au moins 3 caractères"
