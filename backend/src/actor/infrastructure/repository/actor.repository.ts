@@ -20,6 +20,7 @@ export class ActorRepository implements IActorRepository {
       },
       include: {
         actorType: true,
+        organization: true,
       },
     });
   }

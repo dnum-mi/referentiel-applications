@@ -19,13 +19,16 @@ export class ActorService {
 
   public async create(createActor: CreateActorDto, requestorId: string) {
     const createdActor = await this.actorRepository.create(createActor);
-
+    const actorInformation =
+      createdActor.email.length > 0
+        ? createdActor.email
+        : createdActor.organization.path;
     await this.metadataService.createMetadata({
       applicationId: createActor.applicationId,
       createdById: requestorId,
       entity: "actorId",
       entityId: createdActor.id,
-      title: `de l'acteur ${createdActor.actorType?.code} : ${createdActor.email}`,
+      title: `de l'acteur ${createdActor.actorType?.code} : ${actorInformation}`,
       type: "add",
     });
 
