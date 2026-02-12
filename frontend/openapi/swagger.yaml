@@ -702,6 +702,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -1073,6 +1074,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -2237,6 +2239,13 @@ paths:
           in: path
           schema:
             type: string
+        - name: notify
+          required: true
+          in: query
+          description: Send Notification Email
+          schema:
+            example: "true"
+            type: boolean
         - name: applicationId
           required: true
           in: path
@@ -3346,6 +3355,7 @@ paths:
               type: string
               enum:
                 - under_construction
+                - to_validate
                 - poc
                 - in_production_mvp
                 - in_production
@@ -3610,6 +3620,7 @@ components:
       type: string
       enum:
         - under_construction
+        - to_validate
         - poc
         - in_production_mvp
         - in_production
@@ -3947,6 +3958,7 @@ components:
       description: Statut de l'application
       enum:
         - under_construction
+        - to_validate
         - poc
         - in_production_mvp
         - in_production
