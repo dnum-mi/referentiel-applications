@@ -28,7 +28,7 @@ export class EmailService {
     );
     this.enabled = this.configService.get<boolean>("email.enabled", true);
     this.appUrl = this.configService.get<string>(
-      "APP_URL",
+      "BASE_URL",
       "http://localhost:5173",
     );
 
