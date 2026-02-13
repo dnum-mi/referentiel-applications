@@ -227,7 +227,9 @@ export function useApplicationSearch() {
   }
 
   async function searchApplications(customFilters?: Partial<Filters>, store = true) {
-    isLoading.value = true;
+    if (store) {
+      isLoading.value = true;
+    }
     error.value = null;
 
     try {
@@ -255,7 +257,9 @@ export function useApplicationSearch() {
       error.value = err instanceof Error ? err.message : "Erreur inconnue";
       throw err;
     } finally {
-      isLoading.value = false;
+      if (store) {
+        isLoading.value = false;
+      }
     }
   }
 
