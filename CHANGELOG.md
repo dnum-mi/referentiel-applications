@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.62.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.61.0...v1.62.0) (2026-02-13)
+
+
+### Features
+
+* :sparkles: add application view tracking ([abfc11c](https://github.com/dnum-mi/referentiel-applications/commit/abfc11ce04d06ad2f3932525fab3920832b68dde))
+* :sparkles: implement pagination extension for Prisma service ([9186965](https://github.com/dnum-mi/referentiel-applications/commit/918696567fc474954534159a4d5c3d617e8cdce9))
+* :white_check_mark: write playwright e2e test for compliance filter ([7864f31](https://github.com/dnum-mi/referentiel-applications/commit/7864f31a347c627c24123fb8898a04d43522ef1a))
+* application filter support name and short name search ([#1461](https://github.com/dnum-mi/referentiel-applications/issues/1461)) ([17e4400](https://github.com/dnum-mi/referentiel-applications/commit/17e44007a00c88d5a640b566203e98c6aff84929))
+* create email notification when user update reporting status ([#1428](https://github.com/dnum-mi/referentiel-applications/issues/1428)) ([3cecfc8](https://github.com/dnum-mi/referentiel-applications/commit/3cecfc80e63b59697bf287af081a585fe730f234))
+* create prisma query for relation query filtering ([#1453](https://github.com/dnum-mi/referentiel-applications/issues/1453)) ([06fd4e2](https://github.com/dnum-mi/referentiel-applications/commit/06fd4e2c2c26ad7cfbf14f8dfe6b1885c758930f))
+
+
+### Bug Fixes
+
+* :bug: replace app_url with base_url in application email links ([7b72005](https://github.com/dnum-mi/referentiel-applications/commit/7b720053b1e5ab80cda7c13b501df0fff2885efc))
+* :bug: translate enums in metadata descriptions ([5457e16](https://github.com/dnum-mi/referentiel-applications/commit/5457e168fbae3e2d7f3321f3b302b82c523b6d3e))
+* :bug: wrong display of email if it was empty ([59b0ce7](https://github.com/dnum-mi/referentiel-applications/commit/59b0ce78743fac64298c7ec287bce93e28117922))
+* actor update email show actor type ([#1471](https://github.com/dnum-mi/referentiel-applications/issues/1471)) ([46c8c5c](https://github.com/dnum-mi/referentiel-applications/commit/46c8c5c514d427e6ec6c964d2a422fd326147b49))
+* add actor organization name if user has no email ([#1465](https://github.com/dnum-mi/referentiel-applications/issues/1465)) ([323c25c](https://github.com/dnum-mi/referentiel-applications/commit/323c25c2f6064b2e1d451718349396dad72bb325))
+* add adminLevel into token ([#1467](https://github.com/dnum-mi/referentiel-applications/issues/1467)) ([a0bb185](https://github.com/dnum-mi/referentiel-applications/commit/a0bb185f797abcf4bf0c066c0a7d40a74fe47615))
+* remove compiler macro vue import ([8f27084](https://github.com/dnum-mi/referentiel-applications/commit/8f270847b2e3c54c43de45fad71e3db3939226ea))
+* when update anomaly from application, email is now send ([#1469](https://github.com/dnum-mi/referentiel-applications/issues/1469)) ([51da421](https://github.com/dnum-mi/referentiel-applications/commit/51da4214546d9933d376e2c3c15f5a2e9b6e9983))
+
+
+### Performance Improvements
+
+* :fire: removing keycloakId and remove keycloak from tests ([a75be2d](https://github.com/dnum-mi/referentiel-applications/commit/a75be2d1802790e0fb7edfeaef7562504c06dc9b))
+
 ## [1.61.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.60.0...v1.61.0) (2026-02-02)
 
 
