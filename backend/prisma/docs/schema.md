@@ -71,7 +71,7 @@ erDiagram
 "Application" {
   String id PK
   String label
-  String shortName "nullable"
+  String(255) shortName "nullable"
   String logo "nullable"
   String description
   String targetPopulations
@@ -108,13 +108,13 @@ erDiagram
 }
 "Label" {
   String id PK
-  String source "nullable"
-  String value
+  String(255) source "nullable"
+  String(255) value
   String applicationId FK
 }
 "Tag" {
   String id PK
-  String name UK
+  String(100) name UK
   DateTime createdAt
 }
 "TechnicalDebtInfo" {
@@ -294,15 +294,15 @@ erDiagram
   String dima_recovery_solutions "nullable"
   DateTime dima_last_test_date "nullable"
   TestResult dima_test_result "nullable"
-  String dima_recovery_manager "nullable"
+  String(255) dima_recovery_manager "nullable"
   Int pdma_duration_hours "nullable"
   String pdma_data_types "nullable"
-  String pdma_backup_frequency "nullable"
-  String pdma_backup_method "nullable"
+  String(255) pdma_backup_frequency "nullable"
+  String(255) pdma_backup_method "nullable"
   BackupStorage pdma_backup_storage "nullable"
   DateTime pdma_last_test_date "nullable"
   TestResult pdma_test_result "nullable"
-  String pdma_restoration_manager "nullable"
+  String(255) pdma_restoration_manager "nullable"
   HomologationStatus homologation_status "nullable"
   DateTime homologation_date_end "nullable"
   String homologation_rssi_id FK "nullable"
@@ -311,9 +311,9 @@ erDiagram
   String rgaa_accessibility_url "nullable"
   Decimal(5) rgaa_score_percentage "nullable"
   Boolean dsfr_implemented "nullable"
-  String dsfr_version "nullable"
+  String(20) dsfr_version "nullable"
   Boolean rgpd_has_aipd "nullable"
-  String rgpd_dpo_name "nullable"
+  String(255) rgpd_dpo_name "nullable"
 }
 ```
 
@@ -360,15 +360,15 @@ Properties as follows:
 erDiagram
 "HostingOption" {
   String id PK
-  String room "nullable"
-  String building "nullable"
-  String site
-  String platform
-  String provider
+  String(50) room "nullable"
+  String(100) building "nullable"
+  String(100) site
+  String(100) platform
+  String(100) provider
 }
 "Hosting" {
   String id PK
-  String label "nullable"
+  String(255) label "nullable"
   String hostingOptionId FK "nullable"
   String applicationId FK
 }
@@ -449,9 +449,9 @@ Properties as follows:
 erDiagram
 "Organization" {
   String id PK
-  String path
+  String(255) path
   String url "nullable"
-  String sigle "nullable"
+  String(30) sigle "nullable"
   String description "nullable"
   String parentId FK "nullable"
 }
@@ -512,14 +512,16 @@ erDiagram
   Boolean readAnomalyNotifications
   Boolean postAnomalyNotifications
   Boolean manageAnomalyNotifications
+  Boolean readTechnicalDebt
+  Boolean writeTechnicalDebt
   String actorTypeId FK,UK
 }
 "Token" {
   String id PK
   Int adminLevel "nullable"
   String description
-  String name
-  String hash UK
+  String(255) name
+  String(512) hash UK
   DateTime expiresAt
   DateTime createdAt
   DateTime updatedAt
@@ -529,7 +531,7 @@ erDiagram
 }
 "User" {
   String id PK
-  String email UK
+  String(255) email UK
   DateTime lastLogin "nullable"
   String organizationId FK "nullable"
   Int adminLevel
@@ -539,17 +541,17 @@ erDiagram
 }
 "Actor" {
   String id PK
-  String firstname "nullable"
-  String lastname "nullable"
-  String email "nullable"
+  String(100) firstname "nullable"
+  String(100) lastname "nullable"
+  String(255) email "nullable"
   String organizationId FK "nullable"
   String applicationId FK "nullable"
   String actorTypeId FK "nullable"
 }
 "ActorType" {
   String id PK
-  String code UK "nullable"
-  String label
+  String(50) code UK "nullable"
+  String(255) label
   String description "nullable"
 }
 "_ApplicationToUser" {
@@ -587,6 +589,8 @@ Properties as follows:
 - `readAnomalyNotifications`: Peut lire les notifications d'anomalies
 - `postAnomalyNotifications`: Peut créer des notifications d'anomalies
 - `manageAnomalyNotifications`: Peut gérer (mettre à jour/supprimer) les notifications d'anomalies
+- `readTechnicalDebt`: Peut lire les informations de dette technique
+- `writeTechnicalDebt`: Peut écrire les informations de dette technique
 - `actorTypeId`:
 
 ### `Token`

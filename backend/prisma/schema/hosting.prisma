@@ -6,15 +6,15 @@ model HostingOption {
   /// Identifiant unique
   id       String    @id @default(cuid())
   /// Emplacement salle/rack
-  room     String?
+  room     String?   @db.VarChar(50)
   /// Bâtiment où est hébergé
-  building String?
+  building String?   @db.VarChar(100)
   /// Emplacement site/datacenter
-  site     String
+  site     String    @db.VarChar(100)
   /// Plateforme/technologie utilisée
-  platform String
+  platform String    @db.VarChar(100)
   /// Nom du fournisseur d'hébergement
-  provider String
+  provider String    @db.VarChar(100)
   /// Applications utilisant cette option d'hébergement
   hostings Hosting[]
 }
@@ -27,7 +27,7 @@ model Hosting {
   /// Identifiant unique
   id    String  @id @default(cuid())
   /// Label personnalisé pour cette instance d'hébergement
-  label String?
+  label String? @db.VarChar(255)
 
   hostingOptionId String?
   /// Le modèle d'option d'hébergement utilisé

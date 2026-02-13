@@ -6,7 +6,7 @@ model User {
   /// Identifiant unique
   id                        String                @id @default(uuid())
   /// Adresse email de l'utilisateur
-  email                     String                @unique
+  email                     String                @unique @db.VarChar(255)
   /// Horodatage de la dernière connexion
   lastLogin                 DateTime?             @default(now())
   /// Id de l'organisation à laquelle l'utilisateur appartient
@@ -45,11 +45,11 @@ model Actor {
   /// Identifiant unique
   id             String        @id @default(uuid())
   /// Prénom de l'acteur
-  firstname      String?
+  firstname      String?       @db.VarChar(100)
   /// Nom de l'acteur
-  lastname       String?
+  lastname       String?       @db.VarChar(100)
   /// Email de contact
-  email          String?
+  email          String?       @db.VarChar(255)
   /// id de l'organisation
   organizationId String?
   /// Organisation à laquelle cet acteur appartient
@@ -93,9 +93,9 @@ model ActorType {
   /// Identifiant unique
   id          String  @id @default(uuid())
   /// Code court pour le rôle
-  code        String?
+  code        String? @db.VarChar(50)
   /// Nom d'affichage du rôle
-  label       String
+  label       String  @db.VarChar(255)
   /// Description des responsabilités de ce rôle
   description String?
 

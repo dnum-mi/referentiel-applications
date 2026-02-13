@@ -27,16 +27,16 @@ model Compliance {
   /// DIMA : Résultat du dernier test de reprise
   dima_test_result        TestResult?
   /// DIMA : Personne responsable de la reprise
-  dima_recovery_manager   String?
+  dima_recovery_manager   String?      @db.VarChar(255)
 
   /// PDMA : Perte de données maximale admissible (PDMA)
   pdma_duration_hours      Int?
   /// PDMA : Types de données sauvegardées
   pdma_data_types          String?
   /// PDMA : Fréquence des sauvegardes
-  pdma_backup_frequency    String?
+  pdma_backup_frequency    String?        @db.VarChar(255)
   /// PDMA : Méthode utilisée pour les sauvegardes
-  pdma_backup_method       String?
+  pdma_backup_method       String?        @db.VarChar(255)
   /// PDMA : Où les sauvegardes sont stockées
   pdma_backup_storage      BackupStorage?
   /// PDMA : Date du dernier test de restauration
@@ -44,7 +44,7 @@ model Compliance {
   /// PDMA : Résultat du dernier test de restauration
   pdma_test_result         TestResult?
   /// PDMA : Personne responsable de la restauration
-  pdma_restoration_manager String?
+  pdma_restoration_manager String?             @db.VarChar(255)
   /// Statut d'homologation
   homologation_status      HomologationStatus?
   /// Date de fin d'homologation
@@ -66,12 +66,12 @@ model Compliance {
   /// DSFR : Si le Système de Design de l'État est implémenté
   dsfr_implemented Boolean?
   /// DSFR : Version du Système de Design de l'État utilisée
-  dsfr_version     String?
+  dsfr_version     String?  @db.VarChar(20)
 
   /// RGPD : Si une Analyse d'Impact sur la Protection des Données existe
   rgpd_has_aipd Boolean?
   /// RGPD : Nom du Délégué à la Protection des Données
-  rgpd_dpo_name String?
+  rgpd_dpo_name String?  @db.VarChar(255)
 }
 
 /// Résultat d'un test (OK ou KO)
