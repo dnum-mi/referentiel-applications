@@ -45,7 +45,7 @@ export const useReportIssueStore = defineStore("reportIssueStore", () => {
   async function updateReport(id: string, applicationId: string, status: "in_pending" | "in_progress" | "done", notify: boolean = false) {
     try {
       if (applicationId) {
-        await api.applicationAnomalyNotificationsControllerUpdate({ path: { applicationId, id }, body: { status } });
+        await api.applicationAnomalyNotificationsControllerUpdate({ path: { applicationId, id }, body: { status }, query: { notify } });
       } else {
         await api.anomalyNotificationsControllerUpdate({ path: { id }, body: { status }, query: { notify } });
       }

@@ -139,7 +139,10 @@ export class AnomalyNotificationsController {
 @UseGuards(ApplicationGuard)
 @Controller("applications/:applicationId/anomaly-notifications")
 export class ApplicationAnomalyNotificationsController {
-  constructor(protected service: AnomalyNotificationsService) {}
+  constructor(
+    protected service: AnomalyNotificationsService,
+    protected notifyUserService: UserNotificationService,
+  ) {}
 
   /**
    * Crée une nouvelle notification d'anomalie.
@@ -228,10 +231,16 @@ export class ApplicationAnomalyNotificationsController {
     description: "Notification mise à jour avec succès",
     type: AnomalyNotificationDto,
   })
-  update(
+  async update(
     @Param("id") id: string,
     @Body() updateDto: UpdateAnomalyNotificationDto,
+    @Query() query: UpdateAnomalyNotifyQuery,
   ) {
+    const anomalyNotification = await this.service.update(id, updateDto);
+    await this.notifyUserService.notifyUserOnStatusChange(
+      query.notify,
+      anomalyNotification,
+    );
     return this.service.update(id, updateDto);
   }
 
