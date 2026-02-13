@@ -102,7 +102,10 @@ export class ActorService {
     return updatedActor;
   }
 
-  private getChangedFieldsHtml(oldActor: Actor, newActor: Actor): string {
+  private getChangedFieldsHtml(
+    oldActor: Prisma.ActorGetPayload<{ include: { actorType: true } }>,
+    newActor: Prisma.ActorGetPayload<{ include: { actorType: true } }>,
+  ): string {
     const changes: string[] = [];
 
     const fieldLabels = {
@@ -117,6 +120,22 @@ export class ActorService {
     for (const field of fields) {
       const label = fieldLabels[field];
       if (oldActor[field] !== newActor[field]) {
+        changes.push(
+          `<p style="margin: 5px 0; font-size: 14px; color: #161616;">• <strong>${label}</strong></p>`,
+        );
+      }
+    }
+
+    const fieldActorLabels = {
+      label: "Type d'acteur",
+    } as const;
+
+    type FieldActor = keyof typeof fieldActorLabels;
+    const fieldsActor = Object.keys(fieldActorLabels) as FieldActor[];
+
+    for (const field of fieldsActor) {
+      const label = fieldActorLabels[field];
+      if (oldActor.actorType[field] !== newActor.actorType[field]) {
         changes.push(
           `<p style="margin: 5px 0; font-size: 14px; color: #161616;">• <strong>${label}</strong></p>`,
         );
