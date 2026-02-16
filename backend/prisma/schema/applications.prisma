@@ -166,12 +166,12 @@ enum ApplicationType {
   business
   /// Service socle
   core_service
-  /// Single Sign-On /
-  sso
-  /// Site web / communication
-  website_communication
-  /// Intranet / site de communication
-  intranet_communication_website
+  /// Intranet citoyen
+  intranet_citizen
+  /// Intranet agent
+  intranet_staff
+  // Hub de données
+  data_hub
 }
 
 /// Log de consultation des applications
