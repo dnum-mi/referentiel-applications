@@ -30,15 +30,6 @@
   - You are about to alter the column `email` on the `User` table. The data in that column could be lost. The data in that column will be cast from `Text` to `VarChar(255)`.
 
 */
--- AlterEnum
-BEGIN;
-CREATE TYPE "Status_new" AS ENUM ('under_construction', 'poc', 'in_production_mvp', 'in_production', 'in_production_decommissioning', 'decommissioned', 'deleted');
-ALTER TABLE "ApplicationStatus" ALTER COLUMN "status" TYPE "Status_new" USING ("status"::text::"Status_new");
-ALTER TYPE "Status" RENAME TO "Status_old";
-ALTER TYPE "Status_new" RENAME TO "Status";
-DROP TYPE "Status_old";
-COMMIT;
-
 -- AlterTable
 ALTER TABLE "Actor" ALTER COLUMN "email" SET DATA TYPE VARCHAR(255),
 ALTER COLUMN "firstname" SET DATA TYPE VARCHAR(100),
