@@ -1,10 +1,11 @@
-import { createHash } from "node:crypto";
 import {
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { createHash } from "node:crypto";
 import {
   AdminLevel,
   Requestor,
@@ -20,6 +21,8 @@ import {
   isRequestorAllowedToUpdateToken,
   isTokenInvalid,
 } from "./use-cases.ts/token-control.use-case";
+
+const ACTIVE_TOKEN_LIMIT = 5;
 
 @Injectable()
 export class TokenService {
@@ -51,6 +54,14 @@ export class TokenService {
     if (!personal && requestor.adminLevel !== AdminLevel.ADMIN) {
       throw new ForbiddenException("Only admins can create service tokens");
     }
+    const existingTokens = await this.list({ requestor });
+    const tokenCount = existingTokens.length;
+    if (tokenCount >= ACTIVE_TOKEN_LIMIT) {
+      throw new ConflictException(
+        `Token limit of ${ACTIVE_TOKEN_LIMIT} reached. You currently have ${tokenCount} active tokens. Please revoke unused tokens before creating a new one.`,
+      );
+    }
+
     const invalidReason = isNewTokenInvalid(data);
     if (invalidReason) {
       throw invalidReason;
