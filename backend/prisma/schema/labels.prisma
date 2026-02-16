@@ -5,9 +5,9 @@ model Label {
   /// Identifiant unique
   id            String      @id @default(uuid())
   /// Système source qui a fourni ce label
-  source        String?
+  source        String?     @db.VarChar(255)
   /// Valeur du label
-  value         String
+  value         String      @db.VarChar(255)
   /// Entrées de métadonnées pour ce label
   metadatas     Metadata[]  @relation("LabelMetadata")
   applicationId String

@@ -8,7 +8,7 @@ model Application {
   /// Nom complet de l'application
   label               String
   /// Nom court ou acronyme de l'application
-  shortName           String?
+  shortName           String?               @db.VarChar(255)
   /// URL du logo de l'application
   logo                String?
   /// Description détaillée du but de l'application

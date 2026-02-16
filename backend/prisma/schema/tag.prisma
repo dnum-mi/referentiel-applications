@@ -6,7 +6,7 @@ model Tag {
   /// Identifiant unique
   id        String   @id @default(uuid())
   /// Nom du tag (doit être unique)
-  name      String   @unique
+  name      String   @unique @db.VarChar(100)
   /// Quand ce tag a été créé
   createdAt DateTime @default(now())
 

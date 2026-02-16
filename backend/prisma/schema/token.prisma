@@ -10,9 +10,9 @@ model Token {
   /// Description de l'utilité de ce token
   description String
   /// Nom lisible pour ce token
-  name        String
+  name        String      @db.VarChar(255)
   /// Valeur de token hachée pour l'authentification
-  hash        String      @unique
+  hash        String      @unique @db.VarChar(512)
   /// Quand ce token expire
   expiresAt   DateTime
   /// Quand ce token a été créé
