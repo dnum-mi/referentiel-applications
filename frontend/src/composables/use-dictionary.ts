@@ -177,7 +177,7 @@ export type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" 
 export const typeApplicationDictionary: Record<ApplicationType, string> = {
   business: "Métier",
   core_service: "Service socle",
-  sso: "SSO",
-  website_communication: "Site web / communication",
-  intranet_communication_website: "Intranet / site de communication",
+  intranet_citizen: "Intranet citoyen",
+  intranet_staff: "Intranet agent",
+  data_hub: "Hub de données",
 };

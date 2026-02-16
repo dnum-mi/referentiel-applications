@@ -3950,9 +3950,9 @@ components:
       enum:
         - business
         - core_service
-        - sso
-        - website_communication
-        - intranet_communication_website
+        - intranet_citizen
+        - intranet_staff
+        - data_hub
     ApplicationStatus:
       type: string
       description: Statut de l'application
