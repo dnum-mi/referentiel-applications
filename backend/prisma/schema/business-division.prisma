@@ -1,0 +1,14 @@
+/// Direction metier MOA
+///
+/// @namespace BusinessDivision
+model BusinessDivision {
+  /// Identifiant unique
+  id            String        @id @default(uuid())
+  /// Label de la direction metier MOA
+  label         String        @db.VarChar(255)
+
+  /// Applications associées à cette direction metier
+  applications  Application[] @relation("ApplicationBusinessDivision")
+
+  @@unique([label])
+}
