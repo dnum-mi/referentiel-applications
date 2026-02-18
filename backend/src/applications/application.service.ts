@@ -19,6 +19,7 @@ import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { ApplicationViewService } from "./view.service";
 import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
+import { BusinessDivisionService } from "src/business-division/business-division.service";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -36,6 +37,7 @@ export class ApplicationService {
     private readonly metadataService: MetadatasService,
     private readonly applicationViewService: ApplicationViewService,
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
+    private readonly businessDivisionService: BusinessDivisionService,
     @Inject(appConfig.KEY)
     private readonly appConf: ConfigType<typeof appConfig>,
   ) {}
@@ -130,13 +132,24 @@ export class ApplicationService {
       applicationUpdates.tags = { set: existingTags };
     }
 
+    if (data.businessDivisionId !== undefined) {
+      if (data.businessDivisionId) {
+        await this.businessDivisionService.findById(data.businessDivisionId);
+        applicationUpdates.businessDivision = {
+          connect: { id: data.businessDivisionId },
+        };
+      } else {
+        applicationUpdates.businessDivision = { disconnect: true };
+      }
+    }
+
     try {
       const oldApp = await this.applicationRepository.findById(where.id);
 
       const updatedApplication = await this.prisma.application.update({
         where,
         data: applicationUpdates,
-        include: { tags: true },
+        include: { tags: true, businessDivision: true },
       });
 
       await this.updateApplicationQuality(updatedApplication.id);

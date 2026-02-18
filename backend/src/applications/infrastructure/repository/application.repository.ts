@@ -46,6 +46,7 @@ export class ApplicationRepository implements IApplicationRepository {
           include: { sourceApplication: { select: { id: true, label: true } } },
         },
         tags: true,
+        businessDivision: true,
       },
     });
   }
