@@ -25,14 +25,14 @@ describe("Applications", () => {
     TOKEN = await getToken(user);
   });
 
-  it("/GET applications", async () => {
+  it("/GET applications/search", async () => {
     await request(app().getHttpServer())
-      .get("/applications")
+      .get("/applications/search")
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     await request(app().getHttpServer())
-      .get("/applications")
+      .get("/applications/search")
       .query({
         search: "test",
         page: 0,
@@ -42,7 +42,7 @@ describe("Applications", () => {
       .expect(200);
 
     await request(app().getHttpServer())
-      .get("/applications")
+      .get("/applications/search")
       .query({
         label: "test app",
         sortBy: "label",

@@ -570,6 +570,37 @@ paths:
                 $ref: "#/components/schemas/ApplicationDto"
       tags: &a5
         - applications
+  /api/v2/applications/count-by-month:
+    get:
+      operationId: ApplicationController_countByMonth
+      summary: Liste le nombre d'applications sur les 6 derniers mois
+      parameters: []
+      responses:
+        "200":
+          description: Nombre d'applications par mois
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountByMonthDto"
+      tags: *a5
+  /api/v2/applications/count-by-iq:
+    get:
+      operationId: ApplicationController_countByIq
+      summary: Liste le nombre d'applications par indice de qualité (de 0% à 100%)
+      parameters: []
+      responses:
+        "200":
+          description: Nombre d'applications par indice de qualité
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountByIqDto"
+      tags: *a5
+  /api/v2/applications/search:
     get:
       operationId: ApplicationController_search
       summary: Rechercher et filtrer les applications
@@ -643,7 +674,8 @@ paths:
         - name: priorityRestart
           required: false
           in: query
-          description: Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)
+          description: Filtrer par une ou plusieurs priorités de redémarrage (R0, R1,
+            R1_STAR (R1*), R2, R3)
           schema:
             example:
               - R1
@@ -872,36 +904,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApplicationSearchResultDto"
       tags: *a5
-  /api/v2/applications/count-by-month:
-    get:
-      operationId: ApplicationController_countByMonth
-      summary: Liste le nombre d'applications sur les 6 derniers mois
-      parameters: []
-      responses:
-        "200":
-          description: Nombre d'applications par mois
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CountByMonthDto"
-      tags: *a5
-  /api/v2/applications/count-by-iq:
-    get:
-      operationId: ApplicationController_countByIq
-      summary: Liste le nombre d'applications par indice de qualité (de 0% à 100%)
-      parameters: []
-      responses:
-        "200":
-          description: Nombre d'applications par indice de qualité
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CountByIqDto"
-      tags: *a5
   /api/v2/applications/{applicationId}/my-perms:
     get:
       operationId: ApplicationController_getMyPerms
@@ -1015,7 +1017,8 @@ paths:
         - name: priorityRestart
           required: false
           in: query
-          description: Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)
+          description: Filtrer par une ou plusieurs priorités de redémarrage (R0, R1,
+            R1_STAR (R1*), R2, R3)
           schema:
             example:
               - R1
@@ -3296,7 +3299,8 @@ paths:
         - name: priorityRestart
           required: false
           in: query
-          description: Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)
+          description: Filtrer par une ou plusieurs priorités de redémarrage (R0, R1,
+            R1_STAR (R1*), R2, R3)
           schema:
             example:
               - R1
@@ -3950,9 +3954,9 @@ components:
       enum:
         - business
         - core_service
-        - intranet_citizen
-        - intranet_staff
-        - data_hub
+        - sso
+        - website_communication
+        - intranet_communication_website
     ApplicationStatus:
       type: string
       description: Statut de l'application

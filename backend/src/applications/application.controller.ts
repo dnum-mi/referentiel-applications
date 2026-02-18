@@ -128,7 +128,7 @@ Vous devez fournir les informations suivantes :
     return this.applicationService.getApplicationsCountByIq();
   }
 
-  @Get()
+  @Get("search")
   @ApiOperation({
     summary: "Rechercher et filtrer les applications",
     description: `Endpoint unifié pour rechercher, filtrer et paginer les applications.

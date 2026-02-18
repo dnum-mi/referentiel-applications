@@ -56,7 +56,7 @@ export class ApplicationSearchDto extends PaginationDto {
 
   @ApiPropertyOptional({
     description:
-      "Filtrer par une ou plusieurs priorités de redémarrage (R0 à R3)",
+      "Filtrer par une ou plusieurs priorités de redémarrage (R0, R1, R1_STAR (R1*), R2, R3)",
     enum: priorityRestart,
     isArray: true,
     example: ["R1", "R2"],
