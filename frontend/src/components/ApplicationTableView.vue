@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useColumnPreferences } from "@/composables/use-column-preferences";
 import { formatDateFR } from "@/composables/use-date";
-import { restartPrioritiesConfig, statusApplicationDictionary } from "@/composables/use-dictionary";
+import { homologationStatusDict, restartPrioritiesConfig, statusApplicationDictionary } from "@/composables/use-dictionary";
 import RefAppTable from "./RefAppTable.vue";
 import type { TableSortEvent } from "@/types/table";
 import type { ApplicationStatus } from "@/client/types.gen.js";
@@ -65,7 +65,9 @@ const getComplianceField = (compliance: any | undefined, field: string): string 
           : "Non"
         : "-";
     case "homologation":
-      return compliance.homologation_status || "-";
+      return compliance.homologation_status
+        ? homologationStatusDict[compliance.homologation_status as keyof typeof homologationStatusDict] || compliance.homologation_status
+        : "-";
     case "homologationDateEnd":
       return compliance.homologation_date_end ? formatDateFR(compliance.homologation_date_end) : "-";
     default:

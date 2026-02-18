@@ -7,6 +7,7 @@ import { TagFaker } from "../tests/fakers/tag.faker";
 import { HostingOptionFaker } from "../tests/fakers/hosting-option.faker";
 import { HostingFaker } from "../tests/fakers/hosting.faker";
 import { TechnicalDebtInfoFaker } from "../tests/fakers/technical-debt-info.faker";
+import { ComplianceFaker } from "../tests/fakers/compliance.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
 import { BusinessDivisionFaker } from "tests/fakers/business-division.faker";
 
@@ -99,6 +100,14 @@ async function main() {
   console.log("🏬  Creating Business Division...");
   for (let i = 0; i < 50; i++) {
     await BusinessDivisionFaker.create();
+  }
+
+  // Add compliance data to existing applications (several apps per category)
+  console.log("✅ Adding compliance data to existing applications...");
+  for (const app of applications) {
+    await ComplianceFaker.create({
+      application: app,
+    });
   }
 
   // Create actors (requires applications)
