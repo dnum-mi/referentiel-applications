@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import type { ApplicationStatusDto } from "@/client/types.gen";
 import api from "@/api/index";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
@@ -23,7 +23,7 @@ interface StatusFormData {
 }
 
 const props = defineProps<{
-  application: ApplicationWithPerms;
+  application: CreateApplicationWithPerms;
 }>();
 
 const toaster = useToasterStore();

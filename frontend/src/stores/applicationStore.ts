@@ -1,6 +1,6 @@
 import type { ApplicationPriorityRestart, ApplicationType, PatchApplicationDto } from "@/client/types.gen";
 import type { Filters } from "@/composables/use-application-search";
-import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
+import type { APP_PERMISSIONS, CreateApplicationWithPerms } from "@/models/Application";
 import { computed, ref } from "vue";
 import api from "@/api/index";
 import router from "@/router";
@@ -8,7 +8,7 @@ import { routeNames } from "@/router/route-names";
 import { useToasterStore } from "@/stores/toasterStore";
 
 export const useApplicationStore = defineStore("applicationStore", () => {
-  const applicationsById = ref<Record<string, ApplicationWithPerms>>({});
+  const applicationsById = ref<Record<string, CreateApplicationWithPerms>>({});
   const currentAppId = ref<string>();
 
   const application = computed(() => (currentAppId.value ? applicationsById.value[currentAppId.value] : undefined));
@@ -20,7 +20,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     return new Set(response.data);
   };
 
-  const fetchApplication = async (applicationId: string, setCurrent = true): Promise<ApplicationWithPerms> => {
+  const fetchApplication = async (applicationId: string, setCurrent = true): Promise<CreateApplicationWithPerms> => {
     try {
       isLoading.value = true;
       if (setCurrent) {
@@ -39,7 +39,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
     }
   };
 
-  const patchApplication = async (app: PatchApplicationDto & { id: string }): Promise<ApplicationWithPerms> => {
+  const patchApplication = async (app: PatchApplicationDto & { id: string }): Promise<CreateApplicationWithPerms> => {
     const payload: PatchApplicationDto = {
       label: app.label,
       shortName: app.shortName ?? undefined,

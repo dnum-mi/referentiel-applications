@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import { useComplianceStore } from "@/stores/complianceStore";
 import ComplianceForm from "./ComplianceForm.vue";
 import {
@@ -17,7 +17,7 @@ import { BREAKPOINTS } from "@/constants/breakpoint";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 
-const props = defineProps<{ application: ApplicationWithPerms }>();
+const props = defineProps<{ application: CreateApplicationWithPerms }>();
 const applicationId = props.application.id;
 
 const store = useComplianceStore();

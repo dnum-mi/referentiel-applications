@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRelationManager, type RelationRow } from "@/composables/use-relation-manager";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import RelationshipGraph from "./RelationShipGraph.vue";
 import RefAppTable from "./RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 
-const props = defineProps<{ application: ApplicationWithPerms; isMobile?: boolean }>();
+const props = defineProps<{ application: CreateApplicationWithPerms; isMobile?: boolean }>();
 
 const userStore = useUserStore();
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeRelations"));

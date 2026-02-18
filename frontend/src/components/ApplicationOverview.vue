@@ -3,7 +3,7 @@ import { ref, watch, onMounted, onBeforeMount, computed } from "vue";
 import type { Component } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useBreakpoints } from "@/composables/use-breakpoint";
-import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
+import type { APP_PERMISSIONS, CreateApplicationWithPerms } from "@/models/Application";
 
 import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
@@ -26,7 +26,7 @@ import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 
-const props = defineProps<{ application: ApplicationWithPerms }>();
+const props = defineProps<{ application: CreateApplicationWithPerms }>();
 const emit = defineEmits<{
   (e: "update:application"): void;
   (e: "errorMessage", message: string): void;
@@ -41,7 +41,7 @@ const relationsStore = useRelationStore();
 const metadataStore = useMetadataStore();
 
 // Local reactive state
-const application = ref<ApplicationWithPerms>(props.application);
+const application = ref<CreateApplicationWithPerms>(props.application);
 const activeTab = ref(0);
 const route = useRoute();
 const router = useRouter();

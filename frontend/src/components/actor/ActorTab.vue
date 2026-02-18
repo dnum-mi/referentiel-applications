@@ -9,13 +9,13 @@ import OrgBreadCrumb from "../organization/OrgBreadCrumb.vue";
 import RefAppTable from "../RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import type { CreateActorDto, Actor } from "@/client/types.gen";
 
 const props = defineProps<{
-  application: ApplicationWithPerms;
+  application: CreateApplicationWithPerms;
   isMobile?: boolean;
 }>();
 

@@ -17,11 +17,11 @@ import type {
   LabelDto,
   ApplicationType,
 } from "@/client/types.gen";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 
 interface Props {
   mode?: "create" | "edit";
-  initialData: ApplicationWithPerms;
+  initialData: CreateApplicationWithPerms;
   labels?: LabelDto[];
 }
 
