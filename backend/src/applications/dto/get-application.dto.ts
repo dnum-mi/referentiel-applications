@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
+import { BusinessDivisionDTO } from "src/business-division/dto/business-division.dto";
 import { PaginatedResponseDto } from "src/common/dto";
 import { ApplicationStatusDto } from "src/statuses/dto/application-status.dto";
 import { TechnicalDebtInfoDto } from "src/technical-debt-info/dto/create-technical-debt-info.dto";
@@ -80,6 +81,16 @@ export class ApplicationDto {
   @IsOptional()
   @Type(() => TechnicalDebtInfoDto)
   technicalDebtInfo?: TechnicalDebtInfoDto | null;
+
+  @ApiProperty({
+    type: () => BusinessDivisionDTO,
+    description: "Business division MOA for the application",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @Type(() => BusinessDivisionDTO)
+  businessDivision?: BusinessDivisionDTO | null;
 }
 
 export class CountByMonthDto {
