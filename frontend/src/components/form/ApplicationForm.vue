@@ -16,12 +16,13 @@ import type {
   CreateActorDto,
   LabelDto,
   ApplicationType,
+  BusinessDivisionDto,
 } from "@/client/types.gen";
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 
 interface Props {
   mode?: "create" | "edit";
-  initialData: CreateApplicationWithPerms;
+  initialData: ApplicationWithPerms;
   labels?: LabelDto[];
 }
 
@@ -125,6 +126,7 @@ const form = ref<CreateApplicationDto>({
   type: props.initialData?.type,
   tags: props.initialData?.tags ?? [],
   labels: props.initialData?.labels ?? [],
+  businessDivisionId: props?.initialData?.businessDivision?.id ?? null,
 });
 const initialStatusValue = ref(form.value.status?.status);
 
@@ -148,6 +150,7 @@ const isCreateFormDirty = computed(() => {
     form.value.priorityRestart !== undefined ||
     form.value.type !== undefined ||
     (form.value.tags?.length ?? 0) > 0 ||
+    form.value?.businessDivisionId ||
     hasLabels ||
     statusChanged ||
     !!moaActor.value.organizationId ||
@@ -519,6 +522,10 @@ function removePopulation(index: number) {
   form.value.targetPopulations.splice(index, 1);
 }
 
+const updateBusinessDivision = (payload: BusinessDivisionDto | null) => {
+  form.value.businessDivisionId = payload?.id;
+};
+
 onMounted(async () => {
   initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
 
@@ -580,6 +587,8 @@ Aucun espace en début ou en fin."
         default-unselected-text="Sélectionner un status"
         data-testid="application-status"
       />
+
+      <BusinessDivisionSearch :application="initialData" @update="updateBusinessDivision"> </BusinessDivisionSearch>
 
       <DsfrSelect
         v-model="form.type"

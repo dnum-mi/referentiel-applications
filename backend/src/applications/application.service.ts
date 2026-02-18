@@ -65,6 +65,11 @@ export class ApplicationService {
           },
           priorityRestart: createApplicationDto.priorityRestart ?? null,
           quality: 0,
+          ...(createApplicationDto.businessDivisionId && {
+            businessDivision: {
+              connect: { id: createApplicationDto.businessDivisionId },
+            },
+          }),
         },
       });
 
