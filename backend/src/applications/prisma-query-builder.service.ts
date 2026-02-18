@@ -351,7 +351,7 @@ export class PrismaQueryBuilder {
         case "homologation":
           where.AND.push({
             compliance: {
-              homologation_date_end: { not: null },
+              homologation_status: { not: null },
             },
           });
           break;

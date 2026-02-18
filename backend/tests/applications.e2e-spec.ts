@@ -6,7 +6,9 @@ import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
 import { ApplicationFaker } from "./fakers/application.faker";
+import { getPrismaClient } from "./fakers/prisma";
 import { TagFaker } from "./fakers/tag.faker";
+import { ComplianceFaker } from "./fakers/compliance.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
@@ -50,6 +52,44 @@ describe("Applications", () => {
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
+  });
+
+  it("/GET applications?compliance__in=homologation should include apps with homologation_status", async () => {
+    const prisma = getPrismaClient();
+    const appWithHomologationStatus = await ApplicationFaker.create(user);
+    const appWithoutHomologation = await ApplicationFaker.create(user);
+
+    const appWithHomologationCompliance = await ComplianceFaker.create({
+      application: appWithHomologationStatus,
+    });
+    await prisma.compliance.update({
+      where: { id: appWithHomologationCompliance.id },
+      data: { homologation_status: "en_cours" },
+    });
+
+    const appWithoutHomologationCompliance = await ComplianceFaker.create({
+      application: appWithoutHomologation,
+    });
+    await prisma.compliance.update({
+      where: { id: appWithoutHomologationCompliance.id },
+      data: { homologation_status: null },
+    });
+
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({
+        compliance__in: "homologation",
+        page: 0,
+        pageSize: 50,
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const resultIds = response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+    expect(resultIds).toContain(appWithHomologationStatus.id);
+    expect(resultIds).not.toContain(appWithoutHomologation.id);
   });
 
   it("/POST applications, with missing capabilities", async () => {
