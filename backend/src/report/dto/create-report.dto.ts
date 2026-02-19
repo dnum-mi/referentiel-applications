@@ -1,35 +1,35 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { AnomalyNotificationStatus } from "@prisma/client";
+import { ReportStatus } from "@prisma/client";
 import { IsEnum, IsOptional, IsString } from "class-validator";
 
-export class CreateAnomalyNotificationDto {
+export class CreateReportDto {
   @IsString()
   @IsOptional()
   @ApiProperty({
-    description: "La description de la notification d'anomalie",
+    description: "La description du signalement",
     required: false,
   })
   description: string;
 
   @IsOptional()
-  @IsEnum(AnomalyNotificationStatus)
+  @IsEnum(ReportStatus)
   @ApiProperty({
-    description: "Le statut de la notification d'anomalie",
-    enum: AnomalyNotificationStatus,
+    description: "Le statut du signalement",
+    enum: ReportStatus,
     required: false,
   })
-  status?: AnomalyNotificationStatus;
+  status?: ReportStatus;
 
   @IsString()
   @IsOptional()
   @ApiProperty({
-    description: "La note de la notification d'anomalie",
+    description: "La note du signalement",
     required: false,
   })
   notes?: string;
 }
 
-export class CreateAnomalyNotificationRequestDto {
+export class CreateReportRequestDto {
   @IsString()
   @IsOptional()
   applicationId?: string;

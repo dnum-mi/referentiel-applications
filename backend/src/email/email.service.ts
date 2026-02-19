@@ -4,8 +4,8 @@ import type { Transporter } from "nodemailer";
 import * as nodemailer from "nodemailer";
 import { EmailTemplateService } from "./email-templates.services";
 import { MailSendException } from "./error/mail-send.exception";
-import { AnomalyNotificationStatus } from "@prisma/client";
-import { AnomalyNotificationStatusLabels } from "src/applications/constants/enum-label";
+import { ReportStatus } from "@prisma/client";
+import { ReportStatusLabels } from "src/applications/constants/enum-label";
 
 @Injectable()
 export class EmailService {
@@ -259,17 +259,17 @@ export class EmailService {
   }: {
     recipientEmail: string;
     description: string;
-    status: AnomalyNotificationStatus;
+    status: ReportStatus;
     applicationName?: string;
     notes: string;
   }) {
     const subject = "Anomalie notification update";
-    const html = this.templateService.render("anomaly-notification-notify", {
+    const html = this.templateService.render("report-status-update", {
       title: subject,
       headerTitle: "Référentiel des Applications",
       applicationName: applicationName || "Signalement global",
       description,
-      status: AnomalyNotificationStatusLabels[status],
+      status: ReportStatusLabels[status],
       notes,
     });
 
@@ -285,7 +285,7 @@ export class EmailService {
       });
     } catch (error) {
       throw new MailSendException(
-        `Failed to send  anomaly update email to ${recipientEmail}:`,
+        `Failed to send report status update email to ${recipientEmail}:`,
       );
     }
   }

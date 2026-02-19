@@ -95,7 +95,7 @@ const baseNavItems = [
   { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
   { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
   { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
-  { to: { name: routeNames.ISSUELIST }, text: "Signalements" },
+  { to: { name: routeNames.REPORTS }, text: "Signalements" },
   { to: { name: routeNames.HISTORY }, text: "Modifications" },
 ];
 

@@ -65,9 +65,9 @@ const routes = [
     meta: { requiresAuth: false, title: "Accessibilité - Référentiel des applications" },
   },
   {
-    name: routeNames.ISSUELIST,
+    name: routeNames.REPORTS,
     path: "/signalements",
-    component: () => import("@/views/IssuePage.vue"),
+    component: () => import("@/views/ReportsPage.vue"),
     meta: { requiresAuth: true, title: "Signalements - Référentiel des applications" },
   },
   {

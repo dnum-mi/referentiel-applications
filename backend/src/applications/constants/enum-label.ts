@@ -1,4 +1,4 @@
-export const AnomalyNotificationStatusLabels: Record<string, string> = {
+export const ReportStatusLabels: Record<string, string> = {
   in_pending: "En attente",
   in_progress: "En cours",
   done: "Terminée",
@@ -54,7 +54,7 @@ export const ApplicationStatusLabels: Record<string, string> = {
 };
 
 export const ALL_ENUM_LABELS: Record<string, string> = {
-  ...AnomalyNotificationStatusLabels,
+  ...ReportStatusLabels,
   ...RelationTypeLabels,
   ...PriorityRestartLabels,
   ...EventTypeLabels,

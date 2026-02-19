@@ -146,7 +146,7 @@ export class ApplicationRepository implements IApplicationRepository {
         labels: true,
         tags: true,
         externalRessource: true,
-        anomalyNotification: true,
+        reports: true,
         statuses: true,
         actors: {
           include: {

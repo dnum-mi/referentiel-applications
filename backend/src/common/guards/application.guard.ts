@@ -94,9 +94,9 @@ export class ApplicationGuard implements CanActivate {
           if (key === "actorTypeId") return;
           if (value === true) {
             appPermsSet.add(key as APP_PERMISSIONS);
-            if (key === "manageAnomalyNotifications") {
-              appPermsSet.add("readAnomalyNotifications");
-              appPermsSet.add("postAnomalyNotifications");
+            if (key === "manageReports") {
+              appPermsSet.add("readReports");
+              appPermsSet.add("postReports");
             }
           }
         });

@@ -6,7 +6,7 @@ import { columnLabels } from "src/applications/columnLabels/application-export.c
 import { ApplicationRepository } from "src/applications/infrastructure/repository/application.repository";
 import {
   mapActors,
-  mapAnomalyNotifications,
+  mapReports,
   mapApplications,
   mapCompliances,
   mapExternalResources,
@@ -142,14 +142,14 @@ export class ExportApplicationsUseCase {
         rows: apps.flatMap(mapExternalResources),
       },
       {
-        name: sheetLabels.AnomalyNotifications,
+        name: sheetLabels.Reports,
         columns: [
           col("applicationId", 30),
           col("applicationLabel", 30),
-          col("anomalyNotification.description", 40),
-          col("anomalyNotification.status", 20),
+          col("report.description", 40),
+          col("report.status", 20),
         ],
-        rows: apps.flatMap(mapAnomalyNotifications),
+        rows: apps.flatMap(mapReports),
       },
       {
         name: sheetLabels.RelationsAsTarget,

@@ -935,9 +935,9 @@ paths:
                     - readLinks
                     - writeLinks
                     - readMetadata
-                    - readAnomalyNotifications
-                    - manageAnomalyNotifications
-                    - postAnomalyNotifications
+                    - readReports
+                    - manageReports
+                    - postReports
                     - writePriorityRestart
       tags: *a5
   /api/v2/applications/export/excel:
@@ -2008,16 +2008,16 @@ paths:
         "204":
           description: Token supprimé avec succès
       tags: *a10
-  /api/v2/anomaly-notifications:
+  /api/v2/reports:
     get:
-      operationId: AnomalyNotificationsController_findAll
-      summary: Récupérer toutes les notifications d'anomalies
-      description: Renvoie la liste de toutes les notifications d'anomalies.
+      operationId: ReportsController_findAll
+      summary: Récupérer tous les signalements
+      description: Renvoie la liste de tous les signalements.
       parameters:
         - name: all
           required: false
           in: query
-          description: Filtrer les notifications d'anomalies pour l'utilisateur connecté
+          description: Filtrer les signalements pour l'utilisateur connecté
           schema:
             default: false
             type: boolean
@@ -2060,35 +2060,35 @@ paths:
             type: number
       responses:
         "200":
-          description: Liste des notifications d'anomalies
+          description: Liste des signalements
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnomalyNotificationPaginatedResponseDto"
+                $ref: "#/components/schemas/ReportPaginatedResponseDto"
       tags: &a11
-        - AnomalyNotifications
+        - Reports
     post:
-      operationId: AnomalyNotificationsController_create
-      summary: Rapporter une anomalie
+      operationId: ReportsController_create
+      summary: Créer un signalement
       parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAnomalyNotificationRequestDto"
+              $ref: "#/components/schemas/CreateReportRequestDto"
       responses:
         "201":
-          description: Notification d'anomalie créée avec succès
+          description: Signalement créé avec succès
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnomalyNotificationDto"
+                $ref: "#/components/schemas/ReportDto"
       tags: *a11
-  /api/v2/anomaly-notifications/{id}:
+  /api/v2/reports/{id}:
     patch:
-      operationId: AnomalyNotificationsController_update
-      summary: Mettre à jour une notification
+      operationId: ReportsController_update
+      summary: Mettre à jour un signalement
       parameters:
         - name: id
           required: true
@@ -2107,18 +2107,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateAnomalyNotificationDto"
+              $ref: "#/components/schemas/UpdateReportDto"
       responses:
         "200":
-          description: Notification mise à jour avec succès
+          description: Signalement mis à jour avec succès
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnomalyNotificationDto"
+                $ref: "#/components/schemas/ReportDto"
       tags: *a11
-  /api/v2/applications/{applicationId}/anomaly-notifications:
+  /api/v2/applications/{applicationId}/reports:
     post:
-      operationId: ApplicationAnomalyNotificationsController_create
+      operationId: ApplicationReportsController_create
       summary: Demande de modification pour une fiche application
       parameters:
         - name: applicationId
@@ -2132,26 +2132,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAnomalyNotificationRequestDto"
+              $ref: "#/components/schemas/CreateReportRequestDto"
       responses:
         "201":
-          description: Notification d'anomalie créée avec succès
+          description: Signalement créé avec succès
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnomalyNotificationDto"
+                $ref: "#/components/schemas/ReportDto"
       tags: &a12
-        - ApplicationNotifications
+        - ApplicationReports
     get:
-      operationId: ApplicationAnomalyNotificationsController_findAll
-      summary: Récupérer toutes les notifications d'anomalies pour une application
-      description: Renvoie la liste paginée des notifications d'anomalies pour une
-        application donnée.
+      operationId: ApplicationReportsController_findAll
+      summary: Récupérer tous les signalements pour une application
+      description: Renvoie la liste paginée des signalements pour une application donnée.
       parameters:
         - name: all
           required: false
           in: query
-          description: Filtrer les notifications d'anomalies pour l'utilisateur connecté
+          description: Filtrer les signalements pour l'utilisateur connecté
           schema:
             default: false
             type: boolean
@@ -2200,16 +2199,16 @@ paths:
             type: string
       responses:
         "200":
-          description: Liste paginée des notifications d'anomalies pour l'application
+          description: Liste paginée des signalements pour l'application
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnomalyNotificationPaginatedResponseDto"
+                $ref: "#/components/schemas/ReportPaginatedResponseDto"
       tags: *a12
-  /api/v2/applications/{applicationId}/anomaly-notifications/{id}:
+  /api/v2/applications/{applicationId}/reports/{id}:
     get:
-      operationId: ApplicationAnomalyNotificationsController_findOne
-      summary: Récupérer une notification spécifique par ID
+      operationId: ApplicationReportsController_findOne
+      summary: Récupérer un signalement spécifique par ID
       parameters:
         - name: id
           required: true
@@ -2224,15 +2223,15 @@ paths:
             type: string
       responses:
         "200":
-          description: Notification trouvée avec succès
+          description: Signalement trouvé avec succès
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnomalyNotificationDto"
+                $ref: "#/components/schemas/ReportDto"
       tags: *a12
     patch:
-      operationId: ApplicationAnomalyNotificationsController_update
-      summary: Mettre à jour une notification
+      operationId: ApplicationReportsController_update
+      summary: Mettre à jour un signalement
       parameters:
         - name: id
           required: true
@@ -2257,18 +2256,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateAnomalyNotificationDto"
+              $ref: "#/components/schemas/UpdateReportDto"
       responses:
         "200":
-          description: Notification mise à jour avec succès
+          description: Signalement mis à jour avec succès
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnomalyNotificationDto"
+                $ref: "#/components/schemas/ReportDto"
       tags: *a12
     delete:
-      operationId: ApplicationAnomalyNotificationsController_remove
-      summary: Supprimer une notification
+      operationId: ApplicationReportsController_remove
+      summary: Supprimer un signalement
       parameters:
         - name: id
           required: true
@@ -2283,7 +2282,7 @@ paths:
             type: string
       responses:
         "204":
-          description: Notification supprimée avec succès
+          description: Signalement supprimé avec succès
       tags: *a12
   /api/v2/health-check:
     get:
@@ -3718,7 +3717,7 @@ components:
       description: Liste des capacités de l'utilisateur
       enum:
         - CreateApplication
-        - CreateGlobalAnomalyNotification
+        - CreateGlobalReport
     OrganizationDto:
       type: object
       properties:
@@ -3931,7 +3930,7 @@ components:
             type: string
             enum:
               - CreateApplication
-              - CreateGlobalAnomalyNotification
+              - CreateGlobalReport
         organizationId:
           type: string
           nullable: true
@@ -4561,14 +4560,14 @@ components:
       required:
         - id
         - email
-    AnomalyNotificationStatus:
+    ReportStatus:
       type: string
-      description: Le statut de la notification d'anomalie
+      description: Le statut du signalement
       enum:
         - in_pending
         - in_progress
         - done
-    AnomalyNotificationDto:
+    ReportDto:
       type: object
       properties:
         notifier:
@@ -4576,7 +4575,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/Notifier"
         status:
-          $ref: "#/components/schemas/AnomalyNotificationStatus"
+          $ref: "#/components/schemas/ReportStatus"
         createdAt:
           type: string
           description: Date de création de la metadata
@@ -4607,14 +4606,14 @@ components:
         - notifierId
         - description
         - updatedAt
-    AnomalyNotificationPaginatedResponseDto:
+    ReportPaginatedResponseDto:
       type: object
       properties:
         results:
-          description: Array of metadata
+          description: Array of reports
           type: array
           items:
-            $ref: "#/components/schemas/AnomalyNotificationDto"
+            $ref: "#/components/schemas/ReportDto"
         total:
           type: number
           description: Total number of items
@@ -4622,7 +4621,7 @@ components:
       required:
         - results
         - total
-    CreateAnomalyNotificationRequestDto:
+    CreateReportRequestDto:
       type: object
       properties:
         applicationId:
@@ -4634,22 +4633,22 @@ components:
           default: ""
       required:
         - description
-    UpdateAnomalyNotificationDto:
+    UpdateReportDto:
       type: object
       properties:
         description:
           type: string
-          description: La description de la notification d'anomalie
+          description: La description du signalement
         status:
           type: string
-          description: Le statut de la notification d'anomalie
+          description: Le statut du signalement
           enum:
             - in_pending
             - in_progress
             - done
         notes:
           type: string
-          description: La note de la notification d'anomalie
+          description: La note du signalement
     GetIqAvgGroupedDto:
       type: object
       properties:
@@ -4790,11 +4789,11 @@ components:
           type: boolean
         writeLinks:
           type: boolean
-        readAnomalyNotifications:
+        readReports:
           type: boolean
-        postAnomalyNotifications:
+        postReports:
           type: boolean
-        manageAnomalyNotifications:
+        manageReports:
           type: boolean
       required:
         - actorTypeId
@@ -4812,9 +4811,9 @@ components:
         - writeRelations
         - readLinks
         - writeLinks
-        - readAnomalyNotifications
-        - postAnomalyNotifications
-        - manageAnomalyNotifications
+        - readReports
+        - postReports
+        - manageReports
     PatchActorTypeDto:
       type: object
       properties:

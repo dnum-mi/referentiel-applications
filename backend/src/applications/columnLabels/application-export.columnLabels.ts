@@ -80,7 +80,7 @@ export const columnLabels: Record<string, string> = {
   status: "Statut",
   statusDate: "Date du statut",
 
-  anomalyNotification: "Notifications d’anomalie",
-  "anomalyNotification.description": "Description",
-  "anomalyNotification.status": "Statut de notification",
+  report: "Signalements",
+  "report.description": "Description",
+  "report.status": "Statut du signalement",
 };

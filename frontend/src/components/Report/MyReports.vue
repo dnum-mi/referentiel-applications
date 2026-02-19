@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { AnomalyNotificationPaginatedResponseDto } from "@/client/types.gen";
+import type { ReportPaginatedResponseDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import { formatDate } from "@/composables/use-date";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
@@ -34,7 +34,7 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
 
 const userStore = useUserStore();
 
-const data = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total: 0 });
+const data = ref<ReportPaginatedResponseDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 const isEditing = ref<boolean>(false);
 const selection = ref<string[]>([]);
@@ -42,7 +42,7 @@ const currentPage = ref(0);
 const itemsPerPage = ref(15);
 const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 const searchReport = ref("");
-const sortBy = ref<"application" | "description" | "date" | "status" | "signalant" | "notes">("date");
+const sortBy = ref<"application" | "description" | "date" | "status" | "signalant">("date");
 const sortedDesc = ref<boolean>(true);
 
 const rows = computed(() =>
@@ -80,8 +80,8 @@ async function fetchAllReportsDirect() {
       sortBy: sortBy.value,
       order: (sortedDesc.value ? "desc" : "asc") as "desc" | "asc",
     };
-    const response = await api.anomalyNotificationsControllerFindAll({ query });
-    data.value = response.data as AnomalyNotificationPaginatedResponseDto;
+    const response = await api.reportsControllerFindAll({ query });
+    data.value = response.data as ReportPaginatedResponseDto;
   } finally {
     isLoading.value = false;
   }
@@ -144,7 +144,7 @@ watch(
     <div class="fr-mb-4w">
       <DsfrSearchBar
         v-model.trim="searchReport"
-        label="Rechercher un report"
+        label="Rechercher un signalement"
         placeholder="Recherche par description ou par email du signalant"
         button-text="Rechercher"
         class="fr-col-12"
@@ -152,7 +152,7 @@ watch(
       />
     </div>
     <div v-if="!rows.length" class="text-center">
-      <p>Aucune correction recensée.</p>
+      <p>Aucun signalement recensé.</p>
     </div>
     <RefAppTable
       v-else

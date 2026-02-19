@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
-import type { AnomalyNotificationDto, AnomalyNotificationPaginatedResponseDto, MetadataDto } from "@/client/types.gen";
+import type { ReportDto, ReportPaginatedResponseDto, MetadataDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
@@ -17,7 +17,7 @@ const props = defineProps<{ application: ApplicationWithPerms }>();
 const metadataStore = useMetadataStore();
 const toaster = useToasterStore();
 
-const issues = ref<AnomalyNotificationPaginatedResponseDto>({ results: [], total: 0 });
+const issues = ref<ReportPaginatedResponseDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 const currentPage = ref(0);
 const pageSize = ref(5);
@@ -34,7 +34,7 @@ const activeAccordion = ref<number>();
 const userStore = useUserStore();
 
 const canPost = computed(() => {
-  return props.application.myPerms.has("postAnomalyNotifications") || userStore.adminLevel >= AdminLevel.WRITE;
+  return props.application.myPerms.has("postReports") || userStore.adminLevel >= AdminLevel.WRITE;
 });
 
 async function fetchIssues() {
@@ -44,11 +44,11 @@ async function fetchIssues() {
       page: currentPage.value,
       limit: pageSize.value,
     };
-    const response = await api.applicationAnomalyNotificationsControllerFindAll({
+    const response = await api.applicationReportsControllerFindAll({
       path: { applicationId: props.application.id },
       query,
     });
-    issues.value = response.data as AnomalyNotificationPaginatedResponseDto;
+    issues.value = response.data as ReportPaginatedResponseDto;
   } finally {
     isLoading.value = false;
   }
@@ -62,19 +62,19 @@ function onPage(event: any) {
   pageSize.value = event.rows;
 }
 
-const correctionText = ref("");
+const reportText = ref("");
 const submitting = ref(false);
 
-async function submitCorrection() {
+async function submitReport() {
   try {
     submitting.value = true;
     const applicationId = props.application?.id;
     if (!applicationId) throw new Error("Application ID is undefined");
 
-    await api.anomalyNotificationsControllerCreate({ body: { applicationId, description: correctionText.value } });
+    await api.reportsControllerCreate({ body: { applicationId, description: reportText.value } });
     await fetchIssues();
 
-    correctionText.value = "";
+    reportText.value = "";
     toaster.addSuccessMessage("Votre proposition sera prise en compte prochainement.");
   } catch (_error) {
     toaster.addErrorMessage("Oops ! Une erreur est survenue, contactez l’administrateur du référentiel si le problème persiste.");
@@ -89,7 +89,7 @@ function getTitle(meta: any): string {
 
 const rows = computed(() => {
   const title = "Signalement";
-  const reports = issues.value.results.map((report: AnomalyNotificationDto) => ({
+  const reports = issues.value.results.map((report: ReportDto) => ({
     sortKey: new Date(report.createdAt).getTime(),
     Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
     Auteur: report.notifier?.email || "Inconnu",
@@ -122,12 +122,12 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
 <template>
   <AppLoader v-if="loading" data-testid="notifications-loader" />
   <div v-else-if="!loading && rows.length === 0" class="text-center" data-testid="notifications-empty">
-    <p>Aucune correction proposée.</p>
+    <p>Aucun signalement proposé.</p>
   </div>
 
   <DsfrAccordionsGroup v-else v-model="activeAccordion">
     <p>Nombre de consultations de l'application sur les 12 derniers mois : {{ props.application?.views }}</p>
-    <h4>Historique des modifications et demande de corrections</h4>
+    <h4>Historique des modifications et signalements</h4>
     <RefAppTable
       :items="rows"
       :columns="tableColumns"
@@ -154,18 +154,18 @@ const loading = computed(() => isLoading.value || metadataStore.isLoading);
     </RefAppTable>
   </DsfrAccordionsGroup>
   <div v-if="canPost" data-testid="notifications-report-issue">
-    <h4>Proposer une correction</h4>
+    <h4>Proposer un signalement</h4>
     <DsfrInput
-      v-model="correctionText"
+      v-model="reportText"
       is-textarea
-      placeholder="Écrivez votre correction..."
+      placeholder="Décrivez votre signalement..."
       required
       class="fr-mb-1w"
       rows="2"
       data-testid="report-issue-textarea"
     />
-    <DsfrButton :disabled="!correctionText || submitting" data-testid="report-issue-submit-btn" @click="submitCorrection">
-      Proposer ma correction
+    <DsfrButton :disabled="!reportText || submitting" data-testid="report-issue-submit-btn" @click="submitReport">
+      Envoyer mon signalement
     </DsfrButton>
   </div>
 </template>

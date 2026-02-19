@@ -5,7 +5,7 @@ export const sheetLabels: Record<string, string> = {
   Compliances: "Conformités",
   Labels: "Labels",
   ExternalResources: "Ressources externes",
-  AnomalyNotifications: "Notifications d'anomalie",
+  Reports: "Signalements",
   RelationsAsSource: "Relations sortantes",
   RelationsAsTarget: "Relations entrantes",
   Statuses: "Statuts",

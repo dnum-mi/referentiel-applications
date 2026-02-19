@@ -51,14 +51,14 @@ function updateWritePriorityRestart(actorTypeId: string, value: boolean) {
   updatedMatrix.value[actorTypeIdx].writePriorityRestart = value;
 }
 
-type AnomalyPermissionValue = "read" | "post" | "manage";
-function updateAnomalyMatrix(actorTypeId: string, values: AnomalyPermissionValue[]) {
+type ReportPermissionValue = "read" | "post" | "manage";
+function updateReportMatrix(actorTypeId: string, values: ReportPermissionValue[]) {
   const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
 
-  updatedMatrix.value[actorTypeIdx].readAnomalyNotifications = values.includes("read") || values.includes("manage");
-  updatedMatrix.value[actorTypeIdx].postAnomalyNotifications = values.includes("post") || values.includes("manage");
-  updatedMatrix.value[actorTypeIdx].manageAnomalyNotifications = values.includes("manage");
+  updatedMatrix.value[actorTypeIdx].readReports = values.includes("read") || values.includes("manage");
+  updatedMatrix.value[actorTypeIdx].postReports = values.includes("post") || values.includes("manage");
+  updatedMatrix.value[actorTypeIdx].manageReports = values.includes("manage");
 }
 
 function saveAppPermsMatrix() {
@@ -77,7 +77,7 @@ function saveAppPermsMatrix() {
         <th v-for="perm in permissionSuffixes" :key="perm.label" scope="col" style="min-width: 6rem" :title="perm.title">
           {{ perm.label }}
         </th>
-        <th scope="col">Anomalies</th>
+        <th scope="col">Signalements</th>
       </tr>
     </template>
     <tr v-for="perms in updatedMatrix as AppPermsDto[]" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
@@ -120,13 +120,13 @@ function saveAppPermsMatrix() {
         />
       </td>
       <td style="min-width: 15rem">
-        <AnomalyPermissionSelect
+        <ReportPermissionSelect
           :id="`${perms.actorTypeId}`"
-          :read="perms.readAnomalyNotifications"
-          :post="perms.postAnomalyNotifications"
-          :manage="perms.manageAnomalyNotifications"
-          :data-testid="`app-perms-anomaly-${perms.actorTypeId}`"
-          @update:model-value="(value: AnomalyPermissionValue[]) => updateAnomalyMatrix(perms.actorTypeId, value)"
+          :read="perms.readReports"
+          :post="perms.postReports"
+          :manage="perms.manageReports"
+          :data-testid="`app-perms-report-${perms.actorTypeId}`"
+          @update:model-value="(value: ReportPermissionValue[]) => updateReportMatrix(perms.actorTypeId, value)"
         />
       </td>
     </tr>

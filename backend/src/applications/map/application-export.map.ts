@@ -1,7 +1,7 @@
 import type { ApplicationWithAllRelations } from "src/applications/types/application.type";
 import { translateEnum } from "src/common/utils/enum.utils";
 import {
-  AnomalyNotificationStatusLabels,
+  ReportStatusLabels,
   ApplicationStatusLabels,
   ExternalRessourceTypeLabels,
   PriorityRestartLabels,
@@ -126,13 +126,13 @@ export function mapExternalResources(app: ApplicationWithAllRelations) {
   );
 }
 
-export function mapAnomalyNotifications(app: ApplicationWithAllRelations) {
+export function mapReports(app: ApplicationWithAllRelations) {
   return (
-    app.anomalyNotification?.map((n) => ({
+    app.reports?.map((n) => ({
       applicationId: app.id,
       applicationLabel: app.label,
       description: n.description,
-      status: translateEnum(AnomalyNotificationStatusLabels, n.status),
+      status: translateEnum(ReportStatusLabels, n.status),
     })) ?? []
   );
 }

@@ -6,42 +6,39 @@ import {
 import { Prisma } from "@prisma/client";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
 import { PrismaService } from "../prisma/prisma.service";
-import { AnomalyFiltersDto, SortByEnum } from "./dto/anomaly-filters.dto";
-import { CreateAnomalyNotificationDto } from "./dto/create-anomaly-notification.dto";
-import { UpdateAnomalyNotificationDto } from "./dto/update-anomaly-notification.dto";
+import { ReportFiltersDto, SortByEnum } from "./dto/report-filters.dto";
+import { CreateReportDto } from "./dto/create-report.dto";
+import { UpdateReportDto } from "./dto/update-report.dto";
 
 @Injectable()
-export class AnomalyNotificationsService {
+export class ReportsService {
   constructor(protected readonly prisma: PrismaService) {}
 
   /**
-   * Crée une nouvelle notification d'anomalie.
-   * @param data Les données nécessaires pour créer la notification.
-   * @returns La notification d'anomalie créée.
+   * Crée un nouveau signalement.
+   * @param data Les données nécessaires pour créer le signalement.
+   * @returns Le signalement créé.
    */
   public async create(
-    data: CreateAnomalyNotificationDto,
+    data: CreateReportDto,
     requestor: Requestor,
     applicationId?: string,
   ) {
-    const hasPostPerm =
-      requestor.appPerms?.includes("postAnomalyNotifications") === true;
+    const hasPostPerm = requestor.appPerms?.includes("postReports") === true;
     const isAdminWriteOrMore = requestor.adminLevel >= AdminLevel.WRITE;
     if (applicationId) {
       if (!hasPostPerm && !isAdminWriteOrMore) {
         throw new ForbiddenException(
-          "Vous n'avez pas la permission de créer une notification d'anomalie pour cette application.",
+          "Vous n'avez pas la permission de créer un signalement pour cette application.",
         );
       }
-    } else if (
-      !requestor.capabilities.includes("CreateGlobalAnomalyNotification")
-    ) {
+    } else if (!requestor.capabilities.includes("CreateGlobalReport")) {
       throw new ForbiddenException(
-        "Vous n'avez pas la permission de créer une notification d'anomalie.",
+        "Vous n'avez pas la permission de créer un signalement.",
       );
     }
 
-    return this.prisma.anomalyNotification.create({
+    return this.prisma.report.create({
       data: {
         ...(applicationId && {
           application: {
@@ -57,12 +54,12 @@ export class AnomalyNotificationsService {
   }
 
   /**
-   * Récupère toutes les notifications d'anomalies.
-   * @returns Un tableau de notifications d'anomalies.
+   * Récupère tous les signalements.
+   * @returns Un tableau de signalements.
    */
   async findAll(
     requestor: Requestor,
-    filters: AnomalyFiltersDto,
+    filters: ReportFiltersDto,
     applicationId?: string,
   ) {
     const {
@@ -75,13 +72,11 @@ export class AnomalyNotificationsService {
     } = filters;
 
     // Controle des permissions
-    const hasApplicationReadPerms = requestor.appPerms?.includes(
-      "readAnomalyNotifications",
-    );
+    const hasApplicationReadPerms = requestor.appPerms?.includes("readReports");
     const isAdminRead = requestor.adminLevel >= AdminLevel.READ;
     const canReadAll = hasApplicationReadPerms || isAdminRead;
 
-    const where: { AND: Prisma.AnomalyNotificationWhereInput[] } = { AND: [] };
+    const where: { AND: Prisma.ReportWhereInput[] } = { AND: [] };
 
     if (applicationId) {
       if (!canReadAll || !all) {
@@ -128,7 +123,7 @@ export class AnomalyNotificationsService {
 
     const sortOptions: Record<
       keyof typeof SortByEnum,
-      Prisma.AnomalyNotificationOrderByWithRelationInput
+      Prisma.ReportOrderByWithRelationInput
     > = {
       application: { application: { label: order } },
       description: { description: order },
@@ -140,7 +135,7 @@ export class AnomalyNotificationsService {
 
     const orderBy = sortOptions[sortBy];
 
-    return this.prisma.anomalyNotification.paginate({
+    return this.prisma.report.paginate({
       where,
       orderBy,
       page,
@@ -150,42 +145,42 @@ export class AnomalyNotificationsService {
   }
 
   /**
-   * Récupère une notification d'anomalie par son ID.
-   * @param id L'identifiant de la notification.
-   * @returns La notification d'anomalie trouvée.
-   * @throws NotFoundException Si la notification n'est pas trouvée.
+   * Récupère un signalement par son ID.
+   * @param id L'identifiant du signalement.
+   * @returns Le signalement trouvé.
+   * @throws NotFoundException Si le signalement n'est pas trouvé.
    */
   async findOne(id: string, requestor: Requestor) {
     const hasApplicationReadPerms =
-      requestor.appPerms?.includes("readAnomalyNotifications") ||
-      requestor.appPerms?.includes("manageAnomalyNotifications") ||
+      requestor.appPerms?.includes("readReports") ||
+      requestor.appPerms?.includes("manageReports") ||
       requestor.adminLevel >= AdminLevel.READ;
 
-    const where: Prisma.AnomalyNotificationWhereUniqueInput = {
+    const where: Prisma.ReportWhereUniqueInput = {
       id,
       ...(hasApplicationReadPerms ? {} : { notifierId: requestor.id }),
     };
 
-    const notification = await this.prisma.anomalyNotification.findUnique({
+    const report = await this.prisma.report.findUnique({
       where,
       include: { history: true, application: true },
     });
-    if (!notification) {
-      throw new NotFoundException(`Notification avec l'id ${id} non trouvée`);
+    if (!report) {
+      throw new NotFoundException(`Signalement avec l'id ${id} non trouvé`);
     }
 
-    return notification;
+    return report;
   }
 
   /**
-   * Met à jour une notification d'anomalie existante.
-   * @param id L'identifiant de la notification.
+   * Met à jour un signalement existant.
+   * @param id L'identifiant du signalement.
    * @param data Les données de mise à jour.
-   * @returns La notification d'anomalie mise à jour.
-   * @throws NotFoundException Si la notification n'est pas trouvée.
+   * @returns Le signalement mis à jour.
+   * @throws NotFoundException Si le signalement n'est pas trouvé.
    */
-  async update(id: string, data: UpdateAnomalyNotificationDto) {
-    return this.prisma.anomalyNotification.update({
+  async update(id: string, data: UpdateReportDto) {
+    return this.prisma.report.update({
       where: { id },
       data,
       include: {
@@ -196,7 +191,7 @@ export class AnomalyNotificationsService {
   }
 
   async delete(id: string) {
-    return this.prisma.anomalyNotification.delete({
+    return this.prisma.report.delete({
       where: { id },
     });
   }

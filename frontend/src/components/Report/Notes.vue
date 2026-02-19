@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useNotesDialog } from "@/composables/issue/use-notes-dialog";
+import { useNotesDialog } from "@/composables/report/use-notes-dialog";
 import { Textarea } from "primevue";
 
 const props = defineProps<{

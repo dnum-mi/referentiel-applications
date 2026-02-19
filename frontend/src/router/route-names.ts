@@ -9,7 +9,7 @@ export const routeNames = {
   PROFILEAPP: "application",
   CREATEAPP: "creer-application",
 
-  ISSUELIST: "signalements",
+  REPORTS: "signalements",
   QUALITYPAGE: "qualite-generale",
   HISTORY: "historique",
   METADATADETAIL: "metadata-detail",

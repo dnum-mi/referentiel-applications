@@ -1,4 +1,4 @@
-import { useReportIssueStore } from "@/stores/reportIssueStore";
+import { useReportStore } from "@/stores/reportStore";
 import { useToggle } from "../use-toggle";
 
 const useEditedNotes = (notes: MaybeRefOrGetter<string>) => {
@@ -19,7 +19,7 @@ const useEditedNotes = (notes: MaybeRefOrGetter<string>) => {
 };
 
 export const useNotesDialog = (initialNotes: MaybeRefOrGetter<string>, onRefresh: () => void) => {
-  const reportStore = useReportIssueStore();
+  const reportStore = useReportStore();
 
   const { isToggle: isOpen, off: hideDialog, on: openDialog } = useToggle();
 

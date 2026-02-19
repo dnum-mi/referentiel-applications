@@ -23,9 +23,9 @@ export const AppPermissionsRecord = {
   readLinks: null,
   writeLinks: null,
   readMetadata: null,
-  readAnomalyNotifications: null,
-  manageAnomalyNotifications: null,
-  postAnomalyNotifications: null,
+  readReports: null,
+  manageReports: null,
+  postReports: null,
   writePriorityRestart: null,
 } as const satisfies Record<APP_PERMISSIONS, null>;
 

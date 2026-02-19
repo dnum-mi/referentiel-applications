@@ -70,8 +70,8 @@ const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
   },
   {
     label: "Créer un signalement global",
-    value: "CreateGlobalAnomalyNotification" as UserCapabilities,
-    name: "capability-create-global-anomaly-notification",
+    value: "CreateGlobalReport" as UserCapabilities,
+    name: "capability-create-global-report",
   },
 ];
 </script>
