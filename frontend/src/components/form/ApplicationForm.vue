@@ -588,7 +588,7 @@ Aucun espace en début ou en fin."
         data-testid="application-status"
       />
 
-      <BusinessDivisionSearch :application="initialData" @update="updateBusinessDivision"> </BusinessDivisionSearch>
+      <BusinessDivisionSearch :business-division="initialData.businessDivision" @update="updateBusinessDivision" />
 
       <DsfrSelect
         v-model="form.type"

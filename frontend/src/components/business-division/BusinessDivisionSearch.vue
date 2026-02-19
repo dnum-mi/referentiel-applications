@@ -1,23 +1,22 @@
 <script lang="ts" setup>
 import api from "@/api";
 import type { BusinessDivisionDto } from "@/client";
-import type { ApplicationWithPerms } from "@/models/Application";
 
 const props = defineProps<{
-  application?: ApplicationWithPerms;
+  businessDivision?: BusinessDivisionDto | null;
 }>();
 
 const emit = defineEmits<{
   (e: "update", payload: BusinessDivisionDto | null): void;
 }>();
 
-const application = toRef(props, "application");
+const businessDivision = toRef(props, "businessDivision");
 const isLoading = ref(false);
 const errorMessage = ref("");
 const selectedValue = ref<null | BusinessDivisionDto>(null);
 
 const defaultLabel = computed(() => {
-  return application.value ? application.value.businessDivision?.label : undefined;
+  return businessDivision.value ? businessDivision.value?.label : undefined;
 });
 
 const updateSelectedValue = (businessDivision?: BusinessDivisionDto) => {
