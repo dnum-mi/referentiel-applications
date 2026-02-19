@@ -46,6 +46,7 @@ const DEFAULT_FILTERS: Filters = {
   is_service_user_of: RELATION_TYPE_FILTERS.neutral,
   is_data_user_of: RELATION_TYPE_FILTERS.neutral,
   relationAppId: undefined,
+  businessDivisionId: undefined,
 };
 
 // Shared state across components (singleton pattern)
@@ -166,6 +167,7 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     is_service_user_of: parseQueryParamsEnum(query.is_service_user_of) ?? DEFAULT_FILTERS.is_service_user_of,
     is_data_user_of: parseQueryParamsEnum(query.is_data_user_of) ?? DEFAULT_FILTERS.is_data_user_of,
     relationAppId: parseQueryParam(query.relationAppId),
+    businessDivisionId: parseQueryParam(query.businessDivisionId),
   };
 }
 

@@ -588,7 +588,11 @@ Aucun espace en début ou en fin."
         data-testid="application-status"
       />
 
-      <BusinessDivisionSearch :business-division="initialData.businessDivision" @update="updateBusinessDivision" />
+      <BusinessDivisionSearch
+        :business-division-id="initialData.businessDivision?.id"
+        @update="updateBusinessDivision"
+        label="Rechercher une direction de metier"
+      />
 
       <DsfrSelect
         v-model="form.type"

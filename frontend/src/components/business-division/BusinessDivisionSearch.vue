@@ -1,16 +1,23 @@
 <script lang="ts" setup>
+import { watch } from "vue";
 import api from "@/api";
 import type { BusinessDivisionDto } from "@/client";
 
-const props = defineProps<{
-  businessDivision?: BusinessDivisionDto | null;
-}>();
+const props = withDefaults(
+  defineProps<{
+    businessDivisionId?: BusinessDivisionDto["id"] | null;
+    label?: string;
+  }>(),
+  {
+    label: "",
+  },
+);
 
 const emit = defineEmits<{
   (e: "update", payload: BusinessDivisionDto | null): void;
 }>();
 
-const businessDivision = toRef(props, "businessDivision");
+const businessDivision = ref<null | BusinessDivisionDto>(null);
 const isLoading = ref(false);
 const errorMessage = ref("");
 const selectedValue = ref<null | BusinessDivisionDto>(null);
@@ -18,6 +25,19 @@ const selectedValue = ref<null | BusinessDivisionDto>(null);
 const defaultLabel = computed(() => {
   return businessDivision.value ? businessDivision.value?.label : undefined;
 });
+
+watch(
+  () => props.businessDivisionId,
+  async (businessDivisionId) => {
+    if (businessDivisionId) {
+      const { data } = await api.businessDivisionControllerFindById({ path: { id: businessDivisionId } });
+      if (data) {
+        businessDivision.value = data;
+      }
+    }
+  },
+  { immediate: true },
+);
 
 const updateSelectedValue = (businessDivision?: BusinessDivisionDto) => {
   selectedValue.value = businessDivision ?? null;
@@ -53,7 +73,7 @@ async function performSearch(query: string) {
       @update:selected-value="updateSelectedValue"
       :search-data-function="performSearch"
       :default-value="defaultLabel"
-      label="Rechercher une direction de metier"
+      :label="props.label"
       placeholder="Tapez au moins 3 caractères"
       data-testid="business-division-suggestions-input"
     />
