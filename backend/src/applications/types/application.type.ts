@@ -14,7 +14,7 @@ export type ApplicationWithAllRelations = Prisma.ApplicationGetPayload<{
       };
     };
     externalRessource: true;
-    anomalyNotification: true;
+    reports: true;
     relationsAsSource: {
       include: { targetApplication: true };
     };

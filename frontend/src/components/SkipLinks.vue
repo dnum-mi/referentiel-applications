@@ -15,7 +15,7 @@ const skipLinks = computed<SkipLink[]>(() => {
     { text: "Recherche", to: { name: routeNames.SEARCHAPP } },
     { text: "Profil", to: { name: routeNames.PROFILE } },
     { text: "Qualité générale", to: { name: routeNames.QUALITYPAGE } },
-    { text: "Signalements", to: { name: routeNames.ISSUELIST } },
+    { text: "Signalements", to: { name: routeNames.REPORTS } },
     { text: "Modifications", to: { name: routeNames.HISTORY } },
   ];
   if (userStore.adminLevel >= AdminLevel.ADMIN) {

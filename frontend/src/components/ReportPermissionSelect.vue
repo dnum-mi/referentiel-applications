@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
 
-type AnomalyValue = "read" | "post" | "manage";
+type ReportPermissionValue = "read" | "post" | "manage";
 const props = defineProps<{
   read: boolean;
   post: boolean;
@@ -10,7 +10,7 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: "update:model-value", value: AnomalyValue[]): void;
+  (e: "update:model-value", value: ReportPermissionValue[]): void;
 }>();
 
 const canManage = ref(props.manage);
@@ -19,7 +19,7 @@ const canPost = ref(props.post || canManage.value);
 
 function updateSelectedValues() {
   nextTick(() => {
-    const selectedValues = [] as AnomalyValue[];
+    const selectedValues = [] as ReportPermissionValue[];
     if (canRead.value || canManage.value) {
       selectedValues.push("read");
     }
@@ -35,13 +35,13 @@ function updateSelectedValues() {
 </script>
 
 <template>
-  <div class="anomaly-permission-select" data-testid="anomaly-permission-select">
+  <div class="report-permission-select" data-testid="report-permission-select">
     <DsfrToggleSwitch
       v-model="canRead"
       label="Lecture"
       no-text
       :disabled="canManage"
-      data-testid="anomaly-permission-read"
+      data-testid="report-permission-read"
       @update:model-value="updateSelectedValues"
     />
     <DsfrToggleSwitch
@@ -49,21 +49,21 @@ function updateSelectedValues() {
       label="Publication"
       no-text
       :disabled="canManage"
-      data-testid="anomaly-permission-post"
+      data-testid="report-permission-post"
       @update:model-value="updateSelectedValues"
     />
     <DsfrToggleSwitch
       v-model="canManage"
       label="Gestion"
       no-text
-      data-testid="anomaly-permission-manage"
+      data-testid="report-permission-manage"
       @update:model-value="updateSelectedValues"
     />
   </div>
 </template>
 
 <style scoped>
-.anomaly-permission-select {
+.report-permission-select {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;

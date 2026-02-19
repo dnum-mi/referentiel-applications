@@ -23,13 +23,12 @@ enum OrderEnum {
   desc = "desc",
 }
 
-export class AnomalyFiltersDto {
+export class ReportFiltersDto {
   @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
   @ApiProperty({
-    description:
-      "Filtrer les notifications d'anomalies pour l'utilisateur connecté",
+    description: "Filtrer les signalements pour l'utilisateur connecté",
     default: false,
   })
   all?: boolean;

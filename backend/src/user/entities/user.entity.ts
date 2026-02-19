@@ -27,7 +27,7 @@ export enum AdminLevel {
 
 export const UserCapabilities = {
   CreateApplication: "CreateApplication",
-  CreateGlobalAnomalyNotification: "CreateGlobalAnomalyNotification",
+  CreateGlobalReport: "CreateGlobalReport",
 } as const;
 
 export const UserType = {

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { AnomalyNotificationStatus, GetAnomalyNotificationDto } from "@/client/types.gen.js";
+import type { ReportStatus, GetReportDto } from "@/client/types.gen.js";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
-import { useReportIssueStore } from "@/stores/reportIssueStore";
+import { useReportStore } from "@/stores/reportStore";
 import { watch, ref } from "vue";
 
 const props = defineProps<{
-  report: GetAnomalyNotificationDto;
+  report: GetReportDto;
   isEditing: boolean;
 }>();
 
@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 const statusValue = ref(props.report.status);
 
-const options: { value: AnomalyNotificationStatus; text: (typeof statusDictionary)[AnomalyNotificationStatus] }[] = [
+const options: { value: ReportStatus; text: (typeof statusDictionary)[ReportStatus] }[] = [
   {
     value: "in_pending",
     text: "En attente",
@@ -30,9 +30,9 @@ const options: { value: AnomalyNotificationStatus; text: (typeof statusDictionar
   },
 ];
 
-const reportStore = useReportIssueStore();
+const reportStore = useReportStore();
 
-async function updateStatus(newValue: AnomalyNotificationStatus) {
+async function updateStatus(newValue: ReportStatus) {
   try {
     if (props.report.applicationId) {
       await reportStore.updateReport(props.report.id, props.report.applicationId, newValue, true);

@@ -17,8 +17,8 @@ model User {
   createdSet                Metadata[]            @relation("MetadataCreatedBy")
   /// Entrées de métadonnées où cet utilisateur est le propriétaire des données
   dataOwners                Metadata[]            @relation("MetadataDataOwnerBy")
-  /// Notifications d'anomalies pour cet utilisateur
-  AnomalyNotification       AnomalyNotification[] @relation("UserAnomalyNotification")
+  /// Signalements créés par cet utilisateur
+  reports                   Report[]              @relation("UserReport")
   /// Niveau de permission admin de 0 à 30
   adminLevel                Int                   @default(0)
   /// Tokens API qui se font passer pour cet utilisateur
@@ -123,6 +123,6 @@ enum UserType {
 enum CapabilityNames {
   /// Capacité de créer de nouvelles applications
   CreateApplication
-  /// Capacité de créer des notifications d'anomalies globales
-  CreateGlobalAnomalyNotification
+  /// Capacité de créer des signalements globaux
+  CreateGlobalReport @map("CreateGlobalAnomalyNotification")
 }

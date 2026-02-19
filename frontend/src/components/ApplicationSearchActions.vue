@@ -8,7 +8,7 @@ import { useApplicationSearch } from "@/composables/use-application-search";
 import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevel } from "@/models/user";
 import { routeNames } from "@/router/route-names";
-import ReportAnomaly from "@/components/modal/reportAnomaly.vue";
+import ReportModal from "@/components/modal/ReportModal.vue";
 import ColumnCustomization from "@/components/ColumnCustomization.vue";
 
 const props = defineProps<{
@@ -81,7 +81,7 @@ async function exportToExcel() {
         aria-haspopup="dialog"
         aria-controls="modal-report-missing"
         type="button"
-        :disabled="!userStore.user?.capabilities?.includes('CreateGlobalAnomalyNotification') && userStore.adminLevel < AdminLevel.WRITE"
+        :disabled="!userStore.user?.capabilities?.includes('CreateGlobalReport') && userStore.adminLevel < AdminLevel.WRITE"
         data-testid="report-missing-app"
         class="action-btn icon-left report-btn"
         @click="openReport"
@@ -134,14 +134,14 @@ async function exportToExcel() {
     </div>
   </div>
 
-  <ReportAnomaly
+  <ReportModal
     id="modal-report-missing"
     :opened="isReportMissingOpen"
     context="global"
     @close="closeReport"
     @status="(s: string) => (reportStatusMessage = s)"
     @busy="(b: boolean) => (reportStatusMessage = b ? 'En cours...' : '')"
-  ></ReportAnomaly>
+  ></ReportModal>
 </template>
 
 <style scoped>

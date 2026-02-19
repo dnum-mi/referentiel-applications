@@ -16,7 +16,7 @@ export enum HomologationStatus {
   DISPENSEE = "dispensee",
 }
 
-export enum AnomalyNotificationStatus {
+export enum ReportStatus {
   PENDING = "in_pending",
   INPROGRESS = "in_progress",
   DONE = "done",

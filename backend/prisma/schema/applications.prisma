@@ -28,8 +28,8 @@ model Application {
   actors              Actor[]               @relation("ApplicationActors")
   /// Informations de conformité pour cette application
   compliance          Compliance?           @relation("ApplicationCompliance")
-  /// Notifications de signalements pour cette application
-  anomalyNotification AnomalyNotification[] @relation("ApplicationAnomalyNotification")
+  /// Signalements pour cette application
+  reports             Report[]              @relation("ApplicationReport")
   /// Ressources externes liées à cette application
   externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
   /// Configurations d'hébergement pour cette application

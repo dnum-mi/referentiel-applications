@@ -20,9 +20,9 @@ function permissionsToObject(
     readBase: permissions.has("readBase"),
     writeBase: permissions.has("writeBase"),
     writePriorityRestart: permissions.has("writePriorityRestart"),
-    readAnomalyNotifications: permissions.has("readAnomalyNotifications"),
-    postAnomalyNotifications: permissions.has("postAnomalyNotifications"),
-    manageAnomalyNotifications: permissions.has("manageAnomalyNotifications"),
+    readReports: permissions.has("readReports"),
+    postReports: permissions.has("postReports"),
+    manageReports: permissions.has("manageReports"),
   };
 }
 export class ActorTypeFaker {

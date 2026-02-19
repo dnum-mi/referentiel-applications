@@ -1,6 +1,6 @@
 name: 💡 Demande de fonctionnalité
 description: Créer un ticket pour demander une nouvelle fonctionnalité.
-title: "💡 <title>"
+title: "<title>"
 labels: [enhancement]
 body:
   - type: textarea

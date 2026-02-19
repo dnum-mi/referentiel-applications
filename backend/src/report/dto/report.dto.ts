@@ -1,5 +1,5 @@
 import { ApiProperty, PickType } from "@nestjs/swagger";
-import { AnomalyNotificationStatus } from "@prisma/client";
+import { ReportStatus } from "@prisma/client";
 import { Type } from "class-transformer";
 import { IsString } from "class-validator";
 import { PaginatedResponseDto } from "src/common/dto";
@@ -8,7 +8,7 @@ import { UserEntity } from "src/user/entities/user.entity";
 
 class Notifier extends PickType(UserEntity, ["id", "email"]) {}
 
-export class AnomalyNotificationDto {
+export class ReportDto {
   @IsString()
   id: string;
 
@@ -31,13 +31,13 @@ export class AnomalyNotificationDto {
   description: string;
 
   @ApiProperty({
-    description: "Le statut de la notification d'anomalie",
-    enum: AnomalyNotificationStatus,
+    description: "Le statut du signalement",
+    enum: ReportStatus,
     required: true,
-    enumName: "AnomalyNotificationStatus",
+    enumName: "ReportStatus",
   })
   @IsString()
-  status: AnomalyNotificationStatus;
+  status: ReportStatus;
 
   @IsString()
   @ApiProperty({
@@ -51,10 +51,10 @@ export class AnomalyNotificationDto {
   updatedAt: Date;
 }
 
-export class AnomalyNotificationPaginatedResponseDto extends PaginatedResponseDto<AnomalyNotificationDto> {
+export class ReportPaginatedResponseDto extends PaginatedResponseDto<ReportDto> {
   @ApiProperty({
-    type: [AnomalyNotificationDto],
-    description: "Array of metadata",
+    type: [ReportDto],
+    description: "Array of reports",
   })
-  results: AnomalyNotificationDto[];
+  results: ReportDto[];
 }

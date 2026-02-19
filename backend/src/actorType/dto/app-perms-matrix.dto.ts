@@ -64,13 +64,13 @@ export class AppPermsDto {
 
   @ApiProperty()
   @IsBoolean()
-  readAnomalyNotifications: boolean;
+  readReports: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  postAnomalyNotifications: boolean;
+  postReports: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  manageAnomalyNotifications: boolean;
+  manageReports: boolean;
 }

@@ -16,7 +16,7 @@ import Quality from "./QualityTab.vue";
 
 import { useActorStore } from "@/stores/actorStore";
 import { useHostingStore } from "@/stores/hostingStore";
-import { useReportIssueStore } from "@/stores/reportIssueStore";
+import { useReportStore } from "@/stores/reportStore";
 import type { Tab } from "@/utils/types";
 import { useLinkStore } from "@/stores/linkStore";
 import { useComplianceStore } from "@/stores/complianceStore";
@@ -36,7 +36,7 @@ const userStore = useUserStore();
 const actorStore = useActorStore();
 const linkStore = useLinkStore();
 const compliancesStore = useComplianceStore();
-const reportIssueStore = useReportIssueStore();
+const reportStore = useReportStore();
 const relationsStore = useRelationStore();
 const metadataStore = useMetadataStore();
 

@@ -39,12 +39,12 @@ model AppPermissions {
   /// Peut écrire les liens externes
   writeLinks Boolean
 
-  /// Peut lire les notifications d'anomalies
-  readAnomalyNotifications   Boolean @default(false)
-  /// Peut créer des notifications d'anomalies
-  postAnomalyNotifications   Boolean @default(true)
-  /// Peut gérer (mettre à jour/supprimer) les notifications d'anomalies
-  manageAnomalyNotifications Boolean @default(false)
+  /// Peut lire les signalements
+  readReports   Boolean @default(false) @map("readAnomalyNotifications")
+  /// Peut créer des signalements
+  postReports   Boolean @default(true) @map("postAnomalyNotifications")
+  /// Peut gérer (mettre à jour/supprimer) les signalements
+  manageReports Boolean @default(false) @map("manageAnomalyNotifications")
 
   actorTypeId String    @unique
   /// Type d'acteur auquel ces permissions s'appliquent

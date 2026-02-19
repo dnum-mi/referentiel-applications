@@ -17,7 +17,7 @@ import { LinksModule } from "./links/links.module";
 import { LoggerModule } from "./logger/logger.module";
 import { MetadatasModule } from "./metadatas/metadatas.module";
 import { AuthMiddleware } from "./middlewares/auth.middleware";
-import { AnomalyNotificationModule } from "./notification/anomaly-notification.module";
+import { ReportModule } from "./report/report.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ApplicationModule } from "./applications/application.module";
@@ -45,7 +45,7 @@ import { UserModule } from "./user/user.module";
     ApplicationModule,
     HostingsModule,
     TokenModule,
-    AnomalyNotificationModule,
+    ReportModule,
     LoggerModule,
     HealthCheckModule,
     StatsModule,

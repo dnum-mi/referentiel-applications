@@ -12,15 +12,15 @@ async function openSearchAndOpenGlobalReportModal(page: Page) {
   const reportButton = page.getByTestId("report-missing-app");
   await expect(reportButton).toBeEnabled({ timeout: 20000 });
   await reportButton.click();
-  await expect(page.getByTestId("report-anomaly-modal")).toBeVisible();
+  await expect(page.getByTestId("report-modal")).toBeVisible();
 }
 
 async function submitGlobalReport(page: Page, description: string) {
-  await page.getByTestId("report-anomaly-description").fill(description);
+  await page.getByTestId("report-description").fill(description);
   const createReport = page.waitForResponse(
-    (response) => response.url().includes("/api/v2/anomaly-notifications") && response.request().method() === "POST",
+    (response) => response.url().includes("/api/v2/reports") && response.request().method() === "POST",
   );
-  await page.getByTestId("report-anomaly-submit-btn").click();
+  await page.getByTestId("report-submit-btn").click();
   return createReport;
 }
 
@@ -31,7 +31,7 @@ async function createGlobalReport(page: Page, descriptionPrefix: string) {
   const createResponse = await submitGlobalReport(page, description);
   expect(createResponse.status()).toBe(201);
 
-  await expect(page.getByTestId("report-anomaly-modal")).toBeHidden();
+  await expect(page.getByTestId("report-modal")).toBeHidden();
   await expect(page.getByTestId("app-toaster")).toContainText("Merci pour votre signalement !");
 
   return description;
@@ -49,25 +49,25 @@ async function openFirstApplicationFromSearch(page: Page) {
   await expect(page.getByTestId("application-title")).toBeVisible();
 }
 
-async function openHistoryTabAndSubmitCorrection(page: Page, description: string) {
+async function openHistoryTabAndSubmitReport(page: Page, description: string) {
   await page.getByRole("tab", { name: "Historique" }).click();
   await expect(page.getByTestId("notifications-report-issue")).toBeVisible();
   await page.getByTestId("report-issue-textarea").fill(description);
-  const createCorrection = page.waitForResponse(
-    (response) => response.url().includes("/api/v2/anomaly-notifications") && response.request().method() === "POST",
+  const createReport = page.waitForResponse(
+    (response) => response.url().includes("/api/v2/reports") && response.request().method() === "POST",
   );
   await page.getByTestId("report-issue-submit-btn").click();
-  return createCorrection;
+  return createReport;
 }
 
 async function openAllReportsTab(page: Page) {
   await login(page);
   await page.goto(`${BASE_URL}/signalements`);
-  await expect(page.getByTestId("issue-page-title")).toBeVisible();
+  await expect(page.getByTestId("reports-page-title")).toBeVisible();
   await page.getByRole("tab", { name: "Tous les Signalements" }).click();
-  const panel = page.getByTestId("issues-tab-content-tab-all-issues");
+  const panel = page.getByTestId("reports-tab-content-tab-all-reports");
   await expect(panel).toBeVisible();
-  await expect(panel.getByRole("searchbox", { name: "Rechercher un report" })).toBeVisible();
+  await expect(panel.getByRole("searchbox", { name: "Rechercher un signalement" })).toBeVisible();
   return panel;
 }
 
@@ -75,23 +75,23 @@ function findIssueRowByDescription(scope: Locator, description: string) {
   return scope.locator("tbody tr", { hasText: description }).first();
 }
 
-test.describe("Application Anomaly flow", () => {
+test.describe("Reports flow", () => {
   test.describe.configure({ mode: "serial" });
 
   test("RI-01 — Afficher le formulaire de déclaration", async ({ page }) => {
     await openSearchAndOpenGlobalReportModal(page);
 
-    await expect(page.getByTestId("report-anomaly-description")).toBeVisible();
-    await expect(page.getByTestId("report-anomaly-submit-btn")).toBeVisible();
+    await expect(page.getByTestId("report-description")).toBeVisible();
+    await expect(page.getByTestId("report-submit-btn")).toBeVisible();
   });
 
   test("RI-02 — Valider les champs obligatoires", async ({ page }) => {
     await openSearchAndOpenGlobalReportModal(page);
 
-    await page.getByTestId("report-anomaly-submit-btn").click();
+    await page.getByTestId("report-submit-btn").click();
 
     await expect(page.getByText("Veuillez décrire votre signalement.")).toBeVisible();
-    await expect(page.getByTestId("report-anomaly-modal")).toBeVisible();
+    await expect(page.getByTestId("report-modal")).toBeVisible();
   });
 
   test("RI-03 — Créer la demande et afficher un feedback de succès", async ({ page }) => {
@@ -123,11 +123,11 @@ test.describe("Application Anomaly flow", () => {
     await expect(page.getByTestId("app-toaster")).toContainText("Une erreur est survenue lors de l'envoi du signalement");
   });
 
-  test("RI-05 — Signaler une anomalie depuis une fiche application", async ({ page }) => {
+  test("RI-05 — Signaler depuis une fiche application", async ({ page }) => {
     await openFirstApplicationFromSearch(page);
-    const correctionDescription = uniqueText("RI05-app-correction");
+    const reportDescription = uniqueText("RI05-app-report");
 
-    const createResponse = await openHistoryTabAndSubmitCorrection(page, correctionDescription);
+    const createResponse = await openHistoryTabAndSubmitReport(page, reportDescription);
     expect(createResponse.status()).toBe(201);
 
     await expect(page.getByTestId("app-toaster")).toContainText("Votre proposition sera prise en compte prochainement.");
@@ -137,7 +137,7 @@ test.describe("Application Anomaly flow", () => {
     const globalReportDescription = await createGlobalReport(page, "RI06-global-report");
 
     const panel = await openAllReportsTab(page);
-    const searchInput = panel.getByRole("searchbox", { name: "Rechercher un report" });
+    const searchInput = panel.getByRole("searchbox", { name: "Rechercher un signalement" });
     await searchInput.fill(globalReportDescription);
     await panel.getByRole("button", { name: "Rechercher" }).click();
 
@@ -150,9 +150,7 @@ test.describe("Application Anomaly flow", () => {
 
     const patchResponse = page.waitForResponse(
       (response) =>
-        /\/api\/v2\/anomaly-notifications\/[^/]+/.test(response.url()) &&
-        response.request().method() === "PATCH" &&
-        response.status() === 200,
+        /\/api\/v2\/reports\/[^/]+/.test(response.url()) && response.request().method() === "PATCH" && response.status() === 200,
     );
     await statusSelect.selectOption("in_progress");
     await patchResponse;
