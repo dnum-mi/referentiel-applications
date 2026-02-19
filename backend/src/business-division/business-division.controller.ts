@@ -1,5 +1,11 @@
-import { Controller, Get, Query, UseGuards } from "@nestjs/common";
-import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
+import {
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from "@nestjs/swagger";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
 import { ApplicationGuard } from "src/common/guards/application.guard";
@@ -37,5 +43,20 @@ export class BusinessDivisionController {
   })
   async findAll(@Query() filters: BusinessDivisionFiltersDto) {
     return await this.businessDivisionService.search(filters);
+  }
+
+  @Get(":id")
+  @AppAction("readBase")
+  @ApiOperation({
+    summary: "Rechercher un Business division par id.",
+  })
+  @ApiOkResponse({
+    description: "Business division",
+    type: BusinessDivisionDTO,
+  })
+  @ApiNotFoundResponse({ description: "Business Division non trouvé" })
+  @ApiParam({ name: "id", description: "ID du Business Division à trouver" })
+  async findById(@Param("id") id: string) {
+    return await this.businessDivisionService.findById(id);
   }
 }

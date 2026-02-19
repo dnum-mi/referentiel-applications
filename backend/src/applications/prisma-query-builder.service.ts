@@ -402,6 +402,7 @@ export class PrismaQueryBuilder {
     });
 
     where.AND.push(this.buildRelationsQuery(filters));
+    where.AND.push(this.buildBusinessDivision(filters));
 
     return where;
   }
@@ -478,6 +479,12 @@ export class PrismaQueryBuilder {
 
     return {
       AND: [...excludeQueries, { OR: includeQueries }],
+    };
+  }
+
+  private buildBusinessDivision(filters: ApplicationSearchFilters) {
+    return {
+      businessDivisionId: filters.businessDivisionId,
     };
   }
 
