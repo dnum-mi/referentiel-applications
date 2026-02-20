@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useColumnPreferences } from "@/composables/use-column-preferences";
+import { formatDateFR } from "@/composables/use-date";
 import { restartPrioritiesConfig, statusApplicationDictionary } from "@/composables/use-dictionary";
 import RefAppTable from "./RefAppTable.vue";
 import type { TableSortEvent } from "@/types/table";
@@ -41,10 +42,7 @@ const formatActors = (actors: any[], actorTypeCode: string): string => {
     .join("\n");
 };
 
-const getComplianceField = (compliances: any[], field: string): string => {
-  if (!compliances || compliances.length === 0) return "-";
-
-  const compliance = compliances[0];
+const getComplianceField = (compliance: any | undefined, field: string): string => {
   if (!compliance) return "-";
 
   switch (field) {
@@ -68,6 +66,8 @@ const getComplianceField = (compliances: any[], field: string): string => {
         : "-";
     case "homologation":
       return compliance.homologation_status || "-";
+    case "homologationDateEnd":
+      return compliance.homologation_date_end ? formatDateFR(compliance.homologation_date_end) : "-";
     default:
       return "-";
   }
@@ -75,8 +75,6 @@ const getComplianceField = (compliances: any[], field: string): string => {
 
 const applications = computed(() =>
   results.value.map((app: any) => {
-    console.log("Application actors:", app.actors);
-    console.log("APP hostings:", app.hostings);
     return {
       ...app,
       qualityDisplay: app.quality !== null ? `${app.quality}%` : "0%",
@@ -87,11 +85,12 @@ const applications = computed(() =>
       moeDisplay: formatActors(app.actors, "MOE"),
       hostingManagerDisplay: formatActors(app.actors, "HEB"),
       rsimmDisplay: formatActors(app.actors, "RSSI"),
-      dimaDisplay: app.compliance ? getComplianceField([app.compliance], "dima") : "-",
-      pdmaDisplay: app.compliance ? getComplianceField([app.compliance], "pdma") : "-",
-      rgaaDisplay: app.compliance ? getComplianceField([app.compliance], "rgaa") : "-",
-      dsfrDisplay: app.compliance ? getComplianceField([app.compliance], "dsfr") : "-",
-      homologationDisplay: app.compliance ? getComplianceField([app.compliance], "homologation") : "-",
+      dimaDisplay: getComplianceField(app.compliance, "dima"),
+      pdmaDisplay: getComplianceField(app.compliance, "pdma"),
+      rgaaDisplay: getComplianceField(app.compliance, "rgaa"),
+      dsfrDisplay: getComplianceField(app.compliance, "dsfr"),
+      homologationDisplay: getComplianceField(app.compliance, "homologation"),
+      homologationDateEndDisplay: getComplianceField(app.compliance, "homologationDateEnd"),
       statusDisplay: app.currentStatus?.status
         ? statusApplicationDictionary[app.currentStatus.status as ApplicationStatus] || app.currentStatus.status
         : "-",
@@ -196,6 +195,10 @@ function onColumnResize(event: { field: string; width: string }) {
 
     <template #body-homologation="{ data }">
       {{ data.homologationDisplay }}
+    </template>
+
+    <template #body-homologationDateEnd="{ data }">
+      {{ data.homologationDateEndDisplay }}
     </template>
 
     <template #body-status="{ data }">

@@ -124,6 +124,14 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     requiredPermissions: ["readCompliances"],
   },
   {
+    field: "homologationDateEnd",
+    header: "Date de fin d'homologation",
+    sortable: false,
+    defaultWidth: "220px",
+    visible: false,
+    requiredPermissions: ["readCompliances"],
+  },
+  {
     field: "status",
     header: "Status",
     sortable: false,
