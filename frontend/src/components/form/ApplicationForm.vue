@@ -14,7 +14,6 @@ import type {
   ApplicationStatus,
   CreateApplicationDto,
   CreateActorDto,
-  LabelDto,
   ApplicationType,
   BusinessDivisionDto,
 } from "@/client/types.gen";
@@ -23,12 +22,10 @@ import type { ApplicationWithPerms } from "@/models/Application";
 interface Props {
   mode?: "create" | "edit";
   initialData: ApplicationWithPerms;
-  labels?: LabelDto[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "create",
-  labels: () => [],
 });
 
 const emit = defineEmits<{
@@ -53,7 +50,6 @@ const moaFirstnameError = ref<string | undefined>(undefined);
 const moaLastnameError = ref<string | undefined>(undefined);
 const moeFirstnameError = ref<string | undefined>(undefined);
 const moeLastnameError = ref<string | undefined>(undefined);
-const initialLabels = ref<LabelDto[]>([]);
 const cancelModalOpen = ref(false);
 
 const steps = ["Informations principales", "Détails de l'application", "Contact MOA", "Contact MOE"];
@@ -125,7 +121,6 @@ const form = ref<CreateApplicationDto>({
   priorityRestart: props.initialData?.priorityRestart,
   type: props.initialData?.type,
   tags: props.initialData?.tags ?? [],
-  labels: props.initialData?.labels ?? [],
   businessDivisionId: props?.initialData?.businessDivision?.id ?? null,
 });
 const initialStatusValue = ref(form.value.status?.status);
@@ -137,7 +132,6 @@ const isCreateFormDirty = computed(() => {
 
   const hasText = (value?: string) => (value ?? "").trim() !== "";
   const hasArrayValue = (values?: string[]) => values?.some((value) => value.trim() !== "") ?? false;
-  const hasLabels = form.value.labels?.some((label) => (label.value ?? "").trim() !== "" || (label.source ?? "").trim() !== "") ?? false;
   const statusChanged = form.value.status?.status !== initialStatusValue.value;
 
   return (
@@ -151,7 +145,6 @@ const isCreateFormDirty = computed(() => {
     form.value.type !== undefined ||
     (form.value.tags?.length ?? 0) > 0 ||
     form.value?.businessDivisionId ||
-    hasLabels ||
     statusChanged ||
     !!moaActor.value.organizationId ||
     hasText(moaActor.value.email) ||
@@ -463,38 +456,7 @@ async function createActors(applicationId: string) {
 }
 
 async function handleUpdate() {
-  const deletedLabels = initialLabels.value.filter((initial) => !form.value.labels.some((label) => label.id === initial.id));
-  const newLabels = form.value.labels.filter((label) => !initialLabels.value.some((initial) => initial.id === label.id));
-  const updatedLabels = form.value.labels.filter((label) => {
-    const initial = initialLabels.value.find((i) => i.id === label.id);
-    return initial && (initial.value !== label.value || initial.source !== label.source);
-  });
-
   try {
-    for (const label of deletedLabels) {
-      if (label.id) {
-        await api.labelsControllerDelete({
-          path: { applicationId: props.initialData.id, id: label.id },
-        });
-      }
-    }
-
-    for (const label of newLabels) {
-      await api.labelsControllerCreate({
-        path: { applicationId: props.initialData.id },
-        body: { source: label.source, value: label.value },
-      });
-    }
-
-    for (const label of updatedLabels) {
-      if (label.id) {
-        await api.labelsControllerUpdate({
-          path: { applicationId: props.initialData.id, id: label.id },
-          body: { source: label.source, value: label.value },
-        });
-      }
-    }
-
     const updatedApp = await applicationStore.patchApplication({ ...form.value, id: props.initialData.id });
     applicationStore.applicationsById[props.initialData.id] = updatedApp;
 
@@ -527,8 +489,6 @@ const updateBusinessDivision = (payload: BusinessDivisionDto | null) => {
 };
 
 onMounted(async () => {
-  initialLabels.value = props.labels ? JSON.parse(JSON.stringify(props.labels)) : [];
-
   if (isCreateMode.value) {
     if (actorTypeStore.actorTypes.length === 0) {
       await actorTypeStore.fetchAll();
@@ -602,54 +562,6 @@ Aucun espace en début ou en fin."
         default-unselected-text="Sélectionner un type"
         data-testid="application-type"
       />
-
-      <div v-if="!isCreateMode" class="fr-form-group fr-mt-3w">
-        <legend class="fr-label">Noms alternatifs</legend>
-        <div class="fr-mt-2w">
-          <div v-for="(_label, index) in form.labels" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
-            <div class="fr-col">
-              <DsfrInput
-                :model-value="form.labels[index].source ?? ''"
-                :disabled="!canEditBase"
-                :placeholder="`Référentiel externe ${index + 1} (optionnel)`"
-                :data-testid="`application-alt-label-source-${index}`"
-                @update:model-value="form.labels[index].source = (typeof $event === 'string' ? $event : null) || null"
-              />
-              <DsfrInput
-                v-model.trim="form.labels[index].value"
-                :disabled="!canEditBase"
-                :placeholder="`Nom ou identifiant externe ${index + 1}`"
-                :data-testid="`application-alt-label-value-${index}`"
-              />
-            </div>
-            <div class="fr-col-auto">
-              <DsfrButton
-                :disabled="!canEditBase"
-                type="button"
-                tertiary
-                size="sm"
-                icon="delete-line"
-                label="Supprimer"
-                title="Supprimer ce libellé alternatif"
-                aria-label="Supprimer ce libellé alternatif"
-                :data-testid="`application-alt-label-remove-${index}`"
-                @click="form.labels.splice(index, 1)"
-              />
-            </div>
-          </div>
-          <DsfrButton
-            :disabled="!canEditBase"
-            type="button"
-            secondary
-            icon="add-line"
-            label="Ajouter un libellé"
-            title="Ajouter un nouveau libellé alternatif"
-            aria-label="Ajouter un nouveau libellé alternatif"
-            data-testid="application-alt-label-add"
-            @click="form.labels.push({ source: '', value: '' })"
-          />
-        </div>
-      </div>
 
       <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required :error-message="descriptionError">
         <MarkdownEditor

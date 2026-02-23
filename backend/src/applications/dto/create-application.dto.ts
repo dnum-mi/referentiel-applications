@@ -12,21 +12,6 @@ import {
 } from "class-validator";
 import { CreateApplicationStatusDto } from "src/statuses/dto/application-status.dto";
 
-export class CreateLabelDto {
-  @ApiProperty({
-    example: "CODE_PAI",
-    description: "Source of the label",
-  })
-  @IsString()
-  @IsOptional()
-  source: string | null;
-
-  @ApiProperty({ example: "My App", description: "Value of the label" })
-  @IsString()
-  @MinLength(2, { message: "Le label doit contenir au moins 2 caractères" })
-  value: string | null;
-}
-
 export class CreateApplicationDto {
   @ApiProperty({
     example: "My Application",
@@ -126,22 +111,6 @@ export class CreateApplicationDto {
   @ValidateNested()
   @Type(() => CreateApplicationStatusDto)
   status: CreateApplicationStatusDto;
-
-  @ApiProperty({
-    type: [CreateLabelDto],
-    description: "Liste des labels alternatifs associés à l'application",
-    example: [
-      {
-        source: "",
-        value: "My App",
-      },
-    ],
-  })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateLabelDto)
-  labels: CreateLabelDto[];
 
   @ApiProperty({
     description: "Id de la direction de metier de l'application MOA",

@@ -126,7 +126,7 @@ export class ExportApplicationsUseCase {
           col("applicationId", 30),
           col("applicationLabel", 30),
           col("labels.value", 30),
-          col("labels.source", 30),
+          col("labels.labelSource.source", 30),
         ],
         rows: apps.flatMap(mapLabels),
       },

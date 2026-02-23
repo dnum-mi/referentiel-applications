@@ -3,7 +3,6 @@ import { ConfigType } from "@nestjs/config";
 import { Application, Prisma } from "@prisma/client";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { appConfig } from "src/config/configs";
-import { LabelsService } from "src/labels/labels.service";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TagsService } from "src/tag/tags.service";
@@ -33,7 +32,6 @@ export class ApplicationService {
     private readonly prisma: PrismaService,
     private readonly applicationRepository: ApplicationRepository,
     private readonly tagsService: TagsService,
-    private readonly labelsService: LabelsService,
     private readonly metadataService: MetadatasService,
     private readonly applicationViewService: ApplicationViewService,
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
@@ -89,25 +87,12 @@ export class ApplicationService {
     });
 
     await this.updateApplicationQuality(application.id);
-
-    for (const labelDto of createApplicationDto.labels || []) {
-      await this.labelsService.create({
-        source: labelDto.source,
-        value: labelDto.value,
-        metadatas: {
-          create: {
-            applicationId: application.id,
-            createdById: requestorId,
-            description: `Ajout du libellé alternatif "${labelDto.value}" à l'application`,
-          },
-        },
-        application: {
-          connect: {
-            id: application.id,
-          },
-        },
-      });
-    }
+    await this.metadataService.createMetadata({
+      applicationId: application.id,
+      createdById: requestorId,
+      title: `de l'application`,
+      type: "add",
+    });
     return application;
   }
 

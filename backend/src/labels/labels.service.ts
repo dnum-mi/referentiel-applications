@@ -22,6 +22,7 @@ export class LabelsService extends BaseService<Label> {
         metadatas: {
           orderBy: { createdAt: "desc" },
         },
+        labelSource: true,
       },
     });
 
@@ -33,10 +34,7 @@ export class LabelsService extends BaseService<Label> {
   }
 
   /**
-   * Récupère le label principal d'une application.
-   * Priorité :
-   * 1. Le label le plus récent avec la source "https://referentiel-applications.interieur.rie.gouv.fr/applications".
-   * 2. Sinon, le label le plus récent tout court.
+   * Récupère le label principal (plus récent) d'une application.
    * @param applicationId L'ID de l'application concernée.
    * @returns Le label principal.
    * @throws NotFoundException Si aucun label n'est trouvé.
@@ -49,6 +47,7 @@ export class LabelsService extends BaseService<Label> {
           orderBy: { createdAt: "desc" },
           take: 1,
         },
+        labelSource: true,
       },
     });
 

@@ -52,8 +52,12 @@ export class BaseService<T, TDelegate = any> {
   }
 
   async update(id: string, data: any, options?: ServiceOptions<T>): Promise<T> {
-    const oldEntity = await this.findOne(id);
-    const updated = await this.model.update({ where: { id }, data });
+    const oldEntity = await this.findOne(id, options?.include);
+    const updated = await this.model.update({
+      where: { id },
+      data,
+      include: options?.include,
+    });
 
     if (options)
       await this.handleMetadataAndQuality(
