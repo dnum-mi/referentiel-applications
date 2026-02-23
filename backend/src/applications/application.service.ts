@@ -305,13 +305,14 @@ export class ApplicationService {
         where,
         orderBy,
       );
+    } else {
+      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
+      paginatedResult = await this.applicationRepository.findApplications(
+        searchParams,
+        where,
+        orderBy,
+      );
     }
-    const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
-    paginatedResult = await this.applicationRepository.findApplications(
-      searchParams,
-      where,
-      orderBy,
-    );
 
     const dataWithViews = paginatedResult.results.map((app: any) => {
       const { _count, ...rest } = app;
