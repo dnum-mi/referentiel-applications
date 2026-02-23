@@ -124,5 +124,5 @@ enum CapabilityNames {
   /// Capacité de créer de nouvelles applications
   CreateApplication
   /// Capacité de créer des signalements globaux
-  CreateGlobalReport @map("CreateGlobalAnomalyNotification")
+  CreateGlobalReport
 }

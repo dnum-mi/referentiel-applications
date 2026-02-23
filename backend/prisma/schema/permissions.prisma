@@ -40,11 +40,11 @@ model AppPermissions {
   writeLinks Boolean
 
   /// Peut lire les signalements
-  readReports   Boolean @default(false) @map("readAnomalyNotifications")
+  readReports   Boolean @default(false)
   /// Peut créer des signalements
-  postReports   Boolean @default(true) @map("postAnomalyNotifications")
+  postReports   Boolean @default(true)
   /// Peut gérer (mettre à jour/supprimer) les signalements
-  manageReports Boolean @default(false) @map("manageAnomalyNotifications")
+  manageReports Boolean @default(false)
 
   actorTypeId String    @unique
   /// Type d'acteur auquel ces permissions s'appliquent

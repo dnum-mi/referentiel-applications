@@ -25,8 +25,6 @@ model Report {
   history     ReportHistory[]
   /// Application affectée par ce signalement
   application Application?    @relation("ApplicationReport", fields: [applicationId], references: [id], onDelete: Cascade)
-
-  @@map("AnomalyNotification")
 }
 
 /// Enregistrement historique des changements d'un signalement.
@@ -37,7 +35,7 @@ model ReportHistory {
   /// Identifiant unique
   id       String       @id @default(uuid())
   /// Identifiant du signalement associé
-  reportId String       @map("issueNotificationId")
+  reportId String
   /// Action prise
   action   String
   /// Statut après l'action
@@ -47,8 +45,6 @@ model ReportHistory {
 
   /// Le signalement auquel cette entrée d'historique appartient
   report Report @relation(fields: [reportId], references: [id])
-
-  @@map("AnomalyNotificationHistory")
 }
 
 /// Statut d'un signalement.
@@ -61,6 +57,4 @@ enum ReportStatus {
   in_progress
   /// Résolue
   done
-
-  @@map("AnomalyNotificationStatus")
 }
