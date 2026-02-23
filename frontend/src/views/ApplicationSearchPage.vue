@@ -7,7 +7,6 @@ import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
 import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue";
-import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
 
 const statsStore = useStatisticsStore();
 const { isLoading, searchApplications, filters, fetchTechnicalDebtPoints, averageIq, DEFAULT_FILTERS } = useApplicationSearch();

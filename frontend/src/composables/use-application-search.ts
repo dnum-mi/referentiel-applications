@@ -11,7 +11,7 @@ import api from "@/api/index.js";
 import { useDebouncedFn } from "@/composables/use-debouncefn";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 
-export type TechnicalDebtPoint = TechnicalDebtControllerGetTechnicalDebtPointsResponses extends (infer Item)[] ? Item : never;
+export type TechnicalDebtPoint = TechnicalDebtControllerGetTechnicalDebtPointsResponses[200][number];
 
 export type Filters = NonNullable<ApplicationControllerSearchData["query"]>;
 
@@ -265,16 +265,12 @@ export function useApplicationSearch() {
     }
   }
 
-  async function fetchTechnicalDebtPoints(customFilters?: Partial<Filters>) {
+  async function fetchTechnicalDebtPoints(customFilters?: Partial<Filters>): Promise<TechnicalDebtPoint[]> {
     const currentFilters = { ...filters.value, ...customFilters };
     const { page, pageSize, ...query } = cleanFilters(currentFilters);
-    const response = await api.technicalDebtControllerGetTechnicalDebtPoints({
-      query,
-      responseStyle: "data",
-      throwOnError: true,
-    });
+    const response = await api.technicalDebtControllerGetTechnicalDebtPoints({ query, throwOnError: true, responseStyle: "data" });
 
-    return response ?? [];
+    return response.data ?? [];
   }
 
   // Auto-search when filters change
