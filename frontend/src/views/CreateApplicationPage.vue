@@ -4,10 +4,10 @@ import { useRouter } from "vue-router";
 import ApplicationForm from "@/components/form/ApplicationForm.vue";
 import { routeNames } from "@/router/route-names";
 import type { ApplicationDto } from "@/client/types.gen";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 
 const router = useRouter();
-const emptyApplication = ref<ApplicationWithPerms>({
+const emptyApplication = ref<CreateApplicationWithPerms>({
   label: "",
   shortName: "",
   description: "",

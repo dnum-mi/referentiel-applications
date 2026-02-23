@@ -3,7 +3,7 @@ import { ref, computed, watch, onMounted } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
 import type { ReportDto, ReportPaginatedResponseDto, MetadataDto } from "@/client/types.gen";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import { useMetadataStore } from "@/stores/metadataStore";
@@ -12,7 +12,7 @@ import RefAppTable from "./RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 
 const route = useRoute();
-const props = defineProps<{ application: ApplicationWithPerms }>();
+const props = defineProps<{ application: CreateApplicationWithPerms }>();
 
 const metadataStore = useMetadataStore();
 const toaster = useToasterStore();

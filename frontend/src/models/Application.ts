@@ -1,5 +1,6 @@
 import type {
   ActorDto,
+  ApplicationDto,
   AppPermsDto,
   ComplianceDto,
   CreateApplicationDto,
@@ -32,7 +33,8 @@ export interface Application {
   metadatas: MetadataDto[];
 }
 
-export type ApplicationWithPerms = CreateApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
+export type CreateApplicationWithPerms = CreateApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
+export type ApplicationWithPerms = ApplicationDto & { myPerms: Set<APP_PERMISSIONS> };
 
 export interface Relation {
   id: string;

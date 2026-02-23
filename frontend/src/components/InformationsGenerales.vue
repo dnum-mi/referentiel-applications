@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from "vue";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms, CreateApplicationWithPerms } from "@/models/Application";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import ApplicationForm from "./form/ApplicationForm.vue";
@@ -83,7 +83,7 @@ onMounted(() => {
   fetchLabels();
   fetchTechnicalDebtInfo();
 });
-const application = ref<ApplicationWithPerms>({
+const application = ref<CreateApplicationWithPerms>({
   ...props.application,
 });
 
@@ -179,6 +179,10 @@ function cancelDeletionHosting() {
   isDeleteModalOpen.value = false;
 }
 
+const businessDivisionLabel = computed(() => {
+  return props.application.businessDivision?.label ?? "Aucun";
+});
+
 watch(
   () => props.application,
   (newVal) => {
@@ -215,6 +219,11 @@ watch(
               <h4>ID de l'application</h4>
               <p data-testid="info-application-id">
                 {{ application.id }}
+              </p>
+
+              <h4>Direction de metier principale MOA:</h4>
+              <p data-testid="info-application-id">
+                {{ businessDivisionLabel }}
               </p>
 
               <div v-if="application.shortName">

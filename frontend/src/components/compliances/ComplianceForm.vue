@@ -10,12 +10,12 @@ import {
   complianceFieldLabels,
 } from "@/composables/use-dictionary";
 import { useUserStore } from "@/stores/userStore";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
 
 const props = defineProps<{
   applicationId: string;
-  application: ApplicationWithPerms;
+  application: CreateApplicationWithPerms;
   type: string;
   mode: "create" | "edit";
   initialData: Record<string, any> | null;

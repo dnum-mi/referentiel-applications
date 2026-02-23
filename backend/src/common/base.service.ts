@@ -1,11 +1,13 @@
 import type { ApplicationService } from "src/applications/application.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ServiceOptions } from "./utils/types";
+import { PaginatedResponseDto, PaginationDto } from "./dto";
 
 @Injectable()
-export class BaseService<T> {
+export class BaseService<T, TDelegate = any> {
   constructor(
     protected readonly model: any,
     protected readonly prisma: PrismaService,
@@ -19,6 +21,18 @@ export class BaseService<T> {
       throw new NotFoundException(`${this.model.name} with ID ${id} not found`);
     }
     return object;
+  }
+
+  async findAllPaginated(
+    filters: Prisma.Args<TDelegate, "findMany"> &
+      Pick<PaginationDto, "page" | "pageSize">,
+  ): Promise<PaginatedResponseDto<T>> {
+    return this.model.paginate({
+      where: filters.where,
+      orderBy: filters.orderBy,
+      page: filters.page,
+      pageSize: filters.pageSize,
+    });
   }
 
   async countAll(): Promise<number> {

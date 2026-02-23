@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
@@ -9,13 +9,14 @@ import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
+import api from "@/api";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 const metadataStore = useMetadataStore();
 const route = useRoute();
 const id = route.params.id as string;
-const application = computed<ApplicationWithPerms>(() => applicationStore.applicationsById[id]);
+const application = computed<CreateApplicationWithPerms>(() => applicationStore.applicationsById[id]);
 const isLoading = ref(false);
 const errorMessage = ref("");
 

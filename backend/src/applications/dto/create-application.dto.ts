@@ -142,6 +142,13 @@ export class CreateApplicationDto {
   @ValidateNested({ each: true })
   @Type(() => CreateLabelDto)
   labels: CreateLabelDto[];
+
+  @ApiProperty({
+    description: "Id de la direction de metier de l'application MOA",
+  })
+  @IsString()
+  @IsOptional()
+  businessDivisionId?: string | null;
 }
 
 export class PatchApplicationDto extends PartialType(

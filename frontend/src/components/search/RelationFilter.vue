@@ -50,6 +50,7 @@ const updateSelectedValue = (application?: Pick<ApplicationDto, "label" | "id">)
 watch([() => filters.value.relationAppId], ([relationAppId]) => {
   if (!relationAppId) {
     componentKey.value++;
+    defaultValue.value = undefined;
   }
 });
 

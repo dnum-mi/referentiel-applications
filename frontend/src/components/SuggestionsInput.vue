@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ApplicationDto } from "@/client";
 import { generateId } from "@/utils/generator-utils";
-import { ref, watch } from "vue";
+import { ref, watch, type WatchHandle } from "vue";
 
 const props = defineProps<{
   searchData?: Array<{ id: string; label: string }>;
@@ -42,16 +42,12 @@ watch(input, (newValue) => {
   }
 });
 
-watch(
-  () => props.defaultValue,
-  (defaultValue) => {
-    if (!defaultValue) {
-      return;
-    }
-    searchSuggestion.value = defaultValue;
-  },
-  { once: true },
-);
+let stop: WatchHandle;
+stop = watchEffect(() => {
+  if (!props.defaultValue) return;
+  searchSuggestion.value = props.defaultValue;
+  stop?.();
+});
 
 const resetInput = () => {
   searchSuggestion.value = "";

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import type { CreateLinkDto, UpdateLinkDto, Link } from "@/client/types.gen";
 import { useLinkStore } from "@/stores/linkStore";
 import useModal from "@/composables/use-modal";
@@ -14,7 +14,7 @@ import type { TableColumn } from "@/types/table";
 
 const props = withDefaults(
   defineProps<{
-    application: ApplicationWithPerms;
+    application: CreateApplicationWithPerms;
     isMobile?: boolean;
   }>(),
   {

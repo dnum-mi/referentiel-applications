@@ -296,4 +296,11 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsOptional()
   @IsString()
   relationAppId?: string;
+
+  @ApiPropertyOptional({
+    description: "Filtrage des directions de metier MOA",
+  })
+  @IsOptional()
+  @IsString()
+  businessDivisionId?: string | null;
 }

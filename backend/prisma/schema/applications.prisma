@@ -56,6 +56,11 @@ model Application {
   priorityRestart priorityRestart?
   /// Score de qualité de la fiche de l' application
   quality         Int
+  
+  /// Identifiant de la direction metier MOA de l'application
+  businessDivisionId String?
+  /// Direction metier MOA de l'application
+  businessDivision   BusinessDivision? @relation(fields: [businessDivisionId], references: [id], onDelete: SetNull)
 
   @@unique([label, description])
   @@index([label])
