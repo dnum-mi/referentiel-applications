@@ -22,7 +22,7 @@ export const columnLabels: Record<string, string> = {
 
   labels: "Labels",
   "labels.value": "Valeur du label",
-  "labels.source": "Source du label",
+  "labels.labelSource.source": "Source du label",
 
   hostings: "Hébergements",
   "hostings.provider": "Fournisseur d’hébergement",

@@ -10,6 +10,7 @@ import { TechnicalDebtInfoFaker } from "../tests/fakers/technical-debt-info.fake
 import { ComplianceFaker } from "../tests/fakers/compliance.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
 import { BusinessDivisionFaker } from "tests/fakers/business-division.faker";
+import { LabelSourceFaker } from "tests/fakers/label-source.faker";
 
 const prisma = new PrismaClient();
 
@@ -52,6 +53,12 @@ async function main() {
   console.log("🏷️  Creating tags...");
   for (let i = 0; i < 50; i++) {
     await TagFaker.create();
+  }
+
+  // Create label sourecs
+  console.log("🖥️  Creating label sources...");
+  for (let i = 0; i < 15; i++) {
+    await LabelSourceFaker.create();
   }
 
   // Create hosting options

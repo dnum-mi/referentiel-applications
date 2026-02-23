@@ -144,7 +144,11 @@ export class ApplicationRepository implements IApplicationRepository {
         currentStatus: true,
         metadatas: true,
         compliance: true,
-        labels: true,
+        labels: {
+          include: {
+            labelSource: true,
+          },
+        },
         tags: true,
         externalRessource: true,
         reports: true,

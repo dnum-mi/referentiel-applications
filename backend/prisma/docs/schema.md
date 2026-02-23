@@ -6,6 +6,7 @@
 - [BusinessDivision](#businessdivision)
 - [Compliance](#compliance)
 - [Hosting](#hosting)
+- [Labels](#labels)
 - [Metadata](#metadata)
 - [Organizations](#organizations)
 - [Users](#users)
@@ -57,8 +58,8 @@ erDiagram
 }
 "Label" {
   String id PK
-  String(255) source "nullable"
   String(255) value
+  String labelSourceId FK "nullable"
   String applicationId FK
 }
 "Tag" {
@@ -175,8 +176,8 @@ Label/étiquette attaché à une application.
 Properties as follows:
 
 - `id`: Identifiant unique
-- `source`: Système source qui a fourni ce label
 - `value`: Valeur du label
+- `labelSourceId`:
 - `applicationId`:
 
 ### `Tag`
@@ -369,6 +370,26 @@ Properties as follows:
 - `label`: Label personnalisé pour cette instance d'hébergement
 - `hostingOptionId`:
 - `applicationId`:
+
+## Labels
+
+```mermaid
+erDiagram
+"LabelSource" {
+  String id PK
+  String(255) source UK
+}
+```
+
+### `LabelSource`
+
+sources qui fournissent des libellés alternatifs.
+Les sources sont globales et peuvent être partagées entre libellés alternatifs.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `source`: Nom unique du système source
 
 ## Metadata
 

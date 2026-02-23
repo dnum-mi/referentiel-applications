@@ -3,12 +3,12 @@ import { IsOptional, IsString } from "class-validator";
 
 export class CreateLabelDto {
   @ApiProperty({
-    example: "CODE_PAI",
-    description: "Source of the label",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    description: "ID de la source du label",
   })
   @IsString()
   @IsOptional()
-  source: string | null;
+  labelSourceId?: string;
 
   @ApiProperty({
     example: "short-app-name",

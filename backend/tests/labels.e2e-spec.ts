@@ -8,6 +8,7 @@ import { ApplicationFaker } from "./fakers/application.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
+import { LabelSourceFaker } from "./fakers/label-source.faker";
 
 describe("Labels", () => {
   const app = setupTestSuite();
@@ -29,10 +30,11 @@ describe("Labels", () => {
 
   it("/POST applications/:applicationId/labels", async () => {
     const TOKEN = await getToken(user);
+    const labelSource = await LabelSourceFaker.create();
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/labels`)
       .send({
-        source: "",
+        labelSourceId: labelSource.id,
         value: "Test Application",
       })
       .set("Authorization", `Bearer ${TOKEN}`)
@@ -67,11 +69,19 @@ describe("application guard", () => {
       applicationId: application.id,
     });
 
+    // Get labels sources
+    const labelSources = await request(app().getHttpServer())
+      .get("/label-sources")
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const labelSourceId = labelSources.body[0].id;
+
     // Should fail because the user does not have the write permission
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/labels`)
       .send({
-        source: "LES TESTS",
+        labelSourceId,
         value: "Test Label",
       })
       .set("Authorization", `Bearer ${TOKEN}`)
@@ -84,7 +94,7 @@ describe("application guard", () => {
     const label = await request(app().getHttpServer())
       .post(`/applications/${application.id}/labels`)
       .send({
-        source: "LES TESTS",
+        labelSourceId,
         value: "Test Label",
       })
       .set("Authorization", `Bearer ${TOKEN}`)
@@ -132,7 +142,7 @@ describe("application guard", () => {
       .patch(`/applications/${application.id}/labels/${labelId}`)
       .send({
         value: "Updated Label",
-        source: "Updated TESTS",
+        labelSourceId,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);

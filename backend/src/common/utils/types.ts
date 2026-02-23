@@ -44,4 +44,5 @@ export type ServiceOptions<T> = {
   applicationId: string;
   triggerQualityUpdate?: boolean;
   metadata?: MetadataConfig<T>;
+  include?: Record<string, boolean | object>;
 };

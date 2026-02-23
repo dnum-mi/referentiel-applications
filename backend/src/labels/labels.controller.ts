@@ -41,7 +41,7 @@ export class LabelsController {
 **Ce endpoint permet de créer un label complet.**
 
 Vous devez fournir les informations suivantes :
-- **source**: La source de l'application (peut être vide).
+- **labelSourceId**: L'id de la source du libellé (peut être vide).
 - **value**: Le libellé de l'application.
     `,
   })
@@ -57,10 +57,15 @@ Vous devez fournir les informations suivantes :
   ): Promise<LabelDto> {
     return this.service.create(
       {
-        ...createLabelDto,
+        value: createLabelDto.value,
         application: {
           connect: {
             id: applicationId,
+          },
+        },
+        labelSource: {
+          connect: {
+            id: createLabelDto.labelSourceId,
           },
         },
       },
@@ -115,13 +120,14 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   ) {
     return this.service.update(id, updateLabelDto, {
       applicationId,
+      include: { labelSource: true },
       metadata: {
         userId,
         entity: "labelId",
         gender: "du libellé alternatif",
         getColumn: (entity) => entity.value,
         fields: {
-          source: "source",
+          "labelSource.source": "source",
           value: "valeur",
         },
       },

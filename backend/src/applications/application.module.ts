@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { CommonModule } from "src/common/common.module";
-import { LabelsModule } from "src/labels/labels.module";
 import { MetadatasModule } from "src/metadatas/metadatas.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 
@@ -19,7 +18,6 @@ import { ApplicationViewService } from "./view.service";
   imports: [
     CommonModule,
     PrismaModule,
-    LabelsModule,
     MetadatasModule,
     StatusesModule,
     TagsModule,

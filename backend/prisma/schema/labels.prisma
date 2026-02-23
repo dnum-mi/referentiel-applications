@@ -1,16 +1,29 @@
+/// sources qui fournissent des libellés alternatifs.
+/// Les sources sont globales et peuvent être partagées entre libellés alternatifs.
+/// 
+/// @namespace Labels 
+model LabelSource {
+  /// Identifiant unique 
+  id     String  @id @default(uuid())
+  /// Nom unique du système source 
+  source String  @unique @db.VarChar(255)
+  Label  Label[]
+}
+
 /// Label/étiquette attaché à une application.
-///
-/// @namespace Applications
+/// 
+/// @namespace Applications 
 model Label {
-  /// Identifiant unique
-  id            String      @id @default(uuid())
-  /// Système source qui a fourni ce label
-  source        String?     @db.VarChar(255)
-  /// Valeur du label
-  value         String      @db.VarChar(255)
-  /// Entrées de métadonnées pour ce label
-  metadatas     Metadata[]  @relation("LabelMetadata")
+  /// Identifiant unique 
+  id            String       @id @default(uuid())
+  /// Valeur du label 
+  value         String       @db.VarChar(255)
+  labelSourceId String?
+  /// Système source qui a fourni ce label 
+  labelSource   LabelSource? @relation(fields: [labelSourceId], references: [id], onDelete: Cascade)
+  /// Entrées de métadonnées pour ce label 
+  metadatas     Metadata[]   @relation("LabelMetadata")
   applicationId String
-  /// Application à laquelle ce label appartient
-  application   Application @relation("ApplicationLabels", fields: [applicationId], references: [id], onDelete: Cascade)
+  // Application à laquelle ce label appartient 
+  application   Application  @relation("ApplicationLabels", fields: [applicationId], references: [id], onDelete: Cascade)
 }

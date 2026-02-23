@@ -77,7 +77,6 @@ Vous devez fournir les informations suivantes :
 - **tags**: Des tags pour catégoriser l'application.
   - **firstProductionDate**: Date de première mise en production.
   - **plannedDecommissioningDate**: Date prévue de déclassement.
-- **labels**: Les différents libellés alternatifs de l'application.
   - **source**: La source du libelé.
   - **value**: Le libellé alternatif.
 - **compliances**: La liste des conformités associées avec :

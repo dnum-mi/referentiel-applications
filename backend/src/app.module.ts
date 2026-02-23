@@ -29,6 +29,7 @@ import { TagsModule } from "./tag/tags.module";
 import { TechnicalDebtInfoModule } from "./technical-debt-info/technical-debt-info.module";
 import { TokenModule } from "./token/token.module";
 import { UserModule } from "./user/user.module";
+import { LabelSourceModule } from "./label-source/label-source.module";
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { UserModule } from "./user/user.module";
     HostingOptionModule,
     MetadatasModule,
     LinksModule,
+    LabelSourceModule,
     LabelsModule,
     CompliancesModule,
     TagsModule,

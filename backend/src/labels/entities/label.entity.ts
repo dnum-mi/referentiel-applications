@@ -1,6 +1,6 @@
 export class Label {
   id: string;
-  source: string;
+  labelSourceId: string;
   value: string;
   applicationId: string;
 }
