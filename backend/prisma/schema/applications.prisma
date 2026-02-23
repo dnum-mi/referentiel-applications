@@ -60,7 +60,7 @@ model Application {
   /// Identifiant de la direction metier MOA de l'application
   businessDivisionId String?
   /// Direction metier MOA de l'application
-  businessDivision   BusinessDivision? @relation("ApplicationBusinessDivision", fields: [businessDivisionId], references: [id], onDelete: SetNull)
+  businessDivision   BusinessDivision? @relation(fields: [businessDivisionId], references: [id], onDelete: SetNull)
 
   @@unique([label, description])
   @@index([label])

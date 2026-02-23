@@ -2114,7 +2114,7 @@ paths:
       responses:
         "204":
           description: Token supprimé avec succès
-      tags: *a10
+      tags: *a11
   /api/v2/reports:
     get:
       operationId: ReportsController_findAll
@@ -2172,7 +2172,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportPaginatedResponseDto"
-      tags: &a11
+      tags: &a12
         - Reports
     post:
       operationId: ReportsController_create
@@ -2191,7 +2191,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a11
+      tags: *a12
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -2222,7 +2222,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a11
+      tags: *a12
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -2247,7 +2247,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a12
+      tags: &a13
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -2311,7 +2311,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportPaginatedResponseDto"
-      tags: *a12
+      tags: *a13
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -2335,7 +2335,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a12
+      tags: *a13
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -2371,7 +2371,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a12
+      tags: *a13
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -2390,7 +2390,7 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a12
+      tags: *a13
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
