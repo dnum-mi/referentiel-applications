@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineProps } from "vue";
+import { ref, computed } from "vue";
 import type { PropType } from "vue";
 import type { LinkDto } from "@/client/types.gen";
 import { linkTypesDict } from "@/composables/use-dictionary";

@@ -478,9 +478,9 @@ erDiagram
   Boolean writeRelations
   Boolean readLinks
   Boolean writeLinks
-  Boolean readAnomalyNotifications
-  Boolean postAnomalyNotifications
-  Boolean manageAnomalyNotifications
+  Boolean readReports
+  Boolean postReports
+  Boolean manageReports
   String actorTypeId FK,UK
 }
 "Token" {
@@ -553,9 +553,9 @@ Properties as follows:
 - `writeRelations`: Peut écrire les relations d'application
 - `readLinks`: Peut lire les liens externes
 - `writeLinks`: Peut écrire les liens externes
-- `readAnomalyNotifications`: Peut lire les signalements
-- `postAnomalyNotifications`: Peut créer des signalements
-- `manageAnomalyNotifications`: Peut gérer (mettre à jour/supprimer) les signalements
+- `readReports`: Peut lire les signalements
+- `postReports`: Peut créer des signalements
+- `manageReports`: Peut gérer (mettre à jour/supprimer) les signalements
 - `actorTypeId`:
 
 ### `Token`
@@ -651,7 +651,7 @@ Properties as follows:
 
 ```mermaid
 erDiagram
-"AnomalyNotification" {
+"Report" {
   String id PK
   String applicationId FK "nullable"
   String notifierId FK
@@ -661,17 +661,17 @@ erDiagram
   DateTime createdAt
   DateTime updatedAt
 }
-"AnomalyNotificationHistory" {
+"ReportHistory" {
   String id PK
-  String issueNotificationId FK
+  String reportId FK
   String action
   ReportStatus status
   DateTime date
 }
-"AnomalyNotificationHistory" }o--|| "AnomalyNotification" : report
+"ReportHistory" }o--|| "Report" : report
 ```
 
-### `AnomalyNotification`
+### `Report`
 
 Problème ou anomalie signalée pour une fiche application.
 Suit les signalements de la création à la résolution.
@@ -687,7 +687,7 @@ Properties as follows:
 - `createdAt`: Quand le signalement a été créé
 - `updatedAt`: Quand le signalement a été mis à jour pour la dernière fois
 
-### `AnomalyNotificationHistory`
+### `ReportHistory`
 
 Enregistrement historique des changements d'un signalement.
 Suit les transitions de statut et les actions prises.
@@ -695,7 +695,7 @@ Suit les transitions de statut et les actions prises.
 Properties as follows:
 
 - `id`: Identifiant unique
-- `issueNotificationId`: Identifiant du signalement associé
+- `reportId`: Identifiant du signalement associé
 - `action`: Action prise
 - `status`: Statut après l'action
 - `date`: Quand cette action s'est produite
