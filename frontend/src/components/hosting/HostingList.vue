@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { HostingDto } from "@/client/types.gen";
 
-defineProps<{ hostings: HostingDto[] }>();
+defineProps<{ hostings: HostingDto[]; canEdit: boolean }>();
 const emit = defineEmits(["edit", "delete"]);
 
 function handleEdit(hosting: HostingDto) {
@@ -50,6 +50,7 @@ function handleDelete(hosting: HostingDto) {
             title="Modifier"
             class="fr-mr-1w"
             data-testid="hosting-edit-btn"
+            :disabled="!canEdit"
             @click="handleEdit(hosting)"
           />
           <DsfrButton
@@ -58,6 +59,7 @@ function handleDelete(hosting: HostingDto) {
             icon="fr-icon-delete-bin-line"
             title="Supprimer"
             data-testid="hosting-delete-btn"
+            :disabled="!canEdit"
             @click="handleDelete(hosting)"
           />
         </div>

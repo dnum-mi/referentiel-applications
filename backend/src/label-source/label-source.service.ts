@@ -12,7 +12,7 @@ export class LabelSourceService extends BaseService<LabelSource> {
 
   async findAll(filters?: LabelSourceFiltersDto) {
     const where: Prisma.LabelSourceWhereInput = {};
-    if (filters.source) {
+    if (filters && filters.source) {
       where.source = { contains: filters.source, mode: "insensitive" };
     }
 

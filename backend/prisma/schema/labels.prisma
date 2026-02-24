@@ -24,6 +24,6 @@ model Label {
   /// Entrées de métadonnées pour ce label 
   metadatas     Metadata[]   @relation("LabelMetadata")
   applicationId String
-  // Application à laquelle ce label appartient 
+  /// Application à laquelle ce label appartient 
   application   Application  @relation("ApplicationLabels", fields: [applicationId], references: [id], onDelete: Cascade)
 }

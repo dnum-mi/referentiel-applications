@@ -439,9 +439,9 @@ Properties as follows:
 erDiagram
 "Organization" {
   String id PK
-  String(255) path
+  String path
   String url "nullable"
-  String(30) sigle "nullable"
+  String sigle "nullable"
   String description "nullable"
   String parentId FK "nullable"
 }
