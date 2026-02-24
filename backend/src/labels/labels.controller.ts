@@ -36,18 +36,18 @@ export class LabelsController {
   @AppAction("writeBase")
   @ApiBody({ type: CreateLabelDto })
   @ApiOperation({
-    summary: "Créer un nouveau label",
+    summary: "Créer un nouveau nom",
     description: `
-**Ce endpoint permet de créer un label complet.**
+**Ce endpoint permet de créer un nom complet.**
 
 Vous devez fournir les informations suivantes :
-- **labelSourceId**: L'id de la source du libellé (peut être vide).
-- **value**: Le libellé de l'application.
+- **labelSourceId**: L'id de la source du nom (peut être vide).
+- **value**: Le nom alternatif de l'application.
     `,
   })
   @ApiCreatedResponse({
     type: LabelDto,
-    description: "Label créé avec succès.",
+    description: "Nom alternatif créé avec succès.",
   })
   @HttpCode(HttpStatus.CREATED)
   async create(
@@ -58,22 +58,16 @@ Vous devez fournir les informations suivantes :
     return this.service.create(
       {
         value: createLabelDto.value,
-        application: {
-          connect: {
-            id: applicationId,
-          },
-        },
-        labelSource: {
-          connect: {
-            id: createLabelDto.labelSourceId,
-          },
-        },
+        application: { connect: { id: applicationId } },
+        ...(createLabelDto.labelSourceId && {
+          labelSource: { connect: { id: createLabelDto.labelSourceId } },
+        }),
       },
       {
         applicationId,
         metadata: {
           userId,
-          gender: "du libellé alternatif",
+          gender: "du nom alternatif",
           getColumn: (entity) => entity.value,
           entity: "labelId",
         },
@@ -84,15 +78,15 @@ Vous devez fournir les informations suivantes :
   @Get()
   @AppAction("readBase")
   @ApiOperation({
-    summary: "Récupérer les labels par ID d'application",
+    summary: "Récupérer les noms alternatifs par ID d'application",
     description: `
-Ce endpoint permet de récupérer la liste de tous les labels d'une application en fonction de son identifiant unique.
+Ce endpoint permet de récupérer la liste de tous les noms alternatifs d'une application en fonction de son identifiant unique.
 
 Le paramètre **applicationId** doit être fourni dans l'URL.
     `,
   })
   @ApiOkResponse({
-    description: "Liste des labels",
+    description: "Liste des noms alternatifs",
     type: LabelDto,
     isArray: true,
   })
@@ -103,13 +97,13 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @Patch(":id")
   @AppAction("writeBase")
   @ApiOperation({
-    summary: "Mettre à jour un label existant",
+    summary: "Mettre à jour un nom existant",
   })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
-  @ApiParam({ name: "id", description: "ID du label" })
+  @ApiParam({ name: "id", description: "ID du nom" })
   @ApiBody({ type: CreateLabelDto })
   @ApiOkResponse({
-    description: "Label mis à jour",
+    description: "Nom alternatif mis à jour",
     type: LabelDto,
   })
   update(
@@ -118,13 +112,25 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     @Param("id") id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    return this.service.update(id, updateLabelDto, {
+    const updateLabel: any = {
+      value: updateLabelDto.value,
+    };
+
+    if (updateLabelDto.labelSourceId) {
+      updateLabel.labelSource = {
+        connect: { id: updateLabelDto.labelSourceId },
+      };
+    } else {
+      updateLabel.labelSource = { disconnect: true };
+    }
+
+    return this.service.update(id, updateLabel, {
       applicationId,
       include: { labelSource: true },
       metadata: {
         userId,
         entity: "labelId",
-        gender: "du libellé alternatif",
+        gender: "du nom alternatif",
         getColumn: (entity) => entity.value,
         fields: {
           "labelSource.source": "source",
@@ -137,13 +143,13 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @Delete(":id")
   @AppAction("writeBase")
   @ApiOperation({
-    summary: "Supprimer un label",
-    description: ` Ce endpoint permet de supprimer un label existant. 
-    Vous devez fournir l'identifiant du label dans l'URL.
+    summary: "Supprimer un nom alternatif",
+    description: ` Ce endpoint permet de supprimer un nom alternatif existant. 
+    Vous devez fournir l'identifiant du nom alternatif dans l'URL.
     `,
   })
   @ApiNoContentResponse({
-    description: "Label supprimé avec succès",
+    description: "Nom alternatif supprimé avec succès",
   })
   @HttpCode(HttpStatus.NO_CONTENT)
   async delete(
@@ -155,7 +161,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
       applicationId,
       metadata: {
         userId,
-        gender: "du libellé alternatif",
+        gender: "du nom alternatif",
         getColumn: (entity) => entity.value,
         entity: "labelId",
       },

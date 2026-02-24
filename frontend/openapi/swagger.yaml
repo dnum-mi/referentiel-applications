@@ -542,8 +542,6 @@ paths:
 
         \  - **plannedDecommissioningDate**: Date prévue de déclassement.
 
-        - **labels**: Les différents libellés alternatifs de l'application.
-
         \  - **source**: La source du libelé.
 
         \  - **value**: Le libellé alternatif.
@@ -1374,125 +1372,6 @@ paths:
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a5
-  /api/v2/applications/{applicationId}/labels:
-    post:
-      operationId: LabelsController_create
-      summary: Créer un nouveau label
-      description: "
-
-        **Ce endpoint permet de créer un label complet.**
-
-
-        Vous devez fournir les informations suivantes :
-
-        - **source**: La source de l'application (peut être vide).
-
-        - **value**: Le libellé de l'application.
-
-        \    "
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateLabelDto"
-      responses:
-        "201":
-          description: Label créé avec succès.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LabelDto"
-      tags: &a6
-        - Labels
-    get:
-      operationId: LabelsController_findAllSorted
-      summary: Récupérer les labels par ID d'application
-      description: "
-
-        Ce endpoint permet de récupérer la liste de tous les labels d'une
-        application en fonction de son identifiant unique.
-
-
-        Le paramètre **applicationId** doit être fourni dans l'URL.
-
-        \    "
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Liste des labels
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/LabelDto"
-      tags: *a6
-  /api/v2/applications/{applicationId}/labels/{id}:
-    patch:
-      operationId: LabelsController_update
-      summary: Mettre à jour un label existant
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          description: ID du label
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateLabelDto"
-      responses:
-        "200":
-          description: Label mis à jour
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LabelDto"
-      tags: *a6
-    delete:
-      operationId: LabelsController_delete
-      summary: Supprimer un label
-      description: " Ce endpoint permet de supprimer un label existant.\ 
-
-        \    Vous devez fournir l'identifiant du label dans l'URL.
-
-        \    "
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Label supprimé avec succès
-      tags: *a6
   /api/v2/applications/{applicationId}/statuses:
     post:
       operationId: StatusesController_create
@@ -1517,7 +1396,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: &a7
+      tags: &a6
         - statuses
     get:
       operationId: StatusesController_find
@@ -1537,7 +1416,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: *a7
+      tags: *a6
   /api/v2/applications/{applicationId}/statuses/{statusId}:
     patch:
       operationId: StatusesController_update
@@ -1568,7 +1447,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: *a7
+      tags: *a6
     delete:
       operationId: StatusesController_delete
       summary: Supprimer un statut
@@ -1588,7 +1467,7 @@ paths:
       responses:
         "204":
           description: Statut supprimé avec succès
-      tags: *a7
+      tags: *a6
   /api/v2/tags:
     post:
       operationId: TagsController_create
@@ -1619,7 +1498,7 @@ paths:
                 $ref: "#/components/schemas/TagDto"
         "403":
           description: Accès refusé - Privilège admin requis
-      tags: &a8
+      tags: &a7
         - Tags
     get:
       operationId: TagsController_findAll
@@ -1694,7 +1573,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedResponseDto"
-      tags: *a8
+      tags: *a7
   /api/v2/tags/{id}:
     get:
       operationId: TagsController_findOne
@@ -1715,7 +1594,7 @@ paths:
                 $ref: "#/components/schemas/TagDto"
         "404":
           description: Tag non trouvé
-      tags: *a8
+      tags: *a7
     patch:
       operationId: TagsController_update
       summary: Modifier un tag.
@@ -1743,7 +1622,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Tag non trouvé
-      tags: *a8
+      tags: *a7
     delete:
       operationId: TagsController_delete
       summary: Supprimer un tag.
@@ -1761,7 +1640,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Tag non trouvé
-      tags: *a8
+      tags: *a7
   /api/v2/business-division:
     get:
       operationId: BusinessDivisionController_findAll
@@ -1832,7 +1711,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedResponseDto"
-      tags: &a9
+      tags: &a8
         - Business Division
   /api/v2/business-division/{id}:
     get:
@@ -1854,7 +1733,7 @@ paths:
                 $ref: "#/components/schemas/BusinessDivisionDTO"
         "404":
           description: Business Division non trouvé
-      tags: *a9
+      tags: *a8
   /api/v2/applications/{applicationId}/hostings:
     post:
       operationId: ApplicationHostingsController_create
@@ -1879,7 +1758,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingDto"
-      tags: &a10
+      tags: &a9
         - Hostings
     get:
       operationId: ApplicationHostingsController_findAll
@@ -1900,7 +1779,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/HostingDto"
-      tags: *a10
+      tags: *a9
   /api/v2/applications/{applicationId}/hostings/{id}:
     get:
       operationId: ApplicationHostingsController_findOne
@@ -1924,7 +1803,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingDto"
-      tags: *a10
+      tags: *a9
     patch:
       operationId: ApplicationHostingsController_update
       summary: Mettre à jour un hébergement pour une application
@@ -1953,7 +1832,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingDto"
-      tags: *a10
+      tags: *a9
     delete:
       operationId: ApplicationHostingsController_remove
       summary: Supprimer un hébergement pour une application
@@ -1972,7 +1851,7 @@ paths:
       responses:
         "204":
           description: Hébergement supprimé
-      tags: *a10
+      tags: *a9
   /api/v2/sites:
     get:
       operationId: SitesController_findDistinctSites
@@ -2018,7 +1897,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TokenDto"
-      tags: &a11
+      tags: &a10
         - tokens
     post:
       operationId: TokenController_createService
@@ -2038,7 +1917,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a11
+      tags: *a10
   /api/v2/tokens/personal:
     get:
       operationId: TokenController_findPersonal
@@ -2054,7 +1933,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TokenDto"
-      tags: *a11
+      tags: *a10
     post:
       operationId: TokenController_createPersonal
       summary: Crée un nouveau token personnel
@@ -2073,7 +1952,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a11
+      tags: *a10
   /api/v2/tokens/{id}/regenerate:
     post:
       operationId: TokenController_regenerate
@@ -2104,7 +1983,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a11
+      tags: *a10
   /api/v2/tokens/{id}:
     delete:
       operationId: TokenController_delete
@@ -2119,7 +1998,7 @@ paths:
       responses:
         "204":
           description: Token supprimé avec succès
-      tags: *a11
+      tags: *a10
   /api/v2/tokens/personal/{id}:
     delete:
       operationId: TokenController_deletePersonal
@@ -2134,7 +2013,7 @@ paths:
       responses:
         "204":
           description: Token supprimé avec succès
-      tags: *a11
+      tags: *a10
   /api/v2/reports:
     get:
       operationId: ReportsController_findAll
@@ -2192,7 +2071,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportPaginatedResponseDto"
-      tags: &a12
+      tags: &a11
         - Reports
     post:
       operationId: ReportsController_create
@@ -2211,7 +2090,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a12
+      tags: *a11
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -2242,7 +2121,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a12
+      tags: *a11
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -2267,7 +2146,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a13
+      tags: &a12
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -2331,7 +2210,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportPaginatedResponseDto"
-      tags: *a13
+      tags: *a12
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -2355,7 +2234,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a13
+      tags: *a12
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -2391,7 +2270,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a13
+      tags: *a12
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -2410,7 +2289,7 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a13
+      tags: *a12
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -2544,7 +2423,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: &a14
+      tags: &a13
         - organizations
     get:
       operationId: OrganizationsController_findAll
@@ -2594,7 +2473,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/OrganizationDto"
-      tags: *a14
+      tags: *a13
   /api/v2/organizations/{id}:
     get:
       operationId: OrganizationsController_findOne
@@ -2616,7 +2495,7 @@ paths:
                 $ref: "#/components/schemas/OrganizationDto"
         "404":
           description: Organisation non trouvée
-      tags: *a14
+      tags: *a13
     patch:
       operationId: OrganizationsController_update
       summary: Mettre à jour une organisation
@@ -2639,7 +2518,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: *a14
+      tags: *a13
     delete:
       operationId: OrganizationsController_delete
       summary: Supprimer une organisation
@@ -2652,7 +2531,7 @@ paths:
       responses:
         "204":
           description: Organisation supprimée
-      tags: *a14
+      tags: *a13
   /api/v2/actorTypes:
     post:
       operationId: ActorTypeController_create
@@ -2685,7 +2564,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorTypeDto"
-      tags: &a15
+      tags: &a14
         - actorTypes
     get:
       operationId: ActorTypeController_findAll
@@ -2702,7 +2581,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ActorTypeDto"
-      tags: *a15
+      tags: *a14
   /api/v2/actorTypes/perms-matrix:
     get:
       operationId: ActorTypeController_getMatrix
@@ -2719,7 +2598,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AppPermsDto"
-      tags: *a15
+      tags: *a14
     patch:
       operationId: ActorTypeController_updateMatrix
       summary: Mettre à jour la matrice des permissions
@@ -2744,7 +2623,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AppPermsDto"
-      tags: *a15
+      tags: *a14
   /api/v2/actorTypes/{id}:
     get:
       operationId: ActorTypeController_findOne
@@ -2764,7 +2643,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorTypeDto"
-      tags: *a15
+      tags: *a14
     patch:
       operationId: ActorTypeController_update
       summary: Mettre à jour un type d’acteur
@@ -2797,7 +2676,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PatchActorTypeDto"
-      tags: *a15
+      tags: *a14
     delete:
       operationId: ActorTypeController_delete
       summary: Supprimer un type d’acteur
@@ -2810,7 +2689,7 @@ paths:
       responses:
         "204":
           description: Type d’acteur supprimé avec succès
-      tags: *a15
+      tags: *a14
   /api/v2/applications/{applicationId}/actors:
     post:
       operationId: ApplicationActorsController_create
@@ -2855,7 +2734,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: &a16
+      tags: &a15
         - Actors
     get:
       operationId: ApplicationActorsController_findAll
@@ -2876,7 +2755,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ActorDto"
-      tags: *a16
+      tags: *a15
   /api/v2/applications/{applicationId}/actors/{id}:
     get:
       operationId: ApplicationActorsController_findOne
@@ -2901,7 +2780,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: *a16
+      tags: *a15
     patch:
       operationId: ApplicationActorsController_updated
       summary: Mettre à jour un acteur
@@ -2931,7 +2810,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: *a16
+      tags: *a15
     delete:
       operationId: ApplicationActorsController_delete
       summary: Supprimer un acteur
@@ -2951,7 +2830,7 @@ paths:
       responses:
         "204":
           description: Acteur supprimé avec succès
-      tags: *a16
+      tags: *a15
   /api/v2/actors/count:
     get:
       operationId: ActorController_countAllActors
@@ -2984,7 +2863,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingOptionDto"
-      tags: &a17
+      tags: &a16
         - HostingOptions
     get:
       operationId: HostingOptionController_findAll
@@ -3024,7 +2903,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/HostingOptionDto"
-      tags: *a17
+      tags: *a16
   /api/v2/hosting-options/{id}:
     patch:
       operationId: HostingOptionController_update
@@ -3050,7 +2929,7 @@ paths:
                 $ref: "#/components/schemas/HostingOptionDto"
         "404":
           description: Hosting option not found
-      tags: *a17
+      tags: *a16
     delete:
       operationId: HostingOptionController_remove
       summary: Delete hosting option by ID
@@ -3065,7 +2944,7 @@ paths:
           description: Hosting option deleted successfully
         "404":
           description: Hosting option not found
-      tags: *a17
+      tags: *a16
   /api/v2/applications/{applicationId}/links:
     post:
       operationId: ApplicationLinksController_create
@@ -3090,7 +2969,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: &a18
+      tags: &a17
         - Links
     get:
       operationId: ApplicationLinksController_findAll
@@ -3144,7 +3023,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedResponseDto"
-      tags: *a18
+      tags: *a17
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
       operationId: ApplicationLinksController_update
@@ -3175,7 +3054,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: *a18
+      tags: *a17
     delete:
       operationId: ApplicationLinksController_delete
       summary: Delete a link for an application
@@ -3195,7 +3074,222 @@ paths:
       responses:
         "204":
           description: Link deleted successfully
+      tags: *a17
+  /api/v2/label-sources:
+    post:
+      operationId: LabelSourceController_create
+      summary: Créer une nouvelle source de libellés.
+      description: "
+
+        Ce endpoint permet de créer une nouvelle source de libellés alternatifs.
+
+
+        Information requise :\ 
+
+        - **source** : nom de la source
+
+        \    "
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLabelSourceDto"
+      responses:
+        "201":
+          description: Source créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelSourceDto"
+        "403":
+          description: Accès refusé - Privilège admin requis
+      tags: &a18
+        - LabelSources
+    get:
+      operationId: LabelSourceController_findAll
+      summary: Rechercher des sources de libellés alternatifs avec filtre en option.
+      parameters:
+        - name: source
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des sources trouvées
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LabelSourceDto"
       tags: *a18
+  /api/v2/label-sources/{id}:
+    patch:
+      operationId: LabelSourceController_update
+      summary: Modifier une source de libellés alternatifs
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLabelSourceDto"
+      responses:
+        "200":
+          description: Source mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelSourceDto"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Source non trouvée
+      tags: *a18
+    delete:
+      operationId: LabelSourceController_remove
+      summary: Supprimer une source de libellés alternatifs
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Source supprimée avec succès
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Source non trouvée
+      tags: *a18
+  /api/v2/applications/{applicationId}/labels:
+    post:
+      operationId: LabelsController_create
+      summary: Créer un nouveau nom
+      description: "
+
+        **Ce endpoint permet de créer un nom complet.**
+
+
+        Vous devez fournir les informations suivantes :
+
+        - **labelSourceId**: L'id de la source du nom (peut être vide).
+
+        - **value**: Le nom alternatif de l'application.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLabelDto"
+      responses:
+        "201":
+          description: Nom alternatif créé avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelDto"
+      tags: &a19
+        - Labels
+    get:
+      operationId: LabelsController_findAllSorted
+      summary: Récupérer les noms alternatifs par ID d'application
+      description: "
+
+        Ce endpoint permet de récupérer la liste de tous les noms alternatifs
+        d'une application en fonction de son identifiant unique.
+
+
+        Le paramètre **applicationId** doit être fourni dans l'URL.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des noms alternatifs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LabelDto"
+      tags: *a19
+  /api/v2/applications/{applicationId}/labels/{id}:
+    patch:
+      operationId: LabelsController_update
+      summary: Mettre à jour un nom existant
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID du nom
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLabelDto"
+      responses:
+        "200":
+          description: Nom alternatif mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LabelDto"
+      tags: *a19
+    delete:
+      operationId: LabelsController_delete
+      summary: Supprimer un nom alternatif
+      description: " Ce endpoint permet de supprimer un nom alternatif existant.\ 
+
+        \    Vous devez fournir l'identifiant du nom alternatif dans l'URL.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Nom alternatif supprimé avec succès
+      tags: *a19
   /api/v2/applications/{applicationId}/compliances:
     post:
       operationId: ApplicationCompliancesController_create
@@ -3222,7 +3316,7 @@ paths:
                 $ref: "#/components/schemas/ComplianceDto"
         "409":
           description: A compliance already exists for this application
-      tags: &a19
+      tags: &a20
         - Compliances
     get:
       operationId: ApplicationCompliancesController_findOne
@@ -3241,7 +3335,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: *a19
+      tags: *a20
     patch:
       operationId: ApplicationCompliancesController_update
       summary: Update the compliance for an application
@@ -3265,7 +3359,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: *a19
+      tags: *a20
   /api/v2/compliances/count:
     get:
       operationId: ComplianceController_countAllCompliances
@@ -3306,7 +3400,7 @@ paths:
                 $ref: "#/components/schemas/TechnicalDebtInfoDto"
         "409":
           description: Technical debt info already exists for this application
-      tags: &a20
+      tags: &a21
         - Technical Debt Info
     get:
       operationId: ApplicationTechnicalDebtInfoController_findOne
@@ -3325,7 +3419,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TechnicalDebtInfoDto"
-      tags: *a20
+      tags: *a21
     patch:
       operationId: ApplicationTechnicalDebtInfoController_update
       summary: Update the technical debt info for an application
@@ -3349,7 +3443,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TechnicalDebtInfoDto"
-      tags: *a20
+      tags: *a21
   /api/v2/technical-debts:
     get:
       operationId: TechnicalDebtController_getTechnicalDebtPoints
@@ -4121,21 +4215,6 @@ components:
           description: Date optionnelle du changement de statut
       required:
         - status
-    CreateLabelDto:
-      type: object
-      properties:
-        source:
-          type: string
-          nullable: true
-          example: CODE_PAI
-          description: Source of the label
-        value:
-          type: string
-          example: short-app-name
-          description: Value of the label
-      required:
-        - source
-        - value
     CreateApplicationDto:
       type: object
       properties:
@@ -4157,7 +4236,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a21
+          example: &a22
             - population 1
             - population 2
           description: population associated with the application
@@ -4167,7 +4246,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a22
+          example: &a23
             - finance
             - HR
           description: Purposes of the application
@@ -4178,7 +4257,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a23
+          example: &a24
             - tag1
             - tag2
           type: array
@@ -4191,14 +4270,6 @@ components:
             statusDate: 2024-01-15T10:30:00Z
           allOf:
             - $ref: "#/components/schemas/CreateApplicationStatusDto"
-        labels:
-          description: Liste des labels alternatifs associés à l'application
-          example: &a24
-            - source: ""
-              value: My App
-          type: array
-          items:
-            $ref: "#/components/schemas/CreateLabelDto"
         businessDivisionId:
           type: string
           nullable: true
@@ -4206,7 +4277,6 @@ components:
       required:
         - label
         - description
-        - labels
     ApplicationStatusDto:
       type: object
       properties:
@@ -4399,7 +4469,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a21
+          example: *a22
           description: population associated with the application
           type: array
           items:
@@ -4407,7 +4477,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a22
+          example: *a23
           description: Purposes of the application
           type: array
           items:
@@ -4416,45 +4486,14 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a23
-          type: array
-          items:
-            type: string
-        labels:
-          description: Liste des labels alternatifs associés à l'application
           example: *a24
           type: array
           items:
-            $ref: "#/components/schemas/CreateLabelDto"
+            type: string
         businessDivisionId:
           type: string
           nullable: true
           description: Id de la direction de metier de l'application MOA
-    LabelDto:
-      type: object
-      properties:
-        source:
-          type: string
-          nullable: true
-          example: CODE_PAI
-          description: Source of the label
-        value:
-          type: string
-          example: short-app-name
-          description: Value of the label
-        id:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID of the label
-        applicationId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID of the application to which the label belongs
-      required:
-        - source
-        - value
-        - id
-        - applicationId
     UpdateApplicationStatusDto:
       type: object
       properties:
@@ -5208,6 +5247,74 @@ components:
         description:
           type: string
           description: Optional description of the link
+    CreateLabelSourceDto:
+      type: object
+      properties:
+        source:
+          type: string
+          description: Source name
+          example: CODE_PAI
+      required:
+        - source
+    LabelSourceDto:
+      type: object
+      properties:
+        source:
+          type: string
+          description: Source name
+          example: CODE_PAI
+        id:
+          type: string
+          description: Unique identifier of the label source
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+      required:
+        - source
+        - id
+    UpdateLabelSourceDto:
+      type: object
+      properties:
+        source:
+          type: string
+          description: Source name
+          example: CODE_PAI
+      required:
+        - source
+    CreateLabelDto:
+      type: object
+      properties:
+        labelSourceId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la source du label
+        value:
+          type: string
+          example: short-app-name
+          description: Value of the label
+      required:
+        - value
+    LabelDto:
+      type: object
+      properties:
+        labelSourceId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la source du label
+        value:
+          type: string
+          example: short-app-name
+          description: Value of the label
+        id:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID of the label
+        applicationId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID of the application to which the label belongs
+      required:
+        - value
+        - id
+        - applicationId
     CreateComplianceDto:
       type: object
       properties:

@@ -10,6 +10,7 @@ import HostingModal from "./hosting/HostingModal.vue";
 import TechnicalDebtCard from "./technical-debt/TechnicalDebtCard.vue";
 import TechnicalDebtModal from "./technical-debt/TechnicalDebtModal.vue";
 import { useHostingStore } from "@/stores/hostingStore";
+import { useLabelStore } from "@/stores/labelStore";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
 import type { HostingDto, LabelDto, TechnicalDebtInfoDto } from "@/client/types.gen";
@@ -26,10 +27,15 @@ const toaster = useToasterStore();
 const errorMessage = ref<string>("");
 
 const isHostingModalOpen = ref(false);
+const isLabelModalOpen = ref(false);
 const hostingToEdit = ref<HostingDto | null>(null);
 const hostingToDelete = ref<HostingDto | null>(null);
+const labelToEdit = ref<LabelDto | null>(null);
+const labelToDelete = ref<LabelDto | null>(null);
 const isDeleteModalOpen = ref(false);
+const isDeleteLabelModalOpen = ref(false);
 const hostingStore = useHostingStore();
+const labelStore = useLabelStore();
 const userStore = useUserStore();
 const canEditBase = computed(
   () =>
@@ -39,7 +45,6 @@ const canEditBase = computed(
 );
 const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
 const canEditHostings = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeHostings"));
-const labels = ref<LabelDto[]>([]);
 
 const isTechnicalDebtModalOpen = ref(false);
 const technicalDebtInfo = ref<TechnicalDebtInfoDto | null>(null);
@@ -70,23 +75,14 @@ function onTechnicalDebtSaved(data: TechnicalDebtInfoDto) {
   closeTechnicalDebtModal();
 }
 
-async function fetchLabels() {
-  const response = await api.labelsControllerFindAllSorted({ path: { applicationId: props.application.id } });
-  if (!response.data) {
-    toaster.addErrorMessage("Erreur lors du chargement des noms alternatifs");
-    return;
-  }
-  labels.value = response.data;
-}
-
-onMounted(() => {
-  fetchLabels();
-  fetchTechnicalDebtInfo();
-});
-const application = ref<CreateApplicationWithPerms>({
+const application = ref<ApplicationWithPerms>({
   ...props.application,
 });
 
+onMounted(() => {
+  labelStore.fetchLabels(application.value.id);
+  fetchTechnicalDebtInfo();
+});
 const applicationModal = useModal();
 const isModalOpened = computed(() => applicationModal.isModalOpen.value);
 
@@ -148,7 +144,6 @@ function getPriorityBadgeType(priority?: string) {
 
 async function updateApplication() {
   applicationModal.closeModal();
-  await fetchLabels();
   emit("update:application");
 }
 
@@ -182,6 +177,36 @@ function cancelDeletionHosting() {
 const businessDivisionLabel = computed(() => {
   return props.application.businessDivision?.label ?? "Aucun";
 });
+const openCreateLabelModal = () => {
+  labelToEdit.value = null;
+  isLabelModalOpen.value = true;
+};
+const openEditLabel = (label: LabelDto) => {
+  labelToEdit.value = label;
+  isLabelModalOpen.value = true;
+};
+function openDeleteLabelModal(label: LabelDto) {
+  labelToDelete.value = label;
+  isDeleteLabelModalOpen.value = true;
+}
+
+async function confirmDeletionLabel() {
+  if (!labelToDelete.value) return;
+  try {
+    await labelStore.deleteLabel(application.value.id, labelToDelete.value.id);
+  } catch (error) {
+    console.error(error);
+    errorMessage.value = "Erreur lors de la suppression du nom alternatif";
+  } finally {
+    labelToDelete.value = null;
+    isDeleteLabelModalOpen.value = false;
+  }
+}
+
+function cancelDeletionLabel() {
+  labelToDelete.value = null;
+  isDeleteLabelModalOpen.value = false;
+}
 
 watch(
   () => props.application,
@@ -233,21 +258,6 @@ watch(
                 </p>
               </div>
 
-              <div v-if="labels.length > 0" data-testid="info-alt-labels">
-                <h4>Noms Alternatifs</h4>
-                <p>
-                  {{
-                    labels
-                      .map((label) => {
-                        const value = label.value || "";
-                        const source = label.source && label.source.trim() !== "" ? ` (${label.source})` : "";
-                        return `${value}${source}`;
-                      })
-                      .join(" ; ")
-                  }}
-                </p>
-              </div>
-
               <h4>Description</h4>
               <MarkdownDisplay :content="application.description" data-testid="info-description" />
 
@@ -257,6 +267,15 @@ watch(
                   {{ purpose }}
                 </li>
               </ul>
+
+              <div v-if="(application.targetPopulations ?? []).length > 0" data-testid="info-population">
+                <h4 class="fr-mt-3w">Population</h4>
+                <ul class="fr-tags-group">
+                  <li v-for="targetPopulation in application.targetPopulations" :key="targetPopulation">
+                    <DsfrTag :label="targetPopulation" :small="small" />
+                  </li>
+                </ul>
+              </div>
 
               <h4 class="fr-mt-3w">Tags</h4>
               <ul class="fr-tags-group" data-testid="info-tags">
@@ -313,23 +332,31 @@ watch(
                 />
               </div>
             </div>
-            <HostingList :hostings="hostingStore.hostings" @edit="openEditHosting" @delete="openDeleteModal" />
+            <HostingList :hostings="hostingStore.hostings" :can-edit="canEditHostings" @edit="openEditHosting" @delete="openDeleteModal" />
           </div>
         </div>
       </div>
 
-      <!-- Carte : Population -->
-      <div v-if="(application.targetPopulations ?? []).length > 0" class="fr-card" data-testid="info-population">
+      <div class="fr-card" data-testid="info-labels">
         <div class="fr-card__body">
           <div class="fr-card__content">
-            <h3 class="fr-card__title">Population</h3>
-            <div class="fr-card__desc">
-              <ul class="fr-tags-group">
-                <li v-for="targetPopulation in application.targetPopulations" :key="targetPopulation">
-                  <DsfrTag :label="targetPopulation" :small="small" />
-                </li>
-              </ul>
+            <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+              <div class="fr-col">
+                <h3 class="fr-card__title">Noms alternatifs</h3>
+              </div>
+              <div class="fr-col-auto">
+                <DsfrButton
+                  tertiary
+                  size="sm"
+                  class="fr-btn--icon-left fr-icon-add-line"
+                  label="Ajouter"
+                  data-testid="info-add-label-btn"
+                  :disabled="!canEditBase"
+                  @click="openCreateLabelModal"
+                />
+              </div>
             </div>
+            <LabelList :labels="labelStore.labels" :can-edit="canEditBase" @edit="openEditLabel" @delete="openDeleteLabelModal" />
           </div>
         </div>
       </div>
@@ -369,6 +396,22 @@ watch(
     @cancel="cancelDeletionHosting"
   />
 
+  <LabelModal
+    v-if="isLabelModalOpen"
+    :application-id="application.id"
+    :initial-label="labelToEdit"
+    :error-message="errorMessage"
+    @close="isLabelModalOpen = false"
+    @labelCreated="isLabelModalOpen = false"
+  />
+  <DeleteConfirmationModal
+    v-if="isDeleteLabelModalOpen"
+    :opened="isDeleteLabelModalOpen"
+    item-name="le nom alternatif"
+    @confirm="confirmDeletionLabel"
+    @cancel="cancelDeletionLabel"
+  />
+
   <DsfrModal
     size="lg"
     :opened="isModalOpened"
@@ -378,8 +421,7 @@ watch(
   >
     <ApplicationForm
       mode="edit"
-      :initial-data="{ ...application, labels: labels }"
-      :labels="labels"
+      :initial-data="{ ...application }"
       data-testid="info-edit-form"
       @success="updateApplication"
       @cancel="applicationModal.closeModal"
