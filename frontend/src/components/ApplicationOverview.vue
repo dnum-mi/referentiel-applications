@@ -4,6 +4,7 @@ import type { Component } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useBreakpoints } from "@/composables/use-breakpoint";
 import type { APP_PERMISSIONS, CreateApplicationWithPerms } from "@/models/Application";
+import { routeNames } from "@/router/route-names";
 
 import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
@@ -11,7 +12,8 @@ import StatusTab from "./StatusTab.vue";
 import CompliancesAccordionManager from "./compliances/CompliancesAccordionManager.vue";
 import ActorManager from "./actor/ActorTab.vue";
 import Relationships from "./RelationshipsTab.vue";
-import NotificationsApplication from "./NotificationsApplication.vue";
+import ApplicationReportsTab from "./ApplicationReportsTab.vue";
+import ApplicationMetadatasTab from "./ApplicationMetadatasTab.vue";
 import Quality from "./QualityTab.vue";
 
 import { useActorStore } from "@/stores/actorStore";
@@ -56,7 +58,7 @@ function updateApplication() {
 const errorMessages = {
   ERR_LOAD_HOSTINGS: "Erreur lors du chargement des hébergements",
   ERR_LOAD_ACTORS: "Erreur lors du chargement des acteurs",
-  ERR_LOAD_ISSUES_METADATAS: "Erreur lors du chargement des signalements et modifications",
+  ERR_LOAD_METADATA: "Erreur lors du chargement des modifications",
   ERR_LOAD_LINKS: "Erreur lors du chargement des liens",
   ERR_LOAD_RELATIONS: "Erreur lors du chargement des relations",
   ERR_LOAD_COMPLIANCES: "Erreur lors du chargement des conformités",
@@ -67,7 +69,7 @@ const fetchCompliances = () => compliancesStore.fetchCompliance(application.valu
 const fetchActors = () => actorStore.fetchActorsByApplication(application.value.id);
 const fetchRelations = () => relationsStore.fetchRelationsByApplication(application.value.id);
 
-async function fetchHistoryData() {
+async function fetchModificationsData() {
   if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
     await metadataStore.fetchMetadatasByApplication(application.value.id, {
       page: 0,
@@ -143,14 +145,22 @@ const tabs = ref<
     requiredPerms: ["readBase"],
   },
   {
-    title: "Historique",
+    title: "Signalements",
     icon: "ri-edit-line",
-    tabId: "tab-history",
-    panelId: "panel-history",
-    component: NotificationsApplication,
+    tabId: "tab-reports",
+    panelId: "panel-reports",
+    component: ApplicationReportsTab,
     requiredPerms: [],
-    loadFn: fetchHistoryData,
-    errorKey: "ERR_LOAD_ISSUES_METADATAS",
+  },
+  {
+    title: "Modifications",
+    icon: "ri-file-list-2-line",
+    tabId: "tab-modifications",
+    panelId: "panel-modifications",
+    component: ApplicationMetadatasTab,
+    requiredPerms: [],
+    loadFn: fetchModificationsData,
+    errorKey: "ERR_LOAD_METADATA",
   },
   {
     title: "Qualité",
@@ -163,14 +173,6 @@ const tabs = ref<
 ]);
 
 // Read tab from URL using tabId (string) — more stable than using numeric index
-onMounted(() => {
-  const raw = Array.isArray(route.query.tab) ? route.query.tab[0] : route.query.tab;
-  if (raw) {
-    const idx = tabs.value.findIndex((t) => t.tabId === raw);
-    if (idx !== -1) activeTab.value = idx;
-  }
-});
-
 onBeforeMount(async () => {
   // filter tabs based on permissions
   tabs.value = tabs.value.filter((tab) => {
@@ -178,6 +180,13 @@ onBeforeMount(async () => {
     if (userStore.adminLevel >= AdminLevel.READ) return true;
     return tab.requiredPerms.every((perm) => props.application.myPerms.has(perm));
   });
+
+  // Read requested tab from URL params after filtering
+  const raw = Array.isArray(route.params.tab) ? route.params.tab[0] : route.params.tab;
+  if (raw) {
+    const idx = tabs.value.findIndex((t) => t.tabId === raw);
+    if (idx !== -1) activeTab.value = idx;
+  }
 
   // clamp activeTab to valid range
   if (activeTab.value >= tabs.value.length) activeTab.value = Math.max(0, tabs.value.length - 1);
@@ -215,7 +224,12 @@ watch(
   () => activeTab.value,
   (newIdx) => {
     const tabId = tabs.value[newIdx]?.tabId;
-    if (tabId) router.replace({ query: { ...route.query, tab: tabId } });
+    if (tabId) {
+      router.replace({
+        name: routeNames.PROFILEAPP,
+        params: { id: route.params.id, tab: tabId },
+      });
+    }
   },
 );
 </script>

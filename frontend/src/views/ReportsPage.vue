@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import AllReports from "@/components/Report/AllReports.vue";
-import MyReports from "@/components/Report/MyReports.vue";
+import AllReportsTab from "@/components/Report/AllReportsTab.vue";
 import { ref } from "vue";
 
 const activeTab = ref(0);
@@ -12,14 +11,14 @@ const tabs = [
     icon: "ri-edit-line",
     tabId: "tab-my-reports",
     panelId: "panel-my-reports",
-    component: MyReports,
+    component: AllReportsTab,
   },
   {
     title: "Tous les Signalements",
     icon: "ri-edit-line",
     tabId: "tab-all-reports",
     panelId: "panel-all-reports",
-    component: AllReports,
+    component: AllReportsTab,
   },
 ];
 </script>

@@ -2,20 +2,17 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
-import type { ReportDto, ReportPaginatedResponseDto, MetadataDto } from "@/client/types.gen";
+import type { ReportDto, ReportPaginatedResponseDto } from "@/client/types.gen";
 import type { CreateApplicationWithPerms } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import { useMetadataStore } from "@/stores/metadataStore";
-import { useRoute } from "vue-router";
 import RefAppTable from "./RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 
-const route = useRoute();
 const props = defineProps<{ application: CreateApplicationWithPerms }>();
 
-const metadataStore = useMetadataStore();
 const toaster = useToasterStore();
+const userStore = useUserStore();
 
 const issues = ref<ReportPaginatedResponseDto>({ results: [], total: 0 });
 const isLoading = ref(false);
@@ -29,9 +26,6 @@ const tableColumns: TableColumn[] = [
   { field: "Titre", header: "Titre", sortable: false },
   { field: "Actions", header: "Actions", sortable: false },
 ];
-
-const activeAccordion = ref<number>();
-const userStore = useUserStore();
 
 const canPost = computed(() => {
   return props.application.myPerms.has("postReports") || userStore.adminLevel >= AdminLevel.WRITE;
@@ -83,77 +77,46 @@ async function submitReport() {
   }
 }
 
-function getTitle(meta: any): string {
-  return (meta.description || "").split("\n")[0];
-}
-
-const rows = computed(() => {
+const reportRows = computed(() => {
   const title = "Signalement";
-  const reports = issues.value.results.map((report: ReportDto) => ({
-    sortKey: new Date(report.createdAt).getTime(),
-    Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
-    Auteur: report.notifier?.email || "Inconnu",
-    Titre: title,
-    Actions: {
-      id: report.id,
-      isMetadata: false,
-    },
-  }));
-
-  const modifications = (metadataStore.metadatas || []).map((metadata: MetadataDto) => {
-    return {
-      sortKey: new Date(metadata.createdAt).getTime(),
-      Date: new Date(metadata.createdAt).toLocaleDateString("fr-FR"),
-      Auteur: metadata.createdBy?.email || "Inconnu",
-      Titre: getTitle(metadata),
+  return issues.value.results
+    .map((report: ReportDto) => ({
+      sortKey: new Date(report.createdAt).getTime(),
+      Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
+      Auteur: report.notifier?.email || "Inconnu",
+      Titre: title,
       Actions: {
-        id: metadata.id,
-        isMetadata: true,
+        id: report.id,
       },
-    };
-  });
-
-  return [...reports, ...modifications].sort((a, b) => b.sortKey - a.sortKey).map((item, index) => ({ ...item, index }));
+    }))
+    .sort((a, b) => b.sortKey - a.sortKey)
+    .map((item, index) => ({ ...item, index }));
 });
 
-const loading = computed(() => isLoading.value || metadataStore.isLoading);
+const loading = computed(() => isLoading.value);
 </script>
 
 <template>
-  <AppLoader v-if="loading" data-testid="notifications-loader" />
-  <div v-else-if="!loading && rows.length === 0" class="text-center" data-testid="notifications-empty">
-    <p>Aucun signalement proposé.</p>
-  </div>
-
-  <DsfrAccordionsGroup v-else v-model="activeAccordion">
-    <p>Nombre de consultations de l'application sur les 12 derniers mois : {{ props.application?.views }}</p>
-    <h4>Historique des modifications et signalements</h4>
+  <AppLoader v-if="loading" data-testid="reports-loader" />
+  <div v-else>
     <RefAppTable
-      :items="rows"
+      :items="reportRows"
       :columns="tableColumns"
       :paginator="true"
       :lazy="true"
       :rows="pageSize"
       :first="firstIndex"
       :total-records="issues.total"
-      data-testid="notifications-table"
+      data-testid="reports-table"
+      empty-message="Aucun signalement proposé."
       @page="onPage"
     >
-      <template #body-Actions="{ data }">
-        <router-link
-          v-if="data.Actions.isMetadata"
-          :to="{ name: 'metadata-detail', params: { id: data.Actions.id }, query: { from: route.fullPath } }"
-          class="fr-btn fr-btn--secondary fr-btn--sm"
-          data-testid="notifications-see-more-button"
-        >
-          Voir plus
-        </router-link>
-        <span v-else></span
-        ><!-- for Actions without any metadata -->
+      <template #body-Actions>
+        <span></span>
       </template>
     </RefAppTable>
-  </DsfrAccordionsGroup>
-  <div v-if="canPost" data-testid="notifications-report-issue">
+  </div>
+  <div v-if="canPost" data-testid="reports-report-issue">
     <h4>Proposer un signalement</h4>
     <DsfrInput
       v-model="reportText"

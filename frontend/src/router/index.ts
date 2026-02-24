@@ -72,7 +72,7 @@ const routes = [
   },
   {
     name: routeNames.PROFILEAPP,
-    path: "/applications/:id",
+    path: "/applications/:id/:tab?",
     component: () => import("@/views/ApplicationPage.vue"),
     meta: { requiresAuth: true, title: "Profil d'application - Référentiel des applications" },
   },
