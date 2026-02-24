@@ -171,6 +171,7 @@ export const relationTypeLabels: Record<RelationType, string> = {
   in_replacement_of: "remplace",
   is_service_user_of: "utilise le service de",
   is_data_user_of: "utilise les données de",
+  use_sso_of: "utilise le SSO de",
 };
 export type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd";
 

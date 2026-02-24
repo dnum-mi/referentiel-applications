@@ -18,4 +18,8 @@ export const RelationTypeLabelsBidirectional: Record<
     source: "Utilise la donnée de",
     target: "Fournit la donnée à",
   },
+  use_sso_of: {
+    source: "Utilise le SSO de",
+    target: "Fournit le SSO à",
+  },
 };

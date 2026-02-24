@@ -123,6 +123,8 @@ enum RelationType {
   is_service_user_of
   /// L'application utilise des données d'une autre application
   is_data_user_of
+  /// L'application utilise le SSO d'une autre application
+  use_sso_of
 }
 
 /// Niveaux de priorité pour le redémarrage des applications

@@ -25,6 +25,7 @@ async function performSearch(query: string) {
           is_data_user_of: RELATION_TYPE_FILTERS.neutral,
           is_service_user_of: RELATION_TYPE_FILTERS.neutral,
           in_replacement_of: RELATION_TYPE_FILTERS.neutral,
+          use_sso_of: RELATION_TYPE_FILTERS.neutral,
           relationAppId: undefined,
         },
         false,
@@ -76,6 +77,12 @@ const relationFields: { field: RelationField; filterKey: FilterKey; label: strin
     filterKey: RelationType.IS_DATA_USER_OF,
     label: "Utilise la donnée de",
     testId: "relation-is_data_user_of-select",
+  },
+  {
+    field: RelationType.USE_SSO_OF,
+    filterKey: RelationType.USE_SSO_OF,
+    label: "Utilise le SSO de",
+    testId: "relation-use_sso_of-select",
   },
 ];
 

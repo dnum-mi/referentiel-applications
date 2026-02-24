@@ -291,6 +291,14 @@ export class ApplicationSearchDto extends PaginationDto {
   is_data_user_of?: RelationTypeFilter;
 
   @ApiPropertyOptional({
+    description: "Filtrée sur la relation de type Utilise le SSO de",
+    enum: ["NEUTRAL", "INCLUDE", "EXCLUDE"],
+  })
+  @IsOptional()
+  @IsEnum(["NEUTRAL", "INCLUDE", "EXCLUDE"])
+  use_sso_of?: RelationTypeFilter;
+
+  @ApiPropertyOptional({
     description: "Filtrage des relations sur cette app",
   })
   @IsOptional()

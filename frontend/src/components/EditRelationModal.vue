@@ -42,6 +42,7 @@ const relationTypesForSelect = [
   { value: RelationType.IN_REPLACEMENT_OF, text: "Remplace" },
   { value: RelationType.IS_SERVICE_USER_OF, text: "Utilise le service de" },
   { value: RelationType.IS_DATA_USER_OF, text: "Utilise la donnée de" },
+  { value: RelationType.USE_SSO_OF, text: "Utilise le SSO de" },
 ];
 const errorMessage = ref<string>("");
 
@@ -59,6 +60,7 @@ async function performSearch(query: string) {
           is_data_user_of: RELATION_TYPE_FILTERS.neutral,
           is_service_user_of: RELATION_TYPE_FILTERS.neutral,
           in_replacement_of: RELATION_TYPE_FILTERS.neutral,
+          use_sso_of: RELATION_TYPE_FILTERS.neutral,
           relationAppId: undefined,
         },
         false,
