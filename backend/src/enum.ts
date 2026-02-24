@@ -34,4 +34,5 @@ export enum RelationType {
   in_replacement_of,
   is_service_user_of,
   is_data_user_of,
+  use_sso_of,
 }

@@ -429,6 +429,10 @@ export class PrismaQueryBuilder {
         side: "relationsAsSource",
         foreignKey: "applicationTargetId",
       },
+      use_sso_of: {
+        side: "relationsAsSource",
+        foreignKey: "applicationTargetId",
+      },
     } as const;
 
     const buildRelationQuery = (
@@ -476,6 +480,7 @@ export class PrismaQueryBuilder {
       filters.is_data_user_of,
       filters.relationAppId,
     );
+    buildRelationQuery("use_sso_of", filters.use_sso_of, filters.relationAppId);
 
     return {
       AND: [...excludeQueries, { OR: includeQueries }],

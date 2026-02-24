@@ -857,6 +857,16 @@ paths:
               - INCLUDE
               - EXCLUDE
             type: string
+        - name: use_sso_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise le SSO de
+          schema:
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+            type: string
         - name: relationAppId
           required: false
           in: query
@@ -1230,6 +1240,16 @@ paths:
           required: false
           in: query
           description: Filtrée sur la relation de type Utilise la donnée de
+          schema:
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+            type: string
+        - name: use_sso_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise le SSO de
           schema:
             enum:
               - NEUTRAL
@@ -3616,6 +3636,16 @@ paths:
               - INCLUDE
               - EXCLUDE
             type: string
+        - name: use_sso_of
+          required: false
+          in: query
+          description: Filtrée sur la relation de type Utilise le SSO de
+          schema:
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+            type: string
         - name: relationAppId
           required: false
           in: query
@@ -3687,6 +3717,7 @@ components:
         - in_replacement_of
         - is_service_user_of
         - is_data_user_of
+        - use_sso_of
     RelationApplicationDto:
       type: object
       properties:

@@ -40,6 +40,7 @@ export function useRelationManager(applicationId: string) {
     [RelationType.IN_REPLACEMENT_OF]: { source: "Remplace", target: "est remplacé par" },
     [RelationType.IS_SERVICE_USER_OF]: { source: "Utilise le service de", target: "Fournit le service à" },
     [RelationType.IS_DATA_USER_OF]: { source: "Utilise la donnée de", target: "Fournit la donnée à" },
+    [RelationType.USE_SSO_OF]: { source: "Utilise le SSO de", target: "Fournit le SSO à" },
   };
 
   function getRelationLabelForSide(type: RelationType, isSource: boolean): string {

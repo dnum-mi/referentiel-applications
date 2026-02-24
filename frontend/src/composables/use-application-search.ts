@@ -45,6 +45,7 @@ const DEFAULT_FILTERS: Filters = {
   in_replacement_of: RELATION_TYPE_FILTERS.neutral,
   is_service_user_of: RELATION_TYPE_FILTERS.neutral,
   is_data_user_of: RELATION_TYPE_FILTERS.neutral,
+  use_sso_of: RELATION_TYPE_FILTERS.neutral,
   relationAppId: undefined,
   businessDivisionId: undefined,
 };
@@ -166,6 +167,7 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     in_replacement_of: parseQueryParamsEnum(query.in_replacement_of) ?? DEFAULT_FILTERS.in_replacement_of,
     is_service_user_of: parseQueryParamsEnum(query.is_service_user_of) ?? DEFAULT_FILTERS.is_service_user_of,
     is_data_user_of: parseQueryParamsEnum(query.is_data_user_of) ?? DEFAULT_FILTERS.is_data_user_of,
+    use_sso_of: parseQueryParamsEnum(query.use_sso_of) ?? DEFAULT_FILTERS.use_sso_of,
     relationAppId: parseQueryParam(query.relationAppId),
     businessDivisionId: parseQueryParam(query.businessDivisionId),
   };
