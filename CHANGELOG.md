@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.63.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.62.0...v1.63.0) (2026-02-24)
+
+
+### Features
+
+* :sparkles: Add homologation end date column to applications table ([c598f36](https://github.com/dnum-mi/referentiel-applications/commit/c598f367155bc1fe182457c0e2276fdcf8954a4b))
+* :sparkles: move reports to dedicated tab and enhance application overview ([#1504](https://github.com/dnum-mi/referentiel-applications/issues/1504)) ([08bbce5](https://github.com/dnum-mi/referentiel-applications/commit/08bbce5eff3a798cd17efb4d2f08716b4f50627b))
+* add varchar size limits to various database fields ([#1474](https://github.com/dnum-mi/referentiel-applications/issues/1474)) ([5194e9a](https://github.com/dnum-mi/referentiel-applications/commit/5194e9a75987ea1cf3aeb40658bc8a94df3c2233))
+* improve chart time and put building step into dedicated builder… ([#1498](https://github.com/dnum-mi/referentiel-applications/issues/1498)) ([b0277b6](https://github.com/dnum-mi/referentiel-applications/commit/b0277b6962589bb47fd13d26dad042165bbfde87))
+
+
+### Bug Fixes
+
+* add token active limit ([#1478](https://github.com/dnum-mi/referentiel-applications/issues/1478)) ([b740bd8](https://github.com/dnum-mi/referentiel-applications/commit/b740bd866bbea70ba395ccdaaa5b6e848e0b93bd))
+* do not refresh app list when user use input search relation ([#1473](https://github.com/dnum-mi/referentiel-applications/issues/1473)) ([14a189b](https://github.com/dnum-mi/referentiel-applications/commit/14a189b3e99a9fba6020e29fce80767a2849a677))
+* remove redondant bug title template title format ([#1486](https://github.com/dnum-mi/referentiel-applications/issues/1486)) ([509b9be](https://github.com/dnum-mi/referentiel-applications/commit/509b9be805c37875282101717661d2c97292727d))
+
 ## [1.62.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.61.0...v1.62.0) (2026-02-13)
 
 
