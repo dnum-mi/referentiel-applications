@@ -49,9 +49,9 @@ async function openFirstApplicationFromSearch(page: Page) {
   await expect(page.getByTestId("application-title")).toBeVisible();
 }
 
-async function openHistoryTabAndSubmitReport(page: Page, description: string) {
-  await page.getByRole("tab", { name: "Historique" }).click();
-  await expect(page.getByTestId("notifications-report-issue")).toBeVisible();
+async function openReportsTabAndSubmitReport(page: Page, description: string) {
+  await page.getByRole("tab", { name: "Signalements" }).click();
+  await expect(page.getByTestId("reports-report-issue")).toBeVisible();
   await page.getByTestId("report-issue-textarea").fill(description);
   const createReport = page.waitForResponse(
     (response) => response.url().includes("/api/v2/reports") && response.request().method() === "POST",
@@ -127,7 +127,7 @@ test.describe("Reports flow", () => {
     await openFirstApplicationFromSearch(page);
     const reportDescription = uniqueText("RI05-app-report");
 
-    const createResponse = await openHistoryTabAndSubmitReport(page, reportDescription);
+    const createResponse = await openReportsTabAndSubmitReport(page, reportDescription);
     expect(createResponse.status()).toBe(201);
 
     await expect(page.getByTestId("app-toaster")).toContainText("Votre proposition sera prise en compte prochainement.");

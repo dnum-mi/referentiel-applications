@@ -16,7 +16,6 @@ const props = defineProps<{
   isActive: boolean;
 }>();
 
-const title = "Liste de tous les signalements d'applications";
 const headers = [
   { key: "application", label: "Application" },
   { key: "notifier", label: "Signalant" },
