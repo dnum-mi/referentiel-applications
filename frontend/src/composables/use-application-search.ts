@@ -270,8 +270,7 @@ export function useApplicationSearch() {
   async function fetchTechnicalDebtPoints(customFilters?: Partial<Filters>): Promise<TechnicalDebtPoint[]> {
     const currentFilters = { ...filters.value, ...customFilters };
     const { page, pageSize, ...query } = cleanFilters(currentFilters);
-    const response = await api.technicalDebtControllerGetTechnicalDebtPoints({ query, throwOnError: true, responseStyle: "data" });
-
+    const response = await api.technicalDebtControllerGetTechnicalDebtPoints({ query, throwOnError: true });
     return response.data ?? [];
   }
 
