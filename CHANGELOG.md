@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.64.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.64.0...v1.64.1) (2026-02-25)
+
+
+### Bug Fixes
+
+* use relation filter is part of to neutral ([#1514](https://github.com/dnum-mi/referentiel-applications/issues/1514)) ([4f8c665](https://github.com/dnum-mi/referentiel-applications/commit/4f8c6652d4ac9a7413c6f2237cf5a235a96928d2))
+
 ## [1.64.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.63.0...v1.64.0) (2026-02-25)
 
 
