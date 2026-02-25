@@ -37,13 +37,22 @@ const HOMOLOGATION_STATUS = {
 } as const;
 
 const isHomologationHomologuee = computed(() => form.value.status === HOMOLOGATION_STATUS.HOMOLOGUEE);
+const showHomologationDateEnd = computed(() => isHomologationHomologuee.value || Boolean(form.value.date_end));
 
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeCompliances"));
 
 async function loadForm() {
   loading.value = true;
   if (props.mode === "edit" && props.initialData) {
-    form.value = { ...props.initialData };
+    const data = { ...props.initialData };
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (!value || typeof value !== "string" || !key.includes("date")) return;
+
+      data[key] = value.slice(0, 10);
+    });
+
+    form.value = data;
   } else {
     form.value = {};
   }
@@ -262,7 +271,7 @@ async function save() {
           data-testid="compliance-homologation-status"
         />
         <DsfrInput
-          v-if="isHomologationHomologuee"
+          v-if="showHomologationDateEnd || isHomologationHomologuee"
           v-model="form.date_end"
           :label="complianceFieldLabels.date_end"
           type="date"
