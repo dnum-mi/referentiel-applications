@@ -41,7 +41,7 @@ const DEFAULT_FILTERS: Filters = {
   missingMoa: undefined,
   missingMoe: undefined,
   missingHosting: undefined,
-  is_part_of: RELATION_TYPE_FILTERS.exclude,
+  is_part_of: RELATION_TYPE_FILTERS.neutral,
   in_replacement_of: RELATION_TYPE_FILTERS.neutral,
   is_service_user_of: RELATION_TYPE_FILTERS.neutral,
   is_data_user_of: RELATION_TYPE_FILTERS.neutral,
