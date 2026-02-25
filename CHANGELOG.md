@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.64.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.63.0...v1.64.0) (2026-02-25)
+
+
+### Features
+
+* add use_sso_of relation app ([#1505](https://github.com/dnum-mi/referentiel-applications/issues/1505)) ([c99233d](https://github.com/dnum-mi/referentiel-applications/commit/c99233d641b6f5b814d439c5d3ef45762006e345))
+
+
+### Bug Fixes
+
+* :bug: fix homologation filter showing only approved applications ([3665117](https://github.com/dnum-mi/referentiel-applications/commit/366511717c50d1957f13320686b3f6afbf73ea73))
+* remove response style data from debt chart ([#1511](https://github.com/dnum-mi/referentiel-applications/issues/1511)) ([e695299](https://github.com/dnum-mi/referentiel-applications/commit/e69529918051df2e47cf96a33398d3571adcf3dc))
+
 ## [1.63.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.62.0...v1.63.0) (2026-02-24)
 
 
