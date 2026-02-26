@@ -25,7 +25,7 @@ export const actorTypeMapping: Record<string, string> = {
   ArchitecteApplicatif: "Architecte applicatif",
   ArchitecteTechnique: "Architecte technique",
   TMA: "Tierce Maintenance Applicative (TMA)",
-  Exploitation: "Responsable d'exploitation opérationel",
+  Exploitation: "Responsable d'exploitation opérationnel",
   RSIMM: "Responsables des SI Métier et de la Modernisation (RSIMM)",
   CPD: "Correspondant à la protection des données (CPD)",
   OrganismeBeneficiaire: "Correspondant Stratégique Métier (CSM)",
@@ -76,7 +76,7 @@ export const linkTypesDict = {
 export const eventTypesArray = [
   { value: "under_construction", text: "En construction" },
   { value: "in_production", text: "En production" },
-  { value: "decommissioned", text: "Décommissionée" },
+  { value: "decommissioned", text: "Décommissionnée" },
   { value: "decommissioning", text: "En décommissionnement" },
   { value: "highlight", text: "Événement" },
 ];
