@@ -268,14 +268,12 @@ watch(
                 </li>
               </ul>
 
-              <div v-if="(application.targetPopulations ?? []).length > 0" data-testid="info-population">
-                <h4 class="fr-mt-3w">Population</h4>
-                <ul class="fr-tags-group">
-                  <li v-for="targetPopulation in application.targetPopulations" :key="targetPopulation">
-                    <DsfrTag :label="targetPopulation" :small="small" />
-                  </li>
-                </ul>
-              </div>
+              <h4 class="fr-mt-3w">Population</h4>
+              <ul data-testid="info-populations">
+                <li v-for="targetPopulation in application.targetPopulations" :key="targetPopulation">
+                  <DsfrTag :label="targetPopulation" :small="small" />
+                </li>
+              </ul>
 
               <h4 class="fr-mt-3w">Tags</h4>
               <ul class="fr-tags-group" data-testid="info-tags">

@@ -66,8 +66,8 @@ export const useLabelStore = defineStore("labelStore", () => {
     const response = await api.labelSourceControllerFindAll({
       query: filters,
     });
-    labelSources.value = response.data ?? [];
-    return response.data ?? [];
+    labelSources.value = response.data?.results ?? [];
+    return labelSources.value ?? [];
   };
 
   return {

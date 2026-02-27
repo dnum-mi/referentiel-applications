@@ -16,10 +16,10 @@ function handleDelete(label: LabelDto) {
 <template>
   <div v-if="labels.length === 0" class="fr-text--sm fr-text--italic" data-testid="label-empty">Aucun nom alternatif.</div>
   <div v-else>
-    <div v-for="label in labels" :key="label.id" class="fr-mb-2w fr-pb-1w fr-border--bottom" :data-testid="`label-item-${label.id}`">
+    <div v-for="label in labels" :key="label.id" class="fr-pb-1w fr-border--bottom" :data-testid="`label-item-${label.id}`">
       <div class="fr-grid-row fr-grid-row--middle">
         <div class="fr-col">
-          <div class="fr-text--sm fr-mt-1w">
+          <div class="fr-text--sm">
             <p v-if="label.value" class="fr-mb-0">
               {{ label.value }}
               <template v-if="label.labelSource?.source"> ({{ label.labelSource.source }}) </template>

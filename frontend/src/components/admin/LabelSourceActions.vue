@@ -1,21 +1,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { TagDto } from "@/client/types.gen";
+import type { LabelSourceDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
 
-interface BadRequestResponse {
-  error: string;
-  message: string[];
-  statusCode: number;
-}
-
 const props = defineProps<{
-  tag?: TagDto;
+  labelSource?: LabelSourceDto;
 }>();
 
 const emit = defineEmits<{
-  fetchTags: [];
+  fetchLabelSources: [];
 }>();
 
 const toaster = useToasterStore();
@@ -24,11 +18,11 @@ const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
 const isDeleting = ref(false);
-const editingName = ref<string>("");
+const editingSource = ref<string>("");
 const errorMessage = ref<string>("");
 
 async function openEditModal() {
-  editingName.value = props.tag?.name || "";
+  editingSource.value = props.labelSource?.source || "";
   errorMessage.value = "";
   isEditModalOpen.value = true;
 }
@@ -39,7 +33,7 @@ async function openDeleteModal() {
 
 function closeEditModal() {
   isEditModalOpen.value = false;
-  editingName.value = "";
+  editingSource.value = "";
   errorMessage.value = "";
 }
 
@@ -47,51 +41,50 @@ function closeDeleteModal() {
   isDeleteModalOpen.value = false;
 }
 
-async function saveTag() {
+async function saveLabelSource() {
   isSaving.value = true;
   errorMessage.value = "";
 
-  const response = !props.tag?.id
-    ? await api.tagsControllerCreate({
+  const response = !props.labelSource?.id
+    ? await api.labelSourceControllerCreate({
         body: {
-          name: editingName.value,
+          source: editingSource.value,
         },
       })
-    : await api.tagsControllerUpdate({
-        path: { id: props.tag.id },
+    : await api.labelSourceControllerUpdate({
+        path: { id: props.labelSource.id },
         body: {
-          name: editingName.value,
+          source: editingSource.value,
         },
       });
 
   if (!response.response.ok) {
     if (response.response.status === 400) {
-      const error = response.error as BadRequestResponse;
-      errorMessage.value = error.message.join(", ");
+      errorMessage.value = "La valeur est incorrecte.";
     } else {
-      errorMessage.value = "Erreur lors de la sauvegarde du tag";
+      errorMessage.value = "Erreur lors de la sauvegarde de la source";
     }
   } else {
-    toaster.addSuccessMessage(!props.tag?.id ? "Tag créé avec succès" : "Tag mis à jour avec succès");
+    toaster.addSuccessMessage(!props.labelSource?.id ? "Source créée avec succès" : "Source mise à jour avec succès");
 
     closeEditModal();
-    emit("fetchTags");
+    emit("fetchLabelSources");
   }
   isSaving.value = false;
 }
 
-async function deleteTag() {
-  if (!props.tag?.id) return;
+async function deleteLabelSource() {
+  if (!props.labelSource?.id) return;
 
   isDeleting.value = true;
 
-  const response = await api.tagsControllerDelete({ path: { id: props.tag.id } });
+  const response = await api.labelSourceControllerRemove({ path: { id: props.labelSource.id } });
   if (!response.response.ok) {
-    toaster.addErrorMessage("Erreur lors de la suppression du tag");
+    toaster.addErrorMessage("Erreur lors de la suppression de la source");
   } else {
-    toaster.addSuccessMessage("Tag supprimé avec succès");
+    toaster.addSuccessMessage("Source supprimée avec succès");
     closeDeleteModal();
-    emit("fetchTags");
+    emit("fetchLabelSources");
   }
   isDeleting.value = false;
 }
@@ -99,12 +92,12 @@ async function deleteTag() {
 
 <template>
   <DsfrButton
-    v-if="!tag?.id"
+    v-if="!labelSource?.id"
     class="fr-btn--icon-left fr-icon-add-line"
-    label="Créer un tag"
-    data-testid="admin-create-tag-btn"
-    title="Créer un nouveau tag"
-    aria-label="Créer un nouveau tag"
+    label="Créer une source"
+    data-testid="admin-create-label-source-btn"
+    title="Créer une nouvelle source"
+    aria-label="Créer une nouvelle source"
     @click="openEditModal"
   />
 
@@ -113,37 +106,37 @@ async function deleteTag() {
       label="Modifier"
       size="sm"
       secondary
-      data-testid="admin-tag-edit-btn"
-      title="Modifier le tag"
-      aria-label="Modifier le tag"
+      data-testid="admin-label-source-edit-btn"
+      title="Modifier la source"
+      aria-label="Modifier la source"
       @click="openEditModal"
     />
     <DsfrButton
       label="Supprimer"
       size="sm"
       secondary
-      data-testid="admin-tag-delete-btn"
-      title="Supprimer le tag"
-      aria-label="Supprimer le tag"
+      data-testid="admin-label-source-delete-btn"
+      title="Supprimer la source"
+      aria-label="Supprimer la source"
       @click="openDeleteModal"
     />
   </div>
 
   <DsfrModal
     :opened="isEditModalOpen"
-    :title="!tag?.id ? 'Créer un tag' : 'Modifier le tag'"
-    :data-testid="!tag?.id ? 'admin-create-tag-modal' : 'admin-edit-tag-modal'"
+    :title="!labelSource?.id ? 'Créer une source' : 'Modifier la source'"
+    :data-testid="!labelSource?.id ? 'admin-create-label-source-modal' : 'admin-edit-label-source-modal'"
     @close="closeEditModal"
   >
     <DsfrInputGroup
-      v-model="editingName"
+      v-model="editingSource"
       class="fr-mb-2w"
-      label="Nom du tag"
-      hint="Les tags sont en minuscules"
+      label="Valeur de la source"
+      hint="Les sources sont en majuscules"
       label-visible
       required
       :error-message="errorMessage"
-      data-testid="tag-name"
+      data-testid="label-source-source"
     />
 
     <template #footer>
@@ -161,19 +154,24 @@ async function deleteTag() {
         aria-label="Sauvegarder les modifications"
         :disabled="isSaving"
         data-testid="admin-save-perms-btn"
-        @click="saveTag"
+        @click="saveLabelSource"
       />
     </template>
   </DsfrModal>
 
-  <DsfrModal :opened="isDeleteModalOpen" title="Supprimer le tag" data-testid="admin-delete-tag-modal" @close="closeDeleteModal">
+  <DsfrModal
+    :opened="isDeleteModalOpen"
+    title="Supprimer la source"
+    data-testid="admin-delete-label-source-modal"
+    @close="closeDeleteModal"
+  >
     <DsfrAlert
-      id="tag-delete-alert"
+      id="label-source-delete-alert"
       title="Cette action est irréversible"
-      :description="`Il sera retiré de toutes les applications liées. Êtes-vous sûr de vouloir supprimer le tag : ${tag?.name} ?`"
+      :description="`Cela concerne la source ainsi que tous ses noms alternatifs. Êtes-vous sûr de vouloir supprimer la source : ${labelSource?.source} ?`"
       type="warning"
       class="fr-mb-3w alert-multiline"
-      data-testid="tag-delete-alert"
+      data-testid="label-source-delete-alert"
     />
 
     <template #footer>
@@ -193,25 +191,17 @@ async function deleteTag() {
         aria-label="Confirmer la suppression"
         danger
         :disabled="isDeleting"
-        @click="deleteTag"
+        @click="deleteLabelSource"
       />
     </template>
   </DsfrModal>
 </template>
 
 <style scoped>
-.truncate {
-  display: inline-block;
-  max-width: 60ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .button-row {
   display: flex;
   gap: 1rem;
 }
-
 .alert-multiline {
   white-space: normal;
   word-wrap: break-word;

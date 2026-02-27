@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { PaginationDto } from "src/common/dto";
 
 export class CreateLabelSourceDto {
   @ApiProperty({
@@ -15,7 +16,7 @@ export class CreateLabelSourceDto {
 
 export class UpdateLabelSourceDto extends CreateLabelSourceDto {}
 
-export class LabelSourceFiltersDto {
+export class LabelSourceFiltersDto extends PaginationDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
