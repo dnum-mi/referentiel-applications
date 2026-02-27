@@ -246,7 +246,7 @@ watch(
                 {{ application.id }}
               </p>
 
-              <h4>Direction de metier principale MOA:</h4>
+              <h4>Direction métier principale</h4>
               <p data-testid="info-application-id">
                 {{ businessDivisionLabel }}
               </p>
