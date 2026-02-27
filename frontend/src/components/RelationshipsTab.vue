@@ -71,22 +71,26 @@ function setViewMode(mode: "list" | "graph") {
 }
 
 // --- Boutons principaux ---
-const mainButtons = computed(() => [
-  {
-    label: "Liste",
-    title: "Vue liste des relations",
-    icon: "fr-icon-list-unordered",
-    onClick: () => setViewMode("list"),
-    tertiary: viewMode.value !== "list",
-  },
-  {
-    label: "Graphe",
-    title: "Vue graphe des relations",
-    icon: "fr-icon-eye-line",
-    onClick: () => setViewMode("graph"),
-    tertiary: viewMode.value !== "graph",
-  },
-]);
+const mainButtons = computed(() =>
+  props.isMobile
+    ? []
+    : [
+        {
+          label: "Liste",
+          title: "Vue liste des relations",
+          icon: "fr-icon-list-unordered",
+          onClick: () => setViewMode("list"),
+          tertiary: viewMode.value !== "list",
+        },
+        {
+          label: "Graphe",
+          title: "Vue graphe des relations",
+          icon: "fr-icon-eye-line",
+          onClick: () => setViewMode("graph"),
+          tertiary: viewMode.value !== "graph",
+        },
+      ],
+);
 
 const addRelationButton = computed(() => ({
   label: "Ajouter une relation",
