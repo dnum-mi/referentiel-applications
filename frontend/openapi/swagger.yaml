@@ -3111,6 +3111,40 @@ paths:
       operationId: LabelSourceController_findAll
       summary: Rechercher des sources de libellés alternatifs avec filtre en option.
       parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
         - name: source
           required: false
           in: query
@@ -3122,9 +3156,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/LabelSourceDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: *a18
   /api/v2/label-sources/{id}:
     patch:

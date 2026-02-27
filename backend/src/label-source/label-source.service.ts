@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 import { BaseService } from "../common/base.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { LabelSourceFiltersDto } from "./dto/label-source.dto";
+import { PaginatedResponseDto } from "src/common/dto";
 
 @Injectable()
 export class LabelSourceService extends BaseService<LabelSource> {
@@ -10,15 +11,22 @@ export class LabelSourceService extends BaseService<LabelSource> {
     super(prisma.labelSource, prisma);
   }
 
-  async findAll(filters?: LabelSourceFiltersDto) {
+  async findAllLabelSources(
+    filters?: LabelSourceFiltersDto,
+  ): Promise<PaginatedResponseDto<LabelSource>> {
     const where: Prisma.LabelSourceWhereInput = {};
     if (filters && filters.source) {
       where.source = { contains: filters.source, mode: "insensitive" };
     }
 
-    return this.prisma.labelSource.findMany({
+    return this.prisma.labelSource.paginate({
       where,
-      orderBy: [{ source: "asc" }],
+      orderBy: [{ source: filters?.order ?? "asc" }],
+      page: filters?.page,
+      pageSize: filters?.pageSize,
+      include: {
+        _count: { select: { Label: true } },
+      },
     });
   }
 }

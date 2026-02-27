@@ -4,6 +4,7 @@ import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminQualityTab from "@/components/admin/AdminQualityTab.vue";
 import { ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
+import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 
 interface DsfrTab {
   title: string;
@@ -28,6 +29,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-tags",
     panelId: "panel-tags",
     component: AdminTagsTab,
+  },
+  {
+    title: "Gestions des sources",
+    icon: "ri-database-2-line",
+    tabId: "tab-label-sources",
+    panelId: "panel-label-sources",
+    component: AdminLabelSourcesTab,
   },
   {
     title: "Indice de qualité",
