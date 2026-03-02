@@ -22,6 +22,10 @@ model Organization {
   users       User[]
   /// Acteurs associés à cette organisation
   actors      Actor[]
+  /// Identifiant de la direction metier MOA de l'organisation
+  businessDivisionId String?
+  /// Direction metier MOA de l'organisation
+  businessDivision   BusinessDivision? @relation(fields: [businessDivisionId], references: [id], onDelete: SetNull)
 
   /// Entrées de table de fermeture où ceci est un ancêtre
   OrganizationClosureAncestor   OrganizationClosure[] @relation("OrganizationClosureAncestor")

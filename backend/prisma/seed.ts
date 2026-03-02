@@ -105,8 +105,21 @@ async function main() {
 
   // Create Business Division
   console.log("🏬  Creating Business Division...");
+  const businessDivisions = [];
   for (let i = 0; i < 50; i++) {
-    await BusinessDivisionFaker.create();
+    businessDivisions.push(await BusinessDivisionFaker.create());
+  }
+
+  // Link some organizations to business divisions
+  console.log("🔗 Linking organizations to business divisions...");
+  const organizations = await prisma.organization.findMany();
+  for (const [index, org] of organizations.entries()) {
+    if (index % 3 === 0) continue; // ~1/3 des organisations sans business division
+    const bd = businessDivisions[index % businessDivisions.length];
+    await prisma.organization.update({
+      where: { id: org.id },
+      data: { businessDivisionId: bd.id },
+    });
   }
 
   // Add compliance data to existing applications (several apps per category)

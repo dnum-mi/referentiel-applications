@@ -444,6 +444,7 @@ erDiagram
   String sigle "nullable"
   String description "nullable"
   String parentId FK "nullable"
+  String businessDivisionId FK "nullable"
 }
 "OrganizationClosure" {
   String ancestorId FK
@@ -468,6 +469,7 @@ Properties as follows:
 - `sigle`: Acronyme ou nom court
 - `description`: Description complète de l'organisation
 - `parentId`:
+- `businessDivisionId`: Identifiant de la direction metier MOA de l'organisation
 
 ### `OrganizationClosure`
 

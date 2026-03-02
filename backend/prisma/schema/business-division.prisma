@@ -8,4 +8,6 @@ model BusinessDivision {
   label         String   @unique     @db.VarChar(255)
   /// Applications associées à cette direction metier
   applications  Application[]
+  /// Organisations associées à cette direction metier
+  organizations Organization[]
 }
