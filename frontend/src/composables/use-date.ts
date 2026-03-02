@@ -1,4 +1,4 @@
-import { format, isFuture, parseISO } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 export function formatDate(isoDate: string): string {
   const date = new Date(isoDate);
@@ -16,10 +16,11 @@ export function formatDateFR(isoDate: string | Date): string {
   return format(d, "dd/MM/yyyy");
 }
 
-export function todayMax(): string {
-  return format(new Date(), "yyyy-MM-dd");
-}
-
-export function isDateFuture(isoDate: string): boolean {
-  return isFuture(parseISO(isoDate));
+/**
+ * Converts an ISO date string or Date to HTML date input format (YYYY-MM-DD)
+ */
+export function toDateInputValue(date: string | Date | null | undefined): string {
+  if (!date) return "";
+  const d = typeof date === "string" ? parseISO(date) : date;
+  return format(d, "yyyy-MM-dd");
 }

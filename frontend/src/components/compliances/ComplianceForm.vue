@@ -9,6 +9,7 @@ import {
   homologationStatusDict,
   complianceFieldLabels,
 } from "@/composables/use-dictionary";
+import { toDateInputValue } from "@/composables/use-date";
 import { useUserStore } from "@/stores/userStore";
 import type { CreateApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
@@ -44,15 +45,12 @@ const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props
 async function loadForm() {
   loading.value = true;
   if (props.mode === "edit" && props.initialData) {
-    const data = { ...props.initialData };
-
-    Object.entries(data).forEach(([key, value]) => {
-      if (!value || typeof value !== "string" || !key.includes("date")) return;
-
-      data[key] = value.slice(0, 10);
-    });
-
-    form.value = data;
+    form.value = {
+      ...props.initialData,
+      date_end: toDateInputValue(props.initialData.date_end),
+      last_test_date: toDateInputValue(props.initialData.last_test_date),
+      audit_date: toDateInputValue(props.initialData.audit_date),
+    };
   } else {
     form.value = {};
   }
