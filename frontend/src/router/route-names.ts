@@ -11,6 +11,7 @@ export const routeNames = {
 
   REPORTS: "signalements",
   QUALITYPAGE: "qualite-generale",
+  TIMEPAGE: "time",
   HISTORY: "historique",
   METADATADETAIL: "metadata-detail",
   ADMINPAGE: "administration",

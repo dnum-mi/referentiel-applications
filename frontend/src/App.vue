@@ -94,6 +94,7 @@ const quickLinks = computed<QuickLink[]>(() => {
 const baseNavItems = [
   { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
   { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
+  { to: { name: routeNames.TIMEPAGE }, text: "Time" },
   { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
   { to: { name: routeNames.REPORTS }, text: "Signalements" },
   { to: { name: routeNames.HISTORY }, text: "Modifications" },
