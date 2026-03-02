@@ -104,16 +104,16 @@ export class TimeChartBuilder {
     return this;
   }
 
-  /** Labels TIME dans les 4 coins : Migrate / Invest / Eliminate / Tolerate */
+  /** Labels TIME dans les 4 coins : Tolerate / Invest / Eliminate / Migrate */
   drawQuadrants(): this {
     const { plotWidth, plotHeight } = this.layout;
     const gap = 15;
 
     const quadrants = [
-      { tx: 0 + gap, ty: 0 + gap, anchor: "start", baseline: "hanging", label: "Migrate" },
+      { tx: 0 + gap, ty: 0 + gap, anchor: "start", baseline: "hanging", label: "Tolerate" },
       { tx: plotWidth - gap, ty: 0 + gap, anchor: "end", baseline: "hanging", label: "Invest" },
       { tx: 0 + gap, ty: plotHeight - gap, anchor: "start", baseline: "auto", label: "Eliminate" },
-      { tx: plotWidth - gap, ty: plotHeight - gap, anchor: "end", baseline: "auto", label: "Tolerate" },
+      { tx: plotWidth - gap, ty: plotHeight - gap, anchor: "end", baseline: "auto", label: "Migrate" },
     ] as const;
 
     quadrants.forEach(({ tx, ty, anchor, baseline, label }) => {
