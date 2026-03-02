@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.65.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.64.1...v1.65.0) (2026-03-02)
+
+
+### Features
+
+* cacher les relations metier graph en mobile ([#1520](https://github.com/dnum-mi/referentiel-applications/issues/1520)) ([0b5cbe2](https://github.com/dnum-mi/referentiel-applications/commit/0b5cbe285fc87e5ecfa8fd1b254746e0b752f64e))
+* direction de metier principale add relation and fix label ([#1524](https://github.com/dnum-mi/referentiel-applications/issues/1524)) ([2982e9c](https://github.com/dnum-mi/referentiel-applications/commit/2982e9c3cf1c7406dba966ba1ccc40980558225e))
+
+
+### Bug Fixes
+
+* correct French spelling mistakes in use-dictionary.ts ([d6b37a5](https://github.com/dnum-mi/referentiel-applications/commit/d6b37a5425f40f2f284413ae36c6f11d0f92006c))
+
 ## [1.64.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.64.0...v1.64.1) (2026-02-25)
 
 
