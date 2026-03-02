@@ -55,6 +55,16 @@ async function exportToExcel() {
     toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }
 }
+
+const canCreateApplication = computed(() => {
+  return userStore.adminLevel >= AdminLevel.WRITE || userStore.user?.capabilities?.includes("CreateApplication");
+});
+const canReport = computed(() => {
+  return userStore.adminLevel >= AdminLevel.WRITE || userStore.user?.capabilities?.includes("CreateGlobalReport");
+});
+const canExportExcel = computed(() => {
+  return userStore.adminLevel >= AdminLevel.ADMIN || userStore.user?.capabilities?.includes("ExportData");
+});
 </script>
 
 <template>
@@ -66,7 +76,7 @@ async function exportToExcel() {
         secondary
         icon="fr-icon-add-line"
         type="button"
-        :disabled="userStore.adminLevel < AdminLevel.WRITE && !userStore.user?.capabilities?.includes('CreateApplication')"
+        :disabled="!canCreateApplication"
         data-testid="create-application-btn"
         class="action-btn icon-left"
         @click="router.push({ name: routeNames.CREATEAPP })"
@@ -81,7 +91,7 @@ async function exportToExcel() {
         aria-haspopup="dialog"
         aria-controls="modal-report-missing"
         type="button"
-        :disabled="!userStore.user?.capabilities?.includes('CreateGlobalReport') && userStore.adminLevel < AdminLevel.WRITE"
+        :disabled="!canReport"
         data-testid="report-missing-app"
         class="action-btn icon-left report-btn"
         @click="openReport"
@@ -93,7 +103,7 @@ async function exportToExcel() {
       </DsfrButton>
 
       <DsfrButton
-        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
+        v-if="canExportExcel"
         label="Exporter en Excel"
         icon="ri-file-excel-2-line"
         secondary
@@ -105,7 +115,7 @@ async function exportToExcel() {
       ></DsfrButton>
 
       <DsfrButton
-        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
+        v-if="canExportExcel"
         label="Exporter en Excel"
         icon="ri-file-excel-2-line"
         secondary

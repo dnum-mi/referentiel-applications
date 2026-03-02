@@ -8,14 +8,10 @@ import { ConfigType } from "@nestjs/config";
 import { NextFunction, Request, Response } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { ActionLogService } from "src/action-log/action-log.service";
+import { UserCapabilityService } from "src/user/capabilities/user-capability.service";
 import { oidcConfig } from "src/config/configs";
 import { TokenService } from "src/token/token.service";
-import {
-  AdminLevel,
-  Requestor,
-  UserCapabilities,
-  UserEntity,
-} from "src/user/entities/user.entity";
+import { Requestor, UserEntity } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 import { API_KEY_HEADER } from "src/utils/constants.util";
 
@@ -35,6 +31,7 @@ export class AuthMiddleware implements NestMiddleware {
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
     private readonly actionLogService: ActionLogService,
+    private readonly userCapabilityService: UserCapabilityService,
   ) {
     this.jwks = createRemoteJWKSet(new URL(this.oidc.jwksUrl));
   }
@@ -62,14 +59,10 @@ export class AuthMiddleware implements NestMiddleware {
         res.json({ message: "L'authentification a échoué" });
         return;
       }
-      const capabilities = user.capabilities ?? [];
-      if (user.adminLevel >= AdminLevel.WRITE) {
-        capabilities.push(
-          ...(Object.keys(
-            UserCapabilities,
-          ) as (keyof typeof UserCapabilities)[]),
-        );
-      }
+      const capabilities = this.userCapabilityService.mergeCapabilities(
+        user.adminLevel,
+        user.capabilities,
+      );
       req.user = { ...user, capabilities };
 
       this.actionLogService.updateUserLastLogin(req.user);

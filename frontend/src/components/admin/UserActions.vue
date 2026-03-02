@@ -73,6 +73,11 @@ const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     value: "CreateGlobalReport" as UserCapabilities,
     name: "capability-create-global-report",
   },
+  {
+    label: "Export de données",
+    value: "ExportData" as UserCapabilities,
+    name: "capability-export-excel",
+  },
 ];
 </script>
 

@@ -125,4 +125,6 @@ enum CapabilityNames {
   CreateApplication
   /// Capacité de créer des signalements globaux
   CreateGlobalReport
+  /// Capacité d'exporter les data 
+  ExportData
 }

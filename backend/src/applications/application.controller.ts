@@ -173,7 +173,8 @@ Vous devez fournir les informations suivantes :
 
   @Get("export/excel")
   @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredUserCapability("ExportData")
+  @UseGuards(UserCapabilityGuard)
   @ApiOperation({
     summary: "Exporter les applications en Excel",
     description: `Permet d'exporter les applications en un fichier Excel.

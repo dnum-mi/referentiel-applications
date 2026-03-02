@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { CapabilityNames } from "@prisma/client";
 import {
   IsArray,
   IsBoolean,
@@ -28,7 +29,10 @@ export enum AdminLevel {
 export const UserCapabilities = {
   CreateApplication: "CreateApplication",
   CreateGlobalReport: "CreateGlobalReport",
-} as const;
+  ExportData: "ExportData",
+} as const satisfies {
+  [capabilityName in CapabilityNames]: capabilityName;
+};
 
 export const UserType = {
   human: "human",

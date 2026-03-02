@@ -3957,6 +3957,7 @@ components:
       enum:
         - CreateApplication
         - CreateGlobalReport
+        - ExportData
     OrganizationDto:
       type: object
       properties:
@@ -4170,6 +4171,7 @@ components:
             enum:
               - CreateApplication
               - CreateGlobalReport
+              - ExportData
         organizationId:
           type: string
           nullable: true
