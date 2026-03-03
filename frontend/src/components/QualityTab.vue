@@ -3,11 +3,11 @@ import type { ComplianceDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
 import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
-import { useComplianceStore } from "@/stores/complianceStore.js";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useLinkStore } from "@/stores/linkStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { computed, onMounted, ref } from "vue";
+import api from "@/api/index";
 
 const props = defineProps<{ application: Application }>();
 
@@ -20,14 +20,14 @@ const actorTypesList = computed(() => actorTypeStore.actorTypes);
 const hostingStore = useHostingStore();
 const hostings = computed(() => hostingStore.hostings);
 const linkStore = useLinkStore();
-const complianceStore = useComplianceStore();
 const compliances = ref<ComplianceDto | null>(null);
 
 async function fetchQuality() {
   isLoading.value = true;
   try {
     await linkStore.fetchLinks(props.application.id);
-    compliances.value = await complianceStore.fetchCompliance(props.application.id);
+    const response = await api.applicationCompliancesControllerFindOne({ path: { applicationId: props.application.id } });
+    compliances.value = response.data ?? null;
   } catch {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
   } finally {
