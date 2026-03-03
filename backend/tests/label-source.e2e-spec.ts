@@ -47,8 +47,10 @@ describe("LabelSources", () => {
       .get(`/label-sources?source=${labelSource.source}`)
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.some((l) => l.id === labelSource.id)).toBe(true);
+    expect(Array.isArray(response.body.results)).toBe(true);
+    expect(response.body.results.some((l) => l.id === labelSource.id)).toBe(
+      true,
+    );
   });
 
   it("/DELETE label-sources/:id", async () => {

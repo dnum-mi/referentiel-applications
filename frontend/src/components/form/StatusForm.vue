@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import type { PropType } from "vue";
 import type { ApplicationStatusDto } from "@/client/types.gen";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { toDateInputValue } from "@/composables/use-date";
 
 const props = defineProps({
   initialData: {
@@ -19,7 +20,7 @@ const emit = defineEmits(["submit", "cancel"]);
 
 const form = ref({
   status: props.initialData?.status || "",
-  statusDate: props.initialData?.statusDate ? new Date(props.initialData.statusDate).toISOString().split("T")[0] : "",
+  statusDate: toDateInputValue(props.initialData?.statusDate),
 });
 
 const statusOptions = computed(() => [

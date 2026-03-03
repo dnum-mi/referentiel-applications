@@ -6,6 +6,7 @@ import { useStatisticsStore } from "@/stores/statisticsStore";
 import { renderChart } from "@/utils/chart";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
+import { toDateInputValue } from "@/composables/use-date";
 
 Chart.register(...registerables);
 
@@ -28,8 +29,8 @@ const today = new Date();
 const fromDefault = new Date(today.getFullYear(), today.getMonth() - 5, 1);
 const toDefault = today;
 
-const startDate = ref(fromDefault.toISOString().slice(0, 10));
-const endDate = ref(toDefault.toISOString().slice(0, 10));
+const startDate = ref(toDateInputValue(fromDefault));
+const endDate = ref(toDateInputValue(toDefault));
 const groupBy = ref<"day" | "week" | "month">("month");
 
 function updateChart() {

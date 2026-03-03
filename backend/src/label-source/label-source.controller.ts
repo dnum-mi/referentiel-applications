@@ -30,6 +30,7 @@ import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { AdminLevel } from "src/user/entities/user.entity";
 import { AppAction } from "src/common/decorators/application.decorator";
+import { PaginatedResponseDto } from "src/common/dto";
 
 @ApiTags("LabelSources")
 @Controller("label-sources")
@@ -68,11 +69,10 @@ Information requise :
   })
   @ApiOkResponse({
     description: "Liste des sources trouvées",
-    type: LabelSourceDto,
-    isArray: true,
+    type: PaginatedResponseDto<LabelSourceDto>,
   })
   findAll(@Query() filters: LabelSourceFiltersDto) {
-    return this.labelSourceService.findAll(filters);
+    return this.labelSourceService.findAllLabelSources(filters);
   }
 
   @Patch(":id")

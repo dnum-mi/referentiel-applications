@@ -89,7 +89,16 @@ const previewFns: Record<ComplianceType, (d: Record<string, any>) => string> = {
   },
 
   pdma: (d) => `${d.duration_hours ?? ""}H`.trim(),
-  homologation: () => "",
+  homologation: (d) => {
+    const parts: string[] = [];
+    if (d.status) {
+      parts.push(homologationStatusDict[d.status] ?? d.status);
+    }
+    if (d.date_end) {
+      parts.push(formatDateFR(d.date_end));
+    }
+    return parts.join(" - ");
+  },
   rgaa: (d) => {
     const score = d.score_percentage;
     if (score == null || score < 50) return "Non-conformité";
@@ -144,7 +153,8 @@ function onAddClick() {
   showModal.value = true;
 }
 
-function onEditClick(type: ComplianceType) {
+async function onEditClick(type: ComplianceType) {
+  await store.fetchCompliance(applicationId);
   modalMode.value = "edit";
   selectedType.value = type;
   showModal.value = true;
