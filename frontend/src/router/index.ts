@@ -95,6 +95,12 @@ const routes = [
     meta: { requiresAuth: true, title: "Qualité générale - Référentiel des applications" },
   },
   {
+    name: routeNames.TIMEPAGE,
+    path: "/time",
+    component: () => import("@/views/TimePage.vue"),
+    meta: { requiresAuth: true, title: "Diagramme Time - Référentiel des applications" },
+  },
+  {
     name: routeNames.HISTORY,
     path: "/historique",
     component: () => import("@/views/MetadataPage.vue"),
