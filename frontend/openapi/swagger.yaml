@@ -613,7 +613,7 @@ paths:
         - name: search
           required: false
           in: query
-          description: Recherche sur les labels et shortName
+          description: Recherche plein texte sur tous les champs
           schema:
             example: Mon Application
             type: string
@@ -1002,7 +1002,7 @@ paths:
         - name: search
           required: false
           in: query
-          description: Recherche sur les labels et shortName
+          description: Recherche plein texte sur tous les champs
           schema:
             example: Mon Application
             type: string
@@ -3520,7 +3520,7 @@ paths:
         - name: search
           required: false
           in: query
-          description: Recherche sur les labels et shortName
+          description: Recherche plein texte sur tous les champs
           schema:
             example: Mon Application
             type: string

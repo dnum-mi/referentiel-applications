@@ -1,0 +1,18 @@
+/// Journal des notifications de rappel de validation envoyées aux responsables d'application.
+/// Utilisé pour limiter la fréquence des envois (anti-spam).
+///
+/// @namespace Notifications
+model NotificationLog {
+  /// Identifiant unique
+  id            String      @id @default(uuid())
+  /// Identifiant de l'application concernée
+  applicationId String
+  /// Application concernée
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// Date d'envoi de la notification
+  sentAt        DateTime    @default(now())
+  /// Type de notification envoyée
+  type          String      @db.VarChar(100)
+
+  @@index([applicationId, sentAt])
+}

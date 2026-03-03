@@ -8,6 +8,7 @@
 - [Hosting](#hosting)
 - [Labels](#labels)
 - [Metadata](#metadata)
+- [Notifications](#notifications)
 - [Organizations](#organizations)
 - [Users](#users)
 - [Signalements](#signalements)
@@ -432,6 +433,30 @@ Properties as follows:
 - `externalRessourceId`:
 - `hostingId`:
 - `technicalDebtInfoId`:
+
+## Notifications
+
+```mermaid
+erDiagram
+"NotificationLog" {
+  String id PK
+  String applicationId FK
+  DateTime sentAt
+  String(100) type
+}
+```
+
+### `NotificationLog`
+
+Journal des notifications de rappel de validation envoyées aux responsables d'application.
+Utilisé pour limiter la fréquence des envois (anti-spam).
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `applicationId`: Identifiant de l'application concernée
+- `sentAt`: Date d'envoi de la notification
+- `type`: Type de notification envoyée
 
 ## Organizations
 
