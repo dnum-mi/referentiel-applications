@@ -42,12 +42,6 @@ onMounted(async () => {
   <div v-if="userStore.user" class="fr-mt-3w" data-testid="user-profile-card">
     <DsfrTable title="Informations personnelles" data-testid="user-profile-table">
       <tr>
-        <th scope="row">ID Keycloak</th>
-        <td data-testid="user-profile-keycloak">
-          {{ userStore.user.keycloakId }}
-        </td>
-      </tr>
-      <tr>
         <th scope="row">Organisation</th>
         <td data-testid="user-profile-organization">
           {{ userStore.user.organization?.path || "Non renseignée" }}
@@ -73,7 +67,7 @@ onMounted(async () => {
       <DsfrToggleSwitch
         v-model="emailNotificationsEnabled"
         label="Recevoir les notifications par email"
-        hint="Recevoir des notifications par email lorsque vous êtes ajouté ou modifié en tant qu'acteur dans une application"
+        hint="Recevoir des notifications par email lorsque des changements sont apportés à vos applications suivies."
         data-testid="user-profile-email-notifications-checkbox"
         :disabled="isUpdating"
         @update:model-value="handleToggleEmailNotifications"
