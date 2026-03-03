@@ -51,6 +51,8 @@ model Application {
   applicationViews  ApplicationView[]
   /// Informations sur la dette technique
   technicalDebtInfo TechnicalDebtInfo? @relation("ApplicationTechnicalDebtInfo")
+  /// Journaux de notifications de validation envoyées
+  notificationLogs  NotificationLog[]
 
   /// Niveau de priorité pour les opérations de redémarrage
   priorityRestart priorityRestart?

@@ -250,6 +250,66 @@ export class EmailService {
     }
   }
 
+  async sendApplicationValidationReminderEmail({
+    recipientEmail,
+    applicationId,
+    applicationLabel,
+    lastModifiedDate,
+  }: {
+    recipientEmail: string;
+    applicationId: string;
+    applicationLabel: string;
+    lastModifiedDate: Date;
+  }): Promise<void> {
+    if (!this.enabled) {
+      this.logger.log(
+        `Email sending disabled. Would have sent validation reminder to ${recipientEmail}`,
+      );
+      return;
+    }
+
+    if (!recipientEmail) {
+      this.logger.warn(
+        "Cannot send validation reminder: recipient address is empty",
+      );
+      return;
+    }
+
+    const subject = `Rappel : veuillez vérifier la fiche de l'application "${applicationLabel}"`;
+
+    const html = this.templateService.render(
+      "application-validation-reminder",
+      {
+        title: subject,
+        headerTitle: "Référentiel des Applications",
+        applicationLabel,
+        lastModifiedDate: lastModifiedDate.toLocaleDateString("fr-FR"),
+        applicationUrl: `${this.appUrl}/applications/${applicationId}`,
+      },
+    );
+
+    const text = this.templateService.htmlToText(html);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to: recipientEmail,
+        subject,
+        text,
+        html,
+      });
+      this.logger.log(
+        `Application validation reminder sent successfully to ${recipientEmail} for application ${applicationId}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send validation reminder to ${recipientEmail}:`,
+        error as Error,
+      );
+      throw error;
+    }
+  }
+
   async sendSignalementUpdateEmail({
     recipientEmail,
     description,
