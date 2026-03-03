@@ -3958,6 +3958,7 @@ components:
         - CreateApplication
         - CreateGlobalReport
         - ExportData
+        - ViewMDIT
     OrganizationDto:
       type: object
       properties:
@@ -4172,6 +4173,7 @@ components:
               - CreateApplication
               - CreateGlobalReport
               - ExportData
+              - ViewMDIT
         organizationId:
           type: string
           nullable: true

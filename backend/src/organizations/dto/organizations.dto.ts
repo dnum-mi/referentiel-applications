@@ -74,4 +74,10 @@ export class OrganizationDto {
   })
   @IsString()
   parentId: string | null;
+
+  @ApiProperty({
+    description: "Identifiant de la direction metier MOA",
+    nullable: true,
+  })
+  businessDivisionId: string | null;
 }

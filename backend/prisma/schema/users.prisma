@@ -127,4 +127,6 @@ enum CapabilityNames {
   CreateGlobalReport
   /// Capacité d'exporter les data 
   ExportData
+  /// Capacité de voir le MDIT en fonction de sa direction métier
+  ViewMDIT
 }

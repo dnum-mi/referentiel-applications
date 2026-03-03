@@ -78,6 +78,11 @@ const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     value: "ExportData" as UserCapabilities,
     name: "capability-export-excel",
   },
+  {
+    label: "Voir les données MDIT",
+    value: "ViewMDIT" as UserCapabilities,
+    name: "capability-view-mdit",
+  },
 ];
 </script>
 

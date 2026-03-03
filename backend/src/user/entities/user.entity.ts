@@ -30,6 +30,7 @@ export const UserCapabilities = {
   CreateApplication: "CreateApplication",
   CreateGlobalReport: "CreateGlobalReport",
   ExportData: "ExportData",
+  ViewMDIT: "ViewMDIT",
 } as const satisfies {
   [capabilityName in CapabilityNames]: capabilityName;
 };

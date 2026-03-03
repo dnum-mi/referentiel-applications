@@ -17,6 +17,7 @@ export class UserCapabilityService {
       capabilities.push(
         UserCapabilities.CreateApplication,
         UserCapabilities.CreateGlobalReport,
+        UserCapabilities.ViewMDIT,
       );
     }
     if (userAdminLevel >= AdminLevel.ADMIN) {

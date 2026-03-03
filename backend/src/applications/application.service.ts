@@ -321,31 +321,37 @@ export class ApplicationService {
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
-    if (searchParams.isActor && requestor) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
-      });
-      const whereBuildTechnicalDebtInfo =
-        this.prismaQueryBuilder.buildTechnicalDebtInfo();
-      where.AND.push(whereBuildTechnicalDebtInfo);
-      return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
-    }
-    if (
+    const needMDITFiltering =
+      requestor?.capabilities.includes("ViewMDIT") &&
+      requestor?.adminLevel < AdminLevel.READ;
+
+    // Filtre par acteur si :
+    // - l'utilisateur a un niveau NONE et la config n'autorise pas les non-acteurs à lire (readBase)
+    const needsActorFilter =
       !this.appConf.nonActorPermissions.includes("readBase") &&
-      requestor?.adminLevel < AdminLevel.READ
-    ) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
-      });
-      const whereBuildTechnicalDebtInfo =
-        this.prismaQueryBuilder.buildTechnicalDebtInfo();
-      where.AND.push(whereBuildTechnicalDebtInfo);
-      return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
-    }
-    const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
-    const whereBuildTechnicalDebtInfo =
-      this.prismaQueryBuilder.buildTechnicalDebtInfo();
-    where.AND.push(whereBuildTechnicalDebtInfo);
+      requestor?.adminLevel < AdminLevel.READ;
+
+    const userBusinessDivisionId = requestor?.organization?.businessDivisionId;
+    const ownership = needsActorFilter
+      ? {
+          actorEmail: needsActorFilter ? requestor.email : undefined,
+          businessDivisionId: needMDITFiltering
+            ? userBusinessDivisionId
+            : undefined,
+        }
+      : undefined;
+    const where = this.prismaQueryBuilder.buildSearchWhere(
+      searchParams,
+      ownership,
+    );
+    where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
+    console.log(
+      "hello",
+      userBusinessDivisionId,
+      needMDITFiltering,
+      needsActorFilter,
+      JSON.stringify(where, null, 2),
+    );
     return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
   }
 

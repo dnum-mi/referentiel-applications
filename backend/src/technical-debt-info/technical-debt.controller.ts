@@ -1,10 +1,12 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Query, UseGuards } from "@nestjs/common";
 import { ApiOkResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
 import { User } from "src/common/decorators/user.decorator";
 import { Requestor } from "src/user/entities/user.entity";
 import { ApplicationSearchDto } from "src/applications/dto/search-application.dto";
 import { TechnicalDebtPointDto } from "src/applications/dto/technical-debt-point.dto";
 import { ApplicationService } from "src/applications/application.service";
+import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
+import { RequiredUserCapability } from "src/common/decorators/user-capability.decorator";
 
 @ApiTags("technical-debts")
 @Controller("technical-debts")
@@ -22,6 +24,8 @@ export class TechnicalDebtController {
     type: TechnicalDebtPointDto,
     isArray: true,
   })
+  @UseGuards(UserCapabilityGuard)
+  @RequiredUserCapability("ViewMDIT")
   async getTechnicalDebtPoints(
     @Query() searchParams: ApplicationSearchDto,
     @User() requestor: Requestor,
