@@ -8,6 +8,7 @@ import { HostingOptionFaker } from "../tests/fakers/hosting-option.faker";
 import { HostingFaker } from "../tests/fakers/hosting.faker";
 import { TechnicalDebtInfoFaker } from "../tests/fakers/technical-debt-info.faker";
 import { ComplianceFaker } from "../tests/fakers/compliance.faker";
+import { StatsFaker } from "../tests/fakers/stats.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
 import { BusinessDivisionFaker } from "tests/fakers/business-division.faker";
 import { LabelSourceFaker } from "tests/fakers/label-source.faker";
@@ -160,6 +161,24 @@ async function seed({
     actorTypeId: actorTypeMoe.id,
     applicationId: app2.id,
   });
+
+  console.log("� Creating quality stats...");
+  const now = new Date();
+  const monthsCount = 6;
+  for (let i = 0; i < monthsCount; i++) {
+    const date = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth() - (monthsCount - 1 - i),
+        1,
+        0,
+        0,
+        0,
+        0,
+      ),
+    );
+    await StatsFaker.create({ date });
+  }
 
   console.log("✅ Database seeded successfully!");
 }
