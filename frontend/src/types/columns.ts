@@ -147,6 +147,30 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     visible: false,
     alwaysAvailable: true,
   },
+  {
+    field: "technicalMaturity",
+    header: "Maturité technique",
+    sortable: false,
+    defaultWidth: "150px",
+    visible: false,
+    alwaysAvailable: true,
+  },
+  {
+    field: "businessMaturity",
+    header: "Maturité métier",
+    sortable: false,
+    defaultWidth: "150px",
+    visible: false,
+    alwaysAvailable: true,
+  },
+  {
+    field: "costMaturity",
+    header: "Coûts",
+    sortable: false,
+    defaultWidth: "120px",
+    visible: false,
+    alwaysAvailable: true,
+  },
 ];
 
 export const DEFAULT_VISIBLE_COLUMNS = AVAILABLE_COLUMNS.filter((col) => col.visible).map((col) => col.field);
