@@ -11,12 +11,24 @@ import { ComplianceFaker } from "../tests/fakers/compliance.faker";
 import { AdminLevel } from "src/user/entities/user.entity";
 import { BusinessDivisionFaker } from "tests/fakers/business-division.faker";
 import { LabelSourceFaker } from "tests/fakers/label-source.faker";
+import { parseArgs } from "node:util";
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log("🌱 Starting database seeding...");
+const options = {
+  environment: { type: "string" as const },
+  stress: { type: "string" as const },
+};
 
+async function seed({
+  extraReadUsersCount = 0,
+  organizationsCount = 50,
+  tagsCount = 50,
+  labelSourcesCount = 15,
+  hostingOptionsCount = 2,
+  applicationsCount = 100,
+  businessDivisionsCount = 50,
+} = {}) {
   // Create test users
   console.log("👤 Creating test users...");
   const adminUser = await UserFaker.create({
@@ -28,9 +40,15 @@ async function main() {
     adminLevel: AdminLevel.READ,
   });
 
+  for (let i = 0; i < extraReadUsersCount; i++) {
+    await UserFaker.create({
+      adminLevel: AdminLevel.READ,
+    });
+  }
+
   // Create organizations
   console.log("🏢 Creating test organizations...");
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < organizationsCount; i++) {
     await OrganizationFaker.create();
   }
 
@@ -51,27 +69,27 @@ async function main() {
 
   // Create tags
   console.log("🏷️  Creating tags...");
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < tagsCount; i++) {
     await TagFaker.create();
   }
 
-  // Create label sourecs
+  // Create label sources
   console.log("🖥️  Creating label sources...");
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < labelSourcesCount; i++) {
     await LabelSourceFaker.create();
   }
 
   // Create hosting options
   console.log("🖥️  Creating hosting options...");
-  const hostingOptions = [
-    await HostingOptionFaker.create(),
-    await HostingOptionFaker.create(),
-  ];
+  const hostingOptions = [];
+  for (let i = 0; i < hostingOptionsCount; i++) {
+    hostingOptions.push(await HostingOptionFaker.create());
+  }
 
   // Create applications
   console.log("📱 Creating applications...");
   const applications = [];
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < applicationsCount; i++) {
     const user = i % 2 === 0 ? adminUser : regularUser;
     const app = await ApplicationFaker.create(user);
     applications.push(app);
@@ -106,7 +124,7 @@ async function main() {
   // Create Business Division
   console.log("🏬  Creating Business Division...");
   const businessDivisions = [];
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < businessDivisionsCount; i++) {
     businessDivisions.push(await BusinessDivisionFaker.create());
   }
 
@@ -144,6 +162,30 @@ async function main() {
   });
 
   console.log("✅ Database seeded successfully!");
+}
+
+function main() {
+  const {
+    values: { environment },
+  } = parseArgs({ options });
+  console.log(
+    `🌱 Starting database seeding... ${environment ?? "development"}`,
+  );
+  switch (environment) {
+    case "development":
+    default:
+      return seed();
+    case "stress":
+      return seed({
+        extraReadUsersCount: 500,
+        organizationsCount: 1000,
+        tagsCount: 550,
+        labelSourcesCount: 5000,
+        hostingOptionsCount: 20,
+        applicationsCount: 5000,
+        businessDivisionsCount: 450,
+      });
+  }
 }
 
 main()
