@@ -3,12 +3,18 @@ import { expect, type Page } from "@playwright/test";
 export const BASE_URL = "http://localhost:5173";
 export const APPLICATION_SEARCH_PATH = "/recherche-application";
 export const APPLICATION_SEARCH_TITLE_TEST_ID = "application-search-title";
-const keycloakData = {
+
+export const keycloakData = {
+  user: "user",
+  pass: "pass",
+};
+
+const keycloakDataAdmin = {
   user: "admin",
   pass: "pass",
 };
 
-export async function login(page: Page) {
+export async function login(page: Page, userData = keycloakDataAdmin) {
   await page.goto(`${BASE_URL}/`);
 
   const signInLink = page.getByRole("banner").getByRole("link", { name: /Se connecter|Sign in/i });
@@ -24,8 +30,8 @@ export async function login(page: Page) {
   await signInLink.click();
   await page.waitForURL(/\/realms\/.+\/protocol\/openid-connect\/auth/i);
 
-  await page.locator('#username, #kc-username, input[name="username"]').first().fill(keycloakData.user);
-  await page.locator('#password, #kc-password, input[name="password"]').first().fill(keycloakData.pass);
+  await page.locator('#username, #kc-username, input[name="username"]').first().fill(userData.user);
+  await page.locator('#password, #kc-password, input[name="password"]').first().fill(userData.pass);
 
   try {
     await Promise.all([

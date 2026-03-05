@@ -86,7 +86,7 @@ const routes = [
     name: routeNames.ADMINPAGE,
     path: "/administration",
     component: () => import("@/views/AdminPage.vue"),
-    meta: { requiresAuth: true, title: "Administration - Référentiel des applications" },
+    meta: { requiresAuth: true, requiresAdmin: true, title: "Administration - Référentiel des applications" },
   },
   {
     name: routeNames.QUALITYPAGE,
@@ -134,6 +134,14 @@ router.beforeEach(async (to) => {
       // Store the intended destination to redirect after login
       sessionStorage.setItem("redirectAfterLogin", to.fullPath);
       return { name: routeNames.SIGNIN };
+    }
+
+    if (to.meta.requiresAdmin) {
+      const groups = user?.profile?.groups;
+
+      if (!Array.isArray(groups) || !groups.includes("admin")) {
+        return { path: "/" };
+      }
     }
   }
 });
