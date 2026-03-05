@@ -5,6 +5,7 @@ import { RelationType, type ApplicationDto } from "@/client";
 import api from "@/api";
 import { RELATION_TYPE_FILTERS, RELATION_TYPE_FILTERS_ARRAY, type RelationTypeFilter } from "@/types/relation-type-filter";
 import { typeguardIncludes } from "@/utils/typeguard-includes";
+import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 
 const { searchApplications, setFilter, filters } = useApplicationSearch();
 const isLoading = ref(false);
@@ -13,7 +14,7 @@ const componentKey = ref(0);
 const defaultValue = ref<undefined | string>(undefined);
 
 async function performSearch(query: string) {
-  if (query && query.length >= 3) {
+  if (query && query.length >= MIN_CHAR_FOR_SEARCH) {
     isLoading.value = true;
     errorMessage.value = "";
     try {

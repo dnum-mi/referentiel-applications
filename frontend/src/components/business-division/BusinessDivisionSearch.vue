@@ -2,6 +2,7 @@
 import { watch } from "vue";
 import api from "@/api";
 import type { BusinessDivisionDto } from "@/client";
+import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 
 const props = withDefaults(
   defineProps<{
@@ -45,7 +46,7 @@ const updateSelectedValue = (businessDivision?: BusinessDivisionDto) => {
 };
 
 async function performSearch(query: string) {
-  if (query && query.length >= 3) {
+  if (query && query.length >= MIN_CHAR_FOR_SEARCH) {
     isLoading.value = true;
     errorMessage.value = "";
     try {

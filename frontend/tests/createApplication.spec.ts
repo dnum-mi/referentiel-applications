@@ -11,7 +11,7 @@ async function openCreatePage(page: Page) {
 
 async function selectFirstOrganization(page: Page, testId: string, search?: string) {
   const root = page.getByTestId(testId);
-  const searchTerms = search ? [search] : ["a", "e", "i", "o", "u", "n", "r", "s", "t", "l"];
+  const searchTerms = search ? [search] : ["min", "dir", "ser", "dep", "inf", "sys", "app", "com", "org", "ent"];
   const select = root.locator("select");
 
   await expect(select).toBeVisible();
