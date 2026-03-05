@@ -132,7 +132,7 @@ describe("application guard", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
-    const hostingOptionId = hostingOptions.body[0].id;
+    const hostingOptionId = hostingOptions.body.results[0].id;
 
     // Should fail because the user does not have the write permission
     await request(app().getHttpServer())

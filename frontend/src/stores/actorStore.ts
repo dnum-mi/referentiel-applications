@@ -14,6 +14,7 @@ export const useActorStore = defineStore("actorStore", () => {
   async function fetchActorsByApplication(applicationId: string) {
     const response = await api.applicationActorsControllerFindAll({
       path: { applicationId },
+      query: { pageSize: 0 },
     });
     if (!response.response.ok) {
       throw new Error(`Failed to fetch actors for application ${applicationId}`);
@@ -21,7 +22,8 @@ export const useActorStore = defineStore("actorStore", () => {
     if (!response.data) {
       throw new Error(`No actors found for application ${applicationId}`);
     }
-    actors.value = response.data;
+    const responseData = response.data as { results: ActorDto[] };
+    actors.value = responseData.results;
     return actors.value;
   }
 

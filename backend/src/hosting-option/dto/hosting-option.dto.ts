@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { PaginationDto } from "src/common/dto";
 
 export class CreateHostingOptionDto {
   @ApiProperty({
@@ -47,7 +48,7 @@ export class CreateHostingOptionDto {
 
 export class UpdateHostingOptionDto extends CreateHostingOptionDto {}
 
-export class HostingOptionFiltersDto {
+export class HostingOptionFiltersDto extends PaginationDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()

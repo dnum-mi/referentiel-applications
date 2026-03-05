@@ -71,7 +71,7 @@ export class ApplicationHostingsController {
     @Body() dto: CreateHostingDto,
   ) {
     // Ajoute l'ID de l'application provenant de l'URL dans le DTO
-    return this.hostingService.create({ ...dto, applicationId }, userId);
+    return this.hostingService.createHosting({ ...dto, applicationId }, userId);
   }
 
   @Get()
@@ -98,7 +98,7 @@ export class ApplicationHostingsController {
     type: HostingDto,
   })
   findOne(@Param("id") id: string) {
-    return this.hostingService.findOne(id);
+    return this.hostingService.findOneHosting(id);
   }
 
   @Patch(":id")
@@ -116,7 +116,11 @@ export class ApplicationHostingsController {
     @Param("applicationId") applicationId: string,
     @Body() dto: UpdateHostingDto,
   ) {
-    return this.hostingService.update(id, { ...dto, applicationId }, userId);
+    return this.hostingService.updateHosting(
+      id,
+      { ...dto, applicationId },
+      userId,
+    );
   }
 
   @Delete(":id")

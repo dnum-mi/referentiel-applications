@@ -8,12 +8,11 @@ import {
   ApplicationActorsController,
 } from "./actor.controller";
 import { ActorService } from "./actor.service";
-import { ActorRepository } from "./infrastructure/repository/actor.repository";
 
 @Module({
   imports: [PrismaModule, ApplicationModule, MetadatasModule, EmailModule],
   controllers: [ApplicationActorsController, ActorController],
-  providers: [ActorService, ActorRepository],
-  exports: [ActorRepository],
+  providers: [ActorService],
+  exports: [ActorService],
 })
 export class ActorModule {}
