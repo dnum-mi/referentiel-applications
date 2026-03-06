@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { routeNames } from "./route-names";
 import { USER_MANAGER } from "@/services/authentication";
+import { AdminLevel } from "@/models/user";
+import { useUserStore } from "@/stores/userStore";
 
 const oidcRoutes = [
   {
@@ -128,6 +130,8 @@ const router = createRouter({
 
 // Guard to protect routes that require authentication
 router.beforeEach(async (to) => {
+  const userStore = useUserStore();
+
   if (to.meta.requiresAuth) {
     const user = await USER_MANAGER.getUser();
     if (!user) {
@@ -137,9 +141,7 @@ router.beforeEach(async (to) => {
     }
 
     if (to.meta.requiresAdmin) {
-      const groups = user?.profile?.groups;
-
-      if (!Array.isArray(groups) || !groups.includes("admin")) {
+      if (userStore.adminLevel < AdminLevel.ADMIN) {
         return { path: "/" };
       }
     }
