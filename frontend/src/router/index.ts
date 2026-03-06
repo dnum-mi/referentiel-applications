@@ -140,6 +140,10 @@ router.beforeEach(async (to) => {
       return { name: routeNames.SIGNIN };
     }
 
+    if (!userStore.user) {
+      await userStore.fetchUser();
+    }
+
     if (to.meta.requiresAdmin) {
       if (userStore.adminLevel < AdminLevel.ADMIN) {
         return { path: "/" };
