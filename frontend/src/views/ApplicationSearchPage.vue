@@ -12,7 +12,6 @@ const statsStore = useStatisticsStore();
 const { isLoading, searchApplications, averageIq } = useApplicationSearch();
 
 const isMobile = ref(false);
-const showChart = ref(false);
 
 onMounted(() => {
   isMobile.value = window.matchMedia("(max-width: 768px)").matches;
@@ -45,7 +44,7 @@ const averageIqDisplay = computed(() => {
       </div>
 
       <div class="search-actions-wrapper" data-testid="application-search-actions-wrapper">
-        <ApplicationSearchActions :show-chart="showChart" :has-chart-data="false" @toggle-chart="showChart = !showChart" />
+        <ApplicationSearchActions />
       </div>
 
       <div class="average-iq" data-testid="application-average-iq">
