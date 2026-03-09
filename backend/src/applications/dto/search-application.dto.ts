@@ -26,7 +26,7 @@ export class ApplicationSearchDto extends PaginationDto {
   }
 
   @ApiPropertyOptional({
-    description: "Recherche plein texte sur tous les champs",
+    description: "Recherche sur les labels et shortName",
     example: "Mon Application",
     required: false,
   })

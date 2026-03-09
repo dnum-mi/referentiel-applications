@@ -128,7 +128,7 @@ onMounted(async () => {
         Hébergement : {{ hostings.length > 0 ? "oui" : "non" }}
       </DsfrHighlight>
       <DsfrHighlight data-testid="quality-snapvisu" :color="hasLink('snapvisu') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        SnapVisu : {{ hasLink("snapvisu") ? "oui" : "non" }}
+        Supervisée : {{ hasLink("snapvisu") ? "oui" : "non" }}
       </DsfrHighlight>
     </div>
 

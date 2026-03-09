@@ -14,7 +14,6 @@ function toggleCompliance(value: ComplianceType, checked: boolean) {
 
 <template>
   <div>
-    <legend class="fr-label fr-mb-2w">Conformité RGAA</legend>
     <div data-testid="compliance-filter">
       <label v-for="option in complianceOptions" :key="option" class="checkbox-item">
         <input

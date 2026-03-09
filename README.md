@@ -74,6 +74,8 @@ docker compose exec backend pnpm prisma db seed
 docker compose exec backend pnpm cmd user create -e admin@example.com -a 30 # Permet de créer un utilisateur administrateur, pas nécessaire si seed utilisé.
 ```
 
+For stress seeding use `docker compose exec backend pnpm prisma db seed -- --environment stress`
+
 ### 4. Configurer le Client (Frontend)
 
 Si votre projet inclut un frontend, cette commande génère le code nécessaire pour communiquer avec l'API backend :

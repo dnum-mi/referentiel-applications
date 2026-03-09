@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { BASE_URL, login } from "./utils";
+import { gotoSearchPage } from "./utils";
 
 const complianceTypes = ["dima", "pdma", "homologation", "rgaa", "dsfr"] as const;
 
@@ -24,9 +24,7 @@ async function waitForComplianceParam(page: Page, type: ComplianceType | null) {
 
 test.describe("Application search — compliance filters", () => {
   test.beforeEach(async ({ page }) => {
-    await login(page);
-    await page.goto(`${BASE_URL}/recherche-application`);
-    await expect(page.getByTestId("application-search-title")).toBeVisible();
+    await gotoSearchPage(page);
   });
 
   for (const type of complianceTypes) {

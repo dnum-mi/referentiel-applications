@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useClickOutside } from "@/composables/use-click-outside";
 import { ref, watch, computed, onMounted } from "vue";
 
 interface Props<T> {
@@ -97,6 +98,10 @@ const liveRegionText = computed(() => {
     return props.displayNoResult ? "Aucun résultat" : "";
   }
   return `${results.value.length} résultat${results.value.length > 1 ? "s" : ""} disponible${results.value.length > 1 ? "s" : ""}`;
+});
+
+useClickOutside(inputEl, () => {
+  showList.value = false;
 });
 </script>
 

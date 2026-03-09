@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { routeNames } from "./route-names";
 import { USER_MANAGER } from "@/services/authentication";
+import { AdminLevel } from "@/models/user";
+import { useUserStore } from "@/stores/userStore";
 
 const oidcRoutes = [
   {
@@ -86,13 +88,19 @@ const routes = [
     name: routeNames.ADMINPAGE,
     path: "/administration",
     component: () => import("@/views/AdminPage.vue"),
-    meta: { requiresAuth: true, title: "Administration - Référentiel des applications" },
+    meta: { requiresAuth: true, requiresAdmin: true, title: "Administration - Référentiel des applications" },
   },
   {
     name: routeNames.QUALITYPAGE,
     path: "/qualite-generale",
     component: () => import("@/views/QualityPage.vue"),
     meta: { requiresAuth: true, title: "Qualité générale - Référentiel des applications" },
+  },
+  {
+    name: routeNames.TIMEPAGE,
+    path: "/time",
+    component: () => import("@/views/TimePage.vue"),
+    meta: { requiresAuth: true, title: "Diagramme Time - Référentiel des applications" },
   },
   {
     name: routeNames.HISTORY,
@@ -122,12 +130,24 @@ const router = createRouter({
 
 // Guard to protect routes that require authentication
 router.beforeEach(async (to) => {
+  const userStore = useUserStore();
+
   if (to.meta.requiresAuth) {
     const user = await USER_MANAGER.getUser();
     if (!user) {
       // Store the intended destination to redirect after login
       sessionStorage.setItem("redirectAfterLogin", to.fullPath);
       return { name: routeNames.SIGNIN };
+    }
+
+    if (!userStore.user) {
+      await userStore.fetchUser();
+    }
+
+    if (to.meta.requiresAdmin) {
+      if (userStore.adminLevel < AdminLevel.ADMIN) {
+        return { path: "/" };
+      }
     }
   }
 });
