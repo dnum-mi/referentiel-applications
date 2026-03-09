@@ -95,7 +95,7 @@ Information requise :
     type: PaginatedResponseDto<TagDto>,
   })
   findAll(@Query() filters: TagFiltersDto) {
-    return this.tagsService.findAll(filters);
+    return this.tagsService.findAllTags(filters);
   }
 
   @Patch(":id")

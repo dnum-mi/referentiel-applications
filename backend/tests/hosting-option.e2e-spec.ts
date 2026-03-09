@@ -78,8 +78,10 @@ describe("HostingOptions", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.some((ho) => ho.id === hostingOption.id)).toBe(true);
+    expect(Array.isArray(response.body.results)).toBe(true);
+    expect(response.body.results.some((ho) => ho.id === hostingOption.id)).toBe(
+      true,
+    );
   });
 
   it("filters hosting-options by platform", async () => {
@@ -91,8 +93,10 @@ describe("HostingOptions", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.some((ho) => ho.id === hostingOption.id)).toBe(true);
+    expect(Array.isArray(response.body.results)).toBe(true);
+    expect(response.body.results.some((ho) => ho.id === hostingOption.id)).toBe(
+      true,
+    );
   });
 
   it("filters hosting-options by provider", async () => {
@@ -104,7 +108,9 @@ describe("HostingOptions", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
-    expect(Array.isArray(response.body)).toBe(true);
-    expect(response.body.some((ho) => ho.id === hostingOption.id)).toBe(true);
+    expect(Array.isArray(response.body.results)).toBe(true);
+    expect(response.body.results.some((ho) => ho.id === hostingOption.id)).toBe(
+      true,
+    );
   });
 });

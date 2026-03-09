@@ -64,10 +64,14 @@ export const useLabelStore = defineStore("labelStore", () => {
 
   const getAllLabelSources = async (filters: LabelSourceFiltersDto = {}): Promise<LabelSourceDto[]> => {
     const response = await api.labelSourceControllerFindAll({
-      query: filters,
+      query: {
+        ...filters,
+        pageSize: filters?.pageSize ?? 0,
+      },
     });
-    labelSources.value = response.data?.results ?? [];
-    return labelSources.value ?? [];
+    const responseData = response.data as { results: LabelSourceDto[] };
+    labelSources.value = responseData.results;
+    return labelSources.value;
   };
 
   return {

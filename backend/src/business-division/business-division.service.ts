@@ -27,7 +27,7 @@ export class BusinessDivisionService extends BaseService<
   public async search(searchParams: BusinessDivisionFiltersDto) {
     const where = this.queryBuilder.buildSearchWhere(searchParams);
     const orderBy = this.queryBuilder.buildOrderBy(searchParams);
-    return this.findAllPaginated({
+    return this.findAll({
       where,
       orderBy,
       page: searchParams.page,

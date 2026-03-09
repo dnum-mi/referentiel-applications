@@ -1,21 +1,22 @@
 import {
   ConflictException,
   ForbiddenException,
-  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { createHash } from "node:crypto";
+import { Prisma, UserType } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
 import {
   AdminLevel,
   Requestor,
   UserEntity,
 } from "src/user/entities/user.entity";
 import { generateRandomPassword } from "src/utils/functions";
+import { stringToSlug } from "src/utils/functions";
 import { TokenStatus } from "./domain/token-status.entity";
 import { NewTokenEntity } from "./domain/token.entity";
 import { ExposedTokenDto, TokenDto } from "./dto/token.dto";
-import { ITokenRepository } from "./repository/token.repository.interface";
 import {
   isNewTokenInvalid,
   isRequestorAllowedToUpdateToken,
@@ -26,16 +27,29 @@ const ACTIVE_TOKEN_LIMIT = 5;
 
 @Injectable()
 export class TokenService {
-  constructor(
-    @Inject("ITokenRepository")
-    private readonly repository: ITokenRepository,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async list({ requestor }: { requestor?: Requestor }): Promise<TokenDto[]> {
-    const tokens = await this.repository.list({
-      createdById: requestor?.id,
+    const where: Prisma.TokenWhereInput = {
+      status: {
+        not: "revoked",
+      },
+    };
+
+    if (requestor?.id) {
+      where.createdById = requestor.id;
+    }
+
+    const tokens = await this.prisma.token.findMany({
+      where,
+      include: {
+        createdBy: true,
+        userImpersonate: true,
+      },
+      omit: { hash: true },
     });
-    return tokens.map(({ hash: _h, ...token }) => ({
+
+    return tokens.map((token) => ({
       ...token,
       expiresAt: token.expiresAt.toISOString(),
     }));
@@ -69,15 +83,40 @@ export class TokenService {
 
     const password = generateRandomPassword(48);
     const hash = this.generateHash(password);
-    const { hash: _h, ...token } = await this.repository.create({
-      createdById: requestor.id,
-      hash,
-      name: data.name,
-      description: data.description,
-      expiresAt: data.expiresAt,
-      adminLevel: data.adminLevel,
-      userIdImpersonate: personal ? requestor.id : undefined,
+
+    let userIdImpersonate = personal ? requestor.id : undefined;
+    if (!userIdImpersonate) {
+      const nameSlug = stringToSlug(data.name);
+      const user = await this.prisma.user.create({
+        data: {
+          email: `${nameSlug}-${Date.now()}@bot.internal`,
+          adminLevel: data.adminLevel || 0,
+          type: UserType.bot,
+        },
+      });
+      userIdImpersonate = user.id;
+    }
+
+    const token = await this.prisma.token.create({
+      data: {
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdById: requestor.id,
+        name: data.name,
+        description: data.description,
+        expiresAt: data.expiresAt,
+        adminLevel: data.adminLevel,
+        userIdImpersonate,
+        status: TokenStatus.active,
+        hash,
+      },
+      include: {
+        createdBy: true,
+        userImpersonate: true,
+      },
+      omit: { hash: true },
     });
+
     return {
       ...token,
       password,
@@ -86,23 +125,51 @@ export class TokenService {
   }
 
   delete = async (requestor: Requestor, id: string): Promise<void> => {
-    const token = await this.repository.getById(id);
+    const token = await this.prisma.token.findUnique({
+      where: { id },
+      include: {
+        createdBy: true,
+        userImpersonate: true,
+      },
+      omit: { hash: true },
+    });
+
     if (!isRequestorAllowedToUpdateToken(token, requestor)) {
       throw new NotFoundException(
         "Token not found or you don't have permission to delete it",
       );
     }
-    await this.repository.update(id, { status: TokenStatus.revoked });
+    await this.prisma.token.update({
+      where: { id },
+      data: {
+        status: TokenStatus.revoked,
+        updatedAt: new Date(),
+      },
+    });
   };
 
   async findUserByToken(tokenHeader: string): Promise<UserEntity | null> {
     const hash = this.generateHash(tokenHeader);
-    const token = await this.repository.getByHash(hash);
+    const token = await this.prisma.token.findUnique({
+      where: { hash },
+      include: {
+        createdBy: true,
+        userImpersonate: true,
+      },
+      omit: { hash: true },
+    });
+
     const userImpersonate = token?.userImpersonate ?? null;
     const isInvalid = isTokenInvalid(token);
     if (isInvalid === "undetectedExpired") {
       // Handle undetected expired token case
-      await this.repository.update(token.id, { status: TokenStatus.expired });
+      await this.prisma.token.update({
+        where: { id: token.id },
+        data: {
+          status: TokenStatus.expired,
+          updatedAt: new Date(),
+        },
+      });
     }
     if (isInvalid) {
       return null;
@@ -128,17 +195,36 @@ export class TokenService {
     id: string,
     expiresAt: Date,
   ): Promise<ExposedTokenDto> {
-    const token = await this.repository.getById(id);
+    const token = await this.prisma.token.findUnique({
+      where: { id },
+      include: {
+        createdBy: true,
+        userImpersonate: true,
+      },
+      omit: { hash: true },
+    });
+
     if (!isRequestorAllowedToUpdateToken(token, requestor)) {
       throw new NotFoundException(
         "Token not found or you don't have permission to regenerate it",
       );
     }
     const password = generateRandomPassword(48);
-    const newToken = await this.repository.update(token.id, {
-      hash: this.generateHash(password),
-      expiresAt,
+
+    const newToken = await this.prisma.token.update({
+      where: { id: token.id },
+      data: {
+        hash: this.generateHash(password),
+        expiresAt,
+        updatedAt: new Date(),
+      },
+      include: {
+        createdBy: true,
+        userImpersonate: true,
+      },
+      omit: { hash: true },
     });
+
     return {
       ...newToken,
       password,

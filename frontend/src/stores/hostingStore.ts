@@ -73,7 +73,7 @@ export const useHostingStore = defineStore("hostingStore", () => {
 
   const deleteHosting = async (applicationId: string, hostingId: string) => {
     const response = await api.applicationHostingsControllerRemove({
-      path: { id: hostingId },
+      path: { applicationId, id: hostingId },
     });
     if (!response.response.ok) {
       toaster.addErrorMessage("Erreur lors de la suppression de l'hébergement");
@@ -86,10 +86,14 @@ export const useHostingStore = defineStore("hostingStore", () => {
 
   const getAllHostingOptions = async (filters: HostingOptionFiltersDto = {}): Promise<HostingOptionDto[]> => {
     const response = await api.hostingOptionControllerFindAll({
-      query: filters,
+      query: {
+        ...filters,
+        pageSize: filters?.pageSize ?? 0,
+      },
     });
-    hostingOptions.value = response.data ?? [];
-    return response.data ?? [];
+    const responseData = response.data as { results: HostingOptionDto[] };
+    hostingOptions.value = responseData.results;
+    return hostingOptions.value;
   };
 
   return {

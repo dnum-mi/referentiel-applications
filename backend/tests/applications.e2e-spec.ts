@@ -80,7 +80,7 @@ describe("Applications", () => {
       .query({
         compliance__in: "homologation",
         page: 0,
-        pageSize: 50,
+        pageSize: 0, // Disable pagination to get all results
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);

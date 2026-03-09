@@ -41,8 +41,9 @@ export type MetadataConfig<T> = {
   fields?: Record<string, string>;
 };
 export type ServiceOptions<T> = {
-  applicationId: string;
+  applicationId?: string;
   triggerQualityUpdate?: boolean;
   metadata?: MetadataConfig<T>;
   include?: Record<string, boolean | object>;
+  existingEntity?: T;
 };

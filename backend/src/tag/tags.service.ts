@@ -1,28 +1,36 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { CreateTagDto, TagFiltersDto, UpdateTagDto } from "./dto/tag.dto";
-import { ITagRepository } from "./infrastructure/repository/tag.repository.interface";
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { BaseService } from "src/common/base.service";
+import { PrismaService } from "src/prisma/prisma.service";
+import { PaginatedResponseDto } from "src/common/dto";
+import { TagFiltersDto } from "./dto/tag.dto";
+import { Tag } from "./entities/tag.entity";
+import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 
 @Injectable()
-export class TagsService {
+export class TagsService extends BaseService<Tag> {
   constructor(
-    @Inject("ITagRepository")
-    private readonly repository: ITagRepository,
-  ) {}
-
-  create(dto: CreateTagDto) {
-    return this.repository.create(dto);
+    prisma: PrismaService,
+    private readonly queryBuilder: PrismaQueryBuilder,
+  ) {
+    super(prisma.tag, prisma);
   }
 
-  findOne(id: string) {
-    return this.repository.findById(id);
+  findAllTags(filters: TagFiltersDto): Promise<PaginatedResponseDto<Tag>> {
+    return this.findAll({
+      where: this.queryBuilder.buildSearchWhere(filters),
+      orderBy: this.queryBuilder.buildOrderBy(filters),
+      page: filters.page,
+      pageSize: filters.pageSize,
+      include: {
+        _count: { select: { applications: true } },
+      },
+    });
   }
 
-  findAll(filters: TagFiltersDto) {
-    return this.repository.findAll(filters);
-  }
-
-  async findByNames(tagNames: string[]) {
-    const existingTags = await this.repository.findByNames(tagNames);
+  async findByNames(tagNames: string[]): Promise<{ name: string }[]> {
+    const existingTags = await this.prisma.tag.findMany({
+      where: tagNames ? { name: { in: tagNames } } : undefined,
+    });
 
     if (existingTags.length !== tagNames.length) {
       const existingNames = existingTags.map((tag) => tag.name);
@@ -37,13 +45,5 @@ export class TagsService {
     }
 
     return existingTags.map((tag) => ({ name: tag.name }));
-  }
-
-  update(id: string, dto: UpdateTagDto) {
-    return this.repository.update(id, dto);
-  }
-
-  delete(id: string) {
-    return this.repository.delete(id);
   }
 }

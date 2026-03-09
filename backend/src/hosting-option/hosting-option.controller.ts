@@ -17,6 +17,7 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
+import { PaginatedResponseDto } from "src/common/dto";
 import {
   CreateHostingOptionDto,
   HostingOptionDto,
@@ -44,12 +45,11 @@ export class HostingOptionController {
   @Get()
   @ApiOperation({ summary: "Get all hosting options with optional filtering" })
   @ApiOkResponse({
-    description: "List of hosting options",
-    type: HostingOptionDto,
-    isArray: true,
+    description: "Paginated list of hosting options",
+    type: PaginatedResponseDto<HostingOptionDto>,
   })
   findAll(@Query() filters: HostingOptionFiltersDto) {
-    return this.hostingOptionService.findAll(filters);
+    return this.hostingOptionService.findAllHostingOptions(filters);
   }
 
   @Patch(":id")

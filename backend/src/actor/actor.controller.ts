@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -22,9 +23,15 @@ import {
 import { Actor } from "@prisma/client";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { ApplicationGuard } from "src/common/guards/application.guard";
+import { PaginatedResponseDto } from "src/common/dto";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ActorService } from "./actor.service";
-import { ActorDto, CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
+import {
+  ActorDto,
+  ActorFiltersDto,
+  CreateActorDto,
+  UpdateActorDto,
+} from "./dto/actor.dto";
 
 @ApiTags("Actors")
 @Controller("actors")
@@ -108,14 +115,13 @@ Informations requises :
   @ApiOperation({ summary: "Récupérer tous les acteurs" })
   @ApiOkResponse({
     description: "Liste des acteurs trouvés",
-    type: ActorDto,
-    isArray: true,
+    type: PaginatedResponseDto<ActorDto>,
   })
-  @ApiOkResponse({ description: "Liste des acteurs" })
-  public findAll(
+  async findAll(
     @Param("applicationId") applicationId: string,
-  ): Promise<Actor[]> {
-    return this.actorService.findAll(applicationId);
+    @Query() filters: ActorFiltersDto,
+  ) {
+    return this.actorService.findAll({ ...filters, applicationId });
   }
 
   @Patch(":id")

@@ -19,7 +19,7 @@ export class LabelSourceService extends BaseService<LabelSource> {
       where.source = { contains: filters.source, mode: "insensitive" };
     }
 
-    return this.prisma.labelSource.paginate({
+    return this.findAll({
       where,
       orderBy: [{ source: filters?.order ?? "asc" }],
       page: filters?.page,

@@ -16,7 +16,7 @@ export class OrganizationsService extends BaseService<Organization> {
   }
 
   async create(data: CreateOrganizationDto): Promise<Organization> {
-    const newOrg = await this.prisma.organization.create({ data });
+    const newOrg = await super.create(data);
     await this.recalculateClosureTable();
     return newOrg;
   }
@@ -84,10 +84,7 @@ export class OrganizationsService extends BaseService<Organization> {
     id: string,
     data: Partial<CreateOrganizationDto>,
   ): Promise<Organization> {
-    const patchedOrg = await this.prisma.organization.update({
-      where: { id },
-      data,
-    });
+    const patchedOrg = await super.update(id, data);
     await this.recalculateClosureTable();
     return patchedOrg;
   }
