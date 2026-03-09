@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { ApplicationDto } from "@/client";
 import { generateId } from "@/utils/generator-utils";
+import { watchDebounced } from "@vueuse/core";
 import { ref, watch, type WatchHandle } from "vue";
 
 const props = defineProps<{
@@ -28,19 +29,23 @@ function selectSuggestion(suggestion: Pick<ApplicationDto, "id" | "label">) {
   input.value = "";
 }
 
-watch(input, (newValue) => {
-  isLoading.value = true;
-  if (props.searchDataFunction) {
-    props
-      .searchDataFunction(newValue)
-      .then((data) => {
-        suggestions.value = data;
-      })
-      .finally(() => {
-        isLoading.value = false;
-      });
-  }
-});
+watchDebounced(
+  input,
+  (newValue) => {
+    isLoading.value = true;
+    if (props.searchDataFunction) {
+      props
+        .searchDataFunction(newValue)
+        .then((data) => {
+          suggestions.value = data;
+        })
+        .finally(() => {
+          isLoading.value = false;
+        });
+    }
+  },
+  { debounce: 300 },
+);
 
 let stop: WatchHandle;
 stop = watchEffect(() => {
