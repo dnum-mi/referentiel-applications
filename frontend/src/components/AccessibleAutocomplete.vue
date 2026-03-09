@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useClickOutside } from "@/composables/use-click-outside";
-import { ref, watch, computed, onMounted } from "vue";
+import { watchDebounced } from "@vueuse/core";
+import { computed, onMounted, ref } from "vue";
 
 interface Props<T> {
   id?: string;
@@ -39,10 +40,17 @@ async function doSearch(query: string) {
 function onInput(event: Event) {
   const value = (event.target as HTMLInputElement).value;
   inputValue.value = value;
-  emit("onInputValueChange", value);
-  doSearch(value);
   showList.value = true;
 }
+
+watchDebounced(
+  inputValue,
+  (newLabel) => {
+    emit("onInputValueChange", newLabel);
+    doSearch(newLabel);
+  },
+  { debounce: 300 },
+);
 
 function select(item: any) {
   props.onChange?.(item);
