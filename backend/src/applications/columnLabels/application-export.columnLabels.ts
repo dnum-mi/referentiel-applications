@@ -31,6 +31,8 @@ export const columnLabels: Record<string, string> = {
   "hostings.site": "Site",
   "hostings.nature": "Nature",
   "hostings.platform": "Plateforme",
+  "hostings.building": "Bâtiment",
+  "hostings.room": "Salle",
 
   compliances: "Conformités",
   "compliances.type": "Type de conformité",
