@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from "vue";
-import { useApplicationSearch, type Filters, type TechnicalDebtPoint } from "@/composables/use-application-search";
-import { useStatisticsStore } from "@/stores/statisticsStore";
-import ApplicationTableView from "@/components/ApplicationTableView.vue";
-import ApplicationCardView from "@/components/ApplicationCardView.vue";
-import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
+import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue";
+import ApplicationTableView from "@/components/ApplicationTableView.vue";
+import SidebarFilters from "@/components/search/SidebarFilter.vue";
+import { useApplicationSearch } from "@/composables/use-application-search";
+import { useStatisticsStore } from "@/stores/statisticsStore";
+import { computed, onMounted, ref } from "vue";
 
 const statsStore = useStatisticsStore();
-const { isLoading, searchApplications, filters, fetchTechnicalDebtPoints, averageIq, DEFAULT_FILTERS } = useApplicationSearch();
+const { isLoading, searchApplications, averageIq } = useApplicationSearch();
 
 const isMobile = ref(false);
 const showChart = ref(false);
-const technicalDebtPoints = ref<TechnicalDebtPoint[]>([]);
-const isTechnicalDebtLoading = ref(false);
 
 onMounted(() => {
   isMobile.value = window.matchMedia("(max-width: 768px)").matches;
@@ -27,61 +25,11 @@ onMounted(() => {
 
 const displayMode = computed(() => (isMobile.value ? "tiles" : "table"));
 
-async function loadTechnicalDebtPoints() {
-  isTechnicalDebtLoading.value = true;
-  try {
-    technicalDebtPoints.value = await fetchTechnicalDebtPoints();
-  } catch {
-    technicalDebtPoints.value = [];
-  } finally {
-    isTechnicalDebtLoading.value = false;
-  }
-}
-
-const chartData = computed(() => technicalDebtPoints.value);
-const hasChartData = computed(() => chartData.value.length > 0 || isTechnicalDebtLoading.value || showChart.value);
-
-const filterKeysToIgnore = new Set<keyof Filters>(["page", "pageSize", "sortBy", "order"]);
-
-function areArraysEqual(a: unknown[] | undefined, b: unknown[] | undefined) {
-  if (!a && !b) return true;
-  if (!a || !b) return false;
-  if (a.length !== b.length) return false;
-  const normalize = (values: unknown[]) => values.map(String).slice().sort();
-  const normalizedA = normalize(a);
-  const normalizedB = normalize(b);
-  return normalizedA.every((value, index) => value === normalizedB[index]);
-}
-
-const hasActiveFilters = computed(() => {
-  const currentFilters = filters.value;
-
-  return Object.entries(DEFAULT_FILTERS).some(([key, defaultValue]) => {
-    if (filterKeysToIgnore.has(key as keyof Filters)) return false;
-    const currentValue = currentFilters[key as keyof Filters];
-    if (Array.isArray(currentValue) || Array.isArray(defaultValue)) {
-      return !areArraysEqual(currentValue as unknown[] | undefined, defaultValue as unknown[] | undefined);
-    }
-    if (currentValue == null || currentValue === "") {
-      return defaultValue != null && defaultValue !== "";
-    }
-    return currentValue !== defaultValue;
-  });
-});
-
 const averageIqDisplay = computed(() => {
   if (averageIq.value === null) return "-";
   const rounded = Math.round(averageIq.value * 10) / 10;
   return Number.isInteger(rounded) ? `${rounded}%` : `${rounded.toFixed(1)}%`;
 });
-
-watch(
-  () => filters.value,
-  () => {
-    loadTechnicalDebtPoints();
-  },
-  { deep: true, immediate: true },
-);
 </script>
 
 <template>
@@ -97,21 +45,13 @@ watch(
       </div>
 
       <div class="search-actions-wrapper" data-testid="application-search-actions-wrapper">
-        <ApplicationSearchActions :show-chart="showChart" :has-chart-data="hasChartData" @toggle-chart="showChart = !showChart" />
+        <ApplicationSearchActions :show-chart="showChart" :has-chart-data="false" @toggle-chart="showChart = !showChart" />
       </div>
 
       <div class="average-iq" data-testid="application-average-iq">
         <span class="average-iq__label">IQ moyen (Applications Filtrées) : </span>
         <span class="average-iq__value">{{ averageIqDisplay }}</span>
       </div>
-
-      <section v-if="showChart" id="technical-debt-chart" class="chart-section" data-testid="technical-debt-chart-section">
-        <div v-if="isTechnicalDebtLoading" class="loader" role="status" aria-live="polite" aria-atomic="true">
-          <AppLoader />
-          <span class="sr-only">Chargement du graphique…</span>
-        </div>
-        <TechnicalDebtChart v-else :data="chartData" />
-      </section>
 
       <section id="application-results" class="application-results" aria-live="polite" :aria-busy="isLoading" tabindex="-1">
         <ApplicationTableView v-if="displayMode === 'table'" data-testid="application-table-view" />
