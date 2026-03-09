@@ -76,21 +76,23 @@ function closeModal() {
 </script>
 
 <template>
-  <DsfrModal :opened="props.opened" :title="title" data-testid="report-modal" @close="closeModal">
-    <DsfrAlert
-      v-show="errorMessage.length > 0"
-      class="mb-4"
-      tabindex="-1"
-      type="error"
-      role="alert"
-      aria-live="assertive"
-      title="Une erreur est survenue"
-      :description="errorMessage"
-    />
-    <DsfrInput v-model.trim="description" is-textarea :placeholder="placeholder" required rows="4" data-testid="report-description" />
+  <DsfrModal :opened="props.opened" :title="title" @close="closeModal">
+    <div data-testid="report-modal">
+      <DsfrAlert
+        v-show="errorMessage.length > 0"
+        class="mb-4"
+        tabindex="-1"
+        type="error"
+        role="alert"
+        aria-live="assertive"
+        title="Une erreur est survenue"
+        :description="errorMessage"
+      />
+      <DsfrInput v-model.trim="description" is-textarea :placeholder="placeholder" required rows="4" data-testid="report-description" />
 
-    <DsfrButton data-testid="report-submit-btn" class="fr-mt-2w" :disabled="isSubmitting" :aria-busy="isSubmitting" @click="submitReport">
-      {{ isSubmitting ? "Envoi…" : "Envoyer" }}
-    </DsfrButton>
+      <DsfrButton data-testid="report-submit-btn" class="fr-mt-2w" :disabled="isSubmitting" :aria-busy="isSubmitting" @click="submitReport">
+        {{ isSubmitting ? "Envoi…" : "Envoyer" }}
+      </DsfrButton>
+    </div>
   </DsfrModal>
 </template>

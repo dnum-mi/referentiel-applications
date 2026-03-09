@@ -30,7 +30,7 @@ export class LinksService extends BaseService<Link> {
       applicationId: filters.applicationId,
     };
 
-    return this.prisma.externalRessource.paginate({
+    return this.findAll({
       where,
       page: filters.page,
       pageSize: filters.pageSize,

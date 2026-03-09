@@ -1,94 +1,120 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ApplicationService } from "src/applications/application.service";
+import { BaseService } from "src/common/base.service";
+import { PrismaService } from "src/prisma/prisma.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { CreateHostingDto, UpdateHostingDto } from "./dto/hosting.dto";
 import { Hosting } from "./entities/hosting.entity";
-import { IHostingRepository } from "./infrastructure/repository/hosting.repository.interface";
-import { MetadatasService } from "src/metadatas/metadatas.service";
 
 @Injectable()
-export class HostingsService {
+export class HostingsService extends BaseService<Hosting> {
   constructor(
-    @Inject("IHostingRepository")
-    private readonly repository: IHostingRepository,
-    private readonly applicationService: ApplicationService,
-    private readonly metadataService: MetadatasService,
-  ) {}
-
-  async create(dto: CreateHostingDto, requestorId: string) {
-    const createdHosting = await this.repository.create(dto);
-    await this.applicationService.updateApplicationQuality(dto.applicationId);
-    await this.metadataService.createMetadata({
-      applicationId: dto.applicationId,
-      createdById: requestorId,
-      entity: "hostingId",
-      entityId: createdHosting.id,
-      title: `de l'hébergement : ${createdHosting.label}`,
-      type: "add",
-    });
-    return createdHosting;
+    prisma: PrismaService,
+    applicationService: ApplicationService,
+    metadataService: MetadatasService,
+  ) {
+    super(prisma.hosting, prisma, metadataService, applicationService);
   }
 
   async count(): Promise<number> {
-    return this.repository.count();
+    return this.countAll();
   }
 
-  findAll() {
-    return this.repository.findAll();
-  }
+  async createHosting(
+    dto: CreateHostingDto,
+    requestorId: string,
+  ): Promise<Hosting> {
+    const { applicationId, hostingOptionId, ...rest } = dto;
 
-  async findOne(id: string) {
-    const hosting = await this.repository.findById(id);
-    if (!hosting) {
-      throw new NotFoundException(`Hébergement non trouvé pour l'ID ${id}`);
-    }
-    return hosting;
-  }
+    const data = {
+      ...rest,
+      application: { connect: { id: applicationId } },
+      ...(hostingOptionId && {
+        hostingOption: { connect: { id: hostingOptionId } },
+      }),
+    };
 
-  findDistinctSites(): Promise<string[]> {
-    return this.repository.findDistinctSites();
-  }
-
-  async update(id: string, dto: UpdateHostingDto, requestorId: string) {
-    const oldHosting = await this.findOne(id);
-    const updatedHosting = await this.repository.update(id, dto);
-
-    await this.applicationService.updateApplicationQuality(dto.applicationId);
-    await this.metadataService.createMetadata({
-      applicationId: dto.applicationId,
-      createdById: requestorId,
-      title: `de l'hébergement ${oldHosting.label}`,
-      entity: "hostingId",
-      entityId: id,
-      fields: {
-        label: "libellé",
-        "hostingOption.site": "site",
-        "hostingOption.platform": "plateforme",
-        "hostingOption.provider": "fournisseur",
-        "hostingOption.building": "bâtiment",
-        "hostingOption.room": "pièce",
+    return super.create(data, {
+      applicationId,
+      triggerQualityUpdate: true,
+      include: { hostingOption: true },
+      metadata: {
+        userId: requestorId,
+        gender: "de l'hébergement",
+        getColumn: (entity) => entity.label,
+        entity: "hostingId",
       },
-      oldData: oldHosting,
-      newData: updatedHosting,
     });
-    return updatedHosting;
   }
 
-  async remove(id: string, requestorId?: string) {
-    const hosting = await this.repository.findById(id);
+  async findOneHosting(id: string): Promise<Hosting> {
+    return this.findOne(id, { hostingOption: true });
+  }
 
-    await this.metadataService.createMetadata({
-      applicationId: hosting.applicationId,
-      createdById: requestorId,
-      entity: "hostingId",
-      entityId: hosting.id,
-      title: `de l'hébergement : ${hosting.label}`,
-      type: "delete",
+  async findDistinctSites(): Promise<string[]> {
+    const hostingOptionSites = await this.prisma.hostingOption.findMany({
+      select: { site: true },
+      distinct: ["site"],
+      orderBy: { site: "asc" },
     });
 
-    return this.repository.delete(id);
+    return hostingOptionSites.map((r) => r.site);
+  }
+
+  async updateHosting(
+    id: string,
+    dto: UpdateHostingDto,
+    requestorId: string,
+  ): Promise<Hosting> {
+    const { applicationId, hostingOptionId, ...rest } = dto;
+
+    const data = {
+      ...rest,
+      ...(applicationId && {
+        application: { connect: { id: applicationId } },
+      }),
+      ...(hostingOptionId && {
+        hostingOption: { connect: { id: hostingOptionId } },
+      }),
+    };
+
+    return super.update(id, data, {
+      applicationId: dto.applicationId,
+      triggerQualityUpdate: true,
+      include: { hostingOption: true },
+      metadata: {
+        userId: requestorId,
+        gender: "de l'hébergement",
+        getColumn: (entity) => entity.label,
+        entity: "hostingId",
+        fields: {
+          label: "libellé",
+          "hostingOption.site": "site",
+          "hostingOption.platform": "plateforme",
+          "hostingOption.provider": "fournisseur",
+          "hostingOption.building": "bâtiment",
+          "hostingOption.room": "pièce",
+        },
+      },
+    });
+  }
+
+  async remove(id: string, requestorId?: string): Promise<void> {
+    await super.delete(id, {
+      triggerQualityUpdate: true,
+      metadata: {
+        userId: requestorId,
+        gender: "de l'hébergement",
+        getColumn: (entity) => entity.label,
+        entity: "hostingId",
+      },
+    });
   }
 
   async findByApplicationId(applicationId: string): Promise<Hosting[]> {
-    return this.repository.findByApplicationId(applicationId);
+    return this.prisma.hosting.findMany({
+      where: { applicationId },
+      include: { hostingOption: true },
+    });
   }
 }

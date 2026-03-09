@@ -11,14 +11,17 @@ export const useActorTypeStore = defineStore("actorTypeStore", () => {
   async function fetchAll() {
     try {
       isLoading.value = true;
-      const response = await api.actorTypeControllerFindAll();
+      const response = await api.actorTypeControllerFindAll({
+        query: { pageSize: 0 },
+      });
       if (!response.response.ok) {
         throw new Error("Erreur lors de la récupération des types d'acteurs");
       }
       if (!response.data) {
         throw new Error("Aucun type d'acteur trouvé");
       }
-      actorTypes.value = response.data;
+      const responseData = response.data as { results: ActorTypeDto[] };
+      actorTypes.value = responseData.results;
     } catch (err: any) {
       console.error("❌ Erreur lors du chargement des types d'acteurs :", err);
       error.value = err.message ?? "Erreur inconnue";

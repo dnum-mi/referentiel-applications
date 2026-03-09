@@ -1,5 +1,6 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { IsEmail, IsOptional, IsString, ValidateIf } from "class-validator";
+import { PaginationDto } from "src/common/dto";
 
 export class CreateActorDto {
   @ApiProperty({
@@ -65,4 +66,15 @@ export class ActorDto extends CreateActorDto {
   })
   @IsString()
   id: string;
+}
+
+export class ActorFiltersDto extends PaginationDto {
+  @ApiProperty({
+    example: "035869dc-47a6-4cee-828f-f6a28d050b35",
+    description: "ID de l'application pour filtrer les acteurs",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  applicationId?: string;
 }

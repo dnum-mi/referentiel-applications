@@ -7,7 +7,6 @@ import {
   HostingsController,
 } from "./hostings.controller";
 import { HostingsService } from "./hostings.service";
-import { HostingRepository } from "./infrastructure/repository/hosting.repository";
 import { SitesController } from "./site.controller";
 
 @Module({
@@ -17,13 +16,7 @@ import { SitesController } from "./site.controller";
     SitesController,
     HostingsController,
   ],
-  providers: [
-    HostingsService,
-    {
-      provide: "IHostingRepository",
-      useClass: HostingRepository,
-    },
-  ],
-  exports: ["IHostingRepository"],
+  providers: [HostingsService],
+  exports: [HostingsService],
 })
 export class HostingsModule {}

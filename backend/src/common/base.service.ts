@@ -23,28 +23,22 @@ export class BaseService<T, TDelegate = any> {
     return object;
   }
 
-  async findAllPaginated(
+  async findAll(
     filters: Prisma.Args<TDelegate, "findMany"> &
       Pick<PaginationDto, "page" | "pageSize">,
   ): Promise<PaginatedResponseDto<T>> {
-    return this.model.paginate({
-      where: filters.where,
-      orderBy: filters.orderBy,
-      page: filters.page,
-      pageSize: filters.pageSize,
-    });
+    return this.model.paginate(filters);
   }
 
   async countAll(): Promise<number> {
     return this.model.count();
   }
 
-  async findAll(filters?: any): Promise<T[]> {
-    return this.model.findMany({ where: filters });
-  }
-
   async create(data: any, options?: ServiceOptions<T>): Promise<T> {
-    const created = await this.model.create({ data });
+    const created = await this.model.create({
+      data,
+      include: options?.include,
+    });
 
     if (options)
       await this.handleMetadataAndQuality(created, "add", options, created.id);
@@ -70,12 +64,23 @@ export class BaseService<T, TDelegate = any> {
     return updated;
   }
 
-  async delete(id: string, options?: ServiceOptions<T>): Promise<void> {
-    const deleted = await this.findOne(id);
+  async delete(id: string, options?: ServiceOptions<T>): Promise<T> {
+    const deleted = await this.findOne(id, options?.include ?? {});
+
+    const resolvedApplicationId =
+      options?.applicationId ??
+      (deleted as unknown as { applicationId?: string }).applicationId;
+
     if (options)
-      await this.handleMetadataAndQuality(deleted, "delete", options, id);
+      await this.handleMetadataAndQuality(
+        deleted,
+        "delete",
+        { ...options, applicationId: resolvedApplicationId },
+        id,
+      );
 
     await this.model.delete({ where: { id } });
+    return deleted;
   }
 
   private async handleMetadataAndQuality(

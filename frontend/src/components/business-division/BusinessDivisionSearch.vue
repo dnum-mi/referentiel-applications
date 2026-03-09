@@ -52,9 +52,10 @@ async function performSearch(query: string) {
       const { data } = await api.businessDivisionControllerFindAll({
         query: {
           label: query,
+          pageSize: 0,
         },
       });
-      return (data?.results as unknown as BusinessDivisionDto[]) ?? [];
+      return (data as { results: BusinessDivisionDto[] }).results;
     } catch (error) {
       console.error(error);
       errorMessage.value = "Erreur lors de la recherche de direction de metier.";

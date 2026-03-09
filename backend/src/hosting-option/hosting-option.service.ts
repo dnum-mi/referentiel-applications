@@ -2,6 +2,7 @@ import type { HostingOption, Prisma } from "@prisma/client";
 import { Injectable } from "@nestjs/common";
 import { BaseService } from "../common/base.service";
 import { PrismaService } from "../prisma/prisma.service";
+import { PaginatedResponseDto } from "src/common/dto";
 import { HostingOptionFiltersDto } from "./dto/hosting-option.dto";
 
 @Injectable()
@@ -10,7 +11,9 @@ export class HostingOptionService extends BaseService<HostingOption> {
     super(prisma.hostingOption, prisma);
   }
 
-  async findAll(filters?: HostingOptionFiltersDto) {
+  async findAllHostingOptions(
+    filters?: HostingOptionFiltersDto,
+  ): Promise<PaginatedResponseDto<HostingOption>> {
     const where: Prisma.HostingOptionWhereInput = {};
     if (filters) {
       if (filters.site) {
@@ -30,7 +33,7 @@ export class HostingOptionService extends BaseService<HostingOption> {
       }
     }
 
-    return this.prisma.hostingOption.findMany({
+    return this.findAll({
       where,
       orderBy: [
         { provider: "asc" },
@@ -39,6 +42,8 @@ export class HostingOptionService extends BaseService<HostingOption> {
         { building: "asc" },
         { room: "asc" },
       ],
+      page: filters?.page,
+      pageSize: filters?.pageSize,
     });
   }
 }

@@ -2571,16 +2571,48 @@ paths:
       summary: Récupérer tous les types d’acteurs
       description: Ce endpoint permet de récupérer la liste de tous les types
         d’acteurs disponibles.
-      parameters: []
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
       responses:
         "200":
           description: Liste les types d’acteurs
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ActorTypeDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: *a14
   /api/v2/actorTypes/perms-matrix:
     get:
@@ -2746,15 +2778,47 @@ paths:
           description: ID de l'application
           schema:
             type: string
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
       responses:
         "200":
           description: Liste des acteurs trouvés
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ActorDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: *a15
   /api/v2/applications/{applicationId}/actors/{id}:
     get:
@@ -2869,6 +2933,40 @@ paths:
       operationId: HostingOptionController_findAll
       summary: Get all hosting options with optional filtering
       parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
         - name: site
           required: false
           in: query
@@ -2896,13 +2994,11 @@ paths:
             type: string
       responses:
         "200":
-          description: List of hosting options
+          description: Paginated list of hosting options
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/HostingOptionDto"
+                $ref: "#/components/schemas/PaginatedResponseDto"
       tags: *a16
   /api/v2/hosting-options/{id}:
     patch:
