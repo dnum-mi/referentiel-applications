@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from "vue";
-import type { ApplicationWithPerms, CreateApplicationWithPerms } from "@/models/Application";
+import api from "@/api/index.js";
+import type { HostingDto, LabelDto, TechnicalDebtInfoDto } from "@/client/types.gen";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
-import { useToasterStore } from "@/stores/toasterStore";
-import ApplicationForm from "./form/ApplicationForm.vue";
 import useModal from "@/composables/use-modal";
+import type { ApplicationWithPerms } from "@/models/Application";
+import { AdminLevel } from "@/models/user";
+import { useHostingStore } from "@/stores/hostingStore";
+import { useLabelStore } from "@/stores/labelStore";
+import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
+import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
+import { computed, onMounted, ref, watch } from "vue";
+import ApplicationForm from "./form/ApplicationForm.vue";
 import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
 import TechnicalDebtCard from "./technical-debt/TechnicalDebtCard.vue";
 import TechnicalDebtModal from "./technical-debt/TechnicalDebtModal.vue";
-import { useHostingStore } from "@/stores/hostingStore";
-import { useLabelStore } from "@/stores/labelStore";
-import { useUserStore } from "@/stores/userStore";
-import { AdminLevel } from "@/models/user";
-import type { HostingDto, LabelDto, TechnicalDebtInfoDto } from "@/client/types.gen";
-import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
-import api from "@/api/index.js";
 
 const props = defineProps<{
   application: ApplicationWithPerms;
@@ -79,9 +79,22 @@ const application = ref<ApplicationWithPerms>({
   ...props.application,
 });
 
-onMounted(() => {
-  labelStore.fetchLabels(application.value.id);
-  fetchTechnicalDebtInfo();
+const isLoading = ref(false);
+
+onMounted(async () => {
+  isLoading.value = true;
+  try {
+    const promises = [labelStore.fetchLabels(application.value.id), fetchTechnicalDebtInfo()];
+    // fetch hostings if allowed
+    if (userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings")) {
+      promises.push(hostingStore.fetchHostings(application.value.id));
+    }
+    await Promise.all(promises);
+  } catch {
+    toaster.addErrorMessage("Erreur lors du chargement des informations de l'application.");
+  } finally {
+    isLoading.value = false;
+  }
 });
 const applicationModal = useModal();
 const isModalOpened = computed(() => applicationModal.isModalOpen.value);
@@ -218,7 +231,8 @@ watch(
 </script>
 
 <template>
-  <div class="responsive-layout" data-testid="informations-generales">
+  <AppLoader v-if="isLoading" data-testid="informations-generales-loader" />
+  <div v-else class="responsive-layout" data-testid="informations-generales">
     <div class="responsive-column">
       <div class="fr-card">
         <div class="fr-card__body">
