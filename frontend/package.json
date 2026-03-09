@@ -28,9 +28,9 @@
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
     "dompurify": "^3.3.1",
-    "oidc-client-ts": "^3.4.1",
     "marked": "^16.4.2",
     "mermaid": "^11.12.2",
+    "oidc-client-ts": "^3.4.1",
     "pinia": "^3.0.4",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.4",
@@ -38,6 +38,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@faker-js/faker": "^9.9.0",
     "@hey-api/openapi-ts": "^0.80.18",
     "@playwright/test": "^1.57.0",
