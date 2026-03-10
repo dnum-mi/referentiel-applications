@@ -401,7 +401,7 @@ erDiagram
   DateTime createdAt
   String description "nullable"
   MetadataAction action
-  String applicationId FK
+  String applicationId FK "nullable"
   String createdById FK
   String dataOwnerId FK "nullable"
   String complianceId FK "nullable"

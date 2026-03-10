@@ -4,7 +4,10 @@ import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
 export interface IMetadataRepository {
   findAll: (
-    filters?: MetadataFiltersDto & { applicationId?: string },
+    filters?: MetadataFiltersDto & {
+      applicationId?: string;
+      excludeExportAction?: boolean;
+    },
   ) => Promise<PaginatedResponseDto<MetadataDto>>;
 
   findOne: (id: string) => Promise<Metadata | null>;

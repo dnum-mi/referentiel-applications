@@ -51,6 +51,7 @@ import {
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 import { ApplicationExportService } from "./export.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 
 @ApiTags("applications")
 @Controller("applications")
@@ -59,6 +60,7 @@ export class ApplicationController {
     private readonly applicationService: ApplicationService,
     private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly applicationExportService: ApplicationExportService,
+    private readonly metadataService: MetadatasService,
   ) {}
 
   @Post()
@@ -198,6 +200,7 @@ Vous devez fournir les informations suivantes :
   async exportExcel(
     @Query() searchParams: ApplicationSearchDto,
     @Res() res: Response,
+    @UserId() requestorId: string,
   ) {
     const buffer =
       Object.keys(searchParams).length > 0
@@ -205,6 +208,12 @@ Vous devez fournir les informations suivantes :
             searchParams,
           )
         : await this.exportApplicationsUseCase.execute();
+
+    await this.metadataService.createMetadata({
+      createdById: requestorId,
+      title: "des données",
+      type: "export",
+    });
 
     res.setHeader(
       "Content-Type",

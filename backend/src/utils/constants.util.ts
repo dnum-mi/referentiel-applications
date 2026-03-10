@@ -18,4 +18,8 @@ export const MetadataTypes: Record<
     label: "Suppression",
     dbAction: "delete",
   },
+  export: {
+    label: "Export Excel",
+    dbAction: "export",
+  },
 };

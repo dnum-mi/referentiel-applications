@@ -13,9 +13,9 @@ model Metadata {
   /// Type d'action (ajout, mise à jour, suppression)
   action MetadataAction @default(add)
 
-  applicationId String
+  applicationId String?
   /// Application à laquelle cette métadonnée appartient
-  application   Application @relation("ApplicationMetadatas", fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application? @relation("ApplicationMetadatas", fields: [applicationId], references: [id], onDelete: Cascade)
 
   createdById String
   /// Utilisateur qui a créé cette entrée de métadonnée
@@ -60,4 +60,6 @@ enum MetadataAction {
   update
   /// Suppression d'information
   delete
+  /// Export de données
+  export
 }

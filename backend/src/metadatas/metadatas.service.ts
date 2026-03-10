@@ -31,7 +31,7 @@ export class MetadatasService extends BaseService<any> {
   }
 
   public async createMetadata<T = any>(options: {
-    applicationId: string;
+    applicationId?: string;
     createdById: string;
     title: string;
     entity?: string;
