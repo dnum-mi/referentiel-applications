@@ -55,12 +55,12 @@ export function mapHostings(app: ApplicationWithAllRelations) {
     app.hostings?.map((h) => ({
       applicationId: app.id,
       applicationLabel: app.label,
-      label: h.label || "",
-      provider: h.hostingOption?.provider || "",
-      site: h.hostingOption?.site || "",
-      platform: h.hostingOption?.platform || "",
-      building: h.hostingOption?.building || "",
-      room: h.hostingOption?.room || "",
+      "hostings.label": h.label || "",
+      "hostings.provider": h.hostingOption?.provider || "",
+      "hostings.site": h.hostingOption?.site || "",
+      "hostings.platform": h.hostingOption?.platform || "",
+      "hostings.building": h.hostingOption?.building || "",
+      "hostings.room": h.hostingOption?.room || "",
     })) ?? []
   );
 }
@@ -70,10 +70,11 @@ export function mapActors(app: ApplicationWithAllRelations) {
     app.actors?.map((a) => ({
       applicationId: app.id,
       applicationLabel: app.label,
-      firstname: a.firstname,
-      lastname: a.lastname,
-      type: a.actorType?.label || "",
-      email: a.email,
+      "actors.firstname": a.firstname,
+      "actors.lastname": a.lastname,
+      "actors.role": a.actorType?.code || "",
+      "actors.type": a.actorType?.label || "",
+      "actors.email": a.email,
     })) ?? []
   );
 }
@@ -108,8 +109,8 @@ export function mapLabels(app: ApplicationWithAllRelations) {
     app.labels?.map((l) => ({
       applicationId: app.id,
       applicationLabel: app.label,
-      source: l.labelSource?.source || "",
-      value: l.value,
+      "labels.labelSource.source": l.labelSource?.source || "",
+      "labels.value": l.value,
     })) ?? []
   );
 }
@@ -119,9 +120,12 @@ export function mapExternalResources(app: ApplicationWithAllRelations) {
     app.externalRessource?.map((r) => ({
       applicationId: app.id,
       applicationLabel: app.label,
-      link: r.link,
-      description: r.description,
-      type: translateEnum(ExternalRessourceTypeLabels, r.type),
+      "externalRessource.link": r.link,
+      "externalRessource.description": r.description,
+      "externalRessource.type": translateEnum(
+        ExternalRessourceTypeLabels,
+        r.type,
+      ),
     })) ?? []
   );
 }
@@ -131,8 +135,8 @@ export function mapReports(app: ApplicationWithAllRelations) {
     app.reports?.map((n) => ({
       applicationId: app.id,
       applicationLabel: app.label,
-      description: n.description,
-      status: translateEnum(ReportStatusLabels, n.status),
+      "report.description": n.description,
+      "report.status": translateEnum(ReportStatusLabels, n.status),
     })) ?? []
   );
 }
@@ -144,7 +148,7 @@ export function mapRelationsOut(app: ApplicationWithAllRelations) {
       applicationLabel: app.label,
       sourceId: app.id,
       targetId: rel.targetApplication?.id,
-      targetLabel: rel.targetApplication?.label,
+      "relationsAsSource.targetApplication.label": rel.targetApplication?.label,
       type: RelationTypeLabelsBidirectional[rel.type]?.source ?? rel.type,
     })) ?? []
   );
@@ -157,7 +161,7 @@ export function mapRelationsIn(app: ApplicationWithAllRelations) {
       applicationLabel: app.label,
       targetId: app.id,
       sourceId: rel.sourceApplication?.id,
-      sourceLabel: rel.sourceApplication?.label,
+      "relationsAsTarget.sourceApplication.label": rel.sourceApplication?.label,
       type: RelationTypeLabelsBidirectional[rel.type]?.target ?? rel.type,
     })) ?? []
   );
