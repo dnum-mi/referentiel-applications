@@ -57,16 +57,18 @@ const tabs = ref<DsfrTab[]>([
 <template>
   <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs" data-testid="admin-tabs">
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
-      <DsfrTabContent
-        v-show="activeTab === index"
-        :panel-id="tab.panelId"
-        :tab-id="tab.tabId"
-        :title="`Onglet ${tab.title}`"
-        :aria-label="`Onglet ${tab.title}`"
-        :data-testid="tab.panelId"
-      >
-        <component :is="tab.component" />
-      </DsfrTabContent>
+      <KeepAlive>
+        <DsfrTabContent
+          v-if="activeTab === index"
+          :panel-id="tab.panelId"
+          :tab-id="tab.tabId"
+          :title="`Onglet ${tab.title}`"
+          :aria-label="`Onglet ${tab.title}`"
+          :data-testid="tab.panelId"
+        >
+          <component :is="tab.component" />
+        </DsfrTabContent>
+      </KeepAlive>
     </template>
   </DsfrTabs>
 </template>

@@ -33,7 +33,8 @@ const permDict = {
 };
 const permOrder = props.permOrder;
 
-const permIndex = ref(permOrder.findIndex((option) => option === (props.write ? "write" : props.read ? "read" : "none")));
+const foundIndex = permOrder.findIndex((option) => option === (props.write ? "write" : props.read ? "read" : "none"));
+const permIndex = ref(foundIndex === -1 ? 0 : foundIndex);
 
 function togglePermission() {
   if (permIndex.value >= permOrder.length - 1) {
