@@ -3,6 +3,7 @@ import { ref, computed, watch } from "vue";
 import type { PropType } from "vue";
 import type { OrganizationDto } from "@/client/types.gen";
 import { useOrganizationStore } from "@/stores/organizationStore";
+import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 
 const props = defineProps({
   modelValue: {
@@ -99,7 +100,7 @@ watch(selectedOrganizationId, (newValue) => {
 
 // Search organizations
 async function searchOrganizations() {
-  if (!searchQuery.value) {
+  if (!searchQuery.value || searchQuery.value.length < MIN_CHAR_FOR_SEARCH) {
     organizations.value = [];
     return;
   }

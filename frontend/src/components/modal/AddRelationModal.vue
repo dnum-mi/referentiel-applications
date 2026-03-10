@@ -4,6 +4,7 @@ import SuggestionsInput from "../SuggestionsInput.vue";
 import { RelationType, type ApplicationDto } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
+import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 
 const props = withDefaults(
   defineProps<{
@@ -35,7 +36,7 @@ const errorMessage = ref<string>("");
 const isLoading = ref(false);
 
 async function performSearch(query: string) {
-  if (query && query.length >= 3) {
+  if (query && query.length >= MIN_CHAR_FOR_SEARCH) {
     isLoading!.value = true;
     try {
       const response = await searchApplications(
