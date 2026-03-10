@@ -4,6 +4,7 @@ import { useApplicationSearch, type TechnicalDebtPoint } from "@/composables/use
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
 import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
+import { watchDebounced } from "@vueuse/core";
 
 const { filters, fetchTechnicalDebtPoints } = useApplicationSearch();
 
@@ -25,12 +26,12 @@ async function loadTechnicalDebtPoints() {
   }
 }
 
-watch(
+watchDebounced(
   () => filters.value,
   () => {
     loadTechnicalDebtPoints();
   },
-  { deep: true },
+  { deep: true, debounce: 300 },
 );
 </script>
 
