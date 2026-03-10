@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
+import { watchDebounced } from "@vueuse/core";
 import api from "@/api/index";
 import type { UsersPaginatedResponseDto } from "@/client/types.gen";
 import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
@@ -91,16 +92,14 @@ async function fetchUsers() {
   }
 }
 
-let searchDebounceTimeout: number | undefined;
-watch(searchQuery, async (newValue) => {
-  if (searchDebounceTimeout) window.clearTimeout(searchDebounceTimeout);
-  searchDebounceTimeout = window.setTimeout(async () => {
-    if (searchQuery.value === newValue) {
-      currentPage.value = 0;
-      await fetchUsers();
-    }
-  }, 300);
-});
+watchDebounced(
+  searchQuery,
+  async () => {
+    currentPage.value = 0;
+    await fetchUsers();
+  },
+  { debounce: 300 },
+);
 
 watch([sortColumn, isSortDescending], () => {
   currentPage.value = 0;

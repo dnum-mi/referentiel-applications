@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useApplicationSearch, type Filters } from "@/composables/use-application-search";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { DsfrInput, DsfrSelect } from "@gouvminint/vue-dsfr";
 import { useOrganizationStore } from "@/stores/organizationStore";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { watchDebounced } from "@vueuse/core";
 import type { OrganizationDto } from "@/client/types.gen";
 
 const { filters, setFilter } = useApplicationSearch();
@@ -48,11 +48,13 @@ const selectedActorTypeId = computed({
 
 onMounted(() => actorTypeStore.fetchAll());
 
-const { run: debouncedOrganizationSearch } = useDebouncedFn(async (searchTerm: string | undefined) => {
-  organizations.value = await organizationStore.find(searchTerm, true);
-}, 300);
-
-watch(() => filters.value.organization, debouncedOrganizationSearch, { immediate: true });
+watchDebounced(
+  () => filters.value.organization,
+  async (searchTerm) => {
+    organizations.value = await organizationStore.find(searchTerm, true);
+  },
+  { debounce: 300, immediate: true },
+);
 </script>
 
 <template>

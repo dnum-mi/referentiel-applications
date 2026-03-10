@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { useDebounceFn } from "@vueuse/core";
 
 interface ApplicationOption {
   id: string | number;
@@ -49,7 +49,7 @@ async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[
   });
 }
 
-const { run: debouncedSearch } = useDebouncedFn(async (resolve: (res: ApplicationOption[]) => void) => {
+const debouncedSearch = useDebounceFn(async (resolve: (res: ApplicationOption[]) => void) => {
   const response = await searchApplications({ search: trimmedQuery.value, page: 0, pageSize: 8 }, false);
 
   suggestions.value = (response?.results ?? []) as ApplicationOption[];
