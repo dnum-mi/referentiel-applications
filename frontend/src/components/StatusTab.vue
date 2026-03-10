@@ -11,7 +11,7 @@ import { AdminLevel } from "@/models/user";
 import useModal from "@/composables/use-modal";
 import AppLoader from "./AppLoader.vue";
 import StatusForm from "./form/StatusForm.vue";
-import { useBreakpoints } from "@/composables/use-breakpoint";
+import { useMediaQuery } from "@vueuse/core";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import { useApplicationStore } from "@/stores/applicationStore";
 import RefAppTable from "./RefAppTable.vue";
@@ -266,8 +266,7 @@ function buildStatusPayload(formData: StatusFormData) {
   return payload;
 }
 
-const { smaller } = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX }, "max");
-const isMobile = smaller("mobile");
+const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.MOBILE_MAX}px)`);
 
 onMounted(() => {
   fetchStatuses();

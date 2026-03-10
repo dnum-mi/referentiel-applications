@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
-import { useDebounceFn } from "@vueuse/core";
+import { useDebounceFn, useMediaQuery } from "@vueuse/core";
 
 interface ApplicationOption {
   id: string | number;
@@ -16,18 +16,10 @@ const router = useRouter();
 const { searchApplications } = useApplicationSearch();
 const searchRef = ref<{ clear?: () => void } | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
-const isMobile = ref(window.innerWidth <= 768);
+const isMobile = useMediaQuery("(max-width: 768px)");
 const showInput = ref(!isMobile.value);
 const suggestions = ref<ApplicationOption[]>([]);
 const trimmedQuery = ref("");
-
-function handleResize() {
-  isMobile.value = window.innerWidth <= 768;
-  showInput.value = !isMobile.value;
-}
-
-onMounted(() => window.addEventListener("resize", handleResize));
-onUnmounted(() => window.removeEventListener("resize", handleResize));
 
 async function onLoupeClick() {
   showInput.value = true;
