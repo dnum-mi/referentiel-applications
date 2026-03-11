@@ -28,6 +28,8 @@ configureClients(toaster);
 
 const appVersion = __APP_VERSION__;
 
+const environmentLabel = import.meta.env.VITE_RDA_ENVIRONMENT;
+
 const versionLink = computed(() => ({
   label: `📦 ${appVersion}`,
   href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion}`,
@@ -194,6 +196,10 @@ function close() {
     <div class="header-container" id="header-search">
       <SearchHeader v-if="userStore.authenticated" />
     </div>
+
+    <template v-if="environmentLabel" #before-quick-links>
+      <DsfrBadge :label="environmentLabel" type="warning" data-testid="environment-badge" />
+    </template>
 
     <template #mainnav>
       <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />

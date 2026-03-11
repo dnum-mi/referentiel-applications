@@ -98,6 +98,7 @@ services:
     environment:
       - VITE_RDA_MATOMO_URL=http://localhost:8083
       - VITE_RDA_MATOMO_SITE_ID=1
+      - VITE_RDA_ENVIRONMENT=developpement
     ports:
       - "5173:5173"
     depends_on:
