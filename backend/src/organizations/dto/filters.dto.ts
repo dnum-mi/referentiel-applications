@@ -1,8 +1,16 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform, Type } from "class-transformer";
-import { IsArray, IsBoolean, IsOptional, IsString } from "class-validator";
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from "class-validator";
+import { PaginationDto } from "src/common/dto";
 
-export class OrganizationFilterDto {
+export class OrganizationFilterDto extends PaginationDto {
   @IsOptional()
   @IsArray()
   @Transform(({ value }) => value.split(",").filter((id) => id.trim() !== ""))
@@ -39,4 +47,14 @@ export class OrganizationFilterDto {
   })
   @IsBoolean()
   usedOnly?: boolean;
+
+  @ApiPropertyOptional({
+    description: "Nombre de résultats par page, 0 pour supprimer la pagination",
+    example: 50,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  pageSize?: number = 50;
 }

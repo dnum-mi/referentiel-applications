@@ -24,12 +24,13 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
     if (!response.response.ok) {
       throw new Error("Failed to fetch organizations");
     }
-    if (!response.data) {
+    if (!response.data || !response.data.results) {
       return [];
     }
-    storeOrganization(response.data);
+    const organizations = response.data.results;
+    storeOrganization(organizations);
     error.value = null;
-    return response.data;
+    return organizations;
   }
 
   // Debounced batch fetch
@@ -42,10 +43,11 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
         query: { ids: ids.join(","), withAncestors: true },
       });
 
-      if (response.response.ok && response.data) {
-        storeOrganization(response.data);
+      if (response.response.ok && response.data && response.data.results) {
+        const organizations = response.data.results;
+        storeOrganization(organizations);
 
-        response.data.forEach((org: OrganizationDto) => {
+        organizations.forEach((org: OrganizationDto) => {
           resolvers[org.id]?.(org);
           delete resolvers[org.id];
         });
