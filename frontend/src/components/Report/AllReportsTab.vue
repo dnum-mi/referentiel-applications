@@ -3,7 +3,7 @@ import api from "@/api";
 import type { ReportPaginatedResponseDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import { formatDate } from "@/composables/use-date";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { watchDebounced } from "@vueuse/core";
 import { routeNames } from "@/router/route-names";
 import { useUserStore } from "@/stores/userStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
@@ -64,10 +64,6 @@ const rows = computed(() =>
   ),
 );
 
-const { run: debouncedSearch } = useDebouncedFn(async () => {
-  await fetchAllReportsDirect();
-}, 300);
-
 async function fetchAllReportsDirect() {
   isLoading.value = true;
   try {
@@ -86,10 +82,14 @@ async function fetchAllReportsDirect() {
   }
 }
 
-watch(searchReport, () => {
-  currentPage.value = 0;
-  debouncedSearch();
-});
+watchDebounced(
+  searchReport,
+  async () => {
+    currentPage.value = 0;
+    await fetchAllReportsDirect();
+  },
+  { debounce: 300 },
+);
 
 watch([currentPage, itemsPerPage, sortBy, sortedDesc], fetchAllReportsDirect);
 

@@ -4,9 +4,9 @@ import type { TagDto, TagsPaginatedResponseDto } from "@/client/types.gen";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import TagActions from "./TagActions.vue";
 import api from "@/api";
-import { debounce } from "@/utils/debouncer-utils";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
+import { watchDebounced } from "@vueuse/core";
 
 const data = ref<TagsPaginatedResponseDto>({ results: [] as TagDto[], total: 0 });
 
@@ -65,14 +65,14 @@ async function fetchTags() {
   isLoading.value = false;
 }
 
-const debouncedFetch = debounce(async () => {
-  currentPage.value = 0;
-  await fetchTags();
-}, 300);
-
-watch(searchQuery, () => {
-  debouncedFetch();
-});
+watchDebounced(
+  searchQuery,
+  async () => {
+    currentPage.value = 0;
+    await fetchTags();
+  },
+  { debounce: 300 },
+);
 
 watch([sortColumn, isSortDescending], () => {
   currentPage.value = 0;

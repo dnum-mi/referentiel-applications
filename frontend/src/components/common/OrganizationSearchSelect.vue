@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { watchDebounced } from "@vueuse/core";
 import type { PropType } from "vue";
 import type { OrganizationDto } from "@/client/types.gen";
 import { useOrganizationStore } from "@/stores/organizationStore";
@@ -123,13 +124,7 @@ function clearSearch() {
   selectedOrganizationId.value = "";
 }
 
-let searchTimeout: ReturnType<typeof setTimeout> | undefined;
-watch(searchQuery, () => {
-  if (searchTimeout) {
-    clearTimeout(searchTimeout);
-  }
-  searchTimeout = setTimeout(searchOrganizations, 300);
-});
+watchDebounced(searchQuery, searchOrganizations, { debounce: 300 });
 </script>
 
 <template>

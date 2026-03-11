@@ -6,18 +6,15 @@ import ApplicationTableView from "@/components/ApplicationTableView.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useStatisticsStore } from "@/stores/statisticsStore";
-import { computed, onMounted, ref } from "vue";
+import { useMediaQuery } from "@vueuse/core";
+import { computed, onMounted } from "vue";
 
 const statsStore = useStatisticsStore();
 const { isLoading, searchApplications, averageIq } = useApplicationSearch();
 
-const isMobile = ref(false);
+const isMobile = useMediaQuery("(max-width: 768px)");
 
 onMounted(() => {
-  isMobile.value = window.matchMedia("(max-width: 768px)").matches;
-  window.addEventListener("resize", () => {
-    isMobile.value = window.matchMedia("(max-width: 768px)").matches;
-  });
   statsStore.countApplications();
   searchApplications();
 });

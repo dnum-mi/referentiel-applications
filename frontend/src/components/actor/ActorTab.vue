@@ -70,7 +70,15 @@ const tableRows = computed(() =>
 );
 
 onBeforeMount(async () => {
-  await actorTypeStore.fetchAll();
+  loading.value = true;
+  try {
+    await actorTypeStore.fetchAll();
+    await actorStore.fetchActorsByApplication(props.application.id);
+  } catch {
+    toaster.addErrorMessage("Erreur lors du chargement des informations des acteurs.");
+  } finally {
+    loading.value = false;
+  }
 });
 
 async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
