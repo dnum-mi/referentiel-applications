@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useBreakpoints } from "@/composables/use-breakpoint";
 import type { APP_PERMISSIONS, CreateApplicationWithPerms } from "@/models/Application";
 import { routeNames } from "@/router/route-names";
+import { useMediaQuery } from "@vueuse/core";
 import type { Component } from "vue";
 import { onBeforeMount, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -34,8 +34,7 @@ const activeTab = ref(0);
 const route = useRoute();
 const router = useRouter();
 
-const breakpoints = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX });
-const isMobile = breakpoints.smaller("mobile");
+const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.MOBILE_MAX}px)`);
 
 function updateApplication() {
   emit("update:application");

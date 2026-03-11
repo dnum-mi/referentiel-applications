@@ -12,7 +12,7 @@ import {
 } from "@/composables/use-dictionary";
 import { formatDateFR } from "@/composables/use-date";
 import { filterEmpty } from "@/composables/use-filter-watcher";
-import { useBreakpoints } from "@/composables/use-breakpoint";
+import { useMediaQuery } from "@vueuse/core";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
@@ -30,8 +30,7 @@ const showDetailsModal = ref(false);
 const detailsTitle = ref("");
 const detailsList = ref<{ key: string; label: string; value: string }[]>([]);
 
-const { smaller } = useBreakpoints({ mobile: BREAKPOINTS.SMALL_CARD_MAX }, "max");
-const isMobile = smaller("mobile");
+const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.SMALL_CARD_MAX}px)`);
 
 const types: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
 const labels: Record<ComplianceType, string> = {

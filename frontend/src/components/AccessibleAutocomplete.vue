@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useClickOutside } from "@/composables/use-click-outside";
 import { watchDebounced } from "@vueuse/core";
+import { onClickOutside } from "@vueuse/core";
 import { computed, onMounted, ref } from "vue";
 
 interface Props<T> {
@@ -108,7 +108,7 @@ const liveRegionText = computed(() => {
   return `${results.value.length} résultat${results.value.length > 1 ? "s" : ""} disponible${results.value.length > 1 ? "s" : ""}`;
 });
 
-useClickOutside(inputEl, () => {
+onClickOutside(inputEl, () => {
   showList.value = false;
 });
 </script>

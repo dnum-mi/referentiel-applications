@@ -8,7 +8,7 @@ import type {
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { useDebounceFn } from "@vueuse/core";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 
 export type TechnicalDebtPoint = TechnicalDebtControllerGetTechnicalDebtPointsResponses[200][number];
@@ -188,7 +188,7 @@ export function useApplicationSearch() {
   const route = useRoute();
   const router = useRouter();
 
-  const { run: debouncedSearch } = useDebouncedFn(() => searchApplications(), 300);
+  const debouncedSearch = useDebounceFn(() => searchApplications(), 300);
 
   const filters = ref<Filters>({
     ...DEFAULT_FILTERS,

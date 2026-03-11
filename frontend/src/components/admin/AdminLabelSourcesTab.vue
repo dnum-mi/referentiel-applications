@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
+import { watchDebounced } from "@vueuse/core";
 import type { PaginatedResponseDto } from "@/client/types.gen";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import LabelSourceActions from "./LabelSourceActions.vue";
 import api from "@/api";
-import { debounce } from "@/utils/debouncer-utils";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 
@@ -59,14 +59,14 @@ async function fetchLabelSources() {
   isLoading.value = false;
 }
 
-const debouncedFetch = debounce(async () => {
-  currentPage.value = 0;
-  await fetchLabelSources();
-}, 300);
-
-watch(searchQuery, () => {
-  debouncedFetch();
-});
+watchDebounced(
+  searchQuery,
+  async () => {
+    currentPage.value = 0;
+    await fetchLabelSources();
+  },
+  { debounce: 300 },
+);
 
 watch([sortColumn, isSortDescending], () => {
   currentPage.value = 0;

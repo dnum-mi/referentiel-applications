@@ -1,5 +1,5 @@
 import { useReportStore } from "@/stores/reportStore";
-import { useToggle } from "../use-toggle";
+import { useToggle } from "@vueuse/core";
 
 const useEditedNotes = (notes: MaybeRefOrGetter<string>) => {
   const _notes = toRef(notes);
@@ -21,7 +21,9 @@ const useEditedNotes = (notes: MaybeRefOrGetter<string>) => {
 export const useNotesDialog = (initialNotes: MaybeRefOrGetter<string>, onRefresh: () => void) => {
   const reportStore = useReportStore();
 
-  const { isToggle: isOpen, off: hideDialog, on: openDialog } = useToggle();
+  const [isOpen, toggleDialog] = useToggle(false);
+  const openDialog = () => toggleDialog(true);
+  const hideDialog = () => toggleDialog(false);
 
   const { editedNotes, handleReset } = useEditedNotes(initialNotes);
 

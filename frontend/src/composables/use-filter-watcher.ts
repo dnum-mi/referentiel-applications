@@ -1,8 +1,8 @@
 import { watch } from "vue";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { useDebounceFn } from "@vueuse/core";
 
 export function useFilterWatcher(filters: Record<string, any>, callback: () => void, keysToWatch?: string[]) {
-  const debounced = useDebouncedFn(callback, 300);
+  const debounced = useDebounceFn(callback, 300);
   const keys = keysToWatch || Object.keys(filters);
 
   keys.forEach((key) => {
@@ -11,7 +11,7 @@ export function useFilterWatcher(filters: Record<string, any>, callback: () => v
     watch(
       () => filters[key],
       () => {
-        debounced.run();
+        debounced();
       },
       { deep: isArray },
     );

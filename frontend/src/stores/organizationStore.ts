@@ -2,7 +2,7 @@ import type { OrganizationDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
-import { debounce } from "@/utils/debouncer-utils";
+import { useDebounceFn } from "@vueuse/core";
 
 export const useOrganizationStore = defineStore("organizationStore", () => {
   const organizations = ref<Record<string, OrganizationDto>>({});
@@ -33,7 +33,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
   }
 
   // Debounced batch fetch
-  const debouncedFetch = debounce(async () => {
+  const debouncedFetch = useDebounceFn(async () => {
     const ids = Array.from(pendingIds);
     pendingIds.clear();
 
