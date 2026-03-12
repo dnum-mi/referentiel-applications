@@ -3118,7 +3118,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/LinkSearchResultDto"
       tags: *a17
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
@@ -5364,6 +5364,21 @@ components:
         - id
         - link
         - type
+    LinkSearchResultDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateLinkDto:
       type: object
       properties:

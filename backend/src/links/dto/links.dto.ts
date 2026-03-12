@@ -1,7 +1,7 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { ExternalRessourceType } from "@prisma/client";
 import { IsEnum, IsOptional, IsString } from "class-validator";
-import { PaginationDto } from "src/common/dto";
+import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 
 export class CreateLinkDto {
   @IsString()
@@ -45,3 +45,18 @@ export class LinkDto {
 }
 
 export class LinkFiltersDto extends PaginationDto {}
+
+export class LinkSearchResultDto extends PaginatedResponseDto<LinkDto> {
+  @ApiProperty({
+    description: "Array of results",
+    type: () => LinkDto,
+    isArray: true,
+  })
+  results: LinkDto[];
+
+  @ApiProperty({
+    description: "Total number of items",
+    example: 100,
+  })
+  total: number;
+}

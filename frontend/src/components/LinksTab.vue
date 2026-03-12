@@ -63,12 +63,12 @@ async function fetchLinks(filters: { page?: number; pageSize?: number } = {}) {
     const cleanParams = Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== undefined));
     const response = await api.applicationLinksControllerFindAll({
       path: { applicationId: props.application.id },
-      query: cleanParams as any,
+      query: cleanParams,
     });
-    if (!response.response.ok) {
+    if (!response.response.ok || !response.data) {
       throw new Error("Erreur lors de la récupération des liens.");
     }
-    const responseData = response.data as any;
+    const responseData = response.data;
     links.value = responseData.results ?? [];
     total.value = responseData.total ?? 0;
   } catch {
