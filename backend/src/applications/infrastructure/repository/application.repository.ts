@@ -69,6 +69,7 @@ export class ApplicationRepository implements IApplicationRepository {
       include: {
         currentStatus: true,
         technicalDebtInfo: true,
+        businessDivision: true,
         hostings: {
           include: {
             hostingOption: true,

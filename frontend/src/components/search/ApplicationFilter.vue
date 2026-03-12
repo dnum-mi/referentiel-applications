@@ -22,13 +22,6 @@ const { filters, setFilter } = useApplicationSearch();
       data-testid="application-filter-link"
       @update:model-value="setFilter({ link: $event, page: 0 })"
     />
-    <BusinessDivisionSearch
-      label="Direction de metier MOA principale"
-      :business-division-id="filters.businessDivisionId"
-      :show-label="false"
-      @update="setFilter({ businessDivisionId: $event?.id, page: 0 })"
-    >
-    </BusinessDivisionSearch>
   </div>
 </template>
 
