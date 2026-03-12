@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import type { ComplianceDto } from "@/client/types.gen";
+import type { ComplianceDto, LinkDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
+import api from "@/api/index";
 import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useHostingStore } from "@/stores/hostingStore";
-import { useLinkStore } from "@/stores/linkStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { computed, onMounted, ref } from "vue";
-import api from "@/api/index";
 
 const props = defineProps<{ application: Application }>();
 
@@ -19,15 +18,24 @@ const actorTypeStore = useActorTypeStore();
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 const hostingStore = useHostingStore();
 const hostings = computed(() => hostingStore.hostings);
-const linkStore = useLinkStore();
+const links = ref<LinkDto[]>([]);
 const compliances = ref<ComplianceDto | null>(null);
 
 async function fetchQuality() {
   isLoading.value = true;
   try {
-    await linkStore.fetchLinks(props.application.id);
-    const response = await api.applicationCompliancesControllerFindOne({ path: { applicationId: props.application.id } });
-    compliances.value = response.data ?? null;
+    const [linksResponse, compliancesResponse] = await Promise.all([
+      api.applicationLinksControllerFindAll({
+        path: { applicationId: props.application.id },
+      }),
+      api.applicationCompliancesControllerFindOne({
+        path: { applicationId: props.application.id },
+      }),
+    ]);
+
+    const linksData = linksResponse.data as { results?: LinkDto[] } | undefined;
+    links.value = linksData?.results ?? [];
+    compliances.value = compliancesResponse.data ?? null;
   } catch {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
   } finally {
@@ -47,24 +55,24 @@ function hasCompliance(complianceType: string): boolean {
 
   switch (complianceType.toUpperCase()) {
     case "DIMA":
-      return !!(compliances.value.dima_duration_hours || compliances.value.dima_recovery_manager);
+      return Boolean(compliances.value.dima_duration_hours || compliances.value.dima_recovery_manager);
     case "PDMA":
-      return !!(compliances.value.pdma_duration_hours || compliances.value.pdma_restoration_manager);
+      return Boolean(compliances.value.pdma_duration_hours || compliances.value.pdma_restoration_manager);
     case "HOMOLOGATION":
-      return !!compliances.value.homologation_date_end;
+      return Boolean(compliances.value.homologation_date_end);
     case "RGAA":
-      return !!(compliances.value.rgaa_audit_date || compliances.value.rgaa_score_percentage);
+      return Boolean(compliances.value.rgaa_audit_date || compliances.value.rgaa_score_percentage);
     case "DSFR":
-      return !!(compliances.value.dsfr_implemented !== undefined);
+      return compliances.value.dsfr_implemented !== undefined;
     case "RGPD":
-      return !!(compliances.value.rgpd_has_aipd !== undefined);
+      return compliances.value.rgpd_has_aipd !== undefined;
     default:
       return false;
   }
 }
 
 function hasLink(linkValue: string): boolean {
-  return linkStore.links.some((l) => l.link?.toLowerCase().includes(linkValue.toLowerCase()));
+  return links.value.some((link) => link.link?.toLowerCase().includes(linkValue.toLowerCase()));
 }
 
 // To refactor later
@@ -102,16 +110,7 @@ function getComplianceStatus(complianceType: string): string {
   }
 }
 
-onMounted(async () => {
-  isLoading.value = true;
-  try {
-    await fetchQuality();
-  } catch {
-    toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
-  } finally {
-    isLoading.value = false;
-  }
-});
+onMounted(fetchQuality);
 </script>
 
 <template>
@@ -126,13 +125,13 @@ onMounted(async () => {
       <h4>Général</h4>
       <DsfrHighlight
         data-testid="quality-description"
-        :color="!!props.application.description ? 'green-emeraude' : 'yellow-tournesol'"
+        :color="props.application.description ? 'green-emeraude' : 'yellow-tournesol'"
         :small="true"
       >
-        Description : {{ !!props.application.description ? "oui" : "non" }}
+        Description : {{ props.application.description ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight data-testid="quality-hosting" :color="hostings.length > 0 ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        Hébergement : {{ hostings.length > 0 ? "oui" : "non" }}
+      <DsfrHighlight data-testid="quality-hosting" :color="hostings.length ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+        Hébergement : {{ hostings.length ? "oui" : "non" }}
       </DsfrHighlight>
       <DsfrHighlight data-testid="quality-snapvisu" :color="hasLink('snapvisu') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
         Supervisée : {{ hasLink("snapvisu") ? "oui" : "non" }}
@@ -183,5 +182,3 @@ onMounted(async () => {
 
   <DsfrHighlight :large="true" data-testid="quality-index"> INDICE QUALITE: {{ props.application.quality ?? 0 }}% </DsfrHighlight>
 </template>
-
-<style scoped></style>
