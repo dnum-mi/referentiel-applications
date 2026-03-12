@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.66.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.65.0...v1.66.0) (2026-03-12)
+
+
+### Features
+
+* :sparkles: add automatic validation reminder cron service ([4caed5d](https://github.com/dnum-mi/referentiel-applications/commit/4caed5d55e26f8073dcd67ec9d102ac42600c7cc))
+* :sparkles: add label sources tab for management ([6111104](https://github.com/dnum-mi/referentiel-applications/commit/611110447041bce0cff85cc620b98000c907e6a0))
+* :sparkles: add technicalDebt columns to application table ([#1539](https://github.com/dnum-mi/referentiel-applications/issues/1539)) ([11261f4](https://github.com/dnum-mi/referentiel-applications/commit/11261f4d7af43db78b47f969c24250699ec29f2e))
+* add char min before making search api call ([#1558](https://github.com/dnum-mi/referentiel-applications/issues/1558)) ([9b0d4f0](https://github.com/dnum-mi/referentiel-applications/commit/9b0d4f0976dde5a2b97dea6a654b5f2f642e08b4))
+* add debounce on all filter input in application filter composant and remove useless debt call api on applications page ([#1559](https://github.com/dnum-mi/referentiel-applications/issues/1559)) ([5a56ffe](https://github.com/dnum-mi/referentiel-applications/commit/5a56ffe3eb65012992a71e64922cb56029bf9a48))
+* add stress seed ([#1541](https://github.com/dnum-mi/referentiel-applications/issues/1541)) ([5d6390d](https://github.com/dnum-mi/referentiel-applications/commit/5d6390dffc19c5796197122deace20467ceb9400))
+* add TimePage view and update routing for time diagram ([#1525](https://github.com/dnum-mi/referentiel-applications/issues/1525)) ([1a453af](https://github.com/dnum-mi/referentiel-applications/commit/1a453afa98651fe436d91a208bd450f64ec1d21a))
+* lazy loading admin panel page application ([#1556](https://github.com/dnum-mi/referentiel-applications/issues/1556)) ([47bba30](https://github.com/dnum-mi/referentiel-applications/commit/47bba30dd2b7e1a5d6c293932752f9d2b3418af1))
+* use VueUse instead of custom function ([#1564](https://github.com/dnum-mi/referentiel-applications/issues/1564)) ([46a2ca8](https://github.com/dnum-mi/referentiel-applications/commit/46a2ca8d01bc7a0e5d8101945bbf33d68c23aee1))
+
+
+### Bug Fixes
+
+* :bug: fix homologation end date display and improve the preview function ([025f100](https://github.com/dnum-mi/referentiel-applications/commit/025f100635b9d5314b2166d7048f50fd4656b494))
+* :bug: fix-wording-in-front ([ae43254](https://github.com/dnum-mi/referentiel-applications/commit/ae43254c5495986039b204a18ccd2716b68ad0cc))
+* add clickouside for header list search ([#1553](https://github.com/dnum-mi/referentiel-applications/issues/1553)) ([99712d9](https://github.com/dnum-mi/referentiel-applications/commit/99712d9deaa80289956859b6851de07b7addd496))
+* **admin:** :bug: non admin redirection with admin level ([#1554](https://github.com/dnum-mi/referentiel-applications/issues/1554)) ([7ade5cd](https://github.com/dnum-mi/referentiel-applications/commit/7ade5cd7079873de939cba646eb7e6805c1fa4e1))
+* remove unnecessary transition styles from AppToaster component ([#1544](https://github.com/dnum-mi/referentiel-applications/issues/1544)) ([057872c](https://github.com/dnum-mi/referentiel-applications/commit/057872cb34cac474a75bb3fc308775576bbf3535))
+* update export functionality to include missing hosting and actors fields ([#1560](https://github.com/dnum-mi/referentiel-applications/issues/1560)) ([26cf7ea](https://github.com/dnum-mi/referentiel-applications/commit/26cf7ea96c77d44fe89dcd2af12f621cfe756619))
+* update quadrant labels for clarity ([#1527](https://github.com/dnum-mi/referentiel-applications/issues/1527)) ([735a0c2](https://github.com/dnum-mi/referentiel-applications/commit/735a0c206bb8338ab7853936eefeb03261334de2))
+
 ## [1.65.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.64.1...v1.65.0) (2026-03-02)
 
 
