@@ -6,7 +6,7 @@ import { formatDateFR } from "@/composables/use-date";
 import { homologationStatusDict, restartPrioritiesConfig, statusApplicationDictionary } from "@/composables/use-dictionary";
 import RefAppTable from "./RefAppTable.vue";
 import type { TableSortEvent } from "@/types/table";
-import type { ApplicationStatus } from "@/client/types.gen.js";
+import type { ApplicationStatus, BusinessDivisionDto } from "@/client/types.gen.js";
 
 const { filters, results, total, page, pageSize, setFilter, isLoading } = useApplicationSearch();
 const { tableColumns, setColumnWidth } = useColumnPreferences();
@@ -75,6 +75,11 @@ const getComplianceField = (compliance: any | undefined, field: string): string 
   }
 };
 
+const formatBusinessDivision = (businessDivision?: BusinessDivisionDto): string => {
+  if (!businessDivision) return "-";
+  return businessDivision.label || businessDivision.label;
+};
+
 const applications = computed(() =>
   results.value.map((app: any) => {
     return {
@@ -86,6 +91,7 @@ const applications = computed(() =>
       moaDisplay: formatActors(app.actors, "MOA"),
       moeDisplay: formatActors(app.actors, "MOE"),
       hostingManagerDisplay: formatActors(app.actors, "HEB"),
+      businessDivisionDisplay: formatBusinessDivision(app.businessDivision),
       rsimmDisplay: formatActors(app.actors, "RSSI"),
       dimaDisplay: getComplianceField(app.compliance, "dima"),
       pdmaDisplay: getComplianceField(app.compliance, "pdma"),
@@ -205,6 +211,10 @@ function onColumnResize(event: { field: string; width: string }) {
 
     <template #body-status="{ data }">
       {{ data.statusDisplay }}
+    </template>
+
+    <template #body-businessDivision="{ data }">
+      <span class="multiline-cell">{{ data.businessDivisionDisplay }}</span>
     </template>
   </RefAppTable>
 </template>
