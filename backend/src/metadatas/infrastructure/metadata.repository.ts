@@ -28,6 +28,8 @@ export class MetadataRepository implements IMetadataRepository {
       }
     }
 
+    where.action = { not: "export" };
+
     // Handle sorting
     let orderBy: any = { createdAt: "desc" }; // Default sort
 
