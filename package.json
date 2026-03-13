@@ -3,6 +3,9 @@
   "type": "module",
   "version": "1.66.0",
   "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "format": "prettier . --write",
     "lint": "eslint .",
