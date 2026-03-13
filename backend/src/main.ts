@@ -3,6 +3,7 @@ import type { OidcConfig } from "./config/configs/oidc.config";
 import { Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
+import helmet from "helmet";
 import { Logger as PinoLogger } from "nestjs-pino";
 import { AppModule } from "./app.module";
 import { setupGlobalValidation } from "./config/app-config";
@@ -17,6 +18,7 @@ async function bootstrap() {
 
   app.useLogger(app.get(PinoLogger));
   app.setGlobalPrefix(globalPrefix);
+  app.use(helmet());
 
   const globalLogger = new Logger("Bootstrap");
 
