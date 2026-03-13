@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
-import { watchDebounced } from "@vueuse/core";
 import api from "@/api/index";
-import type { UsersPaginatedResponseDto } from "@/client/types.gen";
-import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
-import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
-import UserActions from "./UserActions.vue";
+import type { PaginatedUserEntity, UserEntity } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
+import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
+import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
+import { watchDebounced } from "@vueuse/core";
+import { computed, onMounted, ref, watch } from "vue";
+import UserActions from "./UserActions.vue";
 
 const errorMessages = {
   ERR_LOAD_USERS: "Erreur lors du chargement des utilisateurs",
@@ -15,7 +15,7 @@ const errorMessages = {
 
 type ErrorKey = keyof typeof errorMessages;
 
-const data = ref<UsersPaginatedResponseDto>({ results: [], total: 0 });
+const data = ref<PaginatedUserEntity>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {

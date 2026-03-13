@@ -22,9 +22,9 @@ import { AdminGuard } from "src/common/guards/admin.guard";
 import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
 import { UserFilterDto } from "./dto/filters.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
+import { PaginatedResponseDto } from "src/common/dto";
 import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
 import { UserService } from "./user.service";
-import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
 @ApiTags("users")
 @Controller("/users")
@@ -121,12 +121,15 @@ export class UserController {
   })
   @ApiOkResponse({
     description: "Liste paginée des utilisateurs",
-    type: PaginatedResponseDto<UserEntity>,
+    type: PaginatedResponseDto.of(UserEntity),
   })
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",
   })
-  async findAll(@Query() filters: UserFilterDto, @User() requestor: Requestor) {
+  async findAll(
+    @Query() filters: UserFilterDto,
+    @User() requestor: Requestor,
+  ): Promise<PaginatedResponseDto<UserEntity>> {
     return this.userService.findAll(filters, requestor);
   }
 }

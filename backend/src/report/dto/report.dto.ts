@@ -2,7 +2,6 @@ import { ApiProperty, PickType } from "@nestjs/swagger";
 import { ReportStatus } from "@prisma/client";
 import { Type } from "class-transformer";
 import { IsString } from "class-validator";
-import { PaginatedResponseDto } from "src/common/dto";
 import { ApplicationDto } from "src/applications/dto/get-application.dto";
 import { UserEntity } from "src/user/entities/user.entity";
 
@@ -49,12 +48,4 @@ export class ReportDto {
 
   @IsString()
   updatedAt: Date;
-}
-
-export class ReportPaginatedResponseDto extends PaginatedResponseDto<ReportDto> {
-  @ApiProperty({
-    type: [ReportDto],
-    description: "Array of reports",
-  })
-  results: ReportDto[];
 }

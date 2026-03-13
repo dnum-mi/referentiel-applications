@@ -78,13 +78,13 @@ export class ApplicationLinksController {
   })
   @ApiOkResponse({
     description: "List of links for the application",
-    type: PaginatedResponseDto<LinkDto>,
+    type: PaginatedResponseDto.of(LinkDto),
   })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   findAll(
     @Param("applicationId") applicationId: string,
     @Query() filters: LinkFiltersDto,
-  ): Promise<PaginatedResponseDto<LinkDto>> {
+  ) {
     return this.service.find({ ...filters, applicationId });
   }
 

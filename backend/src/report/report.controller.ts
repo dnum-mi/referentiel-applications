@@ -23,17 +23,18 @@ import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
 import { AppAction } from "src/common/decorators/application.decorator";
 import { RequiredUserCapability } from "src/common/decorators/user-capability.decorator";
 import { User } from "src/common/decorators/user.decorator";
+import { PaginatedResponseDto } from "src/common/dto";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { ApplicationGuard } from "src/common/guards/application.guard";
 import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
 import { EmailService } from "src/email/email.service";
 import { AdminLevel, Requestor } from "src/user/entities/user.entity";
-import { ReportsService } from "./report.service";
-import { ReportFiltersDto } from "./dto/report-filters.dto";
-import { ReportDto, ReportPaginatedResponseDto } from "./dto/report.dto";
 import { CreateReportRequestDto } from "./dto/create-report.dto";
+import { ReportFiltersDto } from "./dto/report-filters.dto";
 import { UpdateReportNotifyQuery } from "./dto/report-notify-query.dto";
+import { ReportDto } from "./dto/report.dto";
 import { UpdateReportDto } from "./dto/update-report.dto";
+import { ReportsService } from "./report.service";
 import { UserNotificationService } from "./user-notification.service";
 
 @ApiTags("Reports")
@@ -58,7 +59,7 @@ export class ReportsController {
   })
   @ApiOkResponse({
     description: "Liste des signalements",
-    type: ReportPaginatedResponseDto,
+    type: PaginatedResponseDto.of(ReportDto),
   })
   findAll(@Query() filters: ReportFiltersDto, @User() requestor: Requestor) {
     return this.service.findAll(requestor, filters);
@@ -183,13 +184,13 @@ export class ApplicationReportsController {
   })
   @ApiOkResponse({
     description: "Liste paginée des signalements pour l'application",
-    type: ReportPaginatedResponseDto,
+    type: PaginatedResponseDto.of(ReportDto),
   })
   findAll(
     @Query() filters: ReportFiltersDto,
     @User() requestor: Requestor,
     @Param("applicationId") applicationId: string,
-  ): Promise<ReportPaginatedResponseDto> {
+  ) {
     return this.service.findAll(requestor, filters, applicationId);
   }
 

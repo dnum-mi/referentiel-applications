@@ -46,7 +46,7 @@ export class HostingOptionController {
   @ApiOperation({ summary: "Get all hosting options with optional filtering" })
   @ApiOkResponse({
     description: "Paginated list of hosting options",
-    type: PaginatedResponseDto<HostingOptionDto>,
+    type: PaginatedResponseDto.of(HostingOptionDto),
   })
   findAll(@Query() filters: HostingOptionFiltersDto) {
     return this.hostingOptionService.findAllHostingOptions(filters);

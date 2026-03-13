@@ -56,7 +56,11 @@ async function performSearch(query: string) {
           pageSize: 0,
         },
       });
-      return (data as { results: BusinessDivisionDto[] }).results;
+      if (!data || !data.results) {
+        errorMessage.value = "Aucun résultat trouvé.";
+        return [];
+      }
+      return data.results;
     } catch (error) {
       console.error(error);
       errorMessage.value = "Erreur lors de la recherche de direction de metier.";

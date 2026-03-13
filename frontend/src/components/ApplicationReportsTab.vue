@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
-import type { ReportDto, ReportPaginatedResponseDto } from "@/client/types.gen";
+import type { PaginatedReportDto, ReportDto } from "@/client/types.gen";
 import type { CreateApplicationWithPerms } from "@/models/Application";
-import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import RefAppTable from "./RefAppTable.vue";
+import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
+import { computed, onMounted, ref, watch } from "vue";
+import RefAppTable from "./RefAppTable.vue";
 
 const props = defineProps<{ application: CreateApplicationWithPerms }>();
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
 
-const issues = ref<ReportPaginatedResponseDto>({ results: [], total: 0 });
+const issues = ref<PaginatedReportDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 const currentPage = ref(0);
 const pageSize = ref(5);
@@ -42,7 +42,11 @@ async function fetchIssues() {
       path: { applicationId: props.application.id },
       query,
     });
-    issues.value = response.data as ReportPaginatedResponseDto;
+    if (!response.data) {
+      issues.value = { results: [], total: 0 };
+      return;
+    }
+    issues.value = response.data;
   } finally {
     isLoading.value = false;
   }

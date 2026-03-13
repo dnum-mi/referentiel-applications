@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
-import type { TagDto, TagsPaginatedResponseDto } from "@/client/types.gen";
-import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
-import TagActions from "./TagActions.vue";
 import api from "@/api";
+import type { PaginatedTagDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
+import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import { watchDebounced } from "@vueuse/core";
+import { computed, onMounted, ref, watch } from "vue";
+import TagActions from "./TagActions.vue";
 
-const data = ref<TagsPaginatedResponseDto>({ results: [] as TagDto[], total: 0 });
+const data = ref<PaginatedTagDto>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
@@ -60,7 +60,11 @@ async function fetchTags() {
   };
 
   const response = await api.tagsControllerFindAll({ query });
-  data.value = response.data as TagsPaginatedResponseDto;
+  if (!response.data) {
+    isLoading.value = false;
+    return;
+  }
+  data.value = response.data;
 
   isLoading.value = false;
 }

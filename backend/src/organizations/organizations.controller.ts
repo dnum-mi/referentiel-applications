@@ -21,11 +21,11 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Organization } from "@prisma/client";
+import { PaginatedResponseDto } from "src/common/dto";
 import { OrganizationFilterDto } from "./dto/filters.dto";
 import {
   CreateOrganizationDto,
   OrganizationDto,
-  OrganizationSearchResultDto,
   PatchOrganizationDto,
 } from "./dto/organizations.dto";
 import { OrganizationsService } from "./organizations.service";
@@ -113,11 +113,9 @@ Vous devez fournir les informations suivantes :
   })
   @ApiOkResponse({
     description: "Liste des organisations",
-    type: OrganizationSearchResultDto,
+    type: PaginatedResponseDto.of(OrganizationDto),
   })
-  public async findAll(
-    @Query() filters: OrganizationFilterDto,
-  ): Promise<OrganizationSearchResultDto> {
+  public async findAll(@Query() filters: OrganizationFilterDto) {
     return this.organizationService.find(filters);
   }
 

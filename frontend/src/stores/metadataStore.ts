@@ -55,7 +55,7 @@ export const useMetadataStore = defineStore("metadataStore", () => {
     }
 
     // Handle paginated response
-    const responseData = response.data as any;
+    const responseData = response.data;
     metadatas.value = responseData.results ?? [];
     total.value = responseData.total ?? 0;
   };
@@ -77,7 +77,7 @@ export const useMetadataStore = defineStore("metadataStore", () => {
       }
 
       // Handle paginated response
-      const responseData = response.data as any;
+      const responseData = response.data;
       metadatas.value = responseData.results ?? [];
       total.value = responseData.total ?? 0;
     } catch (error) {

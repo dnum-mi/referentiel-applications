@@ -247,9 +247,7 @@ export function useApplicationSearch() {
       }
 
       if (store) {
-        const dataWithAverage = response.data as ApplicationSearchResultDto & {
-          averageIq?: number;
-        };
+        const dataWithAverage = response.data;
         results.value = response.data.results;
         total.value = response.data.total;
         averageIq.value =

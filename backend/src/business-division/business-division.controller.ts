@@ -39,7 +39,7 @@ export class BusinessDivisionController {
   })
   @ApiOkResponse({
     description: "Liste des tags trouvés",
-    type: PaginatedResponseDto<BusinessDivisionDTO>,
+    type: PaginatedResponseDto.of(BusinessDivisionDTO),
   })
   async findAll(@Query() filters: BusinessDivisionFiltersDto) {
     return await this.businessDivisionService.search(filters);

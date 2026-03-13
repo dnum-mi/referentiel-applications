@@ -92,7 +92,7 @@ Information requise :
   })
   @ApiOkResponse({
     description: "Liste des tags trouvés",
-    type: PaginatedResponseDto<TagDto>,
+    type: PaginatedResponseDto.of(TagDto),
   })
   findAll(@Query() filters: TagFiltersDto) {
     return this.tagsService.findAllTags(filters);
