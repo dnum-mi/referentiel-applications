@@ -117,6 +117,14 @@ export class ReportsService {
               mode: "insensitive" as const,
             },
           },
+          {
+            notifier: {
+              email: {
+                contains: searchReport,
+                mode: "insensitive" as const,
+              },
+            },
+          },
         ],
       });
     }
