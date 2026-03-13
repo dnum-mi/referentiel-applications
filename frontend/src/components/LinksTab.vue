@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
-import type { CreateApplicationWithPerms } from "@/models/Application";
-import type { CreateLinkDto, UpdateLinkDto, Link } from "@/client/types.gen";
-import { useLinkStore } from "@/stores/linkStore";
-import useModal from "@/composables/use-modal";
-import LinkForm from "./form/LinkForm.vue";
+import type { CreateLinkDto, Link, UpdateLinkDto } from "@/client/types.gen";
 import { linkTypesDict } from "@/composables/use-dictionary";
-import { useUserStore } from "@/stores/userStore";
+import useModal from "@/composables/use-modal";
+import type { CreateApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
+import { useLinkStore } from "@/stores/linkStore";
 import { useToasterStore } from "@/stores/toasterStore.js";
-import RefAppTable from "./RefAppTable.vue";
+import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
+import { computed, ref, watch } from "vue";
+import LinkForm from "./form/LinkForm.vue";
+import RefAppTable from "./RefAppTable.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -183,6 +183,20 @@ function getCardButtons(link: Link) {
     },
   ];
 }
+
+onMounted(async () => {
+  linkStore.isLoading = true;
+  try {
+    await linkStore.fetchLinks(props.application.id, {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+    });
+  } catch {
+    toaster.addErrorMessage("Erreur lors du chargement des liens.");
+  } finally {
+    linkStore.isLoading = false;
+  }
+});
 </script>
 
 <template>

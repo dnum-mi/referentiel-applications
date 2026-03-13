@@ -1,46 +1,32 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeMount, computed } from "vue";
-import type { Component } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useBreakpoints } from "@/composables/use-breakpoint";
 import type { APP_PERMISSIONS, CreateApplicationWithPerms } from "@/models/Application";
 import { routeNames } from "@/router/route-names";
+import { useMediaQuery } from "@vueuse/core";
+import type { Component } from "vue";
+import { onBeforeMount, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
+import ActorManager from "./actor/ActorTab.vue";
+import ApplicationMetadatasTab from "./ApplicationMetadatasTab.vue";
+import ApplicationReportsTab from "./ApplicationReportsTab.vue";
+import CompliancesAccordionManager from "./compliances/CompliancesAccordionManager.vue";
 import InformationsGenerales from "./InformationsGenerales.vue";
 import Links from "./LinksTab.vue";
-import StatusTab from "./StatusTab.vue";
-import CompliancesAccordionManager from "./compliances/CompliancesAccordionManager.vue";
-import ActorManager from "./actor/ActorTab.vue";
-import Relationships from "./RelationshipsTab.vue";
-import ApplicationReportsTab from "./ApplicationReportsTab.vue";
-import ApplicationMetadatasTab from "./ApplicationMetadatasTab.vue";
 import Quality from "./QualityTab.vue";
+import Relationships from "./RelationshipsTab.vue";
+import StatusTab from "./StatusTab.vue";
 
-import { useActorStore } from "@/stores/actorStore";
-import { useHostingStore } from "@/stores/hostingStore";
-import { useReportStore } from "@/stores/reportStore";
-import type { Tab } from "@/utils/types";
-import { useLinkStore } from "@/stores/linkStore";
-import { useComplianceStore } from "@/stores/complianceStore";
-import { useRelationStore } from "@/stores/relationStore";
-import { useUserStore } from "@/stores/userStore";
-import { AdminLevel } from "@/models/user";
-import { useMetadataStore } from "@/stores/metadataStore";
 import { BREAKPOINTS } from "@/constants/breakpoint";
+import { AdminLevel } from "@/models/user";
+import { useUserStore } from "@/stores/userStore";
+import type { Tab } from "@/utils/types";
 
 const props = defineProps<{ application: CreateApplicationWithPerms }>();
 const emit = defineEmits<{
   (e: "update:application"): void;
   (e: "errorMessage", message: string): void;
 }>();
-const hostingStore = useHostingStore();
 const userStore = useUserStore();
-const actorStore = useActorStore();
-const linkStore = useLinkStore();
-const compliancesStore = useComplianceStore();
-const reportStore = useReportStore();
-const relationsStore = useRelationStore();
-const metadataStore = useMetadataStore();
 
 // Local reactive state
 const application = ref<CreateApplicationWithPerms>(props.application);
@@ -48,44 +34,17 @@ const activeTab = ref(0);
 const route = useRoute();
 const router = useRouter();
 
-const breakpoints = useBreakpoints({ mobile: BREAKPOINTS.MOBILE_MAX });
-const isMobile = breakpoints.smaller("mobile");
+const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.MOBILE_MAX}px)`);
 
 function updateApplication() {
   emit("update:application");
 }
 
-const errorMessages = {
-  ERR_LOAD_HOSTINGS: "Erreur lors du chargement des hébergements",
-  ERR_LOAD_ACTORS: "Erreur lors du chargement des acteurs",
-  ERR_LOAD_METADATA: "Erreur lors du chargement des modifications",
-  ERR_LOAD_LINKS: "Erreur lors du chargement des liens",
-  ERR_LOAD_RELATIONS: "Erreur lors du chargement des relations",
-  ERR_LOAD_COMPLIANCES: "Erreur lors du chargement des conformités",
-} as const;
-
-const fetchLinks = () => linkStore.fetchLinks(application.value.id);
-const fetchCompliances = () => compliancesStore.fetchCompliance(application.value.id);
-const fetchActors = () => actorStore.fetchActorsByApplication(application.value.id);
-const fetchRelations = () => relationsStore.fetchRelationsByApplication(application.value.id);
-
-async function fetchModificationsData() {
-  if (application.value.myPerms.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ) {
-    await metadataStore.fetchMetadatasByApplication(application.value.id, {
-      page: 0,
-      pageSize: 20,
-      sortBy: "createdAt",
-      order: "desc",
-    });
-  }
-}
-
 // Tabs definition — keep the same shape, but ensure errorKey is keyof errorMessages
 const tabs = ref<
-  (Tab<typeof errorMessages> & {
+  (Tab<{}> & {
     component: Component;
     requiredPerms: APP_PERMISSIONS[];
-    errorKey?: keyof typeof errorMessages;
   })[]
 >([
   {
@@ -103,8 +62,6 @@ const tabs = ref<
     panelId: "panel-links",
     component: Links,
     requiredPerms: ["readLinks"],
-    loadFn: fetchLinks,
-    errorKey: "ERR_LOAD_LINKS",
   },
   {
     title: "Conformités",
@@ -113,8 +70,6 @@ const tabs = ref<
     panelId: "panel-compliances",
     component: CompliancesAccordionManager,
     requiredPerms: ["readCompliances"],
-    loadFn: fetchCompliances,
-    errorKey: "ERR_LOAD_COMPLIANCES",
   },
   {
     title: "Acteurs",
@@ -123,8 +78,6 @@ const tabs = ref<
     panelId: "panel-actors",
     component: ActorManager,
     requiredPerms: ["readActors"],
-    loadFn: fetchActors,
-    errorKey: "ERR_LOAD_ACTORS",
   },
   {
     title: "Relations",
@@ -133,8 +86,6 @@ const tabs = ref<
     panelId: "panel-relations",
     component: Relationships,
     requiredPerms: ["readRelations"],
-    loadFn: fetchRelations,
-    errorKey: "ERR_LOAD_RELATIONS",
   },
   {
     title: "Statuts",
@@ -159,8 +110,6 @@ const tabs = ref<
     panelId: "panel-modifications",
     component: ApplicationMetadatasTab,
     requiredPerms: [],
-    loadFn: fetchModificationsData,
-    errorKey: "ERR_LOAD_METADATA",
   },
   {
     title: "Qualité",
@@ -190,25 +139,6 @@ onBeforeMount(async () => {
 
   // clamp activeTab to valid range
   if (activeTab.value >= tabs.value.length) activeTab.value = Math.max(0, tabs.value.length - 1);
-
-  // trigger load functions (they use application.value internally)
-  tabs.value.forEach((tab) => {
-    if (tab.loadFn) {
-      // call and handle error per-tab
-      tab.loadFn().catch((err: unknown) => {
-        console.error(`Error loading ${tab.title}:`, err);
-        const msg = tab.errorKey ? errorMessages[tab.errorKey] : "Erreur de chargement";
-        emit("errorMessage", msg);
-      });
-    }
-  });
-
-  // fetch hostings if allowed
-  if (userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings")) {
-    hostingStore.fetchHostings(application.value.id).catch(() => {
-      emit("errorMessage", errorMessages.ERR_LOAD_HOSTINGS);
-    });
-  }
 });
 
 // keep props -> local ref in sync

@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
 import { useRelationManager, type RelationRow } from "@/composables/use-relation-manager";
 import type { CreateApplicationWithPerms } from "@/models/Application";
-import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import RelationshipGraph from "./RelationShipGraph.vue";
-import RefAppTable from "./RefAppTable.vue";
+import { useRelationStore } from "@/stores/relationStore";
+import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
+import { computed, ref } from "vue";
+import RefAppTable from "./RefAppTable.vue";
+import RelationshipGraph from "./RelationShipGraph.vue";
 
 const props = defineProps<{ application: CreateApplicationWithPerms; isMobile?: boolean }>();
 
+const isLoading = ref(false);
 const userStore = useUserStore();
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeRelations"));
 
@@ -124,11 +126,25 @@ function onPage(event: any) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
 }
+
+const relationsStore = useRelationStore();
+
+onMounted(async () => {
+  isLoading.value = true;
+  try {
+    await relationsStore.fetchRelationsByApplication(props.application.id);
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors du chargement des relations.");
+  } finally {
+    isLoading.value = false;
+  }
+});
 </script>
 
 <template>
+  <AppLoader v-if="isLoading" data-testid="relationship-loader" />
   <!-- Header avec boutons -->
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="relations-header">
+  <div v-else class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="relations-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des relations</h3>
     </div>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
-import { useDebouncedFn } from "@/composables/use-debouncefn";
+import { useDebounceFn, useMediaQuery } from "@vueuse/core";
 
 interface ApplicationOption {
   id: string | number;
@@ -16,18 +16,10 @@ const router = useRouter();
 const { searchApplications } = useApplicationSearch();
 const searchRef = ref<{ clear?: () => void } | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
-const isMobile = ref(window.innerWidth <= 768);
+const isMobile = useMediaQuery("(max-width: 768px)");
 const showInput = ref(!isMobile.value);
 const suggestions = ref<ApplicationOption[]>([]);
 const trimmedQuery = ref("");
-
-function handleResize() {
-  isMobile.value = window.innerWidth <= 768;
-  showInput.value = !isMobile.value;
-}
-
-onMounted(() => window.addEventListener("resize", handleResize));
-onUnmounted(() => window.removeEventListener("resize", handleResize));
 
 async function onLoupeClick() {
   showInput.value = true;
@@ -49,7 +41,7 @@ async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[
   });
 }
 
-const { run: debouncedSearch } = useDebouncedFn(async (resolve: (res: ApplicationOption[]) => void) => {
+const debouncedSearch = useDebounceFn(async (resolve: (res: ApplicationOption[]) => void) => {
   const response = await searchApplications({ search: trimmedQuery.value, page: 0, pageSize: 8 }, false);
 
   suggestions.value = (response?.results ?? []) as ApplicationOption[];

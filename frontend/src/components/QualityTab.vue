@@ -1,37 +1,37 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
+import type { ComplianceDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
 import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useLinkStore } from "@/stores/linkStore";
-import { useComplianceStore } from "@/stores/complianceStore.js";
-import type { ComplianceDto } from "@/client/types.gen";
+import { useToasterStore } from "@/stores/toasterStore";
+import { computed, onMounted, ref } from "vue";
+import api from "@/api/index";
 
 const props = defineProps<{ application: Application }>();
 
 const toaster = useToasterStore();
 
-const loading = ref(false);
+const isLoading = ref(false);
 const actorStore = useActorStore();
 const actorTypeStore = useActorTypeStore();
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 const hostingStore = useHostingStore();
 const hostings = computed(() => hostingStore.hostings);
 const linkStore = useLinkStore();
-const complianceStore = useComplianceStore();
 const compliances = ref<ComplianceDto | null>(null);
 
 async function fetchQuality() {
-  loading.value = true;
+  isLoading.value = true;
   try {
     await linkStore.fetchLinks(props.application.id);
-    compliances.value = await complianceStore.fetchCompliance(props.application.id);
+    const response = await api.applicationCompliancesControllerFindOne({ path: { applicationId: props.application.id } });
+    compliances.value = response.data ?? null;
   } catch {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
   } finally {
-    loading.value = false;
+    isLoading.value = false;
   }
 }
 
@@ -103,7 +103,14 @@ function getComplianceStatus(complianceType: string): string {
 }
 
 onMounted(async () => {
-  fetchQuality();
+  isLoading.value = true;
+  try {
+    await fetchQuality();
+  } catch {
+    toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
+  } finally {
+    isLoading.value = false;
+  }
 });
 </script>
 
@@ -113,7 +120,7 @@ onMounted(async () => {
       <h2 class="fr-mb-0" data-testid="quality-title">Informations de qualité</h2>
     </div>
   </div>
-  <AppLoader v-if="loading" data-testid="quality-loader" />
+  <AppLoader v-if="isLoading" data-testid="quality-loader" />
   <div v-else class="fr-grid-row fr-grid-row--gutters">
     <div class="fr-col-12 fr-col-md-4" data-testid="quality-general">
       <h4>Général</h4>
