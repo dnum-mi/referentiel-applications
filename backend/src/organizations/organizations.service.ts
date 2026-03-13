@@ -3,11 +3,21 @@ import { Organization, Prisma } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { OrganizationFilterDto } from "./dto/filters.dto";
-import { CreateOrganizationDto } from "./dto/organizations.dto";
+import {
+  CreateOrganizationDto,
+  OrganizationSearchResultDto,
+} from "./dto/organizations.dto";
+import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 
 @Injectable()
-export class OrganizationsService extends BaseService<Organization> {
-  constructor(prisma: PrismaService) {
+export class OrganizationsService extends BaseService<
+  Organization,
+  Prisma.OrganizationDelegate
+> {
+  constructor(
+    prisma: PrismaService,
+    private readonly queryBuilder: PrismaQueryBuilder,
+  ) {
     super(prisma.organization, prisma);
   }
 
@@ -21,63 +31,12 @@ export class OrganizationsService extends BaseService<Organization> {
     return newOrg;
   }
 
-  async find(filters: OrganizationFilterDto): Promise<Organization[]> {
-    if (filters.search) {
-      const where: { AND: Prisma.OrganizationWhereInput[] } = {
-        AND: [
-          {
-            OR: [
-              { path: { contains: filters.search, mode: "insensitive" } },
-              { sigle: { contains: filters.search, mode: "insensitive" } },
-              { url: { contains: filters.search, mode: "insensitive" } },
-            ],
-          },
-        ],
-      };
-
-      if (filters.usedOnly) {
-        where.AND.push({
-          OR: [{ actors: { some: {} } }, { users: { some: {} } }],
-        });
-      }
-
-      return this.prisma.organization.findMany({
-        where,
-      });
-    }
-
-    // si aucun ID n'est fourni, on retourne les organisations racines
-    if (!filters.ids || filters.ids.length === 0) {
-      return this.prisma.organization.findMany({
-        where: { parentId: null },
-      });
-    }
-
-    // sinon, on retourne les organisations correspondant aux IDs fournis
-    // et on peut filtrer par ancêtres ou descendants si nécessaire
-
-    const where: Prisma.OrganizationClosureWhereInput = {
-      descendantId: { in: filters.ids },
-    };
-    if (filters.withAncestors) {
-      where.descendantId = { in: filters.ids };
-    }
-    if (filters.withChildren) {
-      where.ancestorId = { in: filters.ids };
-    }
-
-    const closures = await this.prisma.organizationClosure.findMany({
-      where,
-      select: { ancestor: true, descendant: true },
-    });
-
-    return Object.values(
-      closures.reduce((acc, relation) => {
-        acc[relation.ancestor.id] = relation.ancestor;
-        acc[relation.descendant.id] = relation.descendant;
-        return acc;
-      }, {}),
-    );
+  async find(
+    filters: OrganizationFilterDto,
+  ): Promise<OrganizationSearchResultDto> {
+    const { page, pageSize } = filters;
+    const where = this.queryBuilder.buildSearchWhere(filters);
+    return this.findAll({ where, page, pageSize });
   }
 
   async update(
