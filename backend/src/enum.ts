@@ -27,6 +27,7 @@ export enum ExternalRessourceType {
   SUPERVISION = "supervision",
   SERVICE = "service",
   AUDIENCE_METRICS = "Mesure d'audience",
+  MAIN_SERVICE = "Service principal",
 }
 
 export enum RelationType {

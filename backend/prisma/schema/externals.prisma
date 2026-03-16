@@ -30,4 +30,6 @@ enum ExternalRessourceType {
   service
   /// Métriques d'audience/analytics
   audience_metrics
+  ///
+  main_service
 }
