@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { Organization, Prisma } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
+import { PaginatedResponseDto } from "src/common/dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { OrganizationFilterDto } from "./dto/filters.dto";
 import {
   CreateOrganizationDto,
-  OrganizationSearchResultDto,
+  OrganizationDto,
 } from "./dto/organizations.dto";
 import { PrismaQueryBuilder } from "./prisma-query-builder.service";
 
@@ -33,7 +34,7 @@ export class OrganizationsService extends BaseService<
 
   async find(
     filters: OrganizationFilterDto,
-  ): Promise<OrganizationSearchResultDto> {
+  ): Promise<PaginatedResponseDto<OrganizationDto>> {
     const { page, pageSize } = filters;
     const where = this.queryBuilder.buildSearchWhere(filters);
     return this.findAll({ where, page, pageSize });

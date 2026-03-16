@@ -229,7 +229,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedMetadataDto"
       tags: &a2
         - Metadatas
   /api/v2/applications/{applicationId}/metadatas/first-last:
@@ -310,7 +310,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedMetadataDto"
       tags: &a3
         - Metadatas
   /api/v2/metadatas/{id}:
@@ -511,7 +511,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedUserEntity"
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a4
@@ -1572,7 +1572,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedTagDto"
       tags: *a7
   /api/v2/tags/{id}:
     get:
@@ -1710,7 +1710,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedBusinessDivisionDTO"
       tags: &a8
         - Business Division
   /api/v2/business-division/{id}:
@@ -2070,7 +2070,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReportPaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedReportDto"
       tags: &a11
         - Reports
     post:
@@ -2209,7 +2209,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReportPaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedReportDto"
       tags: *a12
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
@@ -2504,7 +2504,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OrganizationSearchResultDto"
+                $ref: "#/components/schemas/PaginatedOrganizationDto"
       tags: *a13
   /api/v2/organizations/{id}:
     get:
@@ -2644,7 +2644,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedActorTypeDto"
       tags: *a14
   /api/v2/actorTypes/perms-matrix:
     get:
@@ -2850,7 +2850,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedActorDto"
       tags: *a15
   /api/v2/applications/{applicationId}/actors/{id}:
     get:
@@ -3030,7 +3030,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedHostingOptionDto"
       tags: *a16
   /api/v2/hosting-options/{id}:
     patch:
@@ -3150,7 +3150,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedLinkDto"
       tags: *a17
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
@@ -3284,7 +3284,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedResponseDto"
+                $ref: "#/components/schemas/PaginatedLabelSourceDto"
       tags: *a18
   /api/v2/label-sources/{id}:
     patch:
@@ -4079,21 +4079,6 @@ components:
         - nodes
         - edges
         - rootId
-    PaginatedResponseDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            type: array
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     MetadataAction:
       type: string
       description: Action effectuée sur la metadata
@@ -4290,6 +4275,21 @@ components:
         - hostingId
         - labelId
         - createdBy
+    PaginatedMetadataDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/MetadataDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     FirstLastMetadataDto:
       type: object
       properties:
@@ -4335,6 +4335,21 @@ components:
           type: string
           nullable: true
           description: ID de l'organisation
+    PaginatedUserEntity:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/UserEntity"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     ApplicationPriorityRestart:
       type: string
       enum:
@@ -4697,6 +4712,21 @@ components:
         - id
         - name
         - createdAt
+    PaginatedTagDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/TagDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateTagDto:
       type: object
       properties:
@@ -4706,6 +4736,21 @@ components:
           maxLength: 128
           description: Nom unique du tag
           example: securite
+    PaginatedBusinessDivisionDTO:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessDivisionDTO"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     CreateHostingDto:
       type: object
       properties:
@@ -4977,11 +5022,11 @@ components:
         - notifierId
         - description
         - updatedAt
-    ReportPaginatedResponseDto:
+    PaginatedReportDto:
       type: object
       properties:
         results:
-          description: Array of reports
+          description: Array of results
           type: array
           items:
             $ref: "#/components/schemas/ReportDto"
@@ -5065,17 +5110,17 @@ components:
           description: L'identifiant de l'organisation parente
       required:
         - path
-    OrganizationSearchResultDto:
+    PaginatedOrganizationDto:
       type: object
       properties:
         results:
-          description: Organizations matching the search criteria
+          description: Array of results
           type: array
           items:
             $ref: "#/components/schemas/OrganizationDto"
         total:
           type: number
-          description: Total number of organizations matching the search criteria
+          description: Total number of items
           example: 100
       required:
         - results
@@ -5200,6 +5245,21 @@ components:
         - readReports
         - postReports
         - manageReports
+    PaginatedActorTypeDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/ActorTypeDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     PatchActorTypeDto:
       type: object
       properties:
@@ -5283,6 +5343,21 @@ components:
       required:
         - actorTypeId
         - id
+    PaginatedActorDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/ActorDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateActorDto:
       type: object
       properties:
@@ -5339,6 +5414,21 @@ components:
         - site
         - platform
         - provider
+    PaginatedHostingOptionDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/HostingOptionDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateHostingOptionDto:
       type: object
       properties:
@@ -5414,6 +5504,21 @@ components:
         - id
         - link
         - type
+    PaginatedLinkDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateLinkDto:
       type: object
       properties:
@@ -5448,6 +5553,21 @@ components:
       required:
         - source
         - id
+    PaginatedLabelSourceDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelSourceDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     UpdateLabelSourceDto:
       type: object
       properties:

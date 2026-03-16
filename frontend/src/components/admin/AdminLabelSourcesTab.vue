@@ -54,8 +54,11 @@ async function fetchLabelSources() {
   };
 
   const response = await api.labelSourceControllerFindAll({ query });
-  data.value = response.data as PaginatedResponseDto;
-
+  if (!response.data?.results) {
+    isLoading.value = false;
+    return;
+  }
+  data.value = response.data;
   isLoading.value = false;
 }
 

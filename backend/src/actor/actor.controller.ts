@@ -22,8 +22,8 @@ import {
 } from "@nestjs/swagger";
 import { Actor } from "@prisma/client";
 import { AppAction } from "src/common/decorators/application.decorator";
+import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 import { ApplicationGuard } from "src/common/guards/application.guard";
-import { PaginatedResponseDto } from "src/common/dto";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ActorService } from "./actor.service";
 import {
@@ -115,7 +115,7 @@ Informations requises :
   @ApiOperation({ summary: "Récupérer tous les acteurs" })
   @ApiOkResponse({
     description: "Liste des acteurs trouvés",
-    type: PaginatedResponseDto<ActorDto>,
+    type: PaginatedResponseDto.of(ActorDto),
   })
   async findAll(
     @Param("applicationId") applicationId: string,

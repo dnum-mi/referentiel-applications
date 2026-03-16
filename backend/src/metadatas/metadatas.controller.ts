@@ -24,11 +24,9 @@ export class MetadatasController {
   @ApiOperation({ summary: "Récupérer toutes les metadatas" })
   @ApiOkResponse({
     description: "Récupérer toutes les metadatas",
-    type: PaginatedResponseDto<MetadataDto>,
+    type: PaginatedResponseDto.of(MetadataDto),
   })
-  find(
-    @Query() filters: MetadataFiltersDto,
-  ): Promise<PaginatedResponseDto<MetadataDto>> {
+  find(@Query() filters: MetadataFiltersDto) {
     return this.metadataService.find(filters);
   }
 
@@ -59,12 +57,12 @@ export class ApplicationMetadatasController {
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiOkResponse({
     description: "Liste des metadatas",
-    type: PaginatedResponseDto<MetadataDto>,
+    type: PaginatedResponseDto.of(MetadataDto),
   })
   find(
     @Param("applicationId") applicationId: string,
     @Query() filters: MetadataFiltersDto,
-  ): Promise<PaginatedResponseDto<MetadataDto>> {
+  ) {
     return this.metadataService.find({ ...filters, applicationId });
   }
 

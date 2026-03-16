@@ -20,7 +20,7 @@ export const useActorTypeStore = defineStore("actorTypeStore", () => {
       if (!response.data) {
         throw new Error("Aucun type d'acteur trouvé");
       }
-      const responseData = response.data as { results: ActorTypeDto[] };
+      const responseData = response.data;
       actorTypes.value = responseData.results;
     } catch (err: any) {
       console.error("❌ Erreur lors du chargement des types d'acteurs :", err);
