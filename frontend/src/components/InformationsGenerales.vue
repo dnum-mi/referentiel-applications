@@ -6,7 +6,6 @@ import useModal from "@/composables/use-modal";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
 import { useHostingStore } from "@/stores/hostingStore";
-import { useLabelStore } from "@/stores/labelStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
@@ -35,8 +34,8 @@ const labelToDelete = ref<LabelDto | null>(null);
 const isDeleteModalOpen = ref(false);
 const isDeleteLabelModalOpen = ref(false);
 const hostingStore = useHostingStore();
-const labelStore = useLabelStore();
 const userStore = useUserStore();
+const labels = ref<LabelDto[]>([]);
 const canEditBase = computed(
   () =>
     userStore.adminLevel >= AdminLevel.WRITE ||
@@ -81,10 +80,19 @@ const application = ref<ApplicationWithPerms>({
 
 const isLoading = ref(false);
 
+async function fetchLabels(applicationId: string) {
+  const response = await api.labelsControllerFindAllSorted({ path: { applicationId } });
+  if (!response.response.ok) {
+    toaster.addErrorMessage("Erreur lors de la récupération des noms alternatifs");
+    throw new Error(`Failed to fetch labels: ${response.response.statusText}`);
+  }
+  labels.value = response.data ?? [];
+}
+
 onMounted(async () => {
   isLoading.value = true;
   try {
-    const promises = [labelStore.fetchLabels(application.value.id), fetchTechnicalDebtInfo()];
+    const promises = [fetchLabels(application.value.id), fetchTechnicalDebtInfo()];
     // fetch hostings if allowed
     if (userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings")) {
       promises.push(hostingStore.fetchHostings(application.value.id));
@@ -206,9 +214,16 @@ function openDeleteLabelModal(label: LabelDto) {
 async function confirmDeletionLabel() {
   if (!labelToDelete.value) return;
   try {
-    await labelStore.deleteLabel(application.value.id, labelToDelete.value.id);
-  } catch (error) {
-    console.error(error);
+    const response = await api.labelsControllerDelete({
+      path: { applicationId: application.value.id, id: labelToDelete.value.id },
+    });
+    if (!response.response.ok) {
+      toaster.addErrorMessage("Erreur lors de la suppression du nom alternatif");
+      throw new Error(`Failed to delete label: ${response.response.statusText}`);
+    }
+    await fetchLabels(application.value.id);
+    toaster.addSuccessMessage("Nom alternatif supprimé avec succès");
+  } catch {
     errorMessage.value = "Erreur lors de la suppression du nom alternatif";
   } finally {
     labelToDelete.value = null;
@@ -368,7 +383,7 @@ watch(
                 />
               </div>
             </div>
-            <LabelList :labels="labelStore.labels" :can-edit="canEditBase" @edit="openEditLabel" @delete="openDeleteLabelModal" />
+            <LabelList :labels="labels" :can-edit="canEditBase" @edit="openEditLabel" @delete="openDeleteLabelModal" />
           </div>
         </div>
       </div>
@@ -414,7 +429,14 @@ watch(
     :initial-label="labelToEdit"
     :error-message="errorMessage"
     @close="isLabelModalOpen = false"
-    @labelCreated="isLabelModalOpen = false"
+    @labelCreated="
+      fetchLabels(application.id);
+      isLabelModalOpen = false;
+    "
+    @labelUpdated="
+      fetchLabels(application.id);
+      isLabelModalOpen = false;
+    "
   />
   <DeleteConfirmationModal
     v-if="isDeleteLabelModalOpen"

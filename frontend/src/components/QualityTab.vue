@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { ComplianceDto, LinkDto } from "@/client/types.gen";
+import type { ActorDto, ComplianceDto, LinkDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
 import api from "@/api/index";
-import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -13,7 +12,7 @@ const props = defineProps<{ application: Application }>();
 const toaster = useToasterStore();
 
 const isLoading = ref(false);
-const actorStore = useActorStore();
+const actors = ref<ActorDto[]>([]);
 const actorTypeStore = useActorTypeStore();
 const actorTypesList = computed(() => actorTypeStore.actorTypes);
 const hostingStore = useHostingStore();
@@ -24,7 +23,11 @@ const compliances = ref<ComplianceDto | null>(null);
 async function fetchQuality() {
   isLoading.value = true;
   try {
-    const [linksResponse, compliancesResponse] = await Promise.all([
+    const [actorsResponse, linksResponse, compliancesResponse] = await Promise.all([
+      api.applicationActorsControllerFindAll({
+        path: { applicationId: props.application.id },
+        query: { pageSize: 0 },
+      }),
       api.applicationLinksControllerFindAll({
         path: { applicationId: props.application.id },
       }),
@@ -33,7 +36,9 @@ async function fetchQuality() {
       }),
     ]);
 
-    const linksData = linksResponse.data as { results?: LinkDto[] } | undefined;
+    const actorsData = actorsResponse.data;
+    actors.value = actorsData?.results ?? [];
+    const linksData = linksResponse.data;
     links.value = linksData?.results ?? [];
     compliances.value = compliancesResponse.data ?? null;
   } catch {
@@ -44,7 +49,7 @@ async function fetchQuality() {
 }
 
 function hasActorType(typeCode: string): boolean {
-  return actorStore.actors.some((actor) => {
+  return actors.value.some((actor) => {
     const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
     return type?.code === typeCode;
   });

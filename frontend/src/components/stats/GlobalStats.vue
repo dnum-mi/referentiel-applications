@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from "vue";
-import { useActorStore } from "@/stores/actorStore";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useStatisticsStore } from "@/stores/statisticsStore";
+import api from "@/api/index";
 
 const actorsNb = ref(0);
 const compliancesNb = ref(0);
@@ -11,8 +11,6 @@ const isLoading = ref(false);
 const errorMessage = ref("");
 
 const statisticStore = useStatisticsStore();
-const statsStore = useStatisticsStore();
-const actorStore = useActorStore();
 const hostingStore = useHostingStore();
 
 const datasGroup = computed(() => [
@@ -26,8 +24,9 @@ async function loadStats() {
   isLoading.value = true;
   try {
     await statisticStore.countApplications();
-    actorsNb.value = await actorStore.countActors();
-    compliancesNb.value = await statsStore.countCompliances();
+    const actorsResponse = await api.actorControllerCountAllActors();
+    actorsNb.value = actorsResponse.data ?? 0;
+    compliancesNb.value = await statisticStore.countCompliances();
     hostingsNb.value = await hostingStore.countHostings();
   } catch (error) {
     errorMessage.value = `Erreur lors du chargement des données : ${error}`;
