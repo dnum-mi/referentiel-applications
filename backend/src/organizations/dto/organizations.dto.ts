@@ -74,4 +74,13 @@ export class OrganizationDto {
   })
   @IsString()
   parentId: string | null;
+
+  @ApiProperty({
+    example: "f09ed26a-8415-476a-be3b-ada479291c34",
+    description: "L'identifiant de la direction métier associée",
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  businessDivisionId: string | null;
 }

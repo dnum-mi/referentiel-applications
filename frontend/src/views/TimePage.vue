@@ -5,13 +5,19 @@ import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
 import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
 import { watchDebounced } from "@vueuse/core";
+import { useUserStore } from "@/stores/userStore";
 
-const { filters, fetchTechnicalDebtPoints } = useApplicationSearch();
+const { filters, setFilter, fetchTechnicalDebtPoints } = useApplicationSearch();
+const userStore = useUserStore();
 
 const technicalDebtPoints = ref<TechnicalDebtPoint[]>([]);
 const isTechnicalDebtLoading = ref(false);
 
 onMounted(() => {
+  const businessDivisionId = userStore.getBusinessDivisionId();
+  if (businessDivisionId && !filters.value.businessDivisionId) {
+    setFilter({ businessDivisionId });
+  }
   loadTechnicalDebtPoints();
 });
 
