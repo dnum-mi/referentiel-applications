@@ -1,10 +1,10 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { ExternalRessourceType } from "@prisma/client";
-import { IsEnum, IsOptional, IsString } from "class-validator";
+import { IsEnum, IsOptional, IsString, IsUrl } from "class-validator";
 import { PaginationDto } from "src/common/dto";
 
 export class CreateLinkDto {
-  @IsString()
+  @IsUrl()
   @ApiProperty({ description: "The URL of the link" })
   link: string;
 

@@ -71,6 +71,7 @@ export const linkTypesDict = {
   supervision: "Supervision",
   service: "Service",
   audience_metrics: "Mesure d'audience",
+  main_service: "Service principal",
 };
 
 export const eventTypesArray = [

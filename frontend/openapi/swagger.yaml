@@ -5326,6 +5326,7 @@ components:
         - supervision
         - service
         - audience_metrics
+        - main_service
     CreateLinkDto:
       type: object
       properties:
@@ -5356,6 +5357,7 @@ components:
             - supervision
             - service
             - audience_metrics
+            - main_service
           description: Type of the external resource
         description:
           type: string

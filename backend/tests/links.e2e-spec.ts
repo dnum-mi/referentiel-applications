@@ -41,6 +41,30 @@ describe("Links", () => {
       .expect(201);
   });
 
+  it("/POST applications/:applicationId/links with main_service type", async () => {
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/links`)
+      .send({
+        type: "main_service",
+        link: "https://main-service.example.com",
+        description: "Service principal",
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+  });
+
+  it("/POST applications/:applicationId/links rejects invalid URL", async () => {
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/links`)
+      .send({
+        type: "documentation",
+        link: "not-a-valid-url",
+        description: "Bad link",
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(400);
+  });
+
   it("/PATCH applications/:applicationId/links/:id", async () => {
     const link = await LinkFaker.create(application, user);
 

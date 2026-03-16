@@ -32,6 +32,7 @@ export const ExternalRessourceTypeLabels: Record<string, string> = {
   supervision: "Supervision",
   service: "Service externe",
   audience_metrics: "Métriques d’audience",
+  main_service: "Service principal",
 };
 
 export const NatureLabels: Record<string, string> = {
