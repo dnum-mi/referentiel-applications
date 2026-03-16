@@ -76,6 +76,14 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     requiredPermissions: ["readActors"],
   },
   {
+    field: "businessDivision",
+    header: "Direction métier",
+    sortable: true,
+    defaultWidth: "120px",
+    visible: false,
+    alwaysAvailable: true,
+  },
+  {
     field: "rsimm",
     header: "RSIMM",
     sortable: false,

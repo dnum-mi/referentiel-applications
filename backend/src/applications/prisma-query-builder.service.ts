@@ -509,6 +509,7 @@ export class PrismaQueryBuilder {
       priorityRestart: { priorityRestart: safeOrder },
       quality: { quality: safeOrder },
       label: { label: safeOrder },
+      businessDivision: { label: safeOrder },
       applicationViews: {
         applicationViews: {
           _count: safeOrder,

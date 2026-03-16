@@ -2430,6 +2430,40 @@ paths:
       summary: Récupérer toutes les organisations
       description: Ce endpoint permet de récupérer la liste de toutes les organisations.
       parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 50
+            example: 50
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
         - name: withChildren
           required: false
           in: query
@@ -2470,9 +2504,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/OrganizationDto"
+                $ref: "#/components/schemas/OrganizationSearchResultDto"
       tags: *a13
   /api/v2/organizations/{id}:
     get:
@@ -4069,6 +4101,7 @@ components:
         - add
         - update
         - delete
+        - export
     ApplicationLightDto:
       type: object
       properties:
@@ -5032,6 +5065,21 @@ components:
           description: L'identifiant de l'organisation parente
       required:
         - path
+    OrganizationSearchResultDto:
+      type: object
+      properties:
+        results:
+          description: Organizations matching the search criteria
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationDto"
+        total:
+          type: number
+          description: Total number of organizations matching the search criteria
+          example: 100
+      required:
+        - results
+        - total
     PatchOrganizationDto:
       type: object
       properties:

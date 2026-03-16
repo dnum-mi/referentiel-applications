@@ -1,5 +1,6 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { IsOptional, IsString } from "class-validator";
+import { PaginatedResponseDto } from "src/common/dto";
 
 export class CreateOrganizationDto {
   @ApiProperty({
@@ -74,4 +75,19 @@ export class OrganizationDto {
   })
   @IsString()
   parentId: string | null;
+}
+
+export class OrganizationSearchResultDto extends PaginatedResponseDto<OrganizationDto> {
+  @ApiProperty({
+    description: "Organizations matching the search criteria",
+    type: () => OrganizationDto,
+    isArray: true,
+  })
+  results: OrganizationDto[];
+
+  @ApiProperty({
+    description: "Total number of organizations matching the search criteria",
+    example: 100,
+  })
+  total: number;
 }
