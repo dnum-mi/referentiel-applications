@@ -5,6 +5,7 @@
 - [Applications](#applications)
 - [BusinessDivision](#businessdivision)
 - [Compliance](#compliance)
+- [EcoIndex](#ecoindex)
 - [Hosting](#hosting)
 - [Labels](#labels)
 - [Metadata](#metadata)
@@ -324,6 +325,33 @@ Properties as follows:
 - `dsfr_version`: DSFR : Version du Système de Design de l'État utilisée
 - `rgpd_has_aipd`: RGPD : Si une Analyse d'Impact sur la Protection des Données existe
 - `rgpd_dpo_name`: RGPD : Nom du Délégué à la Protection des Données
+
+## EcoIndex
+
+```mermaid
+erDiagram
+"ecoEnergy" {
+  String id PK
+  String applicationId FK
+  Float indice
+  Float ges
+  Float water
+  DateTime date_scan
+}
+```
+
+### `ecoEnergy`
+
+Stocke les résultats des analyses Éco-index d'une application.
+
+Properties as follows:
+
+- `id`: Identifiant unique du score Éco-index
+- `applicationId`: Identifiant de l'application analysée
+- `indice`: Score global Éco-index
+- `ges`: Émissions de CO2 (en grammes équivalent CO2)
+- `water`: Consommation d'eau (en centilitres)
+- `date_scan`: Horodatage du calcul
 
 ## Hosting
 
