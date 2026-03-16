@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import type { CreateLinkDto, Link, UpdateLinkDto } from "@/client/types.gen";
+import type { CreateLinkDto, LinkDto, UpdateLinkDto } from "@/client/types.gen";
 import { linkTypesDict } from "@/composables/use-dictionary";
 import useModal from "@/composables/use-modal";
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
-import { useLinkStore } from "@/stores/linkStore";
+import api from "@/api/index.js";
 import { useToasterStore } from "@/stores/toasterStore.js";
 import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import LinkForm from "./form/LinkForm.vue";
 import RefAppTable from "./RefAppTable.vue";
 
 const props = withDefaults(
   defineProps<{
-    application: CreateApplicationWithPerms;
+    application: ApplicationWithPerms;
     isMobile?: boolean;
   }>(),
   {
@@ -22,65 +22,71 @@ const props = withDefaults(
   },
 );
 
-const linkStore = useLinkStore();
 const userStore = useUserStore();
-const linkModal = useModal<Link>();
+
+const linkModal = useModal();
+const links = ref<LinkDto[]>([]);
+const total = ref(0);
+const isLoading = ref(false);
 const toaster = useToasterStore();
 
-const selectedLinkIds = ref<string[]>([]);
-const showDeleteConfirmation = ref(false);
 const isSubmitting = ref(false);
+const linkToDelete = ref<string | null>(null);
+const showDeleteConfirmation = ref(false);
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeLinks"));
 
 const currentPage = ref(0);
 const pageSize = ref(15);
 const firstIndex = computed(() => currentPage.value * pageSize.value);
 
-const errorMessage = ref("");
-
 const getTypeLabel = (type: string) => (linkTypesDict as Record<string, string>)[type] || "Type inconnu";
 
 const tableColumns: TableColumn[] = [
-  { field: "selection", header: "Sélection", sortable: false },
   { field: "lien", header: "Lien", sortable: false },
   { field: "description", header: "Description", sortable: false },
   { field: "typeDeLien", header: "Type de lien", sortable: false },
   { field: "actions", header: "Actions", sortable: false },
 ];
 
-watch(
-  () => props.isMobile,
-  (isMobile) => {
-    if (isMobile) selectedLinkIds.value = [];
-  },
-);
-
 function onPage(event: any) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
-  linkStore.fetchLinks(props.application.id, {
+  fetchLinks({
     page: currentPage.value,
     pageSize: pageSize.value,
   });
 }
 
-watch([currentPage, pageSize], () => {
-  linkStore.fetchLinks(props.application.id, {
-    page: currentPage.value,
-    pageSize: pageSize.value,
-  });
-});
+async function fetchLinks(filters: { page?: number; pageSize?: number } = {}) {
+  try {
+    isLoading.value = true;
+    const cleanParams = Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== undefined));
+    const response = await api.applicationLinksControllerFindAll({
+      path: { applicationId: props.application.id },
+      query: cleanParams as any,
+    });
+    if (!response.response.ok) {
+      throw new Error("Erreur lors de la récupération des liens.");
+    }
+    const responseData = response.data as any;
+    links.value = responseData.results ?? [];
+    total.value = responseData.total ?? 0;
+  } catch {
+    toaster.addErrorMessage("Erreur lors de la récupération des liens.");
+    throw new Error("Erreur lors de la récupération des liens.");
+  } finally {
+    isLoading.value = false;
+  }
+}
 
-// Amélioration 1 : Remplacer 'rows' par un tableau d'objets avec noms de champs normalisés
 const rows = computed(() =>
-  linkStore.links.map((link) => ({
+  links.value.map((link) => ({
     id: link.id,
-    selection: link.id, // Utilisé pour le v-model de checkboxes
     lien: { label: link.link || "Lien vide", to: link.link },
     description: link.description || "Description vide",
     typeDeLien: getTypeLabel(link.type),
     actions: {
-      edit: () => linkModal.openModal(link), // Action pour le bouton
+      edit: () => linkModal.openModal(link),
     },
   })),
 );
@@ -88,10 +94,13 @@ const rows = computed(() =>
 async function createLink(newLink: CreateLinkDto) {
   try {
     isSubmitting.value = true;
-    await linkStore.createLink(props.application.id, newLink);
+    const response = await api.applicationLinksControllerCreate({ path: { applicationId: props.application.id }, body: newLink });
+    if (!response.response.ok || !response.data) {
+      throw new Error("Erreur lors de la création du lien.");
+    }
+    toaster.addSuccessMessage("Lien créé avec succès !");
     linkModal.closeModal();
-    // Amélioration 3 : 'emit' supprimé
-    await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
+    await fetchLinks({ page: currentPage.value, pageSize: pageSize.value });
   } finally {
     isSubmitting.value = false;
   }
@@ -100,61 +109,64 @@ async function createLink(newLink: CreateLinkDto) {
 async function editLink(updatedLink: UpdateLinkDto) {
   try {
     isSubmitting.value = true;
-    // Amélioration 2 : 'selectedItem' est maintenant typé
-    const selectedItem = linkModal.selectedItem.value;
+    const selectedItem = linkModal.selectedItem.value as LinkDto | null;
     if (!selectedItem?.id) {
       throw new Error("Aucun élément sélectionné pour la modification.");
     }
-
-    await linkStore.updateLink(props.application.id, {
-      id: selectedItem.id,
-      ...updatedLink,
+    // Filter to only include update fields (link, type, description)
+    const updateDto: UpdateLinkDto = {
+      link: updatedLink.link,
+      type: updatedLink.type,
+      description: updatedLink.description,
+    };
+    const response = await api.applicationLinksControllerUpdate({
+      path: { applicationId: props.application.id, id: selectedItem.id },
+      body: updateDto,
     });
+    if (!response.response.ok || !response.data) {
+      throw new Error("Erreur lors de la modification du lien.");
+    }
+    toaster.addSuccessMessage("Lien modifié avec succès !");
     linkModal.closeModal();
-    // Amélioration 3 : 'emit' supprimé
-    await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
+    await fetchLinks({ page: currentPage.value, pageSize: pageSize.value });
   } finally {
     isSubmitting.value = false;
   }
 }
 
 async function confirmDelete() {
-  if (!selectedLinkIds.value.length) {
+  if (!linkToDelete.value) {
     showDeleteConfirmation.value = false;
     return;
   }
 
   try {
     isSubmitting.value = true;
-    await linkStore.deleteLinks(props.application.id, selectedLinkIds.value);
-    selectedLinkIds.value = [];
+    await api.applicationLinksControllerDelete({
+      path: { applicationId: props.application.id, id: linkToDelete.value },
+    });
+    toaster.addSuccessMessage("Lien supprimé avec succès !");
+    linkToDelete.value = null;
     showDeleteConfirmation.value = false;
-    await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
+    await fetchLinks({ page: currentPage.value, pageSize: pageSize.value });
 
-    // Cette logique de pagination est parfaite, on n'y touche pas
-    if (linkStore.links.length === 0 && (linkStore.total ?? 0) > 0 && currentPage.value > 0) {
+    if (links.value.length === 0 && total.value > 0 && currentPage.value > 0) {
       currentPage.value = Math.max(0, currentPage.value - 1);
-      await linkStore.fetchLinks(props.application.id, { page: currentPage.value, pageSize: pageSize.value });
+      await fetchLinks({ page: currentPage.value, pageSize: pageSize.value });
     }
-  } catch (err) {
+  } catch {
     toaster.addErrorMessage("Erreur lors de la suppression.");
-    console.error("confirmDelete error:", err);
   } finally {
     isSubmitting.value = false;
   }
 }
 
-function removeSelectedLinks() {
-  if (!selectedLinkIds.value.length) {
-    errorMessage.value = "Aucune sélection.";
-    return;
-  }
+function requestDelete(linkId: string) {
+  linkToDelete.value = linkId;
   showDeleteConfirmation.value = true;
 }
 
-// Cette fonction est bien écrite et correspond au style des autres composants.
-function getCardButtons(link: Link) {
-  // On peut utiliser le type Link ici
+function getCardButtons(link: LinkDto) {
   return [
     {
       label: "Modifier",
@@ -177,25 +189,17 @@ function getCardButtons(link: Link) {
       title: "Supprimer le lien",
       onClick: (event?: Event) => {
         event?.stopPropagation();
-        selectedLinkIds.value = [link.id];
-        showDeleteConfirmation.value = true;
+        requestDelete(link.id);
       },
     },
   ];
 }
 
 onMounted(async () => {
-  linkStore.isLoading = true;
-  try {
-    await linkStore.fetchLinks(props.application.id, {
-      page: currentPage.value,
-      pageSize: pageSize.value,
-    });
-  } catch {
-    toaster.addErrorMessage("Erreur lors du chargement des liens.");
-  } finally {
-    linkStore.isLoading = false;
-  }
+  await fetchLinks({
+    page: currentPage.value,
+    pageSize: pageSize.value,
+  });
 });
 </script>
 
@@ -216,36 +220,15 @@ onMounted(async () => {
     </div>
   </div>
 
-  <div v-if="!linkStore.isLoading && linkStore.links.length === 0" class="text-center" data-testid="links-empty">
+  <div v-if="!isLoading && links.length === 0" class="text-center" data-testid="links-empty">
     <p>Aucun lien enregistré.</p>
   </div>
 
   <div v-else>
-    <AppLoader v-if="linkStore.isLoading" data-testid="links-loader" />
+    <AppLoader v-if="isLoading" data-testid="links-loader" />
 
     <div v-else>
       <template v-if="!props.isMobile">
-        <div class="global-delete" style="margin-bottom: 1rem">
-          <DsfrButton
-            type="button"
-            secondary
-            icon="fr-icon-delete-line"
-            data-testid="link-delete-selected-btn"
-            :disabled="!selectedLinkIds.length || !canEdit"
-            :title="!selectedLinkIds.length ? 'Sélectionnez des éléments pour activer' : 'Supprimer la sélection'"
-            :aria-label="
-              !selectedLinkIds.length ? 'Supprimer la sélection (désactivé, aucun élément sélectionné)' : 'Supprimer la sélection'
-            "
-            @click="removeSelectedLinks"
-          >
-            Supprimer la sélection
-          </DsfrButton>
-
-          <div class="sr-only" aria-live="polite" aria-atomic="true">
-            {{ selectedLinkIds.length > 0 ? `${selectedLinkIds.length} élément(s) sélectionné(s)` : "" }}
-          </div>
-        </div>
-
         <RefAppTable
           :items="rows"
           :columns="tableColumns"
@@ -253,14 +236,10 @@ onMounted(async () => {
           :lazy="true"
           :rows="pageSize"
           :first="firstIndex"
-          :total-records="linkStore.total"
+          :total-records="total"
           data-testid="links-table"
           @page="onPage"
         >
-          <template #body-selection="{ data }">
-            <input v-model="selectedLinkIds" type="checkbox" :aria-label="`Sélectionner lien ${data.selection}`" :value="data.selection" />
-          </template>
-
           <template #body-lien="{ data }">
             <a :href="data.lien.to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ data.lien.label }}</a>
           </template>
@@ -282,13 +261,25 @@ onMounted(async () => {
             >
               Modifier
             </DsfrButton>
+            <DsfrButton
+              tertiary
+              size="sm"
+              icon="fr-icon-delete-line"
+              :disabled="!canEdit"
+              data-testid="link-delete-btn"
+              title="Supprimer le lien"
+              aria-label="Supprimer le lien"
+              @click="requestDelete(data.id)"
+            >
+              Supprimer
+            </DsfrButton>
           </template>
         </RefAppTable>
       </template>
 
       <div v-else class="link-card-list">
         <DsfrCard
-          v-for="link in linkStore.links"
+          v-for="link in links"
           :key="link.id"
           :title="link.description || 'Description vide'"
           :description="link.link"
@@ -296,7 +287,6 @@ onMounted(async () => {
           :buttons="getCardButtons(link)"
           size="sm"
           :noArrow="true"
-          class="fr-mb-2w"
           data-testid="link-card"
         >
           <template #end-details>
@@ -313,16 +303,6 @@ onMounted(async () => {
     data-testid="link-modal"
     @close="linkModal.closeModal"
   >
-    <DsfrAlert
-      v-show="errorMessage.length > 0"
-      class="mb-4"
-      tabindex="-1"
-      type="error"
-      role="alert"
-      aria-live="assertive"
-      title="Une erreur est survenue"
-      :description="errorMessage"
-    />
     <LinkForm
       :initial-data="linkModal.selectedItem.value ?? undefined"
       :is-submitting="isSubmitting"
@@ -334,7 +314,7 @@ onMounted(async () => {
 
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
-    item-name="liens"
+    item-name="lien"
     data-testid="link-delete-modal"
     @confirm="confirmDelete"
     @cancel="() => (showDeleteConfirmation = false)"
@@ -346,22 +326,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.fr-mb-2w {
-  margin-bottom: 1rem;
-}
-
-.sr-only {
-  position: absolute !important;
-  height: 1px;
-  width: 1px;
-  overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px);
-  white-space: nowrap;
-  border: 0;
-  padding: 0;
-  margin: -1px;
 }
 
 .link-card-list ::v-deep(.fr-card__footer) {
