@@ -15,11 +15,6 @@ const emit = defineEmits<{
   "update:tags": [value: string[]];
 }>();
 
-interface TagsPaginatedResponse {
-  results: TagDto[];
-  total: number;
-}
-
 async function getTagsOptions(query: string) {
   const response = await api.tagsControllerFindAll({
     query: {
@@ -29,11 +24,11 @@ async function getTagsOptions(query: string) {
     },
   });
 
-  if (!response.response.ok) {
+  if (!response.response.ok || !response.data) {
     throw new Error("Failed to fetch tags");
   }
 
-  const data = response.data as TagsPaginatedResponse;
+  const data = response.data;
   return data.results;
 }
 

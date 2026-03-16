@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { ReportPaginatedResponseDto } from "@/client/types.gen";
+import type { PaginatedReportDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import { formatDate } from "@/composables/use-date";
 import { watchDebounced } from "@vueuse/core";
@@ -33,7 +33,7 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
 
 const userStore = useUserStore();
 
-const data = ref<ReportPaginatedResponseDto>({ results: [], total: 0 });
+const data = ref<PaginatedReportDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 const isEditing = ref<boolean>(false);
 const selection = ref<string[]>([]);
@@ -76,7 +76,11 @@ async function fetchAllReportsDirect() {
       order: (sortedDesc.value ? "desc" : "asc") as "desc" | "asc",
     };
     const response = await api.reportsControllerFindAll({ query });
-    data.value = response.data as ReportPaginatedResponseDto;
+    if (!response.data) {
+      data.value = { results: [], total: 0 };
+      return;
+    }
+    data.value = response.data;
   } finally {
     isLoading.value = false;
   }

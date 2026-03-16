@@ -21,9 +21,9 @@ import {
 } from "@nestjs/swagger";
 import { ActorType } from "@prisma/client";
 import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
+import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 import { AdminGuard } from "src/common/guards/admin.guard";
 import { AdminLevel } from "src/user/entities/user.entity";
-import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 import { ActorTypeService } from "./actorType.service";
 import {
   ActorTypeDto,
@@ -145,7 +145,7 @@ Vous devez fournir les informations suivantes :
   })
   @ApiOkResponse({
     description: "Liste les types d’acteurs",
-    type: PaginatedResponseDto<ActorTypeDto>,
+    type: PaginatedResponseDto.of(ActorTypeDto),
   })
   public async findAll(@Query() filters: PaginationDto) {
     return this.actorTypeService.findAll(filters);

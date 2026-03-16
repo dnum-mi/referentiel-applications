@@ -19,6 +19,11 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
+import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
+import { AppAction } from "src/common/decorators/application.decorator";
+import { PaginatedResponseDto } from "src/common/dto";
+import { AdminGuard } from "src/common/guards/admin.guard";
+import { AdminLevel } from "src/user/entities/user.entity";
 import {
   CreateLabelSourceDto,
   LabelSourceDto,
@@ -26,11 +31,6 @@ import {
   UpdateLabelSourceDto,
 } from "./dto/label-source.dto";
 import { LabelSourceService } from "./label-source.service";
-import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { AdminLevel } from "src/user/entities/user.entity";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { PaginatedResponseDto } from "src/common/dto";
 
 @ApiTags("LabelSources")
 @Controller("label-sources")
@@ -69,7 +69,7 @@ Information requise :
   })
   @ApiOkResponse({
     description: "Liste des sources trouvées",
-    type: PaginatedResponseDto<LabelSourceDto>,
+    type: PaginatedResponseDto.of(LabelSourceDto),
   })
   findAll(@Query() filters: LabelSourceFiltersDto) {
     return this.labelSourceService.findAllLabelSources(filters);

@@ -22,7 +22,7 @@ export const useActorStore = defineStore("actorStore", () => {
     if (!response.data) {
       throw new Error(`No actors found for application ${applicationId}`);
     }
-    const responseData = response.data as { results: ActorDto[] };
+    const responseData = response.data;
     actors.value = responseData.results;
     return actors.value;
   }

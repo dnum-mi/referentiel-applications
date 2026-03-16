@@ -91,7 +91,10 @@ export const useHostingStore = defineStore("hostingStore", () => {
         pageSize: filters?.pageSize ?? 0,
       },
     });
-    const responseData = response.data as { results: HostingOptionDto[] };
+    if (!response.data?.results) {
+      return [];
+    }
+    const responseData = response.data;
     hostingOptions.value = responseData.results;
     return hostingOptions.value;
   };
