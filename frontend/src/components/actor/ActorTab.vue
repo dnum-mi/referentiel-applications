@@ -2,33 +2,34 @@
 import { ref, computed, onBeforeMount } from "vue";
 import { useToasterStore } from "@/stores/toasterStore";
 import useModal from "@/composables/use-modal";
-import { useActorStore } from "@/stores/actorStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import ActorForm from "./ActorForm.vue";
 import OrgBreadCrumb from "../organization/OrgBreadCrumb.vue";
 import RefAppTable from "../RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
+import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
 
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { Application } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 import { AdminLevel } from "@/models/user";
-import type { CreateActorDto, Actor } from "@/client/types.gen";
+import type { APP_PERMISSIONS } from "@/models/Application";
+import type { CreateActorDto, ActorDto } from "@/client/types.gen";
+import api from "@/api/index";
 
 const props = defineProps<{
-  application: CreateApplicationWithPerms;
+  application: Application & { myPerms: Set<APP_PERMISSIONS> };
   isMobile?: boolean;
 }>();
 
-const actorStore = useActorStore();
 const userStore = useUserStore();
 const actorTypeStore = useActorTypeStore();
 const toaster = useToasterStore();
-const actorModal = useModal<Actor>();
+const actorModal = useModal();
+const actors = ref<ActorDto[]>([]);
 
 const selectedActorIds = ref<string[]>([]);
 const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
-const isSubmitting = ref(false);
 const loading = ref(false);
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeActors"));
 
@@ -52,7 +53,7 @@ function getActorTypeLabel(typeId: string): string {
 }
 
 const tableRows = computed(() =>
-  actorStore.actors.map((actor) => ({
+  actors.value.map((actor) => ({
     id: actor.id,
     Sélection: actor.id,
     Organisation: actor.organizationId ?? undefined,
@@ -69,13 +70,36 @@ const tableRows = computed(() =>
   })),
 );
 
+async function fetchActorsByApplication(applicationId: string) {
+  const response = await api.applicationActorsControllerFindAll({
+    path: { applicationId },
+    query: { pageSize: 0 },
+  });
+  actors.value = response.data?.results ?? [];
+}
+
+async function updateActor({ id: _id, ...actor }: CreateActorDto & { id?: string }, applicationId: string, actorId: string) {
+  const response = await api.applicationActorsControllerUpdated({
+    path: { applicationId, id: actorId },
+    body: actor,
+  });
+  if (!response.response.ok) {
+    throw new Error(`Failed to update actor for application ${applicationId}`);
+  }
+  return response.data;
+}
+
+async function deleteActor(actorId: string, applicationId: string) {
+  return api.applicationActorsControllerDelete({
+    path: { applicationId, id: actorId },
+  });
+}
+
 onBeforeMount(async () => {
   loading.value = true;
   try {
     await actorTypeStore.fetchAll();
-    await actorStore.fetchActorsByApplication(props.application.id);
-  } catch {
-    toaster.addErrorMessage("Erreur lors du chargement des informations des acteurs.");
+    await fetchActorsByApplication(props.application.id);
   } finally {
     loading.value = false;
   }
@@ -87,15 +111,17 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
 
   try {
     if (!actor.id) {
-      await actorStore.createActor(actor, props.application.id);
+      await api.applicationActorsControllerCreate({
+        path: { applicationId: props.application.id },
+        body: actor,
+      });
     } else {
-      await actorStore.updateActor(actor, props.application.id, actor.id);
+      await updateActor(actor, props.application.id, actor.id);
     }
-    await actorStore.fetchActorsByApplication(props.application.id);
+    await fetchActorsByApplication(props.application.id);
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
-  } catch (error) {
+  } catch {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
-    console.error(" Erreur handleSaveActors :", error.response?.data || error);
   } finally {
     loading.value = false;
   }
@@ -110,7 +136,7 @@ function removeSelectedActors() {
 }
 
 async function confirmDelete() {
-  const actorsToDelete = actorStore.actors.filter((actor) => selectedActorIds.value.includes(actor.id));
+  const actorsToDelete = actors.value.filter((actor) => selectedActorIds.value.includes(actor.id));
 
   if (actorsToDelete.length === 0) {
     showDeleteConfirmation.value = false;
@@ -118,16 +144,15 @@ async function confirmDelete() {
   }
 
   try {
-    const deletePromises = actorsToDelete.map((actor) => actorStore.deleteActor(actor.id, props.application.id));
+    const deletePromises = actorsToDelete.map((actor) => deleteActor(actor.id, props.application.id));
 
     await Promise.all(deletePromises);
 
-    await actorStore.fetchActorsByApplication(props.application.id);
+    await fetchActorsByApplication(props.application.id);
     selectedActorIds.value = [];
     showDeleteConfirmation.value = false;
     toaster.addSuccessMessage("Acteurs supprimés avec succès !");
-  } catch (error) {
-    console.error("❌ Erreur confirmDelete :", error);
+  } catch {
     toaster.addErrorMessage("Erreur lors de la suppression d'un ou plusieurs acteurs.");
   }
 }
@@ -141,7 +166,7 @@ function onPage(event: any) {
   pageSize.value = event.rows;
 }
 
-function getCardButtons(actor: Actor) {
+function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
   return [
     {
       label: "Modifier",
@@ -190,7 +215,7 @@ function getCardButtons(actor: Actor) {
     </div>
   </div>
 
-  <div v-if="!loading && actorStore.actors.length === 0" class="text-center" data-testid="actor-empty-state">
+  <div v-if="!loading && actors.length === 0" class="text-center" data-testid="actor-empty-state">
     <p>Aucun acteur enregistré.</p>
   </div>
 
@@ -219,7 +244,7 @@ function getCardButtons(actor: Actor) {
         :paginator="true"
         :rows="pageSize"
         :first="firstIndex"
-        :total-records="actorStore.actors.length"
+        :total-records="actors.length"
         data-test-id="actor-table"
         empty-message="Aucun acteur enregistré."
         @page="onPage"
@@ -281,7 +306,7 @@ function getCardButtons(actor: Actor) {
 
     <div v-if="props.isMobile" class="actor-card-list">
       <DsfrCard
-        v-for="actor in actorStore.actors"
+        v-for="actor in actors"
         :key="actor.id"
         :title="`${actor.firstname || ''} ${actor.lastname || ''}`.trim() || '—'"
         :description="actor.email || ''"
@@ -328,8 +353,8 @@ function getCardButtons(actor: Actor) {
     @close="actorModal.closeModal"
   >
     <ActorForm
-      v-bind="{ application, initialData: actorModal.selectedItem.value }"
-      :is-submitting="isSubmitting"
+      v-bind="{ application, initialData: actorModal.selectedItem.value ?? undefined }"
+      :is-submitting="loading"
       :actor-types="actorTypesList"
       data-testid="actor-form-container"
       @submit="handleSaveActors"

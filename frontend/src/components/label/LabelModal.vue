@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from "vue";
-import { useLabelStore } from "@/stores/labelStore";
+import { ref, watch, onMounted } from "vue";
+import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { LabelDto, LabelSourceDto } from "@/client/types.gen";
 
@@ -21,7 +21,6 @@ const labelSourcesList = ref<LabelSourceDto[]>([]);
 const isLoadingSources = ref(false);
 const labelSourceSearch = ref("");
 const isSubmitting = ref(false);
-const labelStore = useLabelStore();
 const toaster = useToasterStore();
 
 watch(labelSourceSearch, (newValue) => {
@@ -33,9 +32,9 @@ watch(labelSourceSearch, (newValue) => {
 async function fetchLabelSources() {
   try {
     isLoadingSources.value = true;
-    labelSourcesList.value = await labelStore.getAllLabelSources();
-  } catch (error) {
-    console.error("Error fetching label sources:", error);
+    const response = await api.labelSourceControllerFindAll({ query: { pageSize: 0 } });
+    labelSourcesList.value = response.data?.results ?? [];
+  } catch {
     toaster.addErrorMessage("Erreur lors du chargement des sources de noms alternatifs.");
   } finally {
     isLoadingSources.value = false;
@@ -62,15 +61,30 @@ async function handleSubmit() {
   isSubmitting.value = true;
   try {
     if (props.initialLabel) {
-      await labelStore.updateLabel(props.applicationId, props.initialLabel.id, labelForm.value);
+      const response = await api.labelsControllerUpdate({
+        path: { applicationId: props.applicationId, id: props.initialLabel.id },
+        body: labelForm.value,
+      });
+      if (!response.response.ok) {
+        toaster.addErrorMessage("Erreur lors de la mise à jour du nom alternatif");
+        throw new Error(`Failed to update label: ${response.response.statusText}`);
+      }
+      toaster.addSuccessMessage("Nom alternatif mis à jour avec succès");
       emit("labelUpdated");
     } else {
-      await labelStore.createLabel(props.applicationId, labelForm.value);
+      const response = await api.labelsControllerCreate({
+        path: { applicationId: props.applicationId },
+        body: labelForm.value,
+      });
+      if (!response.response.ok) {
+        toaster.addErrorMessage("Erreur lors de la création du nom alternatif");
+        throw new Error(`Failed to create label: ${response.response.statusText}`);
+      }
+      toaster.addSuccessMessage("Nom alternatif créé avec succès");
       emit("labelCreated");
     }
     emit("close");
-  } catch (err) {
-    console.error("Error submitting label form:", err);
+  } catch {
     toaster.addErrorMessage("Une erreur est survenue lors de l'enregistrement du nom alternatif");
   } finally {
     isSubmitting.value = false;
