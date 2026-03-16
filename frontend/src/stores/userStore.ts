@@ -71,6 +71,10 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
+  function getBusinessDivisionId(): string | null {
+    return user.value?.organization?.businessDivisionId ?? null;
+  }
+
   return {
     user,
     adminLevel,
@@ -80,5 +84,6 @@ export const useUserStore = defineStore("userStore", () => {
     isSubscribed,
     subscribeToApp,
     unsubscribeFromApp,
+    getBusinessDivisionId,
   };
 });

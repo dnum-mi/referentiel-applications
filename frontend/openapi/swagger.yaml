@@ -4129,12 +4129,18 @@ components:
           nullable: true
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
+        businessDivisionId:
+          type: string
+          nullable: true
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de la direction métier associée
       required:
         - id
         - path
         - url
         - sigle
         - parentId
+        - businessDivisionId
     UserType:
       type: string
       enum:
