@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.67.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.66.0...v1.67.0) (2026-03-18)
+
+
+### Features
+
+* :sparkles: add export metadata type ([839bf6c](https://github.com/dnum-mi/referentiel-applications/commit/839bf6c822ff1b86c41f9b664c04faab60e64613))
+* :sparkles: add table éco energy ([73a3e28](https://github.com/dnum-mi/referentiel-applications/commit/73a3e2885f9460ba3028b1f0cb0aa6c608af5fa8))
+* :sparkles: add type main_service for links tab ([270adbe](https://github.com/dnum-mi/referentiel-applications/commit/270adbe9fec16a7d893c56f7f6c64b7f25ee782a))
+* add direction metier into columns and move filter to actor filter ([#1573](https://github.com/dnum-mi/referentiel-applications/issues/1573)) ([6b36d5a](https://github.com/dnum-mi/referentiel-applications/commit/6b36d5a3f68d56656b416ceb9532cf2e293bd79a))
+* add hosting active inactive mode ([#1590](https://github.com/dnum-mi/referentiel-applications/issues/1590)) ([d7e2fc8](https://github.com/dnum-mi/referentiel-applications/commit/d7e2fc860c3dbae99e814034ec5f87529bfa062e))
+* add pagination on organization ([#1569](https://github.com/dnum-mi/referentiel-applications/issues/1569)) ([d66d1a6](https://github.com/dnum-mi/referentiel-applications/commit/d66d1a6c27094b4ffd11fddabc0a74a9e75a7132))
+* typing improvement pagingation type in swagger ([#1576](https://github.com/dnum-mi/referentiel-applications/issues/1576)) ([11179c7](https://github.com/dnum-mi/referentiel-applications/commit/11179c703fd705d7bc7d2424ce2a4626bc00aa18))
+
+
+### Bug Fixes
+
+* :bug: add helmet ([0ddc0c7](https://github.com/dnum-mi/referentiel-applications/commit/0ddc0c7abc8163d851e13b260f5ea8db6b2428d3))
+* :bug: fix technical debt value display in applications list ([#1589](https://github.com/dnum-mi/referentiel-applications/issues/1589)) ([d918318](https://github.com/dnum-mi/referentiel-applications/commit/d918318329612b15ed33b26760a662b6e3207afa))
+* add search by email for report ([#1570](https://github.com/dnum-mi/referentiel-applications/issues/1570)) ([c2e1ceb](https://github.com/dnum-mi/referentiel-applications/commit/c2e1ceb7027d31a04153da967b930261376c4b55))
+
 ## [1.66.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.65.0...v1.66.0) (2026-03-12)
 
 
