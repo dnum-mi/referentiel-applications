@@ -1,4 +1,4 @@
-import type { RelationDto, RelationType } from "@/client/types.gen";
+import type { RelationApplicationDto, RelationDto, RelationType } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import api from "@/api/index";
@@ -34,7 +34,7 @@ export const useRelationStore = defineStore("relationStore", () => {
     await fetchRelationsByApplication(applicationSourceId);
   }
 
-  async function updateRelation(applicationSourceId: string, id: string, data: { type: RelationType; applicationTargetId: string }) {
+  async function updateRelation(applicationSourceId: string, id: string, data: RelationApplicationDto) {
     await api.relationControllerUpdate({
       path: { applicationId: applicationSourceId, id },
       body: data,

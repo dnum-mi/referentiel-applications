@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import type { Chart } from "chart.js";
+import type { CountByMonthDto } from "@/client/types.gen";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { renderChart } from "@/utils/chart";
 import RefAppTable from "@/components/RefAppTable.vue";
@@ -13,7 +14,7 @@ const isLoading = ref(false);
 const errorMessage = ref("");
 const isTableView = ref(false);
 
-const applicationsByMonth = ref<{ month: string; total: number }[]>([]);
+const applicationsByMonth = ref<CountByMonthDto[]>([]);
 
 const tableColumns: TableColumn[] = [
   { field: "mois", header: "Mois", sortable: false },

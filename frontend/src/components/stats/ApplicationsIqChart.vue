@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import type { Chart } from "chart.js";
+import type { CountByIqDto } from "@/client/types.gen";
 import { renderChart } from "@/utils/chart";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
@@ -12,7 +13,7 @@ let chartInstance: Chart | null = null;
 const isLoading = ref(false);
 const isTableView = ref(false);
 const errorMessage = ref("");
-const countApplicationsByIq = ref<{ iq: number; total: number }[]>([]);
+const countApplicationsByIq = ref<CountByIqDto[]>([]);
 
 const tableColumns: TableColumn[] = [
   { field: "iq", header: "Tranche d'IQ", sortable: false },
@@ -29,7 +30,7 @@ async function loadData() {
     const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`).reverse();
     const data: number[] = Array.from({ length: 21 }).fill(0);
 
-    countApplicationsByIq.value.forEach(({ iq, total }: { iq: number; total: number }) => {
+    countApplicationsByIq.value.forEach(({ iq, total }) => {
       const index = Math.floor(Math.round(iq) / 5);
       if (index >= 0 && index <= 20) data[index] += total;
     });
