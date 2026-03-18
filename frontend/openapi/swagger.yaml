@@ -4767,8 +4767,15 @@ components:
           description: ID of the hosting option
         applicationId:
           type: string
+        isActive:
+          type: boolean
+          nullable: true
+          default: null
+          description: Indicates whether the hosting is active, passif or not specified
+            (null).
       required:
         - applicationId
+        - isActive
     HostingOptionDto:
       type: object
       properties:
@@ -4811,12 +4818,19 @@ components:
           description: ID of the hosting option
         applicationId:
           type: string
+        isActive:
+          type: boolean
+          nullable: true
+          default: null
+          description: Indicates whether the hosting is active, passif or not specified
+            (null).
         id:
           type: string
         hostingOption:
           $ref: "#/components/schemas/HostingOptionDto"
       required:
         - applicationId
+        - isActive
         - id
         - hostingOption
     UpdateHostingDto:
@@ -4829,6 +4843,12 @@ components:
           description: ID of the hosting option
         applicationId:
           type: string
+        isActive:
+          type: boolean
+          nullable: true
+          default: null
+          description: Indicates whether the hosting is active, passif or not specified
+            (null).
     TokenDto:
       type: object
       properties:

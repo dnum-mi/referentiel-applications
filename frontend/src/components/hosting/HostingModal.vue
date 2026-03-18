@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, computed } from "vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import type { HostingDto, HostingOptionDto } from "@/client/types.gen";
+import type { CreateHostingDto, HostingDto, HostingOptionDto } from "@/client/types.gen";
 
 const props = defineProps<{
   applicationId: string;
@@ -12,9 +12,10 @@ const props = defineProps<{
 
 const emit = defineEmits(["close", "hostingCreated", "hostingUpdated"]);
 
-const hostingForm = ref({
+const hostingForm = ref<Required<Omit<CreateHostingDto, "applicationId">>>({
   hostingOptionId: "",
   label: "",
+  isActive: null,
 });
 
 const hostingOptionsList = ref<HostingOptionDto[]>([]);
@@ -56,7 +57,7 @@ onMounted(fetchHostingOptions);
 
 function setInitialValues() {
   if (!props.initialHosting) {
-    hostingForm.value = { hostingOptionId: "", label: "" };
+    hostingForm.value = { hostingOptionId: "", label: "", isActive: null };
     hostingOptionSearch.value = "";
     return;
   }
@@ -64,6 +65,7 @@ function setInitialValues() {
   hostingForm.value = {
     hostingOptionId: props.initialHosting.hostingOptionId || "",
     label: props.initialHosting.label || "",
+    isActive: props.initialHosting.isActive,
   };
 
   if (props.initialHosting.hostingOptionId && hostingOptionsList.value.length > 0) {
@@ -85,6 +87,7 @@ async function handleSubmit() {
       label: hostingForm.value.label,
       hostingOptionId: hostingForm.value.hostingOptionId,
       applicationId: props.applicationId,
+      isActive: hostingForm.value.isActive,
     };
 
     if (props.initialHosting) {
@@ -145,6 +148,17 @@ async function handleSubmit() {
             {{ formatOptionText(option) }}
           </option>
         </datalist>
+        <DsfrSelect
+          :model-value="hostingForm.isActive === null ? 'null' : String(hostingForm.isActive)"
+          @update:model-value="hostingForm.isActive = $event === 'null' ? null : $event === 'true'"
+          label="Statut de l'hébergement"
+          data-testid="hosting-is-active-toggle"
+          :options="[
+            { value: 'null', text: 'Non renseigné' },
+            { value: 'true', text: 'Actif' },
+            { value: 'false', text: 'Passif' },
+          ]"
+        />
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
         <DsfrButton type="button" secondary label="Annuler" data-testid="hosting-cancel-btn" @click="$emit('close')" />

@@ -370,6 +370,7 @@ erDiagram
   String(255) label "nullable"
   String hostingOptionId FK "nullable"
   String applicationId FK
+  Boolean isActive "nullable"
 }
 "Hosting" }o--o| "HostingOption" : hostingOption
 ```
@@ -399,6 +400,7 @@ Properties as follows:
 - `label`: Label personnalisé pour cette instance d'hébergement
 - `hostingOptionId`:
 - `applicationId`:
+- `isActive`: Indique si ce site d'hébergement est actif
 
 ## Labels
 

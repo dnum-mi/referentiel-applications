@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsOptional, IsString, IsUUID } from "class-validator";
+import { IsBoolean, IsOptional, IsString, IsUUID } from "class-validator";
 import { HostingOptionDto } from "src/hosting-option/dto/hosting-option.dto";
 
 export class CreateHostingDto {
@@ -16,6 +16,14 @@ export class CreateHostingDto {
   @ApiProperty()
   @IsUUID()
   applicationId: string;
+
+  @ApiProperty({
+    description:
+      "Indicates whether the hosting is active, passif or not specified (null).",
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive: boolean | null;
 }
 
 export class UpdateHostingDto extends PartialType(CreateHostingDto) {}
