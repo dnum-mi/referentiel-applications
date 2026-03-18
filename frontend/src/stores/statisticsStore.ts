@@ -1,4 +1,4 @@
-import type { GetIqAvgGroupedDto } from "@/client";
+import type { CountByIqDto, CountByMonthDto, GetIqAvgGroupedDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
@@ -15,7 +15,7 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     totalApplications.value = response.data?.total ?? 0;
   }
 
-  async function countApplicationsByMonth(): Promise<{ month: string; total: number }[]> {
+  async function countApplicationsByMonth(): Promise<CountByMonthDto[]> {
     const response = await api.applicationControllerCountByMonth();
     if (!response.response.ok || !response.data) {
       throw new Error("Erreur lors de la récupération des applications par mois");
@@ -23,7 +23,7 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     return response.data;
   }
 
-  async function countApplicationsByIq(): Promise<{ iq: number; total: number }[]> {
+  async function countApplicationsByIq(): Promise<CountByIqDto[]> {
     const response = await api.applicationControllerCountByIq();
     if (!response.response.ok || !response.data) {
       throw new Error("Erreur lors de la récupération des applications par IQ");

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import type { CreateApplicationWithPerms } from "@/models/Application";
-import type { ApplicationStatusDto } from "@/client/types.gen";
+import type { ApplicationStatusDto, CreateApplicationStatusDto } from "@/client/types.gen";
 import api from "@/api/index";
 import { statusApplicationDictionary } from "@/composables/use-dictionary";
 import { formatDateFR } from "@/composables/use-date";
@@ -18,7 +18,7 @@ import RefAppTable from "./RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 
 interface StatusFormData {
-  status: ApplicationStatusDto["status"];
+  status: CreateApplicationStatusDto["status"];
   statusDate?: string;
 }
 
@@ -254,8 +254,8 @@ async function deleteStatus() {
   }
 }
 
-function buildStatusPayload(formData: StatusFormData) {
-  const payload: { status: ApplicationStatusDto["status"]; statusDate?: Date } = {
+function buildStatusPayload(formData: StatusFormData): CreateApplicationStatusDto {
+  const payload: CreateApplicationStatusDto = {
     status: formData.status,
   };
 

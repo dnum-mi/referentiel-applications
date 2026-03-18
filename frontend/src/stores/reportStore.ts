@@ -1,4 +1,4 @@
-import type { CreateReportRequestDto } from "@/client/types.gen";
+import type { CreateReportRequestDto, ReportStatus } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import api from "@/api/index";
 
@@ -42,7 +42,7 @@ export const useReportStore = defineStore("reportStore", () => {
     }
   };
 
-  async function updateReport(id: string, applicationId: string, status: "in_pending" | "in_progress" | "done", notify: boolean = false) {
+  async function updateReport(id: string, applicationId: string, status: ReportStatus, notify: boolean = false) {
     try {
       if (applicationId) {
         await api.applicationReportsControllerUpdate({ path: { applicationId, id }, body: { status }, query: { notify } });
