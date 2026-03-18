@@ -18,11 +18,9 @@ const sortField = ref(filters.value.sortBy || "label");
 const sortOrder = ref(filters.value.order === "desc" ? -1 : 1);
 
 const formatActors = (actors: any[], actorTypeCode: string): string => {
-  if (!actors || actors.length === 0) return "-";
-
   const filteredActors = actors.filter((actor) => actor.actorType?.code === actorTypeCode);
 
-  if (filteredActors.length === 0) return "-";
+  if (filteredActors.length === 0) return "";
 
   return filteredActors
     .map((actor) => {
@@ -42,66 +40,42 @@ const formatActors = (actors: any[], actorTypeCode: string): string => {
     .join("\n");
 };
 
-const getComplianceField = (compliance: any | undefined, field: string): string => {
-  if (!compliance) return "-";
-
-  switch (field) {
-    case "dima":
-      return compliance.dima_duration_hours !== null && compliance.dima_duration_hours !== undefined
-        ? `${compliance.dima_duration_hours}h`
-        : "-";
-    case "pdma":
-      return compliance.pdma_duration_hours !== null && compliance.pdma_duration_hours !== undefined
-        ? `${compliance.pdma_duration_hours}h`
-        : "-";
-    case "rgaa":
-      return compliance.rgaa_score_percentage !== null && compliance.rgaa_score_percentage !== undefined
-        ? `${compliance.rgaa_score_percentage}%`
-        : "-";
-    case "dsfr":
-      return compliance.dsfr_implemented !== null && compliance.dsfr_implemented !== undefined
-        ? compliance.dsfr_implemented
-          ? "Oui"
-          : "Non"
-        : "-";
-    case "homologation":
-      return compliance.homologation_status
-        ? homologationStatusDict[compliance.homologation_status as keyof typeof homologationStatusDict] || compliance.homologation_status
-        : "-";
-    case "homologationDateEnd":
-      return compliance.homologation_date_end ? formatDateFR(compliance.homologation_date_end) : "-";
-    default:
-      return "-";
-  }
-};
-
 const formatBusinessDivision = (businessDivision?: BusinessDivisionDto): string => {
-  if (!businessDivision) return "-";
-  return businessDivision.label || businessDivision.label;
+  if (!businessDivision) return "";
+  return businessDivision.label;
 };
+
+const formatHours = (value: number | null | undefined): string => (value == null ? "" : `${value}h`);
+const formatPercent = (value: number | null | undefined): string => (value == null ? "" : `${value}%`);
+const formatBooleanText = (value: boolean | null | undefined): string => (value == null ? "" : value ? "Oui" : "Non");
+const formatHomologation = (value: string | null | undefined): string =>
+  value ? homologationStatusDict[value as keyof typeof homologationStatusDict] || value : "";
+const formatDate = (value: string | null | undefined): string => (value ? formatDateFR(value) : "");
+const formatStatus = (value: ApplicationStatus | null | undefined): string => (value ? statusApplicationDictionary[value] || value : "");
 
 const applications = computed(() =>
   results.value.map((app: any) => {
     return {
       ...app,
-      qualityDisplay: app.quality !== null ? `${app.quality}%` : "0%",
-      hostingDisplay: app.hostings?.map((h: any) => h.hostingOption?.site || h.site).join(", ") || "-",
-      tagsDisplay: app.tags?.map((tag: any) => tag.name).join(", ") || "-",
+      qualityDisplay: `${app.quality}%`,
+      hostingDisplay: app.hostings.map((h: any) => h.hostingOption?.site || h.site).join(", "),
+      tagsDisplay: app.tags.map((tag: any) => tag.name).join(", "),
       priorityConfig: app.priorityRestart ? restartPrioritiesConfig[app.priorityRestart as keyof typeof restartPrioritiesConfig] : null,
       moaDisplay: formatActors(app.actors, "MOA"),
       moeDisplay: formatActors(app.actors, "MOE"),
       hostingManagerDisplay: formatActors(app.actors, "HEB"),
       businessDivisionDisplay: formatBusinessDivision(app.businessDivision),
       rsimmDisplay: formatActors(app.actors, "RSSI"),
-      dimaDisplay: getComplianceField(app.compliance, "dima"),
-      pdmaDisplay: getComplianceField(app.compliance, "pdma"),
-      rgaaDisplay: getComplianceField(app.compliance, "rgaa"),
-      dsfrDisplay: getComplianceField(app.compliance, "dsfr"),
-      homologationDisplay: getComplianceField(app.compliance, "homologation"),
-      homologationDateEndDisplay: getComplianceField(app.compliance, "homologationDateEnd"),
-      statusDisplay: app.currentStatus?.status
-        ? statusApplicationDictionary[app.currentStatus.status as ApplicationStatus] || app.currentStatus.status
-        : "-",
+      dimaDisplay: formatHours(app.compliance?.dima_duration_hours),
+      pdmaDisplay: formatHours(app.compliance?.pdma_duration_hours),
+      rgaaDisplay: formatPercent(app.compliance?.rgaa_score_percentage),
+      dsfrDisplay: formatBooleanText(app.compliance?.dsfr_implemented),
+      homologationDisplay: formatHomologation(app.compliance?.homologation_status),
+      homologationDateEndDisplay: formatDate(app.compliance?.homologation_date_end),
+      statusDisplay: formatStatus(app.currentStatus?.status),
+      technicalMaturity: app.technicalDebtInfo?.technicalMaturity,
+      businessMaturity: app.technicalDebtInfo?.businessMaturity,
+      costMaturity: app.technicalDebtInfo?.costMaturity,
     };
   }),
 );
@@ -158,7 +132,7 @@ function onColumnResize(event: { field: string; width: string }) {
 
     <template #body-priorityRestart="{ data }">
       <DsfrBadge v-if="data.priorityConfig" :label="data.priorityConfig.shortLabel" :type="data.priorityConfig.type" />
-      <span v-else>-</span>
+      <span v-else />
     </template>
 
     <template #body-hostingSite="{ data }">
