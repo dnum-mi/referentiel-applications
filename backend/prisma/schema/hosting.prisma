@@ -37,6 +37,8 @@ model Hosting {
   application     Application    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// Entrées de métadonnées pour cet hébergement
   metadatas       Metadata[]     @relation("HostingMetadata")
+  /// Indique si ce site d'hébergement est actif 
+  isActive        Boolean? 
 }
 
 /// Nature/type d'infrastructure d'hébergement

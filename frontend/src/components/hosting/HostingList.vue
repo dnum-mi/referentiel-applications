@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { HostingDto } from "@/client/types.gen";
+import type { DsfrBadgeProps } from "@gouvminint/vue-dsfr";
 
 defineProps<{ hostings: HostingDto[]; canEdit: boolean }>();
 const emit = defineEmits(["edit", "delete"]);
@@ -11,6 +12,15 @@ function handleEdit(hosting: HostingDto) {
 function handleDelete(hosting: HostingDto) {
   emit("delete", hosting);
 }
+
+const getActiveBadgeProps = (
+  hosting: HostingDto,
+): Pick<DsfrBadgeProps, "label"> & { type: Extract<DsfrBadgeProps["type"], "success" | "warning" | "info"> } => {
+  if (hosting.isActive === null) {
+    return { label: "Non renseigné", type: "warning" };
+  }
+  return hosting.isActive ? { label: "Actif", type: "success" } : { label: "Passif", type: "info" };
+};
 </script>
 
 <template>
@@ -26,6 +36,7 @@ function handleDelete(hosting: HostingDto) {
         <div class="fr-col">
           <p class="fr-mb-0">
             <strong>{{ hosting.label || "Hébergement" }}</strong>
+            <DsfrBadge v-bind="getActiveBadgeProps(hosting)" small class="fr-ml-1w" data-testid="hosting-active-badge" />
           </p>
           <div class="fr-text--sm fr-mt-1w">
             <!-- Location info -->
