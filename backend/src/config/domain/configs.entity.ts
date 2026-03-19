@@ -8,5 +8,6 @@ export class FrontendConfig {
   oidcConfigUrl: string;
   oidcClientId: string;
   version: string;
+  environmentLabel?: string;
   footerLinks: FooterLink[];
 }

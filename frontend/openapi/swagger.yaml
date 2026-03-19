@@ -4770,7 +4770,6 @@ components:
         isActive:
           type: boolean
           nullable: true
-          default: null
           description: Indicates whether the hosting is active, passif or not specified
             (null).
       required:
@@ -4821,7 +4820,6 @@ components:
         isActive:
           type: boolean
           nullable: true
-          default: null
           description: Indicates whether the hosting is active, passif or not specified
             (null).
         id:
@@ -4846,7 +4844,6 @@ components:
         isActive:
           type: boolean
           nullable: true
-          default: null
           description: Indicates whether the hosting is active, passif or not specified
             (null).
     TokenDto:
@@ -6089,6 +6086,10 @@ components:
           type: string
           description: Backend version
           example: 1.0.0
+        environmentLabel:
+          type: string
+          description: Environment label displayed in the header badge
+          example: developpement
         footerLinks:
           description: Footer links to display in the application footer
           type: array

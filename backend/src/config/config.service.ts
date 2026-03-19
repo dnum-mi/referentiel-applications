@@ -17,6 +17,7 @@ export class ConfigService {
       oidcConfigUrl: this.oidc.configUrl,
       oidcClientId: this.oidc.clientId,
       version: this.app.version,
+      environmentLabel: this.app.environmentLabel,
       footerLinks: this.app.footerLinks,
     };
   }

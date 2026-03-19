@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { FooterLink, FrontendConfig } from "../domain/configs.entity";
 
 export class FooterLinkDto implements FooterLink {
@@ -40,6 +40,12 @@ export class ConfigDto implements FrontendConfig {
     example: "1.0.0",
   })
   version: string;
+
+  @ApiPropertyOptional({
+    description: "Environment label displayed in the header badge",
+    example: "developpement",
+  })
+  environmentLabel?: string;
 
   @ApiProperty({
     description: "Footer links to display in the application footer",
