@@ -27,8 +27,7 @@ function closeNotice() {
 configureClients(toaster);
 
 const appVersion = __APP_VERSION__;
-
-const environmentLabel = import.meta.env.VITE_RDA_ENVIRONMENT;
+const environmentLabel = computed(() => appConfig.value?.environmentLabel);
 
 const versionLink = computed(() => ({
   label: `📦 ${appVersion}`,

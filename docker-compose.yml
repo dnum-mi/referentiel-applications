@@ -44,6 +44,7 @@ services:
       - SMTP_SECURE=false
       - SMTP_FROM=noreply@example.local
       - SMTP_ENABLED=true
+      - ENV_LABEL=developpement
       - FOOTER_LINKS=[{"label":"Documentation","title":"Aller à la documentation","href":"#"},{"label":"Snapvisu","title":"Aller à Snapvisu","href":"#"},{"label":"CSU","title":"Aller au CSU","href":"#"},{"label":"Portail SH24","title":"Aller au Portail SH24","href":"#"}]
     depends_on:
       - postgres
@@ -98,7 +99,6 @@ services:
     environment:
       - VITE_RDA_MATOMO_URL=http://localhost:8083
       - VITE_RDA_MATOMO_SITE_ID=1
-      - VITE_RDA_ENVIRONMENT=developpement
     ports:
       - "5173:5173"
     depends_on:
