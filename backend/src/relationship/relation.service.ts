@@ -2,8 +2,8 @@ import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import {
   RelationApplicationDto,
   RelationGraphDto,
+  RelationDto,
 } from "./application/dto/relation-application.dto";
-import { Relation } from "./domain/relation.entity";
 import { IRelationRepository } from "./infrastructure/repository/relation.repository.interface";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 
@@ -19,7 +19,7 @@ export class RelationService {
     applicationSourceId: string,
     dto: RelationApplicationDto,
     requestorId: string,
-  ): Promise<Relation> {
+  ): Promise<RelationDto> {
     const createdRelation = await this.relationRepository.create(
       applicationSourceId,
       dto,
@@ -42,13 +42,13 @@ export class RelationService {
 
   async findAllForApplicationSource(
     applicationSourceId: string,
-  ): Promise<Relation[]> {
+  ): Promise<RelationDto[]> {
     return this.relationRepository.findAllForApplicationSource(
       applicationSourceId,
     );
   }
 
-  async findOne(id: string): Promise<Relation> {
+  async findOne(id: string): Promise<RelationDto> {
     const relation = await this.relationRepository.findOne(id);
     if (!relation) {
       throw new NotFoundException("Relation not found");
@@ -60,7 +60,7 @@ export class RelationService {
     id: string,
     dto: RelationApplicationDto,
     requestorId: string,
-  ): Promise<Relation> {
+  ): Promise<RelationDto> {
     const oldRelation = await this.findOne(id);
     const updated = await this.relationRepository.update(id, dto);
 

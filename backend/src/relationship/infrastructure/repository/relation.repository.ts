@@ -5,9 +5,9 @@ import {
   GraphEdgeDto,
   GraphNodeDto,
   RelationApplicationDto,
+  RelationDto,
   RelationGraphDto,
 } from "../../application/dto/relation-application.dto";
-import { Relation } from "../../domain/relation.entity";
 import { IRelationRepository } from "./relation.repository.interface";
 
 @Injectable()
@@ -16,12 +16,13 @@ export class RelationRepository implements IRelationRepository {
 
   public async create(
     applicationSourceId: string,
-    { applicationTargetId, type }: RelationApplicationDto,
-  ): Promise<Relation> {
+    { applicationTargetId, type, mediationServiceId }: RelationApplicationDto,
+  ): Promise<RelationDto> {
     return await this.prisma.relation.create({
       data: {
         applicationSourceId,
         applicationTargetId,
+        mediationServiceId,
         type,
       },
       include: {
@@ -31,13 +32,16 @@ export class RelationRepository implements IRelationRepository {
         targetApplication: {
           select: { id: true, label: true },
         },
+        mediationService: {
+          select: { id: true, label: true },
+        },
       },
     });
   }
 
   public async findAllForApplicationSource(
     applicationId: string,
-  ): Promise<Relation[]> {
+  ): Promise<RelationDto[]> {
     return await this.prisma.relation.findMany({
       where: {
         OR: [
@@ -56,11 +60,14 @@ export class RelationRepository implements IRelationRepository {
         targetApplication: {
           select: { id: true, label: true },
         },
+        mediationService: {
+          select: { id: true, label: true },
+        },
       },
     });
   }
 
-  public async findOne(id: string): Promise<Relation> {
+  public async findOne(id: string): Promise<RelationDto> {
     return await this.prisma.relation.findUnique({
       where: { id },
       include: {
@@ -70,6 +77,9 @@ export class RelationRepository implements IRelationRepository {
         targetApplication: {
           select: { id: true, label: true },
         },
+        mediationService: {
+          select: { id: true, label: true },
+        },
       },
     });
   }
@@ -77,7 +87,7 @@ export class RelationRepository implements IRelationRepository {
   public async update(
     id: string,
     dto: RelationApplicationDto,
-  ): Promise<Relation> {
+  ): Promise<RelationDto> {
     return await this.prisma.relation.update({
       where: { id },
       data: dto,
@@ -86,6 +96,9 @@ export class RelationRepository implements IRelationRepository {
           select: { id: true, label: true },
         },
         targetApplication: {
+          select: { id: true, label: true },
+        },
+        mediationService: {
           select: { id: true, label: true },
         },
       },
@@ -162,6 +175,17 @@ export class RelationRepository implements IRelationRepository {
               },
             },
             targetApplication: {
+              select: {
+                id: true,
+                label: true,
+                currentStatus: {
+                  select: {
+                    status: true,
+                  },
+                },
+              },
+            },
+            mediationService: {
               select: {
                 id: true,
                 label: true,

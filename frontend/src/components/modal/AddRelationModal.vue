@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import SuggestionsInput from "../SuggestionsInput.vue";
-import { RelationType, type ApplicationDto } from "@/client/types.gen";
+import { RelationType, type ApplicationDto, type RelationDto } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
+import type { RelationCreate } from "@/models/relations";
 
 const props = withDefaults(
   defineProps<{
@@ -16,13 +17,13 @@ const props = withDefaults(
     opened: false,
   },
 );
-
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "addRelation", payload: { targetId: string; type: string }): void;
+  (e: "addRelation", payload: Omit<RelationCreate, "applicationSourceId">): void;
 }>();
 const { searchApplications } = useApplicationSearch();
 const selectedApplicationId = ref<string>("");
+const selectedMediationServiceId = ref<string>("");
 const relationType = ref<RelationType>(RelationType.IS_PART_OF);
 const relationTypesForSelect = [
   { value: RelationType.IS_PART_OF, text: "Fait partie de" },
@@ -81,8 +82,9 @@ async function submitRelation() {
 
   try {
     emit("addRelation", {
-      targetId: selectedApplicationId.value,
+      applicationTargetId: selectedApplicationId.value,
       type: relationType.value,
+      mediationServiceId: selectedMediationServiceId.value || null,
     });
     closeModal();
   } catch (error) {
@@ -96,6 +98,10 @@ function closeModal() {
 
 function updateSelectedValue(application?: Pick<ApplicationDto, "label" | "id">) {
   selectedApplicationId.value = application?.id ?? "";
+}
+
+function updateMediationServiceId(application?: Pick<ApplicationDto, "label" | "id">) {
+  selectedMediationServiceId.value = application?.id ?? "";
 }
 </script>
 
@@ -128,6 +134,14 @@ function updateSelectedValue(application?: Pick<ApplicationDto, "label" | "id">)
         label="Rechercher une application"
         placeholder="Tapez au moins 3 caractères"
         data-testid="relation-suggestions-input"
+      />
+
+      <SuggestionsInput
+        @update:selected-value="updateMediationServiceId"
+        :search-data-function="performSearch"
+        label="Rechercher une application de mediation service (optionnel)"
+        placeholder="Tapez au moins 3 caractères"
+        data-testid="relation-suggestions-mediation-service-input"
       />
     </template>
 

@@ -27,7 +27,6 @@ import {
   RelationDto,
   RelationGraphDto,
 } from "./application/dto/relation-application.dto";
-import { Relation } from "./domain/relation.entity";
 import { RelationService } from "./relation.service";
 
 @ApiTags("relation")
@@ -56,7 +55,7 @@ export class RelationController {
     @Param("applicationId") applicationId: string,
     @Body() dto: RelationApplicationDto,
     @UserId() userId: string,
-  ): Promise<Relation> {
+  ): Promise<RelationDto> {
     return this.relationService.create(applicationId, dto, userId);
   }
 
@@ -72,7 +71,9 @@ export class RelationController {
     description:
       "Renvoie la liste de toutes les relations d'une application donnée.",
   })
-  findAll(@Param("applicationId") applicationId: string): Promise<Relation[]> {
+  findAll(
+    @Param("applicationId") applicationId: string,
+  ): Promise<RelationDto[]> {
     return this.relationService.findAllForApplicationSource(applicationId);
   }
 
@@ -112,7 +113,7 @@ export class RelationController {
     description: "Relation trouvée avec succès",
   })
   @ApiParam({ name: "id", description: "Identifiant unique de la relation" })
-  async findOne(@Param("id") id: string): Promise<Relation> {
+  async findOne(@Param("id") id: string): Promise<RelationDto> {
     return this.relationService.findOne(id);
   }
 
@@ -132,7 +133,7 @@ export class RelationController {
     @Param("id") id: string,
     @Param("applicationId") _applicationId: string,
     @Body() dto: RelationApplicationDto,
-  ): Promise<Relation> {
+  ): Promise<RelationDto> {
     return this.relationService.update(id, dto, userId);
   }
 

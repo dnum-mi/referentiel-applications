@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { useRelationManager, type RelationRow } from "@/composables/use-relation-manager";
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
 import { useRelationStore } from "@/stores/relationStore";
+import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import { computed, ref } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import RelationshipGraph from "./RelationShipGraph.vue";
+import type { RelationDto } from "@/client";
 
-const props = defineProps<{ application: CreateApplicationWithPerms; isMobile?: boolean }>();
+const props = defineProps<{ application: ApplicationWithPerms; isMobile?: boolean }>();
 
 const isLoading = ref(false);
 const userStore = useUserStore();
 const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeRelations"));
+const toaster = useToasterStore();
 
 const relationManager = useRelationManager(props.application.id);
 const {
@@ -41,6 +44,7 @@ const fieldMap: Record<string, string> = {
   "Application Source": "applicationSource",
   Relation: "relation",
   "Application Cible": "applicationCible",
+  "Mediation Service": "mediationService",
   Actions: "actions",
 };
 
@@ -57,6 +61,7 @@ const normalizedRows = computed(() =>
     applicationSource: row["Application Source"],
     relation: row.Relation,
     applicationCible: row["Application Cible"],
+    mediationService: row["Mediation Service"],
     actions: row.Actions,
     originalRow: row, // Keep original for reference
   })),
@@ -114,11 +119,12 @@ function onEditRelation(row: RelationRow) {
 function onDeleteRelation(row: RelationRow) {
   row.Actions.delete();
 }
-function onAddRelation(relation: { targetId: number; type: string }) {
+function onAddRelation(relation: Pick<RelationDto, "type" | "mediationServiceId" | "applicationTargetId">) {
   handleCreateRelation({
-    applicationTargetId: relation.targetId,
+    applicationTargetId: relation.applicationTargetId,
     type: relation.type,
     applicationSourceId: props.application.id,
+    mediationServiceId: relation.mediationServiceId,
   });
 }
 
@@ -216,6 +222,18 @@ onMounted(async () => {
           <template v-else>Type inconnu</template>
         </template>
 
+        <template #body-mediationService="{ data }">
+          <a
+            v-if="data.mediationService.label"
+            :href="`/applications/${data.mediationService.id}`"
+            class="fr-link"
+            data-testid="relation-target-link"
+          >
+            {{ data.mediationService.label }}
+          </a>
+          <template v-else> - </template>
+        </template>
+
         <template #body-actions="{ data }">
           <DsfrButton
             tertiary
@@ -238,6 +256,7 @@ onMounted(async () => {
       <div v-for="row in rows as RelationRow[]" :key="row.id" class="relation-card fr-mb-2w" data-testid="relation-card">
         <DsfrCard
           :title="row['Application Cible'].label || '—'"
+          :description="row['Relation'] || ''"
           :titleLinkAttrs="{ 'data-testid': `relation-card-link-${row.id}` }"
           :link="`/applications/${row['Application Cible'].id}`"
           :buttons="[
@@ -247,7 +266,6 @@ onMounted(async () => {
               tertiary: true,
               size: 'sm',
               disabled: !canEdit,
-              title: 'Modifier la relation',
               onClick: (event?: Event) => {
                 event?.stopPropagation();
                 onEditRelation(row);
@@ -259,7 +277,6 @@ onMounted(async () => {
               tertiary: true,
               size: 'sm',
               disabled: !canEdit,
-              title: 'Supprimer la relation',
               onClick: (event?: Event) => {
                 event?.stopPropagation();
                 onDeleteRelation(row);

@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { RelationType, Status } from "@prisma/client";
-import { IsEnum, IsString } from "class-validator";
+import { IsEnum, IsOptional, IsString } from "class-validator";
 import { ApplicationMinimalDto } from "src/applications/dto/get-application.dto";
 
 export class RelationApplicationDto {
@@ -12,6 +12,11 @@ export class RelationApplicationDto {
   @IsString()
   @IsEnum(RelationType)
   type: RelationType;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  mediationServiceId: string | null;
 }
 
 export class RelationDto {
@@ -27,6 +32,11 @@ export class RelationDto {
   @IsString()
   applicationTargetId: string;
 
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  mediationServiceId: string | null;
+
   @ApiProperty({
     type: ApplicationMinimalDto,
   })
@@ -41,6 +51,12 @@ export class RelationDto {
   @IsString()
   @IsEnum(RelationType)
   type: RelationType;
+
+  @ApiProperty({
+    type: ApplicationMinimalDto,
+  })
+  @IsOptional()
+  mediationService: ApplicationMinimalDto | null;
 }
 
 export class GraphNodeDto {
