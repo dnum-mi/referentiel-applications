@@ -2,6 +2,7 @@ import type { RelationApplicationDto, RelationDto, RelationType } from "@/client
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import api from "@/api/index";
+import type { RelationCreate, RelationDelete, RelationUpdate } from "@/models/relations";
 
 export const useRelationStore = defineStore("relationStore", () => {
   const relations = ref<(RelationDto & { isSource: boolean })[]>([]);
@@ -26,27 +27,35 @@ export const useRelationStore = defineStore("relationStore", () => {
     }));
   }
 
-  async function createRelation(applicationSourceId: string, applicationTargetId: string, type: RelationType) {
+  async function createRelation(createRelation: RelationCreate) {
     await api.relationControllerCreate({
-      path: { applicationId: applicationSourceId },
-      body: { applicationTargetId, type },
+      path: { applicationId: createRelation.applicationSourceId },
+      body: {
+        applicationTargetId: createRelation.applicationTargetId,
+        type: createRelation.type,
+        mediationServiceId: createRelation.mediationServiceId,
+      },
     });
-    await fetchRelationsByApplication(applicationSourceId);
+    await fetchRelationsByApplication(createRelation.applicationSourceId);
   }
 
-  async function updateRelation(applicationSourceId: string, id: string, data: RelationApplicationDto) {
+  async function updateRelation(updated: RelationUpdate) {
     await api.relationControllerUpdate({
-      path: { applicationId: applicationSourceId, id },
-      body: data,
+      path: { applicationId: updated.applicationSourceId, id: updated.id },
+      body: {
+        applicationTargetId: updated.applicationTargetId,
+        type: updated.type,
+        mediationServiceId: updated.mediationServiceId,
+      },
     });
-    return fetchRelationsByApplication(applicationSourceId);
+    return fetchRelationsByApplication(updated.applicationSourceId);
   }
 
-  async function deleteRelation(applicationSourceId: string, id: string) {
+  async function deleteRelation(deleted: RelationDelete) {
     await api.relationControllerDelete({
-      path: { applicationId: applicationSourceId, id },
+      path: { applicationId: deleted.applicationSourceId, id: deleted.applicationTargetId },
     });
-    return fetchRelationsByApplication(applicationSourceId);
+    return fetchRelationsByApplication(deleted.applicationSourceId);
   }
 
   return {

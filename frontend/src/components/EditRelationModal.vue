@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, toRef, watch } from "vue";
-import api from "@/api/index";
-import { RelationType } from "@/client/types.gen";
 import type { ApplicationDto, RelationDto } from "@/client/types.gen";
+import { RelationType } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
-import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
+import type { RelationUpdate } from "@/composables/use-relation-manager";
 import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
+import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
+import { ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
@@ -20,12 +20,13 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: "close"): void;
-  (e: "updateRelation", updatedRelation: RelationDto): void;
+  (e: "updateRelation", updatedRelation: RelationUpdate): void;
 }>();
 const { searchApplications } = useApplicationSearch();
 const suggestions = ref<ApplicationDto[]>([]);
 const selectedApplication = ref<Required<Pick<ApplicationDto, "id" | "label">> | null>(null);
 const relationTypeSelected = ref<RelationType>(RelationType.IS_PART_OF);
+const selectedMediationService = ref<Required<Pick<ApplicationDto, "id" | "label">> | null>(null);
 
 watch(
   () => props.relation,
@@ -33,6 +34,7 @@ watch(
     if (newRelation) {
       selectedApplication.value = newRelation.targetApplication ?? null;
       relationTypeSelected.value = newRelation.type ?? RelationType.IS_PART_OF;
+      selectedMediationService.value = newRelation.mediationService ?? null;
     }
   },
   { immediate: true },
@@ -85,7 +87,11 @@ function selectApplication(app?: Pick<ApplicationDto, "id" | "label">) {
   suggestions.value = [];
 }
 
-async function submitRelationUpdate() {
+function updateMediationServiceId(application: Pick<ApplicationDto, "label" | "id"> | null) {
+  selectedMediationService.value = application;
+}
+
+function submitRelationUpdate() {
   if (!selectedApplication.value) {
     errorMessage.value = "L'application cible est requise.";
     return;
@@ -99,30 +105,14 @@ async function submitRelationUpdate() {
     return;
   }
 
-  const payload = {
-    applicationTargetId: selectedApplication.value.id,
+  emit("updateRelation", {
+    id: props.relation.id,
+    applicationSourceId: props.relation.applicationSourceId,
     type: relationTypeSelected.value,
-  };
-
-  const response = await api.relationControllerUpdate({
-    path: { applicationId: props.relation.applicationSourceId, id: props.relation.id },
-    body: payload,
+    mediationServiceId: selectedMediationService.value?.id || null,
+    applicationTargetId: selectedApplication.value.id,
   });
-  if (response.error) {
-    console.error(response.error);
-    errorMessage.value = "Erreur lors de la mise à jour de la relation.";
-    return;
-  }
-  if (!response.response.ok) {
-    errorMessage.value = "Erreur lors de la mise à jour de la relation.";
-    return;
-  }
-  if (response.data) {
-    const result = response.data;
-
-    emit("updateRelation", result);
-    closeModal();
-  }
+  closeModal();
 }
 
 function closeModal() {
@@ -161,6 +151,26 @@ function closeModal() {
       >
         <template v-slot:application-label>
           <DsfrTag v-if="selectedApplication?.label" :label="selectedApplication.label" :small="false" style="margin-top: 15px" />
+        </template>
+      </SuggestionsInput>
+      <SuggestionsInput
+        @update:selected-value="($event) => updateMediationServiceId($event ?? null)"
+        :search-data-function="performSearch"
+        label="Rechercher une application de mediation service (optionnel)"
+        placeholder="Tapez au moins 3 caractères"
+        data-testid="relation-suggestions-mediation-service-input"
+      >
+        <template v-slot:application-label>
+          <DsfrTag
+            v-if="selectedMediationService?.label"
+            :label="selectedMediationService.label"
+            :value="selectedMediationService.label"
+            :selected="false"
+            selectable
+            style="margin-top: 15px"
+            @select="updateMediationServiceId(null)"
+            class="fr-tag--dismiss"
+          />
         </template>
       </SuggestionsInput>
     </template>

@@ -44,6 +44,7 @@ erDiagram
   RelationType type
   String applicationSourceId FK
   String applicationTargetId FK
+  String mediationServiceId FK "nullable"
 }
 "ApplicationView" {
   String id PK
@@ -92,6 +93,7 @@ erDiagram
 "ApplicationStatus" }o--|| "Application" : application
 "Relation" }o--|| "Application" : sourceApplication
 "Relation" }o--|| "Application" : targetApplication
+"Relation" }o--o| "Application" : mediationService
 "ApplicationView" }o--|| "Application" : application
 "ExternalRessource" }o--|| "Application" : application
 "Label" }o--|| "Application" : application
@@ -146,6 +148,7 @@ Properties as follows:
 - `type`: Le type de relation (dépendance, remplacement, etc.)
 - `applicationSourceId`: Identifiant de l'application source dans cette relation
 - `applicationTargetId`: Identifiant de l'application cible dans cette relation
+- `mediationServiceId`: Identifiant du service de médiation (nullable si relation directe)
 
 ### `ApplicationView`
 

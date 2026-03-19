@@ -40,9 +40,11 @@ model Application {
   statuses            ApplicationStatus[]   @relation("ApplicationStatuses")
 
   /// Applications dont cette application dépend
-  relationsAsSource Relation[]         @relation("SourceHasTarget")
+  relationsAsSource             Relation[]         @relation("SourceHasTarget")
   /// Applications qui dépendent de cette application
-  relationsAsTarget Relation[]         @relation("TargetHasSource")
+  relationsAsTarget             Relation[]         @relation("TargetHasSource")
+  /// Relations où cette application est service de médiation
+  relationsAsMediationService   Relation[]         @relation("MediationService")
   /// Différents labels associés à cette application
   labels            Label[]            @relation("ApplicationLabels")
   /// Tags pour la catégorisation
@@ -108,10 +110,14 @@ model Relation {
   applicationSourceId String
   /// Identifiant de l'application cible dans cette relation
   applicationTargetId String
+  /// Identifiant du service de médiation (nullable si relation directe)
+  mediationServiceId  String?
   /// L'application source dans cette relation
   sourceApplication   Application  @relation("SourceHasTarget", fields: [applicationSourceId], references: [id], onDelete: Cascade)
   /// L'application cible dans cette relation
   targetApplication   Application  @relation("TargetHasSource", fields: [applicationTargetId], references: [id], onDelete: Cascade)
+  /// Le service de médiation (ex: API gateway, système d'échange) par lequel transitent les échanges
+  mediationService    Application? @relation("MediationService", fields: [mediationServiceId], references: [id], onDelete: SetNull)
 
   @@unique([applicationSourceId, applicationTargetId, type])
 }

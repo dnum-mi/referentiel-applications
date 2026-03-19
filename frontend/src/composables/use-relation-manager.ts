@@ -1,10 +1,10 @@
-import type { RelationDto } from "@/client/types.gen";
-import type { Relation } from "@/models/Application";
+import type { ApplicationDto, RelationApplicationDto, RelationDto } from "@/client/types.gen";
 import { computed, ref } from "vue";
 import api from "@/api/index";
 import { RelationType } from "@/client/types.gen";
 import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
+import type { RelationCreate, RelationUpdate } from "@/models/relations";
 
 export interface RelationRow {
   id: string;
@@ -12,6 +12,10 @@ export interface RelationRow {
   "Application Source": string;
   Relation: string;
   "Application Cible": {
+    label: string;
+    id: string | undefined;
+  };
+  "Mediation Service": {
     label: string;
     id: string | undefined;
   };
@@ -33,7 +37,7 @@ export function useRelationManager(applicationId: string) {
   const isEditRelationModalOpen = ref(false);
   const relationToEdit = ref<RelationDto | null>(null);
 
-  const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Actions"];
+  const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Mediation Service", "Actions"];
 
   const relationTypes: Record<RelationType, { source: string; target: string }> = {
     [RelationType.IS_PART_OF]: { source: "Fait partie de", target: "A comme sous‑élément" },
@@ -70,6 +74,10 @@ export function useRelationManager(applicationId: string) {
       "Application Cible": {
         label: rel.isSource ? targetLabel : sourceLabel,
         id: rel.isSource ? rel.applicationTargetId : rel.applicationSourceId,
+      },
+      "Mediation Service": {
+        label: rel.mediationService?.label || "",
+        id: rel.mediationService?.id,
       },
       Actions: {
         edit: () => editRelation(rel),
@@ -124,17 +132,14 @@ export function useRelationManager(applicationId: string) {
     relationToEdit.value = null;
   }
 
-  async function handleUpdateRelation(updated: RelationDto) {
-    await store.updateRelation(updated.applicationSourceId, updated.id, {
-      type: updated.type,
-      applicationTargetId: updated.applicationTargetId,
-    });
+  async function handleUpdateRelation(updated: RelationUpdate) {
+    await store.updateRelation(updated);
     toaster.addSuccessMessage("Relation mise à jour avec succès!");
     closeEditRelationModal();
   }
 
-  async function handleCreateRelation(created: Omit<Relation, "id">) {
-    await store.createRelation(created.applicationSourceId, created.applicationTargetId, created.type);
+  async function handleCreateRelation(created: RelationCreate) {
+    await store.createRelation(created);
     toaster.addSuccessMessage("Relation créée avec succès!");
     closeAddRelationModal();
   }

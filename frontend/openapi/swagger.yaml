@@ -3979,9 +3979,13 @@ components:
           type: string
         type:
           $ref: "#/components/schemas/relationType"
+        mediationServiceId:
+          type: string
+          nullable: true
       required:
         - applicationTargetId
         - type
+        - mediationServiceId
     ApplicationMinimalDto:
       type: object
       properties:
@@ -4001,19 +4005,28 @@ components:
           type: string
         applicationTargetId:
           type: string
+        mediationServiceId:
+          type: string
+          nullable: true
         sourceApplication:
           $ref: "#/components/schemas/ApplicationMinimalDto"
         targetApplication:
           $ref: "#/components/schemas/ApplicationMinimalDto"
         type:
           $ref: "#/components/schemas/relationType"
+        mediationService:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ApplicationMinimalDto"
       required:
         - id
         - applicationSourceId
         - applicationTargetId
+        - mediationServiceId
         - sourceApplication
         - targetApplication
         - type
+        - mediationService
     Status:
       type: string
       enum:
