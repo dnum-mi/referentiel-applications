@@ -41,7 +41,7 @@ export class TimeChartBuilder {
       .attr("fill", "var(--blue-france-sun-113-625)")
       .attr("font-size", "16px")
       .attr("font-weight", "bold")
-      .text("TIME analysis For Sécurité intérieure");
+      .text("TIME analysis");
     return this;
   }
 
