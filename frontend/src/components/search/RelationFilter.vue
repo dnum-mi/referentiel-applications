@@ -1,11 +1,17 @@
 <script lang="ts" setup>
-import { watch } from "vue";
-import { useApplicationSearch } from "@/composables/use-application-search";
-import { RelationType, type ApplicationDto } from "@/client";
 import api from "@/api";
-import { RELATION_TYPE_FILTERS, RELATION_TYPE_FILTERS_ARRAY, type RelationTypeFilter } from "@/types/relation-type-filter";
-import { typeguardIncludes } from "@/utils/typeguard-includes";
+import { RelationType, type ApplicationControllerSearchData, type ApplicationDto } from "@/client";
+import { useApplicationSearch } from "@/composables/use-application-search";
 import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
+import {
+  IS_MEDIATION_SERVICE,
+  RELATION_TYPE_FILTERS,
+  RELATION_TYPE_FILTERS_ARRAY,
+  type MediationServiceField,
+  type RelationTypeFilter,
+} from "@/types/relation-type-filter";
+import { typeguardIncludes } from "@/utils/typeguard-includes";
+import { watch } from "vue";
 
 const { searchApplications, setFilter, filters } = useApplicationSearch();
 const isLoading = ref(false);
@@ -27,6 +33,7 @@ async function performSearch(query: string) {
           is_service_user_of: RELATION_TYPE_FILTERS.neutral,
           in_replacement_of: RELATION_TYPE_FILTERS.neutral,
           use_sso_of: RELATION_TYPE_FILTERS.neutral,
+          is_mediation_service: RELATION_TYPE_FILTERS.neutral,
           relationAppId: undefined,
         },
         false,
@@ -56,34 +63,34 @@ watch([() => filters.value.relationAppId], ([relationAppId]) => {
   }
 });
 
-type RelationField = RelationType;
-type FilterKey = RelationType;
+type RelationField = RelationType | MediationServiceField;
 
-const relationFields: { field: RelationField; filterKey: FilterKey; label: string; testId: string }[] = [
-  { field: RelationType.IS_PART_OF, filterKey: RelationType.IS_PART_OF, label: "Fait partie de", testId: "relation-is_part_of-select" },
+const relationFields: { field: RelationField; label: string; testId: string }[] = [
+  { field: RelationType.IS_PART_OF, label: "Fait partie de", testId: "relation-is_part_of-select" },
   {
     field: RelationType.IN_REPLACEMENT_OF,
-    filterKey: RelationType.IN_REPLACEMENT_OF,
     label: "Remplace",
     testId: "relation-in_replacement_of-select",
   },
   {
     field: RelationType.IS_SERVICE_USER_OF,
-    filterKey: RelationType.IS_SERVICE_USER_OF,
     label: "Utilise le service de",
     testId: "relation-is_service_user_of-select",
   },
   {
     field: RelationType.IS_DATA_USER_OF,
-    filterKey: RelationType.IS_DATA_USER_OF,
     label: "Utilise la donnée de",
     testId: "relation-is_data_user_of-select",
   },
   {
     field: RelationType.USE_SSO_OF,
-    filterKey: RelationType.USE_SSO_OF,
     label: "Utilise le SSO de",
     testId: "relation-use_sso_of-select",
+  },
+  {
+    field: IS_MEDIATION_SERVICE,
+    label: "Mediation de service",
+    testId: "relation-mediation-service-select",
   },
 ];
 
@@ -102,7 +109,7 @@ const optionsMap: { text: string; value: RelationTypeFilter }[] = [
   },
 ];
 
-const updateFilter = (filterKey: RelationType, value: string | number) => {
+const updateFilter = (filterKey: RelationField, value: string | number) => {
   if (typeof value === "string" && typeguardIncludes(value, RELATION_TYPE_FILTERS_ARRAY)) {
     setFilter({ [filterKey]: value || undefined });
   }
@@ -135,14 +142,14 @@ watch(
       data-testid="relation-suggestions-input"
     />
     <DsfrSelect
-      v-for="{ field, filterKey, testId, label } in relationFields"
+      v-for="{ field, testId, label } in relationFields"
       :key="field"
-      :model-value="filters[filterKey] || RELATION_TYPE_FILTERS.neutral"
+      :model-value="filters[field] || RELATION_TYPE_FILTERS.neutral"
       :label="label"
       :options="optionsMap"
       :disabled="isLoading"
       :data-testid="testId"
-      @update:model-value="updateFilter(filterKey, $event)"
+      @update:model-value="updateFilter(field, $event)"
     />
   </div>
 </template>
