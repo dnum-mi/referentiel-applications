@@ -3,15 +3,12 @@ import {
   Controller,
   Get,
   HttpCode,
-  NotFoundException,
   Param,
   Patch,
   Post,
   UseGuards,
 } from "@nestjs/common";
 import {
-  ApiConflictResponse,
-  ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -28,6 +25,37 @@ import {
 } from "./dto/create-compliance.dto";
 import { UpdateComplianceDto } from "./dto/update-compliance.dto";
 import { detectCompliances } from "./utils/compliance.utils";
+
+const COMPLIANCE_METADATA_FIELDS = {
+  dima_duration_hours: "durée DIMA (heures)",
+  dima_is_hno: "HNO DIMA",
+  dima_business_impact: "impact métier DIMA",
+  dima_recovery_plan: "plan de reprise DIMA",
+  dima_recovery_solutions: "solutions de reprise DIMA",
+  dima_last_test_date: "date dernier test DIMA",
+  dima_test_result: "résultat test DIMA",
+  dima_recovery_manager: "responsable reprise DIMA",
+  pdma_duration_hours: "durée PDMA (heures)",
+  pdma_data_types: "types de données PDMA",
+  pdma_backup_frequency: "fréquence sauvegarde PDMA",
+  pdma_backup_method: "méthode sauvegarde PDMA",
+  pdma_backup_storage: "stockage sauvegarde PDMA",
+  pdma_last_test_date: "date dernier test PDMA",
+  pdma_test_result: "résultat test PDMA",
+  pdma_restoration_manager: "responsable restauration PDMA",
+  homologation_date_end: "date fin homologation",
+  homologation_rssi_id: "RSSI homologation",
+  homologation_status: "statut d'homologation",
+  rgaa_audit_date: "date audit RGAA",
+  rgaa_service_url: "URL service RGAA",
+  rgaa_accessibility_url: "URL accessibilité RGAA",
+  rgaa_score_percentage: "score RGAA (%)",
+  dsfr_implemented: "DSFR implémenté",
+  dsfr_version: "version DSFR",
+  rgpd_has_aipd: "AIPD RGPD",
+  rgpd_dpo_name: "nom DPO RGPD",
+  eco_index_target_url: "URL cible EcoIndex",
+};
 
 @ApiTags("Compliances")
 @Controller("compliances")
@@ -56,13 +84,10 @@ export class ApplicationCompliancesController {
   @Post()
   @RequiredPermissions([Permission.ComplianceWrite])
   @ApiOperation({ summary: "Create a new compliance for an application" })
-  @HttpCode(201)
-  @ApiCreatedResponse({
-    description: "Compliance created successfully",
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: "Compliance created or updated successfully",
     type: ComplianceDto,
-  })
-  @ApiConflictResponse({
-    description: "A compliance already exists for this application",
   })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
   async create(
@@ -72,22 +97,16 @@ export class ApplicationCompliancesController {
   ) {
     const sections = detectCompliances(Object.keys(createComplianceDto));
     const sectionSuffix = sections.length ? ` (${sections.join(", ")})` : "";
-    return await this.compliancesService.create(
-      {
-        ...createComplianceDto,
-        application: {
-          connect: {
-            id: applicationId,
-          },
-        },
-      },
+    return await this.compliancesService.createOrUpdateByApplicationId(
+      applicationId,
+      createComplianceDto,
       {
         applicationId,
         triggerQualityUpdate: true,
         metadata: {
           userId,
           gender: "de la conformité",
-          getColumn: (entity) => sectionSuffix,
+          getColumn: () => sectionSuffix,
           entity: "complianceId",
         },
       },
@@ -119,16 +138,11 @@ export class ApplicationCompliancesController {
     @Param("applicationId") applicationId: string,
     @Body() updateComplianceDto: UpdateComplianceDto,
   ) {
-    // Find the existing compliance for this application
-    const compliance =
-      await this.compliancesService.findByApplicationId(applicationId);
-    if (!compliance) {
-      throw new NotFoundException("No compliance found for this application");
-    }
     const sections = detectCompliances(Object.keys(updateComplianceDto));
     const sectionSuffix = sections.length ? ` (${sections.join(", ")})` : "";
-    const result = await this.compliancesService.update(
-      compliance.id,
+
+    return this.compliancesService.createOrUpdateByApplicationId(
+      applicationId,
       updateComplianceDto,
       {
         applicationId,
@@ -138,44 +152,25 @@ export class ApplicationCompliancesController {
           gender: "de la conformité",
           entity: "complianceId",
           getColumn: () => sectionSuffix,
-          fields: {
-            // DIMA fields
-            dima_duration_hours: "durée DIMA (heures)",
-            dima_is_hno: "HNO DIMA",
-            dima_business_impact: "impact métier DIMA",
-            dima_recovery_plan: "plan de reprise DIMA",
-            dima_recovery_solutions: "solutions de reprise DIMA",
-            dima_last_test_date: "date dernier test DIMA",
-            dima_test_result: "résultat test DIMA",
-            dima_recovery_manager: "responsable reprise DIMA",
-            // PDMA fields
-            pdma_duration_hours: "durée PDMA (heures)",
-            pdma_data_types: "types de données PDMA",
-            pdma_backup_frequency: "fréquence sauvegarde PDMA",
-            pdma_backup_method: "méthode sauvegarde PDMA",
-            pdma_backup_storage: "stockage sauvegarde PDMA",
-            pdma_last_test_date: "date dernier test PDMA",
-            pdma_test_result: "résultat test PDMA",
-            pdma_restoration_manager: "responsable restauration PDMA",
-            // Homologation fields
-            homologation_date_end: "date fin homologation",
-            homologation_rssi_id: "RSSI homologation",
-            homologation_status: "statut d'homologation",
-            // RGAA fields
-            rgaa_audit_date: "date audit RGAA",
-            rgaa_service_url: "URL service RGAA",
-            rgaa_accessibility_url: "URL accessibilité RGAA",
-            rgaa_score_percentage: "score RGAA (%)",
-            // DSFR fields
-            dsfr_implemented: "DSFR implémenté",
-            dsfr_version: "version DSFR",
-            // RGPD fields
-            rgpd_has_aipd: "AIPD RGPD",
-            rgpd_dpo_name: "nom DPO RGPD",
-          },
+          fields: COMPLIANCE_METADATA_FIELDS,
         },
       },
     );
-    return result;
+  }
+
+  @Post("ecoindex/scan")
+  @ApiOperation({
+    summary: "Calculer et enregistrer le score EcoIndex pour cette application",
+  })
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: "Score EcoIndex calculé et enregistré avec succès",
+    type: ComplianceDto,
+  })
+  @ApiParam({ name: "applicationId", description: "ID of the application" })
+  async scanEcoIndex(@Param("applicationId") applicationId: string) {
+    return this.compliancesService.calculateAndStoreLatestEcoIndex(
+      applicationId,
+    );
   }
 }

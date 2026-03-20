@@ -42,4 +42,11 @@ export class Compliance {
   // RGPD specific fields
   rgpd_has_aipd?: boolean;
   rgpd_dpo_name?: string;
+
+  // EcoIndex fields
+  eco_index_score?: number;
+  eco_index_ges?: number;
+  eco_index_water?: number;
+  eco_index_target_url?: string;
+  eco_index_last_calculated_at?: Date;
 }

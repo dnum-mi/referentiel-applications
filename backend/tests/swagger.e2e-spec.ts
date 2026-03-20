@@ -37,7 +37,10 @@ describe("Test Swagger documentation", () => {
   });
 
   it("test all paths and responses", () => {
-    const pathsAllowedWithoutBody = ["/users/me/subscribe/{appId}"];
+    const pathsAllowedWithoutBody = [
+      "/users/me/subscribe/{appId}",
+      "/applications/{applicationId}/compliances/ecoindex/scan",
+    ];
     for (const [path, pathObject] of Object.entries(openapiSpec.paths)) {
       for (const method of methods) {
         if (!pathObject[method]) {

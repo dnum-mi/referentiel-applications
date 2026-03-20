@@ -72,6 +72,17 @@ model Compliance {
   rgpd_has_aipd Boolean?
   /// RGPD : Nom du Délégué à la Protection des Données
   rgpd_dpo_name String?  @db.VarChar(255)
+
+  /// EcoIndex : Score global (0-100)
+  eco_index_score Float?
+  /// EcoIndex : Émissions de gaz à effet de serre (gCO2e)
+  eco_index_ges   Float?
+  /// EcoIndex : Consommation d'eau (centilitres)
+  eco_index_water Float?
+  /// EcoIndex : URL cible utilisée pour le calcul
+  eco_index_target_url String?
+  /// EcoIndex : Date du dernier calcul
+  eco_index_last_calculated_at DateTime?
 }
 
 /// Résultat d'un test (OK ou KO)

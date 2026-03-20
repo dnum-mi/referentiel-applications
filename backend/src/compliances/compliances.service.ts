@@ -1,10 +1,13 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/applications/application.service";
 import { BaseService } from "../common/base.service";
 import { Compliance } from "./entities/compliance.entity";
 import { ServiceOptions } from "src/common/utils/types";
+import { CreateComplianceDto } from "./dto/create-compliance.dto";
+import { UpdateComplianceDto } from "./dto/update-compliance.dto";
+import { calculateEcoIndexMetricsFromUrl } from "./utils/ecoindex.utils";
 
 @Injectable()
 export class CompliancesService extends BaseService<Compliance> {
@@ -16,24 +19,73 @@ export class CompliancesService extends BaseService<Compliance> {
     super(prisma.compliance, prisma, metadataService, applicationService);
   }
 
-  async create(
-    createDto,
-    options?: ServiceOptions<Compliance>,
-  ): Promise<Compliance> {
-    // Check if a compliance already exists for this application
-    const applicationId = createDto.application.connect.id;
-    if (applicationId) {
-      const existingCompliance = await this.findByApplicationId(applicationId);
-      if (existingCompliance) {
-        throw new ConflictException(
-          "A compliance already exists for this application",
-        );
-      }
-    }
-    return super.create(createDto, options);
-  }
-
   async findByApplicationId(applicationId: string): Promise<Compliance | null> {
     return this.model.findFirst({ where: { applicationId } });
+  }
+
+  async createOrUpdateByApplicationId(
+    applicationId: string,
+    data: CreateComplianceDto | UpdateComplianceDto,
+    options?: ServiceOptions<Compliance>,
+  ): Promise<Compliance> {
+    const applicationExists = await this.hasApplication(applicationId);
+
+    if (!applicationExists) {
+      throw new NotFoundException("No application found for this ID");
+    }
+
+    const existing = await this.findByApplicationId(applicationId);
+    if (existing) {
+      return this.update(existing.id, data, options);
+    }
+
+    return super.create(
+      {
+        ...data,
+        applicationId,
+      },
+      options,
+    );
+  }
+
+  private async hasApplication(applicationId: string): Promise<boolean> {
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      select: { id: true },
+    });
+    return Boolean(application);
+  }
+
+  async calculateAndStoreLatestEcoIndex(
+    applicationId: string,
+  ): Promise<Compliance> {
+    const complianceRecord = await this.findByApplicationId(applicationId);
+    const targetUrl = complianceRecord?.eco_index_target_url;
+
+    if (!targetUrl || !targetUrl.startsWith("http")) {
+      throw new NotFoundException(
+        "Aucune URL cible EcoIndex valide trouvée. Veuillez renseigner eco_index_target_url dans la conformité.",
+      );
+    }
+
+    const { score, ges, water, calculatedAt } =
+      await calculateEcoIndexMetricsFromUrl(targetUrl);
+
+    const data = {
+      eco_index_score: score,
+      eco_index_ges: ges,
+      eco_index_water: water,
+      eco_index_last_calculated_at: calculatedAt,
+    };
+    return this.prisma.compliance.upsert({
+      where: { applicationId },
+      create: {
+        applicationId,
+        ...data,
+      },
+      update: {
+        ...data,
+      },
+    }) as unknown as Compliance;
   }
 }

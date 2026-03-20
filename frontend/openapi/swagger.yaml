@@ -3481,14 +3481,12 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateComplianceDto"
       responses:
-        "201":
-          description: Compliance created successfully
+        "200":
+          description: Compliance created or updated successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-        "409":
-          description: A compliance already exists for this application
       tags: &a20
         - Compliances
     get:
@@ -3528,6 +3526,25 @@ paths:
       responses:
         "200":
           description: Compliance updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDto"
+      tags: *a20
+  /api/v2/applications/{applicationId}/compliances/ecoindex/scan:
+    post:
+      operationId: ApplicationCompliancesController_scanEcoIndex
+      summary: Calculer et enregistrer le score EcoIndex pour cette application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Score EcoIndex calculé et enregistré avec succès
           content:
             application/json:
               schema:
@@ -4787,7 +4804,7 @@ components:
         name:
           type: string
           minLength: 2
-          maxLength: 128
+          maxLength: 100
           description: Nom unique du tag
           example: securite
       required:
@@ -4801,7 +4818,7 @@ components:
         name:
           type: string
           minLength: 2
-          maxLength: 128
+          maxLength: 100
           pattern: /^[a-z._-]+$/
           description: Nom unique du tag
           example: securite
@@ -4834,7 +4851,7 @@ components:
         name:
           type: string
           minLength: 2
-          maxLength: 128
+          maxLength: 100
           description: Nom unique du tag
           example: securite
     PaginatedBusinessDivisionDTO:
@@ -5829,6 +5846,10 @@ components:
           type: string
           example: Pierre Durand
           description: RGPD DPO name
+        eco_index_target_url:
+          type: string
+          example: https://service.example.com
+          description: EcoIndex target URL used for scan
     ComplianceDto:
       type: object
       properties:
@@ -5942,10 +5963,31 @@ components:
           type: string
           example: Pierre Durand
           description: RGPD DPO name
+        eco_index_target_url:
+          type: string
+          example: https://service.example.com
+          description: EcoIndex target URL used for scan
         id:
           type: string
           example: 12345678-1234-1234-1234-123456789012
           description: Unique identifier of the compliance record
+        eco_index_score:
+          type: number
+          example: 72.5
+          description: EcoIndex score (0-100)
+        eco_index_ges:
+          type: number
+          example: 1.77
+          description: EcoIndex greenhouse gas emissions (gCO2e)
+        eco_index_water:
+          type: number
+          example: 2.65
+          description: EcoIndex water consumption (cl)
+        eco_index_last_calculated_at:
+          type: string
+          format: date-time
+          example: 2026-03-20T10:30:00.000Z
+          description: EcoIndex last calculation datetime
       required:
         - id
     UpdateComplianceDto:
@@ -6061,6 +6103,10 @@ components:
           type: string
           example: Pierre Durand
           description: RGPD DPO name
+        eco_index_target_url:
+          type: string
+          example: https://service.example.com
+          description: EcoIndex target URL used for scan
     CreateTechnicalDebtInfoDto:
       type: object
       properties:

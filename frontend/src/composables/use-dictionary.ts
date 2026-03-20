@@ -159,6 +159,10 @@ export const complianceFieldLabels: Record<string, string> = {
   recovery_manager: "Responsable de la reprise",
   backup_method: "Méthode de sauvegarde",
   restoration_manager: "Responsable de la restauration",
+  eco_index_score: "Score EcoIndex",
+  eco_index_ges: "Émissions GES (gCO2e)",
+  eco_index_water: "Consommation d'eau (cl)",
+  eco_index_target_url: "URL cible EcoIndex",
 };
 
 export const metadataActionLabels: Record<string, string> = {
