@@ -15,10 +15,7 @@ function handleDelete(hosting: HostingDto) {
 
 const getActiveBadgeProps = (
   hosting: HostingDto,
-): Pick<DsfrBadgeProps, "label"> & { type: Extract<DsfrBadgeProps["type"], "success" | "warning" | "info"> } => {
-  if (hosting.isActive === null) {
-    return { label: "Non renseigné", type: "warning" };
-  }
+): Pick<DsfrBadgeProps, "label"> & { type: Extract<DsfrBadgeProps["type"], "success" | "info"> } => {
   return hosting.isActive ? { label: "Actif", type: "success" } : { label: "Passif", type: "info" };
 };
 </script>
@@ -36,7 +33,13 @@ const getActiveBadgeProps = (
         <div class="fr-col">
           <p class="fr-mb-0">
             <strong>{{ hosting.label || "Hébergement" }}</strong>
-            <DsfrBadge v-bind="getActiveBadgeProps(hosting)" small class="fr-ml-1w" data-testid="hosting-active-badge" />
+            <DsfrBadge
+              v-if="hosting.isActive !== null"
+              v-bind="getActiveBadgeProps(hosting)"
+              small
+              class="fr-ml-1w"
+              data-testid="hosting-active-badge"
+            />
           </p>
           <div class="fr-text--sm fr-mt-1w">
             <!-- Location info -->
