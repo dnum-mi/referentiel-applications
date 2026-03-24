@@ -878,6 +878,16 @@ paths:
           schema:
             nullable: true
             type: string
+        - name: is_mediation_service
+          required: false
+          in: query
+          description: Filtrée sur la mediation de service
+          schema:
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+            type: string
       responses:
         "200":
           description: Liste des applications correspondant aux critères de recherche avec
@@ -1266,6 +1276,16 @@ paths:
           description: Filtrage des directions de metier MOA
           schema:
             nullable: true
+            type: string
+        - name: is_mediation_service
+          required: false
+          in: query
+          description: Filtrée sur la mediation de service
+          schema:
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
       responses:
         "200":
@@ -3912,6 +3932,16 @@ paths:
           description: Filtrage des directions de metier MOA
           schema:
             nullable: true
+            type: string
+        - name: is_mediation_service
+          required: false
+          in: query
+          description: Filtrée sur la mediation de service
+          schema:
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
             type: string
       responses:
         "200":

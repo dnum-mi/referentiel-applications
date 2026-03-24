@@ -464,6 +464,38 @@ export class PrismaQueryBuilder {
       }
     };
 
+    const buildMediationServiceQuery = (
+      value?: RelationTypeFilter,
+      relationAppId?: string,
+    ) => {
+      if (!relationAppId) return;
+
+      const query: Prisma.ApplicationWhereInput = {
+        OR: [
+          {
+            relationsAsSource: { some: { mediationServiceId: relationAppId } },
+          },
+          {
+            relationsAsTarget: { some: { mediationServiceId: relationAppId } },
+          },
+        ],
+      };
+
+      switch (value) {
+        case "INCLUDE":
+          includeQueries.push(query);
+          return;
+        case "EXCLUDE":
+          excludeQueries.push({
+            NOT: query,
+          });
+          return;
+        case "NEUTRAL":
+        default:
+          return;
+      }
+    };
+
     buildRelationQuery("is_part_of", filters.is_part_of, filters.relationAppId);
     buildRelationQuery(
       "in_replacement_of",
@@ -481,6 +513,10 @@ export class PrismaQueryBuilder {
       filters.relationAppId,
     );
     buildRelationQuery("use_sso_of", filters.use_sso_of, filters.relationAppId);
+    buildMediationServiceQuery(
+      filters.is_mediation_service,
+      filters.relationAppId,
+    );
 
     return {
       AND: [...excludeQueries, { OR: includeQueries }],

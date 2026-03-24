@@ -311,4 +311,12 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsOptional()
   @IsString()
   businessDivisionId?: string | null;
+
+  @ApiPropertyOptional({
+    description: "Filtrée sur la mediation de service",
+    enum: ["NEUTRAL", "INCLUDE", "EXCLUDE"],
+  })
+  @IsOptional()
+  @IsEnum(["NEUTRAL", "INCLUDE", "EXCLUDE"])
+  is_mediation_service?: RelationTypeFilter;
 }
