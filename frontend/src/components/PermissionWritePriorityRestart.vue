@@ -13,12 +13,12 @@ const emit = defineEmits<{
   "update:model-value": [value: boolean];
 }>();
 
-const value = computed(() => (props.checked ? "write" : "read"));
+const value = computed(() => (props.checked ? "write" : "none"));
 
 const permDict = {
-  read: {
-    label: "RO",
-    class: "permission-read",
+  none: {
+    label: "-",
+    class: "permission-none",
   },
   write: {
     label: "RW",
@@ -51,16 +51,6 @@ const permDict = {
   color: var(--text-action-high-grey);
 }
 
-.permission-read {
-  background-color: var(--background-action-low-blue-cumulus);
-}
-.permission-read:hover {
-  background-color: var(--background-action-low-blue-cumulus-hover);
-}
-.permission-read:active {
-  background-color: var(--background-action-low-blue-cumulus-active);
-}
-
 .permission-write {
   background-color: var(--background-action-low-green-emeraude);
 }
@@ -69,5 +59,15 @@ const permDict = {
 }
 .permission-write:active {
   background-color: var(--background-action-low-green-emeraude-active);
+}
+
+.permission-none {
+  background-color: var(--background-action-low-red-marianne);
+}
+.permission-none:hover {
+  background-color: var(--background-action-low-red-marianne-hover);
+}
+.permission-none:active {
+  background-color: var(--background-active-red-marianne-hover);
 }
 </style>
