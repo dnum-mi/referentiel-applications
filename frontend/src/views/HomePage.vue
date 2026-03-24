@@ -5,13 +5,12 @@
         <h1 data-testid="home-title">Le référentiel des applications</h1>
       </div>
     </div>
-    <div class="fr-grid-row fr-grid-row--gutters">
-      <img class="fr-col-md-3" src="/assets/svg-screen.svg" alt="" />
+    <div class="fr-grid-row--gutters">
       <p class="fr-col-md-9">
-        Le référentiel des applications représente l'ensemble des produits numériques et logiciels utilisés au sein du système
-        d'information; Il permet de centraliser, structurer, et gérer efficacement pour un accès et une utilisation optimisés; Il "participe
-        à la protection, à la défense et à la résilience du système d’information"(*). Il est adressé à l'ensemble des acteurs du Système
-        d'information.
+        Le référentiel des applications recense l’ensemble des produits numériques et logiciels développés et hébergés au sein du système
+        d’information du ministère. Il assure la centralisation, la structuration et la gestion efficace de ces applications, afin d’en
+        optimiser l’accès et l’usage partagé. Il contribue également à la sécurité, à la protection et à la résilience du système
+        d’information.
       </p>
     </div>
 
