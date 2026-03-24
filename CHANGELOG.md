@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.68.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.67.0...v1.68.0) (2026-03-24)
+
+
+### Features
+
+* add filter for service mediation ([#1605](https://github.com/dnum-mi/referentiel-applications/issues/1605)) ([066a7b5](https://github.com/dnum-mi/referentiel-applications/commit/066a7b586feac0c6c95066652d3331fe280f2427))
+* add mediation service in relation apps ([#1593](https://github.com/dnum-mi/referentiel-applications/issues/1593)) ([1057122](https://github.com/dnum-mi/referentiel-applications/commit/105712228b996000b17c2106b62476733e24b8a5))
+* update home page to remove icon and update description ([#1601](https://github.com/dnum-mi/referentiel-applications/issues/1601)) ([1062f48](https://github.com/dnum-mi/referentiel-applications/commit/1062f48fc0b228cf7e68a6d55b08e306de32002a))
+
+
+### Bug Fixes
+
+* :bug: update chart title to remove unnecessary text ([#1600](https://github.com/dnum-mi/referentiel-applications/issues/1600)) ([f74f6df](https://github.com/dnum-mi/referentiel-applications/commit/f74f6df6e0f0171478b6b40ca9c60707edace94f))
+* :wrench: update backend config to make env label work ([#1598](https://github.com/dnum-mi/referentiel-applications/issues/1598)) ([2be2a59](https://github.com/dnum-mi/referentiel-applications/commit/2be2a5925c57f1231f416eab8e98299f2178c50f))
+* remove hosting badge when no value ([#1608](https://github.com/dnum-mi/referentiel-applications/issues/1608)) ([3a2c4d4](https://github.com/dnum-mi/referentiel-applications/commit/3a2c4d49b66f002a01889c37efee032d3d22ea05))
+
 ## [1.67.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.66.0...v1.67.0) (2026-03-18)
 
 
