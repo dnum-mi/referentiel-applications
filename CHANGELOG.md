@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.68.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.68.1...v1.68.2) (2026-03-27)
+
+
+### Bug Fixes
+
+* conformity date ([#1629](https://github.com/dnum-mi/referentiel-applications/issues/1629)) ([0311a5f](https://github.com/dnum-mi/referentiel-applications/commit/0311a5fe6f411fe818a89291c95237e3b0a5fd61))
+
 ## [1.68.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.68.0...v1.68.1) (2026-03-27)
 
 
