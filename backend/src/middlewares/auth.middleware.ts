@@ -60,7 +60,7 @@ export class AuthMiddleware implements NestMiddleware {
       }
       req.user = {
         ...user,
-        permissions: Array.from(roleToPermissions(user.adminLevel)),
+        permissions: roleToPermissions(user.adminLevel),
       };
 
       this.actionLogService.updateUserLastLogin(req.user);

@@ -113,10 +113,7 @@ export class ApplicationService {
       delete data.priorityRestart;
       // if the user has AppWrite permission, they can write other fields except priorityRestart
     } else if (
-      !(await this.checkPermissions.can(
-        [Permission.AppWritePriority],
-        requestor,
-      ))
+      !(await this.checkPermissions.can([Permission.AppWrite], requestor))
     ) {
       data = {
         priorityRestart: data.priorityRestart,

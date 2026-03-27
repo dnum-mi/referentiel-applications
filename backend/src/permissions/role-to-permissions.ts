@@ -41,12 +41,12 @@ const ADMIN_PERMISSIONS = new Set([
 export const roleToPermissions = (adminLevel: AdminLevel) => {
   switch (adminLevel) {
     case AdminLevel.ADMIN:
-      return ADMIN_PERMISSIONS;
+      return Array.from(ADMIN_PERMISSIONS).sort();
     case AdminLevel.WRITE:
-      return WRITE_PERMISSIONS;
+      return Array.from(WRITE_PERMISSIONS).sort();
     case AdminLevel.READ:
-      return READ_PERMISSIONS;
+      return Array.from(READ_PERMISSIONS).sort();
     case AdminLevel.NONE:
-      return NONE_PERMISSIONS;
+      return Array.from(NONE_PERMISSIONS).sort();
   }
 };
