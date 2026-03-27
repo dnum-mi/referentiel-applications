@@ -98,7 +98,7 @@ describe("application guard", () => {
     appOwner = await UserFaker.create();
     appActor = await UserFaker.create();
     TOKEN = await getToken(appActor);
-    actorType = await ActorTypeFaker.create(["readLinks"]);
+    actorType = await ActorTypeFaker.create(["LinkRead"]);
   });
 
   afterAll(async () => {
@@ -125,7 +125,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeLinks"]);
+    await actorType.update(["LinkWrite"]);
     const link = await request(app().getHttpServer())
       .post(`/applications/${application.id}/links`)
       .send({
@@ -148,7 +148,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add read permission
-    await actorType.update(["readLinks"]);
+    await actorType.update(["LinkRead"]);
 
     // Should succeed to list links
     await request(app().getHttpServer())
@@ -171,7 +171,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeLinks"]);
+    await actorType.update(["LinkWrite"]);
 
     // Should succeed to update the link
     await request(app().getHttpServer())

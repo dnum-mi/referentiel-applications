@@ -249,7 +249,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add read permission
-    await actorType.update(["readBase"]);
+    await actorType.update(["AppRead"]);
 
     // Should succeed to get the application
     await request(app().getHttpServer())
@@ -267,7 +267,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeBase"]);
+    await actorType.update(["AppWrite"]);
 
     // Should succeed to update the relation
     await request(app().getHttpServer())

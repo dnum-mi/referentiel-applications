@@ -545,23 +545,23 @@ Properties as follows:
 ```mermaid
 erDiagram
 "AppPermissions" {
-  Boolean readBase
-  Boolean writeBase
-  Boolean writePriorityRestart
-  Boolean readActors
-  Boolean writeActors
-  Boolean readCompliances
-  Boolean writeCompliances
-  Boolean readHostings
-  Boolean writeHostings
-  Boolean readMetadata
-  Boolean readRelations
-  Boolean writeRelations
-  Boolean readLinks
-  Boolean writeLinks
-  Boolean readReports
-  Boolean postReports
-  Boolean manageReports
+  Boolean AppRead
+  Boolean AppWrite
+  Boolean AppWritePriority
+  Boolean ActorRead
+  Boolean ActorWrite
+  Boolean ComplianceRead
+  Boolean ComplianceWrite
+  Boolean HostingRead
+  Boolean HostingWrite
+  Boolean MetadataRead
+  Boolean RelationRead
+  Boolean RelationWrite
+  Boolean LinkRead
+  Boolean LinkWrite
+  Boolean ReportRead
+  Boolean ReportPost
+  Boolean ReportManage
   String actorTypeId FK,UK
 }
 "Token" {
@@ -620,23 +620,23 @@ Définit quelles actions les acteurs de ce type peuvent effectuer.
 
 Properties as follows:
 
-- `readBase`: Peut lire les informations de base de l'application
-- `writeBase`: Peut écrire les informations de base de l'application
-- `writePriorityRestart`: Peut mettre à jour les paramètres de priorité de redémarrage
-- `readActors`: Peut lire les informations des acteurs
-- `writeActors`: Peut écrire les informations des acteurs
-- `readCompliances`: Peut lire les informations de conformité
-- `writeCompliances`: Peut écrire les informations de conformité
-- `readHostings`: Peut lire les informations d'hébergement
-- `writeHostings`: Peut écrire les informations d'hébergement
-- `readMetadata`: Peut lire les métadonnées
-- `readRelations`: Peut lire les relations d'application
-- `writeRelations`: Peut écrire les relations d'application
-- `readLinks`: Peut lire les liens externes
-- `writeLinks`: Peut écrire les liens externes
-- `readReports`: Peut lire les signalements
-- `postReports`: Peut créer des signalements
-- `manageReports`: Peut gérer (mettre à jour/supprimer) les signalements
+- `AppRead`: Peut lire les informations de base de l'application
+- `AppWrite`: Peut écrire les informations de base de l'application
+- `AppWritePriority`: Peut mettre à jour les paramètres de priorité de redémarrage
+- `ActorRead`: Peut lire les informations des acteurs
+- `ActorWrite`: Peut écrire les informations des acteurs
+- `ComplianceRead`: Peut lire les informations de conformité
+- `ComplianceWrite`: Peut écrire les informations de conformité
+- `HostingRead`: Peut lire les informations d'hébergement
+- `HostingWrite`: Peut écrire les informations d'hébergement
+- `MetadataRead`: Peut lire les métadonnées
+- `RelationRead`: Peut lire les relations d'application
+- `RelationWrite`: Peut écrire les relations d'application
+- `LinkRead`: Peut lire les liens externes
+- `LinkWrite`: Peut écrire les liens externes
+- `ReportRead`: Peut lire les signalements
+- `ReportPost`: Peut créer des signalements
+- `ReportManage`: Peut gérer (mettre à jour/supprimer) les signalements
 - `actorTypeId`:
 
 ### `Token`

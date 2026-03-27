@@ -54,7 +54,7 @@ export class ApplicationCompliancesController {
   constructor(private readonly compliancesService: CompliancesService) {}
 
   @Post()
-  @RequiredPermissions([Permission.writeCompliances])
+  @RequiredPermissions([Permission.ComplianceWrite])
   @ApiOperation({ summary: "Create a new compliance for an application" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -95,7 +95,7 @@ export class ApplicationCompliancesController {
   }
 
   @Get()
-  @RequiredPermissions([Permission.readCompliances])
+  @RequiredPermissions([Permission.ComplianceRead])
   @ApiOperation({ summary: "Retrieve the compliance for an application" })
   @ApiOkResponse({
     description: "Compliance found successfully",
@@ -107,7 +107,7 @@ export class ApplicationCompliancesController {
   }
 
   @Patch()
-  @RequiredPermissions([Permission.writeCompliances])
+  @RequiredPermissions([Permission.ComplianceWrite])
   @ApiOperation({ summary: "Update the compliance for an application" })
   @ApiOkResponse({
     description: "Compliance updated successfully",

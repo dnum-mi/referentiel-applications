@@ -51,7 +51,7 @@ export class ActorTypeController {
    * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
    */
   @Post()
-  @RequiredPermissions([Permission.postActorType])
+  @RequiredPermissions([Permission.ActorTypePost])
   @ApiBody({ type: CreateActorTypeDto })
   @ApiOperation({
     summary: "Créer un nouveau type d’acteur",
@@ -74,7 +74,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get("/perms-matrix")
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Récupérer la matrice des permissions",
     description:
@@ -112,7 +112,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Patch("/perms-matrix")
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Mettre à jour la matrice des permissions",
     description:
@@ -158,7 +158,7 @@ Vous devez fournir les informations suivantes :
    * @returns Le type d'acteur mis à jour
    */
   @Patch(":id")
-  @RequiredPermissions([Permission.manageActorType])
+  @RequiredPermissions([Permission.ActorTypeManage])
   @ApiOperation({
     summary: "Mettre à jour un type d’acteur",
     description: `
@@ -185,7 +185,7 @@ Les données de mise à jour doivent correspondre aux champs
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.deleteActorType])
+  @RequiredPermissions([Permission.ActorTypeDelete])
   @ApiOperation({ summary: "Supprimer un type d’acteur" })
   @HttpCode(204)
   @ApiNoContentResponse({

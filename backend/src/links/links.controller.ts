@@ -38,7 +38,7 @@ export class ApplicationLinksController {
   constructor(private readonly service: LinksService) {}
 
   @Post()
-  @RequiredPermissions([Permission.writeLinks])
+  @RequiredPermissions([Permission.LinkWrite])
   @ApiOperation({ summary: "Create a new link for an application" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -72,7 +72,7 @@ export class ApplicationLinksController {
   }
 
   @Get()
-  @RequiredPermissions([Permission.readLinks])
+  @RequiredPermissions([Permission.LinkRead])
   @ApiOperation({
     summary: "Retrieve links for an application",
     description: "Get list of links for an application",
@@ -90,7 +90,7 @@ export class ApplicationLinksController {
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.writeLinks])
+  @RequiredPermissions([Permission.LinkWrite])
   @ApiOperation({ summary: "Update a link for an application" })
   @ApiOkResponse({ description: "Link updated successfully", type: LinkDto })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
@@ -119,7 +119,7 @@ export class ApplicationLinksController {
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.writeLinks])
+  @RequiredPermissions([Permission.LinkWrite])
   @ApiOperation({ summary: "Delete a link for an application" })
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Link deleted successfully" })

@@ -29,7 +29,7 @@ export class ReportsService {
     applicationId?: string,
   ) {
     const hasPostPerm = await this.checkPermissions.can(
-      [Permission.postReports],
+      [Permission.ReportPost],
       requestor,
     );
     if (applicationId) {
@@ -84,7 +84,7 @@ export class ReportsService {
 
     // Controle des permissions
     const hasApplicationReadPerms = await this.checkPermissions.can(
-      [Permission.readReports],
+      [Permission.ReportRead],
       requestor,
     );
 
@@ -172,7 +172,7 @@ export class ReportsService {
    */
   async findOne(id: string, requestor: Requestor) {
     const hasApplicationReadPerms = this.checkPermissions.can(
-      [Permission.readReports, Permission.manageReports],
+      [Permission.ReportRead, Permission.ReportManage],
       requestor,
     );
 

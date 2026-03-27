@@ -105,7 +105,7 @@ export class UserController {
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Mettre à jour les permissions d'un utilisateur",
     description:
@@ -125,7 +125,7 @@ export class UserController {
   }
 
   @Get()
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Lister tous les utilisateurs",
     description:

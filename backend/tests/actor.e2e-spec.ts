@@ -57,7 +57,7 @@ describe("application guard", () => {
   });
 
   it("permissions testing", async () => {
-    const actorType = await ActorTypeFaker.create(["readActors"]);
+    const actorType = await ActorTypeFaker.create(["ActorRead"]);
     const application = await ApplicationFaker.create(appOwner);
     await ActorFaker.link({
       userEmail: appActor.email,
@@ -79,7 +79,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeActors"]);
+    await actorType.update(["ActorWrite"]);
     const actorCreated = await request(app().getHttpServer())
       .post(`/applications/${application.id}/actors`)
       .send({
@@ -109,7 +109,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add read permission
-    await actorType.update(["readActors"]);
+    await actorType.update(["ActorRead"]);
 
     // Should succeed to get the actor
     await request(app().getHttpServer())
@@ -137,7 +137,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeActors"]);
+    await actorType.update(["ActorWrite"]);
 
     // Should succeed to update the actor
     await request(app().getHttpServer())

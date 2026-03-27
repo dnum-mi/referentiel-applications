@@ -34,7 +34,7 @@ export class LabelsController {
   constructor(private readonly service: LabelsService) {}
 
   @Post()
-  @RequiredPermissions([Permission.writeBase])
+  @RequiredPermissions([Permission.AppWrite])
   @ApiBody({ type: CreateLabelDto })
   @ApiOperation({
     summary: "Créer un nouveau nom",
@@ -77,7 +77,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get()
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Récupérer les noms alternatifs par ID d'application",
     description: `
@@ -96,7 +96,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.writeBase])
+  @RequiredPermissions([Permission.AppWrite])
   @ApiOperation({
     summary: "Mettre à jour un nom existant",
   })
@@ -142,7 +142,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.writeBase])
+  @RequiredPermissions([Permission.AppWrite])
   @ApiOperation({
     summary: "Supprimer un nom alternatif",
     description: ` Ce endpoint permet de supprimer un nom alternatif existant. 

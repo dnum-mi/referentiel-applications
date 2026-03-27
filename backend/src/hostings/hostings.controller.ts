@@ -59,7 +59,7 @@ export class ApplicationHostingsController {
   constructor(private readonly hostingService: HostingsService) {}
 
   @Post()
-  @RequiredPermissions([Permission.writeHostings])
+  @RequiredPermissions([Permission.HostingWrite])
   @ApiOperation({ summary: "Créer un hébergement pour une application" })
   @ApiCreatedResponse({
     description: "Hébergement créé",
@@ -76,7 +76,7 @@ export class ApplicationHostingsController {
   }
 
   @Get()
-  @RequiredPermissions([Permission.readHostings])
+  @RequiredPermissions([Permission.HostingRead])
   @ApiOperation({
     summary: "Récupérer tous les hébergements d'une application",
   })
@@ -90,7 +90,7 @@ export class ApplicationHostingsController {
   }
 
   @Get(":id")
-  @RequiredPermissions([Permission.readHostings])
+  @RequiredPermissions([Permission.HostingRead])
   @ApiOperation({
     summary: "Récupérer un hébergement par ID pour une application",
   })
@@ -103,7 +103,7 @@ export class ApplicationHostingsController {
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.writeHostings])
+  @RequiredPermissions([Permission.HostingWrite])
   @ApiOperation({
     summary: "Mettre à jour un hébergement pour une application",
   })
@@ -125,7 +125,7 @@ export class ApplicationHostingsController {
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.writeHostings])
+  @RequiredPermissions([Permission.HostingWrite])
   @ApiOperation({ summary: "Supprimer un hébergement pour une application" })
   @ApiNoContentResponse({ description: "Hébergement supprimé" })
   @HttpCode(HttpStatus.NO_CONTENT)

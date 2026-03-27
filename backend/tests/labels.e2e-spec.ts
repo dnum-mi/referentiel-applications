@@ -50,7 +50,7 @@ describe("application guard", () => {
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
 
   beforeAll(async () => {
-    actorType = await ActorTypeFaker.create(["readBase"]);
+    actorType = await ActorTypeFaker.create(["AppRead"]);
     appOwner = await UserFaker.create();
     appActor = await UserFaker.create();
     TOKEN = await getToken(appActor);
@@ -61,7 +61,7 @@ describe("application guard", () => {
   });
 
   it("permissions testing", async () => {
-    // read and write labels are parts of readBase and writeBase permissions
+    // read and write labels are parts of AppRead and AppWrite permissions
     const application = await ApplicationFaker.create(appOwner);
     await ActorFaker.link({
       userEmail: appActor.email,
@@ -88,7 +88,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeBase"]);
+    await actorType.update(["AppWrite"]);
 
     // Create a label
     const label = await request(app().getHttpServer())
@@ -112,7 +112,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add read permission
-    await actorType.update(["readBase"]);
+    await actorType.update(["AppRead"]);
 
     // Should succeed to list labels
     await request(app().getHttpServer())
@@ -135,7 +135,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeBase"]);
+    await actorType.update(["AppWrite"]);
 
     // // Should succeed to update the label
     await request(app().getHttpServer())

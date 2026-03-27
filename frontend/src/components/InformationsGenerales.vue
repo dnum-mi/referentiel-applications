@@ -35,9 +35,9 @@ const isDeleteLabelModalOpen = ref(false);
 const hostingStore = useHostingStore();
 const userStore = useUserStore();
 const labels = ref<LabelDto[]>([]);
-const canEditBase = computed(() => userStore.hasPermissions([Permission.WRITE_BASE, Permission.WRITE_PRIORITY_RESTART]));
-const canViewHostings = computed(() => userStore.hasPermissions([Permission.WRITE_BASE, Permission.READ_HOSTINGS]));
-const canEditHostings = computed(() => userStore.hasPermissions([Permission.WRITE_HOSTINGS]));
+const canEditBase = computed(() => userStore.hasPermissions([Permission.APP_WRITE, Permission.APP_WRITE_PRIORITY]));
+const canViewHostings = computed(() => userStore.hasPermissions([Permission.APP_WRITE, Permission.HOSTING_READ]));
+const canEditHostings = computed(() => userStore.hasPermissions([Permission.HOSTING_WRITE]));
 
 const isTechnicalDebtModalOpen = ref(false);
 const technicalDebtInfo = ref<TechnicalDebtInfoDto | null>(null);
@@ -88,7 +88,7 @@ onMounted(async () => {
   try {
     const promises = [fetchLabels(application.value.id), fetchTechnicalDebtInfo()];
     // fetch hostings if allowed
-    if (userStore.hasPermissions([Permission.READ_HOSTINGS])) {
+    if (userStore.hasPermissions([Permission.HOSTING_READ])) {
       promises.push(hostingStore.fetchHostings(application.value.id));
     }
     await Promise.all(promises);

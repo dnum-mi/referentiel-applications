@@ -125,7 +125,7 @@ describe("TechnicalDebtInfo - application guard", () => {
   });
 
   it("permissions testing", async () => {
-    const actorType = await ActorTypeFaker.create(["readBase"]);
+    const actorType = await ActorTypeFaker.create(["AppRead"]);
     await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
@@ -142,7 +142,7 @@ describe("TechnicalDebtInfo - application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeBase"]);
+    await actorType.update(["AppWrite"]);
     const technicalDebtInfo = await request(app().getHttpServer())
       .post(`/applications/${application.id}/technical-debt-info`)
       .send({

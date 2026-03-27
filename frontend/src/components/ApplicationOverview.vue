@@ -53,7 +53,7 @@ const tabs = ref<
     tabId: "tab-infos",
     panelId: "panel-infos",
     component: InformationsGenerales,
-    requiredPerms: [Permission.READ_BASE],
+    requiredPerms: [Permission.APP_READ],
   },
   {
     title: "Liens",
@@ -61,7 +61,7 @@ const tabs = ref<
     tabId: "tab-links",
     panelId: "panel-links",
     component: Links,
-    requiredPerms: [Permission.READ_LINKS],
+    requiredPerms: [Permission.LINK_READ],
   },
   {
     title: "Conformités",
@@ -69,7 +69,7 @@ const tabs = ref<
     tabId: "tab-compliances",
     panelId: "panel-compliances",
     component: CompliancesAccordionManager,
-    requiredPerms: [Permission.READ_COMPLIANCES],
+    requiredPerms: [Permission.COMPLIANCE_READ],
   },
   {
     title: "Acteurs",
@@ -77,7 +77,7 @@ const tabs = ref<
     tabId: "tab-actors",
     panelId: "panel-actors",
     component: ActorManager,
-    requiredPerms: [Permission.READ_ACTORS],
+    requiredPerms: [Permission.ACTOR_READ],
   },
   {
     title: "Relations",
@@ -85,7 +85,7 @@ const tabs = ref<
     tabId: "tab-relations",
     panelId: "panel-relations",
     component: Relationships,
-    requiredPerms: [Permission.READ_RELATIONS],
+    requiredPerms: [Permission.RELATION_READ],
   },
   {
     title: "Statuts",
@@ -93,7 +93,7 @@ const tabs = ref<
     tabId: "tab-statuses",
     panelId: "panel-statuses",
     component: StatusTab,
-    requiredPerms: [Permission.READ_BASE],
+    requiredPerms: [Permission.APP_READ],
   },
   {
     title: "Signalements",
@@ -117,7 +117,7 @@ const tabs = ref<
     tabId: "tab-quality",
     panelId: "panel-quality",
     component: Quality,
-    requiredPerms: [Permission.READ_COMPLIANCES, Permission.READ_ACTORS, Permission.READ_LINKS, Permission.READ_BASE],
+    requiredPerms: [Permission.COMPLIANCE_READ, Permission.ACTOR_READ, Permission.LINK_READ, Permission.APP_READ],
   },
 ]);
 

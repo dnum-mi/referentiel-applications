@@ -947,23 +947,23 @@ paths:
                 items:
                   type: string
                   enum:
-                    - readBase
-                    - writeCompliances
-                    - readRelations
-                    - writeRelations
-                    - readActors
-                    - writeActors
-                    - readCompliances
-                    - writeBase
-                    - readHostings
-                    - writeHostings
-                    - readLinks
-                    - writeLinks
-                    - readMetadata
-                    - readReports
-                    - manageReports
-                    - postReports
-                    - writePriorityRestart
+                    - AppRead
+                    - ComplianceWrite
+                    - RelationRead
+                    - RelationWrite
+                    - ActorRead
+                    - ActorWrite
+                    - ComplianceRead
+                    - AppWrite
+                    - HostingRead
+                    - HostingWrite
+                    - LinkRead
+                    - LinkWrite
+                    - MetadataRead
+                    - ReportRead
+                    - ReportManage
+                    - ReportPost
+                    - AppWritePriority
       tags: *a5
   /api/v2/applications/export/excel:
     get:
@@ -4202,27 +4202,27 @@ components:
         - CreateGlobalReport
         - AppList
         - DataExport
-        - manageAdminPanel
-        - postActorType
-        - manageActorType
-        - deleteActorType
-        - readBase
-        - writeBase
-        - readActors
-        - writeActors
-        - readCompliances
-        - writeCompliances
-        - readHostings
-        - writeHostings
-        - readRelations
-        - writeRelations
-        - readLinks
-        - writeLinks
-        - writePriorityRestart
-        - readMetadata
-        - readReports
-        - postReports
-        - manageReports
+        - AdminPanelManage
+        - ActorTypePost
+        - ActorTypeManage
+        - ActorTypeDelete
+        - AppRead
+        - AppWrite
+        - ActorRead
+        - ActorWrite
+        - ComplianceRead
+        - ComplianceWrite
+        - HostingRead
+        - HostingWrite
+        - RelationRead
+        - RelationWrite
+        - LinkRead
+        - LinkWrite
+        - AppWritePriority
+        - MetadataRead
+        - ReportRead
+        - ReportPost
+        - ReportManage
     UserEntity:
       type: object
       properties:
@@ -5329,59 +5329,59 @@ components:
       properties:
         actorTypeId:
           type: string
-        readBase:
+        AppRead:
           type: boolean
-        writeBase:
+        AppWrite:
           type: boolean
-        writePriorityRestart:
+        AppWritePriority:
           type: boolean
-        readActors:
+        ActorRead:
           type: boolean
-        writeActors:
+        ActorWrite:
           type: boolean
-        readCompliances:
+        ComplianceRead:
           type: boolean
-        writeCompliances:
+        ComplianceWrite:
           type: boolean
-        readHostings:
+        HostingRead:
           type: boolean
-        writeHostings:
+        HostingWrite:
           type: boolean
-        readMetadata:
+        MetadataRead:
           type: boolean
-        readRelations:
+        RelationRead:
           type: boolean
-        writeRelations:
+        RelationWrite:
           type: boolean
-        readLinks:
+        LinkRead:
           type: boolean
-        writeLinks:
+        LinkWrite:
           type: boolean
-        readReports:
+        ReportRead:
           type: boolean
-        postReports:
+        ReportPost:
           type: boolean
-        manageReports:
+        ReportManage:
           type: boolean
       required:
         - actorTypeId
-        - readBase
-        - writeBase
-        - writePriorityRestart
-        - readActors
-        - writeActors
-        - readCompliances
-        - writeCompliances
-        - readHostings
-        - writeHostings
-        - readMetadata
-        - readRelations
-        - writeRelations
-        - readLinks
-        - writeLinks
-        - readReports
-        - postReports
-        - manageReports
+        - AppRead
+        - AppWrite
+        - AppWritePriority
+        - ActorRead
+        - ActorWrite
+        - ComplianceRead
+        - ComplianceWrite
+        - HostingRead
+        - HostingWrite
+        - MetadataRead
+        - RelationRead
+        - RelationWrite
+        - LinkRead
+        - LinkWrite
+        - ReportRead
+        - ReportPost
+        - ReportManage
     PaginatedActorTypeDto:
       type: object
       properties:

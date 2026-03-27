@@ -39,7 +39,7 @@ export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
   @Post()
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Créer un nouveau tag.",
     description: `
@@ -62,7 +62,7 @@ Information requise :
   }
 
   @Get(":id")
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({ summary: "Rechercher un tag par id." })
   @ApiOkResponse({ description: "Tag trouvé avec succès", type: TagDto })
   @ApiNotFoundResponse({ description: "Tag non trouvé" })
@@ -72,7 +72,7 @@ Information requise :
   }
 
   @Get()
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Rechercher des tags.",
     description: `
@@ -96,7 +96,7 @@ Information requise :
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Modifier un tag." })
   @ApiOkResponse({ description: "Tag mis à jour avec succès", type: TagDto })
   @ApiForbiddenResponse({
@@ -109,7 +109,7 @@ Information requise :
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Supprimer un tag." })
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Tag supprimé avec succès" })

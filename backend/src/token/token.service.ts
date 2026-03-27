@@ -65,7 +65,7 @@ export class TokenService {
       );
     }
     const hasPermission = await this.checkPermissions.can(
-      [Permission.manageAdminPanel],
+      [Permission.AdminPanelManage],
       requestor,
     );
     if (!personal && !hasPermission) {
@@ -138,7 +138,7 @@ export class TokenService {
     });
 
     const hasPermission = await this.checkPermissions.can(
-      [Permission.manageAdminPanel],
+      [Permission.AdminPanelManage],
       requestor,
     );
     if (!isRequestorAllowedToUpdateToken(hasPermission, token, requestor)) {
@@ -212,7 +212,7 @@ export class TokenService {
     });
 
     const hasPermission = await this.checkPermissions.can(
-      [Permission.manageAdminPanel],
+      [Permission.AdminPanelManage],
       requestor,
     );
     if (!isRequestorAllowedToUpdateToken(hasPermission, token, requestor)) {

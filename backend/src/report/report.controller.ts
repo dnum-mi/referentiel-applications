@@ -100,7 +100,7 @@ export class ReportsController {
    */
   @Patch(":id")
   @ApiOperation({ summary: "Mettre à jour un signalement" })
-  @RequiredPermissions([Permission.manageReports])
+  @RequiredPermissions([Permission.ReportManage])
   @ApiOkResponse({
     description: "Signalement mis à jour avec succès",
     type: ReportDto,
@@ -151,7 +151,7 @@ export class ApplicationReportsController {
     type: ReportDto,
   })
   @HttpCode(HttpStatus.CREATED)
-  @RequiredPermissions([Permission.postReports])
+  @RequiredPermissions([Permission.ReportPost])
   @ApiParam({
     name: "applicationId",
     description: "ID de l'application",
@@ -214,7 +214,7 @@ export class ApplicationReportsController {
    */
   @Patch(":id")
   @ApiOperation({ summary: "Mettre à jour un signalement" })
-  @RequiredPermissions([Permission.manageReports])
+  @RequiredPermissions([Permission.ReportManage])
   @ApiOkResponse({
     description: "Signalement mis à jour avec succès",
     type: ReportDto,
@@ -238,7 +238,7 @@ export class ApplicationReportsController {
    */
   @Delete(":id")
   @ApiOperation({ summary: "Supprimer un signalement" })
-  @RequiredPermissions([Permission.manageReports])
+  @RequiredPermissions([Permission.ReportManage])
   @ApiNoContentResponse({
     description: "Signalement supprimé avec succès",
   })

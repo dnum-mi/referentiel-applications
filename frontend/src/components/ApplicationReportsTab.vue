@@ -27,7 +27,7 @@ const tableColumns: TableColumn[] = [
 ];
 
 const canPost = computed(() => {
-  return userStore.hasPermissions([Permission.POST_REPORTS]);
+  return userStore.hasPermissions([Permission.REPORT_POST]);
 });
 
 async function fetchIssues() {

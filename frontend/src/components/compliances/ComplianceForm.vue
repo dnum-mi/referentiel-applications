@@ -36,7 +36,7 @@ const submitting = ref(false);
 const isHomologationHomologuee = computed(() => form.value.homologation_status === "homologuee");
 const showHomologationDateEnd = computed(() => isHomologationHomologuee.value || Boolean(form.value.homologation_date_end));
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.WRITE_COMPLIANCES]));
+const canEdit = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE]));
 
 const toOptionalNumber = (value: unknown): number | undefined => (value == null || value === "" ? undefined : Number(value));
 const toOptionalString = (value: unknown): string | undefined => (value == null || value === "" ? undefined : String(value));

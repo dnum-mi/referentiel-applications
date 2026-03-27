@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
 
-type ReportPermissionValue = "read" | "post" | "manage";
+type ReportPermissionValue = "Read" | "Post" | "Manage";
 const props = defineProps<{
   read: boolean;
   post: boolean;
@@ -21,13 +21,13 @@ function updateSelectedValues() {
   nextTick(() => {
     const selectedValues = [] as ReportPermissionValue[];
     if (canRead.value || canManage.value) {
-      selectedValues.push("read");
+      selectedValues.push("Read");
     }
     if (canPost.value || canManage.value) {
-      selectedValues.push("post");
+      selectedValues.push("Post");
     }
     if (canManage.value) {
-      selectedValues.push("manage");
+      selectedValues.push("Manage");
     }
     emits("update:model-value", selectedValues);
   });

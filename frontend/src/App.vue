@@ -61,7 +61,7 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
       iconAttrs: { title: "Déconnexion" },
     },
   ];
-  if (userStore.hasPermissions([Permission.MANAGE_ADMIN_PANEL])) {
+  if (userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
     baseLinks.unshift({
       label: "Admin",
       to: { name: routeNames.ADMINPAGE },

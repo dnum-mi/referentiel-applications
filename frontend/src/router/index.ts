@@ -145,7 +145,7 @@ router.beforeEach(async (to) => {
     }
 
     if (to.meta.requiresAdmin) {
-      if (!userStore.hasPermissions([Permission.MANAGE_ADMIN_PANEL])) {
+      if (!userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
         return { path: "/" };
       }
     }

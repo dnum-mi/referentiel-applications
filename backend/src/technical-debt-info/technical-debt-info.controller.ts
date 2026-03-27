@@ -37,7 +37,7 @@ export class ApplicationTechnicalDebtInfoController {
   ) {}
 
   @Post()
-  @RequiredPermissions([Permission.writeBase])
+  @RequiredPermissions([Permission.AppWrite])
   @ApiOperation({ summary: "Create technical debt info for an application" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -74,7 +74,7 @@ export class ApplicationTechnicalDebtInfoController {
   }
 
   @Get()
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Retrieve the technical debt info for an application",
   })
@@ -95,7 +95,7 @@ export class ApplicationTechnicalDebtInfoController {
   }
 
   @Patch()
-  @RequiredPermissions([Permission.writeBase])
+  @RequiredPermissions([Permission.AppWrite])
   @ApiOperation({
     summary: "Update the technical debt info for an application",
   })

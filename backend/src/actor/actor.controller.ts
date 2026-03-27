@@ -64,7 +64,7 @@ export class ApplicationActorsController {
 
   @Post()
   @ApiBody({ type: CreateActorDto })
-  @RequiredPermissions([Permission.writeActors])
+  @RequiredPermissions([Permission.ActorWrite])
   @ApiOperation({
     summary: "Créer un nouvel acteur",
     description: `
@@ -96,7 +96,7 @@ Informations requises :
   }
 
   @Get(":id")
-  @RequiredPermissions([Permission.readActors])
+  @RequiredPermissions([Permission.ActorRead])
   @ApiOperation({ summary: "Récupérer un acteur par ID" })
   @ApiOkResponse({
     description: "Acteur trouvé avec succès",
@@ -111,7 +111,7 @@ Informations requises :
   }
 
   @Get()
-  @RequiredPermissions([Permission.readActors])
+  @RequiredPermissions([Permission.ActorRead])
   @ApiOperation({ summary: "Récupérer tous les acteurs" })
   @ApiOkResponse({
     description: "Liste des acteurs trouvés",
@@ -125,7 +125,7 @@ Informations requises :
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.writeActors])
+  @RequiredPermissions([Permission.ActorWrite])
   @ApiOperation({ summary: "Mettre à jour un acteur" })
   @ApiOkResponse({
     description: "Acteur mis à jour avec succès",
@@ -155,7 +155,7 @@ Informations requises :
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.writeActors])
+  @RequiredPermissions([Permission.ActorWrite])
   @ApiOperation({ summary: "Supprimer un acteur" })
   @HttpCode(204)
   @ApiNoContentResponse({

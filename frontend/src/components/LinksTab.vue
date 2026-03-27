@@ -32,7 +32,7 @@ const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const linkToDelete = ref<string | null>(null);
 const showDeleteConfirmation = ref(false);
-const canEdit = computed(() => userStore.hasPermissions([Permission.WRITE_LINKS]));
+const canEdit = computed(() => userStore.hasPermissions([Permission.LINK_WRITE]));
 
 const currentPage = ref(0);
 const pageSize = ref(15);

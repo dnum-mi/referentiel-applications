@@ -22,7 +22,7 @@ const permDict = {
   },
   write: {
     label: "RW",
-    class: "permission-write",
+    class: "permission-Write",
   },
 };
 </script>
@@ -51,13 +51,13 @@ const permDict = {
   color: var(--text-action-high-grey);
 }
 
-.permission-write {
+.permission-Write {
   background-color: var(--background-action-low-green-emeraude);
 }
-.permission-write:hover {
+.permission-Write:hover {
   background-color: var(--background-action-low-green-emeraude-hover);
 }
-.permission-write:active {
+.permission-Write:active {
   background-color: var(--background-action-low-green-emeraude-active);
 }
 

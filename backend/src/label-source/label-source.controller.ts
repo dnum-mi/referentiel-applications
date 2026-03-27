@@ -38,7 +38,7 @@ export class LabelSourceController {
   constructor(private readonly labelSourceService: LabelSourceService) {}
 
   @Post()
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Créer une nouvelle source de libellés.",
     description: `
@@ -74,7 +74,7 @@ Information requise :
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Modifier une source de libellés alternatifs" })
   @ApiOkResponse({
     description: "Source mise à jour avec succès",
@@ -92,7 +92,7 @@ Information requise :
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Supprimer une source de libellés alternatifs" })
   @HttpCode(204)
   @ApiNoContentResponse({

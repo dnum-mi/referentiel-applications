@@ -40,7 +40,7 @@ const isLoading = ref(false);
 const isSubmitting = ref(false);
 const errorMessage = ref("");
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.WRITE_BASE]));
+const canEdit = computed(() => userStore.hasPermissions([Permission.APP_WRITE]));
 const deleteModalActions = computed(() => [
   {
     label: "Annuler",

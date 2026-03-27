@@ -42,7 +42,7 @@ export class StatusesController {
   ) {}
 
   @Post()
-  @RequiredPermissions([Permission.writeBase])
+  @RequiredPermissions([Permission.AppWrite])
   @HttpCode(201)
   @ApiOperation({ summary: "Créer un nouveau statut pour une application" })
   @ApiCreatedResponse({
@@ -79,7 +79,7 @@ export class StatusesController {
   }
 
   @Get()
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Récupérer l'historique des statuts d'une application",
   })
@@ -92,7 +92,7 @@ export class StatusesController {
   }
 
   @Patch(":statusId")
-  @RequiredPermissions([Permission.writeBase])
+  @RequiredPermissions([Permission.AppWrite])
   @ApiOperation({ summary: "Modifier un statut existant" })
   @ApiOkResponse({
     description: "Statut modifié avec succès",
@@ -131,7 +131,7 @@ export class StatusesController {
   }
 
   @Delete(":statusId")
-  @RequiredPermissions([Permission.writeBase])
+  @RequiredPermissions([Permission.AppWrite])
   @HttpCode(204)
   @ApiOperation({ summary: "Supprimer un statut" })
   @ApiNoContentResponse({

@@ -30,7 +30,7 @@ const selectedActorIds = ref<string[]>([]);
 const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const loading = ref(false);
-const canEdit = computed(() => userStore.hasPermissions([Permission.WRITE_ACTORS]));
+const canEdit = computed(() => userStore.hasPermissions([Permission.ACTOR_WRITE]));
 
 const columns: TableColumn[] = [
   { field: "Sélection", header: "Sélection", sortable: false },

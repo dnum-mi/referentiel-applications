@@ -147,7 +147,7 @@ Vous devez fournir les informations suivantes :
 
   @Get(":applicationId/my-perms")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Lister les droits de l'utilisateur sur l'application",
   })
@@ -172,7 +172,7 @@ Vous devez fournir les informations suivantes :
 
   @Get("export/excel")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Exporter les applications en Excel",
     description: `Permet d'exporter les applications en un fichier Excel.
@@ -225,7 +225,7 @@ Vous devez fournir les informations suivantes :
 
   @Get(":applicationId")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Récupérer une application spécifique par ID",
     description: `
@@ -247,7 +247,7 @@ Le paramètre **id** doit être fourni dans l'URL.
 
   @Get("data-quality/update")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Mettre à jour l'indice de qualité de toutes les applications",
     description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes.
@@ -271,7 +271,7 @@ Le paramètre **id** doit être fourni dans l'URL.
 
   @Patch(":applicationId")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.writeBase, Permission.writePriorityRestart])
+  @RequiredPermissions([Permission.AppWrite, Permission.AppWritePriority])
   @ApiOperation({
     summary: "Mettre à jour une application",
     description: ` Ce endpoint permet de mettre à jour une application existante. 
@@ -301,7 +301,7 @@ Le paramètre **id** doit être fourni dans l'URL.
 
   @Delete(":applicationId")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.manageAdminPanel])
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Supprimer une application",
     description: "Supprime une application par son ID.",

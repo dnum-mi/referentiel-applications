@@ -121,7 +121,7 @@ watch(
 <template>
   <AppLoader v-if="isLoading" />
   <div v-else>
-    <div v-if="userStore.hasPermissions([Permission.MANAGE_ADMIN_PANEL])">
+    <div v-if="userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])">
       <div v-if="!isEditing && rows.length" class="toRight">
         <DsfrButton
           label="Modifier"

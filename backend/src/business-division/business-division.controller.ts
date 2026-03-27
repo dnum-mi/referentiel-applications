@@ -25,7 +25,7 @@ export class BusinessDivisionController {
   ) {}
 
   @Get()
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Rechercher des Business division.",
     description: `
@@ -47,7 +47,7 @@ export class BusinessDivisionController {
   }
 
   @Get(":id")
-  @RequiredPermissions([Permission.readBase])
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Rechercher un Business division par id.",
   })

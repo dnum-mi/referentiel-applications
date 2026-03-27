@@ -53,7 +53,7 @@ export class ApplicationMetadatasController {
   constructor(private readonly metadataService: MetadatasService) {}
 
   @Get()
-  @RequiredPermissions([Permission.readMetadata])
+  @RequiredPermissions([Permission.MetadataRead])
   @ApiOperation({ summary: "Récupérer toutes les metadatas d'une application" })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiOkResponse({
@@ -69,7 +69,7 @@ export class ApplicationMetadatasController {
 
   @Get("first-last")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.readMetadata])
+  @RequiredPermissions([Permission.MetadataRead])
   @ApiOperation({
     summary: "Retourne la première et la dernière metadata d'une application",
   })

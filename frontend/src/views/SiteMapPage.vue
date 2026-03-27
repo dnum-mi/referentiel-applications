@@ -83,7 +83,7 @@ const protectedPages = computed(() => {
     const passesBaseFilter = baseRouteFilter(currentRoute);
     const isProtectedRoute = currentRoute.meta.requiresAuth === true;
     const isNotAdminPage = currentRoute.name !== routeNames.ADMINPAGE;
-    const hasManageAdminPanelPermissions = userStore.hasPermissions([Permission.MANAGE_ADMIN_PANEL]);
+    const hasManageAdminPanelPermissions = userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]);
     const passesAdminCheck = isNotAdminPage || hasManageAdminPanelPermissions;
     return passesBaseFilter && isProtectedRoute && passesAdminCheck;
   });

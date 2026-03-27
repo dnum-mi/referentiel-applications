@@ -103,18 +103,18 @@ export class ApplicationService {
     let { data } = params;
 
     // protect fields based on permissions
-    // priorityRestart field is only writable by users with writePriorityRestart permission
+    // priorityRestart field is only writable by users with AppWritePriority permission
     if (
       !(await this.checkPermissions.can(
-        [Permission.writePriorityRestart],
+        [Permission.AppWritePriority],
         requestor,
       ))
     ) {
       delete data.priorityRestart;
-      // if the user has writeBase permission, they can write other fields except priorityRestart
+      // if the user has AppWrite permission, they can write other fields except priorityRestart
     } else if (
       !(await this.checkPermissions.can(
-        [Permission.writePriorityRestart],
+        [Permission.AppWritePriority],
         requestor,
       ))
     ) {
@@ -286,7 +286,7 @@ export class ApplicationService {
         orderBy,
       );
     }
-    if (!(await this.checkPermissions.can([Permission.readBase], requestor))) {
+    if (!(await this.checkPermissions.can([Permission.AppRead], requestor))) {
       const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
         actorEmail: requestor.email,
       });
@@ -335,7 +335,7 @@ export class ApplicationService {
       where.AND.push(whereBuildTechnicalDebtInfo);
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
-    if (!(await this.checkPermissions.can([Permission.readBase], requestor))) {
+    if (!(await this.checkPermissions.can([Permission.AppRead], requestor))) {
       const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
         actorEmail: requestor.email,
       });

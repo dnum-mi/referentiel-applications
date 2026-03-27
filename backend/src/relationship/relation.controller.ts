@@ -42,7 +42,7 @@ export class RelationController {
   constructor(private readonly relationService: RelationService) {}
 
   @Post()
-  @RequiredPermissions([Permission.writeRelations])
+  @RequiredPermissions([Permission.RelationWrite])
   @HttpCode(201)
   @ApiCreatedResponse({
     type: RelationDto,
@@ -61,7 +61,7 @@ export class RelationController {
   }
 
   @Get()
-  @RequiredPermissions([Permission.readRelations])
+  @RequiredPermissions([Permission.RelationRead])
   @ApiOkResponse({
     description: "Liste des relations trouvées",
     type: RelationDto,
@@ -79,7 +79,7 @@ export class RelationController {
   }
 
   @Get("graph")
-  @RequiredPermissions([Permission.readRelations])
+  @RequiredPermissions([Permission.RelationRead])
   @ApiOkResponse({
     description: "Graphe des relations de l'application",
     type: RelationGraphDto,
@@ -105,7 +105,7 @@ export class RelationController {
   }
 
   @Get(":id")
-  @RequiredPermissions([Permission.readRelations])
+  @RequiredPermissions([Permission.RelationRead])
   @ApiOperation({
     summary: "Récupérer une relation par son identifiant unique",
   })
@@ -119,7 +119,7 @@ export class RelationController {
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.writeRelations])
+  @RequiredPermissions([Permission.RelationWrite])
   @ApiOperation({ summary: "Mettre à jour une relation" })
   @ApiParam({
     name: "id",
@@ -139,7 +139,7 @@ export class RelationController {
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.writeRelations])
+  @RequiredPermissions([Permission.RelationWrite])
   @ApiOperation({ summary: "Supprimer une relation" })
   @HttpCode(204)
   @ApiNoContentResponse({

@@ -42,7 +42,7 @@ const deleteConfirmationInput = ref("");
 const applicationLabel = computed(() => application.value?.label ?? "");
 
 const canReadMetadata = computed(() => {
-  return userStore.hasPermissions([Permission.READ_METADATA]);
+  return userStore.hasPermissions([Permission.METADATA_READ]);
 });
 
 async function fetchApplicationMetadata() {

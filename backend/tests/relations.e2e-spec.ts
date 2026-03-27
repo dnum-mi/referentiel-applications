@@ -320,7 +320,7 @@ describe("application guard", () => {
     appActor = await UserFaker.create();
     application = await ApplicationFaker.create(appOwner);
     applicationTarget = await ApplicationFaker.create(appOwner);
-    actorType = await ActorTypeFaker.create(["readRelations"]);
+    actorType = await ActorTypeFaker.create(["RelationRead"]);
     actor = await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
@@ -346,7 +346,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeRelations"]);
+    await actorType.update(["RelationWrite"]);
     const relation = await request(app().getHttpServer())
       .post(`/applications/${application.id}/relations`)
       .send({
@@ -379,7 +379,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add read permission
-    await actorType.update(["readRelations"]);
+    await actorType.update(["RelationRead"]);
 
     // Should succeed to get the relation
     await request(app().getHttpServer())
@@ -414,7 +414,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeRelations"]);
+    await actorType.update(["RelationWrite"]);
 
     // Should succeed to update the relation
     await request(app().getHttpServer())

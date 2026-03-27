@@ -4,47 +4,47 @@
 /// @namespace Users
 model AppPermissions {
   /// Peut lire les informations de base de l'application
-  readBase  Boolean
+  AppRead  Boolean
   /// Peut écrire les informations de base de l'application
-  writeBase Boolean
+  AppWrite Boolean
 
   /// Peut mettre à jour les paramètres de priorité de redémarrage
-  writePriorityRestart Boolean @default(false)
+  AppWritePriority Boolean @default(false)
 
   /// Peut lire les informations des acteurs
-  readActors  Boolean
+  ActorRead  Boolean
   /// Peut écrire les informations des acteurs
-  writeActors Boolean
+  ActorWrite Boolean
 
   /// Peut lire les informations de conformité
-  readCompliances  Boolean
+  ComplianceRead  Boolean
   /// Peut écrire les informations de conformité
-  writeCompliances Boolean
+  ComplianceWrite Boolean
 
   /// Peut lire les informations d'hébergement
-  readHostings  Boolean
+  HostingRead  Boolean
   /// Peut écrire les informations d'hébergement
-  writeHostings Boolean
+  HostingWrite Boolean
 
   /// Peut lire les métadonnées
-  readMetadata Boolean
+  MetadataRead Boolean
 
   /// Peut lire les relations d'application
-  readRelations  Boolean
+  RelationRead  Boolean
   /// Peut écrire les relations d'application
-  writeRelations Boolean
+  RelationWrite Boolean
 
   /// Peut lire les liens externes
-  readLinks  Boolean
+  LinkRead  Boolean
   /// Peut écrire les liens externes
-  writeLinks Boolean
+  LinkWrite Boolean
 
   /// Peut lire les signalements
-  readReports   Boolean @default(false)
+  ReportRead   Boolean @default(false)
   /// Peut créer des signalements
-  postReports   Boolean @default(true)
+  ReportPost   Boolean @default(true)
   /// Peut gérer (mettre à jour/supprimer) les signalements
-  manageReports Boolean @default(false)
+  ReportManage Boolean @default(false)
 
   actorTypeId String    @unique
   /// Type d'acteur auquel ces permissions s'appliquent
@@ -69,33 +69,33 @@ enum Permission {
     /// Exporter les données
   DataExport
   /// Manager l'admin panel
-  manageAdminPanel
+  AdminPanelManage
   /// Crée un nouveau type d'acteur 
-  postActorType
+  ActorTypePost
   /// Editer un nouveau type d'acteur 
-  manageActorType
+  ActorTypeManage
     /// Supprimer un nouveau type d'acteur 
-  deleteActorType
+  ActorTypeDelete
 
   // --- Permissions applicatives (par app) ---
   // Couple read/write classique
-  readBase                // Voir les infos de base
-  writeBase               // Modifier les infos de base
-  readActors              // Voir les acteurs
-  writeActors             // Modifier les acteurs
-  readCompliances         // Voir les conformites 
-  writeCompliances        // Modifier les conformites
-  readHostings            // Voir les hebergements 
-  writeHostings           // Modifier les hebergements
-  readRelations           // Voir les relations
-  writeRelations          // Modifier les relations
-  readLinks               // Voir les liens
-  writeLinks              // Modifier les liens
+  AppRead                // Voir les infos de base
+  AppWrite               // Modifier les infos de base
+  ActorRead              // Voir les acteurs
+  ActorWrite             // Modifier les acteurs
+  ComplianceRead         // Voir les conformites
+  ComplianceWrite        // Modifier les conformites
+  HostingRead            // Voir les hebergements
+  HostingWrite           // Modifier les hebergements
+  RelationRead           // Voir les relations
+  RelationWrite          // Modifier les relations
+  LinkRead               // Voir les liens
+  LinkWrite              // Modifier les liens
   // Permissions autonomes binaires (pas de couple read/write)
-  writePriorityRestart       // Modifier la priorite de redemarrage. Lecture couverte par AppRead.
-  readMetadata           // Voir l'historique des metadonnees. Pas de write : donnees generees automatiquement.
+  AppWritePriority       // Modifier la priorite de redemarrage. Lecture couverte par AppRead.
+  MetadataRead           // Voir l'historique des metadonnees. Pas de write : donnees generees automatiquement.
   // Signalements (3 niveaux)
-  readReports             // Voir les signalements
-  postReports             // Creer des signalements sur une app
-  manageReports           // Gerer les signalements (implique ReportRead + ReportPost)
+  ReportRead             // Voir les signalements
+  ReportPost             // Creer des signalements sur une app
+  ReportManage           // Gerer les signalements (implique ReportRead + ReportPost)
 }
