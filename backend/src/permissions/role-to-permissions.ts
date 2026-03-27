@@ -1,5 +1,4 @@
-import { AdminLevel } from "src/user/entities/user.entity";
-import { Permission } from "@prisma/client";
+import { Permission, Roles } from "@prisma/client";
 
 const NONE_PERMISSIONS: Set<Permission> = new Set();
 const READ_PERMISSIONS = new Set([
@@ -38,15 +37,15 @@ const ADMIN_PERMISSIONS = new Set([
   Permission.ActorTypePost,
 ]);
 
-export const roleToPermissions = (adminLevel: AdminLevel) => {
-  switch (adminLevel) {
-    case AdminLevel.ADMIN:
+export const roleToPermissions = (role: Roles) => {
+  switch (role) {
+    case Roles.ADMIN:
       return Array.from(ADMIN_PERMISSIONS).sort();
-    case AdminLevel.WRITE:
+    case Roles.CONTRIBUTOR:
       return Array.from(WRITE_PERMISSIONS).sort();
-    case AdminLevel.READ:
+    case Roles.READER:
       return Array.from(READ_PERMISSIONS).sort();
-    case AdminLevel.NONE:
+    case Roles.VISITOR:
       return Array.from(NONE_PERMISSIONS).sort();
   }
 };

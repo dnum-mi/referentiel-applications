@@ -4140,6 +4140,14 @@ components:
       required:
         - id
         - label
+    Roles:
+      type: string
+      description: Role attribué a un utilisateur
+      enum:
+        - VISITOR
+        - READER
+        - CONTRIBUTOR
+        - ADMIN
     OrganizationDto:
       type: object
       properties:
@@ -4226,6 +4234,8 @@ components:
     UserEntity:
       type: object
       properties:
+        role:
+          $ref: "#/components/schemas/Roles"
         organization:
           nullable: true
           allOf:
@@ -4249,13 +4259,6 @@ components:
           type: string
         email:
           type: string
-        adminLevel:
-          type: number
-          enum: &a22
-            - 0
-            - 10
-            - 20
-            - 30
         organizationId:
           type: string
           nullable: true
@@ -4264,11 +4267,11 @@ components:
           type: string
           nullable: true
       required:
+        - role
         - type
         - additionalPermissions
         - id
         - email
-        - adminLevel
         - organizationId
         - lastLogin
     MetadataDto:
@@ -4383,6 +4386,8 @@ components:
     UserWithPermissions:
       type: object
       properties:
+        role:
+          $ref: "#/components/schemas/Roles"
         organization:
           nullable: true
           allOf:
@@ -4410,9 +4415,6 @@ components:
           type: string
         email:
           type: string
-        adminLevel:
-          enum: *a22
-          type: number
         organizationId:
           type: string
           nullable: true
@@ -4421,11 +4423,11 @@ components:
           type: string
           nullable: true
       required:
+        - role
         - type
         - additionalPermissions
         - id
         - email
-        - adminLevel
         - organizationId
         - lastLogin
     UpdateUserPreferencesDto:
@@ -4438,13 +4440,8 @@ components:
     UpdateUserDto:
       type: object
       properties:
-        adminLevel:
-          enum:
-            - 0
-            - 10
-            - 20
-            - 30
-          type: number
+        role:
+          $ref: "#/components/schemas/Roles"
         organizationId:
           type: string
           nullable: true
@@ -4532,7 +4529,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a23
+          example: &a22
             - population 1
             - population 2
           description: population associated with the application
@@ -4542,7 +4539,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a24
+          example: &a23
             - finance
             - HR
           description: Purposes of the application
@@ -4553,7 +4550,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a25
+          example: &a24
             - tag1
             - tag2
           type: array
@@ -4765,7 +4762,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a23
+          example: *a22
           description: population associated with the application
           type: array
           items:
@@ -4773,7 +4770,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a24
+          example: *a23
           description: Purposes of the application
           type: array
           items:
@@ -4782,7 +4779,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a25
+          example: *a24
           type: array
           items:
             type: string
@@ -4967,15 +4964,8 @@ components:
           type: string
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
-        adminLevel:
-          enum: &a26
-            - 0
-            - 10
-            - 20
-            - 30
-          type: number
-          example: 10
-          description: Niveau d'administration du token
+        role:
+          $ref: "#/components/schemas/Roles"
         description:
           type: string
           example: Token pour l'application X
@@ -5001,15 +4991,8 @@ components:
     CreateServiceTokenDto:
       type: object
       properties:
-        adminLevel:
-          enum:
-            - 0
-            - 10
-            - 20
-            - 30
-          type: number
-          example: 10
-          description: Niveau d'administration du token
+        role:
+          $ref: "#/components/schemas/Roles"
         description:
           type: string
           example: Token pour l'application X
@@ -5024,7 +5007,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
       required:
-        - adminLevel
+        - role
         - description
         - name
     ExposedTokenDto:
@@ -5034,11 +5017,8 @@ components:
           type: string
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
-        adminLevel:
-          enum: *a26
-          type: number
-          example: 10
-          description: Niveau d'administration du token
+        role:
+          $ref: "#/components/schemas/Roles"
         description:
           type: string
           example: Token pour l'application X
@@ -5069,16 +5049,8 @@ components:
     CreatePersonalTokenDto:
       type: object
       properties:
-        adminLevel:
-          enum:
-            - 0
-            - 10
-            - 20
-            - 30
-          type: number
-          example: 10
-          description: Niveau d'administration du token personnel (optionnel). Il ne
-            pourra pas être supérieur à celui de l'utilisateur créant le token.
+        role:
+          $ref: "#/components/schemas/Roles"
         description:
           type: string
           example: Token pour l'application X
@@ -5778,7 +5750,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a27
+          enum: &a25
             - OK
             - KO
           type: string
@@ -5804,7 +5776,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a28
+          enum: &a26
             - S3
             - LOCAL
             - EXTERNE
@@ -5815,7 +5787,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a29
+          enum: &a27
             - OK
             - KO
           type: string
@@ -5825,7 +5797,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a30
+          enum: &a28
             - homologuee
             - en_cours
             - dispensee
@@ -5901,7 +5873,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a27
+          enum: *a25
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -5925,7 +5897,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a28
+          enum: *a26
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -5933,7 +5905,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a29
+          enum: *a27
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -5941,7 +5913,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a30
+          enum: *a28
           type: string
           description: Homologation status
         homologation_date_end:
@@ -6020,7 +5992,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a27
+          enum: *a25
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6044,7 +6016,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a28
+          enum: *a26
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6052,7 +6024,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a29
+          enum: *a27
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6060,7 +6032,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a30
+          enum: *a28
           type: string
           description: Homologation status
         homologation_date_end:

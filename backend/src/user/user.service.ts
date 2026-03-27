@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma, User } from "@prisma/client";
+import { Prisma, Roles, User } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
@@ -28,7 +28,7 @@ export class UserService {
     return this.prisma.user.create({
       data: {
         email,
-        adminLevel: 0,
+        role: Roles.VISITOR,
       },
       include: {
         organization: true,

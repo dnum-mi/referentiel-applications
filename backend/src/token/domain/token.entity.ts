@@ -1,9 +1,10 @@
-import type { AdminLevel, UserEntity } from "src/user/entities/user.entity";
+import type { UserEntity } from "src/user/entities/user.entity";
 import type { TokenStatus } from "./token-status.entity";
+import { Roles } from "@prisma/client";
 
 export class TokenEntity {
   id: string;
-  adminLevel?: AdminLevel;
+  role?: Roles;
   description: string;
   name: string;
   expiresAt: Date;
@@ -21,5 +22,5 @@ export class ExposedTokenEntity extends TokenEntity {
 
 export type NewTokenEntity = Pick<
   TokenEntity,
-  "name" | "description" | "expiresAt" | "adminLevel"
+  "name" | "description" | "expiresAt" | "role"
 >;

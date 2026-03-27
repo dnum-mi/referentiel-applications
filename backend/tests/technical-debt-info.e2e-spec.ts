@@ -1,6 +1,6 @@
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -16,7 +16,7 @@ describe("TechnicalDebtInfo", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
     application = await ApplicationFaker.create(user);
   });
@@ -170,7 +170,7 @@ describe("TechnicalDebts", () => {
   let applicationB: AsyncReturnType<typeof ApplicationFaker.create>;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
     applicationA = await ApplicationFaker.create(user);
     applicationB = await ApplicationFaker.create(user);

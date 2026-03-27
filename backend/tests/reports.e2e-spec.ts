@@ -1,4 +1,4 @@
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
@@ -11,7 +11,7 @@ describe("Reports", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.READ });
+    user = await UserFaker.create({ role: Roles.READER });
     TOKEN = await getToken(user);
   });
 

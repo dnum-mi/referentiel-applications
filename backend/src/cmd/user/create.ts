@@ -1,6 +1,7 @@
 import type { Command } from "commander";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Roles } from "@prisma/client";
 import { Option } from "commander";
+import { typeguardIncludes } from "src/utils/typeguard-includes";
 
 const prisma = new PrismaClient();
 
@@ -17,25 +18,33 @@ export function userCreateCommand(program: Command): void {
     .addOption(
       new Option(
         "-a, --admin-level <level>",
-        "Admin level of the user",
+        "Role of the user",
       ).makeOptionMandatory(),
     )
     .action(createUser);
 }
 
-async function createUser(options: { email: string; adminLevel: string }) {
-  const adminLevelInt = Number.parseInt(options.adminLevel, 10);
-  if (Number.isNaN(adminLevelInt)) {
-    console.error("Admin level must be a number");
+async function createUser(options: { email: string; role: string }) {
+  const role = options.role;
+  if (
+    !typeguardIncludes(role, [
+      Roles.ADMIN,
+      Roles.CONTRIBUTOR,
+      Roles.READER,
+      Roles.VISITOR,
+    ])
+  ) {
+    console.error("role arg must be Roles enum");
     process.exit(1);
   }
+
   await prisma.user
     .upsert({
       where: { email: options.email },
-      update: { adminLevel: adminLevelInt },
+      update: { role },
       create: {
         email: options.email,
-        adminLevel: adminLevelInt,
+        role,
       },
     })
     .then((user) => {

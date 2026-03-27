@@ -36,7 +36,7 @@ export class UserPermissionsInterceptor
   private addPermissionsFromRole(user: UserEntity): UserWithPermissions {
     return {
       ...user,
-      permissions: roleToPermissions(user.adminLevel),
+      permissions: roleToPermissions(user.role),
     };
   }
 
@@ -46,7 +46,7 @@ export class UserPermissionsInterceptor
     return {
       results: paginated.results.map((user) => ({
         ...user,
-        permissions: roleToPermissions(user.adminLevel),
+        permissions: roleToPermissions(user.role),
       })),
       total: paginated.total,
     };

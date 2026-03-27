@@ -1,27 +1,32 @@
-import type { AdminLevel } from "@/models/user";
+import type { Roles } from "@/client";
 
-export const AdminLevelWording: Record<AdminLevel, string> = {
-  0: "Utilisateur",
-  10: "Lecture totale",
-  20: "Écriture totale",
-  30: "Administrateur",
+export const RolesWording: Record<Roles, string> = {
+  VISITOR: "Utilisateur",
+  READER: "Lecture totale",
+  CONTRIBUTOR: "Écriture totale",
+  ADMIN: "Administrateur",
 };
 
-export const AdminLevelWordingBadgeClass: Record<AdminLevel, string> = {
-  0: "fr-badge--new",
-  10: "fr-badge--info",
-  20: "fr-badge--warning",
-  30: "fr-badge--error",
+export const RolesWordingBadgeClass: Record<Roles, string> = {
+  VISITOR: "fr-badge--new",
+  READER: "fr-badge--info",
+  CONTRIBUTOR: "fr-badge--warning",
+  ADMIN: "fr-badge--error",
 };
 
-export const AdminLevelOptions: {
-  value: AdminLevel;
-  label: (typeof AdminLevelWording)[keyof typeof AdminLevelWording];
+export const RolesOptions: {
+  value: Roles;
+  label: (typeof RolesWording)[keyof typeof RolesWording];
   id: string;
   hint: string;
 }[] = [
-  { value: 0, label: AdminLevelWording[0], id: "admin-level-0", hint: "Utilisateur standard" },
-  { value: 10, label: AdminLevelWording[10], id: "admin-level-10", hint: "Accès en lecture sur toutes les applications" },
-  { value: 20, label: AdminLevelWording[20], id: "admin-level-20", hint: "Accès en écriture sur toutes les applications" },
-  { value: 30, label: AdminLevelWording[30], id: "admin-level-30", hint: "Accès administrateur" },
+  { value: "VISITOR", label: RolesWording["VISITOR"], id: "admin-level-visitor", hint: "Utilisateur standard" },
+  { value: "READER", label: RolesWording["READER"], id: "admin-level-reader", hint: "Accès en lecture sur toutes les applications" },
+  {
+    value: "CONTRIBUTOR",
+    label: RolesWording["CONTRIBUTOR"],
+    id: "admin-level-contributor",
+    hint: "Accès en écriture sur toutes les applications",
+  },
+  { value: "ADMIN", label: RolesWording["ADMIN"], id: "admin-level-admin", hint: "Accès administrateur" },
 ];

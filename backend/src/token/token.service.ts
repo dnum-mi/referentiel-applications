@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Permission, Prisma, UserType } from "@prisma/client";
+import { Permission, Prisma, Roles, UserType } from "@prisma/client";
 import { createHash } from "node:crypto";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -93,7 +93,7 @@ export class TokenService {
       const user = await this.prisma.user.create({
         data: {
           email: `${nameSlug}-${Date.now()}@bot.internal`,
-          adminLevel: data.adminLevel || 0,
+          role: data.role || Roles.VISITOR,
           type: UserType.bot,
         },
       });
@@ -108,7 +108,7 @@ export class TokenService {
         name: data.name,
         description: data.description,
         expiresAt: data.expiresAt,
-        adminLevel: data.adminLevel,
+        role: data.role,
         userIdImpersonate,
         status: TokenStatus.active,
         hash,
@@ -182,18 +182,25 @@ export class TokenService {
       return null;
     }
 
-    let adminLevel: number;
-    if (userImpersonate) {
-      adminLevel = Math.min(
-        token.adminLevel ?? 0,
-        userImpersonate?.adminLevel ?? 0,
-      );
-    } else {
-      adminLevel = token.adminLevel ?? 0;
-    }
+    const roleOrder: Record<Roles, number> = {
+      [Roles.VISITOR]: 0,
+      [Roles.READER]: 1,
+      [Roles.CONTRIBUTOR]: 2,
+      [Roles.ADMIN]: 3,
+    };
+    const minRole = (a: Roles, b: Roles): Roles =>
+      roleOrder[a] <= roleOrder[b] ? a : b;
+
+    const effectiveRole = userImpersonate
+      ? minRole(
+          token.role ?? Roles.VISITOR,
+          userImpersonate.role ?? Roles.VISITOR,
+        )
+      : (token.role ?? Roles.VISITOR);
+
     return {
       ...userImpersonate,
-      adminLevel,
+      role: effectiveRole,
     };
   }
 

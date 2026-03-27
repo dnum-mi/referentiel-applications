@@ -1,5 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -15,7 +15,7 @@ describe("Actor", () => {
   let TOKEN: string;
 
   it("/GET actor", async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.READ });
+    user = await UserFaker.create({ role: Roles.READER });
     application = await ApplicationFaker.create(user);
     TOKEN = await getToken(user);
     const response = await request(app().getHttpServer())
@@ -26,7 +26,7 @@ describe("Actor", () => {
   });
 
   it("/POST actor", async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     application = await ApplicationFaker.create(user);
     const actorType = await ActorTypeFaker.create();
     TOKEN = await getToken(user);

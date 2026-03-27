@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import api from "@/api/index";
-import { type UpdateUserDto, type UserEntity, Permission } from "@/client/types.gen";
-import { AdminLevel } from "@/models/user";
+import { type UpdateUserDto, type UserEntity, Permission, Roles as RolesType } from "@/client/types.gen";
+import { Roles } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
-import { AdminLevelOptions } from "@/utils/admin-level-utils";
+import { RolesOptions } from "@/utils/admin-level-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
@@ -18,12 +18,12 @@ const toaster = useToasterStore();
 
 const isEditModalOpen = ref(false);
 const isSaving = ref(false);
-const editingAdminLevel = ref<AdminLevel>(AdminLevel.NONE);
+const editingUserRole = ref<RolesType>(Roles.VISITOR);
 const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
 
 async function openEditModal() {
-  editingAdminLevel.value = props.user.adminLevel;
+  editingUserRole.value = props.user.role;
   editingOrganizationId.value = props.user.organizationId || "";
   editingAdditionalPermissions.value = props.user.additionalPermissions ? [...props.user.additionalPermissions] : [];
   isEditModalOpen.value = true;
@@ -31,7 +31,7 @@ async function openEditModal() {
 
 function closeEditModal() {
   isEditModalOpen.value = false;
-  editingAdminLevel.value = AdminLevel.NONE;
+  editingUserRole.value = Roles.VISITOR;
   editingOrganizationId.value = "";
 }
 
@@ -41,7 +41,7 @@ async function saveUser() {
     const response = await api.userControllerUpdate({
       path: { id: props.user.id },
       body: {
-        adminLevel: editingAdminLevel.value,
+        role: editingUserRole.value,
         organizationId: editingOrganizationId.value === "" ? null : editingOrganizationId.value,
         additionalPermissions: editingAdditionalPermissions.value,
       } as UpdateUserDto,
@@ -106,9 +106,9 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
         data-testid="additional-permissions-checkbox"
       />
       <DsfrRadioButtonSet
-        v-model="editingAdminLevel"
+        v-model="editingUserRole"
         legend="Niveau de privilège"
-        :options="AdminLevelOptions"
+        :options="RolesOptions"
         name="admin-level-radio"
         data-testid="admin-level-radio"
       />

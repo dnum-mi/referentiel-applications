@@ -106,7 +106,7 @@ export class TokenController {
     return this.tokenService.create(requestor, true, {
       ...data,
       expiresAt: new Date(data.expiresAt),
-      adminLevel: requestor.adminLevel,
+      role: requestor.role,
     });
   }
 

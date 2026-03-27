@@ -1,7 +1,7 @@
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
 import { faker } from "@faker-js/faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -22,7 +22,7 @@ describe("Applications", () => {
 
   beforeAll(async () => {
     user = await UserFaker.create({
-      adminLevel: AdminLevel.READ,
+      role: Roles.READER,
     });
     TOKEN = await getToken(user);
   });
@@ -150,7 +150,7 @@ describe("Applications", () => {
   });
 
   it("/DELETE applications/:id - should delete application with all related metadata", async () => {
-    const user = await UserFaker.create({ adminLevel: AdminLevel.ADMIN });
+    const user = await UserFaker.create({ role: Roles.ADMIN });
     const TOKEN = await getToken(user);
 
     await request(app().getHttpServer())

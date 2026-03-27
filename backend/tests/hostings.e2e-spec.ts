@@ -1,5 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -16,7 +16,7 @@ describe("Hostings", () => {
   let application: { id: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     application = await ApplicationFaker.create(user);
   });
 

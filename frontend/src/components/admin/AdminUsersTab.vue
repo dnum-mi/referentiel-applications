@@ -3,7 +3,7 @@ import api from "@/api/index";
 import type { PaginatedUserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
-import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
+import { RolesWording, RolesWordingBadgeClass } from "@/utils/admin-level-utils";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
@@ -34,8 +34,8 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     isSortable: true,
   },
   {
-    key: "adminLevel",
-    label: "Niveau d'admin",
+    key: "role",
+    label: "Role",
     isSortable: true,
   },
   {
@@ -112,9 +112,9 @@ const tableRows = computed(() =>
     organisation: user.organization?.path || "-",
     lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
     additionalPermissions: user.additionalPermissions,
-    adminLevel: {
-      label: AdminLevelWording[user.adminLevel],
-      badgeClass: AdminLevelWordingBadgeClass[user.adminLevel],
+    role: {
+      label: RolesWording[user.role],
+      badgeClass: RolesWordingBadgeClass[user.role],
     },
     actions: user,
   })),
@@ -174,8 +174,8 @@ onMounted(fetchUsers);
         @sort="onSort"
         @page="onPage"
       >
-        <template #body-adminLevel="{ data }">
-          <span class="fr-badge justify-center" :class="data.adminLevel.badgeClass">{{ data.adminLevel.label }}</span>
+        <template #body-role="{ data }">
+          <span class="fr-badge justify-center" :class="data.role.badgeClass">{{ data.role.label }}</span>
         </template>
 
         <template #body-additionalPermissions="{ data }">

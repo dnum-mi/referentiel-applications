@@ -566,7 +566,7 @@ erDiagram
 }
 "Token" {
   String id PK
-  Int adminLevel "nullable"
+  Roles role "nullable"
   String description
   String(255) name
   String(512) hash UK
@@ -582,7 +582,7 @@ erDiagram
   String(255) email UK
   DateTime lastLogin "nullable"
   String organizationId FK "nullable"
-  Int adminLevel
+  Roles role
   UserType type
   Boolean emailNotificationsEnabled
   Permission additionalPermissions
@@ -647,7 +647,7 @@ Permet aux comptes de service ou à l'automatisation d'accéder à l'API.
 Properties as follows:
 
 - `id`: Identifiant unique
-- `adminLevel`: Niveau admin accordé à ce token
+- `role`: Role accordé à ce token
 - `description`: Description de l'utilité de ce token
 - `name`: Nom lisible pour ce token
 - `hash`: Valeur de token hachée pour l'authentification
@@ -669,7 +669,7 @@ Properties as follows:
 - `email`: Adresse email de l'utilisateur
 - `lastLogin`: Horodatage de la dernière connexion
 - `organizationId`: Id de l'organisation à laquelle l'utilisateur appartient
-- `adminLevel`: Niveau de permission admin de 0 à 30
+- `role`: Groupement de permissions par defaut
 - `type`: Type de compte utilisateur (humain ou bot)
 - `emailNotificationsEnabled`: Si les notifications par email sont activées
 - `additionalPermissions`: Permissions supplémentaire (ancien capabilities)

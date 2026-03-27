@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Roles } from "@prisma/client";
 import { ApplicationFaker } from "../tests/fakers/application.faker";
 import { UserFaker } from "../tests/fakers/user.faker";
 import { OrganizationFaker } from "../tests/fakers/organization.faker";
@@ -9,7 +9,6 @@ import { HostingFaker } from "../tests/fakers/hosting.faker";
 import { TechnicalDebtInfoFaker } from "../tests/fakers/technical-debt-info.faker";
 import { ComplianceFaker } from "../tests/fakers/compliance.faker";
 import { StatsFaker } from "../tests/fakers/stats.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
 import { BusinessDivisionFaker } from "tests/fakers/business-division.faker";
 import { LabelSourceFaker } from "tests/fakers/label-source.faker";
 import { parseArgs } from "node:util";
@@ -34,16 +33,16 @@ async function seed({
   console.log("👤 Creating test users...");
   const adminUser = await UserFaker.create({
     email: "admin@example.com",
-    adminLevel: AdminLevel.ADMIN,
+    role: Roles.ADMIN,
   });
   const regularUser = await UserFaker.create({
     email: "user@example.com",
-    adminLevel: AdminLevel.READ,
+    role: Roles.READER,
   });
 
   for (let i = 0; i < extraReadUsersCount; i++) {
     await UserFaker.create({
-      adminLevel: AdminLevel.READ,
+      role: Roles.READER,
     });
   }
 

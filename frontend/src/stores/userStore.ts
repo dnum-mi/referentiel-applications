@@ -1,6 +1,6 @@
 import client from "@/api/index";
-import type { Permission, UserFollowedApplicationDto, UserWithPermissions } from "@/client/types.gen";
-import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
+import { Roles, type Permission, type UserFollowedApplicationDto, type UserWithPermissions } from "@/client/types.gen";
+import type { APP_PERMISSIONS } from "@/models/Application";
 import { USER_MANAGER } from "@/services/authentication";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
@@ -27,8 +27,8 @@ export const useUserStore = defineStore("userStore", () => {
     }
   });
 
-  const adminLevel = computed(() => {
-    return user.value ? user.value.adminLevel : 0;
+  const userRole = computed(() => {
+    return user.value ? user.value.role : Roles.VISITOR;
   });
 
   async function fetchUser() {
@@ -88,7 +88,7 @@ export const useUserStore = defineStore("userStore", () => {
 
   return {
     user,
-    adminLevel,
+    userRole,
     authenticated,
     fetchUser,
     updateEmailPreferences,

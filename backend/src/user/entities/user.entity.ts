@@ -1,15 +1,14 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Permission, Roles } from "@prisma/client";
 import {
   IsArray,
   IsBoolean,
   IsEnum,
-  IsNumber,
   IsOptional,
   IsString,
 } from "class-validator";
 import { APP_PERMISSIONS } from "src/common/utils/types";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
-import { Permission } from "@prisma/client";
 
 export class UserFollowedApplicationDto {
   @ApiProperty()
@@ -17,13 +16,6 @@ export class UserFollowedApplicationDto {
 
   @ApiProperty()
   label: string;
-}
-
-export enum AdminLevel {
-  NONE = 0,
-  READ = 10,
-  WRITE = 20,
-  ADMIN = 30,
 }
 
 export const UserType = {
@@ -38,9 +30,14 @@ export class UserEntity {
   @IsString()
   email: string;
 
-  @IsNumber()
-  @IsEnum(AdminLevel)
-  adminLevel: AdminLevel; // Changed from permissions to adminLevel
+  @ApiProperty({
+    required: true,
+    enum: Roles,
+    enumName: "Roles",
+    description: "Role attribué a un utilisateur",
+  })
+  @IsEnum(Roles)
+  role: Roles;
 
   @IsString()
   @IsOptional()

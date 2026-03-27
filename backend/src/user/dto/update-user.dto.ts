@@ -1,18 +1,23 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Permission } from "@prisma/client";
+import { Permission, Roles } from "@prisma/client";
 import {
   IsArray,
   IsBoolean,
-  IsInt,
+  IsEnum,
   IsOptional,
   IsString,
 } from "class-validator";
-import type { AdminLevel } from "../entities/user.entity";
 
 export class UpdateUserDto {
-  @ApiProperty({ required: false })
-  @IsInt()
-  adminLevel?: AdminLevel;
+  @ApiProperty({
+    required: false,
+    enum: Roles,
+    enumName: "Roles",
+    description: "Role attribué a un utilisateur",
+  })
+  @IsOptional()
+  @IsEnum(Roles)
+  role?: Roles;
 
   @ApiProperty({
     required: false,

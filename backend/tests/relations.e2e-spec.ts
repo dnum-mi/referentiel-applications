@@ -1,7 +1,7 @@
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
 import { RelationType } from "@prisma/client";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -26,7 +26,7 @@ describe("Relations End-to-End", () => {
 
   beforeAll(async () => {
     // Given
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
     applicationSource = await ApplicationFaker.create(user);
     applicationTarget = await ApplicationFaker.create(user);
@@ -144,7 +144,7 @@ describe("Relations Graph End-to-End", () => {
   let deletedApp: { id: string; label: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
 
     rootApp = await ApplicationFaker.create(user);
