@@ -6,7 +6,7 @@ import { OrganizationFilterDto } from "./dto/filters.dto";
 export class PrismaQueryBuilder {
   buildSearchWhere(
     filters: OrganizationFilterDto,
-  ): Prisma.OrganizationWhereInput | Prisma.OrganizationClosureWhereInput {
+  ): Prisma.OrganizationWhereInput {
     if (filters.search) {
       const conditions: Prisma.OrganizationWhereInput[] = [
         {
@@ -30,7 +30,15 @@ export class PrismaQueryBuilder {
     }
 
     return filters.withChildren
-      ? { ancestorId: { in: filters.ids } }
-      : { descendantId: { in: filters.ids } };
+      ? {
+          OrganizationClosureDescendant: {
+            some: { ancestorId: { in: filters.ids } },
+          },
+        }
+      : {
+          OrganizationClosureAncestor: {
+            some: { descendantId: { in: filters.ids } },
+          },
+        };
   }
 }
