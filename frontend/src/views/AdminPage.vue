@@ -52,10 +52,12 @@ const tabs = ref<DsfrTab[]>([
     component: AdminPermsMatrixTab,
   },
 ]);
+
+const tabsStyle = ref({ "--tabs-height": "auto" });
 </script>
 
 <template>
-  <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs" data-testid="admin-tabs">
+  <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs" data-testid="admin-tabs" :style="tabsStyle">
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
       <KeepAlive>
         <DsfrTabContent
