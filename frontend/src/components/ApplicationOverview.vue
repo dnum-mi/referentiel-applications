@@ -17,9 +17,9 @@ import Relationships from "./RelationshipsTab.vue";
 import StatusTab from "./StatusTab.vue";
 
 import { BREAKPOINTS } from "@/constants/breakpoint";
-import { AdminLevel } from "@/models/user";
 import { useUserStore } from "@/stores/userStore";
 import type { Tab } from "@/utils/types";
+import { Permission } from "@/client";
 
 const props = defineProps<{ application: CreateApplicationWithPerms }>();
 const emit = defineEmits<{
@@ -53,7 +53,7 @@ const tabs = ref<
     tabId: "tab-infos",
     panelId: "panel-infos",
     component: InformationsGenerales,
-    requiredPerms: ["readBase"],
+    requiredPerms: [Permission.READ_BASE],
   },
   {
     title: "Liens",
@@ -61,7 +61,7 @@ const tabs = ref<
     tabId: "tab-links",
     panelId: "panel-links",
     component: Links,
-    requiredPerms: ["readLinks"],
+    requiredPerms: [Permission.READ_LINKS],
   },
   {
     title: "Conformités",
@@ -69,7 +69,7 @@ const tabs = ref<
     tabId: "tab-compliances",
     panelId: "panel-compliances",
     component: CompliancesAccordionManager,
-    requiredPerms: ["readCompliances"],
+    requiredPerms: [Permission.READ_COMPLIANCES],
   },
   {
     title: "Acteurs",
@@ -77,7 +77,7 @@ const tabs = ref<
     tabId: "tab-actors",
     panelId: "panel-actors",
     component: ActorManager,
-    requiredPerms: ["readActors"],
+    requiredPerms: [Permission.READ_ACTORS],
   },
   {
     title: "Relations",
@@ -85,7 +85,7 @@ const tabs = ref<
     tabId: "tab-relations",
     panelId: "panel-relations",
     component: Relationships,
-    requiredPerms: ["readRelations"],
+    requiredPerms: [Permission.READ_RELATIONS],
   },
   {
     title: "Statuts",
@@ -93,7 +93,7 @@ const tabs = ref<
     tabId: "tab-statuses",
     panelId: "panel-statuses",
     component: StatusTab,
-    requiredPerms: ["readBase"],
+    requiredPerms: [Permission.READ_BASE],
   },
   {
     title: "Signalements",
@@ -117,7 +117,7 @@ const tabs = ref<
     tabId: "tab-quality",
     panelId: "panel-quality",
     component: Quality,
-    requiredPerms: ["readCompliances", "readActors", "readLinks", "readBase"],
+    requiredPerms: [Permission.READ_COMPLIANCES, Permission.READ_ACTORS, Permission.READ_LINKS, Permission.READ_BASE],
   },
 ]);
 
@@ -125,9 +125,7 @@ const tabs = ref<
 onBeforeMount(async () => {
   // filter tabs based on permissions
   tabs.value = tabs.value.filter((tab) => {
-    if (!tab.requiredPerms) return true;
-    if (userStore.adminLevel >= AdminLevel.READ) return true;
-    return tab.requiredPerms.every((perm) => props.application.myPerms.has(perm));
+    return userStore.hasPermissions(tab.requiredPerms, Array.from(props.application.myPerms));
   });
 
   // Read requested tab from URL params after filtering

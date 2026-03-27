@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ConfigDto } from "@/client";
+import { Permission, type ConfigDto } from "@/client";
 import { ref, computed } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import { useToasterStore } from "./stores/toasterStore";
@@ -7,7 +7,6 @@ import { routeNames } from "./router/route-names";
 import { getConfig } from "./services/config";
 import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
-import { AdminLevel } from "./models/user";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
 import AppToaster from "./components/AppToaster.vue";
@@ -62,7 +61,7 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
       iconAttrs: { title: "Déconnexion" },
     },
   ];
-  if (userStore.adminLevel >= AdminLevel.ADMIN) {
+  if (userStore.hasPermissions([Permission.MANAGE_ADMIN_PANEL])) {
     baseLinks.unshift({
       label: "Admin",
       to: { name: routeNames.ADMINPAGE },

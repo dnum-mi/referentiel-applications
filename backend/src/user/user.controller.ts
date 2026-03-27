@@ -8,8 +8,10 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
 import {
+  ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -17,24 +19,32 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
+import { PaginatedResponseDto } from "src/common/dto";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserFilterDto } from "./dto/filters.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
-import { PaginatedResponseDto } from "src/common/dto";
-import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
+import {
+  Requestor,
+  UserEntity,
+  UserWithPermissions,
+} from "./entities/user.entity";
+import { UserPermissionsInterceptor } from "./user-permissions.interceptor";
 import { UserService } from "./user.service";
 
 @ApiTags("users")
 @Controller("/users")
+@UseInterceptors(UserPermissionsInterceptor)
+@UseGuards(PermissionGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get("me")
   @ApiOperation({ summary: "Récupérer ses propres informations utilisateur" })
   @ApiOkResponse({
-    type: UserEntity,
+    type: UserWithPermissions,
     description: "Informations utilisateur trouvées",
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
@@ -50,7 +60,7 @@ export class UserController {
   })
   @ApiOkResponse({
     description: "Préférences mises à jour avec succès",
-    type: UserEntity,
+    type: UserWithPermissions,
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
   async updateMe(
@@ -68,7 +78,11 @@ export class UserController {
   @ApiParam({ name: "appId", description: "ID de l'application à suivre" })
   @ApiOkResponse({
     description: "Abonnement pris en compte",
-    type: UserEntity,
+    type: UserWithPermissions,
+  })
+  @ApiCreatedResponse({
+    description: "Abonnement pris en compte",
+    type: UserWithPermissions,
   })
   async subscribe(@User() user: UserEntity, @Param("appId") appId: string) {
     return this.userService.subscribe(user.id, appId);
@@ -84,15 +98,14 @@ export class UserController {
   })
   @ApiOkResponse({
     description: "Désabonnement pris en compte",
-    type: UserEntity,
+    type: UserWithPermissions,
   })
   async unsubscribe(@User() user: UserEntity, @Param("appId") appId: string) {
     return this.userService.unsubscribe(user.id, appId);
   }
 
   @Patch(":id")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.manageAdminPanel])
   @ApiOperation({
     summary: "Mettre à jour les permissions d'un utilisateur",
     description:
@@ -101,7 +114,7 @@ export class UserController {
   @ApiParam({ name: "id", description: "ID de l'utilisateur" })
   @ApiOkResponse({
     description: "Utilisateur mis à jour avec succès",
-    type: UserEntity,
+    type: UserWithPermissions,
   })
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",
@@ -112,8 +125,7 @@ export class UserController {
   }
 
   @Get()
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.manageAdminPanel])
   @ApiOperation({
     summary: "Lister tous les utilisateurs",
     description:
@@ -121,7 +133,7 @@ export class UserController {
   })
   @ApiOkResponse({
     description: "Liste paginée des utilisateurs",
-    type: PaginatedResponseDto.of(UserEntity),
+    type: PaginatedResponseDto.of(UserWithPermissions),
   })
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",

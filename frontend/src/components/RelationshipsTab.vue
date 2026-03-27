@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useRelationManager, type RelationRow } from "@/composables/use-relation-manager";
 import type { ApplicationWithPerms } from "@/models/Application";
-import { AdminLevel } from "@/models/user";
 import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
@@ -9,13 +8,13 @@ import type { TableColumn } from "@/types/table";
 import { computed, ref } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import RelationshipGraph from "./RelationShipGraph.vue";
-import type { RelationDto } from "@/client";
+import { Permission, type RelationDto } from "@/client";
 
 const props = defineProps<{ application: ApplicationWithPerms; isMobile?: boolean }>();
 
 const isLoading = ref(false);
 const userStore = useUserStore();
-const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeRelations"));
+const canEdit = computed(() => userStore.hasPermissions([Permission.WRITE_RELATIONS]));
 const toaster = useToasterStore();
 
 const relationManager = useRelationManager(props.application.id);

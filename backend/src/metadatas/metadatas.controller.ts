@@ -5,8 +5,9 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import {
   FirstLastMetadataDto,
   MetadataDto,
@@ -46,13 +47,13 @@ export class MetadatasController {
 }
 
 @ApiTags("Metadatas")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("applications/:applicationId/metadatas")
 export class ApplicationMetadatasController {
   constructor(private readonly metadataService: MetadatasService) {}
 
   @Get()
-  @AppAction("readMetadata")
+  @RequiredPermissions([Permission.readMetadata])
   @ApiOperation({ summary: "Récupérer toutes les metadatas d'une application" })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiOkResponse({
@@ -67,8 +68,8 @@ export class ApplicationMetadatasController {
   }
 
   @Get("first-last")
-  @UseGuards(ApplicationGuard)
-  @AppAction("readMetadata")
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.readMetadata])
   @ApiOperation({
     summary: "Retourne la première et la dernière metadata d'une application",
   })

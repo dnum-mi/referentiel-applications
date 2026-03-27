@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { CommonModule } from "src/common/common.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { MetadataRepository } from "./infrastructure/metadata.repository";
 import {
@@ -8,7 +9,7 @@ import {
 import { MetadatasService } from "./metadatas.service";
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, CommonModule],
   controllers: [ApplicationMetadatasController, MetadatasController],
   providers: [MetadatasService, MetadataRepository],
   exports: [MetadatasService, MetadataRepository],

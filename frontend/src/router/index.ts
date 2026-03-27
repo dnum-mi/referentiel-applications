@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { routeNames } from "./route-names";
 import { USER_MANAGER } from "@/services/authentication";
-import { AdminLevel } from "@/models/user";
 import { useUserStore } from "@/stores/userStore";
+import { Permission } from "@/client";
 
 const oidcRoutes = [
   {
@@ -145,7 +145,7 @@ router.beforeEach(async (to) => {
     }
 
     if (to.meta.requiresAdmin) {
-      if (userStore.adminLevel < AdminLevel.ADMIN) {
+      if (!userStore.hasPermissions([Permission.MANAGE_ADMIN_PANEL])) {
         return { path: "/" };
       }
     }

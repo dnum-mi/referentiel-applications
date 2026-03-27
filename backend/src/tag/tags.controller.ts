@@ -20,11 +20,10 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { ApplicationGuard } from "src/common/guards/application.guard";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import {
   CreateTagDto,
   TagDto,
@@ -32,17 +31,15 @@ import {
   UpdateTagDto,
 } from "./dto/tag.dto";
 import { TagsService } from "./tags.service";
-import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
 @ApiTags("Tags")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("tags")
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
   @Post()
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.manageAdminPanel])
   @ApiOperation({
     summary: "Créer un nouveau tag.",
     description: `
@@ -65,7 +62,7 @@ Information requise :
   }
 
   @Get(":id")
-  @AppAction("readBase")
+  @RequiredPermissions([Permission.readBase])
   @ApiOperation({ summary: "Rechercher un tag par id." })
   @ApiOkResponse({ description: "Tag trouvé avec succès", type: TagDto })
   @ApiNotFoundResponse({ description: "Tag non trouvé" })
@@ -75,7 +72,7 @@ Information requise :
   }
 
   @Get()
-  @AppAction("readBase")
+  @RequiredPermissions([Permission.readBase])
   @ApiOperation({
     summary: "Rechercher des tags.",
     description: `
@@ -99,8 +96,7 @@ Information requise :
   }
 
   @Patch(":id")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.manageAdminPanel])
   @ApiOperation({ summary: "Modifier un tag." })
   @ApiOkResponse({ description: "Tag mis à jour avec succès", type: TagDto })
   @ApiForbiddenResponse({
@@ -113,8 +109,7 @@ Information requise :
   }
 
   @Delete(":id")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.manageAdminPanel])
   @ApiOperation({ summary: "Supprimer un tag." })
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Tag supprimé avec succès" })

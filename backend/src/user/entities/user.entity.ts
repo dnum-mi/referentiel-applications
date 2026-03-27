@@ -9,6 +9,7 @@ import {
 } from "class-validator";
 import { APP_PERMISSIONS } from "src/common/utils/types";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
+import { Permission } from "@prisma/client";
 
 export class UserFollowedApplicationDto {
   @ApiProperty()
@@ -25,11 +26,6 @@ export enum AdminLevel {
   ADMIN = 30,
 }
 
-export const UserCapabilities = {
-  CreateApplication: "CreateApplication",
-  CreateGlobalReport: "CreateGlobalReport",
-} as const;
-
 export const UserType = {
   human: "human",
   bot: "bot",
@@ -45,15 +41,6 @@ export class UserEntity {
   @IsNumber()
   @IsEnum(AdminLevel)
   adminLevel: AdminLevel; // Changed from permissions to adminLevel
-
-  @ApiProperty({
-    required: false,
-    enum: UserCapabilities,
-    enumName: "UserCapabilities",
-    isArray: true,
-    description: "Liste des capacités de l'utilisateur",
-  })
-  capabilities?: (keyof typeof UserCapabilities)[];
 
   @IsString()
   @IsOptional()
@@ -87,9 +74,30 @@ export class UserEntity {
   })
   @IsOptional()
   followedApplications?: UserFollowedApplicationDto[];
+
+  @ApiProperty({
+    required: true,
+    enum: Permission,
+    enumName: "Permission",
+    isArray: true,
+    description: "Liste des permissions supplémentaire accordé a un user",
+  })
+  additionalPermissions: (keyof typeof Permission)[];
 }
 
-export class Requestor extends UserEntity {
+export class UserWithPermissions extends UserEntity {
+  @ApiProperty({
+    required: false,
+    enum: Permission,
+    enumName: "Permission",
+    isArray: true,
+    description: "Liste des permissions lié au role d'un user",
+  })
+  @IsOptional()
+  permissions?: (keyof typeof Permission)[];
+}
+
+export class Requestor extends UserWithPermissions {
   @IsArray()
   @IsOptional()
   groups?: string[];
@@ -97,6 +105,4 @@ export class Requestor extends UserEntity {
   @IsArray()
   @IsOptional()
   appPerms?: APP_PERMISSIONS[]; // Changed from permissions to appPerms
-
-  capabilities: (keyof typeof UserCapabilities)[];
 }

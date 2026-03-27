@@ -17,8 +17,9 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
 import {
   CreateTechnicalDebtInfoDto,
@@ -28,7 +29,7 @@ import { UpdateTechnicalDebtInfoDto } from "./dto/update-technical-debt-info.dto
 import { TechnicalDebtInfoService } from "./technical-debt-info.service";
 
 @ApiTags("Technical Debt Info")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("applications/:applicationId/technical-debt-info")
 export class ApplicationTechnicalDebtInfoController {
   constructor(
@@ -36,7 +37,7 @@ export class ApplicationTechnicalDebtInfoController {
   ) {}
 
   @Post()
-  @AppAction("writeBase")
+  @RequiredPermissions([Permission.writeBase])
   @ApiOperation({ summary: "Create technical debt info for an application" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -73,7 +74,7 @@ export class ApplicationTechnicalDebtInfoController {
   }
 
   @Get()
-  @AppAction("readBase")
+  @RequiredPermissions([Permission.readBase])
   @ApiOperation({
     summary: "Retrieve the technical debt info for an application",
   })
@@ -94,7 +95,7 @@ export class ApplicationTechnicalDebtInfoController {
   }
 
   @Patch()
-  @AppAction("writeBase")
+  @RequiredPermissions([Permission.writeBase])
   @ApiOperation({
     summary: "Update the technical debt info for an application",
   })

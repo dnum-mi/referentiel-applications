@@ -1,12 +1,13 @@
-import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { ConfigType } from "@nestjs/config";
-import { Application, Prisma } from "@prisma/client";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { Application, Permission, Prisma } from "@prisma/client";
+import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
+import { BusinessDivisionService } from "src/business-division/business-division.service";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { calculateIQ } from "src/common/utils/quality.utils";
-import { appConfig } from "src/config/configs";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TagsService } from "src/tag/tags.service";
-import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { Requestor } from "src/user/entities/user.entity";
 import { ApplicationRights } from "./dto/application-rights.dto";
 import {
   CreateApplicationDto,
@@ -17,8 +18,6 @@ import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { ApplicationViewService } from "./view.service";
-import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
-import { BusinessDivisionService } from "src/business-division/business-division.service";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -36,8 +35,7 @@ export class ApplicationService {
     private readonly applicationViewService: ApplicationViewService,
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
     private readonly businessDivisionService: BusinessDivisionService,
-    @Inject(appConfig.KEY)
-    private readonly appConf: ConfigType<typeof appConfig>,
+    private readonly checkPermissions: CheckPermissions,
   ) {}
 
   public async createApplication(
@@ -106,10 +104,20 @@ export class ApplicationService {
 
     // protect fields based on permissions
     // priorityRestart field is only writable by users with writePriorityRestart permission
-    if (!requestor.appPerms.includes("writePriorityRestart")) {
+    if (
+      !(await this.checkPermissions.can(
+        [Permission.writePriorityRestart],
+        requestor,
+      ))
+    ) {
       delete data.priorityRestart;
       // if the user has writeBase permission, they can write other fields except priorityRestart
-    } else if (!requestor.appPerms.includes("writeBase")) {
+    } else if (
+      !(await this.checkPermissions.can(
+        [Permission.writePriorityRestart],
+        requestor,
+      ))
+    ) {
       data = {
         priorityRestart: data.priorityRestart,
       };
@@ -278,10 +286,7 @@ export class ApplicationService {
         orderBy,
       );
     }
-    if (
-      !this.appConf.nonActorPermissions.includes("readBase") &&
-      requestor?.adminLevel < AdminLevel.READ
-    ) {
+    if (!(await this.checkPermissions.can([Permission.readBase], requestor))) {
       const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
         actorEmail: requestor.email,
       });
@@ -330,10 +335,7 @@ export class ApplicationService {
       where.AND.push(whereBuildTechnicalDebtInfo);
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
-    if (
-      !this.appConf.nonActorPermissions.includes("readBase") &&
-      requestor?.adminLevel < AdminLevel.READ
-    ) {
+    if (!(await this.checkPermissions.can([Permission.readBase], requestor))) {
       const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
         actorEmail: requestor.email,
       });

@@ -8,8 +8,7 @@ import { statusApplicationDictionary, typeApplicationDictionary } from "@/compos
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
-import { AdminLevel } from "@/models/user";
-import api from "@/api";
+import { Permission } from "@/client";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
@@ -43,7 +42,7 @@ const deleteConfirmationInput = ref("");
 const applicationLabel = computed(() => application.value?.label ?? "");
 
 const canReadMetadata = computed(() => {
-  return application.value?.myPerms?.has("readMetadata") || userStore.adminLevel >= AdminLevel.READ;
+  return userStore.hasPermissions([Permission.READ_METADATA]);
 });
 
 async function fetchApplicationMetadata() {
@@ -162,7 +161,7 @@ const actions = computed(() => [
       <ApplicationOverview :application="application" data-testid="application-overview" @update:application="fetchApplicationMetadata" />
 
       <DsfrButton
-        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
+        v-if="userStore.hasPermissions([Permission.DELETE_APPLICATION])"
         class="application-delete-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         data-testid="application-delete-btn"
         title="Supprimer définitivement cette application"

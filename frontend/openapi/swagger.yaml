@@ -343,7 +343,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserEntity"
+                $ref: "#/components/schemas/UserWithPermissions"
         "404":
           description: Utilisateur non trouvé
       tags: &a4
@@ -366,7 +366,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserEntity"
+                $ref: "#/components/schemas/UserWithPermissions"
         "404":
           description: Utilisateur non trouvé
       tags: *a4
@@ -387,13 +387,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserEntity"
+                $ref: "#/components/schemas/UserWithPermissions"
         "201":
-          description: ""
+          description: Abonnement pris en compte
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/UserWithPermissions"
       tags: *a4
     delete:
       operationId: UserController_unsubscribe
@@ -411,7 +411,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserEntity"
+                $ref: "#/components/schemas/UserWithPermissions"
       tags: *a4
   /api/v2/users/{id}:
     patch:
@@ -438,7 +438,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserEntity"
+                $ref: "#/components/schemas/UserWithPermissions"
         "403":
           description: Accès refusé - Privilège admin requis
         "404":
@@ -511,7 +511,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedUserEntity"
+                $ref: "#/components/schemas/PaginatedUserWithPermissions"
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a4
@@ -4140,12 +4140,6 @@ components:
       required:
         - id
         - label
-    UserCapabilities:
-      type: string
-      description: Liste des capacités de l'utilisateur
-      enum:
-        - CreateApplication
-        - CreateGlobalReport
     OrganizationDto:
       type: object
       properties:
@@ -4199,13 +4193,39 @@ components:
       required:
         - id
         - label
+    Permission:
+      type: string
+      description: Liste des permissions lié au role d'un user
+      enum:
+        - CreateApplication
+        - DeleteApplication
+        - CreateGlobalReport
+        - AppList
+        - DataExport
+        - manageAdminPanel
+        - postActorType
+        - manageActorType
+        - deleteActorType
+        - readBase
+        - writeBase
+        - readActors
+        - writeActors
+        - readCompliances
+        - writeCompliances
+        - readHostings
+        - writeHostings
+        - readRelations
+        - writeRelations
+        - readLinks
+        - writeLinks
+        - writePriorityRestart
+        - readMetadata
+        - readReports
+        - postReports
+        - manageReports
     UserEntity:
       type: object
       properties:
-        capabilities:
-          type: array
-          items:
-            $ref: "#/components/schemas/UserCapabilities"
         organization:
           nullable: true
           allOf:
@@ -4221,17 +4241,21 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserFollowedApplicationDto"
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
         id:
           type: string
         email:
           type: string
         adminLevel:
-          enum:
+          type: number
+          enum: &a22
             - 0
             - 10
             - 20
             - 30
-          type: number
         organizationId:
           type: string
           nullable: true
@@ -4241,6 +4265,7 @@ components:
           nullable: true
       required:
         - type
+        - additionalPermissions
         - id
         - email
         - adminLevel
@@ -4355,6 +4380,54 @@ components:
       required:
         - first
         - last
+    UserWithPermissions:
+      type: object
+      properties:
+        organization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        type:
+          $ref: "#/components/schemas/UserType"
+        emailNotificationsEnabled:
+          type: boolean
+          description: Préférence de notification par email
+          default: true
+        followedApplications:
+          description: Applications suivies par l'utilisateur
+          type: array
+          items:
+            $ref: "#/components/schemas/UserFollowedApplicationDto"
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        id:
+          type: string
+        email:
+          type: string
+        adminLevel:
+          enum: *a22
+          type: number
+        organizationId:
+          type: string
+          nullable: true
+        lastLogin:
+          format: date-time
+          type: string
+          nullable: true
+      required:
+        - type
+        - additionalPermissions
+        - id
+        - email
+        - adminLevel
+        - organizationId
+        - lastLogin
     UpdateUserPreferencesDto:
       type: object
       properties:
@@ -4372,26 +4445,24 @@ components:
             - 20
             - 30
           type: number
-        capabilities:
-          type: array
-          description: Liste des capacités de l'utilisateur
-          items:
-            type: string
-            enum:
-              - CreateApplication
-              - CreateGlobalReport
         organizationId:
           type: string
           nullable: true
           description: ID de l'organisation
-    PaginatedUserEntity:
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+      required:
+        - additionalPermissions
+    PaginatedUserWithPermissions:
       type: object
       properties:
         results:
           description: Array of results
           type: array
           items:
-            $ref: "#/components/schemas/UserEntity"
+            $ref: "#/components/schemas/UserWithPermissions"
         total:
           type: number
           description: Total number of items
@@ -4461,7 +4532,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a22
+          example: &a23
             - population 1
             - population 2
           description: population associated with the application
@@ -4471,7 +4542,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a23
+          example: &a24
             - finance
             - HR
           description: Purposes of the application
@@ -4482,7 +4553,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a24
+          example: &a25
             - tag1
             - tag2
           type: array
@@ -4694,7 +4765,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a22
+          example: *a23
           description: population associated with the application
           type: array
           items:
@@ -4702,7 +4773,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a23
+          example: *a24
           description: Purposes of the application
           type: array
           items:
@@ -4711,7 +4782,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a24
+          example: *a25
           type: array
           items:
             type: string
@@ -4897,7 +4968,7 @@ components:
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
         adminLevel:
-          enum: &a25
+          enum: &a26
             - 0
             - 10
             - 20
@@ -4964,7 +5035,7 @@ components:
           example: abc123def456ghi789jkl012mno345pq
           description: Identifiant unique du token
         adminLevel:
-          enum: *a25
+          enum: *a26
           type: number
           example: 10
           description: Niveau d'administration du token
@@ -5707,7 +5778,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a26
+          enum: &a27
             - OK
             - KO
           type: string
@@ -5733,7 +5804,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a27
+          enum: &a28
             - S3
             - LOCAL
             - EXTERNE
@@ -5744,7 +5815,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a28
+          enum: &a29
             - OK
             - KO
           type: string
@@ -5754,7 +5825,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a29
+          enum: &a30
             - homologuee
             - en_cours
             - dispensee
@@ -5830,7 +5901,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a26
+          enum: *a27
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -5854,7 +5925,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a27
+          enum: *a28
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -5862,7 +5933,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a28
+          enum: *a29
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -5870,7 +5941,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a29
+          enum: *a30
           type: string
           description: Homologation status
         homologation_date_end:
@@ -5949,7 +6020,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a26
+          enum: *a27
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -5973,7 +6044,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a27
+          enum: *a28
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -5981,7 +6052,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a28
+          enum: *a29
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -5989,7 +6060,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a29
+          enum: *a30
           type: string
           description: Homologation status
         homologation_date_end:

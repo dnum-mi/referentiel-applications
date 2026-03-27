@@ -27,14 +27,14 @@ model User {
   tokensCreated             Token[]               @relation("TokenUserCreator")
   /// Type de compte utilisateur (humain ou bot)
   type                      UserType              @default(human)
-  /// Capacités spéciales accordées à cet utilisateur
-  capabilities              CapabilityNames[]
   /// Applications suivies par cet utilisateur pour les notifications
   followedApplications      Application[]         @relation("UserFollowedApplications")
   /// Applications consultées par cet utilisateur
   applicationViews          ApplicationView[]
   /// Si les notifications par email sont activées
   emailNotificationsEnabled Boolean               @default(true)
+  /// Permissions supplémentaire (ancien capabilities) 
+  additionalPermissions         Permission []
 }
 
 /// Personne ou entité impliquée avec une application.

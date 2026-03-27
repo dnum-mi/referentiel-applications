@@ -1,5 +1,5 @@
-import type { AdminLevel } from "../entities/user.entity";
 import { ApiProperty } from "@nestjs/swagger";
+import { Permission } from "@prisma/client";
 import {
   IsArray,
   IsBoolean,
@@ -7,22 +7,12 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
-import { UserCapabilities } from "../entities/user.entity";
+import type { AdminLevel } from "../entities/user.entity";
 
 export class UpdateUserDto {
   @ApiProperty({ required: false })
   @IsInt()
   adminLevel?: AdminLevel;
-
-  @ApiProperty({
-    required: false,
-    enum: UserCapabilities,
-    isArray: true,
-
-    description: "Liste des capacités de l'utilisateur",
-  })
-  @IsArray()
-  capabilities?: (keyof typeof UserCapabilities)[];
 
   @ApiProperty({
     required: false,
@@ -32,6 +22,16 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   organizationId?: string | null;
+
+  @ApiProperty({
+    required: true,
+    enum: Permission,
+    enumName: "Permission",
+    isArray: true,
+    description: "Liste des permissions supplémentaire accordé a un user",
+  })
+  @IsArray()
+  additionalPermissions?: (keyof typeof Permission)[];
 }
 
 export class UpdateUserPreferencesDto {

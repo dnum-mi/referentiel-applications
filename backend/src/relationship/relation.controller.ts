@@ -19,8 +19,9 @@ import {
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
 import {
   RelationApplicationDto,
@@ -30,7 +31,7 @@ import {
 import { RelationService } from "./relation.service";
 
 @ApiTags("relation")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @ApiParam({
   name: "applicationId",
   description: "ID de l'application",
@@ -41,7 +42,7 @@ export class RelationController {
   constructor(private readonly relationService: RelationService) {}
 
   @Post()
-  @AppAction("writeRelations")
+  @RequiredPermissions([Permission.writeRelations])
   @HttpCode(201)
   @ApiCreatedResponse({
     type: RelationDto,
@@ -60,7 +61,7 @@ export class RelationController {
   }
 
   @Get()
-  @AppAction("readRelations")
+  @RequiredPermissions([Permission.readRelations])
   @ApiOkResponse({
     description: "Liste des relations trouvées",
     type: RelationDto,
@@ -78,7 +79,7 @@ export class RelationController {
   }
 
   @Get("graph")
-  @AppAction("readRelations")
+  @RequiredPermissions([Permission.readRelations])
   @ApiOkResponse({
     description: "Graphe des relations de l'application",
     type: RelationGraphDto,
@@ -104,7 +105,7 @@ export class RelationController {
   }
 
   @Get(":id")
-  @AppAction("readRelations")
+  @RequiredPermissions([Permission.readRelations])
   @ApiOperation({
     summary: "Récupérer une relation par son identifiant unique",
   })
@@ -118,7 +119,7 @@ export class RelationController {
   }
 
   @Patch(":id")
-  @AppAction("writeRelations")
+  @RequiredPermissions([Permission.writeRelations])
   @ApiOperation({ summary: "Mettre à jour une relation" })
   @ApiParam({
     name: "id",
@@ -138,7 +139,7 @@ export class RelationController {
   }
 
   @Delete(":id")
-  @AppAction("writeRelations")
+  @RequiredPermissions([Permission.writeRelations])
   @ApiOperation({ summary: "Supprimer une relation" })
   @HttpCode(204)
   @ApiNoContentResponse({

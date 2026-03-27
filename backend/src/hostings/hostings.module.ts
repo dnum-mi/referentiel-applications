@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { CommonModule } from "src/common/common.module";
 import { MetadatasModule } from "src/metadatas/metadatas.module";
 import { ApplicationModule } from "src/applications/application.module";
 import { PrismaModule } from "../prisma/prisma.module";
@@ -10,7 +11,7 @@ import { HostingsService } from "./hostings.service";
 import { SitesController } from "./site.controller";
 
 @Module({
-  imports: [PrismaModule, MetadatasModule, ApplicationModule],
+  imports: [PrismaModule, MetadatasModule, ApplicationModule, CommonModule],
   controllers: [
     ApplicationHostingsController,
     SitesController,

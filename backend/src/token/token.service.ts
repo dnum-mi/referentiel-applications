@@ -4,16 +4,12 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { Permission, Prisma, UserType } from "@prisma/client";
 import { createHash } from "node:crypto";
-import { Prisma, UserType } from "@prisma/client";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import {
-  AdminLevel,
-  Requestor,
-  UserEntity,
-} from "src/user/entities/user.entity";
-import { generateRandomPassword } from "src/utils/functions";
-import { stringToSlug } from "src/utils/functions";
+import { Requestor, UserEntity } from "src/user/entities/user.entity";
+import { generateRandomPassword, stringToSlug } from "src/utils/functions";
 import { TokenStatus } from "./domain/token-status.entity";
 import { NewTokenEntity } from "./domain/token.entity";
 import { ExposedTokenDto, TokenDto } from "./dto/token.dto";
@@ -27,7 +23,10 @@ const ACTIVE_TOKEN_LIMIT = 5;
 
 @Injectable()
 export class TokenService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly checkPermissions: CheckPermissions,
+  ) {}
 
   async list({ requestor }: { requestor?: Requestor }): Promise<TokenDto[]> {
     const where: Prisma.TokenWhereInput = {
@@ -65,7 +64,11 @@ export class TokenService {
         "Requestor must be defined to create a token",
       );
     }
-    if (!personal && requestor.adminLevel !== AdminLevel.ADMIN) {
+    const hasPermission = await this.checkPermissions.can(
+      [Permission.manageAdminPanel],
+      requestor,
+    );
+    if (!personal && !hasPermission) {
       throw new ForbiddenException("Only admins can create service tokens");
     }
     const existingTokens = await this.list({ requestor });
@@ -134,7 +137,11 @@ export class TokenService {
       omit: { hash: true },
     });
 
-    if (!isRequestorAllowedToUpdateToken(token, requestor)) {
+    const hasPermission = await this.checkPermissions.can(
+      [Permission.manageAdminPanel],
+      requestor,
+    );
+    if (!isRequestorAllowedToUpdateToken(hasPermission, token, requestor)) {
       throw new NotFoundException(
         "Token not found or you don't have permission to delete it",
       );
@@ -204,7 +211,11 @@ export class TokenService {
       omit: { hash: true },
     });
 
-    if (!isRequestorAllowedToUpdateToken(token, requestor)) {
+    const hasPermission = await this.checkPermissions.can(
+      [Permission.manageAdminPanel],
+      requestor,
+    );
+    if (!isRequestorAllowedToUpdateToken(hasPermission, token, requestor)) {
       throw new NotFoundException(
         "Token not found or you don't have permission to regenerate it",
       );

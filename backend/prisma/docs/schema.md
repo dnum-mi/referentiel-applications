@@ -584,8 +584,8 @@ erDiagram
   String organizationId FK "nullable"
   Int adminLevel
   UserType type
-  CapabilityNames capabilities
   Boolean emailNotificationsEnabled
+  Permission additionalPermissions
 }
 "Actor" {
   String id PK
@@ -671,8 +671,8 @@ Properties as follows:
 - `organizationId`: Id de l'organisation à laquelle l'utilisateur appartient
 - `adminLevel`: Niveau de permission admin de 0 à 30
 - `type`: Type de compte utilisateur (humain ou bot)
-- `capabilities`: Capacités spéciales accordées à cet utilisateur
 - `emailNotificationsEnabled`: Si les notifications par email sont activées
+- `additionalPermissions`: Permissions supplémentaire (ancien capabilities)
 
 ### `Actor`
 

@@ -1,5 +1,4 @@
-import type { Prisma } from "@prisma/client";
-import type { UserCapabilities } from "src/user/entities/user.entity";
+import type { Permission, Prisma } from "@prisma/client";
 import type { AsyncReturnType } from "src/utils/types.util";
 import { faker } from "@faker-js/faker";
 import { AdminLevel } from "src/user/entities/user.entity";
@@ -9,13 +8,13 @@ export type UserFakerReturnType = AsyncReturnType<typeof UserFaker.create>;
 interface UserFakerParams {
   email?: string;
   adminLevel?: AdminLevel;
-  capabilities?: (keyof typeof UserCapabilities)[];
+  additionalPermissions?: Permission[];
 }
 export class UserFaker {
   static async create({
     email = faker.internet.email(),
     adminLevel = AdminLevel.NONE,
-    capabilities = [],
+    additionalPermissions = [],
   }: UserFakerParams = {}) {
     const prisma = getPrismaClient();
 
@@ -28,7 +27,7 @@ export class UserFaker {
         data: {
           email,
           adminLevel,
-          capabilities: [...capabilities],
+          additionalPermissions: [...additionalPermissions],
         },
       });
     }

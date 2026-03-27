@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import api from "@/api/index";
-import type { UserEntity, UpdateUserDto, UserCapabilities } from "@/client/types.gen";
-import { useToasterStore } from "@/stores/toasterStore";
+import { type UpdateUserDto, type UserEntity, Permission } from "@/client/types.gen";
 import { AdminLevel } from "@/models/user";
+import { useToasterStore } from "@/stores/toasterStore";
 import { AdminLevelOptions } from "@/utils/admin-level-utils";
-import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
+import { ref } from "vue";
+import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 
 const props = defineProps<{ user: Required<UserEntity> }>();
 
@@ -20,12 +20,12 @@ const isEditModalOpen = ref(false);
 const isSaving = ref(false);
 const editingAdminLevel = ref<AdminLevel>(AdminLevel.NONE);
 const editingOrganizationId = ref<string>("");
-const editingCapabilities = ref<UserCapabilities[]>([]);
+const editingAdditionalPermissions = ref<Permission[]>([]);
 
 async function openEditModal() {
   editingAdminLevel.value = props.user.adminLevel;
   editingOrganizationId.value = props.user.organizationId || "";
-  editingCapabilities.value = props.user.capabilities ? [...props.user.capabilities] : [];
+  editingAdditionalPermissions.value = props.user.additionalPermissions ? [...props.user.additionalPermissions] : [];
   isEditModalOpen.value = true;
 }
 
@@ -43,7 +43,7 @@ async function saveUser() {
       body: {
         adminLevel: editingAdminLevel.value,
         organizationId: editingOrganizationId.value === "" ? null : editingOrganizationId.value,
-        capabilities: editingCapabilities.value,
+        additionalPermissions: editingAdditionalPermissions.value,
       } as UpdateUserDto,
     });
     if (!response.error && response.data) {
@@ -62,15 +62,15 @@ async function saveUser() {
   }
 }
 
-const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
+const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
   {
     label: "Créer une application",
-    value: "CreateApplication",
+    value: Permission.CREATE_APPLICATION,
     name: "capability-create-application",
   },
   {
     label: "Créer un signalement global",
-    value: "CreateGlobalReport" as UserCapabilities,
+    value: Permission.CREATE_GLOBAL_REPORT,
     name: "capability-create-global-report",
   },
 ];
@@ -99,11 +99,11 @@ const capabilitiesOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
         data-testid="user-organization-search"
       />
       <DsfrCheckboxSet
-        v-model="editingCapabilities"
+        v-model="editingAdditionalPermissions"
         legend="Capacités"
-        :options="capabilitiesOptions"
-        name="capabilities-checkbox"
-        data-testid="capabilities-checkbox"
+        :options="additionalPermissionsOptions"
+        name="additional-permissions-checkbox"
+        data-testid="additional-permissions-checkbox"
       />
       <DsfrRadioButtonSet
         v-model="editingAdminLevel"

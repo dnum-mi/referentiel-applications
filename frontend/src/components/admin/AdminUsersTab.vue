@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import api from "@/api/index";
-import type { PaginatedUserEntity, UserEntity } from "@/client/types.gen";
+import type { PaginatedUserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
@@ -15,7 +15,7 @@ const errorMessages = {
 
 type ErrorKey = keyof typeof errorMessages;
 
-const data = ref<PaginatedUserEntity>({ results: [], total: 0 });
+const data = ref<PaginatedUserWithPermissions>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
@@ -39,7 +39,7 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     isSortable: true,
   },
   {
-    key: "capabilities",
+    key: "additionalPermissions",
     isSortable: true,
     label: "Nb Cap.",
   },
@@ -111,7 +111,7 @@ const tableRows = computed(() =>
     email: user.email,
     organisation: user.organization?.path || "-",
     lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
-    capabilities: user.capabilities,
+    additionalPermissions: user.additionalPermissions,
     adminLevel: {
       label: AdminLevelWording[user.adminLevel],
       badgeClass: AdminLevelWordingBadgeClass[user.adminLevel],
@@ -178,9 +178,9 @@ onMounted(fetchUsers);
           <span class="fr-badge justify-center" :class="data.adminLevel.badgeClass">{{ data.adminLevel.label }}</span>
         </template>
 
-        <template #body-capabilities="{ data }">
-          <span v-show="data.capabilities.length" class="fr-badge ml-2" :title="data.capabilities.join(', ')">{{
-            data.capabilities.length
+        <template #body-additionalPermissions="{ data }">
+          <span v-show="data.additionalPermissions.length" class="fr-badge ml-2" :title="data.additionalPermissions.join(', ')">{{
+            data.additionalPermissions.length
           }}</span>
         </template>
 

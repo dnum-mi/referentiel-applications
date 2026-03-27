@@ -19,16 +19,13 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { RequiredUserCapability } from "src/common/decorators/user-capability.decorator";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { ApplicationGuard } from "src/common/guards/application.guard";
-import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { EmailService } from "src/email/email.service";
-import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { Requestor } from "src/user/entities/user.entity";
 import { CreateReportRequestDto } from "./dto/create-report.dto";
 import { ReportFiltersDto } from "./dto/report-filters.dto";
 import { UpdateReportNotifyQuery } from "./dto/report-notify-query.dto";
@@ -39,7 +36,7 @@ import { UserNotificationService } from "./user-notification.service";
 
 @ApiTags("Reports")
 @Controller("reports")
-@UseGuards(AdminGuard)
+@UseGuards(PermissionGuard)
 export class ReportsController {
   constructor(
     protected service: ReportsService,
@@ -81,8 +78,7 @@ export class ReportsController {
     description: "Signalement créé avec succès",
     type: ReportDto,
   })
-  @UseGuards(UserCapabilityGuard)
-  @RequiredUserCapability("CreateGlobalReport")
+  @RequiredPermissions([Permission.CreateGlobalReport])
   @HttpCode(HttpStatus.CREATED)
   async create(
     @User() requestor: Requestor,
@@ -103,9 +99,8 @@ export class ReportsController {
    * @returns Le signalement mis à jour.
    */
   @Patch(":id")
-  @RequiredAdminLevel(AdminLevel.WRITE)
   @ApiOperation({ summary: "Mettre à jour un signalement" })
-  @AppAction("manageReports")
+  @RequiredPermissions([Permission.manageReports])
   @ApiOkResponse({
     description: "Signalement mis à jour avec succès",
     type: ReportDto,
@@ -131,7 +126,7 @@ export class ReportsController {
   description: "ID de l'application",
   type: String,
 })
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("applications/:applicationId/reports")
 export class ApplicationReportsController {
   constructor(
@@ -156,7 +151,7 @@ export class ApplicationReportsController {
     type: ReportDto,
   })
   @HttpCode(HttpStatus.CREATED)
-  @AppAction("postReports")
+  @RequiredPermissions([Permission.postReports])
   @ApiParam({
     name: "applicationId",
     description: "ID de l'application",
@@ -219,7 +214,7 @@ export class ApplicationReportsController {
    */
   @Patch(":id")
   @ApiOperation({ summary: "Mettre à jour un signalement" })
-  @AppAction("manageReports")
+  @RequiredPermissions([Permission.manageReports])
   @ApiOkResponse({
     description: "Signalement mis à jour avec succès",
     type: ReportDto,
@@ -243,7 +238,7 @@ export class ApplicationReportsController {
    */
   @Delete(":id")
   @ApiOperation({ summary: "Supprimer un signalement" })
-  @AppAction("manageReports")
+  @RequiredPermissions([Permission.manageReports])
   @ApiNoContentResponse({
     description: "Signalement supprimé avec succès",
   })

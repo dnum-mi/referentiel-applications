@@ -1,4 +1,6 @@
-import type { Prisma } from "@prisma/client";
+import type { AppPermissions, Prisma } from "@prisma/client";
+import { Permission as PermissionsRecord } from "@prisma/client";
+import { typeguardIncludes } from "src/utils/typeguard-includes";
 
 export type GLOBAL_PERMISSIONS = "read" | "write" | "admin";
 export type GLOBAL_PERMS_MAP = Record<GLOBAL_PERMISSIONS, boolean>;
@@ -32,6 +34,17 @@ export const AppPermissionsRecord = {
 export const AppPermissionsValues: APP_PERMISSIONS[] = Object.keys(
   AppPermissionsRecord,
 ) as APP_PERMISSIONS[];
+
+export const transformAppPermissionsObjectToArray = (
+  appPermissions: AppPermissions,
+) => {
+  return Object.keys(appPermissions).filter((value) => {
+    if (typeguardIncludes(value, Object.values(PermissionsRecord))) {
+      return appPermissions[value];
+    }
+    return false;
+  }) as APP_PERMISSIONS[];
+};
 
 export type MetadataConfig<T> = {
   userId: string;

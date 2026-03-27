@@ -50,3 +50,52 @@ model AppPermissions {
   /// Type d'acteur auquel ces permissions s'appliquent
   actorType   ActorType @relation(fields: [actorTypeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
+
+/// Permissions globale et aussi les applications permissions. 
+/// Définit quelles actions sont disponible sur l'ensemble de l'application 
+/// Deux types: Permissions applicatives (par app) & Permissions Globales (Crée une application, crée un signalement globale etc...) 
+///
+/// @namespace Permissions
+enum Permission {
+  // --- Permissions globales ---
+  /// Capacité de créer de nouvelles applications
+  CreateApplication
+  /// Capacité de supprimer une application
+  DeleteApplication
+  /// Capacité de créer des signalements globaux
+  CreateGlobalReport
+  /// Voir la liste des applications
+  AppList
+    /// Exporter les données
+  DataExport
+  /// Manager l'admin panel
+  manageAdminPanel
+  /// Crée un nouveau type d'acteur 
+  postActorType
+  /// Editer un nouveau type d'acteur 
+  manageActorType
+    /// Supprimer un nouveau type d'acteur 
+  deleteActorType
+
+  // --- Permissions applicatives (par app) ---
+  // Couple read/write classique
+  readBase                // Voir les infos de base
+  writeBase               // Modifier les infos de base
+  readActors              // Voir les acteurs
+  writeActors             // Modifier les acteurs
+  readCompliances         // Voir les conformites 
+  writeCompliances        // Modifier les conformites
+  readHostings            // Voir les hebergements 
+  writeHostings           // Modifier les hebergements
+  readRelations           // Voir les relations
+  writeRelations          // Modifier les relations
+  readLinks               // Voir les liens
+  writeLinks              // Modifier les liens
+  // Permissions autonomes binaires (pas de couple read/write)
+  writePriorityRestart       // Modifier la priorite de redemarrage. Lecture couverte par AppRead.
+  readMetadata           // Voir l'historique des metadonnees. Pas de write : donnees generees automatiquement.
+  // Signalements (3 niveaux)
+  readReports             // Voir les signalements
+  postReports             // Creer des signalements sur une app
+  manageReports           // Gerer les signalements (implique ReportRead + ReportPost)
+}

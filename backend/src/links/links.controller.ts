@@ -18,8 +18,9 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
 import {
   CreateLinkDto,
@@ -31,13 +32,13 @@ import { LinksService } from "./links.service";
 import { PaginatedResponseDto } from "src/common/dto";
 
 @ApiTags("Links")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("applications/:applicationId/links")
 export class ApplicationLinksController {
   constructor(private readonly service: LinksService) {}
 
   @Post()
-  @AppAction("writeLinks")
+  @RequiredPermissions([Permission.writeLinks])
   @ApiOperation({ summary: "Create a new link for an application" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -71,7 +72,7 @@ export class ApplicationLinksController {
   }
 
   @Get()
-  @AppAction("readLinks")
+  @RequiredPermissions([Permission.readLinks])
   @ApiOperation({
     summary: "Retrieve links for an application",
     description: "Get list of links for an application",
@@ -89,7 +90,7 @@ export class ApplicationLinksController {
   }
 
   @Patch(":id")
-  @AppAction("writeLinks")
+  @RequiredPermissions([Permission.writeLinks])
   @ApiOperation({ summary: "Update a link for an application" })
   @ApiOkResponse({ description: "Link updated successfully", type: LinkDto })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
@@ -118,7 +119,7 @@ export class ApplicationLinksController {
   }
 
   @Delete(":id")
-  @AppAction("writeLinks")
+  @RequiredPermissions([Permission.writeLinks])
   @ApiOperation({ summary: "Delete a link for an application" })
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Link deleted successfully" })

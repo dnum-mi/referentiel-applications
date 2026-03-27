@@ -1,11 +1,9 @@
-import { ref, computed, watch } from "vue";
-import type { APP_PERMISSIONS } from "@/models/Application";
+import { useUserStore } from "@/stores/userStore";
 import { AVAILABLE_COLUMNS, DEFAULT_VISIBLE_COLUMNS, type ColumnConfig } from "@/types/columns";
 import type { TableColumn } from "@/types/table";
-import { useUserStore } from "@/stores/userStore";
+import { computed, ref, watch } from "vue";
 
 const STORAGE_KEY = "app-table-column-preferences";
-const MIN_ADMIN_LEVEL_FOR_ALL_COLUMNS = 1;
 
 interface ColumnPreferences {
   visibleColumns: string[];
@@ -53,16 +51,11 @@ watch([() => preferences.value.visibleColumns, columnWidths], savePreferences, {
 export function useColumnPreferences() {
   const userStore = useUserStore();
 
-  const isColumnAvailable = (column: ColumnConfig, userPerms?: Set<APP_PERMISSIONS>): boolean => {
+  const isColumnAvailable = (column: ColumnConfig): boolean => {
     if (column.alwaysAvailable) {
       return true;
     }
-
-    if (userStore.adminLevel >= MIN_ADMIN_LEVEL_FOR_ALL_COLUMNS) {
-      return true;
-    }
-
-    if (column.requiredPermissions && column.requiredPermissions.length > 0) {
+    if (userStore.hasPermissions(column.requiredPermissions ?? [])) {
       return !!userStore.authenticated;
     }
 

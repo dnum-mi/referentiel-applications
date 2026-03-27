@@ -19,21 +19,22 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { CreateLabelDto } from "./dto/create-label.dto";
 import { LabelDto } from "./dto/label.dto";
 import { LabelsService } from "./labels.service";
 
 @ApiTags("Labels")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("applications/:applicationId/labels")
 export class LabelsController {
   constructor(private readonly service: LabelsService) {}
 
   @Post()
-  @AppAction("writeBase")
+  @RequiredPermissions([Permission.writeBase])
   @ApiBody({ type: CreateLabelDto })
   @ApiOperation({
     summary: "Créer un nouveau nom",
@@ -76,7 +77,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get()
-  @AppAction("readBase")
+  @RequiredPermissions([Permission.readBase])
   @ApiOperation({
     summary: "Récupérer les noms alternatifs par ID d'application",
     description: `
@@ -95,7 +96,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   }
 
   @Patch(":id")
-  @AppAction("writeBase")
+  @RequiredPermissions([Permission.writeBase])
   @ApiOperation({
     summary: "Mettre à jour un nom existant",
   })
@@ -141,7 +142,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   }
 
   @Delete(":id")
-  @AppAction("writeBase")
+  @RequiredPermissions([Permission.writeBase])
   @ApiOperation({
     summary: "Supprimer un nom alternatif",
     description: ` Ce endpoint permet de supprimer un nom alternatif existant. 

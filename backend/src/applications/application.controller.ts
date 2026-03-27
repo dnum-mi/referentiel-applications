@@ -27,15 +27,13 @@ import {
 } from "@nestjs/swagger";
 import { Response } from "express";
 
-import { AppAction } from "src/common/decorators/application.decorator";
-import { RequiredUserCapability } from "src/common/decorators/user-capability.decorator";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { ApplicationGuard } from "src/common/guards/application.guard";
-import { UserCapabilityGuard } from "src/common/guards/user-capability.guard";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { APP_PERMISSIONS, AppPermissionsValues } from "src/common/utils/types";
-import { AdminLevel, Requestor } from "src/user/entities/user.entity";
-import { RequiredAdminLevel } from "../common/decorators/admin.decorator";
+import { MetadatasService } from "src/metadatas/metadatas.service";
+import { Requestor } from "src/user/entities/user.entity";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ApplicationService } from "./application.service";
 import {
@@ -49,9 +47,8 @@ import {
   CountByMonthDto,
 } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
-import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 import { ApplicationExportService } from "./export.service";
-import { MetadatasService } from "src/metadatas/metadatas.service";
+import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 
 @ApiTags("applications")
 @Controller("applications")
@@ -89,8 +86,8 @@ Vous devez fournir les informations suivantes :
     description: "Application créée avec succès.",
     type: ApplicationDto,
   })
-  @UseGuards(UserCapabilityGuard)
-  @RequiredUserCapability("CreateApplication")
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.CreateApplication])
   public async create(
     @Body() createApplicationDto: CreateApplicationDto,
     @UserId() requestorId: string,
@@ -149,8 +146,8 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get(":applicationId/my-perms")
-  @UseGuards(ApplicationGuard)
-  @AppAction("readBase")
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.readBase])
   @ApiOperation({
     summary: "Lister les droits de l'utilisateur sur l'application",
   })
@@ -174,8 +171,8 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get("export/excel")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.manageAdminPanel])
   @ApiOperation({
     summary: "Exporter les applications en Excel",
     description: `Permet d'exporter les applications en un fichier Excel.
@@ -227,8 +224,8 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get(":applicationId")
-  @UseGuards(ApplicationGuard)
-  @AppAction("readBase")
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.readBase])
   @ApiOperation({
     summary: "Récupérer une application spécifique par ID",
     description: `
@@ -249,8 +246,8 @@ Le paramètre **id** doit être fourni dans l'URL.
   }
 
   @Get("data-quality/update")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.manageAdminPanel])
   @ApiOperation({
     summary: "Mettre à jour l'indice de qualité de toutes les applications",
     description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes.
@@ -273,8 +270,8 @@ Le paramètre **id** doit être fourni dans l'URL.
   }
 
   @Patch(":applicationId")
-  @UseGuards(ApplicationGuard)
-  @AppAction(["writeBase", "writePriorityRestart"])
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.writeBase, Permission.writePriorityRestart])
   @ApiOperation({
     summary: "Mettre à jour une application",
     description: ` Ce endpoint permet de mettre à jour une application existante. 
@@ -303,8 +300,8 @@ Le paramètre **id** doit être fourni dans l'URL.
   }
 
   @Delete(":applicationId")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.manageAdminPanel])
   @ApiOperation({
     summary: "Supprimer une application",
     description: "Supprime une application par son ID.",

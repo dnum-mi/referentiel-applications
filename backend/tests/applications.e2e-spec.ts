@@ -12,6 +12,7 @@ import { ComplianceFaker } from "./fakers/compliance.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
+import { Permission } from "@prisma/client";
 
 describe("Applications", () => {
   const app = setupTestSuite();
@@ -22,7 +23,6 @@ describe("Applications", () => {
   beforeAll(async () => {
     user = await UserFaker.create({
       adminLevel: AdminLevel.READ,
-      capabilities: [],
     });
     TOKEN = await getToken(user);
   });
@@ -92,7 +92,7 @@ describe("Applications", () => {
     expect(resultIds).not.toContain(appWithoutHomologation.id);
   });
 
-  it("/POST applications, with missing capabilities", async () => {
+  it("/POST applications, with missing permissions", async () => {
     await request(app().getHttpServer())
       .post("/applications")
       .send({
@@ -108,7 +108,9 @@ describe("Applications", () => {
   });
 
   it("/POST applications", async () => {
-    await user.update({ capabilities: ["CreateApplication"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
     const tag1 = await TagFaker.create();
     const tag2 = await TagFaker.create();
     const response = await request(app().getHttpServer())
@@ -129,7 +131,9 @@ describe("Applications", () => {
   });
 
   it("/POST applications - should accept missing priorityRestart", async () => {
-    await user.update({ capabilities: ["CreateApplication"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
 
     const response = await request(app().getHttpServer())
       .post("/applications")
@@ -166,7 +170,9 @@ describe("Applications", () => {
   });
 
   it("/POST applications - should fail with empty label", async () => {
-    await user.update({ capabilities: ["CreateApplication"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
 
     const response = await request(app().getHttpServer())
       .post("/applications")
@@ -185,7 +191,9 @@ describe("Applications", () => {
   });
 
   it("/POST applications - should fail with empty description", async () => {
-    await user.update({ capabilities: ["CreateApplication"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
 
     await request(app().getHttpServer())
       .post("/applications")
