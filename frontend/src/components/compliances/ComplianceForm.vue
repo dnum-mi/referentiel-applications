@@ -9,7 +9,7 @@ import {
   complianceFieldLabels,
   type ComplianceType,
 } from "@/composables/use-dictionary";
-import { toDateInputValue } from "@/composables/use-date";
+import { toDateInputValue, toISODateTime } from "@/composables/use-date";
 import { useUserStore } from "@/stores/userStore";
 import type { CreateApplicationWithPerms } from "@/models/Application";
 import { AdminLevel } from "@/models/user";
@@ -65,19 +65,19 @@ async function save() {
     dima_recovery_plan: form.value?.dima_recovery_plan,
     dima_recovery_solutions: form.value?.dima_recovery_solutions,
     dima_recovery_manager: form.value?.dima_recovery_manager,
-    dima_last_test_date: toOptionalString(form.value?.dima_last_test_date),
+    dima_last_test_date: toISODateTime(form.value?.dima_last_test_date),
     dima_test_result: form.value?.dima_test_result,
     pdma_duration_hours: toOptionalNumber(form.value?.pdma_duration_hours),
     pdma_data_types: form.value?.pdma_data_types,
     pdma_backup_frequency: form.value?.pdma_backup_frequency,
     pdma_backup_storage: form.value?.pdma_backup_storage,
-    pdma_last_test_date: toOptionalString(form.value?.pdma_last_test_date),
+    pdma_last_test_date: toISODateTime(form.value?.pdma_last_test_date),
     pdma_test_result: form.value?.pdma_test_result,
     pdma_backup_method: form.value?.pdma_backup_method,
     pdma_restoration_manager: form.value?.pdma_restoration_manager,
     homologation_status: form.value?.homologation_status,
-    homologation_date_end: toOptionalString(form.value?.homologation_date_end),
-    rgaa_audit_date: toOptionalString(form.value?.rgaa_audit_date),
+    homologation_date_end: toISODateTime(form.value?.homologation_date_end),
+    rgaa_audit_date: toISODateTime(form.value?.rgaa_audit_date),
     rgaa_service_url: form.value?.rgaa_service_url,
     rgaa_accessibility_url: form.value?.rgaa_accessibility_url,
     rgaa_score_percentage: toOptionalString(form.value?.rgaa_score_percentage),
