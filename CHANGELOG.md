@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.68.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.68.0...v1.68.1) (2026-03-27)
+
+
+### Bug Fixes
+
+* add tabs heigh auto for Dsfr Tabs ([#1627](https://github.com/dnum-mi/referentiel-applications/issues/1627)) ([2aed712](https://github.com/dnum-mi/referentiel-applications/commit/2aed7121c517c3e6833a5d083334a9188a022900))
+* update query build for organization ([#1621](https://github.com/dnum-mi/referentiel-applications/issues/1621)) ([51dbc36](https://github.com/dnum-mi/referentiel-applications/commit/51dbc367d3035425e4d54825e72c4ce85ffd8d74))
+
 ## [1.68.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.67.0...v1.68.0) (2026-03-24)
 
 
