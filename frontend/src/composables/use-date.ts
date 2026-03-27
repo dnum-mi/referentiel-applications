@@ -24,3 +24,11 @@ export function toDateInputValue(date: string | Date | null | undefined): string
   const d = typeof date === "string" ? parseISO(date) : date;
   return format(d, "yyyy-MM-dd");
 }
+
+/**
+ * Converts a date input value (YYYY-MM-DD) to a full ISO-8601 DateTime string
+ */
+export function toISODateTime(date: string | null | undefined): string | undefined {
+  if (!date) return undefined;
+  return parseISO(date).toISOString();
+}
