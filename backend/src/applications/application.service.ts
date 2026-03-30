@@ -323,29 +323,31 @@ export class ApplicationService {
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
-    if (searchParams.isActor && requestor) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
-      });
-      const whereBuildTechnicalDebtInfo =
-        this.prismaQueryBuilder.buildTechnicalDebtInfo();
-      where.AND.push(whereBuildTechnicalDebtInfo);
+    const hasAppList = await this.checkPermissions.can(
+      [Permission.AppList],
+      requestor,
+    );
+    if (hasAppList) {
+      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
+      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
-    if (!(await this.checkPermissions.can([Permission.AppRead], requestor))) {
+
+    const hasAppRead = await this.checkPermissions.can(
+      [Permission.AppRead],
+      requestor,
+    );
+
+    if (hasAppRead) {
       const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
+        actorEmail: requestor?.email,
+        businessDivisionId: requestor?.organization?.businessDivisionId,
       });
-      const whereBuildTechnicalDebtInfo =
-        this.prismaQueryBuilder.buildTechnicalDebtInfo();
-      where.AND.push(whereBuildTechnicalDebtInfo);
+      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
-    const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
-    const whereBuildTechnicalDebtInfo =
-      this.prismaQueryBuilder.buildTechnicalDebtInfo();
-    where.AND.push(whereBuildTechnicalDebtInfo);
-    return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
+
+    return [];
   }
 
   public async exportApplications(): Promise<any[]> {

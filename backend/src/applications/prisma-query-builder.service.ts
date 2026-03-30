@@ -7,24 +7,32 @@ import { ApplicationSearchFilters } from "src/applications/infrastructure/reposi
 export class PrismaQueryBuilder {
   public buildSearchWhere(
     filters: ApplicationSearchFilters,
-    ownership?: { actorEmail?: string },
+    ownership?: { actorEmail?: string; businessDivisionId?: string },
   ) {
     const { shortName, priorityRestart } = filters;
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
 
-    if (ownership?.actorEmail) {
-      where.AND.push({
-        actors: {
-          some: {
-            email: {
-              equals: ownership.actorEmail,
-              mode: "insensitive" as const,
+    if (ownership?.actorEmail || ownership?.businessDivisionId) {
+      const orConditions: Prisma.ApplicationWhereInput[] = [];
+      if (ownership.actorEmail) {
+        orConditions.push({
+          actors: {
+            some: {
+              email: {
+                equals: ownership.actorEmail,
+                mode: "insensitive" as const,
+              },
             },
           },
-        },
-      });
+        });
+      }
+      if (ownership.businessDivisionId) {
+        orConditions.push({ businessDivisionId: ownership.businessDivisionId });
+      }
+      where.AND.push({ OR: orConditions });
+      console.log(orConditions);
     }
 
     const filterConfigs = [
@@ -519,7 +527,10 @@ export class PrismaQueryBuilder {
     );
 
     return {
-      AND: [...excludeQueries, { OR: includeQueries }],
+      AND: [
+        ...excludeQueries,
+        ...(includeQueries.length > 0 ? [{ OR: includeQueries }] : []),
+      ],
     };
   }
 
