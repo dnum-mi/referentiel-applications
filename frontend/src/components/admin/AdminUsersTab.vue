@@ -3,7 +3,7 @@ import api from "@/api/index";
 import type { PaginatedUserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
-import { RolesWording, RolesWordingBadgeClass } from "@/utils/admin-level-utils";
+import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
@@ -39,9 +39,9 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     isSortable: true,
   },
   {
-    key: "additionalPermissions",
-    isSortable: true,
-    label: "Nb Cap.",
+    key: "permissions",
+    label: "Permissions",
+    isSortable: false,
   },
   {
     key: "actions",
@@ -186,6 +186,10 @@ onMounted(fetchUsers);
 
         <template #body-actions="{ data }">
           <UserActions :user="data.actions" @user-updated="fetchUsers" />
+        </template>
+
+        <template #body-permissions>
+          <UserPermissionsModal />
         </template>
       </RefAppTable>
     </div>

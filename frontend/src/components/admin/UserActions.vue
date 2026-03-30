@@ -3,7 +3,7 @@ import api from "@/api/index";
 import { type UpdateUserDto, type UserEntity, Permission, Roles as RolesType } from "@/client/types.gen";
 import { Roles } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
-import { RolesOptions } from "@/utils/admin-level-utils";
+import { RolesOptions } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
