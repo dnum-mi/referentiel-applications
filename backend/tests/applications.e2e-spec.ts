@@ -236,19 +236,18 @@ describe("application guard", () => {
   it("permissions testing", async () => {
     // remove all permission
     await actorType.update([], { reset: true });
-    // Should fail to get the relation because the user does not have the read permission
+    // Should succeed to get the application because AppRead is granted to all authenticated users
     await request(app().getHttpServer())
       .get(`/applications/${application.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(403);
+      .expect(200);
 
-    // Should fail to list relations because the user does not have the read permission
     await request(app().getHttpServer())
       .get(`/applications/${application.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(403);
+      .expect(200);
 
-    // Add read permission
+    // Add read permission (already granted globally, but keep for explicitness)
     await actorType.update(["AppRead"]);
 
     // Should succeed to get the application

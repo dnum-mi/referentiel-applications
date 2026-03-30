@@ -154,11 +154,11 @@ describe("TechnicalDebtInfo - application guard", () => {
 
     // remove all permission
     await actorType.update([], { reset: true });
-    // Should fail to get the technical debt info because the user does not have the read permission
+    // Should succeed to get the technical debt info because AppRead is granted to all authenticated users
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/technical-debt-info`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(403);
+      .expect(200);
   });
 });
 
