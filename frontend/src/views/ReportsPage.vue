@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AllReportsTab from "@/components/Report/AllReportsTab.vue";
-import { ref } from "vue";
+import { ref, markRaw } from "vue";
 
 const activeTab = ref(0);
 const applicationTabListName = "Informations sur les signalements";
@@ -11,14 +11,14 @@ const tabs = [
     icon: "ri-edit-line",
     tabId: "tab-my-reports",
     panelId: "panel-my-reports",
-    component: AllReportsTab,
+    component: markRaw(AllReportsTab),
   },
   {
     title: "Tous les Signalements",
     icon: "ri-edit-line",
     tabId: "tab-all-reports",
     panelId: "panel-all-reports",
-    component: AllReportsTab,
+    component: markRaw(AllReportsTab),
   },
 ];
 </script>

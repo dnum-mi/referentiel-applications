@@ -3,7 +3,7 @@ import type { APP_PERMISSIONS, CreateApplicationWithPerms } from "@/models/Appli
 import { routeNames } from "@/router/route-names";
 import { useMediaQuery } from "@vueuse/core";
 import type { Component } from "vue";
-import { onBeforeMount, ref, watch } from "vue";
+import { onBeforeMount, ref, watch, markRaw } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import ActorManager from "./actor/ActorTab.vue";
@@ -52,7 +52,7 @@ const tabs = ref<
     icon: "ri-checkbox-circle-line",
     tabId: "tab-infos",
     panelId: "panel-infos",
-    component: InformationsGenerales,
+    component: markRaw(InformationsGenerales), // mark as raw to avoid unnecessary reactivity on a component
     requiredPerms: [Permission.APP_READ],
   },
   {
@@ -60,7 +60,7 @@ const tabs = ref<
     icon: "ri-links-line",
     tabId: "tab-links",
     panelId: "panel-links",
-    component: Links,
+    component: markRaw(Links),
     requiredPerms: [Permission.LINK_READ],
   },
   {
@@ -68,7 +68,7 @@ const tabs = ref<
     icon: "ri-shield-check-line",
     tabId: "tab-compliances",
     panelId: "panel-compliances",
-    component: CompliancesAccordionManager,
+    component: markRaw(CompliancesAccordionManager),
     requiredPerms: [Permission.COMPLIANCE_READ],
   },
   {
@@ -76,7 +76,7 @@ const tabs = ref<
     icon: "ri-team-line",
     tabId: "tab-actors",
     panelId: "panel-actors",
-    component: ActorManager,
+    component: markRaw(ActorManager),
     requiredPerms: [Permission.ACTOR_READ],
   },
   {
@@ -84,7 +84,7 @@ const tabs = ref<
     icon: "ri-node-tree",
     tabId: "tab-relations",
     panelId: "panel-relations",
-    component: Relationships,
+    component: markRaw(Relationships),
     requiredPerms: [Permission.RELATION_READ],
   },
   {
@@ -92,7 +92,7 @@ const tabs = ref<
     icon: "ri-time-line",
     tabId: "tab-statuses",
     panelId: "panel-statuses",
-    component: StatusTab,
+    component: markRaw(StatusTab),
     requiredPerms: [Permission.APP_READ],
   },
   {
@@ -100,7 +100,7 @@ const tabs = ref<
     icon: "ri-edit-line",
     tabId: "tab-reports",
     panelId: "panel-reports",
-    component: ApplicationReportsTab,
+    component: markRaw(ApplicationReportsTab),
     requiredPerms: [],
   },
   {
@@ -108,7 +108,7 @@ const tabs = ref<
     icon: "ri-file-list-2-line",
     tabId: "tab-modifications",
     panelId: "panel-modifications",
-    component: ApplicationMetadatasTab,
+    component: markRaw(ApplicationMetadatasTab),
     requiredPerms: [Permission.METADATA_READ],
   },
   {
@@ -116,7 +116,7 @@ const tabs = ref<
     icon: "ri-bar-chart-line",
     tabId: "tab-quality",
     panelId: "panel-quality",
-    component: Quality,
+    component: markRaw(Quality),
     requiredPerms: [Permission.COMPLIANCE_READ, Permission.ACTOR_READ, Permission.LINK_READ, Permission.APP_READ],
   },
 ]);

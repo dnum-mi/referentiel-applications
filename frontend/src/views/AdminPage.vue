@@ -2,7 +2,7 @@
 import AdminUsersTab from "@/components/admin/AdminUsersTab.vue";
 import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminQualityTab from "@/components/admin/AdminQualityTab.vue";
-import { ref } from "vue";
+import { markRaw, ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 
@@ -21,35 +21,35 @@ const tabs = ref<DsfrTab[]>([
     icon: "ri-user-settings-line",
     tabId: "tab-users",
     panelId: "panel-users",
-    component: AdminUsersTab,
+    component: markRaw(AdminUsersTab),
   },
   {
     title: "Gestions des tags",
     icon: "ri-price-tag-line",
     tabId: "tab-tags",
     panelId: "panel-tags",
-    component: AdminTagsTab,
+    component: markRaw(AdminTagsTab),
   },
   {
     title: "Gestions des sources",
     icon: "ri-database-2-line",
     tabId: "tab-label-sources",
     panelId: "panel-label-sources",
-    component: AdminLabelSourcesTab,
+    component: markRaw(AdminLabelSourcesTab),
   },
   {
     title: "Indice de qualité",
     icon: "ri-bar-chart-line",
     tabId: "tab-quality",
     panelId: "panel-quality",
-    component: AdminQualityTab,
+    component: markRaw(AdminQualityTab),
   },
   {
     title: "Matrice des permissions",
     icon: "ri-shield-user-line",
     tabId: "tab-app-perms-matrix",
     panelId: "panel-app-perms-matrix",
-    component: AdminPermsMatrixTab,
+    component: markRaw(AdminPermsMatrixTab),
   },
 ]);
 
