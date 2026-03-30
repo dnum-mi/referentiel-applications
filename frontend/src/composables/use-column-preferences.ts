@@ -59,7 +59,7 @@ export function useColumnPreferences() {
       return !!userStore.authenticated;
     }
 
-    return true;
+    return false;
   };
 
   const availableColumns = computed(() => {

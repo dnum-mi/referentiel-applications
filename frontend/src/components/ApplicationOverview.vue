@@ -109,7 +109,7 @@ const tabs = ref<
     tabId: "tab-modifications",
     panelId: "panel-modifications",
     component: ApplicationMetadatasTab,
-    requiredPerms: [],
+    requiredPerms: [Permission.METADATA_READ],
   },
   {
     title: "Qualité",

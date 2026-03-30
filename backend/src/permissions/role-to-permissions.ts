@@ -1,10 +1,9 @@
 import { Permission, Roles } from "@prisma/client";
 
-const NONE_PERMISSIONS: Set<Permission> = new Set();
+const NONE_PERMISSIONS: Set<Permission> = new Set([Permission.AppRead]);
 const READ_PERMISSIONS = new Set([
   ...Array.from(NONE_PERMISSIONS),
   Permission.AppList,
-  Permission.AppRead,
   Permission.ActorRead,
   Permission.ComplianceRead,
   Permission.HostingRead,
