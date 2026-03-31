@@ -188,8 +188,8 @@ onMounted(fetchUsers);
           <UserActions :user="data.actions" @user-updated="fetchUsers" />
         </template>
 
-        <template #body-permissions>
-          <UserPermissionsModal />
+        <template #body-permissions="{ data }">
+          <UserPermissionsModal :user="data.actions" />
         </template>
       </RefAppTable>
     </div>

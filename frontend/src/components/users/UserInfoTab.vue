@@ -55,7 +55,7 @@ onMounted(async () => {
       </tr>
     </DsfrTable>
     <div class="fr-mt-4w">
-      <UserPermissions />
+      <UserPermissions :user="userStore.user" />
     </div>
     <div class="fr-mt-4w">
       <h2 class="fr-h6">Préférences de notification</h2>
