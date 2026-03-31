@@ -56,7 +56,7 @@ export const PERMISSIONS_LABELS: Record<Permission, string> = {
   LinkRead: "Voir les liens",
   LinkWrite: "Modifier les liens",
   AppWritePriority: "Modifier la priorité de redémarrage",
-  MetadataRead: "Voir l'historique des métadonnées",
+  MetadataRead: "Voir l'historique des modifications`",
   ReportRead: "Voir les signalements",
   ReportPost: "Créer des signalements",
   ReportManage: "Gérer les signalements",
