@@ -172,7 +172,7 @@ Vous devez fournir les informations suivantes :
 
   @Get("export/excel")
   @UseGuards(PermissionGuard)
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.DataExport])
   @ApiOperation({
     summary: "Exporter les applications en Excel",
     description: `Permet d'exporter les applications en un fichier Excel.
@@ -198,11 +198,13 @@ Vous devez fournir les informations suivantes :
     @Query() searchParams: ApplicationSearchDto,
     @Res() res: Response,
     @UserId() requestorId: string,
+    @User() user: Requestor,
   ) {
     const buffer =
       Object.keys(searchParams).length > 0
         ? await this.applicationExportService.exportSearchResultsToExcel(
             searchParams,
+            user,
           )
         : await this.exportApplicationsUseCase.execute();
 
