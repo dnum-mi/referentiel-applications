@@ -134,13 +134,3 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     </DsfrModal>
   </div>
 </template>
-
-<style scoped>
-.truncate {
-  display: inline-block;
-  max-width: 60ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-</style>

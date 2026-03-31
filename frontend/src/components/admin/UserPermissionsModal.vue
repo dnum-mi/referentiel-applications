@@ -2,9 +2,9 @@
 import { onClickOutside, useToggle } from "@vueuse/core";
 
 const [value, toggle] = useToggle(false);
-const modalEl = ref<HTMLInputElement | null>(null);
+const el = ref<HTMLElement | null>(null);
 
-onClickOutside(modalEl, () => {
+onClickOutside(el, () => {
   toggle(false);
 });
 </script>
@@ -13,7 +13,6 @@ onClickOutside(modalEl, () => {
   <div>
     <DsfrButton
       label="Voir"
-      ref="modalEl"
       size="sm"
       secondary
       data-testid="admin-user-permissions-btn"
@@ -22,7 +21,7 @@ onClickOutside(modalEl, () => {
       @click="toggle()"
     />
     <DsfrModal :opened="value" size="lg" title="Permissions de l'utilisateur" data-testid="admin-edit-user-modal" @close="toggle(false)">
-      <UserPermissions />
+      <UserPermissions ref="el" />
     </DsfrModal>
   </div>
 </template>
