@@ -273,33 +273,34 @@ export class ApplicationService {
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
-    if (searchParams.isActor && requestor) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
-      });
-      paginatedResult = await this.applicationRepository.findApplications(
-        searchParams,
-        where,
-        orderBy,
-      );
+    const hasAppList = await this.checkPermissions.can(
+      [Permission.AppList],
+      requestor,
+    );
+    const hasAppRead = await this.checkPermissions.can(
+      [Permission.AppRead],
+      requestor,
+    );
+
+    if (!hasAppList && !hasAppRead) {
+      return { results: [], total: 0, averageIq: 0 };
     }
-    if (!(await this.checkPermissions.can([Permission.AppRead], requestor))) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
-      });
-      paginatedResult = await this.applicationRepository.findApplications(
-        searchParams,
-        where,
-        orderBy,
-      );
-    } else {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
-      paginatedResult = await this.applicationRepository.findApplications(
-        searchParams,
-        where,
-        orderBy,
-      );
-    }
+
+    const where = this.prismaQueryBuilder.buildSearchWhere(
+      searchParams,
+      hasAppList
+        ? undefined
+        : {
+            actorEmail: requestor?.email,
+            businessDivisionId: requestor?.organization?.businessDivisionId,
+          },
+    );
+
+    paginatedResult = await this.applicationRepository.findApplications(
+      searchParams,
+      where,
+      orderBy,
+    );
 
     const dataWithViews = paginatedResult.results.map((app: any) => {
       const { _count, ...rest } = app;
