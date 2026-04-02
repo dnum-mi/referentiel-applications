@@ -1,11 +1,12 @@
-import type { UserEntity, UserFollowedApplicationDto } from "@/client/types.gen";
+import client from "@/api/index";
+import { Roles, type Permission, type UserFollowedApplicationDto, type UserWithPermissions } from "@/client/types.gen";
+import type { APP_PERMISSIONS } from "@/models/Application";
+import { USER_MANAGER } from "@/services/authentication";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import client from "@/api/index";
-import { USER_MANAGER } from "@/services/authentication";
 
 export const useUserStore = defineStore("userStore", () => {
-  const user = ref<UserEntity>();
+  const user = ref<UserWithPermissions>();
   const authenticated = ref(false);
 
   // Écoute les événements OIDC pour maintenir l'état d'authentification à jour
@@ -26,14 +27,14 @@ export const useUserStore = defineStore("userStore", () => {
     }
   });
 
-  const adminLevel = computed(() => {
-    return user.value ? user.value.adminLevel : 0;
+  const userRole = computed(() => {
+    return user.value ? user.value.role : Roles.VISITOR;
   });
 
   async function fetchUser() {
     const response = await client.userControllerFindMe();
     if (response.data && response.response.ok) {
-      user.value = response.data as UserEntity;
+      user.value = response.data;
     }
   }
 
@@ -43,7 +44,7 @@ export const useUserStore = defineStore("userStore", () => {
     });
 
     if (response.data && response.response.ok) {
-      user.value = response.data as UserEntity;
+      user.value = response.data;
     }
   }
 
@@ -57,7 +58,7 @@ export const useUserStore = defineStore("userStore", () => {
     });
 
     if (response.data && response.response.ok) {
-      user.value = response.data as UserEntity;
+      user.value = response.data;
     }
   }
 
@@ -67,7 +68,7 @@ export const useUserStore = defineStore("userStore", () => {
     });
 
     if (response.data && response.response.ok) {
-      user.value = response.data as UserEntity;
+      user.value = response.data;
     }
   }
 
@@ -75,9 +76,19 @@ export const useUserStore = defineStore("userStore", () => {
     return user.value?.organization?.businessDivisionId ?? null;
   }
 
+  function hasPermissions(permissions: Permission[], userApplicationPerms?: APP_PERMISSIONS[]) {
+    if (permissions.length === 0) return true;
+    const userPermissions = new Set([
+      ...(user.value?.permissions ?? []),
+      ...(user.value?.additionalPermissions ?? []),
+      ...Array.from(userApplicationPerms ?? []),
+    ]);
+    return Array.from(userPermissions).some((userPermission) => permissions.includes(userPermission));
+  }
+
   return {
     user,
-    adminLevel,
+    userRole,
     authenticated,
     fetchUser,
     updateEmailPreferences,
@@ -85,5 +96,6 @@ export const useUserStore = defineStore("userStore", () => {
     subscribeToApp,
     unsubscribeFromApp,
     getBusinessDivisionId,
+    hasPermissions,
   };
 });

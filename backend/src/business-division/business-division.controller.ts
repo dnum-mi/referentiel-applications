@@ -6,9 +6,10 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { BusinessDivisionService } from "./business-division.service";
 import {
   BusinessDivisionDTO,
@@ -16,7 +17,7 @@ import {
 } from "./dto/business-division.dto";
 
 @ApiTags("Business Division")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("business-division")
 export class BusinessDivisionController {
   constructor(
@@ -24,7 +25,7 @@ export class BusinessDivisionController {
   ) {}
 
   @Get()
-  @AppAction("readBase")
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Rechercher des Business division.",
     description: `
@@ -46,7 +47,7 @@ export class BusinessDivisionController {
   }
 
   @Get(":id")
-  @AppAction("readBase")
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Rechercher un Business division par id.",
   })

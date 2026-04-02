@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { PaginatedReportDto } from "@/client/types.gen";
+import { Permission, type PaginatedReportDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import { formatDate } from "@/composables/use-date";
 import { watchDebounced } from "@vueuse/core";
@@ -121,7 +121,7 @@ watch(
 <template>
   <AppLoader v-if="isLoading" />
   <div v-else>
-    <div v-if="userStore.adminLevel >= 30">
+    <div v-if="userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])">
       <div v-if="!isEditing && rows.length" class="toRight">
         <DsfrButton
           label="Modifier"

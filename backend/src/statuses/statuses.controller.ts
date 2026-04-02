@@ -17,8 +17,9 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { ApplicationService } from "src/applications/application.service";
 import { User } from "../common/decorators/user.decorator";
 import { MetadatasService } from "../metadatas/metadatas.service";
@@ -32,7 +33,7 @@ import { StatusesService } from "./statuses.service";
 
 @ApiTags("statuses")
 @Controller("applications/:applicationId/statuses")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 export class StatusesController {
   constructor(
     private readonly statusesService: StatusesService,
@@ -41,7 +42,7 @@ export class StatusesController {
   ) {}
 
   @Post()
-  @AppAction("writeBase")
+  @RequiredPermissions([Permission.AppWrite])
   @HttpCode(201)
   @ApiOperation({ summary: "Créer un nouveau statut pour une application" })
   @ApiCreatedResponse({
@@ -78,7 +79,7 @@ export class StatusesController {
   }
 
   @Get()
-  @AppAction("readBase")
+  @RequiredPermissions([Permission.AppRead])
   @ApiOperation({
     summary: "Récupérer l'historique des statuts d'une application",
   })
@@ -91,7 +92,7 @@ export class StatusesController {
   }
 
   @Patch(":statusId")
-  @AppAction("writeBase")
+  @RequiredPermissions([Permission.AppWrite])
   @ApiOperation({ summary: "Modifier un statut existant" })
   @ApiOkResponse({
     description: "Statut modifié avec succès",
@@ -130,7 +131,7 @@ export class StatusesController {
   }
 
   @Delete(":statusId")
-  @AppAction("writeBase")
+  @RequiredPermissions([Permission.AppWrite])
   @HttpCode(204)
   @ApiOperation({ summary: "Supprimer un statut" })
   @ApiNoContentResponse({

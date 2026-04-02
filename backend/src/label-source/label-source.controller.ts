@@ -19,11 +19,10 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
-import { AppAction } from "src/common/decorators/application.decorator";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import {
   CreateLabelSourceDto,
   LabelSourceDto,
@@ -34,12 +33,12 @@ import { LabelSourceService } from "./label-source.service";
 
 @ApiTags("LabelSources")
 @Controller("label-sources")
+@UseGuards(PermissionGuard)
 export class LabelSourceController {
   constructor(private readonly labelSourceService: LabelSourceService) {}
 
   @Post()
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Créer une nouvelle source de libellés.",
     description: `
@@ -62,7 +61,6 @@ Information requise :
   }
 
   @Get()
-  @AppAction("readBase")
   @ApiOperation({
     summary:
       "Rechercher des sources de libellés alternatifs avec filtre en option.",
@@ -76,8 +74,7 @@ Information requise :
   }
 
   @Patch(":id")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Modifier une source de libellés alternatifs" })
   @ApiOkResponse({
     description: "Source mise à jour avec succès",
@@ -95,8 +92,7 @@ Information requise :
   }
 
   @Delete(":id")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Supprimer une source de libellés alternatifs" })
   @HttpCode(204)
   @ApiNoContentResponse({

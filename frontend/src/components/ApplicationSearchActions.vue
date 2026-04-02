@@ -6,10 +6,10 @@ import { useUserStore } from "@/stores/userStore";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useToasterStore } from "@/stores/toasterStore";
-import { AdminLevel } from "@/models/user";
 import { routeNames } from "@/router/route-names";
 import ReportModal from "@/components/modal/ReportModal.vue";
 import ColumnCustomization from "@/components/ColumnCustomization.vue";
+import { Permission } from "@/client";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -46,6 +46,18 @@ async function exportToExcel() {
     toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }
 }
+
+const hasExportPermissions = computed(() => {
+  return userStore.hasPermissions([Permission.DATA_EXPORT]);
+});
+
+const hasCreateApplicationsPermissions = computed(() => {
+  return userStore.hasPermissions([Permission.CREATE_APPLICATION]);
+});
+
+const hasCreateGlobalReport = computed(() => {
+  return userStore.hasPermissions([Permission.CREATE_GLOBAL_REPORT]);
+});
 </script>
 
 <template>
@@ -57,7 +69,7 @@ async function exportToExcel() {
         secondary
         icon="fr-icon-add-line"
         type="button"
-        :disabled="userStore.adminLevel < AdminLevel.WRITE && !userStore.user?.capabilities?.includes('CreateApplication')"
+        :disabled="!hasCreateApplicationsPermissions"
         data-testid="create-application-btn"
         class="action-btn icon-left"
         @click="router.push({ name: routeNames.CREATEAPP })"
@@ -72,7 +84,7 @@ async function exportToExcel() {
         aria-haspopup="dialog"
         aria-controls="modal-report-missing"
         type="button"
-        :disabled="!userStore.user?.capabilities?.includes('CreateGlobalReport') && userStore.adminLevel < AdminLevel.WRITE"
+        :disabled="!hasCreateGlobalReport"
         data-testid="report-missing-app"
         class="action-btn icon-left report-btn"
         @click="openReport"
@@ -84,7 +96,7 @@ async function exportToExcel() {
       </DsfrButton>
 
       <DsfrButton
-        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
+        v-if="hasExportPermissions"
         label="Exporter en Excel"
         icon="ri-file-excel-2-line"
         secondary
@@ -96,7 +108,7 @@ async function exportToExcel() {
       ></DsfrButton>
 
       <DsfrButton
-        v-if="userStore.adminLevel >= AdminLevel.ADMIN"
+        v-if="hasExportPermissions"
         label="Exporter en Excel"
         icon="ri-file-excel-2-line"
         secondary

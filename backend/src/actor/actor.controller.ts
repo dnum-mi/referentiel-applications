@@ -20,10 +20,8 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { Actor } from "@prisma/client";
-import { AppAction } from "src/common/decorators/application.decorator";
+import { Actor, Permission } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
-import { ApplicationGuard } from "src/common/guards/application.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { ActorService } from "./actor.service";
 import {
@@ -32,6 +30,8 @@ import {
   CreateActorDto,
   UpdateActorDto,
 } from "./dto/actor.dto";
+import { PermissionGuard } from "src/common/guards/permission.guard";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 
 @ApiTags("Actors")
 @Controller("actors")
@@ -52,7 +52,7 @@ export class ActorController {
 }
 
 @ApiTags("Actors")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @ApiParam({
   name: "applicationId",
   description: "ID de l'application",
@@ -64,7 +64,7 @@ export class ApplicationActorsController {
 
   @Post()
   @ApiBody({ type: CreateActorDto })
-  @AppAction("writeActors")
+  @RequiredPermissions([Permission.ActorWrite])
   @ApiOperation({
     summary: "Créer un nouvel acteur",
     description: `
@@ -96,7 +96,7 @@ Informations requises :
   }
 
   @Get(":id")
-  @AppAction("readActors")
+  @RequiredPermissions([Permission.ActorRead])
   @ApiOperation({ summary: "Récupérer un acteur par ID" })
   @ApiOkResponse({
     description: "Acteur trouvé avec succès",
@@ -111,7 +111,7 @@ Informations requises :
   }
 
   @Get()
-  @AppAction("readActors")
+  @RequiredPermissions([Permission.ActorRead])
   @ApiOperation({ summary: "Récupérer tous les acteurs" })
   @ApiOkResponse({
     description: "Liste des acteurs trouvés",
@@ -125,7 +125,7 @@ Informations requises :
   }
 
   @Patch(":id")
-  @AppAction("writeActors")
+  @RequiredPermissions([Permission.ActorWrite])
   @ApiOperation({ summary: "Mettre à jour un acteur" })
   @ApiOkResponse({
     description: "Acteur mis à jour avec succès",
@@ -155,7 +155,7 @@ Informations requises :
   }
 
   @Delete(":id")
-  @AppAction("writeActors")
+  @RequiredPermissions([Permission.ActorWrite])
   @ApiOperation({ summary: "Supprimer un acteur" })
   @HttpCode(204)
   @ApiNoContentResponse({

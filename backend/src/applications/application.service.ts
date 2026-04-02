@@ -1,12 +1,13 @@
-import { Inject, Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { ConfigType } from "@nestjs/config";
-import { Application, Prisma } from "@prisma/client";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { Application, Permission, Prisma } from "@prisma/client";
+import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
+import { BusinessDivisionService } from "src/business-division/business-division.service";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { calculateIQ } from "src/common/utils/quality.utils";
-import { appConfig } from "src/config/configs";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TagsService } from "src/tag/tags.service";
-import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { Requestor } from "src/user/entities/user.entity";
 import { ApplicationRights } from "./dto/application-rights.dto";
 import {
   CreateApplicationDto,
@@ -17,8 +18,6 @@ import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { ApplicationViewService } from "./view.service";
-import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
-import { BusinessDivisionService } from "src/business-division/business-division.service";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -36,8 +35,7 @@ export class ApplicationService {
     private readonly applicationViewService: ApplicationViewService,
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
     private readonly businessDivisionService: BusinessDivisionService,
-    @Inject(appConfig.KEY)
-    private readonly appConf: ConfigType<typeof appConfig>,
+    private readonly checkPermissions: CheckPermissions,
   ) {}
 
   public async createApplication(
@@ -105,11 +103,18 @@ export class ApplicationService {
     let { data } = params;
 
     // protect fields based on permissions
-    // priorityRestart field is only writable by users with writePriorityRestart permission
-    if (!requestor.appPerms.includes("writePriorityRestart")) {
+    // priorityRestart field is only writable by users with AppWritePriority permission
+    if (
+      !(await this.checkPermissions.can(
+        [Permission.AppWritePriority],
+        requestor,
+      ))
+    ) {
       delete data.priorityRestart;
-      // if the user has writeBase permission, they can write other fields except priorityRestart
-    } else if (!requestor.appPerms.includes("writeBase")) {
+      // if the user has AppWrite permission, they can write other fields except priorityRestart
+    } else if (
+      !(await this.checkPermissions.can([Permission.AppWrite], requestor))
+    ) {
       data = {
         priorityRestart: data.priorityRestart,
       };
@@ -268,36 +273,34 @@ export class ApplicationService {
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
-    if (searchParams.isActor && requestor) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
-      });
-      paginatedResult = await this.applicationRepository.findApplications(
-        searchParams,
-        where,
-        orderBy,
-      );
+    const hasAppList = await this.checkPermissions.can(
+      [Permission.AppList],
+      requestor,
+    );
+    const hasAppRead = await this.checkPermissions.can(
+      [Permission.AppRead],
+      requestor,
+    );
+
+    if (!hasAppList && !hasAppRead) {
+      return { results: [], total: 0, averageIq: 0 };
     }
-    if (
-      !this.appConf.nonActorPermissions.includes("readBase") &&
-      requestor?.adminLevel < AdminLevel.READ
-    ) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
-      });
-      paginatedResult = await this.applicationRepository.findApplications(
-        searchParams,
-        where,
-        orderBy,
-      );
-    } else {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
-      paginatedResult = await this.applicationRepository.findApplications(
-        searchParams,
-        where,
-        orderBy,
-      );
-    }
+
+    const where = this.prismaQueryBuilder.buildSearchWhere(
+      searchParams,
+      hasAppList
+        ? undefined
+        : {
+            actorEmail: requestor?.email,
+            businessDivisionId: requestor?.organization?.businessDivisionId,
+          },
+    );
+
+    paginatedResult = await this.applicationRepository.findApplications(
+      searchParams,
+      where,
+      orderBy,
+    );
 
     const dataWithViews = paginatedResult.results.map((app: any) => {
       const { _count, ...rest } = app;
@@ -321,32 +324,31 @@ export class ApplicationService {
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
-    if (searchParams.isActor && requestor) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
-      });
-      const whereBuildTechnicalDebtInfo =
-        this.prismaQueryBuilder.buildTechnicalDebtInfo();
-      where.AND.push(whereBuildTechnicalDebtInfo);
+    const hasAppList = await this.checkPermissions.can(
+      [Permission.AppList],
+      requestor,
+    );
+    if (hasAppList) {
+      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
+      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
-    if (
-      !this.appConf.nonActorPermissions.includes("readBase") &&
-      requestor?.adminLevel < AdminLevel.READ
-    ) {
+
+    const hasAppRead = await this.checkPermissions.can(
+      [Permission.AppRead],
+      requestor,
+    );
+
+    if (hasAppRead) {
       const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor.email,
+        actorEmail: requestor?.email,
+        businessDivisionId: requestor?.organization?.businessDivisionId,
       });
-      const whereBuildTechnicalDebtInfo =
-        this.prismaQueryBuilder.buildTechnicalDebtInfo();
-      where.AND.push(whereBuildTechnicalDebtInfo);
+      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
-    const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
-    const whereBuildTechnicalDebtInfo =
-      this.prismaQueryBuilder.buildTechnicalDebtInfo();
-    where.AND.push(whereBuildTechnicalDebtInfo);
-    return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
+
+    return [];
   }
 
   public async exportApplications(): Promise<any[]> {

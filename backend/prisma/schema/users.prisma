@@ -19,22 +19,30 @@ model User {
   dataOwners                Metadata[]            @relation("MetadataDataOwnerBy")
   /// Signalements créés par cet utilisateur
   reports                   Report[]              @relation("UserReport")
-  /// Niveau de permission admin de 0 à 30
-  adminLevel                Int                   @default(0)
+  /// Groupement de permissions par defaut
+  role                Roles                   @default(VISITOR)
   /// Tokens API qui se font passer pour cet utilisateur
   tokensImpersonate         Token[]               @relation("TokenUserImpersonate")
   /// Tokens API créés par cet utilisateur
   tokensCreated             Token[]               @relation("TokenUserCreator")
   /// Type de compte utilisateur (humain ou bot)
   type                      UserType              @default(human)
-  /// Capacités spéciales accordées à cet utilisateur
-  capabilities              CapabilityNames[]
   /// Applications suivies par cet utilisateur pour les notifications
   followedApplications      Application[]         @relation("UserFollowedApplications")
   /// Applications consultées par cet utilisateur
   applicationViews          ApplicationView[]
   /// Si les notifications par email sont activées
   emailNotificationsEnabled Boolean               @default(true)
+  /// Permissions supplémentaire (ancien capabilities) 
+  additionalPermissions         Permission []
+}
+
+/// @namespace Roles
+enum Roles {
+  VISITOR
+  READER
+  CONTRIBUTOR
+  ADMIN
 }
 
 /// Personne ou entité impliquée avec une application.

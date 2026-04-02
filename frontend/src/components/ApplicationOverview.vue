@@ -3,7 +3,7 @@ import type { APP_PERMISSIONS, CreateApplicationWithPerms } from "@/models/Appli
 import { routeNames } from "@/router/route-names";
 import { useMediaQuery } from "@vueuse/core";
 import type { Component } from "vue";
-import { onBeforeMount, ref, watch } from "vue";
+import { onBeforeMount, ref, watch, markRaw } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import ActorManager from "./actor/ActorTab.vue";
@@ -17,9 +17,9 @@ import Relationships from "./RelationshipsTab.vue";
 import StatusTab from "./StatusTab.vue";
 
 import { BREAKPOINTS } from "@/constants/breakpoint";
-import { AdminLevel } from "@/models/user";
 import { useUserStore } from "@/stores/userStore";
 import type { Tab } from "@/utils/types";
+import { Permission } from "@/client";
 
 const props = defineProps<{ application: CreateApplicationWithPerms }>();
 const emit = defineEmits<{
@@ -52,55 +52,55 @@ const tabs = ref<
     icon: "ri-checkbox-circle-line",
     tabId: "tab-infos",
     panelId: "panel-infos",
-    component: InformationsGenerales,
-    requiredPerms: ["readBase"],
+    component: markRaw(InformationsGenerales), // mark as raw to avoid unnecessary reactivity on a component
+    requiredPerms: [Permission.APP_READ],
   },
   {
     title: "Liens",
     icon: "ri-links-line",
     tabId: "tab-links",
     panelId: "panel-links",
-    component: Links,
-    requiredPerms: ["readLinks"],
+    component: markRaw(Links),
+    requiredPerms: [Permission.LINK_READ],
   },
   {
     title: "Conformités",
     icon: "ri-shield-check-line",
     tabId: "tab-compliances",
     panelId: "panel-compliances",
-    component: CompliancesAccordionManager,
-    requiredPerms: ["readCompliances"],
+    component: markRaw(CompliancesAccordionManager),
+    requiredPerms: [Permission.COMPLIANCE_READ],
   },
   {
     title: "Acteurs",
     icon: "ri-team-line",
     tabId: "tab-actors",
     panelId: "panel-actors",
-    component: ActorManager,
-    requiredPerms: ["readActors"],
+    component: markRaw(ActorManager),
+    requiredPerms: [Permission.ACTOR_READ],
   },
   {
     title: "Relations",
     icon: "ri-node-tree",
     tabId: "tab-relations",
     panelId: "panel-relations",
-    component: Relationships,
-    requiredPerms: ["readRelations"],
+    component: markRaw(Relationships),
+    requiredPerms: [Permission.RELATION_READ],
   },
   {
     title: "Statuts",
     icon: "ri-time-line",
     tabId: "tab-statuses",
     panelId: "panel-statuses",
-    component: StatusTab,
-    requiredPerms: ["readBase"],
+    component: markRaw(StatusTab),
+    requiredPerms: [Permission.APP_READ],
   },
   {
     title: "Signalements",
     icon: "ri-edit-line",
     tabId: "tab-reports",
     panelId: "panel-reports",
-    component: ApplicationReportsTab,
+    component: markRaw(ApplicationReportsTab),
     requiredPerms: [],
   },
   {
@@ -108,16 +108,16 @@ const tabs = ref<
     icon: "ri-file-list-2-line",
     tabId: "tab-modifications",
     panelId: "panel-modifications",
-    component: ApplicationMetadatasTab,
-    requiredPerms: [],
+    component: markRaw(ApplicationMetadatasTab),
+    requiredPerms: [Permission.METADATA_READ],
   },
   {
     title: "Qualité",
     icon: "ri-bar-chart-line",
     tabId: "tab-quality",
     panelId: "panel-quality",
-    component: Quality,
-    requiredPerms: ["readCompliances", "readActors", "readLinks", "readBase"],
+    component: markRaw(Quality),
+    requiredPerms: [Permission.COMPLIANCE_READ, Permission.ACTOR_READ, Permission.LINK_READ, Permission.APP_READ],
   },
 ]);
 
@@ -125,9 +125,7 @@ const tabs = ref<
 onBeforeMount(async () => {
   // filter tabs based on permissions
   tabs.value = tabs.value.filter((tab) => {
-    if (!tab.requiredPerms) return true;
-    if (userStore.adminLevel >= AdminLevel.READ) return true;
-    return tab.requiredPerms.every((perm) => props.application.myPerms.has(perm));
+    return userStore.hasPermissions(tab.requiredPerms, Array.from(props.application.myPerms));
   });
 
   // Read requested tab from URL params after filtering

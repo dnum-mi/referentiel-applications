@@ -4,49 +4,98 @@
 /// @namespace Users
 model AppPermissions {
   /// Peut lire les informations de base de l'application
-  readBase  Boolean
+  AppRead  Boolean
   /// Peut écrire les informations de base de l'application
-  writeBase Boolean
+  AppWrite Boolean
 
   /// Peut mettre à jour les paramètres de priorité de redémarrage
-  writePriorityRestart Boolean @default(false)
+  AppWritePriority Boolean @default(false)
 
   /// Peut lire les informations des acteurs
-  readActors  Boolean
+  ActorRead  Boolean
   /// Peut écrire les informations des acteurs
-  writeActors Boolean
+  ActorWrite Boolean
 
   /// Peut lire les informations de conformité
-  readCompliances  Boolean
+  ComplianceRead  Boolean
   /// Peut écrire les informations de conformité
-  writeCompliances Boolean
+  ComplianceWrite Boolean
 
   /// Peut lire les informations d'hébergement
-  readHostings  Boolean
+  HostingRead  Boolean
   /// Peut écrire les informations d'hébergement
-  writeHostings Boolean
+  HostingWrite Boolean
 
   /// Peut lire les métadonnées
-  readMetadata Boolean
+  MetadataRead Boolean
 
   /// Peut lire les relations d'application
-  readRelations  Boolean
+  RelationRead  Boolean
   /// Peut écrire les relations d'application
-  writeRelations Boolean
+  RelationWrite Boolean
 
   /// Peut lire les liens externes
-  readLinks  Boolean
+  LinkRead  Boolean
   /// Peut écrire les liens externes
-  writeLinks Boolean
+  LinkWrite Boolean
 
   /// Peut lire les signalements
-  readReports   Boolean @default(false)
+  ReportRead   Boolean @default(false)
   /// Peut créer des signalements
-  postReports   Boolean @default(true)
+  ReportPost   Boolean @default(true)
   /// Peut gérer (mettre à jour/supprimer) les signalements
-  manageReports Boolean @default(false)
+  ReportManage Boolean @default(false)
 
   actorTypeId String    @unique
   /// Type d'acteur auquel ces permissions s'appliquent
   actorType   ActorType @relation(fields: [actorTypeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
+/// Permissions globale et aussi les applications permissions. 
+/// Définit quelles actions sont disponible sur l'ensemble de l'application 
+/// Deux types: Permissions applicatives (par app) & Permissions Globales (Crée une application, crée un signalement globale etc...) 
+///
+/// @namespace Permissions
+enum Permission {
+  // --- Permissions globales ---
+  /// Capacité de créer de nouvelles applications
+  CreateApplication
+  /// Capacité de supprimer une application
+  DeleteApplication
+  /// Capacité de créer des signalements globaux
+  CreateGlobalReport
+  /// Voir la liste des applications
+  AppList
+    /// Exporter les données
+  DataExport
+  /// Manager l'admin panel
+  AdminPanelManage
+  /// Crée un nouveau type d'acteur 
+  ActorTypePost
+  /// Editer un nouveau type d'acteur 
+  ActorTypeManage
+    /// Supprimer un nouveau type d'acteur 
+  ActorTypeDelete
+
+  // --- Permissions applicatives (par app) ---
+  // Couple read/write classique
+  AppRead                // Voir les infos de base
+  AppWrite               // Modifier les infos de base
+  ActorRead              // Voir les acteurs
+  ActorWrite             // Modifier les acteurs
+  ComplianceRead         // Voir les conformites
+  ComplianceWrite        // Modifier les conformites
+  HostingRead            // Voir les hebergements
+  HostingWrite           // Modifier les hebergements
+  RelationRead           // Voir les relations
+  RelationWrite          // Modifier les relations
+  LinkRead               // Voir les liens
+  LinkWrite              // Modifier les liens
+  // Permissions autonomes binaires (pas de couple read/write)
+  AppWritePriority       // Modifier la priorite de redemarrage. Lecture couverte par AppRead.
+  MetadataRead           // Voir l'historique des metadonnees. Pas de write : donnees generees automatiquement.
+  // Signalements (3 niveaux)
+  ReportRead             // Voir les signalements
+  ReportPost             // Creer des signalements sur une app
+  ReportManage           // Gerer les signalements (implique ReportRead + ReportPost)
 }

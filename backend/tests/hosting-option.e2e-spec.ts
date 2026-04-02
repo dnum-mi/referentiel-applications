@@ -1,5 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { HostingOptionFaker } from "./fakers/hosting-option.faker";
 import { UserFaker } from "./fakers/user.faker";
@@ -11,7 +11,7 @@ describe("HostingOptions", () => {
   let user: UserFakerReturnType;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
   });
 
   it("/GET hosting-options", async () => {

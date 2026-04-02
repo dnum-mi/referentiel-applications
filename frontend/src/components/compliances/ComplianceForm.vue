@@ -12,10 +12,9 @@ import {
 import { toDateInputValue, toISODateTime } from "@/composables/use-date";
 import { useUserStore } from "@/stores/userStore";
 import type { CreateApplicationWithPerms } from "@/models/Application";
-import { AdminLevel } from "@/models/user";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
-import type { ComplianceDto } from "@/client/types.gen";
+import { Permission, type ComplianceDto } from "@/client/types.gen";
 
 const props = defineProps<{
   applicationId: string;
@@ -37,7 +36,7 @@ const submitting = ref(false);
 const isHomologationHomologuee = computed(() => form.value.homologation_status === "homologuee");
 const showHomologationDateEnd = computed(() => isHomologationHomologuee.value || Boolean(form.value.homologation_date_end));
 
-const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeCompliances"));
+const canEdit = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE]));
 
 const toOptionalNumber = (value: unknown): number | undefined => (value == null || value === "" ? undefined : Number(value));
 const toOptionalString = (value: unknown): string | undefined => (value == null || value === "" ? undefined : String(value));

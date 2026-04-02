@@ -72,8 +72,8 @@ const moeActor = ref<CreateActorDto>({
 });
 
 const isCreateMode = computed(() => props.mode === "create");
-const canEditBase = computed(() => isCreateMode.value || props.initialData?.myPerms.has("writeBase"));
-const canEditPriorityRestart = computed(() => isCreateMode.value || props.initialData?.myPerms.has("writePriorityRestart"));
+const canEditBase = computed(() => isCreateMode.value || props.initialData?.myPerms.has("AppWrite"));
+const canEditPriorityRestart = computed(() => isCreateMode.value || props.initialData?.myPerms.has("AppWritePriority"));
 
 const moaOrganizationId = computed({
   get: () => moaActor.value.organizationId ?? undefined,

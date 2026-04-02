@@ -19,11 +19,10 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { ActorType } from "@prisma/client";
-import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
+import { ActorType, Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { ActorTypeService } from "./actorType.service";
 import {
   ActorTypeDto,
@@ -37,7 +36,7 @@ import { AppPermsDto } from "./dto/app-perms-matrix.dto";
  * Permet de créer, mettre à jour, modifier
  */
 @ApiTags("actorTypes")
-@UseGuards(AdminGuard)
+@UseGuards(PermissionGuard)
 @Controller("actorTypes")
 export class ActorTypeController {
   constructor(private readonly actorTypeService: ActorTypeService) {}
@@ -52,7 +51,7 @@ export class ActorTypeController {
    * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
    */
   @Post()
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.ActorTypePost])
   @ApiBody({ type: CreateActorTypeDto })
   @ApiOperation({
     summary: "Créer un nouveau type d’acteur",
@@ -75,7 +74,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get("/perms-matrix")
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Récupérer la matrice des permissions",
     description:
@@ -99,7 +98,6 @@ Vous devez fournir les informations suivantes :
    * @throws NotFoundException Si le type d'acteur n'est pas trouvée
    */
   @Get(":id")
-  @RequiredAdminLevel(AdminLevel.NONE)
   @ApiOkResponse({
     type: ActorTypeDto,
     description: "Récupère un type d’acteur spécifique par ID",
@@ -114,6 +112,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Patch("/perms-matrix")
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Mettre à jour la matrice des permissions",
     description:
@@ -137,7 +136,6 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get()
-  @RequiredAdminLevel(AdminLevel.NONE)
   @ApiOperation({
     summary: "Récupérer tous les types d’acteurs",
     description:
@@ -160,7 +158,7 @@ Vous devez fournir les informations suivantes :
    * @returns Le type d'acteur mis à jour
    */
   @Patch(":id")
-  @RequiredAdminLevel(AdminLevel.WRITE)
+  @RequiredPermissions([Permission.ActorTypeManage])
   @ApiOperation({
     summary: "Mettre à jour un type d’acteur",
     description: `
@@ -187,7 +185,7 @@ Les données de mise à jour doivent correspondre aux champs
   }
 
   @Delete(":id")
-  @RequiredAdminLevel(AdminLevel.WRITE)
+  @RequiredPermissions([Permission.ActorTypeDelete])
   @ApiOperation({ summary: "Supprimer un type d’acteur" })
   @HttpCode(204)
   @ApiNoContentResponse({

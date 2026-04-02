@@ -1,5 +1,5 @@
 <script setup lang="ts">
-type PermissionValue = "none" | "read" | "write";
+type PermissionValue = "none" | "Read" | "Write";
 
 const props = withDefaults(
   defineProps<{
@@ -9,7 +9,7 @@ const props = withDefaults(
     permOrder?: PermissionValue[];
   }>(),
   {
-    permOrder: () => ["none", "read", "write"] as PermissionValue[],
+    permOrder: () => ["none", "Read", "Write"] as PermissionValue[],
   },
 );
 
@@ -22,18 +22,18 @@ const permDict = {
     label: "-",
     class: "permission-none",
   },
-  read: {
+  Read: {
     label: "RO",
-    class: "permission-read",
+    class: "permission-Read",
   },
-  write: {
+  Write: {
     label: "RW",
-    class: "permission-write",
+    class: "permission-Write",
   },
 };
 const permOrder = props.permOrder;
 
-const foundIndex = permOrder.findIndex((option) => option === (props.write ? "write" : props.read ? "read" : "none"));
+const foundIndex = permOrder.findIndex((option) => option === (props.write ? "Write" : props.read ? "Read" : "none"));
 const permIndex = ref(foundIndex === -1 ? 0 : foundIndex);
 
 function togglePermission() {
@@ -81,23 +81,23 @@ function togglePermission() {
   background-color: var(--background-active-red-marianne-hover);
 }
 
-.permission-read {
+.permission-Read {
   background-color: var(--background-action-low-blue-cumulus);
 }
-.permission-read:hover {
+.permission-Read:hover {
   background-color: var(--background-action-low-blue-cumulus-hover);
 }
-.permission-read:active {
+.permission-Read:active {
   background-color: var(--background-action-low-blue-cumulus-active);
 }
 
-.permission-write {
+.permission-Write {
   background-color: var(--background-action-low-green-emeraude);
 }
-.permission-write:hover {
+.permission-Write:hover {
   background-color: var(--background-action-low-green-emeraude-hover);
 }
-.permission-write:active {
+.permission-Write:active {
   background-color: var(--background-action-low-green-emeraude-active);
 }
 </style>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import api from "@/api/index";
-import type { PaginatedUserEntity, UserEntity } from "@/client/types.gen";
+import type { PaginatedUserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
-import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
+import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
@@ -15,7 +15,7 @@ const errorMessages = {
 
 type ErrorKey = keyof typeof errorMessages;
 
-const data = ref<PaginatedUserEntity>({ results: [], total: 0 });
+const data = ref<PaginatedUserWithPermissions>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
@@ -34,14 +34,14 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     isSortable: true,
   },
   {
-    key: "adminLevel",
-    label: "Niveau d'admin",
+    key: "role",
+    label: "Role",
     isSortable: true,
   },
   {
-    key: "capabilities",
-    isSortable: true,
-    label: "Nb Cap.",
+    key: "permissions",
+    label: "Permissions",
+    isSortable: false,
   },
   {
     key: "actions",
@@ -111,10 +111,10 @@ const tableRows = computed(() =>
     email: user.email,
     organisation: user.organization?.path || "-",
     lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
-    capabilities: user.capabilities,
-    adminLevel: {
-      label: AdminLevelWording[user.adminLevel],
-      badgeClass: AdminLevelWordingBadgeClass[user.adminLevel],
+    additionalPermissions: user.additionalPermissions,
+    role: {
+      label: RolesWording[user.role],
+      badgeClass: RolesWordingBadgeClass[user.role],
     },
     actions: user,
   })),
@@ -174,30 +174,24 @@ onMounted(fetchUsers);
         @sort="onSort"
         @page="onPage"
       >
-        <template #body-adminLevel="{ data }">
-          <span class="fr-badge justify-center" :class="data.adminLevel.badgeClass">{{ data.adminLevel.label }}</span>
+        <template #body-role="{ data }">
+          <span class="fr-badge justify-center" :class="data.role.badgeClass">{{ data.role.label }}</span>
         </template>
 
-        <template #body-capabilities="{ data }">
-          <span v-show="data.capabilities.length" class="fr-badge ml-2" :title="data.capabilities.join(', ')">{{
-            data.capabilities.length
+        <template #body-additionalPermissions="{ data }">
+          <span v-show="data.additionalPermissions.length" class="fr-badge ml-2" :title="data.additionalPermissions.join(', ')">{{
+            data.additionalPermissions.length
           }}</span>
         </template>
 
         <template #body-actions="{ data }">
           <UserActions :user="data.actions" @user-updated="fetchUsers" />
         </template>
+
+        <template #body-permissions="{ data }">
+          <UserPermissionsModal :user="data.actions" />
+        </template>
       </RefAppTable>
     </div>
   </div>
 </template>
-
-<style scoped>
-.truncate {
-  display: inline-block;
-  max-width: 60ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-</style>

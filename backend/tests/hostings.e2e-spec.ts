@@ -1,5 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -16,7 +16,7 @@ describe("Hostings", () => {
   let application: { id: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     application = await ApplicationFaker.create(user);
   });
 
@@ -118,7 +118,7 @@ describe("application guard", () => {
   });
 
   it("permissions testing", async () => {
-    const actorType = await ActorTypeFaker.create(["readHostings"]);
+    const actorType = await ActorTypeFaker.create(["HostingRead"]);
     const application = await ApplicationFaker.create(appOwner);
     await ActorFaker.link({
       userEmail: appActor.email,
@@ -146,7 +146,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeHostings"]);
+    await actorType.update(["HostingWrite"]);
     const hosting = await request(app().getHttpServer())
       .post(`/applications/${application.id}/hostings`)
       .send({
@@ -174,7 +174,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add read permission
-    await actorType.update(["readHostings"]);
+    await actorType.update(["HostingRead"]);
 
     // Should succeed to get the hosting
     await request(app().getHttpServer())
@@ -202,7 +202,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeHostings"]);
+    await actorType.update(["HostingWrite"]);
 
     // Should succeed to update the hosting
     await request(app().getHttpServer())

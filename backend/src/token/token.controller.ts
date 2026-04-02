@@ -15,10 +15,11 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { RequiredAdminLevel } from "src/common/decorators/admin.decorator";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
-import { AdminGuard } from "src/common/guards/admin.guard";
-import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { PermissionGuard } from "src/common/guards/permission.guard";
+import { Requestor } from "src/user/entities/user.entity";
 import {
   CreatePersonalTokenDto,
   CreateServiceTokenDto,
@@ -34,12 +35,12 @@ import { TokenService } from "./token.service";
  */
 @ApiTags("tokens")
 @Controller("tokens")
+@UseGuards(PermissionGuard)
 export class TokenController {
   constructor(private readonly tokenService: TokenService) {}
 
   @Get()
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Récupère tous les tokens de service",
     description:
@@ -70,8 +71,7 @@ export class TokenController {
   }
 
   @Post()
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Crée un nouveau token de service",
     description: "Cette méthode permet de créer un nouveau token de service.",
@@ -106,13 +106,12 @@ export class TokenController {
     return this.tokenService.create(requestor, true, {
       ...data,
       expiresAt: new Date(data.expiresAt),
-      adminLevel: requestor.adminLevel,
+      role: requestor.role,
     });
   }
 
   @Post(":id/regenerate")
-  @UseGuards(AdminGuard)
-  @RequiredAdminLevel(AdminLevel.ADMIN)
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Régénère un token de service",
     description: "Cette méthode permet de régénérer un token de service.",

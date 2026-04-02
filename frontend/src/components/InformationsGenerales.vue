@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import api from "@/api/index.js";
-import type { HostingDto, LabelDto, TechnicalDebtInfoDto } from "@/client/types.gen";
+import { Permission, type HostingDto, type LabelDto, type TechnicalDebtInfoDto } from "@/client/types.gen";
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
 import useModal from "@/composables/use-modal";
 import type { ApplicationWithPerms } from "@/models/Application";
-import { AdminLevel } from "@/models/user";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
@@ -36,14 +35,9 @@ const isDeleteLabelModalOpen = ref(false);
 const hostingStore = useHostingStore();
 const userStore = useUserStore();
 const labels = ref<LabelDto[]>([]);
-const canEditBase = computed(
-  () =>
-    userStore.adminLevel >= AdminLevel.WRITE ||
-    props.application.myPerms.has("writeBase") ||
-    props.application.myPerms.has("writePriorityRestart"),
-);
-const canViewHostings = computed(() => userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings"));
-const canEditHostings = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeHostings"));
+const canEditBase = computed(() => userStore.hasPermissions([Permission.APP_WRITE, Permission.APP_WRITE_PRIORITY]));
+const canViewHostings = computed(() => userStore.hasPermissions([Permission.HOSTING_READ]));
+const canEditHostings = computed(() => userStore.hasPermissions([Permission.HOSTING_WRITE]));
 
 const isTechnicalDebtModalOpen = ref(false);
 const technicalDebtInfo = ref<TechnicalDebtInfoDto | null>(null);
@@ -94,7 +88,7 @@ onMounted(async () => {
   try {
     const promises = [fetchLabels(application.value.id), fetchTechnicalDebtInfo()];
     // fetch hostings if allowed
-    if (userStore.adminLevel >= AdminLevel.READ || props.application.myPerms.has("readHostings")) {
+    if (userStore.hasPermissions([Permission.HOSTING_READ])) {
       promises.push(hostingStore.fetchHostings(application.value.id));
     }
     await Promise.all(promises);

@@ -1,7 +1,7 @@
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
 import { faker } from "@faker-js/faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -12,6 +12,7 @@ import { ComplianceFaker } from "./fakers/compliance.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
+import { Permission } from "@prisma/client";
 
 describe("Applications", () => {
   const app = setupTestSuite();
@@ -21,8 +22,7 @@ describe("Applications", () => {
 
   beforeAll(async () => {
     user = await UserFaker.create({
-      adminLevel: AdminLevel.READ,
-      capabilities: [],
+      role: Roles.READER,
     });
     TOKEN = await getToken(user);
   });
@@ -92,7 +92,7 @@ describe("Applications", () => {
     expect(resultIds).not.toContain(appWithoutHomologation.id);
   });
 
-  it("/POST applications, with missing capabilities", async () => {
+  it("/POST applications, with missing permissions", async () => {
     await request(app().getHttpServer())
       .post("/applications")
       .send({
@@ -108,7 +108,9 @@ describe("Applications", () => {
   });
 
   it("/POST applications", async () => {
-    await user.update({ capabilities: ["CreateApplication"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
     const tag1 = await TagFaker.create();
     const tag2 = await TagFaker.create();
     const response = await request(app().getHttpServer())
@@ -129,7 +131,9 @@ describe("Applications", () => {
   });
 
   it("/POST applications - should accept missing priorityRestart", async () => {
-    await user.update({ capabilities: ["CreateApplication"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
 
     const response = await request(app().getHttpServer())
       .post("/applications")
@@ -146,7 +150,7 @@ describe("Applications", () => {
   });
 
   it("/DELETE applications/:id - should delete application with all related metadata", async () => {
-    const user = await UserFaker.create({ adminLevel: AdminLevel.ADMIN });
+    const user = await UserFaker.create({ role: Roles.ADMIN });
     const TOKEN = await getToken(user);
 
     await request(app().getHttpServer())
@@ -166,7 +170,9 @@ describe("Applications", () => {
   });
 
   it("/POST applications - should fail with empty label", async () => {
-    await user.update({ capabilities: ["CreateApplication"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
 
     const response = await request(app().getHttpServer())
       .post("/applications")
@@ -185,7 +191,9 @@ describe("Applications", () => {
   });
 
   it("/POST applications - should fail with empty description", async () => {
-    await user.update({ capabilities: ["CreateApplication"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
 
     await request(app().getHttpServer())
       .post("/applications")
@@ -228,20 +236,19 @@ describe("application guard", () => {
   it("permissions testing", async () => {
     // remove all permission
     await actorType.update([], { reset: true });
-    // Should fail to get the relation because the user does not have the read permission
+    // Should succeed to get the application because AppRead is granted to all authenticated users
     await request(app().getHttpServer())
       .get(`/applications/${application.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(403);
+      .expect(200);
 
-    // Should fail to list relations because the user does not have the read permission
     await request(app().getHttpServer())
       .get(`/applications/${application.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(403);
+      .expect(200);
 
-    // Add read permission
-    await actorType.update(["readBase"]);
+    // Add read permission (already granted globally, but keep for explicitness)
+    await actorType.update(["AppRead"]);
 
     // Should succeed to get the application
     await request(app().getHttpServer())
@@ -259,7 +266,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeBase"]);
+    await actorType.update(["AppWrite"]);
 
     // Should succeed to update the relation
     await request(app().getHttpServer())

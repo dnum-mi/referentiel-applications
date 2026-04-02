@@ -8,69 +8,69 @@ export class AppPermsDto {
 
   @ApiProperty()
   @IsBoolean()
-  readBase: boolean;
+  AppRead: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  writeBase: boolean;
+  AppWrite: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  writePriorityRestart: boolean;
+  AppWritePriority: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  readActors: boolean;
+  ActorRead: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  writeActors: boolean;
+  ActorWrite: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  readCompliances: boolean;
+  ComplianceRead: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  writeCompliances: boolean;
+  ComplianceWrite: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  readHostings: boolean;
+  HostingRead: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  writeHostings: boolean;
+  HostingWrite: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  readMetadata: boolean;
+  MetadataRead: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  readRelations: boolean;
+  RelationRead: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  writeRelations: boolean;
+  RelationWrite: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  readLinks: boolean;
+  LinkRead: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  writeLinks: boolean;
+  LinkWrite: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  readReports: boolean;
+  ReportRead: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  postReports: boolean;
+  ReportPost: boolean;
 
   @ApiProperty()
   @IsBoolean()
-  manageReports: boolean;
+  ReportManage: boolean;
 }

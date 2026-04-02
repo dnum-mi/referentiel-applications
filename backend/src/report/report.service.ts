@@ -3,16 +3,20 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
-import { AdminLevel, Requestor } from "src/user/entities/user.entity";
+import { Permission, Prisma } from "@prisma/client";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
+import { Requestor } from "src/user/entities/user.entity";
 import { PrismaService } from "../prisma/prisma.service";
-import { ReportFiltersDto, SortByEnum } from "./dto/report-filters.dto";
 import { CreateReportDto } from "./dto/create-report.dto";
+import { ReportFiltersDto, SortByEnum } from "./dto/report-filters.dto";
 import { UpdateReportDto } from "./dto/update-report.dto";
 
 @Injectable()
 export class ReportsService {
-  constructor(protected readonly prisma: PrismaService) {}
+  constructor(
+    protected readonly prisma: PrismaService,
+    private readonly checkPermissions: CheckPermissions,
+  ) {}
 
   /**
    * Crée un nouveau signalement.
@@ -24,15 +28,22 @@ export class ReportsService {
     requestor: Requestor,
     applicationId?: string,
   ) {
-    const hasPostPerm = requestor.appPerms?.includes("postReports") === true;
-    const isAdminWriteOrMore = requestor.adminLevel >= AdminLevel.WRITE;
+    const hasPostPerm = await this.checkPermissions.can(
+      [Permission.ReportPost],
+      requestor,
+    );
     if (applicationId) {
-      if (!hasPostPerm && !isAdminWriteOrMore) {
+      if (!hasPostPerm) {
         throw new ForbiddenException(
           "Vous n'avez pas la permission de créer un signalement pour cette application.",
         );
       }
-    } else if (!requestor.capabilities.includes("CreateGlobalReport")) {
+    } else if (
+      !(await this.checkPermissions.can(
+        [Permission.CreateGlobalReport],
+        requestor,
+      ))
+    ) {
       throw new ForbiddenException(
         "Vous n'avez pas la permission de créer un signalement.",
       );
@@ -72,14 +83,15 @@ export class ReportsService {
     } = filters;
 
     // Controle des permissions
-    const hasApplicationReadPerms = requestor.appPerms?.includes("readReports");
-    const isAdminRead = requestor.adminLevel >= AdminLevel.READ;
-    const canReadAll = hasApplicationReadPerms || isAdminRead;
+    const hasApplicationReadPerms = await this.checkPermissions.can(
+      [Permission.ReportRead],
+      requestor,
+    );
 
     const where: { AND: Prisma.ReportWhereInput[] } = { AND: [] };
 
     if (applicationId) {
-      if (!canReadAll || !all) {
+      if (!hasApplicationReadPerms || !all) {
         where.AND.push({
           notifierId: {
             equals: requestor.id,
@@ -92,7 +104,7 @@ export class ReportsService {
           equals: applicationId,
         },
       });
-    } else if (!isAdminRead || !all) {
+    } else if (!hasApplicationReadPerms || !all) {
       where.AND.push({
         notifierId: {
           equals: requestor.id,
@@ -159,10 +171,10 @@ export class ReportsService {
    * @throws NotFoundException Si le signalement n'est pas trouvé.
    */
   async findOne(id: string, requestor: Requestor) {
-    const hasApplicationReadPerms =
-      requestor.appPerms?.includes("readReports") ||
-      requestor.appPerms?.includes("manageReports") ||
-      requestor.adminLevel >= AdminLevel.READ;
+    const hasApplicationReadPerms = this.checkPermissions.can(
+      [Permission.ReportRead, Permission.ReportManage],
+      requestor,
+    );
 
     const where: Prisma.ReportWhereUniqueInput = {
       id,

@@ -1,7 +1,7 @@
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
 import { RelationType } from "@prisma/client";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -26,7 +26,7 @@ describe("Relations End-to-End", () => {
 
   beforeAll(async () => {
     // Given
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
     applicationSource = await ApplicationFaker.create(user);
     applicationTarget = await ApplicationFaker.create(user);
@@ -144,7 +144,7 @@ describe("Relations Graph End-to-End", () => {
   let deletedApp: { id: string; label: string };
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
 
     rootApp = await ApplicationFaker.create(user);
@@ -320,7 +320,7 @@ describe("application guard", () => {
     appActor = await UserFaker.create();
     application = await ApplicationFaker.create(appOwner);
     applicationTarget = await ApplicationFaker.create(appOwner);
-    actorType = await ActorTypeFaker.create(["readRelations"]);
+    actorType = await ActorTypeFaker.create(["RelationRead"]);
     actor = await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
@@ -346,7 +346,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeRelations"]);
+    await actorType.update(["RelationWrite"]);
     const relation = await request(app().getHttpServer())
       .post(`/applications/${application.id}/relations`)
       .send({
@@ -379,7 +379,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add read permission
-    await actorType.update(["readRelations"]);
+    await actorType.update(["RelationRead"]);
 
     // Should succeed to get the relation
     await request(app().getHttpServer())
@@ -414,7 +414,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeRelations"]);
+    await actorType.update(["RelationWrite"]);
 
     // Should succeed to update the relation
     await request(app().getHttpServer())

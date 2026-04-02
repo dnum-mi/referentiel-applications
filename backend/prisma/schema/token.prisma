@@ -5,8 +5,8 @@
 model Token {
   /// Identifiant unique
   id          String      @id @default(uuid())
-  /// Niveau admin accordé à ce token
-  adminLevel  Int?
+  /// Role accordé à ce token
+  role Roles? 
   /// Description de l'utilité de ce token
   description String
   /// Nom lisible pour ce token

@@ -3,11 +3,11 @@ import { computed } from "vue";
 import router from "@/router";
 import { useUserStore } from "@/stores/userStore";
 import { routeNames } from "@/router/route-names";
-import { AdminLevel } from "@/models/user";
 
 const userStore = useUserStore();
 
 import type { RouteRecordNormalized } from "vue-router";
+import { Permission } from "@/client";
 
 interface PageItem {
   label: string;
@@ -83,8 +83,8 @@ const protectedPages = computed(() => {
     const passesBaseFilter = baseRouteFilter(currentRoute);
     const isProtectedRoute = currentRoute.meta.requiresAuth === true;
     const isNotAdminPage = currentRoute.name !== routeNames.ADMINPAGE;
-    const userIsAdmin = userStore.adminLevel >= AdminLevel.ADMIN;
-    const passesAdminCheck = isNotAdminPage || userIsAdmin;
+    const hasManageAdminPanelPermissions = userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]);
+    const passesAdminCheck = isNotAdminPage || hasManageAdminPanelPermissions;
     return passesBaseFilter && isProtectedRoute && passesAdminCheck;
   });
 

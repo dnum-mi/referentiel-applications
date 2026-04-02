@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, PickType } from "@nestjs/swagger";
 import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
-import { AdminLevel } from "src/user/entities/user.entity";
 import { TokenStatus } from "../domain/token-status.entity";
+import { Roles } from "@prisma/client";
 
 export class TokenDto {
   @ApiProperty({
@@ -13,13 +13,14 @@ export class TokenDto {
   id: string;
 
   @ApiPropertyOptional({
-    example: 10,
-    description: "Niveau d'administration du token",
     required: false,
+    enum: Roles,
+    enumName: "Roles",
+    description: "Role attribué a un utilisateur",
   })
   @IsOptional()
-  @IsEnum(AdminLevel)
-  adminLevel?: AdminLevel;
+  @IsEnum(Roles)
+  role?: Roles;
 
   @ApiProperty({
     example: "Token pour l'application X",
@@ -70,27 +71,32 @@ export class CreateServiceTokenDto extends PickType(TokenDto, [
   "name",
   "description",
   "expiresAt",
-  "adminLevel",
+  "role",
 ] as const) {
   @ApiProperty({
     required: true,
+    enum: Roles,
+    enumName: "Roles",
+    description: "Role attribué a un utilisateur",
   })
-  adminLevel: AdminLevel;
+  role: Roles;
 }
 
 export class CreatePersonalTokenDto extends PickType(TokenDto, [
   "name",
   "description",
   "expiresAt",
-  "adminLevel",
+  "role",
 ] as const) {
   @ApiProperty({
     required: false,
+    enum: Roles,
+    enumName: "Roles",
     description:
       "Niveau d'administration du token personnel (optionnel). Il ne pourra pas être supérieur à celui de l'utilisateur créant le token.",
   })
   @IsOptional()
-  adminLevel?: AdminLevel;
+  role?: Roles;
 }
 
 export class RegenerateTokenDto extends PickType(TokenDto, [

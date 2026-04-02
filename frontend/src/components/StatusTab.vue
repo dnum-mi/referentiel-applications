@@ -1,21 +1,20 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import type { CreateApplicationWithPerms } from "@/models/Application";
-import type { ApplicationStatusDto, CreateApplicationStatusDto } from "@/client/types.gen";
 import api from "@/api/index";
-import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { Permission, type ApplicationStatusDto, type CreateApplicationStatusDto } from "@/client/types.gen";
 import { formatDateFR } from "@/composables/use-date";
+import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import useModal from "@/composables/use-modal";
+import { BREAKPOINTS } from "@/constants/breakpoint";
+import type { ApplicationWithPerms } from "@/models/Application";
+import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
-import { AdminLevel } from "@/models/user";
-import useModal from "@/composables/use-modal";
+import type { TableColumn } from "@/types/table";
+import { useMediaQuery } from "@vueuse/core";
+import { computed, onMounted, ref } from "vue";
 import AppLoader from "./AppLoader.vue";
 import StatusForm from "./form/StatusForm.vue";
-import { useMediaQuery } from "@vueuse/core";
-import { BREAKPOINTS } from "@/constants/breakpoint";
-import { useApplicationStore } from "@/stores/applicationStore";
 import RefAppTable from "./RefAppTable.vue";
-import type { TableColumn } from "@/types/table";
 
 interface StatusFormData {
   status: CreateApplicationStatusDto["status"];
@@ -23,7 +22,7 @@ interface StatusFormData {
 }
 
 const props = defineProps<{
-  application: CreateApplicationWithPerms;
+  application: ApplicationWithPerms;
 }>();
 
 const toaster = useToasterStore();
@@ -41,7 +40,7 @@ const isLoading = ref(false);
 const isSubmitting = ref(false);
 const errorMessage = ref("");
 
-const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeBase"));
+const canEdit = computed(() => userStore.hasPermissions([Permission.APP_WRITE]));
 const deleteModalActions = computed(() => [
   {
     label: "Annuler",

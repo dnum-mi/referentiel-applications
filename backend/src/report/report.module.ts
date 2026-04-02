@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { CommonModule } from "src/common/common.module";
 import { PrismaModule } from "./../prisma/prisma.module";
 import { UserModule } from "./../user/user.module";
 import {
@@ -10,7 +11,7 @@ import { EmailModule } from "src/email/email.module";
 import { UserNotificationService } from "./user-notification.service";
 
 @Module({
-  imports: [PrismaModule, UserModule, EmailModule],
+  imports: [PrismaModule, UserModule, EmailModule, CommonModule],
   controllers: [ReportsController, ApplicationReportsController],
   providers: [ReportsService, UserNotificationService],
   exports: [ReportsService],

@@ -17,8 +17,9 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { CompliancesService } from "./compliances.service";
 import {
@@ -47,13 +48,13 @@ export class ComplianceController {
 }
 
 @ApiTags("Compliances")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("applications/:applicationId/compliances")
 export class ApplicationCompliancesController {
   constructor(private readonly compliancesService: CompliancesService) {}
 
   @Post()
-  @AppAction("writeCompliances")
+  @RequiredPermissions([Permission.ComplianceWrite])
   @ApiOperation({ summary: "Create a new compliance for an application" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -94,7 +95,7 @@ export class ApplicationCompliancesController {
   }
 
   @Get()
-  @AppAction("readCompliances")
+  @RequiredPermissions([Permission.ComplianceRead])
   @ApiOperation({ summary: "Retrieve the compliance for an application" })
   @ApiOkResponse({
     description: "Compliance found successfully",
@@ -106,7 +107,7 @@ export class ApplicationCompliancesController {
   }
 
   @Patch()
-  @AppAction("writeCompliances")
+  @RequiredPermissions([Permission.ComplianceWrite])
   @ApiOperation({ summary: "Update the compliance for an application" })
   @ApiOkResponse({
     description: "Compliance updated successfully",

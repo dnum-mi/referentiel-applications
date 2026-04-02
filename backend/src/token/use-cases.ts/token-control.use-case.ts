@@ -1,8 +1,8 @@
-import type { Requestor } from "src/user/entities/user.entity";
-import type { TokenEntity } from "../domain/token.entity";
 import { BadRequestException } from "@nestjs/common";
-import { AdminLevel, UserType } from "src/user/entities/user.entity";
+import type { Requestor } from "src/user/entities/user.entity";
+import { UserType } from "src/user/entities/user.entity";
 import { TokenStatus } from "../domain/token-status.entity";
+import type { TokenEntity } from "../domain/token.entity";
 
 export const tokenInvalidReason = {
   notFound: "notFound",
@@ -49,6 +49,7 @@ export function isNewTokenInvalid(
 }
 
 export function isRequestorAllowedToUpdateToken(
+  hasPermission: boolean,
   token?: TokenEntity,
   requestor?: Requestor,
 ): boolean {
@@ -65,7 +66,7 @@ export function isRequestorAllowedToUpdateToken(
   // bot tokens
   if (token.userImpersonate.type === UserType.bot) {
     // only admins can update bot tokens
-    if (requestor.adminLevel !== AdminLevel.ADMIN) {
+    if (!hasPermission) {
       return false;
     }
     return true;

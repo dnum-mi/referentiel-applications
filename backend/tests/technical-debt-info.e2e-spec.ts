@@ -1,6 +1,6 @@
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -16,7 +16,7 @@ describe("TechnicalDebtInfo", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
     application = await ApplicationFaker.create(user);
   });
@@ -125,7 +125,7 @@ describe("TechnicalDebtInfo - application guard", () => {
   });
 
   it("permissions testing", async () => {
-    const actorType = await ActorTypeFaker.create(["readBase"]);
+    const actorType = await ActorTypeFaker.create(["AppRead"]);
     await ActorFaker.link({
       userEmail: appActor.email,
       actorTypeId: actorType.id,
@@ -142,7 +142,7 @@ describe("TechnicalDebtInfo - application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeBase"]);
+    await actorType.update(["AppWrite"]);
     const technicalDebtInfo = await request(app().getHttpServer())
       .post(`/applications/${application.id}/technical-debt-info`)
       .send({
@@ -154,11 +154,11 @@ describe("TechnicalDebtInfo - application guard", () => {
 
     // remove all permission
     await actorType.update([], { reset: true });
-    // Should fail to get the technical debt info because the user does not have the read permission
+    // Should succeed to get the technical debt info because AppRead is granted to all authenticated users
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/technical-debt-info`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(403);
+      .expect(200);
   });
 });
 
@@ -170,7 +170,7 @@ describe("TechnicalDebts", () => {
   let applicationB: AsyncReturnType<typeof ApplicationFaker.create>;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
     applicationA = await ApplicationFaker.create(user);
     applicationB = await ApplicationFaker.create(user);

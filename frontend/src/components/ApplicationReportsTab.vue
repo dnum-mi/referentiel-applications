@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { PaginatedReportDto, ReportDto } from "@/client/types.gen";
+import { Permission, type PaginatedReportDto, type ReportDto } from "@/client/types.gen";
 import type { CreateApplicationWithPerms } from "@/models/Application";
-import { AdminLevel } from "@/models/user";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
@@ -28,7 +27,7 @@ const tableColumns: TableColumn[] = [
 ];
 
 const canPost = computed(() => {
-  return props.application.myPerms.has("postReports") || userStore.adminLevel >= AdminLevel.WRITE;
+  return userStore.hasPermissions([Permission.REPORT_POST]);
 });
 
 async function fetchIssues() {

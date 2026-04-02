@@ -19,46 +19,46 @@ onMounted(async () => {
 });
 
 const permissionSuffixes = {
-  Base: { label: "Infos", title: "Informations" },
+  App: { label: "Infos", title: "Informations" },
   PriorityRestart: { label: "Priorit. Redémarr.", title: "Prioritisation et redémarrage" },
-  Hostings: { label: "Héberg.", title: "Hébergements" },
-  Links: { label: "Liens", title: "Liens" },
-  Compliances: { label: "Conformités", title: "Conformités" },
-  Actors: { label: "Acteurs", title: "Acteurs" },
-  Relations: { label: "Relations", title: "Relations" },
+  Hosting: { label: "Héberg.", title: "Hébergements" },
+  Link: { label: "Liens", title: "Liens" },
+  Compliance: { label: "Conformités", title: "Conformités" },
+  Actor: { label: "Acteurs", title: "Acteurs" },
+  Relation: { label: "Relations", title: "Relations" },
   Metadata: { label: "Historique", title: "Historique" },
 } as const satisfies Record<string, { label: string; title: string }>;
 const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissionSuffixes)[];
 
 const updatedMatrix = ref<AppPermsDto[]>(unref(props.appPermsMatrix));
 
-type PermissionValue = "none" | "read" | "write";
+type PermissionValue = "none" | "Read" | "Write";
 function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSuffixes, value: PermissionValue) {
   const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
   if (permission === "PriorityRestart") {
     return;
   }
-  updatedMatrix.value[actorTypeIdx][`read${permission}`] = value === "read" || value === "write";
+  updatedMatrix.value[actorTypeIdx][`${permission}Read`] = value === "Read" || value === "Write";
   if (permission !== "Metadata") {
-    updatedMatrix.value[actorTypeIdx][`write${permission}`] = value === "write";
+    updatedMatrix.value[actorTypeIdx][`${permission}Write`] = value === "Write";
   }
 }
 
 function updateWritePriorityRestart(actorTypeId: string, value: boolean) {
   const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
-  updatedMatrix.value[actorTypeIdx].writePriorityRestart = value;
+  updatedMatrix.value[actorTypeIdx].AppWritePriority = value;
 }
 
-type ReportPermissionValue = "read" | "post" | "manage";
+type ReportPermissionValue = "Read" | "Post" | "Manage";
 function updateReportMatrix(actorTypeId: string, values: ReportPermissionValue[]) {
   const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
   if (actorTypeIdx === -1) return;
 
-  updatedMatrix.value[actorTypeIdx].readReports = values.includes("read") || values.includes("manage");
-  updatedMatrix.value[actorTypeIdx].postReports = values.includes("post") || values.includes("manage");
-  updatedMatrix.value[actorTypeIdx].manageReports = values.includes("manage");
+  updatedMatrix.value[actorTypeIdx].ReportRead = values.includes("Read") || values.includes("Manage");
+  updatedMatrix.value[actorTypeIdx].ReportPost = values.includes("Post") || values.includes("Manage");
+  updatedMatrix.value[actorTypeIdx].ReportManage = values.includes("Manage");
 }
 
 function saveAppPermsMatrix() {
@@ -84,12 +84,12 @@ function saveAppPermsMatrix() {
       <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
       <td v-for="perm in permissionKeys" :key="perm">
         <PermissionSelect
-          v-if="perm === 'Base'"
+          v-if="perm === 'App'"
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
-          :read="perms[`read${perm}`] || false"
-          :write="perms[`write${perm}`] || false"
-          :perm-order="['read', 'write']"
+          :read="perms[`${perm}Read`] || false"
+          :write="perms[`${perm}Write`] || false"
+          :perm-order="['Read', 'Write']"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
@@ -97,15 +97,15 @@ function saveAppPermsMatrix() {
           v-else-if="perm === 'Metadata'"
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
-          :read="perms[`read${perm}`] || false"
-          :perm-order="['none', 'read']"
+          :read="perms[`${perm}Read`] || false"
+          :perm-order="['none', 'Read']"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
         <PermissionWritePriorityRestart
           v-else-if="perm === 'PriorityRestart'"
           :id="`${perms.actorTypeId}-${perm}`"
-          :checked="perms.writePriorityRestart"
+          :checked="perms.AppWritePriority"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: boolean) => updateWritePriorityRestart(perms.actorTypeId, value)"
         />
@@ -113,8 +113,8 @@ function saveAppPermsMatrix() {
           v-else
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
-          :read="perms[`read${perm}`] || false"
-          :write="perms[`write${perm}`] || false"
+          :read="perms[`${perm}Read`] || false"
+          :write="perms[`${perm}Write`] || false"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
@@ -122,9 +122,9 @@ function saveAppPermsMatrix() {
       <td style="min-width: 15rem">
         <ReportPermissionSelect
           :id="`${perms.actorTypeId}`"
-          :read="perms.readReports"
-          :post="perms.postReports"
-          :manage="perms.manageReports"
+          :read="perms.ReportRead"
+          :post="perms.ReportPost"
+          :manage="perms.ReportManage"
           :data-testid="`app-perms-report-${perms.actorTypeId}`"
           @update:model-value="(value: ReportPermissionValue[]) => updateReportMatrix(perms.actorTypeId, value)"
         />

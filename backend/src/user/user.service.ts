@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma, User } from "@prisma/client";
+import { Prisma, Roles, User } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
-import { AdminLevel, Requestor, UserEntity } from "./entities/user.entity";
+import { Requestor, UserEntity } from "./entities/user.entity";
 
 @Injectable()
 export class UserService {
@@ -28,8 +28,7 @@ export class UserService {
     return this.prisma.user.create({
       data: {
         email,
-        adminLevel: 0,
-        capabilities: [],
+        role: Roles.VISITOR,
       },
       include: {
         organization: true,
@@ -73,7 +72,9 @@ export class UserService {
       where: { id },
       data: {
         ...updateUserDto,
-        capabilities: [...new Set(updateUserDto.capabilities || [])], // Ensure capabilities are unique
+        additionalPermissions: [
+          ...new Set(updateUserDto.additionalPermissions || []),
+        ], // Ensure additionalPermissions are unique]
       },
     });
   }
@@ -141,9 +142,6 @@ export class UserService {
       orderBy,
       page: filters.page,
       pageSize: filters.pageSize,
-      omit: {
-        capabilities: requestor.adminLevel < AdminLevel.ADMIN, // Only admins can see user capabilities
-      },
     });
   }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import type { CreateApplicationWithPerms } from "@/models/Application";
-import type { ComplianceDto } from "@/client/types.gen";
+import { Permission, type ComplianceDto } from "@/client/types.gen";
 import api from "@/api/index.js";
 import { useToasterStore } from "@/stores/toasterStore";
 import ComplianceForm from "./ComplianceForm.vue";
@@ -17,11 +17,13 @@ import { useMediaQuery } from "@vueuse/core";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
+import { useUserStore } from "@/stores/userStore";
 
 const props = defineProps<{ application: CreateApplicationWithPerms }>();
 const applicationId = props.application.id;
 
 const toaster = useToasterStore();
+const userStore = useUserStore();
 const compliance = ref<ComplianceDto | null>(null);
 const isLoading = ref(false);
 
@@ -241,6 +243,10 @@ function closeDetails() {
   detailsList.value = [];
   detailsTitle.value = "";
 }
+
+const hasComplianceEditPermission = computed(() => {
+  return userStore.hasPermissions([Permission.COMPLIANCE_WRITE]);
+});
 </script>
 
 <template>
@@ -254,7 +260,7 @@ function closeDetails() {
         icon="fr-icon-add-line"
         size="sm"
         label="Ajouter"
-        :disabled="isLoading"
+        :disabled="isLoading || !hasComplianceEditPermission"
         data-testid="compliance-add-btn"
         @click="onAddClick"
       ></DsfrButton>
@@ -301,6 +307,7 @@ function closeDetails() {
               tertiary
               icon="ri-edit-line"
               data-testid="compliance-edit-btn"
+              :disabled="!hasComplianceEditPermission"
               @click="() => onEditClick(data.type)"
               title="Modifier"
               aria-label="Modifier"

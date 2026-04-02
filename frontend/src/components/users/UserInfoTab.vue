@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/userStore";
-import { AdminLevelWording, AdminLevelWordingBadgeClass } from "@/utils/admin-level-utils";
+import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import { ref, onMounted } from "vue";
 
 const userStore = useUserStore();
@@ -53,15 +53,10 @@ onMounted(async () => {
           {{ userStore.user.email }}
         </td>
       </tr>
-      <tr>
-        <th scope="row">Type</th>
-        <td>
-          <span class="fr-badge fr-mr-1w" :class="AdminLevelWordingBadgeClass[userStore.adminLevel]" data-testid="user-profile-type">
-            {{ AdminLevelWording[userStore.adminLevel] }}
-          </span>
-        </td>
-      </tr>
     </DsfrTable>
+    <div class="fr-mt-4w">
+      <UserPermissions :user="userStore.user" />
+    </div>
     <div class="fr-mt-4w">
       <h2 class="fr-h6">Préférences de notification</h2>
       <DsfrToggleSwitch

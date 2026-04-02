@@ -1,6 +1,6 @@
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -16,7 +16,7 @@ describe("Labels", () => {
   let user: UserFakerReturnType;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     application = await ApplicationFaker.create(user);
   });
 
@@ -50,7 +50,7 @@ describe("application guard", () => {
   let actorType: AsyncReturnType<typeof ActorTypeFaker.create>;
 
   beforeAll(async () => {
-    actorType = await ActorTypeFaker.create(["readBase"]);
+    actorType = await ActorTypeFaker.create(["AppRead"]);
     appOwner = await UserFaker.create();
     appActor = await UserFaker.create();
     TOKEN = await getToken(appActor);
@@ -61,7 +61,7 @@ describe("application guard", () => {
   });
 
   it("permissions testing", async () => {
-    // read and write labels are parts of readBase and writeBase permissions
+    // read and write labels are parts of AppRead and AppWrite permissions
     const application = await ApplicationFaker.create(appOwner);
     await ActorFaker.link({
       userEmail: appActor.email,
@@ -88,7 +88,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeBase"]);
+    await actorType.update(["AppWrite"]);
 
     // Create a label
     const label = await request(app().getHttpServer())
@@ -105,14 +105,14 @@ describe("application guard", () => {
     // remove all permission
     await actorType.update([], { reset: true });
 
-    // Should fail to list labels because the user does not have the read permission
+    // Should succeed to list labels because AppRead is granted to all authenticated users
     await request(app().getHttpServer())
       .get(`/applications/${application.id}/labels`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(403);
+      .expect(200);
 
-    // Add read permission
-    await actorType.update(["readBase"]);
+    // Add read permission (already granted globally, but keep for explicitness)
+    await actorType.update(["AppRead"]);
 
     // Should succeed to list labels
     await request(app().getHttpServer())
@@ -135,7 +135,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeBase"]);
+    await actorType.update(["AppWrite"]);
 
     // // Should succeed to update the label
     await request(app().getHttpServer())

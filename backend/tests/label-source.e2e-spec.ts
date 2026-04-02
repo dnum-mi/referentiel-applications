@@ -1,5 +1,5 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { LabelSourceFaker } from "./fakers/label-source.faker";
 import { UserFaker } from "./fakers/user.faker";
@@ -13,7 +13,7 @@ describe("LabelSources", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.ADMIN });
+    user = await UserFaker.create({ role: Roles.ADMIN });
     TOKEN = await getToken(user);
   });
 

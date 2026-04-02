@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { CreateLinkDto, LinkDto, UpdateLinkDto } from "@/client/types.gen";
+import { Permission, type CreateLinkDto, type LinkDto, type UpdateLinkDto } from "@/client/types.gen";
 import { linkTypesDict } from "@/composables/use-dictionary";
 import useModal from "@/composables/use-modal";
 import type { ApplicationWithPerms } from "@/models/Application";
-import { AdminLevel } from "@/models/user";
 import api from "@/api/index.js";
 import { useToasterStore } from "@/stores/toasterStore.js";
 import { useUserStore } from "@/stores/userStore";
@@ -33,7 +32,7 @@ const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const linkToDelete = ref<string | null>(null);
 const showDeleteConfirmation = ref(false);
-const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeLinks"));
+const canEdit = computed(() => userStore.hasPermissions([Permission.LINK_WRITE]));
 
 const currentPage = ref(0);
 const pageSize = ref(15);

@@ -1,6 +1,6 @@
 import type { AsyncReturnType } from "src/utils/types.util";
 import type { UserFakerReturnType } from "./fakers/user.faker";
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
@@ -17,7 +17,7 @@ describe("Links", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.WRITE });
+    user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
     TOKEN = await getToken(user);
     application = await ApplicationFaker.create(user);
   });
@@ -98,7 +98,7 @@ describe("application guard", () => {
     appOwner = await UserFaker.create();
     appActor = await UserFaker.create();
     TOKEN = await getToken(appActor);
-    actorType = await ActorTypeFaker.create(["readLinks"]);
+    actorType = await ActorTypeFaker.create(["LinkRead"]);
   });
 
   afterAll(async () => {
@@ -125,7 +125,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Should succeed after granting the write permission
-    await actorType.update(["writeLinks"]);
+    await actorType.update(["LinkWrite"]);
     const link = await request(app().getHttpServer())
       .post(`/applications/${application.id}/links`)
       .send({
@@ -148,7 +148,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add read permission
-    await actorType.update(["readLinks"]);
+    await actorType.update(["LinkRead"]);
 
     // Should succeed to list links
     await request(app().getHttpServer())
@@ -171,7 +171,7 @@ describe("application guard", () => {
       .expect(403);
 
     // Add write permission again
-    await actorType.update(["writeLinks"]);
+    await actorType.update(["LinkWrite"]);
 
     // Should succeed to update the link
     await request(app().getHttpServer())

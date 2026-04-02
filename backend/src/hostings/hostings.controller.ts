@@ -18,8 +18,9 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { AppAction } from "src/common/decorators/application.decorator";
-import { ApplicationGuard } from "src/common/guards/application.guard";
+import { Permission } from "@prisma/client";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
 import {
   CreateHostingDto,
@@ -47,7 +48,7 @@ export class HostingsController {
 }
 
 @ApiTags("Hostings")
-@UseGuards(ApplicationGuard)
+@UseGuards(PermissionGuard)
 @Controller("applications/:applicationId/hostings")
 @ApiParam({
   name: "applicationId",
@@ -58,7 +59,7 @@ export class ApplicationHostingsController {
   constructor(private readonly hostingService: HostingsService) {}
 
   @Post()
-  @AppAction("writeHostings")
+  @RequiredPermissions([Permission.HostingWrite])
   @ApiOperation({ summary: "Créer un hébergement pour une application" })
   @ApiCreatedResponse({
     description: "Hébergement créé",
@@ -75,7 +76,7 @@ export class ApplicationHostingsController {
   }
 
   @Get()
-  @AppAction("readHostings")
+  @RequiredPermissions([Permission.HostingRead])
   @ApiOperation({
     summary: "Récupérer tous les hébergements d'une application",
   })
@@ -89,7 +90,7 @@ export class ApplicationHostingsController {
   }
 
   @Get(":id")
-  @AppAction("readHostings")
+  @RequiredPermissions([Permission.HostingRead])
   @ApiOperation({
     summary: "Récupérer un hébergement par ID pour une application",
   })
@@ -102,7 +103,7 @@ export class ApplicationHostingsController {
   }
 
   @Patch(":id")
-  @AppAction("writeHostings")
+  @RequiredPermissions([Permission.HostingWrite])
   @ApiOperation({
     summary: "Mettre à jour un hébergement pour une application",
   })
@@ -124,7 +125,7 @@ export class ApplicationHostingsController {
   }
 
   @Delete(":id")
-  @AppAction("writeHostings")
+  @RequiredPermissions([Permission.HostingWrite])
   @ApiOperation({ summary: "Supprimer un hébergement pour une application" })
   @ApiNoContentResponse({ description: "Hébergement supprimé" })
   @HttpCode(HttpStatus.NO_CONTENT)

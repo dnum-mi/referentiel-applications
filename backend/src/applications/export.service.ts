@@ -3,6 +3,10 @@ import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { PrismaQueryBuilder } from "./prisma-query-builder.service";
+import { Requestor } from "src/user/entities/user.entity";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
+import { Permission } from "@prisma/client";
+import { ApplicationSearchResultDto } from "./dto/get-application.dto";
 
 @Injectable()
 export class ApplicationExportService {
@@ -10,6 +14,7 @@ export class ApplicationExportService {
     private readonly repository: ApplicationRepository,
     private readonly exportApplicationsUseCase: ExportApplicationsUseCase,
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
+    private readonly checkPermissions: CheckPermissions,
   ) {}
 
   async exportApplicationsToExcel(): Promise<Buffer> {
@@ -18,15 +23,37 @@ export class ApplicationExportService {
 
   async exportSearchResultsToExcel(
     searchParams: ApplicationSearchDto,
+    requestor: Requestor,
   ): Promise<Buffer> {
-    const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
-    const { sortBy = "shortName", order = "asc" } = searchParams;
-    const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
-    const allMatchingApps = await this.repository.findApplications(
-      searchParams,
-      where,
-      orderBy,
+    const hasAppList = await this.checkPermissions.can(
+      [Permission.AppList],
+      requestor,
     );
+    const hasAppRead = await this.checkPermissions.can(
+      [Permission.AppRead],
+      requestor,
+    );
+    let allMatchingApps: ApplicationSearchResultDto;
+    if (!hasAppList && !hasAppRead) {
+      allMatchingApps = { results: [], total: 0, averageIq: 0 };
+    } else {
+      const where = this.prismaQueryBuilder.buildSearchWhere(
+        searchParams,
+        hasAppList
+          ? undefined
+          : {
+              actorEmail: requestor?.email,
+              businessDivisionId: requestor?.organization?.businessDivisionId,
+            },
+      );
+      const { sortBy = "shortName", order = "asc" } = searchParams;
+      const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
+      allMatchingApps = await this.repository.findApplications(
+        searchParams,
+        where,
+        orderBy,
+      );
+    }
 
     // Get full relations for the filtered applications
     const filteredIds = allMatchingApps.results.map((app) => app.id);

@@ -11,9 +11,8 @@ import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
 
 import type { Application } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
-import { AdminLevel } from "@/models/user";
 import type { APP_PERMISSIONS } from "@/models/Application";
-import type { CreateActorDto, ActorDto } from "@/client/types.gen";
+import { type CreateActorDto, type ActorDto, Permission } from "@/client/types.gen";
 import api from "@/api/index";
 
 const props = defineProps<{
@@ -31,7 +30,7 @@ const selectedActorIds = ref<string[]>([]);
 const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const loading = ref(false);
-const canEdit = computed(() => userStore.adminLevel >= AdminLevel.WRITE || props.application.myPerms.has("writeActors"));
+const canEdit = computed(() => userStore.hasPermissions([Permission.ACTOR_WRITE]));
 
 const columns: TableColumn[] = [
   { field: "Sélection", header: "Sélection", sortable: false },

@@ -1,8 +1,9 @@
-import { AdminLevel } from "src/user/entities/user.entity";
+import { Roles } from "@prisma/client";
 import request from "supertest";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
+import { Permission } from "@prisma/client";
 
 describe("Reports", () => {
   const app = setupTestSuite();
@@ -10,7 +11,7 @@ describe("Reports", () => {
   let TOKEN: string;
 
   beforeAll(async () => {
-    user = await UserFaker.create({ adminLevel: AdminLevel.READ });
+    user = await UserFaker.create({ role: Roles.READER });
     TOKEN = await getToken(user);
   });
 
@@ -32,7 +33,9 @@ describe("Reports", () => {
   });
 
   it("/POST reports", async () => {
-    await user.update({ capabilities: ["CreateGlobalReport"] });
+    await user.update({
+      additionalPermissions: [Permission.CreateGlobalReport],
+    });
     return request(app().getHttpServer())
       .post("/reports")
       .set("Authorization", `Bearer ${TOKEN}`)
