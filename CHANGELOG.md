@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.69.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.68.2...v1.69.0) (2026-04-02)
+
+
+### Features
+
+* refacto droits adminLevel capabilities ([#1612](https://github.com/dnum-mi/referentiel-applications/issues/1612)) ([05579e3](https://github.com/dnum-mi/referentiel-applications/commit/05579e357684d053ecbc4384eac742d8d91cedd6))
+
+
+### Bug Fixes
+
+* update base email template ([#1635](https://github.com/dnum-mi/referentiel-applications/issues/1635)) ([dfcd088](https://github.com/dnum-mi/referentiel-applications/commit/dfcd088b9f291a4cb9984348c90f3857cf53273f))
+
 ## [1.68.2](https://github.com/dnum-mi/referentiel-applications/compare/v1.68.1...v1.68.2) (2026-03-27)
 
 
