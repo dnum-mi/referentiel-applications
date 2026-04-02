@@ -36,7 +36,7 @@ const hostingStore = useHostingStore();
 const userStore = useUserStore();
 const labels = ref<LabelDto[]>([]);
 const canEditBase = computed(() => userStore.hasPermissions([Permission.APP_WRITE, Permission.APP_WRITE_PRIORITY]));
-const canViewHostings = computed(() => userStore.hasPermissions([Permission.APP_WRITE, Permission.HOSTING_READ]));
+const canViewHostings = computed(() => userStore.hasPermissions([Permission.HOSTING_READ]));
 const canEditHostings = computed(() => userStore.hasPermissions([Permission.HOSTING_WRITE]));
 
 const isTechnicalDebtModalOpen = ref(false);

@@ -32,7 +32,6 @@ export class PrismaQueryBuilder {
         orConditions.push({ businessDivisionId: ownership.businessDivisionId });
       }
       where.AND.push({ OR: orConditions });
-      console.log(orConditions);
     }
 
     const filterConfigs = [
