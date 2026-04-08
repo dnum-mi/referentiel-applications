@@ -47,9 +47,6 @@ export class UserEntity {
   @IsOptional()
   organization?: OrganizationDto | null;
 
-  @IsString()
-  lastLogin: Date | null;
-
   @ApiProperty({ enum: UserType, enumName: "UserType" })
   @IsString()
   @IsEnum(UserType)

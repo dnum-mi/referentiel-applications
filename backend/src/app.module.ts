@@ -1,7 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule as NestConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
-import { ActionLogService } from "./action-log/action-log.service";
 import { ActorModule } from "./actor/actor.module";
 import { ActorTypeModule } from "./actorType/actorType.module";
 import { AppController } from "./app.controller";
@@ -66,7 +65,7 @@ import { LabelSourceModule } from "./label-source/label-source.module";
     StatusesModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ActionLogService, LoggingService, AuthMiddleware],
+  providers: [AppService, LoggingService, AuthMiddleware],
   exports: [LoggingService],
 })
 export class AppModule implements NestModule {

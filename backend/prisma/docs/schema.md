@@ -14,6 +14,7 @@
 - [Users](#users)
 - [Signalements](#signalements)
 - [Statistics](#statistics)
+- [default](#default)
 
 ## Applications
 
@@ -580,7 +581,6 @@ erDiagram
 "User" {
   String id PK
   String(255) email UK
-  DateTime lastLogin "nullable"
   String organizationId FK "nullable"
   Roles role
   UserType type
@@ -667,7 +667,6 @@ Properties as follows:
 
 - `id`: Identifiant unique
 - `email`: Adresse email de l'utilisateur
-- `lastLogin`: Horodatage de la dernière connexion
 - `organizationId`: Id de l'organisation à laquelle l'utilisateur appartient
 - `role`: Groupement de permissions par defaut
 - `type`: Type de compte utilisateur (humain ou bot)
@@ -804,3 +803,45 @@ Properties as follows:
 - `valeur`: Valeur numérique de cette statistique
 - `type`: Type de statistique
 - `date`: Date à laquelle cette statistique s'applique
+
+## default
+
+```mermaid
+erDiagram
+"UserPermissionLog" {
+  String id PK
+  String userId
+  DateTime createdAt
+  String changedById "nullable"
+  Roles role "nullable"
+  Permission additionalPermissions
+}
+"UserConnexionLog" {
+  String id PK
+  String userId
+  DateTime createdAt
+}
+```
+
+### `UserPermissionLog`
+
+Ce modèle enregistre les changements de permissions des utilisateurs, y compris qui a effectué le changement et quand il a eu lieu.
+
+Properties as follows:
+
+- `id`:
+- `userId`:
+- `createdAt`:
+- `changedById`: Pas de jointure explicite pour éviter les problèmes de suppression en cascade, on stocke juste l'ID de l'utilisateur qui a effectué le changement
+- `role`:
+- `additionalPermissions`:
+
+### `UserConnexionLog`
+
+Ce modèle enregistre les connexions des utilisateurs, y compris l'heure de connexion.
+
+Properties as follows:
+
+- `id`:
+- `userId`:
+- `createdAt`:

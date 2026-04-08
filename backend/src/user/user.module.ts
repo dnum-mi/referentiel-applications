@@ -4,11 +4,18 @@ import { LoggerService } from "src/logger/logger.service";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { UserController } from "./user.controller";
 import { UserService } from "./user.service";
+import { UserPermissionLogService } from "./user-permission-log.service";
+import { UserConnexionLogService } from "./user-connexion-log.service";
 
 @Module({
   imports: [PrismaModule, CommonModule],
   controllers: [UserController],
-  providers: [UserService, LoggerService],
-  exports: [UserService],
+  providers: [
+    UserService,
+    LoggerService,
+    UserPermissionLogService,
+    UserConnexionLogService,
+  ],
+  exports: [UserService, UserConnexionLogService],
 })
 export class UserModule {}

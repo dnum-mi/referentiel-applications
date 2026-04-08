@@ -7,8 +7,6 @@ model User {
   id                        String                @id @default(uuid())
   /// Adresse email de l'utilisateur
   email                     String                @unique @db.VarChar(255)
-  /// Horodatage de la dernière connexion
-  lastLogin                 DateTime?             @default(now())
   /// Id de l'organisation à laquelle l'utilisateur appartient
   organizationId            String?
   /// Organisation à laquelle l'utilisateur appartient
