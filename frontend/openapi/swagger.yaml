@@ -4262,10 +4262,6 @@ components:
         organizationId:
           type: string
           nullable: true
-        lastLogin:
-          format: date-time
-          type: string
-          nullable: true
       required:
         - role
         - type
@@ -4273,7 +4269,6 @@ components:
         - id
         - email
         - organizationId
-        - lastLogin
     MetadataDto:
       type: object
       properties:
@@ -4418,10 +4413,6 @@ components:
         organizationId:
           type: string
           nullable: true
-        lastLogin:
-          format: date-time
-          type: string
-          nullable: true
       required:
         - role
         - type
@@ -4429,7 +4420,6 @@ components:
         - id
         - email
         - organizationId
-        - lastLogin
     UpdateUserPreferencesDto:
       type: object
       properties:

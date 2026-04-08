@@ -5,10 +5,14 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
 import { Requestor, UserEntity } from "./entities/user.entity";
+import { UserPermissionLogService } from "./user-permission-log.service";
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userPermissionLogService: UserPermissionLogService,
+  ) {}
 
   async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
     // Check if a user exists with the given email
@@ -23,9 +27,8 @@ export class UserService {
     if (existingUser) {
       return existingUser;
     }
-
     // If no user exists, create a new one
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email,
         role: Roles.VISITOR,
@@ -35,6 +38,8 @@ export class UserService {
         followedApplications: true,
       },
     });
+    await this.userPermissionLogService.log(user);
+    return user;
   }
 
   async subscribe(userId: string, applicationId: string) {
@@ -67,8 +72,8 @@ export class UserService {
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    return this.prisma.user.update({
+  async update(id: string, updateUserDto: UpdateUserDto, requestor: Requestor) {
+    const user = await this.prisma.user.update({
       where: { id },
       data: {
         ...updateUserDto,
@@ -77,6 +82,9 @@ export class UserService {
         ], // Ensure additionalPermissions are unique]
       },
     });
+
+    await this.userPermissionLogService.log(user, requestor);
+    return user;
   }
 
   async updateOwnPreferences(

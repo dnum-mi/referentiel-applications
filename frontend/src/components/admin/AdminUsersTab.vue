@@ -29,11 +29,6 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     isSortable: true,
   },
   {
-    key: "lastLogin",
-    label: "Dernière connexion",
-    isSortable: true,
-  },
-  {
     key: "role",
     label: "Role",
     isSortable: true,
@@ -110,7 +105,6 @@ const tableRows = computed(() =>
   data.value.results.map((user) => ({
     email: user.email,
     organisation: user.organization?.path || "-",
-    lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString("fr-FR") : "",
     additionalPermissions: user.additionalPermissions,
     role: {
       label: RolesWording[user.role],

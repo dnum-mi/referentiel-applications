@@ -1,0 +1,16 @@
+/// Ce modèle enregistre les changements de permissions des utilisateurs, y compris qui a effectué le changement et quand il a eu lieu.
+model UserPermissionLog {
+    id         String   @id @default(cuid())
+    userId     String
+    createdAt  DateTime @default(now())
+    changedById String? /// Pas de jointure explicite pour éviter les problèmes de suppression en cascade, on stocke juste l'ID de l'utilisateur qui a effectué le changement
+    role Roles?
+    additionalPermissions Permission[]
+}
+
+/// Ce modèle enregistre les connexions des utilisateurs, y compris l'heure de connexion.
+model UserConnexionLog {
+    id         String   @id @default(cuid())
+    userId     String
+    createdAt  DateTime @default(now())
+}

@@ -120,8 +120,12 @@ export class UserController {
     description: "Accès refusé - Privilège admin requis",
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
-  async update(@Param("id") id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  async update(
+    @Param("id") id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @User() requestor: Requestor,
+  ) {
+    return this.userService.update(id, updateUserDto, requestor);
   }
 
   @Get()
