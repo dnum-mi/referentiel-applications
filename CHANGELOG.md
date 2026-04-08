@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.70.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.69.0...v1.70.0) (2026-04-08)
+
+
+### Features
+
+* add log for user ([#1641](https://github.com/dnum-mi/referentiel-applications/issues/1641)) ([cfd0639](https://github.com/dnum-mi/referentiel-applications/commit/cfd06395aa1fcedf1b9f252240208a6e0c0df153))
+
+
+### Bug Fixes
+
+* add tilde for axios packages ([#1638](https://github.com/dnum-mi/referentiel-applications/issues/1638)) ([7ae2451](https://github.com/dnum-mi/referentiel-applications/commit/7ae2451fd8327698edf9bcb69d9ca2c45e9e9b95))
+
 ## [1.69.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.68.2...v1.69.0) (2026-04-02)
 
 
