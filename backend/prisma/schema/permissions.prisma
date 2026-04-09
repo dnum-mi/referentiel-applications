@@ -64,6 +64,8 @@ enum Permission {
   DeleteApplication
   /// Capacité de créer des signalements globaux
   CreateGlobalReport
+  /// Voir la liste des applications sur le TIME
+  MDITList
   /// Voir la liste des applications
   AppList
     /// Exporter les données
@@ -74,7 +76,7 @@ enum Permission {
   ActorTypePost
   /// Editer un nouveau type d'acteur 
   ActorTypeManage
-    /// Supprimer un nouveau type d'acteur 
+  /// Supprimer un nouveau type d'acteur 
   ActorTypeDelete
 
   // --- Permissions applicatives (par app) ---

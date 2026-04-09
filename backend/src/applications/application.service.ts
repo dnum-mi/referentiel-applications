@@ -324,11 +324,11 @@ export class ApplicationService {
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
-    const hasAppList = await this.checkPermissions.can(
-      [Permission.AppList],
+    const hasMDITList = await this.checkPermissions.can(
+      [Permission.MDITList],
       requestor,
     );
-    if (hasAppList) {
+    if (hasMDITList) {
       const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
       where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);

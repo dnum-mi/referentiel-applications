@@ -4208,6 +4208,7 @@ components:
         - CreateApplication
         - DeleteApplication
         - CreateGlobalReport
+        - MDITList
         - AppList
         - DataExport
         - AdminPanelManage
