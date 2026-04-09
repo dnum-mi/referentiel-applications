@@ -117,7 +117,8 @@ async function save() {
     <div v-else>
       <template v-if="type === 'dima'">
         <DsfrSelect
-          v-model="form.dima_duration_hours"
+          :modelValue="form.dima_duration_hours"
+          @update:modelValue="($event) => (form.dima_duration_hours = toOptionalNumber($event))"
           :options="dimaDurationHoursOptions"
           label="Durée d'interruption maximale"
           label-visible
@@ -186,7 +187,8 @@ async function save() {
 
       <template v-else-if="type === 'pdma'">
         <DsfrSelect
-          v-model="form.pdma_duration_hours"
+          :modelValue="form.pdma_duration_hours"
+          @update:modelValue="($event) => (form.pdma_duration_hours = toOptionalNumber($event))"
           :options="pdmaDurationHoursOptions"
           :label="complianceFieldLabels.duration_hours"
           label-visible
