@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import api from "@/api";
 import { Permission, type PaginatedReportDto, type ReportDto } from "@/client/types.gen";
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import { computed, onMounted, ref, watch } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 
-const props = defineProps<{ application: CreateApplicationWithPerms }>();
+const props = defineProps<{ application: ApplicationWithPerms }>();
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
@@ -23,7 +23,7 @@ const tableColumns: TableColumn[] = [
   { field: "Date", header: "Date", sortable: false },
   { field: "Auteur", header: "Auteur", sortable: false },
   { field: "Titre", header: "Titre", sortable: false },
-  { field: "Actions", header: "Actions", sortable: false },
+  { field: "Description", header: "Description", sortable: false },
 ];
 
 const canPost = computed(() => {
@@ -68,7 +68,7 @@ async function submitReport() {
     const applicationId = props.application?.id;
     if (!applicationId) throw new Error("Application ID is undefined");
 
-    await api.reportsControllerCreate({ body: { applicationId, description: reportText.value } });
+    await api.applicationReportsControllerCreate({ path: { applicationId }, body: { applicationId, description: reportText.value } });
     await fetchIssues();
 
     reportText.value = "";
@@ -88,9 +88,7 @@ const reportRows = computed(() => {
       Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
       Auteur: report.notifier?.email || "Inconnu",
       Titre: title,
-      Actions: {
-        id: report.id,
-      },
+      Description: report.description,
     }))
     .sort((a, b) => b.sortKey - a.sortKey)
     .map((item, index) => ({ ...item, index }));
@@ -114,9 +112,6 @@ const loading = computed(() => isLoading.value);
       empty-message="Aucun signalement proposé."
       @page="onPage"
     >
-      <template #body-Actions>
-        <span></span>
-      </template>
     </RefAppTable>
   </div>
   <div v-if="canPost" data-testid="reports-report-issue">
