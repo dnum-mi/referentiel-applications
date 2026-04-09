@@ -78,6 +78,11 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     value: Permission.DATA_EXPORT,
     name: "capability-create-data-export",
   },
+  {
+    label: "Voir les données MDIT",
+    value: Permission.MDIT_LIST,
+    name: "capability-mdit-view",
+  },
 ];
 </script>
 

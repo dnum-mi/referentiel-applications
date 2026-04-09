@@ -1,16 +1,20 @@
 import { Permission, Roles } from "@prisma/client";
 
-const NONE_PERMISSIONS: Set<Permission> = new Set([Permission.AppRead]);
+const NONE_PERMISSIONS: Set<Permission> = new Set([
+  Permission.AppRead,
+  Permission.AppList,
+  Permission.ReportRead,
+  Permission.ReportPost,
+]);
 const READ_PERMISSIONS = new Set([
   ...Array.from(NONE_PERMISSIONS),
-  Permission.AppList,
   Permission.ActorRead,
   Permission.ComplianceRead,
   Permission.HostingRead,
   Permission.RelationRead,
   Permission.LinkRead,
   Permission.MetadataRead,
-  Permission.ReportRead,
+  Permission.MDITList,
 ]);
 const WRITE_PERMISSIONS = new Set([
   ...Array.from(READ_PERMISSIONS),
@@ -23,7 +27,6 @@ const WRITE_PERMISSIONS = new Set([
   Permission.RelationWrite,
   Permission.LinkWrite,
   Permission.AppWritePriority,
-  Permission.ReportPost,
   Permission.ReportManage,
   Permission.ActorTypeDelete,
   Permission.ActorTypeManage,
