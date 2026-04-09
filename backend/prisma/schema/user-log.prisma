@@ -2,6 +2,7 @@
 model UserPermissionLog {
     id         String   @id @default(cuid())
     userId     String
+    user User @relation("UserPermissionLogUser", fields: [userId], references: [id], onDelete: Restrict)
     createdAt  DateTime @default(now())
     changedById String? /// Pas de jointure explicite pour éviter les problèmes de suppression en cascade, on stocke juste l'ID de l'utilisateur qui a effectué le changement
     role Roles?
@@ -12,5 +13,9 @@ model UserPermissionLog {
 model UserConnexionLog {
     id         String   @id @default(cuid())
     userId     String
+    user User @relation("UserConnexionLogUser", fields: [userId], references: [id], onDelete: Restrict)
+    authTime   DateTime /// Timestamp auth_time du JWT 
     createdAt  DateTime @default(now())
+
+    @@unique([userId, authTime])
 }
