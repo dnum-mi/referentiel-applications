@@ -810,7 +810,7 @@ Properties as follows:
 erDiagram
 "UserPermissionLog" {
   String id PK
-  String userId
+  String userId FK
   DateTime createdAt
   String changedById "nullable"
   Roles role "nullable"
@@ -818,7 +818,8 @@ erDiagram
 }
 "UserConnexionLog" {
   String id PK
-  String userId
+  String userId FK
+  DateTime authTime
   DateTime createdAt
 }
 ```
@@ -844,4 +845,5 @@ Properties as follows:
 
 - `id`:
 - `userId`:
+- `authTime`: Timestamp auth_time du JWT
 - `createdAt`:

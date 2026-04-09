@@ -33,6 +33,8 @@ model User {
   emailNotificationsEnabled Boolean               @default(true)
   /// Permissions supplémentaire (ancien capabilities) 
   additionalPermissions         Permission []
+  userPermissionLog  UserPermissionLog[] @relation("UserPermissionLogUser")
+  userConnexionLog  UserConnexionLog[] @relation("UserConnexionLogUser")
 }
 
 /// @namespace Roles
