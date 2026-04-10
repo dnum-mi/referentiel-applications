@@ -120,6 +120,7 @@ const tabs = ref<
     requiredPerms: [Permission.COMPLIANCE_READ, Permission.ACTOR_READ, Permission.LINK_READ, Permission.APP_READ],
   },
 ]);
+const tabsStyle = ref({ "--tabs-height": "auto" });
 
 // Read tab from URL using tabId (string) — more stable than using numeric index
 onBeforeMount(async () => {
@@ -168,6 +169,7 @@ watch(
     v-model="activeTab"
     tab-list-name="Informations sur l'application"
     :tab-titles="tabs"
+    :style="tabsStyle"
     data-testid="application-tabs"
   >
     <template v-for="(tab, index) in tabs" :key="tab.panelId">
