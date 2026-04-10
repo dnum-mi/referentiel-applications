@@ -53,9 +53,7 @@ async function openReportsTabAndSubmitReport(page: Page, description: string) {
   await page.getByRole("tab", { name: "Signalements" }).click();
   await expect(page.getByTestId("reports-report-issue")).toBeVisible();
   await page.getByTestId("report-issue-textarea").fill(description);
-  const createReport = page.waitForResponse(
-    (response) => response.url().includes("/api/v2/reports") && response.request().method() === "POST",
-  );
+  const createReport = page.waitForResponse((response) => response.url().includes("/reports") && response.request().method() === "POST");
   await page.getByTestId("report-issue-submit-btn").click();
   return createReport;
 }
