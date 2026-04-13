@@ -505,14 +505,7 @@ erDiagram
   String parentId FK "nullable"
   String businessDivisionId FK "nullable"
 }
-"OrganizationClosure" {
-  String ancestorId FK
-  String descendantId FK
-  Int depth
-}
 "Organization" }o--o| "Organization" : parent
-"OrganizationClosure" }o--|| "Organization" : ancestor
-"OrganizationClosure" }o--|| "Organization" : descendant
 ```
 
 ### `Organization`
@@ -529,17 +522,6 @@ Properties as follows:
 - `description`: Description complète de l'organisation
 - `parentId`:
 - `businessDivisionId`: Identifiant de la direction metier MOA de l'organisation
-
-### `OrganizationClosure`
-
-Table de fermeture pour des requêtes hiérarchiques efficaces.
-Stocke toutes les relations ancêtre-descendant avec la profondeur.
-
-Properties as follows:
-
-- `ancestorId`:
-- `descendantId`:
-- `depth`: Distance entre ancêtre et descendant (0 = même nœud)
 
 ## Users
 

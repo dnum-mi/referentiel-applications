@@ -19,15 +19,6 @@ export class OrganizationFilterDto extends PaginationDto {
   @IsOptional()
   @Type(() => Boolean)
   @ApiProperty({
-    description: "Renvoi les organisations enfants de chaque organisation",
-    default: false,
-  })
-  @IsBoolean()
-  withChildren?: boolean;
-
-  @IsOptional()
-  @Type(() => Boolean)
-  @ApiProperty({
     description: "Renvoi les organisations parentes de chaque organisation",
     default: true,
   })

@@ -22,13 +22,8 @@ export class OrganizationsService extends BaseService<
     super(prisma.organization, prisma);
   }
 
-  async onApplicationBootstrap() {
-    await this.recalculateClosureTable();
-  }
-
   async create(data: CreateOrganizationDto): Promise<Organization> {
     const newOrg = await super.create(data);
-    await this.recalculateClosureTable();
     return newOrg;
   }
 
@@ -45,7 +40,6 @@ export class OrganizationsService extends BaseService<
     data: Partial<CreateOrganizationDto>,
   ): Promise<Organization> {
     const patchedOrg = await super.update(id, data);
-    await this.recalculateClosureTable();
     return patchedOrg;
   }
 
@@ -62,51 +56,5 @@ export class OrganizationsService extends BaseService<
       }
     }
     await this.prisma.organization.delete({ where: { id } });
-    await this.prisma.organizationClosure.deleteMany({
-      where: { descendantId: id },
-    });
-  }
-
-  /**
-   * Recalculates the closure table for the organization hierarchy.
-   * This method should be called after any changes to the organization structure.
-   * It ensures that the closure table reflects the current state of the organization tree.
-   *
-   * @returns {Promise<void>}
-   */
-  async recalculateClosureTable(): Promise<void> {
-    // 1. On récupère tous les nœuds
-    const allOrganizations = await this.prisma.organization.findMany();
-    // On prépare un objet pour accéder par id
-    const orgById = allOrganizations.reduce((acc, org) => {
-      acc[org.id] = org;
-      return acc;
-    }, {});
-
-    const closures: Prisma.OrganizationClosureCreateManyInput[] = [];
-
-    // 2. Pour chaque nœud, on construit la liste de ses ancêtres (y compris lui-même)
-    for (const organization of allOrganizations) {
-      let depth = 0;
-      let parent = organization;
-      // On remonte la chaîne des parents
-      while (parent) {
-        closures.push({
-          ancestorId: parent.id,
-          descendantId: organization.id,
-          depth,
-        });
-        // On commence par l’auto-référence (chaque nœud est son propre ancêtre)
-        depth++;
-        // On remonte au parent
-        parent = orgById[parent.parentId];
-      }
-    }
-    // 3. On vide la table des closures existantes et on insère les nouvelles
-    await this.prisma.organizationClosure.deleteMany({});
-    await this.prisma.organizationClosure.createMany({
-      data: closures,
-      skipDuplicates: true,
-    });
   }
 }
