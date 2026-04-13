@@ -29,16 +29,6 @@ export class PrismaQueryBuilder {
       return { parentId: null };
     }
 
-    return filters.withChildren
-      ? {
-          OrganizationClosureDescendant: {
-            some: { ancestorId: { in: filters.ids } },
-          },
-        }
-      : {
-          OrganizationClosureAncestor: {
-            some: { descendantId: { in: filters.ids } },
-          },
-        };
+    return { id: { in: filters.ids } };
   }
 }

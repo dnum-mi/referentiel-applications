@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onBeforeMount } from "vue";
-import { useToasterStore } from "@/stores/toasterStore";
+import api from "@/api/index";
+import { type ActorDto, type CreateActorDto, Permission } from "@/client/types.gen";
+import OrgaLink from "@/components/organization/OgaLink.vue";
 import useModal from "@/composables/use-modal";
+import type { APP_PERMISSIONS, Application } from "@/models/Application";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
-import ActorForm from "./ActorForm.vue";
-import OrgBreadCrumb from "../organization/OrgBreadCrumb.vue";
-import RefAppTable from "../RefAppTable.vue";
+import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
-
-import type { Application } from "@/models/Application";
-import { useUserStore } from "@/stores/userStore";
-import type { APP_PERMISSIONS } from "@/models/Application";
-import { type CreateActorDto, type ActorDto, Permission } from "@/client/types.gen";
-import api from "@/api/index";
+import { computed, onBeforeMount, ref } from "vue";
+import RefAppTable from "../RefAppTable.vue";
+import ActorForm from "./ActorForm.vue";
 
 const props = defineProps<{
   application: Application & { myPerms: Set<APP_PERMISSIONS> };
@@ -253,7 +251,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
         </template>
 
         <template #body-Organisation="{ data }">
-          <OrgBreadCrumb v-if="data.Organisation" :organization-id="data.Organisation"></OrgBreadCrumb>
+          <OrgaLink v-if="data.Organisation" :organization-id="data.Organisation"></OrgaLink>
           <template v-else> Aucune organisation </template>
         </template>
 
@@ -327,7 +325,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
         <template #end-details>
           <div class="fr-text--sm">
             <strong class="fr-mr-1w">Organisation :</strong>
-            <OrgBreadCrumb v-if="actor.organizationId" :organization-id="actor.organizationId"></OrgBreadCrumb>
+            <OrgaLink v-if="actor.organizationId" :organization-id="actor.organizationId"></OrgaLink>
             <span v-else>Aucune organisation</span>
             <div v-if="actor.email" class="fr-mt-1v">
               <a

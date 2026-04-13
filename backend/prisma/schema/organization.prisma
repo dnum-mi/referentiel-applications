@@ -26,27 +26,5 @@ model Organization {
   businessDivisionId String?
   /// Direction metier MOA de l'organisation
   businessDivision   BusinessDivision? @relation(fields: [businessDivisionId], references: [id], onDelete: SetNull)
-
-  /// Entrées de table de fermeture où ceci est un ancêtre
-  OrganizationClosureAncestor   OrganizationClosure[] @relation("OrganizationClosureAncestor")
-  /// Entrées de table de fermeture où ceci est un descendant
-  OrganizationClosureDescendant OrganizationClosure[] @relation("OrganizationClosureDescendant")
 }
 
-/// Table de fermeture pour des requêtes hiérarchiques efficaces.
-/// Stocke toutes les relations ancêtre-descendant avec la profondeur.
-///
-/// @namespace Organizations
-model OrganizationClosure {
-  ancestorId   String
-  descendantId String
-  /// Distance entre ancêtre et descendant (0 = même nœud)
-  depth        Int
-
-  /// L'organisation ancêtre
-  ancestor   Organization @relation("OrganizationClosureAncestor", fields: [ancestorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  /// L'organisation descendante
-  descendant Organization @relation("OrganizationClosureDescendant", fields: [descendantId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-
-  @@unique([ancestorId, descendantId])
-}

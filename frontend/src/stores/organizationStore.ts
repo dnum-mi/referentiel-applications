@@ -40,7 +40,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
 
     try {
       const response = await api.organizationsControllerFindAll({
-        query: { ids: ids.join(","), withAncestors: true },
+        query: { ids: ids.join(",") },
       });
 
       if (response.response.ok && response.data && response.data.results) {
