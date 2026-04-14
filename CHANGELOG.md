@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.71.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.70.0...v1.71.0) (2026-04-13)
+
+
+### Features
+
+* add mdit permissions and add app list by default for user ([#1649](https://github.com/dnum-mi/referentiel-applications/issues/1649)) ([f96ba62](https://github.com/dnum-mi/referentiel-applications/commit/f96ba62d972c582bf6671b1e5e121258a53547b0))
+* remove organization closure ([#1651](https://github.com/dnum-mi/referentiel-applications/issues/1651)) ([ce014a2](https://github.com/dnum-mi/referentiel-applications/commit/ce014a2a7a776b61e63138438d15b7bc5c0135b5))
+
+
+### Bug Fixes
+
+* add relation on log user ([#1647](https://github.com/dnum-mi/referentiel-applications/issues/1647)) ([f932e24](https://github.com/dnum-mi/referentiel-applications/commit/f932e24aefa71388b999f7f8e90d679294af03c7))
+* transform input value to number for pdma and dima duration in form ([#1645](https://github.com/dnum-mi/referentiel-applications/issues/1645)) ([9c35933](https://github.com/dnum-mi/referentiel-applications/commit/9c35933493f057acb561c9dd4e8b30db909fd388))
+* use auto for tabs heigh in dsfrTabs ([#1650](https://github.com/dnum-mi/referentiel-applications/issues/1650)) ([8f14fe5](https://github.com/dnum-mi/referentiel-applications/commit/8f14fe582ac0c3096022daf20670dfb14682e0ec))
+
 ## [1.70.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.69.0...v1.70.0) (2026-04-08)
 
 
