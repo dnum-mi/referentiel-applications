@@ -141,7 +141,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   },
   {
     field: "status",
-    header: "Status",
+    header: "Statut",
     sortable: false,
     defaultWidth: "150px",
     visible: false,

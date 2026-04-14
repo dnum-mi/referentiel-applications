@@ -258,8 +258,7 @@ const hasComplianceEditPermission = computed(() => {
     <div class="fr-col-auto">
       <DsfrButton
         icon="fr-icon-add-line"
-        size="sm"
-        label="Ajouter"
+        label="Ajouter une conformité"
         :disabled="isLoading || !hasComplianceEditPermission"
         data-testid="compliance-add-btn"
         @click="onAddClick"

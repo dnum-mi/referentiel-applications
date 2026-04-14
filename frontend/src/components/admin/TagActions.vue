@@ -156,9 +156,9 @@ async function deleteTag() {
         @click="closeEditModal"
       />
       <DsfrButton
-        label="Sauvegarder"
-        title="Sauvegarder les modifications"
-        aria-label="Sauvegarder les modifications"
+        label="Enregistrer"
+        title="Enregistrer les modifications"
+        aria-label="Enregistrer les modifications"
         :disabled="isSaving"
         data-testid="admin-save-perms-btn"
         @click="saveTag"
