@@ -598,7 +598,7 @@ Aucun espace en début ou en fin."
       />
 
       <div class="fr-form-group fr-mt-3w">
-        <legend class="fr-label">Population</legend>
+        <legend class="fr-label">Populations</legend>
         <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
         <div class="fr-mt-2w">
           <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
