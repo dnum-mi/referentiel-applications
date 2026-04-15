@@ -6,9 +6,10 @@ import { GetIqAvgGroupedUseCase } from "./application/use-cases/get-iq-avg-group
 import { StatsCronService } from "./cron/stats.cron.service";
 import { StatsRepository } from "./infrastructure/stats.repository";
 import { StatsController } from "./interfaces/stats.controller";
+import { LoggerModule } from "src/logger/logger.module";
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, LoggerModule],
   providers: [
     StatsService,
     StatsCronService,

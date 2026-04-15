@@ -1,4 +1,5 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { LoggerService } from "src/logger/logger.service";
 import { ConfigService } from "@nestjs/config";
 import type { Transporter } from "nodemailer";
 import * as nodemailer from "nodemailer";
@@ -12,12 +13,12 @@ export class EmailService {
   private readonly transporter: Transporter;
   private readonly from: string;
   private readonly enabled: boolean;
-  private readonly logger = new Logger(EmailService.name);
   private readonly appUrl: string;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly templateService: EmailTemplateService,
+    private readonly logger: LoggerService,
   ) {
     const host = this.configService.get<string>("email.host");
     const port = this.configService.get<number>("email.port");
@@ -82,10 +83,7 @@ export class EmailService {
         `Actor added notification email sent successfully to ${to}`,
       );
     } catch (error) {
-      this.logger.error(
-        `Failed to send actor added email to ${to}:`,
-        error as Error,
-      );
+      this.logger.error(`Failed to send actor added email to ${to}:`, error);
 
       this.logger.warn(
         `Email delivery failed for ${to} but was ignored due to configuration.`,
@@ -137,10 +135,7 @@ export class EmailService {
         `Actor modified notification email sent successfully to ${to}. Changed fields: ${changedFields ? "included" : "not available"}`,
       );
     } catch (error) {
-      this.logger.error(
-        `Failed to send actor modified email to ${to}:`,
-        error as Error,
-      );
+      this.logger.error(`Failed to send actor modified email to ${to}:`, error);
       this.logger.warn(
         `Email delivery failed for ${to} but was ignored due to configuration.`,
       );
@@ -242,10 +237,7 @@ export class EmailService {
         `Daily digest email sent successfully to ${recipient} (${totalChanges} changes)`,
       );
     } catch (error) {
-      this.logger.error(
-        `Failed to send daily digest to ${recipient}:`,
-        error as Error,
-      );
+      this.logger.error(`Failed to send daily digest to ${recipient}:`, error);
       throw error;
     }
   }
@@ -304,7 +296,7 @@ export class EmailService {
     } catch (error) {
       this.logger.error(
         `Failed to send validation reminder to ${recipientEmail}:`,
-        error as Error,
+        error,
       );
       throw error;
     }
