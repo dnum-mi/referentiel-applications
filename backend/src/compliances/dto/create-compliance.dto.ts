@@ -264,6 +264,15 @@ export class CreateComplianceDto {
   @IsOptional()
   @IsString()
   rgpd_dpo_name?: string;
+
+  @ApiProperty({
+    example: "https://service.example.com",
+    description: "EcoIndex target URL used for scan",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  eco_index_target_url?: string;
 }
 
 export class ComplianceDto extends CreateComplianceDto {
@@ -274,4 +283,34 @@ export class ComplianceDto extends CreateComplianceDto {
   })
   @IsString()
   id: string;
+
+  @ApiProperty({
+    example: 72.5,
+    description: "EcoIndex score (0-100)",
+    required: false,
+  })
+  eco_index_score?: number;
+
+  @ApiProperty({
+    example: 1.77,
+    description: "EcoIndex greenhouse gas emissions (gCO2e)",
+    required: false,
+  })
+  eco_index_ges?: number;
+
+  @ApiProperty({
+    example: 2.65,
+    description: "EcoIndex water consumption (cl)",
+    required: false,
+  })
+  eco_index_water?: number;
+
+  @ApiProperty({
+    type: String,
+    format: "date-time",
+    example: "2026-03-20T10:30:00.000Z",
+    description: "EcoIndex last calculation datetime",
+    required: false,
+  })
+  eco_index_last_calculated_at?: Date;
 }

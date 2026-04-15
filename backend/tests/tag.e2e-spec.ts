@@ -18,11 +18,16 @@ describe("Tags", () => {
   });
 
   it("/POST tags", async () => {
+    const name =
+      faker.word
+        .noun({ length: { min: 2, max: 100 } })
+        .replace(/[^a-z._-]/g, "") || `tag-test-${Date.now()}`;
+
     await request(app().getHttpServer())
       .post("/tags")
       .set("Authorization", `Bearer ${TOKEN}`)
       .send({
-        name: `${faker.word.noun({ length: { min: 2, max: 128 } }).replace(/[^a-z._-]/g, "")}`,
+        name,
       })
       .expect(201);
   });
@@ -44,11 +49,15 @@ describe("Tags", () => {
 
   it("/PATCH tags/:id", async () => {
     const tag = await TagFaker.create();
+    const updatedName = `updated_${faker.word
+      .noun({ length: { min: 2, max: 92 } })
+      .replace(/[^a-z._-]/g, "")}`;
+
     await request(app().getHttpServer())
       .patch(`/tags/${tag.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
       .send({
-        name: `updated_${faker.word.noun({ length: { min: 2, max: 128 } }).replace(/[^a-z._-]/g, "")}`,
+        name: updatedName,
       })
       .expect(200);
   });

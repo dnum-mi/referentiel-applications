@@ -56,9 +56,6 @@ model Application {
   /// Journaux de notifications de validation envoyées
   notificationLogs  NotificationLog[]
 
-  /// Scores Éco-index calculés pour cette application
-  ecoIndexScores   ecoEnergy[] @relation("ApplicationToEcoEnergy")
-
   /// Niveau de priorité pour les opérations de redémarrage
   priorityRestart priorityRestart?
   /// Score de qualité de la fiche de l' application

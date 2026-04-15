@@ -38,7 +38,7 @@ describe("Compliances", () => {
         rgpd_dpo_name: "Jean Dupont",
       })
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(201);
+      .expect(200);
 
     expect(response.body.id).toBeDefined();
     expect(response.body.rgpd_has_aipd).toEqual(true);
@@ -74,16 +74,21 @@ describe("Compliances", () => {
     expect(response.body.rgpd_dpo_name).toEqual("Jean Dupont");
   });
 
-  it("/POST applications/:applicationId/compliances - should return 409 when compliance already exists", async () => {
-    // Try to create another compliance for the same application
-    await request(app().getHttpServer())
+  it("/POST applications/:applicationId/compliances - should upsert when compliance already exists", async () => {
+    const response = await request(app().getHttpServer())
       .post(`/applications/${application.id}/compliances`)
       .send({
         dima_duration_hours: 24,
         dima_is_hno: false,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(409);
+      .expect(200);
+
+    expect(response.body.id).toBeDefined();
+    expect(response.body.dima_duration_hours).toEqual(24);
+    expect(response.body.dima_is_hno).toEqual(false);
+    expect(response.body.rgpd_has_aipd).toEqual(true);
+    expect(response.body.rgpd_dpo_name).toEqual("Jean Dupont");
   });
 });
 
@@ -131,7 +136,7 @@ describe("application guard", () => {
         dima_recovery_manager: "John Doe",
       })
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(201);
+      .expect(200);
     expect(compliance.body.dima_recovery_manager).toEqual("John Doe");
 
     // remove all permission

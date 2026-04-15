@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import type { CreateApplicationWithPerms } from "@/models/Application";
 import { Permission, type ComplianceDto } from "@/client/types.gen";
 import api from "@/api/index.js";
+import { applicationCompliancesControllerScanEcoIndex } from "@/client/sdk.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import ComplianceForm from "./ComplianceForm.vue";
 import {
@@ -12,20 +12,23 @@ import {
   complianceFieldLabels,
   type ComplianceType,
 } from "@/composables/use-dictionary";
-import { formatDateFR } from "@/composables/use-date";
+import { formatDate, formatDateFR } from "@/composables/use-date";
 import { useMediaQuery } from "@vueuse/core";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 import { useUserStore } from "@/stores/userStore";
 
-const props = defineProps<{ application: CreateApplicationWithPerms }>();
+const props = defineProps<{ application: ApplicationWithPerms }>();
 const applicationId = props.application.id;
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
 const compliance = ref<ComplianceDto | null>(null);
 const isLoading = ref(false);
+const isScanningEcoIndex = ref(false);
+
+const canWriteCompliances = computed(() => props.application.myPerms.has("writeCompliances"));
 
 const showModal = ref(false);
 const modalMode = ref<"create" | "edit">("create");
@@ -82,6 +85,7 @@ const tableColumns: TableColumn[] = [
 const NO_INFO_LABEL = "Pas d'information disponible";
 const FILLED_STATUS_LABEL = "Renseignée";
 const EMPTY_STATUS_LABEL = "Non renseignée";
+const NO_ECOINDEX_LABEL = "Non calculé";
 
 function getFieldValue(type: ComplianceType, key: string) {
   return (compliance.value as any)?.[`${type}_${key}`];
@@ -124,11 +128,16 @@ function getPreview(type: ComplianceType): string {
   }
 
   if (type === "rgaa") {
-    if (compliance.value.rgaa_score_percentage == null || compliance.value.rgaa_score_percentage === "") return "Non-conforme";
-    const score = Number(compliance.value.rgaa_score_percentage);
-    if (score < 50) return "Non-conforme";
-    if (score === 100) return "Conforme";
-    return "Partiellement conforme";
+    const parts: string[] = [];
+    if (compliance.value.rgaa_score_percentage == null || compliance.value.rgaa_score_percentage === "") {
+      parts.push("Non-conforme");
+    } else {
+      const score = Number(compliance.value.rgaa_score_percentage);
+      if (score < 50) parts.push("Non-conforme");
+      else if (score === 100) parts.push("Conforme");
+      else parts.push("Partiellement conforme");
+    }
+    return parts.join(" • ");
   }
 
   if (type === "dsfr") {
@@ -182,6 +191,14 @@ const modalTitle = computed(() => {
   return isNewType.value ? `Créer ${labels[selectedType.value]}` : `Modifier ${labels[selectedType.value]}`;
 });
 
+const ecoIndexValues = computed(() => ({
+  score: compliance.value?.eco_index_score,
+  ges: compliance.value?.eco_index_ges,
+  water: compliance.value?.eco_index_water,
+  targetUrl: compliance.value?.eco_index_target_url,
+  lastCalculatedAt: compliance.value?.eco_index_last_calculated_at,
+}));
+
 async function fetchCompliance() {
   try {
     isLoading.value = true;
@@ -225,6 +242,21 @@ function closeModal() {
   selectedType.value = null;
 }
 
+async function runEcoIndexScan() {
+  try {
+    isScanningEcoIndex.value = true;
+    const response = await applicationCompliancesControllerScanEcoIndex({
+      path: { applicationId },
+    });
+    compliance.value = response.data ?? compliance.value;
+    toaster.addSuccessMessage("Scan EcoIndex effectué avec succès.");
+  } catch {
+    toaster.addErrorMessage("Erreur lors du scan EcoIndex.");
+  } finally {
+    isScanningEcoIndex.value = false;
+  }
+}
+
 function openDetails(type: ComplianceType) {
   detailsList.value = fieldsByType[type]
     .map((key) => ({ key, value: getFieldValue(type, key) }))
@@ -256,6 +288,17 @@ const hasComplianceEditPermission = computed(() => {
     </div>
 
     <div class="fr-col-auto">
+      <DsfrButton
+        v-if="canWriteCompliances"
+        icon="fr-icon-leaf-line"
+        size="sm"
+        secondary
+        label="Calculer EcoIndex"
+        :disabled="isLoading || isScanningEcoIndex"
+        data-testid="compliance-scan-ecoindex-btn"
+        class="fr-mr-1w"
+        @click="runEcoIndexScan"
+      ></DsfrButton>
       <DsfrButton
         icon="fr-icon-add-line"
         label="Ajouter une conformité"
@@ -366,6 +409,37 @@ const hasComplianceEditPermission = computed(() => {
         </div>
       </div>
     </div>
+
+    <section class="fr-mt-4w" data-testid="compliance-ecoindex-section">
+      <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-2w">
+        <h4 class="fr-mb-0">Eco index</h4>
+      </div>
+
+      <ul data-testid="compliance-ecoindex-values">
+        <li>
+          <strong>Score EcoIndex :</strong>
+          <span class="compliance-value">{{ ecoIndexValues.score ?? NO_ECOINDEX_LABEL }}</span>
+        </li>
+        <li>
+          <strong>Émissions GES (gCO2e) :</strong>
+          <span class="compliance-value">{{ ecoIndexValues.ges ?? NO_ECOINDEX_LABEL }}</span>
+        </li>
+        <li>
+          <strong>Consommation d'eau (cl) :</strong>
+          <span class="compliance-value">{{ ecoIndexValues.water ?? NO_ECOINDEX_LABEL }}</span>
+        </li>
+        <li>
+          <strong>URL cible :</strong>
+          <span class="compliance-value">{{ ecoIndexValues.targetUrl ?? NO_ECOINDEX_LABEL }}</span>
+        </li>
+        <li>
+          <strong>Dernier calcul :</strong>
+          <span class="compliance-value">{{
+            ecoIndexValues.lastCalculatedAt ? formatDate(String(ecoIndexValues.lastCalculatedAt)) : NO_ECOINDEX_LABEL
+          }}</span>
+        </li>
+      </ul>
+    </section>
   </div>
 
   <DsfrModal :opened="showDetailsModal" :title="detailsTitle" data-testid="compliance-details-modal" @close="closeDetails">
@@ -443,6 +517,7 @@ const hasComplianceEditPermission = computed(() => {
 .compliance-details-modal-list li {
   margin-bottom: 0.5rem;
 }
+
 .compliance-value {
   margin-left: 0.5rem;
   color: inherit;
