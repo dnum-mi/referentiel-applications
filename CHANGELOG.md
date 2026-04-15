@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.72.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.71.0...v1.72.0) (2026-04-15)
+
+
+### Features
+
+* :sparkles: add eco index calculation feature ([#1604](https://github.com/dnum-mi/referentiel-applications/issues/1604)) ([24817d2](https://github.com/dnum-mi/referentiel-applications/commit/24817d23e3b2ac1b07c957fc8f08bfbfcee924f5))
+* centralize log to log service ([#1656](https://github.com/dnum-mi/referentiel-applications/issues/1656)) ([32a1152](https://github.com/dnum-mi/referentiel-applications/commit/32a115204aad0e4072d104405d586b287723fee5))
+
+
+### Bug Fixes
+
+* :lipstick: fix UI labels and wording ([55a5218](https://github.com/dnum-mi/referentiel-applications/commit/55a521882d3af5a4f1cfd02d16c922c07c98e3ae))
+* :lipstick: UI buttons and label fixes ([aaa7bbf](https://github.com/dnum-mi/referentiel-applications/commit/aaa7bbfecacdd347255cac816615818eef629e73))
+* add the correct permissions for application form editing ([#1657](https://github.com/dnum-mi/referentiel-applications/issues/1657)) ([520bb1b](https://github.com/dnum-mi/referentiel-applications/commit/520bb1b53da5a2692e6534de49f859d36c0782c1))
+
 ## [1.71.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.70.0...v1.71.0) (2026-04-13)
 
 
