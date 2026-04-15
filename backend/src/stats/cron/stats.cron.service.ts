@@ -1,12 +1,14 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { StatsService } from "../application/stats.service";
+import { LoggerService } from "src/logger/logger.service";
 
 @Injectable()
 export class StatsCronService {
-  private readonly logger = new Logger(StatsCronService.name);
-
-  constructor(private readonly statsService: StatsService) {}
+  constructor(
+    private readonly statsService: StatsService,
+    private readonly logger: LoggerService,
+  ) {}
 
   @Cron("0 0 * * *", { timeZone: "Europe/Paris" })
   async handleDailyIqAvgJob() {

@@ -4,6 +4,7 @@ import { Status } from "@prisma/client";
 import { ApplicationValidationCronService } from "./application-validation-cron.service";
 import { EmailService } from "../email.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { LoggerService } from "src/logger/logger.service";
 
 describe("ApplicationValidationCronService", () => {
   let service: ApplicationValidationCronService;
@@ -25,6 +26,13 @@ describe("ApplicationValidationCronService", () => {
     sendApplicationValidationReminderEmail: jest.fn(),
   };
 
+  const mockLoggerService = {
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -33,6 +41,7 @@ describe("ApplicationValidationCronService", () => {
         ApplicationValidationCronService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: EmailService, useValue: mockEmailService },
+        { provide: LoggerService, useValue: mockLoggerService },
       ],
     }).compile();
 

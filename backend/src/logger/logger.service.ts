@@ -9,8 +9,11 @@ export class LoggerService {
     this.logger.info(message);
   }
 
-  error(message: string, trace?: string) {
-    this.logger.error({ trace }, message);
+  error(message: unknown, error?: unknown) {
+    this.logger.error(
+      { trace: this.formatTrace(error) },
+      this.formatError(message),
+    );
   }
 
   warn(message: string) {
@@ -23,5 +26,15 @@ export class LoggerService {
 
   verbose(message: string) {
     this.logger.trace(message);
+  }
+
+  private formatError(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === "string") return error;
+    return "Unknown error";
+  }
+  private formatTrace(error: unknown): string {
+    if (error instanceof Error) return error.stack;
+    return "";
   }
 }

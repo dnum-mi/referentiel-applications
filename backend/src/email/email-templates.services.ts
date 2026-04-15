@@ -1,14 +1,14 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { LoggerService } from "src/logger/logger.service";
 
 @Injectable()
 export class EmailTemplateService {
-  private readonly logger = new Logger(EmailTemplateService.name);
   private readonly templatesPath: string;
   private baseTemplate: string;
 
-  constructor() {
+  constructor(private readonly logger: LoggerService) {
     this.templatesPath = path.join(__dirname, "templates");
     this.loadBaseTemplate();
   }

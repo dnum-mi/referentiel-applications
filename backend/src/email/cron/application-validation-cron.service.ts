@@ -1,6 +1,7 @@
-import { Injectable, Logger, OnApplicationBootstrap } from "@nestjs/common";
+import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import { Status } from "@prisma/client";
+import { LoggerService } from "src/logger/logger.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { EmailService } from "../email.service";
 
@@ -17,11 +18,10 @@ function subtractMonths(baseDate: Date, monthsAmount: number): Date {
 export class ApplicationValidationCronService
   implements OnApplicationBootstrap
 {
-  private readonly logger = new Logger(ApplicationValidationCronService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly logger: LoggerService,
   ) {}
 
   async onApplicationBootstrap() {
