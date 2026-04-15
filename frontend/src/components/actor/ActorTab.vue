@@ -361,7 +361,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
-    item-name="acteurs"
+    item-name="les acteurs sélectionnés"
     data-testid="actor-delete-modal"
     @confirm="confirmDelete"
     @cancel="cancelDelete"
