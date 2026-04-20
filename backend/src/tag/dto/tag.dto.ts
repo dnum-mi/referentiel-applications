@@ -18,8 +18,8 @@ export class CreateTagDto {
   @MinLength(2, {
     message: "Le nom du tag doit contenir au moins 2 caractères.",
   })
-  @MaxLength(128, {
-    message: "Le nom du tag doit contenir au maximum 128 caractères.",
+  @MaxLength(100, {
+    message: "Le nom du tag doit contenir au maximum 100 caractères.",
   })
   @IsString()
   name: string;
@@ -40,8 +40,8 @@ export class TagDto {
   @MinLength(2, {
     message: "Le nom du tag doit contenir au moins 2 caractères.",
   })
-  @MaxLength(128, {
-    message: "Le nom du tag doit contenir au maximum 128 caractères.",
+  @MaxLength(100, {
+    message: "Le nom du tag doit contenir au maximum 100 caractères.",
   })
   @Matches(/^[a-z._-]+$/, {
     message:

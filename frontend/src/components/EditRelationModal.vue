@@ -175,7 +175,7 @@ function closeModal() {
       </SuggestionsInput>
     </template>
     <template #footer>
-      <DsfrButton label="Sauvegarder" data-testid="edit-relation-save-btn" @click="submitRelationUpdate" />
+      <DsfrButton label="Enregistrer" data-testid="edit-relation-save-btn" @click="submitRelationUpdate" />
       <DsfrButton label="Annuler" secondary data-testid="edit-relation-cancel-btn" @click="closeModal" />
     </template>
   </DsfrModal>

@@ -38,6 +38,8 @@ jobs:
           done
           echo "Keycloak did not become ready in time"
           exit 1
+      - name: Display backend logs for debugging
+        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend
       - name: Run migrations
         run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm prisma migrate deploy
       - name: Set permissions on coverage folder

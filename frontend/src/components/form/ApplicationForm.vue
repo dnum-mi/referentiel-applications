@@ -9,15 +9,17 @@ import TagSearchSelect from "@/components/common/TagSearchSelect.vue";
 import OrganizationSearchSelect from "@/components/common/OrganizationSearchSelect.vue";
 import { statusApplicationDictionary, priorityRestartLabelsOptions, typeApplicationDictionary } from "@/composables/use-dictionary";
 import api from "@/api/index";
-import type {
-  ApplicationDto,
-  ApplicationStatus,
-  CreateApplicationDto,
-  CreateActorDto,
-  ApplicationType,
-  BusinessDivisionDto,
+import {
+  type ApplicationDto,
+  type ApplicationStatus,
+  type CreateApplicationDto,
+  type CreateActorDto,
+  type ApplicationType,
+  type BusinessDivisionDto,
+  Permission,
 } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
+import { useUserStore } from "@/stores/userStore";
 
 interface Props {
   mode?: "create" | "edit";
@@ -72,8 +74,10 @@ const moeActor = ref<CreateActorDto>({
 });
 
 const isCreateMode = computed(() => props.mode === "create");
-const canEditBase = computed(() => isCreateMode.value || props.initialData?.myPerms.has("AppWrite"));
-const canEditPriorityRestart = computed(() => isCreateMode.value || props.initialData?.myPerms.has("AppWritePriority"));
+const userStore = useUserStore();
+
+const canEditBase = computed(() => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE]));
+const canEditPriorityRestart = computed(() => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE_PRIORITY]));
 
 const moaOrganizationId = computed({
   get: () => moaActor.value.organizationId ?? undefined,
@@ -598,7 +602,7 @@ Aucun espace en début ou en fin."
       />
 
       <div class="fr-form-group fr-mt-3w">
-        <legend class="fr-label">Population</legend>
+        <legend class="fr-label">Populations</legend>
         <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
         <div class="fr-mt-2w">
           <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">

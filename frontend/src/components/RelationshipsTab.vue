@@ -327,7 +327,7 @@ onMounted(async () => {
   />
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
-    item-name="relations"
+    item-name="les relations sélectionnées"
     data-testid="relation-delete-modal"
     @confirm="confirmDelete"
     @cancel="cancelDelete"

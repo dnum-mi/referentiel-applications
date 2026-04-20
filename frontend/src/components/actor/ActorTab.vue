@@ -202,7 +202,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
         type="button"
         title="Ajouter un nouvel acteur à l’application"
         aria-label="Ajouter un acteur"
-        class="fr-btn fr-btn--secondary fr-btn--icon-left fr-icon-add-line"
+        class="fr-btn--icon-left fr-icon-add-line"
         :disabled="!canEdit"
         data-testid="actor-add-btn"
         @click="actorModal.openCreateModal()"
@@ -361,7 +361,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
-    item-name="acteurs"
+    item-name="les acteurs sélectionnés"
     data-testid="actor-delete-modal"
     @confirm="confirmDelete"
     @cancel="cancelDelete"

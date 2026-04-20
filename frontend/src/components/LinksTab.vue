@@ -313,7 +313,7 @@ onMounted(async () => {
 
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"
-    item-name="lien"
+    item-name="le lien"
     data-testid="link-delete-modal"
     @confirm="confirmDelete"
     @cancel="() => (showDeleteConfirmation = false)"

@@ -5,6 +5,7 @@ const COMPLIANCE_LABELS: Record<string, string> = {
   dsfr_: "DSFR",
   rgpd_: "RGPD",
   homologation_: "Homologation",
+  eco_index_: "EcoIndex",
 };
 
 export function detectCompliances(updatedKeys: string[]) {

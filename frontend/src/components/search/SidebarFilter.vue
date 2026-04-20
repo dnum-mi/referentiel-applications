@@ -72,10 +72,10 @@ const { openAccordions, toggle } = useAccordionManager(3, true);
         </DsfrAccordion>
 
         <DsfrAccordion
-          :selected="openAccordions.includes(5)"
+          :selected="openAccordions.includes(6)"
           title="Relations"
           data-testid="sidebar-accordion-relations"
-          @click="toggle(5)"
+          @click="toggle(6)"
         >
           <RelationFilter />
         </DsfrAccordion>

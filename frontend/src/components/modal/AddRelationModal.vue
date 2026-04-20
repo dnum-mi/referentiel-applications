@@ -146,7 +146,7 @@ function updateMediationServiceId(application?: Pick<ApplicationDto, "label" | "
     </template>
 
     <template #footer>
-      <DsfrButton label="Sauvegarder" data-testid="relation-save-btn" @click="submitRelation" />
+      <DsfrButton label="Enregistrer" data-testid="relation-save-btn" @click="submitRelation" />
       <DsfrButton label="Annuler" secondary data-testid="relation-cancel-btn" @click="closeModal" />
     </template>
   </DsfrModal>

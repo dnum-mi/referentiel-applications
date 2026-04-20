@@ -14,6 +14,7 @@ import { Requestor, UserEntity } from "src/user/entities/user.entity";
 import { UserConnexionLogService } from "src/user/user-connexion-log.service";
 import { UserService } from "src/user/user.service";
 import { API_KEY_HEADER } from "src/utils/constants.util";
+import { LoggerService } from "src/logger/logger.service";
 
 declare module "express" {
   export interface Request {
@@ -31,6 +32,7 @@ export class AuthMiddleware implements NestMiddleware {
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
     private readonly userConnexionLogService: UserConnexionLogService,
+    private readonly logger: LoggerService,
   ) {
     this.jwks = createRemoteJWKSet(new URL(this.oidc.jwksUrl));
   }
@@ -71,7 +73,8 @@ export class AuthMiddleware implements NestMiddleware {
 
       next();
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
+
       throw new UnauthorizedException("L'authentification a échoué");
     }
   }

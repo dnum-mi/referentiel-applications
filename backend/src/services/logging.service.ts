@@ -1,11 +1,10 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { decodeJwt } from "jose";
+import { LoggerService } from "src/logger/logger.service";
 
 @Injectable()
 export class LoggingService {
-  private readonly logger = new Logger(LoggingService.name);
-
-  constructor() {}
+  constructor(private readonly logger: LoggerService) {}
 
   async logRequest(context: any) {
     const { correlationId, headers } = context;
@@ -17,8 +16,7 @@ export class LoggingService {
     context.user = userInfo;
 
     this.logger.debug(
-      `[${correlationId}] Request complete:`,
-      JSON.stringify(context),
+      `[${correlationId}] Request complete: ${JSON.stringify(context)}`,
     );
   }
 

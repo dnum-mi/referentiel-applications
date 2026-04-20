@@ -11,14 +11,14 @@ import {
 } from "@/composables/use-dictionary";
 import { toDateInputValue, toISODateTime } from "@/composables/use-date";
 import { useUserStore } from "@/stores/userStore";
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
 import { Permission, type ComplianceDto } from "@/client/types.gen";
 
 const props = defineProps<{
   applicationId: string;
-  application: CreateApplicationWithPerms;
+  application: ApplicationWithPerms;
   type: ComplianceType;
   mode: "create" | "edit";
   initialData: ComplianceDto | null;
@@ -80,6 +80,7 @@ async function save() {
     rgaa_service_url: form.value?.rgaa_service_url,
     rgaa_accessibility_url: form.value?.rgaa_accessibility_url,
     rgaa_score_percentage: toOptionalString(form.value?.rgaa_score_percentage),
+    eco_index_target_url: form.value?.eco_index_target_url,
     dsfr_implemented: form.value?.dsfr_implemented,
     dsfr_version: form.value?.dsfr_version,
     rgpd_has_aipd: form.value?.rgpd_has_aipd,
@@ -301,6 +302,13 @@ async function save() {
           step="0.01"
           label-visible
           data-testid="compliance-rgaa-score"
+        />
+        <DsfrInput
+          v-model="form.eco_index_target_url"
+          :label="complianceFieldLabels.eco_index_target_url"
+          type="url"
+          label-visible
+          data-testid="compliance-ecoindex-target-url"
         />
       </template>
 

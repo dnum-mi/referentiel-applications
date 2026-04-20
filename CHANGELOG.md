@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.72.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.71.0...v1.72.0) (2026-04-15)
+
+
+### Features
+
+* :sparkles: add eco index calculation feature ([#1604](https://github.com/dnum-mi/referentiel-applications/issues/1604)) ([24817d2](https://github.com/dnum-mi/referentiel-applications/commit/24817d23e3b2ac1b07c957fc8f08bfbfcee924f5))
+* centralize log to log service ([#1656](https://github.com/dnum-mi/referentiel-applications/issues/1656)) ([32a1152](https://github.com/dnum-mi/referentiel-applications/commit/32a115204aad0e4072d104405d586b287723fee5))
+
+
+### Bug Fixes
+
+* :lipstick: fix UI labels and wording ([55a5218](https://github.com/dnum-mi/referentiel-applications/commit/55a521882d3af5a4f1cfd02d16c922c07c98e3ae))
+* :lipstick: UI buttons and label fixes ([aaa7bbf](https://github.com/dnum-mi/referentiel-applications/commit/aaa7bbfecacdd347255cac816615818eef629e73))
+* add the correct permissions for application form editing ([#1657](https://github.com/dnum-mi/referentiel-applications/issues/1657)) ([520bb1b](https://github.com/dnum-mi/referentiel-applications/commit/520bb1b53da5a2692e6534de49f859d36c0782c1))
+
+## [1.71.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.70.0...v1.71.0) (2026-04-13)
+
+
+### Features
+
+* add mdit permissions and add app list by default for user ([#1649](https://github.com/dnum-mi/referentiel-applications/issues/1649)) ([f96ba62](https://github.com/dnum-mi/referentiel-applications/commit/f96ba62d972c582bf6671b1e5e121258a53547b0))
+* remove organization closure ([#1651](https://github.com/dnum-mi/referentiel-applications/issues/1651)) ([ce014a2](https://github.com/dnum-mi/referentiel-applications/commit/ce014a2a7a776b61e63138438d15b7bc5c0135b5))
+
+
+### Bug Fixes
+
+* add relation on log user ([#1647](https://github.com/dnum-mi/referentiel-applications/issues/1647)) ([f932e24](https://github.com/dnum-mi/referentiel-applications/commit/f932e24aefa71388b999f7f8e90d679294af03c7))
+* transform input value to number for pdma and dima duration in form ([#1645](https://github.com/dnum-mi/referentiel-applications/issues/1645)) ([9c35933](https://github.com/dnum-mi/referentiel-applications/commit/9c35933493f057acb561c9dd4e8b30db909fd388))
+* use auto for tabs heigh in dsfrTabs ([#1650](https://github.com/dnum-mi/referentiel-applications/issues/1650)) ([8f14fe5](https://github.com/dnum-mi/referentiel-applications/commit/8f14fe582ac0c3096022daf20670dfb14682e0ec))
+
 ## [1.70.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.69.0...v1.70.0) (2026-04-08)
 
 
