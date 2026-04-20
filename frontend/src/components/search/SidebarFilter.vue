@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import ActorFilter from "@/components/search/ActorFilter.vue";
 import HostingFilter from "@/components/search/HostingFilter.vue";
@@ -8,14 +8,24 @@ import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import PriorityRestartFilter from "@/components/search/PriorityRestartFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
+import { useUserStore } from "@/stores/userStore";
 import StatusFilter from "./StatusFilter.vue";
-import { DsfrButton } from "@gouvminint/vue-dsfr";
+import { DsfrButton, DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
 
 const sidebarOpen = ref(true);
-const { total, resetFilters } = useApplicationSearch();
+const { total, resetFilters, filters, setFilter } = useApplicationSearch();
 const statsStore = useStatisticsStore();
+const userStore = useUserStore();
 
 const { openAccordions, toggle } = useAccordionManager(3, true);
+
+const isMyAppsFilterActive = computed(() => {
+  return !!(userStore.user?.email && filters.value.actorEmail === userStore.user.email);
+});
+
+function toggleMyAppsFilter(value: boolean) {
+  setFilter({ actorEmail: value ? userStore.user?.email : undefined, page: 0 });
+}
 </script>
 
 <template>
@@ -30,6 +40,15 @@ const { openAccordions, toggle } = useAccordionManager(3, true);
         <p class="total-count" data-testid="sidebar-total-count">
           {{ total }} application(s) trouvée(s) sur {{ statsStore.totalApplications }}
         </p>
+
+        <DsfrToggleSwitch
+          v-if="userStore.user?.email"
+          :model-value="isMyAppsFilterActive"
+          label="Mes Applications"
+          no-text
+          data-testid="my-apps-filter-toggle"
+          @update:model-value="toggleMyAppsFilter"
+        />
 
         <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">
           <ApplicationFilter />
@@ -72,10 +91,10 @@ const { openAccordions, toggle } = useAccordionManager(3, true);
         </DsfrAccordion>
 
         <DsfrAccordion
-          :selected="openAccordions.includes(6)"
+          :selected="openAccordions.includes(5)"
           title="Relations"
           data-testid="sidebar-accordion-relations"
-          @click="toggle(6)"
+          @click="toggle(5)"
         >
           <RelationFilter />
         </DsfrAccordion>

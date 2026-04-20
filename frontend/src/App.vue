@@ -18,10 +18,6 @@ const route = useRoute();
 const userStore = useUserStore();
 const appConfig = ref<ConfigDto>();
 const toaster = useToasterStore();
-const isClosed = ref(false);
-function closeNotice() {
-  isClosed.value = true;
-}
 
 configureClients(toaster);
 
@@ -204,12 +200,6 @@ function close() {
       <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
     </template>
   </DsfrHeader>
-  <DsfrNotice v-if="!isClosed" closeable title="questionnaire utilisateur" @close="closeNotice">
-    Merci de contribuer à l'amélioration du Référentiel des Applications en répondant à notre
-    <a href="https://grist.numerique.gouv.fr/o/retourutilisateur/forms/oJTuNbEchqS9ymzhzCXubN/4" rel="noopener noreferrer" target="_blank">
-      questionnaire utilisateur
-    </a>
-  </DsfrNotice>
   <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content">
     <RouterView :key="String(route.params.id ?? '')" />
   </div>
