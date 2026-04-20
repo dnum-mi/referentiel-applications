@@ -8,11 +8,13 @@ import { statusApplicationDictionary, typeApplicationDictionary } from "@/compos
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
+import { useToasterStore } from "@/stores/toasterStore";
 import { Permission } from "@/client";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 const metadataStore = useMetadataStore();
+const toaster = useToasterStore();
 const route = useRoute();
 const id = route.params.id as string;
 const application = computed<CreateApplicationWithPerms>(() => applicationStore.applicationsById[id]);
@@ -62,6 +64,19 @@ async function loadApplication() {
     errorMessage.value = "Impossible de charger les données de l'application.";
   } finally {
     isLoading.value = false;
+  }
+}
+
+async function copyToClipboard() {
+  try {
+    if (!navigator.clipboard) {
+      toaster.addErrorMessage("Impossible de copier le lien.");
+      return;
+    }
+    await navigator.clipboard.writeText(window.location.href);
+    toaster.addSuccessMessage("Lien copié dans le presse-papier !");
+  } catch (err) {
+    toaster.addErrorMessage("Impossible de copier le lien.");
   }
 }
 
@@ -139,6 +154,15 @@ const actions = computed(() => [
         "
       >
         {{ isSubscribed ? "Abonné(e)" : "S'abonner" }}
+      </DsfrButton>
+      <DsfrButton
+        class="fr-btn--tertiary-no-outline fr-btn--icon-left fr-icon-links-line"
+        data-testid="application-copy-link-btn"
+        title="Copier le lien de cette application"
+        aria-label="Copier le lien de cette application"
+        @click="copyToClipboard"
+      >
+        Copier le lien de la fiche application
       </DsfrButton>
       <div class="status-tags" aria-hidden="false" data-testid="application-tags">
         <DsfrTag
