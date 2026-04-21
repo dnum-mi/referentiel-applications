@@ -3593,7 +3593,7 @@ paths:
       tags: &a21
         - Technical Debt Info
     get:
-      operationId: ApplicationTechnicalDebtInfoController_findOne
+      operationId: ApplicationTechnicalDebtInfoController_find
       summary: Retrieve the technical debt info for an application
       parameters:
         - name: applicationId
@@ -3602,37 +3602,47 @@ paths:
           description: ID of the application
           schema:
             type: string
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
       responses:
         "200":
           description: Technical debt info found successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TechnicalDebtInfoDto"
-      tags: *a21
-    patch:
-      operationId: ApplicationTechnicalDebtInfoController_update
-      summary: Update the technical debt info for an application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID of the application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateTechnicalDebtInfoDto"
-      responses:
-        "200":
-          description: Technical debt info updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TechnicalDebtInfoDto"
+                $ref: "#/components/schemas/PaginatedTechnicalDebtInfoDto"
       tags: *a21
   /api/v2/technical-debts:
     get:
@@ -6128,27 +6138,21 @@ components:
           maximum: 5
           example: 2.75
           description: Cost maturity score (0-5)
-    UpdateTechnicalDebtInfoDto:
+    PaginatedTechnicalDebtInfoDto:
       type: object
       properties:
-        technicalMaturity:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/TechnicalDebtInfoDto"
+        total:
           type: number
-          minimum: 0
-          maximum: 5
-          example: 3.2
-          description: Technical maturity score (0-5)
-        businessMaturity:
-          type: number
-          minimum: 0
-          maximum: 5
-          example: 4.5
-          description: Business maturity score (0-5)
-        costMaturity:
-          type: number
-          minimum: 0
-          maximum: 5
-          example: 2.75
-          description: Cost maturity score (0-5)
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     TechnicalDebtPointDto:
       type: object
       properties:

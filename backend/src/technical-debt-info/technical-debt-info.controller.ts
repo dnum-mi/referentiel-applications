@@ -5,8 +5,8 @@ import {
   HttpCode,
   NotFoundException,
   Param,
-  Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -25,8 +25,8 @@ import {
   CreateTechnicalDebtInfoDto,
   TechnicalDebtInfoDto,
 } from "./dto/create-technical-debt-info.dto";
-import { UpdateTechnicalDebtInfoDto } from "./dto/update-technical-debt-info.dto";
 import { TechnicalDebtInfoService } from "./technical-debt-info.service";
+import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 
 @ApiTags("Technical Debt Info")
 @UseGuards(PermissionGuard)
@@ -80,54 +80,23 @@ export class ApplicationTechnicalDebtInfoController {
   })
   @ApiOkResponse({
     description: "Technical debt info found successfully",
-    type: TechnicalDebtInfoDto,
+    type: PaginatedResponseDto.of(TechnicalDebtInfoDto),
   })
   @ApiParam({ name: "applicationId", description: "ID of the application" })
-  async findOne(@Param("applicationId") applicationId: string) {
-    const result =
-      await this.technicalDebtInfoService.findByApplicationId(applicationId);
-    if (!result) {
+  async find(
+    @Param("applicationId") applicationId: string,
+    @Query() filters: PaginationDto,
+  ) {
+    const { page, pageSize } = filters;
+    const result = await this.technicalDebtInfoService.findByApplicationId(
+      applicationId,
+      { page, pageSize },
+    );
+    if (!result?.results?.length) {
       throw new NotFoundException(
         "No technical debt info found for this application",
       );
     }
     return result;
-  }
-
-  @Patch()
-  @RequiredPermissions([Permission.AppWrite])
-  @ApiOperation({
-    summary: "Update the technical debt info for an application",
-  })
-  @ApiOkResponse({
-    description: "Technical debt info updated successfully",
-    type: TechnicalDebtInfoDto,
-  })
-  @ApiParam({ name: "applicationId", description: "ID of the application" })
-  async update(
-    @UserId() userId: string,
-    @Param("applicationId") applicationId: string,
-    @Body() updateDto: UpdateTechnicalDebtInfoDto,
-  ) {
-    const existing =
-      await this.technicalDebtInfoService.findByApplicationId(applicationId);
-    if (!existing) {
-      throw new NotFoundException(
-        "No technical debt info found for this application",
-      );
-    }
-    return await this.technicalDebtInfoService.update(existing.id, updateDto, {
-      applicationId,
-      metadata: {
-        userId,
-        gender: "de la dette technique",
-        entity: "technicalDebtInfoId",
-        fields: {
-          technicalMaturity: "maturité technique",
-          businessMaturity: "maturité métier",
-          costMaturity: "maturité des coûts",
-        },
-      },
-    });
   }
 }

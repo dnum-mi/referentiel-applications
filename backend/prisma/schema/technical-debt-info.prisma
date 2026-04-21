@@ -5,7 +5,7 @@
 model TechnicalDebtInfo {
   /// Identifiant unique
   id            String      @id @default(uuid())
-  applicationId String      @unique
+  applicationId String
   /// Application à laquelle cette évaluation appartient
   application   Application @relation("ApplicationTechnicalDebtInfo", fields: [applicationId], references: [id], onDelete: Cascade)
   /// Entrées de métadonnées pour cette évaluation
@@ -17,4 +17,8 @@ model TechnicalDebtInfo {
   businessMaturity  Decimal @default(0) @db.Decimal(3, 2)
   /// Score de maturité des coûts (0-1)
   costMaturity      Decimal @default(0) @db.Decimal(3, 2)
+  /// Date de création de l'évaluation
+  createdAt         DateTime @default(now())
+
+  @@index([applicationId, createdAt(sort: Desc)])
 }

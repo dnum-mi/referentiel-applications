@@ -1,10 +1,11 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { ApplicationService } from "src/applications/application.service";
+import { ServiceOptions } from "src/common/utils/types";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { ApplicationService } from "src/applications/application.service";
 import { BaseService } from "../common/base.service";
 import { TechnicalDebtInfo } from "./entities/technical-debt-info.entity";
-import { ServiceOptions } from "src/common/utils/types";
+import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 
 @Injectable()
 export class TechnicalDebtInfoService extends BaseService<TechnicalDebtInfo> {
@@ -25,21 +26,17 @@ export class TechnicalDebtInfoService extends BaseService<TechnicalDebtInfo> {
     createDto,
     options?: ServiceOptions<TechnicalDebtInfo>,
   ): Promise<TechnicalDebtInfo> {
-    const applicationId = createDto.application.connect.id;
-    if (applicationId) {
-      const existing = await this.findByApplicationId(applicationId);
-      if (existing) {
-        throw new ConflictException(
-          "A technical debt info already exists for this application",
-        );
-      }
-    }
     return super.create(createDto, options);
   }
 
   async findByApplicationId(
     applicationId: string,
-  ): Promise<TechnicalDebtInfo | null> {
-    return this.model.findFirst({ where: { applicationId } });
+    filters: Pick<PaginationDto, "page" | "pageSize">,
+  ): Promise<PaginatedResponseDto<TechnicalDebtInfo>> {
+    return this.model.paginate({
+      where: { applicationId },
+      orderBy: { createdAt: "desc" },
+      ...filters,
+    });
   }
 }

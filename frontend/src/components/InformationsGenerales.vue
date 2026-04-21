@@ -43,7 +43,10 @@ const isTechnicalDebtModalOpen = ref(false);
 const technicalDebtInfo = ref<TechnicalDebtInfoDto | null>(null);
 
 async function fetchTechnicalDebtInfo() {
-  const response = await api.applicationTechnicalDebtInfoControllerFindOne({ path: { applicationId: props.application.id } });
+  const response = await api.applicationTechnicalDebtInfoControllerFindOne({
+    path: { applicationId: props.application.id },
+    query: { pageSize: 1 },
+  });
   if (response.response.status === 404) {
     technicalDebtInfo.value = null;
     return;
@@ -52,7 +55,8 @@ async function fetchTechnicalDebtInfo() {
     toaster.addErrorMessage("Erreur lors de la récupération des informations de dette technique.");
     return;
   }
-  technicalDebtInfo.value = response.data ?? null;
+  const technicalDebtInfoResponse = response.data?.results[0];
+  technicalDebtInfo.value = technicalDebtInfoResponse ?? null;
 }
 
 function openTechnicalDebtModal() {
