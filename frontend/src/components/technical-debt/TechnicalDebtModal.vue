@@ -54,9 +54,7 @@ async function handleSubmit() {
     costMaturity: toNumberOrZero(form.value.costMaturity),
   };
 
-  const apiCall = isEditMode.value ? api.applicationTechnicalDebtInfoControllerUpdate : api.applicationTechnicalDebtInfoControllerCreate;
-
-  const response = await apiCall({ path: { applicationId: props.applicationId }, body });
+  const response = await api.applicationTechnicalDebtInfoControllerCreate({ path: { applicationId: props.applicationId }, body });
 
   isSubmitting.value = false;
 

@@ -7,7 +7,7 @@ model Report {
   id            String       @id @default(uuid())
   /// Identifiant de la fiche application affectée
   applicationId String?
-  /// Identifiant de l'utilisateur qui a  fait le signalement
+  /// Identifiant de l'utilisateur qui a fait le signalement
   notifierId    String
   /// Utilisateur qui a fait le signalement
   notifier      User         @relation("UserReport", fields: [notifierId], references: [id], onDelete: Restrict, onUpdate: Cascade)

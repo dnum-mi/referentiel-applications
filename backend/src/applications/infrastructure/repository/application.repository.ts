@@ -126,6 +126,8 @@ export class ApplicationRepository implements IApplicationRepository {
         label: true,
         shortName: true,
         technicalDebtInfo: {
+          orderBy: { createdAt: "desc" as const },
+          take: 1,
           select: {
             technicalMaturity: true,
             businessMaturity: true,
@@ -136,7 +138,11 @@ export class ApplicationRepository implements IApplicationRepository {
     });
 
     // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
-    return results as unknown as TechnicalDebtPointDto[];
+    // technicalDebtInfo is now a list (historized), we extract the most recent entry.
+    return results.map((app) => ({
+      ...app,
+      technicalDebtInfo: app.technicalDebtInfo[0] ?? null,
+    })) as unknown as TechnicalDebtPointDto[];
   }
 
   async findAllWithFullRelations(): Promise<ApplicationWithAllRelations[]> {

@@ -72,10 +72,11 @@ erDiagram
 }
 "TechnicalDebtInfo" {
   String id PK
-  String applicationId FK,UK
+  String applicationId FK
   Decimal(3) technicalMaturity
   Decimal(3) businessMaturity
   Decimal(3) costMaturity
+  DateTime createdAt
 }
 "_ApplicationToUser" {
   String A FK
@@ -97,7 +98,7 @@ erDiagram
 "ApplicationView" }o--|| "Application" : application
 "ExternalRessource" }o--|| "Application" : application
 "Label" }o--|| "Application" : application
-"TechnicalDebtInfo" |o--|| "Application" : application
+"TechnicalDebtInfo" }o--|| "Application" : application
 "_ApplicationToUser" }o--|| "Application" : Application
 "_ApplicationToApplicationStatus" }o--|| "Application" : Application
 "_ApplicationToApplicationStatus" }o--|| "ApplicationStatus" : ApplicationStatus
@@ -208,6 +209,7 @@ Properties as follows:
 - `technicalMaturity`: Score de maturité technique (0-1)
 - `businessMaturity`: Score de maturité métier (0-1)
 - `costMaturity`: Score de maturité des coûts (0-1)
+- `createdAt`: Date de création de l'évaluation
 
 ### `_ApplicationToUser`
 

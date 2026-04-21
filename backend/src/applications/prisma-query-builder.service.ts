@@ -569,6 +569,6 @@ export class PrismaQueryBuilder {
   }
 
   public buildTechnicalDebtInfo() {
-    return { technicalDebtInfo: { isNot: null } };
+    return { technicalDebtInfo: { some: {} } };
   }
 }
