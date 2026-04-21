@@ -51,36 +51,35 @@ describe("TechnicalDebtInfo", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
-    expect(response.body.id).toBeDefined();
-    expect(response.body.technicalMaturity).toEqual(3.25);
-    expect(response.body.businessMaturity).toEqual(4.1);
-    expect(response.body.costMaturity).toEqual(2.75);
+    expect(response.body.results).toBeDefined();
+    expect(response.body.results.length).toBeGreaterThanOrEqual(1);
+    const latest = response.body.results[0];
+    expect(latest.id).toBeDefined();
+    expect(latest.technicalMaturity).toEqual(3.25);
+    expect(latest.businessMaturity).toEqual(4.1);
+    expect(latest.costMaturity).toEqual(2.75);
   });
 
-  it("/PATCH applications/:applicationId/technical-debt-info - update technical debt info", async () => {
+  it("/POST applications/:applicationId/technical-debt-info - should add a new historic entry", async () => {
     const response = await request(app().getHttpServer())
-      .patch(`/applications/${application.id}/technical-debt-info`)
+      .post(`/applications/${application.id}/technical-debt-info`)
       .send({
         technicalMaturity: 4.5,
         costMaturity: 0,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(200);
+      .expect(201);
 
     expect(response.body.id).toBeDefined();
     expect(response.body.technicalMaturity).toEqual(4.5);
-    expect(response.body.businessMaturity).toEqual(4.1);
     expect(response.body.costMaturity).toEqual(0);
-  });
 
-  it("/POST applications/:applicationId/technical-debt-info - should return 409 when already exists", async () => {
-    await request(app().getHttpServer())
-      .post(`/applications/${application.id}/technical-debt-info`)
-      .send({
-        technicalMaturity: 1,
-      })
+    const listResponse = await request(app().getHttpServer())
+      .get(`/applications/${application.id}/technical-debt-info`)
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(409);
+      .expect(200);
+
+    expect(listResponse.body.results.length).toBeGreaterThanOrEqual(2);
   });
 
   it("/POST applications/:applicationId/technical-debt-info - should validate maturity scores range", async () => {
