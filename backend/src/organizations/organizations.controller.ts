@@ -74,8 +74,8 @@ Vous devez fournir les informations suivantes :
     type: OrganizationDto,
   })
   public async create(
-    @Body() CreateOrganizationDto: CreateOrganizationDto,
-    @Request() req,
+    @Body() createOrganizationDto: CreateOrganizationDto,
+    @Request() req: { user: { id: string } },
   ) {
     Logger.log({
       message: "Début de la création de l'organisation",
@@ -83,7 +83,7 @@ Vous devez fournir les informations suivantes :
       action: "create",
     });
 
-    return await this.organizationService.create(CreateOrganizationDto);
+    return await this.organizationService.create(createOrganizationDto);
   }
 
   /**
@@ -141,7 +141,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Delete("/:id")
-  @RequiredPermissions([Permission.OrganizationManage]) 
+  @RequiredPermissions([Permission.OrganizationManage])
   @ApiOperation({ summary: "Supprimer une organisation" })
   @HttpCode(204)
   @ApiNoContentResponse({

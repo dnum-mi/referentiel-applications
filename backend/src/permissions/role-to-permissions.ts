@@ -30,7 +30,7 @@ const WRITE_PERMISSIONS = new Set([
   Permission.ReportManage,
   Permission.ActorTypeDelete,
   Permission.ActorTypeManage,
-  Permission.OrganizationManage
+  Permission.OrganizationManage,
 ]);
 const ADMIN_PERMISSIONS = new Set([
   ...Array.from(WRITE_PERMISSIONS),
