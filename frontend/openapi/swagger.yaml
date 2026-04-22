@@ -189,6 +189,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -270,6 +271,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -465,6 +467,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -590,6 +593,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -989,6 +993,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1559,6 +1564,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1697,6 +1703,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2464,6 +2471,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 50
             example: 50
             type: number
@@ -2631,6 +2639,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2837,6 +2846,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2992,6 +3002,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3137,6 +3148,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3266,6 +3278,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3616,6 +3629,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3665,6 +3679,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -4235,6 +4250,7 @@ components:
         - ActorTypePost
         - ActorTypeManage
         - ActorTypeDelete
+        - OrganizationManage
         - AppRead
         - AppWrite
         - ActorRead
