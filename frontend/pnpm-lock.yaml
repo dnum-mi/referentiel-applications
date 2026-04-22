@@ -59,6 +59,9 @@ importers:
       vue:
         specifier: ^3.5.30
         version: 3.5.30(typescript@5.8.3)
+      vue-matomo:
+        specifier: ^4.2.0
+        version: 4.2.0
       vue-router:
         specifier: ^4.6.4
         version: 4.6.4(vue@3.5.30(typescript@5.8.3))
@@ -3632,6 +3635,10 @@ packages:
 
   vue-component-type-helpers@2.2.12:
     resolution: {integrity: sha512-YbGqHZ5/eW4SnkPNR44mKVc6ZKQoRs/Rux1sxC6rdwXb4qpbOSYfDr9DsTHolOTGmIKgM9j141mZbBeg05R1pw==}
+
+  vue-matomo@4.2.0:
+    resolution: {integrity: sha512-m5hCw7LH3wPDcERaF4sp/ojR9sEx7Rl8TpOyH/4jjQxMF2DuY/q5pO+i9o5Dx+BXLSa9+IQ0qhAbWYRyESQXmA==}
+    engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
 
   vue-router@4.6.4:
     resolution: {integrity: sha512-Hz9q5sa33Yhduglwz6g9skT8OBPii+4bFn88w6J+J4MfEo4KRRpmiNG/hHHkdbRFlLBOqxN8y8gf2Fb0MTUgVg==}
@@ -7667,6 +7674,8 @@ snapshots:
   vscode-uri@3.1.0: {}
 
   vue-component-type-helpers@2.2.12: {}
+
+  vue-matomo@4.2.0: {}
 
   vue-router@4.6.4(vue@3.5.30(typescript@5.8.3)):
     dependencies:
