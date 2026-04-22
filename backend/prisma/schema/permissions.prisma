@@ -78,6 +78,8 @@ enum Permission {
   ActorTypeManage
   /// Supprimer un nouveau type d'acteur 
   ActorTypeDelete
+  /// Gérer les organizations (créer, modifier, supprimer) 
+  OrganizationManage
 
   // --- Permissions applicatives (par app) ---
   // Couple read/write classique
