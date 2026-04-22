@@ -39,7 +39,6 @@ import { LabelSourceModule } from "./label-source/label-source.module";
       envFilePath: [".env"],
       cache: true,
     }),
-    PrismaModule,
     RelationModule,
     UserModule,
     ApplicationModule,
