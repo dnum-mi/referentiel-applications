@@ -10,6 +10,7 @@ import {
   Post,
   Query,
   Request,
+  UseGuards,
 } from "@nestjs/common";
 import {
   ApiBody,
@@ -20,7 +21,7 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { Organization } from "@prisma/client";
+import { Organization, Permission } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
 import { OrganizationFilterDto } from "./dto/filters.dto";
 import {
@@ -29,12 +30,15 @@ import {
   PatchOrganizationDto,
 } from "./dto/organizations.dto";
 import { OrganizationsService } from "./organizations.service";
+import { PermissionGuard } from "src/common/guards/permission.guard";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 
 /**
  * Controller la gestion des organisations
  * Permet de créer, mettre à jour,
  */
 @ApiTags("organizations")
+@UseGuards(PermissionGuard)
 @Controller("organizations")
 export class OrganizationsController {
   constructor(private readonly organizationService: OrganizationsService) {}
@@ -50,6 +54,7 @@ export class OrganizationsController {
    * @throws BadRequestException Si le token est invalide ou l'identifiant utilisateur est manquant
    */
   @Post()
+  @RequiredPermissions([Permission.OrganizationManage])
   @ApiBody({ type: CreateOrganizationDto })
   @ApiOperation({
     summary: "Créer une nouvelle organisation",
@@ -120,6 +125,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Patch("/:id")
+  @RequiredPermissions([Permission.OrganizationManage])
   @ApiOperation({
     summary: "Mettre à jour une organisation",
   })
@@ -135,6 +141,7 @@ Vous devez fournir les informations suivantes :
   }
 
   @Delete("/:id")
+  @RequiredPermissions([Permission.OrganizationManage]) 
   @ApiOperation({ summary: "Supprimer une organisation" })
   @HttpCode(204)
   @ApiNoContentResponse({
