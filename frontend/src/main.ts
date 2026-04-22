@@ -3,9 +3,9 @@ import Aura from "@primevue/themes/aura";
 import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
 import { createApp } from "vue";
+import VueMatomo from "vue-matomo";
 import { vUseMermaid } from "@/composables/use-mermaid";
 import App from "./App.vue";
-import MatomoPlugin from "./plugins/MatomoPlugin";
 
 import router from "./router/index";
 import { logDsfrVersion } from "./utils/log-dsfr-version";
@@ -31,16 +31,15 @@ const MATOMO_SITE_ID = isProd
   ? Number(import.meta.env.VITE_MATOMO_SITE_ID ?? "VITE_RDA_MATOMO_SITE_ID")
   : Number(import.meta.env.VITE_MATOMO_SITE_ID || import.meta.env.VITE_RDA_MATOMO_SITE_ID);
 
-app.use(MatomoPlugin, {
+app.use(createPinia());
+app.use(router);
+app.use(VueMatomo, {
   host: MATOMO_URL,
   siteId: MATOMO_SITE_ID,
   router,
-  debug: import.meta.env.DEBUG === "true",
+  enableLinkTracking: true,
   enableHeartBeatTimer: true,
 });
-
-app.use(createPinia());
-app.use(router);
 app.use(PrimeVue, {
   theme: {
     preset: Aura,
@@ -51,8 +50,3 @@ app.component("VIcon", VIcon);
 app.directive("use-mermaid", vUseMermaid);
 
 app.mount("#app");
-
-router.afterEach((to) => {
-  console.log("trackPageView", to.fullPath);
-  app.config.globalProperties.$matomo?.trackPageView(to.fullPath);
-});
