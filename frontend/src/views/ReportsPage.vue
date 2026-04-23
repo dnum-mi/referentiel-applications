@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AllReportsTab from "@/components/Report/AllReportsTab.vue";
+import ReportsTab from "@/components/Report/ReportsTab.vue";
 import { ref, markRaw } from "vue";
 
 const activeTab = ref(0);
@@ -11,14 +11,16 @@ const tabs = [
     icon: "ri-edit-line",
     tabId: "tab-my-reports",
     panelId: "panel-my-reports",
-    component: markRaw(AllReportsTab),
+    allReport: false,
+    component: markRaw(ReportsTab),
   },
   {
     title: "Tous les Signalements",
     icon: "ri-edit-line",
     tabId: "tab-all-reports",
     panelId: "panel-all-reports",
-    component: markRaw(AllReportsTab),
+    allReport: true,
+    component: markRaw(ReportsTab),
   },
 ];
 </script>
@@ -34,7 +36,7 @@ const tabs = [
           :panel-id="tab.panelId"
           :data-testid="`reports-tab-content-${tab.tabId}`"
         >
-          <component :is="tab.component" :data-testid="`reports-tab-component-${tab.tabId}`" :is-active="activeTab === index" />
+          <component :is="tab.component" :data-testid="`reports-tab-component-${tab.tabId}`" :is-active="activeTab === index" :all-report="tab.allReport" />
         </DsfrTabContent>
       </template>
     </DsfrTabs>
