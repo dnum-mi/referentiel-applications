@@ -4517,6 +4517,10 @@ components:
           type: string
           nullable: true
           description: Date optionnelle du changement de statut
+        version:
+          type: string
+          nullable: true
+          description: Version du statut
       required:
         - status
     CreateApplicationDto:
@@ -4596,6 +4600,10 @@ components:
           format: date-time
           type: string
           description: Date du changement de statut
+        version:
+          type: string
+          nullable: true
+          description: Version du statut
       required:
         - id
         - applicationId
@@ -4808,6 +4816,10 @@ components:
           type: string
           nullable: true
           description: Date optionnelle du changement de statut
+        version:
+          type: string
+          nullable: true
+          description: Version du statut
     CreateTagDto:
       type: object
       properties:

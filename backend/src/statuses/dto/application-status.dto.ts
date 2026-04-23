@@ -31,6 +31,14 @@ export class ApplicationStatusDto {
   })
   @Type(() => Date)
   statusDate: Date;
+
+  @ApiProperty({
+    description: "Version du statut",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  version: string | null;
 }
 
 export class CreateApplicationStatusDto {
@@ -51,4 +59,12 @@ export class CreateApplicationStatusDto {
   @IsOptional()
   @Type(() => Date)
   statusDate?: Date | null;
+
+  @ApiProperty({
+    description: "Version du statut",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  version?: string | null;
 }

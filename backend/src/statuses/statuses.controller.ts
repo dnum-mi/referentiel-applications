@@ -66,13 +66,7 @@ export class StatusesController {
       applicationId,
       createdById: requestor.id,
       title: "du statut de l'application",
-      fields: {
-        status: "Statut",
-        statusDate: "Date du statut",
-      },
       type: "add",
-      oldData: null,
-      newData: createdStatus,
     });
 
     return createdStatus;
@@ -122,6 +116,7 @@ export class StatusesController {
       fields: {
         status: "Statut",
         statusDate: "Date du statut",
+        version: "Version",
       },
       oldData,
       newData: updatedStatus,
@@ -160,13 +155,7 @@ export class StatusesController {
       applicationId,
       createdById: requestor.id,
       title: "du statut de l'application",
-      fields: {
-        status: "Statut",
-        statusDate: "Date du statut",
-      },
       type: "delete",
-      oldData: statusToDelete,
-      newData: null,
     });
   }
 }
