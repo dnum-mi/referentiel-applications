@@ -36,7 +36,12 @@ const tabs = [
           :panel-id="tab.panelId"
           :data-testid="`reports-tab-content-${tab.tabId}`"
         >
-          <component :is="tab.component" :data-testid="`reports-tab-component-${tab.tabId}`" :is-active="activeTab === index" :all-report="tab.allReport" />
+          <component
+            :is="tab.component"
+            :data-testid="`reports-tab-component-${tab.tabId}`"
+            :is-active="activeTab === index"
+            :all-report="tab.allReport"
+          />
         </DsfrTabContent>
       </template>
     </DsfrTabs>

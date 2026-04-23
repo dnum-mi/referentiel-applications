@@ -14,7 +14,7 @@ import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
   isActive: boolean;
-  allReport: boolean
+  allReport: boolean;
 }>();
 
 const isAllReport = computed(() => props.allReport);
