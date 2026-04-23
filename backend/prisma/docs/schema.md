@@ -38,6 +38,7 @@ erDiagram
   String applicationId FK
   Status status
   DateTime statusDate
+  String version "nullable"
 }
 "Relation" {
   String id PK
@@ -137,6 +138,7 @@ Properties as follows:
 - `applicationId`: Identifiant de l'application associée
 - `status`: La valeur du statut à ce moment
 - `statusDate`: Quand ce statut a été défini
+- `version`: La version du statut
 
 ### `Relation`
 

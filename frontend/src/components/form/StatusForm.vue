@@ -21,6 +21,7 @@ const emit = defineEmits(["submit", "cancel"]);
 const form = ref({
   status: props.initialData?.status || "",
   statusDate: toDateInputValue(props.initialData?.statusDate),
+  version: props.initialData?.version,
 });
 
 const statusOptions = computed(() => [
@@ -47,6 +48,7 @@ function handleSubmit() {
       required
       data-testid="status-select"
     />
+    <DsfrInput v-model="form.version" class="fr-mb-3w" label="Version (optionnel)" label-visible data-testid="status-version-input" />
     <DsfrInput
       v-model="form.statusDate"
       class="fr-mb-3w"

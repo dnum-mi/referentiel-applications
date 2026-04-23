@@ -19,6 +19,7 @@ import RefAppTable from "./RefAppTable.vue";
 interface StatusFormData {
   status: CreateApplicationStatusDto["status"];
   statusDate?: string;
+  version?: string;
 }
 
 const props = defineProps<{
@@ -79,6 +80,7 @@ const headers = computed(() => {
   const baseHeaders: TableColumn[] = [
     { field: "Statut", header: "Statut", sortable: false },
     { field: "Date du statut", header: "Date du statut", sortable: false },
+    { field: "Version", header: "Version", sortable: false },
   ];
 
   if (canEdit.value) {
@@ -94,6 +96,7 @@ const rows = computed(() =>
       id: status.id,
       Statut: getStatusLabel(status),
       "Date du statut": formatStatusDateDisplay(status.statusDate),
+      Version: status.version || "Non renseignée",
     };
 
     if (canEdit.value) {
@@ -262,6 +265,10 @@ function buildStatusPayload(formData: StatusFormData): CreateApplicationStatusDt
     payload.statusDate = new Date(formData.statusDate);
   }
 
+  if (formData.version) {
+    payload.version = formData.version;
+  }
+
   return payload;
 }
 
@@ -299,7 +306,15 @@ onMounted(() => {
     <StatusForm
       v-if="formModal.isCreateModalOpen.value || formModal.isModalOpen.value"
       :is-submitting="isSubmitting"
-      :initial-data="selectedStatus ? { status: selectedStatus.status, statusDate: selectedStatus.statusDate ?? undefined } : undefined"
+      :initial-data="
+        selectedStatus
+          ? {
+              status: selectedStatus.status,
+              statusDate: selectedStatus.statusDate ?? undefined,
+              version: selectedStatus.version ?? undefined,
+            }
+          : undefined
+      "
       data-testid="status-form"
       @submit="handleFormSubmit"
       @cancel="formModal.closeModal"
@@ -366,7 +381,7 @@ onMounted(() => {
             v-for="status in statuses"
             :key="status.id"
             :title="getStatusLabel(status)"
-            :description="`Date du statut : ${formatStatusDateDisplay(status.statusDate!)}`"
+            :description="`Date du statut : ${formatStatusDateDisplay(status.statusDate!)}, Version : ${status.version || 'Non renseignée'}`"
             :buttons="getStatusCardButtons(status)"
             size="sm"
             :no-arrow="true"
