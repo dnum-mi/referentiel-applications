@@ -13,121 +13,100 @@ paths:
             application/json:
               schema:
                 type: string
-  /api/v2/applications/{applicationId}/relations:
-    post:
-      operationId: RelationController_create
-      summary: Créer une nouvelle relation
-      description: Permet de créer une relation entre deux applications.
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RelationApplicationDto"
+  /api/v2/config:
+    get:
+      operationId: getConfig
+      summary: Récupérer la configuration du client
+      parameters: []
       responses:
-        "201":
-          description: Relation créée avec succès
+        "200":
+          description: Configuration du client
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RelationDto"
-      tags: &a1
-        - relation
+                $ref: "#/components/schemas/ConfigDto"
+      tags:
+        - Config
+  /api/v2/tokens:
     get:
-      operationId: RelationController_findAll
-      summary: Récupérer toutes les relations d'une application
-      description: Renvoie la liste de toutes les relations d'une application donnée.
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
+      operationId: TokenController_list
+      summary: Récupère tous les tokens de service
+      description: Cette méthode permet de récupérer tous les tokens de service.
+      parameters: []
       responses:
         "200":
-          description: Liste des relations trouvées
+          description: Liste des tokens récupérée avec succès
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RelationDto"
-      tags: *a1
-  /api/v2/applications/{applicationId}/relations/graph:
-    get:
-      operationId: RelationController_getRelationGraph
-      summary: Récupérer le graphe des relations d'une application
-      description: Renvoie un graphe des relations de l'application avec possibilité
-        de limiter la profondeur. Les applications supprimées sont exclues.
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-        - name: depth
-          required: false
-          in: query
-          description: "Profondeur maximale de traversée du graphe (par défaut: 2, max:
-            100)"
-          schema:
-            type: number
+                  $ref: "#/components/schemas/TokenDto"
+      tags: &a1
+        - tokens
+    post:
+      operationId: TokenController_createService
+      summary: Crée un nouveau token de service
+      description: Cette méthode permet de créer un nouveau token de service.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateServiceTokenDto"
       responses:
-        "200":
-          description: Graphe des relations de l'application
+        "201":
+          description: Token créé avec succès
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RelationGraphDto"
+                $ref: "#/components/schemas/ExposedTokenDto"
       tags: *a1
-  /api/v2/applications/{applicationId}/relations/{id}:
+  /api/v2/tokens/personal:
     get:
-      operationId: RelationController_findOne
-      summary: Récupérer une relation par son identifiant unique
+      operationId: TokenController_findPersonal
+      summary: Récupère tous les tokens personnels
+      description: Cette méthode permet de récupérer tous les tokens personnels.
+      parameters: []
+      responses:
+        "200":
+          description: Liste des tokens récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TokenDto"
+      tags: *a1
+    post:
+      operationId: TokenController_createPersonal
+      summary: Crée un nouveau token personnel
+      description: Cette méthode permet de créer un nouveau token personnel.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePersonalTokenDto"
+      responses:
+        "201":
+          description: Token créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExposedTokenDto"
+      tags: *a1
+  /api/v2/tokens/{id}/regenerate:
+    post:
+      operationId: TokenController_regenerate
+      summary: Régénère un token de service
+      description: Cette méthode permet de régénérer un token de service.
       parameters:
         - name: id
           required: true
           in: path
-          description: Identifiant unique de la relation
-          schema:
-            type: string
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Relation trouvée avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RelationDto"
-      tags: *a1
-    patch:
-      operationId: RelationController_update
-      summary: Mettre à jour une relation
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: Identifiant unique de la relation à mettre à jour
-          schema:
-            type: string
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
           schema:
             type: string
       requestBody:
@@ -135,34 +114,50 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RelationApplicationDto"
+              $ref: "#/components/schemas/RegenerateTokenDto"
       responses:
         "200":
-          description: Relation mise à jour avec succès
+          description: Token régénéré avec succès
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RelationDto"
+                $ref: "#/components/schemas/TokenDto"
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExposedTokenDto"
       tags: *a1
+  /api/v2/tokens/{id}:
     delete:
-      operationId: RelationController_delete
-      summary: Supprimer une relation
+      operationId: TokenController_delete
+      summary: Supprime (révoque) un token de service
+      description: Cette méthode permet de supprimer (révoquer) un token de service.
       parameters:
         - name: id
           required: true
           in: path
-          description: Identifiant unique de la relation à supprimer
-          schema:
-            type: string
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
           schema:
             type: string
       responses:
         "204":
-          description: Relation supprimée avec succès
+          description: Token supprimé avec succès
+      tags: *a1
+  /api/v2/tokens/personal/{id}:
+    delete:
+      operationId: TokenController_deletePersonal
+      summary: Supprime (révoque) un token personnel
+      description: Cette méthode permet de supprimer (révoquer) un token personnel.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Token supprimé avec succès
       tags: *a1
   /api/v2/applications/{applicationId}/metadatas:
     get:
@@ -334,190 +329,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/MetadataDto"
       tags: *a3
-  /api/v2/users/me:
-    get:
-      operationId: UserController_findMe
-      summary: Récupérer ses propres informations utilisateur
-      parameters: []
-      responses:
-        "200":
-          description: Informations utilisateur trouvées
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "404":
-          description: Utilisateur non trouvé
-      tags: &a4
-        - users
-    patch:
-      operationId: UserController_updateMe
-      summary: Mettre à jour ses propres préférences utilisateur
-      description: "Permet à un utilisateur de modifier ses propres préférences (ex:
-        notifications par email)."
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateUserPreferencesDto"
-      responses:
-        "200":
-          description: Préférences mises à jour avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "404":
-          description: Utilisateur non trouvé
-      tags: *a4
-  /api/v2/users/me/subscribe/{appId}:
-    post:
-      operationId: UserController_subscribe
-      summary: S'abonner aux notifications d'une application
-      parameters:
-        - name: appId
-          required: true
-          in: path
-          description: ID de l'application à suivre
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Abonnement pris en compte
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "201":
-          description: Abonnement pris en compte
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-      tags: *a4
-    delete:
-      operationId: UserController_unsubscribe
-      summary: Se désabonner des notifications d'une application
-      parameters:
-        - name: appId
-          required: true
-          in: path
-          description: ID de l'application à ne plus suivre
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Désabonnement pris en compte
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-      tags: *a4
-  /api/v2/users/{id}:
-    patch:
-      operationId: UserController_update
-      summary: Mettre à jour les permissions d'un utilisateur
-      description: Permet de modifier les permissions d'un utilisateur. Accès limité
-        aux administrateurs.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: ID de l'utilisateur
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateUserDto"
-      responses:
-        "200":
-          description: Utilisateur mis à jour avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "403":
-          description: Accès refusé - Privilège admin requis
-        "404":
-          description: Utilisateur non trouvé
-      tags: *a4
-  /api/v2/users:
-    get:
-      operationId: UserController_findAll
-      summary: Lister tous les utilisateurs
-      description: Récupère la liste de tous les utilisateurs avec leurs permissions.
-        Supporte la recherche par email. Accès limité aux administrateurs.
-      parameters:
-        - name: page
-          required: false
-          in: query
-          description: Numéro de page
-          schema:
-            minimum: 0
-            example: 0
-            type: number
-        - name: pageSize
-          required: false
-          in: query
-          description: Nombre de résultats par page, 0 pour supprimer la pagination
-          schema:
-            minimum: 0
-            maximum: 100
-            default: 15
-            example: 15
-            type: number
-        - name: sortBy
-          required: false
-          in: query
-          description: Champ utilisé pour le tri
-          schema:
-            example: label
-            type: string
-        - name: order
-          required: false
-          in: query
-          description: Ordre de tri
-          schema:
-            example: asc
-            enum:
-              - asc
-              - desc
-            type: string
-        - name: type
-          required: false
-          in: query
-          description: Type d'utilisateur. Utiliser les valeurs de /userTypes
-          schema:
-            default:
-              - human
-            example:
-              - human
-            type: array
-            items:
-              type: string
-              enum:
-                - human
-                - bot
-        - name: search
-          required: false
-          in: query
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Liste paginée des utilisateurs
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedUserWithPermissions"
-        "403":
-          description: Accès refusé - Privilège admin requis
-      tags: *a4
   /api/v2/applications:
     post:
       operationId: ApplicationController_create
@@ -569,7 +380,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
-      tags: &a5
+      tags: &a4
         - applications
     get:
       operationId: ApplicationController_search
@@ -900,7 +711,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationSearchResultDto"
-      tags: *a5
+      tags: *a4
   /api/v2/applications/count-by-month:
     get:
       operationId: ApplicationController_countByMonth
@@ -915,7 +726,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CountByMonthDto"
-      tags: *a5
+      tags: *a4
   /api/v2/applications/count-by-iq:
     get:
       operationId: ApplicationController_countByIq
@@ -930,7 +741,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CountByIqDto"
-      tags: *a5
+      tags: *a4
   /api/v2/applications/{applicationId}/my-perms:
     get:
       operationId: ApplicationController_getMyPerms
@@ -968,7 +779,7 @@ paths:
                     - ReportManage
                     - ReportPost
                     - AppWritePriority
-      tags: *a5
+      tags: *a4
   /api/v2/applications/export/excel:
     get:
       operationId: ApplicationController_exportExcel
@@ -1302,7 +1113,7 @@ paths:
                 format: binary
         "403":
           description: Accès refusé - Privilège admin requis
-      tags: *a5
+      tags: *a4
   /api/v2/applications/{applicationId}:
     get:
       operationId: ApplicationController_findOne
@@ -1329,7 +1140,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
-      tags: *a5
+      tags: *a4
     patch:
       operationId: ApplicationController_update
       summary: Mettre à jour une application
@@ -1359,7 +1170,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
-      tags: *a5
+      tags: *a4
     delete:
       operationId: ApplicationController_remove
       summary: Supprimer une application
@@ -1375,7 +1186,7 @@ paths:
           description: Application supprimée avec succès.
         "404":
           description: Application non trouvée.
-      tags: *a5
+      tags: *a4
   /api/v2/applications/data-quality/update:
     get:
       operationId: ApplicationController_updateAllApplicationsQuality
@@ -1396,7 +1207,7 @@ paths:
                 type: string
         "403":
           description: Accès refusé - Privilège admin requis
-      tags: *a5
+      tags: *a4
   /api/v2/applications/{applicationId}/statuses:
     post:
       operationId: StatusesController_create
@@ -1421,7 +1232,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: &a6
+      tags: &a5
         - statuses
     get:
       operationId: StatusesController_find
@@ -1441,7 +1252,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: *a6
+      tags: *a5
   /api/v2/applications/{applicationId}/statuses/{statusId}:
     patch:
       operationId: StatusesController_update
@@ -1472,7 +1283,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: *a6
+      tags: *a5
     delete:
       operationId: StatusesController_delete
       summary: Supprimer un statut
@@ -1492,7 +1303,7 @@ paths:
       responses:
         "204":
           description: Statut supprimé avec succès
-      tags: *a6
+      tags: *a5
   /api/v2/tags:
     post:
       operationId: TagsController_create
@@ -1523,7 +1334,7 @@ paths:
                 $ref: "#/components/schemas/TagDto"
         "403":
           description: Accès refusé - Privilège admin requis
-      tags: &a7
+      tags: &a6
         - Tags
     get:
       operationId: TagsController_findAll
@@ -1599,7 +1410,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedTagDto"
-      tags: *a7
+      tags: *a6
   /api/v2/tags/{id}:
     get:
       operationId: TagsController_findOne
@@ -1620,7 +1431,7 @@ paths:
                 $ref: "#/components/schemas/TagDto"
         "404":
           description: Tag non trouvé
-      tags: *a7
+      tags: *a6
     patch:
       operationId: TagsController_update
       summary: Modifier un tag.
@@ -1648,7 +1459,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Tag non trouvé
-      tags: *a7
+      tags: *a6
     delete:
       operationId: TagsController_delete
       summary: Supprimer un tag.
@@ -1666,7 +1477,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Tag non trouvé
-      tags: *a7
+      tags: *a6
   /api/v2/business-division:
     get:
       operationId: BusinessDivisionController_findAll
@@ -1738,7 +1549,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedBusinessDivisionDTO"
-      tags: &a8
+      tags: &a7
         - Business Division
   /api/v2/business-division/{id}:
     get:
@@ -1760,662 +1571,346 @@ paths:
                 $ref: "#/components/schemas/BusinessDivisionDTO"
         "404":
           description: Business Division non trouvé
-      tags: *a8
-  /api/v2/applications/{applicationId}/hostings:
+      tags: *a7
+  /api/v2/applications/{applicationId}/data-source:
     post:
-      operationId: ApplicationHostingsController_create
-      summary: Créer un hébergement pour une application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateHostingDto"
-      responses:
-        "201":
-          description: Hébergement créé
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HostingDto"
-      tags: &a9
-        - Hostings
-    get:
-      operationId: ApplicationHostingsController_findAll
-      summary: Récupérer tous les hébergements d'une application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Liste des hébergements
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/HostingDto"
-      tags: *a9
-  /api/v2/applications/{applicationId}/hostings/{id}:
-    get:
-      operationId: ApplicationHostingsController_findOne
-      summary: Récupérer un hébergement par ID pour une application
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Hébergement trouvé
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HostingDto"
-      tags: *a9
-    patch:
-      operationId: ApplicationHostingsController_update
-      summary: Mettre à jour un hébergement pour une application
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateHostingDto"
-      responses:
-        "200":
-          description: Hébergement mis à jour
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HostingDto"
-      tags: *a9
-    delete:
-      operationId: ApplicationHostingsController_remove
-      summary: Supprimer un hébergement pour une application
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Hébergement supprimé
-      tags: *a9
-  /api/v2/sites:
-    get:
-      operationId: SitesController_findDistinctSites
-      summary: Liste des sites distincts existants
-      parameters: []
-      responses:
-        "200":
-          description: Liste des sites
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-      tags:
-        - Sites
-  /api/v2/hostings/count:
-    get:
-      operationId: HostingsController_countAllHostings
-      summary: Récupérer le nombre total d'hébergements (toutes applications)
-      parameters: []
-      responses:
-        "200":
-          description: Nombre total d'hébergements
-          content:
-            application/json:
-              schema:
-                type: number
-      tags:
-        - Hostings
-  /api/v2/tokens:
-    get:
-      operationId: TokenController_list
-      summary: Récupère tous les tokens de service
-      description: Cette méthode permet de récupérer tous les tokens de service.
-      parameters: []
-      responses:
-        "200":
-          description: Liste des tokens récupérée avec succès
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TokenDto"
-      tags: &a10
-        - tokens
-    post:
-      operationId: TokenController_createService
-      summary: Crée un nouveau token de service
-      description: Cette méthode permet de créer un nouveau token de service.
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateServiceTokenDto"
-      responses:
-        "201":
-          description: Token créé avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a10
-  /api/v2/tokens/personal:
-    get:
-      operationId: TokenController_findPersonal
-      summary: Récupère tous les tokens personnels
-      description: Cette méthode permet de récupérer tous les tokens personnels.
-      parameters: []
-      responses:
-        "200":
-          description: Liste des tokens récupérée avec succès
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TokenDto"
-      tags: *a10
-    post:
-      operationId: TokenController_createPersonal
-      summary: Crée un nouveau token personnel
-      description: Cette méthode permet de créer un nouveau token personnel.
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreatePersonalTokenDto"
-      responses:
-        "201":
-          description: Token créé avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a10
-  /api/v2/tokens/{id}/regenerate:
-    post:
-      operationId: TokenController_regenerate
-      summary: Régénère un token de service
-      description: Cette méthode permet de régénérer un token de service.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RegenerateTokenDto"
-      responses:
-        "200":
-          description: Token régénéré avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TokenDto"
-        "201":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ExposedTokenDto"
-      tags: *a10
-  /api/v2/tokens/{id}:
-    delete:
-      operationId: TokenController_delete
-      summary: Supprime (révoque) un token de service
-      description: Cette méthode permet de supprimer (révoquer) un token de service.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Token supprimé avec succès
-      tags: *a10
-  /api/v2/tokens/personal/{id}:
-    delete:
-      operationId: TokenController_deletePersonal
-      summary: Supprime (révoque) un token personnel
-      description: Cette méthode permet de supprimer (révoquer) un token personnel.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Token supprimé avec succès
-      tags: *a10
-  /api/v2/reports:
-    get:
-      operationId: ReportsController_findAll
-      summary: Récupérer tous les signalements
-      description: Renvoie la liste de tous les signalements.
-      parameters:
-        - name: all
-          required: false
-          in: query
-          description: Filtrer les signalements pour l'utilisateur connecté
-          schema:
-            default: false
-            type: boolean
-        - name: searchReport
-          required: false
-          in: query
-          schema:
-            type: string
-        - name: sortBy
-          required: false
-          in: query
-          schema:
-            enum:
-              - application
-              - status
-              - date
-              - description
-              - signalant
-              - notes
-            type: string
-        - name: order
-          required: false
-          in: query
-          schema:
-            enum:
-              - asc
-              - desc
-            type: string
-        - name: page
-          required: false
-          in: query
-          schema:
-            minimum: 0
-            type: number
-        - name: limit
-          required: false
-          in: query
-          schema:
-            minimum: 1
-            type: number
-      responses:
-        "200":
-          description: Liste des signalements
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedReportDto"
-      tags: &a11
-        - Reports
-    post:
-      operationId: ReportsController_create
-      summary: Créer un signalement
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateReportRequestDto"
-      responses:
-        "201":
-          description: Signalement créé avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReportDto"
-      tags: *a11
-  /api/v2/reports/{id}:
-    patch:
-      operationId: ReportsController_update
-      summary: Mettre à jour un signalement
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: notify
-          required: true
-          in: query
-          description: Send Notification Email
-          schema:
-            example: "true"
-            type: boolean
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateReportDto"
-      responses:
-        "200":
-          description: Signalement mis à jour avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReportDto"
-      tags: *a11
-  /api/v2/applications/{applicationId}/reports:
-    post:
-      operationId: ApplicationReportsController_create
-      summary: Demande de modification pour une fiche application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateReportRequestDto"
-      responses:
-        "201":
-          description: Signalement créé avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReportDto"
-      tags: &a12
-        - ApplicationReports
-    get:
-      operationId: ApplicationReportsController_findAll
-      summary: Récupérer tous les signalements pour une application
-      description: Renvoie la liste paginée des signalements pour une application donnée.
-      parameters:
-        - name: all
-          required: false
-          in: query
-          description: Filtrer les signalements pour l'utilisateur connecté
-          schema:
-            default: false
-            type: boolean
-        - name: searchReport
-          required: false
-          in: query
-          schema:
-            type: string
-        - name: sortBy
-          required: false
-          in: query
-          schema:
-            enum:
-              - application
-              - status
-              - date
-              - description
-              - signalant
-              - notes
-            type: string
-        - name: order
-          required: false
-          in: query
-          schema:
-            enum:
-              - asc
-              - desc
-            type: string
-        - name: page
-          required: false
-          in: query
-          schema:
-            minimum: 0
-            type: number
-        - name: limit
-          required: false
-          in: query
-          schema:
-            minimum: 1
-            type: number
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Liste paginée des signalements pour l'application
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedReportDto"
-      tags: *a12
-  /api/v2/applications/{applicationId}/reports/{id}:
-    get:
-      operationId: ApplicationReportsController_findOne
-      summary: Récupérer un signalement spécifique par ID
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Signalement trouvé avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReportDto"
-      tags: *a12
-    patch:
-      operationId: ApplicationReportsController_update
-      summary: Mettre à jour un signalement
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: notify
-          required: true
-          in: query
-          description: Send Notification Email
-          schema:
-            example: "true"
-            type: boolean
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateReportDto"
-      responses:
-        "200":
-          description: Signalement mis à jour avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ReportDto"
-      tags: *a12
-    delete:
-      operationId: ApplicationReportsController_remove
-      summary: Supprimer un signalement
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Signalement supprimé avec succès
-      tags: *a12
-  /api/v2/health-check:
-    get:
-      operationId: HealthCheckController_checkHealth
-      summary: Vérification de la santé de l'application
-      description: Exécute une requête basique vers la base de données pour vérifier
-        la connectivité et l'état global de l'application.
-      parameters: []
-      responses:
-        "200":
-          description: L'application fonctionne correctement.
-          content:
-            application/json:
-              schema:
-                example:
-                  status: ok
-        "500":
-          description: Le service n'est pas disponible en raison d'une erreur lors de la
-            connexion à la base de données.
-          content:
-            application/json:
-              schema:
-                example:
-                  status: error
-                  message: Détail de l'erreur
-      tags:
-        - Health Check
-  /api/v2/stats/iq-avg/period:
-    get:
-      operationId: StatsController_getIqAvgGrouped
-      summary: Récupérer la moyenne des IQ par période
+      operationId: DataSourceController_create
+      summary: Créer une nouvelle source de donnée
       description: "
 
-        Permet de récupérer la moyenne des IQ par période. \ 
-
-        Vous pouvez spécifier la période en utilisant les paramètres `from` et
-        `to`, \ 
-
-        ainsi que le regroupement souhaité avec `groupBy`. \ 
+        **Ce endpoint permet de créer une source de donnée complète liée à une
+        application.**
 
 
-        **Valeurs possibles pour `groupBy` :** \ 
+        Informations traitées :
 
-        - `jour` (day) \ 
+        - **Nom** : Nom d'usage.
 
-        - `semaine` (week) \ 
+        - **Description** : Description détaillée.
 
-        - `mois` (month) \ 
+        - **IsReference** : Indicateur \"Source Maître\". S'il est à true, cette
+        application est la source officielle, unique et faisant foi pour cette
+        donnée au sein du ministère.
 
-        - `année` (year) \ 
+        - **Exemple** : Échantillon de données.
+
+        - **Conservation** : Durée d'Utilité Administrative (DUA).
 
 
-        **Exemple d’appel :** \ 
+        - **DatabaseName** : Nom de l'instance de la base de données hôte.
 
-        ```http
+        - **DatabaseTableName** : Nom technique de l'entité contenant les
+        données.
 
-        GET /stats/iq-avg/period?from=2025-07-01&to=2025-07-23&groupBy=mois
+        - **FieldCount** : Nombre total de colonnes ou de champs que contient la
+        source de donnée.
 
-        Authorization: Bearer <TOKEN>
+        - **Fields** : Liste textuelle des champs/colonnes.
 
-        ```
+        - **Volumetry** : Représente le nombre actuel d'enregistrements présents
+        dans la source.
+
+        - **MonthlyVolumetry** : Estimation du nombre de nouveaux
+        enregistrements ajoutés chaque mois.
+
+
+        - **TypeId** : Lien vers la nature technique du support.
+
+        - **SensibilityId** : Lien vers le niveau de protection et de criticité.
+
+        - **FamilyId** : Lien vers la classification thématique.
+
+        - **UpdateFrequencyId** : Lien vers le rythme de rafraîchissement des
+        données.
 
         \    "
       parameters:
-        - name: from
-          required: false
-          in: query
-          description: Date de début au format ISO (ex. 2025-07-01)
+        - name: applicationId
+          required: true
+          in: path
           schema:
-            example: 2025-07-01
             type: string
-        - name: to
-          required: false
-          in: query
-          description: Date de fin au format ISO (ex. 2025-07-23)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDataSourceDto"
+      responses:
+        "201":
+          description: Source de donnée créée avec succès.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceDto"
+      tags: &a8
+        - Data Sources
+    get:
+      operationId: DataSourceController_findAll
+      summary: Récupérer les sources de donnée par ID d'application
+      description: "
+
+        Ce endpoint permet de récupérer la liste de tous les sources de donnée
+        d'une application en fonction de son identifiant unique.
+
+
+        Le paramètre **applicationId** doit être fourni dans l'URL.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
           schema:
-            example: 2025-07-23
             type: string
-        - name: groupBy
+        - name: page
           required: false
           in: query
-          description: Regroupement souhaité (jour, semaine, mois, année)
+          description: Numéro de page
           schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
             enum:
-              - jour
-              - semaine
-              - mois
-              - année
+              - asc
+              - desc
             type: string
       responses:
         "200":
-          description: Tableau de buckets avec label, moyenne, min, max, count
+          description: Liste des sources de donnée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedDataSourceDto"
+      tags: *a8
+  /api/v2/applications/{applicationId}/data-source/{id}:
+    patch:
+      operationId: DataSourceController_update
+      summary: Mettre à jour une source de donnée existante
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de la source de donnée
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDataSourceDto"
+      responses:
+        "200":
+          description: Source de donnée mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceDto"
+      tags: *a8
+    delete:
+      operationId: DataSourceController_delete
+      summary: Supprimer une source de donnée
+      description: " Ce endpoint permet de supprimer une source de donnée existante.\ 
+
+        \    Vous devez fournir l'identifiant de la source de donnée dans l'URL.
+
+        \    "
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Source de donnée supprimée avec succès
+      tags: *a8
+  /api/v2/applications/{applicationId}/relations:
+    post:
+      operationId: RelationController_create
+      summary: Créer une nouvelle relation
+      description: Permet de créer une relation entre deux applications.
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelationApplicationDto"
+      responses:
+        "201":
+          description: Relation créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationDto"
+      tags: &a9
+        - relation
+    get:
+      operationId: RelationController_findAll
+      summary: Récupérer toutes les relations d'une application
+      description: Renvoie la liste de toutes les relations d'une application donnée.
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des relations trouvées
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/GetIqAvgGroupedDto"
-      tags:
-        - Stats
+                  $ref: "#/components/schemas/RelationDto"
+      tags: *a9
+  /api/v2/applications/{applicationId}/relations/graph:
+    get:
+      operationId: RelationController_getRelationGraph
+      summary: Récupérer le graphe des relations d'une application
+      description: Renvoie un graphe des relations de l'application avec possibilité
+        de limiter la profondeur. Les applications supprimées sont exclues.
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: depth
+          required: false
+          in: query
+          description: "Profondeur maximale de traversée du graphe (par défaut: 2, max:
+            100)"
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Graphe des relations de l'application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationGraphDto"
+      tags: *a9
+  /api/v2/applications/{applicationId}/relations/{id}:
+    get:
+      operationId: RelationController_findOne
+      summary: Récupérer une relation par son identifiant unique
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Identifiant unique de la relation
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Relation trouvée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationDto"
+      tags: *a9
+    patch:
+      operationId: RelationController_update
+      summary: Mettre à jour une relation
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Identifiant unique de la relation à mettre à jour
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RelationApplicationDto"
+      responses:
+        "200":
+          description: Relation mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RelationDto"
+      tags: *a9
+    delete:
+      operationId: RelationController_delete
+      summary: Supprimer une relation
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: Identifiant unique de la relation à supprimer
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Relation supprimée avec succès
+      tags: *a9
   /api/v2/organizations:
     post:
       operationId: OrganizationsController_create
@@ -2450,7 +1945,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: &a13
+      tags: &a10
         - organizations
     get:
       operationId: OrganizationsController_findAll
@@ -2526,7 +2021,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedOrganizationDto"
-      tags: *a13
+      tags: *a10
   /api/v2/organizations/{id}:
     get:
       operationId: OrganizationsController_findOne
@@ -2548,7 +2043,7 @@ paths:
                 $ref: "#/components/schemas/OrganizationDto"
         "404":
           description: Organisation non trouvée
-      tags: *a13
+      tags: *a10
     patch:
       operationId: OrganizationsController_update
       summary: Mettre à jour une organisation
@@ -2571,7 +2066,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: *a13
+      tags: *a10
     delete:
       operationId: OrganizationsController_delete
       summary: Supprimer une organisation
@@ -2584,46 +2079,125 @@ paths:
       responses:
         "204":
           description: Organisation supprimée
-      tags: *a13
-  /api/v2/actorTypes:
-    post:
-      operationId: ActorTypeController_create
-      summary: Créer un nouveau type d’acteur
-      description: "
-
-        **Ce endpoint permet de créer un type d’acteur complète**
-
-
-        Vous devez fournir les informations suivantes :
-
-        - **code**: Le code du type d’acteur
-
-        - **label**: Le libellé du type d’acteur
-
-        - **description**: La description du type d’acteur
-
-        \    "
+      tags: *a10
+  /api/v2/users/me:
+    get:
+      operationId: UserController_findMe
+      summary: Récupérer ses propres informations utilisateur
+      parameters: []
+      responses:
+        "200":
+          description: Informations utilisateur trouvées
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "404":
+          description: Utilisateur non trouvé
+      tags: &a11
+        - users
+    patch:
+      operationId: UserController_updateMe
+      summary: Mettre à jour ses propres préférences utilisateur
+      description: "Permet à un utilisateur de modifier ses propres préférences (ex:
+        notifications par email)."
       parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateActorTypeDto"
+              $ref: "#/components/schemas/UpdateUserPreferencesDto"
       responses:
-        "201":
-          description: type d’acteur créé avec succes
+        "200":
+          description: Préférences mises à jour avec succès
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActorTypeDto"
-      tags: &a14
-        - actorTypes
+                $ref: "#/components/schemas/UserWithPermissions"
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a11
+  /api/v2/users/me/subscribe/{appId}:
+    post:
+      operationId: UserController_subscribe
+      summary: S'abonner aux notifications d'une application
+      parameters:
+        - name: appId
+          required: true
+          in: path
+          description: ID de l'application à suivre
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Abonnement pris en compte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "201":
+          description: Abonnement pris en compte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+      tags: *a11
+    delete:
+      operationId: UserController_unsubscribe
+      summary: Se désabonner des notifications d'une application
+      parameters:
+        - name: appId
+          required: true
+          in: path
+          description: ID de l'application à ne plus suivre
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Désabonnement pris en compte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+      tags: *a11
+  /api/v2/users/{id}:
+    patch:
+      operationId: UserController_update
+      summary: Mettre à jour les permissions d'un utilisateur
+      description: Permet de modifier les permissions d'un utilisateur. Accès limité
+        aux administrateurs.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserDto"
+      responses:
+        "200":
+          description: Utilisateur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a11
+  /api/v2/users:
     get:
-      operationId: ActorTypeController_findAll
-      summary: Récupérer tous les types d’acteurs
-      description: Ce endpoint permet de récupérer la liste de tous les types
-        d’acteurs disponibles.
+      operationId: UserController_findAll
+      summary: Lister tous les utilisateurs
+      description: Récupère la liste de tous les utilisateurs avec leurs permissions.
+        Supporte la recherche par email. Accès limité aux administrateurs.
       parameters:
         - name: page
           required: false
@@ -2660,122 +2234,36 @@ paths:
               - asc
               - desc
             type: string
-      responses:
-        "200":
-          description: Liste les types d’acteurs
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedActorTypeDto"
-      tags: *a14
-  /api/v2/actorTypes/perms-matrix:
-    get:
-      operationId: ActorTypeController_getMatrix
-      summary: Récupérer la matrice des permissions
-      description: Cet endpoint permet de récupérer la matrice des permissions pour
-        les types d’acteurs.
-      parameters: []
-      responses:
-        "200":
-          description: Liste les types d’acteurs par id et de leurs permissions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AppPermsDto"
-      tags: *a14
-    patch:
-      operationId: ActorTypeController_updateMatrix
-      summary: Mettre à jour la matrice des permissions
-      description: Cet endpoint permet de mettre à jour la matrice des permissions
-        pour les types d’acteurs.
-      parameters: []
-      requestBody:
-        required: true
-        description: Liste des permissions à mettre à jour pour les types d’acteurs
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: "#/components/schemas/AppPermsDto"
-      responses:
-        "200":
-          description: Met à jour la matrice des permissions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AppPermsDto"
-      tags: *a14
-  /api/v2/actorTypes/{id}:
-    get:
-      operationId: ActorTypeController_findOne
-      summary: Récupérer un type d’acteur spécifique par ID
-      description: Cet endpoint permet de récupérer les détails complets d'un type
-        d’acteur en fonction de son identifiant unique.
-      parameters:
-        - name: id
-          required: true
-          in: path
+        - name: type
+          required: false
+          in: query
+          description: Type d'utilisateur. Utiliser les valeurs de /userTypes
+          schema:
+            default:
+              - human
+            example:
+              - human
+            type: array
+            items:
+              type: string
+              enum:
+                - human
+                - bot
+        - name: search
+          required: false
+          in: query
           schema:
             type: string
       responses:
         "200":
-          description: Récupère un type d’acteur spécifique par ID
+          description: Liste paginée des utilisateurs
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActorTypeDto"
-      tags: *a14
-    patch:
-      operationId: ActorTypeController_update
-      summary: Mettre à jour un type d’acteur
-      description: "
-
-        Ce endpoint permet de mettre à jour un type d’acteur existante
-
-        Vous devez fournir l'identifiant du type d’acteur dans l'URL et les
-        nouvelles données dans le corps de la requête
-
-        Les données de mise à jour doivent correspondre aux champs
-
-        \    "
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PatchActorTypeDto"
-      responses:
-        "200":
-          description: Type d’acteur mis à jour avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PatchActorTypeDto"
-      tags: *a14
-    delete:
-      operationId: ActorTypeController_delete
-      summary: Supprimer un type d’acteur
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Type d’acteur supprimé avec succès
-      tags: *a14
+                $ref: "#/components/schemas/PaginatedUserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+      tags: *a11
   /api/v2/applications/{applicationId}/actors:
     post:
       operationId: ApplicationActorsController_create
@@ -2820,7 +2308,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: &a15
+      tags: &a12
         - Actors
     get:
       operationId: ApplicationActorsController_findAll
@@ -2874,7 +2362,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedActorDto"
-      tags: *a15
+      tags: *a12
   /api/v2/applications/{applicationId}/actors/{id}:
     get:
       operationId: ApplicationActorsController_findOne
@@ -2899,7 +2387,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: *a15
+      tags: *a12
     patch:
       operationId: ApplicationActorsController_updated
       summary: Mettre à jour un acteur
@@ -2929,7 +2417,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorDto"
-      tags: *a15
+      tags: *a12
     delete:
       operationId: ApplicationActorsController_delete
       summary: Supprimer un acteur
@@ -2949,7 +2437,7 @@ paths:
       responses:
         "204":
           description: Acteur supprimé avec succès
-      tags: *a15
+      tags: *a12
   /api/v2/actors/count:
     get:
       operationId: ActorController_countAllActors
@@ -2964,6 +2452,446 @@ paths:
                 type: number
       tags:
         - Actors
+  /api/v2/actorTypes:
+    post:
+      operationId: ActorTypeController_create
+      summary: Créer un nouveau type d’acteur
+      description: "
+
+        **Ce endpoint permet de créer un type d’acteur complète**
+
+
+        Vous devez fournir les informations suivantes :
+
+        - **code**: Le code du type d’acteur
+
+        - **label**: Le libellé du type d’acteur
+
+        - **description**: La description du type d’acteur
+
+        \    "
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateActorTypeDto"
+      responses:
+        "201":
+          description: type d’acteur créé avec succes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActorTypeDto"
+      tags: &a13
+        - actorTypes
+    get:
+      operationId: ActorTypeController_findAll
+      summary: Récupérer tous les types d’acteurs
+      description: Ce endpoint permet de récupérer la liste de tous les types
+        d’acteurs disponibles.
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+      responses:
+        "200":
+          description: Liste les types d’acteurs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedActorTypeDto"
+      tags: *a13
+  /api/v2/actorTypes/perms-matrix:
+    get:
+      operationId: ActorTypeController_getMatrix
+      summary: Récupérer la matrice des permissions
+      description: Cet endpoint permet de récupérer la matrice des permissions pour
+        les types d’acteurs.
+      parameters: []
+      responses:
+        "200":
+          description: Liste les types d’acteurs par id et de leurs permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppPermsDto"
+      tags: *a13
+    patch:
+      operationId: ActorTypeController_updateMatrix
+      summary: Mettre à jour la matrice des permissions
+      description: Cet endpoint permet de mettre à jour la matrice des permissions
+        pour les types d’acteurs.
+      parameters: []
+      requestBody:
+        required: true
+        description: Liste des permissions à mettre à jour pour les types d’acteurs
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/AppPermsDto"
+      responses:
+        "200":
+          description: Met à jour la matrice des permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppPermsDto"
+      tags: *a13
+  /api/v2/actorTypes/{id}:
+    get:
+      operationId: ActorTypeController_findOne
+      summary: Récupérer un type d’acteur spécifique par ID
+      description: Cet endpoint permet de récupérer les détails complets d'un type
+        d’acteur en fonction de son identifiant unique.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Récupère un type d’acteur spécifique par ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActorTypeDto"
+      tags: *a13
+    patch:
+      operationId: ActorTypeController_update
+      summary: Mettre à jour un type d’acteur
+      description: "
+
+        Ce endpoint permet de mettre à jour un type d’acteur existante
+
+        Vous devez fournir l'identifiant du type d’acteur dans l'URL et les
+        nouvelles données dans le corps de la requête
+
+        Les données de mise à jour doivent correspondre aux champs
+
+        \    "
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatchActorTypeDto"
+      responses:
+        "200":
+          description: Type d’acteur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatchActorTypeDto"
+      tags: *a13
+    delete:
+      operationId: ActorTypeController_delete
+      summary: Supprimer un type d’acteur
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Type d’acteur supprimé avec succès
+      tags: *a13
+  /api/v2/applications/{applicationId}/compliances:
+    post:
+      operationId: ApplicationCompliancesController_create
+      summary: Create a new compliance for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateComplianceDto"
+      responses:
+        "200":
+          description: Compliance created or updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDto"
+      tags: &a14
+        - Compliances
+    get:
+      operationId: ApplicationCompliancesController_findOne
+      summary: Retrieve the compliance for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Compliance found successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDto"
+      tags: *a14
+    patch:
+      operationId: ApplicationCompliancesController_update
+      summary: Update the compliance for an application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateComplianceDto"
+      responses:
+        "200":
+          description: Compliance updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDto"
+      tags: *a14
+  /api/v2/applications/{applicationId}/compliances/ecoindex/scan:
+    post:
+      operationId: ApplicationCompliancesController_scanEcoIndex
+      summary: Calculer et enregistrer le score EcoIndex pour cette application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID of the application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Score EcoIndex calculé et enregistré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceDto"
+      tags: *a14
+  /api/v2/compliances/count:
+    get:
+      operationId: ComplianceController_countAllCompliances
+      summary: Récupérer le nombre total de conformités (toutes applications)
+      parameters: []
+      responses:
+        "200":
+          description: Nombre total de conformités
+          content:
+            application/json:
+              schema:
+                type: number
+      tags:
+        - Compliances
+  /api/v2/applications/{applicationId}/hostings:
+    post:
+      operationId: ApplicationHostingsController_create
+      summary: Créer un hébergement pour une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateHostingDto"
+      responses:
+        "201":
+          description: Hébergement créé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingDto"
+      tags: &a15
+        - Hostings
+    get:
+      operationId: ApplicationHostingsController_findAll
+      summary: Récupérer tous les hébergements d'une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des hébergements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HostingDto"
+      tags: *a15
+  /api/v2/applications/{applicationId}/hostings/{id}:
+    get:
+      operationId: ApplicationHostingsController_findOne
+      summary: Récupérer un hébergement par ID pour une application
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Hébergement trouvé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingDto"
+      tags: *a15
+    patch:
+      operationId: ApplicationHostingsController_update
+      summary: Mettre à jour un hébergement pour une application
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHostingDto"
+      responses:
+        "200":
+          description: Hébergement mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostingDto"
+      tags: *a15
+    delete:
+      operationId: ApplicationHostingsController_remove
+      summary: Supprimer un hébergement pour une application
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Hébergement supprimé
+      tags: *a15
+  /api/v2/sites:
+    get:
+      operationId: SitesController_findDistinctSites
+      summary: Liste des sites distincts existants
+      parameters: []
+      responses:
+        "200":
+          description: Liste des sites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+      tags:
+        - Sites
+  /api/v2/hostings/count:
+    get:
+      operationId: HostingsController_countAllHostings
+      summary: Récupérer le nombre total d'hébergements (toutes applications)
+      parameters: []
+      responses:
+        "200":
+          description: Nombre total d'hébergements
+          content:
+            application/json:
+              schema:
+                type: number
+      tags:
+        - Hostings
   /api/v2/hosting-options:
     post:
       operationId: HostingOptionController_create
@@ -3097,15 +3025,26 @@ paths:
         "404":
           description: Hosting option not found
       tags: *a16
-  /api/v2/applications/{applicationId}/links:
+  /api/v2/applications/{applicationId}/labels:
     post:
-      operationId: ApplicationLinksController_create
-      summary: Create a new link for an application
+      operationId: LabelsController_create
+      summary: Créer un nouveau nom
+      description: "
+
+        **Ce endpoint permet de créer un nom complet.**
+
+
+        Vous devez fournir les informations suivantes :
+
+        - **labelSourceId**: L'id de la source du nom (peut être vide).
+
+        - **value**: Le nom alternatif de l'application.
+
+        \    "
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID of the application
           schema:
             type: string
       requestBody:
@@ -3113,85 +3052,59 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateLinkDto"
+              $ref: "#/components/schemas/CreateLabelDto"
       responses:
         "201":
-          description: Link created successfully
+          description: Nom alternatif créé avec succès.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LinkDto"
+                $ref: "#/components/schemas/LabelDto"
       tags: &a17
-        - Links
+        - Labels
     get:
-      operationId: ApplicationLinksController_findAll
-      summary: Retrieve links for an application
-      description: Get list of links for an application
+      operationId: LabelsController_findAllSorted
+      summary: Récupérer les noms alternatifs par ID d'application
+      description: "
+
+        Ce endpoint permet de récupérer la liste de tous les noms alternatifs
+        d'une application en fonction de son identifiant unique.
+
+
+        Le paramètre **applicationId** doit être fourni dans l'URL.
+
+        \    "
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID of the application
           schema:
-            type: string
-        - name: page
-          required: false
-          in: query
-          description: Numéro de page
-          schema:
-            minimum: 0
-            example: 0
-            type: number
-        - name: pageSize
-          required: false
-          in: query
-          description: Nombre de résultats par page, 0 pour supprimer la pagination
-          schema:
-            minimum: 0
-            maximum: 100
-            default: 15
-            example: 15
-            type: number
-        - name: sortBy
-          required: false
-          in: query
-          description: Champ utilisé pour le tri
-          schema:
-            example: label
-            type: string
-        - name: order
-          required: false
-          in: query
-          description: Ordre de tri
-          schema:
-            example: asc
-            enum:
-              - asc
-              - desc
             type: string
       responses:
         "200":
-          description: List of links for the application
+          description: Liste des noms alternatifs
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedLinkDto"
+                type: array
+                items:
+                  $ref: "#/components/schemas/LabelDto"
       tags: *a17
-  /api/v2/applications/{applicationId}/links/{id}:
+  /api/v2/applications/{applicationId}/labels/{id}:
     patch:
-      operationId: ApplicationLinksController_update
-      summary: Update a link for an application
+      operationId: LabelsController_update
+      summary: Mettre à jour un nom existant
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID of the application
+          description: ID de l'application
           schema:
             type: string
         - name: id
           required: true
           in: path
-          description: ID of the link to update
+          description: ID du nom
           schema:
             type: string
       requestBody:
@@ -3199,34 +3112,37 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateLinkDto"
+              $ref: "#/components/schemas/CreateLabelDto"
       responses:
         "200":
-          description: Link updated successfully
+          description: Nom alternatif mis à jour
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LinkDto"
+                $ref: "#/components/schemas/LabelDto"
       tags: *a17
     delete:
-      operationId: ApplicationLinksController_delete
-      summary: Delete a link for an application
+      operationId: LabelsController_delete
+      summary: Supprimer un nom alternatif
+      description: " Ce endpoint permet de supprimer un nom alternatif existant.\ 
+
+        \    Vous devez fournir l'identifiant du nom alternatif dans l'URL.
+
+        \    "
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID of the application
           schema:
             type: string
         - name: id
           required: true
           in: path
-          description: ID of the link to delete
           schema:
             type: string
       responses:
         "204":
-          description: Link deleted successfully
+          description: Nom alternatif supprimé avec succès
       tags: *a17
   /api/v2/label-sources:
     post:
@@ -3357,26 +3273,15 @@ paths:
         "404":
           description: Source non trouvée
       tags: *a18
-  /api/v2/applications/{applicationId}/labels:
+  /api/v2/applications/{applicationId}/links:
     post:
-      operationId: LabelsController_create
-      summary: Créer un nouveau nom
-      description: "
-
-        **Ce endpoint permet de créer un nom complet.**
-
-
-        Vous devez fournir les informations suivantes :
-
-        - **labelSourceId**: L'id de la source du nom (peut être vide).
-
-        - **value**: Le nom alternatif de l'application.
-
-        \    "
+      operationId: ApplicationLinksController_create
+      summary: Create a new link for an application
       parameters:
         - name: applicationId
           required: true
           in: path
+          description: ID of the application
           schema:
             type: string
       requestBody:
@@ -3384,59 +3289,85 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateLabelDto"
+              $ref: "#/components/schemas/CreateLinkDto"
       responses:
         "201":
-          description: Nom alternatif créé avec succès.
+          description: Link created successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LabelDto"
+                $ref: "#/components/schemas/LinkDto"
       tags: &a19
-        - Labels
+        - Links
     get:
-      operationId: LabelsController_findAllSorted
-      summary: Récupérer les noms alternatifs par ID d'application
-      description: "
-
-        Ce endpoint permet de récupérer la liste de tous les noms alternatifs
-        d'une application en fonction de son identifiant unique.
-
-
-        Le paramètre **applicationId** doit être fourni dans l'URL.
-
-        \    "
+      operationId: ApplicationLinksController_findAll
+      summary: Retrieve links for an application
+      description: Get list of links for an application
       parameters:
         - name: applicationId
           required: true
           in: path
+          description: ID of the application
           schema:
+            type: string
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
             type: string
       responses:
         "200":
-          description: Liste des noms alternatifs
+          description: List of links for the application
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/LabelDto"
+                $ref: "#/components/schemas/PaginatedLinkDto"
       tags: *a19
-  /api/v2/applications/{applicationId}/labels/{id}:
+  /api/v2/applications/{applicationId}/links/{id}:
     patch:
-      operationId: LabelsController_update
-      summary: Mettre à jour un nom existant
+      operationId: ApplicationLinksController_update
+      summary: Update a link for an application
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID de l'application
+          description: ID of the application
           schema:
             type: string
         - name: id
           required: true
           in: path
-          description: ID du nom
+          description: ID of the link to update
           schema:
             type: string
       requestBody:
@@ -3444,139 +3375,35 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateLabelDto"
+              $ref: "#/components/schemas/UpdateLinkDto"
       responses:
         "200":
-          description: Nom alternatif mis à jour
+          description: Link updated successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LabelDto"
+                $ref: "#/components/schemas/LinkDto"
       tags: *a19
     delete:
-      operationId: LabelsController_delete
-      summary: Supprimer un nom alternatif
-      description: " Ce endpoint permet de supprimer un nom alternatif existant.\ 
-
-        \    Vous devez fournir l'identifiant du nom alternatif dans l'URL.
-
-        \    "
+      operationId: ApplicationLinksController_delete
+      summary: Delete a link for an application
       parameters:
         - name: applicationId
           required: true
           in: path
+          description: ID of the application
           schema:
             type: string
         - name: id
           required: true
           in: path
+          description: ID of the link to delete
           schema:
             type: string
       responses:
         "204":
-          description: Nom alternatif supprimé avec succès
+          description: Link deleted successfully
       tags: *a19
-  /api/v2/applications/{applicationId}/compliances:
-    post:
-      operationId: ApplicationCompliancesController_create
-      summary: Create a new compliance for an application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID of the application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateComplianceDto"
-      responses:
-        "200":
-          description: Compliance created or updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ComplianceDto"
-      tags: &a20
-        - Compliances
-    get:
-      operationId: ApplicationCompliancesController_findOne
-      summary: Retrieve the compliance for an application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID of the application
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Compliance found successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ComplianceDto"
-      tags: *a20
-    patch:
-      operationId: ApplicationCompliancesController_update
-      summary: Update the compliance for an application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID of the application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateComplianceDto"
-      responses:
-        "200":
-          description: Compliance updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ComplianceDto"
-      tags: *a20
-  /api/v2/applications/{applicationId}/compliances/ecoindex/scan:
-    post:
-      operationId: ApplicationCompliancesController_scanEcoIndex
-      summary: Calculer et enregistrer le score EcoIndex pour cette application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID of the application
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Score EcoIndex calculé et enregistré avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ComplianceDto"
-      tags: *a20
-  /api/v2/compliances/count:
-    get:
-      operationId: ComplianceController_countAllCompliances
-      summary: Récupérer le nombre total de conformités (toutes applications)
-      parameters: []
-      responses:
-        "200":
-          description: Nombre total de conformités
-          content:
-            application/json:
-              schema:
-                type: number
-      tags:
-        - Compliances
   /api/v2/applications/{applicationId}/technical-debt-info:
     post:
       operationId: ApplicationTechnicalDebtInfoController_create
@@ -3603,7 +3430,7 @@ paths:
                 $ref: "#/components/schemas/TechnicalDebtInfoDto"
         "409":
           description: Technical debt info already exists for this application
-      tags: &a21
+      tags: &a20
         - Technical Debt Info
     get:
       operationId: ApplicationTechnicalDebtInfoController_find
@@ -3657,7 +3484,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedTechnicalDebtInfoDto"
-      tags: *a21
+      tags: *a20
   /api/v2/technical-debts:
     get:
       operationId: TechnicalDebtController_getTechnicalDebtPoints
@@ -3989,20 +3816,381 @@ paths:
                   $ref: "#/components/schemas/TechnicalDebtPointDto"
       tags:
         - technical-debts
-  /api/v2/config:
+  /api/v2/stats/iq-avg/period:
     get:
-      operationId: getConfig
-      summary: Récupérer la configuration du client
-      parameters: []
+      operationId: StatsController_getIqAvgGrouped
+      summary: Récupérer la moyenne des IQ par période
+      description: "
+
+        Permet de récupérer la moyenne des IQ par période. \ 
+
+        Vous pouvez spécifier la période en utilisant les paramètres `from` et
+        `to`, \ 
+
+        ainsi que le regroupement souhaité avec `groupBy`. \ 
+
+
+        **Valeurs possibles pour `groupBy` :** \ 
+
+        - `jour` (day) \ 
+
+        - `semaine` (week) \ 
+
+        - `mois` (month) \ 
+
+        - `année` (year) \ 
+
+
+        **Exemple d’appel :** \ 
+
+        ```http
+
+        GET /stats/iq-avg/period?from=2025-07-01&to=2025-07-23&groupBy=mois
+
+        Authorization: Bearer <TOKEN>
+
+        ```
+
+        \    "
+      parameters:
+        - name: from
+          required: false
+          in: query
+          description: Date de début au format ISO (ex. 2025-07-01)
+          schema:
+            example: 2025-07-01
+            type: string
+        - name: to
+          required: false
+          in: query
+          description: Date de fin au format ISO (ex. 2025-07-23)
+          schema:
+            example: 2025-07-23
+            type: string
+        - name: groupBy
+          required: false
+          in: query
+          description: Regroupement souhaité (jour, semaine, mois, année)
+          schema:
+            enum:
+              - jour
+              - semaine
+              - mois
+              - année
+            type: string
       responses:
         "200":
-          description: Configuration du client
+          description: Tableau de buckets avec label, moyenne, min, max, count
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ConfigDto"
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetIqAvgGroupedDto"
       tags:
-        - Config
+        - Stats
+  /api/v2/reports:
+    get:
+      operationId: ReportsController_findAll
+      summary: Récupérer tous les signalements
+      description: Renvoie la liste de tous les signalements.
+      parameters:
+        - name: all
+          required: false
+          in: query
+          description: Filtrer les signalements pour l'utilisateur connecté
+          schema:
+            default: false
+            type: boolean
+        - name: searchReport
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          required: false
+          in: query
+          schema:
+            enum:
+              - application
+              - status
+              - date
+              - description
+              - signalant
+              - notes
+            type: string
+        - name: order
+          required: false
+          in: query
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 0
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            type: number
+      responses:
+        "200":
+          description: Liste des signalements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedReportDto"
+      tags: &a21
+        - Reports
+    post:
+      operationId: ReportsController_create
+      summary: Créer un signalement
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReportRequestDto"
+      responses:
+        "201":
+          description: Signalement créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportDto"
+      tags: *a21
+  /api/v2/reports/{id}:
+    patch:
+      operationId: ReportsController_update
+      summary: Mettre à jour un signalement
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: notify
+          required: true
+          in: query
+          description: Send Notification Email
+          schema:
+            example: "true"
+            type: boolean
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReportDto"
+      responses:
+        "200":
+          description: Signalement mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportDto"
+      tags: *a21
+  /api/v2/applications/{applicationId}/reports:
+    post:
+      operationId: ApplicationReportsController_create
+      summary: Demande de modification pour une fiche application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReportRequestDto"
+      responses:
+        "201":
+          description: Signalement créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportDto"
+      tags: &a22
+        - ApplicationReports
+    get:
+      operationId: ApplicationReportsController_findAll
+      summary: Récupérer tous les signalements pour une application
+      description: Renvoie la liste paginée des signalements pour une application donnée.
+      parameters:
+        - name: all
+          required: false
+          in: query
+          description: Filtrer les signalements pour l'utilisateur connecté
+          schema:
+            default: false
+            type: boolean
+        - name: searchReport
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: sortBy
+          required: false
+          in: query
+          schema:
+            enum:
+              - application
+              - status
+              - date
+              - description
+              - signalant
+              - notes
+            type: string
+        - name: order
+          required: false
+          in: query
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: page
+          required: false
+          in: query
+          schema:
+            minimum: 0
+            type: number
+        - name: limit
+          required: false
+          in: query
+          schema:
+            minimum: 1
+            type: number
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste paginée des signalements pour l'application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedReportDto"
+      tags: *a22
+  /api/v2/applications/{applicationId}/reports/{id}:
+    get:
+      operationId: ApplicationReportsController_findOne
+      summary: Récupérer un signalement spécifique par ID
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Signalement trouvé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportDto"
+      tags: *a22
+    patch:
+      operationId: ApplicationReportsController_update
+      summary: Mettre à jour un signalement
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: notify
+          required: true
+          in: query
+          description: Send Notification Email
+          schema:
+            example: "true"
+            type: boolean
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateReportDto"
+      responses:
+        "200":
+          description: Signalement mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportDto"
+      tags: *a22
+    delete:
+      operationId: ApplicationReportsController_remove
+      summary: Supprimer un signalement
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Signalement supprimé avec succès
+      tags: *a22
+  /api/v2/health-check:
+    get:
+      operationId: HealthCheckController_checkHealth
+      summary: Vérification de la santé de l'application
+      description: Exécute une requête basique vers la base de données pour vérifier
+        la connectivité et l'état global de l'application.
+      parameters: []
+      responses:
+        "200":
+          description: L'application fonctionne correctement.
+          content:
+            application/json:
+              schema:
+                example:
+                  status: ok
+        "500":
+          description: Le service n'est pas disponible en raison d'une erreur lors de la
+            connexion à la base de données.
+          content:
+            application/json:
+              schema:
+                example:
+                  status: error
+                  message: Détail de l'erreur
+      tags:
+        - Health Check
 info:
   title: API Référentiel Applications
   description: API pour la gestion des applications
@@ -4029,134 +4217,180 @@ components:
       name: x-refapp-token
       description: Token authentication
   schemas:
-    relationType:
-      type: string
-      enum:
-        - is_part_of
-        - in_replacement_of
-        - is_service_user_of
-        - is_data_user_of
-        - use_sso_of
-    RelationApplicationDto:
+    FooterLinkDto:
       type: object
       properties:
-        applicationTargetId:
-          type: string
-        type:
-          $ref: "#/components/schemas/relationType"
-        mediationServiceId:
-          type: string
-          nullable: true
-      required:
-        - applicationTargetId
-        - type
-        - mediationServiceId
-    ApplicationMinimalDto:
-      type: object
-      properties:
-        id:
-          type: string
         label:
           type: string
+          description: Link label
+          example: Documentation
+        title:
+          type: string
+          description: Link title (tooltip)
+          example: Aller à la documentation
+        href:
+          type: string
+          description: Link URL
+          example: https://documentation.example.com
       required:
-        - id
         - label
-    RelationDto:
+        - title
+        - href
+    ConfigDto:
       type: object
       properties:
-        id:
+        oidcConfigUrl:
           type: string
-        applicationSourceId:
+          description: OIDC configuration URL
+          example: https://auth.sso.interieur.rie.gouv.fr/.well-known/openid-configuration
+        oidcClientId:
           type: string
-        applicationTargetId:
+          description: OIDC client ID
+          example: my-client-id
+        version:
           type: string
-        mediationServiceId:
+          description: Backend version
+          example: 1.0.0
+        environmentLabel:
           type: string
-          nullable: true
-        sourceApplication:
-          $ref: "#/components/schemas/ApplicationMinimalDto"
-        targetApplication:
-          $ref: "#/components/schemas/ApplicationMinimalDto"
-        type:
-          $ref: "#/components/schemas/relationType"
-        mediationService:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/ApplicationMinimalDto"
+          description: Environment label displayed in the header badge
+          example: developpement
+        footerLinks:
+          description: Footer links to display in the application footer
+          type: array
+          items:
+            $ref: "#/components/schemas/FooterLinkDto"
       required:
-        - id
-        - applicationSourceId
-        - applicationTargetId
-        - mediationServiceId
-        - sourceApplication
-        - targetApplication
-        - type
-        - mediationService
-    Status:
+        - oidcConfigUrl
+        - oidcClientId
+        - version
+        - footerLinks
+    Roles:
       type: string
+      description: Role attribué a un utilisateur
       enum:
-        - under_construction
-        - to_validate
-        - poc
-        - in_production_mvp
-        - in_production
-        - in_production_decommissioning
-        - decommissioned
-        - deleted
-    GraphNodeDto:
+        - VISITOR
+        - READER
+        - CONTRIBUTOR
+        - ADMIN
+    TokenDto:
       type: object
       properties:
         id:
           type: string
-        label:
+          example: abc123def456ghi789jkl012mno345pq
+          description: Identifiant unique du token
+        role:
+          $ref: "#/components/schemas/Roles"
+        description:
           type: string
+          example: Token pour l'application X
+          description: Description du token
+        name:
+          type: string
+          example: Service X
+          description: Nom du service ou de l'application utilisant le token
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
         status:
-          $ref: "#/components/schemas/Status"
+          type: object
+          example: active
+          description: Statut du token
       required:
         - id
-        - label
-    GraphEdgeDto:
+        - description
+        - name
+        - status
+    CreateServiceTokenDto:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        description:
+          type: string
+          example: Token pour l'application X
+          description: Description du token
+        name:
+          type: string
+          example: Service X
+          description: Nom du service ou de l'application utilisant le token
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
+      required:
+        - role
+        - description
+        - name
+    ExposedTokenDto:
       type: object
       properties:
         id:
           type: string
-        sourceId:
+          example: abc123def456ghi789jkl012mno345pq
+          description: Identifiant unique du token
+        role:
+          $ref: "#/components/schemas/Roles"
+        description:
           type: string
-        sourceLabel:
+          example: Token pour l'application X
+          description: Description du token
+        name:
           type: string
-        targetId:
+          example: Service X
+          description: Nom du service ou de l'application utilisant le token
+        expiresAt:
           type: string
-        targetLabel:
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
+        status:
+          type: object
+          example: active
+          description: Statut du token
+        password:
           type: string
-        type:
-          $ref: "#/components/schemas/relationType"
+          example: xyz987uvw654rst321opq098nml765kj
+          description: Valeur du token (ne sera pas stockée, à afficher une seule fois)
       required:
         - id
-        - sourceId
-        - sourceLabel
-        - targetId
-        - targetLabel
-        - type
-    RelationGraphDto:
+        - description
+        - name
+        - status
+        - password
+    CreatePersonalTokenDto:
       type: object
       properties:
-        nodes:
-          description: Liste des applications (nœuds du graphe)
-          type: array
-          items:
-            $ref: "#/components/schemas/GraphNodeDto"
-        edges:
-          description: Liste des relations (arêtes du graphe)
-          type: array
-          items:
-            $ref: "#/components/schemas/GraphEdgeDto"
-        rootId:
+        role:
+          $ref: "#/components/schemas/Roles"
+        description:
           type: string
-          description: ID de l'application racine
+          example: Token pour l'application X
+          description: Description du token
+        name:
+          type: string
+          example: Service X
+          description: Nom du service ou de l'application utilisant le token
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
       required:
-        - nodes
-        - edges
-        - rootId
+        - description
+        - name
+    RegenerateTokenDto:
+      type: object
+      properties:
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
     MetadataAction:
       type: string
       description: Action effectuée sur la metadata
@@ -4175,14 +4409,6 @@ components:
       required:
         - id
         - label
-    Roles:
-      type: string
-      description: Role attribué a un utilisateur
-      enum:
-        - VISITOR
-        - READER
-        - CONTRIBUTOR
-        - ADMIN
     OrganizationDto:
       type: object
       properties:
@@ -4415,85 +4641,6 @@ components:
       required:
         - first
         - last
-    UserWithPermissions:
-      type: object
-      properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        organization:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/OrganizationDto"
-        type:
-          $ref: "#/components/schemas/UserType"
-        emailNotificationsEnabled:
-          type: boolean
-          description: Préférence de notification par email
-          default: true
-        followedApplications:
-          description: Applications suivies par l'utilisateur
-          type: array
-          items:
-            $ref: "#/components/schemas/UserFollowedApplicationDto"
-        additionalPermissions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Permission"
-        permissions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Permission"
-        id:
-          type: string
-        email:
-          type: string
-        organizationId:
-          type: string
-          nullable: true
-      required:
-        - role
-        - type
-        - additionalPermissions
-        - id
-        - email
-        - organizationId
-    UpdateUserPreferencesDto:
-      type: object
-      properties:
-        emailNotificationsEnabled:
-          type: boolean
-          description: Indique si les notifications par email sont activées pour
-            l'utilisateur
-    UpdateUserDto:
-      type: object
-      properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        organizationId:
-          type: string
-          nullable: true
-          description: ID de l'organisation
-        additionalPermissions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Permission"
-      required:
-        - additionalPermissions
-    PaginatedUserWithPermissions:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/UserWithPermissions"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     ApplicationPriorityRestart:
       type: string
       enum:
@@ -4560,7 +4707,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a22
+          example: &a23
             - population 1
             - population 2
           description: population associated with the application
@@ -4570,7 +4717,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a23
+          example: &a24
             - finance
             - HR
           description: Purposes of the application
@@ -4581,7 +4728,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a24
+          example: &a25
             - tag1
             - tag2
           type: array
@@ -4797,7 +4944,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a22
+          example: *a23
           description: population associated with the application
           type: array
           items:
@@ -4805,7 +4952,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a23
+          example: *a24
           description: Purposes of the application
           type: array
           items:
@@ -4814,7 +4961,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a24
+          example: *a25
           type: array
           items:
             type: string
@@ -4907,277 +5054,160 @@ components:
       required:
         - results
         - total
-    CreateHostingDto:
+    CreateDataSourceDto:
       type: object
       properties:
-        label:
+        name:
           type: string
-        hostingOptionId:
+          maxLength: 255
+          example: Base de données RH
+          description: Nom d'usage de la source de donnée
+        description:
           type: string
-          description: ID of the hosting option
-        applicationId:
-          type: string
-        isActive:
+          example: Contient l'ensemble des dossiers agents du ministère.
+          description: Description détaillée de la source
+        isReference:
           type: boolean
-          nullable: true
-          description: Indicates whether the hosting is active, passif or not specified
-            (null).
+          description: Indicateur Source Maître (officielle et faisant foi)
+          default: false
+        example:
+          type: string
+          example: ID_AGENT; NOM; PRENOM
+          description: Échantillon de données ou format des champs
+        conservation:
+          type: string
+          maxLength: 100
+          example: 10 ans
+          description: Durée d'Utilité Administrative (DUA)
+        databaseName:
+          type: string
+          maxLength: 255
+          example: DB_PROD_RH
+          description: Nom de l'instance de la base de données hôte
+        databaseTableName:
+          type: string
+          maxLength: 255
+          example: t_agents_details
+          description: Nom technique de la table ou du fichier
+        fieldCount:
+          type: number
+          example: 40
+          description: Nombre total de colonnes/champs
+        fields:
+          type: string
+          description: Liste textuelle des champs/colonnes
+        volumetry:
+          type: number
+          example: 150000
+          description: Nombre actuel d'enregistrements
+        monthlyVolumetry:
+          type: number
+          example: 500
+          description: Nouveaux enregistrements par mois
+        typeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type de support (DataSourceType)
+        sensibilityId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du niveau de sensibilité
+        familyId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la famille thématique
+        updateFrequencyId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la fréquence de mise à jour
       required:
-        - applicationId
-        - isActive
-    HostingOptionDto:
+        - name
+    DataSourceDto:
       type: object
       properties:
-        site:
+        name:
           type: string
-          description: Site name (géographique)
-          example: CER(RENNES)
-        platform:
+          maxLength: 255
+          example: Base de données RH
+          description: Nom d'usage de la source de donnée
+        description:
           type: string
-          description: Platform name
-          example: PHYSIQUE
-        provider:
-          type: string
-          description: Provider name
-          example: DTNUM
-        building:
-          type: string
-          description: Building (optional)
-          example: B15
-        room:
-          type: string
-          description: Room (optional)
-          example: IT2
-        id:
-          type: string
-          description: Unique identifier of the hosting option
-          example: 12345678-1234-1234-1234-123456789012
-      required:
-        - site
-        - platform
-        - provider
-        - id
-    HostingDto:
-      type: object
-      properties:
-        label:
-          type: string
-        hostingOptionId:
-          type: string
-          description: ID of the hosting option
-        applicationId:
-          type: string
-        isActive:
+          example: Contient l'ensemble des dossiers agents du ministère.
+          description: Description détaillée de la source
+        isReference:
           type: boolean
-          nullable: true
-          description: Indicates whether the hosting is active, passif or not specified
-            (null).
+          description: Indicateur Source Maître (officielle et faisant foi)
+          default: false
+        example:
+          type: string
+          example: ID_AGENT; NOM; PRENOM
+          description: Échantillon de données ou format des champs
+        conservation:
+          type: string
+          maxLength: 100
+          example: 10 ans
+          description: Durée d'Utilité Administrative (DUA)
+        databaseName:
+          type: string
+          maxLength: 255
+          example: DB_PROD_RH
+          description: Nom de l'instance de la base de données hôte
+        databaseTableName:
+          type: string
+          maxLength: 255
+          example: t_agents_details
+          description: Nom technique de la table ou du fichier
+        fieldCount:
+          type: number
+          example: 40
+          description: Nombre total de colonnes/champs
+        fields:
+          type: string
+          description: Liste textuelle des champs/colonnes
+        volumetry:
+          type: number
+          example: 150000
+          description: Nombre actuel d'enregistrements
+        monthlyVolumetry:
+          type: number
+          example: 500
+          description: Nouveaux enregistrements par mois
+        typeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type de support (DataSourceType)
+        sensibilityId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du niveau de sensibilité
+        familyId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la famille thématique
+        updateFrequencyId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la fréquence de mise à jour
         id:
           type: string
-        hostingOption:
-          $ref: "#/components/schemas/HostingOptionDto"
-      required:
-        - applicationId
-        - isActive
-        - id
-        - hostingOption
-    UpdateHostingDto:
-      type: object
-      properties:
-        label:
-          type: string
-        hostingOptionId:
-          type: string
-          description: ID of the hosting option
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la source de donnée
         applicationId:
           type: string
-        isActive:
-          type: boolean
-          nullable: true
-          description: Indicates whether the hosting is active, passif or not specified
-            (null).
-    TokenDto:
-      type: object
-      properties:
-        id:
-          type: string
-          example: abc123def456ghi789jkl012mno345pq
-          description: Identifiant unique du token
-        role:
-          $ref: "#/components/schemas/Roles"
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-        status:
-          type: object
-          example: active
-          description: Statut du token
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de l'application liée
       required:
-        - id
-        - description
         - name
-        - status
-    CreateServiceTokenDto:
-      type: object
-      properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-      required:
-        - role
-        - description
-        - name
-    ExposedTokenDto:
-      type: object
-      properties:
-        id:
-          type: string
-          example: abc123def456ghi789jkl012mno345pq
-          description: Identifiant unique du token
-        role:
-          $ref: "#/components/schemas/Roles"
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-        status:
-          type: object
-          example: active
-          description: Statut du token
-        password:
-          type: string
-          example: xyz987uvw654rst321opq098nml765kj
-          description: Valeur du token (ne sera pas stockée, à afficher une seule fois)
-      required:
-        - id
-        - description
-        - name
-        - status
-        - password
-    CreatePersonalTokenDto:
-      type: object
-      properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-      required:
-        - description
-        - name
-    RegenerateTokenDto:
-      type: object
-      properties:
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-    Notifier:
-      type: object
-      properties:
-        id:
-          type: string
-        email:
-          type: string
-      required:
-        - id
-        - email
-    ReportStatus:
-      type: string
-      description: Le statut du signalement
-      enum:
-        - in_pending
-        - in_progress
-        - done
-    ReportDto:
-      type: object
-      properties:
-        notifier:
-          description: The user who reported the issue
-          allOf:
-            - $ref: "#/components/schemas/Notifier"
-        status:
-          $ref: "#/components/schemas/ReportStatus"
-        createdAt:
-          type: string
-          description: Date de création de la metadata
-          example: 2023-10-01T12:00:00Z
-        id:
-          type: string
-        applicationId:
-          type: string
-          nullable: true
-        application:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/ApplicationDto"
-        notifierId:
-          type: string
-        description:
-          type: string
-        updatedAt:
-          format: date-time
-          type: string
-      required:
-        - notifier
-        - status
-        - createdAt
         - id
         - applicationId
-        - application
-        - notifierId
-        - description
-        - updatedAt
-    PaginatedReportDto:
+    PaginatedDataSourceDto:
       type: object
       properties:
         results:
           description: Array of results
           type: array
           items:
-            $ref: "#/components/schemas/ReportDto"
+            $ref: "#/components/schemas/DataSourceDto"
         total:
           type: number
           description: Total number of items
@@ -5185,58 +5215,200 @@ components:
       required:
         - results
         - total
-    CreateReportRequestDto:
+    UpdateDataSourceDto:
       type: object
       properties:
-        applicationId:
+        name:
           type: string
+          maxLength: 255
+          example: Base de données RH
+          description: Nom d'usage de la source de donnée
         description:
           type: string
-        notes:
+          example: Contient l'ensemble des dossiers agents du ministère.
+          description: Description détaillée de la source
+        isReference:
+          type: boolean
+          description: Indicateur Source Maître (officielle et faisant foi)
+          default: false
+        example:
           type: string
-          default: ""
+          example: ID_AGENT; NOM; PRENOM
+          description: Échantillon de données ou format des champs
+        conservation:
+          type: string
+          maxLength: 100
+          example: 10 ans
+          description: Durée d'Utilité Administrative (DUA)
+        databaseName:
+          type: string
+          maxLength: 255
+          example: DB_PROD_RH
+          description: Nom de l'instance de la base de données hôte
+        databaseTableName:
+          type: string
+          maxLength: 255
+          example: t_agents_details
+          description: Nom technique de la table ou du fichier
+        fieldCount:
+          type: number
+          example: 40
+          description: Nombre total de colonnes/champs
+        fields:
+          type: string
+          description: Liste textuelle des champs/colonnes
+        volumetry:
+          type: number
+          example: 150000
+          description: Nombre actuel d'enregistrements
+        monthlyVolumetry:
+          type: number
+          example: 500
+          description: Nouveaux enregistrements par mois
+        typeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type de support (DataSourceType)
+        sensibilityId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du niveau de sensibilité
+        familyId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la famille thématique
+        updateFrequencyId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la fréquence de mise à jour
+    relationType:
+      type: string
+      enum:
+        - is_part_of
+        - in_replacement_of
+        - is_service_user_of
+        - is_data_user_of
+        - use_sso_of
+    RelationApplicationDto:
+      type: object
+      properties:
+        applicationTargetId:
+          type: string
+        type:
+          $ref: "#/components/schemas/relationType"
+        mediationServiceId:
+          type: string
+          nullable: true
       required:
-        - description
-    UpdateReportDto:
+        - applicationTargetId
+        - type
+        - mediationServiceId
+    ApplicationMinimalDto:
       type: object
       properties:
-        description:
+        id:
           type: string
-          description: La description du signalement
-        status:
-          type: string
-          description: Le statut du signalement
-          enum:
-            - in_pending
-            - in_progress
-            - done
-        notes:
-          type: string
-          description: La note du signalement
-    GetIqAvgGroupedDto:
-      type: object
-      properties:
         label:
           type: string
-          example: 2025-07
-        moyenne:
-          type: number
-          example: 78.2
-        min:
-          type: number
-          example: 62
-        max:
-          type: number
-          example: 93
-        count:
-          type: number
-          example: 14
       required:
+        - id
         - label
-        - moyenne
-        - min
-        - max
-        - count
+    RelationDto:
+      type: object
+      properties:
+        id:
+          type: string
+        applicationSourceId:
+          type: string
+        applicationTargetId:
+          type: string
+        mediationServiceId:
+          type: string
+          nullable: true
+        sourceApplication:
+          $ref: "#/components/schemas/ApplicationMinimalDto"
+        targetApplication:
+          $ref: "#/components/schemas/ApplicationMinimalDto"
+        type:
+          $ref: "#/components/schemas/relationType"
+        mediationService:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ApplicationMinimalDto"
+      required:
+        - id
+        - applicationSourceId
+        - applicationTargetId
+        - mediationServiceId
+        - sourceApplication
+        - targetApplication
+        - type
+        - mediationService
+    Status:
+      type: string
+      enum:
+        - under_construction
+        - to_validate
+        - poc
+        - in_production_mvp
+        - in_production
+        - in_production_decommissioning
+        - decommissioned
+        - deleted
+    GraphNodeDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        status:
+          $ref: "#/components/schemas/Status"
+      required:
+        - id
+        - label
+    GraphEdgeDto:
+      type: object
+      properties:
+        id:
+          type: string
+        sourceId:
+          type: string
+        sourceLabel:
+          type: string
+        targetId:
+          type: string
+        targetLabel:
+          type: string
+        type:
+          $ref: "#/components/schemas/relationType"
+      required:
+        - id
+        - sourceId
+        - sourceLabel
+        - targetId
+        - targetLabel
+        - type
+    RelationGraphDto:
+      type: object
+      properties:
+        nodes:
+          description: Liste des applications (nœuds du graphe)
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphNodeDto"
+        edges:
+          description: Liste des relations (arêtes du graphe)
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphEdgeDto"
+        rootId:
+          type: string
+          description: ID de l'application racine
+      required:
+        - nodes
+        - edges
+        - rootId
     CreateOrganizationDto:
       type: object
       properties:
@@ -5292,6 +5464,196 @@ components:
           type: string
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
+    UserWithPermissions:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        organization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        type:
+          $ref: "#/components/schemas/UserType"
+        emailNotificationsEnabled:
+          type: boolean
+          description: Préférence de notification par email
+          default: true
+        followedApplications:
+          description: Applications suivies par l'utilisateur
+          type: array
+          items:
+            $ref: "#/components/schemas/UserFollowedApplicationDto"
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        id:
+          type: string
+        email:
+          type: string
+        organizationId:
+          type: string
+          nullable: true
+      required:
+        - role
+        - type
+        - additionalPermissions
+        - id
+        - email
+        - organizationId
+    UpdateUserPreferencesDto:
+      type: object
+      properties:
+        emailNotificationsEnabled:
+          type: boolean
+          description: Indique si les notifications par email sont activées pour
+            l'utilisateur
+    UpdateUserDto:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        organizationId:
+          type: string
+          nullable: true
+          description: ID de l'organisation
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+      required:
+        - additionalPermissions
+    PaginatedUserWithPermissions:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/UserWithPermissions"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    CreateActorDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@example.com
+          description: Email de l'acteur (Optionel)
+        firstname:
+          type: string
+          example: Jean
+          description: Prénom de l’acteur
+        lastname:
+          type: string
+          example: Dupont
+          description: Nom de l’acteur
+        actorTypeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type d'acteur lié
+        organizationId:
+          type: string
+          nullable: true
+          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
+          description: ID de l'organization lié (Optionel)
+        applicationId:
+          type: string
+          nullable: true
+          example: 035869dc-47a6-4cee-828f-f6a28d050b35
+          description: ID de l'application lié (Optionel)
+      required:
+        - actorTypeId
+    ActorDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@example.com
+          description: Email de l'acteur (Optionel)
+        firstname:
+          type: string
+          example: Jean
+          description: Prénom de l’acteur
+        lastname:
+          type: string
+          example: Dupont
+          description: Nom de l’acteur
+        actorTypeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type d'acteur lié
+        organizationId:
+          type: string
+          nullable: true
+          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
+          description: ID de l'organization lié (Optionel)
+        applicationId:
+          type: string
+          nullable: true
+          example: 035869dc-47a6-4cee-828f-f6a28d050b35
+          description: ID de l'application lié (Optionel)
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant unique de l'acteur
+      required:
+        - actorTypeId
+        - id
+    PaginatedActorDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/ActorDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    UpdateActorDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@example.com
+          description: Email de l'acteur (Optionel)
+        firstname:
+          type: string
+          example: Jean
+          description: Prénom de l’acteur
+        lastname:
+          type: string
+          example: Dupont
+          description: Nom de l’acteur
+        actorTypeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type d'acteur lié
+        organizationId:
+          type: string
+          nullable: true
+          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
+          description: ID de l'organization lié (Optionel)
+        applicationId:
+          type: string
+          nullable: true
+          example: 035869dc-47a6-4cee-828f-f6a28d050b35
+          description: ID de l'application lié (Optionel)
     CreateActorTypeDto:
       type: object
       properties:
@@ -5424,343 +5786,6 @@ components:
           example: La MOA définit les besoins du projet, supervise sa mise en œuvre et
             veille à ce que les objectifs métiers soient atteints.
           description: description du type d'acteur
-    CreateActorDto:
-      type: object
-      properties:
-        email:
-          type: string
-          example: example@example.com
-          description: Email de l'acteur (Optionel)
-        firstname:
-          type: string
-          example: Jean
-          description: Prénom de l’acteur
-        lastname:
-          type: string
-          example: Dupont
-          description: Nom de l’acteur
-        actorTypeId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du type d'acteur lié
-        organizationId:
-          type: string
-          nullable: true
-          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
-          description: ID de l'organization lié (Optionel)
-        applicationId:
-          type: string
-          nullable: true
-          example: 035869dc-47a6-4cee-828f-f6a28d050b35
-          description: ID de l'application lié (Optionel)
-      required:
-        - actorTypeId
-    ActorDto:
-      type: object
-      properties:
-        email:
-          type: string
-          example: example@example.com
-          description: Email de l'acteur (Optionel)
-        firstname:
-          type: string
-          example: Jean
-          description: Prénom de l’acteur
-        lastname:
-          type: string
-          example: Dupont
-          description: Nom de l’acteur
-        actorTypeId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du type d'acteur lié
-        organizationId:
-          type: string
-          nullable: true
-          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
-          description: ID de l'organization lié (Optionel)
-        applicationId:
-          type: string
-          nullable: true
-          example: 035869dc-47a6-4cee-828f-f6a28d050b35
-          description: ID de l'application lié (Optionel)
-        id:
-          type: string
-          example: 12345678-1234-1234-1234-123456789012
-          description: Identifiant unique de l'acteur
-      required:
-        - actorTypeId
-        - id
-    PaginatedActorDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/ActorDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
-    UpdateActorDto:
-      type: object
-      properties:
-        email:
-          type: string
-          example: example@example.com
-          description: Email de l'acteur (Optionel)
-        firstname:
-          type: string
-          example: Jean
-          description: Prénom de l’acteur
-        lastname:
-          type: string
-          example: Dupont
-          description: Nom de l’acteur
-        actorTypeId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du type d'acteur lié
-        organizationId:
-          type: string
-          nullable: true
-          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
-          description: ID de l'organization lié (Optionel)
-        applicationId:
-          type: string
-          nullable: true
-          example: 035869dc-47a6-4cee-828f-f6a28d050b35
-          description: ID de l'application lié (Optionel)
-    CreateHostingOptionDto:
-      type: object
-      properties:
-        site:
-          type: string
-          description: Site name (géographique)
-          example: CER(RENNES)
-        platform:
-          type: string
-          description: Platform name
-          example: PHYSIQUE
-        provider:
-          type: string
-          description: Provider name
-          example: DTNUM
-        building:
-          type: string
-          description: Building (optional)
-          example: B15
-        room:
-          type: string
-          description: Room (optional)
-          example: IT2
-      required:
-        - site
-        - platform
-        - provider
-    PaginatedHostingOptionDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/HostingOptionDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
-    UpdateHostingOptionDto:
-      type: object
-      properties:
-        site:
-          type: string
-          description: Site name (géographique)
-          example: CER(RENNES)
-        platform:
-          type: string
-          description: Platform name
-          example: PHYSIQUE
-        provider:
-          type: string
-          description: Provider name
-          example: DTNUM
-        building:
-          type: string
-          description: Building (optional)
-          example: B15
-        room:
-          type: string
-          description: Room (optional)
-          example: IT2
-      required:
-        - site
-        - platform
-        - provider
-    ExternalRessourceType:
-      type: string
-      description: Type of the external resource
-      enum:
-        - documentation
-        - supervision
-        - service
-        - audience_metrics
-        - main_service
-    CreateLinkDto:
-      type: object
-      properties:
-        link:
-          type: string
-          description: The URL of the link
-        type:
-          $ref: "#/components/schemas/ExternalRessourceType"
-        description:
-          type: string
-          description: Optional description of the link
-      required:
-        - link
-        - type
-    LinkDto:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier of the link
-        link:
-          type: string
-          description: The URL of the link
-        type:
-          type: string
-          enum:
-            - documentation
-            - supervision
-            - service
-            - audience_metrics
-            - main_service
-          description: Type of the external resource
-        description:
-          type: string
-          description: Description of the link
-      required:
-        - id
-        - link
-        - type
-    PaginatedLinkDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/LinkDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
-    UpdateLinkDto:
-      type: object
-      properties:
-        link:
-          type: string
-          description: The URL of the link
-        type:
-          $ref: "#/components/schemas/ExternalRessourceType"
-        description:
-          type: string
-          description: Optional description of the link
-    CreateLabelSourceDto:
-      type: object
-      properties:
-        source:
-          type: string
-          description: Source name
-          example: CODE_PAI
-      required:
-        - source
-    LabelSourceDto:
-      type: object
-      properties:
-        source:
-          type: string
-          description: Source name
-          example: CODE_PAI
-        id:
-          type: string
-          description: Unique identifier of the label source
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-      required:
-        - source
-        - id
-    PaginatedLabelSourceDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/LabelSourceDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
-    UpdateLabelSourceDto:
-      type: object
-      properties:
-        source:
-          type: string
-          description: Source name
-          example: CODE_PAI
-      required:
-        - source
-    CreateLabelDto:
-      type: object
-      properties:
-        labelSourceId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la source du label
-        value:
-          type: string
-          example: short-app-name
-          description: Value of the label
-      required:
-        - value
-    LabelDto:
-      type: object
-      properties:
-        labelSourceId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la source du label
-        value:
-          type: string
-          example: short-app-name
-          description: Value of the label
-        id:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID of the label
-        applicationId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID of the application to which the label belongs
-      required:
-        - value
-        - id
-        - applicationId
     CreateComplianceDto:
       type: object
       properties:
@@ -5789,7 +5814,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a25
+          enum: &a26
             - OK
             - KO
           type: string
@@ -5815,7 +5840,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a26
+          enum: &a27
             - S3
             - LOCAL
             - EXTERNE
@@ -5826,7 +5851,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a27
+          enum: &a28
             - OK
             - KO
           type: string
@@ -5836,7 +5861,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a28
+          enum: &a29
             - homologuee
             - en_cours
             - dispensee
@@ -5916,7 +5941,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a25
+          enum: *a26
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -5940,7 +5965,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a26
+          enum: *a27
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -5948,7 +5973,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a27
+          enum: *a28
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -5956,7 +5981,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a28
+          enum: *a29
           type: string
           description: Homologation status
         homologation_date_end:
@@ -6056,7 +6081,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a25
+          enum: *a26
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6080,7 +6105,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a26
+          enum: *a27
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6088,7 +6113,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a27
+          enum: *a28
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6096,7 +6121,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a28
+          enum: *a29
           type: string
           description: Homologation status
         homologation_date_end:
@@ -6145,6 +6170,321 @@ components:
           type: string
           example: https://service.example.com
           description: EcoIndex target URL used for scan
+    CreateHostingDto:
+      type: object
+      properties:
+        label:
+          type: string
+        hostingOptionId:
+          type: string
+          description: ID of the hosting option
+        applicationId:
+          type: string
+        isActive:
+          type: boolean
+          nullable: true
+          description: Indicates whether the hosting is active, passif or not specified
+            (null).
+      required:
+        - applicationId
+        - isActive
+    HostingOptionDto:
+      type: object
+      properties:
+        site:
+          type: string
+          description: Site name (géographique)
+          example: CER(RENNES)
+        platform:
+          type: string
+          description: Platform name
+          example: PHYSIQUE
+        provider:
+          type: string
+          description: Provider name
+          example: DTNUM
+        building:
+          type: string
+          description: Building (optional)
+          example: B15
+        room:
+          type: string
+          description: Room (optional)
+          example: IT2
+        id:
+          type: string
+          description: Unique identifier of the hosting option
+          example: 12345678-1234-1234-1234-123456789012
+      required:
+        - site
+        - platform
+        - provider
+        - id
+    HostingDto:
+      type: object
+      properties:
+        label:
+          type: string
+        hostingOptionId:
+          type: string
+          description: ID of the hosting option
+        applicationId:
+          type: string
+        isActive:
+          type: boolean
+          nullable: true
+          description: Indicates whether the hosting is active, passif or not specified
+            (null).
+        id:
+          type: string
+        hostingOption:
+          $ref: "#/components/schemas/HostingOptionDto"
+      required:
+        - applicationId
+        - isActive
+        - id
+        - hostingOption
+    UpdateHostingDto:
+      type: object
+      properties:
+        label:
+          type: string
+        hostingOptionId:
+          type: string
+          description: ID of the hosting option
+        applicationId:
+          type: string
+        isActive:
+          type: boolean
+          nullable: true
+          description: Indicates whether the hosting is active, passif or not specified
+            (null).
+    CreateHostingOptionDto:
+      type: object
+      properties:
+        site:
+          type: string
+          description: Site name (géographique)
+          example: CER(RENNES)
+        platform:
+          type: string
+          description: Platform name
+          example: PHYSIQUE
+        provider:
+          type: string
+          description: Provider name
+          example: DTNUM
+        building:
+          type: string
+          description: Building (optional)
+          example: B15
+        room:
+          type: string
+          description: Room (optional)
+          example: IT2
+      required:
+        - site
+        - platform
+        - provider
+    PaginatedHostingOptionDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/HostingOptionDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    UpdateHostingOptionDto:
+      type: object
+      properties:
+        site:
+          type: string
+          description: Site name (géographique)
+          example: CER(RENNES)
+        platform:
+          type: string
+          description: Platform name
+          example: PHYSIQUE
+        provider:
+          type: string
+          description: Provider name
+          example: DTNUM
+        building:
+          type: string
+          description: Building (optional)
+          example: B15
+        room:
+          type: string
+          description: Room (optional)
+          example: IT2
+      required:
+        - site
+        - platform
+        - provider
+    CreateLabelDto:
+      type: object
+      properties:
+        labelSourceId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la source du label
+        value:
+          type: string
+          example: short-app-name
+          description: Value of the label
+      required:
+        - value
+    LabelDto:
+      type: object
+      properties:
+        labelSourceId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID de la source du label
+        value:
+          type: string
+          example: short-app-name
+          description: Value of the label
+        id:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID of the label
+        applicationId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID of the application to which the label belongs
+      required:
+        - value
+        - id
+        - applicationId
+    CreateLabelSourceDto:
+      type: object
+      properties:
+        source:
+          type: string
+          description: Source name
+          example: CODE_PAI
+      required:
+        - source
+    LabelSourceDto:
+      type: object
+      properties:
+        source:
+          type: string
+          description: Source name
+          example: CODE_PAI
+        id:
+          type: string
+          description: Unique identifier of the label source
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+      required:
+        - source
+        - id
+    PaginatedLabelSourceDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/LabelSourceDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    UpdateLabelSourceDto:
+      type: object
+      properties:
+        source:
+          type: string
+          description: Source name
+          example: CODE_PAI
+      required:
+        - source
+    ExternalRessourceType:
+      type: string
+      description: Type of the external resource
+      enum:
+        - documentation
+        - supervision
+        - service
+        - audience_metrics
+        - main_service
+    CreateLinkDto:
+      type: object
+      properties:
+        link:
+          type: string
+          description: The URL of the link
+        type:
+          $ref: "#/components/schemas/ExternalRessourceType"
+        description:
+          type: string
+          description: Optional description of the link
+      required:
+        - link
+        - type
+    LinkDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the link
+        link:
+          type: string
+          description: The URL of the link
+        type:
+          type: string
+          enum:
+            - documentation
+            - supervision
+            - service
+            - audience_metrics
+            - main_service
+          description: Type of the external resource
+        description:
+          type: string
+          description: Description of the link
+      required:
+        - id
+        - link
+        - type
+    PaginatedLinkDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    UpdateLinkDto:
+      type: object
+      properties:
+        link:
+          type: string
+          description: The URL of the link
+        type:
+          $ref: "#/components/schemas/ExternalRessourceType"
+        description:
+          type: string
+          description: Optional description of the link
     CreateTechnicalDebtInfoDto:
       type: object
       properties:
@@ -6200,54 +6540,129 @@ components:
         - id
         - label
         - shortName
-    FooterLinkDto:
+    GetIqAvgGroupedDto:
       type: object
       properties:
         label:
           type: string
-          description: Link label
-          example: Documentation
-        title:
-          type: string
-          description: Link title (tooltip)
-          example: Aller à la documentation
-        href:
-          type: string
-          description: Link URL
-          example: https://documentation.example.com
+          example: 2025-07
+        moyenne:
+          type: number
+          example: 78.2
+        min:
+          type: number
+          example: 62
+        max:
+          type: number
+          example: 93
+        count:
+          type: number
+          example: 14
       required:
         - label
-        - title
-        - href
-    ConfigDto:
+        - moyenne
+        - min
+        - max
+        - count
+    Notifier:
       type: object
       properties:
-        oidcConfigUrl:
+        id:
           type: string
-          description: OIDC configuration URL
-          example: https://auth.sso.interieur.rie.gouv.fr/.well-known/openid-configuration
-        oidcClientId:
+        email:
           type: string
-          description: OIDC client ID
-          example: my-client-id
-        version:
+      required:
+        - id
+        - email
+    ReportStatus:
+      type: string
+      description: Le statut du signalement
+      enum:
+        - in_pending
+        - in_progress
+        - done
+    ReportDto:
+      type: object
+      properties:
+        notifier:
+          description: The user who reported the issue
+          allOf:
+            - $ref: "#/components/schemas/Notifier"
+        status:
+          $ref: "#/components/schemas/ReportStatus"
+        createdAt:
           type: string
-          description: Backend version
-          example: 1.0.0
-        environmentLabel:
+          description: Date de création de la metadata
+          example: 2023-10-01T12:00:00Z
+        id:
           type: string
-          description: Environment label displayed in the header badge
-          example: developpement
-        footerLinks:
-          description: Footer links to display in the application footer
+        applicationId:
+          type: string
+          nullable: true
+        application:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ApplicationDto"
+        notifierId:
+          type: string
+        description:
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - notifier
+        - status
+        - createdAt
+        - id
+        - applicationId
+        - application
+        - notifierId
+        - description
+        - updatedAt
+    PaginatedReportDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
           type: array
           items:
-            $ref: "#/components/schemas/FooterLinkDto"
+            $ref: "#/components/schemas/ReportDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
       required:
-        - oidcConfigUrl
-        - oidcClientId
-        - version
-        - footerLinks
+        - results
+        - total
+    CreateReportRequestDto:
+      type: object
+      properties:
+        applicationId:
+          type: string
+        description:
+          type: string
+        notes:
+          type: string
+          default: ""
+      required:
+        - description
+    UpdateReportDto:
+      type: object
+      properties:
+        description:
+          type: string
+          description: La description du signalement
+        status:
+          type: string
+          description: Le statut du signalement
+          enum:
+            - in_pending
+            - in_progress
+            - done
+        notes:
+          type: string
+          description: La note du signalement
 security:
   - oauth2: []
   - api_key: []

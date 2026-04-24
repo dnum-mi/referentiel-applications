@@ -5,6 +5,7 @@
 - [Applications](#applications)
 - [BusinessDivision](#businessdivision)
 - [Compliance](#compliance)
+- [DataSource](#datasource)
 - [Hosting](#hosting)
 - [Labels](#labels)
 - [Metadata](#metadata)
@@ -343,6 +344,55 @@ Properties as follows:
 - `eco_index_target_url`: EcoIndex : URL cible utilisée pour le calcul
 - `eco_index_last_calculated_at`: EcoIndex : Date du dernier calcul
 
+## DataSource
+
+```mermaid
+erDiagram
+"DataSource" {
+  String id PK
+  String(255) name
+  String description "nullable"
+  Boolean isReference
+  String example "nullable"
+  String(100) conservation "nullable"
+  String(255) databaseName "nullable"
+  String(255) databaseTableName "nullable"
+  Int fieldCount "nullable"
+  String fields "nullable"
+  Int volumetry "nullable"
+  Int monthlyVolumetry "nullable"
+  String applicationId FK
+  String typeId FK "nullable"
+  String sensibilityId FK "nullable"
+  String updateFrequencyId FK "nullable"
+  String familyId FK "nullable"
+}
+```
+
+### `DataSource`
+
+DataSource représente une source de données liée à une application.
+
+Properties as follows:
+
+- `id`: Identifiant unique de la source de donnée
+- `name`: Nom d'usage.
+- `description`: Description détaillée.
+- `isReference`: Indicateur "Source Maître". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
+- `example`: Échantillon de données.
+- `conservation`: Durée d'Utilité Administrative (DUA).
+- `databaseName`: Nom de l'instance de la base de données hôte.
+- `databaseTableName`: Nom technique de l'entité contenant les données.
+- `fieldCount`: Nombre total de colonnes ou de champs que contient la source de donnée.
+- `fields`: Liste textuelle des champs/colonnes.
+- `volumetry`: Représente le nombre actuel d'enregistrements présents dans la source.
+- `monthlyVolumetry`: Estimation du nombre de nouveaux enregistrements ajoutés chaque mois.
+- `applicationId`: Lien vers l'application utilisant cette donnée.
+- `typeId`: Lien vers la nature technique du support.
+- `sensibilityId`: Lien vers le niveau de protection et de criticité.
+- `updateFrequencyId`: Lien vers la fréquence de mise à jour.
+- `familyId`: Lien vers la classification thématique.
+
 ## Hosting
 
 ```mermaid
@@ -430,6 +480,7 @@ erDiagram
   String externalRessourceId FK "nullable"
   String hostingId FK "nullable"
   String technicalDebtInfoId FK "nullable"
+  String dataSourceId FK "nullable"
 }
 ```
 
@@ -453,6 +504,7 @@ Properties as follows:
 - `externalRessourceId`:
 - `hostingId`:
 - `technicalDebtInfoId`:
+- `dataSourceId`:
 
 ## Notifications
 
@@ -776,6 +828,23 @@ Properties as follows:
 
 ```mermaid
 erDiagram
+"DataSourceType" {
+  String id PK
+  String(255) label UK
+}
+"Sensibility" {
+  String id PK
+  String(255) label UK
+  String(50) color "nullable"
+}
+"Family" {
+  String id PK
+  String(255) label UK
+}
+"UpdateFrequency" {
+  String id PK
+  String(255) label UK
+}
 "UserPermissionLog" {
   String id PK
   String userId FK
@@ -791,6 +860,43 @@ erDiagram
   DateTime createdAt
 }
 ```
+
+### `DataSourceType`
+
+Nature technique du support.
+
+Properties as follows:
+
+- `id`:
+- `label`:
+
+### `Sensibility`
+
+Niveau de protection.
+
+Properties as follows:
+
+- `id`:
+- `label`:
+- `color`:
+
+### `Family`
+
+Classification thématique.
+
+Properties as follows:
+
+- `id`:
+- `label`:
+
+### `UpdateFrequency`
+
+Fréquence de mise à jour.
+
+Properties as follows:
+
+- `id`:
+- `label`:
 
 ### `UserPermissionLog`
 

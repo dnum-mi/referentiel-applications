@@ -68,7 +68,7 @@ enum Permission {
   MDITList
   /// Voir la liste des applications
   AppList
-    /// Exporter les données
+  /// Exporter les données
   DataExport
   /// Manager l'admin panel
   AdminPanelManage
@@ -83,23 +83,23 @@ enum Permission {
 
   // --- Permissions applicatives (par app) ---
   // Couple read/write classique
-  AppRead                // Voir les infos de base
-  AppWrite               // Modifier les infos de base
-  ActorRead              // Voir les acteurs
-  ActorWrite             // Modifier les acteurs
-  ComplianceRead         // Voir les conformites
-  ComplianceWrite        // Modifier les conformites
-  HostingRead            // Voir les hebergements
-  HostingWrite           // Modifier les hebergements
-  RelationRead           // Voir les relations
-  RelationWrite          // Modifier les relations
-  LinkRead               // Voir les liens
-  LinkWrite              // Modifier les liens
+  AppRead // Voir les infos de base
+  AppWrite // Modifier les infos de base
+  ActorRead // Voir les acteurs
+  ActorWrite // Modifier les acteurs
+  ComplianceRead // Voir les conformites
+  ComplianceWrite // Modifier les conformites
+  HostingRead // Voir les hebergements
+  HostingWrite // Modifier les hebergements
+  RelationRead // Voir les relations
+  RelationWrite // Modifier les relations
+  LinkRead // Voir les liens
+  LinkWrite // Modifier les liens
   // Permissions autonomes binaires (pas de couple read/write)
-  AppWritePriority       // Modifier la priorite de redemarrage. Lecture couverte par AppRead.
-  MetadataRead           // Voir l'historique des metadonnees. Pas de write : donnees generees automatiquement.
+  AppWritePriority // Modifier la priorite de redemarrage. Lecture couverte par AppRead.
+  MetadataRead // Voir l'historique des metadonnees. Pas de write : donnees generees automatiquement.
   // Signalements (3 niveaux)
-  ReportRead             // Voir les signalements
-  ReportPost             // Creer des signalements sur une app
-  ReportManage           // Gerer les signalements (implique ReportRead + ReportPost)
+  ReportRead // Voir les signalements
+  ReportPost // Creer des signalements sur une app
+  ReportManage // Gerer les signalements (implique ReportRead + ReportPost)
 }

@@ -1,0 +1,78 @@
+/// Nature technique du support.
+model DataSourceType {
+  id          String       @id @default(uuid())
+  label       String       @unique @db.VarChar(255)
+  dataSources DataSource[]
+}
+
+/// Niveau de protection.
+model Sensibility {
+  id          String       @id @default(uuid())
+  label       String       @unique @db.VarChar(255)
+  color       String?      @db.VarChar(50) // Code couleur DSFR
+  dataSources DataSource[]
+}
+
+/// Classification thématique.
+model Family {
+  id          String       @id @default(uuid())
+  label       String       @unique @db.VarChar(255)
+  dataSources DataSource[]
+}
+
+/// Fréquence de mise à jour.
+model UpdateFrequency {
+  id          String       @id @default(uuid())
+  label       String       @unique @db.VarChar(255)
+  dataSources DataSource[]
+}
+
+/// DataSource représente une source de données liée à une application.
+///
+/// @namespace DataSource
+model DataSource {
+  /// Identifiant unique de la source de donnée
+  id           String  @id @default(uuid())
+  /// Nom d'usage.
+  name         String  @db.VarChar(255)
+  /// Description détaillée.
+  description  String? @db.Text
+  /// Indicateur "Source Maître". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
+  isReference  Boolean @default(false)
+  /// Échantillon de données.
+  example      String? @db.Text
+  /// Durée d'Utilité Administrative (DUA).
+  conservation String? @db.VarChar(100)
+
+  /// Nom de l'instance de la base de données hôte.
+  databaseName      String? @db.VarChar(255)
+  /// Nom technique de l'entité contenant les données.
+  databaseTableName String? @db.VarChar(255)
+  /// Nombre total de colonnes ou de champs que contient la source de donnée.
+  fieldCount        Int?
+  /// Liste textuelle des champs/colonnes.
+  fields            String? @db.Text
+  /// Représente le nombre actuel d'enregistrements présents dans la source.
+  volumetry         Int?
+  /// Estimation du nombre de nouveaux enregistrements ajoutés chaque mois.
+  monthlyVolumetry  Int?
+
+  /// Lien vers l'application utilisant cette donnée.
+  applicationId     String
+  application       Application      @relation("ApplicationDataSources", fields: [applicationId], references: [id], onDelete: Cascade)
+  /// Lien vers la nature technique du support.
+  typeId            String?
+  type              DataSourceType?  @relation(fields: [typeId], references: [id])
+  /// Lien vers le niveau de protection et de criticité.
+  sensibilityId     String?
+  sensibility       Sensibility?     @relation(fields: [sensibilityId], references: [id])
+  /// Lien vers la fréquence de mise à jour.
+  updateFrequencyId String?
+  updateFrequency   UpdateFrequency? @relation(fields: [updateFrequencyId], references: [id])
+  /// Lien vers la classification thématique.
+  familyId          String?
+  family            Family?          @relation(fields: [familyId], references: [id])
+
+  /// Tableau de métadonnées
+  metadatas Metadata[] @relation("DataSourceMetadata")
+}

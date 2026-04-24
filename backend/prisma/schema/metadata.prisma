@@ -48,6 +48,10 @@ model Metadata {
   technicalDebtInfoId String?
   /// Info de dette technique associée
   technicalDebtInfo   TechnicalDebtInfo? @relation("TechnicalDebtInfoMetadata", fields: [technicalDebtInfoId], references: [id])
+
+  dataSourceId String?
+  /// Source de donnée associée
+  dataSource   DataSource? @relation("DataSourceMetadata", fields: [dataSourceId], references: [id])
 }
 
 /// Type d'action de métadonnée

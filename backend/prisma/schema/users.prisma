@@ -4,37 +4,37 @@
 /// @namespace Users
 model User {
   /// Identifiant unique
-  id                        String                @id @default(uuid())
+  id                        String              @id @default(uuid())
   /// Adresse email de l'utilisateur
-  email                     String                @unique @db.VarChar(255)
+  email                     String              @unique @db.VarChar(255)
   /// Id de l'organisation à laquelle l'utilisateur appartient
   organizationId            String?
   /// Organisation à laquelle l'utilisateur appartient
-  organization              Organization?         @relation(fields: [organizationId], references: [id])
+  organization              Organization?       @relation(fields: [organizationId], references: [id])
   /// Entrées de métadonnées créées par cet utilisateur
-  createdSet                Metadata[]            @relation("MetadataCreatedBy")
+  createdSet                Metadata[]          @relation("MetadataCreatedBy")
   /// Entrées de métadonnées où cet utilisateur est le propriétaire des données
-  dataOwners                Metadata[]            @relation("MetadataDataOwnerBy")
+  dataOwners                Metadata[]          @relation("MetadataDataOwnerBy")
   /// Signalements créés par cet utilisateur
-  reports                   Report[]              @relation("UserReport")
+  reports                   Report[]            @relation("UserReport")
   /// Groupement de permissions par defaut
-  role                Roles                   @default(VISITOR)
+  role                      Roles               @default(VISITOR)
   /// Tokens API qui se font passer pour cet utilisateur
-  tokensImpersonate         Token[]               @relation("TokenUserImpersonate")
+  tokensImpersonate         Token[]             @relation("TokenUserImpersonate")
   /// Tokens API créés par cet utilisateur
-  tokensCreated             Token[]               @relation("TokenUserCreator")
+  tokensCreated             Token[]             @relation("TokenUserCreator")
   /// Type de compte utilisateur (humain ou bot)
-  type                      UserType              @default(human)
+  type                      UserType            @default(human)
   /// Applications suivies par cet utilisateur pour les notifications
-  followedApplications      Application[]         @relation("UserFollowedApplications")
+  followedApplications      Application[]       @relation("UserFollowedApplications")
   /// Applications consultées par cet utilisateur
   applicationViews          ApplicationView[]
   /// Si les notifications par email sont activées
-  emailNotificationsEnabled Boolean               @default(true)
+  emailNotificationsEnabled Boolean             @default(true)
   /// Permissions supplémentaire (ancien capabilities) 
-  additionalPermissions         Permission []
-  userPermissionLog  UserPermissionLog[] @relation("UserPermissionLogUser")
-  userConnexionLog  UserConnexionLog[] @relation("UserConnexionLogUser")
+  additionalPermissions     Permission[]
+  userPermissionLog         UserPermissionLog[] @relation("UserPermissionLogUser")
+  userConnexionLog          UserConnexionLog[]  @relation("UserConnexionLogUser")
 }
 
 /// @namespace Roles
