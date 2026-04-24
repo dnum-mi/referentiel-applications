@@ -27,16 +27,16 @@ model Compliance {
   /// DIMA : Résultat du dernier test de reprise
   dima_test_result        TestResult?
   /// DIMA : Personne responsable de la reprise
-  dima_recovery_manager   String?      @db.VarChar(255)
+  dima_recovery_manager   String?     @db.VarChar(255)
 
   /// PDMA : Perte de données maximale admissible (PDMA)
   pdma_duration_hours      Int?
   /// PDMA : Types de données sauvegardées
   pdma_data_types          String?
   /// PDMA : Fréquence des sauvegardes
-  pdma_backup_frequency    String?        @db.VarChar(255)
+  pdma_backup_frequency    String?             @db.VarChar(255)
   /// PDMA : Méthode utilisée pour les sauvegardes
-  pdma_backup_method       String?        @db.VarChar(255)
+  pdma_backup_method       String?             @db.VarChar(255)
   /// PDMA : Où les sauvegardes sont stockées
   pdma_backup_storage      BackupStorage?
   /// PDMA : Date du dernier test de restauration
@@ -74,13 +74,13 @@ model Compliance {
   rgpd_dpo_name String?  @db.VarChar(255)
 
   /// EcoIndex : Score global (0-100)
-  eco_index_score Float?
+  eco_index_score              Float?
   /// EcoIndex : Émissions de gaz à effet de serre (gCO2e)
-  eco_index_ges   Float?
+  eco_index_ges                Float?
   /// EcoIndex : Consommation d'eau (centilitres)
-  eco_index_water Float?
+  eco_index_water              Float?
   /// EcoIndex : URL cible utilisée pour le calcul
-  eco_index_target_url String?
+  eco_index_target_url         String?
   /// EcoIndex : Date du dernier calcul
   eco_index_last_calculated_at DateTime?
 }

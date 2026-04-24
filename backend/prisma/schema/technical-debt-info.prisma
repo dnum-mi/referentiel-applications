@@ -12,11 +12,11 @@ model TechnicalDebtInfo {
   metadatas     Metadata[]  @relation("TechnicalDebtInfoMetadata")
 
   /// Score de maturité technique (0-1)
-  technicalMaturity Decimal @default(0) @db.Decimal(3, 2)
+  technicalMaturity Decimal  @default(0) @db.Decimal(3, 2)
   /// Score de maturité métier (0-1)
-  businessMaturity  Decimal @default(0) @db.Decimal(3, 2)
+  businessMaturity  Decimal  @default(0) @db.Decimal(3, 2)
   /// Score de maturité des coûts (0-1)
-  costMaturity      Decimal @default(0) @db.Decimal(3, 2)
+  costMaturity      Decimal  @default(0) @db.Decimal(3, 2)
   /// Date de création de l'évaluation
   createdAt         DateTime @default(now())
 

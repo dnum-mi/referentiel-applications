@@ -6,7 +6,7 @@ model Token {
   /// Identifiant unique
   id          String      @id @default(uuid())
   /// Role accordé à ce token
-  role Roles? 
+  role        Roles?
   /// Description de l'utilité de ce token
   description String
   /// Nom lisible pour ce token

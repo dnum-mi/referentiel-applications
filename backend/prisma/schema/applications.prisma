@@ -4,63 +4,65 @@
 /// @namespace Applications
 model Application {
   /// Identifiant unique de l'application
-  id                  String                @id @default(uuid())
+  id                String              @id @default(uuid())
   /// Nom complet de l'application
-  label               String
+  label             String
   /// Nom court ou acronyme de l'application
-  shortName           String?               @db.VarChar(255)
+  shortName         String?             @db.VarChar(255)
   /// URL du logo de l'application
-  logo                String?
+  logo              String?
   /// Description détaillée du but de l'application
-  description         String
+  description       String
   /// Populations cibles utilisatrices de cette application
-  targetPopulations   String[]
+  targetPopulations String[]
   /// Finalités métier servies par cette application
-  purposes            String[]
+  purposes          String[]
   /// Type/catégorie de l'application (métier, service, etc.)
-  type                ApplicationType?
-  currentStatusId     String?
+  type              ApplicationType?
+  currentStatusId   String?
   /// Statut actuel de l'application
-  currentStatus       ApplicationStatus?    @relation(fields: [currentStatusId], references: [id], onDelete: SetNull)
+  currentStatus     ApplicationStatus?  @relation(fields: [currentStatusId], references: [id], onDelete: SetNull)
   /// Entrées de métadonnées associées à cette application
-  metadatas           Metadata[]            @relation("ApplicationMetadatas")
+  metadatas         Metadata[]          @relation("ApplicationMetadatas")
   /// Acteurs - (personnes, entités) impliqués avec cette application
-  actors              Actor[]               @relation("ApplicationActors")
+  actors            Actor[]             @relation("ApplicationActors")
   /// Informations de conformité pour cette application
-  compliance          Compliance?           @relation("ApplicationCompliance")
+  compliance        Compliance?         @relation("ApplicationCompliance")
   /// Signalements pour cette application
-  reports             Report[]              @relation("ApplicationReport")
+  reports           Report[]            @relation("ApplicationReport")
   /// Ressources externes liées à cette application
-  externalRessource   ExternalRessource[]   @relation("ApplicationExternalsRessource")
+  externalRessource ExternalRessource[] @relation("ApplicationExternalsRessource")
   /// Configurations d'hébergement pour cette application
-  hostings            Hosting[]
+  hostings          Hosting[]
   /// Utilisateurs abonnés aux mises à jour de cette application
-  subscribers         User[]                @relation("UserFollowedApplications")
+  subscribers       User[]              @relation("UserFollowedApplications")
   /// Historique des statuts pour cette application
-  statuses            ApplicationStatus[]   @relation("ApplicationStatuses")
+  statuses          ApplicationStatus[] @relation("ApplicationStatuses")
 
   /// Applications dont cette application dépend
-  relationsAsSource             Relation[]         @relation("SourceHasTarget")
+  relationsAsSource           Relation[]          @relation("SourceHasTarget")
   /// Applications qui dépendent de cette application
-  relationsAsTarget             Relation[]         @relation("TargetHasSource")
+  relationsAsTarget           Relation[]          @relation("TargetHasSource")
   /// Relations où cette application est service de médiation
-  relationsAsMediationService   Relation[]         @relation("MediationService")
+  relationsAsMediationService Relation[]          @relation("MediationService")
   /// Différents labels associés à cette application
-  labels            Label[]            @relation("ApplicationLabels")
+  labels                      Label[]             @relation("ApplicationLabels")
   /// Tags pour la catégorisation
-  tags              Tag[]
+  tags                        Tag[]
   /// Consultations de l'application
-  applicationViews  ApplicationView[]
+  applicationViews            ApplicationView[]
   /// Informations sur la dette technique
-  technicalDebtInfo TechnicalDebtInfo[] @relation("ApplicationTechnicalDebtInfo")
+  technicalDebtInfo           TechnicalDebtInfo[] @relation("ApplicationTechnicalDebtInfo")
   /// Journaux de notifications de validation envoyées
-  notificationLogs  NotificationLog[]
+  notificationLogs            NotificationLog[]
+  /// Différents source de données associées à cette application
+  dataSources                 DataSource[]        @relation("ApplicationDataSources")
 
   /// Niveau de priorité pour les opérations de redémarrage
   priorityRestart priorityRestart?
   /// Score de qualité de la fiche de l' application
   quality         Int
-  
+
   /// Identifiant de la direction metier MOA de l'application
   businessDivisionId String?
   /// Direction metier MOA de l'application

@@ -4,27 +4,26 @@
 /// @namespace Organizations
 model Organization {
   /// Identifiant unique
-  id          String         @id @default(uuid())
+  id                 String            @id @default(uuid())
   /// Chemin complet dans la hiérarchie (ex: "/MI/DNUM/SG")
-  path        String
+  path               String
   /// URL du site web pour cette organisation
-  url         String?
+  url                String?
   /// Acronyme ou nom court
-  sigle       String?
+  sigle              String?
   /// Description complète de l'organisation
-  description String?
-  parentId    String?
+  description        String?
+  parentId           String?
   /// Organisation parente dans la hiérarchie
-  parent      Organization?  @relation("OrganizationParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  parent             Organization?     @relation("OrganizationParent", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   /// Organisations enfants
-  children    Organization[] @relation("OrganizationParent")
+  children           Organization[]    @relation("OrganizationParent")
   /// Utilisateurs appartenant à cette organisation
-  users       User[]
+  users              User[]
   /// Acteurs associés à cette organisation
-  actors      Actor[]
+  actors             Actor[]
   /// Identifiant de la direction metier MOA de l'organisation
   businessDivisionId String?
   /// Direction metier MOA de l'organisation
   businessDivision   BusinessDivision? @relation(fields: [businessDivisionId], references: [id], onDelete: SetNull)
 }
-
