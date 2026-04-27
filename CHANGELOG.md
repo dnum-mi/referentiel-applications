@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.73.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.72.0...v1.73.0) (2026-04-27)
+
+
+### Features
+
+* :sparkles: add "My Applications" filter for quick access ([d7b6636](https://github.com/dnum-mi/referentiel-applications/commit/d7b66368538326cb24f64c5fd1dd2f32023fe3ef))
+* :sparkles: add copy-to-clipboard button for application URL ([e2f1859](https://github.com/dnum-mi/referentiel-applications/commit/e2f18590ee071eaef4da0c9f5789478e861a09d4))
+* :sparkles: add dataSource table, fakers and endpoints ([f880723](https://github.com/dnum-mi/referentiel-applications/commit/f880723010c8aff3c89d75b8ce0d29e7590f62b5))
+* :sparkles: add the status version ([2ca8ed2](https://github.com/dnum-mi/referentiel-applications/commit/2ca8ed231ed150b7c7f7750e885f83508e35124b))
+* historic for mdit ([#1671](https://github.com/dnum-mi/referentiel-applications/issues/1671)) ([43f82b6](https://github.com/dnum-mi/referentiel-applications/commit/43f82b69897bdbe66089672dba674e8c4484f926))
+
+
+### Bug Fixes
+
+* delete link in notice in app.vue ([8278afd](https://github.com/dnum-mi/referentiel-applications/commit/8278afd3d81ec6443ba528298461869d45cb7de1))
+* organization permissions guard ([#1674](https://github.com/dnum-mi/referentiel-applications/issues/1674)) ([e0489b6](https://github.com/dnum-mi/referentiel-applications/commit/e0489b64e82898aece1640ba9ba6a4d45c1d4584))
+* rename 'signalant' to 'notifier' in report filters and service ([#1683](https://github.com/dnum-mi/referentiel-applications/issues/1683)) ([3c39889](https://github.com/dnum-mi/referentiel-applications/commit/3c39889d105e32272f5e7ca220ab46a01e6f48b9))
+* tab report show the same data and set limit max for page size ([#1678](https://github.com/dnum-mi/referentiel-applications/issues/1678)) ([04f42a6](https://github.com/dnum-mi/referentiel-applications/commit/04f42a611167e97c07482583a3407604a81c0298))
+* use vue matomo instead custom plugin ([#1672](https://github.com/dnum-mi/referentiel-applications/issues/1672)) ([40e7bc7](https://github.com/dnum-mi/referentiel-applications/commit/40e7bc74d717626e94d38c5220654138d3367397))
+* use watcher for start and end date in iqchart ([#1682](https://github.com/dnum-mi/referentiel-applications/issues/1682)) ([530f87d](https://github.com/dnum-mi/referentiel-applications/commit/530f87debd51d4bfd78f9d4caebf279a43eaa1f7))
+
 ## [1.72.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.71.0...v1.72.0) (2026-04-15)
 
 
