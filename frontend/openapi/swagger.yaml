@@ -184,7 +184,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -266,7 +265,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -404,7 +402,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -804,7 +801,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1375,7 +1371,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1514,7 +1509,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1677,7 +1671,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1966,7 +1959,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 50
             example: 50
             type: number
@@ -2213,7 +2205,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2334,7 +2325,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2506,7 +2496,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2930,7 +2919,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3194,7 +3182,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3324,7 +3311,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3456,7 +3442,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3506,7 +3491,6 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
-            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3816,6 +3800,103 @@ paths:
                   $ref: "#/components/schemas/TechnicalDebtPointDto"
       tags:
         - technical-debts
+  /api/v2/applications/{applicationId}/rgaa-compliances:
+    get:
+      operationId: RgaaController_findAll
+      summary: Lister les conformités RGAA d'une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des conformités RGAA
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RgaaComplianceDto"
+      tags: &a21
+        - RGAA Compliances
+    post:
+      operationId: RgaaController_create
+      summary: Créer une conformité RGAA pour une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRgaaComplianceDto"
+      responses:
+        "201":
+          description: Conformité RGAA créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RgaaComplianceDto"
+      tags: *a21
+  /api/v2/applications/{applicationId}/rgaa-compliances/{id}:
+    patch:
+      operationId: RgaaController_update
+      summary: Mettre à jour une conformité RGAA
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de la conformité RGAA
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRgaaComplianceDto"
+      responses:
+        "200":
+          description: Conformité RGAA mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RgaaComplianceDto"
+      tags: *a21
+    delete:
+      operationId: RgaaController_delete
+      summary: Supprimer une conformité RGAA
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de la conformité RGAA
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Conformité RGAA supprimée
+      tags: *a21
   /api/v2/stats/iq-avg/period:
     get:
       operationId: StatsController_getIqAvgGrouped
@@ -3916,7 +3997,7 @@ paths:
               - status
               - date
               - description
-              - notifier
+              - signalant
               - notes
             type: string
         - name: order
@@ -3946,7 +4027,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: &a21
+      tags: &a22
         - Reports
     post:
       operationId: ReportsController_create
@@ -3965,7 +4046,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a21
+      tags: *a22
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -3996,7 +4077,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a21
+      tags: *a22
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -4021,7 +4102,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a22
+      tags: &a23
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -4049,7 +4130,7 @@ paths:
               - status
               - date
               - description
-              - notifier
+              - signalant
               - notes
             type: string
         - name: order
@@ -4085,7 +4166,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: *a22
+      tags: *a23
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -4109,7 +4190,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a22
+      tags: *a23
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -4145,7 +4226,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a22
+      tags: *a23
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -4164,7 +4245,7 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a22
+      tags: *a23
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -4707,7 +4788,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a23
+          example: &a24
             - population 1
             - population 2
           description: population associated with the application
@@ -4717,7 +4798,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a24
+          example: &a25
             - finance
             - HR
           description: Purposes of the application
@@ -4728,7 +4809,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a25
+          example: &a26
             - tag1
             - tag2
           type: array
@@ -4944,7 +5025,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a23
+          example: *a24
           description: population associated with the application
           type: array
           items:
@@ -4952,7 +5033,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a24
+          example: *a25
           description: Purposes of the application
           type: array
           items:
@@ -4961,7 +5042,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a25
+          example: *a26
           type: array
           items:
             type: string
@@ -5814,7 +5895,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a26
+          enum: &a27
             - OK
             - KO
           type: string
@@ -5840,7 +5921,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a27
+          enum: &a28
             - S3
             - LOCAL
             - EXTERNE
@@ -5851,7 +5932,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a28
+          enum: &a29
             - OK
             - KO
           type: string
@@ -5861,7 +5942,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a29
+          enum: &a30
             - homologuee
             - en_cours
             - dispensee
@@ -5875,24 +5956,6 @@ components:
           type: string
           example: uuid-of-rssi-actor
           description: Homologation RSSI actor ID
-        rgaa_audit_date:
-          type: string
-          example: 2023-01-01
-          description: RGAA audit date
-        rgaa_service_url:
-          type: string
-          example: https://service.example.com
-          description: RGAA service URL
-        rgaa_accessibility_url:
-          type: string
-          example: https://service.example.com/accessibilite
-          description: RGAA accessibility page URL
-        rgaa_score_percentage:
-          type: string
-          minimum: 0
-          maximum: 100
-          example: 85
-          description: RGAA score percentage (0-100)
         dsfr_implemented:
           type: boolean
           example: true
@@ -5941,7 +6004,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a26
+          enum: *a27
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -5965,7 +6028,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a27
+          enum: *a28
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -5973,7 +6036,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a28
+          enum: *a29
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -5981,7 +6044,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a29
+          enum: *a30
           type: string
           description: Homologation status
         homologation_date_end:
@@ -5992,24 +6055,6 @@ components:
           type: string
           example: uuid-of-rssi-actor
           description: Homologation RSSI actor ID
-        rgaa_audit_date:
-          type: string
-          example: 2023-01-01
-          description: RGAA audit date
-        rgaa_service_url:
-          type: string
-          example: https://service.example.com
-          description: RGAA service URL
-        rgaa_accessibility_url:
-          type: string
-          example: https://service.example.com/accessibilite
-          description: RGAA accessibility page URL
-        rgaa_score_percentage:
-          type: string
-          minimum: 0
-          maximum: 100
-          example: 85
-          description: RGAA score percentage (0-100)
         dsfr_implemented:
           type: boolean
           example: true
@@ -6028,6 +6073,7 @@ components:
           description: RGPD DPO name
         eco_index_target_url:
           type: string
+          nullable: true
           example: https://service.example.com
           description: EcoIndex target URL used for scan
         id:
@@ -6081,7 +6127,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a26
+          enum: *a27
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6105,7 +6151,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a27
+          enum: *a28
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6113,7 +6159,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a28
+          enum: *a29
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6121,7 +6167,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a29
+          enum: *a30
           type: string
           description: Homologation status
         homologation_date_end:
@@ -6132,24 +6178,6 @@ components:
           type: string
           example: uuid-of-rssi-actor
           description: Homologation RSSI actor ID
-        rgaa_audit_date:
-          type: string
-          example: 2023-01-01
-          description: RGAA audit date
-        rgaa_service_url:
-          type: string
-          example: https://service.example.com
-          description: RGAA service URL
-        rgaa_accessibility_url:
-          type: string
-          example: https://service.example.com/accessibilite
-          description: RGAA accessibility page URL
-        rgaa_score_percentage:
-          type: string
-          minimum: 0
-          maximum: 100
-          example: 85
-          description: RGAA score percentage (0-100)
         dsfr_implemented:
           type: boolean
           example: true
@@ -6168,6 +6196,7 @@ components:
           description: RGPD DPO name
         eco_index_target_url:
           type: string
+          nullable: true
           example: https://service.example.com
           description: EcoIndex target URL used for scan
     CreateHostingDto:
@@ -6540,6 +6569,67 @@ components:
         - id
         - label
         - shortName
+    RgaaComplianceDto:
+      type: object
+      properties:
+        audit_date:
+          type: string
+          nullable: true
+          example: 2024-01-15
+          description: Date de l'audit RGAA
+        service_url:
+          type: string
+          nullable: true
+          example: https://service.example.gouv.fr
+          description: URL du service web audité
+        accessibility_url:
+          type: string
+          nullable: true
+          example: https://service.example.gouv.fr/accessibilite
+          description: URL de la déclaration d'accessibilité
+        score_percentage:
+          type: number
+          nullable: true
+          minimum: 0
+          maximum: 100
+          example: 85.5
+          description: Score de conformité RGAA en pourcentage (0-100)
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant unique de la conformité RGAA
+        applicationId:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant de l'application
+      required:
+        - id
+        - applicationId
+    CreateRgaaComplianceDto:
+      type: object
+      properties:
+        audit_date:
+          type: string
+          nullable: true
+          example: 2024-01-15
+          description: Date de l'audit RGAA
+        service_url:
+          type: string
+          nullable: true
+          example: https://service.example.gouv.fr
+          description: URL du service web audité
+        accessibility_url:
+          type: string
+          nullable: true
+          example: https://service.example.gouv.fr/accessibilite
+          description: URL de la déclaration d'accessibilité
+        score_percentage:
+          type: number
+          nullable: true
+          minimum: 0
+          maximum: 100
+          example: 85.5
+          description: Score de conformité RGAA en pourcentage (0-100)
     GetIqAvgGroupedDto:
       type: object
       properties:

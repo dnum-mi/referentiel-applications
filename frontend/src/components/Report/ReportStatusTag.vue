@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { ReportStatus, GetReportDto } from "@/client/types.gen.js";
+import type { ReportDto, ReportStatus } from "@/client/types.gen.js";
 import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
 import { useReportStore } from "@/stores/reportStore";
 import { watch, ref } from "vue";
 
 const props = defineProps<{
-  report: GetReportDto;
+  report: ReportDto;
   isEditing: boolean;
 }>();
 
@@ -13,7 +13,7 @@ const emit = defineEmits<{
   refresh: [];
 }>();
 
-const statusValue = ref(props.report.status);
+const statusValue = ref<ReportStatus>(props.report.status);
 
 const options: { value: ReportStatus; text: (typeof statusDictionary)[ReportStatus] }[] = [
   {
@@ -41,6 +41,7 @@ async function updateStatus(newValue: ReportStatus) {
     }
   } catch (err) {
     console.error("Erreur lors de la mise à jour du statut :", err);
+    statusValue.value = props.report.status;
   }
   emit("refresh");
 }
@@ -50,14 +51,21 @@ watch(statusValue, (newVal, oldVal) => {
     updateStatus(newVal);
   }
 });
+
+watch(
+  () => props.report.status,
+  (newStatus) => {
+    statusValue.value = newStatus;
+  },
+);
 </script>
 
 <template>
   <DsfrTag
     v-if="!isEditing"
-    :icon="statusIconClasses[report.status]"
-    :class="report.status"
-    :label="statusDictionary[report.status]"
+    :icon="statusIconClasses[statusValue]"
+    :class="statusValue"
+    :label="statusDictionary[statusValue]"
     :data-testid="`issues-row-${report.id}-status`"
   />
   <DsfrSelect v-else v-model="statusValue" :options="options" />

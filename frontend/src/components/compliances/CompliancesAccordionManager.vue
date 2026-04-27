@@ -263,7 +263,10 @@ function closeDetails() {
 }
 
 const hasComplianceEditPermission = computed(() => {
-  return userStore.hasPermissions([Permission.COMPLIANCE_WRITE]);
+  const hasGlobalComplianceWritePermission = userStore.hasPermissions([Permission.COMPLIANCE_WRITE]);
+  const hasApplicationComplianceWritePermission = props.application.myPerms?.has(Permission.COMPLIANCE_WRITE) ?? false;
+
+  return hasGlobalComplianceWritePermission || hasApplicationComplianceWritePermission;
 });
 
 const isEditingTargetUrl = ref(false);
@@ -284,7 +287,7 @@ async function saveTargetUrl() {
   try {
     const response = await api.applicationCompliancesControllerUpdate({
       path: { applicationId },
-      body: { eco_index_target_url: targetUrlDraft.value || undefined },
+      body: { eco_index_target_url: targetUrlDraft.value === "" ? null : targetUrlDraft.value },
     });
     if (response.data) compliance.value = response.data;
     isEditingTargetUrl.value = false;

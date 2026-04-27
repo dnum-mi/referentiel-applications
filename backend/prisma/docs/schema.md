@@ -725,23 +725,25 @@ Properties as follows:
 ### `ActorType`
 
 Définit les différents rôles que les acteurs peuvent avoir.
+
 ### Codes des acteurs possibles
-| Code | Rôle / Description |
-| :--- | :--- |
-| **MOA** | Maîtrise d’Ouvrage (MOA) |
-| **MOE** | Maîtrise d’Œuvre (MOE) |
-| **RSSI** | Responsable de la Sécurité des Systèmes d’Information (RSSI) |
-| **ArchitecteApplicatif** | Architecte applicatif |
-| **ArchitecteTechnique** | Architecte technique |
-| **TMA** | Tierce Maintenance Applicative (TMA) |
-| **Exploitation** | Responsable d'exploitation opérationnel |
-| **RSIMM** | Responsables des SI Métier et de la Modernisation (RSIMM) |
-| **CPD** | Correspondant à la protection des données (CPD) |
-| **OrganismeBeneficiaire** | Correspondant Stratégique Métier (CSM) |
-| **ProductOwner** | Product Owner (PO) |
-| **ProductManager** | Product Manager (PM) |
-| **Hebergement** | Responsable de l'hébergement |
-| **Autre** | Autre |
+
+| Code                      | Rôle / Description                                           |
+| :------------------------ | :----------------------------------------------------------- |
+| **MOA**                   | Maîtrise d’Ouvrage (MOA)                                     |
+| **MOE**                   | Maîtrise d’Œuvre (MOE)                                       |
+| **RSSI**                  | Responsable de la Sécurité des Systèmes d’Information (RSSI) |
+| **ArchitecteApplicatif**  | Architecte applicatif                                        |
+| **ArchitecteTechnique**   | Architecte technique                                         |
+| **TMA**                   | Tierce Maintenance Applicative (TMA)                         |
+| **Exploitation**          | Responsable d'exploitation opérationnel                      |
+| **RSIMM**                 | Responsables des SI Métier et de la Modernisation (RSIMM)    |
+| **CPD**                   | Correspondant à la protection des données (CPD)              |
+| **OrganismeBeneficiaire** | Correspondant Stratégique Métier (CSM)                       |
+| **ProductOwner**          | Product Owner (PO)                                           |
+| **ProductManager**        | Product Manager (PM)                                         |
+| **Hebergement**           | Responsable de l'hébergement                                 |
+| **Autre**                 | Autre                                                        |
 
 Properties as follows:
 

@@ -21,7 +21,7 @@ const showModal = ref(false);
 const editingItem = ref<RgaaComplianceDto | null>(null);
 const submitting = ref(false);
 
-const form = ref<Partial<CreateRgaaComplianceDto>>({});
+const form = ref<Record<string, string | number | undefined>>({});
 
 const canWrite = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE]));
 
@@ -65,10 +65,10 @@ function openCreate() {
 function openEdit(item: RgaaComplianceDto) {
   editingItem.value = item;
   form.value = {
-    service_url: item.service_url ?? undefined,
-    accessibility_url: item.accessibility_url ?? undefined,
-    score_percentage: item.score_percentage ?? undefined,
-    audit_date: toDateInputValue(item.audit_date) ?? undefined,
+    service_url: item.service_url || undefined,
+    accessibility_url: item.accessibility_url || undefined,
+    score_percentage: item.score_percentage || undefined,
+    audit_date: toDateInputValue(item.audit_date) || undefined,
   };
   showModal.value = true;
 }
@@ -82,13 +82,11 @@ function closeModal() {
 async function save() {
   submitting.value = true;
   const payload: CreateRgaaComplianceDto = {
-    service_url: form.value.service_url || undefined,
-    accessibility_url: form.value.accessibility_url || undefined,
+    service_url: form.value.service_url && form.value.service_url !== "" ? String(form.value.service_url) : null,
+    accessibility_url: form.value.accessibility_url && form.value.accessibility_url !== "" ? String(form.value.accessibility_url) : null,
     score_percentage:
-      form.value.score_percentage != null && form.value.score_percentage !== (undefined as any)
-        ? Number(form.value.score_percentage)
-        : undefined,
-    audit_date: toISODateTime(form.value.audit_date) ?? undefined,
+      form.value.score_percentage != null && form.value.score_percentage !== "" ? Number(form.value.score_percentage) : null,
+    audit_date: form.value.audit_date ? (toISODateTime(String(form.value.audit_date)) ?? null) : null,
   };
   try {
     if (editingItem.value) {
