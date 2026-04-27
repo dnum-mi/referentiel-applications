@@ -3916,7 +3916,7 @@ paths:
               - status
               - date
               - description
-              - signalant
+              - notifier
               - notes
             type: string
         - name: order
@@ -4049,7 +4049,7 @@ paths:
               - status
               - date
               - description
-              - signalant
+              - notifier
               - notes
             type: string
         - name: order
