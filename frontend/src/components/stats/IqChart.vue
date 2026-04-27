@@ -55,10 +55,10 @@ async function fetchAndUpdate() {
   updateChart();
 }
 
-watch(groupBy, fetchAndUpdate);
+watch([groupBy, startDate, endDate], fetchAndUpdate);
 
 onMounted(async () => {
-  await statsStore.fetchIqStats(undefined, undefined, groupBy.value);
+  await statsStore.fetchIqStats(startDate.value, endDate.value, groupBy.value);
   updateChart();
 });
 </script>
