@@ -14,7 +14,7 @@ export enum SortByEnum {
   status = "status",
   date = "date",
   description = "description",
-  signalant = "signalant",
+  notifier = "notifier",
   notes = "notes",
 }
 

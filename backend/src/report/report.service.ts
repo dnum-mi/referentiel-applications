@@ -149,7 +149,7 @@ export class ReportsService {
       description: { description: order },
       date: { createdAt: order },
       status: { status: order },
-      signalant: { notifier: { email: order } },
+      notifier: { notifier: { email: order } },
       notes: { notes: order },
     };
 
@@ -171,7 +171,7 @@ export class ReportsService {
    * @throws NotFoundException Si le signalement n'est pas trouvé.
    */
   async findOne(id: string, requestor: Requestor) {
-    const hasApplicationReadPerms = this.checkPermissions.can(
+    const hasApplicationReadPerms = await this.checkPermissions.can(
       [Permission.ReportRead, Permission.ReportManage],
       requestor,
     );
