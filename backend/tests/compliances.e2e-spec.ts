@@ -56,20 +56,19 @@ describe("Compliances", () => {
     expect(response.body.rgpd_dpo_name).toEqual("Jean Dupont");
   });
 
-  it("/PATCH applications/:applicationId/compliances - update compliance with RGAA data", async () => {
+  it("/PATCH applications/:applicationId/compliances - update compliance with DSFR data", async () => {
     const response = await request(app().getHttpServer())
       .patch(`/applications/${application.id}/compliances`)
       .send({
-        rgaa_audit_date: "2023-01-01T00:00:00.000Z",
-        rgaa_score_percentage: "85.2",
-        rgaa_service_url: "https://example.com",
+        dsfr_implemented: true,
+        dsfr_version: "1.14.0",
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     expect(response.body.id).toBeDefined();
-    expect(response.body.rgaa_score_percentage).toEqual(85.2);
-    expect(response.body.rgaa_service_url).toEqual("https://example.com");
+    expect(response.body.dsfr_implemented).toEqual(true);
+    expect(response.body.dsfr_version).toEqual("1.14.0");
     expect(response.body.rgpd_has_aipd).toEqual(true);
     expect(response.body.rgpd_dpo_name).toEqual("Jean Dupont");
   });

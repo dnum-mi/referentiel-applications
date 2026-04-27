@@ -39,8 +39,6 @@ const showHomologationDateEnd = computed(() => isHomologationHomologuee.value ||
 const canEdit = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE]));
 
 const toOptionalNumber = (value: unknown): number | undefined => (value == null || value === "" ? undefined : Number(value));
-const toOptionalString = (value: unknown): string | undefined => (value == null || value === "" ? undefined : String(value));
-
 onMounted(() => {
   if (!props.initialData) {
     form.value = {};
@@ -51,7 +49,6 @@ onMounted(() => {
     ...props.initialData,
     homologation_date_end: toDateInputValue(props.initialData.homologation_date_end),
     dima_last_test_date: toDateInputValue(props.initialData.dima_last_test_date),
-    rgaa_audit_date: toDateInputValue(props.initialData.rgaa_audit_date),
   };
 });
 
@@ -76,11 +73,6 @@ async function save() {
     pdma_restoration_manager: form.value?.pdma_restoration_manager,
     homologation_status: form.value?.homologation_status,
     homologation_date_end: toISODateTime(form.value?.homologation_date_end),
-    rgaa_audit_date: toISODateTime(form.value?.rgaa_audit_date),
-    rgaa_service_url: form.value?.rgaa_service_url,
-    rgaa_accessibility_url: form.value?.rgaa_accessibility_url,
-    rgaa_score_percentage: toOptionalString(form.value?.rgaa_score_percentage),
-    eco_index_target_url: form.value?.eco_index_target_url,
     dsfr_implemented: form.value?.dsfr_implemented,
     dsfr_version: form.value?.dsfr_version,
     rgpd_has_aipd: form.value?.rgpd_has_aipd,
@@ -267,48 +259,6 @@ async function save() {
           :disabled="!canEdit"
           hint="Date de fin d'homologation"
           data-testid="compliance-homologation-date-end"
-        />
-      </template>
-
-      <template v-else-if="type === 'rgaa'">
-        <DsfrInput
-          v-model="form.rgaa_audit_date"
-          :label="complianceFieldLabels.audit_date"
-          type="date"
-          label-visible
-          data-testid="compliance-rgaa-audit-date"
-        />
-        <DsfrInput
-          v-model="form.rgaa_service_url"
-          :label="complianceFieldLabels.service_url"
-          type="url"
-          label-visible
-          data-testid="compliance-rgaa-service-url"
-        />
-        <DsfrInput
-          v-model="form.rgaa_accessibility_url"
-          :label="complianceFieldLabels.accessibility_url"
-          type="url"
-          label-visible
-          data-testid="compliance-rgaa-accessibility-url"
-        />
-        <DsfrInput
-          v-model="form.rgaa_score_percentage"
-          :label="complianceFieldLabels.score_percentage"
-          type="number"
-          inputmode="decimal"
-          min="0"
-          max="100"
-          step="0.01"
-          label-visible
-          data-testid="compliance-rgaa-score"
-        />
-        <DsfrInput
-          v-model="form.eco_index_target_url"
-          :label="complianceFieldLabels.eco_index_target_url"
-          type="url"
-          label-visible
-          data-testid="compliance-ecoindex-target-url"
         />
       </template>
 

@@ -54,15 +54,6 @@ model Compliance {
   /// RSSI (Responsable de la Sécurité des Systèmes d'Information) pour l'homologation
   homologation_rssi        Actor?              @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
 
-  /// RGAA : Date de l'audit d'accessibilité
-  rgaa_audit_date        DateTime?
-  /// RGAA : URL du service
-  rgaa_service_url       String?
-  /// RGAA : URL de la déclaration d'accessibilité
-  rgaa_accessibility_url String?
-  /// RGAA : Score d'accessibilité en pourcentage
-  rgaa_score_percentage  Decimal?  @db.Decimal(5, 2)
-
   /// DSFR : Si le Système de Design de l'État est implémenté
   dsfr_implemented Boolean?
   /// DSFR : Version du Système de Design de l'État utilisée

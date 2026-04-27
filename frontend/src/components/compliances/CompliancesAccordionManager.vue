@@ -18,21 +18,22 @@ import { BREAKPOINTS } from "@/constants/breakpoint";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 import { useUserStore } from "@/stores/userStore";
+import type { ApplicationWithPerms } from "@/models/Application";
+import RgaaComplianceSection from "./RgaaComplianceSection.vue";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const applicationId = props.application.id;
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
+type ManagedComplianceType = Exclude<ComplianceType, "rgaa">;
 const compliance = ref<ComplianceDto | null>(null);
 const isLoading = ref(false);
 const isScanningEcoIndex = ref(false);
 
-const canWriteCompliances = computed(() => props.application.myPerms.has("writeCompliances"));
-
 const showModal = ref(false);
 const modalMode = ref<"create" | "edit">("create");
-const selectedType = ref<ComplianceType | null>(null);
+const selectedType = ref<ManagedComplianceType | null>(null);
 
 const showDetailsModal = ref(false);
 const detailsTitle = ref("");
@@ -40,16 +41,15 @@ const detailsList = ref<{ key: string; label: string; value: string }[]>([]);
 
 const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.SMALL_CARD_MAX}px)`);
 
-const types: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
-const labels: Record<ComplianceType, string> = {
+const types: ManagedComplianceType[] = ["dima", "pdma", "homologation", "dsfr", "rgpd"];
+const labels: Record<ManagedComplianceType, string> = {
   dima: "Délai d'Indisponibilité Maximale Admissible (DIMA)",
   pdma: "Perte de données maximale admissible (PDMA)",
   homologation: "Homologation",
-  rgaa: "Référentiel général d’amélioration de l’accessibilité (RGAA)",
   dsfr: "Design Système de l'état (DSFR)",
   rgpd: "Règlement Général sur la Protection des Données (RGPD)",
 };
-const fieldsByType: Record<ComplianceType, string[]> = {
+const fieldsByType: Record<ManagedComplianceType, string[]> = {
   dima: [
     "duration_hours",
     "is_hno",
@@ -71,7 +71,6 @@ const fieldsByType: Record<ComplianceType, string[]> = {
     "restoration_manager",
   ],
   homologation: ["status", "date_end"],
-  rgaa: ["audit_date", "service_url", "accessibility_url", "score_percentage"],
   dsfr: ["implemented", "version"],
   rgpd: ["has_aipd", "dpo_name"],
 };
@@ -87,11 +86,11 @@ const FILLED_STATUS_LABEL = "Renseignée";
 const EMPTY_STATUS_LABEL = "Non renseignée";
 const NO_ECOINDEX_LABEL = "Non calculé";
 
-function getFieldValue(type: ComplianceType, key: string) {
+function getFieldValue(type: ManagedComplianceType, key: string) {
   return (compliance.value as any)?.[`${type}_${key}`];
 }
 
-function hasComplianceInfo(type: ComplianceType): boolean {
+function hasComplianceInfo(type: ManagedComplianceType): boolean {
   return fieldsByType[type].some((key) => {
     const value = getFieldValue(type, key);
     return value != null && value !== "";
@@ -104,7 +103,7 @@ const isNewType = computed(() => {
   return selectedType.value != null && !typesWithData.value.includes(selectedType.value);
 });
 
-function getPreview(type: ComplianceType): string {
+function getPreview(type: ManagedComplianceType): string {
   if (!compliance.value) return "";
 
   if (type === "dima") {
@@ -125,19 +124,6 @@ function getPreview(type: ComplianceType): string {
     }
     if (compliance.value.homologation_date_end) parts.push(formatDateFR(compliance.value.homologation_date_end));
     return parts.join(" - ");
-  }
-
-  if (type === "rgaa") {
-    const parts: string[] = [];
-    if (compliance.value.rgaa_score_percentage == null || compliance.value.rgaa_score_percentage === "") {
-      parts.push("Non-conforme");
-    } else {
-      const score = Number(compliance.value.rgaa_score_percentage);
-      if (score < 50) parts.push("Non-conforme");
-      else if (score === 100) parts.push("Conforme");
-      else parts.push("Partiellement conforme");
-    }
-    return parts.join(" • ");
   }
 
   if (type === "dsfr") {
@@ -225,7 +211,7 @@ function onAddClick() {
   showModal.value = true;
 }
 
-function onEditClick(type: ComplianceType) {
+function onEditClick(type: ManagedComplianceType) {
   modalMode.value = "edit";
   selectedType.value = type;
   showModal.value = true;
@@ -257,7 +243,7 @@ async function runEcoIndexScan() {
   }
 }
 
-function openDetails(type: ComplianceType) {
+function openDetails(type: ManagedComplianceType) {
   detailsList.value = fieldsByType[type]
     .map((key) => ({ key, value: getFieldValue(type, key) }))
     .filter(({ value }) => value != null && value !== "")
@@ -279,6 +265,36 @@ function closeDetails() {
 const hasComplianceEditPermission = computed(() => {
   return userStore.hasPermissions([Permission.COMPLIANCE_WRITE]);
 });
+
+const isEditingTargetUrl = ref(false);
+const targetUrlDraft = ref("");
+const isSavingTargetUrl = ref(false);
+
+function startEditTargetUrl() {
+  targetUrlDraft.value = compliance.value?.eco_index_target_url ?? "";
+  isEditingTargetUrl.value = true;
+}
+
+function cancelEditTargetUrl() {
+  isEditingTargetUrl.value = false;
+}
+
+async function saveTargetUrl() {
+  isSavingTargetUrl.value = true;
+  try {
+    const response = await api.applicationCompliancesControllerUpdate({
+      path: { applicationId },
+      body: { eco_index_target_url: targetUrlDraft.value || undefined },
+    });
+    if (response.data) compliance.value = response.data;
+    isEditingTargetUrl.value = false;
+    toaster.addSuccessMessage("URL cible EcoIndex mise à jour.");
+  } catch {
+    toaster.addErrorMessage("Erreur lors de la mise à jour de l'URL cible EcoIndex.");
+  } finally {
+    isSavingTargetUrl.value = false;
+  }
+}
 </script>
 
 <template>
@@ -289,7 +305,7 @@ const hasComplianceEditPermission = computed(() => {
 
     <div class="fr-col-auto">
       <DsfrButton
-        v-if="canWriteCompliances"
+        v-if="hasComplianceEditPermission"
         icon="fr-icon-leaf-line"
         size="sm"
         secondary
@@ -410,6 +426,8 @@ const hasComplianceEditPermission = computed(() => {
       </div>
     </div>
 
+    <RgaaComplianceSection :application-id="applicationId" class="fr-mt-4w" />
+
     <section class="fr-mt-4w" data-testid="compliance-ecoindex-section">
       <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-2w">
         <h4 class="fr-mb-0">Eco index</h4>
@@ -430,7 +448,50 @@ const hasComplianceEditPermission = computed(() => {
         </li>
         <li>
           <strong>URL cible :</strong>
-          <span class="compliance-value">{{ ecoIndexValues.targetUrl ?? NO_ECOINDEX_LABEL }}</span>
+          <template v-if="isEditingTargetUrl">
+            <form class="fr-mt-1w" @submit.prevent="saveTargetUrl">
+              <DsfrInput
+                v-model="targetUrlDraft"
+                :label="complianceFieldLabels.eco_index_target_url"
+                label-visible
+                type="url"
+                data-testid="ecoindex-target-url-input"
+              />
+              <div class="fr-mt-1w">
+                <DsfrButton
+                  type="submit"
+                  size="sm"
+                  :loading="isSavingTargetUrl"
+                  label="Enregistrer"
+                  class="fr-mr-1w"
+                  data-testid="ecoindex-target-url-save"
+                />
+                <DsfrButton
+                  type="button"
+                  size="sm"
+                  secondary
+                  label="Annuler"
+                  @click="cancelEditTargetUrl"
+                  data-testid="ecoindex-target-url-cancel"
+                />
+              </div>
+            </form>
+          </template>
+          <template v-else>
+            <span class="compliance-value">{{ ecoIndexValues.targetUrl ?? NO_ECOINDEX_LABEL }}</span>
+            <DsfrButton
+              v-if="hasComplianceEditPermission"
+              tertiary
+              size="sm"
+              icon="ri-edit-line"
+              :no-outline="true"
+              label="Modifier"
+              aria-label="Modifier l'URL cible EcoIndex"
+              class="fr-ml-1w"
+              data-testid="ecoindex-target-url-edit-btn"
+              @click="startEditTargetUrl"
+            />
+          </template>
         </li>
         <li>
           <strong>Dernier calcul :</strong>

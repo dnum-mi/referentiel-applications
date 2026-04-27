@@ -27,7 +27,9 @@ model Application {
   /// Acteurs - (personnes, entités) impliqués avec cette application
   actors            Actor[]             @relation("ApplicationActors")
   /// Informations de conformité pour cette application
-  compliance        Compliance?         @relation("ApplicationCompliance")
+  compliance        Compliance?           @relation("ApplicationCompliance")
+  /// Conformités RGAA (0 à N, une par site web)
+  rgaaCompliances   RgaaCompliance[]
   /// Signalements pour cette application
   reports           Report[]            @relation("ApplicationReport")
   /// Ressources externes liées à cette application

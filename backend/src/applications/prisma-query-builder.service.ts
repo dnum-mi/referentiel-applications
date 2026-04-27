@@ -371,8 +371,8 @@ export class PrismaQueryBuilder {
           break;
         case "rgaa":
           where.AND.push({
-            compliance: {
-              rgaa_audit_date: { not: null },
+            rgaaCompliances: {
+              some: {},
             },
           });
           break;
