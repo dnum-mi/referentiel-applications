@@ -17,7 +17,7 @@ const { total, resetFilters, filters, setFilter } = useApplicationSearch();
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
 
-const { openAccordions, toggle } = useAccordionManager(3, true);
+const { openAccordions, toggle } = useAccordionManager(7, true);
 
 const isMyAppsFilterActive = computed(() => {
   return !!(userStore.user?.email && filters.value.actorEmail === userStore.user.email);
@@ -91,10 +91,10 @@ function toggleMyAppsFilter(value: boolean) {
         </DsfrAccordion>
 
         <DsfrAccordion
-          :selected="openAccordions.includes(5)"
+          :selected="openAccordions.includes(6)"
           title="Relations"
           data-testid="sidebar-accordion-relations"
-          @click="toggle(5)"
+          @click="toggle(6)"
         >
           <RelationFilter />
         </DsfrAccordion>

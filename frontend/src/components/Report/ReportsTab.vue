@@ -14,7 +14,10 @@ import { computed, ref, watch } from "vue";
 
 const props = defineProps<{
   isActive: boolean;
+  allReport: boolean;
 }>();
+
+const isAllReport = computed(() => props.allReport);
 
 const headers = [
   { key: "application", label: "Application" },
@@ -36,7 +39,6 @@ const userStore = useUserStore();
 const data = ref<PaginatedReportDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 const isEditing = ref<boolean>(false);
-const selection = ref<string[]>([]);
 const currentPage = ref(0);
 const itemsPerPage = ref(15);
 const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
@@ -68,7 +70,7 @@ async function fetchAllReportsDirect() {
   isLoading.value = true;
   try {
     const query = {
-      all: true,
+      all: isAllReport.value,
       searchReport: searchReport.value,
       page: currentPage.value,
       limit: itemsPerPage.value,
