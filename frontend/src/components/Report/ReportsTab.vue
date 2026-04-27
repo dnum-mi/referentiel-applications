@@ -43,7 +43,7 @@ const currentPage = ref(0);
 const itemsPerPage = ref(15);
 const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 const searchReport = ref("");
-const sortBy = ref<"application" | "description" | "date" | "status" | "signalant" | "notes">("date");
+const sortBy = ref<"application" | "description" | "date" | "status" | "notifier" | "notes">("date");
 const sortedDesc = ref<boolean>(true);
 
 const rows = computed(() =>
@@ -125,25 +125,10 @@ watch(
   <div v-else>
     <div v-if="userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])">
       <div v-if="!isEditing && rows.length" class="toRight">
-        <DsfrButton
-          label="Modifier"
-          class="fr-mb-1w"
-          :onclick="
-            () => {
-              isEditing = true;
-            }
-          "
-        />
+        <DsfrButton label="Modifier" class="fr-mb-1w" @click="isEditing = true" />
       </div>
       <div v-else-if="rows.length" class="toRight">
-        <DsfrButton
-          label="Arreter de  modifier"
-          :onclick="
-            () => {
-              isEditing = false;
-            }
-          "
-        />
+        <DsfrButton label="Arreter de modifier" @click="isEditing = false" />
       </div>
     </div>
     <div class="fr-mb-4w">
