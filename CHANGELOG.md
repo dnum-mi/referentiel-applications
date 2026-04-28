@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.73.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.73.0...v1.73.1) (2026-04-28)
+
+
+### Bug Fixes
+
+* :bug: update API method for fetching technical debt info ([#1685](https://github.com/dnum-mi/referentiel-applications/issues/1685)) ([d1c3fe7](https://github.com/dnum-mi/referentiel-applications/commit/d1c3fe73404ef69b3ab75b488bd679d98e3a480d))
+
 ## [1.73.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.72.0...v1.73.0) (2026-04-27)
 
 
