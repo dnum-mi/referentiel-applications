@@ -43,7 +43,7 @@ const isTechnicalDebtModalOpen = ref(false);
 const technicalDebtInfo = ref<TechnicalDebtInfoDto | null>(null);
 
 async function fetchTechnicalDebtInfo() {
-  const response = await api.applicationTechnicalDebtInfoControllerFindOne({
+  const response = await api.applicationTechnicalDebtInfoControllerFind({
     path: { applicationId: props.application.id },
     query: { pageSize: 1 },
   });
