@@ -1,4 +1,5 @@
 import type { TechnicalDebtPoint } from "@/composables/use-application-search";
+import { TRESHOLD_TIME_MATURITY } from "@/utils/get-time-quadrant";
 import * as d3 from "d3";
 
 type GSelection = d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -72,7 +73,7 @@ export class TimeChartBuilder {
 
     this.g
       .append("g")
-      .attr("transform", `translate(0,${y(2.5)})`)
+      .attr("transform", `translate(0,${y(TRESHOLD_TIME_MATURITY)})`)
       .call(xAxis)
       .call((axis) =>
         axis
@@ -87,7 +88,7 @@ export class TimeChartBuilder {
 
     this.g
       .append("g")
-      .attr("transform", `translate(${x(2.5)},0)`)
+      .attr("transform", `translate(${x(TRESHOLD_TIME_MATURITY)},0)`)
       .call(yAxis)
       .call((axis) =>
         axis

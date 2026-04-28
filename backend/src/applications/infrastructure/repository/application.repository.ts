@@ -68,7 +68,10 @@ export class ApplicationRepository implements IApplicationRepository {
       pageSize,
       include: {
         currentStatus: true,
-        technicalDebtInfo: true,
+        technicalDebtInfo: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
         businessDivision: true,
         hostings: {
           include: {
@@ -110,6 +113,13 @@ export class ApplicationRepository implements IApplicationRepository {
     // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
     return {
       ...paginatedResult,
+      results: paginatedResult.results.map((app) => ({
+        ...app,
+        // must use assertion due to paginate plugin doesn't preserve types if we are using limit select
+        technicalDebtInfo:
+          (app as unknown as { technicalDebtInfo: TechnicalDebtPointDto[] })
+            .technicalDebtInfo[0] ?? null,
+      })),
       averageIq: avgResult._avg.quality ?? 0,
     } as unknown as ApplicationSearchResultDto;
   }
