@@ -1,18 +1,23 @@
 <script setup lang="ts">
-import { ref, nextTick } from "vue";
+import { ref, nextTick, computed } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { useUserStore } from "@/stores/userStore";
+import { Permission } from "@/client";
 import { useDebounceFn, useMediaQuery } from "@vueuse/core";
+import { getTimeQuadrant, type TimeQuadrant } from "@/utils/get-time-quadrant";
 
 interface ApplicationOption {
   id: string | number;
   label: string;
   shortName?: string;
   organization?: string;
+  timeQuadrant?: TimeQuadrant;
 }
 
 const router = useRouter();
+const userStore = useUserStore();
 const { searchApplications } = useApplicationSearch();
 const searchRef = ref<{ clear?: () => void } | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
@@ -20,6 +25,8 @@ const isMobile = useMediaQuery("(max-width: 768px)");
 const showInput = ref(!isMobile.value);
 const suggestions = ref<ApplicationOption[]>([]);
 const trimmedQuery = ref("");
+
+const canSeeMDIT = computed(() => userStore.hasPermissions([Permission.MDIT_LIST]));
 
 async function onLoupeClick() {
   showInput.value = true;
@@ -44,7 +51,14 @@ async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[
 const debouncedSearch = useDebounceFn(async (resolve: (res: ApplicationOption[]) => void) => {
   const response = await searchApplications({ search: trimmedQuery.value, page: 0, pageSize: 8 }, false);
 
-  suggestions.value = (response?.results ?? []) as ApplicationOption[];
+  suggestions.value = (response?.results ?? []).map((app): ApplicationOption => {
+    const td = app.technicalDebtInfo;
+    const timeQuadrant =
+      canSeeMDIT.value && td?.technicalMaturity != null && td?.businessMaturity != null
+        ? getTimeQuadrant(td.technicalMaturity, td.businessMaturity)
+        : undefined;
+    return { id: app.id, label: app.label, shortName: app.shortName ?? undefined, timeQuadrant };
+  });
 
   resolve(suggestions.value);
 }, 400);
@@ -98,6 +112,7 @@ function onConfirm(selection: ApplicationOption | null) {
             <small v-if="item.shortName"> ({{ item.shortName }})</small>
             <em v-if="item.organization"> — {{ item.organization }}</em>
           </template>
+          <span v-if="item.timeQuadrant" class="suggestion__time-badge">{{ item.timeQuadrant }}</span>
         </div>
       </template>
     </AccessibleAutocomplete>
@@ -129,10 +144,23 @@ function onConfirm(selection: ApplicationOption | null) {
   flex-direction: column;
   font-size: 0.95rem;
 }
+
 .suggestion small,
 .suggestion em {
   color: #6b7280;
   font-size: 0.85rem;
+}
+
+.suggestion__time-badge {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: var(--blue-france-sun-113-625);
+  color: white;
+  align-self: flex-start;
 }
 
 @media (max-width: 768px) {
