@@ -263,7 +263,7 @@ function closeDetails() {
 }
 
 const hasComplianceEditPermission = computed(() => {
-  const hasGlobalComplianceWritePermission = userStore.hasPermissions([Permission.COMPLIANCE_WRITE]);
+  const hasGlobalComplianceWritePermission = userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.application.myPerms));
   const hasApplicationComplianceWritePermission = props.application.myPerms?.has(Permission.COMPLIANCE_WRITE) ?? false;
 
   return hasGlobalComplianceWritePermission || hasApplicationComplianceWritePermission;
@@ -429,7 +429,7 @@ async function saveTargetUrl() {
       </div>
     </div>
 
-    <RgaaComplianceSection :application-id="applicationId" class="fr-mt-4w" />
+    <RgaaComplianceSection :application-id="applicationId" :app-perms="application.myPerms" class="fr-mt-4w" />
 
     <section class="fr-mt-4w" data-testid="compliance-ecoindex-section">
       <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-2w">
