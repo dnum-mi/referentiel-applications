@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.74.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.73.1...v1.74.0) (2026-04-29)
+
+
+### Features
+
+* :lipstick: update refapp logo ([#1689](https://github.com/dnum-mi/referentiel-applications/issues/1689)) ([312ead5](https://github.com/dnum-mi/referentiel-applications/commit/312ead51e1e6db7adf1f33d9ecf9ec60f66139bb))
+* :sparkles: add mulitple rgaa compliances ([#1684](https://github.com/dnum-mi/referentiel-applications/issues/1684)) ([37167a4](https://github.com/dnum-mi/referentiel-applications/commit/37167a4f301d020e18dc1579eb542ad60b8278e5))
+
+
+### Bug Fixes
+
+* add permissions application when using userstore ([#1691](https://github.com/dnum-mi/referentiel-applications/issues/1691)) ([50559f6](https://github.com/dnum-mi/referentiel-applications/commit/50559f6b448a927407bb150ad0808d324d3a8600))
+
 ## [1.73.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.73.0...v1.73.1) (2026-04-28)
 
 
