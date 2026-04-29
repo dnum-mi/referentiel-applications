@@ -76,8 +76,12 @@ const moeActor = ref<CreateActorDto>({
 const isCreateMode = computed(() => props.mode === "create");
 const userStore = useUserStore();
 
-const canEditBase = computed(() => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE]));
-const canEditPriorityRestart = computed(() => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE_PRIORITY]));
+const canEditBase = computed(
+  () => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE], Array.from(props.initialData?.myPerms ?? [])),
+);
+const canEditPriorityRestart = computed(
+  () => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE_PRIORITY], Array.from(props.initialData?.myPerms ?? [])),
+);
 
 const moaOrganizationId = computed({
   get: () => moaActor.value.organizationId ?? undefined,

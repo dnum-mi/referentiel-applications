@@ -9,8 +9,9 @@ import { formatDateFR } from "@/composables/use-date";
 import { toDateInputValue, toISODateTime } from "@/composables/use-date";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
+import type { ApplicationWithPerms } from "@/models/Application";
 
-const props = defineProps<{ applicationId: string }>();
+const props = defineProps<{ applicationId: string; appPerms: ApplicationWithPerms["myPerms"] }>();
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
@@ -23,7 +24,7 @@ const submitting = ref(false);
 
 const form = ref<Record<string, string | number | undefined>>({});
 
-const canWrite = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE]));
+const canWrite = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.appPerms)));
 
 const tableColumns: TableColumn[] = [
   { field: "service_url", header: "URL du service", sortable: false },

@@ -14,7 +14,7 @@ const props = defineProps<{ application: ApplicationWithPerms; isMobile?: boolea
 
 const isLoading = ref(false);
 const userStore = useUserStore();
-const canEdit = computed(() => userStore.hasPermissions([Permission.RELATION_WRITE]));
+const canEdit = computed(() => userStore.hasPermissions([Permission.RELATION_WRITE], Array.from(props.application.myPerms)));
 const toaster = useToasterStore();
 
 const relationManager = useRelationManager(props.application.id);

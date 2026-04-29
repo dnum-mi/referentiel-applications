@@ -44,7 +44,7 @@ const deleteConfirmationInput = ref("");
 const applicationLabel = computed(() => application.value?.label ?? "");
 
 const canReadMetadata = computed(() => {
-  return userStore.hasPermissions([Permission.METADATA_READ]);
+  return userStore.hasPermissions([Permission.METADATA_READ], Array.from(application.value.myPerms));
 });
 
 async function fetchApplicationMetadata() {
@@ -185,7 +185,7 @@ const actions = computed(() => [
       <ApplicationOverview :application="application" data-testid="application-overview" @update:application="fetchApplicationMetadata" />
 
       <DsfrButton
-        v-if="userStore.hasPermissions([Permission.DELETE_APPLICATION])"
+        v-if="userStore.hasPermissions([Permission.DELETE_APPLICATION], Array.from(application.myPerms))"
         class="application-delete-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         data-testid="application-delete-btn"
         title="Supprimer définitivement cette application"
