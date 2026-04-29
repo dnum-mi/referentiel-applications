@@ -24,7 +24,7 @@
         <div class="fr-col-12 fr-col-sm-4">
           <div class="fr-tile" data-testid="home-tile-centralisation">
             <div class="fr-tile__body">
-              <img src="/assets/logo.svg" alt="" />
+              <img src="/assets/svg-centralize.svg" alt="" />
               <h3 class="fr-tile__title">Centralisation</h3>
               <p class="fr-tile__desc fr-text--sm">Rassembler toutes les fiches produits dans un seul point de vérité.</p>
             </div>
