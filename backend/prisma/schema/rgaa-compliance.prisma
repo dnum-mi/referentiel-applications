@@ -1,0 +1,24 @@
+/// Conformité RGAA (Référentiel général d'amélioration de l'accessibilité) pour un site web donné.
+/// Une application peut avoir 0 à N conformités RGAA, une par URL de service.
+///
+/// @namespace Compliance
+model RgaaCompliance {
+  /// Identifiant unique
+  id            String      @id @default(uuid())
+  /// Identifiant de l'application
+  applicationId String
+  /// Application à laquelle cette conformité RGAA appartient
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  /// RGAA : Date de l'audit d'accessibilité
+  audit_date         DateTime?
+  /// RGAA : URL du service audité
+  service_url        String?
+  /// RGAA : URL de la déclaration d'accessibilité
+  accessibility_url  String?
+  /// RGAA : Score d'accessibilité en pourcentage (0-100)
+  score_percentage   Decimal?  @db.Decimal(5, 2)
+
+  @@unique([applicationId, service_url])
+  @@index([applicationId])
+}

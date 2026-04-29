@@ -79,25 +79,6 @@ const complianceSeeds: ComplianceSeedData[] = [
     homologation_status: HomologationStatus.dispensee,
   },
 
-  {
-    rgaa_audit_date: new Date("2024-11-05T00:00:00.000Z"),
-    rgaa_service_url: "https://service-a.example.gouv.fr",
-    rgaa_accessibility_url: "https://service-a.example.gouv.fr/accessibilite",
-    rgaa_score_percentage: "72.50",
-  },
-  {
-    rgaa_audit_date: new Date("2025-03-10T00:00:00.000Z"),
-    rgaa_service_url: "https://service-b.example.gouv.fr",
-    rgaa_accessibility_url: "https://service-b.example.gouv.fr/accessibilite",
-    rgaa_score_percentage: "88.20",
-  },
-  {
-    rgaa_audit_date: new Date("2025-09-01T00:00:00.000Z"),
-    rgaa_service_url: "https://service-c.example.gouv.fr",
-    rgaa_accessibility_url: "https://service-c.example.gouv.fr/accessibilite",
-    rgaa_score_percentage: "96.00",
-  },
-
   { dsfr_implemented: true, dsfr_version: "1.12.1" },
   { dsfr_implemented: false },
   { dsfr_implemented: true, dsfr_version: "1.13.0" },

@@ -1,15 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
 import {
   IsBoolean,
   IsDateString,
   IsEnum,
   IsInt,
-  IsNumber,
   IsOptional,
   IsString,
-  Max,
-  Min,
 } from "class-validator";
 import { BackupStorage, HomologationStatus, TestResult } from "src/enum";
 
@@ -186,46 +182,6 @@ export class CreateComplianceDto {
   @IsOptional()
   @IsString()
   homologation_rssi_id?: string;
-
-  // RGAA specific fields
-  @ApiProperty({
-    example: "2023-01-01",
-    description: "RGAA audit date",
-    required: false,
-  })
-  @IsOptional()
-  @IsDateString()
-  rgaa_audit_date?: string;
-
-  @ApiProperty({
-    example: "https://service.example.com",
-    description: "RGAA service URL",
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  rgaa_service_url?: string;
-
-  @ApiProperty({
-    example: "https://service.example.com/accessibilite",
-    description: "RGAA accessibility page URL",
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  rgaa_accessibility_url?: string;
-
-  @ApiProperty({
-    example: 85,
-    description: "RGAA score percentage (0-100)",
-    required: false,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  rgaa_score_percentage?: string;
 
   // DSFR specific fields
   @ApiProperty({

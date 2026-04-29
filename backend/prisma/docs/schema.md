@@ -286,10 +286,6 @@ erDiagram
   HomologationStatus homologation_status "nullable"
   DateTime homologation_date_end "nullable"
   String homologation_rssi_id FK "nullable"
-  DateTime rgaa_audit_date "nullable"
-  String rgaa_service_url "nullable"
-  String rgaa_accessibility_url "nullable"
-  Decimal(5) rgaa_score_percentage "nullable"
   Boolean dsfr_implemented "nullable"
   String(20) dsfr_version "nullable"
   Boolean rgpd_has_aipd "nullable"
@@ -299,6 +295,14 @@ erDiagram
   Float eco_index_water "nullable"
   String eco_index_target_url "nullable"
   DateTime eco_index_last_calculated_at "nullable"
+}
+"RgaaCompliance" {
+  String id PK
+  String applicationId FK
+  DateTime audit_date "nullable"
+  String service_url "nullable"
+  String accessibility_url "nullable"
+  Decimal(5) score_percentage "nullable"
 }
 ```
 
@@ -330,10 +334,6 @@ Properties as follows:
 - `homologation_status`: Statut d'homologation
 - `homologation_date_end`: Date de fin d'homologation
 - `homologation_rssi_id`: Identifiant du RSSI (Responsable de la Sécurité des Systèmes d'Information) pour l'homologation
-- `rgaa_audit_date`: RGAA : Date de l'audit d'accessibilité
-- `rgaa_service_url`: RGAA : URL du service
-- `rgaa_accessibility_url`: RGAA : URL de la déclaration d'accessibilité
-- `rgaa_score_percentage`: RGAA : Score d'accessibilité en pourcentage
 - `dsfr_implemented`: DSFR : Si le Système de Design de l'État est implémenté
 - `dsfr_version`: DSFR : Version du Système de Design de l'État utilisée
 - `rgpd_has_aipd`: RGPD : Si une Analyse d'Impact sur la Protection des Données existe
@@ -343,6 +343,20 @@ Properties as follows:
 - `eco_index_water`: EcoIndex : Consommation d'eau (centilitres)
 - `eco_index_target_url`: EcoIndex : URL cible utilisée pour le calcul
 - `eco_index_last_calculated_at`: EcoIndex : Date du dernier calcul
+
+### `RgaaCompliance`
+
+Conformité RGAA (Référentiel général d'amélioration de l'accessibilité) pour un site web donné.
+Une application peut avoir 0 à N conformités RGAA, une par URL de service.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `applicationId`: Identifiant de l'application
+- `audit_date`: RGAA : Date de l'audit d'accessibilité
+- `service_url`: RGAA : URL du service audité
+- `accessibility_url`: RGAA : URL de la déclaration d'accessibilité
+- `score_percentage`: RGAA : Score d'accessibilité en pourcentage (0-100)
 
 ## DataSource
 

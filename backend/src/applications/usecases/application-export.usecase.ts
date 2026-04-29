@@ -107,11 +107,6 @@ export class ExportApplicationsUseCase {
           // HOMOLOGATION fields
           col("homologation_date_end", 20),
           col("homologation_rssi_id", 25),
-          // RGAA fields
-          col("rgaa_audit_date", 20),
-          col("rgaa_service_url", 30),
-          col("rgaa_accessibility_url", 30),
-          col("rgaa_score_percentage", 15),
           // DSFR fields
           col("dsfr_implemented", 15),
           col("dsfr_version", 15),

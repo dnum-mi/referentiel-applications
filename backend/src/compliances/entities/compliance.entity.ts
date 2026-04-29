@@ -29,12 +29,6 @@ export class Compliance {
   homologation_rssi_id?: string;
   homologation_status?: string;
 
-  // RGAA specific fields
-  rgaa_audit_date?: Date;
-  rgaa_service_url?: string;
-  rgaa_accessibility_url?: string;
-  rgaa_score_percentage?: number;
-
   // DSFR specific fields
   dsfr_implemented?: boolean;
   dsfr_version?: string;

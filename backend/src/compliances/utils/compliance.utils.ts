@@ -1,7 +1,6 @@
 const COMPLIANCE_LABELS: Record<string, string> = {
   dima_: "DIMA",
   pdma_: "PDMA",
-  rgaa_: "RGAA",
   dsfr_: "DSFR",
   rgpd_: "RGPD",
   homologation_: "Homologation",

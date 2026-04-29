@@ -30,6 +30,7 @@ import { TokenModule } from "./token/token.module";
 import { UserModule } from "./user/user.module";
 import { LabelSourceModule } from "./label-source/label-source.module";
 import { DataSourceModule } from "./data-source/data-source.module";
+import { RgaaModule } from "./rgaa/rgaa.module";
 
 @Module({
   imports: [
@@ -60,6 +61,9 @@ import { DataSourceModule } from "./data-source/data-source.module";
     LinksModule,
     TagsModule,
     TechnicalDebtInfoModule,
+    RgaaModule,
+    PrismaModule,
+    ConfigModule,
     StatusesModule,
     StatsModule,
     ReportModule,

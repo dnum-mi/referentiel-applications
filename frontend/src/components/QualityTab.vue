@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ActorDto, ComplianceDto, LinkDto } from "@/client/types.gen";
+import type { ActorDto, ComplianceDto, LinkDto, RgaaComplianceDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
 import api from "@/api/index";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
@@ -19,11 +19,12 @@ const hostingStore = useHostingStore();
 const hostings = computed(() => hostingStore.hostings);
 const links = ref<LinkDto[]>([]);
 const compliances = ref<ComplianceDto | null>(null);
+const rgaaCompliances = ref<RgaaComplianceDto[]>([]);
 
 async function fetchQuality() {
   isLoading.value = true;
   try {
-    const [actorsResponse, linksResponse, compliancesResponse] = await Promise.all([
+    const [actorsResponse, linksResponse, compliancesResponse, rgaaResponse] = await Promise.all([
       api.applicationActorsControllerFindAll({
         path: { applicationId: props.application.id },
         query: { pageSize: 0 },
@@ -34,6 +35,9 @@ async function fetchQuality() {
       api.applicationCompliancesControllerFindOne({
         path: { applicationId: props.application.id },
       }),
+      api.rgaaControllerFindAll({
+        path: { applicationId: props.application.id },
+      }),
     ]);
 
     const actorsData = actorsResponse.data;
@@ -41,6 +45,7 @@ async function fetchQuality() {
     const linksData = linksResponse.data;
     links.value = linksData?.results ?? [];
     compliances.value = compliancesResponse.data ?? null;
+    rgaaCompliances.value = rgaaResponse.data ?? [];
   } catch {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
   } finally {
@@ -66,7 +71,7 @@ function hasCompliance(complianceType: string): boolean {
     case "HOMOLOGATION":
       return Boolean(compliances.value.homologation_date_end);
     case "RGAA":
-      return Boolean(compliances.value.rgaa_audit_date || compliances.value.rgaa_score_percentage);
+      return rgaaCompliances.value.length > 0;
     case "DSFR":
       return compliances.value.dsfr_implemented !== undefined;
     case "RGPD":
@@ -92,8 +97,8 @@ function getComplianceColor(complianceType: string): string {
       if (compliances.value.rgpd_has_aipd === undefined) return "yellow-tournesol";
       return compliances.value.rgpd_has_aipd ? "green-emeraude" : "yellow-tournesol";
     case "RGAA":
-      if (!compliances.value.rgaa_score_percentage) return "yellow-tournesol";
-      if (Number(compliances.value.rgaa_score_percentage) >= 50) return "green-emeraude";
+      if (rgaaCompliances.value.length === 0) return "yellow-tournesol";
+      if (rgaaCompliances.value.some(({ score_percentage: score }) => score != null && Number(score) >= 50)) return "green-emeraude";
       return "yellow-tournesol";
     default:
       return hasCompliance(complianceType) ? "green-emeraude" : "yellow-tournesol";
