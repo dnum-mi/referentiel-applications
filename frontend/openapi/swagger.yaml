@@ -184,6 +184,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -265,6 +266,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -402,6 +404,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -801,6 +804,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1371,6 +1375,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1509,6 +1514,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1671,6 +1677,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -1959,6 +1966,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 50
             example: 50
             type: number
@@ -2205,6 +2213,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2325,6 +2334,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2496,6 +2506,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -2919,6 +2930,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3182,6 +3194,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3311,6 +3324,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3442,6 +3456,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3491,6 +3506,7 @@ paths:
           description: Nombre de résultats par page, 0 pour supprimer la pagination
           schema:
             minimum: 0
+            maximum: 100
             default: 15
             example: 15
             type: number
@@ -3997,7 +4013,7 @@ paths:
               - status
               - date
               - description
-              - signalant
+              - notifier
               - notes
             type: string
         - name: order
@@ -4130,7 +4146,7 @@ paths:
               - status
               - date
               - description
-              - signalant
+              - notifier
               - notes
             type: string
         - name: order
@@ -6073,7 +6089,6 @@ components:
           description: RGPD DPO name
         eco_index_target_url:
           type: string
-          nullable: true
           example: https://service.example.com
           description: EcoIndex target URL used for scan
         id:
@@ -6196,7 +6211,6 @@ components:
           description: RGPD DPO name
         eco_index_target_url:
           type: string
-          nullable: true
           example: https://service.example.com
           description: EcoIndex target URL used for scan
     CreateHostingDto:

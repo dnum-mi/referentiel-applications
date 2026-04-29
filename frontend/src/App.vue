@@ -68,8 +68,12 @@ const authenticatedQuickLinks = computed<QuickLink[]>(() => {
   return baseLinks;
 });
 
-const operatorImgSrc = "/assets/logotitle2.svg";
+const operatorImgSrc = "/assets/logo.svg";
 const operatorImgAlt = "Ministère de l'intérieur - Référentiel des Applications";
+const operatorImgStyle = {
+  maxHeight: "none",
+  width: "5rem",
+};
 
 const unauthenticatedQuickLinks = computed<QuickLink[]>(() => [
   {
@@ -208,6 +212,7 @@ function close() {
     :logo-text="logoText"
     :operator-img-src="operatorImgSrc"
     :operator-img-alt="operatorImgAlt"
+    :operator-img-style="operatorImgStyle"
     :home-to="homeTo"
     :ecosystem-links="ecosystemLinks"
     :mandatory-links="mandatoryLinks"
