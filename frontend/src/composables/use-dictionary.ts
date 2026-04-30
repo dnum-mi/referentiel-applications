@@ -159,10 +159,11 @@ export const complianceFieldLabels: Record<string, string> = {
   recovery_manager: "Responsable de la reprise",
   backup_method: "Méthode de sauvegarde",
   restoration_manager: "Responsable de la restauration",
-  eco_index_score: "Score EcoIndex",
-  eco_index_ges: "Émissions GES (gCO2e)",
-  eco_index_water: "Consommation d'eau (cl)",
-  eco_index_target_url: "URL cible EcoIndex",
+  score: "Score EcoIndex",
+  ges: "Émissions GES (gCO2e)",
+  water: "Consommation d'eau (cl)",
+  target_url: "URL cible EcoIndex",
+  last_calculated_at: "Dernier calcul",
 };
 
 export const metadataActionLabels: Record<string, string> = {
@@ -178,7 +179,7 @@ export const relationTypeLabels: Record<RelationType, string> = {
   is_data_user_of: "utilise les données de",
   use_sso_of: "utilise le SSO de",
 };
-export type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd";
+export type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd" | "eco_index";
 
 export const typeApplicationDictionary: Record<ApplicationType, string> = {
   business: "Métier",

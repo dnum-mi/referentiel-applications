@@ -41,13 +41,14 @@ const detailsList = ref<{ key: string; label: string; value: string }[]>([]);
 
 const isMobile = useMediaQuery(`(max-width: ${BREAKPOINTS.SMALL_CARD_MAX}px)`);
 
-const types: ManagedComplianceType[] = ["dima", "pdma", "homologation", "dsfr", "rgpd"];
+const types: ManagedComplianceType[] = ["dima", "pdma", "homologation", "rgpd", "eco_index", "dsfr"];
 const labels: Record<ManagedComplianceType, string> = {
   dima: "Délai d'Indisponibilité Maximale Admissible (DIMA)",
   pdma: "Perte de données maximale admissible (PDMA)",
   homologation: "Homologation",
   dsfr: "Design Système de l'état (DSFR)",
   rgpd: "Règlement Général sur la Protection des Données (RGPD)",
+  eco_index: "Eco-index",
 };
 const fieldsByType: Record<ManagedComplianceType, string[]> = {
   dima: [
@@ -73,6 +74,7 @@ const fieldsByType: Record<ManagedComplianceType, string[]> = {
   homologation: ["status", "date_end"],
   dsfr: ["implemented", "version"],
   rgpd: ["has_aipd", "dpo_name"],
+  eco_index: ["score", "ges", "water", "target_url", "last_calculated_at"],
 };
 const tableColumns: TableColumn[] = [
   { field: "Type", header: "Type", sortable: false },
@@ -134,6 +136,13 @@ function getPreview(type: ManagedComplianceType): string {
     return parts.join(" • ");
   }
 
+  if (type === "eco_index") {
+    const score = compliance.value.eco_index_score;
+    const date = compliance.value.eco_index_last_calculated_at;
+    if (score == null) return NO_ECOINDEX_LABEL;
+    return `Score: ${score}/100 • Le ${formatDateFR(date)}`;
+  }
+
   const parts: string[] = [];
   if (compliance.value.rgpd_has_aipd === true) parts.push("AIPD: Oui");
   else if (compliance.value.rgpd_has_aipd === false) parts.push("AIPD: Non");
@@ -142,6 +151,7 @@ function getPreview(type: ManagedComplianceType): string {
 }
 
 function formatFieldValue(key: string, value: unknown): string {
+  if (key === "last_calculated_at") return formatDate(String(value));
   if (key === "test_result") return testResultsDict[value as keyof typeof testResultsDict];
   if (key === "backup_storage") return backupStorageDict[value as keyof typeof backupStorageDict];
   if (key === "status") return homologationStatusDict[value as keyof typeof homologationStatusDict] ?? String(value);
@@ -268,36 +278,6 @@ const hasComplianceEditPermission = computed(() => {
 
   return hasGlobalComplianceWritePermission || hasApplicationComplianceWritePermission;
 });
-
-const isEditingTargetUrl = ref(false);
-const targetUrlDraft = ref("");
-const isSavingTargetUrl = ref(false);
-
-function startEditTargetUrl() {
-  targetUrlDraft.value = compliance.value?.eco_index_target_url ?? "";
-  isEditingTargetUrl.value = true;
-}
-
-function cancelEditTargetUrl() {
-  isEditingTargetUrl.value = false;
-}
-
-async function saveTargetUrl() {
-  isSavingTargetUrl.value = true;
-  try {
-    const response = await api.applicationCompliancesControllerUpdate({
-      path: { applicationId },
-      body: { eco_index_target_url: targetUrlDraft.value === "" ? null : targetUrlDraft.value },
-    });
-    if (response.data) compliance.value = response.data;
-    isEditingTargetUrl.value = false;
-    toaster.addSuccessMessage("URL cible EcoIndex mise à jour.");
-  } catch {
-    toaster.addErrorMessage("Erreur lors de la mise à jour de l'URL cible EcoIndex.");
-  } finally {
-    isSavingTargetUrl.value = false;
-  }
-}
 </script>
 
 <template>
@@ -430,80 +410,6 @@ async function saveTargetUrl() {
     </div>
 
     <RgaaComplianceSection :application-id="applicationId" :app-perms="application.myPerms" class="fr-mt-4w" />
-
-    <section class="fr-mt-4w" data-testid="compliance-ecoindex-section">
-      <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-2w">
-        <h4 class="fr-mb-0">Eco index</h4>
-      </div>
-
-      <ul data-testid="compliance-ecoindex-values">
-        <li>
-          <strong>Score EcoIndex :</strong>
-          <span class="compliance-value">{{ ecoIndexValues.score ?? NO_ECOINDEX_LABEL }}</span>
-        </li>
-        <li>
-          <strong>Émissions GES (gCO2e) :</strong>
-          <span class="compliance-value">{{ ecoIndexValues.ges ?? NO_ECOINDEX_LABEL }}</span>
-        </li>
-        <li>
-          <strong>Consommation d'eau (cl) :</strong>
-          <span class="compliance-value">{{ ecoIndexValues.water ?? NO_ECOINDEX_LABEL }}</span>
-        </li>
-        <li>
-          <strong>URL cible :</strong>
-          <template v-if="isEditingTargetUrl">
-            <form class="fr-mt-1w" @submit.prevent="saveTargetUrl">
-              <DsfrInput
-                v-model="targetUrlDraft"
-                :label="complianceFieldLabels.eco_index_target_url"
-                label-visible
-                type="url"
-                data-testid="ecoindex-target-url-input"
-              />
-              <div class="fr-mt-1w">
-                <DsfrButton
-                  type="submit"
-                  size="sm"
-                  :loading="isSavingTargetUrl"
-                  label="Enregistrer"
-                  class="fr-mr-1w"
-                  data-testid="ecoindex-target-url-save"
-                />
-                <DsfrButton
-                  type="button"
-                  size="sm"
-                  secondary
-                  label="Annuler"
-                  @click="cancelEditTargetUrl"
-                  data-testid="ecoindex-target-url-cancel"
-                />
-              </div>
-            </form>
-          </template>
-          <template v-else>
-            <span class="compliance-value">{{ ecoIndexValues.targetUrl ?? NO_ECOINDEX_LABEL }}</span>
-            <DsfrButton
-              v-if="hasComplianceEditPermission"
-              tertiary
-              size="sm"
-              icon="ri-edit-line"
-              :no-outline="true"
-              label="Modifier"
-              aria-label="Modifier l'URL cible EcoIndex"
-              class="fr-ml-1w"
-              data-testid="ecoindex-target-url-edit-btn"
-              @click="startEditTargetUrl"
-            />
-          </template>
-        </li>
-        <li>
-          <strong>Dernier calcul :</strong>
-          <span class="compliance-value">{{
-            ecoIndexValues.lastCalculatedAt ? formatDate(String(ecoIndexValues.lastCalculatedAt)) : NO_ECOINDEX_LABEL
-          }}</span>
-        </li>
-      </ul>
-    </section>
   </div>
 
   <DsfrModal :opened="showDetailsModal" :title="detailsTitle" data-testid="compliance-details-modal" @close="closeDetails">

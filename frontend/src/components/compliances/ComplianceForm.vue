@@ -77,6 +77,7 @@ async function save() {
     dsfr_version: form.value?.dsfr_version,
     rgpd_has_aipd: form.value?.rgpd_has_aipd,
     rgpd_dpo_name: form.value?.rgpd_dpo_name,
+    eco_index_target_url: form.value?.eco_index_target_url,
   };
 
   try {
@@ -282,6 +283,16 @@ async function save() {
           data-testid="compliance-rgpd-aipd"
         />
         <DsfrInput v-model="form.rgpd_dpo_name" :label="complianceFieldLabels.dpo_name" label-visible data-testid="compliance-rgpd-dpo" />
+      </template>
+
+      <template v-else-if="type === 'eco_index'">
+        <DsfrInput
+          v-model="form.eco_index_target_url"
+          :label="complianceFieldLabels.eco_index_target_url"
+          label-visible
+          type="url"
+          data-testid="ecoindex-target-url-input"
+        />
       </template>
     </div>
     <div class="fr-mt-2w text-right">
