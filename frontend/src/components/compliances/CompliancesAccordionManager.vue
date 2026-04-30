@@ -48,7 +48,7 @@ const labels: Record<ManagedComplianceType, string> = {
   homologation: "Homologation",
   dsfr: "Design Système de l'état (DSFR)",
   rgpd: "Règlement Général sur la Protection des Données (RGPD)",
-  eco_index: "Eco-index",
+  eco_index: "Ecoconception",
 };
 const fieldsByType: Record<ManagedComplianceType, string[]> = {
   dima: [
@@ -285,27 +285,6 @@ const hasComplianceEditPermission = computed(() => {
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des conformités</h3>
     </div>
-
-    <div class="fr-col-auto">
-      <DsfrButton
-        v-if="hasComplianceEditPermission"
-        icon="fr-icon-leaf-line"
-        size="sm"
-        secondary
-        label="Calculer EcoIndex"
-        :disabled="isLoading || isScanningEcoIndex"
-        data-testid="compliance-scan-ecoindex-btn"
-        class="fr-mr-1w"
-        @click="runEcoIndexScan"
-      ></DsfrButton>
-      <DsfrButton
-        icon="fr-icon-add-line"
-        label="Ajouter une conformité"
-        :disabled="isLoading || !hasComplianceEditPermission"
-        data-testid="compliance-add-btn"
-        @click="onAddClick"
-      ></DsfrButton>
-    </div>
   </div>
 
   <AppLoader v-if="isLoading" data-testid="compliance-loader"></AppLoader>
@@ -355,6 +334,17 @@ const hasComplianceEditPermission = computed(() => {
             >
               Modifier
             </DsfrButton>
+            <DsfrButton
+              v-if="data.type === 'eco_index'"
+              icon="ri-leaf-line"
+              size="sm"
+              tertiary
+              :disabled="isLoading || isScanningEcoIndex"
+              data-testid="compliance-scan-ecoindex-btn"
+              @click="runEcoIndexScan"
+            >
+              Calculer
+            </DsfrButton>
           </div>
         </template>
       </RefAppTable>
@@ -400,6 +390,19 @@ const hasComplianceEditPermission = computed(() => {
                     @click="() => onEditClick(row.type)"
                   >
                     Modifier
+                  </DsfrButton>
+                </li>
+                <li>
+                  <DsfrButton
+                    v-if="row.type === 'eco_index'"
+                    icon="ri-leaf-line"
+                    size="sm"
+                    tertiary
+                    :disabled="isLoading || isScanningEcoIndex"
+                    data-testid="compliance-scan-ecoindex-btn"
+                    @click="runEcoIndexScan"
+                  >
+                    Calculer
                   </DsfrButton>
                 </li>
               </ul>
