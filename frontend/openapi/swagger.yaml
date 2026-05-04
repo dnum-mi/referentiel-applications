@@ -593,6 +593,7 @@ paths:
                 - homologation
                 - rgaa
                 - dsfr
+                - rgpd
         - name: link
           required: false
           in: query
@@ -993,6 +994,7 @@ paths:
                 - homologation
                 - rgaa
                 - dsfr
+                - rgpd
         - name: link
           required: false
           in: query
@@ -3695,6 +3697,7 @@ paths:
                 - homologation
                 - rgaa
                 - dsfr
+                - rgpd
         - name: link
           required: false
           in: query

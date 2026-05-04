@@ -390,6 +390,16 @@ export class PrismaQueryBuilder {
             },
           });
           break;
+        case "rgpd":
+          where.AND.push({
+            compliance: {
+              OR: [
+                { rgpd_has_aipd: { not: null } },
+                { rgpd_dpo_name: { not: null } },
+              ],
+            },
+          });
+          break;
       }
     });
 
