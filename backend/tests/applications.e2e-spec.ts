@@ -92,6 +92,44 @@ describe("Applications", () => {
     expect(resultIds).not.toContain(appWithoutHomologation.id);
   });
 
+  it("/GET applications?compliance__in=rgpd should include apps with RGPD data", async () => {
+    const prisma = getPrismaClient();
+    const appWithRgpd = await ApplicationFaker.create(user);
+    const appWithoutRgpd = await ApplicationFaker.create(user);
+
+    const appWithRgpdCompliance = await ComplianceFaker.create({
+      application: appWithRgpd,
+    });
+    await prisma.compliance.update({
+      where: { id: appWithRgpdCompliance.id },
+      data: { rgpd_has_aipd: true, rgpd_dpo_name: "DPO Test" },
+    });
+
+    const appWithoutRgpdCompliance = await ComplianceFaker.create({
+      application: appWithoutRgpd,
+    });
+    await prisma.compliance.update({
+      where: { id: appWithoutRgpdCompliance.id },
+      data: { rgpd_has_aipd: null, rgpd_dpo_name: null },
+    });
+
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({
+        compliance__in: "rgpd",
+        page: 0,
+        pageSize: 0,
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const resultIds = response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+    expect(resultIds).toContain(appWithRgpd.id);
+    expect(resultIds).not.toContain(appWithoutRgpd.id);
+  });
+
   it("/POST applications, with missing permissions", async () => {
     await request(app().getHttpServer())
       .post("/applications")

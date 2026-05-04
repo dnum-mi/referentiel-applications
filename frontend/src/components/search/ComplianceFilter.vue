@@ -3,7 +3,7 @@ import { useApplicationSearch } from "@/composables/use-application-search";
 import type { ComplianceType } from "@/composables/use-dictionary";
 
 const { filters, setFilter } = useApplicationSearch();
-const complianceOptions: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr"];
+const complianceOptions: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
 
 function toggleCompliance(value: ComplianceType, checked: boolean) {
   const selected = new Set<ComplianceType>(filters.value.compliance__in || []);

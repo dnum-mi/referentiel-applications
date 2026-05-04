@@ -192,10 +192,12 @@ export class ApplicationSearchDto extends PaginationDto {
   @ApiPropertyOptional({
     description: "Filtrer par conformité",
     type: [String],
-    enum: ["dima", "pdma", "homologation", "rgaa", "dsfr"],
+    enum: ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"],
   })
   @IsOptional()
-  @IsEnum(["dima", "pdma", "homologation", "rgaa", "dsfr"], { each: true })
+  @IsEnum(["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"], {
+    each: true,
+  })
   @Transform(({ value }) => ApplicationSearchDto.toArray(value))
   compliance__in?: string[];
 

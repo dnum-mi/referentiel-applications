@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { gotoSearchPage } from "./utils";
 
-const complianceTypes = ["dima", "pdma", "homologation", "rgaa", "dsfr"] as const;
+const complianceTypes = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"] as const;
 
 type ComplianceType = (typeof complianceTypes)[number];
 
