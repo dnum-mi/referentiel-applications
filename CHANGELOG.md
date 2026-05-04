@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.75.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.74.0...v1.75.0) (2026-04-30)
+
+
+### Features
+
+* affichage optionnel time search ([#1687](https://github.com/dnum-mi/referentiel-applications/issues/1687)) ([06ac4a3](https://github.com/dnum-mi/referentiel-applications/commit/06ac4a391c394446fac3a4ffde5e1d9bfab0984a))
+
+
+### Bug Fixes
+
+* :bug: move eco index position ([131a9a6](https://github.com/dnum-mi/referentiel-applications/commit/131a9a62b68328a2af6cbd6f8a423aa25626f118))
+* :bug: move eco index position and delete useless button ([c06f577](https://github.com/dnum-mi/referentiel-applications/commit/c06f5770b065170edbf5cd45567719b27676d938))
+* update logo for centralisation tile on homepage ([#1692](https://github.com/dnum-mi/referentiel-applications/issues/1692)) ([b0f58c6](https://github.com/dnum-mi/referentiel-applications/commit/b0f58c6d20e0c3d29639bc1e1362816df08489ec))
+
 ## [1.74.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.73.1...v1.74.0) (2026-04-29)
 
 
