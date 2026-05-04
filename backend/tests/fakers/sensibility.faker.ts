@@ -6,11 +6,8 @@ export class SensibilityFaker {
     const prisma = getPrismaClient();
 
     const sensibilities = [
-      { label: "Public", color: "green" },
-      { label: "Interne", color: "blue" },
-      { label: "Restreint", color: "orange" },
-      { label: "Confidentiel", color: "red" },
-      { label: "Données Personnelles (RGPD)", color: "purple" },
+      { label: "Sensible", color: "red" },
+      { label: "RGPD", color: "purple" },
     ];
 
     const data = faker.helpers.arrayElement(sensibilities);

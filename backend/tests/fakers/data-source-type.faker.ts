@@ -6,10 +6,11 @@ const prisma = new PrismaClient();
 export class DataSourceTypeFaker {
   static async create() {
     const dataSourceTypes = [
-      { label: "API REST" },
-      { label: "Base de données SQL" },
-      { label: "Fichier plat CSV" },
+      { label: "Image" },
+      { label: "Structurée" },
+      { label: "Texte / Document" },
       { label: "Flux Kafka" },
+      { label: "Log" },
     ];
 
     const data = faker.helpers.arrayElement(dataSourceTypes);
