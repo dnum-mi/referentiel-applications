@@ -27,7 +27,7 @@ export class CreateDataSourceDto {
   description?: string;
 
   @ApiProperty({
-    description: "Indicateur Source Maître (officielle et faisant foi)",
+    description: "Indicateur Donnée référentielle (officielle et faisant foi)",
     default: false,
   })
   @IsBoolean()
@@ -44,7 +44,7 @@ export class CreateDataSourceDto {
 
   @ApiPropertyOptional({
     example: "10 ans",
-    description: "Durée d'Utilité Administrative (DUA)",
+    description: "Durée de conservation",
   })
   @IsString()
   @IsOptional()

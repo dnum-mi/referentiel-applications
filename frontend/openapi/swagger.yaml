@@ -1602,13 +1602,13 @@ paths:
 
         - **Description** : Description détaillée.
 
-        - **IsReference** : Indicateur \"Source Maître\". S'il est à true, cette
-        application est la source officielle, unique et faisant foi pour cette
-        donnée au sein du ministère.
+        - **IsReference** : Indicateur \"Donnée référentielle\". S'il est à
+        true, cette application est la source officielle, unique et faisant foi
+        pour cette donnée au sein du ministère.
 
         - **Exemple** : Échantillon de données.
 
-        - **Conservation** : Durée d'Utilité Administrative (DUA).
+        - **Conservation** : Durée de conservation.
 
 
         - **DatabaseName** : Nom de l'instance de la base de données hôte.
@@ -1721,6 +1721,30 @@ paths:
                 $ref: "#/components/schemas/PaginatedDataSourceDto"
       tags: *a8
   /api/v2/applications/{applicationId}/data-source/{id}:
+    get:
+      operationId: DataSourceController_findOne
+      summary: Récupérer une source de donnée par ID
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de la source de donnée
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Source de donnée trouvée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataSourceDto"
+      tags: *a8
     patch:
       operationId: DataSourceController_update
       summary: Mettre à jour une source de donnée existante
@@ -5186,7 +5210,7 @@ components:
           description: Description détaillée de la source
         isReference:
           type: boolean
-          description: Indicateur Source Maître (officielle et faisant foi)
+          description: Indicateur Donnée référentielle (officielle et faisant foi)
           default: false
         example:
           type: string
@@ -5196,7 +5220,7 @@ components:
           type: string
           maxLength: 100
           example: 10 ans
-          description: Durée d'Utilité Administrative (DUA)
+          description: Durée de conservation
         databaseName:
           type: string
           maxLength: 255
@@ -5254,7 +5278,7 @@ components:
           description: Description détaillée de la source
         isReference:
           type: boolean
-          description: Indicateur Source Maître (officielle et faisant foi)
+          description: Indicateur Donnée référentielle (officielle et faisant foi)
           default: false
         example:
           type: string
@@ -5264,7 +5288,7 @@ components:
           type: string
           maxLength: 100
           example: 10 ans
-          description: Durée d'Utilité Administrative (DUA)
+          description: Durée de conservation
         databaseName:
           type: string
           maxLength: 255
@@ -5347,7 +5371,7 @@ components:
           description: Description détaillée de la source
         isReference:
           type: boolean
-          description: Indicateur Source Maître (officielle et faisant foi)
+          description: Indicateur Donnée référentielle (officielle et faisant foi)
           default: false
         example:
           type: string
@@ -5357,7 +5381,7 @@ components:
           type: string
           maxLength: 100
           example: 10 ans
-          description: Durée d'Utilité Administrative (DUA)
+          description: Durée de conservation
         databaseName:
           type: string
           maxLength: 255

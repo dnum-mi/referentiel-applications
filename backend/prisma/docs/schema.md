@@ -392,9 +392,9 @@ Properties as follows:
 - `id`: Identifiant unique de la source de donnée
 - `name`: Nom d'usage.
 - `description`: Description détaillée.
-- `isReference`: Indicateur "Source Maître". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
+- `isReference`: Indicateur "Donnée référentielle". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
 - `example`: Échantillon de données.
-- `conservation`: Durée d'Utilité Administrative (DUA).
+- `conservation`: Durée de conservation
 - `databaseName`: Nom de l'instance de la base de données hôte.
 - `databaseTableName`: Nom technique de l'entité contenant les données.
 - `fieldCount`: Nombre total de colonnes ou de champs que contient la source de donnée.

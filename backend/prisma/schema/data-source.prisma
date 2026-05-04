@@ -37,11 +37,11 @@ model DataSource {
   name         String  @db.VarChar(255)
   /// Description détaillée.
   description  String? @db.Text
-  /// Indicateur "Source Maître". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
+  /// Indicateur "Donnée référentielle". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
   isReference  Boolean @default(false)
   /// Échantillon de données.
   example      String? @db.Text
-  /// Durée d'Utilité Administrative (DUA).
+  /// Durée de conservation
   conservation String? @db.VarChar(100)
 
   /// Nom de l'instance de la base de données hôte.

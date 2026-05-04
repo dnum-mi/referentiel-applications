@@ -50,9 +50,9 @@ export class DataSourceController {
 Informations traitées :
 - **Nom** : Nom d'usage.
 - **Description** : Description détaillée.
-- **IsReference** : Indicateur "Source Maître". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
+- **IsReference** : Indicateur "Donnée référentielle". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
 - **Exemple** : Échantillon de données.
-- **Conservation** : Durée d'Utilité Administrative (DUA).
+- **Conservation** : Durée de conservation.
 
 - **DatabaseName** : Nom de l'instance de la base de données hôte.
 - **DatabaseTableName** : Nom technique de l'entité contenant les données.
@@ -135,6 +135,24 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     return this.service.find({ ...filters, applicationId });
   }
 
+  @Get(":id")
+  @RequiredPermissions([Permission.AppRead])
+  @ApiOperation({
+    summary: "Récupérer une source de donnée par ID",
+  })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
+  @ApiParam({ name: "id", description: "ID de la source de donnée" })
+  @ApiOkResponse({
+    description: "Source de donnée trouvée",
+    type: DataSourceDto,
+  })
+  async findOne(
+    @Param("applicationId") applicationId: string,
+    @Param("id") id: string,
+  ) {
+    return this.service.findOne(id, applicationId);
+  }
+
   @Patch(":id")
   @RequiredPermissions([Permission.AppWrite])
   @ApiOperation({
@@ -190,7 +208,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
         getColumn: (entity) => entity.name,
         fields: {
           name: "nom",
-          isReference: "source maître",
+          isReference: "Donnée référentielle",
           example: "exemple",
           databaseName: "base de donnée",
           databaseTableName: "table",

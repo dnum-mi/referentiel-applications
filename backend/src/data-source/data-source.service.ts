@@ -35,4 +35,19 @@ export class DataSourceService extends BaseService<DataSource> {
       },
     });
   }
+
+  async findOne(id: string, applicationId: string): Promise<DataSource> {
+    return this.model.findFirst({
+      where: {
+        id,
+        applicationId,
+      },
+      include: {
+        type: true,
+        sensibility: true,
+        family: true,
+        updateFrequency: true,
+      },
+    });
+  }
 }

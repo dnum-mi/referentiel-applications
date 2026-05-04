@@ -15,6 +15,7 @@ import Links from "./LinksTab.vue";
 import Quality from "./QualityTab.vue";
 import Relationships from "./RelationshipsTab.vue";
 import StatusTab from "./StatusTab.vue";
+import DataTab from "./DataTab.vue";
 
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import { useUserStore } from "@/stores/userStore";
@@ -118,6 +119,14 @@ const tabs = ref<
     panelId: "panel-quality",
     component: markRaw(Quality),
     requiredPerms: [Permission.COMPLIANCE_READ, Permission.ACTOR_READ, Permission.LINK_READ, Permission.APP_READ],
+  },
+  {
+    title: "Données",
+    icon: "ri-database-2-line",
+    tabId: "tab-data",
+    panelId: "panel-data",
+    component: markRaw(DataTab),
+    requiredPerms: [Permission.APP_READ],
   },
 ]);
 const tabsStyle = ref({ "--tabs-height": "auto" });
