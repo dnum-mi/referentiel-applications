@@ -11,7 +11,7 @@ const { filters, setFilter } = useApplicationSearch();
       label-visible
       label="Nom de l'application"
       data-testid="application-filter-label"
-      @update:model-value="setFilter({ search: $event, page: 0 })"
+      @update:model-value="setFilter({ search: $event?.toString(), page: 0 })"
     />
     <legend class="fr-label">Tags</legend>
     <TagSearchSelect :tags="filters.tag" data-testid="application-filter-tag" @update:tags="setFilter({ tag: $event, page: 0 })" />
@@ -20,7 +20,14 @@ const { filters, setFilter } = useApplicationSearch();
       label-visible
       label="Lien externe"
       data-testid="application-filter-link"
-      @update:model-value="setFilter({ link: $event, page: 0 })"
+      @update:model-value="setFilter({ link: $event?.toString(), page: 0 })"
+    />
+    <DsfrInput
+      :model-value="filters.dataSourceName"
+      label-visible
+      label="Source de données"
+      data-testid="application-filter-data-source-name"
+      @update:model-value="setFilter({ dataSourceName: $event?.toString(), page: 0 })"
     />
   </div>
 </template>

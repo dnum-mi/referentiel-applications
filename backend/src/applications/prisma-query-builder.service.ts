@@ -323,6 +323,19 @@ export class PrismaQueryBuilder {
         },
       },
       {
+        condition: filters.dataSourceName,
+        whereClause: {
+          dataSources: {
+            some: {
+              name: {
+                contains: filters.dataSourceName,
+                mode: "insensitive" as const,
+              },
+            },
+          },
+        },
+      },
+      {
         condition: shortName,
         whereClause: {
           shortName: { contains: shortName, mode: "insensitive" as const },
