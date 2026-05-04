@@ -6,13 +6,13 @@ const prisma = new PrismaClient();
 export class UpdateFrequencyFaker {
   static async create() {
     const frequencies = [
-      "Temps réel",
-      "Quotidien",
-      "Hebdomadaire",
-      "Mensuel",
+      "Annuelle",
+      "Mensuelle",
       "Trimestriel",
-      "Annuel",
-      "À la demande",
+      "Quotidienne",
+      "Hebdomadaire",
+      "Au besoin",
+      "Jamais",
     ];
 
     const label = faker.helpers.arrayElement(frequencies);
