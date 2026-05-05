@@ -95,11 +95,11 @@ export class ApplicationService {
   }
 
   public async update(params: {
-    where: Prisma.ApplicationWhereUniqueInput;
+    applicationId: string;
     data: PatchApplicationDto;
     requestor: Requestor;
   }): Promise<Application> {
-    const { where, requestor } = params;
+    const { applicationId, requestor } = params;
     let { data } = params;
 
     // protect fields based on permissions
@@ -139,10 +139,10 @@ export class ApplicationService {
     }
 
     try {
-      const oldApp = await this.applicationRepository.findById(where.id);
+      const oldApp = await this.applicationRepository.findById(applicationId);
 
       const updatedApplication = await this.prisma.application.update({
-        where,
+        where: { id: applicationId },
         data: applicationUpdates,
         include: { tags: true, businessDivision: true },
       });
@@ -171,7 +171,7 @@ export class ApplicationService {
       return updatedApplication;
     } catch {
       throw new NotFoundException(
-        `Application non trouvée pour l'ID: ${where.id}`,
+        `Application non trouvée pour l'ID: ${applicationId}`,
       );
     }
   }
