@@ -295,7 +295,7 @@ Le paramètre **id** doit être fourni dans l'URL.
       action: "patch",
     });
     return this.applicationService.update({
-      where: { id },
+      applicationId: id,
       data: applicationToUpdate,
       requestor,
     });
