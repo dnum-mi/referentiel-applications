@@ -321,4 +321,11 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsOptional()
   @IsEnum(["NEUTRAL", "INCLUDE", "EXCLUDE"])
   is_mediation_service?: RelationTypeFilter;
+
+  @ApiPropertyOptional({
+    description: "Recherche par nom de source de données",
+  })
+  @IsOptional()
+  @IsString()
+  dataSourceName?: string;
 }

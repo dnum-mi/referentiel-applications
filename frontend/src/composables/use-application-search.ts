@@ -49,6 +49,7 @@ const DEFAULT_FILTERS: Filters = {
   is_mediation_service: RELATION_TYPE_FILTERS.neutral,
   relationAppId: undefined,
   businessDivisionId: undefined,
+  dataSourceName: undefined,
 };
 
 // Shared state across components (singleton pattern)
@@ -172,6 +173,7 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     is_mediation_service: parseQueryParamsEnum(query.is_mediation_service) ?? DEFAULT_FILTERS.is_mediation_service,
     relationAppId: parseQueryParam(query.relationAppId),
     businessDivisionId: parseQueryParam(query.businessDivisionId),
+    dataSourceName: parseQueryParam(query.dataSourceName),
   };
 }
 

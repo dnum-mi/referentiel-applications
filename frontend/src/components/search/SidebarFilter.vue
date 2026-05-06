@@ -6,6 +6,7 @@ import HostingFilter from "@/components/search/HostingFilter.vue";
 import QualityFilter from "@/components/search/QualityFilter.vue";
 import ApplicationFilter from "@/components/search/ApplicationFilter.vue";
 import PriorityRestartFilter from "@/components/search/PriorityRestartFilter.vue";
+import DataFilter from "@/components/search/DataFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { useUserStore } from "@/stores/userStore";
@@ -17,7 +18,7 @@ const { total, resetFilters, filters, setFilter } = useApplicationSearch();
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
 
-const { openAccordions, toggle } = useAccordionManager(7, true);
+const { openAccordions, toggle } = useAccordionManager(8, true);
 
 const isMyAppsFilterActive = computed(() => {
   return !!(userStore.user?.email && filters.value.actorEmail === userStore.user.email);
@@ -97,6 +98,10 @@ function toggleMyAppsFilter(value: boolean) {
           @click="toggle(6)"
         >
           <RelationFilter />
+        </DsfrAccordion>
+
+        <DsfrAccordion :selected="openAccordions.includes(7)" title="Données" data-testid="sidebar-accordion-donnees" @click="toggle(7)">
+          <DataFilter />
         </DsfrAccordion>
       </div>
     </aside>

@@ -704,6 +704,12 @@ paths:
               - INCLUDE
               - EXCLUDE
             type: string
+        - name: dataSourceName
+          required: false
+          in: query
+          description: Recherche par nom de source de données
+          schema:
+            type: string
       responses:
         "200":
           description: Liste des applications correspondant aux critères de recherche avec
@@ -1104,6 +1110,12 @@ paths:
               - NEUTRAL
               - INCLUDE
               - EXCLUDE
+            type: string
+        - name: dataSourceName
+          required: false
+          in: query
+          description: Recherche par nom de source de données
+          schema:
             type: string
       responses:
         "200":
@@ -3807,6 +3819,12 @@ paths:
               - NEUTRAL
               - INCLUDE
               - EXCLUDE
+            type: string
+        - name: dataSourceName
+          required: false
+          in: query
+          description: Recherche par nom de source de données
+          schema:
             type: string
       responses:
         "200":
