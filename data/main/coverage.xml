@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage lines-valid="3638" lines-covered="2566" line-rate="0.7053" branches-valid="717" branches-covered="268" branch-rate="0.3737" timestamp="1777917205428" complexity="0" version="0.1">
+<coverage lines-valid="3639" lines-covered="2567" line-rate="0.7054" branches-valid="717" branches-covered="268" branch-rate="0.3737" timestamp="1778069824419" complexity="0" version="0.1">
   <sources>
     <source>/app</source>
   </sources>
@@ -1040,9 +1040,9 @@
                 <line number="268" hits="5"/>
               </lines>
             </method>
-            <method name="(anonymous_20)" hits="2" signature="()V">
+            <method name="(anonymous_20)" hits="3" signature="()V">
               <lines>
-                <line number="305" hits="2"/>
+                <line number="305" hits="3"/>
               </lines>
             </method>
             <method name="(anonymous_21)" hits="1" signature="()V">
@@ -1187,8 +1187,8 @@
             <line number="289" hits="5" branch="false"/>
             <line number="299" hits="5" branch="false"/>
             <line number="305" hits="5" branch="false"/>
-            <line number="306" hits="2" branch="false"/>
-            <line number="308" hits="2" branch="false"/>
+            <line number="306" hits="3" branch="false"/>
+            <line number="308" hits="3" branch="false"/>
             <line number="314" hits="5" branch="false"/>
             <line number="324" hits="1" branch="true" condition-coverage="100% (2/2)"/>
             <line number="325" hits="1" branch="false"/>
@@ -1295,42 +1295,42 @@
             </method>
             <method name="(anonymous_2)" hits="2" signature="()V">
               <lines>
-                <line number="356" hits="2"/>
+                <line number="369" hits="2"/>
               </lines>
             </method>
-            <method name="(anonymous_3)" hits="114" signature="()V">
+            <method name="(anonymous_3)" hits="120" signature="()V">
               <lines>
-                <line number="407" hits="114"/>
+                <line number="420" hits="120"/>
               </lines>
             </method>
             <method name="(anonymous_4)" hits="6" signature="()V">
               <lines>
-                <line number="427" hits="6"/>
+                <line number="440" hits="6"/>
               </lines>
             </method>
             <method name="(anonymous_5)" hits="30" signature="()V">
               <lines>
-                <line number="455" hits="30"/>
+                <line number="468" hits="30"/>
               </lines>
             </method>
             <method name="(anonymous_6)" hits="6" signature="()V">
               <lines>
-                <line number="484" hits="6"/>
+                <line number="497" hits="6"/>
               </lines>
             </method>
             <method name="(anonymous_7)" hits="6" signature="()V">
               <lines>
-                <line number="546" hits="6"/>
+                <line number="559" hits="6"/>
               </lines>
             </method>
             <method name="(anonymous_8)" hits="6" signature="()V">
               <lines>
-                <line number="552" hits="6"/>
+                <line number="565" hits="6"/>
               </lines>
             </method>
             <method name="(anonymous_9)" hits="1" signature="()V">
               <lines>
-                <line number="581" hits="1"/>
+                <line number="594" hits="1"/>
               </lines>
             </method>
           </methods>
@@ -1347,61 +1347,61 @@
             <line number="32" hits="0" branch="false"/>
             <line number="34" hits="0" branch="false"/>
             <line number="37" hits="6" branch="false"/>
-            <line number="356" hits="6" branch="false"/>
-            <line number="357" hits="2" branch="true" condition-coverage="33.33333333333333% (2/6)"/>
-            <line number="359" hits="1" branch="false"/>
-            <line number="364" hits="1" branch="false"/>
-            <line number="366" hits="0" branch="false"/>
-            <line number="371" hits="0" branch="false"/>
-            <line number="373" hits="0" branch="false"/>
-            <line number="378" hits="0" branch="false"/>
-            <line number="380" hits="0" branch="false"/>
-            <line number="385" hits="0" branch="false"/>
-            <line number="387" hits="0" branch="false"/>
-            <line number="392" hits="0" branch="false"/>
-            <line number="394" hits="1" branch="false"/>
-            <line number="402" hits="1" branch="false"/>
-            <line number="407" hits="6" branch="false"/>
-            <line number="408" hits="114" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="409" hits="3" branch="false"/>
-            <line number="414" hits="6" branch="false"/>
-            <line number="421" hits="6" branch="false"/>
-            <line number="422" hits="6" branch="false"/>
-            <line number="424" hits="6" branch="false"/>
-            <line number="430" hits="6" branch="false"/>
-            <line number="431" hits="6" branch="false"/>
-            <line number="432" hits="6" branch="false"/>
-            <line number="455" hits="6" branch="false"/>
-            <line number="460" hits="30" branch="false"/>
-            <line number="461" hits="30" branch="false"/>
-            <line number="469" hits="30" branch="true" condition-coverage="25% (1/4)"/>
-            <line number="471" hits="0" branch="false"/>
-            <line number="472" hits="0" branch="false"/>
-            <line number="474" hits="0" branch="false"/>
-            <line number="477" hits="0" branch="false"/>
-            <line number="480" hits="30" branch="false"/>
-            <line number="484" hits="6" branch="false"/>
-            <line number="488" hits="6" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="369" hits="6" branch="false"/>
+            <line number="370" hits="2" branch="true" condition-coverage="33.33333333333333% (2/6)"/>
+            <line number="372" hits="1" branch="false"/>
+            <line number="377" hits="1" branch="false"/>
+            <line number="379" hits="0" branch="false"/>
+            <line number="384" hits="0" branch="false"/>
+            <line number="386" hits="0" branch="false"/>
+            <line number="391" hits="0" branch="false"/>
+            <line number="393" hits="0" branch="false"/>
+            <line number="398" hits="0" branch="false"/>
+            <line number="400" hits="0" branch="false"/>
+            <line number="405" hits="0" branch="false"/>
+            <line number="407" hits="1" branch="false"/>
+            <line number="415" hits="1" branch="false"/>
+            <line number="420" hits="6" branch="false"/>
+            <line number="421" hits="120" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="422" hits="3" branch="false"/>
+            <line number="427" hits="6" branch="false"/>
+            <line number="434" hits="6" branch="false"/>
+            <line number="435" hits="6" branch="false"/>
+            <line number="437" hits="6" branch="false"/>
+            <line number="443" hits="6" branch="false"/>
+            <line number="444" hits="6" branch="false"/>
+            <line number="445" hits="6" branch="false"/>
+            <line number="468" hits="6" branch="false"/>
+            <line number="473" hits="30" branch="false"/>
+            <line number="474" hits="30" branch="false"/>
+            <line number="482" hits="30" branch="true" condition-coverage="25% (1/4)"/>
+            <line number="484" hits="0" branch="false"/>
+            <line number="485" hits="0" branch="false"/>
+            <line number="487" hits="0" branch="false"/>
             <line number="490" hits="0" branch="false"/>
-            <line number="501" hits="0" branch="true" condition-coverage="0% (0/4)"/>
+            <line number="493" hits="30" branch="false"/>
+            <line number="497" hits="6" branch="false"/>
+            <line number="501" hits="6" branch="true" condition-coverage="100% (1/1)"/>
             <line number="503" hits="0" branch="false"/>
-            <line number="504" hits="0" branch="false"/>
-            <line number="506" hits="0" branch="false"/>
-            <line number="509" hits="0" branch="false"/>
-            <line number="512" hits="0" branch="false"/>
-            <line number="516" hits="6" branch="false"/>
-            <line number="517" hits="6" branch="false"/>
-            <line number="522" hits="6" branch="false"/>
-            <line number="527" hits="6" branch="false"/>
-            <line number="532" hits="6" branch="false"/>
-            <line number="533" hits="6" branch="false"/>
-            <line number="538" hits="6" branch="false"/>
-            <line number="547" hits="6" branch="false"/>
-            <line number="556" hits="6" branch="true" condition-coverage="50% (1/2)"/>
-            <line number="562" hits="6" branch="false"/>
-            <line number="576" hits="6" branch="true" condition-coverage="50% (1/2)"/>
-            <line number="578" hits="6" branch="true" condition-coverage="50% (1/2)"/>
-            <line number="582" hits="1" branch="false"/>
+            <line number="514" hits="0" branch="true" condition-coverage="0% (0/4)"/>
+            <line number="516" hits="0" branch="false"/>
+            <line number="517" hits="0" branch="false"/>
+            <line number="519" hits="0" branch="false"/>
+            <line number="522" hits="0" branch="false"/>
+            <line number="525" hits="0" branch="false"/>
+            <line number="529" hits="6" branch="false"/>
+            <line number="530" hits="6" branch="false"/>
+            <line number="535" hits="6" branch="false"/>
+            <line number="540" hits="6" branch="false"/>
+            <line number="545" hits="6" branch="false"/>
+            <line number="546" hits="6" branch="false"/>
+            <line number="551" hits="6" branch="false"/>
+            <line number="560" hits="6" branch="false"/>
+            <line number="569" hits="6" branch="true" condition-coverage="50% (1/2)"/>
+            <line number="575" hits="6" branch="false"/>
+            <line number="589" hits="6" branch="true" condition-coverage="50% (1/2)"/>
+            <line number="591" hits="6" branch="true" condition-coverage="50% (1/2)"/>
+            <line number="595" hits="1" branch="false"/>
           </lines>
         </class>
         <class name="view.service.ts" filename="src/applications/view.service.ts" line-rate="1" branch-rate="1">
@@ -1488,7 +1488,7 @@
         </class>
       </classes>
     </package>
-    <package name="src.applications.dto" line-rate="0.8492000000000001" branch-rate="0.125">
+    <package name="src.applications.dto" line-rate="0.8503000000000001" branch-rate="0.125">
       <classes>
         <class name="create-application.dto.ts" filename="src/applications/dto/create-application.dto.ts" line-rate="1" branch-rate="1">
           <methods>
@@ -1600,7 +1600,7 @@
             <line number="141" hits="18" branch="false"/>
           </lines>
         </class>
-        <class name="search-application.dto.ts" filename="src/applications/dto/search-application.dto.ts" line-rate="0.7419" branch-rate="0.125">
+        <class name="search-application.dto.ts" filename="src/applications/dto/search-application.dto.ts" line-rate="0.746" branch-rate="0.125">
           <methods>
             <method name="(anonymous_2)" hits="6" signature="()V">
               <lines>
@@ -1751,6 +1751,7 @@
             <line number="308" hits="18" branch="false"/>
             <line number="315" hits="18" branch="false"/>
             <line number="323" hits="18" branch="false"/>
+            <line number="330" hits="18" branch="false"/>
           </lines>
         </class>
         <class name="technical-debt-point.dto.ts" filename="src/applications/dto/technical-debt-point.dto.ts" line-rate="1" branch-rate="1">
@@ -1796,9 +1797,9 @@
                 <line number="54" hits="5"/>
               </lines>
             </method>
-            <method name="(anonymous_6)" hits="2" signature="()V">
+            <method name="(anonymous_6)" hits="3" signature="()V">
               <lines>
-                <line number="116" hits="2"/>
+                <line number="116" hits="3"/>
               </lines>
             </method>
             <method name="(anonymous_7)" hits="1" signature="()V">
@@ -1835,7 +1836,7 @@
             <line number="64" hits="5" branch="false"/>
             <line number="106" hits="5" branch="false"/>
             <line number="114" hits="5" branch="false"/>
-            <line number="116" hits="2" branch="false"/>
+            <line number="116" hits="3" branch="false"/>
             <line number="131" hits="1" branch="false"/>
             <line number="152" hits="1" branch="false"/>
             <line number="159" hits="0" branch="false"/>
@@ -4262,9 +4263,9 @@
                 <line number="102" hits="2"/>
               </lines>
             </method>
-            <method name="(anonymous_12)" hits="3" signature="()V">
+            <method name="(anonymous_12)" hits="4" signature="()V">
               <lines>
-                <line number="108" hits="3"/>
+                <line number="108" hits="4"/>
               </lines>
             </method>
             <method name="(anonymous_13)" hits="2" signature="()V">
@@ -4294,7 +4295,7 @@
             <line number="81" hits="2" branch="false"/>
             <line number="88" hits="4" branch="false"/>
             <line number="103" hits="2" branch="false"/>
-            <line number="108" hits="3" branch="false"/>
+            <line number="108" hits="4" branch="false"/>
             <line number="115" hits="2" branch="false"/>
           </lines>
         </class>
@@ -5578,14 +5579,14 @@
       <classes>
         <class name="decimal-to-number.extension.ts" filename="src/prisma/extensions/decimal-to-number.extension.ts" line-rate="1" branch-rate="1">
           <methods>
-            <method name="convertDecimals" hits="8976" signature="()V">
+            <method name="convertDecimals" hits="9021" signature="()V">
               <lines>
-                <line number="3" hits="8976"/>
+                <line number="3" hits="9021"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="7882" signature="()V">
+            <method name="(anonymous_1)" hits="7928" signature="()V">
               <lines>
-                <line number="8" hits="7882"/>
+                <line number="8" hits="7928"/>
               </lines>
             </method>
             <method name="(anonymous_2)" hits="813" signature="()V">
@@ -5596,12 +5597,12 @@
           </methods>
           <lines>
             <line number="1" hits="20" branch="false"/>
-            <line number="4" hits="8976" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="5" hits="8932" branch="true" condition-coverage="100% (1/1)"/>
-            <line number="6" hits="8089" branch="true" condition-coverage="100% (4/4)"/>
-            <line number="7" hits="1035" branch="false"/>
-            <line number="8" hits="7882" branch="false"/>
-            <line number="11" hits="7054" branch="false"/>
+            <line number="4" hits="9021" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="5" hits="8977" branch="true" condition-coverage="100% (1/1)"/>
+            <line number="6" hits="8126" branch="true" condition-coverage="100% (4/4)"/>
+            <line number="7" hits="1037" branch="false"/>
+            <line number="8" hits="7928" branch="false"/>
+            <line number="11" hits="7089" branch="false"/>
             <line number="14" hits="20" branch="false"/>
             <line number="19" hits="813" branch="false"/>
             <line number="20" hits="813" branch="false"/>
@@ -8209,9 +8210,9 @@
                 <line number="32" hits="9"/>
               </lines>
             </method>
-            <method name="(anonymous_2)" hits="33" signature="()V">
+            <method name="(anonymous_2)" hits="32" signature="()V">
               <lines>
-                <line number="38" hits="33"/>
+                <line number="38" hits="32"/>
               </lines>
             </method>
             <method name="(anonymous_3)" hits="29" signature="()V">
@@ -8234,7 +8235,7 @@
             <line number="33" hits="9" branch="false"/>
             <line number="34" hits="9" branch="false"/>
             <line number="36" hits="9" branch="false"/>
-            <line number="38" hits="33" branch="false"/>
+            <line number="38" hits="32" branch="false"/>
             <line number="39" hits="9" branch="false"/>
             <line number="43" hits="9" branch="false"/>
             <line number="54" hits="9" branch="true" condition-coverage="0% (0/1)"/>
@@ -8281,14 +8282,14 @@
                 <line number="11" hits="34"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="16" signature="()V">
+            <method name="(anonymous_1)" hits="19" signature="()V">
               <lines>
-                <line number="23" hits="16"/>
+                <line number="23" hits="19"/>
               </lines>
             </method>
-            <method name="(anonymous_2)" hits="15" signature="()V">
+            <method name="(anonymous_2)" hits="14" signature="()V">
               <lines>
-                <line number="43" hits="15"/>
+                <line number="43" hits="14"/>
               </lines>
             </method>
             <method name="(anonymous_3)" hits="2" signature="()V">
@@ -8307,9 +8308,9 @@
             <line number="12" hits="34" branch="false"/>
             <line number="15" hits="34" branch="false"/>
             <line number="16" hits="34" branch="false"/>
-            <line number="23" hits="16" branch="false"/>
+            <line number="23" hits="19" branch="false"/>
             <line number="38" hits="34" branch="false"/>
-            <line number="43" hits="15" branch="true" condition-coverage="100% (2/2)"/>
+            <line number="43" hits="14" branch="true" condition-coverage="100% (2/2)"/>
             <line number="50" hits="34" branch="false"/>
             <line number="55" hits="34" branch="false"/>
             <line number="59" hits="2" branch="false"/>
@@ -8413,9 +8414,9 @@
                 <line number="5" hits="9"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="5" signature="()V">
+            <method name="(anonymous_1)" hits="3" signature="()V">
               <lines>
-                <line number="32" hits="5"/>
+                <line number="32" hits="3"/>
               </lines>
             </method>
             <method name="(anonymous_2)" hits="4" signature="()V">
@@ -8432,7 +8433,7 @@
             <line number="8" hits="9" branch="false"/>
             <line number="15" hits="9" branch="false"/>
             <line number="26" hits="9" branch="false"/>
-            <line number="32" hits="5" branch="false"/>
+            <line number="32" hits="3" branch="false"/>
             <line number="35" hits="4" branch="false"/>
           </lines>
         </class>
@@ -8443,9 +8444,9 @@
                 <line number="6" hits="4"/>
               </lines>
             </method>
-            <method name="(anonymous_1)" hits="2" signature="()V">
+            <method name="(anonymous_1)" hits="1" signature="()V">
               <lines>
-                <line number="34" hits="2"/>
+                <line number="34" hits="1"/>
               </lines>
             </method>
           </methods>
@@ -8456,7 +8457,7 @@
             <line number="12" hits="4" branch="false"/>
             <line number="14" hits="4" branch="false"/>
             <line number="16" hits="4" branch="false"/>
-            <line number="34" hits="2" branch="false"/>
+            <line number="34" hits="1" branch="false"/>
           </lines>
         </class>
         <class name="label-source.faker.ts" filename="tests/fakers/label-source.faker.ts" line-rate="1" branch-rate="1">
