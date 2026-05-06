@@ -22,13 +22,6 @@ const { filters, setFilter } = useApplicationSearch();
       data-testid="application-filter-link"
       @update:model-value="setFilter({ link: $event?.toString(), page: 0 })"
     />
-    <DsfrInput
-      :model-value="filters.dataSourceName"
-      label-visible
-      label="Source de données"
-      data-testid="application-filter-data-source-name"
-      @update:model-value="setFilter({ dataSourceName: $event?.toString(), page: 0 })"
-    />
   </div>
 </template>
 
