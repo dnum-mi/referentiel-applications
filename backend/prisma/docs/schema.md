@@ -927,11 +927,11 @@ Properties as follows:
 
 ### `UserConnexionLog`
 
-Ce modèle enregistre les connexions des utilisateurs, y compris l'heure de connexion.
+Ce modèle enregistre les connexions des utilisateurs, avec une entrée par utilisateur par jour.
 
 Properties as follows:
 
 - `id`:
 - `userId`:
-- `authTime`: Timestamp auth_time du JWT
+- `authTime`:
 - `createdAt`:

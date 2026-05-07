@@ -9,11 +9,12 @@ export class UserConnexionLogService extends BaseService<UserConnexionLog> {
     super(prisma.userConnexionLog, prisma);
   }
 
-  public log(userId: User["id"], authTime: number) {
-    const authTimeDate = new Date(authTime * 1000);
+  public log(userId: User["id"]) {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
     return this.prisma.userConnexionLog.upsert({
-      where: { userId_authTime: { userId, authTime: authTimeDate } },
-      create: { userId, authTime: authTimeDate },
+      where: { userId_authTime: { userId, authTime: today } },
+      create: { userId, authTime: today },
       update: {},
     });
   }
