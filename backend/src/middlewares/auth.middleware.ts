@@ -43,7 +43,6 @@ export class AuthMiddleware implements NestMiddleware {
       const token = req.headers[API_KEY_HEADER] as string | undefined;
 
       let user: UserEntity | null = null;
-      let authTime: number | undefined;
 
       if (token) {
         user = await this.tokenService.findUserByToken(token);
@@ -54,7 +53,6 @@ export class AuthMiddleware implements NestMiddleware {
         user = await this.userService.findOrCreateByEmail(
           payload.email as string,
         );
-        authTime = payload.auth_time as number | undefined;
       }
 
       if (!user) {
@@ -67,9 +65,7 @@ export class AuthMiddleware implements NestMiddleware {
         permissions: roleToPermissions(user.role),
       };
 
-      if (authTime) {
-        await this.userConnexionLogService.log(req.user.id, authTime);
-      }
+      await this.userConnexionLogService.log(user.id);
 
       next();
     } catch (error) {

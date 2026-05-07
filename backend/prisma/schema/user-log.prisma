@@ -9,13 +9,13 @@ model UserPermissionLog {
   additionalPermissions Permission[]
 }
 
-/// Ce modèle enregistre les connexions des utilisateurs, y compris l'heure de connexion.
+/// Ce modèle enregistre les connexions des utilisateurs, avec une entrée par utilisateur par jour.
 model UserConnexionLog {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation("UserConnexionLogUser", fields: [userId], references: [id], onDelete: Restrict)
-  authTime  DateTime /// Timestamp auth_time du JWT 
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation("UserConnexionLogUser", fields: [userId], references: [id], onDelete: Restrict)
+  authTime  DateTime @db.Date 
+  createdAt      DateTime @default(now())
 
   @@unique([userId, authTime])
 }
