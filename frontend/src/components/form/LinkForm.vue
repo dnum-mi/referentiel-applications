@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import type { PropType } from "vue";
 import type { LinkDto } from "@/client/types.gen";
-import { linkTypesDict } from "@/composables/use-dictionary";
+import { linkTypesDict } from "@/constants/dictionary";
 
 const props = defineProps({
   initialData: {

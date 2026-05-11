@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import UserFollowTab from "@/components/users/userFollowTab.vue";
+import UserFollowTab from "@/components/users/UsrFollowTab.vue";
 import UserInfoTab from "@/components/users/UserInfoTab.vue";
 import UserTokensTab from "@/components/users/UserTokensTab.vue";
 import { ref } from "vue";

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Permission, type CreateLinkDto, type LinkDto, type UpdateLinkDto } from "@/client/types.gen";
-import { linkTypesDict } from "@/composables/use-dictionary";
+import { linkTypesDict } from "@/constants/dictionary";
 import useModal from "@/composables/use-modal";
 import type { ApplicationWithPerms } from "@/models/Application";
 import api from "@/api/index.js";

@@ -4,7 +4,7 @@ import { useRouter } from "vue-router";
 import api from "@/api/index";
 import type { RelationGraphDto } from "@/client";
 import { useGraphStyles } from "@/composables/use-graph-style";
-import { relationTypeLabels } from "@/composables/use-dictionary";
+import { relationTypeLabels } from "@/constants/dictionary";
 import { useD3Graph } from "@/composables/use-d3-graph";
 
 const props = defineProps<{ applicationId: string }>();

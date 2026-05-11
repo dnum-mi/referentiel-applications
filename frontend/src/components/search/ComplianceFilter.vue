@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useApplicationSearch } from "@/composables/use-application-search";
-import type { ComplianceType } from "@/composables/use-dictionary";
+import type { ComplianceType } from "@/constants/dictionary";
 
 const { filters, setFilter } = useApplicationSearch();
 const complianceOptions: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];

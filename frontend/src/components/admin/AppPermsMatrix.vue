@@ -63,7 +63,6 @@ function updateReportMatrix(actorTypeId: string, values: ReportPermissionValue[]
 
 function saveAppPermsMatrix() {
   // Emit the updated matrix to the parent component
-  console.log("Saving App Perms Matrix:", updatedMatrix.value);
 
   emits("update:appPermsMatrix", updatedMatrix.value);
 }

@@ -4,7 +4,7 @@ import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { formatDateFR } from "@/composables/use-date";
-import { statusApplicationDictionary, typeApplicationDictionary } from "@/composables/use-dictionary";
+import { statusApplicationDictionary, typeApplicationDictionary } from "@/constants/dictionary";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";

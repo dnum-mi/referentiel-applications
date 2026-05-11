@@ -65,9 +65,7 @@ export const useMetadataStore = defineStore("metadataStore", () => {
   ) => {
     isLoading.value = true;
     try {
-      console.log("Fetching global metadatas...");
       const response = await api.metadatasControllerFind({ query });
-      console.log(response);
       isLoading.value = false;
 
       if (!response.data) {

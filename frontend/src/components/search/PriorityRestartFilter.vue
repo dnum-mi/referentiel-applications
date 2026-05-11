@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useApplicationSearch } from "@/composables/use-application-search";
-import { priorityRestartLabelsOptions } from "@/composables/use-dictionary";
+import { priorityRestartLabelsOptions } from "@/constants/dictionary";
 import type { ApplicationPriorityRestart } from "@/client/types.gen.js";
 
 const { filters, setFilter } = useApplicationSearch();

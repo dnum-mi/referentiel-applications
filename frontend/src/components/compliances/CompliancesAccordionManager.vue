@@ -11,7 +11,7 @@ import {
   homologationStatusDict,
   complianceFieldLabels,
   type ComplianceType,
-} from "@/composables/use-dictionary";
+} from "@/constants/dictionary";
 import { formatDate, formatDateFR } from "@/composables/use-date";
 import { useMediaQuery } from "@vueuse/core";
 import { BREAKPOINTS } from "@/constants/breakpoint";

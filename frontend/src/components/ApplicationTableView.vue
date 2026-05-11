@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useColumnPreferences } from "@/composables/use-column-preferences";
 import { formatDateFR } from "@/composables/use-date";
-import { homologationStatusDict, restartPrioritiesConfig, statusApplicationDictionary } from "@/composables/use-dictionary";
+import { homologationStatusDict, restartPrioritiesConfig, statusApplicationDictionary } from "@/constants/dictionary";
 import RefAppTable from "./RefAppTable.vue";
 import type { TableSortEvent } from "@/types/table";
 import type { ApplicationStatus, BusinessDivisionDto } from "@/client/types.gen.js";

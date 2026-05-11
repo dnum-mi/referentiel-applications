@@ -2,7 +2,7 @@
 import api from "@/api/index";
 import { Permission, type ApplicationStatusDto, type CreateApplicationStatusDto } from "@/client/types.gen";
 import { formatDateFR } from "@/composables/use-date";
-import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { statusApplicationDictionary } from "@/constants/dictionary";
 import useModal from "@/composables/use-modal";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import type { ApplicationWithPerms } from "@/models/Application";
