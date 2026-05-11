@@ -51,7 +51,7 @@ export const useReportStore = defineStore("reportStore", () => {
       }
       return true;
     } catch (error) {
-      console.log("Erreur lors de l'enregistrement des modifications : ", error);
+      console.error("Erreur lors de l'enregistrement des modifications : ", error);
     }
   }
 
@@ -60,7 +60,7 @@ export const useReportStore = defineStore("reportStore", () => {
       await api.reportsControllerUpdate({ path: { id }, body: { notes }, query: { notify } });
       return true;
     } catch (error) {
-      console.log("Erreur lors de l'enregistrement des modifications : ", error);
+      console.error("Erreur lors de l'enregistrement des modifications : ", error);
     }
   }
 

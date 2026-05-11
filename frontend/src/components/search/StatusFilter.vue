@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { statusApplicationDictionary } from "@/constants/dictionary";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import type { ApplicationStatus } from "@/client/types.gen";
 

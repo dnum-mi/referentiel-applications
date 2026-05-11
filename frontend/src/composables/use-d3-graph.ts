@@ -1,6 +1,6 @@
 import type { GraphEdgeDto, GraphNodeDto } from "@/client";
 import * as d3 from "d3";
-import { statusApplicationDictionary } from "./use-dictionary";
+import { statusApplicationDictionary } from "../constants/dictionary";
 import { useGraphStyles } from "./use-graph-style";
 import { sanitizeLabel } from "./use-sanitize-utils";
 

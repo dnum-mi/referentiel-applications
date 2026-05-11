@@ -8,7 +8,7 @@ import {
   homologationStatusDict,
   complianceFieldLabels,
   type ComplianceType,
-} from "@/composables/use-dictionary";
+} from "@/constants/dictionary";
 import { toDateInputValue, toISODateTime } from "@/composables/use-date";
 import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";

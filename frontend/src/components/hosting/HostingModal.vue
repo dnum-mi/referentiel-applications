@@ -80,7 +80,6 @@ watch(() => props.initialHosting, setInitialValues, { immediate: true });
 watch(hostingOptionsList, setInitialValues, { immediate: true });
 
 async function handleSubmit() {
-  console.log("Submitting hosting form", hostingForm.value);
   isSubmitting.value = true;
   try {
     const formData = {

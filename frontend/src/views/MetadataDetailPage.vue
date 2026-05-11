@@ -3,7 +3,7 @@ import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index";
 import { formatDate } from "@/composables/use-date";
-import { metadataActionLabels } from "@/composables/use-dictionary";
+import { metadataActionLabels } from "@/constants/dictionary";
 import type { MetadataDto } from "@/client/types.gen";
 
 const route = useRoute();

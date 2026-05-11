@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ReportDto, ReportStatus } from "@/client/types.gen.js";
-import { statusDictionary, statusIconClasses } from "@/composables/use-dictionary";
+import { statusDictionary, statusIconClasses } from "@/constants/dictionary";
 import { useReportStore } from "@/stores/reportStore";
 import { watch, ref } from "vue";
 

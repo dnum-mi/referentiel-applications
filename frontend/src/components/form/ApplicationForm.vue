@@ -7,7 +7,7 @@ import { useActorTypeStore } from "@/stores/actorTypeStore";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import TagSearchSelect from "@/components/common/TagSearchSelect.vue";
 import OrganizationSearchSelect from "@/components/common/OrganizationSearchSelect.vue";
-import { statusApplicationDictionary, priorityRestartLabelsOptions, typeApplicationDictionary } from "@/composables/use-dictionary";
+import { statusApplicationDictionary, priorityRestartLabelsOptions, typeApplicationDictionary } from "@/constants/dictionary";
 import api from "@/api/index";
 import {
   type ApplicationDto,

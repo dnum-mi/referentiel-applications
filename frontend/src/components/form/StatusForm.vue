@@ -2,7 +2,7 @@
 import { ref, computed } from "vue";
 import type { PropType } from "vue";
 import type { ApplicationStatusDto } from "@/client/types.gen";
-import { statusApplicationDictionary } from "@/composables/use-dictionary";
+import { statusApplicationDictionary } from "@/constants/dictionary";
 import { toDateInputValue } from "@/composables/use-date";
 
 const props = defineProps({
