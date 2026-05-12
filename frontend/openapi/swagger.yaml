@@ -1201,6 +1201,26 @@ paths:
         "404":
           description: Application non trouvée.
       tags: *a4
+  /api/v2/applications/{applicationId}/quality-summary:
+    get:
+      operationId: ApplicationController_getQualitySummary
+      summary: Récupérer le résumé qualité d'une application
+      description: Retourne les indicateurs OUI/NON pour l'indice de qualité.
+        Accessible à tous les rôles ayant AppRead.
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualitySummaryDto"
+      tags: *a4
   /api/v2/applications/data-quality/update:
     get:
       operationId: ApplicationController_updateAllApplicationsQuality
@@ -5041,6 +5061,68 @@ components:
         - results
         - total
         - averageIq
+    QualitySummaryActorsDto:
+      type: object
+      properties:
+        MOA:
+          type: boolean
+        MOE:
+          type: boolean
+        TMA:
+          type: boolean
+        HEB:
+          type: boolean
+        REP:
+          type: boolean
+      required:
+        - MOA
+        - MOE
+        - TMA
+        - HEB
+        - REP
+    QualitySummaryCompliancesDto:
+      type: object
+      properties:
+        DIMA:
+          type: boolean
+        PDMA:
+          type: boolean
+        HOMOLOGATION:
+          type: boolean
+        RGAA:
+          type: boolean
+        DSFR:
+          type: boolean
+          nullable: true
+        RGPD:
+          type: boolean
+          nullable: true
+      required:
+        - DIMA
+        - PDMA
+        - HOMOLOGATION
+        - RGAA
+        - DSFR
+        - RGPD
+    QualitySummaryDto:
+      type: object
+      properties:
+        hasDescription:
+          type: boolean
+        hasHosting:
+          type: boolean
+        hasSnapvisu:
+          type: boolean
+        actors:
+          $ref: "#/components/schemas/QualitySummaryActorsDto"
+        compliances:
+          $ref: "#/components/schemas/QualitySummaryCompliancesDto"
+      required:
+        - hasDescription
+        - hasHosting
+        - hasSnapvisu
+        - actors
+        - compliances
     PatchApplicationDto:
       type: object
       properties:
