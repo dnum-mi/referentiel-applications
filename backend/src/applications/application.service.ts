@@ -13,7 +13,10 @@ import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from "./dto/create-application.dto";
-import { ApplicationSearchResultDto } from "./dto/get-application.dto";
+import {
+  ApplicationSearchResultDto,
+  QualitySummaryDto,
+} from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
@@ -418,5 +421,46 @@ export class ApplicationService {
       where: { id: applicationId },
       data: { quality: iq },
     });
+  }
+
+  async getQualitySummary(applicationId: string): Promise<QualitySummaryDto> {
+    const [application, hosting, actors, compliance, links, rgaaCompliances] =
+      await Promise.all([
+        this.prisma.application.findUnique({ where: { id: applicationId } }),
+        this.prisma.hosting.findFirst({ where: { applicationId } }),
+        this.prisma.actor.findMany({
+          where: { applicationId },
+          include: { actorType: true },
+        }),
+        this.prisma.compliance.findFirst({ where: { applicationId } }),
+        this.prisma.externalRessource.findMany({ where: { applicationId } }),
+        this.prisma.rgaaCompliance.findMany({ where: { applicationId } }),
+      ]);
+
+    return {
+      hasDescription: Boolean(application?.description),
+      hasHosting: Boolean(hosting),
+      hasSnapvisu: links.some((l) => l.link.toLowerCase().includes("snapvisu")),
+      actors: {
+        MOA: actors.some((a) => a.actorType?.code === "MOA"),
+        MOE: actors.some((a) => a.actorType?.code === "MOE"),
+        TMA: actors.some((a) => a.actorType?.code === "TMA"),
+        HEB: actors.some((a) => a.actorType?.code === "HEB"),
+        REP: actors.some((a) => a.actorType?.code === "REP"),
+      },
+      compliances: {
+        DIMA: Boolean(
+          compliance?.dima_duration_hours || compliance?.dima_recovery_manager,
+        ),
+        PDMA: Boolean(
+          compliance?.pdma_duration_hours ||
+            compliance?.pdma_restoration_manager,
+        ),
+        HOMOLOGATION: Boolean(compliance?.homologation_date_end),
+        RGAA: rgaaCompliances.length > 0,
+        DSFR: compliance?.dsfr_implemented ?? null,
+        RGPD: compliance?.rgpd_has_aipd ?? null,
+      },
+    };
   }
 }

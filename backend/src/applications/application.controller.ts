@@ -45,6 +45,7 @@ import {
   ApplicationSearchResultDto,
   CountByIqDto,
   CountByMonthDto,
+  QualitySummaryDto,
 } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { ApplicationExportService } from "./export.service";
@@ -245,6 +246,22 @@ Le paramètre **id** doit être fourni dans l'URL.
     @User() user: Requestor,
   ): Promise<ApplicationDto> {
     return this.applicationService.getApplicationById(id, user);
+  }
+
+  @Get(":applicationId/quality-summary")
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.AppRead])
+  @ApiOperation({
+    summary: "Récupérer le résumé qualité d'une application",
+    description:
+      "Retourne les indicateurs OUI/NON pour l'indice de qualité. Accessible à tous les rôles ayant AppRead.",
+  })
+  @ApiOkResponse({ type: QualitySummaryDto })
+  @ApiParam({ name: "applicationId", type: String })
+  async getQualitySummary(
+    @Param("applicationId") id: string,
+  ): Promise<QualitySummaryDto> {
+    return this.applicationService.getQualitySummary(id);
   }
 
   @Get("data-quality/update")

@@ -1,51 +1,24 @@
 <script setup lang="ts">
-import type { ActorDto, ComplianceDto, LinkDto, RgaaComplianceDto } from "@/client/types.gen";
+import type { QualitySummaryDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
 import api from "@/api/index";
-import { useActorTypeStore } from "@/stores/actorTypeStore";
-import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 
 const props = defineProps<{ application: Application }>();
 
 const toaster = useToasterStore();
 
 const isLoading = ref(false);
-const actors = ref<ActorDto[]>([]);
-const actorTypeStore = useActorTypeStore();
-const actorTypesList = computed(() => actorTypeStore.actorTypes);
-const hostingStore = useHostingStore();
-const hostings = computed(() => hostingStore.hostings);
-const links = ref<LinkDto[]>([]);
-const compliances = ref<ComplianceDto | null>(null);
-const rgaaCompliances = ref<RgaaComplianceDto[]>([]);
+const summary = ref<QualitySummaryDto | null>(null);
 
 async function fetchQuality() {
   isLoading.value = true;
   try {
-    const [actorsResponse, linksResponse, compliancesResponse, rgaaResponse] = await Promise.all([
-      api.applicationActorsControllerFindAll({
-        path: { applicationId: props.application.id },
-        query: { pageSize: 0 },
-      }),
-      api.applicationLinksControllerFindAll({
-        path: { applicationId: props.application.id },
-      }),
-      api.applicationCompliancesControllerFindOne({
-        path: { applicationId: props.application.id },
-      }),
-      api.rgaaControllerFindAll({
-        path: { applicationId: props.application.id },
-      }),
-    ]);
-
-    const actorsData = actorsResponse.data;
-    actors.value = actorsData?.results ?? [];
-    const linksData = linksResponse.data;
-    links.value = linksData?.results ?? [];
-    compliances.value = compliancesResponse.data ?? null;
-    rgaaCompliances.value = rgaaResponse.data ?? [];
+    const response = await api.applicationControllerGetQualitySummary({
+      path: { applicationId: props.application.id },
+    });
+    summary.value = response.data ?? null;
   } catch {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
   } finally {
@@ -53,70 +26,29 @@ async function fetchQuality() {
   }
 }
 
-function hasActorType(typeCode: string): boolean {
-  return actors.value.some((actor) => {
-    const type = actorTypesList.value.find((t) => t.id === actor.actorTypeId);
-    return type?.code === typeCode;
-  });
-}
-
-function hasCompliance(complianceType: string): boolean {
-  if (!compliances.value) return false;
-
-  switch (complianceType.toUpperCase()) {
-    case "DIMA":
-      return Boolean(compliances.value.dima_duration_hours || compliances.value.dima_recovery_manager);
-    case "PDMA":
-      return Boolean(compliances.value.pdma_duration_hours || compliances.value.pdma_restoration_manager);
-    case "HOMOLOGATION":
-      return Boolean(compliances.value.homologation_date_end);
-    case "RGAA":
-      return rgaaCompliances.value.length > 0;
+function getComplianceColor(key: keyof QualitySummaryDto["compliances"]): string {
+  if (!summary.value) return "yellow-tournesol";
+  const c = summary.value.compliances;
+  switch (key) {
     case "DSFR":
-      return compliances.value.dsfr_implemented !== undefined;
+      return c.DSFR === null ? "yellow-tournesol" : c.DSFR ? "green-emeraude" : "yellow-tournesol";
     case "RGPD":
-      return compliances.value.rgpd_has_aipd !== undefined;
+      return c.RGPD === null ? "yellow-tournesol" : c.RGPD ? "green-emeraude" : "yellow-tournesol";
     default:
-      return false;
+      return c[key] ? "green-emeraude" : "yellow-tournesol";
   }
 }
 
-function hasLink(linkValue: string): boolean {
-  return links.value.some((link) => link.link?.toLowerCase().includes(linkValue.toLowerCase()));
-}
-
-// To refactor later
-function getComplianceColor(complianceType: string): string {
-  if (!compliances.value) return "yellow-tournesol";
-
-  switch (complianceType.toUpperCase()) {
+function getComplianceStatus(key: keyof QualitySummaryDto["compliances"]): string {
+  if (!summary.value) return "non";
+  const c = summary.value.compliances;
+  switch (key) {
     case "DSFR":
-      if (compliances.value.dsfr_implemented === undefined) return "yellow-tournesol";
-      return compliances.value.dsfr_implemented ? "green-emeraude" : "yellow-tournesol";
+      return c.DSFR === null ? "non configuré" : c.DSFR ? "oui" : "non implémenté";
     case "RGPD":
-      if (compliances.value.rgpd_has_aipd === undefined) return "yellow-tournesol";
-      return compliances.value.rgpd_has_aipd ? "green-emeraude" : "yellow-tournesol";
-    case "RGAA":
-      if (rgaaCompliances.value.length === 0) return "yellow-tournesol";
-      if (rgaaCompliances.value.some(({ score_percentage: score }) => score != null && Number(score) >= 50)) return "green-emeraude";
-      return "yellow-tournesol";
+      return c.RGPD === null ? "non configuré" : c.RGPD ? "oui" : "non réalisée";
     default:
-      return hasCompliance(complianceType) ? "green-emeraude" : "yellow-tournesol";
-  }
-}
-
-function getComplianceStatus(complianceType: string): string {
-  if (!compliances.value) return "non";
-
-  switch (complianceType.toUpperCase()) {
-    case "DSFR":
-      if (compliances.value.dsfr_implemented === undefined) return "non configuré";
-      return compliances.value.dsfr_implemented ? "oui" : "non implémenté";
-    case "RGPD":
-      if (compliances.value.rgpd_has_aipd === undefined) return "non configuré";
-      return compliances.value.rgpd_has_aipd ? "oui" : "non réalisée";
-    default:
-      return hasCompliance(complianceType) ? "oui" : "non";
+      return c[key] ? "oui" : "non";
   }
 }
 
@@ -130,40 +62,40 @@ onMounted(fetchQuality);
     </div>
   </div>
   <AppLoader v-if="isLoading" data-testid="quality-loader" />
-  <div v-else class="fr-grid-row fr-grid-row--gutters">
+  <div v-else-if="summary" class="fr-grid-row fr-grid-row--gutters">
     <div class="fr-col-12 fr-col-md-4" data-testid="quality-general">
       <h4>Général</h4>
       <DsfrHighlight
         data-testid="quality-description"
-        :color="props.application.description ? 'green-emeraude' : 'yellow-tournesol'"
+        :color="summary.hasDescription ? 'green-emeraude' : 'yellow-tournesol'"
         :small="true"
       >
-        Description : {{ props.application.description ? "oui" : "non" }}
+        Description : {{ summary.hasDescription ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight data-testid="quality-hosting" :color="hostings.length ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        Hébergement : {{ hostings.length ? "oui" : "non" }}
+      <DsfrHighlight data-testid="quality-hosting" :color="summary.hasHosting ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+        Hébergement : {{ summary.hasHosting ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight data-testid="quality-snapvisu" :color="hasLink('snapvisu') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        Supervisée : {{ hasLink("snapvisu") ? "oui" : "non" }}
+      <DsfrHighlight data-testid="quality-snapvisu" :color="summary.hasSnapvisu ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+        Supervisée : {{ summary.hasSnapvisu ? "oui" : "non" }}
       </DsfrHighlight>
     </div>
 
     <div class="fr-col-12 fr-col-md-4" data-testid="quality-actors">
       <h4>Acteurs</h4>
-      <DsfrHighlight data-testid="quality-actor-moa" :color="hasActorType('MOA') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        MOA : {{ hasActorType("MOA") ? "oui" : "non" }}
+      <DsfrHighlight data-testid="quality-actor-moa" :color="summary.actors.MOA ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+        MOA : {{ summary.actors.MOA ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight data-testid="quality-actor-moe" :color="hasActorType('MOE') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        MOE : {{ hasActorType("MOE") ? "oui" : "non" }}
+      <DsfrHighlight data-testid="quality-actor-moe" :color="summary.actors.MOE ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+        MOE : {{ summary.actors.MOE ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight data-testid="quality-actor-heb" :color="hasActorType('HEB') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        Responsable hébergement : {{ hasActorType("HEB") ? "oui" : "non" }}
+      <DsfrHighlight data-testid="quality-actor-heb" :color="summary.actors.HEB ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+        Responsable hébergement : {{ summary.actors.HEB ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight data-testid="quality-actor-rep" :color="hasActorType('REP') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        Exploitation : {{ hasActorType("REP") ? "oui" : "non" }}
+      <DsfrHighlight data-testid="quality-actor-rep" :color="summary.actors.REP ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+        Exploitation : {{ summary.actors.REP ? "oui" : "non" }}
       </DsfrHighlight>
-      <DsfrHighlight data-testid="quality-actor-tma" :color="hasActorType('TMA') ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
-        TMA : {{ hasActorType("TMA") ? "oui" : "non" }}
+      <DsfrHighlight data-testid="quality-actor-tma" :color="summary.actors.TMA ? 'green-emeraude' : 'yellow-tournesol'" :small="true">
+        TMA : {{ summary.actors.TMA ? "oui" : "non" }}
       </DsfrHighlight>
     </div>
 

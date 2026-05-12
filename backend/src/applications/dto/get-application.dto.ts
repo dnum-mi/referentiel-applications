@@ -3,6 +3,7 @@ import { priorityRestart, Status } from "@prisma/client";
 import { Type } from "class-transformer";
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -142,3 +143,38 @@ export class ApplicationMinimalDto extends PickType(ApplicationDto, [
   "id",
   "label",
 ] as const) {}
+
+export class QualitySummaryActorsDto {
+  @ApiProperty() @IsBoolean() MOA: boolean;
+  @ApiProperty() @IsBoolean() MOE: boolean;
+  @ApiProperty() @IsBoolean() TMA: boolean;
+  @ApiProperty() @IsBoolean() HEB: boolean;
+  @ApiProperty() @IsBoolean() REP: boolean;
+}
+
+export class QualitySummaryCompliancesDto {
+  @ApiProperty() @IsBoolean() DIMA: boolean;
+  @ApiProperty() @IsBoolean() PDMA: boolean;
+  @ApiProperty() @IsBoolean() HOMOLOGATION: boolean;
+  @ApiProperty() @IsBoolean() RGAA: boolean;
+  @ApiProperty({ nullable: true }) @IsOptional() @IsBoolean() DSFR:
+    | boolean
+    | null;
+  @ApiProperty({ nullable: true }) @IsOptional() @IsBoolean() RGPD:
+    | boolean
+    | null;
+}
+
+export class QualitySummaryDto {
+  @ApiProperty() @IsBoolean() hasDescription: boolean;
+  @ApiProperty() @IsBoolean() hasHosting: boolean;
+  @ApiProperty() @IsBoolean() hasSnapvisu: boolean;
+
+  @ApiProperty({ type: () => QualitySummaryActorsDto })
+  @Type(() => QualitySummaryActorsDto)
+  actors: QualitySummaryActorsDto;
+
+  @ApiProperty({ type: () => QualitySummaryCompliancesDto })
+  @Type(() => QualitySummaryCompliancesDto)
+  compliances: QualitySummaryCompliancesDto;
+}
