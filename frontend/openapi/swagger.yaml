@@ -3902,6 +3902,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceDto"
+        "409":
+          description: Une conformité RGAA existe déjà pour cette application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RgaaComplianceErrorResponseDto"
       tags: *a21
   /api/v2/applications/{applicationId}/rgaa-compliances/{id}:
     patch:
@@ -6695,6 +6701,16 @@ components:
         - id
         - label
         - shortName
+    RgaaComplianceErrorResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Une conformité RGAA existe déjà pour cette application
+          description: Message d'erreur en cas de conflit lors de la création d'une
+            conformité RGAA
+      required:
+        - message
     RgaaComplianceDto:
       type: object
       properties:

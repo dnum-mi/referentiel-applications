@@ -69,3 +69,13 @@ export class RgaaComplianceDto extends CreateRgaaComplianceDto {
   @IsString()
   applicationId: string;
 }
+
+export class RgaaComplianceErrorResponseDto {
+  @ApiProperty({
+    example: "Une conformité RGAA existe déjà pour cette application",
+    description:
+      "Message d'erreur en cas de conflit lors de la création d'une conformité RGAA",
+  })
+  @IsString()
+  message: string;
+}

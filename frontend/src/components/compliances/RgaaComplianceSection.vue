@@ -103,8 +103,13 @@ async function save() {
         path: { applicationId: props.applicationId },
         body: payload,
       });
-      if (res.data) items.value.push(res.data);
-      toaster.addSuccessMessage("Conformité RGAA créée avec succès !");
+      if (res?.error?.message) {
+        toaster.addErrorMessage(res.error.message);
+      }
+      if (res.data) {
+        items.value.push(res.data);
+        toaster.addSuccessMessage("Conformité RGAA créée avec succès !");
+      }
     }
     closeModal();
   } catch {

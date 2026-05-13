@@ -3,13 +3,23 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { BaseService } from "src/common/base.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
-import { RgaaCompliance } from "./entities/rgaa-compliance.entity";
 import { CreateRgaaComplianceDto } from "./dto/rgaa-compliance.dto";
+import { RgaaCompliance } from "./entities/rgaa-compliance.entity";
+import { ServiceOptions } from "src/common/utils/types";
+import { ApplicationService } from "src/applications/application.service";
 
 @Injectable()
-export class RgaaService {
-  constructor(private readonly prisma: PrismaService) {}
+export class RgaaService extends BaseService<RgaaCompliance> {
+  constructor(
+    readonly prisma: PrismaService,
+    metadataService: MetadatasService,
+    applicationService: ApplicationService,
+  ) {
+    super(prisma.rgaaCompliance, prisma, metadataService, applicationService);
+  }
 
   async findAllByApplicationId(
     applicationId: string,
@@ -20,9 +30,10 @@ export class RgaaService {
     }) as unknown as RgaaCompliance[];
   }
 
-  async create(
+  async createRgaa(
     applicationId: string,
     dto: CreateRgaaComplianceDto,
+    options?: ServiceOptions<RgaaCompliance>,
   ): Promise<RgaaCompliance> {
     const applicationExists = await this.prisma.application.findUnique({
       where: { id: applicationId },
@@ -50,15 +61,17 @@ export class RgaaService {
       }
     }
 
-    return this.prisma.rgaaCompliance.create({
-      data: { ...dto, applicationId },
-    }) as unknown as RgaaCompliance;
+    return super.create(
+      { ...dto, applicationId },
+      options,
+    ) as unknown as RgaaCompliance;
   }
 
-  async update(
+  async updateRgaa(
     id: string,
     applicationId: string,
     dto: Partial<CreateRgaaComplianceDto>,
+    options?: ServiceOptions<RgaaCompliance>,
   ): Promise<RgaaCompliance> {
     const existing = await this.prisma.rgaaCompliance.findUnique({
       where: { id },
@@ -83,19 +96,20 @@ export class RgaaService {
       }
     }
 
-    return this.prisma.rgaaCompliance.update({
-      where: { id },
-      data: dto,
-    }) as unknown as RgaaCompliance;
+    return super.update(id, dto, options) as unknown as RgaaCompliance;
   }
 
-  async delete(id: string, applicationId: string): Promise<void> {
+  async deleteRgaa(
+    id: string,
+    applicationId: string,
+    options?: ServiceOptions<RgaaCompliance>,
+  ): Promise<void> {
     const existing = await this.prisma.rgaaCompliance.findUnique({
       where: { id },
     });
     if (!existing || existing.applicationId !== applicationId) {
       throw new NotFoundException("Conformité RGAA introuvable");
     }
-    await this.prisma.rgaaCompliance.delete({ where: { id } });
+    await super.delete(id, options);
   }
 }
