@@ -1,18 +1,14 @@
 import type { APP_PERMISSIONS } from "src/common/utils/types";
 import { registerAs } from "@nestjs/config";
 import { AppPermissionsRecord } from "src/common/utils/types";
-
-export interface FooterLink {
-  label: string;
-  title: string;
-  href: string;
-}
+import type { FooterLink } from "../domain/configs.entity";
 
 export interface AppConfig {
   env: string;
   environmentLabel?: string;
   port: number;
   host: string;
+  swaggerPublicUrl?: string;
   onlyWriteSwagger: boolean;
   writeYaml: boolean;
   version: string;
@@ -34,6 +30,7 @@ export default registerAs("app", (): AppConfig => {
     env: process.env.NODE_ENV ?? "development",
     port: Number.parseInt(process.env.PORT ?? "3500", 10),
     host: process.env.HOST ?? "0.0.0.0",
+    swaggerPublicUrl: process.env.SWAGGER_PUBLIC_URL,
     onlyWriteSwagger: process.env.ONLY_WRITE_SWAGGER === "true",
     writeYaml: process.env.WRITE_SWAGGER_YAML !== "false",
     version: process.env.VERSION ?? "development",

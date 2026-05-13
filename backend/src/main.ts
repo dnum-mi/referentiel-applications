@@ -18,7 +18,20 @@ async function bootstrap() {
 
   app.useLogger(app.get(PinoLogger));
   app.setGlobalPrefix(globalPrefix);
-  app.use(helmet());
+
+  const apiHelmet = helmet();
+
+  app.use((req, res, next) => {
+    // Apply Helmet everywhere except Swagger assets and OAuth callback page.
+    if (
+      req.path.startsWith("/swagger") ||
+      req.path.startsWith(`${globalPrefix}/swagger`)
+    ) {
+      return next();
+    }
+
+    return apiHelmet(req, res, next);
+  });
 
   const globalLogger = new Logger("Bootstrap");
 

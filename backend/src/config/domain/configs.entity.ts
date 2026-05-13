@@ -1,10 +1,10 @@
-export class FooterLink {
+export interface FooterLink {
   label: string;
   title: string;
   href: string;
 }
 
-export class FrontendConfig {
+export interface FrontendConfig {
   oidcConfigUrl: string;
   oidcClientId: string;
   version: string;
