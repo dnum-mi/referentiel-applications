@@ -53,10 +53,12 @@ watch([() => props.sortField, () => props.sortOrder], ([newField, newOrder]) => 
 function onSort(event: DataTableSortEvent) {
   const scrollPos = window?.scrollY || 0;
 
-  if (skeletonTimeout.value) clearTimeout(skeletonTimeout.value);
-  skeletonTimeout.value = window.setTimeout(() => {
-    isSorting.value = true;
-  }, 120);
+  if (props.lazy) {
+    if (skeletonTimeout.value) clearTimeout(skeletonTimeout.value);
+    skeletonTimeout.value = window.setTimeout(() => {
+      isSorting.value = true;
+    }, 120);
+  }
 
   const sortField = typeof event.sortField === "string" ? event.sortField : "";
 

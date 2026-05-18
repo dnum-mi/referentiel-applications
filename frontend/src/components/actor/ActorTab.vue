@@ -33,6 +33,7 @@ const canEdit = computed(() => userStore.hasPermissions([Permission.ACTOR_WRITE]
 const columns: TableColumn[] = [
   { field: "Sélection", header: "Sélection", sortable: false },
   { field: "Organisation", header: "Organisation", sortable: false },
+  { field: "Groupe", header: "Groupe", sortable: true },
   { field: "Type", header: "Type", sortable: false },
   { field: "Email", header: "Email", sortable: false },
   { field: "Prénom", header: "Prénom", sortable: false },
@@ -64,6 +65,7 @@ const tableRows = computed(() =>
     Actions: {
       edit: () => actorModal.openModal(actor),
     },
+    Groupe: actor.isGroup ? "Oui" : "Non",
   })),
 );
 
