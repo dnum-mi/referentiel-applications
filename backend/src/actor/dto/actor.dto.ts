@@ -1,5 +1,11 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsEmail, IsOptional, IsString, ValidateIf } from "class-validator";
+import {
+  IsBoolean,
+  IsEmail,
+  IsOptional,
+  IsString,
+  ValidateIf,
+} from "class-validator";
 import { PaginationDto } from "src/common/dto";
 
 export class CreateActorDto {
@@ -54,6 +60,13 @@ export class CreateActorDto {
   })
   @IsOptional()
   applicationId?: string | null;
+
+  @ApiProperty({
+    description: "Indique si l'acteur est un groupe d'acteurs ou non",
+    required: false,
+  })
+  @IsBoolean()
+  isGroup: boolean;
 }
 
 export class UpdateActorDto extends PartialType(CreateActorDto) {}

@@ -50,12 +50,16 @@ export class ActorService {
       createdActor.email.length > 0
         ? createdActor.email
         : createdActor.organization.path;
+    const title = createdActor.isGroup
+      ? `du groupe ${createdActor.organization.path}`
+      : `de l'acteur ${createdActor.actorType?.code} : ${actorInformation}`;
+
     await this.metadataService.createMetadata({
       applicationId: createActor.applicationId,
       createdById: requestorId,
       entity: "actorId",
       entityId: createdActor.id,
-      title: `de l'acteur ${createdActor.actorType?.code} : ${actorInformation}`,
+      title,
       type: "add",
     });
 
@@ -133,17 +137,21 @@ export class ActorService {
     await this.applicationService.updateApplicationQuality(
       updatedActor.applicationId,
     );
+    const title = updatedActor.isGroup
+      ? `du groupe d'acteur ${updatedActor.organization.path}`
+      : `de l'acteur ${oldActor.actorType?.code}`;
 
     await this.metadataService.createMetadata({
       applicationId: updatedActor.applicationId,
       createdById: requestorId,
-      title: `de l'acteur ${oldActor.actorType?.code}`,
+      title,
       entity: "actorId",
       entityId: updatedActor.id,
       fields: {
         lastname: "nom",
         firstname: "prénom",
         email: "email",
+        isGroup: "groupe",
         "organization.sigle": "organisation",
         "actorType.label": "rôle",
       },
@@ -209,13 +217,16 @@ export class ActorService {
 
   public async delete(id: string, requestorId: string) {
     const actor = await this.findOne(id);
+    const title = actor.isGroup
+      ? `du groupe d'acteur ${actor.organization.path}`
+      : `de l'acteur ${actor.actorType?.code} : ${actor.email}`;
 
     await this.metadataService.createMetadata({
       applicationId: actor.applicationId,
       createdById: requestorId,
       entity: "actorId",
       entityId: actor.id,
-      title: `de l'acteur ${actor.actorType.code} : ${actor.email}`,
+      title,
       type: "delete",
     });
 

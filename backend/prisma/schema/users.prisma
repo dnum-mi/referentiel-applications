@@ -74,6 +74,8 @@ model Actor {
   metadatas      Metadata[]    @relation("ActorMetadata")
   /// Enregistrements de conformité
   compliances    Compliance[]  @relation("ComplianceHomologationRSSI")
+  /// Indique si l'acteur est un groupe ou une personne physique
+  isGroup         Boolean       @default(false)
 
   @@index([applicationId, actorTypeId])
 }

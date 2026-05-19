@@ -629,6 +629,7 @@ erDiagram
   String organizationId FK "nullable"
   String applicationId FK "nullable"
   String actorTypeId FK "nullable"
+  Boolean isGroup
 }
 "ActorType" {
   String id PK
@@ -721,6 +722,7 @@ Properties as follows:
 - `organizationId`: id de l'organisation
 - `applicationId`: id de l'application dont l'utilisateur est acteur
 - `actorTypeId`: id du type de cet acteur
+- `isGroup`: Indique si l'acteur est un groupe ou une personne physique
 
 ### `ActorType`
 

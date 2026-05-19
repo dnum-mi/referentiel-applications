@@ -5772,6 +5772,9 @@ components:
           nullable: true
           example: 035869dc-47a6-4cee-828f-f6a28d050b35
           description: ID de l'application lié (Optionel)
+        isGroup:
+          type: boolean
+          description: Indique si l'acteur est un groupe d'acteurs ou non
       required:
         - actorTypeId
     ActorDto:
@@ -5803,6 +5806,9 @@ components:
           nullable: true
           example: 035869dc-47a6-4cee-828f-f6a28d050b35
           description: ID de l'application lié (Optionel)
+        isGroup:
+          type: boolean
+          description: Indique si l'acteur est un groupe d'acteurs ou non
         id:
           type: string
           example: 12345678-1234-1234-1234-123456789012
@@ -5854,6 +5860,9 @@ components:
           nullable: true
           example: 035869dc-47a6-4cee-828f-f6a28d050b35
           description: ID de l'application lié (Optionel)
+        isGroup:
+          type: boolean
+          description: Indique si l'acteur est un groupe d'acteurs ou non
     CreateActorTypeDto:
       type: object
       properties:

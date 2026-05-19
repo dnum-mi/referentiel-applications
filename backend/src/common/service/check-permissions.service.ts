@@ -36,7 +36,10 @@ export class CheckPermissions {
     const actors = await this.prisma.actor.findMany({
       where: {
         applicationId,
-        email: user.email,
+        OR: [
+          { email: user.email },
+          { isGroup: true, organizationId: user.organizationId },
+        ],
       },
       include: {
         actorType: {

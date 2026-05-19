@@ -26,6 +26,7 @@ const initialOrganization = ref<OrganizationDto | null>(null);
 
 const form = ref<CreateActorDto>({
   actorTypeId: "",
+  isGroup: false,
   ...props.initialData,
   applicationId: props.application.id,
 });
@@ -61,13 +62,16 @@ const isFormValid = computed(() => {
   return form.value.actorTypeId && form.value.actorTypeId !== "" && organizationId.value && organizationId.value !== "";
 });
 
+const isGroup = computed(() => !!form.value.isGroup);
+
 function handleSubmit() {
   const formData = {
     ...form.value,
     email: form.value.email?.trim() || "",
-    firstname: form.value.firstname?.trim() || undefined,
-    lastname: form.value.lastname?.trim() || undefined,
+    firstname: !isGroup.value ? form.value.firstname?.trim() || undefined : null,
+    lastname: !isGroup.value ? form.value.lastname?.trim() || undefined : null,
   };
+
   emit("submit", formData);
 }
 </script>
@@ -101,23 +105,34 @@ function handleSubmit() {
       class="fr-mb-3w"
     />
 
-    <DsfrInput
-      v-model="form.firstname"
-      label="Prénom"
-      label-visible
-      placeholder="Prénom"
-      data-testid="actor-firstname-input"
+    <DsfrCheckbox
+      v-model="form.isGroup"
+      name="isGroup"
+      :value="true"
+      label="Cette acteur est un groupe"
+      data-testid="actor-is-group-checkbox"
       class="fr-mb-3w"
     />
 
-    <DsfrInput
-      v-model="form.lastname"
-      label="Nom"
-      label-visible
-      placeholder="Nom de famille"
-      data-testid="actor-lastname-input"
-      class="fr-mb-3w"
-    />
+    <template v-if="!isGroup">
+      <DsfrInput
+        v-model="form.firstname"
+        label="Prénom"
+        label-visible
+        placeholder="Prénom"
+        data-testid="actor-firstname-input"
+        class="fr-mb-3w"
+      />
+
+      <DsfrInput
+        v-model="form.lastname"
+        label="Nom"
+        label-visible
+        placeholder="Nom de famille"
+        data-testid="actor-lastname-input"
+        class="fr-mb-3w"
+      />
+    </template>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
       <DsfrButton type="button" secondary label="Annuler" data-testid="actor-cancel-btn" @click="$emit('cancel')" />

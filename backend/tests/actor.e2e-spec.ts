@@ -38,6 +38,7 @@ describe("Actor", () => {
         lastname: "lastname",
         actorTypeId: actorType.id,
         applicationId: application.id,
+        isGroup: false,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
@@ -88,6 +89,7 @@ describe("application guard", () => {
         lastname: "lastname",
         actorTypeId: actorType.id,
         applicationId: application.id,
+        isGroup: false,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
