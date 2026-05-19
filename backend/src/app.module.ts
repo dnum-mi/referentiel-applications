@@ -29,8 +29,8 @@ import { TechnicalDebtInfoModule } from "./technical-debt-info/technical-debt-in
 import { TokenModule } from "./token/token.module";
 import { UserModule } from "./user/user.module";
 import { LabelSourceModule } from "./label-source/label-source.module";
-import { DataSourceModule } from "./data-source/data-source.module";
 import { RgaaModule } from "./rgaa/rgaa.module";
+import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
 
 @Module({
   imports: [
@@ -47,7 +47,7 @@ import { RgaaModule } from "./rgaa/rgaa.module";
     TokenModule,
     MetadatasModule,
     ApplicationModule,
-    DataSourceModule,
+    DataCatalogModule,
     RelationModule,
     OrganizationsModule,
     UserModule,

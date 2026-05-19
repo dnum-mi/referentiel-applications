@@ -49,13 +49,15 @@ model Metadata {
   /// Info de dette technique associée
   technicalDebtInfo   TechnicalDebtInfo? @relation(fields: [technicalDebtInfoId], references: [id])
 
-  dataSourceId String?
-  /// Source de donnée associée
-  dataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
 
   rgaaComplianceId String?
   /// Conformité RGAA associée
   rgaaCompliance   RgaaCompliance? @relation(fields: [rgaaComplianceId], references: [id])
+  dataApplicationId String?
+  dataApplication   DataApplication? @relation("DataApplicationMetadata", fields: [dataApplicationId], references: [id])
+
+  dataDescriptionId String?
+  dataDescription   DataDescription? @relation("DataDescriptionMetadata", fields: [dataDescriptionId], references: [id])
 }
 
 /// Type d'action de métadonnée

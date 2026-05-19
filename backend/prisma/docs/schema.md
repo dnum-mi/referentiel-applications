@@ -5,7 +5,7 @@
 - [Applications](#applications)
 - [BusinessDivision](#businessdivision)
 - [Compliance](#compliance)
-- [DataSource](#datasource)
+- [DataCatalog](#datacatalog)
 - [Hosting](#hosting)
 - [Labels](#labels)
 - [Metadata](#metadata)
@@ -92,6 +92,10 @@ erDiagram
   String A FK
   String B FK
 }
+"_DataDescriptionToTag" {
+  String A FK
+  String B FK
+}
 "Application" }o--o| "ApplicationStatus" : currentStatus
 "ApplicationStatus" }o--|| "Application" : application
 "Relation" }o--|| "Application" : sourceApplication
@@ -106,6 +110,7 @@ erDiagram
 "_ApplicationToApplicationStatus" }o--|| "ApplicationStatus" : ApplicationStatus
 "_ApplicationToTag" }o--|| "Application" : Application
 "_ApplicationToTag" }o--|| "Tag" : Tag
+"_DataDescriptionToTag" }o--|| "Tag" : Tag
 ```
 
 ### `Application`
@@ -241,6 +246,15 @@ Properties as follows:
 - `A`:
 - `B`:
 
+### `_DataDescriptionToTag`
+
+Pair relationship table between [DataDescription](#DataDescription) and [Tag](#Tag)
+
+Properties as follows:
+
+- `A`:
+- `B`:
+
 ## BusinessDivision
 
 ```mermaid
@@ -358,54 +372,139 @@ Properties as follows:
 - `accessibility_url`: RGAA : URL de la déclaration d'accessibilité
 - `score_percentage`: RGAA : Score d'accessibilité en pourcentage (0-100)
 
-## DataSource
+## DataCatalog
 
 ```mermaid
 erDiagram
-"DataSource" {
+"DataFamily" {
+  String id PK
+  String(255) path
+}
+"DataSensibility" {
+  String id PK
+  String(255) label
+  String(50) color
+}
+"DataDescription" {
   String id PK
   String(255) name
   String description "nullable"
-  Boolean isReference
+  String familyId FK "nullable"
+  String(255) officialUrl "nullable"
+}
+"DataApplication" {
+  String id PK
+  String applicationId FK
+  String dataDescriptionId FK
   String example "nullable"
-  String(100) conservation "nullable"
-  String(255) databaseName "nullable"
-  String(255) databaseTableName "nullable"
-  Int fieldCount "nullable"
-  String fields "nullable"
+  OpenDataStatus openDataStatus "nullable"
+  Boolean isReference
+  String businessUsage "nullable"
+  String documentationUrl
+  String(255) conservation "nullable"
   Int volumetry "nullable"
   Int monthlyVolumetry "nullable"
-  String applicationId FK
-  String typeId FK "nullable"
+  DataUpdateFrequency updateFrequency "nullable"
   String sensibilityId FK "nullable"
-  String updateFrequencyId FK "nullable"
-  String familyId FK "nullable"
 }
+"DataExposure" {
+  String id PK
+  String applicationDataId FK
+  String(255) type "nullable"
+  String url "nullable"
+  String(255) endpoint "nullable"
+  String(255) format "nullable"
+  String swaggerUrl "nullable"
+  String(255) authenticationType "nullable"
+}
+"_DataDescriptionToTag" {
+  String A FK
+  String B FK
+}
+"DataDescription" }o--o| "DataFamily" : family
+"DataApplication" }o--|| "DataDescription" : dataDescription
+"DataApplication" }o--o| "DataSensibility" : sensibility
+"DataExposure" }o--|| "DataApplication" : dataApplication
+"_DataDescriptionToTag" }o--|| "DataDescription" : DataDescription
 ```
 
-### `DataSource`
+### `DataFamily`
 
-DataSource représente une source de données liée à une application.
+Famille de données, utilisée pour regrouper les descriptions de données.
 
 Properties as follows:
 
-- `id`: Identifiant unique de la source de donnée
-- `name`: Nom d'usage.
-- `description`: Description détaillée.
-- `isReference`: Indicateur "Source Maître". S'il est à true, cette application est la source officielle, unique et faisant foi pour cette donnée au sein du ministère.
-- `example`: Échantillon de données.
-- `conservation`: Durée d'Utilité Administrative (DUA).
-- `databaseName`: Nom de l'instance de la base de données hôte.
-- `databaseTableName`: Nom technique de l'entité contenant les données.
-- `fieldCount`: Nombre total de colonnes ou de champs que contient la source de donnée.
-- `fields`: Liste textuelle des champs/colonnes.
-- `volumetry`: Représente le nombre actuel d'enregistrements présents dans la source.
-- `monthlyVolumetry`: Estimation du nombre de nouveaux enregistrements ajoutés chaque mois.
-- `applicationId`: Lien vers l'application utilisant cette donnée.
-- `typeId`: Lien vers la nature technique du support.
-- `sensibilityId`: Lien vers le niveau de protection et de criticité.
-- `updateFrequencyId`: Lien vers la fréquence de mise à jour.
-- `familyId`: Lien vers la classification thématique.
+- `id`: Identifiant unique
+- `path`: Chemin hiérarchique de la famille (ex: "Identité / Etat civil")
+
+### `DataSensibility`
+
+Niveau de sensibilité d'une donnée.
+Définit le label affiché et la couleur associée dans l'interface.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `label`: Libellé du niveau de sensibilité
+- `color`: Couleur hexadécimale associée (ex: "#FF0000")
+
+### `DataDescription`
+
+Description générique d'une donnée, indépendante d'une application.
+Peut être réutilisée dans plusieurs applications.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `name`: Nom de la donnée
+- `description`: Description détaillée
+- `familyId`: Identifiant de la famille de données
+- `officialUrl`: URL vers la source officielle de la donnée
+
+### `DataApplication`
+
+Utilisation d'une donnée dans le contexte d'une application spécifique.
+Enrichit la description générique avec des informations propres à l'usage applicatif.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `applicationId`: Identifiant de l'application concernée
+- `dataDescriptionId`: Identifiant de la description de donnée associée
+- `example`: Exemple de valeur de la donnée
+- `openDataStatus`: Statut d'exposition en open data
+- `isReference`: Indique si cette donnée est une donnée de référence (source de vérité)
+- `businessUsage`: Description de l'usage métier de la donnée
+- `documentationUrl`: Liste des URLs de documentation associées
+- `conservation`: Durée de conservation de la donnée
+- `volumetry`: Volume total estimé (nombre d'enregistrements)
+- `monthlyVolumetry`: Volume mensuel estimé (nombre d'enregistrements par mois)
+- `updateFrequency`: Fréquence de mise à jour de la donnée
+- `sensibilityId`: Identifiant du niveau de sensibilité
+
+### `DataExposure`
+
+Mode d'exposition d'une donnée applicative (API REST, fichier, flux, etc.).
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `applicationDataId`: Identifiant de l'utilisation applicative parente
+- `type`: Type d'exposition (ex: API, Fichier, Flux)
+- `url`: URL d'accès à la donnée
+- `endpoint`: Point de terminaison technique
+- `format`: Format des données échangées (ex: JSON, CSV, XML)
+- `swaggerUrl`: URL de la documentation Swagger/OpenAPI
+- `authenticationType`: Type d'authentification requis (ex: OAuth2, API Key)
+
+### `_DataDescriptionToTag`
+
+Pair relationship table between [DataDescription](#DataDescription) and [Tag](#Tag)
+
+Properties as follows:
+
+- `A`:
+- `B`:
 
 ## Hosting
 
@@ -494,8 +593,9 @@ erDiagram
   String externalRessourceId FK "nullable"
   String hostingId FK "nullable"
   String technicalDebtInfoId FK "nullable"
-  String dataSourceId FK "nullable"
   String rgaaComplianceId FK "nullable"
+  String dataApplicationId FK "nullable"
+  String dataDescriptionId FK "nullable"
 }
 ```
 
@@ -519,8 +619,9 @@ Properties as follows:
 - `externalRessourceId`:
 - `hostingId`:
 - `technicalDebtInfoId`:
-- `dataSourceId`:
 - `rgaaComplianceId`:
+- `dataApplicationId`:
+- `dataDescriptionId`:
 
 ## Notifications
 
@@ -846,23 +947,6 @@ Properties as follows:
 
 ```mermaid
 erDiagram
-"DataSourceType" {
-  String id PK
-  String(255) label UK
-}
-"Sensibility" {
-  String id PK
-  String(255) label UK
-  String(50) color "nullable"
-}
-"Family" {
-  String id PK
-  String(255) label UK
-}
-"UpdateFrequency" {
-  String id PK
-  String(255) label UK
-}
 "UserPermissionLog" {
   String id PK
   String userId FK
@@ -878,43 +962,6 @@ erDiagram
   DateTime createdAt
 }
 ```
-
-### `DataSourceType`
-
-Nature technique du support.
-
-Properties as follows:
-
-- `id`:
-- `label`:
-
-### `Sensibility`
-
-Niveau de protection.
-
-Properties as follows:
-
-- `id`:
-- `label`:
-- `color`:
-
-### `Family`
-
-Classification thématique.
-
-Properties as follows:
-
-- `id`:
-- `label`:
-
-### `UpdateFrequency`
-
-Fréquence de mise à jour.
-
-Properties as follows:
-
-- `id`:
-- `label`:
 
 ### `UserPermissionLog`
 

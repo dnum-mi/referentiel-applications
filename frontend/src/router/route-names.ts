@@ -19,6 +19,8 @@ export const routeNames = {
   SITEMAP: "plan-du-site",
   ACCESSIBILITE: "accessibilite",
 
+  DATA_APPLICATION_DETAIL: "data-application-detail",
+
   NOTFOUND: "page-non-trouvee",
   Page_404: "404",
 } as const;

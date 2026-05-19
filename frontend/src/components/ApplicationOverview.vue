@@ -20,6 +20,7 @@ import { BREAKPOINTS } from "@/constants/breakpoint";
 import { useUserStore } from "@/stores/userStore";
 import type { Tab } from "@/utils/types";
 import { Permission } from "@/client";
+import DataApplicationTab from "./data-application/DataApplicationTab.vue";
 
 const props = defineProps<{ application: CreateApplicationWithPerms }>();
 const emit = defineEmits<{
@@ -53,6 +54,14 @@ const tabs = ref<
     tabId: "tab-infos",
     panelId: "panel-infos",
     component: markRaw(InformationsGenerales), // mark as raw to avoid unnecessary reactivity on a component
+    requiredPerms: [Permission.APP_READ],
+  },
+  {
+    title: "Données",
+    icon: "ri-database-line",
+    tabId: "tab-data",
+    panelId: "panel-data",
+    component: markRaw(DataApplicationTab),
     requiredPerms: [Permission.APP_READ],
   },
   {
