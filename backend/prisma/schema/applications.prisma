@@ -58,8 +58,7 @@ model Application {
   /// Journaux de notifications de validation envoyées
   notificationLogs            NotificationLog[]
   /// Différents source de données associées à cette application
-  dataSources                 DataSource[]
-
+  dataApplications DataApplication[]
   /// Niveau de priorité pour les opérations de redémarrage
   priorityRestart priorityRestart?
   /// Score de qualité de la fiche de l' application

@@ -1,4 +1,5 @@
 import { PrismaClient, Roles } from "@prisma/client";
+import { faker } from "@faker-js/faker";
 import { ApplicationFaker } from "../tests/fakers/application.faker";
 import { UserFaker } from "../tests/fakers/user.faker";
 import { OrganizationFaker } from "../tests/fakers/organization.faker";
@@ -11,12 +12,11 @@ import { ComplianceFaker } from "../tests/fakers/compliance.faker";
 import { StatsFaker } from "../tests/fakers/stats.faker";
 import { BusinessDivisionFaker } from "tests/fakers/business-division.faker";
 import { LabelSourceFaker } from "tests/fakers/label-source.faker";
+import { DataDescriptionFaker } from "tests/fakers/data-description.faker";
+import { DataApplicationFaker } from "tests/fakers/data-application.faker";
+import { DataFamilyFaker } from "tests/fakers/data-family.faker";
+import { DataSensibilityFaker } from "tests/fakers/data-sensibility.faker";
 import { parseArgs } from "node:util";
-import { FamilyFaker } from "tests/fakers/family.faker";
-import { SensibilityFaker } from "tests/fakers/sensibility.faker";
-import { DataSourceTypeFaker } from "tests/fakers/data-source-type.faker";
-import { UpdateFrequencyFaker } from "tests/fakers/update-frequency.faker";
-import { DataSourceFaker } from "tests/fakers/data-source.faker";
 
 const prisma = new PrismaClient();
 
@@ -33,10 +33,6 @@ async function seed({
   hostingOptionsCount = 2,
   applicationsCount = 100,
   businessDivisionsCount = 50,
-  dataSourceTypesCount = 50,
-  sensibilitiesCount = 5,
-  familiesCount = 10,
-  updateFrequenciesCount = 5,
 } = {}) {
   // Create test users
   console.log("👤 Creating test users...");
@@ -95,34 +91,6 @@ async function seed({
     hostingOptions.push(await HostingOptionFaker.create());
   }
 
-  // Create data source types
-  console.log("🔐  Creating data source types...");
-  const dataSourceTypes = [];
-  for (let i = 0; i < dataSourceTypesCount; i++) {
-    dataSourceTypes.push(await DataSourceTypeFaker.create());
-  }
-
-  // Create data source sensibilities
-  console.log("🔐  Creating data source sensibilities...");
-  const sensibilities = [];
-  for (let i = 0; i < sensibilitiesCount; i++) {
-    sensibilities.push(await SensibilityFaker.create());
-  }
-
-  // Create data source families
-  console.log("📂  Creating data source families...");
-  const families = [];
-  for (let i = 0; i < familiesCount; i++) {
-    families.push(await FamilyFaker.create());
-  }
-
-  // Create data source update frequencies
-  console.log("⏱️  Creating data source update frequencies...");
-  const updateFrequencies = [];
-  for (let i = 0; i < updateFrequenciesCount; i++) {
-    updateFrequencies.push(await UpdateFrequencyFaker.create());
-  }
-
   // Create applications
   console.log("📱 Creating applications...");
   const applications = [];
@@ -133,6 +101,37 @@ async function seed({
   }
   const app1 = applications[0];
   const app2 = applications[1];
+
+  // Create data descriptions
+  console.log("📚 Creating data families and sensibilities...");
+  const dataFamilies = await DataFamilyFaker.createAll();
+  const dataSensibilities = await DataSensibilityFaker.createAll();
+
+  console.log("📚 Creating data descriptions...");
+  const dataDescriptions = [];
+
+  for (let i = 0; i < 50; i++) {
+    const family = faker.helpers.arrayElement(dataFamilies);
+    const dd = await DataDescriptionFaker.create({ familyId: family.id });
+    dataDescriptions.push(dd);
+  }
+
+  console.log("🔗 Creating data applications...");
+  for (const app of applications) {
+    const count = faker.number.int({ min: 2, max: 25 });
+    const randomData = DataDescriptionFaker.pickRandom(dataDescriptions, count);
+    const randomSensibility = faker.helpers.arrayElement(dataSensibilities);
+
+    for (const dd of randomData) {
+      await DataApplicationFaker.create({
+        applicationId: app.id,
+        dataDescriptionId: dd.id,
+        sensibilityId: faker.helpers.maybe(() => randomSensibility.id, {
+          probability: 0.8,
+        }),
+      });
+    }
+  }
 
   // Link hostings to applications
   console.log("🏗️  Linking hostings to applications...");
@@ -145,26 +144,6 @@ async function seed({
       user: adminUser,
     });
     hostingsCount += 1;
-  }
-
-  // Link data sources to applications
-  console.log("📊  Linking data sources to applications...");
-  let dataSourcesCount = 0;
-  for (const [index, app] of applications.entries()) {
-    const type = dataSourceTypes[index % dataSourceTypes.length];
-    const sensibility = sensibilities[index % sensibilities.length];
-    const family = families[index % families.length];
-    const updateFrequency = updateFrequencies[index % updateFrequencies.length];
-
-    await DataSourceFaker.create({
-      application: app,
-      type: type,
-      sensibility: sensibility,
-      family: family,
-      updateFrequency: updateFrequency,
-      user: adminUser,
-    });
-    dataSourcesCount += 1;
   }
 
   // Add technical debt info
@@ -259,10 +238,6 @@ function main() {
         hostingOptionsCount: 20,
         applicationsCount: 5000,
         businessDivisionsCount: 450,
-        dataSourceTypesCount: 50,
-        sensibilitiesCount: 5,
-        familiesCount: 50,
-        updateFrequenciesCount: 5,
       });
   }
 }

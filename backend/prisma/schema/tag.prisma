@@ -12,4 +12,5 @@ model Tag {
 
   /// Applications avec ce tag
   applications Application[]
+  dataDescriptions DataDescription[]
 }

@@ -116,6 +116,16 @@ const routes = [
   },
 
   {
+    name: routeNames.DATA_APPLICATION_DETAIL,
+    path: "/applications/:applicationId/data/:dataApplicationId",
+    component: () => import("@/components/data-application/DataApplicationDetail.vue"),
+    props: (route) => ({
+      applicationId: route.params.applicationId as string,
+      dataApplicationId: route.params.dataApplicationId as string,
+    }),
+    meta: { requiresAuth: true, title: "Détail de la donnée - Référentiel des applications" },
+  },
+  {
     path: "/:pathMatch(.*)*",
     name: routeNames.NOTFOUND,
     component: () => import("@/views/NotFoundPage.vue"),

@@ -1,0 +1,145 @@
+/// Famille de données, utilisée pour regrouper les descriptions de données.
+///
+/// @namespace DataCatalog
+model DataFamily {
+  /// Identifiant unique
+  id   String @id @default(uuid())
+  /// Chemin hiérarchique de la famille (ex: "Identité / Etat civil")
+  path String @db.VarChar(255)
+
+  dataDescriptions DataDescription[]
+}
+
+/// Niveau de sensibilité d'une donnée.
+/// Définit le label affiché et la couleur associée dans l'interface.
+///
+/// @namespace DataCatalog
+model DataSensibility {
+  /// Identifiant unique
+  id    String @id @default(uuid())
+  /// Libellé du niveau de sensibilité
+  label String @db.VarChar(255)
+  /// Couleur hexadécimale associée (ex: "#FF0000")
+  color String @db.VarChar(50)
+
+  dataApplications DataApplication[]
+}
+
+/// Description générique d'une donnée, indépendante d'une application.
+/// Peut être réutilisée dans plusieurs applications.
+///
+/// @namespace DataCatalog
+model DataDescription {
+  /// Identifiant unique
+  id          String  @id @default(uuid())
+  /// Nom de la donnée
+  name        String  @db.VarChar(255)
+  /// Description détaillée
+  description String? @db.Text
+  /// Identifiant de la famille de données
+  familyId    String?
+  /// URL vers la source officielle de la donnée
+  officialUrl String? @db.VarChar(255)
+
+  /// Famille de données parente
+  family           DataFamily?       @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  dataApplications DataApplication[]
+  metadatas        Metadata[]        @relation("DataDescriptionMetadata")
+  tags             Tag[]
+}
+
+/// Utilisation d'une donnée dans le contexte d'une application spécifique.
+/// Enrichit la description générique avec des informations propres à l'usage applicatif.
+///
+/// @namespace DataCatalog
+model DataApplication {
+  /// Identifiant unique
+  id                String               @id @default(uuid())
+  /// Identifiant de l'application concernée
+  applicationId     String
+  /// Identifiant de la description de donnée associée
+  dataDescriptionId String
+  /// Exemple de valeur de la donnée
+  example           String?              @db.Text
+  /// Statut d'exposition en open data
+  openDataStatus    OpenDataStatus?
+  /// Indique si cette donnée est une donnée de référence (source de vérité)
+  isReference       Boolean              @default(false)
+  /// Description de l'usage métier de la donnée
+  businessUsage     String?              @db.Text
+  /// Liste des URLs de documentation associées
+  documentationUrl  String[]
+  /// Durée de conservation de la donnée
+  conservation      String?              @db.VarChar(255)
+  /// Volume total estimé (nombre d'enregistrements)
+  volumetry         Int?
+  /// Volume mensuel estimé (nombre d'enregistrements par mois)
+  monthlyVolumetry  Int?
+  /// Fréquence de mise à jour de la donnée
+  updateFrequency   DataUpdateFrequency?
+  /// Identifiant du niveau de sensibilité
+  sensibilityId     String?
+
+  /// Application utilisant cette donnée
+  application     Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// Description générique de la donnée
+  dataDescription DataDescription  @relation(fields: [dataDescriptionId], references: [id], onDelete: Restrict)
+  /// Niveau de sensibilité de la donnée dans ce contexte
+  sensibility     DataSensibility? @relation(fields: [sensibilityId], references: [id], onDelete: SetNull)
+  metadatas       Metadata[]       @relation("DataApplicationMetadata")
+  /// Modes d'exposition de la donnée (API, fichier, etc.)
+  exposures       DataExposure[]
+}
+
+/// Mode d'exposition d'une donnée applicative (API REST, fichier, flux, etc.).
+///
+/// @namespace DataCatalog
+model DataExposure {
+  /// Identifiant unique
+  id                 String  @id @default(uuid())
+  /// Identifiant de l'utilisation applicative parente
+  applicationDataId  String
+  /// Type d'exposition (ex: API, Fichier, Flux)
+  type               String? @db.VarChar(255)
+  /// URL d'accès à la donnée
+  url                String? @db.Text
+  /// Point de terminaison technique
+  endpoint           String? @db.VarChar(255)
+  /// Format des données échangées (ex: JSON, CSV, XML)
+  format             String? @db.VarChar(255)
+  /// URL de la documentation Swagger/OpenAPI
+  swaggerUrl         String? @db.Text
+  /// Type d'authentification requis (ex: OAuth2, API Key)
+  authenticationType String? @db.VarChar(255)
+
+  /// Utilisation applicative à laquelle cette exposition est rattachée
+  dataApplication DataApplication @relation(fields: [applicationDataId], references: [id], onDelete: Cascade)
+}
+
+/// Fréquence de mise à jour d'une donnée applicative.
+///
+/// @namespace DataCatalog
+enum DataUpdateFrequency {
+  /// Mise à jour quotidienne
+  DAILY
+  /// Mise à jour hebdomadaire
+  WEEKLY
+  /// Mise à jour mensuelle
+  MONTHLY
+  /// Mise à jour annuelle
+  YEARLY
+  /// Mise à jour à la demande uniquement
+  ON_DEMAND
+}
+
+/// Statut d'exposition d'une donnée en open data.
+///
+/// @namespace DataCatalog
+enum OpenDataStatus {
+  /// Donnée exposée en open data
+  EXPOSED
+  /// Donnée non exposée en open data
+  NOT_EXPOSED
+  /// Donnée non exposable en open data
+  NOT_EXPOSABLE
+}
