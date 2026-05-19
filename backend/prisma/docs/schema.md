@@ -495,6 +495,7 @@ erDiagram
   String hostingId FK "nullable"
   String technicalDebtInfoId FK "nullable"
   String dataSourceId FK "nullable"
+  String rgaaComplianceId FK "nullable"
 }
 ```
 
@@ -519,6 +520,7 @@ Properties as follows:
 - `hostingId`:
 - `technicalDebtInfoId`:
 - `dataSourceId`:
+- `rgaaComplianceId`:
 
 ## Notifications
 

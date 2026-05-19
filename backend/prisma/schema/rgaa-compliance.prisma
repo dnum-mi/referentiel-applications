@@ -19,6 +19,8 @@ model RgaaCompliance {
   /// RGAA : Score d'accessibilité en pourcentage (0-100)
   score_percentage   Decimal?  @db.Decimal(5, 2)
 
+  metadatas Metadata[] @relation()
+
   @@unique([applicationId, service_url])
   @@index([applicationId])
 }

@@ -10,7 +10,9 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiConflictResponse,
   ApiCreatedResponse,
+  ApiExtraModels,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -20,13 +22,23 @@ import {
 import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { UserId } from "src/common/decorators/user-id.decorator";
 import {
   CreateRgaaComplianceDto,
   RgaaComplianceDto,
+  RgaaComplianceErrorResponseDto,
 } from "./dto/rgaa-compliance.dto";
 import { RgaaService } from "./rgaa.service";
 
+const RGAA_METADATA_FIELDS = {
+  audit_date: "date d'audit",
+  service_url: "URL du service",
+  accessibility_url: "URL de déclaration d'accessibilité",
+  score_percentage: "score d'accessibilité (%)",
+};
+
 @ApiTags("RGAA Compliances")
+@ApiExtraModels(RgaaComplianceErrorResponseDto)
 @UseGuards(PermissionGuard)
 @Controller("applications/:applicationId/rgaa-compliances")
 export class RgaaController {
@@ -55,12 +67,27 @@ export class RgaaController {
     description: "Conformité RGAA créée avec succès",
     type: RgaaComplianceDto,
   })
+  @ApiConflictResponse({
+    description: "Une conformité RGAA existe déjà pour cette application",
+    type: RgaaComplianceErrorResponseDto,
+  })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   async create(
+    @UserId() userId: string,
     @Param("applicationId") applicationId: string,
     @Body() dto: CreateRgaaComplianceDto,
   ) {
-    return this.rgaaService.create(applicationId, dto);
+    return this.rgaaService.createRgaa(applicationId, dto, {
+      applicationId,
+      triggerQualityUpdate: true,
+      metadata: {
+        userId,
+        gender: "de la conformité RGAA",
+        getColumn: () => dto.service_url,
+        entity: "rgaaComplianceId",
+        fields: RGAA_METADATA_FIELDS,
+      },
+    });
   }
 
   @Patch(":id")
@@ -77,10 +104,21 @@ export class RgaaController {
   @ApiParam({ name: "id", description: "ID de la conformité RGAA" })
   async update(
     @Param("applicationId") applicationId: string,
+    @UserId() userId: string,
     @Param("id") id: string,
     @Body() dto: CreateRgaaComplianceDto,
   ) {
-    return this.rgaaService.update(id, applicationId, dto);
+    return this.rgaaService.updateRgaa(id, applicationId, dto, {
+      applicationId,
+      triggerQualityUpdate: true,
+      metadata: {
+        userId,
+        gender: "de la conformité RGAA",
+        getColumn: () => dto.service_url,
+        entity: "rgaaComplianceId",
+        fields: RGAA_METADATA_FIELDS,
+      },
+    });
   }
 
   @Delete(":id")
@@ -95,9 +133,20 @@ export class RgaaController {
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiParam({ name: "id", description: "ID de la conformité RGAA" })
   async delete(
+    @UserId() userId: string,
     @Param("applicationId") applicationId: string,
     @Param("id") id: string,
   ) {
-    await this.rgaaService.delete(id, applicationId);
+    await this.rgaaService.deleteRgaa(id, applicationId, {
+      applicationId,
+      triggerQualityUpdate: true,
+      metadata: {
+        userId,
+        gender: "de la conformité RGAA",
+        getColumn: (entity) => entity.service_url,
+        entity: "rgaaComplianceId",
+        fields: RGAA_METADATA_FIELDS,
+      },
+    });
   }
 }

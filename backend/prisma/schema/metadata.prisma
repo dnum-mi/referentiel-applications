@@ -52,6 +52,10 @@ model Metadata {
   dataSourceId String?
   /// Source de donnée associée
   dataSource   DataSource? @relation("DataSourceMetadata", fields: [dataSourceId], references: [id])
+
+  rgaaComplianceId String?
+  /// Conformité RGAA associée
+  rgaaCompliance   RgaaCompliance? @relation(fields: [rgaaComplianceId], references: [id])
 }
 
 /// Type d'action de métadonnée
