@@ -4972,6 +4972,7 @@ components:
         status:
           $ref: "#/components/schemas/ApplicationStatus"
         priorityRestart:
+          nullable: true
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         currentStatus:
           nullable: true
