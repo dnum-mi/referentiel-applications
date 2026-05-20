@@ -54,11 +54,12 @@ export class ApplicationDto {
   @ApiProperty({
     enum: priorityRestart,
     required: false,
+    nullable: true,
     enumName: "ApplicationPriorityRestart",
   })
   @IsOptional()
   @IsEnum(priorityRestart)
-  priorityRestart?: priorityRestart;
+  priorityRestart?: priorityRestart | null;
 
   @IsNumber()
   quality: number | null;
