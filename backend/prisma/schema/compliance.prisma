@@ -8,9 +8,9 @@ model Compliance {
   /// Identifiant de l'application
   applicationId String      @unique
   /// Application à laquelle ces données de conformité appartiennent
-  application   Application @relation("ApplicationCompliance", fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// Entrées de métadonnées pour cet enregistrement de conformité
-  metadatas     Metadata[]  @relation("ComplianceMetadata")
+  metadatas     Metadata[]
 
   /// DIMA : Délai d'Indisponibilité Maximale Admissible en heures
   dima_duration_hours     Int?
@@ -52,7 +52,7 @@ model Compliance {
   /// Identifiant du RSSI (Responsable de la Sécurité des Systèmes d'Information) pour l'homologation
   homologation_rssi_id     String?
   /// RSSI (Responsable de la Sécurité des Systèmes d'Information) pour l'homologation
-  homologation_rssi        Actor?              @relation("ComplianceHomologationRSSI", fields: [homologation_rssi_id], references: [id])
+  homologation_rssi        Actor?              @relation(fields: [homologation_rssi_id], references: [id])
 
   /// DSFR : Si le Système de Design de l'État est implémenté
   dsfr_implemented Boolean?

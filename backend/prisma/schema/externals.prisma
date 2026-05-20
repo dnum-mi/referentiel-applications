@@ -13,9 +13,9 @@ model ExternalRessource {
   type          ExternalRessourceType
   applicationId String
   /// Application à laquelle cette ressource appartient
-  application   Application           @relation("ApplicationExternalsRessource", fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application           @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// Entrées de métadonnées pour cette ressource
-  metadatas     Metadata[]            @relation("ExternalRessourceMetadata")
+  metadatas     Metadata[]
 }
 
 /// Types de ressources externes

@@ -23,17 +23,17 @@ model Application {
   /// Statut actuel de l'application
   currentStatus     ApplicationStatus?  @relation(fields: [currentStatusId], references: [id], onDelete: SetNull)
   /// Entrées de métadonnées associées à cette application
-  metadatas         Metadata[]          @relation("ApplicationMetadatas")
+  metadatas         Metadata[]
   /// Acteurs - (personnes, entités) impliqués avec cette application
-  actors            Actor[]             @relation("ApplicationActors")
+  actors            Actor[]
   /// Informations de conformité pour cette application
-  compliance        Compliance?           @relation("ApplicationCompliance")
+  compliance        Compliance?
   /// Conformités RGAA (0 à N, une par site web)
   rgaaCompliances   RgaaCompliance[]
   /// Signalements pour cette application
-  reports           Report[]            @relation("ApplicationReport")
+  reports           Report[]
   /// Ressources externes liées à cette application
-  externalRessource ExternalRessource[] @relation("ApplicationExternalsRessource")
+  externalRessource ExternalRessource[]
   /// Configurations d'hébergement pour cette application
   hostings          Hosting[]
   /// Utilisateurs abonnés aux mises à jour de cette application
@@ -48,17 +48,17 @@ model Application {
   /// Relations où cette application est service de médiation
   relationsAsMediationService Relation[]          @relation("MediationService")
   /// Différents labels associés à cette application
-  labels                      Label[]             @relation("ApplicationLabels")
+  labels                      Label[]
   /// Tags pour la catégorisation
   tags                        Tag[]
   /// Consultations de l'application
   applicationViews            ApplicationView[]
   /// Informations sur la dette technique
-  technicalDebtInfo           TechnicalDebtInfo[] @relation("ApplicationTechnicalDebtInfo")
+  technicalDebtInfo           TechnicalDebtInfo[]
   /// Journaux de notifications de validation envoyées
   notificationLogs            NotificationLog[]
   /// Différents source de données associées à cette application
-  dataSources                 DataSource[]        @relation("ApplicationDataSources")
+  dataSources                 DataSource[]
 
   /// Niveau de priorité pour les opérations de redémarrage
   priorityRestart priorityRestart?

@@ -15,7 +15,7 @@ model Metadata {
 
   applicationId String?
   /// Application à laquelle cette métadonnée appartient
-  application   Application? @relation("ApplicationMetadatas", fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   createdById String
   /// Utilisateur qui a créé cette entrée de métadonnée
@@ -27,31 +27,31 @@ model Metadata {
 
   complianceId String?
   /// Enregistrement de conformité associé
-  compliance   Compliance? @relation("ComplianceMetadata", fields: [complianceId], references: [id])
+  compliance   Compliance? @relation(fields: [complianceId], references: [id])
 
   labelId String?
   /// Label associé
-  label   Label?  @relation("LabelMetadata", fields: [labelId], references: [id])
+  label   Label?  @relation(fields: [labelId], references: [id])
 
   actorId String?
   /// Acteur associé
-  actor   Actor?  @relation("ActorMetadata", fields: [actorId], references: [id])
+  actor   Actor?  @relation(fields: [actorId], references: [id])
 
   externalRessourceId String?
   /// Ressource externe associée
-  externalRessource   ExternalRessource? @relation("ExternalRessourceMetadata", fields: [externalRessourceId], references: [id])
+  externalRessource   ExternalRessource? @relation(fields: [externalRessourceId], references: [id])
 
   hostingId String?
   /// Hébergement associé
-  hosting   Hosting? @relation("HostingMetadata", fields: [hostingId], references: [id])
+  hosting   Hosting? @relation(fields: [hostingId], references: [id])
 
   technicalDebtInfoId String?
   /// Info de dette technique associée
-  technicalDebtInfo   TechnicalDebtInfo? @relation("TechnicalDebtInfoMetadata", fields: [technicalDebtInfoId], references: [id])
+  technicalDebtInfo   TechnicalDebtInfo? @relation(fields: [technicalDebtInfoId], references: [id])
 
   dataSourceId String?
   /// Source de donnée associée
-  dataSource   DataSource? @relation("DataSourceMetadata", fields: [dataSourceId], references: [id])
+  dataSource   DataSource? @relation(fields: [dataSourceId], references: [id])
 
   rgaaComplianceId String?
   /// Conformité RGAA associée

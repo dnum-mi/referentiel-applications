@@ -22,8 +22,8 @@ model Label {
   /// Système source qui a fourni ce label 
   labelSource   LabelSource? @relation(fields: [labelSourceId], references: [id], onDelete: Cascade)
   /// Entrées de métadonnées pour ce label 
-  metadatas     Metadata[]   @relation("LabelMetadata")
+  metadatas     Metadata[]
   applicationId String
   /// Application à laquelle ce label appartient 
-  application   Application  @relation("ApplicationLabels", fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 }
