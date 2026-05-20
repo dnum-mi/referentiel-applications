@@ -16,7 +16,7 @@ model User {
   /// Entrées de métadonnées où cet utilisateur est le propriétaire des données
   dataOwners                Metadata[]          @relation("MetadataDataOwnerBy")
   /// Signalements créés par cet utilisateur
-  reports                   Report[]            @relation("UserReport")
+  reports                   Report[]
   /// Groupement de permissions par defaut
   role                      Roles               @default(VISITOR)
   /// Tokens API qui se font passer pour cet utilisateur
@@ -33,8 +33,8 @@ model User {
   emailNotificationsEnabled Boolean             @default(true)
   /// Permissions supplémentaire (ancien capabilities) 
   additionalPermissions     Permission[]
-  userPermissionLog         UserPermissionLog[] @relation("UserPermissionLogUser")
-  userConnexionLog          UserConnexionLog[]  @relation("UserConnexionLogUser")
+  userPermissionLog         UserPermissionLog[]
+  userConnexionLog          UserConnexionLog[]
 }
 
 /// @namespace Roles
@@ -65,15 +65,15 @@ model Actor {
   /// id de l'application dont l'utilisateur est acteur
   applicationId  String?
   /// Application à laquelle cet acteur est associé
-  application    Application?  @relation("ApplicationActors", fields: [applicationId], references: [id], onDelete: Cascade)
+  application    Application?  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// id du type de cet acteur
   actorTypeId    String?
   /// Rôle/type de cet acteur
   actorType      ActorType?    @relation(fields: [actorTypeId], references: [id])
   /// Entrées de métadonnées pour cet acteur
-  metadatas      Metadata[]    @relation("ActorMetadata")
+  metadatas      Metadata[]
   /// Enregistrements de conformité
-  compliances    Compliance[]  @relation("ComplianceHomologationRSSI")
+  compliances    Compliance[]
   /// Indique si l'acteur est un groupe ou une personne physique
   isGroup         Boolean       @default(false)
 

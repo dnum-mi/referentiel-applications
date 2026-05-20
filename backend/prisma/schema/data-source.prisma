@@ -59,7 +59,7 @@ model DataSource {
 
   /// Lien vers l'application utilisant cette donnée.
   applicationId     String
-  application       Application      @relation("ApplicationDataSources", fields: [applicationId], references: [id], onDelete: Cascade)
+  application       Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// Lien vers la nature technique du support.
   typeId            String?
   type              DataSourceType?  @relation(fields: [typeId], references: [id])
@@ -74,5 +74,5 @@ model DataSource {
   family            Family?          @relation(fields: [familyId], references: [id])
 
   /// Tableau de métadonnées
-  metadatas Metadata[] @relation("DataSourceMetadata")
+  metadatas Metadata[]
 }

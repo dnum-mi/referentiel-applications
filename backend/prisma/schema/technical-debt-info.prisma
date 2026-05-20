@@ -7,9 +7,9 @@ model TechnicalDebtInfo {
   id            String      @id @default(uuid())
   applicationId String
   /// Application à laquelle cette évaluation appartient
-  application   Application @relation("ApplicationTechnicalDebtInfo", fields: [applicationId], references: [id], onDelete: Cascade)
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// Entrées de métadonnées pour cette évaluation
-  metadatas     Metadata[]  @relation("TechnicalDebtInfoMetadata")
+  metadatas     Metadata[]
 
   /// Score de maturité technique (0-1)
   technicalMaturity Decimal  @default(0) @db.Decimal(3, 2)
