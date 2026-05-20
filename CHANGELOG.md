@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.76.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.75.0...v1.76.0) (2026-05-20)
+
+
+### Features
+
+* :sparkles: replace random data with business data ([9a9246e](https://github.com/dnum-mi/referentiel-applications/commit/9a9246ec47a0c35c780d12e6560c1c91c4d87d7e))
+* add filtering for data sourcing name ([#1706](https://github.com/dnum-mi/referentiel-applications/issues/1706)) ([303a13c](https://github.com/dnum-mi/referentiel-applications/commit/303a13ca8c704ec4d78e602050b8580186224a1d))
+* add group actors ([#1721](https://github.com/dnum-mi/referentiel-applications/issues/1721)) ([28b3282](https://github.com/dnum-mi/referentiel-applications/commit/28b3282b44e80375859e11c12c4083e2b1b80339))
+* add quality summary for quality tabs ([#1717](https://github.com/dnum-mi/referentiel-applications/issues/1717)) ([846efe7](https://github.com/dnum-mi/referentiel-applications/commit/846efe7ab6b5307b181e303a8036f139de4901b3))
+
+
+### Bug Fixes
+
+* :bug: add RGPD compliance filter ([#1697](https://github.com/dnum-mi/referentiel-applications/issues/1697)) ([68be78f](https://github.com/dnum-mi/referentiel-applications/commit/68be78f49313e87abab4b4a00181b3738310fe3b))
+* :bug: update priorityRestart  to be nullable in DTO and Swagger documentation ([#1727](https://github.com/dnum-mi/referentiel-applications/issues/1727)) ([932f005](https://github.com/dnum-mi/referentiel-applications/commit/932f005192324fd69a3e6fa9063e512680b5086b))
+* add application id to checker permission in update application service ([#1710](https://github.com/dnum-mi/referentiel-applications/issues/1710)) ([500e1d2](https://github.com/dnum-mi/referentiel-applications/commit/500e1d2d5f02a3e7089db342eaa87aa1df10bcfd))
+* add trace for rgaa into metadata ([#1720](https://github.com/dnum-mi/referentiel-applications/issues/1720)) ([e653da8](https://github.com/dnum-mi/referentiel-applications/commit/e653da8b29a07e8fa7ebb286a22cd88328a59aca))
+* add unique constraint for log user connexion by day by user ([#1714](https://github.com/dnum-mi/referentiel-applications/issues/1714)) ([1ce8ffc](https://github.com/dnum-mi/referentiel-applications/commit/1ce8ffc0cab95675d0fa0e60bf5e8e4c7ace1681))
+
 ## [1.75.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.74.0...v1.75.0) (2026-04-30)
 
 
