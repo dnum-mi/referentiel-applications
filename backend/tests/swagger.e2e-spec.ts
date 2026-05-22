@@ -40,6 +40,7 @@ describe("Test Swagger documentation", () => {
     const pathsAllowedWithoutBody = [
       "/users/me/subscribe/{appId}",
       "/applications/{applicationId}/compliances/ecoindex/scan",
+      "/users/{id}/sync-organization-from-maia",
     ];
     for (const [path, pathObject] of Object.entries(openapiSpec.paths)) {
       for (const method of methods) {

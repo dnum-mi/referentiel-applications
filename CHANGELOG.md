@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.77.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.76.0...v1.77.0) (2026-05-22)
+
+
+### Features
+
+* :sparkles: add user organizations synchronization  from MAIA ([#1734](https://github.com/dnum-mi/referentiel-applications/issues/1734)) ([9ee3b5c](https://github.com/dnum-mi/referentiel-applications/commit/9ee3b5cca50e4752863698c26689f49d8274b191))
+
 ## [1.76.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.75.0...v1.76.0) (2026-05-20)
 
 

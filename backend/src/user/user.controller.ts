@@ -11,6 +11,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import {
+  ApiBody,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -25,6 +26,8 @@ import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserFilterDto } from "./dto/filters.dto";
+import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
+import { SyncOrganizationsResponseDto } from "./dto/sync-organizations-response.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
 import {
   Requestor,
@@ -102,6 +105,45 @@ export class UserController {
   })
   async unsubscribe(@User() user: UserEntity, @Param("appId") appId: string) {
     return this.userService.unsubscribe(user.id, appId);
+  }
+
+  @Post(":id/sync-organization-from-maia")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Synchroniser l'organisation d'un utilisateur depuis MAIA",
+    description:
+      "Recherche l'utilisateur dans MAIA à partir de son email, crée l'organisation si nécessaire, puis l'associe à l'utilisateur ciblé.",
+  })
+  @ApiParam({ name: "id", description: "ID de l'utilisateur" })
+  @ApiOkResponse({
+    description: "Organisation synchronisée avec succès",
+    type: UserWithPermissions,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
+  async syncOrganizationFromMaia(@Param("id") id: string) {
+    return this.userService.syncOrganizationFromMaia(id);
+  }
+
+  @Post("sync-organizations-from-maia")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Synchroniser les organisations depuis MAIA (batch)",
+    description:
+      "Lance une synchronisation des organisations utilisateurs depuis MAIA en tâche de fond.",
+  })
+  @ApiBody({ type: SyncOrganizationsDto, required: false })
+  @ApiOkResponse({
+    description: "Batch MAIA lancé en tâche de fond",
+    type: SyncOrganizationsResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  async syncOrganizationsFromMaia(@Body() body: SyncOrganizationsDto) {
+    return this.userService.startSyncOrganizationsFromMaiaInBackground(body);
   }
 
   @Patch(":id")
