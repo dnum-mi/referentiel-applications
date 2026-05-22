@@ -163,6 +163,7 @@ export const complianceFieldLabels: Record<string, string> = {
   ges: "Émissions GES (gCO2e)",
   water: "Consommation d'eau (cl)",
   target_url: "URL cible EcoIndex",
+  eco_index_target_url: "URL cible EcoIndex",
   last_calculated_at: "Dernier calcul",
 };
 
