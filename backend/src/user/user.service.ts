@@ -1,10 +1,12 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, Roles, User } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
+import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
 import { Requestor, UserEntity } from "./entities/user.entity";
+import { getOrganizationPathFromMaia } from "./utils/maia.tools";
 import { UserPermissionLogService } from "./user-permission-log.service";
 
 @Injectable()
@@ -15,7 +17,6 @@ export class UserService {
   ) {}
 
   async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
-    // Check if a user exists with the given email
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
       include: {
@@ -27,7 +28,7 @@ export class UserService {
     if (existingUser) {
       return existingUser;
     }
-    // If no user exists, create a new one
+
     const user = await this.prisma.user.create({
       data: {
         email,
@@ -38,6 +39,7 @@ export class UserService {
         followedApplications: true,
       },
     });
+
     await this.userPermissionLogService.log(user);
     return user;
   }
@@ -79,7 +81,7 @@ export class UserService {
         ...updateUserDto,
         additionalPermissions: [
           ...new Set(updateUserDto.additionalPermissions || []),
-        ], // Ensure additionalPermissions are unique]
+        ],
       },
     });
 
@@ -89,13 +91,13 @@ export class UserService {
 
   async updateOwnPreferences(
     id: string,
-    UpdateUserPreferencesDto: UpdateUserPreferencesDto,
+    updateUserPreferencesDto: UpdateUserPreferencesDto,
   ) {
     return this.prisma.user.update({
       where: { id },
       data: {
         emailNotificationsEnabled:
-          UpdateUserPreferencesDto.emailNotificationsEnabled,
+          updateUserPreferencesDto.emailNotificationsEnabled,
       },
     });
   }
@@ -155,5 +157,101 @@ export class UserService {
 
   getCurrentUser(requestor: UserEntity): UserEntity {
     return requestor;
+  }
+
+  async syncOrganizationFromMaia(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException("Utilisateur non trouvé");
+    }
+
+    const organizationPath = await getOrganizationPathFromMaia(user.email);
+
+    if (!organizationPath) {
+      throw new NotFoundException(
+        "Aucune organisation trouvée dans MAIA pour cet utilisateur.",
+      );
+    }
+
+    const { organization } =
+      await this.findOrCreateOrganizationFromPath(organizationPath);
+
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        organizationId: organization.id,
+      },
+    });
+  }
+
+  async syncOrganizationsFromMaia(dto: SyncOrganizationsDto): Promise<void> {
+    const onlyMissing = dto.onlyMissing ?? true;
+
+    const users = await this.prisma.user.findMany({
+      where: onlyMissing ? { organizationId: null } : undefined,
+      select: {
+        id: true,
+        email: true,
+      },
+      orderBy: { id: "asc" },
+    });
+
+    for (const user of users) {
+      const organizationPath = await getOrganizationPathFromMaia(user.email);
+
+      if (!organizationPath) {
+        continue;
+      }
+
+      const { organization } =
+        await this.findOrCreateOrganizationFromPath(organizationPath);
+
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { organizationId: organization.id },
+      });
+    }
+  }
+
+  startSyncOrganizationsFromMaiaInBackground(dto: SyncOrganizationsDto) {
+    const onlyMissing = dto.onlyMissing ?? true;
+
+    void this.syncOrganizationsFromMaia({ onlyMissing }).catch(() => undefined);
+
+    return {
+      status: "queued" as const,
+      message: "Tâche de synchronisation MAIA lancée.",
+    };
+  }
+
+  private async findOrCreateOrganizationFromPath(path: string) {
+    const existingOrganization = await this.prisma.organization.findFirst({
+      where: { path },
+      select: { id: true },
+    });
+
+    if (existingOrganization) {
+      return {
+        organization: existingOrganization,
+        created: false,
+      };
+    }
+
+    return {
+      organization: await this.prisma.organization.create({
+        data: {
+          path,
+        },
+        select: { id: true },
+      }),
+      created: true,
+    };
   }
 }

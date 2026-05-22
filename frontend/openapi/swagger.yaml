@@ -2195,6 +2195,58 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserWithPermissions"
       tags: *a11
+  /api/v2/users/{id}/sync-organization-from-maia:
+    post:
+      operationId: UserController_syncOrganizationFromMaia
+      summary: Synchroniser l'organisation d'un utilisateur depuis MAIA
+      description: Recherche l'utilisateur dans MAIA à partir de son email, crée
+        l'organisation si nécessaire, puis l'associe à l'utilisateur ciblé.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Organisation synchronisée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "201":
+          description: ""
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a11
+  /api/v2/users/sync-organizations-from-maia:
+    post:
+      operationId: UserController_syncOrganizationsFromMaia
+      summary: Synchroniser les organisations depuis MAIA (batch)
+      description: Lance une synchronisation des organisations utilisateurs depuis
+        MAIA en tâche de fond.
+      parameters: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncOrganizationsDto"
+      responses:
+        "200":
+          description: Batch MAIA lancé en tâche de fond
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncOrganizationsResponseDto"
+        "201":
+          description: ""
+        "403":
+          description: Accès refusé - Privilège admin requis
+      tags: *a11
   /api/v2/users/{id}:
     patch:
       operationId: UserController_update
@@ -5720,6 +5772,30 @@ components:
           type: boolean
           description: Indique si les notifications par email sont activées pour
             l'utilisateur
+    SyncOrganizationsDto:
+      type: object
+      properties:
+        onlyMissing:
+          type: boolean
+          default: true
+          description: "Si true, traite uniquement les utilisateurs sans organisation
+            (défaut: true)"
+    SyncOrganizationsResponseDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Statut de la tâche de synchronisation
+          example: queued
+          enum:
+            - queued
+        message:
+          type: string
+          description: Message descriptif
+          example: Tâche de synchronisation MAIA lancée.
+      required:
+        - status
+        - message
     UpdateUserDto:
       type: object
       properties:
