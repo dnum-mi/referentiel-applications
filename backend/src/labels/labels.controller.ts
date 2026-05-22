@@ -39,7 +39,7 @@ export class LabelsController {
   @ApiOperation({
     summary: "Créer un nouveau nom",
     description: `
-**Ce endpoint permet de créer un nom complet.**
+**Cet endpoint permet de créer un nom complet.**
 
 Vous devez fournir les informations suivantes :
 - **labelSourceId**: L'id de la source du nom (peut être vide).
@@ -81,7 +81,7 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Récupérer les noms alternatifs par ID d'application",
     description: `
-Ce endpoint permet de récupérer la liste de tous les noms alternatifs d'une application en fonction de son identifiant unique.
+Cet endpoint permet de récupérer la liste de tous les noms alternatifs d'une application en fonction de son identifiant unique.
 
 Le paramètre **applicationId** doit être fourni dans l'URL.
     `,
@@ -145,7 +145,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
   @RequiredPermissions([Permission.AppWrite])
   @ApiOperation({
     summary: "Supprimer un nom alternatif",
-    description: ` Ce endpoint permet de supprimer un nom alternatif existant. 
+    description: ` Cet endpoint permet de supprimer un nom alternatif existant. 
     Vous devez fournir l'identifiant du nom alternatif dans l'URL.
     `,
   })

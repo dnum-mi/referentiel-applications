@@ -62,7 +62,7 @@
             <div class="fr-tile__body">
               <img src="/assets/svg-stats.svg" alt="" />
               <h3 class="fr-tile__title">Amélioration de l'exploitabilité</h3>
-              <p class="fr-tile__desc fr-text--sm">mesurer les impactes d'incidents opérationnels.</p>
+              <p class="fr-tile__desc fr-text--sm">mesurer les impacts d'incidents opérationnels.</p>
             </div>
           </div>
         </div>
@@ -72,7 +72,7 @@
     <section class="fr-py-3w">
       <div class="fr-grid-row">
         <div class="fr-col">
-          <h2 data-testid="home-beta-title">Envie de devenir beta testeur ?</h2>
+          <h2 data-testid="home-beta-title">Envie de devenir bêta-testeur ?</h2>
         </div>
       </div>
       <div class="fr-grid-row">
@@ -84,7 +84,7 @@
           href="https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr"
           target="_blank"
           ><span class="fr-icon-mail-open-line fr-icon--sm fr-mr-1w"></span>
-          Nous Contacter sur Tchap
+          Nous contacter sur Tchap
         </a>
       </div>
     </section>

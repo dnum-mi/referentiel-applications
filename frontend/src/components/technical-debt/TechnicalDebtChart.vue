@@ -15,9 +15,9 @@ const { containerRef, svgRef } = useTechnicalDebtChart(props);
 
 <template>
   <div ref="containerRef" class="technical-debt-scatter">
-    <svg v-if="props.data.length" ref="svgRef" role="img" aria-label="Graphique de maturite TIME"></svg>
+    <svg v-if="props.data.length" ref="svgRef" role="img" aria-label="Graphique de maturité TIME"></svg>
     <p v-else class="fr-text--sm fr-text--italic fr-mt-2w" data-testid="technical-debt-empty">
-      Aucune donnee TIME disponible pour vos applications autorisees.
+      Aucune donnée TIME disponible pour vos applications autorisées.
     </p>
   </div>
 </template>

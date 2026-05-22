@@ -335,7 +335,7 @@ paths:
       summary: Créer une nouvelle application
       description: "
 
-        **Ce endpoint permet de créer une application complète.**
+        **Cet endpoint permet de créer une application complète.**
 
 
         Vous devez fournir les informations suivantes :
@@ -356,7 +356,7 @@ paths:
 
         \  - **plannedDecommissioningDate**: Date prévue de déclassement.
 
-        \  - **source**: La source du libelé.
+        \  - **source**: La source du libellé.
 
         \  - **value**: Le libellé alternatif.
 
@@ -1134,7 +1134,7 @@ paths:
       summary: Récupérer une application spécifique par ID
       description: "
 
-        Ce endpoint permet de récupérer les détails complets d'une application
+        Cet endpoint permet de récupérer les détails complets d'une application
         en fonction de son identifiant unique.
 
 
@@ -1158,7 +1158,7 @@ paths:
     patch:
       operationId: ApplicationController_update
       summary: Mettre à jour une application
-      description: " Ce endpoint permet de mettre à jour une application existante.\ 
+      description: " Cet endpoint permet de mettre à jour une application existante.\ 
 
         \    Vous devez fournir l'identifiant de l'application dans l'URL et les
         nouvelles données dans le corps de la requête. Les données de mise à
@@ -1225,7 +1225,7 @@ paths:
     get:
       operationId: ApplicationController_updateAllApplicationsQuality
       summary: Mettre à jour l'indice de qualité de toutes les applications
-      description: " Ce endpoint permet de mettre à jour l'indice de qualité des
+      description: " Cet endpoint permet de mettre à jour l'indice de qualité des
         applications existantes.
 
         \    Seulement accessible par les administrateurs.
@@ -1344,7 +1344,7 @@ paths:
       summary: Créer un nouveau tag.
       description: "
 
-        Ce endpoint permet de créer un tag.
+        Cet endpoint permet de créer un tag.
 
 
         Information requise :\ 
@@ -1952,7 +1952,7 @@ paths:
       summary: Créer une nouvelle organisation
       description: "
 
-        **Ce endpoint permet de créer une organisation complète**
+        **Cet endpoint permet de créer une organisation complète**
 
 
         Vous devez fournir les informations suivantes :
@@ -1975,7 +1975,7 @@ paths:
               $ref: "#/components/schemas/CreateOrganizationDto"
       responses:
         "201":
-          description: Organisation Créée avec succes
+          description: Organisation créée avec succès
           content:
             application/json:
               schema:
@@ -1985,7 +1985,7 @@ paths:
     get:
       operationId: OrganizationsController_findAll
       summary: Récupérer toutes les organisations
-      description: Ce endpoint permet de récupérer la liste de toutes les organisations.
+      description: Cet endpoint permet de récupérer la liste de toutes les organisations.
       parameters:
         - name: page
           required: false
@@ -2061,7 +2061,7 @@ paths:
     get:
       operationId: OrganizationsController_findOne
       summary: Récupérer une organisation spécifique par ID
-      description: Ce endpoint permet de récupérer les détails complets d'une
+      description: Cet endpoint permet de récupérer les détails complets d'une
         organisation en fonction de son identifiant unique.
       parameters:
         - name: id
@@ -2357,7 +2357,7 @@ paths:
       summary: Créer un nouvel acteur
       description: "
 
-        Ce endpoint permet de créer un acteur complet.
+        Cet endpoint permet de créer un acteur complet.
 
 
         Informations requises :\ 
@@ -2545,7 +2545,7 @@ paths:
       summary: Créer un nouveau type d’acteur
       description: "
 
-        **Ce endpoint permet de créer un type d’acteur complète**
+        **Cet endpoint permet de créer un type d'acteur complet**
 
 
         Vous devez fournir les informations suivantes :
@@ -2566,7 +2566,7 @@ paths:
               $ref: "#/components/schemas/CreateActorTypeDto"
       responses:
         "201":
-          description: type d’acteur créé avec succes
+          description: type d’acteur créé avec succès
           content:
             application/json:
               schema:
@@ -2576,7 +2576,7 @@ paths:
     get:
       operationId: ActorTypeController_findAll
       summary: Récupérer tous les types d’acteurs
-      description: Ce endpoint permet de récupérer la liste de tous les types
+      description: Cet endpoint permet de récupérer la liste de tous les types
         d’acteurs disponibles.
       parameters:
         - name: page
@@ -2689,7 +2689,7 @@ paths:
       summary: Mettre à jour un type d’acteur
       description: "
 
-        Ce endpoint permet de mettre à jour un type d’acteur existante
+        Cet endpoint permet de mettre à jour un type d'acteur existant
 
         Vous devez fournir l'identifiant du type d’acteur dans l'URL et les
         nouvelles données dans le corps de la requête
@@ -3118,7 +3118,7 @@ paths:
       summary: Créer un nouveau nom
       description: "
 
-        **Ce endpoint permet de créer un nom complet.**
+        **Cet endpoint permet de créer un nom complet.**
 
 
         Vous devez fournir les informations suivantes :
@@ -3154,7 +3154,7 @@ paths:
       summary: Récupérer les noms alternatifs par ID d'application
       description: "
 
-        Ce endpoint permet de récupérer la liste de tous les noms alternatifs
+        Cet endpoint permet de récupérer la liste de tous les noms alternatifs
         d'une application en fonction de son identifiant unique.
 
 
@@ -3211,7 +3211,7 @@ paths:
     delete:
       operationId: LabelsController_delete
       summary: Supprimer un nom alternatif
-      description: " Ce endpoint permet de supprimer un nom alternatif existant.\ 
+      description: " Cet endpoint permet de supprimer un nom alternatif existant.\ 
 
         \    Vous devez fournir l'identifiant du nom alternatif dans l'URL.
 
@@ -3237,7 +3237,8 @@ paths:
       summary: Créer une nouvelle source de libellés.
       description: "
 
-        Ce endpoint permet de créer une nouvelle source de libellés alternatifs.
+        Cet endpoint permet de créer une nouvelle source de libellés
+        alternatifs.
 
 
         Information requise :\ 

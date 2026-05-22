@@ -95,7 +95,7 @@ const baseNavItems = [
   { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
   { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
   { to: { name: routeNames.TIMEPAGE }, text: "Time" },
-  { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
+  { to: { name: routeNames.QUALITYPAGE }, text: "Qualité générale" },
   { to: { name: routeNames.REPORTS }, text: "Signalements" },
   { to: { name: routeNames.HISTORY }, text: "Modifications" },
 ];
@@ -122,7 +122,7 @@ const ecosystemLinks = computed(() => {
     },
     { label: "Code source", title: "Aller au code source de l'application", href: "http://github.com/dnum-mi/referentiel-applications" },
     {
-      label: "Api du référentiel",
+      label: "API du référentiel",
       title: "Aller à la documentation de l'API du référentiel",
       href: "/api/v2/swagger/",
     },

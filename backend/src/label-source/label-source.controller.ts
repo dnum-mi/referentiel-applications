@@ -42,7 +42,7 @@ export class LabelSourceController {
   @ApiOperation({
     summary: "Créer une nouvelle source de libellés.",
     description: `
-Ce endpoint permet de créer une nouvelle source de libellés alternatifs.
+Cet endpoint permet de créer une nouvelle source de libellés alternatifs.
 
 Information requise : 
 - **source** : nom de la source

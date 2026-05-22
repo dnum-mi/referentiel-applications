@@ -59,7 +59,7 @@ export class OrganizationsController {
   @ApiOperation({
     summary: "Créer une nouvelle organisation",
     description: `
-**Ce endpoint permet de créer une organisation complète**
+**Cet endpoint permet de créer une organisation complète**
 
 Vous devez fournir les informations suivantes :
 - **label**: Le libellé de l'organisation
@@ -70,7 +70,7 @@ Vous devez fournir les informations suivantes :
   })
   @ApiCreatedResponse({
     status: 201,
-    description: "Organisation Créée avec succes",
+    description: "Organisation créée avec succès",
     type: OrganizationDto,
   })
   public async create(
@@ -98,7 +98,7 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Récupérer une organisation spécifique par ID",
     description:
-      "Ce endpoint permet de récupérer les détails complets d'une organisation en fonction de son identifiant unique.",
+      "Cet endpoint permet de récupérer les détails complets d'une organisation en fonction de son identifiant unique.",
   })
   @ApiOkResponse({
     status: 200,
@@ -114,7 +114,7 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Récupérer toutes les organisations",
     description:
-      "Ce endpoint permet de récupérer la liste de toutes les organisations.",
+      "Cet endpoint permet de récupérer la liste de toutes les organisations.",
   })
   @ApiOkResponse({
     description: "Liste des organisations",

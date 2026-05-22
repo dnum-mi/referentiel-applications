@@ -56,7 +56,7 @@ export class ActorTypeController {
   @ApiOperation({
     summary: "Créer un nouveau type d’acteur",
     description: `
-**Ce endpoint permet de créer un type d’acteur complète**
+**Cet endpoint permet de créer un type d'acteur complet**
 
 Vous devez fournir les informations suivantes :
 - **code**: Le code du type d’acteur
@@ -66,7 +66,7 @@ Vous devez fournir les informations suivantes :
   })
   @HttpCode(201)
   @ApiCreatedResponse({
-    description: "type d’acteur créé avec succes",
+    description: "type d’acteur créé avec succès",
     type: ActorTypeDto,
   })
   public async create(@Body() CreateActorTypeDto: CreateActorTypeDto) {
@@ -139,7 +139,7 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Récupérer tous les types d’acteurs",
     description:
-      "Ce endpoint permet de récupérer la liste de tous les types d’acteurs disponibles.",
+      "Cet endpoint permet de récupérer la liste de tous les types d’acteurs disponibles.",
   })
   @ApiOkResponse({
     description: "Liste les types d’acteurs",
@@ -162,7 +162,7 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Mettre à jour un type d’acteur",
     description: `
-Ce endpoint permet de mettre à jour un type d’acteur existante
+Cet endpoint permet de mettre à jour un type d'acteur existant
 Vous devez fournir l'identifiant du type d’acteur dans l'URL et les nouvelles données dans le corps de la requête
 Les données de mise à jour doivent correspondre aux champs
     `,

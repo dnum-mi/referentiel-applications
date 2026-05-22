@@ -66,7 +66,7 @@ export class ApplicationController {
   @ApiOperation({
     summary: "Créer une nouvelle application",
     description: `
-**Ce endpoint permet de créer une application complète.**
+**Cet endpoint permet de créer une application complète.**
 
 Vous devez fournir les informations suivantes :
 - **label**: Le libellé de l'application.
@@ -77,7 +77,7 @@ Vous devez fournir les informations suivantes :
 - **tags**: Des tags pour catégoriser l'application.
   - **firstProductionDate**: Date de première mise en production.
   - **plannedDecommissioningDate**: Date prévue de déclassement.
-  - **source**: La source du libelé.
+  - **source**: La source du libellé.
   - **value**: Le libellé alternatif.
 - **compliances**: La liste des conformités associées avec :
   - Champs spécifiques selon le type de conformité (DIMA, PDMA, HOMOLOGATION, RGAA, DSFR, RGPD).
@@ -232,7 +232,7 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Récupérer une application spécifique par ID",
     description: `
-Ce endpoint permet de récupérer les détails complets d'une application en fonction de son identifiant unique.
+Cet endpoint permet de récupérer les détails complets d'une application en fonction de son identifiant unique.
 
 Le paramètre **id** doit être fourni dans l'URL.
     `,
@@ -269,7 +269,7 @@ Le paramètre **id** doit être fourni dans l'URL.
   @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Mettre à jour l'indice de qualité de toutes les applications",
-    description: ` Ce endpoint permet de mettre à jour l'indice de qualité des applications existantes.
+    description: ` Cet endpoint permet de mettre à jour l'indice de qualité des applications existantes.
     Seulement accessible par les administrateurs.
     `,
   })
@@ -293,7 +293,7 @@ Le paramètre **id** doit être fourni dans l'URL.
   @RequiredPermissions([Permission.AppWrite, Permission.AppWritePriority])
   @ApiOperation({
     summary: "Mettre à jour une application",
-    description: ` Ce endpoint permet de mettre à jour une application existante. 
+    description: ` Cet endpoint permet de mettre à jour une application existante. 
     Vous devez fournir l'identifiant de l'application dans l'URL et les nouvelles données dans le corps de la requête. Les données de mise à jour doivent correspondre aux champs.
     `,
   })

@@ -55,6 +55,6 @@ enum ReportStatus {
   in_pending
   /// En cours de traitement
   in_progress
-  /// Résolue
+  /// Résolu
   done
 }

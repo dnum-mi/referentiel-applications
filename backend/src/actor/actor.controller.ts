@@ -68,7 +68,7 @@ export class ApplicationActorsController {
   @ApiOperation({
     summary: "Créer un nouvel acteur",
     description: `
-Ce endpoint permet de créer un acteur complet.
+Cet endpoint permet de créer un acteur complet.
 
 Informations requises : 
 - **email** : Email de l'acteur

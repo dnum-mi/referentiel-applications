@@ -43,7 +43,7 @@ export class TagsController {
   @ApiOperation({
     summary: "Créer un nouveau tag.",
     description: `
-Ce endpoint permet de créer un tag.
+Cet endpoint permet de créer un tag.
 
 Information requise : 
 - **name** : nom unique du tag
