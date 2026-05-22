@@ -2,6 +2,7 @@
 import api from "@/api/index";
 import type { PaginatedUserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
+import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
@@ -51,8 +52,10 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
 }));
 
 const isLoading = ref(false);
+const isBatchLoading = ref(false);
 const errorKeySet = ref<Set<ErrorKey>>(new Set());
 const searchQuery = ref("");
+const toaster = useToasterStore();
 
 const sortColumn = ref<(typeof headers)[number]["key"]>("email");
 const isSortDescending = ref<boolean>(false);
@@ -84,6 +87,19 @@ async function fetchUsers() {
     }
   } finally {
     isLoading.value = false;
+  }
+}
+
+async function runMaiaBatch() {
+  isBatchLoading.value = true;
+  try {
+    await api.userControllerSyncOrganizationsFromMaia({ body: { onlyMissing: true } });
+    toaster.addSuccessMessage("Batch MAIA lancé en tâche de fond.");
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors du lancement du batch MAIA.");
+    console.error(error);
+  } finally {
+    isBatchLoading.value = false;
   }
 }
 
@@ -131,6 +147,16 @@ onMounted(fetchUsers);
 <template>
   <div>
     <h1 class="fr-h1" data-testid="admin-users-title">Gestion des utilisateurs</h1>
+
+    <div class="fr-mb-2w">
+      <DsfrButton
+        :label="isBatchLoading ? 'Batch MAIA en cours...' : 'Synchroniser les organisations MAIA (sans organisation)'"
+        :disabled="isBatchLoading"
+        :icon="{ name: 'ri-refresh-line', animation: isBatchLoading ? 'spin' : undefined }"
+        data-testid="admin-users-maia-batch-btn"
+        @click="runMaiaBatch"
+      />
+    </div>
 
     <div class="fr-mb-4w">
       <DsfrSearchBar

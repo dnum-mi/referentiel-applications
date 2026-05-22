@@ -18,6 +18,7 @@ const toaster = useToasterStore();
 
 const isEditModalOpen = ref(false);
 const isSaving = ref(false);
+const isSyncingFromMaia = ref(false);
 const editingUserRole = ref<RolesType>(Roles.VISITOR);
 const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
@@ -62,6 +63,25 @@ async function saveUser() {
   }
 }
 
+async function syncFromMaia() {
+  isSyncingFromMaia.value = true;
+  try {
+    const response = await api.userControllerSyncOrganizationFromMaia({ path: { id: props.user.id } });
+    if (response.response.ok && response.data) {
+      toaster.addSuccessMessage("Organisation synchronisée depuis MAIA");
+      emit("userUpdated", response.data);
+    } else {
+      toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
+      console.error(response.error);
+    }
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
+    console.error(error);
+  } finally {
+    isSyncingFromMaia.value = false;
+  }
+}
+
 const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
   {
     label: "Créer une application",
@@ -88,15 +108,27 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
 
 <template>
   <div>
-    <DsfrButton
-      label="Modifier"
-      size="sm"
-      secondary
-      data-testid="admin-user-edit-btn"
-      title="Modifier les permissions de l'utilisateur"
-      aria-label="Modifier les permissions de l'utilisateur"
-      @click="openEditModal"
-    />
+    <div class="fr-btns-group fr-btns-group--inline fr-btns-group--sm">
+      <DsfrButton
+        :label="isSyncingFromMaia ? 'MAIA...' : 'MAIA'"
+        size="sm"
+        tertiary
+        :disabled="isSyncingFromMaia"
+        data-testid="admin-user-sync-maia-btn"
+        title="Synchroniser l'organisation depuis MAIA"
+        aria-label="Synchroniser l'organisation depuis MAIA"
+        @click="syncFromMaia"
+      />
+      <DsfrButton
+        label="Modifier"
+        size="sm"
+        secondary
+        data-testid="admin-user-edit-btn"
+        title="Modifier les permissions de l'utilisateur"
+        aria-label="Modifier les permissions de l'utilisateur"
+        @click="openEditModal"
+      />
+    </div>
 
     <DsfrModal :opened="isEditModalOpen" title="Modifier l'utilisateur" data-testid="admin-edit-user-modal" @close="closeEditModal">
       <p><strong>Utilisateur :</strong> {{ user.email }}</p>
