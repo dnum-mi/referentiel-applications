@@ -15,6 +15,10 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  label: {
+    type: String,
+    default: null,
+  },
   initialOrganization: {
     type: Object as PropType<OrganizationDto | null>,
     default: null,
@@ -42,13 +46,9 @@ const selectedOrganizationId = ref(props.modelValue);
 
 // Computed label for the search input with asterisk if required
 const searchLabel = computed(() => {
+  if (!!props.label) return props.label;
   return props.required ? "Organisation *" : "Organisation";
 });
-
-// Set initial search query to show selected organization name when editing
-if (props.initialOrganization) {
-  searchQuery.value = props.initialOrganization.path;
-}
 
 // Computed options for the select
 const selectOptions = computed(() => {

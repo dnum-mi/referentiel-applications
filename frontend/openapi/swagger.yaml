@@ -1606,60 +1606,84 @@ paths:
         "404":
           description: Business Division non trouvé
       tags: *a7
-  /api/v2/applications/{applicationId}/data-source:
+  /api/v2/data-catalog/descriptions:
     post:
-      operationId: DataSourceController_create
-      summary: Créer une nouvelle source de donnée
-      description: "
-
-        **Ce endpoint permet de créer une source de donnée complète liée à une
-        application.**
-
-
-        Informations traitées :
-
-        - **Nom** : Nom d'usage.
-
-        - **Description** : Description détaillée.
-
-        - **IsReference** : Indicateur \"Source Maître\". S'il est à true, cette
-        application est la source officielle, unique et faisant foi pour cette
-        donnée au sein du ministère.
-
-        - **Exemple** : Échantillon de données.
-
-        - **Conservation** : Durée d'Utilité Administrative (DUA).
-
-
-        - **DatabaseName** : Nom de l'instance de la base de données hôte.
-
-        - **DatabaseTableName** : Nom technique de l'entité contenant les
-        données.
-
-        - **FieldCount** : Nombre total de colonnes ou de champs que contient la
-        source de donnée.
-
-        - **Fields** : Liste textuelle des champs/colonnes.
-
-        - **Volumetry** : Représente le nombre actuel d'enregistrements présents
-        dans la source.
-
-        - **MonthlyVolumetry** : Estimation du nombre de nouveaux
-        enregistrements ajoutés chaque mois.
-
-
-        - **TypeId** : Lien vers la nature technique du support.
-
-        - **SensibilityId** : Lien vers le niveau de protection et de criticité.
-
-        - **FamilyId** : Lien vers la classification thématique.
-
-        - **UpdateFrequencyId** : Lien vers le rythme de rafraîchissement des
-        données.
-
-        \    "
+      operationId: DataCatalogController_createDescription
+      summary: Créer une data description
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDataDescriptionDto"
+      responses:
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataDescriptionDto"
+      tags: &a8
+        - Data Catalog
+      security: &a9
+        - bearer: []
+    get:
+      operationId: DataCatalogController_findAllDescriptions
+      summary: Lister les data descriptions
       parameters:
-        - name: applicationId
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DataDescriptionDto"
+      tags: *a8
+      security: *a9
+  /api/v2/data-catalog/descriptions/{id}:
+    patch:
+      operationId: DataCatalogController_updateDescription
+      summary: Mettre à jour une data description
+      parameters:
+        - name: id
           required: true
           in: path
           schema:
@@ -1669,28 +1693,58 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDataSourceDto"
+              $ref: "#/components/schemas/CreateDataDescriptionDto"
       responses:
-        "201":
-          description: Source de donnée créée avec succès.
+        "200":
+          description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DataSourceDto"
-      tags: &a8
-        - Data Sources
+                $ref: "#/components/schemas/DataDescriptionDto"
+      tags: *a8
+      security: *a9
+    delete:
+      operationId: DataCatalogController_deleteDescription
+      summary: Supprimer une data description
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Data description deleted successfully
+      tags: *a8
+      security: *a9
+  /api/v2/data-catalog/applications/{applicationId}/{dataApplicationId}:
     get:
-      operationId: DataSourceController_findAll
-      summary: Récupérer les sources de donnée par ID d'application
-      description: "
-
-        Ce endpoint permet de récupérer la liste de tous les sources de donnée
-        d'une application en fonction de son identifiant unique.
-
-
-        Le paramètre **applicationId** doit être fourni dans l'URL.
-
-        \    "
+      operationId: DataCatalogController_findOneApplicationData
+      summary: Détail d'une donnée dans une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: dataApplicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataApplicationDto"
+      tags: *a8
+      security: *a9
+  /api/v2/data-catalog/applications/{applicationId}:
+    get:
+      operationId: DataCatalogController_findByApplication
+      summary: Lister les données d'une application
       parameters:
         - name: applicationId
           required: true
@@ -1734,66 +1788,13 @@ paths:
             type: string
       responses:
         "200":
-          description: Liste des sources de donnée
+          description: ""
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PaginatedDataSourceDto"
+                $ref: "#/components/schemas/PaginatedDataApplicationDto"
       tags: *a8
-  /api/v2/applications/{applicationId}/data-source/{id}:
-    patch:
-      operationId: DataSourceController_update
-      summary: Mettre à jour une source de donnée existante
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          description: ID de la source de donnée
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateDataSourceDto"
-      responses:
-        "200":
-          description: Source de donnée mise à jour
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DataSourceDto"
-      tags: *a8
-    delete:
-      operationId: DataSourceController_delete
-      summary: Supprimer une source de donnée
-      description: " Ce endpoint permet de supprimer une source de donnée existante.\ 
-
-        \    Vous devez fournir l'identifiant de la source de donnée dans l'URL.
-
-        \    "
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Source de donnée supprimée avec succès
-      tags: *a8
+      security: *a9
   /api/v2/applications/{applicationId}/relations:
     post:
       operationId: RelationController_create
@@ -1819,7 +1820,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RelationDto"
-      tags: &a9
+      tags: &a10
         - relation
     get:
       operationId: RelationController_findAll
@@ -1841,7 +1842,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RelationDto"
-      tags: *a9
+      tags: *a10
   /api/v2/applications/{applicationId}/relations/graph:
     get:
       operationId: RelationController_getRelationGraph
@@ -1869,7 +1870,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RelationGraphDto"
-      tags: *a9
+      tags: *a10
   /api/v2/applications/{applicationId}/relations/{id}:
     get:
       operationId: RelationController_findOne
@@ -1894,7 +1895,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RelationDto"
-      tags: *a9
+      tags: *a10
     patch:
       operationId: RelationController_update
       summary: Mettre à jour une relation
@@ -1924,7 +1925,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RelationDto"
-      tags: *a9
+      tags: *a10
     delete:
       operationId: RelationController_delete
       summary: Supprimer une relation
@@ -1944,7 +1945,7 @@ paths:
       responses:
         "204":
           description: Relation supprimée avec succès
-      tags: *a9
+      tags: *a10
   /api/v2/organizations:
     post:
       operationId: OrganizationsController_create
@@ -1979,7 +1980,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: &a10
+      tags: &a11
         - organizations
     get:
       operationId: OrganizationsController_findAll
@@ -2055,7 +2056,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedOrganizationDto"
-      tags: *a10
+      tags: *a11
   /api/v2/organizations/{id}:
     get:
       operationId: OrganizationsController_findOne
@@ -2077,7 +2078,7 @@ paths:
                 $ref: "#/components/schemas/OrganizationDto"
         "404":
           description: Organisation non trouvée
-      tags: *a10
+      tags: *a11
     patch:
       operationId: OrganizationsController_update
       summary: Mettre à jour une organisation
@@ -2100,7 +2101,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: *a10
+      tags: *a11
     delete:
       operationId: OrganizationsController_delete
       summary: Supprimer une organisation
@@ -2113,63 +2114,6 @@ paths:
       responses:
         "204":
           description: Organisation supprimée
-      tags: *a10
-  /api/v2/organization-maia-references:
-    post:
-      operationId: OrganizationMaiaReferencesController_create
-      summary: Créer une référence MAIA vers une organisation
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateOrganizationMaiaReferenceDto"
-      responses:
-        "201":
-          description: Référence créée
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OrganizationMaiaReferenceDto"
-        "404":
-          description: Organisation non trouvée
-        "409":
-          description: La référence MAIA existe déjà
-      tags: &a11
-        - organization-maia-references
-    get:
-      operationId: OrganizationMaiaReferencesController_findAll
-      summary: Lister les références MAIA
-      parameters:
-        - name: organizationId
-          required: false
-          in: query
-          description: Filtrer par organisation locale
-          schema:
-            example: f09ed26a-8415-476a-be3b-ada479291c34
-            type: string
-      responses:
-        "200":
-          description: Liste des références MAIA
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedOrganizationMaiaReferenceDto"
-      tags: *a11
-  /api/v2/organization-maia-references/{id}:
-    delete:
-      operationId: OrganizationMaiaReferencesController_remove
-      summary: Supprimer une référence MAIA
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Référence supprimée
       tags: *a11
   /api/v2/users/me:
     get:
@@ -4662,35 +4606,6 @@ components:
       required:
         - id
         - label
-    OrganizationMaiaReferenceDto:
-      type: object
-      properties:
-        id:
-          type: string
-          example: f09ed26a-8415-476a-be3b-ada479291c34
-          description: Identifiant de la référence
-        maiaRef:
-          type: string
-          example: MI/DNUM/SDID
-          description: Référence MAIA
-        organizationId:
-          type: string
-          example: f09ed26a-8415-476a-be3b-ada479291c34
-          description: Organisation locale liée
-        createdAt:
-          format: date-time
-          type: string
-          description: Date de création
-        updatedAt:
-          format: date-time
-          type: string
-          description: Date de mise à jour
-      required:
-        - id
-        - maiaRef
-        - organizationId
-        - createdAt
-        - updatedAt
     OrganizationDto:
       type: object
       properties:
@@ -4722,11 +4637,6 @@ components:
           nullable: true
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de la direction métier associée
-        maiaReferences:
-          description: Références MAIA associées à l'organisation
-          type: array
-          items:
-            $ref: "#/components/schemas/OrganizationMaiaReferenceDto"
       required:
         - id
         - path
@@ -4790,6 +4700,10 @@ components:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/OrganizationDto"
+        scopeOrganization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
         type:
           $ref: "#/components/schemas/UserType"
         emailNotificationsEnabled:
@@ -4812,6 +4726,9 @@ components:
         organizationId:
           type: string
           nullable: true
+        scopeOrganizationId:
+          type: string
+          nullable: true
       required:
         - role
         - type
@@ -4819,6 +4736,7 @@ components:
         - id
         - email
         - organizationId
+        - scopeOrganizationId
     MetadataDto:
       type: object
       properties:
@@ -5404,160 +5322,179 @@ components:
       required:
         - results
         - total
-    CreateDataSourceDto:
+    CreateDataDescriptionDto:
       type: object
       properties:
         name:
           type: string
-          maxLength: 255
-          example: Base de données RH
-          description: Nom d'usage de la source de donnée
         description:
           type: string
-          example: Contient l'ensemble des dossiers agents du ministère.
-          description: Description détaillée de la source
-        isReference:
-          type: boolean
-          description: Indicateur Source Maître (officielle et faisant foi)
-          default: false
-        example:
-          type: string
-          example: ID_AGENT; NOM; PRENOM
-          description: Échantillon de données ou format des champs
-        conservation:
-          type: string
-          maxLength: 100
-          example: 10 ans
-          description: Durée d'Utilité Administrative (DUA)
-        databaseName:
-          type: string
-          maxLength: 255
-          example: DB_PROD_RH
-          description: Nom de l'instance de la base de données hôte
-        databaseTableName:
-          type: string
-          maxLength: 255
-          example: t_agents_details
-          description: Nom technique de la table ou du fichier
-        fieldCount:
-          type: number
-          example: 40
-          description: Nombre total de colonnes/champs
-        fields:
-          type: string
-          description: Liste textuelle des champs/colonnes
-        volumetry:
-          type: number
-          example: 150000
-          description: Nombre actuel d'enregistrements
-        monthlyVolumetry:
-          type: number
-          example: 500
-          description: Nouveaux enregistrements par mois
-        typeId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du type de support (DataSourceType)
-        sensibilityId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du niveau de sensibilité
         familyId:
           type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la famille thématique
-        updateFrequencyId:
+        officialUrl:
           type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la fréquence de mise à jour
+        tagIds:
+          type: array
+          items:
+            type: string
       required:
         - name
-    DataSourceDto:
+    DataFamilyDto:
       type: object
       properties:
-        name:
-          type: string
-          maxLength: 255
-          example: Base de données RH
-          description: Nom d'usage de la source de donnée
-        description:
-          type: string
-          example: Contient l'ensemble des dossiers agents du ministère.
-          description: Description détaillée de la source
-        isReference:
-          type: boolean
-          description: Indicateur Source Maître (officielle et faisant foi)
-          default: false
-        example:
-          type: string
-          example: ID_AGENT; NOM; PRENOM
-          description: Échantillon de données ou format des champs
-        conservation:
-          type: string
-          maxLength: 100
-          example: 10 ans
-          description: Durée d'Utilité Administrative (DUA)
-        databaseName:
-          type: string
-          maxLength: 255
-          example: DB_PROD_RH
-          description: Nom de l'instance de la base de données hôte
-        databaseTableName:
-          type: string
-          maxLength: 255
-          example: t_agents_details
-          description: Nom technique de la table ou du fichier
-        fieldCount:
-          type: number
-          example: 40
-          description: Nombre total de colonnes/champs
-        fields:
-          type: string
-          description: Liste textuelle des champs/colonnes
-        volumetry:
-          type: number
-          example: 150000
-          description: Nombre actuel d'enregistrements
-        monthlyVolumetry:
-          type: number
-          example: 500
-          description: Nouveaux enregistrements par mois
-        typeId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du type de support (DataSourceType)
-        sensibilityId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du niveau de sensibilité
-        familyId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la famille thématique
-        updateFrequencyId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la fréquence de mise à jour
         id:
           type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la source de donnée
+        path:
+          type: string
+      required:
+        - id
+        - path
+    ApplicationRefDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+      required:
+        - id
+        - label
+    DataApplicationRefDto:
+      type: object
+      properties:
+        id:
+          type: string
         applicationId:
           type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de l'application liée
+        application:
+          $ref: "#/components/schemas/ApplicationRefDto"
       required:
-        - name
         - id
         - applicationId
-    PaginatedDataSourceDto:
+        - application
+    DataDescriptionDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        officialUrl:
+          type: string
+        family:
+          $ref: "#/components/schemas/DataFamilyDto"
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagDto"
+        dataApplications:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataApplicationRefDto"
+      required:
+        - id
+        - name
+    DataSensibilityDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        color:
+          type: string
+      required:
+        - id
+        - label
+        - color
+    OpenDataStatus:
+      type: string
+      enum:
+        - EXPOSED
+        - NOT_EXPOSED
+        - NOT_EXPOSABLE
+    UpdateFrequency:
+      type: string
+      enum:
+        - DAILY
+        - WEEKLY
+        - MONTHLY
+        - YEARLY
+        - ON_DEMAND
+    DataExposureDto:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        endpoint:
+          type: string
+        url:
+          type: string
+        format:
+          type: string
+        swaggerUrl:
+          type: string
+        authenticationType:
+          type: string
+      required:
+        - id
+    DataApplicationDto:
+      type: object
+      properties:
+        id:
+          type: string
+        applicationId:
+          type: string
+        dataDescriptionId:
+          type: string
+        dataDescription:
+          $ref: "#/components/schemas/DataDescriptionDto"
+        sensibility:
+          $ref: "#/components/schemas/DataSensibilityDto"
+        example:
+          type: string
+        openDataStatus:
+          $ref: "#/components/schemas/OpenDataStatus"
+        isReference:
+          type: boolean
+        businessUsage:
+          type: string
+        documentationUrl:
+          type: array
+          items:
+            type: string
+        volumetry:
+          type: number
+          minimum: 0
+        monthlyVolumetry:
+          type: number
+          minimum: 0
+        updateFrequency:
+          $ref: "#/components/schemas/UpdateFrequency"
+        conservation:
+          type: string
+          maxLength: 255
+        exposures:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataExposureDto"
+      required:
+        - id
+        - applicationId
+        - dataDescriptionId
+        - dataDescription
+    PaginatedDataApplicationDto:
       type: object
       properties:
         results:
           description: Array of results
           type: array
           items:
-            $ref: "#/components/schemas/DataSourceDto"
+            $ref: "#/components/schemas/DataApplicationDto"
         total:
           type: number
           description: Total number of items
@@ -5565,72 +5502,6 @@ components:
       required:
         - results
         - total
-    UpdateDataSourceDto:
-      type: object
-      properties:
-        name:
-          type: string
-          maxLength: 255
-          example: Base de données RH
-          description: Nom d'usage de la source de donnée
-        description:
-          type: string
-          example: Contient l'ensemble des dossiers agents du ministère.
-          description: Description détaillée de la source
-        isReference:
-          type: boolean
-          description: Indicateur Source Maître (officielle et faisant foi)
-          default: false
-        example:
-          type: string
-          example: ID_AGENT; NOM; PRENOM
-          description: Échantillon de données ou format des champs
-        conservation:
-          type: string
-          maxLength: 100
-          example: 10 ans
-          description: Durée d'Utilité Administrative (DUA)
-        databaseName:
-          type: string
-          maxLength: 255
-          example: DB_PROD_RH
-          description: Nom de l'instance de la base de données hôte
-        databaseTableName:
-          type: string
-          maxLength: 255
-          example: t_agents_details
-          description: Nom technique de la table ou du fichier
-        fieldCount:
-          type: number
-          example: 40
-          description: Nombre total de colonnes/champs
-        fields:
-          type: string
-          description: Liste textuelle des champs/colonnes
-        volumetry:
-          type: number
-          example: 150000
-          description: Nombre actuel d'enregistrements
-        monthlyVolumetry:
-          type: number
-          example: 500
-          description: Nouveaux enregistrements par mois
-        typeId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du type de support (DataSourceType)
-        sensibilityId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID du niveau de sensibilité
-        familyId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la famille thématique
-        updateFrequencyId:
-          type: string
-          example: 5708d232-8338-4abf-8f38-8370acc89497
-          description: ID de la fréquence de mise à jour
     relationType:
       type: string
       enum:
@@ -5814,41 +5685,16 @@ components:
           type: string
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
-    CreateOrganizationMaiaReferenceDto:
-      type: object
-      properties:
-        maiaRef:
-          type: string
-          example: MI/DNUM/SDID
-          description: Référence MAIA à associer
-        organizationId:
-          type: string
-          example: f09ed26a-8415-476a-be3b-ada479291c34
-          description: Identifiant de l'organisation locale cible
-      required:
-        - maiaRef
-        - organizationId
-    PaginatedOrganizationMaiaReferenceDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/OrganizationMaiaReferenceDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     UserWithPermissions:
       type: object
       properties:
         role:
           $ref: "#/components/schemas/Roles"
         organization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        scopeOrganization:
           nullable: true
           allOf:
             - $ref: "#/components/schemas/OrganizationDto"
@@ -5878,6 +5724,9 @@ components:
         organizationId:
           type: string
           nullable: true
+        scopeOrganizationId:
+          type: string
+          nullable: true
       required:
         - role
         - type
@@ -5885,6 +5734,7 @@ components:
         - id
         - email
         - organizationId
+        - scopeOrganizationId
     UpdateUserPreferencesDto:
       type: object
       properties:
@@ -5916,6 +5766,16 @@ components:
       required:
         - status
         - message
+    ScopePermissionsErrorDto:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Scope permissions denied
+          description: Impossible de modifier un utilisateur en dehors de son scope
+            d'organisation.
+      required:
+        - message
     UpdateUserDto:
       type: object
       properties:
@@ -5929,8 +5789,16 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Permission"
+        scopeOrganization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        scopeOrganizationId:
+          type: string
+          nullable: true
       required:
         - additionalPermissions
+        - scopeOrganizationId
     PaginatedUserWithPermissions:
       type: object
       properties:

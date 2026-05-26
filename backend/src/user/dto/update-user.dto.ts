@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
+import { OrganizationDto } from "src/organizations/dto/organizations.dto";
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -37,6 +38,14 @@ export class UpdateUserDto {
   })
   @IsArray()
   additionalPermissions?: (keyof typeof Permission)[];
+
+  @IsString()
+  @IsOptional()
+  scopeOrganizationId: string | null;
+
+  @ApiProperty({ type: () => OrganizationDto, required: false })
+  @IsOptional()
+  scopeOrganization?: OrganizationDto | null;
 }
 
 export class UpdateUserPreferencesDto {

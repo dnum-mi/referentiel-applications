@@ -8,6 +8,7 @@ import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
 import { Requestor, UserEntity } from "./entities/user.entity";
 import { getOrganizationPathFromMaia } from "./utils/maia.tools";
+import { ScopedPermissionService } from "./scope-permission/scoped-permission.service";
 import { UserPermissionLogService } from "./user-permission-log.service";
 
 @Injectable()
@@ -16,6 +17,7 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly userPermissionLogService: UserPermissionLogService,
     private readonly organizationMaiaReferencesService: OrganizationMaiaReferencesService,
+    private readonly scopedPermissionService: ScopedPermissionService,
   ) {}
 
   async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
@@ -24,6 +26,7 @@ export class UserService {
       include: {
         organization: true,
         followedApplications: true,
+        scopeOrganization: true,
       },
     });
 
@@ -39,6 +42,7 @@ export class UserService {
       include: {
         organization: true,
         followedApplications: true,
+        scopeOrganization: true,
       },
     });
 
@@ -57,6 +61,7 @@ export class UserService {
       include: {
         organization: true,
         followedApplications: true,
+        scopeOrganization: true,
       },
     });
   }
@@ -72,15 +77,24 @@ export class UserService {
       include: {
         organization: true,
         followedApplications: true,
+        scopeOrganization: true,
       },
     });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto, requestor: Requestor) {
+    await this.scopedPermissionService.assertCanUpdate(
+      id,
+      updateUserDto,
+      requestor,
+    );
+
     const user = await this.prisma.user.update({
       where: { id },
       data: {
-        ...updateUserDto,
+        role: updateUserDto.role,
+        organizationId: updateUserDto.organizationId,
+        scopeOrganizationId: updateUserDto.scopeOrganizationId,
         additionalPermissions: [
           ...new Set(updateUserDto.additionalPermissions || []),
         ],
@@ -150,6 +164,7 @@ export class UserService {
       where,
       include: {
         organization: true,
+        scopeOrganization: true,
       },
       orderBy,
       page: filters.page,

@@ -749,6 +749,7 @@ erDiagram
   String id PK
   String(255) email UK
   String organizationId FK "nullable"
+  String scopeOrganizationId FK "nullable"
   Roles role
   UserType type
   Boolean emailNotificationsEnabled
@@ -836,6 +837,7 @@ Properties as follows:
 - `id`: Identifiant unique
 - `email`: Adresse email de l'utilisateur
 - `organizationId`: Id de l'organisation à laquelle l'utilisateur appartient
+- `scopeOrganizationId`: Id de l'organisation de scope de l'utilisateur (pour les permissions basées sur le scope organisationnel)
 - `role`: Groupement de permissions par defaut
 - `type`: Type de compte utilisateur (humain ou bot)
 - `emailNotificationsEnabled`: Si les notifications par email sont activées

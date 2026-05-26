@@ -13,6 +13,7 @@ import {
 import {
   ApiBody,
   ApiCreatedResponse,
+  ApiExtraModels,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -29,6 +30,7 @@ import { UserFilterDto } from "./dto/filters.dto";
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
 import { SyncOrganizationsResponseDto } from "./dto/sync-organizations-response.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
+import { ScopePermissionsErrorDto } from "./dto/user.error.dto";
 import {
   Requestor,
   UserEntity,
@@ -36,6 +38,7 @@ import {
 } from "./entities/user.entity";
 import { UserPermissionsInterceptor } from "./user-permissions.interceptor";
 import { UserService } from "./user.service";
+import { RgaaComplianceErrorResponseDto } from "src/rgaa/dto/rgaa-compliance.dto";
 
 @ApiTags("users")
 @Controller("/users")
@@ -162,6 +165,11 @@ export class UserController {
     description: "Accès refusé - Privilège admin requis",
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
+  @ApiForbiddenResponse({
+    description: "Une conformité RGAA existe déjà pour cette application",
+    type: RgaaComplianceErrorResponseDto,
+  })
+  @ApiExtraModels(ScopePermissionsErrorDto)
   async update(
     @Param("id") id: string,
     @Body() updateUserDto: UpdateUserDto,

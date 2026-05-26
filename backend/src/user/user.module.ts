@@ -7,6 +7,7 @@ import { UserController } from "./user.controller";
 import { UserService } from "./user.service";
 import { UserPermissionLogService } from "./user-permission-log.service";
 import { UserConnexionLogService } from "./user-connexion-log.service";
+import { ScopedPermissionService } from "./scope-permission/scoped-permission.service";
 
 @Module({
   imports: [PrismaModule, CommonModule, OrganizationMaiaReferencesModule],
@@ -16,6 +17,7 @@ import { UserConnexionLogService } from "./user-connexion-log.service";
     LoggerService,
     UserPermissionLogService,
     UserConnexionLogService,
+    ScopedPermissionService,
   ],
   exports: [UserService, UserConnexionLogService],
 })

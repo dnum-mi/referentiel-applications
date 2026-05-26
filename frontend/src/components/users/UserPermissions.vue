@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { UserWithPermissions } from "@/client";
-import { useUserStore } from "@/stores/userStore";
 import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import { computed } from "vue";
 
@@ -9,6 +8,7 @@ const user = toRef(props, "user");
 
 const userPermissions = computed(() => user.value.permissions ?? []);
 const userAdditionalPermissions = computed(() => user.value.additionalPermissions ?? []);
+const scopePermission = computed(() => user.value.scopeOrganization?.path ?? "Tout");
 </script>
 
 <template>
@@ -19,7 +19,7 @@ const userAdditionalPermissions = computed(() => user.value.additionalPermission
         {{ RolesWording[user.role] }}
       </span>
     </div>
-    <UserPermissionList :permissions="userPermissions" label="Permissions accordées par le rôle" />
+    <UserPermissionList :permissions="userPermissions" :label="`Permissions accordées par le rôle sur ${scopePermission}`" />
     <UserPermissionList :permissions="userAdditionalPermissions" label="Permissions supplémentaires" />
   </div>
 </template>
