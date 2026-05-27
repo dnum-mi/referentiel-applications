@@ -64,7 +64,7 @@ Ce projet est un référentiel centralisé des applications logicielles du minis
 4. **Suivre l'architecture modulaire NestJS** : chaque domaine métier a son propre module (`applications`, `compliance`, `hostings`, `report`, `actor`, etc.).
 5. **Ne jamais exposer de secret ou credential** dans le code ou les commits.
 6. **Valider les types** : le projet utilise TypeScript strict — les DTOs et entités doivent être typés.
-7. **Tester avant de soumettre** : `pnpm test` doit passer avant toute PR.
+7. **Tester avant de soumettre** : `docker compose exec backend pnpm test` doit passer avant toute PR.
 8. **Formater le code** avant de committer : `pnpm run format`.
 9. **Respecter le score de qualité** : toute fiche application doit tendre vers un score de qualité élevé (champ `quality` de l'entité `Application`).
 10. **Réponses en français** — le projet et sa documentation sont en français.

@@ -58,5 +58,5 @@ export type ServiceOptions<T> = {
   triggerQualityUpdate?: boolean;
   metadata?: MetadataConfig<T>;
   include?: Record<string, boolean | object>;
-  existingEntity?: T;
+  existingEntity?: T; // Used to skip duplicate findOne call during update
 };

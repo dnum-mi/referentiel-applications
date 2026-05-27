@@ -74,7 +74,7 @@ describe("HostingOptions", () => {
     const hostingOption = await HostingOptionFaker.create();
 
     const response = await request(app().getHttpServer())
-      .get(`/hosting-options?site=${hostingOption.site}`)
+      .get(`/hosting-options?site=${hostingOption.site}&pageSize=0`)
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
@@ -89,7 +89,7 @@ describe("HostingOptions", () => {
     const hostingOption = await HostingOptionFaker.create();
 
     const response = await request(app().getHttpServer())
-      .get(`/hosting-options?platform=${hostingOption.platform}`)
+      .get(`/hosting-options?platform=${hostingOption.platform}&pageSize=0`)
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
@@ -104,7 +104,7 @@ describe("HostingOptions", () => {
     const hostingOption = await HostingOptionFaker.create();
 
     const response = await request(app().getHttpServer())
-      .get(`/hosting-options?provider=${hostingOption.provider}`)
+      .get(`/hosting-options?provider=${hostingOption.provider}&pageSize=0`)
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 

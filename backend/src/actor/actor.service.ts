@@ -1,5 +1,9 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { Actor, Prisma } from "@prisma/client";
+import { Injectable, Logger } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+
+type ActorWithRelations = Prisma.ActorGetPayload<{
+  include: { actorType: true; organization: true; application: true };
+}>;
 import { BaseService } from "src/common/base.service";
 import { EmailService } from "src/email/email.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -14,57 +18,57 @@ import { PaginatedResponseDto } from "src/common/dto";
 
 @Injectable()
 export class ActorService {
-  private readonly baseService: BaseService<Actor, Prisma.ActorDelegate>;
+  private readonly baseService: BaseService<
+    ActorWithRelations,
+    Prisma.ActorDelegate
+  >;
+  private readonly actorInclude = {
+    actorType: true,
+    organization: true,
+    application: true,
+  };
 
   constructor(
     private readonly applicationService: ApplicationService,
-    private readonly metadataService: MetadatasService,
+    metadataService: MetadatasService,
     private readonly emailService: EmailService,
     private readonly prisma: PrismaService,
   ) {
-    this.baseService = new BaseService<Actor, Prisma.ActorDelegate>(
-      prisma.actor,
-      prisma,
-      metadataService,
-      applicationService,
-    );
+    this.baseService = new BaseService<
+      ActorWithRelations,
+      Prisma.ActorDelegate
+    >(prisma.actor, prisma, metadataService, applicationService);
   }
 
-  public async create(createActor: CreateActorDto, requestorId: string) {
-    const { organizationId, applicationId, actorTypeId, ...rest } = createActor;
+  public async create(
+    createActor: CreateActorDto,
+    applicationId: string,
+    requestorId: string,
+  ) {
+    const { organizationId, actorTypeId, ...rest } = createActor;
 
-    const createdActor = await this.prisma.actor.create({
-      data: {
+    const createdActor = await this.baseService.create(
+      {
         ...rest,
         organizationId: organizationId ?? null,
-        applicationId: applicationId ?? null,
+        applicationId,
         actorTypeId,
       },
-      include: {
-        actorType: true,
-        organization: true,
+      {
+        applicationId,
+        include: this.actorInclude,
+        metadata: {
+          userId: requestorId,
+          gender: "de l'acteur",
+          getColumn: (entity) => {
+            const actorInformation = entity.email || entity.organization?.path;
+            return entity.isGroup
+              ? `groupe ${entity.organization?.path}`
+              : `${entity.actorType?.code} : ${actorInformation}`;
+          },
+          entity: "actorId",
+        },
       },
-    });
-
-    const actorInformation =
-      createdActor.email.length > 0
-        ? createdActor.email
-        : createdActor.organization.path;
-    const title = createdActor.isGroup
-      ? `du groupe ${createdActor.organization.path}`
-      : `de l'acteur ${createdActor.actorType?.code} : ${actorInformation}`;
-
-    await this.metadataService.createMetadata({
-      applicationId: createActor.applicationId,
-      createdById: requestorId,
-      entity: "actorId",
-      entityId: createdActor.id,
-      title,
-      type: "add",
-    });
-
-    await this.applicationService.updateApplicationQuality(
-      createdActor.applicationId,
     );
 
     await this.sendActorNotificationIfEnabled(createdActor, "created");
@@ -77,24 +81,12 @@ export class ActorService {
   }
 
   public async findOne(id: string) {
-    const actor = await this.prisma.actor.findUnique({
-      where: { id },
-      include: {
-        organization: true,
-        application: true,
-        actorType: true,
-      },
-    });
-
-    if (!actor) {
-      throw new NotFoundException(`Acteur non trouvé pour l'ID ${id}`);
-    }
-    return actor;
+    return this.baseService.findOne(id, this.actorInclude);
   }
 
   public async findAll(
     filters?: ActorFiltersDto,
-  ): Promise<PaginatedResponseDto<Actor>> {
+  ): Promise<PaginatedResponseDto<ActorWithRelations>> {
     return this.baseService.findAll({
       where: filters?.applicationId
         ? { applicationId: filters.applicationId }
@@ -104,60 +96,48 @@ export class ActorService {
     });
   }
 
-  public async update(params: {
-    where: Prisma.ActorWhereUniqueInput;
-    data: UpdateActorDto;
-    requestorId: string;
-  }): Promise<Actor> {
-    const { where, data, requestorId } = params;
+  public async update(
+    id: string,
+    data: UpdateActorDto,
+    applicationId: string,
+    requestorId: string,
+  ): Promise<ActorWithRelations> {
+    const oldActor = await this.baseService.findOne(id, this.actorInclude);
 
-    let oldActor = await this.findOne(where.id);
+    const { organizationId, actorTypeId, ...rest } = data;
 
-    const { organizationId, applicationId, actorTypeId, ...rest } = data;
-
-    const updatedActor = await this.prisma.actor.update({
-      where,
-      data: {
+    const updatedActor = await this.baseService.update(
+      id,
+      {
         ...rest,
         ...(organizationId !== undefined && {
           organizationId: organizationId || null,
         }),
-        ...(applicationId !== undefined && {
-          applicationId: applicationId || null,
-        }),
         ...(actorTypeId !== undefined && { actorTypeId }),
       },
-      include: {
-        organization: true,
-        application: true,
-        actorType: true,
+      {
+        existingEntity: oldActor,
+        applicationId,
+        include: this.actorInclude,
+        metadata: {
+          userId: requestorId,
+          gender: "de l'acteur",
+          getColumn: (entity) =>
+            entity.isGroup
+              ? `groupe d'acteur ${entity.organization?.path}`
+              : `${entity.actorType?.code}`,
+          entity: "actorId",
+          fields: {
+            lastname: "nom",
+            firstname: "prénom",
+            email: "email",
+            isGroup: "groupe",
+            "organization.sigle": "organisation",
+            "actorType.label": "rôle",
+          },
+        },
       },
-    });
-
-    await this.applicationService.updateApplicationQuality(
-      updatedActor.applicationId,
     );
-    const title = updatedActor.isGroup
-      ? `du groupe d'acteur ${updatedActor.organization.path}`
-      : `de l'acteur ${oldActor.actorType?.code}`;
-
-    await this.metadataService.createMetadata({
-      applicationId: updatedActor.applicationId,
-      createdById: requestorId,
-      title,
-      entity: "actorId",
-      entityId: updatedActor.id,
-      fields: {
-        lastname: "nom",
-        firstname: "prénom",
-        email: "email",
-        isGroup: "groupe",
-        "organization.sigle": "organisation",
-        "actorType.label": "rôle",
-      },
-      oldData: oldActor,
-      newData: updatedActor,
-    });
 
     const changedFields = oldActor
       ? this.getChangedFieldsHtml(oldActor, updatedActor)
@@ -215,24 +195,20 @@ export class ActorService {
     return changes.length > 0 ? changes.join("") : "";
   }
 
-  public async delete(id: string, requestorId: string) {
-    const actor = await this.findOne(id);
-    const title = actor.isGroup
-      ? `du groupe d'acteur ${actor.organization.path}`
-      : `de l'acteur ${actor.actorType?.code} : ${actor.email}`;
-
-    await this.metadataService.createMetadata({
-      applicationId: actor.applicationId,
-      createdById: requestorId,
-      entity: "actorId",
-      entityId: actor.id,
-      title,
-      type: "delete",
+  public async delete(id: string, applicationId: string, requestorId: string) {
+    return this.baseService.delete(id, {
+      applicationId,
+      include: this.actorInclude,
+      metadata: {
+        userId: requestorId,
+        gender: "de l'acteur",
+        getColumn: (entity) =>
+          entity.isGroup
+            ? `groupe d'acteur ${entity.organization?.path}`
+            : `${entity.actorType?.code} : ${entity.email}`,
+        entity: "actorId",
+      },
     });
-
-    await this.applicationService.updateApplicationQuality(actor.applicationId);
-
-    return this.prisma.actor.delete({ where: { id } });
   }
 
   private async sendActorNotificationIfEnabled(

@@ -98,7 +98,6 @@ export class ApplicationCompliancesController {
       createComplianceDto,
       {
         applicationId,
-        triggerQualityUpdate: true,
         metadata: {
           userId,
           gender: "de la conformité",
@@ -142,7 +141,6 @@ export class ApplicationCompliancesController {
       updateComplianceDto,
       {
         applicationId,
-        triggerQualityUpdate: true,
         metadata: {
           userId,
           gender: "de la conformité",

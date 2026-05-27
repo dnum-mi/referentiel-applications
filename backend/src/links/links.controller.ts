@@ -51,24 +51,7 @@ export class ApplicationLinksController {
     @Body() createLinkDto: CreateLinkDto,
     @Param("applicationId") applicationId: string,
   ) {
-    return await this.service.create(
-      {
-        ...createLinkDto,
-        application: {
-          connect: { id: applicationId },
-        },
-      },
-      {
-        applicationId,
-        triggerQualityUpdate: true,
-        metadata: {
-          userId,
-          gender: "du lien",
-          getColumn: (entity) => entity.link,
-          entity: "externalRessourceId",
-        },
-      },
-    );
+    return this.service.createLink(applicationId, createLinkDto, userId);
   }
 
   @Get()
@@ -101,21 +84,7 @@ export class ApplicationLinksController {
     @Param("id") id: string,
     @Body() updateLinkDto: UpdateLinkDto,
   ) {
-    return this.service.update(id, updateLinkDto, {
-      applicationId,
-      triggerQualityUpdate: true,
-      metadata: {
-        userId,
-        gender: "du lien",
-        getColumn: (entity) => entity.link,
-        entity: "externalRessourceId",
-        fields: {
-          link: "lien",
-          type: "type",
-          description: "description",
-        },
-      },
-    });
+    return this.service.updateLink(id, applicationId, updateLinkDto, userId);
   }
 
   @Delete(":id")
@@ -130,15 +99,6 @@ export class ApplicationLinksController {
     @Param("applicationId") applicationId: string,
     @Param("id") id: string,
   ) {
-    return this.service.delete(id, {
-      applicationId,
-      triggerQualityUpdate: true,
-      metadata: {
-        userId,
-        gender: "du lien",
-        getColumn: (entity) => entity.link,
-        entity: "externalRessourceId",
-      },
-    });
+    return this.service.deleteLink(id, applicationId, userId);
   }
 }

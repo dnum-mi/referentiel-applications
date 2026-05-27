@@ -79,7 +79,6 @@ export class RgaaController {
   ) {
     return this.rgaaService.createRgaa(applicationId, dto, {
       applicationId,
-      triggerQualityUpdate: true,
       metadata: {
         userId,
         gender: "de la conformité RGAA",
@@ -110,7 +109,6 @@ export class RgaaController {
   ) {
     return this.rgaaService.updateRgaa(id, applicationId, dto, {
       applicationId,
-      triggerQualityUpdate: true,
       metadata: {
         userId,
         gender: "de la conformité RGAA",
@@ -139,7 +137,6 @@ export class RgaaController {
   ) {
     await this.rgaaService.deleteRgaa(id, applicationId, {
       applicationId,
-      triggerQualityUpdate: true,
       metadata: {
         userId,
         gender: "de la conformité RGAA",

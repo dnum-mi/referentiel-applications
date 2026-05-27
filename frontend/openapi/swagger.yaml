@@ -2565,16 +2565,16 @@ paths:
       operationId: ApplicationActorsController_delete
       summary: Supprimer un acteur
       parameters:
-        - name: id
-          required: true
-          in: path
-          description: ID de l'acteur
-          schema:
-            type: string
         - name: applicationId
           required: true
           in: path
           description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de l'acteur
           schema:
             type: string
       responses:

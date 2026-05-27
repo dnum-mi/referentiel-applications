@@ -84,6 +84,7 @@ Informations requises :
     type: ActorDto,
   })
   public create(
+    @Param("applicationId") applicationId: string,
     @Body() createActorDto: CreateActorDto,
     @UserId() userId: string,
   ) {
@@ -92,7 +93,7 @@ Informations requises :
       userId,
       action: "create",
     });
-    return this.actorService.create(createActorDto, userId);
+    return this.actorService.create(createActorDto, applicationId, userId);
   }
 
   @Get(":id")
@@ -147,11 +148,7 @@ Informations requises :
       action: "patch",
     });
 
-    return this.actorService.update({
-      where: { id },
-      data: { ...actorToUpdate, applicationId },
-      requestorId: userId,
-    });
+    return this.actorService.update(id, actorToUpdate, applicationId, userId);
   }
 
   @Delete(":id")
@@ -167,6 +164,7 @@ Informations requises :
   })
   public async delete(
     @UserId() userId: string,
+    @Param("applicationId") applicationId: string,
     @Param("id") id: string,
   ): Promise<Actor> {
     Logger.log({
@@ -175,6 +173,6 @@ Informations requises :
       action: "delete",
     });
 
-    return this.actorService.delete(id, userId);
+    return this.actorService.delete(id, applicationId, userId);
   }
 }
