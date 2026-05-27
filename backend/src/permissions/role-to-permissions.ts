@@ -14,6 +14,7 @@ const WRITE_PERMISSIONS = new Set([
   ...Array.from(READ_PERMISSIONS),
   Permission.CreateApplication,
   Permission.CreateGlobalReport,
+  Permission.ReportManage,
   Permission.OrganizationManage,
   Permission.ActorTypeDelete,
   Permission.ActorTypeManage,
@@ -56,7 +57,6 @@ const WRITE_APP_PERMISSIONS = new Set([
   Permission.RelationWrite,
   Permission.LinkWrite,
   Permission.AppWritePriority,
-  Permission.ReportManage,
 ]);
 const ADMIN_APP_PERMISSIONS = new Set([...Array.from(WRITE_APP_PERMISSIONS)]);
 
