@@ -302,6 +302,65 @@ export class EmailService {
     }
   }
 
+  async sendUserOrganizationChangedNotification({
+    to,
+    userEmail,
+    oldOrganization,
+    newOrganization,
+  }: {
+    to: string;
+    userEmail: string;
+    oldOrganization: string | null;
+    newOrganization: string | null;
+  }): Promise<void> {
+    if (!this.enabled) {
+      this.logger.log(
+        `Email sending disabled. Would have sent organization change notification to ${to}`,
+      );
+      return;
+    }
+
+    if (!to) {
+      this.logger.warn(
+        "Cannot send organization change notification: recipient address is empty",
+      );
+      return;
+    }
+
+    const subject = "Votre organisation a été modifiée";
+
+    const html = this.templateService.render("user-organization-changed", {
+      title: subject,
+      headerTitle: "Référentiel des Applications",
+      userEmail,
+      oldOrganization: oldOrganization ?? "Aucune",
+      newOrganization: newOrganization ?? "Aucune",
+    });
+
+    const text = this.templateService.htmlToText(html);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to,
+        subject,
+        text,
+        html,
+      });
+      this.logger.log(
+        `Organization change notification sent successfully to ${to}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send organization change notification to ${to}:`,
+        error,
+      );
+      this.logger.warn(
+        `Email delivery failed for ${to} but was ignored due to configuration.`,
+      );
+    }
+  }
+
   async sendSignalementUpdateEmail({
     recipientEmail,
     description,

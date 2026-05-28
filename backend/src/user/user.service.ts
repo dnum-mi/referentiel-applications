@@ -10,6 +10,8 @@ import { Requestor, UserEntity } from "./entities/user.entity";
 import { getOrganizationPathFromMaia } from "./utils/maia.tools";
 import { ScopedPermissionService } from "./scope-permission/scoped-permission.service";
 import { UserPermissionLogService } from "./user-permission-log.service";
+import { LoggerService } from "src/logger/logger.service";
+import { EmailService } from "src/email/email.service";
 
 @Injectable()
 export class UserService {
@@ -18,6 +20,8 @@ export class UserService {
     private readonly userPermissionLogService: UserPermissionLogService,
     private readonly organizationMaiaReferencesService: OrganizationMaiaReferencesService,
     private readonly scopedPermissionService: ScopedPermissionService,
+    private readonly logger: LoggerService,
+    private readonly emailService: EmailService,
   ) {}
 
   async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
@@ -89,6 +93,15 @@ export class UserService {
       requestor,
     );
 
+    this.logger.log(
+      `[AdminPanel] Début mise à jour utilisateur ${id} par ${requestor.id} - changes: ${JSON.stringify({ role: updateUserDto.role, organizationId: updateUserDto.organizationId, scopeOrganizationId: updateUserDto.scopeOrganizationId, additionalPermissions: updateUserDto.additionalPermissions })}`,
+    );
+
+    const previousUser = await this.prisma.user.findUnique({
+      where: { id },
+      include: { organization: true },
+    });
+
     const user = await this.prisma.user.update({
       where: { id },
       data: {
@@ -99,9 +112,28 @@ export class UserService {
           ...new Set(updateUserDto.additionalPermissions || []),
         ],
       },
+      include: { organization: true },
     });
 
     await this.userPermissionLogService.log(user, requestor);
+
+    this.logger.log(
+      `[AdminPanel] Utilisateur ${id} mis à jour avec succès par ${requestor.id}`,
+    );
+
+    const organizationChanged =
+      previousUser?.organizationId !== updateUserDto.organizationId;
+
+    if (organizationChanged && user.email) {
+      const newOrg = user.organization;
+      await this.emailService.sendUserOrganizationChangedNotification({
+        to: user.email,
+        userEmail: user.email,
+        oldOrganization: previousUser?.organization?.path ?? null,
+        newOrganization: newOrg?.path ?? null,
+      });
+    }
+
     return user;
   }
 
