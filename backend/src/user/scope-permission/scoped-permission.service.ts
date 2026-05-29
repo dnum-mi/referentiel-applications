@@ -102,19 +102,12 @@ export class ScopedPermissionService {
       );
     }
 
-    const scopeOrg = await this.fetchOrganization(action.to);
-    this.assertWithinScope(
-      scopeOrg.path,
-      requestorScopePath,
-      "Vous ne pouvez pas assigner un périmètre hors de votre périmètre",
-    );
-
-    if (action.type === "UPDATE") {
-      const fromScopeOrg = await this.fetchOrganization(action.from);
+    if (action.type === "SET" || action.type === "UPDATE") {
+      const scopeOrg = await this.fetchOrganization(action.to);
       this.assertWithinScope(
-        fromScopeOrg.path,
+        scopeOrg.path,
         requestorScopePath,
-        "Vous ne pouvez pas modifier le périmètre actuel de cet utilisateur",
+        "Vous ne pouvez pas assigner un périmètre hors de votre périmètre",
       );
     }
   }

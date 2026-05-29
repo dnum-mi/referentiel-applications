@@ -320,7 +320,8 @@ describe("ScopedPermissionService", () => {
           ).rejects.toThrow(ScopePermissionsException);
         });
 
-        it("throws when the source (from) scope organization is outside the admin's scope", async () => {
+        it("allows when the target (to) scope organization is within the admin's scope, even if the source (from) is outside", async () => {
+          // Only the 'to' organization is checked for an UPDATE, not the 'from'
           mockPrismaService.user.findFirst.mockResolvedValue(
             makeUser(null, orgOutScope.id),
           );
@@ -330,7 +331,7 @@ describe("ScopedPermissionService", () => {
           } as UpdateUserDto;
           await expect(
             service.assertCanUpdate("target-1", dto, scopedAdmin),
-          ).rejects.toThrow(ScopePermissionsException);
+          ).resolves.toBeUndefined();
         });
       });
     });

@@ -87,7 +87,7 @@ export class CheckPermissions {
     });
 
     if (actorsFromScope.length > 0) {
-       return roleToAppPermissions(user.role); 
+      return roleToAppPermissions(user.role);
     }
 
     const businessDivisionFromScope = await this.prisma.application.findFirst({
@@ -103,7 +103,7 @@ export class CheckPermissions {
     });
 
     if (businessDivisionFromScope) {
-       return roleToAppPermissions(user.role); 
+      return roleToAppPermissions(user.role);
     }
 
     return [];
