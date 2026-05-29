@@ -63,5 +63,8 @@
   },
 
   // disable import module specifier endings (ex: .js, .ts, etc.)
-  "typescript.preferences.importModuleSpecifierEnding": "none"
+  "typescript.preferences.importModuleSpecifierEnding": "none",
+  "yaml.schemas": {
+    "https://www.artillery.io/schema.json": []
+  }
 }
