@@ -72,24 +72,40 @@ export class CheckPermissions {
   ): Promise<APP_PERMISSIONS[]> {
     // If user has no scope, it has all app permissions related to its role, otherwise we check if there is an actor with the same scope as the user, if there is, it has all app permissions related to its role, if not, it has no permission
     const scopedPermissions: string | undefined = user?.scopeOrganization?.path;
-    console.log(scopedPermissions, user);
     if (!scopedPermissions) return roleToAppPermissions(user.role);
     const actorsFromScope = await this.prisma.actor.findMany({
       where: {
         applicationId,
-        OR: [
-          {
-            organization: {
-              path: {
-                contains: scopedPermissions,
-                mode: "insensitive" as const,
-              },
-            },
+        organization: {
+          path: {
+            contains: scopedPermissions,
+            mode: "insensitive" as const,
           },
-        ],
+        },
       },
       distinct: ["actorTypeId"],
     });
-    return actorsFromScope.length > 0 ? roleToAppPermissions(user.role) : [];
+
+    if (actorsFromScope.length > 0) {
+       return roleToAppPermissions(user.role); 
+    }
+
+    const businessDivisionFromScope = await this.prisma.application.findFirst({
+      where: {
+        id: applicationId,
+        businessDivision: {
+          label: {
+            contains: scopedPermissions,
+            mode: "insensitive" as const,
+          },
+        },
+      },
+    });
+
+    if (businessDivisionFromScope) {
+       return roleToAppPermissions(user.role); 
+    }
+
+    return [];
   }
 }
