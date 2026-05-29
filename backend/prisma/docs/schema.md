@@ -660,7 +660,15 @@ erDiagram
   String parentId FK "nullable"
   String businessDivisionId FK "nullable"
 }
+"OrganizationMaiaReference" {
+  String id PK
+  String maiaRef UK
+  String organizationId FK
+  DateTime createdAt
+  DateTime updatedAt
+}
 "Organization" }o--o| "Organization" : parent
+"OrganizationMaiaReference" }o--|| "Organization" : organization
 ```
 
 ### `Organization`
@@ -677,6 +685,28 @@ Properties as follows:
 - `description`: Description complète de l'organisation
 - `parentId`:
 - `businessDivisionId`: Identifiant de la direction metier MOA de l'organisation
+
+### `OrganizationMaiaReference`
+
+Table d'override pour la consolidation des organisations MAIA.
+
+Système "override-only": permettre aux administrateurs de rediriger manuellement
+certains chemins MAIA reçus de MAIA vers une organisation locale consolidée.
+Par exemple: rediriger "MI/DNUM/SDID" et "MI/DNUM/SDAN" vers l'org "MI/DNUM".
+
+Comportement de la synchronisation MAIA:
+
+1. Check si le chemin MAIA figure dans cette table → utiliser l'organisation override
+2. Sinon, check si une org locale existe avec ce chemin exact → l'utiliser
+3. Sinon, créer une org locale avec ce chemin
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `maiaRef`: Chemin MAIA à rediriger (ex: "MI/DNUM/SDID" ou "MI/DNUM/SDAN")
+- `organizationId`: Organisation locale cible (l'override destination)
+- `createdAt`: Timestamp de création (par l'admin)
+- `updatedAt`: Timestamp de mise à jour (par l'admin)
 
 ## Users
 

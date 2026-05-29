@@ -1,5 +1,6 @@
-import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { IsOptional, IsString } from "class-validator";
+import { OrganizationMaiaReferenceDto } from "src/organization-maia-references/dto/organization-maia-references.dto";
 
 export class CreateOrganizationDto {
   @ApiProperty({
@@ -83,4 +84,10 @@ export class OrganizationDto {
   @IsString()
   @IsOptional()
   businessDivisionId: string | null;
+
+  @ApiPropertyOptional({
+    description: "Références MAIA associées à l'organisation",
+    type: [OrganizationMaiaReferenceDto],
+  })
+  maiaReferences?: OrganizationMaiaReferenceDto[];
 }

@@ -61,3 +61,117 @@ describe("Organizations", () => {
       .expect(204);
   });
 });
+
+describe("Organizations - MAIA references", () => {
+  const app = setupTestSuite();
+  let TOKEN: string;
+
+  beforeAll(async () => {
+    const user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
+    TOKEN = await getToken(user);
+  });
+
+  it("POST /organization-maia-references creates a reference", async () => {
+    const org = await OrganizationFaker.create();
+    const maiaRef = `MI/TEST/${Date.now()}`;
+
+    const res = await request(app().getHttpServer())
+      .post("/organization-maia-references")
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({ maiaRef, organizationId: org.id })
+      .expect(201);
+
+    expect(res.body.maiaRef).toBe(maiaRef);
+    expect(res.body.organizationId).toBe(org.id);
+  });
+
+  it("GET /organization-maia-references lists references (including N:1)", async () => {
+    const org = await OrganizationFaker.create();
+    const suffix = Date.now();
+
+    await request(app().getHttpServer())
+      .post("/organization-maia-references")
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({
+        maiaRef: `MI/DNUM/SDID-${suffix}`,
+        organizationId: org.id,
+      })
+      .expect(201);
+
+    await request(app().getHttpServer())
+      .post("/organization-maia-references")
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({
+        maiaRef: `MI/DNUM/SDAN-${suffix}`,
+        organizationId: org.id,
+      })
+      .expect(201);
+
+    const res = await request(app().getHttpServer())
+      .get(`/organization-maia-references?organizationId=${org.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const refs = res.body.results.map((m: { maiaRef: string }) => m.maiaRef);
+    expect(refs).toContain(`MI/DNUM/SDID-${suffix}`);
+    expect(refs).toContain(`MI/DNUM/SDAN-${suffix}`);
+
+    const orgRes = await request(app().getHttpServer())
+      .get(`/organizations/${org.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(Array.isArray(orgRes.body.maiaReferences)).toBe(true);
+    expect(
+      orgRes.body.maiaReferences.map((r: { maiaRef: string }) => r.maiaRef),
+    ).toEqual(
+      expect.arrayContaining([
+        `MI/DNUM/SDID-${suffix}`,
+        `MI/DNUM/SDAN-${suffix}`,
+      ]),
+    );
+  });
+
+  it("POST /organization-maia-references returns 409 on duplicate maiaRef", async () => {
+    const org1 = await OrganizationFaker.create();
+    const org2 = await OrganizationFaker.create();
+    const maiaRef = `MI/DUPLICATE/${Date.now()}`;
+
+    await request(app().getHttpServer())
+      .post("/organization-maia-references")
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({ maiaRef, organizationId: org1.id })
+      .expect(201);
+
+    await request(app().getHttpServer())
+      .post("/organization-maia-references")
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({ maiaRef, organizationId: org2.id })
+      .expect(409);
+  });
+
+  it("DELETE /organization-maia-references/:id removes the reference", async () => {
+    const org = await OrganizationFaker.create();
+    const maiaRef = `MI/DELETE/${Date.now()}`;
+
+    const createRes = await request(app().getHttpServer())
+      .post("/organization-maia-references")
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({ maiaRef, organizationId: org.id })
+      .expect(201);
+
+    await request(app().getHttpServer())
+      .delete(`/organization-maia-references/${createRes.body.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(204);
+
+    const res = await request(app().getHttpServer())
+      .get(`/organization-maia-references?organizationId=${org.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(
+      res.body.results.map((m: { maiaRef: string }) => m.maiaRef),
+    ).not.toContain(maiaRef);
+  });
+});

@@ -26,4 +26,32 @@ model Organization {
   businessDivisionId String?
   /// Direction metier MOA de l'organisation
   businessDivision   BusinessDivision? @relation(fields: [businessDivisionId], references: [id], onDelete: SetNull)
+  /// Références MAIA liées à cette organisation (permet le regroupement N:1)
+  maiaReferences     OrganizationMaiaReference[]
+}
+
+/// Table d'override pour la consolidation des organisations MAIA.
+/// 
+/// Système "override-only": permettre aux administrateurs de rediriger manuellement
+/// certains chemins MAIA reçus de MAIA vers une organisation locale consolidée.
+/// Par exemple: rediriger "MI/DNUM/SDID" et "MI/DNUM/SDAN" vers l'org "MI/DNUM".
+///
+/// Comportement de la synchronisation MAIA:
+/// 1. Check si le chemin MAIA figure dans cette table → utiliser l'organisation override
+/// 2. Sinon, check si une org locale existe avec ce chemin exact → l'utiliser
+/// 3. Sinon, créer une org locale avec ce chemin
+///
+/// @namespace Organizations
+model OrganizationMaiaReference {
+  /// Identifiant unique
+  id             String       @id @default(uuid())
+  /// Chemin MAIA à rediriger (ex: "MI/DNUM/SDID" ou "MI/DNUM/SDAN")
+  maiaRef        String       @unique
+  /// Organisation locale cible (l'override destination)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  /// Timestamp de création (par l'admin)
+  createdAt      DateTime     @default(now())
+  /// Timestamp de mise à jour (par l'admin)
+  updatedAt      DateTime     @updatedAt
 }

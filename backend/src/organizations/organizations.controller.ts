@@ -107,7 +107,7 @@ Vous devez fournir les informations suivantes :
   })
   @ApiNotFoundResponse({ description: "Organisation non trouvée" })
   public async findOne(@Param("id") id: string): Promise<Organization> {
-    return await this.organizationService.findOne(id);
+    return await this.organizationService.findOneWithReferences(id);
   }
 
   @Get()

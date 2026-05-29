@@ -32,7 +32,20 @@ export class OrganizationsService extends BaseService<
   ): Promise<PaginatedResponseDto<OrganizationDto>> {
     const { page, pageSize } = filters;
     const where = this.queryBuilder.buildSearchWhere(filters);
-    return this.findAll({ where, page, pageSize });
+    return this.findAll({
+      where,
+      page,
+      pageSize,
+      include: {
+        maiaReferences: true,
+      },
+    });
+  }
+
+  async findOneWithReferences(id: string) {
+    return this.findOne(id, {
+      maiaReferences: true,
+    });
   }
 
   async update(
