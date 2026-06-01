@@ -7,6 +7,13 @@ export const RolesWording: Record<Roles, string> = {
   ADMIN: "Administrateur",
 };
 
+export const RolesScopes = {
+  VISITOR: "Pas de périmètre pour un utilisateur standard",
+  READER: "Périmètre de lecture",
+  CONTRIBUTOR: "Périmètre d'écriture",
+  ADMIN: "Périmètre d'administration",
+} as const satisfies Record<Roles, string>;
+
 export const RolesWordingBadgeClass: Record<Roles, string> = {
   VISITOR: "fr-badge--new",
   READER: "fr-badge--info",

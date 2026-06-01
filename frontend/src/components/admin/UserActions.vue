@@ -3,7 +3,7 @@ import api from "@/api/index";
 import { type UpdateUserDto, type UserEntity, Permission, Roles as RolesType } from "@/client/types.gen";
 import { Roles } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
-import { RolesOptions } from "@/utils/roles-utils";
+import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
@@ -110,6 +110,13 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     name: "capability-mdit-view",
   },
 ];
+
+const labelScope = computed(() => {
+  return `${RolesScopes[editingUserRole.value]}`;
+});
+const isScopeDisabled = computed(() => {
+  return editingUserRole.value === Roles.VISITOR;
+});
 </script>
 
 <template>
@@ -163,9 +170,10 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
       />
 
       <OrganizationSearchSelect
+        v-show="!isScopeDisabled"
         v-model="editingScopePermissions"
         class="fr-mb-2w"
-        label="Périmètre d'administration"
+        :label="labelScope"
         :initial-organization="user.scopeOrganization"
         data-testid="user-organization-search"
       />
