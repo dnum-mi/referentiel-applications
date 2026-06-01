@@ -46,7 +46,8 @@ export class BaseService<T, TDelegate = any> {
   }
 
   async update(id: string, data: any, options?: ServiceOptions<T>): Promise<T> {
-    const oldEntity = await this.findOne(id, options?.include);
+    const oldEntity =
+      options?.existingEntity ?? (await this.findOne(id, options?.include));
     const updated = await this.model.update({
       where: { id },
       data,
@@ -66,20 +67,21 @@ export class BaseService<T, TDelegate = any> {
 
   async delete(id: string, options?: ServiceOptions<T>): Promise<T> {
     const deleted = await this.findOne(id, options?.include ?? {});
+    const applicationId = this.getApplicationId(deleted, options);
 
-    const resolvedApplicationId =
-      options?.applicationId ??
-      (deleted as unknown as { applicationId?: string }).applicationId;
-
-    if (options)
-      await this.handleMetadataAndQuality(
-        deleted,
-        "delete",
-        { ...options, applicationId: resolvedApplicationId },
-        id,
-      );
+    await this.createMetadataEntry({
+      applicationId,
+      options,
+      entity: deleted,
+      entityId: id,
+      type: "delete",
+      newData: deleted,
+    });
 
     await this.model.delete({ where: { id } });
+
+    await this.updateApplicationQualitySafely(applicationId);
+
     return deleted;
   }
 
@@ -90,24 +92,71 @@ export class BaseService<T, TDelegate = any> {
     entityId: string,
     oldEntity?: T,
   ) {
-    if (options.triggerQualityUpdate && options.applicationId)
-      await this.applicationService.updateApplicationQuality(
-        options.applicationId,
-      );
+    await this.updateApplicationQuality(options.applicationId);
 
-    if (options.metadata && options.applicationId)
-      await this.metadataService.createMetadata({
-        applicationId: options.applicationId,
-        createdById: options.metadata.userId,
-        entity: options.metadata.entity,
-        entityId: entityId,
-        title: options.metadata.getColumn?.(entity)
-          ? `${options.metadata.gender} : ${options.metadata.getColumn?.(entity)}`
-          : options.metadata.gender,
-        type,
-        fields: options.metadata.fields,
-        oldData: oldEntity,
-        newData: entity,
-      });
+    await this.createMetadataEntry({
+      applicationId: options.applicationId,
+      options,
+      entity,
+      entityId,
+      type,
+      oldData: oldEntity,
+      newData: entity,
+    });
+  }
+
+  private getApplicationId(entity: T, options?: ServiceOptions<T>) {
+    return (
+      options?.applicationId ??
+      (entity as unknown as { applicationId?: string }).applicationId
+    );
+  }
+
+  private async createMetadataEntry({
+    applicationId,
+    options,
+    entity,
+    entityId,
+    type,
+    oldData,
+    newData,
+  }: {
+    applicationId?: string;
+    options?: ServiceOptions<T>;
+    entity: T;
+    entityId: string;
+    type: "add" | "update" | "delete";
+    oldData?: T;
+    newData: T;
+  }) {
+    if (!options?.metadata || !applicationId) return;
+
+    const columnValue = options.metadata.getColumn?.(entity);
+
+    await this.metadataService?.createMetadata({
+      applicationId,
+      createdById: options.metadata.userId,
+      entity: options.metadata.entity,
+      entityId,
+      title: columnValue
+        ? `${options.metadata.gender} : ${columnValue}`
+        : options.metadata.gender,
+      type,
+      fields: options.metadata.fields,
+      oldData,
+      newData,
+    });
+  }
+
+  private async updateApplicationQuality(applicationId?: string) {
+    if (!applicationId) return;
+
+    await this.applicationService?.updateApplicationQuality(applicationId);
+  }
+
+  private async updateApplicationQualitySafely(applicationId?: string) {
+    try {
+      await this.updateApplicationQuality(applicationId);
+    } catch {}
   }
 }

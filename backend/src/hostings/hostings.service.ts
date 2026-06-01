@@ -36,7 +36,6 @@ export class HostingsService extends BaseService<Hosting> {
 
     return super.create(data, {
       applicationId,
-      triggerQualityUpdate: true,
       include: { hostingOption: true },
       metadata: {
         userId: requestorId,
@@ -80,7 +79,6 @@ export class HostingsService extends BaseService<Hosting> {
 
     return super.update(id, data, {
       applicationId: dto.applicationId,
-      triggerQualityUpdate: true,
       include: { hostingOption: true },
       metadata: {
         userId: requestorId,
@@ -101,7 +99,6 @@ export class HostingsService extends BaseService<Hosting> {
 
   async remove(id: string, requestorId?: string): Promise<void> {
     await super.delete(id, {
-      triggerQualityUpdate: true,
       metadata: {
         userId: requestorId,
         gender: "de l'hébergement",

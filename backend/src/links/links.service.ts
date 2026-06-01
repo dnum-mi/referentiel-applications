@@ -5,7 +5,12 @@ import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/applications/application.service";
 import { BaseService } from "../common/base.service";
-import { LinkDto, LinkFiltersDto } from "./dto/links.dto";
+import {
+  CreateLinkDto,
+  LinkDto,
+  LinkFiltersDto,
+  UpdateLinkDto,
+} from "./dto/links.dto";
 import { Link } from "./entities/link.entity";
 
 @Injectable()
@@ -37,6 +42,64 @@ export class LinksService extends BaseService<Link> {
       orderBy: filters.sortBy
         ? { [filters.sortBy]: filters.order || "asc" }
         : { link: "asc" },
+    });
+  }
+
+  async createLink(
+    applicationId: string,
+    createLinkDto: CreateLinkDto,
+    requestorId: string,
+  ) {
+    return this.create(
+      {
+        ...createLinkDto,
+        application: {
+          connect: { id: applicationId },
+        },
+      },
+      {
+        applicationId,
+        metadata: {
+          userId: requestorId,
+          gender: "du lien",
+          getColumn: (entity) => entity.link,
+          entity: "externalRessourceId",
+        },
+      },
+    );
+  }
+
+  async updateLink(
+    id: string,
+    applicationId: string,
+    updateLinkDto: UpdateLinkDto,
+    requestorId: string,
+  ) {
+    return this.update(id, updateLinkDto, {
+      applicationId,
+      metadata: {
+        userId: requestorId,
+        gender: "du lien",
+        getColumn: (entity) => entity.link,
+        entity: "externalRessourceId",
+        fields: {
+          link: "lien",
+          type: "type",
+          description: "description",
+        },
+      },
+    });
+  }
+
+  async deleteLink(id: string, applicationId: string, requestorId: string) {
+    return this.delete(id, {
+      applicationId,
+      metadata: {
+        userId: requestorId,
+        gender: "du lien",
+        getColumn: (entity) => entity.link,
+        entity: "externalRessourceId",
+      },
     });
   }
 }
