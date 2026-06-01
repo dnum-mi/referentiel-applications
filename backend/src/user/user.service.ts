@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma, Roles, User } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
+import { OrganizationMaiaReferencesService } from "src/organization-maia-references/organization-maia-references.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
@@ -14,6 +15,7 @@ export class UserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly userPermissionLogService: UserPermissionLogService,
+    private readonly organizationMaiaReferencesService: OrganizationMaiaReferencesService,
   ) {}
 
   async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
@@ -232,26 +234,33 @@ export class UserService {
   }
 
   private async findOrCreateOrganizationFromPath(path: string) {
-    const existingOrganization = await this.prisma.organization.findFirst({
+    // 1. Lookup prioritaire via la table des overrides MAIA
+    const orgFromOverride =
+      await this.organizationMaiaReferencesService.findOrganizationByMaiaRef(
+        path,
+      );
+    if (orgFromOverride) {
+      return { organization: orgFromOverride, created: false };
+    }
+
+    // 2. Sinon on utilise le path tel quel
+    const existingOrg = await this.prisma.organization.findFirst({
       where: { path },
       select: { id: true },
     });
-
-    if (existingOrganization) {
+    if (existingOrg) {
       return {
-        organization: existingOrganization,
+        organization: existingOrg,
         created: false,
       };
     }
 
-    return {
-      organization: await this.prisma.organization.create({
-        data: {
-          path,
-        },
-        select: { id: true },
-      }),
-      created: true,
-    };
+    const newOrg = await this.prisma.organization.create({
+      data: {
+        path,
+      },
+      select: { id: true },
+    });
+    return { organization: newOrg, created: true };
   }
 }

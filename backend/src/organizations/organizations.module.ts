@@ -9,5 +9,6 @@ import { CommonModule } from "src/common/common.module";
   imports: [PrismaModule, CommonModule],
   controllers: [OrganizationsController],
   providers: [OrganizationsService, PrismaQueryBuilder],
+  exports: [OrganizationsService],
 })
 export class OrganizationsModule {}

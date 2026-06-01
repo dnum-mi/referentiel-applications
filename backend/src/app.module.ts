@@ -31,6 +31,7 @@ import { UserModule } from "./user/user.module";
 import { LabelSourceModule } from "./label-source/label-source.module";
 import { RgaaModule } from "./rgaa/rgaa.module";
 import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
+import { OrganizationMaiaReferencesModule } from "./organization-maia-references/organization-maia-references.module";
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
     DataCatalogModule,
     RelationModule,
     OrganizationsModule,
+    OrganizationMaiaReferencesModule,
     UserModule,
     ActorModule,
     ActorTypeModule,
