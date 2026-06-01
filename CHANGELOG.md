@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.78.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.77.0...v1.78.0) (2026-06-01)
+
+
+### Features
+
+* :sparkles: add eco_index_target_url to compliance field labels ([#1738](https://github.com/dnum-mi/referentiel-applications/issues/1738)) ([3b9fd37](https://github.com/dnum-mi/referentiel-applications/commit/3b9fd375b7d81a1167c385dcc7543184b5d7252b))
+* :sparkles: add maia references to organizations for maia org imports ([#1747](https://github.com/dnum-mi/referentiel-applications/issues/1747)) ([49d6a41](https://github.com/dnum-mi/referentiel-applications/commit/49d6a41a77142ad1dcf642fb69df7ff592152ed3))
+* create the restriction for admin panel users ([#1741](https://github.com/dnum-mi/referentiel-applications/issues/1741)) ([4a11721](https://github.com/dnum-mi/referentiel-applications/commit/4a117210be957d92f1cf401eff1f16f0ab445284))
+* **data-catalog:** implement data tab with backend, DTOs, UI and tests ([2dffd67](https://github.com/dnum-mi/referentiel-applications/commit/2dffd67d121f80bb494236ca8c42d8c7bbfa4a71))
+
+
+### Bug Fixes
+
+* :bug: fix IQ not being correctly updated ([#1742](https://github.com/dnum-mi/referentiel-applications/issues/1742)) ([74c5a6d](https://github.com/dnum-mi/referentiel-applications/commit/74c5a6d104fb68c6b89a1629ac67e725d2b8b68b))
+
 ## [1.77.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.76.0...v1.77.0) (2026-05-22)
 
 
