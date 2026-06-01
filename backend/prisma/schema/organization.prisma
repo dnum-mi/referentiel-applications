@@ -19,7 +19,9 @@ model Organization {
   /// Organisations enfants
   children           Organization[]    @relation("OrganizationParent")
   /// Utilisateurs appartenant à cette organisation
-  users              User[]
+  users              User[]            @relation("UserOrganization")
+  /// Utilisateurs ayant cette organisation comme scope
+  scopeUsers         User[]            @relation("UserScopeOrganization")
   /// Acteurs associés à cette organisation
   actors             Actor[]
   /// Identifiant de la direction metier MOA de l'organisation

@@ -10,7 +10,13 @@ model User {
   /// Id de l'organisation à laquelle l'utilisateur appartient
   organizationId            String?
   /// Organisation à laquelle l'utilisateur appartient
-  organization              Organization?       @relation(fields: [organizationId], references: [id])
+  organization              Organization?       @relation("UserOrganization", fields: [organizationId], references: [id])
+
+  /// Id de l'organisation de scope de l'utilisateur (pour les permissions basées sur le scope organisationnel) 
+  scopeOrganizationId            String?
+  /// Organisation de scope de l'utilisateur
+  scopeOrganization              Organization?       @relation("UserScopeOrganization", fields: [scopeOrganizationId], references: [id])
+
   /// Entrées de métadonnées créées par cet utilisateur
   createdSet                Metadata[]          @relation("MetadataCreatedBy")
   /// Entrées de métadonnées où cet utilisateur est le propriétaire des données

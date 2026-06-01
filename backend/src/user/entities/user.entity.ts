@@ -47,6 +47,14 @@ export class UserEntity {
   @IsOptional()
   organization?: OrganizationDto | null;
 
+  @IsString()
+  @IsOptional()
+  scopeOrganizationId: string | null;
+
+  @ApiProperty({ type: () => OrganizationDto, required: false })
+  @IsOptional()
+  scopeOrganization?: OrganizationDto | null;
+
   @ApiProperty({ enum: UserType, enumName: "UserType" })
   @IsString()
   @IsEnum(UserType)

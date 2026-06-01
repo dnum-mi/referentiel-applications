@@ -3,7 +3,7 @@ import api from "@/api/index";
 import { type UpdateUserDto, type UserEntity, Permission, Roles as RolesType } from "@/client/types.gen";
 import { Roles } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
-import { RolesOptions } from "@/utils/roles-utils";
+import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
@@ -22,11 +22,13 @@ const isSyncingFromMaia = ref(false);
 const editingUserRole = ref<RolesType>(Roles.VISITOR);
 const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
+const editingScopePermissions = ref<string>("");
 
 async function openEditModal() {
   editingUserRole.value = props.user.role;
   editingOrganizationId.value = props.user.organizationId || "";
   editingAdditionalPermissions.value = props.user.additionalPermissions ? [...props.user.additionalPermissions] : [];
+  editingScopePermissions.value = props.user.scopeOrganizationId || "";
   isEditModalOpen.value = true;
 }
 
@@ -34,6 +36,7 @@ function closeEditModal() {
   isEditModalOpen.value = false;
   editingUserRole.value = Roles.VISITOR;
   editingOrganizationId.value = "";
+  editingScopePermissions.value = "";
 }
 
 async function saveUser() {
@@ -45,6 +48,7 @@ async function saveUser() {
         role: editingUserRole.value,
         organizationId: editingOrganizationId.value === "" ? null : editingOrganizationId.value,
         additionalPermissions: editingAdditionalPermissions.value,
+        scopeOrganizationId: editingScopePermissions.value === "" ? null : editingScopePermissions.value,
       } as UpdateUserDto,
     });
     if (!response.error && response.data) {
@@ -52,11 +56,13 @@ async function saveUser() {
       closeEditModal();
       emit("userUpdated", response.data);
     } else {
-      toaster.addErrorMessage("Erreur lors de la mise à jour de l'utilisateur");
+      const errorMessage =
+        (response.error as { message: string })?.message ?? "Une erreur est survenue lors de la mise à jour de l'utilisateur";
+      toaster.addErrorMessage(errorMessage);
       console.error(response.error);
     }
   } catch (err) {
-    toaster.addErrorMessage("Erreur lors de la mise à jour de l'utilisateur");
+    toaster.addErrorMessage("Une erreur est survenue lors de la mise à jour de l'utilisateur");
     console.error(err);
   } finally {
     isSaving.value = false;
@@ -104,6 +110,13 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     name: "capability-mdit-view",
   },
 ];
+
+const labelScope = computed(() => {
+  return `${RolesScopes[editingUserRole.value]}`;
+});
+const isScopeDisabled = computed(() => {
+  return editingUserRole.value === Roles.VISITOR;
+});
 </script>
 
 <template>
@@ -147,12 +160,22 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
         name="additional-permissions-checkbox"
         data-testid="additional-permissions-checkbox"
       />
+
       <DsfrRadioButtonSet
         v-model="editingUserRole"
         legend="Niveau de privilège"
         :options="RolesOptions"
         name="admin-level-radio"
         data-testid="admin-level-radio"
+      />
+
+      <OrganizationSearchSelect
+        v-show="!isScopeDisabled"
+        v-model="editingScopePermissions"
+        class="fr-mb-2w"
+        :label="labelScope"
+        :initial-organization="user.scopeOrganization"
+        data-testid="user-organization-search"
       />
 
       <template #footer>

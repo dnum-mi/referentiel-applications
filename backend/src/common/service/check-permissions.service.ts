@@ -2,7 +2,11 @@ import { Injectable } from "@nestjs/common";
 import { Permission } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
-import { transformAppPermissionsObjectToArray } from "../utils/types";
+import {
+  APP_PERMISSIONS,
+  transformAppPermissionsObjectToArray,
+} from "../utils/types";
+import { roleToAppPermissions } from "src/permissions/role-to-permissions";
 
 @Injectable()
 export class CheckPermissions {
@@ -19,7 +23,11 @@ export class CheckPermissions {
         applicationId,
         user,
       );
-      user.appPerms = actorPermissions;
+      const userRolePermissions = await this.getUserRolePermissions(
+        applicationId,
+        user,
+      );
+      user.appPerms = [...actorPermissions, ...userRolePermissions];
     }
     const userPermissions = new Set([
       ...user.permissions,
@@ -56,5 +64,48 @@ export class CheckPermissions {
         transformAppPermissionsObjectToArray(perm),
       ),
     );
+  }
+
+  private async getUserRolePermissions(
+    applicationId: string,
+    user: Requestor,
+  ): Promise<APP_PERMISSIONS[]> {
+    // If user has no scope, it has all app permissions related to its role, otherwise we check if there is an actor with the same scope as the user, if there is, it has all app permissions related to its role, if not, it has no permission
+    const scopedPermissions: string | undefined = user?.scopeOrganization?.path;
+    if (!scopedPermissions) return roleToAppPermissions(user.role);
+    const actorsFromScope = await this.prisma.actor.findMany({
+      where: {
+        applicationId,
+        organization: {
+          path: {
+            contains: scopedPermissions,
+            mode: "insensitive" as const,
+          },
+        },
+      },
+      distinct: ["actorTypeId"],
+    });
+
+    if (actorsFromScope.length > 0) {
+      return roleToAppPermissions(user.role);
+    }
+
+    const businessDivisionFromScope = await this.prisma.application.findFirst({
+      where: {
+        id: applicationId,
+        businessDivision: {
+          label: {
+            contains: scopedPermissions,
+            mode: "insensitive" as const,
+          },
+        },
+      },
+    });
+
+    if (businessDivisionFromScope) {
+      return roleToAppPermissions(user.role);
+    }
+
+    return [];
   }
 }

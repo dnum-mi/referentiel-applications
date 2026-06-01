@@ -8,29 +8,16 @@ const NONE_PERMISSIONS: Set<Permission> = new Set([
 ]);
 const READ_PERMISSIONS = new Set([
   ...Array.from(NONE_PERMISSIONS),
-  Permission.ActorRead,
-  Permission.ComplianceRead,
-  Permission.HostingRead,
-  Permission.RelationRead,
-  Permission.LinkRead,
-  Permission.MetadataRead,
   Permission.MDITList,
 ]);
 const WRITE_PERMISSIONS = new Set([
   ...Array.from(READ_PERMISSIONS),
   Permission.CreateApplication,
   Permission.CreateGlobalReport,
-  Permission.AppWrite,
-  Permission.ActorWrite,
-  Permission.ComplianceWrite,
-  Permission.HostingWrite,
-  Permission.RelationWrite,
-  Permission.LinkWrite,
-  Permission.AppWritePriority,
   Permission.ReportManage,
+  Permission.OrganizationManage,
   Permission.ActorTypeDelete,
   Permission.ActorTypeManage,
-  Permission.OrganizationManage,
 ]);
 const ADMIN_PERMISSIONS = new Set([
   ...Array.from(WRITE_PERMISSIONS),
@@ -50,5 +37,38 @@ export const roleToPermissions = (role: Roles) => {
       return Array.from(READ_PERMISSIONS).sort();
     case Roles.VISITOR:
       return Array.from(NONE_PERMISSIONS).sort();
+  }
+};
+
+const READ_APP_PERMISSIONS = new Set([
+  Permission.ActorRead,
+  Permission.ComplianceRead,
+  Permission.HostingRead,
+  Permission.RelationRead,
+  Permission.LinkRead,
+  Permission.MetadataRead,
+]);
+const WRITE_APP_PERMISSIONS = new Set([
+  ...Array.from(READ_APP_PERMISSIONS),
+  Permission.AppWrite,
+  Permission.ActorWrite,
+  Permission.ComplianceWrite,
+  Permission.HostingWrite,
+  Permission.RelationWrite,
+  Permission.LinkWrite,
+  Permission.AppWritePriority,
+]);
+const ADMIN_APP_PERMISSIONS = new Set([...Array.from(WRITE_APP_PERMISSIONS)]);
+
+export const roleToAppPermissions = (role: Roles) => {
+  switch (role) {
+    case Roles.ADMIN:
+      return Array.from(ADMIN_APP_PERMISSIONS).sort();
+    case Roles.CONTRIBUTOR:
+      return Array.from(WRITE_APP_PERMISSIONS).sort();
+    case Roles.READER:
+      return Array.from(READ_APP_PERMISSIONS).sort();
+    case Roles.VISITOR:
+      return [];
   }
 };
