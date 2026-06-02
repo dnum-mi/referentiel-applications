@@ -144,7 +144,7 @@ const mandatoryLinks = computed(() => [
   },
   {
     label: "Contacter l'équipe",
-    title: "Envoyer un email à l'équipe du Référentiel des Applications",
+    title: "Envoyer un e-mail à l'équipe du Référentiel des Applications",
     href: "mailto:support-referentiel-applications@interieur.gouv.fr",
     to: "",
     target: "_blank",

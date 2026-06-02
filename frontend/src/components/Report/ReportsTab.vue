@@ -135,7 +135,7 @@ watch(
       <DsfrSearchBar
         v-model.trim="searchReport"
         label="Rechercher un signalement"
-        placeholder="Recherche par description ou par email du signalant"
+        placeholder="Recherche par description ou par e-mail du signalant"
         button-text="Rechercher"
         class="fr-col-12"
         data-testid="issues-search-bar"

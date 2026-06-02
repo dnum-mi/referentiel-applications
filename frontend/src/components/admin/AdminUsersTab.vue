@@ -162,7 +162,7 @@ onMounted(fetchUsers);
       <DsfrSearchBar
         v-model.trim="searchQuery"
         label="Rechercher un utilisateur"
-        placeholder="Rechercher par email ou organisation..."
+        placeholder="Rechercher par e-mail ou organisation..."
         button-text="Rechercher"
         class="fr-col-12"
         data-testid="admin-user-search"

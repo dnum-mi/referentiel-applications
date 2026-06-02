@@ -63,7 +63,7 @@ watchDebounced(
   <DsfrInput
     :model-value="filters.actorEmail || ''"
     label-visible
-    label="Email"
+    label="E-mail"
     type="email"
     data-testid="actor-email-filter-input"
     class="fr-mb-2w"
