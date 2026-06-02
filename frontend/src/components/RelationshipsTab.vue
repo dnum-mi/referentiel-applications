@@ -43,7 +43,7 @@ const fieldMap: Record<string, string> = {
   "Application Source": "applicationSource",
   Relation: "relation",
   "Application Cible": "applicationCible",
-  "Mediation Service": "mediationService",
+  "Service de médiation": "mediationService",
   Actions: "actions",
 };
 
@@ -60,7 +60,7 @@ const normalizedRows = computed(() =>
     applicationSource: row["Application Source"],
     relation: row.Relation,
     applicationCible: row["Application Cible"],
-    mediationService: row["Mediation Service"],
+    mediationService: row["Service de médiation"],
     actions: row.Actions,
     originalRow: row, // Keep original for reference
   })),

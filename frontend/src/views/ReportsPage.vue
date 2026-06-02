@@ -7,7 +7,7 @@ const applicationTabListName = "Informations sur les signalements";
 
 const tabs = [
   {
-    title: "Mes Signalements",
+    title: "Mes signalements",
     icon: "ri-edit-line",
     tabId: "tab-my-reports",
     panelId: "panel-my-reports",
@@ -15,7 +15,7 @@ const tabs = [
     component: markRaw(ReportsTab),
   },
   {
-    title: "Tous les Signalements",
+    title: "Tous les signalements",
     icon: "ri-edit-line",
     tabId: "tab-all-reports",
     panelId: "panel-all-reports",

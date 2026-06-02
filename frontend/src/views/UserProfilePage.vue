@@ -14,7 +14,7 @@ const tabs = [
   },
   {
     tabId: "tokens",
-    title: "Mes tokens",
+    title: "Mes jetons",
     panelId: "tab-content-tokens",
   },
   {

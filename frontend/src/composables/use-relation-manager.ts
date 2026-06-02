@@ -15,7 +15,7 @@ export interface RelationRow {
     label: string;
     id: string | undefined;
   };
-  "Mediation Service": {
+  "Service de médiation": {
     label: string;
     id: string | undefined;
   };
@@ -37,7 +37,7 @@ export function useRelationManager(applicationId: string) {
   const isEditRelationModalOpen = ref(false);
   const relationToEdit = ref<RelationDto | null>(null);
 
-  const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Mediation Service", "Actions"];
+  const headers = ["Sélection", "Application Source", "Relation", "Application Cible", "Service de médiation", "Actions"];
 
   const relationTypes: Record<RelationType, { source: string; target: string }> = {
     [RelationType.IS_PART_OF]: { source: "Fait partie de", target: "A comme sous‑élément" },
@@ -75,7 +75,7 @@ export function useRelationManager(applicationId: string) {
         label: rel.isSource ? targetLabel : sourceLabel,
         id: rel.isSource ? rel.applicationTargetId : rel.applicationSourceId,
       },
-      "Mediation Service": {
+      "Service de médiation": {
         label: rel.mediationService?.label || "",
         id: rel.mediationService?.id,
       },

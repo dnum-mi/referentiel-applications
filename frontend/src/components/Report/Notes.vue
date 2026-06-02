@@ -24,14 +24,14 @@ const { isOpen, openDialog, handleReset, submit, editedNotes, handleClose } = us
       v-if="isEditing"
       icon="ri-edit-line"
       data-testid="actor-edit-notes"
-      title="Editer la notes"
-      aria-label="Editer la notes"
+      title="Éditer la note"
+      aria-label="Éditer la note"
       style="gap: 0"
       @click="openDialog"
     />
   </div>
 
-  <DsfrModal :opened="isOpen" title="Editer la note" data-testid="customize-columns-dialog" @close="handleClose">
+  <DsfrModal :opened="isOpen" title="Éditer la note" data-testid="customize-columns-dialog" @close="handleClose">
     <Textarea v-model="editedNotes" rows="5" cols="30" />
     <template #footer>
       <DsfrButton label="Réinitialiser" secondary size="sm" @click="handleReset()" data-testid="reset-columns-button" />

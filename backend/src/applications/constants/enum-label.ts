@@ -45,7 +45,7 @@ export const NatureLabels: Record<string, string> = {
 
 export const ApplicationStatusLabels: Record<string, string> = {
   under_construction: "En construction",
-  to_validate: "A valider",
+  to_validate: "À valider",
   poc: "POC",
   in_production_mvp: "En production (MVP)",
   in_production: "En production",

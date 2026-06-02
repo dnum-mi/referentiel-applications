@@ -74,7 +74,7 @@ async function submitReport() {
     reportText.value = "";
     toaster.addSuccessMessage("Votre proposition sera prise en compte prochainement.");
   } catch (_error) {
-    toaster.addErrorMessage("Oops ! Une erreur est survenue, contactez l’administrateur du référentiel si le problème persiste.");
+    toaster.addErrorMessage("Une erreur est survenue, contactez l'administrateur du référentiel si le problème persiste.");
   } finally {
     submitting.value = false;
   }

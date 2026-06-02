@@ -16,7 +16,7 @@ const error = ref<string | null>(null);
 async function fetchMetadata() {
   const id = route.params.id as string;
   if (!id) {
-    error.value = "Identifiant de metadata manquant";
+    error.value = "Identifiant de métadonnée manquant";
     return;
   }
 
@@ -28,7 +28,7 @@ async function fetchMetadata() {
     isLoading.value = false;
 
     if (!response.response.ok) {
-      error.value = "Erreur lors de la récupération de la metadata.";
+      error.value = "Erreur lors de la récupération de la métadonnée.";
       console.error("Error fetching metadata:", response.error);
       return;
     }
@@ -40,7 +40,7 @@ async function fetchMetadata() {
   } catch (err) {
     isLoading.value = false;
     console.error("Error fetching metadata:", err);
-    error.value = "Erreur lors de la récupération de la metadata";
+    error.value = "Erreur lors de la récupération de la métadonnée";
   }
 }
 
@@ -148,7 +148,7 @@ onMounted(() => {
     </div>
 
     <div v-else class="fr-alert fr-alert--info" data-testid="metadata-not-found">
-      <p>Aucune metadata trouvée.</p>
+      <p>Aucune métadonnée trouvée.</p>
     </div>
   </div>
 </template>

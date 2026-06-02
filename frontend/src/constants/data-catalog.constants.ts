@@ -25,6 +25,6 @@ export const DOCUMENTATION_COLUMNS = [{ field: "url", header: "Lien", sortable: 
 export const EXPOSURE_COLUMNS = [
   { field: "type", header: "Type", sortable: false },
   { field: "format", header: "Format", sortable: false },
-  { field: "endpoint", header: "Point de terminaison / URL", sortable: false },
+  { field: "endpoint", header: "endpoint / URL", sortable: false },
   { field: "authenticationType", header: "Authentification", sortable: false },
 ] as const;

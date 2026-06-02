@@ -81,8 +81,8 @@ async function fetchLinks(filters: { page?: number; pageSize?: number } = {}) {
 const rows = computed(() =>
   links.value.map((link) => ({
     id: link.id,
-    lien: { label: link.link || "Lien vide", to: link.link },
-    description: link.description || "Description vide",
+    lien: { label: link.link || "Lien non renseigné", to: link.link },
+    description: link.description || "Description non renseignée",
     typeDeLien: getTypeLabel(link.type),
     actions: {
       edit: () => linkModal.openModal(link),
@@ -280,7 +280,7 @@ onMounted(async () => {
         <DsfrCard
           v-for="link in links"
           :key="link.id"
-          :title="link.description || 'Description vide'"
+          :title="link.description || 'Description non renseignée'"
           :description="link.link"
           :link="link.link"
           :buttons="getCardButtons(link)"

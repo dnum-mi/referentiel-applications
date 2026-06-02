@@ -374,7 +374,7 @@ export class EmailService {
     applicationName?: string;
     notes: string;
   }) {
-    const subject = "Anomalie notification update";
+    const subject = "Notification de mise à jour du signalement";
     const html = this.templateService.render("report-status-update", {
       title: subject,
       headerTitle: "Référentiel des Applications",

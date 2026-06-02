@@ -102,7 +102,7 @@ export const restartPrioritiesConfig = {
     label: "R1* – Selon période d'activité",
     shortLabel: "R1*",
     tooltip:
-      "Equivalent à R1 si en activité, Equivalent à R3 si en sommeil - Les applications prioritaires supportant les missions régaliennes ayant des périodes d'utilisation d'activité durant lesquelles l'indisponibilité présente des conséquences opérationnelles majeures et de sommeil durant lesquelles l'indisponibilité ne présente aucune conséquence opérationnelle",
+      "Équivalent à R1 si en activité, équivalent à R3 si en sommeil - Les applications prioritaires supportant les missions régaliennes ayant des périodes d'utilisation d'activité durant lesquelles l'indisponibilité présente des conséquences opérationnelles majeures et de sommeil durant lesquelles l'indisponibilité ne présente aucune conséquence opérationnelle",
   },
   R2: {
     type: "info",
@@ -120,7 +120,7 @@ export const restartPrioritiesConfig = {
 
 export const statusApplicationDictionary: Record<ApplicationStatus, string> = {
   under_construction: "En construction",
-  to_validate: "A valider",
+  to_validate: "À valider",
   poc: "POC (Preuve de concept)",
   in_production_mvp: "MVP en production",
   in_production: "En production",

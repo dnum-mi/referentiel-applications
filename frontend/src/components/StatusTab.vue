@@ -66,7 +66,7 @@ async function fetchStatuses() {
       statuses.value = Array.isArray(response.data) ? response.data : [];
     } else {
       statuses.value = [];
-      throw new Error("Failed to fetch statuses");
+      throw new Error("Échec de la récupération des statuts");
     }
   } catch (error) {
     console.error("Error fetching statuses:", error);

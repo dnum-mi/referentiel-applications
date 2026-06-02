@@ -124,7 +124,7 @@ export class ActorService {
           gender: "de l'acteur",
           getColumn: (entity) =>
             entity.isGroup
-              ? `groupe d'acteur ${entity.organization?.path}`
+              ? `groupe d'acteurs ${entity.organization?.path}`
               : `${entity.actorType?.code}`,
           entity: "actorId",
           fields: {
@@ -204,7 +204,7 @@ export class ActorService {
         gender: "de l'acteur",
         getColumn: (entity) =>
           entity.isGroup
-            ? `groupe d'acteur ${entity.organization?.path}`
+            ? `groupe d'acteurs ${entity.organization?.path}`
             : `${entity.actorType?.code} : ${entity.email}`,
         entity: "actorId",
       },

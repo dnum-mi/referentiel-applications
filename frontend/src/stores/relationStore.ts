@@ -14,7 +14,7 @@ export const useRelationStore = defineStore("relationStore", () => {
       path: { applicationId },
     });
     if (!response.response.ok) {
-      throw new Error("Failed to fetch relations");
+      throw new Error("Erreur lors de la récupération des relations");
     }
     if (!response.data) {
       relations.value = [];

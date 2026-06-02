@@ -128,7 +128,7 @@ watch(
         <DsfrButton label="Modifier" class="fr-mb-1w" @click="isEditing = true" />
       </div>
       <div v-else-if="rows.length" class="toRight">
-        <DsfrButton label="Arreter de modifier" @click="isEditing = false" />
+        <DsfrButton label="Arrêter de modifier" @click="isEditing = false" />
       </div>
     </div>
     <div class="fr-mb-4w">

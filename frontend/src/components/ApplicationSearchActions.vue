@@ -104,7 +104,7 @@ const hasCreateGlobalReport = computed(() => {
         class="action-btn icon-left hide-on-mobile"
         @click="exportToExcel"
         aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
-        title="Exporter en excel les applications correspondant aux filtres actuels"
+        title="Exporter en Excel les applications correspondant aux filtres actuels"
       ></DsfrButton>
 
       <DsfrButton
@@ -116,7 +116,7 @@ const hasCreateGlobalReport = computed(() => {
         class="action-btn icon-left show-on-mobile"
         @click="exportToExcel"
         aria-label="Exporter en Excel les applications correspondant aux filtres actuels"
-        title="Exporter en excel les applications correspondant aux filtres actuels"
+        title="Exporter en Excel les applications correspondant aux filtres actuels"
       ></DsfrButton>
 
       <ColumnCustomization data-testid="column-customization" />

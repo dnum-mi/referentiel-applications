@@ -131,7 +131,7 @@ async function handleSubmit() {
         Chargement des options...
       </div>
       <div v-else class="fr-form-group">
-        <DsfrInput v-model="hostingForm.label" label-visible label="Label" class="fr-mb-3w" data-testid="hosting-label-input" />
+        <DsfrInput v-model="hostingForm.label" label-visible label="Libellé" class="fr-mb-3w" data-testid="hosting-label-input" />
         <DsfrInput
           v-model="hostingOptionSearch"
           label-visible

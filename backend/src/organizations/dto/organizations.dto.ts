@@ -13,7 +13,7 @@ export class CreateOrganizationDto {
 
   @ApiProperty({
     example: "",
-    description: "url de l'organisation",
+    description: "URL de l'organisation",
     required: false,
   })
   @IsString()
@@ -56,7 +56,7 @@ export class OrganizationDto {
 
   @ApiProperty({
     example: "",
-    description: "url de l'organisation",
+    description: "URL de l'organisation",
     nullable: true,
   })
   url: string | null;

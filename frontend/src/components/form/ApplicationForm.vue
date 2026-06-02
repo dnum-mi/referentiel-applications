@@ -528,7 +528,7 @@ onMounted(async () => {
         v-model.trim="form.label"
         :disabled="!canEditBase"
         hint="Doit contenir au moins une lettre.
-Seuls les lettres (avec accents), chiffres, espaces, points et tirets sont autorisés.
+Seules les lettres (avec accents), chiffres, espaces, points et tirets sont autorisés.
 Aucun espace en début ou en fin."
         label="Nom de l'application"
         label-visible
@@ -551,15 +551,15 @@ Aucun espace en début ou en fin."
         v-if="isCreateMode"
         v-model="form.status.status"
         :options="statusOptions"
-        label="Status de l'application"
-        default-unselected-text="Sélectionner un status"
+        label="Statut de l'application"
+        default-unselected-text="Sélectionner un statut"
         data-testid="application-status"
       />
 
       <BusinessDivisionSearch
         :business-division-id="initialData.businessDivision?.id"
         @update="updateBusinessDivision"
-        label="Rechercher une direction de metier"
+        label="Rechercher une direction métier"
       />
 
       <DsfrSelect
@@ -712,7 +712,7 @@ Aucun espace en début ou en fin."
       />
       <DsfrInputGroup
         v-model.trim="moaActor.email"
-        label="Email du contact MOA"
+        label="Adresse e-mail du contact MOA"
         label-visible
         required
         type="email"
@@ -760,7 +760,7 @@ Aucun espace en début ou en fin."
       />
       <DsfrInputGroup
         v-model.trim="moeActor.email"
-        label="Email du contact MOE"
+        label="Adresse e-mail du contact MOE"
         label-visible
         required
         type="email"
@@ -815,7 +815,7 @@ Aucun espace en début ou en fin."
         v-if="currentStep === steps.length"
         type="button"
         :disabled="isSubmitting"
-        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
+        :label="isSubmitting ? 'Enregistrement…' : 'Enregistrer'"
         data-testid="application-submit-btn"
         @click="submitCurrentStep"
       />
@@ -827,7 +827,7 @@ Aucun espace en début ou en fin."
       <DsfrButton
         type="submit"
         :disabled="isSubmitting"
-        :label="isSubmitting ? 'Enregistrement...' : 'Enregistrer'"
+        :label="isSubmitting ? 'Enregistrement…' : 'Enregistrer'"
         data-testid="application-submit-btn"
       />
     </div>

@@ -16,7 +16,7 @@ export class TokenDto {
     required: false,
     enum: Roles,
     enumName: "Roles",
-    description: "Role attribué a un utilisateur",
+    description: "Rôle attribué à un utilisateur",
   })
   @IsOptional()
   @IsEnum(Roles)
@@ -77,7 +77,7 @@ export class CreateServiceTokenDto extends PickType(TokenDto, [
     required: true,
     enum: Roles,
     enumName: "Roles",
-    description: "Role attribué a un utilisateur",
+    description: "Rôle attribué à un utilisateur",
   })
   role: Roles;
 }

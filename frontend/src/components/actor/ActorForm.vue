@@ -97,7 +97,7 @@ function handleSubmit() {
 
     <DsfrInput
       v-model="form.email"
-      label="Email"
+      label="E-mail"
       label-visible
       type="email"
       placeholder="exemple@domaine.com"
@@ -109,7 +109,7 @@ function handleSubmit() {
       v-model="form.isGroup"
       name="isGroup"
       :value="true"
-      label="Cette acteur est un groupe"
+      label="Cet acteur est un groupe"
       data-testid="actor-is-group-checkbox"
       class="fr-mb-3w"
     />

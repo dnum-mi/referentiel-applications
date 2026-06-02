@@ -31,7 +31,7 @@ export const useNotesDialog = (initialNotes: MaybeRefOrGetter<string>, onRefresh
     try {
       await reportStore.updateNotes(reportId, editedNotes.value);
     } catch (err) {
-      console.error("Erreur lors de la mise à jour de la notes :", err);
+      console.error("Erreur lors de la mise à jour des notes :", err);
     }
     hideDialog();
     onRefresh();

@@ -45,7 +45,7 @@ const averageIqDisplay = computed(() => {
       </div>
 
       <div class="average-iq" data-testid="application-average-iq">
-        <span class="average-iq__label">IQ moyen (Applications Filtrées) : </span>
+        <span class="average-iq__label">IQ moyen (applications filtrées) : </span>
         <span class="average-iq__value">{{ averageIqDisplay }}</span>
       </div>
 

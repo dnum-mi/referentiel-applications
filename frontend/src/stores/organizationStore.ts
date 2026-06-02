@@ -22,7 +22,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
       query: { search, usedOnly },
     });
     if (!response.response.ok) {
-      throw new Error("Failed to fetch organizations");
+      throw new Error("Erreur lors de la récupération des organisations");
     }
     if (!response.data || !response.data.results) {
       return [];

@@ -34,7 +34,7 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
       .attr("width", width)
       .attr("height", height)
       .attr("role", "img")
-      .attr("aria-label", "Distribution des applications selon les maturites TIME");
+      .attr("aria-label", "Distribution des applications selon les maturités TIME");
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 

@@ -34,7 +34,7 @@ import { PermissionGuard } from "src/common/guards/permission.guard";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 
 /**
- * Controller la gestion des organisations
+ * Controller de la gestion des organisations
  * Permet de créer, mettre à jour,
  */
 @ApiTags("organizations")
@@ -63,14 +63,14 @@ export class OrganizationsController {
 
 Vous devez fournir les informations suivantes :
 - **label**: Le libellé de l'organisation
-- **url**: L'url de l'organisation
+- **url**: L'URL de l'organisation
 - **sigle**: Le sigle de l'organisation
 - **parentId**: L'identifiant de l'organisation parente
     `,
   })
   @ApiCreatedResponse({
     status: 201,
-    description: "Organisation Créée avec succes",
+    description: "Organisation créée avec succès",
     type: OrganizationDto,
   })
   public async create(

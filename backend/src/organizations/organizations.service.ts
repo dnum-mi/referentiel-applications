@@ -64,7 +64,7 @@ export class OrganizationsService extends BaseService<
       });
       if (children.length > 0) {
         throw new Error(
-          "Cannot delete organization with children. Use force delete.",
+          "Impossible de supprimer une organisation ayant des sous-organisations. Utilisez la suppression forcée.",
         );
       }
     }

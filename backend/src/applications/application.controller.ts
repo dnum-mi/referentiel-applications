@@ -77,7 +77,7 @@ Vous devez fournir les informations suivantes :
 - **tags**: Des tags pour catégoriser l'application.
   - **firstProductionDate**: Date de première mise en production.
   - **plannedDecommissioningDate**: Date prévue de déclassement.
-  - **source**: La source du libelé.
+  - **source**: La source du libellé.
   - **value**: Le libellé alternatif.
 - **compliances**: La liste des conformités associées avec :
   - Champs spécifiques selon le type de conformité (DIMA, PDMA, HOMOLOGATION, RGAA, DSFR, RGPD).

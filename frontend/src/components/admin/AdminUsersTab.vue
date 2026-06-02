@@ -21,7 +21,7 @@ const data = ref<PaginatedUserWithPermissions>({ results: [], total: 0 });
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
     key: "email",
-    label: "Email",
+    label: "E-mail",
     isSortable: true,
   },
   {
@@ -31,7 +31,7 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   },
   {
     key: "role",
-    label: "Role",
+    label: "Rôle",
     isSortable: true,
   },
   {

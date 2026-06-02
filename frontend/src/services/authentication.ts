@@ -5,7 +5,7 @@ const FRONTEND_URL = window.location.origin;
 
 const config = await getConfig();
 if (config instanceof Error) {
-  throw new Error("Failed to fetch OIDC configuration from backend");
+  throw new Error("Échec de la récupération de la configuration OIDC");
 }
 
 // oidcConfigUrl is like "http://localhost:8082/realms/xxx/.well-known/openid-configuration"

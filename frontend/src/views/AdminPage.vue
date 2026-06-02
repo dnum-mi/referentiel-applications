@@ -32,14 +32,14 @@ const tabs = ref<DsfrTab[]>([
     component: markRaw(AdminOrganizationsTab),
   },
   {
-    title: "Gestions des tags",
+    title: "Gestion des tags",
     icon: "ri-price-tag-line",
     tabId: "tab-tags",
     panelId: "panel-tags",
     component: markRaw(AdminTagsTab),
   },
   {
-    title: "Gestions des sources",
+    title: "Gestion des sources",
     icon: "ri-database-2-line",
     tabId: "tab-label-sources",
     panelId: "panel-label-sources",

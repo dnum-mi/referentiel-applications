@@ -35,7 +35,7 @@ const columns: TableColumn[] = [
   { field: "Organisation", header: "Organisation", sortable: false },
   { field: "Groupe", header: "Groupe", sortable: true },
   { field: "Type", header: "Type", sortable: false },
-  { field: "Email", header: "Email", sortable: false },
+  { field: "Email", header: "E-mail", sortable: false },
   { field: "Prénom", header: "Prénom", sortable: false },
   { field: "Nom", header: "Nom", sortable: false },
   { field: "Actions", header: "Actions", sortable: false },
@@ -118,9 +118,9 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
       await updateActor(actor, props.application.id, actor.id);
     }
     await fetchActorsByApplication(props.application.id);
-    toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
+    toaster.addSuccessMessage("Acteur enregistré avec succès !");
   } catch {
-    toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
+    toaster.addErrorMessage("Erreur lors de l'enregistrement de l'acteur.");
   } finally {
     loading.value = false;
   }
@@ -264,8 +264,8 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
             target="_blank"
             rel="noopener noreferrer"
             data-testid="actor-email-link"
-            :title="`Envoyer un email à ${data.Email.label}`"
-            :aria-label="`Envoyer un email à ${data.Email.label}`"
+            :title="`Envoyer un e-mail à ${data.Email.label}`"
+            :aria-label="`Envoyer un e-mail à ${data.Email.label}`"
           >
             {{ data.Email.label }}
           </a>
@@ -333,8 +333,8 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
               <a
                 :href="`mailto:${actor.email}`"
                 data-testid="actor-email-link"
-                :title="`Envoyer un email à ${actor.email}`"
-                :aria-label="`Envoyer un email à ${actor.email}`"
+                :title="`Envoyer un e-mail à ${actor.email}`"
+                :aria-label="`Envoyer un e-mail à ${actor.email}`"
               >
                 {{ actor.email }}
               </a>

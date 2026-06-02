@@ -46,7 +46,7 @@ watchDebounced(
     <SidebarFilters data-testid="time-filters" />
 
     <main class="main-content" id="main-content" data-testid="main-content" role="main">
-      <h1 class="fr-h1" data-testid="time-title">Diagramme Time</h1>
+      <h1 class="fr-h1" data-testid="time-title">Diagramme TIME</h1>
 
       <section id="technical-debt-chart" class="chart-section" data-testid="technical-debt-chart-section">
         <div v-if="isTechnicalDebtLoading" class="loader" role="status" aria-live="polite" aria-atomic="true">

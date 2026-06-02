@@ -25,7 +25,7 @@ async function getTagsOptions(query: string) {
   });
 
   if (!response.response.ok || !response.data) {
-    throw new Error("Failed to fetch tags");
+    throw new Error("Échec de la récupération des tags");
   }
 
   const data = response.data;

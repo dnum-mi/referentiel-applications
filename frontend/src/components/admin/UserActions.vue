@@ -100,7 +100,7 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     name: "capability-create-global-report",
   },
   {
-    label: "Export les données",
+    label: "Exporter les données",
     value: Permission.DATA_EXPORT,
     name: "capability-create-data-export",
   },

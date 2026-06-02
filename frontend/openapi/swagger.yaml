@@ -356,7 +356,7 @@ paths:
 
         \  - **plannedDecommissioningDate**: Date prévue de déclassement.
 
-        \  - **source**: La source du libelé.
+        \  - **source**: La source du libellé.
 
         \  - **value**: Le libellé alternatif.
 
@@ -1959,7 +1959,7 @@ paths:
 
         - **label**: Le libellé de l'organisation
 
-        - **url**: L'url de l'organisation
+        - **url**: L'URL de l'organisation
 
         - **sigle**: Le sigle de l'organisation
 
@@ -1975,7 +1975,7 @@ paths:
               $ref: "#/components/schemas/CreateOrganizationDto"
       responses:
         "201":
-          description: Organisation Créée avec succes
+          description: Organisation créée avec succès
           content:
             application/json:
               schema:
@@ -2419,7 +2419,7 @@ paths:
 
         Informations requises :\ 
 
-        - **email** : Email de l'acteur
+        - **email** : E-mail de l'acteur
 
         - **firstname** : Prénom de l'acteur
 
@@ -2602,7 +2602,7 @@ paths:
       summary: Créer un nouveau type d’acteur
       description: "
 
-        **Ce endpoint permet de créer un type d’acteur complète**
+        **Ce endpoint permet de créer un type d'acteur complet**
 
 
         Vous devez fournir les informations suivantes :
@@ -2623,7 +2623,7 @@ paths:
               $ref: "#/components/schemas/CreateActorTypeDto"
       responses:
         "201":
-          description: type d’acteur créé avec succes
+          description: type d'acteur créé avec succès
           content:
             application/json:
               schema:
@@ -2746,7 +2746,7 @@ paths:
       summary: Mettre à jour un type d’acteur
       description: "
 
-        Ce endpoint permet de mettre à jour un type d’acteur existante
+        Ce endpoint permet de mettre à jour un type d'acteur existant
 
         Vous devez fournir l'identifiant du type d’acteur dans l'URL et les
         nouvelles données dans le corps de la requête
@@ -3420,12 +3420,12 @@ paths:
   /api/v2/applications/{applicationId}/links:
     post:
       operationId: ApplicationLinksController_create
-      summary: Create a new link for an application
+      summary: Créer un lien pour une application
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID of the application
+          description: ID de l'application
           schema:
             type: string
       requestBody:
@@ -3436,7 +3436,7 @@ paths:
               $ref: "#/components/schemas/CreateLinkDto"
       responses:
         "201":
-          description: Link created successfully
+          description: Lien créé avec succès
           content:
             application/json:
               schema:
@@ -3445,13 +3445,13 @@ paths:
         - Links
     get:
       operationId: ApplicationLinksController_findAll
-      summary: Retrieve links for an application
-      description: Get list of links for an application
+      summary: Récupérer les liens d'une application
+      description: Liste des liens associés à une application
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID of the application
+          description: ID de l'application
           schema:
             type: string
         - name: page
@@ -3491,7 +3491,7 @@ paths:
             type: string
       responses:
         "200":
-          description: List of links for the application
+          description: Liste des liens de l'application
           content:
             application/json:
               schema:
@@ -3500,18 +3500,18 @@ paths:
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
       operationId: ApplicationLinksController_update
-      summary: Update a link for an application
+      summary: Mettre à jour un lien d'une application
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID of the application
+          description: ID de l'application
           schema:
             type: string
         - name: id
           required: true
           in: path
-          description: ID of the link to update
+          description: ID du lien à mettre à jour
           schema:
             type: string
       requestBody:
@@ -3522,7 +3522,7 @@ paths:
               $ref: "#/components/schemas/UpdateLinkDto"
       responses:
         "200":
-          description: Link updated successfully
+          description: Lien mis à jour avec succès
           content:
             application/json:
               schema:
@@ -3530,23 +3530,23 @@ paths:
       tags: *a21
     delete:
       operationId: ApplicationLinksController_delete
-      summary: Delete a link for an application
+      summary: Supprimer un lien d'une application
       parameters:
         - name: applicationId
           required: true
           in: path
-          description: ID of the application
+          description: ID de l'application
           schema:
             type: string
         - name: id
           required: true
           in: path
-          description: ID of the link to delete
+          description: ID du lien à supprimer
           schema:
             type: string
       responses:
         "204":
-          description: Link deleted successfully
+          description: Lien supprimé avec succès
       tags: *a21
   /api/v2/applications/{applicationId}/technical-debt-info:
     post:
@@ -4707,7 +4707,7 @@ components:
           type: string
           nullable: true
           example: ""
-          description: url de l'organisation
+          description: URL de l'organisation
         sigle:
           type: string
           nullable: true
@@ -5731,7 +5731,7 @@ components:
         url:
           type: string
           example: ""
-          description: url de l'organisation
+          description: URL de l'organisation
         sigle:
           type: string
           example: dtnum
@@ -5767,7 +5767,7 @@ components:
         url:
           type: string
           example: ""
-          description: url de l'organisation
+          description: URL de l'organisation
         sigle:
           type: string
           example: dtnum

@@ -74,7 +74,7 @@ async function copyToClipboard() {
       return;
     }
     await navigator.clipboard.writeText(window.location.href);
-    toaster.addSuccessMessage("Lien copié dans le presse-papier !");
+    toaster.addSuccessMessage("Lien copié dans le presse-papiers !");
   } catch (err) {
     toaster.addErrorMessage("Impossible de copier le lien.");
   }

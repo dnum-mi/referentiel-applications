@@ -36,7 +36,7 @@ async function fetchTokens() {
 
   const response = await api.tokenControllerFindPersonal();
   if (response.error) {
-    error.value = "Erreur lors du chargement des tokens";
+    error.value = "Erreur lors du chargement des jetons";
     isLoading.value = false;
     return;
   }
@@ -52,19 +52,19 @@ async function createToken() {
 
   const response = await api.tokenControllerCreatePersonal({ body: newToken.value });
   if (response.error) {
-    error.value = "Erreur lors de la création du token";
+    error.value = "Erreur lors de la création du jeton";
     isLoading.value = false;
     return;
   }
 
   if (!response.data) {
-    error.value = "Erreur lors de la création du token";
+    error.value = "Erreur lors de la création du jeton";
     isLoading.value = false;
     return;
   }
 
   newlyCreatedToken.value = response.data;
-  successMessage.value = "Token créé avec succès";
+  successMessage.value = "Jeton créé avec succès";
   resetForm();
   showCreateForm.value = false;
   await fetchTokens();
@@ -84,14 +84,14 @@ async function confirmRevokeToken() {
 
   const response = await api.tokenControllerDeletePersonal({ path: { id: tokenToRevoke.value } });
   if (response.error) {
-    error.value = "Erreur lors de la révocation du token";
+    error.value = "Erreur lors de la révocation du jeton";
     isLoading.value = false;
     showDeleteConfirmation.value = false;
     tokenToRevoke.value = null;
     return;
   }
 
-  successMessage.value = "Token révoqué avec succès";
+  successMessage.value = "Jeton révoqué avec succès";
   await fetchTokens();
   isLoading.value = false;
   showDeleteConfirmation.value = false;
@@ -132,9 +132,9 @@ function isRevoked(token: TokenDto): boolean {
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text).then(() => {
-    successMessage.value = "Token copié dans le presse-papier";
+    successMessage.value = "Jeton copié dans le presse-papiers";
     setTimeout(() => {
-      if (successMessage.value === "Token copié dans le presse-papier") {
+      if (successMessage.value === "Jeton copié dans le presse-papiers") {
         successMessage.value = null;
       }
     }, 3000);
@@ -152,7 +152,7 @@ onMounted(() => {
 
 <template>
   <div class="fr-mt-3w">
-    <h2 class="fr-h3 fr-mb-2w">Tokens applicatifs</h2>
+    <h2 class="fr-h3 fr-mb-2w">Jetons applicatifs</h2>
     <p class="fr-text--sm fr-mb-3w">
       Les tokens applicatifs vous permettent d'accéder à l'API du référentiel. Vous pouvez créer jusqu'à 5 tokens personnels.
     </p>
@@ -168,7 +168,7 @@ onMounted(() => {
       @close="successMessage = null"
     />
 
-    <DsfrAlert v-if="newlyCreatedToken" type="success" title="Token créé avec succès" class="fr-mb-2w" closeable @close="dismissNewToken">
+    <DsfrAlert v-if="newlyCreatedToken" type="success" title="Jeton créé avec succès" class="fr-mb-2w" closeable @close="dismissNewToken">
       <p class="fr-mb-1w"><strong>Attention :</strong> Copiez ce token maintenant, il ne sera plus affiché.</p>
       <div class="token-display fr-mb-1w">
         <code class="token-value">{{ newlyCreatedToken.password }}</code>
@@ -180,7 +180,7 @@ onMounted(() => {
       <DsfrButton v-if="!showCreateForm" icon="ri-add-line" :disabled="maxTokensReached" @click="toggleCreateForm">
         Créer un nouveau token
       </DsfrButton>
-      <span v-if="maxTokensReached" class="fr-ml-2w fr-text--sm fr-text--bold"> Limite de 5 tokens atteinte </span>
+      <span v-if="maxTokensReached" class="fr-ml-2w fr-text--sm fr-text--bold"> Limite de 5 jetons atteinte </span>
     </div>
 
     <div v-if="showCreateForm" class="fr-card fr-p-3w fr-mb-3w">
@@ -191,7 +191,7 @@ onMounted(() => {
           label="Nom"
           label-visible
           required
-          hint="Nom du service ou de l'application utilisant ce token"
+          hint="Nom du service ou de l'application utilisant ce jeton"
         />
 
         <DsfrInputGroup
@@ -199,7 +199,7 @@ onMounted(() => {
           label="Description"
           label-visible
           required
-          hint="Description de l'usage du token"
+          hint="Description de l'usage du jeton"
         />
 
         <DsfrInputGroup
@@ -226,7 +226,7 @@ onMounted(() => {
 
     <DsfrTable
       v-else
-      title="Liste de vos tokens"
+      title="Liste de vos jetons"
       :headers="['Nom', 'Description', 'Date d\'expiration', 'Statut', 'Actions']"
       class="fr-table--layout-fixed"
     >

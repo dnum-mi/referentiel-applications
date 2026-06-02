@@ -71,7 +71,7 @@ export class ApplicationActorsController {
 Ce endpoint permet de créer un acteur complet.
 
 Informations requises : 
-- **email** : Email de l'acteur
+- **email** : E-mail de l'acteur
 - **firstname** : Prénom de l'acteur
 - **lastname** : Nom de l'acteur
 - **actorTypeId** : ID du type d'acteur lié à l'acteur 

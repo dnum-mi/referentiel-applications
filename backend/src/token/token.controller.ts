@@ -30,7 +30,7 @@ import {
 import { TokenService } from "./token.service";
 
 /**
- * Controller la gestion des organisations
+ * Controller de la gestion des organisations
  * Permet de créer, mettre à jour,
  */
 @ApiTags("tokens")

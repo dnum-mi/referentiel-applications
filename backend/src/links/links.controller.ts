@@ -39,13 +39,13 @@ export class ApplicationLinksController {
 
   @Post()
   @RequiredPermissions([Permission.LinkWrite])
-  @ApiOperation({ summary: "Create a new link for an application" })
+  @ApiOperation({ summary: "Créer un lien pour une application" })
   @HttpCode(201)
   @ApiCreatedResponse({
-    description: "Link created successfully",
+    description: "Lien créé avec succès",
     type: LinkDto,
   })
-  @ApiParam({ name: "applicationId", description: "ID of the application" })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
   async create(
     @UserId() userId: string,
     @Body() createLinkDto: CreateLinkDto,
@@ -57,14 +57,14 @@ export class ApplicationLinksController {
   @Get()
   @RequiredPermissions([Permission.LinkRead])
   @ApiOperation({
-    summary: "Retrieve links for an application",
-    description: "Get list of links for an application",
+    summary: "Récupérer les liens d'une application",
+    description: "Liste des liens associés à une application",
   })
   @ApiOkResponse({
-    description: "List of links for the application",
+    description: "Liste des liens de l'application",
     type: PaginatedResponseDto.of(LinkDto),
   })
-  @ApiParam({ name: "applicationId", description: "ID of the application" })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
   findAll(
     @Param("applicationId") applicationId: string,
     @Query() filters: LinkFiltersDto,
@@ -74,10 +74,10 @@ export class ApplicationLinksController {
 
   @Patch(":id")
   @RequiredPermissions([Permission.LinkWrite])
-  @ApiOperation({ summary: "Update a link for an application" })
-  @ApiOkResponse({ description: "Link updated successfully", type: LinkDto })
-  @ApiParam({ name: "applicationId", description: "ID of the application" })
-  @ApiParam({ name: "id", description: "ID of the link to update" })
+  @ApiOperation({ summary: "Mettre à jour un lien d'une application" })
+  @ApiOkResponse({ description: "Lien mis à jour avec succès", type: LinkDto })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
+  @ApiParam({ name: "id", description: "ID du lien à mettre à jour" })
   update(
     @UserId() userId: string,
     @Param("applicationId") applicationId: string,
@@ -89,11 +89,11 @@ export class ApplicationLinksController {
 
   @Delete(":id")
   @RequiredPermissions([Permission.LinkWrite])
-  @ApiOperation({ summary: "Delete a link for an application" })
+  @ApiOperation({ summary: "Supprimer un lien d'une application" })
   @HttpCode(204)
-  @ApiNoContentResponse({ description: "Link deleted successfully" })
-  @ApiParam({ name: "applicationId", description: "ID of the application" })
-  @ApiParam({ name: "id", description: "ID of the link to delete" })
+  @ApiNoContentResponse({ description: "Lien supprimé avec succès" })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
+  @ApiParam({ name: "id", description: "ID du lien à supprimer" })
   delete(
     @UserId() userId: string,
     @Param("applicationId") applicationId: string,

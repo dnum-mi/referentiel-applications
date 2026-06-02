@@ -48,11 +48,11 @@ function handleSubmit() {
       required
       data-testid="status-select"
     />
-    <DsfrInput v-model="form.version" class="fr-mb-3w" label="Version (optionnel)" label-visible data-testid="status-version-input" />
+    <DsfrInput v-model="form.version" class="fr-mb-3w" label="Version (facultative)" label-visible data-testid="status-version-input" />
     <DsfrInput
       v-model="form.statusDate"
       class="fr-mb-3w"
-      label="Date du statut (optionnel)"
+      label="Date du statut (facultative)"
       label-visible
       type="date"
       hint="Date à laquelle le changement de statut a eu lieu"

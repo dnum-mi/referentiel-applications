@@ -48,7 +48,7 @@ onMounted(async () => {
         </td>
       </tr>
       <tr>
-        <th scope="row">Email</th>
+        <th scope="row">E-mail</th>
         <td data-testid="user-profile-email">
           {{ userStore.user.email }}
         </td>
@@ -61,8 +61,8 @@ onMounted(async () => {
       <h2 class="fr-h6">Préférences de notification</h2>
       <DsfrToggleSwitch
         v-model="emailNotificationsEnabled"
-        label="Recevoir les notifications par email"
-        hint="Recevoir des notifications par email lorsque des changements sont apportés à vos applications suivies."
+        label="Recevoir les notifications par e-mail"
+        hint="Recevoir des notifications par e-mail lorsque des changements sont apportés à vos applications suivies."
         data-testid="user-profile-email-notifications-checkbox"
         :disabled="isUpdating"
         @update:model-value="handleToggleEmailNotifications"
