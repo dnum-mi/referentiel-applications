@@ -39,6 +39,7 @@ export class ApplicationExportService {
     } else {
       const where = this.prismaQueryBuilder.buildSearchWhere(
         searchParams,
+        requestor,
         hasAppList
           ? undefined
           : {

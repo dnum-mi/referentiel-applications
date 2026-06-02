@@ -24,8 +24,15 @@ const isMyAppsFilterActive = computed(() => {
   return !!(userStore.user?.email && filters.value.actorEmail === userStore.user.email);
 });
 
+const isSubscribedAppsFilterActive = computed(() => {
+  return !!(userStore.user?.email && filters.value.subscribersEmail);
+});
+
 function toggleMyAppsFilter(value: boolean) {
   setFilter({ actorEmail: value ? userStore.user?.email : undefined, page: 0 });
+}
+function toggleSubscribedAppsFilter(value: boolean) {
+  setFilter({ subscribersEmail: value ? true : undefined, page: 0 });
 }
 </script>
 
@@ -49,6 +56,14 @@ function toggleMyAppsFilter(value: boolean) {
           no-text
           data-testid="my-apps-filter-toggle"
           @update:model-value="toggleMyAppsFilter"
+        />
+
+        <DsfrToggleSwitch
+          :model-value="isSubscribedAppsFilterActive"
+          label="Mes Abonnements"
+          no-text
+          data-testid="my-apps-filter-toggle-subscribed"
+          @update:model-value="toggleSubscribedAppsFilter"
         />
 
         <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">

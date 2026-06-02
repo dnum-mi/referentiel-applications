@@ -133,6 +133,15 @@ export class ApplicationSearchDto extends PaginationDto {
   currentStatus__isNull?: boolean;
 
   @ApiPropertyOptional({
+    description: "Filtrer les applications abonné",
+    example: true,
+  })
+  @IsOptional()
+  @Transform(({ value }) => stringToBoolean(value))
+  @IsBoolean()
+  subscribersEmail?: boolean;
+
+  @ApiPropertyOptional({
     description: "Nom de l'organisation liée à l'application",
     example: "Direction des systèmes d'information",
   })

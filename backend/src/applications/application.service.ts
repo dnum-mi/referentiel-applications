@@ -291,6 +291,7 @@ export class ApplicationService {
 
     const where = this.prismaQueryBuilder.buildSearchWhere(
       searchParams,
+      requestor,
       hasAppList
         ? undefined
         : {
@@ -332,7 +333,10 @@ export class ApplicationService {
       requestor,
     );
     if (hasMDITList) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams);
+      const where = this.prismaQueryBuilder.buildSearchWhere(
+        searchParams,
+        requestor,
+      );
       where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }
@@ -343,10 +347,14 @@ export class ApplicationService {
     );
 
     if (hasAppRead) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(searchParams, {
-        actorEmail: requestor?.email,
-        businessDivisionId: requestor?.organization?.businessDivisionId,
-      });
+      const where = this.prismaQueryBuilder.buildSearchWhere(
+        searchParams,
+        requestor,
+        {
+          actorEmail: requestor?.email,
+          businessDivisionId: requestor?.organization?.businessDivisionId,
+        },
+      );
       where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
       return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
     }

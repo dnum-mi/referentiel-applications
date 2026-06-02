@@ -22,6 +22,7 @@ const DEFAULT_FILTERS: Filters = {
   priorityRestart: undefined,
   currentStatus__in: ["under_construction", "poc", "in_production_mvp", "in_production", "in_production_decommissioning", "decommissioned"],
   currentStatus__isNull: true,
+  subscribersEmail: false,
   compliance__in: undefined,
   page: 0,
   pageSize: 15,
@@ -146,6 +147,12 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
         : parseQueryParam(query.currentStatus__isNull) === "false"
           ? false
           : DEFAULT_FILTERS.currentStatus__isNull,
+    subscribersEmail:
+      parseQueryParam(query.subscribersEmail) === "true"
+        ? true
+        : parseQueryParam(query.subscribersEmail) === "false"
+          ? false
+          : DEFAULT_FILTERS.subscribersEmail,
     compliance__in: parseQueryParamArray(query.compliance__in) as Filters["compliance__in"],
     page: parseQueryParamNumber(query.page) ?? 0,
     pageSize: parseQueryParamNumber(query.pageSize) ?? 15,

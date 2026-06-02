@@ -2,34 +2,38 @@ import { Injectable } from "@nestjs/common";
 import type { Prisma, RelationType } from "@prisma/client";
 import { RelationTypeFilter } from "../product/application/dto/relation-type.dto";
 import { ApplicationSearchFilters } from "src/applications/infrastructure/repository/application.repository.interface";
+import { Requestor } from "src/user/entities/user.entity";
 
 @Injectable()
 export class PrismaQueryBuilder {
   public buildSearchWhere(
     filters: ApplicationSearchFilters,
-    ownership?: { actorEmail?: string; businessDivisionId?: string },
+    requestor: Requestor,
+    restrictedFilter?: { actorEmail?: string; businessDivisionId?: string },
   ) {
     const { shortName, priorityRestart } = filters;
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
 
-    if (ownership?.actorEmail || ownership?.businessDivisionId) {
+    if (restrictedFilter?.actorEmail || restrictedFilter?.businessDivisionId) {
       const orConditions: Prisma.ApplicationWhereInput[] = [];
-      if (ownership.actorEmail) {
+      if (restrictedFilter.actorEmail) {
         orConditions.push({
           actors: {
             some: {
               email: {
-                equals: ownership.actorEmail,
+                equals: restrictedFilter.actorEmail,
                 mode: "insensitive" as const,
               },
             },
           },
         });
       }
-      if (ownership.businessDivisionId) {
-        orConditions.push({ businessDivisionId: ownership.businessDivisionId });
+      if (restrictedFilter.businessDivisionId) {
+        orConditions.push({
+          businessDivisionId: restrictedFilter.businessDivisionId,
+        });
       }
       where.AND.push({ OR: orConditions });
     }
@@ -362,6 +366,19 @@ export class PrismaQueryBuilder {
                 filters.currentStatus__isNull === true ? null : undefined,
             },
           ],
+        },
+      },
+      {
+        condition: filters.subscribersEmail,
+        whereClause: {
+          subscribers: {
+            some: {
+              email: {
+                equals: requestor.email,
+                mode: "insensitive" as const,
+              },
+            },
+          },
         },
       },
     ];
