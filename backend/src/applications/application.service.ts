@@ -289,7 +289,7 @@ export class ApplicationService {
       return { results: [], total: 0, averageIq: 0 };
     }
 
-    const where = this.prismaQueryBuilder.buildSearchWhere(
+    const where = await this.prismaQueryBuilder.buildSearchWhere(
       searchParams,
       requestor,
       hasAppList
@@ -333,7 +333,7 @@ export class ApplicationService {
       requestor,
     );
     if (hasMDITList) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(
+      const where = await this.prismaQueryBuilder.buildSearchWhere(
         searchParams,
         requestor,
       );
@@ -347,7 +347,7 @@ export class ApplicationService {
     );
 
     if (hasAppRead) {
-      const where = this.prismaQueryBuilder.buildSearchWhere(
+      const where = await this.prismaQueryBuilder.buildSearchWhere(
         searchParams,
         requestor,
         {

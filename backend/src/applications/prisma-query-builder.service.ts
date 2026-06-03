@@ -3,10 +3,17 @@ import type { Prisma, RelationType } from "@prisma/client";
 import { RelationTypeFilter } from "../product/application/dto/relation-type.dto";
 import { ApplicationSearchFilters } from "src/applications/infrastructure/repository/application.repository.interface";
 import { Requestor } from "src/user/entities/user.entity";
+import { PrismaService } from "src/prisma/prisma.service";
+import { QueryBuilderGroupActor } from "src/common/service/prisma-query-builder.service";
 
 @Injectable()
 export class PrismaQueryBuilder {
-  public buildSearchWhere(
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly queryBuilderGroupActor: QueryBuilderGroupActor,
+  ) {}
+
+  public async buildSearchWhere(
     filters: ApplicationSearchFilters,
     requestor: Requestor,
     restrictedFilter?: { actorEmail?: string; businessDivisionId?: string },
@@ -15,6 +22,15 @@ export class PrismaQueryBuilder {
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
+
+    const groupActorTypeIds: string[] =
+      filters.myApplications && requestor?.organization?.path
+        ? (
+            await this.prisma.$queryRawUnsafe<{ actorTypeId: string }[]>(
+              this.queryBuilderGroupActor.build(requestor),
+            )
+          ).map((a) => a.actorTypeId)
+        : [];
 
     if (restrictedFilter?.actorEmail || restrictedFilter?.businessDivisionId) {
       const orConditions: Prisma.ApplicationWhereInput[] = [];
@@ -258,6 +274,26 @@ export class PrismaQueryBuilder {
                 equals: filters.actorEmail,
                 mode: "insensitive" as const,
               },
+            },
+          },
+        },
+      },
+      {
+        condition: filters.myApplications,
+        whereClause: {
+          actors: {
+            some: {
+              OR: [
+                {
+                  email: {
+                    equals: requestor.email,
+                    mode: "insensitive" as const,
+                  },
+                },
+                ...(groupActorTypeIds.length > 0
+                  ? [{ actorTypeId: { in: groupActorTypeIds }, isGroup: true }]
+                  : []),
+              ],
             },
           },
         },

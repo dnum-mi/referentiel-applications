@@ -142,6 +142,15 @@ export class ApplicationSearchDto extends PaginationDto {
   subscribersEmail?: boolean;
 
   @ApiPropertyOptional({
+    description: "Filtrer les applications par acteur et groupe acteurs",
+    example: true,
+  })
+  @IsOptional()
+  @Transform(({ value }) => stringToBoolean(value))
+  @IsBoolean()
+  myApplications?: boolean;
+
+  @ApiPropertyOptional({
     description: "Nom de l'organisation liée à l'application",
     example: "Direction des systèmes d'information",
   })

@@ -21,7 +21,7 @@ const userStore = useUserStore();
 const { openAccordions, toggle } = useAccordionManager(8, true);
 
 const isMyAppsFilterActive = computed(() => {
-  return !!(userStore.user?.email && filters.value.actorEmail === userStore.user.email);
+  return !!(userStore.user?.email && filters.value.myApplications);
 });
 
 const isSubscribedAppsFilterActive = computed(() => {
@@ -29,7 +29,7 @@ const isSubscribedAppsFilterActive = computed(() => {
 });
 
 function toggleMyAppsFilter(value: boolean) {
-  setFilter({ actorEmail: value ? userStore.user?.email : undefined, page: 0 });
+  setFilter({ myApplications: value ? true : undefined, page: 0 });
 }
 function toggleSubscribedAppsFilter(value: boolean) {
   setFilter({ subscribersEmail: value ? true : undefined, page: 0 });
