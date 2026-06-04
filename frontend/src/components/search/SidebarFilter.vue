@@ -55,6 +55,7 @@ function toggleSubscribedAppsFilter(value: boolean) {
           label="Mes Applications"
           no-text
           data-testid="my-apps-filter-toggle"
+          class="my-toggle-nowrap"
           @update:model-value="toggleMyAppsFilter"
         />
 
@@ -63,6 +64,7 @@ function toggleSubscribedAppsFilter(value: boolean) {
           label="Mes Abonnements"
           no-text
           data-testid="my-apps-filter-toggle-subscribed"
+          class="my-toggle-nowrap"
           @update:model-value="toggleSubscribedAppsFilter"
         />
 
@@ -133,6 +135,10 @@ function toggleSubscribedAppsFilter(value: boolean) {
 </template>
 
 <style scoped>
+:deep(.fr-toggle__label) {
+  white-space: nowrap;
+}
+
 .sidebar {
   width: 280px;
   border-right: 1px solid #e5e7eb;
