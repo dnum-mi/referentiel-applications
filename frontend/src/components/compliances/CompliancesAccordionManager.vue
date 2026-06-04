@@ -215,12 +215,6 @@ async function refresh() {
 
 onMounted(refresh);
 
-function onAddClick() {
-  modalMode.value = compliance.value && (compliance.value.id || typesWithData.value.length > 0) ? "edit" : "create";
-  selectedType.value = null;
-  showModal.value = true;
-}
-
 function onEditClick(type: ManagedComplianceType) {
   modalMode.value = "edit";
   selectedType.value = type;
@@ -339,7 +333,7 @@ const hasComplianceEditPermission = computed(() => {
               icon="ri-leaf-line"
               size="sm"
               tertiary
-              :disabled="isLoading || isScanningEcoIndex"
+              :disabled="isLoading || isScanningEcoIndex || !hasComplianceEditPermission"
               data-testid="compliance-scan-ecoindex-btn"
               @click="runEcoIndexScan"
             >
