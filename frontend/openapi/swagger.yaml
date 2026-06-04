@@ -529,6 +529,20 @@ paths:
           schema:
             example: true
             type: boolean
+        - name: subscribersEmail
+          required: false
+          in: query
+          description: Filtrer les applications abonné
+          schema:
+            example: true
+            type: boolean
+        - name: myApplications
+          required: false
+          in: query
+          description: Filtrer les applications par acteur et groupe acteurs
+          schema:
+            example: true
+            type: boolean
         - name: organization
           required: false
           in: query
@@ -933,6 +947,20 @@ paths:
           required: false
           in: query
           description: Filtrer les applications sans statut
+          schema:
+            example: true
+            type: boolean
+        - name: subscribersEmail
+          required: false
+          in: query
+          description: Filtrer les applications abonné
+          schema:
+            example: true
+            type: boolean
+        - name: myApplications
+          required: false
+          in: query
+          description: Filtrer les applications par acteur et groupe acteurs
           schema:
             example: true
             type: boolean
@@ -3772,6 +3800,20 @@ paths:
           required: false
           in: query
           description: Filtrer les applications sans statut
+          schema:
+            example: true
+            type: boolean
+        - name: subscribersEmail
+          required: false
+          in: query
+          description: Filtrer les applications abonné
+          schema:
+            example: true
+            type: boolean
+        - name: myApplications
+          required: false
+          in: query
+          description: Filtrer les applications par acteur et groupe acteurs
           schema:
             example: true
             type: boolean

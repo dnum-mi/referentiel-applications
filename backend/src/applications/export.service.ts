@@ -37,8 +37,9 @@ export class ApplicationExportService {
     if (!hasAppList && !hasAppRead) {
       allMatchingApps = { results: [], total: 0, averageIq: 0 };
     } else {
-      const where = this.prismaQueryBuilder.buildSearchWhere(
+      const where = await this.prismaQueryBuilder.buildSearchWhere(
         searchParams,
+        requestor,
         hasAppList
           ? undefined
           : {

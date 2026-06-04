@@ -7,10 +7,14 @@ import {
   transformAppPermissionsObjectToArray,
 } from "../utils/types";
 import { roleToAppPermissions } from "src/permissions/role-to-permissions";
+import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
 
 @Injectable()
 export class CheckPermissions {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly queryBuilderGroupActor: QueryBuilderGroupActor,
+  ) {}
 
   async can(
     permissions: Permission[],
@@ -41,29 +45,41 @@ export class CheckPermissions {
   }
 
   private async getUserAppPermissions(applicationId: string, user: Requestor) {
-    const actors = await this.prisma.actor.findMany({
-      where: {
-        applicationId,
-        OR: [
-          { email: user.email },
-          { isGroup: true, organizationId: user.organizationId },
-        ],
-      },
-      include: {
-        actorType: {
-          include: {
-            appPermissions: true,
-          },
-        },
-      },
-      distinct: ["actorTypeId"],
-    });
+    const userOrganization: string | null = user.organization?.path ?? null;
 
-    return actors.flatMap((actor) =>
-      actor.actorType.appPermissions.flatMap((perm) =>
-        transformAppPermissionsObjectToArray(perm),
+    const [emailActors, groupActors] = await Promise.all([
+      this.prisma.actor.findMany({
+        where: { applicationId, email: user.email, isGroup: false },
+        include: { actorType: { include: { appPermissions: true } } },
+        distinct: ["actorTypeId"],
+      }),
+      userOrganization !== null
+        ? this.prisma.$queryRawUnsafe<{ actorTypeId: string }[]>(
+            this.queryBuilderGroupActor.buildByApplication(applicationId, user),
+          )
+        : Promise.resolve([]),
+    ]);
+
+    const groupActorTypes =
+      groupActors.length > 0
+        ? await this.prisma.actorType.findMany({
+            where: { id: { in: groupActors.map((a) => a.actorTypeId) } },
+            include: { appPermissions: true },
+          })
+        : [];
+
+    return [
+      ...emailActors.flatMap((actor) =>
+        actor.actorType.appPermissions.flatMap((perm) =>
+          transformAppPermissionsObjectToArray(perm),
+        ),
       ),
-    );
+      ...groupActorTypes.flatMap((actorType) =>
+        actorType.appPermissions.flatMap((perm) =>
+          transformAppPermissionsObjectToArray(perm),
+        ),
+      ),
+    ];
   }
 
   private async getUserRolePermissions(

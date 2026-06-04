@@ -21,11 +21,18 @@ const userStore = useUserStore();
 const { openAccordions, toggle } = useAccordionManager(8, true);
 
 const isMyAppsFilterActive = computed(() => {
-  return !!(userStore.user?.email && filters.value.actorEmail === userStore.user.email);
+  return !!(userStore.user?.email && filters.value.myApplications);
+});
+
+const isSubscribedAppsFilterActive = computed(() => {
+  return !!(userStore.user?.email && filters.value.subscribersEmail);
 });
 
 function toggleMyAppsFilter(value: boolean) {
-  setFilter({ actorEmail: value ? userStore.user?.email : undefined, page: 0 });
+  setFilter({ myApplications: value ? true : undefined, page: 0 });
+}
+function toggleSubscribedAppsFilter(value: boolean) {
+  setFilter({ subscribersEmail: value ? true : undefined, page: 0 });
 }
 </script>
 
@@ -48,7 +55,17 @@ function toggleMyAppsFilter(value: boolean) {
           label="Mes Applications"
           no-text
           data-testid="my-apps-filter-toggle"
+          class="my-toggle-nowrap"
           @update:model-value="toggleMyAppsFilter"
+        />
+
+        <DsfrToggleSwitch
+          :model-value="isSubscribedAppsFilterActive"
+          label="Mes Abonnements"
+          no-text
+          data-testid="my-apps-filter-toggle-subscribed"
+          class="my-toggle-nowrap"
+          @update:model-value="toggleSubscribedAppsFilter"
         />
 
         <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">
@@ -118,6 +135,10 @@ function toggleMyAppsFilter(value: boolean) {
 </template>
 
 <style scoped>
+:deep(.fr-toggle__label) {
+  white-space: nowrap;
+}
+
 .sidebar {
   width: 280px;
   border-right: 1px solid #e5e7eb;

@@ -2,34 +2,54 @@ import { Injectable } from "@nestjs/common";
 import type { Prisma, RelationType } from "@prisma/client";
 import { RelationTypeFilter } from "../product/application/dto/relation-type.dto";
 import { ApplicationSearchFilters } from "src/applications/infrastructure/repository/application.repository.interface";
+import { Requestor } from "src/user/entities/user.entity";
+import { PrismaService } from "src/prisma/prisma.service";
+import { QueryBuilderGroupActor } from "src/common/service/prisma-query-builder.service";
 
 @Injectable()
 export class PrismaQueryBuilder {
-  public buildSearchWhere(
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly queryBuilderGroupActor: QueryBuilderGroupActor,
+  ) {}
+
+  public async buildSearchWhere(
     filters: ApplicationSearchFilters,
-    ownership?: { actorEmail?: string; businessDivisionId?: string },
+    requestor: Requestor,
+    restrictedFilter?: { actorEmail?: string; businessDivisionId?: string },
   ) {
     const { shortName, priorityRestart } = filters;
 
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
 
-    if (ownership?.actorEmail || ownership?.businessDivisionId) {
+    const groupActorTypeIds: string[] =
+      filters.myApplications && requestor?.organization?.path
+        ? (
+            await this.prisma.$queryRawUnsafe<{ actorTypeId: string }[]>(
+              this.queryBuilderGroupActor.build(requestor),
+            )
+          ).map((a) => a.actorTypeId)
+        : [];
+
+    if (restrictedFilter?.actorEmail || restrictedFilter?.businessDivisionId) {
       const orConditions: Prisma.ApplicationWhereInput[] = [];
-      if (ownership.actorEmail) {
+      if (restrictedFilter.actorEmail) {
         orConditions.push({
           actors: {
             some: {
               email: {
-                equals: ownership.actorEmail,
+                equals: restrictedFilter.actorEmail,
                 mode: "insensitive" as const,
               },
             },
           },
         });
       }
-      if (ownership.businessDivisionId) {
-        orConditions.push({ businessDivisionId: ownership.businessDivisionId });
+      if (restrictedFilter.businessDivisionId) {
+        orConditions.push({
+          businessDivisionId: restrictedFilter.businessDivisionId,
+        });
       }
       where.AND.push({ OR: orConditions });
     }
@@ -259,6 +279,26 @@ export class PrismaQueryBuilder {
         },
       },
       {
+        condition: filters.myApplications,
+        whereClause: {
+          actors: {
+            some: {
+              OR: [
+                {
+                  email: {
+                    equals: requestor.email,
+                    mode: "insensitive" as const,
+                  },
+                },
+                ...(groupActorTypeIds.length > 0
+                  ? [{ actorTypeId: { in: groupActorTypeIds }, isGroup: true }]
+                  : []),
+              ],
+            },
+          },
+        },
+      },
+      {
         condition: filters.missingMoa,
         whereClause: {
           actors: {
@@ -362,6 +402,19 @@ export class PrismaQueryBuilder {
                 filters.currentStatus__isNull === true ? null : undefined,
             },
           ],
+        },
+      },
+      {
+        condition: filters.subscribersEmail,
+        whereClause: {
+          subscribers: {
+            some: {
+              email: {
+                equals: requestor.email,
+                mode: "insensitive" as const,
+              },
+            },
+          },
         },
       },
     ];
