@@ -238,6 +238,11 @@ async function runEcoIndexScan() {
     const response = await applicationCompliancesControllerScanEcoIndex({
       path: { applicationId },
     });
+    const error = response.error as Error;
+    if (error) {
+      toaster.addErrorMessage("Aucune URL cible EcoIndex valide trouvée.");
+      return;
+    }
     compliance.value = response.data ?? compliance.value;
     toaster.addSuccessMessage("Scan EcoIndex effectué avec succès.");
   } catch {

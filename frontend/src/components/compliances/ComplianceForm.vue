@@ -36,6 +36,10 @@ const submitting = ref(false);
 const isHomologationHomologuee = computed(() => form.value.homologation_status === "homologuee");
 const showHomologationDateEnd = computed(() => isHomologationHomologuee.value || Boolean(form.value.homologation_date_end));
 
+const showEcoIndexUrlWarning = computed(
+  () => Boolean(props.initialData?.eco_index_target_url) && form.value.eco_index_target_url !== props.initialData?.eco_index_target_url,
+);
+
 const canEdit = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.application.myPerms)));
 
 const toOptionalNumber = (value: unknown): number | undefined => (value == null || value === "" ? undefined : Number(value));
@@ -292,6 +296,13 @@ async function save() {
           label-visible
           type="url"
           data-testid="ecoindex-target-url-input"
+        />
+        <DsfrAlert
+          v-if="showEcoIndexUrlWarning"
+          type="warning"
+          title="Attention"
+          description="Modifier l'URL réinitialisera les valeurs de l'éco-index."
+          class="fr-mt-2w"
         />
       </template>
     </div>
