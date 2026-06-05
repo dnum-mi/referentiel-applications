@@ -14,6 +14,8 @@ export enum HomologationStatus {
   HOMOLOGUEE = "homologuee",
   EN_COURS = "en_cours",
   DISPENSEE = "dispensee",
+  NON_REALISEE = "non_realisee",
+  A_METTRE_EN_PLACE = "a_mettre_en_place",
 }
 
 export enum ReportStatus {

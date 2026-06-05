@@ -108,4 +108,8 @@ enum HomologationStatus {
   en_cours
   /// Homologation dispensée/exemptée
   dispensee
+  // Homologation non réalisée
+  non_realisee
+  // Homologation a mettre en place
+  a_mettre_en_place
 }

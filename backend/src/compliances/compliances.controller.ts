@@ -153,6 +153,7 @@ export class ApplicationCompliancesController {
   }
 
   @Post("ecoindex/scan")
+  @RequiredPermissions([Permission.ComplianceWrite])
   @ApiOperation({
     summary: "Calculer et enregistrer le score EcoIndex pour cette application",
   })

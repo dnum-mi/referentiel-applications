@@ -20,6 +20,7 @@ import type { TableColumn } from "@/types/table";
 import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
 import RgaaComplianceSection from "./RgaaComplianceSection.vue";
+import { getEcoIndexGrade } from "@/utils/get-ecoindex-grade.js";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const applicationId = props.application.id;
@@ -140,7 +141,8 @@ function getPreview(type: ManagedComplianceType): string {
     const score = compliance.value.eco_index_score;
     const date = compliance.value.eco_index_last_calculated_at;
     if (score == null) return NO_ECOINDEX_LABEL;
-    return `Score: ${score}/100 • Le ${formatDateFR(date)}`;
+    const datePart = date ? ` • Le ${formatDateFR(date)}` : "";
+    return `Score: ${getEcoIndexGrade(score)} (${score}/100) ${datePart}`;
   }
 
   const parts: string[] = [];
@@ -157,6 +159,7 @@ function formatFieldValue(key: string, value: unknown): string {
   if (key === "status") return homologationStatusDict[value as keyof typeof homologationStatusDict] ?? String(value);
   if (key === "is_hno" || key === "recovery_plan" || key === "implemented" || key === "has_aipd") return value ? "Oui" : "Non";
   if (key === "last_test_date" || key === "date_end" || key === "audit_date") return formatDateFR(value as string | Date);
+  if (key === "score") return `${getEcoIndexGrade(value as number)} (${String(value)}/100)`;
   return String(value);
 }
 
@@ -187,14 +190,6 @@ const modalTitle = computed(() => {
   return isNewType.value ? `Créer ${labels[selectedType.value]}` : `Modifier ${labels[selectedType.value]}`;
 });
 
-const ecoIndexValues = computed(() => ({
-  score: compliance.value?.eco_index_score,
-  ges: compliance.value?.eco_index_ges,
-  water: compliance.value?.eco_index_water,
-  targetUrl: compliance.value?.eco_index_target_url,
-  lastCalculatedAt: compliance.value?.eco_index_last_calculated_at,
-}));
-
 async function fetchCompliance() {
   try {
     isLoading.value = true;
@@ -214,12 +209,6 @@ async function refresh() {
 }
 
 onMounted(refresh);
-
-function onAddClick() {
-  modalMode.value = compliance.value && (compliance.value.id || typesWithData.value.length > 0) ? "edit" : "create";
-  selectedType.value = null;
-  showModal.value = true;
-}
 
 function onEditClick(type: ManagedComplianceType) {
   modalMode.value = "edit";
@@ -244,6 +233,11 @@ async function runEcoIndexScan() {
     const response = await applicationCompliancesControllerScanEcoIndex({
       path: { applicationId },
     });
+    const error = response.error as Error;
+    if (error) {
+      toaster.addErrorMessage("Aucune URL cible EcoIndex valide trouvée.");
+      return;
+    }
     compliance.value = response.data ?? compliance.value;
     toaster.addSuccessMessage("Scan EcoIndex effectué avec succès.");
   } catch {
@@ -339,7 +333,7 @@ const hasComplianceEditPermission = computed(() => {
               icon="ri-leaf-line"
               size="sm"
               tertiary
-              :disabled="isLoading || isScanningEcoIndex"
+              :disabled="isLoading || isScanningEcoIndex || !hasComplianceEditPermission"
               data-testid="compliance-scan-ecoindex-btn"
               @click="runEcoIndexScan"
             >

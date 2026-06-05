@@ -6307,6 +6307,8 @@ components:
             - homologuee
             - en_cours
             - dispensee
+            - non_realisee
+            - a_mettre_en_place
           type: string
           description: Homologation status
         homologation_date_end:
