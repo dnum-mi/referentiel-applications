@@ -1,4 +1,10 @@
-import type { ApplicationPriorityRestart, ApplicationStatus, ApplicationType, RelationType } from "@/client/types.gen.js";
+import type {
+  ApplicationPriorityRestart,
+  ApplicationStatus,
+  ApplicationType,
+  CreateComplianceDto,
+  RelationType,
+} from "@/client/types.gen.js";
 
 export const statusDictionary = {
   in_pending: "En attente",
@@ -50,7 +56,9 @@ export const homologationStatusDict = {
   homologuee: "Homologuée",
   en_cours: "En cours d'homologation",
   dispensee: "Dispensée d'homologation",
-};
+  non_realisee: "Non réalisée",
+  a_mettre_en_place: "À mettre en place",
+} as const satisfies Record<NonNullable<CreateComplianceDto["homologation_status"]>, string>;
 
 export const dimaDurationHoursOptions = [
   { value: 1, text: "1H" },
