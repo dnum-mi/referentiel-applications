@@ -108,3 +108,17 @@ export class Requestor extends UserWithPermissions {
   @IsOptional()
   appPerms?: APP_PERMISSIONS[]; // Changed from permissions to appPerms
 }
+
+export class UserWithPermissionsAndFullNameMaia extends UserWithPermissions {
+  @IsString()
+  @IsOptional()
+  fullName: string;
+
+  @IsString()
+  @IsOptional()
+  lastName: string;
+
+  @IsString()
+  @IsOptional()
+  firstName: string;
+}

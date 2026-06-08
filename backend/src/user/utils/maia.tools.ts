@@ -6,6 +6,9 @@ type MaiaFinderResponse = {
           fullCode?: string;
         };
       };
+      fullName?: string;
+      lastName?: string;
+      firstName?: string;
     };
   }>;
 };
@@ -29,6 +32,18 @@ function extractOrganizationPath(payload: MaiaFinderResponse): string | null {
   return normalizeOrganizationPath(fullCode);
 }
 
+function extractFirstAndLastname(payload: MaiaFinderResponse) {
+  const lastName = payload.data?.[0]?.values?.lastName;
+  const firstName = payload.data?.[0]?.values?.firstName;
+  const fullName = payload.data?.[0]?.values?.fullName;
+
+  return {
+    lastName: lastName ?? "",
+    firstName: firstName ?? "",
+    fullName: fullName ?? "",
+  };
+}
+
 export async function getOrganizationPathFromMaia(
   email: string,
 ): Promise<string | null> {
@@ -36,6 +51,11 @@ export async function getOrganizationPathFromMaia(
     return process.env.MOCK_MAIA_ORGANIZATION?.trim() || "ORGANISATION";
   }
 
+  const payload = await callMaia(email);
+  return extractOrganizationPath(payload);
+}
+
+async function callMaia(email: string): Promise<MaiaFinderResponse> {
   const maiaUrl = process.env.MAIA_API_URL!.trim();
 
   const headers: Record<string, string> = {
@@ -59,7 +79,14 @@ export async function getOrganizationPathFromMaia(
           value: email,
         },
       ],
-      fields: ["fullName", "phoneNumber.number", "structure.fullCode", "mail"],
+      fields: [
+        "fullName",
+        "phoneNumber.number",
+        "structure.fullCode",
+        "mail",
+        "lastName",
+        "firstName",
+      ],
       metadata: ["pagination"],
       ordering: [{ mode: "asc", field: "fullName" }],
       pagination: {
@@ -72,5 +99,18 @@ export async function getOrganizationPathFromMaia(
   });
 
   const payload = (await response.json()) as MaiaFinderResponse;
-  return extractOrganizationPath(payload);
+  return payload;
+}
+
+export async function getFullNameFromMaia(email: string) {
+  if (isMockEnabled()) {
+    return {
+      lastName: "DOE",
+      firstName: "John",
+      fullName: "John DOE",
+    };
+  }
+
+  const payload = await callMaia(email);
+  return extractFirstAndLastname(payload);
 }

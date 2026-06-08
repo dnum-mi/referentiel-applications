@@ -2281,6 +2281,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserWithPermissions"
       tags: *a13
+  /api/v2/users/by-email/{email}/sync-organization-from-maia:
+    get:
+      operationId: UserController_syncOrganizationFromMaiaByEmail
+      summary: Synchroniser l'organisation depuis Maia par email
+      parameters:
+        - name: email
+          required: true
+          in: path
+          description: Email de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Organisation synchronisée avec succès & fullName récupéré
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissionsAndFullNameMaia"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a13
   /api/v2/users/{id}/sync-organization-from-maia:
     post:
       operationId: UserController_syncOrganizationFromMaia
@@ -5905,6 +5928,65 @@ components:
           type: boolean
           description: Indique si les notifications par email sont activées pour
             l'utilisateur
+    UserWithPermissionsAndFullNameMaia:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        organization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        scopeOrganization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        type:
+          $ref: "#/components/schemas/UserType"
+        emailNotificationsEnabled:
+          type: boolean
+          description: Préférence de notification par email
+          default: true
+        followedApplications:
+          description: Applications suivies par l'utilisateur
+          type: array
+          items:
+            $ref: "#/components/schemas/UserFollowedApplicationDto"
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        id:
+          type: string
+        email:
+          type: string
+        organizationId:
+          type: string
+          nullable: true
+        scopeOrganizationId:
+          type: string
+          nullable: true
+        fullName:
+          type: string
+        lastName:
+          type: string
+        firstName:
+          type: string
+      required:
+        - role
+        - type
+        - additionalPermissions
+        - id
+        - email
+        - organizationId
+        - scopeOrganizationId
+        - fullName
+        - lastName
+        - firstName
     SyncOrganizationsDto:
       type: object
       properties:
@@ -6308,8 +6390,6 @@ components:
             - homologuee
             - en_cours
             - dispensee
-            - non_realisee
-            - a_mettre_en_place
           type: string
           description: Homologation status
         homologation_date_end:
