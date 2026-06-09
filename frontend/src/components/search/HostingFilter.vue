@@ -16,9 +16,9 @@ type HostingField = "site" | "platform" | "provider" | "building" | "room";
 type FilterKey = "hostingSite" | "hostingPlatform" | "hostingProvider" | "hostingBuilding" | "hostingRoom";
 
 const hostingFields: { field: HostingField; filterKey: FilterKey; label: string; testId: string }[] = [
-  { field: "site", filterKey: "hostingSite", label: "Tous les sites", testId: "hosting-site-select" },
-  { field: "platform", filterKey: "hostingPlatform", label: "Toutes les plateformes", testId: "hosting-platform-select" },
   { field: "provider", filterKey: "hostingProvider", label: "Tous les fournisseurs", testId: "hosting-provider-select" },
+  { field: "platform", filterKey: "hostingPlatform", label: "Toutes les plateformes", testId: "hosting-platform-select" },
+  { field: "site", filterKey: "hostingSite", label: "Tous les sites", testId: "hosting-site-select" },
   { field: "building", filterKey: "hostingBuilding", label: "Tous les bâtiments", testId: "hosting-building-select" },
   { field: "room", filterKey: "hostingRoom", label: "Toutes les pièces", testId: "hosting-room-select" },
 ];
@@ -95,7 +95,7 @@ const labels: Record<HostingField, string> = {
       :options="optionsMap[field].value"
       :disabled="isLoading"
       :data-testid="testId"
-      @update:model-value="updateFilter(filterKey, $event)"
+      @update:model-value="updateFilter(filterKey, String($event ?? ''))"
     />
   </div>
 </template>
