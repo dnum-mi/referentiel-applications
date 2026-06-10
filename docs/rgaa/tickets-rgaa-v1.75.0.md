@@ -68,6 +68,12 @@ Sévérité : 🔴 Bloquant · 🟠 Majeur · 🟡 Mineur
 
 > Capture : _cf. rapport p.17_ · **Sévérité globale : 🔴 Bloquant** · Pages : toutes les pages · Fichier : `frontend/src/main.css` (point d'entrée CSS importé par `frontend/src/main.ts` et `frontend/src/App.vue`)
 
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Espacement des caractères (CSS global) ».
+
+**🧪 Tester (après correction) :**
+
+- `10.12` — Injecter le CSS d'espacement (Stylus, cf. #1785) : aucun texte tronqué.
+
 **Problème :**
 
 - `10.12` – bloquant : Du texte est tronqué avec un espacement de caractère plus important que celui par défaut.
@@ -155,6 +161,12 @@ Le CSS global du projet impose des tailles de police réduites et des conteneurs
 >
 > 🎯 **Page-référence (grille)** : 9.2 est conforme **uniquement sur P04** → reprendre le gabarit de landmarks de P04 (présence du `<main>`) et le porter au layout global.
 
+**🔁 Reproduire :** ouvrir `/recherche-application` — localiser : « Zone de contenu principal non définie ».
+
+**🧪 Tester (après correction) :**
+
+- `9.2` — HeadingsMap / ARC Toolkit : structure cohérente et landmarks (`main`, `nav`…) présents.
+
 **Problème :**
 
 - `9.2` – majeur : La zone de contenu principal n'est pas définie.
@@ -193,6 +205,12 @@ _Remarque : le `tabindex="-1"` prépare la cible de focus exploitée par le tick
 > Capture : _cf. rapport p.20_ · **Sévérité globale : 🟠 Majeur** · Pages : P05, P06, P08 · Fichier : `frontend/src/router/index.ts`
 >
 > 🎯 **Page-référence (grille)** : 8.6 est jugé conforme sur **P01** → s'inspirer de son `<title>` pour rendre P05/P06/P08 aussi explicites.
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/historique`, `/applications/creer` — localiser : « Titre de page peu explicite ».
+
+**🧪 Tester (après correction) :**
+
+- `8.6` — Vérifier le titre de l'onglet du navigateur : unique et décrivant clairement la page.
 
 **Problème :**
 
@@ -260,6 +278,12 @@ _P06 (`MetadataPage.vue`) : `setPageTitle(\`Modifications du ${dateDebut} au ${d
 
 > Capture : _cf. rapport p.20_ · **Sévérité globale : 🟠 Majeur** · Pages : header (toutes) · Fichier : `frontend/src/App.vue`
 
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Header : « Liberté Égalité Fraternité » non restitué ».
+
+**🧪 Tester (après correction) :**
+
+- `10.2` — Web Developer → désactiver les CSS : le contenu porteur d'information reste présent.
+
 **Problème :**
 
 - `10.2` – majeur : le texte « Liberté Égalité, Fraternité » n'est pas retransmis par les TA.
@@ -300,6 +324,12 @@ _Si la version de `@gouvminint/vue-dsfr` n'expose pas ce slot pour le header, aj
 
 > Capture : _cf. rapport p.21_ · **Sévérité globale : 🟠 Majeur** · Pages : header (toutes) · Fichier : `frontend/src/App.vue`
 
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Header : « Référentiel des Applications » n'est pas un titre ».
+
+**🧪 Tester (après correction) :**
+
+- `9.1` — HeadingsMap : information structurée par des titres réels (h1…hn), sans titre simulé.
+
 **Problème :**
 
 - `9.1` – majeur : le texte « Référentiel des Applications » n'est pas un titre.
@@ -330,6 +360,12 @@ _Si la prop n'existe pas dans la version utilisée, basculer sur le slot `#servi
 ![Capture — zone à corriger (RGAA-011)](screenshots/rgaa-011.png)
 
 > Capture : _cf. rapport p.24_ · **Sévérité globale : 🟠 Majeur** · Pages : header (toutes) · Fichier : `frontend/src/App.vue`
+
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Header : page courante indiquée uniquement par la couleur ».
+
+**🧪 Tester (après correction) :**
+
+- `3.1` — Passer la page en niveaux de gris : l'information reste perceptible sans la couleur (forme/texte/`aria-current`).
 
 **Problème :**
 
@@ -382,6 +418,12 @@ _Vérifier dans le rendu réel que `aria-current="page"` est bien présent sur l
 
 > Capture : _cf. rapport p.25_ · **Sévérité globale : 🟡 Mineur** · Pages : footer (toutes) · Fichier : `frontend/src/App.vue`
 
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Footer : paragraphe vide ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `8.9` – mineur : présence d'un `<p>` vide.
@@ -418,6 +460,12 @@ _Le `<p>` vide exact n'est pas reproductible depuis le seul template (généré 
 > _Pas de capture — même devise « Liberté Égalité Fraternité » que le bandeau, voir RGAA-008._
 
 > Capture : _cf. rapport p.25_ · **Sévérité globale : 🟠 Majeur** · Pages : footer (toutes) · Fichier : `frontend/src/App.vue`
+
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Footer : « Liberté Égalité Fraternité » non restitué ».
+
+**🧪 Tester (après correction) :**
+
+- `10.2` — Web Developer → désactiver les CSS : le contenu porteur d'information reste présent.
 
 **Problème :**
 
@@ -461,6 +509,12 @@ _Nom de slot à adapter à la version de `@gouvminint/vue-dsfr` (par ex. `#opera
 ![Capture — zone à corriger (RGAA-014)](screenshots/rgaa-014.png)
 
 > Capture : _cf. rapport p.26_ · **Sévérité globale : 🟠 Majeur** · Pages : footer (toutes) · Fichier : `frontend/src/App.vue`
+
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Footer : title du lien logo incohérent avec l'intitulé visible ».
+
+**🧪 Tester (après correction) :**
+
+- `6.1` — NVDA, liste des liens (INS+F7) : intitulé explicite hors contexte ; « nouvelle fenêtre » annoncée.
 
 **Problème :**
 
@@ -506,6 +560,12 @@ _Si la prop n'existe pas, utiliser le slot du logo opérateur pour rendre soi-m�
 
 > Capture : _cf. rapport p.26_ · **Sévérité globale : 🟠 Majeur** · Pages : footer (toutes) · Fichier : `frontend/src/App.vue`
 
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Footer : liens « nouvelle fenêtre » non mentionnés ».
+
+**🧪 Tester (après correction) :**
+
+- `6.1` — NVDA, liste des liens (INS+F7) : intitulé explicite hors contexte ; « nouvelle fenêtre » annoncée.
+
 **Problème :**
 
 - `6.1` – majeur : les liens qui ouvrent une nouvelle fenêtre ne le mentionnent pas dans l'intitulé.
@@ -543,6 +603,12 @@ _Pour les `ecosystemLinks` externes, suffixer « - nouvelle fenêtre » dès lor
 ![Capture — zone à corriger (RGAA-016)](screenshots/rgaa-016.png)
 
 > Capture : _cf. rapport p.27_ · **Sévérité globale : 🟠 Majeur** · Pages : footer (toutes) · Fichier : `frontend/src/App.vue`
+
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Footer : icône « colis » avant le numéro de version ».
+
+**🧪 Tester (après correction) :**
+
+- `6.1` — NVDA, liste des liens (INS+F7) : intitulé explicite hors contexte ; « nouvelle fenêtre » annoncée.
 
 **Problème :**
 
@@ -584,6 +650,12 @@ target: "_blank", }));
 
 > Capture : _cf. rapport p.27_ · **Sévérité globale : 🟠 Majeur** · Pages : footer (toutes) · Fichier : `frontend/src/App.vue`
 
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Footer : bouton « paramètres d'affichage » sans état ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+
 **Problème :**
 
 - `7.1` – majeur : le bouton « paramètres d'affichage » devrait afficher son état (mode clair / sombre courant).
@@ -621,6 +693,13 @@ _Penser à binder `:after-mandatory-links="afterMandatoryLinks"` (déjà le cas)
 > _Pas de capture — non-conformité comportementale (gestion du focus et du titre lors des changements de vue SPA), non capturable en image._
 
 > Capture : _cf. rapport p.49 & p.12-13_ · **Sévérité globale : 🔴 Bloquant** · Pages : application monopage (toutes) · Fichier : `frontend/src/App.vue`, `frontend/src/router/index.ts`
+
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « SPA : rôle de navigation, gestion du focus, restitution des titres ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
 
 **Problème :**
 
@@ -711,6 +790,12 @@ _Note de cohérence avec RGAA-009 : pour éviter deux `<h1>`, soit cet annonceur
 
 > Capture : _cf. rapport (synthèse de conformité)_ · **Sévérité globale : 🟠 Organisationnel** · Pages : footer + page accessibilité (toutes) · Fichier : `frontend/src/App.vue`, `frontend/src/views/AccessibilityPage.vue`
 
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Mention d'accessibilité obligatoire et déclaration de conformité ».
+
+**🧪 Tester (après correction) :**
+
+- voir critère(s) du ticket et #1785
+
 **Problème :**
 
 - Organisationnel : la mention de conformité affichée en pied de page est erronée. Le résultat de l'audit (28 critères non conformes mais site partiellement utilisable) impose la mention exacte « Accessibilité : Partiellement conforme ». Le footer affiche actuellement « Accessibilité : non conforme ». De plus, la déclaration d'accessibilité publiée sur `/accessibilite` (`AccessibilityPage.vue`) est incomplète : état de conformité « en cours d'audit », aucun coordonnées de contact, aucune voie de recours.
@@ -791,6 +876,12 @@ _Les valeurs « XX % », la date et certaines coordonnées sont des placeholders
 >
 > 🎯 **Page-référence (grille)** : 12.6 est conforme sur **P01** → s'aligner sur ses landmarks de navigation (`role="navigation"` + `aria-label`).
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/applications/<id> (onglets)`, `/administration` — localiser : « Pagination (landmark de navigation) ».
+
+**🧪 Tester (après correction) :**
+
+- `12.6` — NVDA, landmarks (INS+F7) : zones (header/nav/main/footer/recherche) atteignables ou évitables.
+
 **Problème :**
 
 - `12.6` – Mineur : la zone de navigation `<nav>` (pagination) ne possède pas le landmark ARIA associé. Le composant `<DsfrPagination>` génère bien une balise `<nav>`, mais sans `role="navigation"` ni `aria-label` permettant de la distinguer des autres zones de navigation de la page.
@@ -830,6 +921,13 @@ _Les valeurs « XX % », la date et certaines coordonnées sont des placeholders
 ![Capture — zone à corriger (RGAA-010)](screenshots/rgaa-010.png)
 
 > Capture : _cf. rapport p.22-23_ · **Sévérité globale : 🟠 Majeur** · Pages : Header (toutes pages) · Fichier : `frontend/src/components/search/SearchHeader.vue` + `frontend/src/components/AccessibleAutocomplete.vue`
+
+**🔁 Reproduire :** ouvrir n'importe quelle page (ex. `/`) — localiser : « Header · Barre de recherche – Combobox ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
 
 **Problème :**
 
@@ -918,6 +1016,13 @@ onMounted(() => {
 
 **État réel du code :** la version actuelle d'`AccessibleAutocomplete.vue` a **déjà** largement traité le pattern ARIA décrit pour la « v1 » : la liste est un `<ul role="listbox">` (et non un `<datalist>`), les items portent `role="option"` + `aria-selected`, le champ porte `role="combobox"`, `aria-expanded`, `aria-controls`, `aria-activedescendant`, et une région `aria-live="polite" aria-atomic="true"` annonce le nombre de résultats. **Ce qui manque encore** : le nom (`aria-label`) sur le `<ul>` conteneur et l'attribut `aria-autocomplete="list"` sur le champ.
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/applications/<id> (onglets)`, `/time` — localiser : « Combobox v1 (datalist) ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
+
 **Problème :**
 
 - `7.1` – Majeur : pas de nom (`aria-label`) sur le conteneur `<ul>` de la liste.
@@ -983,6 +1088,14 @@ onMounted(() => {
 
 **État réel du code :** le composant **partage le même code** que la v1 (un seul `AccessibleAutocomplete.vue`). Le point **bloquant 7.3** de l'audit (« items sans `role="option"`, ne fonctionne pas au clavier ») est partiellement adressé : les items sont des `<li role="option">` et la navigation flèches HAUT/BAS + Entrée est gérée par `onKeydown`. **Mais** la sélection à la souris se fait via `@mousedown.prevent` sur des `<li>` non focusables (pas de `<button>`, pas de `tabindex`) : un utilisateur ne disposant que d'un pointeur logiciel ou d'une navigation séquentielle Tab ne peut pas atteindre/activer les items directement. L'audit préconise explicitement un `<button role="option">` par item.
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/applications/<id> (onglets)`, `/time`, `/administration` — localiser : « Combobox v2 « Tapez au moins 3 caractères » ».
+
+**🧪 Tester (après correction) :**
+
+- `7.3` — Au clavier seul (Tab, flèches, Entrée/Espace) : le composant est entièrement utilisable sans souris.
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
+
 **Problème :**
 
 - `7.3` – **Bloquant** : items de liste non réellement actionnables au clavier en dehors des flèches (pas d'élément interactif `<button>` dans chaque item). À fiabiliser pour garantir l'activation au clavier.
@@ -1036,6 +1149,13 @@ onMounted(() => {
 
 **État réel du code :** `TagSearchSelect.vue` réutilise `AccessibleAutocomplete` avec `id="tag-search"` et `:isSearch="true"`. **Aucun `<label for="tag-search">` n'est présent** dans le composant : le seul intitulé « Tags » provient du parent (un `<legend>` du `fieldset` filtre, non associé au champ). Les correctifs `7.1` communs (nom du `<ul>`, `aria-autocomplete`, surcharge `searchbox`) sont hérités d'`AccessibleAutocomplete` et donc identiques à RGAA-010/018.
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/applications/<id> (onglets)`, `/applications/creer`, `/time` — localiser : « Combobox v3 « tags » ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+
 **Problème :**
 
 - `11.1` – **Bloquant** : étiquette « Tags » non associée au champ (`<legend>` parent, pas de `<label for>` sur `tag-search`).
@@ -1088,6 +1208,12 @@ onMounted(() => {
 
 > Capture : _cf. rapport p.32-33_ · **Sévérité globale : 🟠 Majeur** · Pages : P04/P05/P08/P10 · Fichier : `frontend/src/components/common/TagSearchSelect.vue`
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/applications/<id> (onglets)`, `/applications/creer`, `/time` — localiser : « Boutons Tags ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+
 **Problème :**
 
 - `7.1` – Majeur : présence d'attributs `aria-pressed` inappropriés sur les boutons de tags. Les tags sélectionnés sont rendus via `<DsfrTag selectable>`, qui produit un `<button aria-pressed>` ; or ces boutons servent à **supprimer** le tag (action ponctuelle), pas à basculer un état → `aria-pressed` est sémantiquement faux.
@@ -1123,6 +1249,12 @@ onMounted(() => {
 
 > Capture : _cf. rapport p.41_ · **Sévérité globale : 🟡 Mineur** · Pages : P04/P05/P11 · Fichier : `frontend/src/components/PaginationFooter.vue`
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/applications/<id> (onglets)`, `/administration` — localiser : « Pagination v1 · Sémantique ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `8.9` – Mineur : présence d'un élément sans valeur sémantique. Le compteur de résultats est rendu dans un `<div>` (et le total dans une `footer-item`), alors qu'un texte porteur d'information doit utiliser un `<p>`.
@@ -1155,6 +1287,14 @@ onMounted(() => {
 > 🎯 **Page-référence (grille)** : 11.2 (étiquette pertinente) est conforme sur **8 pages** → reprendre un libellé d'étiquette explicite déjà en place ailleurs dans l'app.
 
 **État réel du code :** le `<select>` « Résultats par page » possède **déjà** un `<label for="rows-per-page">Résultats par page</label>` associé — le point bloquant `11.1` audité (champ sans étiquette) et le `11.2` (étiquette vocalisée en anglais) **semblent déjà corrigés** sur ce `<select>` natif. Reste à vérifier qu'aucun `aria-label` anglais résiduel n'est posé, et le point `7.1` sur le **conteneur de liste** (`<ul>`) concerne la liste de pagination générée par `<DsfrPagination>`, qui n'a pas de nom accessible.
+
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/applications/<id> (onglets)`, `/administration` — localiser : « Pagination v1 · select « lignes par page » ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `11.2` — NVDA : l'étiquette annoncée est pertinente et en français.
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
 
 **Problème :**
 
@@ -1207,6 +1347,12 @@ onMounted(() => {
 
 > Capture : _cf. rapport p.42_ · **Sévérité globale : 🟠 Majeur** · Pages : P04/P05/P11 · Fichier : `frontend/src/components/PaginationFooter.vue`
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/applications/<id> (onglets)`, `/administration` — localiser : « Pagination v1 · boutons précédent/suivant ».
+
+**🧪 Tester (après correction) :**
+
+- `8.7` — Inspecteur : `lang` sur le passage en langue étrangère ; NVDA change de prononciation (ou traduire en français).
+
 **Problème :**
 
 - `8.7` – Majeur : absence de signalement de changement de langue. Les boutons « premier / précédent / suivant / dernier » générés par `<DsfrPagination>` exposent des `aria-label` en anglais (ex. `First page`, `Previous page`, `Next page`, `Last page`) au sein d'une page en français.
@@ -1247,6 +1393,12 @@ onMounted(() => {
 
 **État réel du code :** la « pagination v2 » de la page historique (`views/MetadataPage.vue`) utilise le **même** composant `PaginationFooter.vue` (aucun composant de pagination dédié n'existe pour P06). Le `<div>` audité sans valeur sémantique correspond donc au même compteur de résultats que RGAA-028 (`<div class="footer-item total-count">`).
 
+**🔁 Reproduire :** ouvrir `/historique` — localiser : « Pagination v2 · Sémantique ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `8.9` – Mineur : présence d'un élément sans valeur sémantique (`<div>` au lieu d'un `<p>`) pour le texte du compteur de résultats affiché sous le tableau d'historique.
@@ -1277,6 +1429,12 @@ onMounted(() => {
 > Capture : _cf. rapport p.43_ · **Sévérité globale : 🟠 Majeur** · Pages : P06 · Fichier : `frontend/src/components/PaginationFooter.vue`
 
 **État réel du code :** les pages passées à `<DsfrPagination>` portent **déjà** un `title: \`Page ${index + 1}\``dans le tableau`pages`calculé. Si les liens audités restent « peu explicites », c'est que ce`title`n'est pas répercuté par le composant DSFR sur les`<a>` (qui n'affichent que le numéro comme intitulé). À vérifier au rendu.
+
+**🔁 Reproduire :** ouvrir `/historique` — localiser : « Pagination v2 · liens non explicites ».
+
+**🧪 Tester (après correction) :**
+
+- `6.1` — NVDA, liste des liens (INS+F7) : intitulé explicite hors contexte ; « nouvelle fenêtre » annoncée.
 
 **Problème :**
 
@@ -1320,6 +1478,12 @@ const pages = computed(() => {
 
 > Capture : _cf. rapport p.34_ · **Sévérité globale : 🟠 Majeur** · Pages : P04/P10 · Fichier : `frontend/src/components/search/SidebarFilter.vue`
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/time` — localiser : « Filtre | Titre ».
+
+**🧪 Tester (après correction) :**
+
+- `9.1` — HeadingsMap : information structurée par des titres réels (h1…hn), sans titre simulé.
+
 **Problème :**
 
 - `9.1` – majeur : Présence d'un titre de hiérarchie simulé. Le titre du panneau de filtres « Filtres » est rendu avec un `<h5>`, alors qu'aucun `<h2>`/`<h3>`/`<h4>` ne le précède dans la hiérarchie de la page de recherche. Le niveau de titre ne reflète donc pas la structure réelle du document (saut de niveau, hiérarchie « simulée » uniquement pour l'apparence).
@@ -1355,6 +1519,12 @@ const pages = computed(() => {
 ![Capture — zone à corriger (RGAA-023)](screenshots/rgaa-023.png)
 
 > Capture : _cf. rapport p.35_ · **Sévérité globale : 🟠 Majeur** · Pages : P04/P10 · Fichier : `frontend/src/components/search/PriorityRestartFilter.vue`, `frontend/src/components/search/StatusFilter.vue`, `frontend/src/components/search/ComplianceFilter.vue`, `frontend/src/components/search/QualityFilter.vue`, `frontend/src/components/search/ApplicationFilter.vue`
+
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/time` — localiser : « Filtre | Regroupement de champ (sections Général, Qualité, Statut, Conformité) ».
+
+**🧪 Tester (après correction) :**
+
+- `11.5` — NVDA / inspecteur : les champs de même nature sont regroupés (`fieldset`) et le groupe est annoncé.
 
 **Problème :**
 
@@ -1427,6 +1597,12 @@ const pages = computed(() => {
 ![Capture — zone à corriger (RGAA-024)](screenshots/rgaa-024.png)
 
 > Capture : _cf. rapport p.37_ · **Sévérité globale : 🟠 Majeur** · Pages : P04/P10 · Fichier : `frontend/src/components/search/ComplianceFilter.vue`, `frontend/src/components/search/StatusFilter.vue`, `frontend/src/components/search/PriorityRestartFilter.vue`, `frontend/src/components/search/HostingFilter.vue`
+
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/time` — localiser : « Filtre | Cases à cocher ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
 
 **Problème :**
 
@@ -1516,6 +1692,13 @@ const pages = computed(() => {
 
 > Capture : _cf. rapport p.38_ · **Sévérité globale : 🟠 Majeur** · Pages : P05/P08 · Fichier : `frontend/src/components/MarkdownEditor.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « WYSIWYG · Information communiquée par la couleur et par la forme ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+- `10.2` — Web Developer → désactiver les CSS : le contenu porteur d'information reste présent.
+
 **Problème :**
 
 - `7.1` – majeur : l'état actif du bouton « éditer » / « aperçu » est uniquement porté par une classe CSS visuelle (`.active`, ombre, transform) et n'est pas restitué dans le code aux technologies d'assistance.
@@ -1565,6 +1748,13 @@ const pages = computed(() => {
 > Capture : _cf. rapport p.39_ · **Sévérité globale : 🔴 Bloquant** · Pages : P05/P08 · Fichier : `frontend/src/components/MarkdownEditor.vue`
 >
 > 🎯 **Page-référence (grille)** : le piège clavier (12.9) est circonscrit à **P05/P08** (ce composant) ; les 9 autres pages sont conformes → **un seul correctif sur `MarkdownEditor.vue` suffit** à couvrir 12.9.
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « WYSIWYG · Champ `<textarea>` ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `12.9` — Au clavier (Tab) : on peut entrer ET sortir de la zone sans blocage.
 
 **Problème :**
 
@@ -1648,6 +1838,12 @@ function handleKeydown(event: KeyboardEvent) {
 
 > Capture : _cf. rapport p.44_ · **Sévérité globale : 🟠 Majeur** · Pages : P05/P08 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « Champs « Populations » et « Objectifs » · Regroupement de champs ».
+
+**🧪 Tester (après correction) :**
+
+- `11.5` — NVDA / inspecteur : les champs de même nature sont regroupés (`fieldset`) et le groupe est annoncé.
+
 **Problème :**
 
 - `11.5` – majeur : les champs de même nature (chaque ligne « Population », chaque ligne « Objectif ») ne sont pas regroupés. Le code utilise un `<div class="fr-form-group">` avec une `<legend>` orpheline (une `<legend>` hors `<fieldset>` n'a pas de valeur de regroupement).
@@ -1698,6 +1894,12 @@ function handleKeydown(event: KeyboardEvent) {
 
 > Capture : _cf. rapport p.45_ · **Sévérité globale : 🟡 Mineur** · Pages : P05/P08 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « Champs « Populations » et « Objectifs » · Sémantique (`<label>` vides) ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `8.9` – mineur : les `DsfrInput` des lignes « Population » / « Objectif » sont rendus par le composant DSFR avec un élément `<label>` vide (aucune prop `label` fournie), élément sans valeur sémantique.
@@ -1730,6 +1932,12 @@ function handleKeydown(event: KeyboardEvent) {
 
 > Capture : _cf. rapport p.45_ · **Sévérité globale : 🔴 Bloquant** · Pages : P05/P08 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « Champs « Populations » et « Objectifs » · Champs sans étiquette ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+
 **Problème :**
 
 - `11.1` – bloquant : aucun des champs « Population » / « Objectif » n'a d'étiquette visible. Pour « Objectif » un `:placeholder="\`Objectif ${index + 1}\`"` existe mais un placeholder ne tient pas lieu d'étiquette ; pour « Population » il n'y a rien.
@@ -1761,6 +1969,13 @@ function handleKeydown(event: KeyboardEvent) {
 ![Capture — zone à corriger (RGAA-036)](screenshots/rgaa-036.png)
 
 > Capture : _cf. rapport p.46_ · **Sévérité globale : 🟠 Majeur** · Pages : P05/P08 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « Champs « Populations » et « Objectifs » · Boutons « Supprimer » ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
 
 **Problème :**
 
@@ -1838,6 +2053,12 @@ async function removePurpose(index: number) {
 
 > Capture : _cf. rapport p.47_ · **Sévérité globale : 🟠 Majeur** · Pages : P05/P08 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « Champs « Populations » et « Objectifs » · Boutons « Ajouter » ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
+
 **Problème :**
 
 - `12.8` – majeur : après activation de « Ajouter un objectif » / « Ajouter une population », le focus reste sur le bouton « Ajouter ». L'ordre de tabulation devient incohérent : l'utilisateur clavier ne sait pas qu'un nouveau champ vide est apparu au-dessus.
@@ -1886,6 +2107,13 @@ async function addPopulation() {
 
 > Capture : _cf. rapport p.48_ · **Sévérité globale : 🔴 Bloquant** · Pages : P05/P08 · Fichier : `frontend/src/components/common/OrganizationSearchSelect.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « Champ « Organisation » · Champ sans étiquette ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `11.1` – bloquant : le `<select>` de suggestions (`DsfrSelect`) est rendu avec `:label-visible="false"` et sans `label`, donc sans étiquette visible.
@@ -1918,6 +2146,12 @@ async function addPopulation() {
 ![Capture — zone à corriger (RGAA-039)](screenshots/rgaa-039.png)
 
 > Capture : _cf. rapport p.48_ · **Sévérité globale : 🟠 Majeur** · Pages : P05/P08 · Fichier : `frontend/src/components/common/OrganizationSearchSelect.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « Champ « Organisation » · Regroupement de champ ».
+
+**🧪 Tester (après correction) :**
+
+- `11.5` — NVDA / inspecteur : les champs de même nature sont regroupés (`fieldset`) et le groupe est annoncé.
 
 **Problème :**
 
@@ -1975,6 +2209,12 @@ const groupLabelId = `org-search-group-${useId()}`;
 
 > Capture : _cf. rapport p.49_ · **Sévérité globale : 🟠 Majeur** · Pages : P05/P08 · Fichier : `frontend/src/components/common/OrganizationSearchSelect.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)`, `/applications/creer` — localiser : « Champ « Organisation » · Message de statut ».
+
+**🧪 Tester (après correction) :**
+
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
+
 **Problème :**
 
 - `7.5` – majeur : les paragraphes annonçant le nombre de suggestions (« N résultats trouvés ») ou « Aucune organisation trouvée » ne sont pas des messages de statut : ils n'ont ni `aria-live` ni `aria-atomic`, donc leur mise à jour n'est pas annoncée aux technologies d'assistance.
@@ -2020,6 +2260,12 @@ const groupLabelId = `org-search-group-${useId()}`;
 
 > Capture : _cf. rapport p.57-58_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichiers : `frontend/src/components/form/ApplicationForm.vue`, `frontend/src/components/hosting/HostingModal.vue`, `frontend/src/components/form/LinkForm.vue`, `frontend/src/components/label/LabelModal.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modales · Indication du caractère obligatoire ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+
 **Problème :**
 
 - `11.10` – majeur : aucune indication en amont du formulaire ne signale que les champs marqués `*` (rendus par la prop `required` de DSFR) sont obligatoires. Exemple dans `LabelModal.vue` : le formulaire commence directement par les champs, sans mention.
@@ -2055,6 +2301,12 @@ const groupLabelId = `org-search-group-${useId()}`;
 ![Capture — zone à corriger (RGAA-049)](screenshots/rgaa-049.png)
 
 > Capture : _cf. rapport p.59_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichiers : `frontend/src/components/form/LinkForm.vue`, `frontend/src/components/hosting/HostingModal.vue`, `frontend/src/components/label/LabelModal.vue`, `frontend/src/components/form/ApplicationForm.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modales · Champ en erreur, nommer le champ ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
 
 **Problème :**
 
@@ -2130,6 +2382,12 @@ function handleSubmit() {
 
 > Capture : _cf. rapport p.60_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modale « Modifier l'application » · Erreur « Description » ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+
 **Problème :**
 
 - `11.10` – majeur : le message d'erreur de la description (`descriptionError`) est affiché par le `DsfrInputGroup` parent, mais le champ réellement éditable est le `<textarea>` interne au `MarkdownEditor`. Aucun `aria-describedby` ne relie ce `<textarea>` au message d'erreur : le message ne pointe pas vers le champ.
@@ -2194,6 +2452,12 @@ string; describedby?: string }>();
 ![Capture — zone à corriger (RGAA-051)](screenshots/rgaa-051.png)
 
 > Capture : _cf. rapport p.61_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/InformationsGenerales.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Boutons « Modifier » et « Ajouter » ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
 
 **Problème :**
 
@@ -2267,6 +2531,12 @@ string; describedby?: string }>();
 
 > Capture : _cf. rapport p.72_ · **Sévérité globale : 🟠 Majeur** · Pages : P08 · Fichiers : `frontend/src/components/form/ApplicationForm.vue`, `frontend/src/views/CreateApplicationPage.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/creer` — localiser : « P08 étapes 1 & 3 · Indication du caractère obligatoire ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+
 **Problème :**
 
 - `11.10` – majeur : en mode création (stepper), les étapes 1 et 3 ne signalent pas en amont que les champs `*` sont obligatoires. L'étape 1 commence directement par le `<h3>` puis les champs ; l'étape 3 (MOA) n'indique que « Toutes les informations du contact MOA sont obligatoires » mais pas la convention de l'astérisque pour l'ensemble du formulaire.
@@ -2299,6 +2569,12 @@ string; describedby?: string }>();
 ![Capture — zone à corriger (RGAA-068)](screenshots/rgaa-068.png)
 
 > Capture : _cf. rapport p.73_ · **Sévérité globale : 🟠 Majeur** · Pages : P08 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/creer` — localiser : « P08 étape 1 · `<textarea>` obligatoire (erreur non reliée) ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
 
 **Problème :**
 
@@ -2351,6 +2627,12 @@ function validateStep1(): boolean {
 ![Capture — zone à corriger (RGAA-069)](screenshots/rgaa-069.png)
 
 > Capture : _cf. rapport p.74_ · **Sévérité globale : 🟠 Majeur** · Pages : P08 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/creer` — localiser : « P08 · Boutons « Précédent » / « Suivant » ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
 
 **Problème :**
 
@@ -2411,6 +2693,12 @@ async function previousStep() {
 
 > Capture : _cf. rapport p.74_ · **Sévérité globale : 🟠 Majeur** · Pages : P08 · Fichier : `frontend/src/components/form/ApplicationForm.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/creer` — localiser : « P08 étape 3 · Champ « Email du contact MOA » · Format de donnée ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+
 **Problème :**
 
 - `11.10` – majeur : aucune indication en amont du format attendu pour « Email du contact MOA ». L'étiquette est juste « Email du contact MOA » sans exemple.
@@ -2451,6 +2739,12 @@ async function previousStep() {
 >
 > 🎯 **Page-référence (grille)** : 11.11 est conforme sur **P05 et P11** → reprendre leur formulation de suggestion d'erreur (champ nommé + exemple).
 
+**🔁 Reproduire :** ouvrir `/applications/creer` — localiser : « P08 étape 3 · Champ « Email du contact MOA » · Suggestion d'erreur ».
+
+**🧪 Tester (après correction) :**
+
+- `11.11` — Saisir une valeur invalide : le message propose une correction explicite (exemple de format attendu).
+
 **Problème :**
 
 - `11.11` – majeur : la suggestion d'erreur en cas d'email invalide est peu explicite : `moaEmailError` vaut « L'email du contact MOA est invalide. », sans rappeler le format attendu.
@@ -2483,6 +2777,13 @@ async function previousStep() {
 ![Capture — zone à corriger (RGAA-046)](screenshots/rgaa-046.png)
 
 > Capture : _cf. rapport p.55_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/views/ApplicationPage.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Bouton « S'abonner / Abonné(e) » ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
 
 **Problème :**
 
@@ -2564,6 +2865,12 @@ async function toggleSubscription() {
 
 > Capture : _cf. rapport p.55-56_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/InformationsGenerales.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Onglet « Informations générales » | images informatives en `::before` ».
+
+**🧪 Tester (après correction) :**
+
+- `10.2` — Web Developer → désactiver les CSS : le contenu porteur d'information reste présent.
+
 **Problème :**
 
 - `10.2` – majeur : les icônes DSFR (`fr-icon-*`) porteuses d'information sont générées en pseudo-élément `::before` ; avec les CSS désactivées, aucune information textuelle visible/exposée ne subsiste.
@@ -2602,6 +2909,12 @@ async function toggleSubscription() {
 ![Capture — zone à corriger (RGAA-052)](screenshots/rgaa-052.png)
 
 > Capture : _cf. rapport p.62_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/hosting/HostingModal.vue`, `frontend/src/components/label/LabelModal.vue`, `frontend/src/components/technical-debt/TechnicalDebtModal.vue`, `frontend/src/components/modal/DeleteConfirmationModal.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modales Hébergement / Noms alternatifs / Dette / Confirmation | focus à l'ouverture ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
 
 **Problème :**
 
@@ -2687,6 +3000,12 @@ watch(
 
 > Capture : _cf. rapport p.63_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/LinksTab.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Onglet « Liens » | liens avec icônes ».
+
+**🧪 Tester (après correction) :**
+
+- `6.1` — NVDA, liste des liens (INS+F7) : intitulé explicite hors contexte ; « nouvelle fenêtre » annoncée.
+
 **Problème :**
 
 - `6.1` – majeur : les liens ouvrant une nouvelle fenêtre (`target="_blank"`) ne le signalent pas dans l'intitulé.
@@ -2728,6 +3047,12 @@ watch(
 ![Capture — zone à corriger (RGAA-054)](screenshots/rgaa-054.png)
 
 > Capture : _cf. rapport p.63_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/compliances/RgaaComplianceSection.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modale « Ajouter une conformité RGAA » | cohérence de tabulation ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
 
 **Problème :**
 
@@ -2780,6 +3105,13 @@ watch(showModal, async (isOpen) => {
 ![Capture — zone à corriger (RGAA-055)](screenshots/rgaa-055.png)
 
 > Capture : _cf. rapport p.64_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/compliances/RgaaComplianceSection.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modale « Conformité RGAA » | message de statut + tabulation ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
 
 **Problème :**
 
@@ -2888,6 +3220,13 @@ async function remove(item: RgaaComplianceDto) {
 
 > Capture : _cf. rapport p.64_ · **Sévérité globale : 🔴 Bloquant** · Pages : P05 · Fichier : `frontend/src/components/actor/ActorForm.vue`, `frontend/src/components/common/OrganizationSearchSelect.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Onglet « Acteurs » | Modale « Modifier l'acteur » | champ sans étiquette ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `11.1` – **bloquant** : le `<select>` de filtrage des organisations n'a pas d'étiquette visible.
@@ -2925,6 +3264,12 @@ async function remove(item: RgaaComplianceDto) {
 ![Capture — zone à corriger (RGAA-057)](screenshots/rgaa-057.png)
 
 > Capture : _cf. rapport p.65_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/actor/ActorForm.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modale « Modifier l'acteur » | regroupement de champs ».
+
+**🧪 Tester (après correction) :**
+
+- `11.5` — NVDA / inspecteur : les champs de même nature sont regroupés (`fieldset`) et le groupe est annoncé.
 
 **Problème :**
 
@@ -2994,6 +3339,12 @@ async function remove(item: RgaaComplianceDto) {
 
 > Capture : _cf. rapport p.66_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/common/OrganizationSearchSelect.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modale « Modifier l'acteur » | message de statut (suggestions) ».
+
+**🧪 Tester (après correction) :**
+
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
+
 **Problème :**
 
 - `7.5` – majeur : absence de message de statut informant les TA du nombre de suggestions d'organisations selon la saisie (« X résultat(s) trouvé(s) » / « Aucune organisation trouvée »).
@@ -3039,6 +3390,13 @@ async function remove(item: RgaaComplianceDto) {
 ![Capture — zone à corriger (RGAA-059)](screenshots/rgaa-059.png)
 
 > Capture : _cf. rapport p.67_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/actor/ActorTab.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Modale « Modifier l'acteur » | message de statut + tabulation ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
 
 **Problème :**
 
@@ -3145,6 +3503,12 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
 
 > Capture : _cf. rapport p.68_ · **Sévérité globale : 🔴 Bloquant** · Pages : P05 · Fichier : `frontend/src/components/RelationshipsTab.vue`
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Onglet « Relations » | tableau | cases à cocher ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+
 **Problème :**
 
 - `11.1` – **bloquant** : les cases à cocher de sélection des relations n'ont aucune étiquette (ni `<label>`, ni `title`, ni `aria-label`).
@@ -3183,6 +3547,12 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
 ![Capture — zone à corriger (RGAA-061)](screenshots/rgaa-061.png)
 
 > Capture : _cf. rapport p.68_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/RelationshipsTab.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Onglet « Relations » | information par la couleur et la forme ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
 
 **Problème :**
 
@@ -3254,6 +3624,12 @@ const mainButtons = computed(() =>
 
 > Capture : _cf. rapport p.69_ · **Sévérité globale : 🟠 Majeur** · Pages : P05 · Fichier : `frontend/src/components/RefAppTable.vue` (slot `#empty`, utilisé par l'onglet Signalement `frontend/src/components/ApplicationReportsTab.vue` via `empty-message`)
 
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Onglet « Signalement » | rôle et attribut non pertinents ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+
 **Problème :**
 
 - `7.1` – majeur : présence d'un attribut `aria-live` inapproprié sur le message d'état vide du tableau.
@@ -3287,6 +3663,13 @@ const mainButtons = computed(() =>
 ![Capture — zone à corriger (RGAA-063)](screenshots/rgaa-063.png)
 
 > Capture : _cf. rapport p.69_ · **Sévérité globale : 🔴 Bloquant** · Pages : P05 · Fichier : `frontend/src/components/ApplicationReportsTab.vue`
+
+**🔁 Reproduire :** ouvrir `/applications/<id> (onglets)` — localiser : « Onglet « Signalement » | champ sans étiquette ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
 
 **Problème :**
 
@@ -3334,6 +3717,12 @@ const mainButtons = computed(() =>
 ![Capture — zone à corriger (RGAA-027)](screenshots/rgaa-027.png)
 
 > Capture : _cf. rapport p.40_ · **Sévérité globale : 🟠 Majeur** · Pages : P04/P06/P11 · Fichier : `frontend/src/components/RefAppTable.vue`
+
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/historique`, `/administration` — localiser : « Tableaux de données | éléments de tri/filtrage ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
 
 **Problème :**
 
@@ -3457,6 +3846,12 @@ function requestSort(field: string): void {
 
 > Capture : _cf. rapport p.50_ · **Sévérité globale : 🟠 Majeur** · Pages : P01 · Fichier : `frontend/src/views/HomePage.vue`
 
+**🔁 Reproduire :** ouvrir `/` — localiser : « P01 Lien « Nous contacter sur Tchap » ».
+
+**🧪 Tester (après correction) :**
+
+- `6.1` — NVDA, liste des liens (INS+F7) : intitulé explicite hors contexte ; « nouvelle fenêtre » annoncée.
+
 **Problème :**
 
 - `6.1` – majeur : l'intitulé du lien n'est pas suffisamment explicite. Le lien s'ouvre dans une nouvelle fenêtre (`target="_blank"`) mais ni le `title` ni l'`aria-label` ne mentionnent « nouvelle fenêtre ».
@@ -3500,6 +3895,12 @@ function requestSort(field: string): void {
 
 > Capture : _cf. rapport p.52_ · **Sévérité globale : 🟡 Mineur** · Pages : P04 · Fichier : `frontend/src/views/ApplicationSearchPage.vue`
 
+**🔁 Reproduire :** ouvrir `/recherche-application` — localiser : « P04 Sémantique ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `8.9` – mineur : présence d'un élément `<div>` sans valeur sémantique utilisé pour véhiculer du texte (le bloc « IQ moyen (Applications Filtrées) »).
@@ -3531,6 +3932,12 @@ function requestSort(field: string): void {
 > Capture : _cf. rapport p.53_ · **Sévérité globale : 🟠 Majeur** · Pages : P04 · Fichier : `frontend/src/components/ColumnCustomization.vue`
 >
 > 🎯 **Page-référence (grille)** : 11.6 est NC sur **P04** mais **conforme sur P11 (Admin)** → copier le markup `<fieldset>`/`<legend>` de la modale conforme de P11.
+
+**🔁 Reproduire :** ouvrir `/recherche-application` — localiser : « P04 Modale « Personnaliser les colonnes » | regroupement ».
+
+**🧪 Tester (après correction) :**
+
+- `11.6` — Inspecteur : le regroupement possède une légende (`legend`) reliée.
 
 **Problème :**
 
@@ -3611,6 +4018,13 @@ function requestSort(field: string): void {
 >
 > 🎯 **Page-référence (grille)** : 11.2 (étiquette pertinente) est conforme sur **8 pages** → s'inspirer d'un champ déjà bien étiqueté ailleurs (étiquette explicite plutôt que placeholder).
 
+**🔁 Reproduire :** ouvrir `/recherche-application` — localiser : « P04 Modale « Signaler une application manquante » | champ sans étiquette ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `11.2` — NVDA : l'étiquette annoncée est pertinente et en français.
+
 **Problème :**
 
 - `11.1` – bloquant : absence d'étiquette visible sur le champ de description. Le `DsfrInput` (textarea) ne reçoit que `placeholder` et `required`, sans `label`.
@@ -3673,6 +4087,12 @@ const fieldLabel = computed(() => labelMapper[props.context]);
 
 > Capture : _cf. rapport p.75_ · **Sévérité globale : 🟡 Mineur** · Pages : P09 · Fichier : `frontend/src/components/users/UserInfoTab.vue`
 
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes informations | `<thead>` vide ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `8.9` – mineur : présence d'une balise `<thead>` vide générée par `DsfrTable` (aucun en-tête n'est passé pour le tableau « Informations personnelles »).
@@ -3728,6 +4148,12 @@ const fieldLabel = computed(() => labelMapper[props.context]);
 
 > Capture : _cf. rapport p.75_ · **Sévérité globale : 🟡 Mineur** · Pages : P09 · Fichier : `frontend/src/components/users/UserPermissionList.vue` · `frontend/src/components/users/UserPermissions.vue`
 
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes informations | rôle et permissions | sémantique ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `8.9` – mineur : absence de balise sémantique. Les libellés (« Rôle », libellés des listes de permissions) et le marqueur d'absence de permission sont rendus dans des `<span>` non sémantiques, et le tiret `—` n'est pas évocateur.
@@ -3779,6 +4205,13 @@ const fieldLabel = computed(() => labelMapper[props.context]);
 ![Capture — zone à corriger (RGAA-074)](screenshots/rgaa-074.png)
 
 > Capture : _cf. rapport p.76_ · **Sévérité globale : 🟠 Majeur** · Pages : P09 · Fichier : `frontend/src/components/users/UserInfoTab.vue`
+
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes informations | case à cocher notifications ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
 
 **Problème :**
 
@@ -3860,6 +4293,12 @@ async function handleToggleEmailNotifications() {
 
 > Capture : _cf. rapport p.76_ · **Sévérité globale : 🟠 Majeur** · Pages : P09 · Fichier : `frontend/src/components/users/UserTokensTab.vue`
 
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes tokens | caractères obligatoires ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+
 **Problème :**
 
 - `11.10` – majeur : absence de texte expliquant le rôle de l'astérisque. Le formulaire de création présente trois champs `required` (Nom, Description, Date d'expiration), donc trois astérisques, sans aucune indication préalable.
@@ -3908,6 +4347,12 @@ async function handleToggleEmailNotifications() {
 ![Capture — zone à corriger (RGAA-076)](screenshots/rgaa-076.png)
 
 > Capture : _cf. rapport p.77_ · **Sévérité globale : 🟠 Majeur** · Pages : P09 · Fichier : `frontend/src/components/users/UserTokensTab.vue`
+
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes tokens | champs en erreur ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
 
 **Problème :**
 
@@ -4009,6 +4454,13 @@ async function createToken() {
 >
 > 🎯 **Page-référence (grille)** : 11.11 est conforme sur **P05 et P11** → reprendre leur formulation de suggestion d'erreur (champ nommé + exemple de format de date).
 
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes tokens | champ date ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+- `11.11` — Saisir une valeur invalide : le message propose une correction explicite (exemple de format attendu).
+
 **Problème :**
 
 - `11.10` – majeur : absence de format de donnée sur l'étiquette du champ. Le champ « Date d'expiration » n'indique ni l'intervalle autorisé ni le format attendu (seul un `hint="Maximum 1 an dans le futur"` est présent).
@@ -4066,6 +4518,12 @@ function validateExpiresAt(): void {
 > _Pas de capture — création de token non finalisable en automatisation (le champ date DSFR à 3 sous-champs jour/mois/année n'est pas remplissable) ; le message succès/erreur n'a pu être déclenché. Cf. rapport p.78._
 
 > Capture : _cf. rapport p.78_ · **Sévérité globale : 🟠 Majeur** · Pages : P09 · Fichier : `frontend/src/components/users/UserTokensTab.vue`
+
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes tokens | message succès/erreur ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
 
 **Problème :**
 
@@ -4176,6 +4634,12 @@ async function confirmRevokeToken() {
 
 > Capture : _cf. rapport p.78_ · **Sévérité globale : 🟠 Majeur** · Pages : P09 · Fichier : `frontend/src/components/users/UserTokensTab.vue`
 
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes tokens | bouton Copier ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+
 **Problème :**
 
 - `7.1` – majeur : absence de pertinence de l'intitulé du bouton. Le bouton « Copier » de l'alerte « Token créé avec succès » ne précise pas ce qui est copié.
@@ -4213,6 +4677,12 @@ async function confirmRevokeToken() {
 ![Capture — zone à corriger (RGAA-080)](screenshots/rgaa-080.png)
 
 > Capture : _cf. rapport p.79_ · **Sévérité globale : 🟠 Majeur** · Pages : P09 · Fichier : `frontend/src/components/users/UsrFollowTab.vue`
+
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes abonnements | bouton Désabonner ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
 
 **Problème :**
 
@@ -4253,6 +4723,13 @@ async function confirmRevokeToken() {
 ![Capture — zone à corriger (RGAA-081)](screenshots/rgaa-081.png)
 
 > Capture : _cf. rapport p.79_ · **Sévérité globale : 🟠 Majeur** · Pages : P09 · Fichier : `frontend/src/components/users/UsrFollowTab.vue`
+
+**🔁 Reproduire :** ouvrir `/profil` — localiser : « Mes abonnements | tableau de mise en forme ».
+
+**🧪 Tester (après correction) :**
+
+- `5.3` — Inspecteur : le tableau de mise en forme porte `role="presentation"` et reste compréhensible linéarisé.
+- `5.8` — Inspecteur : aucun `th`/`thead`/`scope`/`caption` dans le tableau de mise en forme.
 
 **Problème :**
 
@@ -4333,6 +4810,12 @@ async function confirmRevokeToken() {
 ![Capture — zone à corriger (RGAA-083)](screenshots/rgaa-083.png)
 
 > Capture : _cf. rapport p.81_ · **Sévérité globale : 🟡 Mineur** · Pages : P11 · Fichier : `frontend/src/components/users/UserPermissions.vue` (+ `frontend/src/components/users/UserPermissionList.vue`)
+
+**🔁 Reproduire :** ouvrir `/administration` — localiser : « Modale « Permissions de l'utilisateur » (éléments sans valeur sémantique) ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
 
 **Problème :**
 
@@ -4452,6 +4935,12 @@ Dans `UserPermissionList.vue`, l'état « aucune permission » est rendu dans un
 
 > Capture : _cf. rapport p.82-83_ · **Sévérité globale : 🟠 Majeur** · Pages : P11 · Fichier : `frontend/src/components/admin/AdminUsersTab.vue` · `frontend/src/components/admin/AdminTagsTab.vue` · `frontend/src/components/admin/AdminLabelSourcesTab.vue`
 
+**🔁 Reproduire :** ouvrir `/administration` — localiser : « Onglets Utilisateurs / Tags / Sources (message de statut sur le nombre de résultats) ».
+
+**🧪 Tester (après correction) :**
+
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
+
 **Problème :**
 
 - `7.5` – majeur : Le message d'alerte n'est pas restitué correctement aux technologies d'assistance concernant le nombre de résultats pendant la saisie d'un mail, organisation, nom, ou valeur. Les trois onglets filtrent un tableau via `DsfrSearchBar` + `watchDebounced`, mais le résultat (chargement / nombre de lignes) n'est annoncé par aucune région live.
@@ -4543,6 +5032,13 @@ const statusMessage = computed(() => {
 
 > Capture : _cf. rapport p.84_ · **Sévérité globale : 🔴 Bloquant** · Pages : P11 · Fichier : `frontend/src/components/admin/UserActions.vue` (+ `frontend/src/components/common/OrganizationSearchSelect.vue`)
 
+**🔁 Reproduire :** ouvrir `/administration` — localiser : « Modale « Modifier l'utilisateur » (champ sans étiquette) ».
+
+**🧪 Tester (après correction) :**
+
+- `11.1` — NVDA : le champ annonce une étiquette ; vérifier qu'elle est visible à l'écran.
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `11.1` – bloquant : Absence d'étiquette visible sur le champ. Dans la modale « Modifier l'utilisateur », le second `OrganizationSearchSelect` (périmètre / scope) reçoit un `:label="labelScope"`, mais `labelScope` vaut `RolesScopes[editingUserRole]`, qui est vide pour certains rôles → étiquette absente.
@@ -4631,6 +5127,12 @@ const searchLabel = computed(() => {
 ![Capture — zone à corriger (RGAA-086)](screenshots/rgaa-086.png)
 
 > Capture : _cf. rapport p.84_ · **Sévérité globale : 🟠 Majeur** · Pages : P11 · Fichier : `frontend/src/components/admin/UserActions.vue`
+
+**🔁 Reproduire :** ouvrir `/administration` — localiser : « Modale « Modifier l'utilisateur » (regroupement de champs) ».
+
+**🧪 Tester (après correction) :**
+
+- `11.5` — NVDA / inspecteur : les champs de même nature sont regroupés (`fieldset`) et le groupe est annoncé.
 
 **Problème :**
 
@@ -4723,6 +5225,12 @@ Code actuel (`UserActions.vue`) :
 
 > Capture : _cf. rapport p.85_ · **Sévérité globale : 🟠 Majeur** · Pages : P11 · Fichier : `frontend/src/components/common/OrganizationSearchSelect.vue`
 
+**🔁 Reproduire :** ouvrir `/administration` — localiser : « Modale « Modifier l'utilisateur » (message de statut sur les suggestions d'organisations) ».
+
+**🧪 Tester (après correction) :**
+
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
+
 **Problème :**
 
 - `7.5` – majeur : Absence de message de statut aux technologies d'assistance informant du nombre de suggestions d'organisations selon la saisie. Les messages « N résultats trouvés » et « Aucune organisation trouvée » existent visuellement mais ne sont pas dans une région live.
@@ -4786,6 +5294,13 @@ const searchStatus = computed(() => {
 ![Capture — zone à corriger (RGAA-088)](screenshots/rgaa-088.png)
 
 > Capture : _cf. rapport p.86_ · **Sévérité globale : 🟠 Majeur** · Pages : P11 · Fichier : `frontend/src/components/admin/UserActions.vue`
+
+**🔁 Reproduire :** ouvrir `/administration` — localiser : « Modale « Modifier l'utilisateur » (bouton Enregistrer : tabulation + confirmation) ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
 
 **Problème :**
 
@@ -4930,6 +5445,13 @@ async function saveUser() {
 
 > Note : le rapport vise les modales « Modifier le tag » / « Créer un tag ». Dans le code, ces modales sont rendues par `TagActions.vue` (et non par `LabelModal.vue`, qui gère les « noms alternatifs »). Le ticket porte donc sur `TagActions.vue`.
 
+**🔁 Reproduire :** ouvrir `/administration` — localiser : « Modale « Modifier / Créer un tag » (format de donnée + tabulation après Enregistrer) ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
+
 **Problème :**
 
 - `11.10` – majeur : Absence d'indication en amont sur le format de données attendu. Le champ affiche un `hint="Les tags sont en minuscules"` mais ne mentionne pas la longueur minimale (au moins 2 caractères).
@@ -5051,6 +5573,12 @@ async function saveTag() {
 
 > Capture : _cf. rapport p.87-88_ · **Sévérité globale : 🟠 Majeur** · Pages : P11 · Fichier : `frontend/src/components/PermissionSelect.vue` (utilisé par `frontend/src/components/admin/AppPermsMatrix.vue` ; conteneur `frontend/src/components/admin/AdminPermsMatrixTab.vue`)
 
+**🔁 Reproduire :** ouvrir `/administration` — localiser : « Matrice des permissions (boutons « - / RO / RW ») ».
+
+**🧪 Tester (après correction) :**
+
+- `7.1` — ARC Toolkit + NVDA : rôles/états ARIA corrects, composant annoncé correctement (pas d'attribut parasite).
+
 **Problème :**
 
 - `7.1` – majeur : Les intitulés des boutons ne permettent pas de comprendre clairement l'action ou l'état associé aux valeurs « - », « RO » et « RW ». Chaque cellule de la matrice (`AppPermsMatrix.vue`) rend un `PermissionSelect` qui est un simple bouton bascule affichant `-` / `RO` / `RW`, sans `title` ni état explicite.
@@ -5168,6 +5696,13 @@ const toggleTitle = computed(
 
 > Capture : _cf. rapport p.70_ · **Sévérité globale : 🟠 Majeur** · Pages : P06 · Fichier : `frontend/src/views/MetadataPage.vue`
 
+**🔁 Reproduire :** ouvrir `/historique` — localiser : « P06 Bouton « Appliquer » ».
+
+**🧪 Tester (après correction) :**
+
+- `12.8` — Au clavier (Tab) : après l'action, le focus va à un endroit logique (cf. solution).
+- `7.5` — NVDA : le message de statut est vocalisé automatiquement (`aria-live`) sans déplacer le focus.
+
 **Problème :**
 
 - `12.8` – majeur : Absence de cohérence de l'ordre de tabulation après l'activation du bouton « Appliquer ».
@@ -5260,6 +5795,13 @@ async function applyFilters() {
 >
 > 🎯 **Page-référence (grille)** : 11.11 (suggestions d'erreur) est conforme sur **P05 et P11** → reprendre leur formulation (message nommant le champ + exemple de format).
 
+**🔁 Reproduire :** ouvrir `/historique` — localiser : « P06 Champs dates en erreurs ».
+
+**🧪 Tester (après correction) :**
+
+- `11.10` — Soumettre le formulaire en erreur : caractère obligatoire indiqué en amont et message nommant le champ.
+- `11.11` — Saisir une valeur invalide : le message propose une correction explicite (exemple de format attendu).
+
 **Problème :**
 
 - `11.10` – majeur : Les messages d'erreurs ne citent pas nommément les champs concernés.
@@ -5341,6 +5883,12 @@ async function applyFilters() {
 
 > Capture : _cf. rapport p.72_ · **Sévérité globale : 🟠 Majeur** · Pages : P07 · Fichier : `frontend/src/views/MetadataDetailPage.vue`
 
+**🔁 Reproduire :** ouvrir `/metadatas/<id>` — localiser : « P07 Hiérarchie des titres ».
+
+**🧪 Tester (après correction) :**
+
+- `8.9` — Inspecteur : aucune balise détournée (p vide, thead vide, span à la place d'un titre/texte).
+
 **Problème :**
 
 - `8.9` – majeur : Absence de contenu après le titre `<h3>`.
@@ -5386,6 +5934,14 @@ Code actuel : dans le bloc Description, un `<h3>` porte le titre de la modificat
 ![Capture — zone à corriger (RGAA-082)](screenshots/rgaa-082.png)
 
 > Capture : _cf. rapport p.80_ · **Sévérité globale : 🟠 Majeur** · Pages : P10 · Fichier : `frontend/src/components/technical-debt/TechnicalDebtChart.vue` · `frontend/src/chart/time-chart.builder.ts` · `frontend/src/views/TimePage.vue`
+
+**🔁 Reproduire :** ouvrir `/time` — localiser : « P10 Image graphique interactif `<svg>` ».
+
+**🧪 Tester (après correction) :**
+
+- `1.3` — NVDA : l'alternative textuelle est restituée, pertinente et en français.
+- `1.6` — NVDA + transcription : la description détaillée (tableau/transcription) est accessible et complète.
+- `8.7` — Inspecteur : `lang` sur le passage en langue étrangère ; NVDA change de prononciation (ou traduire en français).
 
 **Problème :**
 
@@ -5499,6 +6055,12 @@ Code actuel : le `<svg>` a un simple `aria-label="Graphique de maturite TIME"` (
 >
 > 🎯 **Page-référence (grille)** : 3.2 est conforme sur **8 des 11 pages** (couleurs DSFR) → problème circonscrit aux couleurs **custom** ; aligner les tags `.add`/`.update` et le `#555` au survol sur la palette DSFR.
 
+**🔁 Reproduire :** ouvrir `/historique`, `/metadatas/<id>`, `/administration` — localiser : « Contraste des textes ».
+
+**🧪 Tester (après correction) :**
+
+- `3.2` — Colour Contrast Analyser / WCAG Contrast Checker : ratio texte/fond ≥ 4.5:1 (≥ 3:1 si ≥ 24px ou ≥ 18,5px gras), **y compris au survol**.
+
 **Problème :**
 
 - `3.2` – majeur : Présence d'éléments textuels ayant un contraste insuffisant avec leur arrière-plan (4.5:1), notamment dans les états `hover`.
@@ -5581,6 +6143,12 @@ Couleurs custom hors variables DSFR repérées (contraste insuffisant ou à vér
 >
 > 🎯 **Page-référence (grille)** : 3.3 est conforme sur **8 des 11 pages** → problème limité aux bordures **custom** des filtres et à l'échelle de couleur du graphe Time.
 
+**🔁 Reproduire :** ouvrir `/recherche-application`, `/time`, `/administration` — localiser : « Contraste des éléments graphiques ».
+
+**🧪 Tester (après correction) :**
+
+- `3.3` — Colour Contrast Analyser sur l'élément/la bordure : ratio ≥ 3:1 avec les couleurs adjacentes.
+
 **Problème :**
 
 - `3.3` – majeur : Présence d'éléments graphiques ayant un contraste insuffisant avec leur arrière-plan (bordures de champs P04/P11, graphe Time P10).
@@ -5648,6 +6216,12 @@ color: d3.scaleSequential(d3.interpolateYlOrRd).domain([-1.5, 5]),
 ![Capture — zone à corriger (RGAA-003)](screenshots/rgaa-003.png)
 
 > Capture : _cf. rapport p.16_ · **Sévérité globale : 🔴 Bloquant** · Pages : P10 · Fichier : `frontend/src/views/TimePage.vue` · `frontend/src/components/technical-debt/TechnicalDebtChart.vue`
+
+**🔁 Reproduire :** ouvrir `/time` — localiser : « Redistribution des contenus (reflow 320px) ».
+
+**🧪 Tester (après correction) :**
+
+- `10.11` — Réduire la fenêtre à **320px** (ou zoom 400 % à 1280px) : aucun contenu/fonction perdu, pas de double défilement.
 
 **Problème :**
 
