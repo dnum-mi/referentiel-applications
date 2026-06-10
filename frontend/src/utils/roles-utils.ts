@@ -50,6 +50,7 @@ export const PERMISSIONS_LABELS: Record<Permission, string> = {
   ActorTypePost: "Créer un type d'acteur",
   ActorTypeManage: "Modifier un type d'acteur",
   ActorTypeDelete: "Supprimer un type d'acteur",
+  ColumnRead: "Voir toutes les colonnes personnalisées",
   OrganizationManage: "Gérer l'organisation",
   // Permissions applicatives
   AppRead: "Voir les informations de base",

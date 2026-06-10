@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import type { ApplicationStatus, BusinessDivisionDto, HostingOptionDto } from "@/client/types.gen.js";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useColumnPreferences } from "@/composables/use-column-preferences";
 import { formatDateFR } from "@/composables/use-date";
 import { homologationStatusDict, restartPrioritiesConfig, statusApplicationDictionary } from "@/constants/dictionary";
-import RefAppTable from "./RefAppTable.vue";
 import type { TableSortEvent } from "@/types/table";
-import type { ApplicationStatus, BusinessDivisionDto } from "@/client/types.gen.js";
+import { computed, ref } from "vue";
+import RefAppTable from "./RefAppTable.vue";
 
 const { filters, results, total, page, pageSize, setFilter, isLoading } = useApplicationSearch();
 const { tableColumns, setColumnWidth } = useColumnPreferences();
@@ -52,6 +52,8 @@ const formatHomologation = (value: string | null | undefined): string =>
   value ? homologationStatusDict[value as keyof typeof homologationStatusDict] || value : "";
 const formatDate = (value: string | null | undefined): string => (value ? formatDateFR(value) : "");
 const formatStatus = (value: ApplicationStatus | null | undefined): string => (value ? statusApplicationDictionary[value] || value : "");
+const formatHostingsProvider = (value: HostingOptionDto | undefined): string => (value ? value.provider : "");
+const formatHostingsPlatform = (value: HostingOptionDto | undefined): string => (value ? value.platform : "");
 
 const applications = computed(() =>
   results.value.map((app: any) => {
@@ -60,6 +62,8 @@ const applications = computed(() =>
       qualityDisplay: `${app.quality}%`,
       hostingDisplay: app.hostings.map((h: any) => h.hostingOption?.site || h.site).join(", "),
       tagsDisplay: app.tags.map((tag: any) => tag.name).join(", "),
+      hostingProviderDisplay: app.hostings.map((h: any) => formatHostingsProvider(h.hostingOption)).join(", "),
+      hostingPlatformDisplay: app.hostings.map((h: any) => formatHostingsPlatform(h.hostingOption)).join(", "),
       priorityConfig: app.priorityRestart ? restartPrioritiesConfig[app.priorityRestart as keyof typeof restartPrioritiesConfig] : null,
       moaDisplay: formatActors(app.actors, "MOA"),
       moeDisplay: formatActors(app.actors, "MOE"),
@@ -137,6 +141,14 @@ function onColumnResize(event: { field: string; width: string }) {
 
     <template #body-hostingSite="{ data }">
       {{ data.hostingDisplay }}
+    </template>
+
+    <template #body-hosting-ProviderDisplay="{ data }">
+      {{ data.hostingProviderDisplay }}
+    </template>
+
+    <template #body-hosting-PlatformDisplay="{ data }">
+      {{ data.hostingPlatformDisplay }}
     </template>
 
     <template #body-tag="{ data }">

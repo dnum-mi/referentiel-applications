@@ -1,4 +1,4 @@
-import type { APP_PERMISSIONS } from "@/models/Application";
+import { type Permission } from "@/client";
 
 export interface ColumnConfig {
   field: string;
@@ -6,7 +6,7 @@ export interface ColumnConfig {
   sortable?: boolean;
   defaultWidth?: string;
   visible?: boolean;
-  requiredPermissions?: APP_PERMISSIONS[];
+  requiredPermissions?: Permission[];
   alwaysAvailable?: boolean;
 }
 
@@ -41,7 +41,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: true,
     defaultWidth: "280px",
     visible: true,
-    requiredPermissions: ["HostingRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "tag",
@@ -57,7 +57,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "200px",
     visible: false,
-    requiredPermissions: ["ActorRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "moe",
@@ -65,7 +65,23 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "200px",
     visible: false,
-    requiredPermissions: ["ActorRead"],
+    requiredPermissions: ["ColumnRead"],
+  },
+  {
+    field: "hostingProviderDisplay",
+    header: "Fournisseur",
+    sortable: true,
+    defaultWidth: "200px",
+    visible: false,
+    requiredPermissions: ["ColumnRead"],
+  },
+  {
+    field: "hostingPlatformDisplay",
+    header: "Plateforme",
+    sortable: true,
+    defaultWidth: "200px",
+    visible: false,
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "hostingManagerDisplay",
@@ -73,7 +89,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "200px",
     visible: false,
-    requiredPermissions: ["ActorRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "businessDivision",
@@ -89,7 +105,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "200px",
     visible: false,
-    requiredPermissions: ["ActorRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "dima",
@@ -97,7 +113,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "150px",
     visible: false,
-    requiredPermissions: ["ComplianceRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "pdma",
@@ -105,7 +121,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "150px",
     visible: false,
-    requiredPermissions: ["ComplianceRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "rgaa",
@@ -113,7 +129,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "150px",
     visible: false,
-    requiredPermissions: ["ComplianceRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "dsfr",
@@ -121,7 +137,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "150px",
     visible: false,
-    requiredPermissions: ["ComplianceRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "homologation",
@@ -129,7 +145,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "180px",
     visible: false,
-    requiredPermissions: ["ComplianceRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "homologationDateEnd",
@@ -137,7 +153,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     sortable: false,
     defaultWidth: "220px",
     visible: false,
-    requiredPermissions: ["ComplianceRead"],
+    requiredPermissions: ["ColumnRead"],
   },
   {
     field: "status",
