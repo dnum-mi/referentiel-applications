@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminUsersTab from "@/components/admin/AdminUsersTab.vue";
 import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
-import AdminQualityTab from "@/components/admin/AdminQualityTab.vue";
+import AdminBatchData from "@/components/admin/AdminBatchData.vue";
 import AdminOrganizationsTab from "@/components/admin/AdminOrganizationsTab.vue";
 import { markRaw, ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
@@ -46,11 +46,11 @@ const tabs = ref<DsfrTab[]>([
     component: markRaw(AdminLabelSourcesTab),
   },
   {
-    title: "Indice de qualité",
-    icon: "ri-bar-chart-line",
-    tabId: "tab-quality",
-    panelId: "panel-quality",
-    component: markRaw(AdminQualityTab),
+    title: "Batch de données",
+    icon: "ri-stack-line",
+    tabId: "batch-data",
+    panelId: "panel-batch-data",
+    component: markRaw(AdminBatchData),
   },
   {
     title: "Matrice des permissions",

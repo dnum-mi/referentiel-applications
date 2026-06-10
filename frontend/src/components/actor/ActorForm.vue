@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import type { PropType } from "vue";
+import api from "@/api/index.js";
+import type { ActorTypeDto, CreateActorDto, OrganizationDto } from "@/client/types.gen.js";
 import type { Application } from "@/models/Application";
-import type { OrganizationDto, ActorTypeDto, CreateActorDto } from "@/client/types.gen.js";
-import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import api from "@/api/index.js";
-import { parseMaiaFullName } from "@/utils/parse-maia-fullname";
+import type { PropType } from "vue";
+import { computed, onMounted, ref } from "vue";
+import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 
 const props = defineProps({
   initialData: Object as PropType<CreateActorDto>,
@@ -105,8 +104,8 @@ function handleSubmit() {
   const formData = {
     ...form.value,
     email: form.value.email?.trim() || "",
-    firstname: !isGroup.value ? form.value.firstname?.trim() || undefined : null,
-    lastname: !isGroup.value ? form.value.lastname?.trim() || undefined : null,
+    firstname: !isGroup.value ? (form.value.firstname?.trim() ?? undefined) : null,
+    lastname: !isGroup.value ? (form.value.lastname?.trim() ?? undefined) : null,
   };
 
   emit("submit", formData);

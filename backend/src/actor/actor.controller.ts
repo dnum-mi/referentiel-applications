@@ -34,6 +34,7 @@ import { PermissionGuard } from "src/common/guards/permission.guard";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 
 @ApiTags("Actors")
+@UseGuards(PermissionGuard)
 @Controller("actors")
 export class ActorController {
   constructor(private readonly actorService: ActorService) {}
@@ -48,6 +49,20 @@ export class ActorController {
   })
   public async countAllActors(): Promise<number> {
     return this.actorService.count();
+  }
+
+  @Post("sync-maia")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Synchroniser les acteurs depuis MAIA (batch)",
+    description:
+      "Pour chaque acteur avec un email, récupère l'organisation, le prénom et le nom depuis MAIA et met à jour l'acteur. La tâche est lancée en arrière-plan.",
+  })
+  @ApiOkResponse({
+    description: "Batch MAIA lancé en tâche de fond",
+  })
+  public syncFromMaia() {
+    return this.actorService.startSyncActorsFromMaiaInBackground();
   }
 }
 

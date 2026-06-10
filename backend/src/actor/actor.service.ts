@@ -15,6 +15,11 @@ import {
 } from "./dto/actor.dto";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PaginatedResponseDto } from "src/common/dto";
+import { OrganizationMaiaReferencesService } from "src/organization-maia-references/organization-maia-references.service";
+import {
+  getFullNameFromMaia,
+  getOrganizationPathFromMaia,
+} from "src/user/utils/maia.tools";
 
 @Injectable()
 export class ActorService {
@@ -33,6 +38,7 @@ export class ActorService {
     metadataService: MetadatasService,
     private readonly emailService: EmailService,
     private readonly prisma: PrismaService,
+    private readonly organizationMaiaReferencesService: OrganizationMaiaReferencesService,
   ) {
     this.baseService = new BaseService<
       ActorWithRelations,
@@ -209,6 +215,80 @@ export class ActorService {
         entity: "actorId",
       },
     });
+  }
+
+  startSyncActorsFromMaiaInBackground() {
+    this.syncAllActorsFromMaia();
+    return {
+      status: "queued" as const,
+      message: "Tâche de synchronisation MAIA des acteurs lancée.",
+    };
+  }
+
+  async syncAllActorsFromMaia() {
+    const actors = await this.prisma.actor.findMany({
+      where: { email: { not: null }, isGroup: false },
+      select: { id: true, email: true },
+    });
+
+    for (const actor of actors) {
+      try {
+        const [
+          organizationPath,
+          { firstName: firstNameFromMaia, lastName: lastNameFromMaia },
+        ] = await Promise.all([
+          getOrganizationPathFromMaia(actor.email),
+          getFullNameFromMaia(actor.email),
+        ]);
+
+        const updateData: Prisma.ActorUpdateInput = {};
+
+        if (firstNameFromMaia) {
+          updateData.firstname = firstNameFromMaia;
+        }
+        if (lastNameFromMaia) {
+          updateData.lastname = lastNameFromMaia;
+        }
+        if (organizationPath) {
+          const { organization } =
+            await this.findOrCreateOrganizationFromPath(organizationPath);
+          updateData.organization = { connect: { id: organization.id } };
+        }
+
+        await this.prisma.actor.update({
+          where: { id: actor.id },
+          data: updateData,
+        });
+      } catch (error) {
+        Logger.warn(
+          `Échec de la synchronisation MAIA pour l'acteur ${actor.email}: ${error}`,
+        );
+      }
+    }
+  }
+
+  private async findOrCreateOrganizationFromPath(path: string) {
+    const orgFromOverride =
+      await this.organizationMaiaReferencesService.findOrganizationByMaiaRef(
+        path,
+      );
+    if (orgFromOverride) {
+      return { organization: orgFromOverride };
+    }
+
+    const existing = await this.prisma.organization.findFirst({
+      where: { path },
+      select: { id: true },
+    });
+    if (existing) {
+      return { organization: existing };
+    }
+
+    const newOrg = await this.prisma.organization.create({
+      data: { path },
+      select: { id: true },
+    });
+    return { organization: newOrg };
   }
 
   private async sendActorNotificationIfEnabled(
