@@ -60,6 +60,7 @@ export class ActorController {
   })
   @ApiOkResponse({
     description: "Batch MAIA lancé en tâche de fond",
+    type: String,
   })
   public syncFromMaia() {
     return this.actorService.startSyncActorsFromMaiaInBackground();

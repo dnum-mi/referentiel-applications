@@ -2658,6 +2658,10 @@ paths:
       responses:
         "200":
           description: Batch MAIA lancé en tâche de fond
+          content:
+            application/json:
+              schema:
+                type: string
         "201":
           description: ""
       tags: *a15

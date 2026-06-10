@@ -41,6 +41,7 @@ describe("Test Swagger documentation", () => {
       "/users/me/subscribe/{appId}",
       "/applications/{applicationId}/compliances/ecoindex/scan",
       "/users/{id}/sync-organization-from-maia",
+      "/actors/sync-maia",
     ];
     for (const [path, pathObject] of Object.entries(openapiSpec.paths)) {
       for (const method of methods) {
