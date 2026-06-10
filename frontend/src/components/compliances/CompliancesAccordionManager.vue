@@ -27,7 +27,9 @@ const applicationId = props.application.id;
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
-type ManagedComplianceType = Exclude<ComplianceType, "rgaa">;
+// « rgaa » a sa propre section dédiée ; « pra » est un critère booléen sans
+// formulaire détaillé : ni l'un ni l'autre n'est géré dans cet accordéon.
+type ManagedComplianceType = Exclude<ComplianceType, "rgaa" | "pra">;
 const compliance = ref<ComplianceDto | null>(null);
 const isLoading = ref(false);
 const isScanningEcoIndex = ref(false);
