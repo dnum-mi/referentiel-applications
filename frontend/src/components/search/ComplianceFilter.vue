@@ -66,7 +66,7 @@ function setState(criterion: ComplianceFilterCriterion, state: string | number) 
       :options="optionsFor(criterion)"
       :name="`compliance-${criterion}`"
       :data-testid="`compliance-option-${criterion}`"
-      @update:model-value="(state) => setState(criterion, state)"
+      @update:model-value="(state: string | number) => setState(criterion, state)"
     />
   </div>
 </template>
