@@ -9,6 +9,7 @@ const NONE_PERMISSIONS: Set<Permission> = new Set([
 const READ_PERMISSIONS = new Set([
   ...Array.from(NONE_PERMISSIONS),
   Permission.MDITList,
+  Permission.ColumnRead,
 ]);
 const WRITE_PERMISSIONS = new Set([
   ...Array.from(READ_PERMISSIONS),

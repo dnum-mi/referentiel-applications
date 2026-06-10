@@ -4807,6 +4807,7 @@ components:
         - ActorTypeManage
         - ActorTypeDelete
         - OrganizationManage
+        - ColumnRead
         - AppRead
         - AppWrite
         - ActorRead

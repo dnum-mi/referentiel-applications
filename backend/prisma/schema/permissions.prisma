@@ -80,6 +80,8 @@ enum Permission {
   ActorTypeDelete
   /// Gérer les organizations (créer, modifier, supprimer) 
   OrganizationManage
+  /// Afficher toutes les colonnes des applications
+  ColumnRead
 
   // --- Permissions applicatives (par app) ---
   // Couple read/write classique
