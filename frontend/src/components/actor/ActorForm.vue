@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import type { PropType } from "vue";
+import api from "@/api/index.js";
+import type { ActorTypeDto, CreateActorDto, OrganizationDto } from "@/client/types.gen.js";
 import type { Application } from "@/models/Application";
-import type { OrganizationDto, ActorTypeDto, CreateActorDto } from "@/client/types.gen.js";
-import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 import { useOrganizationStore } from "@/stores/organizationStore";
+import { useToasterStore } from "@/stores/toasterStore";
+import type { PropType } from "vue";
+import { computed, onMounted, ref } from "vue";
+import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 
 const props = defineProps({
   initialData: Object as PropType<CreateActorDto>,
@@ -22,7 +24,41 @@ const props = defineProps({
 const emit = defineEmits(["submit", "cancel"]);
 
 const organizationStore = useOrganizationStore();
+const toaster = useToasterStore();
 const initialOrganization = ref<OrganizationDto | null>(null);
+const isSyncingFromMaia = ref(false);
+
+async function syncFromMaiaByEmail() {
+  isSyncingFromMaia.value = true;
+  if (!form.value.email) {
+    toaster.addErrorMessage("L'email est requis pour synchroniser depuis MAIA");
+    isSyncingFromMaia.value = false;
+    return;
+  }
+  try {
+    const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email: form.value.email } });
+    if (response.response.ok && response.data) {
+      const { organizationId: newOrgId, firstName, lastName } = response.data;
+      form.value.firstname = firstName;
+      form.value.lastname = lastName;
+      if (newOrgId) {
+        const org = await organizationStore.getById(newOrgId);
+        if (org) {
+          initialOrganization.value = org;
+        }
+        organizationId.value = newOrgId;
+
+        toaster.addSuccessMessage("Organisation synchronisée depuis MAIA");
+      }
+    } else {
+      toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
+    }
+  } catch (error) {
+    toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
+  } finally {
+    isSyncingFromMaia.value = false;
+  }
+}
 
 const form = ref<CreateActorDto>({
   actorTypeId: "",
@@ -68,8 +104,8 @@ function handleSubmit() {
   const formData = {
     ...form.value,
     email: form.value.email?.trim() || "",
-    firstname: !isGroup.value ? form.value.firstname?.trim() || undefined : null,
-    lastname: !isGroup.value ? form.value.lastname?.trim() || undefined : null,
+    firstname: !isGroup.value ? (form.value.firstname?.trim() ?? undefined) : null,
+    lastname: !isGroup.value ? (form.value.lastname?.trim() ?? undefined) : null,
   };
 
   emit("submit", formData);
@@ -87,14 +123,6 @@ function handleSubmit() {
       class="fr-mb-3w"
     />
 
-    <OrganizationSearchSelect
-      v-model="organizationId"
-      :initial-organization="initialOrganization"
-      data-testid="actor-organization"
-      class="fr-mb-3w"
-      required
-    />
-
     <DsfrInput
       v-model="form.email"
       label="Email"
@@ -103,6 +131,26 @@ function handleSubmit() {
       placeholder="exemple@domaine.com"
       data-testid="actor-email-input"
       class="fr-mb-3w"
+    />
+    <DsfrButton
+      type="button"
+      label="Synchroniser depuis MAIA (par email)"
+      size="sm"
+      tertiary
+      :disabled="isSyncingFromMaia || !form.email"
+      data-testid="admin-user-sync-maia-btn"
+      title="Synchroniser l'organisation depuis MAIA"
+      aria-label="Synchroniser l'organisation depuis MAIA"
+      @click="syncFromMaiaByEmail"
+      style="margin-bottom: 1rem"
+    />
+
+    <OrganizationSearchSelect
+      v-model="organizationId"
+      :initial-organization="initialOrganization"
+      data-testid="actor-organization"
+      class="fr-mb-3w"
+      required
     />
 
     <DsfrCheckbox

@@ -2281,6 +2281,29 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserWithPermissions"
       tags: *a13
+  /api/v2/users/by-email/{email}/sync-organization-from-maia:
+    get:
+      operationId: UserController_syncOrganizationFromMaiaByEmail
+      summary: Synchroniser l'organisation depuis Maia par email
+      parameters:
+        - name: email
+          required: true
+          in: path
+          description: Email de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Organisation synchronisée avec succès & fullName récupéré
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissionsAndFullNameMaia"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a13
   /api/v2/users/{id}/sync-organization-from-maia:
     post:
       operationId: UserController_syncOrganizationFromMaia
@@ -2622,8 +2645,26 @@ paths:
             application/json:
               schema:
                 type: number
-      tags:
+      tags: &a15
         - Actors
+  /api/v2/actors/sync-maia:
+    post:
+      operationId: ActorController_syncFromMaia
+      summary: Synchroniser les acteurs depuis MAIA (batch)
+      description: Pour chaque acteur avec un email, récupère l'organisation, le
+        prénom et le nom depuis MAIA et met à jour l'acteur. La tâche est lancée
+        en arrière-plan.
+      parameters: []
+      responses:
+        "200":
+          description: Batch MAIA lancé en tâche de fond
+          content:
+            application/json:
+              schema:
+                type: string
+        "201":
+          description: ""
+      tags: *a15
   /api/v2/actorTypes:
     post:
       operationId: ActorTypeController_create
@@ -2656,7 +2697,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorTypeDto"
-      tags: &a15
+      tags: &a16
         - actorTypes
     get:
       operationId: ActorTypeController_findAll
@@ -2706,7 +2747,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedActorTypeDto"
-      tags: *a15
+      tags: *a16
   /api/v2/actorTypes/perms-matrix:
     get:
       operationId: ActorTypeController_getMatrix
@@ -2723,7 +2764,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AppPermsDto"
-      tags: *a15
+      tags: *a16
     patch:
       operationId: ActorTypeController_updateMatrix
       summary: Mettre à jour la matrice des permissions
@@ -2748,7 +2789,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/AppPermsDto"
-      tags: *a15
+      tags: *a16
   /api/v2/actorTypes/{id}:
     get:
       operationId: ActorTypeController_findOne
@@ -2768,7 +2809,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ActorTypeDto"
-      tags: *a15
+      tags: *a16
     patch:
       operationId: ActorTypeController_update
       summary: Mettre à jour un type d’acteur
@@ -2801,7 +2842,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PatchActorTypeDto"
-      tags: *a15
+      tags: *a16
     delete:
       operationId: ActorTypeController_delete
       summary: Supprimer un type d’acteur
@@ -2814,7 +2855,7 @@ paths:
       responses:
         "204":
           description: Type d’acteur supprimé avec succès
-      tags: *a15
+      tags: *a16
   /api/v2/applications/{applicationId}/compliances:
     post:
       operationId: ApplicationCompliancesController_create
@@ -2839,7 +2880,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: &a16
+      tags: &a17
         - Compliances
     get:
       operationId: ApplicationCompliancesController_findOne
@@ -2858,7 +2899,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: *a16
+      tags: *a17
     patch:
       operationId: ApplicationCompliancesController_update
       summary: Update the compliance for an application
@@ -2882,7 +2923,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: *a16
+      tags: *a17
   /api/v2/applications/{applicationId}/compliances/ecoindex/scan:
     post:
       operationId: ApplicationCompliancesController_scanEcoIndex
@@ -2901,7 +2942,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ComplianceDto"
-      tags: *a16
+      tags: *a17
   /api/v2/compliances/count:
     get:
       operationId: ComplianceController_countAllCompliances
@@ -2940,7 +2981,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingDto"
-      tags: &a17
+      tags: &a18
         - Hostings
     get:
       operationId: ApplicationHostingsController_findAll
@@ -2961,7 +3002,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/HostingDto"
-      tags: *a17
+      tags: *a18
   /api/v2/applications/{applicationId}/hostings/{id}:
     get:
       operationId: ApplicationHostingsController_findOne
@@ -2985,7 +3026,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingDto"
-      tags: *a17
+      tags: *a18
     patch:
       operationId: ApplicationHostingsController_update
       summary: Mettre à jour un hébergement pour une application
@@ -3014,7 +3055,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingDto"
-      tags: *a17
+      tags: *a18
     delete:
       operationId: ApplicationHostingsController_remove
       summary: Supprimer un hébergement pour une application
@@ -3033,7 +3074,7 @@ paths:
       responses:
         "204":
           description: Hébergement supprimé
-      tags: *a17
+      tags: *a18
   /api/v2/sites:
     get:
       operationId: SitesController_findDistinctSites
@@ -3082,7 +3123,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HostingOptionDto"
-      tags: &a18
+      tags: &a19
         - HostingOptions
     get:
       operationId: HostingOptionController_findAll
@@ -3155,7 +3196,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedHostingOptionDto"
-      tags: *a18
+      tags: *a19
   /api/v2/hosting-options/{id}:
     patch:
       operationId: HostingOptionController_update
@@ -3181,7 +3222,7 @@ paths:
                 $ref: "#/components/schemas/HostingOptionDto"
         "404":
           description: Hosting option not found
-      tags: *a18
+      tags: *a19
     delete:
       operationId: HostingOptionController_remove
       summary: Delete hosting option by ID
@@ -3196,7 +3237,7 @@ paths:
           description: Hosting option deleted successfully
         "404":
           description: Hosting option not found
-      tags: *a18
+      tags: *a19
   /api/v2/applications/{applicationId}/labels:
     post:
       operationId: LabelsController_create
@@ -3232,7 +3273,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LabelDto"
-      tags: &a19
+      tags: &a20
         - Labels
     get:
       operationId: LabelsController_findAllSorted
@@ -3261,7 +3302,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/LabelDto"
-      tags: *a19
+      tags: *a20
   /api/v2/applications/{applicationId}/labels/{id}:
     patch:
       operationId: LabelsController_update
@@ -3292,7 +3333,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LabelDto"
-      tags: *a19
+      tags: *a20
     delete:
       operationId: LabelsController_delete
       summary: Supprimer un nom alternatif
@@ -3315,7 +3356,7 @@ paths:
       responses:
         "204":
           description: Nom alternatif supprimé avec succès
-      tags: *a19
+      tags: *a20
   /api/v2/label-sources:
     post:
       operationId: LabelSourceController_create
@@ -3346,7 +3387,7 @@ paths:
                 $ref: "#/components/schemas/LabelSourceDto"
         "403":
           description: Accès refusé - Privilège admin requis
-      tags: &a20
+      tags: &a21
         - LabelSources
     get:
       operationId: LabelSourceController_findAll
@@ -3399,7 +3440,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedLabelSourceDto"
-      tags: *a20
+      tags: *a21
   /api/v2/label-sources/{id}:
     patch:
       operationId: LabelSourceController_update
@@ -3427,7 +3468,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Source non trouvée
-      tags: *a20
+      tags: *a21
     delete:
       operationId: LabelSourceController_remove
       summary: Supprimer une source de libellés alternatifs
@@ -3444,7 +3485,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Source non trouvée
-      tags: *a20
+      tags: *a21
   /api/v2/applications/{applicationId}/links:
     post:
       operationId: ApplicationLinksController_create
@@ -3469,7 +3510,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: &a21
+      tags: &a22
         - Links
     get:
       operationId: ApplicationLinksController_findAll
@@ -3524,7 +3565,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedLinkDto"
-      tags: *a21
+      tags: *a22
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
       operationId: ApplicationLinksController_update
@@ -3555,7 +3596,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: *a21
+      tags: *a22
     delete:
       operationId: ApplicationLinksController_delete
       summary: Delete a link for an application
@@ -3575,7 +3616,7 @@ paths:
       responses:
         "204":
           description: Link deleted successfully
-      tags: *a21
+      tags: *a22
   /api/v2/applications/{applicationId}/technical-debt-info:
     post:
       operationId: ApplicationTechnicalDebtInfoController_create
@@ -3602,7 +3643,7 @@ paths:
                 $ref: "#/components/schemas/TechnicalDebtInfoDto"
         "409":
           description: Technical debt info already exists for this application
-      tags: &a22
+      tags: &a23
         - Technical Debt Info
     get:
       operationId: ApplicationTechnicalDebtInfoController_find
@@ -3656,7 +3697,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedTechnicalDebtInfoDto"
-      tags: *a22
+      tags: *a23
   /api/v2/technical-debts:
     get:
       operationId: TechnicalDebtController_getTechnicalDebtPoints
@@ -4029,7 +4070,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RgaaComplianceDto"
-      tags: &a23
+      tags: &a24
         - RGAA Compliances
     post:
       operationId: RgaaController_create
@@ -4060,7 +4101,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceErrorResponseDto"
-      tags: *a23
+      tags: *a24
   /api/v2/applications/{applicationId}/rgaa-compliances/{id}:
     patch:
       operationId: RgaaController_update
@@ -4091,7 +4132,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceDto"
-      tags: *a23
+      tags: *a24
     delete:
       operationId: RgaaController_delete
       summary: Supprimer une conformité RGAA
@@ -4111,7 +4152,7 @@ paths:
       responses:
         "204":
           description: Conformité RGAA supprimée
-      tags: *a23
+      tags: *a24
   /api/v2/stats/iq-avg/period:
     get:
       operationId: StatsController_getIqAvgGrouped
@@ -4242,7 +4283,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: &a24
+      tags: &a25
         - Reports
     post:
       operationId: ReportsController_create
@@ -4261,7 +4302,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a24
+      tags: *a25
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -4292,7 +4333,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a24
+      tags: *a25
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -4317,7 +4358,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a25
+      tags: &a26
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -4381,7 +4422,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: *a25
+      tags: *a26
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -4405,7 +4446,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a25
+      tags: *a26
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -4441,7 +4482,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a25
+      tags: *a26
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -4460,7 +4501,7 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a25
+      tags: *a26
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -5046,7 +5087,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a26
+          example: &a27
             - population 1
             - population 2
           description: population associated with the application
@@ -5056,7 +5097,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a27
+          example: &a28
             - finance
             - HR
           description: Purposes of the application
@@ -5067,7 +5108,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a28
+          example: &a29
             - tag1
             - tag2
           type: array
@@ -5346,7 +5387,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a26
+          example: *a27
           description: population associated with the application
           type: array
           items:
@@ -5354,7 +5395,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a27
+          example: *a28
           description: Purposes of the application
           type: array
           items:
@@ -5363,7 +5404,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a28
+          example: *a29
           type: array
           items:
             type: string
@@ -5905,6 +5946,65 @@ components:
           type: boolean
           description: Indique si les notifications par email sont activées pour
             l'utilisateur
+    UserWithPermissionsAndFullNameMaia:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        organization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        scopeOrganization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        type:
+          $ref: "#/components/schemas/UserType"
+        emailNotificationsEnabled:
+          type: boolean
+          description: Préférence de notification par email
+          default: true
+        followedApplications:
+          description: Applications suivies par l'utilisateur
+          type: array
+          items:
+            $ref: "#/components/schemas/UserFollowedApplicationDto"
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        id:
+          type: string
+        email:
+          type: string
+        organizationId:
+          type: string
+          nullable: true
+        scopeOrganizationId:
+          type: string
+          nullable: true
+        fullName:
+          type: string
+        lastName:
+          type: string
+        firstName:
+          type: string
+      required:
+        - role
+        - type
+        - additionalPermissions
+        - id
+        - email
+        - organizationId
+        - scopeOrganizationId
+        - fullName
+        - lastName
+        - firstName
     SyncOrganizationsDto:
       type: object
       properties:
@@ -6257,7 +6357,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a29
+          enum: &a30
             - OK
             - KO
           type: string
@@ -6283,7 +6383,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a30
+          enum: &a31
             - S3
             - LOCAL
             - EXTERNE
@@ -6294,7 +6394,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a31
+          enum: &a32
             - OK
             - KO
           type: string
@@ -6304,7 +6404,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a32
+          enum: &a33
             - homologuee
             - en_cours
             - dispensee
@@ -6368,7 +6468,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a29
+          enum: *a30
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6392,7 +6492,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a30
+          enum: *a31
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6400,7 +6500,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a31
+          enum: *a32
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6408,7 +6508,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a32
+          enum: *a33
           type: string
           description: Homologation status
         homologation_date_end:
@@ -6490,7 +6590,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a29
+          enum: *a30
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6514,7 +6614,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a30
+          enum: *a31
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6522,7 +6622,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a31
+          enum: *a32
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6530,7 +6630,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a32
+          enum: *a33
           type: string
           description: Homologation status
         homologation_date_end:

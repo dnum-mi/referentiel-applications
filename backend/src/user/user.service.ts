@@ -7,7 +7,10 @@ import { UserFilterDto } from "./dto/filters.dto";
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
 import { Requestor, UserEntity } from "./entities/user.entity";
-import { getOrganizationPathFromMaia } from "./utils/maia.tools";
+import {
+  getFullNameFromMaia,
+  getOrganizationPathFromMaia,
+} from "./utils/maia.tools";
 import { ScopedPermissionService } from "./scope-permission/scoped-permission.service";
 import { UserPermissionLogService } from "./user-permission-log.service";
 import { LoggerService } from "src/logger/logger.service";
@@ -208,9 +211,9 @@ export class UserService {
     return requestor;
   }
 
-  async syncOrganizationFromMaia(userId: string) {
+  async syncOrganizationFromMaiaByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { email },
       select: {
         id: true,
         email: true,
@@ -221,6 +224,33 @@ export class UserService {
       throw new NotFoundException("Utilisateur non trouvé");
     }
 
+    const userFromMaia = await this.syncOrganizationFromMaiaForUser(user);
+    const { lastName, firstName, fullName } = await getFullNameFromMaia(email);
+    return {
+      ...userFromMaia,
+      lastName,
+      firstName,
+      fullName,
+    };
+  }
+
+  async syncOrganizationFromMaia(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException("Utilisateur non trouvé");
+    }
+
+    return this.syncOrganizationFromMaiaForUser(user);
+  }
+
+  private async syncOrganizationFromMaiaForUser(user: {
+    id: string;
+    email: string;
+  }) {
     const organizationPath = await getOrganizationPathFromMaia(user.email);
 
     if (!organizationPath) {
@@ -234,9 +264,7 @@ export class UserService {
 
     return this.prisma.user.update({
       where: { id: user.id },
-      data: {
-        organizationId: organization.id,
-      },
+      data: { organizationId: organization.id },
     });
   }
 

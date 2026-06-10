@@ -35,6 +35,7 @@ import {
   Requestor,
   UserEntity,
   UserWithPermissions,
+  UserWithPermissionsAndFullNameMaia,
 } from "./entities/user.entity";
 import { UserPermissionsInterceptor } from "./user-permissions.interceptor";
 import { UserService } from "./user.service";
@@ -108,6 +109,24 @@ export class UserController {
   })
   async unsubscribe(@User() user: UserEntity, @Param("appId") appId: string) {
     return this.userService.unsubscribe(user.id, appId);
+  }
+
+  @Get("by-email/:email/sync-organization-from-maia")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Synchroniser l'organisation depuis Maia par email",
+  })
+  @ApiParam({ name: "email", description: "Email de l'utilisateur" })
+  @ApiOkResponse({
+    description: "Organisation synchronisée avec succès & fullName récupéré",
+    type: UserWithPermissionsAndFullNameMaia,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
+  async syncOrganizationFromMaiaByEmail(@Param("email") email: string) {
+    return this.userService.syncOrganizationFromMaiaByEmail(email);
   }
 
   @Post(":id/sync-organization-from-maia")
