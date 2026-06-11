@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.79.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.78.0...v1.79.0) (2026-06-11)
+
+
+### Features
+
+* add favoris app and add my app with actor group ([#1756](https://github.com/dnum-mi/referentiel-applications/issues/1756)) ([569430a](https://github.com/dnum-mi/referentiel-applications/commit/569430a8f26a0ed0b2b5bef891d2bf6fa77fe105))
+* add maia import into actor form ([#1762](https://github.com/dnum-mi/referentiel-applications/issues/1762)) ([853035c](https://github.com/dnum-mi/referentiel-applications/commit/853035cd210ddee63aa4c165462275eb40052ed0))
+* add new value to columns and fix permission ([#1787](https://github.com/dnum-mi/referentiel-applications/issues/1787)) ([5f7fcd1](https://github.com/dnum-mi/referentiel-applications/commit/5f7fcd1d46b2ffa29e29a3b878b01476fbf9c844))
+* add restriction and reset value for ecoindex ([#1758](https://github.com/dnum-mi/referentiel-applications/issues/1758)) ([f9e475e](https://github.com/dnum-mi/referentiel-applications/commit/f9e475e45cf8a1ed83314a7a6f729c00ecafce76))
+* attach maia organisation when create user ([#1793](https://github.com/dnum-mi/referentiel-applications/issues/1793)) ([f707d15](https://github.com/dnum-mi/referentiel-applications/commit/f707d152d126a4b25e85367d76e3f1fed51af102))
+* reorder hosting fields and ensure filter updates handle null values ([#1768](https://github.com/dnum-mi/referentiel-applications/issues/1768)) ([54eff91](https://github.com/dnum-mi/referentiel-applications/commit/54eff915d24efc1f1fc95a95aec72aa3ed782299))
+
 ## [1.78.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.77.0...v1.78.0) (2026-06-01)
 
 
