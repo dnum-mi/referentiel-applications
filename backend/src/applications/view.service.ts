@@ -9,7 +9,7 @@ export class ApplicationViewService {
     const since = new Date();
     since.setMinutes(since.getMinutes() - 15);
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (_tx) => {
       const existingView = await this.prisma.applicationView.findFirst({
         where: {
           applicationId,

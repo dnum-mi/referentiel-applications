@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { useApplicationSearch, type TechnicalDebtPoint } from "@/composables/use-application-search";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";

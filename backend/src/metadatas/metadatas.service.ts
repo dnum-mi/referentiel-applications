@@ -115,7 +115,7 @@ export class MetadatasService extends BaseService<any> {
       }
     }
 
-    let prismaData: Prisma.MetadataUncheckedCreateInput = {
+    const prismaData: Prisma.MetadataUncheckedCreateInput = {
       applicationId,
       createdById,
       action: MetadataTypes[type].dbAction,

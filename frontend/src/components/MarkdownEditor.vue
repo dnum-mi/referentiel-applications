@@ -123,7 +123,7 @@ function handleKeydown(event: KeyboardEvent) {
 const tabs = [
   { title: "éditer", value: "edit", icon: "edit-line" },
   { title: "aperçu", value: "preview", icon: "eye-line" },
-];
+] as const;
 
 const toolbarActions = [
   { title: "Gras", icon: "bold", handler: () => wrapSelection("**", "**") },
@@ -137,7 +137,7 @@ const toolbarActions = [
   { title: "Tableau", icon: "table-line", handler: insertTable },
 ];
 
-const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.value)));
+const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.value, { async: false })));
 </script>
 
 <template>

@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -130,6 +132,7 @@ export class UserController {
   }
 
   @Post(":id/sync-organization-from-maia")
+  @HttpCode(HttpStatus.OK)
   @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Synchroniser l'organisation d'un utilisateur depuis MAIA",

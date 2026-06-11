@@ -57,7 +57,7 @@ const maturityFields = computed(() => [
               :label="technicalDebtInfo ? 'Modifier' : 'Ajouter'"
               :disabled="!canEdit"
               :data-testid="technicalDebtInfo ? 'technical-debt-edit-btn' : 'technical-debt-create-btn'"
-              @click="$emit(technicalDebtInfo ? 'edit' : 'create')"
+              @click="technicalDebtInfo ? $emit('edit') : $emit('create')"
             />
           </div>
         </div>

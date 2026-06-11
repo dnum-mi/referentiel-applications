@@ -135,7 +135,6 @@ async function seed({
 
   // Link hostings to applications
   console.log("🏗️  Linking hostings to applications...");
-  let hostingsCount = 0;
   for (const [index, app] of applications.entries()) {
     const hostingOption = hostingOptions[index % hostingOptions.length];
     await HostingFaker.create({
@@ -143,18 +142,15 @@ async function seed({
       application: app,
       user: adminUser,
     });
-    hostingsCount += 1;
   }
 
   // Add technical debt info
   console.log("💸 Adding technical debt info...");
-  let technicalDebtCount = 0;
   for (const app of applications) {
     await TechnicalDebtInfoFaker.create({
       application: app,
       user: adminUser,
     });
-    technicalDebtCount += 1;
   }
 
   // Create Business Division

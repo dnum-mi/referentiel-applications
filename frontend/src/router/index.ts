@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, type RouteLocationNormalized, type RouteRecordRaw } from "vue-router";
 import { routeNames } from "./route-names";
 import { USER_MANAGER } from "@/services/authentication";
 import { useUserStore } from "@/stores/userStore";
@@ -119,7 +119,7 @@ const routes = [
     name: routeNames.DATA_APPLICATION_DETAIL,
     path: "/applications/:applicationId/data/:dataApplicationId",
     component: () => import("@/components/data-application/DataApplicationDetail.vue"),
-    props: (route) => ({
+    props: (route: RouteLocationNormalized) => ({
       applicationId: route.params.applicationId as string,
       dataApplicationId: route.params.dataApplicationId as string,
     }),
@@ -135,7 +135,7 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(import.meta.env?.BASE_URL || ""),
-  routes,
+  routes: routes as RouteRecordRaw[],
 });
 
 // Guard to protect routes that require authentication

@@ -48,7 +48,7 @@ function removeTag(index: number) {
 <template>
   <ul class="fr-tags-group" data-testid="info-tags">
     <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
-      <DsfrTag :label="tag" selectable @click.stop.prevent="removeTag(index)" class="fr-tag--dismiss" />
+      <DsfrTag :label="tag" selectable :value="tag" :selected="false" @click.stop.prevent="removeTag(index)" class="fr-tag--dismiss" />
     </li>
   </ul>
   <AccessibleAutocomplete

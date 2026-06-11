@@ -1,13 +1,16 @@
 <script lang="ts" setup>
-import { useApplicationSearch } from "@/composables/use-application-search";
-import type { ComplianceType } from "@/constants/dictionary";
+import { useApplicationSearch, type Filters } from "@/composables/use-application-search";
+
+// Sous-ensemble des conformités réellement filtrables (type exact du filtre).
+type FilterableCompliance = NonNullable<Filters["compliance__in"]>[number];
 
 const { filters, setFilter } = useApplicationSearch();
-const complianceOptions: ComplianceType[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
+const complianceOptions: FilterableCompliance[] = ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"];
 
-function toggleCompliance(value: ComplianceType, checked: boolean) {
-  const selected = new Set<ComplianceType>(filters.value.compliance__in || []);
-  checked ? selected.add(value) : selected.delete(value);
+function toggleCompliance(value: FilterableCompliance, checked: boolean) {
+  const selected = new Set<FilterableCompliance>(filters.value.compliance__in || []);
+  if (checked) selected.add(value);
+  else selected.delete(value);
   setFilter({ compliance__in: Array.from(selected) });
 }
 </script>

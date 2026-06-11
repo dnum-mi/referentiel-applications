@@ -13,17 +13,31 @@ import {
   type ApplicationDto,
   type ApplicationStatus,
   type CreateApplicationDto,
+  type CreateApplicationStatusDto,
   type CreateActorDto,
   type ApplicationType,
   type BusinessDivisionDto,
   Permission,
 } from "@/client/types.gen";
-import type { ApplicationWithPerms } from "@/models/Application";
+import type { ApplicationFormInitialData } from "@/models/Application";
 import { useUserStore } from "@/stores/userStore";
 
 interface Props {
   mode?: "create" | "edit";
-  initialData: ApplicationWithPerms;
+  initialData: ApplicationFormInitialData;
+}
+
+// Champs garantis présents dans le formulaire (initialisés avec des valeurs par défaut).
+type FormState = Omit<CreateApplicationDto, "purposes" | "targetPopulations" | "status"> & {
+  purposes: string[];
+  targetPopulations: string[];
+  status: CreateApplicationStatusDto;
+};
+
+// Le statut peut arriver sous forme d'objet (création) ou de chaîne (édition).
+function toStatusDto(status: CreateApplicationStatusDto | ApplicationStatus | undefined): CreateApplicationStatusDto {
+  if (!status) return { status: "to_validate" as ApplicationStatus };
+  return typeof status === "string" ? { status } : status;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -118,12 +132,12 @@ const TypeOptions = computed(() =>
   })),
 );
 
-const form = ref<CreateApplicationDto>({
+const form = ref<FormState>({
   label: props.initialData?.label ?? "",
   shortName: props.initialData?.shortName ?? "",
   description: props.initialData?.description ?? "",
   logo: props.initialData?.logo ?? "",
-  status: props.initialData?.status ?? { status: "to_validate" as ApplicationStatus },
+  status: toStatusDto(props.initialData?.status),
   purposes: props.initialData?.purposes ?? [],
   targetPopulations: props.initialData?.targetPopulations ?? [],
   priorityRestart: props.initialData?.priorityRestart,
@@ -464,14 +478,17 @@ async function createActors(applicationId: string) {
 }
 
 async function handleUpdate() {
+  const applicationId = props.initialData.id;
+  if (!applicationId) return;
   try {
-    const updatedApp = await applicationStore.patchApplication({ ...form.value, id: props.initialData.id });
-    applicationStore.applicationsById[props.initialData.id] = updatedApp;
+    const updatedApp = await applicationStore.patchApplication({ ...form.value, id: applicationId });
+    applicationStore.applicationsById[applicationId] = updatedApp;
 
     toaster.addSuccessMessage("Application mise à jour avec succès !");
     emit("success", props.initialData as ApplicationDto);
   } catch (error) {
-    const message = error.message?.join?.(", ") || "Une erreur est survenue";
+    const raw = error && typeof error === "object" && "message" in error ? (error as { message?: unknown }).message : undefined;
+    const message = Array.isArray(raw) ? raw.join(", ") : typeof raw === "string" ? raw : "Une erreur est survenue";
     toaster.addErrorMessage(message);
   }
 }

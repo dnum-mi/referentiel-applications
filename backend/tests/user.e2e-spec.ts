@@ -34,7 +34,7 @@ describe("Users MAIA sync", () => {
     await request(app().getHttpServer())
       .post(`/users/${user.id}/sync-organization-from-maia`)
       .set("Authorization", `Bearer ${token}`)
-      .expect(201);
+      .expect(200);
   });
 
   it("/POST users/sync-organizations-from-maia", async () => {
@@ -61,7 +61,7 @@ describe("Users MAIA sync", () => {
     await request(app().getHttpServer())
       .post(`/users/${user.id}/sync-organization-from-maia`)
       .set("Authorization", `Bearer ${token}`)
-      .expect(201);
+      .expect(200);
 
     const updated = await prisma.user.findUniqueOrThrow({
       where: { id: user.id },
@@ -82,7 +82,7 @@ describe("Users MAIA sync", () => {
     await request(app().getHttpServer())
       .post(`/users/${user.id}/sync-organization-from-maia`)
       .set("Authorization", `Bearer ${token}`)
-      .expect(201);
+      .expect(200);
 
     const updated = await prisma.user.findUniqueOrThrow({
       where: { id: user.id },
@@ -107,7 +107,7 @@ describe("Users MAIA sync", () => {
     await request(app().getHttpServer())
       .post(`/users/${user.id}/sync-organization-from-maia`)
       .set("Authorization", `Bearer ${token}`)
-      .expect(201);
+      .expect(200);
 
     const updated = await prisma.user.findUniqueOrThrow({
       where: { id: user.id },

@@ -1186,7 +1186,7 @@ paths:
     patch:
       operationId: ApplicationController_update
       summary: Mettre à jour une application
-      description: " Ce endpoint permet de mettre à jour une application existante.\ 
+      description: " Ce endpoint permet de mettre à jour une application existante.\
 
         \    Vous devez fournir l'identifiant de l'application dans l'URL et les
         nouvelles données dans le corps de la requête. Les données de mise à
@@ -1375,7 +1375,7 @@ paths:
         Ce endpoint permet de créer un tag.
 
 
-        Information requise :\ 
+        Information requise :\
 
         - **name** : nom unique du tag
 
@@ -1405,7 +1405,7 @@ paths:
 
         \  Cette route permet de rechercher selon les paramètres fournis :
 
-        \ \ 
+        \ \
 
         \  - Retourne une liste paginée ou non de tags.
 
@@ -1548,7 +1548,7 @@ paths:
 
         \    Cette route permet de rechercher selon les paramètres fournis :
 
-        \ \ 
+        \ \
 
         \    - Retourne une liste paginée ou non de business division.
 
@@ -2324,8 +2324,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserWithPermissions"
-        "201":
-          description: ""
         "403":
           description: Accès refusé - Privilège admin requis
         "404":
@@ -2468,7 +2466,7 @@ paths:
         Ce endpoint permet de créer un acteur complet.
 
 
-        Informations requises :\ 
+        Informations requises :\
 
         - **email** : Email de l'acteur
 
@@ -2476,7 +2474,7 @@ paths:
 
         - **lastname** : Nom de l'acteur
 
-        - **actorTypeId** : ID du type d'acteur lié à l'acteur\ 
+        - **actorTypeId** : ID du type d'acteur lié à l'acteur\
 
         - **organizationId** : ID de l'organisation liée à l'acteur
 
@@ -3337,7 +3335,7 @@ paths:
     delete:
       operationId: LabelsController_delete
       summary: Supprimer un nom alternatif
-      description: " Ce endpoint permet de supprimer un nom alternatif existant.\ 
+      description: " Ce endpoint permet de supprimer un nom alternatif existant.\
 
         \    Vous devez fournir l'identifiant du nom alternatif dans l'URL.
 
@@ -3366,7 +3364,7 @@ paths:
         Ce endpoint permet de créer une nouvelle source de libellés alternatifs.
 
 
-        Information requise :\ 
+        Information requise :\
 
         - **source** : nom de la source
 
@@ -4159,30 +4157,30 @@ paths:
       summary: Récupérer la moyenne des IQ par période
       description: "
 
-        Permet de récupérer la moyenne des IQ par période. \ 
+        Permet de récupérer la moyenne des IQ par période. \
 
         Vous pouvez spécifier la période en utilisant les paramètres `from` et
-        `to`, \ 
+        `to`, \
 
-        ainsi que le regroupement souhaité avec `groupBy`. \ 
-
-
-        **Valeurs possibles pour `groupBy` :** \ 
-
-        - `jour` (day) \ 
-
-        - `semaine` (week) \ 
-
-        - `mois` (month) \ 
-
-        - `année` (year) \ 
+        ainsi que le regroupement souhaité avec `groupBy`. \
 
 
-        **Exemple d’appel :** \ 
+        **Valeurs possibles pour `groupBy` :** \
+
+        - `day` (jour) \
+
+        - `week` (semaine) \
+
+        - `month` (mois) \
+
+        - `year` (année) \
+
+
+        **Exemple d’appel :** \
 
         ```http
 
-        GET /stats/iq-avg/period?from=2025-07-01&to=2025-07-23&groupBy=mois
+        GET /stats/iq-avg/period?from=2025-07-01&to=2025-07-23&groupBy=month
 
         Authorization: Bearer <TOKEN>
 
@@ -4207,13 +4205,13 @@ paths:
         - name: groupBy
           required: false
           in: query
-          description: Regroupement souhaité (jour, semaine, mois, année)
+          description: Regroupement souhaité (day, week, month, year)
           schema:
             enum:
-              - jour
-              - semaine
-              - mois
-              - année
+              - day
+              - week
+              - month
+              - year
             type: string
       responses:
         "200":

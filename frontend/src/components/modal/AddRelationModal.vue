@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import SuggestionsInput from "../SuggestionsInput.vue";
-import { RelationType, type ApplicationDto, type RelationDto } from "@/client/types.gen";
+import { RelationType, type ApplicationDto } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";

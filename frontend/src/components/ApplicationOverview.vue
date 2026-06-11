@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { APP_PERMISSIONS, CreateApplicationWithPerms } from "@/models/Application";
+import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application";
 import { routeNames } from "@/router/route-names";
 import { useMediaQuery } from "@vueuse/core";
 import type { Component } from "vue";
@@ -22,7 +22,7 @@ import type { Tab } from "@/utils/types";
 import { Permission } from "@/client";
 import DataApplicationTab from "./data-application/DataApplicationTab.vue";
 
-const props = defineProps<{ application: CreateApplicationWithPerms }>();
+const props = defineProps<{ application: ApplicationWithPerms }>();
 const emit = defineEmits<{
   (e: "update:application"): void;
   (e: "errorMessage", message: string): void;
@@ -30,7 +30,7 @@ const emit = defineEmits<{
 const userStore = useUserStore();
 
 // Local reactive state
-const application = ref<CreateApplicationWithPerms>(props.application);
+const application = ref<ApplicationWithPerms>(props.application);
 const activeTab = ref(0);
 const route = useRoute();
 const router = useRouter();
@@ -43,7 +43,7 @@ function updateApplication() {
 
 // Tabs definition — keep the same shape, but ensure errorKey is keyof errorMessages
 const tabs = ref<
-  (Tab<{}> & {
+  (Tab<Record<string, never>> & {
     component: Component;
     requiredPerms: APP_PERMISSIONS[];
   })[]
@@ -205,7 +205,7 @@ watch(
       If `DsfrAccordion` exposes an expanded state or events, we can mount the inner component only
       when its accordion is opened to reduce initial render cost on mobile.
     -->
-    <DsfrAccordion v-for="(tab, index) in tabs" :key="tab.tabId" :title="tab.title" :id="`accordion-${tab.panelId}`">
+    <DsfrAccordion v-for="tab in tabs" :key="tab.tabId" :title="tab.title" :id="`accordion-${tab.panelId}`">
       <component
         :is="tab.component"
         :application="application"

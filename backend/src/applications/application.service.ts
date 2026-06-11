@@ -272,7 +272,6 @@ export class ApplicationService {
     searchParams: ApplicationSearchDto,
     requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
-    let paginatedResult: ApplicationSearchResultDto;
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
@@ -300,7 +299,7 @@ export class ApplicationService {
           },
     );
 
-    paginatedResult = await this.applicationRepository.findApplications(
+    const paginatedResult = await this.applicationRepository.findApplications(
       searchParams,
       where,
       orderBy,

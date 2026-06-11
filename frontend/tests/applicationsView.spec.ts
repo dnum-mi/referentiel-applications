@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { APPLICATION_SEARCH_TITLE_TEST_ID, BASE_URL, getSidebarTotalCount, gotoSearchPage, login, waitForSearchParams } from "./utils";
+import { APPLICATION_SEARCH_TITLE_TEST_ID, BASE_URL, getSidebarTotalCount, gotoSearchPage, waitForSearchParams } from "./utils";
 
 const SIDEBAR_TOTAL_COUNT = "sidebar-total-count";
 const SIDEBAR_RESET = "sidebar-reset-filters-button";

@@ -1,4 +1,4 @@
-import type { ApplicationDto, RelationApplicationDto, RelationDto } from "@/client/types.gen";
+import type { RelationDto } from "@/client/types.gen";
 import { computed, ref } from "vue";
 import api from "@/api/index";
 import { RelationType } from "@/client/types.gen";
