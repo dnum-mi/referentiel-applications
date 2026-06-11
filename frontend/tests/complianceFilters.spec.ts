@@ -42,8 +42,9 @@ function paramIncludes(url: string, param: string, value: string) {
 }
 
 async function selectState(page: Page, criterion: string, label: string) {
-  // Chaque critère est rendu via un <select> DSFR : on sélectionne l'option par son libellé.
-  await page.getByTestId(`compliance-option-${criterion}`).locator("select").selectOption({ label });
+  // DsfrSelect (inheritAttrs: false) applique data-testid directement sur le <select> :
+  // on sélectionne donc l'option par son libellé sur l'élément testid lui-même.
+  await page.getByTestId(`compliance-option-${criterion}`).selectOption({ label });
 }
 
 test.describe("Application search — compliance filters (états)", () => {
