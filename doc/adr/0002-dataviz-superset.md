@@ -1,6 +1,6 @@
 # ADR-002 — Utiliser Apache Superset pour la datavisualisation du référentiel des applications
 
-## Status
+## Statut
 
 Accepted
 
@@ -13,7 +13,8 @@ Accepted
 Mathieu Pichon (DTNUM/SDID)
 Hassan DRISS (DTNUM/SDID)
 
-## Context and Problem Statement
+## Contexte et Problème
+(Context and Problem Statement)
 
 Le référentiel des applications vise à constituer un point de vérité unique pour recenser et gérer les métadonnées des applications.
 
@@ -34,7 +35,8 @@ Ce suivi ne suffit plus. Les besoins évoluent vers une capacité d’analyse pl
 
 La décision à prendre est donc de déterminer si les fonctions de datavisualisation doivent continuer à être développées spécifiquement dans le référentiel ou être portées par une solution dédiée.
 
-## Decision Drivers
+## Options Considérées
+(Decision Drivers)
 
 * Réduire le couplage entre le référentiel applicatif et les besoins de pilotage.
 * Permettre l’évolution des indicateurs sans développement spécifique systématique.
@@ -44,8 +46,6 @@ La décision à prendre est donc de déterminer si les fonctions de datavisualis
 * Limiter la dette technique liée aux composants graphiques, agrégations, filtres, exports et droits d’accès analytiques.
 * Améliorer la maintenabilité du produit.
 * Préserver la capacité à exposer des indicateurs de complétude, de qualité, de volumétrie et de pilotage.
-
-## Considered Options
 
 ### Option 1 — Continuer le développement custom dans le référentiel
 
@@ -76,14 +76,14 @@ Avantages :
 * séparation claire entre le produit référentiel et la couche décisionnelle ;
 * création et évolution de dashboards sans développement applicatif systématique ;
 * fonctionnalités natives de datavisualisation, filtres, exploration, dashboards et SQL ;
-* solution open source alignée avec le contexte du référentiel;
 * meilleure autonomie des utilisateurs habilités pour l’analyse ;
 * réduction de la dette technique dans le code du référentiel ;
 * capacité à traiter des cas d’usage de pilotage plus riches que les indicateurs actuels ;
-* possibilité d’industrialiser la publication d’indicateurs de complétude, qualité, volumétrie et suivi.
-* compatible kubernetes et dsfr
-* solution connue et mise en oeuvre dans selfim, siaf etc.
-    
+* possibilité d’industrialiser la publication d’indicateurs de complétude, qualité, volumétrie et suivi;
+* compatible kubernetes et dsfr;
+* solution connue et mise en oeuvre dans selfim, siaf etc;
+* solution inscrite au [SILL](https://code.gouv.fr/sill/);
+* solution open source alignée avec le contexte du référentiel
 
 Inconvénients :
 
@@ -109,7 +109,8 @@ Inconvénients :
 * intégration potentiellement moins cohérente avec une démarche open source ;
 * besoin de justification supplémentaire si une alternative non open source est choisie.
 
-## Decision Outcome
+## Décision
+(Decision Outcome)
 
 Nous retenons l’utilisation d’Apache Superset comme solution de datavisualisation dédiée pour le référentiel des applications.
 
@@ -117,7 +118,9 @@ Le référentiel reste le système de référence pour la gestion des applicatio
 
 Les développements custom existants peuvent être conservés lorsqu’ils répondent à un besoin simple, stable et directement intégré au parcours applicatif. En revanche, les nouveaux besoins de pilotage, d’analyse, de suivi de complétude ou de tableaux de bord évolutifs doivent être prioritairement traités dans Superset.
 
-## Positive Consequences
+## Conséquences
+
+ - Avantages
 
 * Le code du référentiel reste centré sur son cœur de mission : collecter, structurer, exposer et maintenir les métadonnées applicatives.
 * Les tableaux de bord peuvent évoluer plus rapidement, sans nécessiter un développement applicatif pour chaque modification.
@@ -128,7 +131,7 @@ Les développements custom existants peuvent être conservés lorsqu’ils répo
 * La dette technique liée aux composants graphiques spécifiques est limitée.
 * Les besoins futurs de pilotage peuvent être absorbés par une plateforme conçue pour cet usage.
 
-## Negative Consequences
+- Inconvénients
 
 * Une plateforme supplémentaire doit être exploitée.
 * Les règles de sécurité, d’authentification, d’autorisation et de traçabilité doivent être définies.
@@ -136,7 +139,7 @@ Les développements custom existants peuvent être conservés lorsqu’ils répo
 * Les définitions d’indicateurs doivent être gouvernées pour éviter les divergences entre dashboards.
 * Une compétence minimale Superset doit être acquise par l’équipe produit, data ou exploitation.
 
-## Implementation Notes
+## Implémentation
 
 La mise en œuvre devra préciser :
 
@@ -149,7 +152,7 @@ La mise en œuvre devra préciser :
 * les conventions de nommage des datasets, graphiques et dashboards ;
 * le processus de validation des indicateurs partagés.
 
-## Validation Criteria
+- Critère de validation
 
 La décision sera considérée comme validée si :
 
@@ -160,7 +163,7 @@ La décision sera considérée comme validée si :
 * les définitions des indicateurs principaux sont documentées ;
 * l’ajout ou l’évolution d’un indicateur simple ne nécessite plus une modification du code du référentiel.
 
-## Links
+## Liens
 
 * Référentiel des applications : https://github.com/dnum-mi/referentiel-applications
 * Apache Superset : https://superset.apache.org/
