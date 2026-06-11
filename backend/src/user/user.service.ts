@@ -41,11 +41,24 @@ export class UserService {
       return existingUser;
     }
 
+    return this.createUser(email);
+  }
+
+  async createUser(email: string) {
+    const organizationPath = await getOrganizationPathFromMaia(email);
+    const data: Prisma.UserCreateArgs["data"] = {
+      email,
+      role: Roles.VISITOR,
+    };
+
+    if (organizationPath) {
+      const { organization } =
+        await this.findOrCreateOrganizationFromPath(organizationPath);
+      data.organizationId = organization.id;
+    }
+
     const user = await this.prisma.user.create({
-      data: {
-        email,
-        role: Roles.VISITOR,
-      },
+      data,
       include: {
         organization: true,
         followedApplications: true,
