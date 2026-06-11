@@ -15,6 +15,20 @@ import { PaginationDto } from "src/common/dto";
 import { RelationTypeFilter } from "src/product/application/dto/relation-type.dto";
 import { stringToBoolean } from "src/utils/functions";
 
+/**
+ * Critères de conformité filtrables. `pra` (Plan de Reprise d'Activité) s'appuie
+ * sur le champ `dima_recovery_plan` de la conformité.
+ */
+export const COMPLIANCE_CRITERIA = [
+  "dima",
+  "pdma",
+  "homologation",
+  "rgaa",
+  "dsfr",
+  "rgpd",
+  "pra",
+] as const;
+
 export class ApplicationSearchDto extends PaginationDto {
   private static toArray(value: unknown): string[] {
     if (value == null) return [];
@@ -208,16 +222,49 @@ export class ApplicationSearchDto extends PaginationDto {
   hostingRoom?: string;
 
   @ApiPropertyOptional({
-    description: "Filtrer par conformité",
+    description:
+      "[Déprécié] Filtrer par conformité présente. Utiliser plutôt compliancePresent__in.",
     type: [String],
-    enum: ["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"],
+    enum: [...COMPLIANCE_CRITERIA],
+    deprecated: true,
   })
   @IsOptional()
-  @IsEnum(["dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"], {
-    each: true,
-  })
+  @IsEnum([...COMPLIANCE_CRITERIA], { each: true })
   @Transform(({ value }) => ApplicationSearchDto.toArray(value))
   compliance__in?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      "Critères de conformité devant être présents (renseignés) sur l'application",
+    type: [String],
+    enum: [...COMPLIANCE_CRITERIA],
+  })
+  @IsOptional()
+  @IsEnum([...COMPLIANCE_CRITERIA], { each: true })
+  @Transform(({ value }) => ApplicationSearchDto.toArray(value))
+  compliancePresent__in?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      "Critères de conformité absents : pour un critère booléen (pra, dsfr) = explicitement Non (false) ; pour les autres = non renseigné",
+    type: [String],
+    enum: [...COMPLIANCE_CRITERIA],
+  })
+  @IsOptional()
+  @IsEnum([...COMPLIANCE_CRITERIA], { each: true })
+  @Transform(({ value }) => ApplicationSearchDto.toArray(value))
+  complianceAbsent__in?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      "Critères de conformité non renseignés (valeur nulle). Pertinent pour les critères booléens (pra, dsfr)",
+    type: [String],
+    enum: [...COMPLIANCE_CRITERIA],
+  })
+  @IsOptional()
+  @IsEnum([...COMPLIANCE_CRITERIA], { each: true })
+  @Transform(({ value }) => ApplicationSearchDto.toArray(value))
+  complianceUnset__in?: string[];
 
   @ApiPropertyOptional({
     description: "Recherche par lien (ressource externe)",
