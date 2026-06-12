@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import api from "@/api/index";
-import { type UpdateUserDto, type UserEntity, Permission, Roles as RolesType } from "@/client/types.gen";
+import {
+  type MaiaOrganizationSuggestionDto,
+  type UpdateUserDto,
+  type UserEntity,
+  Permission,
+  Roles as RolesType,
+} from "@/client/types.gen";
 import { Roles } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
-import { ref } from "vue";
+import { useMemoize } from "@vueuse/core";
+import { computed, ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 
 const props = defineProps<{ user: Required<UserEntity> }>();
@@ -23,13 +30,35 @@ const editingUserRole = ref<RolesType>(Roles.VISITOR);
 const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
 const editingScopePermissions = ref<string>("");
+const maiaSuggestion = ref<MaiaOrganizationSuggestionDto | null>(null);
+const isFetchingMaiaSuggestion = ref(false);
 
 async function openEditModal() {
   editingUserRole.value = props.user.role;
   editingOrganizationId.value = props.user.organizationId || "";
   editingAdditionalPermissions.value = props.user.additionalPermissions ? [...props.user.additionalPermissions] : [];
   editingScopePermissions.value = props.user.scopeOrganizationId || "";
+  maiaSuggestion.value = null;
   isEditModalOpen.value = true;
+  fetchMaiaSuggestion();
+}
+
+const fetchMaiaSuggestionCached = useMemoize(async (email: string) => {
+  const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email } });
+  if (response.response.ok && response.data) return response.data;
+  return null;
+});
+
+async function fetchMaiaSuggestion() {
+  if (!props.user.email) return;
+  isFetchingMaiaSuggestion.value = true;
+  try {
+    maiaSuggestion.value = await fetchMaiaSuggestionCached(props.user.email);
+  } catch {
+    // On ignore les erreurs pour la suggestion MAIA, ce n'est pas critique pour l'édition de l'utilisateur
+  } finally {
+    isFetchingMaiaSuggestion.value = false;
+  }
 }
 
 function closeEditModal() {
@@ -37,6 +66,7 @@ function closeEditModal() {
   editingUserRole.value = Roles.VISITOR;
   editingOrganizationId.value = "";
   editingScopePermissions.value = "";
+  maiaSuggestion.value = null;
 }
 
 async function saveUser() {
@@ -111,6 +141,11 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
   },
 ];
 
+const isNotValidated = computed(() => {
+  if (!maiaSuggestion.value?.organizationId) return false;
+  return editingOrganizationId.value !== maiaSuggestion.value.organizationId;
+});
+
 const labelScope = computed(() => {
   return `${RolesScopes[editingUserRole.value]}`;
 });
@@ -148,11 +183,25 @@ const isScopeDisabled = computed(() => {
 
       <OrganizationSearchSelect
         v-model="editingOrganizationId"
-        class="fr-mb-2w"
+        class="fr-mb-1w"
         description="Recherchez et sélectionnez une organisation pour cet utilisateur"
         :initial-organization="user.organization"
         data-testid="user-organization-search"
       />
+
+      <div class="fr-mb-2w">
+        <p v-if="isFetchingMaiaSuggestion" class="fr-text--sm fr-text-mention--grey fr-mb-0">Récupération de la suggestion MAIA…</p>
+        <template v-else-if="maiaSuggestion?.organizationPath">
+          <p class="fr-text--sm fr-mb-1v">
+            <span class="fr-text-mention--grey">Organisation MAIA : </span>
+            <strong>{{ maiaSuggestion.organizationPath }}</strong>
+          </p>
+          <p v-if="isNotValidated" class="fr-badge fr-badge--error fr-badge--no-icon fr-mb-0" data-testid="user-org-not-validated-badge">
+            NON VALIDÉE
+          </p>
+          <p v-else class="fr-badge fr-badge--success fr-badge--no-icon fr-mb-0" data-testid="user-org-not-validated-badge">VALIDÉE</p>
+        </template>
+      </div>
       <DsfrCheckboxSet
         v-model="editingAdditionalPermissions"
         legend="Capacités"
