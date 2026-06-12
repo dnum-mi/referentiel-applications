@@ -65,10 +65,14 @@ export function statusesFromReport(report) {
   return byId;
 }
 
+// Construit dynamiquement (via le code 27 = ESC) pour éviter un caractère de contrôle
+// littéral dans une regex, interdit par la règle ESLint `no-control-regex`.
+const ANSI_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
+
 /** Nettoie un message d'erreur Playwright (codes ANSI, multi-ligne) en un court extrait. */
 function cleanError(message) {
   return String(message ?? "échec")
-    .replace(/\[[0-9;]*m/g, "") // codes couleur ANSI
+    .replace(ANSI_PATTERN, "") // codes couleur ANSI
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean)
