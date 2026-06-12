@@ -631,6 +631,7 @@ Aucun espace en début ou en fin."
               <DsfrInput
                 v-model.trim="form.targetPopulations[index]"
                 :disabled="!canEditBase"
+                :title="`Population cible champ numéro ${index + 1}`"
                 :data-testid="`application-population-${index}`"
               />
             </div>
@@ -671,7 +672,7 @@ Aucun espace en début ou en fin."
               <DsfrInput
                 v-model.trim="form.purposes[index]"
                 :disabled="!canEditBase"
-                :placeholder="`Objectif ${index + 1}`"
+                :title="`Objectif champ numéro ${index + 1}`"
                 :data-testid="`application-purpose-${index}`"
               />
             </div>
