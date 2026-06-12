@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import type { LabelDto } from "@/client/types.gen";
+import type { LabelDto, LabelSourceDto } from "@/client/types.gen";
 
-defineProps<{ labels: LabelDto[]; canEdit: boolean }>();
+// L'API renvoie la source du label imbriquée, non déclarée dans LabelDto.
+type LabelWithSource = LabelDto & { labelSource?: LabelSourceDto };
+
+defineProps<{ labels: LabelWithSource[]; canEdit: boolean }>();
 const emit = defineEmits(["edit", "delete"]);
 
-function handleEdit(label: LabelDto) {
+function handleEdit(label: LabelWithSource) {
   emit("edit", label);
 }
 
-function handleDelete(label: LabelDto) {
+function handleDelete(label: LabelWithSource) {
   emit("delete", label);
 }
 </script>

@@ -2,7 +2,6 @@ import type { LocationQueryValue } from "vue-router";
 import type {
   ApplicationControllerSearchData,
   ApplicationDto,
-  ApplicationSearchResultDto,
   TechnicalDebtControllerGetTechnicalDebtPointsResponses,
 } from "@/client/types.gen";
 import { computed, ref, watch } from "vue";
@@ -285,7 +284,7 @@ export function useApplicationSearch() {
 
   async function fetchTechnicalDebtPoints(customFilters?: Partial<Filters>): Promise<TechnicalDebtPoint[]> {
     const currentFilters = { ...filters.value, ...customFilters };
-    const { page, pageSize, ...query } = cleanFilters(currentFilters);
+    const { page: _page, pageSize: _pageSize, ...query } = cleanFilters(currentFilters);
     const response = await api.technicalDebtControllerGetTechnicalDebtPoints({ query, throwOnError: true });
     return response.data ?? [];
   }

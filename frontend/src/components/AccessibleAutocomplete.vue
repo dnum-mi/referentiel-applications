@@ -127,7 +127,7 @@ onClickOutside(inputEl, () => {
       role="combobox"
       :aria-controls="id ? id + '-list' : 'autocomplete-list'"
       :aria-activedescendant="ariaActiveDescendant"
-      :aria-expanded="showList.toString()"
+      :aria-expanded="showList"
       :aria-describedby="ariaDescribedById"
     />
     <div v-if="id" :id="ariaDescribedById" class="visually-hidden">

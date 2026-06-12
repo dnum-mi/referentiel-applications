@@ -30,8 +30,8 @@ const toaster = useToasterStore();
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 
-const formModal = useModal();
-const deleteModal = useModal();
+const formModal = useModal<ApplicationStatusDto>();
+const deleteModal = useModal<ApplicationStatusDto>();
 
 const selectedStatus = computed<ApplicationStatusDto | null>(() => formModal.selectedItem.value as ApplicationStatusDto | null);
 const statusPendingDeletion = computed<ApplicationStatusDto | null>(() => deleteModal.selectedItem.value as ApplicationStatusDto | null);

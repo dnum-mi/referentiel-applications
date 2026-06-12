@@ -8,17 +8,19 @@ function clamp(value: number, defaultValue: number) {
   return Math.max(0, Math.min(100, value));
 }
 
-function updateMin(value: string) {
-  const parsed = Number.parseInt(value, 10);
-  if (value !== "" && Number.isNaN(parsed)) return;
+function updateMin(value: string | number | undefined) {
+  const str = String(value ?? "");
+  const parsed = Number.parseInt(str, 10);
+  if (str !== "" && Number.isNaN(parsed)) return;
   const iqGte = clamp(parsed, 0);
   const iqLte = filters.value.iqLte != null && filters.value.iqLte < iqGte ? iqGte : filters.value.iqLte;
   setFilter({ iqGte, iqLte, page: 0 });
 }
 
-function updateMax(value: string) {
-  const parsed = Number.parseInt(value, 10);
-  if (value !== "" && Number.isNaN(parsed)) return;
+function updateMax(value: string | number | undefined) {
+  const str = String(value ?? "");
+  const parsed = Number.parseInt(str, 10);
+  if (str !== "" && Number.isNaN(parsed)) return;
   const iqLte = clamp(parsed, 100);
   const iqGte = filters.value.iqGte != null && filters.value.iqGte > iqLte ? iqLte : filters.value.iqGte;
   setFilter({ iqGte, iqLte, page: 0 });

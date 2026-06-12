@@ -8,7 +8,7 @@ import { metadataActionLabels } from "@/constants/dictionary";
 import PaginationFooter from "@/components/PaginationFooter.vue";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
-import type { MetadataPaginatedResponseDto } from "@/client/types.gen";
+import type { PaginatedMetadataDto } from "@/client/types.gen";
 
 const columns: TableColumn[] = [
   { field: "Application", header: "Application", sortable: true },
@@ -29,7 +29,7 @@ const createdAtLte = ref<string>("");
 
 const metadataStore = useMetadataStore();
 
-const data = ref<MetadataPaginatedResponseDto>({ results: [], total: 0 });
+const data = ref<PaginatedMetadataDto>({ results: [], total: 0 });
 const isLoading = ref(false);
 
 const columnToFieldKeyMap: Record<string, string> = {
@@ -68,7 +68,7 @@ function fetchData() {
       data.value = {
         results: metadataStore.metadatas,
         total: metadataStore.total,
-      } as MetadataPaginatedResponseDto;
+      } as PaginatedMetadataDto;
     })
     .finally(() => {
       isLoading.value = false;

@@ -1,4 +1,4 @@
-import type { RelationApplicationDto, RelationDto, RelationType } from "@/client/types.gen";
+import type { RelationDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import api from "@/api/index";

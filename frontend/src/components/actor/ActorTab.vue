@@ -21,7 +21,7 @@ const props = defineProps<{
 const userStore = useUserStore();
 const actorTypeStore = useActorTypeStore();
 const toaster = useToasterStore();
-const actorModal = useModal();
+const actorModal = useModal<ActorDto>();
 const actors = ref<ActorDto[]>([]);
 
 const selectedActorIds = ref<string[]>([]);

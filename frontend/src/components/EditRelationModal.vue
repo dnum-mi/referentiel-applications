@@ -2,7 +2,7 @@
 import type { ApplicationDto, RelationDto } from "@/client/types.gen";
 import { RelationType } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
-import type { RelationUpdate } from "@/composables/use-relation-manager";
+import type { RelationUpdate } from "@/models/relations";
 import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 import { ref, watch } from "vue";

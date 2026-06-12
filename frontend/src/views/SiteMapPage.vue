@@ -9,11 +9,6 @@ const userStore = useUserStore();
 import type { RouteRecordNormalized } from "vue-router";
 import { Permission } from "@/client";
 
-interface PageItem {
-  label: string;
-  to: { name: string | symbol | null | undefined };
-}
-
 function getRouteTitle(currentRoute: RouteRecordNormalized): string {
   const pageTitleFromMeta = currentRoute.meta?.title as string;
   if (pageTitleFromMeta) {

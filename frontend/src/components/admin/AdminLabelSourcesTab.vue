@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { watchDebounced } from "@vueuse/core";
-import type { PaginatedResponseDto } from "@/client/types.gen";
+import type { LabelSourceDto } from "@/client/types.gen";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
 import LabelSourceActions from "./LabelSourceActions.vue";
 import api from "@/api";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 
-const data = ref<PaginatedResponseDto>({ results: [], total: 0 });
+// L'API renvoie le décompte des labels liés, non déclaré dans LabelSourceDto.
+type LabelSourceRow = LabelSourceDto & { _count?: { Label: number } };
+const data = ref<{ results: LabelSourceRow[]; total: number }>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {

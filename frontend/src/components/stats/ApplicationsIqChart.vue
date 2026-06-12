@@ -28,7 +28,7 @@ async function loadData() {
     countApplicationsByIq.value = await statisticsStore.countApplicationsByIq();
 
     const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`).reverse();
-    const data: number[] = Array.from({ length: 21 }).fill(0);
+    const data: number[] = Array.from({ length: 21 }, () => 0);
 
     countApplicationsByIq.value.forEach(({ iq, total }) => {
       const index = Math.floor(Math.round(iq) / 5);

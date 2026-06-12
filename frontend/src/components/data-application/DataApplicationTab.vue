@@ -150,7 +150,7 @@ watch(
       </template>
 
       <!-- FAMILLE MÉTIER — hiérarchie depuis _familyParts -->
-      <template #body-family="{ data }">
+      <template #body-family="{ data }: { data: DataRow }">
         <span v-if="!data._familyParts.length" class="fr-text-mention--grey">—</span>
         <template v-else>
           <template v-for="(part, index) in data._familyParts" :key="part">

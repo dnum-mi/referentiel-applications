@@ -54,18 +54,7 @@ export default defineConfig({
     }),
     AutoImport({
       include: [/\.[tj]sx?$/, /\.vue$/, /\.vue\?vue/],
-      imports: [
-        // @ts-expect-error TS2322
-        "vue",
-        // @ts-expect-error TS2322
-        "vue-router",
-        // @ts-expect-error TS2322
-        "pinia",
-        // @ts-expect-error TS2322
-        "vitest",
-        // @ts-expect-error TS2322
-        vueDsfrAutoimportPreset,
-      ],
+      imports: ["vue", "vue-router", "pinia", "vitest", vueDsfrAutoimportPreset],
       vueTemplate: true,
       dts: "./src/auto-imports.d.ts",
     }),

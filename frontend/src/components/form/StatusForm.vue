@@ -21,7 +21,7 @@ const emit = defineEmits(["submit", "cancel"]);
 const form = ref({
   status: props.initialData?.status || "",
   statusDate: toDateInputValue(props.initialData?.statusDate),
-  version: props.initialData?.version,
+  version: props.initialData?.version ?? "",
 });
 
 const statusOptions = computed(() => [
