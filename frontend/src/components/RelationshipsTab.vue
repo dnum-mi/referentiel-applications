@@ -201,7 +201,13 @@ onMounted(async () => {
         @page="onPage"
       >
         <template #body-selection="{ data }">
-          <input v-model="selectedRelationIds" type="checkbox" :value="data.selection" />
+          <input
+            v-model="selectedRelationIds"
+            type="checkbox"
+            :value="data.selection"
+            :aria-label="`Sélectionner la relation ${data.applicationSource} - ${data.applicationCible.label} (${data.relation})`"
+            :data-testid="`relation-row-select-${data.selection}`"
+          />
         </template>
 
         <template #body-applicationCible="{ data }">
