@@ -1,0 +1,176 @@
+name: QA — Campagne de non-régression (release)
+
+# Cycle de vie automatique, piloté par release-please :
+#  - PR release-please ouverte/mise à jour → ouvre les 4 issues [QA][vX.Y.Z], rejoue toute la
+#    non-régression, remplit les issues (cases + screenshots + verdict) et ÉCHOUE si qa:fail
+#    (faire de ce job un « required status check » sur main pour bloquer le merge).
+#  - Tag vX.Y.Z créé (PR release-please mergée) → ferme les 4 issues de la version.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: # déclenchement manuel (test / rejeu d'une campagne)
+    inputs:
+      version:
+        description: "Version de campagne (ex. 1.79.0). Vide → version de test."
+        required: false
+        default: ""
+
+permissions:
+  contents: write # push de la branche qa-screenshots
+  issues: write
+  pull-requests: write # commenter la PR release-please
+
+jobs:
+  # --- À l'ouverture/maj de la PR release-please : campagne complète + gate ---
+  campaign:
+    name: Campagne de non-régression
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && startsWith(github.head_ref, 'release-please--branches--main'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Résoudre la version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            V=$(jq -r '."."' .release-please-manifest.json) # version à venir (PR release-please)
+          else
+            V="${{ github.event.inputs.version }}"
+            [ -z "$V" ] && V="0.0.0-pipeline-test" # test manuel / push
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Ouvrir / réutiliser les issues de campagne (+ commentaire sur la PR)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          VERSION: ${{ steps.ver.outputs.version }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node qa/scripts/campaign.mjs open
+
+      # --- Stack applicative (backend prod, comme le job e2e prouvé de main-ci) ---
+      - name: Construire l'image backend (prod)
+        run: docker build --target prod -t qa-backend:ci ./backend
+
+      - name: Démarrer la stack
+        run: IMAGE_TAG=qa-backend:ci docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d backend postgres keycloak
+
+      - name: Attendre Keycloak
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then exit 0; fi
+            sleep 5
+          done
+          docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend keycloak; exit 1
+
+      - name: Seed (avec retries)
+        run: |
+          for i in {1..10}; do
+            if IMAGE_TAG=qa-backend:ci docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed; then exit 0; fi
+            echo "Seed tentative $i échouée, retry dans 5s..."; sleep 5
+          done
+          echo "Seed échoué"; exit 1
+
+      # --- Frontend (serveur de dev) + e2e ---
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Installer les deps frontend
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Générer le client API du frontend
+        working-directory: frontend
+        run: pnpm gen
+
+      - name: Installer les deps e2e
+        working-directory: e2e
+        run: pnpm install --frozen-lockfile
+
+      - name: Installer Playwright (chromium)
+        working-directory: e2e
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Rejouer la non-régression (JSON + screenshots)
+        id: e2e
+        working-directory: e2e
+        continue-on-error: true # on remplit les issues même en cas d'échec, puis on gate plus bas
+        env:
+          CI: "true"
+          API_BASE_URL: http://localhost:3500
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results.json
+        run: pnpm exec playwright test --project=chromium --reporter=json
+
+      # --- Publier les screenshots sur la branche dédiée qa-screenshots ---
+      - name: Publier les screenshots
+        if: hashFiles('e2e/qa-screenshots/*.png') != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEST="runs/release-v${{ steps.ver.outputs.version }}"
+          tmp=$(mktemp -d)
+          REPO_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          if git clone --depth 1 --single-branch --branch qa-screenshots "$REPO_URL" "$tmp" 2>/dev/null; then
+            rm -rf "$tmp/$DEST"
+          else
+            git clone --depth 1 "$REPO_URL" "$tmp"
+            git -C "$tmp" switch --orphan qa-screenshots
+            git -C "$tmp" rm -rfq . 2>/dev/null || true
+          fi
+          mkdir -p "$tmp/$DEST"
+          cp e2e/qa-screenshots/*.png "$tmp/$DEST/"
+          git -C "$tmp" add "$DEST"
+          git -C "$tmp" -c user.email=actions@github.com -c user.name="qa-campaign" commit -m "qa: screenshots v${{ steps.ver.outputs.version }}"
+          git -C "$tmp" push origin qa-screenshots
+
+      # --- Synchroniser chaque issue de campagne (cases + screenshots + verdict) ---
+      - name: Remplir les issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          RESULTS_FILE: e2e/results.json
+          SCREENSHOTS_DIR: e2e/qa-screenshots
+          SCREENSHOTS_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/qa-screenshots/runs/release-v${{ steps.ver.outputs.version }}
+          SCREENSHOTS_CACHE_BUST: ${{ github.sha }} # URL fraîche par commit (anti-cache d'image)
+        run: |
+          for issue in $(jq -r '.[].issue' qa-campaign.json); do
+            ISSUE_NUMBER="$issue" node qa/scripts/sync-issue.mjs
+          done
+
+      - name: Upload du rapport Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
+
+      # --- GATE : échec de non-régression ⇒ échec du job ⇒ merge bloqué (si check requis) ---
+      - name: Bloquer si la non-régression a échoué
+        if: steps.e2e.outcome == 'failure'
+        run: |
+          echo "Non-régression en échec → release bloquée. Voir les issues de campagne."
+          exit 1
+
+  # --- Au merge de la PR release-please (tag vX.Y.Z) : fermer les issues de la version ---
+  close:
+    name: Fermer les issues de campagne
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fermer les issues [QA][vX.Y.Z]
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: node qa/scripts/campaign.mjs close

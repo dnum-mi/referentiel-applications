@@ -40,7 +40,7 @@ export class OrganizationMaiaReferencesService extends BaseService<
         error.code === "P2002"
       ) {
         throw new ConflictException(
-          `La référence MAIA \"${data.maiaRef}\" est déjà associée à une organisation`,
+          `La référence MAIA « ${data.maiaRef} » est déjà associée à une organisation`,
         );
       }
       throw error;

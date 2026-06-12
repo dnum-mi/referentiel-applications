@@ -7,7 +7,8 @@ const { filters, setFilter } = useApplicationSearch();
 
 function togglePriority(value: ApplicationPriorityRestart, checked: boolean) {
   const selected = new Set<ApplicationPriorityRestart>(filters.value.priorityRestart || []);
-  checked ? selected.add(value) : selected.delete(value);
+  if (checked) selected.add(value);
+  else selected.delete(value);
   setFilter({ priorityRestart: Array.from(selected) });
 }
 </script>

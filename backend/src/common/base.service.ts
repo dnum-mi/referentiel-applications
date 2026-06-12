@@ -157,6 +157,8 @@ export class BaseService<T, TDelegate = any> {
   private async updateApplicationQualitySafely(applicationId?: string) {
     try {
       await this.updateApplicationQuality(applicationId);
-    } catch {}
+    } catch {
+      // Mise à jour best-effort : on ignore volontairement les erreurs.
+    }
   }
 }

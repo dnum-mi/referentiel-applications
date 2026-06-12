@@ -31,7 +31,7 @@ const pages = computed(() => {
         class="fr-select"
         :value="limit"
         data-testid="pagination-rows-select"
-        @change="emit('update:limit', +$event.target.value)"
+        @change="emit('update:limit', +($event.target as HTMLSelectElement).value)"
       >
         <option v-for="opt in [5, 15, 30, 50, 100]" :key="opt" :value="opt">
           {{ opt }}

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/userStore";
-import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import { ref, onMounted } from "vue";
 
 const userStore = useUserStore();

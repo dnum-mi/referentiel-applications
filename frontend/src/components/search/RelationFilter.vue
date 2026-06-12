@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import api from "@/api";
-import { RelationType, type ApplicationControllerSearchData, type ApplicationDto } from "@/client";
+import { RelationType, type ApplicationDto } from "@/client";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 import {

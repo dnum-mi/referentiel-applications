@@ -46,7 +46,7 @@ const selectedOrganizationId = ref(props.modelValue);
 
 // Computed label for the search input with asterisk if required
 const searchLabel = computed(() => {
-  if (!!props.label) return props.label;
+  if (props.label) return props.label;
   return props.required ? "Organisation *" : "Organisation";
 });
 

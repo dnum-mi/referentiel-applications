@@ -1,0 +1,164 @@
+import { test as base } from "@playwright/test";
+import { test, expect } from "../fixtures/test";
+import { AdminPage, ApplicationPage, loginAs } from "../pom";
+import { captureStepScreenshot } from "../support/screenshots";
+
+const USER_EMAIL = "user@example.com";
+
+/**
+ * Non-régression — Permissions & rôles (protocole `qa/protocoles/permissions.md`).
+ * PRM-01 utilise le rôle `user` (sans datafeature) ; les autres l'admin (datafeature) ; POM strict.
+ */
+test.describe("Permissions & rôles", () => {
+  base.afterEach(async ({ page }, testInfo) => {
+    await captureStepScreenshot(page, testInfo);
+  });
+
+  // PRM-01 — rôle Lecteur : pas de datafeature, login explicite en `user`.
+  base(
+    "PRM-01 - un non-admin ne peut pas accéder à l'administration",
+    async ({ page }) => {
+      await loginAs(page, "user");
+      const admin = new AdminPage(page);
+      await admin.goToAdministration();
+      await admin.expectAccessDenied();
+    },
+  );
+
+  test("PRM-02 - l'admin accède au panneau d'administration", async ({
+    page,
+  }) => {
+    await loginAs(page, "admin");
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.expectLoaded();
+  });
+
+  test("PRM-06 - matrice de permissions par type d'acteur", async ({
+    page,
+  }) => {
+    await loginAs(page, "admin");
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.openPermsMatrixTab();
+    await admin.expectPermsMatrixEditable();
+  });
+
+  test("PRM-08 - droits contextuels via type d'acteur (my-perms)", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.applicationWithMyPerms();
+    test.skip(
+      !app,
+      "Aucune application avec droits contextuels (my-perms) pour cet utilisateur",
+    );
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(app!.id);
+    await fiche.expectLoaded();
+  });
+
+  test("PRM-03 - liste et recherche des utilisateurs", async ({ page }) => {
+    await loginAs(page, "admin");
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.expectUserRow(USER_EMAIL);
+  });
+
+  test("PRM-04 - édition du rôle d'un utilisateur", async ({ page, data }) => {
+    const admin = new AdminPage(page);
+    try {
+      // Le flux édition (modal DSFR) peut subir un re-render transitoire sous charge :
+      // on ré-ouvre + ré-enregistre jusqu'au succès plutôt que de flaker.
+      await expect(async () => {
+        await admin.open();
+        await admin.openEditUser(USER_EMAIL);
+        await admin.changeRoleAndSave();
+      }).toPass({ timeout: 45000 });
+    } finally {
+      await data.resetUser(USER_EMAIL); // rétablit le Lecteur
+    }
+  });
+
+  test("PRM-05 - permissions individuelles additionnelles", async ({
+    page,
+    data,
+  }) => {
+    const admin = new AdminPage(page);
+    try {
+      await expect(async () => {
+        await admin.open();
+        await admin.openEditUser(USER_EMAIL);
+        await admin.toggleAdditionalPermissionAndSave();
+      }).toPass({ timeout: 45000 });
+    } finally {
+      await data.resetUser(USER_EMAIL);
+    }
+  });
+
+  test("PRM-07 - modifier et enregistrer la matrice de permissions", async ({
+    page,
+  }) => {
+    await loginAs(page, "admin");
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.openPermsMatrixTab();
+    await admin.editMatrixAndRestore();
+  });
+
+  // PRM-09/10 utilisent un CONTEXTE navigateur séparé pour la session `user` : le provisioning se
+  // fait avec l'admin (datafeature) sur la page principale, sans interférence du SSO Keycloak.
+  test("PRM-09 - un Lecteur ne voit pas les actions d'écriture", async ({
+    browser,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+    await data.resetUser(USER_EMAIL); // garantit le rôle Lecteur
+
+    const ctx = await browser.newContext();
+    try {
+      const userPage = await ctx.newPage();
+      await loginAs(userPage, "user");
+      const fiche = new ApplicationPage(userPage);
+      await fiche.open(app!.id, "tab-infos");
+      await fiche.expectInfoEditDisabled();
+    } finally {
+      await ctx.close();
+    }
+  });
+
+  test("PRM-10 - un Contributeur peut éditer une fiche", async ({
+    browser,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    const ctx = await browser.newContext();
+    try {
+      // Droit d'écriture accordé globalement (robuste quel que soit le scope/acteur).
+      await data.setUserAdditionalPermissions(USER_EMAIL, ["AppWrite"]);
+      const userPage = await ctx.newPage();
+      await loginAs(userPage, "user");
+      const fiche = new ApplicationPage(userPage);
+      await fiche.open(app!.id, "tab-infos");
+      await fiche.expectInfoEditAvailable();
+    } finally {
+      await ctx.close();
+      await data.resetUser(USER_EMAIL);
+    }
+  });
+
+  test("PRM-11 - AppWritePriority dissociée de AppWrite", async ({ data }) => {
+    try {
+      await data.setUserAdditionalPermissions(USER_EMAIL, ["AppWritePriority"]);
+      const user = await data.getUser(USER_EMAIL);
+      expect(user?.additionalPermissions).toContain("AppWritePriority");
+      expect(user?.additionalPermissions).not.toContain("AppWrite");
+    } finally {
+      await data.resetUser(USER_EMAIL);
+    }
+  });
+});

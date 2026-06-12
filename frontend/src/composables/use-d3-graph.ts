@@ -248,7 +248,7 @@ export function useD3Graph() {
       });
 
     node
-      .filter((d) => d.status)
+      .filter((d) => Boolean(d.status))
       .append("text")
       .text((d) => {
         const statusLabel =

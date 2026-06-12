@@ -8,7 +8,7 @@ const props = defineProps<{
 }>();
 
 const renderedHtml = computed(() => {
-  const dirty = marked.parse(props.content || "");
+  const dirty = marked.parse(props.content || "", { async: false });
   return DOMPurify.sanitize(dirty);
 });
 </script>

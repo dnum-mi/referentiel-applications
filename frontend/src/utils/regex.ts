@@ -3,4 +3,4 @@ export const regexPriority = /priorité:(\S+)/i;
 
 export const regexLink: RegExp = /^(?:https?:\/\/|www\.)((?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})(:\d+)?(\/\S*)?$/;
 
-export const regexFormatTag: RegExp = /^[a-z0-9\-]+$/i;
+export const regexFormatTag: RegExp = /^[a-z0-9-]+$/i;

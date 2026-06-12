@@ -22,15 +22,15 @@ Permet de récupérer la moyenne des IQ par période.
 Vous pouvez spécifier la période en utilisant les paramètres \`from\` et \`to\`,  
 ainsi que le regroupement souhaité avec \`groupBy\`.  
 
-**Valeurs possibles pour \`groupBy\` :**  
-- \`jour\` (day)  
-- \`semaine\` (week)  
-- \`mois\` (month)  
-- \`année\` (year)  
+**Valeurs possibles pour \`groupBy\` :**
+- \`day\` (jour)
+- \`week\` (semaine)
+- \`month\` (mois)
+- \`year\` (année)
 
-**Exemple d’appel :**  
+**Exemple d’appel :**
 \`\`\`http
-GET /stats/iq-avg/period?from=2025-07-01&to=2025-07-23&groupBy=mois
+GET /stats/iq-avg/period?from=2025-07-01&to=2025-07-23&groupBy=month
 Authorization: Bearer <TOKEN>
 \`\`\`
     `,
@@ -50,9 +50,9 @@ Authorization: Bearer <TOKEN>
   @ApiQuery({
     name: "groupBy",
     required: false,
-    description: "Regroupement souhaité (jour, semaine, mois, année)",
-    enum: ["jour", "semaine", "mois", "année"],
-    example: "mois",
+    description: "Regroupement souhaité (day, week, month, year)",
+    enum: ["day", "week", "month", "year"],
+    example: "month",
   })
   @ApiOkResponse({
     description: "Tableau de buckets avec label, moyenne, min, max, count",

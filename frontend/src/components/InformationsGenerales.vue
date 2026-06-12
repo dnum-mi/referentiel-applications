@@ -264,7 +264,7 @@ watch(
                   label="Modifier"
                   data-testid="info-edit-btn"
                   :disabled="!canEditBase"
-                  @click="applicationModal.openModal"
+                  @click="() => applicationModal.openModal()"
                 />
               </div>
             </div>
@@ -426,7 +426,7 @@ watch(
   <LabelModal
     v-if="isLabelModalOpen"
     :application-id="application.id"
-    :initial-label="labelToEdit"
+    :initial-label="labelToEdit ?? undefined"
     :error-message="errorMessage"
     @close="isLabelModalOpen = false"
     @labelCreated="
