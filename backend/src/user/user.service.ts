@@ -227,24 +227,27 @@ export class UserService {
   async syncOrganizationFromMaiaByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },
-      select: {
-        id: true,
-        email: true,
-      },
+      select: { id: true, email: true },
     });
 
     if (!user) {
       throw new NotFoundException("Utilisateur non trouvé");
     }
 
-    const userFromMaia = await this.syncOrganizationFromMaiaForUser(user);
-    const { lastName, firstName, fullName } = await getFullNameFromMaia(email);
-    return {
-      ...userFromMaia,
-      lastName,
-      firstName,
-      fullName,
-    };
+    const [organizationPath, { lastName, firstName, fullName }] =
+      await Promise.all([
+        getOrganizationPathFromMaia(email),
+        getFullNameFromMaia(email),
+      ]);
+
+    let organizationId: string | null = null;
+    if (organizationPath) {
+      const { organization } =
+        await this.findOrCreateOrganizationFromPath(organizationPath);
+      organizationId = organization.id;
+    }
+
+    return { organizationId, organizationPath, lastName, firstName, fullName };
   }
 
   async syncOrganizationFromMaia(userId: string) {

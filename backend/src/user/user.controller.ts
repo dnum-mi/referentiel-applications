@@ -29,6 +29,7 @@ import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserFilterDto } from "./dto/filters.dto";
+import { MaiaOrganizationSuggestionDto } from "./dto/maia-organization-suggestion.dto";
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
 import { SyncOrganizationsResponseDto } from "./dto/sync-organizations-response.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
@@ -37,7 +38,6 @@ import {
   Requestor,
   UserEntity,
   UserWithPermissions,
-  UserWithPermissionsAndFullNameMaia,
 } from "./entities/user.entity";
 import { UserPermissionsInterceptor } from "./user-permissions.interceptor";
 import { UserService } from "./user.service";
@@ -116,12 +116,14 @@ export class UserController {
   @Get("by-email/:email/sync-organization-from-maia")
   @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
-    summary: "Synchroniser l'organisation depuis Maia par email",
+    summary: "Récupérer les informations MAIA d'un utilisateur par email",
+    description:
+      "Interroge MAIA pour récupérer l'organisation et les informations personnelles associées à cet email, sans modifier l'utilisateur en base.",
   })
   @ApiParam({ name: "email", description: "Email de l'utilisateur" })
   @ApiOkResponse({
-    description: "Organisation synchronisée avec succès & fullName récupéré",
-    type: UserWithPermissionsAndFullNameMaia,
+    description: "Informations MAIA récupérées",
+    type: MaiaOrganizationSuggestionDto,
   })
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",

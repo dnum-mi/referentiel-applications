@@ -1294,7 +1294,7 @@ paths:
     patch:
       operationId: ApplicationController_update
       summary: Mettre à jour une application
-      description: " Ce endpoint permet de mettre à jour une application existante.\
+      description: " Ce endpoint permet de mettre à jour une application existante.\ 
 
         \    Vous devez fournir l'identifiant de l'application dans l'URL et les
         nouvelles données dans le corps de la requête. Les données de mise à
@@ -1483,7 +1483,7 @@ paths:
         Ce endpoint permet de créer un tag.
 
 
-        Information requise :\
+        Information requise :\ 
 
         - **name** : nom unique du tag
 
@@ -1513,7 +1513,7 @@ paths:
 
         \  Cette route permet de rechercher selon les paramètres fournis :
 
-        \ \
+        \ \ 
 
         \  - Retourne une liste paginée ou non de tags.
 
@@ -1656,7 +1656,7 @@ paths:
 
         \    Cette route permet de rechercher selon les paramètres fournis :
 
-        \ \
+        \ \ 
 
         \    - Retourne une liste paginée ou non de business division.
 
@@ -2392,7 +2392,9 @@ paths:
   /api/v2/users/by-email/{email}/sync-organization-from-maia:
     get:
       operationId: UserController_syncOrganizationFromMaiaByEmail
-      summary: Synchroniser l'organisation depuis Maia par email
+      summary: Récupérer les informations MAIA d'un utilisateur par email
+      description: Interroge MAIA pour récupérer l'organisation et les informations
+        personnelles associées à cet email, sans modifier l'utilisateur en base.
       parameters:
         - name: email
           required: true
@@ -2402,11 +2404,11 @@ paths:
             type: string
       responses:
         "200":
-          description: Organisation synchronisée avec succès & fullName récupéré
+          description: Informations MAIA récupérées
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserWithPermissionsAndFullNameMaia"
+                $ref: "#/components/schemas/MaiaOrganizationSuggestionDto"
         "403":
           description: Accès refusé - Privilège admin requis
         "404":
@@ -2589,7 +2591,7 @@ paths:
         Ce endpoint permet de créer un acteur complet.
 
 
-        Informations requises :\
+        Informations requises :\ 
 
         - **email** : Email de l'acteur
 
@@ -2597,7 +2599,7 @@ paths:
 
         - **lastname** : Nom de l'acteur
 
-        - **actorTypeId** : ID du type d'acteur lié à l'acteur\
+        - **actorTypeId** : ID du type d'acteur lié à l'acteur\ 
 
         - **organizationId** : ID de l'organisation liée à l'acteur
 
@@ -3458,7 +3460,7 @@ paths:
     delete:
       operationId: LabelsController_delete
       summary: Supprimer un nom alternatif
-      description: " Ce endpoint permet de supprimer un nom alternatif existant.\
+      description: " Ce endpoint permet de supprimer un nom alternatif existant.\ 
 
         \    Vous devez fournir l'identifiant du nom alternatif dans l'URL.
 
@@ -3487,7 +3489,7 @@ paths:
         Ce endpoint permet de créer une nouvelle source de libellés alternatifs.
 
 
-        Information requise :\
+        Information requise :\ 
 
         - **source** : nom de la source
 
@@ -4334,26 +4336,26 @@ paths:
       summary: Récupérer la moyenne des IQ par période
       description: "
 
-        Permet de récupérer la moyenne des IQ par période. \
+        Permet de récupérer la moyenne des IQ par période. \ 
 
         Vous pouvez spécifier la période en utilisant les paramètres `from` et
-        `to`, \
+        `to`, \ 
 
-        ainsi que le regroupement souhaité avec `groupBy`. \
-
-
-        **Valeurs possibles pour `groupBy` :** \
-
-        - `day` (jour) \
-
-        - `week` (semaine) \
-
-        - `month` (mois) \
-
-        - `year` (année) \
+        ainsi que le regroupement souhaité avec `groupBy`. \ 
 
 
-        **Exemple d’appel :** \
+        **Valeurs possibles pour `groupBy` :**
+
+        - `day` (jour)
+
+        - `week` (semaine)
+
+        - `month` (mois)
+
+        - `year` (année)
+
+
+        **Exemple d’appel :**
 
         ```http
 
@@ -6121,65 +6123,33 @@ components:
           type: boolean
           description: Indique si les notifications par email sont activées pour
             l'utilisateur
-    UserWithPermissionsAndFullNameMaia:
+    MaiaOrganizationSuggestionDto:
       type: object
       properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        organization:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/OrganizationDto"
-        scopeOrganization:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/OrganizationDto"
-        type:
-          $ref: "#/components/schemas/UserType"
-        emailNotificationsEnabled:
-          type: boolean
-          description: Préférence de notification par email
-          default: true
-        followedApplications:
-          description: Applications suivies par l'utilisateur
-          type: array
-          items:
-            $ref: "#/components/schemas/UserFollowedApplicationDto"
-        additionalPermissions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Permission"
-        permissions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Permission"
-        id:
-          type: string
-        email:
-          type: string
         organizationId:
           type: string
           nullable: true
-        scopeOrganizationId:
+          description: ID de l'organisation correspondante dans le référentiel
+        organizationPath:
           type: string
           nullable: true
-        fullName:
-          type: string
-        lastName:
-          type: string
+          description: Chemin de l'organisation proposée par MAIA
+          example: MINISTERE/DIRECTION/SERVICE
         firstName:
           type: string
+          description: Prénom récupéré depuis MAIA
+        lastName:
+          type: string
+          description: Nom récupéré depuis MAIA
+        fullName:
+          type: string
+          description: Nom complet récupéré depuis MAIA
       required:
-        - role
-        - type
-        - additionalPermissions
-        - id
-        - email
         - organizationId
-        - scopeOrganizationId
-        - fullName
-        - lastName
+        - organizationPath
         - firstName
+        - lastName
+        - fullName
     SyncOrganizationsDto:
       type: object
       properties:
