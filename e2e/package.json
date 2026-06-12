@@ -1,0 +1,20 @@
+{
+  "name": "referentiel-applications-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.14.0",
+  "description": "Tests end-to-end de non-régression (Playwright, POM strict + datafeature). Voir qa/README.md.",
+  "scripts": {
+    "test:e2e": "playwright test --reporter=list",
+    "test:e2e:json": "playwright test --reporter=json",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:list": "playwright test --list",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}

@@ -2457,6 +2457,21 @@ paths:
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a13
+  /api/v2/email/digest:
+    post:
+      operationId: EmailController_runDigest
+      summary: Exécute le digest email des abonnés (admin)
+      parameters:
+        - name: day
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Digest déclenché
+      tags:
+        - email
   /api/v2/applications/{applicationId}/actors:
     post:
       operationId: ApplicationActorsController_create
