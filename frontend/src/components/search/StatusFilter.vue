@@ -12,7 +12,8 @@ const statusOptions = Object.keys(statusApplicationDictionary).map((value) => ({
 
 function toggleStatus(value: ApplicationStatus, checked: boolean) {
   const selected = new Set<ApplicationStatus>(filters.value.currentStatus__in || []);
-  checked ? selected.add(value) : selected.delete(value);
+  if (checked) selected.add(value);
+  else selected.delete(value);
 
   setFilter({
     currentStatus__in: selected.size > 0 ? Array.from(selected) : undefined,

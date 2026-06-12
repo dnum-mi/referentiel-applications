@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted } from "vue";
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useRoute } from "vue-router";
 import type { MetadataDto } from "@/client/types.gen";
 import type { TableColumn } from "@/types/table";
 
-const props = defineProps<{ application: CreateApplicationWithPerms }>();
+const props = defineProps<{ application: ApplicationWithPerms }>();
 
 const route = useRoute();
 const metadataStore = useMetadataStore();

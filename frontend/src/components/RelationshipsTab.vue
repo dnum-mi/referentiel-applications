@@ -256,7 +256,7 @@ onMounted(async () => {
         <DsfrCard
           :title="row['Application Cible'].label || '—'"
           :description="row['Relation'] || ''"
-          :titleLinkAttrs="{ 'data-testid': `relation-card-link-${row.id}` }"
+          :title-link-attrs="{ 'data-testid': `relation-card-link-${row.id}` }"
           :link="`/applications/${row['Application Cible'].id}`"
           :buttons="[
             {
@@ -283,7 +283,7 @@ onMounted(async () => {
             },
           ]"
           size="sm"
-          :noArrow="true"
+          :no-arrow="true"
           class="fr-p-0"
           :data-testid="`relation-card-${row.id}`"
         >
@@ -315,7 +315,7 @@ onMounted(async () => {
     :application-id="props.application.id"
     data-testid="relation-add-modal"
     @close="closeAddRelationModal"
-    @addRelation="onAddRelation"
+    @add-relation="onAddRelation"
   />
   <EditRelationModal
     :opened="isEditRelationModalOpen"
@@ -323,7 +323,7 @@ onMounted(async () => {
     :relation="relationToEdit"
     data-testid="relation-edit-modal"
     @close="closeEditRelationModal"
-    @updateRelation="handleUpdateRelation"
+    @update-relation="handleUpdateRelation"
   />
   <DeleteConfirmationModal
     :opened="showDeleteConfirmation"

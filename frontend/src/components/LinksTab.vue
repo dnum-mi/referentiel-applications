@@ -7,7 +7,8 @@ import api from "@/api/index.js";
 import { useToasterStore } from "@/stores/toasterStore.js";
 import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
-import { computed, onMounted, ref } from "vue";
+import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
+import { computed, onMounted, ref, type ButtonHTMLAttributes } from "vue";
 import LinkForm from "./form/LinkForm.vue";
 import RefAppTable from "./RefAppTable.vue";
 
@@ -23,7 +24,7 @@ const props = withDefaults(
 
 const userStore = useUserStore();
 
-const linkModal = useModal();
+const linkModal = useModal<LinkDto>();
 const links = ref<LinkDto[]>([]);
 const total = ref(0);
 const isLoading = ref(false);
@@ -165,7 +166,7 @@ function requestDelete(linkId: string) {
   showDeleteConfirmation.value = true;
 }
 
-function getCardButtons(link: LinkDto) {
+function getCardButtons(link: LinkDto): (DsfrButtonProps & ButtonHTMLAttributes)[] {
   return [
     {
       label: "Modifier",

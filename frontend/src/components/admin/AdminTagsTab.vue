@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { PaginatedTagDto } from "@/client/types.gen";
+import type { TagDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
@@ -8,7 +8,9 @@ import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
 import TagActions from "./TagActions.vue";
 
-const data = ref<PaginatedTagDto>({ results: [], total: 0 });
+// L'API renvoie le décompte des applications liées, non déclaré dans TagDto.
+type TagRow = TagDto & { _count?: { applications: number } };
+const data = ref<{ results: TagRow[]; total: number }>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {

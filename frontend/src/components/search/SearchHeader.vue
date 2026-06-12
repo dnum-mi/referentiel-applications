@@ -98,12 +98,12 @@ function onConfirm(selection: ApplicationOption | null) {
       ref="searchRef"
       id="app-search"
       :search="fetchSuggestions"
-      :displayLabel="displayLabel"
-      :onChange="onConfirm"
-      :displayNoResult="true"
-      :isSearch="true"
+      :display-label="displayLabel"
+      :on-change="onConfirm"
+      :display-no-result="true"
+      :is-search="true"
       placeholder="Rechercher une application…"
-      :inputRef="inputRef"
+      :input-ref="inputRef"
     >
       <template #suggestion="{ item }">
         <div class="suggestion">

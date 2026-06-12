@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { useApplicationSearch, type Filters } from "@/composables/use-application-search";
+import { useApplicationSearch } from "@/composables/use-application-search";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { DsfrInput, DsfrSelect } from "@gouvminint/vue-dsfr";
 import { useOrganizationStore } from "@/stores/organizationStore";
@@ -67,7 +67,7 @@ watchDebounced(
     type="email"
     data-testid="actor-email-filter-input"
     class="fr-mb-2w"
-    @update:model-value="setFilter({ actorEmail: $event || undefined, page: 0 })"
+    @update:model-value="setFilter({ actorEmail: $event ? String($event) : undefined, page: 0 })"
   />
 
   <DsfrInput
@@ -77,7 +77,7 @@ watchDebounced(
     list="organizationSuggestionsList"
     placeholder="Rechercher une organisation"
     data-testid="organization-filter-input"
-    @update:model-value="setFilter({ organization: $event || undefined, page: 0 })"
+    @update:model-value="setFilter({ organization: $event ? String($event) : undefined, page: 0 })"
   />
   <datalist id="organizationSuggestionsList" data-testid="organization-suggestions-list">
     <option v-for="organization in organizations" :key="organization.id" :data-testid="`organization-option-${organization.id}`">

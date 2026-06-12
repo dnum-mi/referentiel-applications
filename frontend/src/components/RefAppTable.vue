@@ -110,23 +110,23 @@ watch(
       :rows="rows"
       :first="first"
       :paginator="paginator"
-      :rowsPerPageOptions="[5, 10, 15, 20, 50]"
-      :paginatorTemplate="'RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport'"
-      currentPageReportTemplate="{first} à {last} sur {totalRecords}"
+      :rows-per-page-options="[5, 10, 15, 20, 50]"
+      :paginator-template="'RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport'"
+      current-page-report-template="{first} à {last} sur {totalRecords}"
       :sort-field="internalSortField"
       :sort-order="internalSortOrder"
       :loading="loading && !isSorting"
       :data-testid="dataTestId"
       striped-rows
-      resizableColumns
-      columnResizeMode="fit"
-      responsiveLayout="scroll"
+      resizable-columns
+      column-resize-mode="fit"
+      responsive-layout="scroll"
       aria-live="polite"
       :aria-busy="loading || isSorting"
       @sort="onSort"
       @page="onPage"
       @column-resize-end="onColumnResize"
-      tableStyle="min-width: 50rem"
+      table-style="min-width: 50rem"
     >
       <template #empty>
         <div class="fr-py-2w fr-text--center" role="status" aria-live="polite">{{ emptyMessage }}</div>

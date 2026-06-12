@@ -4,10 +4,10 @@ import { useRouter } from "vue-router";
 import ApplicationForm from "@/components/form/ApplicationForm.vue";
 import { routeNames } from "@/router/route-names";
 import type { ApplicationDto } from "@/client/types.gen";
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { ApplicationFormInitialData } from "@/models/Application";
 
 const router = useRouter();
-const emptyApplication = ref<CreateApplicationWithPerms>({
+const emptyApplication = ref<ApplicationFormInitialData>({
   label: "",
   shortName: "",
   description: "",
@@ -17,7 +17,6 @@ const emptyApplication = ref<CreateApplicationWithPerms>({
   targetPopulations: [],
   priorityRestart: undefined,
   tags: [],
-  labels: [],
   myPerms: new Set(),
 });
 

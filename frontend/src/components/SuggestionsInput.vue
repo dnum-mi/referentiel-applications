@@ -2,7 +2,7 @@
 import type { ApplicationDto } from "@/client";
 import { generateId } from "@/utils/generator-utils";
 import { watchDebounced } from "@vueuse/core";
-import { ref, watch, type WatchHandle } from "vue";
+import { ref, type WatchHandle } from "vue";
 
 const props = defineProps<{
   searchData?: Array<{ id: string; label: string }>;

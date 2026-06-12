@@ -168,7 +168,7 @@ export class UserService {
 
   async findAll(
     filters: UserFilterDto,
-    requestor: Requestor,
+    _requestor: Requestor,
   ): Promise<PaginatedResponseDto<User>> {
     const where: Prisma.UserWhereInput = {};
 

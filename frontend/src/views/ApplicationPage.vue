@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CreateApplicationWithPerms } from "@/models/Application";
+import type { ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
@@ -17,7 +17,7 @@ const metadataStore = useMetadataStore();
 const toaster = useToasterStore();
 const route = useRoute();
 const id = route.params.id as string;
-const application = computed<CreateApplicationWithPerms>(() => applicationStore.applicationsById[id]);
+const application = computed<ApplicationWithPerms>(() => applicationStore.applicationsById[id]);
 const isLoading = ref(false);
 const errorMessage = ref("");
 
@@ -168,7 +168,7 @@ const actions = computed(() => [
         <DsfrTag
           v-if="application.currentStatus?.statusDate"
           class="fr-mr-1v"
-          :label="`${statusApplicationDictionary[application.currentStatus?.status]} depuis le ${formatDateFR(application.currentStatus?.statusDate)}`"
+          :label="`${statusApplicationDictionary[application.currentStatus.status]} depuis le ${formatDateFR(application.currentStatus.statusDate)}`"
           data-testid="application-status-tag"
         />
 
