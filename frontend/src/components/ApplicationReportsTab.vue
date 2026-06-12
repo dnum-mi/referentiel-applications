@@ -119,6 +119,8 @@ const loading = computed(() => isLoading.value);
     <DsfrInput
       v-model="reportText"
       is-textarea
+      label="Décrivez votre signalement"
+      label-visible
       placeholder="Décrivez votre signalement..."
       required
       class="fr-mb-1w"
