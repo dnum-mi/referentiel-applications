@@ -1,32 +1,29 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { priorityRestartLabelsOptions } from "@/constants/dictionary";
 import type { ApplicationPriorityRestart } from "@/client/types.gen.js";
 
 const { filters, setFilter } = useApplicationSearch();
 
-function togglePriority(value: ApplicationPriorityRestart, checked: boolean) {
-  const selected = new Set<ApplicationPriorityRestart>(filters.value.priorityRestart || []);
-  if (checked) selected.add(value);
-  else selected.delete(value);
-  setFilter({ priorityRestart: Array.from(selected) });
-}
+const priorityCheckboxOptions = priorityRestartLabelsOptions.map((option) => ({
+  label: option.text,
+  name: `priority-restart-option-${option.value}`,
+  value: option.value,
+  id: `priority-restart-option-${option.value}`,
+}));
+
+const selectedPriorities = computed({
+  get: () => [...(filters.value.priorityRestart || [])],
+  set: (value: ApplicationPriorityRestart[]) => setFilter({ priorityRestart: value }),
+});
 </script>
 
 <template>
-  <div>
-    <legend class="fr-label fr-mb-2w">Priorité de redémarrage</legend>
-    <div data-testid="priority-restart-filter">
-      <label v-for="option in priorityRestartLabelsOptions" :key="option.value" class="checkbox-item">
-        <input
-          type="checkbox"
-          :value="option.value"
-          :checked="filters.priorityRestart?.includes(option.value)"
-          :data-testid="`priority-restart-option-${option.value}`"
-          @change="(e) => togglePriority(option.value, (e.target as HTMLInputElement).checked)"
-        />
-        {{ option.text }}
-      </label>
-    </div>
-  </div>
+  <DsfrCheckboxSet
+    v-model="selectedPriorities"
+    legend="Priorité de redémarrage"
+    :options="priorityCheckboxOptions"
+    data-testid="priority-restart-filter"
+  />
 </template>
