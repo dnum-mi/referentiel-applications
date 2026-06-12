@@ -1,0 +1,6 @@
+# Les issues vierges restent autorisées (ne casse pas le flux existant).
+blank_issues_enabled: true
+contact_links:
+  - name: "📖 Guide QA / non-régression"
+    url: https://github.com/dnum-mi/referentiel-applications/blob/main/qa/README.md
+    about: "Comment dérouler une campagne de non-régression et remplir un protocole."

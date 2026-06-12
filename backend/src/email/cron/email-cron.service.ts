@@ -28,17 +28,23 @@ export class EmailDigestCronService {
   ) {}
 
   @Cron("0 0 * * *", { timeZone: "Europe/Paris" })
-  async sendDailyDigest() {
+  async sendDailyDigest(targetDate?: Date) {
     Logger.log("Starting daily email digest job at midnight");
 
     try {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
+      // Par défaut (cron) : la veille. La CLI peut cibler une autre date (ex. aujourd'hui).
+      const target =
+        targetDate ??
+        (() => {
+          const d = new Date();
+          d.setDate(d.getDate() - 1);
+          return d;
+        })();
 
-      const startOfYesterday = new Date(yesterday);
+      const startOfYesterday = new Date(target);
       startOfYesterday.setHours(0, 0, 0, 0);
 
-      const endOfYesterday = new Date(yesterday);
+      const endOfYesterday = new Date(target);
       endOfYesterday.setHours(23, 59, 59, 999);
 
       Logger.log(
@@ -69,8 +75,14 @@ export class EmailDigestCronService {
         return;
       }
 
+      // Certaines métadonnées (ex. signalements globaux) n'ont pas d'applicationId :
+      // on les exclut, sinon `id: { in: [null, …] }` fait échouer la requête Prisma.
       const modifiedAppIds = [
-        ...new Set(yesterdayMetadata.map((m) => m.applicationId)),
+        ...new Set(
+          yesterdayMetadata
+            .map((m) => m.applicationId)
+            .filter((id): id is string => Boolean(id)),
+        ),
       ];
       Logger.log(
         `Found ${modifiedAppIds.length} modified applications with ${yesterdayMetadata.length} total changes`,

@@ -1,0 +1,133 @@
+name: QA — Sync non-régression
+
+# Rejoue les tests Playwright automatisés et synchronise une issue de campagne QA :
+# coche les étapes passées (pivot = ID d'étape `XXX-NN` dans le titre du test), met à jour le
+# tableau récapitulatif et pose le verdict `qa:pass` / `qa:fail`.
+#
+# Déclenchement manuel : Actions → "QA — Sync non-régression" → Run workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version testée (ex. v1.10.0) — informatif"
+        required: false
+        type: string
+      issue_number:
+        description: "Numéro de l'issue de campagne QA à mettre à jour"
+        required: true
+        type: string
+      grep:
+        description: "Filtre de specs (regex Playwright, ex. ^CAT-) — vide = tous"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  qa-sync:
+    name: Playwright → issue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Stack applicative (backend prod, comme le job e2e prouvé de main-ci) ---
+      - name: Build backend image (prod)
+        run: docker build --target prod -t qa-backend:ci ./backend
+
+      - name: Start stack
+        run: IMAGE_TAG=qa-backend:ci docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d backend postgres keycloak
+
+      - name: Wait for Keycloak
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:8082/realms/referentiel-applications/.well-known/openid-configuration; then
+              echo "Keycloak prêt"; exit 0
+            fi
+            echo "Attente de Keycloak..."; sleep 5
+          done
+          echo "Keycloak non disponible"; docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend keycloak; exit 1
+
+      - name: Seed (avec retries)
+        run: |
+          for i in {1..10}; do
+            if IMAGE_TAG=qa-backend:ci docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed; then exit 0; fi
+            echo "Seed tentative $i échouée, retry dans 5s..."; sleep 5
+          done
+          echo "Seed échoué"; exit 1
+
+      # --- Frontend (serveur de dev) + e2e (Playwright), lancés sur le runner ---
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install frontend deps (serveur de dev démarré par Playwright)
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate frontend API client
+        working-directory: frontend
+        run: pnpm gen
+
+      - name: Install e2e deps
+        working-directory: e2e
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: e2e
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run e2e (JSON report)
+        working-directory: e2e
+        env:
+          CI: "true"
+          API_BASE_URL: http://localhost:3500 # cible du proxy Vite côté runner
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results.json
+        run: pnpm exec playwright test --project=chromium --reporter=json ${{ inputs.grep && format('--grep "{0}"', inputs.grep) || '' }}
+        continue-on-error: true # un échec de test ne doit pas empêcher la synchro de l'issue
+
+      # --- Publication des screenshots par étape sur la branche dédiée `qa-screenshots` ---
+      - name: Publish step screenshots
+        if: hashFiles('e2e/qa-screenshots/*.png') != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEST="runs/issue-${{ inputs.issue_number }}"
+          tmp=$(mktemp -d)
+          REPO_URL="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          if git clone --depth 1 --single-branch --branch qa-screenshots "$REPO_URL" "$tmp" 2>/dev/null; then
+            rm -rf "$tmp/$DEST"
+          else
+            git clone --depth 1 "$REPO_URL" "$tmp"
+            git -C "$tmp" switch --orphan qa-screenshots
+            git -C "$tmp" rm -rfq . 2>/dev/null || true
+          fi
+          mkdir -p "$tmp/$DEST"
+          cp e2e/qa-screenshots/*.png "$tmp/$DEST/"
+          git -C "$tmp" add "$DEST"
+          git -C "$tmp" -c user.email=actions@github.com -c user.name="qa-sync" commit -m "qa: screenshots #${{ inputs.issue_number }}"
+          git -C "$tmp" push origin qa-screenshots
+
+      # --- Synchronisation de l'issue (cases + screenshots + verdict) ---
+      - name: Sync issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          RESULTS_FILE: e2e/results.json
+          SCREENSHOTS_DIR: e2e/qa-screenshots
+          SCREENSHOTS_BASE_URL: https://raw.githubusercontent.com/${{ github.repository }}/qa-screenshots/runs/issue-${{ inputs.issue_number }}
+          SCREENSHOTS_CACHE_BUST: ${{ github.sha }} # URL fraîche par commit (anti-cache d'image)
+        run: node qa/scripts/sync-issue.mjs
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7
