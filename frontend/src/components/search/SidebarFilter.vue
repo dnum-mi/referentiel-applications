@@ -28,10 +28,6 @@ const isSubscribedAppsFilterActive = computed(() => {
   return !!(userStore.user?.email && filters.value.subscribersEmail);
 });
 
-// Les critères de conformité correspondent aux colonnes gardées par « ColumnRead ».
-// On masque donc le filtre de conformité aux utilisateurs sans cette permission.
-const canFilterCompliance = computed(() => userStore.authenticated && userStore.hasPermissions(["ColumnRead"]));
-
 function toggleMyAppsFilter(value: boolean) {
   setFilter({ myApplications: value ? true : undefined, page: 0 });
 }
@@ -104,7 +100,6 @@ function toggleSubscribedAppsFilter(value: boolean) {
         </DsfrAccordion>
 
         <DsfrAccordion
-          v-if="canFilterCompliance"
           :selected="openAccordions.includes(5)"
           title="Conformité"
           data-testid="sidebar-accordion-compliance"

@@ -161,9 +161,7 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
         : parseQueryParam(query.myApplications) === "false"
           ? false
           : DEFAULT_FILTERS.myApplications,
-    // Rétrocompatibilité : à défaut de compliancePresent__in, on retombe sur l'ancien compliance__in (= critères présents).
-    compliancePresent__in: (parseQueryParamArray(query.compliancePresent__in) ??
-      parseQueryParamArray(query.compliance__in)) as Filters["compliancePresent__in"],
+    compliancePresent__in: parseQueryParamArray(query.compliancePresent__in) as Filters["compliancePresent__in"],
     complianceAbsent__in: parseQueryParamArray(query.complianceAbsent__in) as Filters["complianceAbsent__in"],
     complianceUnset__in: parseQueryParamArray(query.complianceUnset__in) as Filters["complianceUnset__in"],
     page: parseQueryParamNumber(query.page) ?? 0,
