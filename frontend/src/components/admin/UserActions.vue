@@ -147,7 +147,8 @@ const isNotValidated = computed(() => {
 });
 
 const labelScope = computed(() => {
-  return `${RolesScopes[editingUserRole.value]}`;
+  const scope = RolesScopes[editingUserRole.value];
+  return scope ? `${scope}` : "Organisation du périmètre";
 });
 const isScopeDisabled = computed(() => {
   return editingUserRole.value === Roles.VISITOR;
