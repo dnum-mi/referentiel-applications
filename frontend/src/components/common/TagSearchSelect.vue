@@ -48,19 +48,27 @@ function removeTag(index: number) {
 <template>
   <ul class="fr-tags-group" data-testid="info-tags">
     <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
-      <DsfrTag :label="tag" selectable :value="tag" :selected="false" @click.stop.prevent="removeTag(index)" class="fr-tag--dismiss" />
+      <DsfrTag
+        :label="tag"
+        tag-name="button"
+        class="fr-tag--dismiss"
+        :title="`Supprimer le tag : ${tag}`"
+        @click.stop.prevent="removeTag(index)"
+      />
     </li>
   </ul>
+  <label for="tag-search" class="fr-label">Tags</label>
   <AccessibleAutocomplete
     id="tag-search"
     data-testid="search-tags"
+    title="Tags"
+    list-label="Tags proposés"
     :search="getTagsOptions"
     display-menu="overlay"
     placeholder="Rechercher un tag"
     :min-length="2"
     :onChange="addTag"
     :displayNoResult="true"
-    :isSearch="true"
     :displayLabel="(item) => item.name"
   />
 </template>
