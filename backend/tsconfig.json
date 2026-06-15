@@ -5,6 +5,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "baseUrl": "./",
+    "ignoreDeprecations": "6.0",
     "module": "commonjs",
     "strict": true,
     "strictBindCallApply": false,

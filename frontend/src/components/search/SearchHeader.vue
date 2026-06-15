@@ -97,11 +97,12 @@ function onConfirm(selection: ApplicationOption | null) {
       v-if="!isMobile"
       ref="searchRef"
       id="app-search"
+      title="Rechercher une application"
+      list-label="Applications proposées"
       :search="fetchSuggestions"
       :display-label="displayLabel"
       :on-change="onConfirm"
       :display-no-result="true"
-      :is-search="true"
       placeholder="Rechercher une application…"
       :input-ref="inputRef"
     >

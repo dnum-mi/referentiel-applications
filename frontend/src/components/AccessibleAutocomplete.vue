@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { watchDebounced } from "@vueuse/core";
 import { onClickOutside } from "@vueuse/core";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 
 interface Props<T> {
   id?: string;
@@ -9,7 +9,10 @@ interface Props<T> {
   displayLabel: (item: T | null) => string;
   placeholder?: string;
   displayNoResult?: boolean;
-  isSearch?: boolean;
+  /** Étiquette visible du champ (rendue en `title` — RGAA 11.1). */
+  title?: string;
+  /** Nom accessible de la liste de suggestions (`aria-label` du listbox — RGAA 7.1). */
+  listLabel?: string;
   onChange?: (item: T | null) => void;
 }
 
@@ -22,6 +25,7 @@ const highlightedIndex = ref(-1);
 const loading = ref(false);
 const showList = ref(false);
 const inputEl = ref<HTMLInputElement | null>(null);
+const containerEl = ref<HTMLElement | null>(null);
 
 async function doSearch(query: string) {
   if (!query) {
@@ -83,10 +87,6 @@ function clear() {
 }
 defineExpose({ clear });
 
-onMounted(() => {
-  if (props.isSearch) inputEl.value?.setAttribute("role", "searchbox");
-});
-
 const hasResults = computed(() => results.value.length > 0);
 
 const ariaActiveDescendant = computed(() => {
@@ -105,26 +105,29 @@ const liveRegionText = computed(() => {
   if (results.value.length === 0) {
     return props.displayNoResult ? "Aucun résultat" : "";
   }
-  return `${results.value.length} résultat${results.value.length > 1 ? "s" : ""} disponible${results.value.length > 1 ? "s" : ""}`;
+  const n = results.value.length;
+  return `${n} suggestion${n > 1 ? "s" : ""} disponible${n > 1 ? "s" : ""}, utilisez les flèches haut et bas pour naviguer, Entrée pour sélectionner.`;
 });
 
-onClickOutside(inputEl, () => {
+onClickOutside(containerEl, () => {
   showList.value = false;
 });
 </script>
 
 <template>
-  <div class="autocomplete" @keydown="onKeydown">
+  <div ref="containerEl" class="autocomplete" @keydown="onKeydown">
     <input
       :id="id"
       ref="inputEl"
       type="text"
       class="fr-input"
       :placeholder="placeholder"
+      :title="title"
       v-model="inputValue"
       @input="onInput"
       autocomplete="off"
       role="combobox"
+      aria-autocomplete="list"
       :aria-controls="id ? id + '-list' : 'autocomplete-list'"
       :aria-activedescendant="ariaActiveDescendant"
       :aria-expanded="showList"
@@ -139,20 +142,23 @@ onClickOutside(inputEl, () => {
       :id="id ? id + '-list' : 'autocomplete-list'"
       class="autocomplete-list"
       role="listbox"
+      :aria-label="listLabel ?? 'Suggestions'"
     >
-      <li
-        v-for="(item, index) in results"
-        :key="index"
-        class="autocomplete-item"
-        :id="`autocomplete-item-${index}`"
-        :class="{ highlighted: index === highlightedIndex }"
-        @mousedown.prevent="select(item)"
-        role="option"
-        :aria-selected="index === highlightedIndex ? 'true' : 'false'"
-      >
-        <slot name="suggestion" :item="item">
-          {{ props.displayLabel(item) }}
-        </slot>
+      <li v-for="(item, index) in results" :key="index" role="presentation">
+        <button
+          type="button"
+          class="autocomplete-item"
+          :id="`autocomplete-item-${index}`"
+          :class="{ highlighted: index === highlightedIndex }"
+          tabindex="-1"
+          role="option"
+          :aria-selected="index === highlightedIndex ? 'true' : 'false'"
+          @click="select(item)"
+        >
+          <slot name="suggestion" :item="item">
+            {{ props.displayLabel(item) }}
+          </slot>
+        </button>
       </li>
 
       <li v-if="!hasResults && displayNoResult" class="no-result" role="option" aria-disabled="true">Aucun résultat</li>
@@ -182,7 +188,15 @@ onClickOutside(inputEl, () => {
   overflow-y: auto;
 }
 .autocomplete-item {
+  display: block;
+  width: 100%;
   padding: 0.5rem 0.75rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
   cursor: pointer;
 }
 .autocomplete-item.highlighted,
