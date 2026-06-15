@@ -28,7 +28,19 @@ export class AdminPage extends BasePage {
 
   async searchUser(value: string): Promise<void> {
     // `admin-user-search` est un <form> : on remplit l'<input> à l'intérieur.
+    // On attend le refetch débouncé de la liste : sinon il peut survenir APRÈS l'ouverture du modal
+    // d'édition et le démonter (la ligne porte le modal) — cf. #1830.
+    const refetch = this.page
+      .waitForResponse(
+        (r) =>
+          /\/users\?/.test(r.url()) &&
+          r.url().includes("search") &&
+          r.request().method() === "GET",
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
     await this.userSearch().locator("input").fill(value);
+    await refetch;
   }
 
   /** Recherche un utilisateur et vérifie qu'il apparaît dans la table (PRM-03). */
