@@ -80,9 +80,9 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
     await admin.editUserRoleWithinScopeAndSave("qa-target@example.com");
   });
 
-  // Note : la frontière de périmètre se vérifie au niveau de l'autorisation (cœur de #14/#15). Le widget
-  // de recherche d'organisation ferme le modal d'édition en e2e (bug UI #1830) et un payload partiel
-  // déclenche une 500 (#1831) → on valide la règle via l'endpoint, avec le token du requérant scopé.
+  // Note : la frontière de périmètre se vérifie au niveau de l'autorisation (cœur de #14/#15). L'édition
+  // via l'UI est instable (le modal d'édition se ferme au rafraîchissement de la liste, #1830) et un
+  // payload partiel déclenche une 500 (#1831) → on valide la règle via l'endpoint, token du requérant scopé.
   test("SCP-04 - changer l'organisation dans le périmètre est autorisé, éditer un user hors périmètre est refusé", async ({
     page,
   }) => {
