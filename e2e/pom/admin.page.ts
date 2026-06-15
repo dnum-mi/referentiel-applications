@@ -87,6 +87,15 @@ export class AdminPage extends BasePage {
     await this.expectToaster(/mis à jour avec succès/i);
   }
 
+  /**
+   * Édite le rôle d'un utilisateur cible et enregistre (SCP-03 : un admin scopé édite un user de son
+   * périmètre). Réussite = toast de succès, donc le périmètre du requérant a autorisé l'édition.
+   */
+  async editUserRoleWithinScopeAndSave(email: string): Promise<void> {
+    await this.openEditUser(email);
+    await this.changeRoleAndSave();
+  }
+
   private matrixPanel = () => this.byTestId("panel-app-perms-matrix");
 
   /** Ouvre l'onglet « Matrice des permissions » et attend le panneau + la table. */
@@ -140,5 +149,19 @@ export class AdminPage extends BasePage {
   /** Vérifie qu'on n'est PAS sur la page admin (cas non-admin). */
   async expectAccessDenied(): Promise<void> {
     await expect(this.page).not.toHaveURL(/\/administration/);
+  }
+
+  // --- Onglet « Batch de données » : synchronisation MAIA (#1825, MAI-04) ---
+  async openBatchDataTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: "Batch de données" })
+      .click();
+    await expect(this.byTestId("admin-actor-maia-batch-btn")).toBeVisible();
+  }
+
+  /** Lance la synchronisation des acteurs avec MAIA et vérifie le retour (MAI-04). */
+  async runMaiaActorBatchAndExpectToast(): Promise<void> {
+    await this.byTestId("admin-actor-maia-batch-btn").click();
+    await this.expectToaster(/Batch MAIA lancé en tâche de fond/i);
   }
 }

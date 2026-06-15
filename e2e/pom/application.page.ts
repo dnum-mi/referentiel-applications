@@ -185,4 +185,109 @@ export class ApplicationPage extends BasePage {
     await this.byTestId("application-copy-link-btn").click();
     await this.expectToaster(/Lien copié dans le presse-papier/i);
   }
+
+  // --- Conformités : éco-conception & homologation (#1825, CMP-*) ---
+  // Libellés de ligne du tableau des conformités (`labels` du composant).
+  private static readonly HOMOLOGATION_LABEL = "Homologation";
+  private static readonly ECO_INDEX_LABEL = "Ecoconception";
+
+  /** Ligne du tableau des conformités correspondant à un type (ciblée par son libellé). */
+  private complianceRow(label: string): Locator {
+    return this.byTestId("compliance-table")
+      .locator("tbody tr")
+      .filter({ hasText: label });
+  }
+
+  /** Ouvre le formulaire d'édition d'une conformité depuis sa ligne. */
+  private async openComplianceEdit(label: string): Promise<void> {
+    await this.complianceRow(label).getByTestId("compliance-edit-btn").click();
+    await expect(this.byTestId("compliance-form-container")).toBeVisible();
+  }
+
+  /** Sélectionne un statut d'homologation (par libellé) et enregistre (CMP-01). */
+  async setHomologationStatus(optionLabel: string): Promise<void> {
+    await this.openComplianceEdit(ApplicationPage.HOMOLOGATION_LABEL);
+    await this.byTestId("compliance-homologation-status").selectOption({
+      label: optionLabel,
+    });
+    await this.byTestId("compliance-submit-btn").click();
+    await this.expectToaster(/Conformité mise à jour avec succès/i);
+  }
+
+  /** Le résumé de la ligne homologation affiche le statut attendu (CMP-01). */
+  async expectHomologationPreview(text: string | RegExp): Promise<void> {
+    await expect(
+      this.complianceRow(ApplicationPage.HOMOLOGATION_LABEL),
+    ).toContainText(text);
+  }
+
+  /** Le résumé de la ligne éco-conception affiche le grade attendu (CMP-04). */
+  async expectEcoIndexGrade(grade: string): Promise<void> {
+    await expect(
+      this.complianceRow(ApplicationPage.ECO_INDEX_LABEL),
+    ).toContainText(new RegExp(`Score:\\s*${grade}\\b`));
+  }
+
+  /** Le résumé de la ligne éco-conception indique l'absence de score (CMP-03). */
+  async expectEcoIndexNotCalculated(): Promise<void> {
+    await expect(
+      this.complianceRow(ApplicationPage.ECO_INDEX_LABEL),
+    ).toContainText(/Non calculé/i);
+  }
+
+  /** Modifie l'URL cible éco-index et enregistre (déclenche le reset côté serveur, CMP-03). */
+  async changeEcoIndexUrlAndSave(url: string): Promise<void> {
+    await this.openComplianceEdit(ApplicationPage.ECO_INDEX_LABEL);
+    await this.byTestId("ecoindex-target-url-input").fill(url);
+    await this.byTestId("compliance-submit-btn").click();
+    await this.expectToaster(/Conformité mise à jour avec succès/i);
+  }
+
+  /** Le bouton « Calculer » l'éco-index est actif (droit d'écriture conformité, CMP-02). */
+  async expectEcoIndexScanEnabled(): Promise<void> {
+    await expect(
+      this.complianceRow(ApplicationPage.ECO_INDEX_LABEL).getByTestId(
+        "compliance-scan-ecoindex-btn",
+      ),
+    ).toBeEnabled();
+  }
+
+  /** Le bouton « Calculer » l'éco-index est désactivé (Lecteur sans droit, CMP-02). */
+  async expectEcoIndexScanDisabled(): Promise<void> {
+    await expect(
+      this.complianceRow(ApplicationPage.ECO_INDEX_LABEL).getByTestId(
+        "compliance-scan-ecoindex-btn",
+      ),
+    ).toBeDisabled();
+  }
+
+  // --- Onglet Acteurs : ajout & import MAIA (#1825, MAI-*) ---
+  /** Ouvre le formulaire d'ajout d'acteur depuis l'onglet Acteurs. */
+  async openAddActorForm(): Promise<void> {
+    await this.openTab("tab-actors");
+    await this.byTestId("actor-add-btn").click();
+    // Le data-testid parent (`actor-form-container`) écrase `actor-form` sur le <form> (fallthrough Vue).
+    await expect(this.byTestId("actor-form-container")).toBeVisible();
+  }
+
+  /** Saisit un email et importe les informations de l'acteur depuis MAIA (MAI-02). */
+  async importActorFromMaia(email: string): Promise<void> {
+    await this.byTestId("actor-email-input").fill(email);
+    await this.byTestId("admin-user-sync-maia-btn").click();
+    await this.expectToaster(/Organisation synchronisée depuis MAIA/i);
+  }
+
+  /** Le prénom de l'acteur a été renseigné (par l'import MAIA) — MAI-02. */
+  async expectActorFirstnameFilled(): Promise<void> {
+    await expect(this.byTestId("actor-firstname-input")).not.toHaveValue("");
+  }
+
+  /** Le champ email est positionné AVANT le champ organisation dans le formulaire (MAI-03). */
+  async expectActorEmailBeforeOrganization(): Promise<void> {
+    const emailBox = await this.byTestId("actor-email-input").boundingBox();
+    const orgBox = await this.byTestId("actor-organization").boundingBox();
+    expect(emailBox).not.toBeNull();
+    expect(orgBox).not.toBeNull();
+    expect(emailBox!.y).toBeLessThan(orgBox!.y);
+  }
 }

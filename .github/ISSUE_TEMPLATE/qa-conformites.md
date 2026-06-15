@@ -1,8 +1,8 @@
 ---
-name: "🧪 QA — Catalogue & recherche"
-about: "Campagne de non-régression du catalogue & de la recherche pour une version"
-title: "[QA][vX.Y.Z] Catalogue & recherche"
-labels: ["qa", "non-regression", "qa:catalogue"]
+name: "🧪 QA — Conformités (éco-conception & homologation)"
+about: "Campagne de non-régression des conformités (éco-index, homologation) pour une version"
+title: "[QA][vX.Y.Z] Conformités (éco-conception & homologation)"
+labels: ["qa", "non-regression", "qa:conformites"]
 ---
 
 ## Campagne
@@ -13,7 +13,7 @@ labels: ["qa", "non-regression", "qa:catalogue"]
 - **Testeur** :
 - **Date** :
 
-> Protocole de référence : [`qa/protocoles/catalogue.md`](../blob/main/qa/protocoles/catalogue.md).
+> Protocole de référence : [`qa/protocoles/conformites.md`](../blob/main/qa/protocoles/conformites.md).
 > Cocher chaque étape validée et **glisser une capture** dans la zone `📎`. Tout échec → ouvrir un
 > 🐛 (template _Rapport de bug_) et lier l'issue ici, laisser la case décochée.
 
@@ -21,7 +21,7 @@ labels: ["qa", "non-regression", "qa:catalogue"]
 
 | Total | ✅ Passés | ❌ Échecs | ⏭️ Non testés |
 | ----- | --------- | --------- | ------------- |
-| 17    |           |           |               |
+| 4     |           |           |               |
 
 ## Protocole
 
