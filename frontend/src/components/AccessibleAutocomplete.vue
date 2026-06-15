@@ -28,6 +28,7 @@ const inputEl = ref<HTMLInputElement | null>(null);
 const containerEl = ref<HTMLElement | null>(null);
 
 async function doSearch(query: string) {
+  highlightedIndex.value = -1;
   if (!query) {
     results.value = [];
     return;
@@ -65,15 +66,19 @@ function select(item: any) {
 
 function onKeydown(e: KeyboardEvent) {
   if (!showList.value) return;
+  const count = results.value.length;
+  const current = Number.isInteger(highlightedIndex.value) ? highlightedIndex.value : -1;
   if (e.key === "ArrowDown") {
     e.preventDefault();
-    highlightedIndex.value = (highlightedIndex.value + 1) % results.value.length;
+    if (!count) return;
+    highlightedIndex.value = (current + 1) % count;
   } else if (e.key === "ArrowUp") {
     e.preventDefault();
-    highlightedIndex.value = (highlightedIndex.value - 1 + results.value.length) % results.value.length;
-  } else if (e.key === "Enter" && highlightedIndex.value >= 0) {
+    if (!count) return;
+    highlightedIndex.value = (current - 1 + count) % count;
+  } else if (e.key === "Enter" && current >= 0 && current < count) {
     e.preventDefault();
-    select(results.value[highlightedIndex.value]);
+    select(results.value[current]);
   } else if (e.key === "Escape") {
     showList.value = false;
   }
