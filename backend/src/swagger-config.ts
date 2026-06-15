@@ -1,5 +1,6 @@
 // src/main.ts
 import type { INestApplication } from "@nestjs/common";
+import type { AppConfig } from "./config/configs/app.config";
 import type { OidcConfig } from "./config/configs/oidc.config";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -7,22 +8,39 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { stringify } from "yaml";
 import { API_KEY_HEADER } from "./utils/constants.util";
 
+const API_PREFIX = "/api/v2";
+const SWAGGER_PATH = "/swagger";
+
+function getRealmUrl(configUrl: string) {
+  return configUrl
+    .trim()
+    .replace(/\/\.well-known\/openid-configuration\/?$/, "")
+    .replace(/\/+$/, "");
+}
+
+function getSwaggerPublicUrl(
+  options: Pick<AppConfig, "host" | "port" | "swaggerPublicUrl">,
+) {
+  if (options.swaggerPublicUrl) {
+    return options.swaggerPublicUrl.trim().replace(/\/+$/, "");
+  }
+
+  const host = options.host === "0.0.0.0" ? "localhost" : options.host;
+
+  return `http://${host}:${options.port}`;
+}
+
 // Configuration de Swagger
 export function setupSwagger(
   app: INestApplication<any>,
-  options: {
-    writeYaml?: boolean;
-    onlyWriteSwagger?: boolean;
-  },
+  options: Pick<
+    AppConfig,
+    "host" | "port" | "swaggerPublicUrl" | "writeYaml" | "onlyWriteSwagger"
+  >,
   oidcConfig: Pick<OidcConfig, "configUrl" | "clientId">,
 ) {
-  // Extract the base URL from OIDC_CONFIG_URL by removing the .well-known path
-  // e.g., "https://auth.sso.interieur.rie.gouv.fr/.well-known/openid-configuration"
-  // becomes "https://auth.sso.interieur.rie.gouv.fr"
-  const baseUrl = oidcConfig.configUrl.replace(
-    /.well-known\/openid-configuration$/,
-    "",
-  );
+  const realmUrl = getRealmUrl(oidcConfig.configUrl);
+  const swaggerPublicUrl = getSwaggerPublicUrl(options);
 
   const config = new DocumentBuilder()
     .setTitle("API Référentiel Applications")
@@ -34,9 +52,9 @@ export function setupSwagger(
         description: "OAuth2 authentication using OIDC",
         flows: {
           authorizationCode: {
-            authorizationUrl: `${baseUrl}/protocol/openid-connect/auth`,
-            tokenUrl: `${baseUrl}/protocol/openid-connect/token`,
-            refreshUrl: `${baseUrl}/protocol/openid-connect/token`,
+            authorizationUrl: `${realmUrl}/protocol/openid-connect/auth`,
+            tokenUrl: `${realmUrl}/protocol/openid-connect/token`,
+            refreshUrl: `${realmUrl}/protocol/openid-connect/token`,
             scopes: {
               openid: "OpenID scope",
               profile: "Profile scope",
@@ -61,12 +79,13 @@ export function setupSwagger(
 
   const document = SwaggerModule.createDocument(app, config);
 
-  SwaggerModule.setup("/swagger", app, document, {
+  SwaggerModule.setup(SWAGGER_PATH, app, document, {
     explorer: true,
-    jsonDocumentUrl: "/swagger/json",
-    yamlDocumentUrl: "/swagger/yaml",
+    jsonDocumentUrl: `${SWAGGER_PATH}/json`,
+    yamlDocumentUrl: `${SWAGGER_PATH}/yaml`,
     useGlobalPrefix: true,
     swaggerOptions: {
+      oauth2RedirectUrl: `${swaggerPublicUrl}${API_PREFIX}${SWAGGER_PATH}/oauth2-redirect.html`,
       usePkceWithAuthorizationCodeGrant: true,
       initOAuth: {
         scopes: ["openid", "profile"],

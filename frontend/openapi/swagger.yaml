@@ -4718,9 +4718,9 @@ components:
       type: oauth2
       flows:
         authorizationCode:
-          authorizationUrl: http://localhost:8082/realms/referentiel-applications//protocol/openid-connect/auth
-          tokenUrl: http://localhost:8082/realms/referentiel-applications//protocol/openid-connect/token
-          refreshUrl: http://localhost:8082/realms/referentiel-applications//protocol/openid-connect/token
+          authorizationUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/auth
+          tokenUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/token
+          refreshUrl: http://localhost:8082/realms/referentiel-applications/protocol/openid-connect/token
           scopes:
             openid: OpenID scope
             profile: Profile scope
