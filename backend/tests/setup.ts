@@ -20,6 +20,8 @@ export async function setupApp(): Promise<INestApplication> {
   setupSwagger(
     app,
     {
+      host: "localhost",
+      port: 3500,
       writeYaml: false,
       onlyWriteSwagger: false,
     },

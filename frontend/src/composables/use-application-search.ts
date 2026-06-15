@@ -23,7 +23,9 @@ const DEFAULT_FILTERS: Filters = {
   currentStatus__isNull: true,
   subscribersEmail: false,
   myApplications: false,
-  compliance__in: undefined,
+  compliancePresent__in: undefined,
+  complianceAbsent__in: undefined,
+  complianceUnset__in: undefined,
   page: 0,
   pageSize: 15,
   sortBy: "label",
@@ -159,7 +161,9 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
         : parseQueryParam(query.myApplications) === "false"
           ? false
           : DEFAULT_FILTERS.myApplications,
-    compliance__in: parseQueryParamArray(query.compliance__in) as Filters["compliance__in"],
+    compliancePresent__in: parseQueryParamArray(query.compliancePresent__in) as Filters["compliancePresent__in"],
+    complianceAbsent__in: parseQueryParamArray(query.complianceAbsent__in) as Filters["complianceAbsent__in"],
+    complianceUnset__in: parseQueryParamArray(query.complianceUnset__in) as Filters["complianceUnset__in"],
     page: parseQueryParamNumber(query.page) ?? 0,
     pageSize: parseQueryParamNumber(query.pageSize) ?? 15,
     sortBy: parseQueryParam(query.sortBy) ?? "label",

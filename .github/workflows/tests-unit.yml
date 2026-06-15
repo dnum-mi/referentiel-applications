@@ -39,13 +39,13 @@ jobs:
           echo "Keycloak did not become ready in time"
           exit 1
       - name: Display backend logs for debugging
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend
+        run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend
       - name: Run migrations
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm prisma migrate deploy
+        run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm prisma migrate deploy
       - name: Set permissions on coverage folder
         run: chmod -R 777 ./backend/coverage
       - name: Run test coverage
-        run: docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm test:cov
+        run: IMAGE_TAG=${{ inputs.backend_image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml exec backend pnpm test:cov
       - name: Upload vitest coverage artifacts
         uses: actions/upload-artifact@v4
         with:

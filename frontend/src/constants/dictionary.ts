@@ -188,7 +188,29 @@ export const relationTypeLabels: Record<RelationType, string> = {
   is_data_user_of: "utilise les données de",
   use_sso_of: "utilise le SSO de",
 };
-export type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd" | "eco_index";
+export type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd" | "eco_index" | "pra";
+
+/** Critères de conformité proposés dans le filtre du catalogue, dans l'ordre d'affichage. */
+export const complianceFilterCriteria = ["pra", "dima", "pdma", "homologation", "rgaa", "dsfr", "rgpd"] as const;
+
+export type ComplianceFilterCriterion = (typeof complianceFilterCriteria)[number];
+
+/** Libellés courts pour le filtre conformité de la sidebar. */
+export const complianceFilterLabels: Record<ComplianceFilterCriterion, string> = {
+  pra: "PRA",
+  dima: "DIMA",
+  pdma: "PDMA",
+  homologation: "Homologation",
+  rgaa: "RGAA",
+  dsfr: "DSFR",
+  rgpd: "RGPD",
+};
+
+/**
+ * Critères de conformité réellement booléens (oui / non / non renseigné).
+ * Pour ceux-ci le filtre propose 4 états ; les autres se limitent à présent / absent.
+ */
+export const complianceBooleanCriteria: ComplianceFilterCriterion[] = ["pra", "dsfr"];
 
 export const typeApplicationDictionary: Record<ApplicationType, string> = {
   business: "Métier",

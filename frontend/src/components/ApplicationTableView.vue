@@ -74,6 +74,8 @@ const applications = computed(() =>
       pdmaDisplay: formatHours(app.compliance?.pdma_duration_hours),
       rgaaDisplay: formatPercent(app.compliance?.rgaa_score_percentage),
       dsfrDisplay: formatBooleanText(app.compliance?.dsfr_implemented),
+      rgpdDisplay: formatBooleanText(app.compliance?.rgpd_has_aipd),
+      praDisplay: formatBooleanText(app.compliance?.dima_recovery_plan),
       homologationDisplay: formatHomologation(app.compliance?.homologation_status),
       homologationDateEndDisplay: formatDate(app.compliance?.homologation_date_end),
       statusDisplay: formatStatus(app.currentStatus?.status),
@@ -185,6 +187,14 @@ function onColumnResize(event: { field: string; width: string }) {
 
     <template #body-dsfr="{ data }">
       {{ data.dsfrDisplay }}
+    </template>
+
+    <template #body-rgpd="{ data }">
+      {{ data.rgpdDisplay }}
+    </template>
+
+    <template #body-pra="{ data }">
+      {{ data.praDisplay }}
     </template>
 
     <template #body-homologation="{ data }">

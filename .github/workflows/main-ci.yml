@@ -68,7 +68,7 @@ jobs:
       - name: Seed backend database for E2E
         run: |
           for i in {1..10}; do
-            if docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed; then
+            if IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed; then
               exit 0
             fi
             echo "Seed attempt $i failed, retrying in 5s..."
