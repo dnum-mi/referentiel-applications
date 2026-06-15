@@ -142,7 +142,7 @@ export class UserController {
       "Recherche l'utilisateur dans MAIA à partir de son email, crée l'organisation si nécessaire, puis l'associe à l'utilisateur ciblé.",
   })
   @ApiParam({ name: "id", description: "ID de l'utilisateur" })
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: "Organisation synchronisée avec succès",
     type: UserWithPermissions,
   })

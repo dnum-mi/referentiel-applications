@@ -596,7 +596,9 @@ paths:
         - name: compliance__in
           required: false
           in: query
-          description: Filtrer par conformité
+          description: "[Déprécié] Filtrer par conformité présente. Utiliser plutôt
+            compliancePresent__in."
+          deprecated: true
           schema:
             type: array
             items:
@@ -608,6 +610,58 @@ paths:
                 - rgaa
                 - dsfr
                 - rgpd
+                - pra
+        - name: compliancePresent__in
+          required: false
+          in: query
+          description: Critères de conformité devant être présents (renseignés) sur
+            l'application
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: complianceAbsent__in
+          required: false
+          in: query
+          description: "Critères de conformité absents : pour un critère booléen (pra,
+            dsfr) = explicitement Non (false) ; pour les autres = non renseigné"
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: complianceUnset__in
+          required: false
+          in: query
+          description: Critères de conformité non renseignés (valeur nulle). Pertinent
+            pour les critères booléens (pra, dsfr)
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
         - name: link
           required: false
           in: query
@@ -1017,7 +1071,9 @@ paths:
         - name: compliance__in
           required: false
           in: query
-          description: Filtrer par conformité
+          description: "[Déprécié] Filtrer par conformité présente. Utiliser plutôt
+            compliancePresent__in."
+          deprecated: true
           schema:
             type: array
             items:
@@ -1029,6 +1085,58 @@ paths:
                 - rgaa
                 - dsfr
                 - rgpd
+                - pra
+        - name: compliancePresent__in
+          required: false
+          in: query
+          description: Critères de conformité devant être présents (renseignés) sur
+            l'application
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: complianceAbsent__in
+          required: false
+          in: query
+          description: "Critères de conformité absents : pour un critère booléen (pra,
+            dsfr) = explicitement Non (false) ; pour les autres = non renseigné"
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: complianceUnset__in
+          required: false
+          in: query
+          description: Critères de conformité non renseignés (valeur nulle). Pertinent
+            pour les critères booléens (pra, dsfr)
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
         - name: link
           required: false
           in: query
@@ -2321,8 +2429,6 @@ paths:
             type: string
       responses:
         "200":
-          description: ""
-        "201":
           description: Organisation synchronisée avec succès
           content:
             application/json:
@@ -3928,7 +4034,9 @@ paths:
         - name: compliance__in
           required: false
           in: query
-          description: Filtrer par conformité
+          description: "[Déprécié] Filtrer par conformité présente. Utiliser plutôt
+            compliancePresent__in."
+          deprecated: true
           schema:
             type: array
             items:
@@ -3940,6 +4048,58 @@ paths:
                 - rgaa
                 - dsfr
                 - rgpd
+                - pra
+        - name: compliancePresent__in
+          required: false
+          in: query
+          description: Critères de conformité devant être présents (renseignés) sur
+            l'application
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: complianceAbsent__in
+          required: false
+          in: query
+          description: "Critères de conformité absents : pour un critère booléen (pra,
+            dsfr) = explicitement Non (false) ; pour les autres = non renseigné"
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
+        - name: complianceUnset__in
+          required: false
+          in: query
+          description: Critères de conformité non renseignés (valeur nulle). Pertinent
+            pour les critères booléens (pra, dsfr)
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - dima
+                - pdma
+                - homologation
+                - rgaa
+                - dsfr
+                - rgpd
+                - pra
         - name: link
           required: false
           in: query

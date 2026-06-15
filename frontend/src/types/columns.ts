@@ -140,6 +140,22 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     requiredPermissions: ["ColumnRead"],
   },
   {
+    field: "rgpd",
+    header: "RGPD",
+    sortable: false,
+    defaultWidth: "150px",
+    visible: false,
+    requiredPermissions: ["ColumnRead"],
+  },
+  {
+    field: "pra",
+    header: "PRA",
+    sortable: false,
+    defaultWidth: "150px",
+    visible: false,
+    requiredPermissions: ["ColumnRead"],
+  },
+  {
     field: "homologation",
     header: "Homologation",
     sortable: false,

@@ -6,6 +6,56 @@ import { Requestor } from "src/user/entities/user.entity";
 import { PrismaService } from "src/prisma/prisma.service";
 import { QueryBuilderGroupActor } from "src/common/service/prisma-query-builder.service";
 
+/**
+ * Clauses Prisma par critère de conformité et par état de filtre :
+ * - `present` : valeur renseignée comme positive (ou simplement renseignée).
+ * - `absent`  : pour un critère booléen, explicitement Non (`false`) ;
+ *               sinon, négation de `present` (= non renseigné).
+ * - `unset`   : non renseigné (valeur nulle / pas de fiche). Défini uniquement
+ *               pour les critères booléens, où Non (false) et non renseigné diffèrent.
+ *
+ * `pra` (Plan de Reprise d'Activité) = `dima_recovery_plan`.
+ */
+type ComplianceFilterClauses = {
+  present: Prisma.ApplicationWhereInput;
+  absent: Prisma.ApplicationWhereInput;
+  unset?: Prisma.ApplicationWhereInput;
+};
+
+/** Construit les clauses d'un critère booléen (true / false / null) sur la conformité. */
+const booleanComplianceClauses = (
+  field: "dima_recovery_plan" | "dsfr_implemented",
+): ComplianceFilterClauses => ({
+  present: { compliance: { [field]: true } },
+  absent: { compliance: { [field]: false } },
+  unset: { NOT: { compliance: { [field]: { not: null } } } },
+});
+
+/** Construit les clauses d'un critère de simple présence (renseigné / non renseigné). */
+const presenceComplianceClauses = (
+  present: Prisma.ApplicationWhereInput,
+): ComplianceFilterClauses => ({ present, absent: { NOT: present } });
+
+const COMPLIANCE_FILTERS: Record<string, ComplianceFilterClauses> = {
+  homologation: presenceComplianceClauses({
+    compliance: { homologation_status: { not: null } },
+  }),
+  rgaa: presenceComplianceClauses({ rgaaCompliances: { some: {} } }),
+  pdma: presenceComplianceClauses({
+    compliance: { pdma_duration_hours: { not: null } },
+  }),
+  dima: presenceComplianceClauses({
+    compliance: { dima_duration_hours: { not: null } },
+  }),
+  rgpd: presenceComplianceClauses({
+    compliance: {
+      OR: [{ rgpd_has_aipd: { not: null } }, { rgpd_dpo_name: { not: null } }],
+    },
+  }),
+  dsfr: booleanComplianceClauses("dsfr_implemented"),
+  pra: booleanComplianceClauses("dima_recovery_plan"),
+};
+
 @Injectable()
 export class PrismaQueryBuilder {
   constructor(
@@ -419,54 +469,24 @@ export class PrismaQueryBuilder {
       },
     ];
 
-    filters.compliance__in?.forEach((compliance) => {
-      switch (compliance) {
-        case "homologation":
-          where.AND.push({
-            compliance: {
-              homologation_status: { not: null },
-            },
-          });
-          break;
-        case "dsfr":
-          where.AND.push({
-            compliance: {
-              dsfr_implemented: true,
-            },
-          });
-          break;
-        case "rgaa":
-          where.AND.push({
-            rgaaCompliances: {
-              some: {},
-            },
-          });
-          break;
-        case "pdma":
-          where.AND.push({
-            compliance: {
-              pdma_duration_hours: { not: null },
-            },
-          });
-          break;
-        case "dima":
-          where.AND.push({
-            compliance: {
-              dima_duration_hours: { not: null },
-            },
-          });
-          break;
-        case "rgpd":
-          where.AND.push({
-            compliance: {
-              OR: [
-                { rgpd_has_aipd: { not: null } },
-                { rgpd_dpo_name: { not: null } },
-              ],
-            },
-          });
-          break;
-      }
+    // Conformité (filtre par état). `compliance__in` reste un alias déprécié de "présent".
+    const presentCriteria = [
+      ...(filters.compliancePresent__in ?? []),
+      ...(filters.compliance__in ?? []),
+    ];
+    presentCriteria.forEach((criterion) => {
+      const filter = COMPLIANCE_FILTERS[criterion];
+      if (filter) where.AND.push(filter.present);
+    });
+
+    filters.complianceAbsent__in?.forEach((criterion) => {
+      const filter = COMPLIANCE_FILTERS[criterion];
+      if (filter) where.AND.push(filter.absent);
+    });
+
+    filters.complianceUnset__in?.forEach((criterion) => {
+      const filter = COMPLIANCE_FILTERS[criterion];
+      if (filter?.unset) where.AND.push(filter.unset);
     });
 
     // Apply all filters using the configuration array
