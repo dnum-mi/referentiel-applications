@@ -20,6 +20,7 @@ import {
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
+import { ApplicationSearchService } from "./search/application-search.service";
 import { ApplicationViewService } from "./view.service";
 
 export function objectEntries<Obj extends Record<string, unknown>>(
@@ -39,6 +40,7 @@ export class ApplicationService {
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
     private readonly businessDivisionService: BusinessDivisionService,
     private readonly checkPermissions: CheckPermissions,
+    private readonly applicationSearchService: ApplicationSearchService,
   ) {}
 
   public async createApplication(
@@ -94,6 +96,7 @@ export class ApplicationService {
       title: `de l'application`,
       type: "add",
     });
+    this.applicationSearchService.scheduleRefresh();
     return application;
   }
 
@@ -171,6 +174,7 @@ export class ApplicationService {
         newData: updatedApplication,
       });
 
+      this.applicationSearchService.scheduleRefresh();
       return updatedApplication;
     } catch {
       throw new NotFoundException(
@@ -272,7 +276,15 @@ export class ApplicationService {
     searchParams: ApplicationSearchDto,
     requestor?: Requestor,
   ): Promise<ApplicationSearchResultDto> {
-    const { sortBy = "shortName", order = "asc" } = searchParams;
+    const fullText = searchParams.q?.trim();
+    const prefixText = searchParams.qPrefix?.trim();
+    // `qPrefix` (autocomplétion au fil de la frappe) est prioritaire sur `q`.
+    const hasFullText = !!(prefixText || fullText);
+    // Avec une recherche full-text, le tri par défaut est la pertinence ;
+    // sinon on conserve le tri historique (shortName).
+    const { order = "asc" } = searchParams;
+    const sortBy =
+      searchParams.sortBy ?? (hasFullText ? "relevance" : "shortName");
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
     const hasAppList = await this.checkPermissions.can(
@@ -299,11 +311,32 @@ export class ApplicationService {
           },
     );
 
-    const paginatedResult = await this.applicationRepository.findApplications(
-      searchParams,
-      where,
-      orderBy,
-    );
+    // Recherche full-text : on restreint l'ensemble aux applications retournées
+    // par le moteur de recherche, en conservant leur ordre de pertinence.
+    let rankedIds: string[] | undefined;
+    if (hasFullText) {
+      const ranked = prefixText
+        ? await this.applicationSearchService.fullTextSearchPrefix(prefixText)
+        : await this.applicationSearchService.fullTextSearch(
+            fullText as string,
+          );
+      rankedIds = ranked.map((result) => result.id);
+      where.AND.push({ id: { in: rankedIds } });
+    }
+
+    const useRelevance = hasFullText && sortBy === "relevance";
+
+    const paginatedResult = useRelevance
+      ? await this.applicationRepository.findApplicationsRanked(
+          searchParams,
+          where,
+          rankedIds ?? [],
+        )
+      : await this.applicationRepository.findApplications(
+          searchParams,
+          where,
+          orderBy,
+        );
 
     const dataWithViews = paginatedResult.results.map((app: any) => {
       const { _count, ...rest } = app;
@@ -393,6 +426,7 @@ export class ApplicationService {
     }
 
     await this.applicationRepository.delete(id);
+    this.applicationSearchService.scheduleRefresh();
   }
 
   private applyScalarAndSimpleRelationUpdates(

@@ -51,6 +51,61 @@ export class ApplicationRepository implements IApplicationRepository {
     });
   }
 
+  /**
+   * Relations chargées pour chaque ligne d'une liste d'applications. Partagé
+   * entre la recherche classique (`findApplications`) et la recherche full-text
+   * triée par pertinence (`findApplicationsRanked`).
+   */
+  private buildListInclude() {
+    const since = new Date();
+    since.setMonth(since.getMonth() - 12);
+
+    return {
+      currentStatus: true,
+      technicalDebtInfo: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+      businessDivision: true,
+      hostings: {
+        include: {
+          hostingOption: true,
+        },
+      },
+      actors: {
+        include: {
+          organization: {
+            select: { id: true, path: true, sigle: true },
+          },
+          actorType: true,
+        },
+      },
+      compliance: true,
+      labels: true,
+      externalRessource: true,
+      tags: true,
+      _count: {
+        select: {
+          applicationViews: {
+            where: {
+              createdAt: { gte: since },
+            },
+          },
+        },
+      },
+    } satisfies Prisma.ApplicationInclude;
+  }
+
+  /** Aplatit le dernier point de dette technique (relation historisée -> objet unique). */
+  private flattenTechnicalDebt<T>(app: T): T {
+    return {
+      ...app,
+      technicalDebtInfo:
+        (app as unknown as { technicalDebtInfo: TechnicalDebtPointDto[] })
+          .technicalDebtInfo[0] ?? null,
+    };
+  }
+
   public async findApplications(
     filters: ApplicationSearchFilters,
     where: Prisma.ApplicationWhereInput,
@@ -58,48 +113,12 @@ export class ApplicationRepository implements IApplicationRepository {
   ): Promise<ApplicationSearchResultDto> {
     const { page, pageSize } = filters;
 
-    const since = new Date();
-    since.setMonth(since.getMonth() - 12);
-
     const paginatedResult = await this.prisma.application.paginate({
       where,
       orderBy,
       page,
       pageSize,
-      include: {
-        currentStatus: true,
-        technicalDebtInfo: {
-          orderBy: { createdAt: "desc" },
-          take: 1,
-        },
-        businessDivision: true,
-        hostings: {
-          include: {
-            hostingOption: true,
-          },
-        },
-        actors: {
-          include: {
-            organization: {
-              select: { id: true, path: true, sigle: true },
-            },
-            actorType: true,
-          },
-        },
-        compliance: true,
-        labels: true,
-        externalRessource: true,
-        tags: true,
-        _count: {
-          select: {
-            applicationViews: {
-              where: {
-                createdAt: { gte: since },
-              },
-            },
-          },
-        },
-      },
+      include: this.buildListInclude(),
     });
 
     // Calculate average IQ across all matching applications (not just paginated results)
@@ -113,13 +132,70 @@ export class ApplicationRepository implements IApplicationRepository {
     // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
     return {
       ...paginatedResult,
-      results: paginatedResult.results.map((app) => ({
-        ...app,
-        // must use assertion due to paginate plugin doesn't preserve types if we are using limit select
-        technicalDebtInfo:
-          (app as unknown as { technicalDebtInfo: TechnicalDebtPointDto[] })
-            .technicalDebtInfo[0] ?? null,
-      })),
+      // must use assertion due to paginate plugin doesn't preserve types if we are using limit select
+      results: paginatedResult.results.map((app) =>
+        this.flattenTechnicalDebt(app),
+      ),
+      averageIq: avgResult._avg.quality ?? 0,
+    } as unknown as ApplicationSearchResultDto;
+  }
+
+  /**
+   * Liste des applications triée par pertinence full-text.
+   *
+   * `where` contient déjà la restriction `id IN (matches FTS)` et l'ensemble des
+   * filtres structurels (droits, conformité, hébergement, statut...). On
+   * intersecte ces filtres avec l'ordre de pertinence fourni par le moteur de
+   * recherche, puis on pagine et on charge les fiches de la page uniquement.
+   */
+  public async findApplicationsRanked(
+    filters: ApplicationSearchFilters,
+    where: Prisma.ApplicationWhereInput,
+    rankedIds: string[],
+  ): Promise<ApplicationSearchResultDto> {
+    const { page = 0, pageSize = 15 } = filters;
+
+    // 1. Quels ids (déjà restreints aux matches FTS) passent les filtres structurels ?
+    const passing = await this.prisma.application.findMany({
+      where,
+      select: { id: true },
+    });
+    const passingSet = new Set(passing.map((app) => app.id));
+
+    // 2. Conserver l'ordre de pertinence renvoyé par le moteur de recherche.
+    const orderedIds = rankedIds.filter((id) => passingSet.has(id));
+    const total = orderedIds.length;
+
+    // 3. Paginer la liste d'ids (pageSize <= 0 => pas de pagination).
+    const safePage = Math.max(0, page);
+    const pageIds =
+      pageSize > 0
+        ? orderedIds.slice(safePage * pageSize, safePage * pageSize + pageSize)
+        : orderedIds;
+
+    // 4. Charger les fiches complètes de la page, puis ré-ordonner par pertinence.
+    const records = pageIds.length
+      ? await this.prisma.application.findMany({
+          where: { id: { in: pageIds } },
+          include: this.buildListInclude(),
+        })
+      : [];
+    const byId = new Map(records.map((record) => [record.id, record]));
+    const orderedResults = pageIds
+      .map((id) => byId.get(id))
+      .filter((record): record is NonNullable<typeof record> =>
+        Boolean(record),
+      );
+
+    // 5. IQ moyen sur l'ensemble du résultat (toutes pages confondues).
+    const avgResult = await this.prisma.application.aggregate({
+      where: { id: { in: orderedIds } },
+      _avg: { quality: true },
+    });
+
+    return {
+      results: orderedResults.map((app) => this.flattenTechnicalDebt(app)),
+      total,
       averageIq: avgResult._avg.quality ?? 0,
     } as unknown as ApplicationSearchResultDto;
   }

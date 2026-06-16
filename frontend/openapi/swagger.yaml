@@ -432,6 +432,26 @@ paths:
           schema:
             example: Mon Application
             type: string
+        - name: q
+          required: false
+          in: query
+          description: "Recherche full-text sur l'ensemble des informations descriptives
+            de la fiche (libellé, nom court, description, finalités, populations
+            cibles, tags, labels, acteurs). Insensible à la casse et aux
+            accents, avec lemmatisation française et tri par pertinence. Syntaxe
+            avancée : \"expression exacte\", motA OR motB, -motExclu."
+          schema:
+            example: gestion des factures
+            type: string
+        - name: qPrefix
+          required: false
+          in: query
+          description: Recherche full-text en mode préfixe, pour l'autocomplétion au fil
+            de la frappe (chaque mot saisi est traité comme un préfixe). Même
+            périmètre que `q`. Prioritaire sur `q` s'il est fourni.
+          schema:
+            example: tow muel
+            type: string
         - name: label
           required: false
           in: query
@@ -906,6 +926,26 @@ paths:
           description: Recherche sur les labels et shortName
           schema:
             example: Mon Application
+            type: string
+        - name: q
+          required: false
+          in: query
+          description: "Recherche full-text sur l'ensemble des informations descriptives
+            de la fiche (libellé, nom court, description, finalités, populations
+            cibles, tags, labels, acteurs). Insensible à la casse et aux
+            accents, avec lemmatisation française et tri par pertinence. Syntaxe
+            avancée : \"expression exacte\", motA OR motB, -motExclu."
+          schema:
+            example: gestion des factures
+            type: string
+        - name: qPrefix
+          required: false
+          in: query
+          description: Recherche full-text en mode préfixe, pour l'autocomplétion au fil
+            de la frappe (chaque mot saisi est traité comme un préfixe). Même
+            périmètre que `q`. Prioritaire sur `q` s'il est fourni.
+          schema:
+            example: tow muel
             type: string
         - name: label
           required: false
@@ -3869,6 +3909,26 @@ paths:
           description: Recherche sur les labels et shortName
           schema:
             example: Mon Application
+            type: string
+        - name: q
+          required: false
+          in: query
+          description: "Recherche full-text sur l'ensemble des informations descriptives
+            de la fiche (libellé, nom court, description, finalités, populations
+            cibles, tags, labels, acteurs). Insensible à la casse et aux
+            accents, avec lemmatisation française et tri par pertinence. Syntaxe
+            avancée : \"expression exacte\", motA OR motB, -motExclu."
+          schema:
+            example: gestion des factures
+            type: string
+        - name: qPrefix
+          required: false
+          in: query
+          description: Recherche full-text en mode préfixe, pour l'autocomplétion au fil
+            de la frappe (chaque mot saisi est traité comme un préfixe). Même
+            périmètre que `q`. Prioritaire sur `q` s'il est fourni.
+          schema:
+            example: tow muel
             type: string
         - name: label
           required: false

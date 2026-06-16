@@ -11,6 +11,7 @@ import { ApplicationController } from "./application.controller";
 import { ApplicationService } from "./application.service";
 import { ApplicationExportService } from "./export.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
+import { ApplicationSearchService } from "./search/application-search.service";
 import { ExportApplicationsUseCase } from "./usecases/application-export.usecase";
 import { ApplicationViewService } from "./view.service";
 
@@ -31,6 +32,7 @@ import { ApplicationViewService } from "./view.service";
     ExportApplicationsUseCase,
     ApplicationRepository,
     PrismaQueryBuilder,
+    ApplicationSearchService,
   ],
   exports: [
     ApplicationExportService,
