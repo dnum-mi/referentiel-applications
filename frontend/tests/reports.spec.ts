@@ -96,10 +96,11 @@ test.describe("Reports flow", () => {
     await createGlobalReport(page, "RI03-global-report");
   });
 
-  test("RI-04 — Afficher une erreur si la création échoue", async ({ page }) => {
+  test("RI-04 — Ré-authentifie l'utilisateur quand la session est invalide (401)", async ({ page }) => {
     await openSearchAndOpenGlobalReportModal(page);
-    const description = uniqueText("RI04-global-report-failed");
+    const description = uniqueText("RI04-global-report-401");
 
+    // Corrompt le token OIDC stocké → le prochain appel API renverra 401.
     await page.evaluate(() => {
       const stores = [localStorage, sessionStorage];
       for (const storage of stores) {
@@ -116,9 +117,25 @@ test.describe("Reports flow", () => {
     });
 
     const failedCreate = await submitGlobalReport(page, description);
-    expect(failedCreate.status()).toBeGreaterThanOrEqual(400);
+    expect(failedCreate.status()).toBe(401);
 
-    await expect(page.getByTestId("app-toaster")).toContainText("Une erreur est survenue lors de l'envoi du signalement");
+    // Le 401 déclenche une ré-authentification : l'app repasse par OIDC (la session
+    // SSO Keycloak étant encore vivante, le retour est transparent) et récupère un
+    // token valide. On vérifie ce renouvellement plutôt que l'URL Keycloak, qui
+    // n'est que transitoire.
+    await page.waitForFunction(
+      () => {
+        for (const storage of [localStorage, sessionStorage]) {
+          for (const key of Object.keys(storage)) {
+            if (!key.startsWith("oidc.user:")) continue;
+            const raw = storage.getItem(key);
+            if (raw && (JSON.parse(raw) as { access_token?: string }).access_token) return true;
+          }
+        }
+        return false;
+      },
+      { timeout: 15000 },
+    );
   });
 
   test("RI-05 — Signaler depuis une fiche application", async ({ page }) => {
