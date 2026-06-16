@@ -22,6 +22,8 @@ interface StatusFormData {
   version?: string;
 }
 
+defineOptions({ inheritAttrs: false });
+
 const props = defineProps<{
   application: ApplicationWithPerms;
 }>();
@@ -280,7 +282,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="statuses-header">
+  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="statuses-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">Historique des statuts</h3>
     </div>

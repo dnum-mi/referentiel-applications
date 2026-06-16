@@ -22,6 +22,8 @@ import type { ApplicationWithPerms } from "@/models/Application";
 import RgaaComplianceSection from "./RgaaComplianceSection.vue";
 import { getEcoIndexGrade } from "@/utils/get-ecoindex-grade.js";
 
+defineOptions({ inheritAttrs: false });
+
 const props = defineProps<{ application: ApplicationWithPerms }>();
 const applicationId = props.application.id;
 
@@ -277,7 +279,7 @@ const hasComplianceEditPermission = computed(() => {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-3w" data-testid="compliance-header">
+  <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-3w" v-bind="$attrs" data-testid="compliance-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des conformités</h3>
     </div>

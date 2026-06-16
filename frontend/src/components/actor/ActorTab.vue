@@ -13,6 +13,8 @@ import { computed, onBeforeMount, ref } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import ActorForm from "./ActorForm.vue";
 
+defineOptions({ inheritAttrs: false });
+
 const props = defineProps<{
   application: Application & { myPerms: Set<APP_PERMISSIONS> };
   isMobile?: boolean;
@@ -195,7 +197,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="actor-tab">
+  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="actor-tab">
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des acteurs</h3>
     </div>

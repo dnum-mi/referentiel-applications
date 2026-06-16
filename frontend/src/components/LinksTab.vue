@@ -12,6 +12,8 @@ import { computed, onMounted, ref, type ButtonHTMLAttributes } from "vue";
 import LinkForm from "./form/LinkForm.vue";
 import RefAppTable from "./RefAppTable.vue";
 
+defineOptions({ inheritAttrs: false });
+
 const props = withDefaults(
   defineProps<{
     application: ApplicationWithPerms;
@@ -204,7 +206,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="links-header">
+  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="links-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des liens</h3>
     </div>
