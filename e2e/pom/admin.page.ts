@@ -28,7 +28,19 @@ export class AdminPage extends BasePage {
 
   async searchUser(value: string): Promise<void> {
     // `admin-user-search` est un <form> : on remplit l'<input> à l'intérieur.
+    // On attend le refetch débouncé de la liste : sinon il peut survenir APRÈS l'ouverture du modal
+    // d'édition et le démonter (la ligne porte le modal) — cf. #1830.
+    const refetch = this.page
+      .waitForResponse(
+        (r) =>
+          /\/users\?/.test(r.url()) &&
+          r.url().includes("search") &&
+          r.request().method() === "GET",
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
     await this.userSearch().locator("input").fill(value);
+    await refetch;
   }
 
   /** Recherche un utilisateur et vérifie qu'il apparaît dans la table (PRM-03). */
@@ -87,6 +99,15 @@ export class AdminPage extends BasePage {
     await this.expectToaster(/mis à jour avec succès/i);
   }
 
+  /**
+   * Édite le rôle d'un utilisateur cible et enregistre (SCP-03 : un admin scopé édite un user de son
+   * périmètre). Réussite = toast de succès, donc le périmètre du requérant a autorisé l'édition.
+   */
+  async editUserRoleWithinScopeAndSave(email: string): Promise<void> {
+    await this.openEditUser(email);
+    await this.changeRoleAndSave();
+  }
+
   private matrixPanel = () => this.byTestId("panel-app-perms-matrix");
 
   /** Ouvre l'onglet « Matrice des permissions » et attend le panneau + la table. */
@@ -140,5 +161,19 @@ export class AdminPage extends BasePage {
   /** Vérifie qu'on n'est PAS sur la page admin (cas non-admin). */
   async expectAccessDenied(): Promise<void> {
     await expect(this.page).not.toHaveURL(/\/administration/);
+  }
+
+  // --- Onglet « Batch de données » : synchronisation MAIA (#1825, MAI-04) ---
+  async openBatchDataTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: "Batch de données" })
+      .click();
+    await expect(this.byTestId("admin-actor-maia-batch-btn")).toBeVisible();
+  }
+
+  /** Lance la synchronisation des acteurs avec MAIA et vérifie le retour (MAI-04). */
+  async runMaiaActorBatchAndExpectToast(): Promise<void> {
+    await this.byTestId("admin-actor-maia-batch-btn").click();
+    await this.expectToaster(/Batch MAIA lancé en tâche de fond/i);
   }
 }

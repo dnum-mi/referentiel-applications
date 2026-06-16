@@ -72,7 +72,11 @@ jobs:
       - name: Seed (avec retries)
         run: |
           for i in {1..10}; do
-            if IMAGE_TAG=qa-backend:ci docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed; then exit 0; fi
+            if IMAGE_TAG=qa-backend:ci docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed; then
+              # Fixtures QA déterministes (périmètres & groupes d'acteurs) — requises par scope-acteurs.spec.ts
+              IMAGE_TAG=qa-backend:ci docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend pnpm db:seed:qa
+              exit $?
+            fi
             echo "Seed tentative $i échouée, retry dans 5s..."; sleep 5
           done
           echo "Seed échoué"; exit 1

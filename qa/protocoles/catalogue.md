@@ -94,3 +94,17 @@
 - **Datafeature** : utilisateur `admin`.
 - **Action** : cliquer `application-export-btn`.
 - **Résultat attendu** : un fichier `.xlsx` est téléchargé, cohérent avec les filtres actifs.
+
+### CAT-16 — Bascule « Mes abonnements » ✅
+
+- **Action** : activer `my-apps-filter-toggle-subscribed`.
+- **Résultat attendu** : l'URL porte `subscribersEmail=true` ; la liste se restreint aux applications
+  auxquelles l'utilisateur est abonné.
+
+### CAT-17 — Colonnes avancées (MOA / MOE / Plateforme / Fournisseur) ✅
+
+- **Datafeature** : utilisateur disposant du droit `ColumnRead` (Lecteur ou plus).
+- **Action** : ouvrir `customize-columns-button`, cocher les colonnes MOA, MOE, Plateforme et
+  Fournisseur, fermer la boîte.
+- **Résultat attendu** : les quatre colonnes sont proposées dans la personnalisation et leurs en-têtes
+  apparaissent dans le tableau.
