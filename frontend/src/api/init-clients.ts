@@ -38,7 +38,7 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
       if (!isReauthenticating) {
         isReauthenticating = true;
         try {
-          await USER_MANAGER.signinRedirect();
+          await USER_MANAGER.signoutRedirect();
         } catch {
           isReauthenticating = false;
         }
