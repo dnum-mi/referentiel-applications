@@ -15,8 +15,10 @@ export class SearchPage extends BasePage {
   private totalCounter = () => this.byTestId("sidebar-total-count");
   private resetButton = () => this.byTestId("sidebar-reset-filters-button");
   private myAppsToggle = () => this.byTestId("my-apps-filter-toggle");
+  // La recherche texte se fait via la barre full-text en haut de la page (param `q`),
+  // qui a remplacé l'ancien champ « Nom de l'application » du sidebar.
   private searchInput = () =>
-    this.sidebar().getByTestId("application-filter-label");
+    this.byTestId("application-fulltext-search-wrapper").locator("input");
 
   // --- Navigation ---
   async open(): Promise<void> {
@@ -72,16 +74,14 @@ export class SearchPage extends BasePage {
 
   // --- Actions de filtrage ---
   async searchByLabel(value: string): Promise<void> {
-    await this.openAccordion("sidebar-accordion-general", this.searchInput());
-    await this.searchInput().fill(value);
-    await expect(this.searchInput()).toHaveValue(value);
+    const input = this.searchInput();
+    await expect(input).toBeVisible();
+    await input.fill(value);
+    await expect(input).toHaveValue(value);
   }
 
   async expectSearchApplied(value: string): Promise<void> {
-    await waitForSearchParams(
-      this.page,
-      (params) => params.get("search") === value,
-    );
+    await waitForSearchParams(this.page, (params) => params.get("q") === value);
   }
 
   async resetFilters(): Promise<void> {
