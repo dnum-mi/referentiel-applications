@@ -240,6 +240,19 @@ function main() {
 
 main()
   .then(async () => {
+    // Les applications sont insérées directement via Prisma (sans passer par le
+    // hook applicatif), donc on rafraîchit explicitement l'index full-text pour
+    // que la recherche reflète les données seedées.
+    try {
+      await prisma.$executeRawUnsafe(
+        "REFRESH MATERIALIZED VIEW application_search_index",
+      );
+    } catch (error) {
+      console.warn(
+        "Impossible de rafraîchir application_search_index (migration non appliquée ?)",
+        error,
+      );
+    }
     await prisma.$disconnect();
   })
   .catch(async (e) => {
