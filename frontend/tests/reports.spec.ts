@@ -96,7 +96,7 @@ test.describe("Reports flow", () => {
     await createGlobalReport(page, "RI03-global-report");
   });
 
-  test("RI-04 — Ré-authentifie l'utilisateur quand la session est invalide (401)", async ({ page }) => {
+  test("RI-04 — Déconnecte l'utilisateur quand la session est invalide (401)", async ({ page }) => {
     await openSearchAndOpenGlobalReportModal(page);
     const description = uniqueText("RI04-global-report-401");
 
@@ -119,23 +119,10 @@ test.describe("Reports flow", () => {
     const failedCreate = await submitGlobalReport(page, description);
     expect(failedCreate.status()).toBe(401);
 
-    // Le 401 déclenche une ré-authentification : l'app repasse par OIDC (la session
-    // SSO Keycloak étant encore vivante, le retour est transparent) et récupère un
-    // token valide. On vérifie ce renouvellement plutôt que l'URL Keycloak, qui
-    // n'est que transitoire.
-    await page.waitForFunction(
-      () => {
-        for (const storage of [localStorage, sessionStorage]) {
-          for (const key of Object.keys(storage)) {
-            if (!key.startsWith("oidc.user:")) continue;
-            const raw = storage.getItem(key);
-            if (raw && (JSON.parse(raw) as { access_token?: string }).access_token) return true;
-          }
-        }
-        return false;
-      },
-      { timeout: 15000 },
-    );
+    // Le 401 déclenche une déconnexion (signoutRedirect) : l'app repasse par Keycloak
+    // (transitoire) puis revient sur l'accueil, désormais déconnectée.
+    await page.waitForURL(`${BASE_URL}/`, { timeout: 15000 });
+    await expect(page.getByRole("banner").getByRole("link", { name: /Se connecter|Sign in/i })).toBeVisible();
   });
 
   test("RI-05 — Signaler depuis une fiche application", async ({ page }) => {
