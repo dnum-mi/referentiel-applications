@@ -46,6 +46,27 @@ const DOMAINS = [
     template: "qa-signalements-abonnements.md",
     colorLabel: "qa:signalements",
   },
+  {
+    domain: "conformites",
+    prefix: "CMP",
+    label: "Conformités (éco-conception & homologation)",
+    template: "qa-conformites.md",
+    colorLabel: "qa:conformites",
+  },
+  {
+    domain: "scope-acteurs",
+    prefix: "SCP",
+    label: "Périmètres admin & groupes d'acteurs",
+    template: "qa-scope-acteurs.md",
+    colorLabel: "qa:scope-acteurs",
+  },
+  {
+    domain: "maia",
+    prefix: "MAI",
+    label: "Intégration MAIA",
+    template: "qa-maia.md",
+    colorLabel: "qa:maia",
+  },
 ];
 
 function required(key) {

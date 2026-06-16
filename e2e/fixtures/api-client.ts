@@ -88,6 +88,11 @@ export class ApiClient {
     return this.get<{ id: string; email: string }>(`/users/me`);
   }
 
+  /** Profil complet de l'utilisateur courant (inclut `organization`). */
+  meRaw(): Promise<Record<string, unknown> | null> {
+    return this.get<Record<string, unknown>>(`/users/me`);
+  }
+
   // --- Écriture (provisioning pour les tests de permissions) ---
 
   private async patch<T>(path: string, body: unknown): Promise<T | null> {
@@ -111,10 +116,15 @@ export class ApiClient {
     return page?.results?.find((u) => u.email === email) ?? null;
   }
 
-  /** Met à jour le rôle et/ou les permissions additionnelles d'un utilisateur. */
+  /** Met à jour le rôle, les permissions, l'organisation et/ou le périmètre d'un utilisateur. */
   setUser(
     id: string,
-    body: { role?: string; additionalPermissions?: string[] },
+    body: {
+      role?: string;
+      additionalPermissions?: string[];
+      organizationId?: string | null;
+      scopeOrganizationId?: string | null;
+    },
   ): Promise<UserAdmin | null> {
     return this.patch<UserAdmin>(`/users/${id}`, body);
   }
@@ -165,6 +175,21 @@ export class ApiClient {
   triggerDigest(day: "today" | "yesterday" = "today"): Promise<unknown> {
     return this.post(`/email/digest?day=${day}`);
   }
+
+  // --- Conformités (provisioning éco-index / homologation, requiert ComplianceWrite) ---
+  compliance(appId: string): Promise<ComplianceShape | null> {
+    return this.get<ComplianceShape>(`/applications/${appId}/compliances`);
+  }
+
+  setCompliance(
+    appId: string,
+    body: Partial<ComplianceShape>,
+  ): Promise<ComplianceShape | null> {
+    return this.patch<ComplianceShape>(
+      `/applications/${appId}/compliances`,
+      body,
+    );
+  }
 }
 
 export interface UserAdmin {
@@ -172,4 +197,12 @@ export interface UserAdmin {
   email: string;
   role: string;
   additionalPermissions: string[];
+}
+
+/** Champs de conformité utiles aux tests (sous-ensemble du DTO backend). */
+export interface ComplianceShape {
+  id: string;
+  homologation_status: string | null;
+  eco_index_target_url: string | null;
+  eco_index_score: number | null;
 }

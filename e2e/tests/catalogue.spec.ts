@@ -122,7 +122,7 @@ test.describe("Catalogue & recherche", () => {
 
     const search = new SearchPage(page);
     await search.open();
-    await search.toggleMyApps();
+    await search.toggleMyAppsAndExpectApplied();
     await search.expectResultsVisible();
   });
 
@@ -249,5 +249,41 @@ test.describe("Catalogue & recherche", () => {
     await search.open();
     const download = await search.exportExcel();
     expect(download.suggestedFilename()).toMatch(/\.(xlsx|xls)$/i);
+  });
+
+  test("CAT-16 - bascule « Mes abonnements »", async ({ page, data }) => {
+    test.skip(
+      !(await data.firstApplication()),
+      "Aucune application dans le jeu de données",
+    );
+
+    const search = new SearchPage(page);
+    await search.open();
+    await search.toggleSubscribedAppsAndExpectApplied();
+    await search.expectResultsVisible();
+  });
+
+  test("CAT-17 - colonnes avancées (MOA/MOE/Plateforme/Fournisseur)", async ({
+    page,
+    data,
+  }) => {
+    test.skip(
+      !(await data.firstApplication()),
+      "Aucune application dans le jeu de données",
+    );
+
+    const search = new SearchPage(page);
+    await search.open();
+    await search.openColumnCustomization();
+
+    for (const label of ["MOA", "MOE", "Plateforme", "Fournisseur"]) {
+      await search.expectColumnOptionAvailable(label);
+      await search.enableColumn(label);
+    }
+    await search.closeColumnCustomization();
+
+    for (const header of ["MOA", "MOE", "Plateforme", "Fournisseur"]) {
+      await search.expectColumnVisible(header);
+    }
   });
 });

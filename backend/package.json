@@ -24,6 +24,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "db:seed": "prisma db seed",
+    "db:seed:qa": "ts-node -r tsconfig-paths/register prisma/seed-qa.ts",
     "migrate:hosting": "ts-node src/scripts/migrate-hostings.ts"
   },
   "prisma": {

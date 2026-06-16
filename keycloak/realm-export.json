@@ -128,9 +128,7 @@
       ],
       "authorizationServicesEnabled": false,
       "serviceAccountsEnabled": true,
-      "webOrigins": [
-        "+"
-      ],
+      "webOrigins": ["+"],
       "directAccessGrantsEnabled": true
     }
   ],
@@ -155,20 +153,11 @@
       "createdTimestamp": 1728673413023,
       "totp": false,
       "serviceAccountClientId": "referentiel-applications",
-      "realmRoles": [
-        "default-roles-referentiel-applications"
-      ],
+      "realmRoles": ["default-roles-referentiel-applications"],
       "clientRoles": {
-        "realm-management": [
-          "impersonation",
-          "create-client"
-        ],
-        "referentiel-applications": [
-          "USER"
-        ],
-        "broker": [
-          "read-token"
-        ],
+        "realm-management": ["impersonation", "create-client"],
+        "referentiel-applications": ["USER"],
+        "broker": ["read-token"],
         "account": [
           "view-groups",
           "manage-account",
@@ -191,13 +180,9 @@
       "enabled": true,
       "createdTimestamp": 1728673414000,
       "totp": false,
-      "realmRoles": [
-        "user"
-      ],
+      "realmRoles": ["user"],
       "clientRoles": {
-        "referentiel-applications": [
-          "USER"
-        ]
+        "referentiel-applications": ["USER"]
       },
       "credentials": [
         {
@@ -206,9 +191,7 @@
           "temporary": false
         }
       ],
-      "groups": [
-        "/admin"
-      ]
+      "groups": ["/admin"]
     },
     {
       "id": "f15d1c13-8198-4ca5-a180-94656e20d567",
@@ -220,13 +203,9 @@
       "enabled": true,
       "createdTimestamp": 1728673414000,
       "totp": false,
-      "realmRoles": [
-        "user"
-      ],
+      "realmRoles": ["user"],
       "clientRoles": {
-        "referentiel-applications": [
-          "USER"
-        ]
+        "referentiel-applications": ["USER"]
       },
       "credentials": [
         {
@@ -246,13 +225,75 @@
       "enabled": true,
       "createdTimestamp": 1728673414000,
       "totp": false,
-      "realmRoles": [
-        "user"
-      ],
+      "realmRoles": ["user"],
       "clientRoles": {
-        "referentiel-applications": [
-          "USER"
-        ]
+        "referentiel-applications": ["USER"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "f15d1c13-8198-4ca5-a180-94656e20d570",
+      "username": "scope-admin",
+      "email": "scope-admin@example.com",
+      "firstName": "Sandra",
+      "lastName": "Cope",
+      "emailVerified": true,
+      "enabled": true,
+      "createdTimestamp": 1728673414000,
+      "totp": false,
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "referentiel-applications": ["USER"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "f15d1c13-8198-4ca5-a180-94656e20d571",
+      "username": "member-toto-tutu",
+      "email": "member-toto-tutu@example.com",
+      "firstName": "Tom",
+      "lastName": "Tutu",
+      "emailVerified": true,
+      "enabled": true,
+      "createdTimestamp": 1728673414000,
+      "totp": false,
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "referentiel-applications": ["USER"]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "f15d1c13-8198-4ca5-a180-94656e20d572",
+      "username": "member-toto",
+      "email": "member-toto@example.com",
+      "firstName": "Théo",
+      "lastName": "Toto",
+      "emailVerified": true,
+      "enabled": true,
+      "createdTimestamp": 1728673414000,
+      "totp": false,
+      "realmRoles": ["user"],
+      "clientRoles": {
+        "referentiel-applications": ["USER"]
       },
       "credentials": [
         {

@@ -15,6 +15,11 @@ export class SearchPage extends BasePage {
   private totalCounter = () => this.byTestId("sidebar-total-count");
   private resetButton = () => this.byTestId("sidebar-reset-filters-button");
   private myAppsToggle = () => this.byTestId("my-apps-filter-toggle");
+  private subscribedToggle = () =>
+    this.byTestId("my-apps-filter-toggle-subscribed");
+  private customizeColumnsButton = () =>
+    this.byTestId("customize-columns-button");
+  private columnsDialog = () => this.byTestId("customize-columns-dialog");
   // La recherche texte se fait via la barre full-text en haut de la page (param `q`),
   // qui a remplacé l'ancien champ « Nom de l'application » du sidebar.
   private searchInput = () =>
@@ -93,6 +98,64 @@ export class SearchPage extends BasePage {
   async toggleMyApps(): Promise<void> {
     await expect(this.myAppsToggle()).toBeVisible();
     await this.myAppsToggle().click();
+  }
+
+  /** Active le filtre « Mes applications » et vérifie sa propagation dans l'URL (CAT-10). */
+  async toggleMyAppsAndExpectApplied(): Promise<void> {
+    await expect(this.myAppsToggle()).toBeVisible();
+    await this.myAppsToggle().click();
+    await waitForSearchParams(
+      this.page,
+      (params) => params.get("myApplications") === "true",
+    );
+  }
+
+  /** Active le filtre « Mes abonnements » et vérifie sa propagation dans l'URL (CAT-16). */
+  async toggleSubscribedAppsAndExpectApplied(): Promise<void> {
+    await expect(this.subscribedToggle()).toBeVisible();
+    await this.subscribedToggle().click();
+    await waitForSearchParams(
+      this.page,
+      (params) => params.get("subscribersEmail") === "true",
+    );
+  }
+
+  // --- Personnalisation des colonnes (CAT-17 : colonnes avancées MOA/MOE/Plateforme/Fournisseur) ---
+  async openColumnCustomization(): Promise<void> {
+    await this.customizeColumnsButton().click();
+    await expect(this.columnsDialog()).toBeVisible();
+  }
+
+  async closeColumnCustomization(): Promise<void> {
+    await this.byTestId("close-dialog-button").click();
+    await expect(this.columnsDialog()).toBeHidden();
+  }
+
+  /** Une colonne est proposée dans la boîte de personnalisation (droit ColumnRead). */
+  async expectColumnOptionAvailable(label: string): Promise<void> {
+    await expect(
+      this.columnsDialog().getByRole("checkbox", { name: label, exact: true }),
+    ).toBeVisible();
+  }
+
+  /** Active une colonne via sa case dans la boîte de personnalisation. */
+  async enableColumn(label: string): Promise<void> {
+    // Case DSFR : l'<input> est masqué et piloté par v-model → on clique le <label> interactif.
+    const box = this.columnsDialog().getByRole("checkbox", {
+      name: label,
+      exact: true,
+    });
+    if (!(await box.isChecked())) {
+      await this.columnsDialog().getByText(label, { exact: true }).click();
+      await expect(box).toBeChecked();
+    }
+  }
+
+  /** L'en-tête de colonne est visible dans le tableau. */
+  async expectColumnVisible(header: string): Promise<void> {
+    await expect(
+      this.page.getByRole("columnheader", { name: header, exact: true }),
+    ).toBeVisible();
   }
 
   // --- Tri ---

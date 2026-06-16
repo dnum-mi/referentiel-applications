@@ -1,4 +1,5 @@
 import { ApiClient } from "./api-client";
+import { dbQuery } from "../support/db";
 
 export interface AppRef {
   id: string;
@@ -17,6 +18,14 @@ export class DataFeature {
   async firstApplication(): Promise<AppRef | null> {
     const page = await this.api.applications("pageSize=1&page=0");
     return page?.results?.[0] ?? null;
+  }
+
+  /** Application dont le libellé correspond exactement (fixtures QA seedées). */
+  async applicationByLabel(label: string): Promise<AppRef | null> {
+    const page = await this.api.applications(
+      `search=${encodeURIComponent(label)}&pageSize=20&page=0`,
+    );
+    return page?.results?.find((a) => a.label === label) ?? null;
   }
 
   /** Une application possédant au moins une relation inter-applications. */
@@ -106,6 +115,34 @@ export class DataFeature {
 
   triggerDigest(day: "today" | "yesterday" = "today") {
     return this.api.triggerDigest(day);
+  }
+
+  // --- Conformités (provisioning déterministe pour CMP-*, avec le token admin) ---
+
+  /** Conformité courante d'une application. */
+  getCompliance(appId: string) {
+    return this.api.compliance(appId);
+  }
+
+  /**
+   * Fixe une URL cible et un score éco-index connus, directement en base.
+   * `eco_index_score` n'est pas inscriptible via l'API (posé uniquement par un scan HTTP réel) → on
+   * établit l'état de départ par SQL.
+   */
+  async setEcoIndex(appId: string, url: string, score: number): Promise<void> {
+    await dbQuery(
+      `UPDATE "Compliance"
+         SET eco_index_target_url = $1,
+             eco_index_score = $2,
+             eco_index_last_calculated_at = NOW()
+       WHERE "applicationId" = $3`,
+      [url, score, appId],
+    );
+  }
+
+  /** Affecte un statut d'homologation. */
+  async setHomologationStatus(appId: string, status: string): Promise<void> {
+    await this.api.setCompliance(appId, { homologation_status: status });
   }
 }
 
