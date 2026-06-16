@@ -232,9 +232,13 @@ export class SearchPage extends BasePage {
 
   // --- Filtres additionnels ---
   async filterByStatus(status: string): Promise<void> {
-    const checkbox = this.byTestId(`status-option-${status}`);
-    await this.openAccordion("sidebar-accordion-status", checkbox);
-    await checkbox.check();
+    // Les options de statut (DsfrCheckboxSet) exposent un `id` sur l'input mais
+    // pas de `data-testid` exploitable : on cible donc l'input par son id et on
+    // clique le label associé (cohérent avec la suite frontend).
+    const checkbox = this.page.locator(`#status-option-${status}`);
+    const label = this.page.locator(`label[for="status-option-${status}"]`);
+    await this.openAccordion("sidebar-accordion-status", label);
+    await label.click();
     await expect(checkbox).toBeChecked();
     await waitForSearchParams(this.page, (p) =>
       (p.get("currentStatus__in") ?? "").split(",").includes(status),
