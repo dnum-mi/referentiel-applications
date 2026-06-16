@@ -46,7 +46,8 @@ const selectedOrganizationId = ref(props.modelValue);
 
 // Computed label for the search input with asterisk if required
 const searchLabel = computed(() => {
-  if (props.label) return props.label;
+  const label = props.label?.trim();
+  if (label) return label;
   return props.required ? "Organisation *" : "Organisation";
 });
 
@@ -145,7 +146,13 @@ watchDebounced(searchQuery, searchOrganizations, { debounce: 300 });
     </div>
 
     <div v-if="selectOptions.length > 0" class="fr-mt-1w">
-      <DsfrSelect v-model="selectedOrganizationId" :options="selectOptions" :disabled="isLoading" :label-visible="false" />
+      <DsfrSelect
+        v-model="selectedOrganizationId"
+        :options="selectOptions"
+        :disabled="isLoading"
+        label="Choisir une organisation de votre choix"
+        label-visible
+      />
     </div>
 
     <div v-if="searchQuery && !isLoading && organizations.length > 0" class="fr-mt-1w">

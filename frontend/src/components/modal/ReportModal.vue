@@ -36,8 +36,13 @@ const placeholderMapper = {
   application: "Décrivez le signalement (champ à corriger, erreur constatée, etc.)…",
   global: "Décrivez l’application manquante (nom, URL, entité responsable, contexte)…",
 };
+const labelMapper = {
+  application: "Décrivez le signalement : champ à corriger, erreur constatée, contexte",
+  global: "Décrivez l’application manquante : nom, url, entité responsable, contexte",
+};
 
 const placeholder = computed(() => placeholderMapper[props.context]);
+const fieldLabel = computed(() => labelMapper[props.context]);
 
 async function submitReport() {
   const desc = description.value;
@@ -88,7 +93,15 @@ function closeModal() {
         title="Une erreur est survenue"
         :description="errorMessage"
       />
-      <DsfrInput v-model.trim="description" is-textarea :placeholder="placeholder" required rows="4" data-testid="report-description" />
+      <DsfrInput
+        v-model.trim="description"
+        is-textarea
+        :label="fieldLabel"
+        :placeholder="placeholder"
+        required
+        rows="4"
+        data-testid="report-description"
+      />
 
       <DsfrButton data-testid="report-submit-btn" class="fr-mt-2w" :disabled="isSubmitting" :aria-busy="isSubmitting" @click="submitReport">
         {{ isSubmitting ? "Envoi…" : "Envoyer" }}

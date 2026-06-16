@@ -200,9 +200,10 @@ test.describe("ApplicationsView", () => {
   test("AV-06 - filtres simples reflettes dans URL", async ({ page }) => {
     await gotoSearchPage(page);
 
-    const statusCheckbox = page.getByTestId("status-option-to_validate");
+    const statusCheckbox = page.locator("#status-option-to_validate");
+    const statusLabel = page.locator('label[for="status-option-to_validate"]');
     await openAccordionIfNeeded(page, SIDEBAR_ACC_STATUS, statusCheckbox);
-    await statusCheckbox.check();
+    await statusLabel.click();
     await expect(statusCheckbox).toBeChecked();
     await waitForSearchParams(page, (params) => {
       const statuses = (params.get("currentStatus__in") ?? "").split(",").filter(Boolean);
@@ -218,9 +219,10 @@ test.describe("ApplicationsView", () => {
   test("AV-07 - combine plusieurs filtres dans URL", async ({ page }) => {
     await gotoSearchPage(page);
 
-    const statusCheckbox = page.getByTestId("status-option-to_validate");
+    const statusCheckbox = page.locator("#status-option-to_validate");
+    const statusLabel = page.locator('label[for="status-option-to_validate"]');
     await openAccordionIfNeeded(page, SIDEBAR_ACC_STATUS, statusCheckbox);
-    await statusCheckbox.check();
+    await statusLabel.click();
 
     const organizationInput = getOrganizationInput(page);
     await openAccordionIfNeeded(page, SIDEBAR_ACC_ORGANIZATION, organizationInput);
@@ -239,9 +241,10 @@ test.describe("ApplicationsView", () => {
   test("AV-08 - persiste filtres apres reload et retour navigateur", async ({ page }) => {
     await gotoSearchPage(page);
 
-    const statusCheckbox = page.getByTestId("status-option-to_validate");
+    const statusCheckbox = page.locator("#status-option-to_validate");
+    const statusLabel = page.locator('label[for="status-option-to_validate"]');
     await openAccordionIfNeeded(page, SIDEBAR_ACC_STATUS, statusCheckbox);
-    await statusCheckbox.check();
+    await statusLabel.click();
 
     const searchInput = getSearchInput(page);
     await openAccordionIfNeeded(page, SIDEBAR_ACC_GENERAL, searchInput);
@@ -276,9 +279,10 @@ test.describe("ApplicationsView", () => {
     await openAccordionIfNeeded(page, SIDEBAR_ACC_GENERAL, searchInput);
     await fillSearch(page, "will-reset");
 
-    const statusCheckbox = page.getByTestId("status-option-to_validate");
+    const statusCheckbox = page.locator("#status-option-to_validate");
+    const statusLabel = page.locator('label[for="status-option-to_validate"]');
     await openAccordionIfNeeded(page, SIDEBAR_ACC_STATUS, statusCheckbox);
-    await statusCheckbox.check();
+    await statusLabel.click();
 
     await expect(page.getByTestId(SIDEBAR_RESET)).toBeVisible();
     await page.getByTestId(SIDEBAR_RESET).click();
