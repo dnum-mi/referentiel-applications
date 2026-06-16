@@ -435,11 +435,12 @@ paths:
         - name: q
           required: false
           in: query
-          description: "Recherche full-text sur l'ensemble des informations descriptives
-            de la fiche (libellé, nom court, description, finalités, populations
+          description: Recherche full-text sur l'ensemble des informations descriptives de
+            la fiche (libellé, nom court, description, finalités, populations
             cibles, tags, labels, acteurs). Insensible à la casse et aux
-            accents, avec lemmatisation française et tri par pertinence. Syntaxe
-            avancée : \"expression exacte\", motA OR motB, -motExclu."
+            accents, avec lemmatisation française et tri par pertinence. Tous
+            les mots saisis doivent être présents (ET) ; la ponctuation est
+            ignorée.
           schema:
             example: gestion des factures
             type: string
@@ -930,11 +931,12 @@ paths:
         - name: q
           required: false
           in: query
-          description: "Recherche full-text sur l'ensemble des informations descriptives
-            de la fiche (libellé, nom court, description, finalités, populations
+          description: Recherche full-text sur l'ensemble des informations descriptives de
+            la fiche (libellé, nom court, description, finalités, populations
             cibles, tags, labels, acteurs). Insensible à la casse et aux
-            accents, avec lemmatisation française et tri par pertinence. Syntaxe
-            avancée : \"expression exacte\", motA OR motB, -motExclu."
+            accents, avec lemmatisation française et tri par pertinence. Tous
+            les mots saisis doivent être présents (ET) ; la ponctuation est
+            ignorée.
           schema:
             example: gestion des factures
             type: string
@@ -3913,11 +3915,12 @@ paths:
         - name: q
           required: false
           in: query
-          description: "Recherche full-text sur l'ensemble des informations descriptives
-            de la fiche (libellé, nom court, description, finalités, populations
+          description: Recherche full-text sur l'ensemble des informations descriptives de
+            la fiche (libellé, nom court, description, finalités, populations
             cibles, tags, labels, acteurs). Insensible à la casse et aux
-            accents, avec lemmatisation française et tri par pertinence. Syntaxe
-            avancée : \"expression exacte\", motA OR motB, -motExclu."
+            accents, avec lemmatisation française et tri par pertinence. Tous
+            les mots saisis doivent être présents (ET) ; la ponctuation est
+            ignorée.
           schema:
             example: gestion des factures
             type: string
