@@ -19,8 +19,7 @@ interface ApplicationOption {
 const router = useRouter();
 const userStore = useUserStore();
 const { searchApplications } = useApplicationSearch();
-const searchRef = ref<{ clear?: () => void } | null>(null);
-const inputRef = ref<HTMLInputElement | null>(null);
+const searchRef = ref<{ clear?: () => void; focus?: () => void } | null>(null);
 const isMobile = useMediaQuery("(max-width: 768px)");
 const showInput = ref(!isMobile.value);
 const suggestions = ref<ApplicationOption[]>([]);
@@ -31,7 +30,7 @@ const canSeeMDIT = computed(() => userStore.hasPermissions([Permission.MDIT_LIST
 async function onLoupeClick() {
   showInput.value = true;
   await nextTick();
-  inputRef.value?.focus();
+  searchRef.value?.focus?.();
 }
 
 function closeSearch() {
@@ -49,7 +48,7 @@ async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[
 }
 
 const debouncedSearch = useDebounceFn(async (resolve: (res: ApplicationOption[]) => void) => {
-  const response = await searchApplications({ search: trimmedQuery.value, page: 0, pageSize: 8 }, false);
+  const response = await searchApplications({ qPrefix: trimmedQuery.value, page: 0, pageSize: 8 }, false);
 
   suggestions.value = (response?.results ?? []).map((app): ApplicationOption => {
     const td = app.technicalDebtInfo;
@@ -83,7 +82,7 @@ function onConfirm(selection: ApplicationOption | null) {
     <label class="fr-sr-only" for="app-search">Recherche d’une application</label>
 
     <DsfrButton
-      v-show="isMobile"
+      v-show="isMobile && !showInput"
       @click="onLoupeClick"
       tertiary
       class="loupe-button"
@@ -93,30 +92,44 @@ function onConfirm(selection: ApplicationOption | null) {
       <v-icon name="ri-search-line" />
     </DsfrButton>
 
-    <AccessibleAutocomplete
-      v-if="!isMobile"
-      ref="searchRef"
-      id="app-search"
-      title="Rechercher une application"
-      list-label="Applications proposées"
-      :search="fetchSuggestions"
-      :display-label="displayLabel"
-      :on-change="onConfirm"
-      :display-no-result="true"
-      placeholder="Rechercher une application…"
-      :input-ref="inputRef"
-    >
-      <template #suggestion="{ item }">
-        <div class="suggestion">
-          <strong>{{ item.label }}</strong>
-          <template v-if="item.shortName || item.organization">
-            <small v-if="item.shortName"> ({{ item.shortName }})</small>
-            <em v-if="item.organization"> — {{ item.organization }}</em>
+    <!-- Desktop : champ inline ; Mobile : overlay plein écran ouvert via la loupe. -->
+    <div v-if="!isMobile || showInput" :class="['search-field', { 'mobile-search-overlay': isMobile && showInput }]">
+      <div :class="{ 'overlay-header': isMobile && showInput }">
+        <AccessibleAutocomplete
+          ref="searchRef"
+          id="app-search"
+          title="Rechercher une application"
+          list-label="Applications proposées"
+          :search="fetchSuggestions"
+          :display-label="displayLabel"
+          :on-change="onConfirm"
+          :display-no-result="true"
+          placeholder="Rechercher une application…"
+        >
+          <template #suggestion="{ item }">
+            <div class="suggestion">
+              <strong>{{ item.label }}</strong>
+              <template v-if="item.shortName || item.organization">
+                <small v-if="item.shortName"> ({{ item.shortName }})</small>
+                <em v-if="item.organization"> — {{ item.organization }}</em>
+              </template>
+              <span v-if="item.timeQuadrant" class="suggestion__time-badge">{{ item.timeQuadrant }}</span>
+            </div>
           </template>
-          <span v-if="item.timeQuadrant" class="suggestion__time-badge">{{ item.timeQuadrant }}</span>
-        </div>
-      </template>
-    </AccessibleAutocomplete>
+        </AccessibleAutocomplete>
+
+        <DsfrButton
+          v-if="isMobile && showInput"
+          @click="closeSearch"
+          tertiary
+          class="close-overlay"
+          aria-label="Fermer la recherche"
+          data-testid="close-search-btn"
+        >
+          <v-icon name="ri-close-line" />
+        </DsfrButton>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -127,6 +140,26 @@ function onConfirm(selection: ApplicationOption | null) {
   justify-content: flex-end;
   margin: 1em;
   align-items: center;
+}
+
+/* Largeur du champ d'autocomplétion : assez large pour ne pas tronquer le
+   placeholder, responsive, sans toucher au composant partagé AccessibleAutocomplete. */
+.search-header :deep(.autocomplete) {
+  width: clamp(20rem, 30vw, 28rem);
+}
+
+/* Dans l'overlay de recherche mobile, le champ occupe toute la largeur
+   disponible (surcharge la largeur fixe desktop ci-dessus). */
+.search-header .overlay-header {
+  width: 100%;
+  gap: 0.5rem;
+}
+.search-header .overlay-header :deep(.autocomplete) {
+  flex: 1;
+  width: auto;
+}
+.close-overlay {
+  flex-shrink: 0;
 }
 
 .loupe-button {

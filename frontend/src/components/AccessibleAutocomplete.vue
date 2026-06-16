@@ -90,7 +90,11 @@ function clear() {
   highlightedIndex.value = -1;
   showList.value = false;
 }
-defineExpose({ clear });
+
+function focus() {
+  inputEl.value?.focus();
+}
+defineExpose({ clear, focus });
 
 const hasResults = computed(() => results.value.length > 0);
 
