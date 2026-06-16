@@ -96,10 +96,11 @@ test.describe("Reports flow", () => {
     await createGlobalReport(page, "RI03-global-report");
   });
 
-  test("RI-04 — Afficher une erreur si la création échoue", async ({ page }) => {
+  test("RI-04 — Déconnecte l'utilisateur quand la session est invalide (401)", async ({ page }) => {
     await openSearchAndOpenGlobalReportModal(page);
-    const description = uniqueText("RI04-global-report-failed");
+    const description = uniqueText("RI04-global-report-401");
 
+    // Corrompt le token OIDC stocké → le prochain appel API renverra 401.
     await page.evaluate(() => {
       const stores = [localStorage, sessionStorage];
       for (const storage of stores) {
@@ -116,9 +117,12 @@ test.describe("Reports flow", () => {
     });
 
     const failedCreate = await submitGlobalReport(page, description);
-    expect(failedCreate.status()).toBeGreaterThanOrEqual(400);
+    expect(failedCreate.status()).toBe(401);
 
-    await expect(page.getByTestId("app-toaster")).toContainText("Une erreur est survenue lors de l'envoi du signalement");
+    // Le 401 déclenche une déconnexion (signoutRedirect) : l'app repasse par Keycloak
+    // (transitoire) puis revient sur l'accueil, désormais déconnectée.
+    await page.waitForURL(`${BASE_URL}/`, { timeout: 15000 });
+    await expect(page.getByRole("banner").getByRole("link", { name: /Se connecter|Sign in/i })).toBeVisible();
   });
 
   test("RI-05 — Signaler depuis une fiche application", async ({ page }) => {
