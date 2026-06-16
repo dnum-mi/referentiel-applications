@@ -33,13 +33,22 @@ const MATOMO_SITE_ID = isProd
 
 app.use(createPinia());
 app.use(router);
-app.use(VueMatomo, {
-  host: MATOMO_URL,
-  siteId: MATOMO_SITE_ID,
-  router,
-  enableLinkTracking: true,
-  enableHeartBeatTimer: true,
-});
+
+// N'active Matomo que s'il est réellement configuré : en production, ou en
+// développement quand on l'a explicitement demandé via VITE_ENABLE_MATOMO.
+// Évite l'erreur réseau « matomo.js ERR_CONNECTION_REFUSED » quand le service
+// Matomo local (docker-compose.matomo.yml) n'est pas démarré.
+const matomoEnabled = Boolean(MATOMO_URL) && Number.isFinite(MATOMO_SITE_ID) && (isProd || import.meta.env.VITE_ENABLE_MATOMO === "true");
+
+if (matomoEnabled) {
+  app.use(VueMatomo, {
+    host: MATOMO_URL,
+    siteId: MATOMO_SITE_ID,
+    router,
+    enableLinkTracking: true,
+    enableHeartBeatTimer: true,
+  });
+}
 app.use(PrimeVue, {
   theme: {
     preset: Aura,
