@@ -186,7 +186,7 @@ test.describe("Catalogue & recherche", () => {
     await search.filterByOrganization("Minist");
     await search.searchByLabel("combo");
     await search.expectSearchApplied("combo");
-    search.expectParamsPresent("currentStatus__in", "organization", "q");
+    search.expectParamsPresent("currentStatus__in", "organization", "search");
   });
 
   test("CAT-11 - vue tableau (desktop) / cartes (mobile)", async ({

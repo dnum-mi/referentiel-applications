@@ -8,6 +8,7 @@ const SIDEBAR_ACC_GENERAL = "sidebar-accordion-general";
 const SIDEBAR_ACC_STATUS = "sidebar-accordion-status";
 const SIDEBAR_ACC_ORGANIZATION = "sidebar-accordion-organization";
 const SIDEBAR_ACC_HOSTING = "sidebar-accordion-hosting";
+const FILTER_SEARCH = "application-filter-label";
 const FILTER_ORGANIZATION = "organization-filter-input";
 const FILTER_HOSTING_SITE = "hosting-site-select";
 
@@ -16,9 +17,7 @@ async function getSidebarTotal(page: Page): Promise<number> {
 }
 
 function getSearchInput(page: Page) {
-  // La recherche texte se fait via la barre full-text en haut de la page (param `q`),
-  // qui a remplacé l'ancien champ « Nom de l'application » du sidebar.
-  return page.getByTestId("application-fulltext-search-wrapper").locator("input");
+  return getSidebar(page).getByTestId(FILTER_SEARCH);
 }
 
 function getOrganizationInput(page: Page) {
@@ -175,7 +174,7 @@ test.describe("ApplicationsView", () => {
 
     await fillSearch(page, firstAppLabel);
 
-    await waitForSearchParams(page, (params) => params.get("q") === firstAppLabel);
+    await waitForSearchParams(page, (params) => params.get("search") === firstAppLabel);
     await expect.poll(() => getSidebarTotal(page), { timeout: 15000 }).toBeLessThan(initialTotal);
     await expect.poll(() => getSidebarTotal(page), { timeout: 15000 }).toBeGreaterThan(0);
     expect(initialTotal).toBeGreaterThan(0);
@@ -195,7 +194,7 @@ test.describe("ApplicationsView", () => {
     await openAccordionIfNeeded(page, SIDEBAR_ACC_GENERAL, searchInput);
 
     await expect(searchInput).toHaveValue(value);
-    expect(new URL(page.url()).searchParams.get("q")).toBe(value);
+    expect(new URL(page.url()).searchParams.get("search")).toBe(value);
   });
 
   test("AV-06 - filtres simples reflettes dans URL", async ({ page }) => {
@@ -253,7 +252,7 @@ test.describe("ApplicationsView", () => {
 
     await waitForSearchParams(page, (params) => {
       const statuses = (params.get("currentStatus__in") ?? "").split(",").filter(Boolean);
-      return statuses.includes("to_validate") && params.get("q") === "av08-persist";
+      return statuses.includes("to_validate") && params.get("search") === "av08-persist";
     });
 
     await page.reload();
@@ -266,7 +265,7 @@ test.describe("ApplicationsView", () => {
     await expect(page.getByTestId(APPLICATION_SEARCH_TITLE_TEST_ID)).toBeVisible();
 
     const params = new URL(page.url()).searchParams;
-    expect(params.get("q")).toBe("av08-persist");
+    expect(params.get("search")).toBe("av08-persist");
     expect((params.get("currentStatus__in") ?? "").split(",")).toContain("to_validate");
   });
 

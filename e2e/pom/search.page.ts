@@ -20,10 +20,8 @@ export class SearchPage extends BasePage {
   private customizeColumnsButton = () =>
     this.byTestId("customize-columns-button");
   private columnsDialog = () => this.byTestId("customize-columns-dialog");
-  // La recherche texte se fait via la barre full-text en haut de la page (param `q`),
-  // qui a remplacé l'ancien champ « Nom de l'application » du sidebar.
   private searchInput = () =>
-    this.byTestId("application-fulltext-search-wrapper").locator("input");
+    this.sidebar().getByTestId("application-filter-label");
 
   // --- Navigation ---
   async open(): Promise<void> {
@@ -79,14 +77,16 @@ export class SearchPage extends BasePage {
 
   // --- Actions de filtrage ---
   async searchByLabel(value: string): Promise<void> {
-    const input = this.searchInput();
-    await expect(input).toBeVisible();
-    await input.fill(value);
-    await expect(input).toHaveValue(value);
+    await this.openAccordion("sidebar-accordion-general", this.searchInput());
+    await this.searchInput().fill(value);
+    await expect(this.searchInput()).toHaveValue(value);
   }
 
   async expectSearchApplied(value: string): Promise<void> {
-    await waitForSearchParams(this.page, (params) => params.get("q") === value);
+    await waitForSearchParams(
+      this.page,
+      (params) => params.get("search") === value,
+    );
   }
 
   async resetFilters(): Promise<void> {

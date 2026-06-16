@@ -3,7 +3,6 @@ import AppLoader from "@/components/AppLoader.vue";
 import ApplicationCardView from "@/components/ApplicationCardView.vue";
 import ApplicationSearchActions from "@/components/ApplicationSearchActions.vue";
 import ApplicationTableView from "@/components/ApplicationTableView.vue";
-import ApplicationFullTextSearch from "@/components/search/ApplicationFullTextSearch.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useStatisticsStore } from "@/stores/statisticsStore";
@@ -35,8 +34,6 @@ const averageIqDisplay = computed(() => {
 
     <main class="main-content" id="main-content" data-testid="main-content" role="main">
       <h1 class="fr-h1" data-testid="application-search-title">Recherche d'applications</h1>
-
-      <ApplicationFullTextSearch />
 
       <div v-if="isLoading" class="loader" data-testid="application-loader" role="status" aria-live="polite" aria-atomic="true">
         <AppLoader />
