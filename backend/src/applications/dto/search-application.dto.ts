@@ -53,7 +53,7 @@ export class ApplicationSearchDto extends PaginationDto {
       "Recherche full-text sur l'ensemble des informations descriptives de la fiche " +
       "(libellé, nom court, description, finalités, populations cibles, tags, labels, acteurs). " +
       "Insensible à la casse et aux accents, avec lemmatisation française et tri par pertinence. " +
-      'Syntaxe avancée : "expression exacte", motA OR motB, -motExclu.',
+      "Tous les mots saisis doivent être présents (ET) ; la ponctuation est ignorée.",
     example: "gestion des factures",
     required: false,
   })

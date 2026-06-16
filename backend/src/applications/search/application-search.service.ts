@@ -37,11 +37,10 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
    * à la requête, ordonnés par pertinence décroissante (`ts_rank`).
    *
    * Le texte est dé-accentué (`immutable_unaccent`) puis interprété via
-   * `websearch_to_tsquery`, qui offre une syntaxe « grand public » :
-   *   - `"expression exacte"` entre guillemets,
-   *   - `motA OR motB`,
-   *   - `-motExclu` pour exclure un terme.
-   * Une chaîne vide renvoie une liste vide (aucun filtrage).
+   * `plainto_tsquery` : tous les mots saisis doivent être présents (ET), la
+   * ponctuation est ignorée. On évite ainsi `websearch_to_tsquery`, dont les
+   * opérateurs interprètent un `-` dans les données (ex. « Altenwerth - Goodwin »)
+   * comme une exclusion. Une chaîne vide renvoie une liste vide (aucun filtrage).
    */
   public async fullTextSearch(query: string): Promise<RankedApplication[]> {
     const trimmed = query?.trim();
@@ -53,7 +52,7 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
       SELECT asi."applicationId",
              ts_rank(asi.document, q.query)::float8 AS rank
       FROM application_search_index asi,
-           websearch_to_tsquery('french', immutable_unaccent(${trimmed})) AS q(query)
+           plainto_tsquery('french', immutable_unaccent(${trimmed})) AS q(query)
       WHERE asi.document @@ q.query
       ORDER BY rank DESC
     `;
