@@ -23,34 +23,29 @@ const requestInterceptor: ReqInterceptor = async (req) => {
 type ResInterceptor = Parameters<typeof client.interceptors.response.use>[0];
 export function configureClients(toaster: { addErrorMessage: (message: string) => void }) {
   const responseInterceptor: ResInterceptor = async (response) => {
-    const status = response.status;
-    console.log({ status });
+    if (response.ok) {
+      return response;
+    }
 
-    // 401 → relance du login
-    if (status === 401) {
-      console.log("User is unauthorized");
-      const user = await USER_MANAGER.getUser();
-      if (!user) {
-        USER_MANAGER.signinRedirect();
-      }
-      return Promise.reject(new Error("Unauthorized"));
+    // 401 → session invalide : on redirige vers /oidc/logout pour déconnecter l'utilisateur
+    if (response.status === 401) {
+      await USER_MANAGER.signoutRedirect();
+      return response;
     }
 
     // 403 → message d’erreur
-    if (status === 403) {
+    if (response.status === 403) {
       toaster.addErrorMessage("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
-      return Promise.reject(new Error("Forbidden"));
+      return response;
     }
 
     // 404 → redirection vers NotFound
-    if (status === 404) {
+    if (response.status === 404) {
       router.replace({ name: routeNames.NOTFOUND });
-      // on rejette quand même pour que d'éventuels catch côté composant ne continuent pas de tourner
-      return Promise.reject(new Error("Not Found"));
+      return response;
     }
 
-    // autres erreurs
-    return Promise.reject(new Error("Unknown Error"));
+    return response;
   };
 
   // Configurer le nouveau client axios
@@ -73,5 +68,4 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
   });
 
   client.interceptors.response.use(responseInterceptor);
-  client.interceptors.response.eject(responseInterceptor);
 }
