@@ -81,6 +81,13 @@ const DOMAINS = [
     template: "qa-historique.md",
     colorLabel: "qa:historique",
   },
+  {
+    domain: "catalogue-filtres",
+    prefix: "CSF",
+    label: "Catalogue — filtres avancés",
+    template: "qa-catalogue-filtres.md",
+    colorLabel: "qa:catalogue-filtres",
+  },
 ];
 
 function required(key) {
