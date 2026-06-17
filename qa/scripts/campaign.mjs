@@ -67,6 +67,20 @@ const DOMAINS = [
     template: "qa-maia.md",
     colorLabel: "qa:maia",
   },
+  {
+    domain: "qualite-generale",
+    prefix: "QAL",
+    label: "Qualité générale",
+    template: "qa-qualite-generale.md",
+    colorLabel: "qa:qualite",
+  },
+  {
+    domain: "historique",
+    prefix: "HIS",
+    label: "Historique des modifications",
+    template: "qa-historique.md",
+    colorLabel: "qa:historique",
+  },
 ];
 
 function required(key) {

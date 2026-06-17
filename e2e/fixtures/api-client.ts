@@ -84,6 +84,13 @@ export class ApiClient {
     );
   }
 
+  /** Historique global des modifications (metadatas). */
+  metadatas(query = ""): Promise<Paginated<{ id: string }> | null> {
+    return this.get<Paginated<{ id: string }>>(
+      `/metadatas${query ? `?${query}` : ""}`,
+    );
+  }
+
   me(): Promise<{ id: string; email: string } | null> {
     return this.get<{ id: string; email: string }>(`/users/me`);
   }

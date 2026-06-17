@@ -5,3 +5,5 @@ export { ApplicationPage, type AppTab } from "./application.page";
 export { AdminPage } from "./admin.page";
 export { ReportsPage } from "./reports.page";
 export { UserProfilePage } from "./user-profile.page";
+export { QualityPage } from "./quality.page";
+export { HistoryPage, MetadataDetailPage } from "./history.page";

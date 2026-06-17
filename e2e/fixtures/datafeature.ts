@@ -54,6 +54,12 @@ export class DataFeature {
     return page?.results?.[0] ?? null;
   }
 
+  /** Une entrée de l'historique global des modifications (metadata), ou `null` si le journal est vide. */
+  async anyMetadata(): Promise<{ id: string } | null> {
+    const page = await this.api.metadatas("pageSize=1&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
   /** Profil de l'utilisateur connecté. */
   currentUser() {
     return this.api.me();

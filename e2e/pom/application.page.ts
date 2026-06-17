@@ -141,9 +141,20 @@ export class ApplicationPage extends BasePage {
     await this.expectToaster(/prise en compte|proposition/i);
   }
 
-  // --- Onglet Modifications / historique (FIC-14) ---
+  // --- Onglet Modifications / historique (FIC-14, HIS-11) ---
   async expectModificationsTabLoaded(): Promise<void> {
     await expect(this.byTestId("modifications-table")).toBeVisible();
+  }
+
+  /** Nombre de boutons « Voir plus » de l'onglet Modifications (0 si aucune modification). */
+  modificationsSeeMoreCount(): Promise<number> {
+    return this.byTestId("modifications-see-more-button").count();
+  }
+
+  /** Ouvre le détail de la 1ʳᵉ modification depuis l'onglet et attend la page de détail (HIS-11). */
+  async openFirstModificationDetail(): Promise<void> {
+    await this.byTestId("modifications-see-more-button").first().click();
+    await expect(this.page).toHaveURL(/\/metadatas\//);
   }
 
   // --- Abonnement (bouton sans data-testid → ciblé par nom accessible, encapsulé ici) ---
