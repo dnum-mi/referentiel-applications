@@ -23,12 +23,20 @@ C'est ce pivot qui permet à la CI (`qa-sync.yml`) de cocher automatiquement la 
 résultat du test, et au testeur de savoir d'un coup d'œil ce qui est déjà couvert (colonne
 **Automatisé** des protocoles).
 
-| Préfixe | Domaine                    | Protocole                                                                          |
-| :------ | :------------------------- | :--------------------------------------------------------------------------------- |
-| `CAT-`  | Catalogue & recherche      | [`protocoles/catalogue.md`](protocoles/catalogue.md)                               |
-| `FIC-`  | Fiche application          | [`protocoles/fiche-application.md`](protocoles/fiche-application.md)               |
-| `PRM-`  | Permissions & rôles        | [`protocoles/permissions.md`](protocoles/permissions.md)                           |
-| `SIG-`  | Signalements & abonnements | [`protocoles/signalements-abonnements.md`](protocoles/signalements-abonnements.md) |
+| Préfixe | Domaine                               | Protocole                                                                                |
+| :------ | :------------------------------------ | :--------------------------------------------------------------------------------------- |
+| `CAT-`  | Catalogue & recherche                 | [`protocoles/catalogue.md`](protocoles/catalogue.md)                                     |
+| `FIC-`  | Fiche application                     | [`protocoles/fiche-application.md`](protocoles/fiche-application.md)                     |
+| `PRM-`  | Permissions & rôles                   | [`protocoles/permissions.md`](protocoles/permissions.md)                                 |
+| `SIG-`  | Signalements & abonnements            | [`protocoles/signalements-abonnements.md`](protocoles/signalements-abonnements.md)       |
+| `CMP-`  | Conformités (éco-index, homologation) | [`protocoles/conformites.md`](protocoles/conformites.md)                                 |
+| `SCP-`  | Périmètres admin & groupes d'acteurs  | [`protocoles/scope-acteurs.md`](protocoles/scope-acteurs.md)                             |
+| `MAI-`  | Intégration MAIA                      | [`protocoles/maia.md`](protocoles/maia.md)                                               |
+| `CRU-`  | Actions CRUD de base (fiche)          | [`protocoles/actions-crud.md`](protocoles/actions-crud.md)                               |
+| `ADM-`  | Administration des référentiels       | [`protocoles/administration-referentiels.md`](protocoles/administration-referentiels.md) |
+| `PRF-`  | Profil utilisateur                    | [`protocoles/profil-utilisateur.md`](protocoles/profil-utilisateur.md)                   |
+| `QUA-`  | Qualité générale & tableaux de bord   | [`protocoles/qualite-generale.md`](protocoles/qualite-generale.md)                       |
+| `NAV-`  | Navigation globale & pages statiques  | [`protocoles/navigation-globale.md`](protocoles/navigation-globale.md)                   |
 
 ## Cycle de vie d'une campagne (équivalent QASE « test run »)
 

@@ -67,6 +67,41 @@ const DOMAINS = [
     template: "qa-maia.md",
     colorLabel: "qa:maia",
   },
+  {
+    domain: "actions-crud",
+    prefix: "CRU",
+    label: "Actions CRUD de base",
+    template: "qa-actions-crud.md",
+    colorLabel: "qa:actions-crud",
+  },
+  {
+    domain: "administration-referentiels",
+    prefix: "ADM",
+    label: "Administration des référentiels",
+    template: "qa-administration-referentiels.md",
+    colorLabel: "qa:administration-referentiels",
+  },
+  {
+    domain: "profil-utilisateur",
+    prefix: "PRF",
+    label: "Profil utilisateur",
+    template: "qa-profil-utilisateur.md",
+    colorLabel: "qa:profil-utilisateur",
+  },
+  {
+    domain: "qualite-generale",
+    prefix: "QUA",
+    label: "Qualité générale & tableaux de bord",
+    template: "qa-qualite-generale.md",
+    colorLabel: "qa:qualite-generale",
+  },
+  {
+    domain: "navigation-globale",
+    prefix: "NAV",
+    label: "Navigation globale & pages statiques",
+    template: "qa-navigation-globale.md",
+    colorLabel: "qa:navigation-globale",
+  },
 ];
 
 function required(key) {
