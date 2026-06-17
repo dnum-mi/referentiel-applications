@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Gère le cycle de vie des issues de campagne QA d'une version.
 //
-//   node qa/scripts/campaign.mjs open   → crée (si absentes) les 4 issues [QA][vX.Y.Z] <domaine>
+//   node qa/scripts/campaign.mjs open   → crée (si absentes) une issue [QA][vX.Y.Z] <domaine> par domaine
 //                                          et écrit qa-campaign.json = [{ domain, prefix, issue }]
 //   node qa/scripts/campaign.mjs close  → ferme toutes les issues ouvertes [QA][vX.Y.Z]
 //

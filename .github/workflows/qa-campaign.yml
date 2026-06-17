@@ -1,10 +1,10 @@
 name: QA — Campagne de non-régression (release)
 
 # Cycle de vie automatique, piloté par release-please :
-#  - PR release-please ouverte/mise à jour → ouvre les 4 issues [QA][vX.Y.Z], rejoue toute la
+#  - PR release-please ouverte/mise à jour → ouvre une issue [QA][vX.Y.Z] par domaine, rejoue toute la
 #    non-régression, remplit les issues (cases + screenshots + verdict) et ÉCHOUE si qa:fail
 #    (faire de ce job un « required status check » sur main pour bloquer le merge).
-#  - Tag vX.Y.Z créé (PR release-please mergée) → ferme les 4 issues de la version.
+#  - Tag vX.Y.Z créé (PR release-please mergée) → ferme les issues de la version.
 
 on:
   pull_request:

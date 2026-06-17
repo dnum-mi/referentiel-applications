@@ -91,8 +91,8 @@ pnpm type-check          # tsc --noEmit (vérifie le typage du POM)
 
 Le cycle de campagne est **entièrement automatisé** autour de release-please :
 
-1. **PR release-please ouverte** (version `vX.Y.Z` à venir) → `qa/scripts/campaign.mjs open` crée les
-   4 issues `[QA][vX.Y.Z] <domaine>` (idempotent), la CI monte la stack, rejoue **toute** la
+1. **PR release-please ouverte** (version `vX.Y.Z` à venir) → `qa/scripts/campaign.mjs open` crée une
+   issue `[QA][vX.Y.Z] <domaine>` par domaine (idempotent), la CI monte la stack, rejoue **toute** la
    non-régression, publie les screenshots (branche `qa-screenshots`) et `qa/scripts/sync-issue.mjs`
    **remplit chaque issue** (cases + captures par étape + verdict `qa:pass`/`qa:fail`).
 2. **Gate** : si la non-régression échoue, le job **échoue** → à condition d'avoir ajouté ce check
