@@ -7,3 +7,5 @@ export { ReportsPage } from "./reports.page";
 export { UserProfilePage } from "./user-profile.page";
 export { QualityPage } from "./quality.page";
 export { HistoryPage, MetadataDetailPage } from "./history.page";
+export { HomePage } from "./home.page";
+export { ChromePage } from "./chrome.page";

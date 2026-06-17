@@ -35,6 +35,7 @@ résultat du test, et au testeur de savoir d'un coup d'œil ce qui est déjà co
 | `QAL-`  | Qualité générale                            | [`protocoles/qualite-generale.md`](protocoles/qualite-generale.md)                 |
 | `HIS-`  | Historique des modifications                | [`protocoles/historique.md`](protocoles/historique.md)                             |
 | `CSF-`  | Catalogue — filtres avancés                 | [`protocoles/catalogue-filtres.md`](protocoles/catalogue-filtres.md)               |
+| `ACC-`  | Accueil & chrome                            | [`protocoles/accueil.md`](protocoles/accueil.md)                                   |
 
 ## Cycle de vie d'une campagne (équivalent QASE « test run »)
 

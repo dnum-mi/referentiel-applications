@@ -88,6 +88,13 @@ const DOMAINS = [
     template: "qa-catalogue-filtres.md",
     colorLabel: "qa:catalogue-filtres",
   },
+  {
+    domain: "accueil",
+    prefix: "ACC",
+    label: "Accueil & chrome",
+    template: "qa-accueil.md",
+    colorLabel: "qa:accueil",
+  },
 ];
 
 function required(key) {
