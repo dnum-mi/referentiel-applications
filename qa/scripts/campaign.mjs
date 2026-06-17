@@ -81,6 +81,13 @@ const DOMAINS = [
     template: "qa-administration-referentiels.md",
     colorLabel: "qa:administration-referentiels",
   },
+  {
+    domain: "profil-utilisateur",
+    prefix: "PRF",
+    label: "Profil utilisateur",
+    template: "qa-profil-utilisateur.md",
+    colorLabel: "qa:profil-utilisateur",
+  },
 ];
 
 function required(key) {

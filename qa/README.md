@@ -34,6 +34,9 @@ résultat du test, et au testeur de savoir d'un coup d'œil ce qui est déjà co
 | `MAI-`  | Intégration MAIA                      | [`protocoles/maia.md`](protocoles/maia.md)                                               |
 | `CRU-`  | Actions CRUD de base (fiche)          | [`protocoles/actions-crud.md`](protocoles/actions-crud.md)                               |
 | `ADM-`  | Administration des référentiels       | [`protocoles/administration-referentiels.md`](protocoles/administration-referentiels.md) |
+| `PRF-`  | Profil utilisateur                    | [`protocoles/profil-utilisateur.md`](protocoles/profil-utilisateur.md)                   |
+| `QUA-`  | Qualité générale & tableaux de bord   | [`protocoles/qualite-generale.md`](protocoles/qualite-generale.md)                       |
+| `NAV-`  | Navigation globale & pages statiques  | [`protocoles/navigation-globale.md`](protocoles/navigation-globale.md)                   |
 
 ## Cycle de vie d'une campagne (équivalent QASE « test run »)
 
