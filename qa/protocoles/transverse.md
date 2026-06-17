@@ -46,3 +46,10 @@
 - **Datafeature** : session `admin`.
 - **Action** : sur la page 404, cliquer « Retour à l'accueil ».
 - **Résultat attendu** : navigation vers `/recherche-application`.
+
+### TRV-07 — La page Accessibilité affiche ses sections ✅
+
+- **Datafeature** : aucune (session vierge).
+- **Action** : ouvrir `/accessibilite`.
+- **Résultat attendu** : les sections « Déclaration d'accessibilité » et « État de conformité » sont
+  visibles.

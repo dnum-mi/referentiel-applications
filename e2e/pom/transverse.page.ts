@@ -43,6 +43,16 @@ export class AccessibilityPage extends BasePage {
   async expectLoaded(): Promise<void> {
     await expect(this.title()).toBeVisible();
   }
+
+  /** Les sections clés de la déclaration d'accessibilité sont présentes. */
+  async expectSections(): Promise<void> {
+    await expect(
+      this.page.getByRole("heading", { name: "Déclaration d'accessibilité" }),
+    ).toBeVisible();
+    await expect(
+      this.page.getByRole("heading", { name: "État de conformité" }),
+    ).toBeVisible();
+  }
 }
 
 /** Page Object — Page « 404 » non trouvée (`NotFoundPage`). */

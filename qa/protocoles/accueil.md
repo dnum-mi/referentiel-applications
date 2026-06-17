@@ -66,3 +66,16 @@
 - **Action** : ouvrir `/` sans être authentifié.
 - **Résultat attendu** : la recherche rapide du bandeau n'est pas rendue (réservée aux utilisateurs
   connectés).
+
+### ACC-09 — Le footer affiche les liens obligatoires ✅
+
+- **Datafeature** : aucune (session vierge).
+- **Action** : ouvrir `/` et observer le pied de page.
+- **Résultat attendu** : le footer est visible et propose les liens « Accessibilité » et « Plan du
+  site ».
+
+### ACC-10 — Un item de navigation principale ouvre sa page ✅
+
+- **Datafeature** : session `admin`.
+- **Action** : cliquer l'entrée « Applications » de la navigation principale.
+- **Résultat attendu** : navigation vers `/recherche-application`.

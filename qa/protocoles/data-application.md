@@ -36,3 +36,9 @@
 - **Datafeature** : une application avec ≥ 1 donnée.
 - **Action** : sur le détail d'une donnée, cliquer « Retour à la liste ».
 - **Résultat attendu** : retour sur la fiche `/applications/:id`.
+
+### DAT-05 — Le détail affiche la section « Usage dans l'application » ✅
+
+- **Datafeature** : une application avec ≥ 1 donnée.
+- **Action** : ouvrir le détail d'une donnée.
+- **Résultat attendu** : la section « Usage dans l'application » est affichée.

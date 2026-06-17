@@ -57,4 +57,16 @@ test.describe("Détail d'une donnée applicative", () => {
     await detail.expectLoaded();
     await detail.goBackToFiche(ref!.appId);
   });
+
+  test("DAT-05 - le détail affiche la section « Usage dans l'application »", async ({
+    page,
+    data,
+  }) => {
+    const ref = await data.applicationWithData();
+    test.skip(!ref, "Aucune application avec données");
+
+    const detail = new DataDetailPage(page);
+    await detail.open(ref!.appId, ref!.dataId);
+    await detail.expectUsageSection();
+  });
 });

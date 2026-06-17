@@ -79,3 +79,10 @@
 - **Action** : ouvrir l'onglet `tab-modifications` d'une fiche puis cliquer « Voir plus ».
 - **Résultat attendu** : navigation vers `/metadatas/:id` ; le détail s'affiche. (Cas `skipped` si
   l'application n'a aucune modification.)
+
+### HIS-11 — La pagination de l'historique change de page ✅
+
+- **Datafeature** : ≥ 1 entrée dans le journal des modifications.
+- **Action** : cliquer la page 2 de la pagination de l'historique.
+- **Résultat attendu** : la page 2 devient la page courante et la liste reste affichée. (Cas
+  `skipped` s'il n'y a qu'une seule page.)

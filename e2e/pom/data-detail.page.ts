@@ -25,6 +25,13 @@ export class DataDetailPage extends BasePage {
     ).toBeVisible();
   }
 
+  /** La section « Usage dans l'application » est affichée. */
+  async expectUsageSection(): Promise<void> {
+    await expect(
+      this.page.getByRole("heading", { name: "Usage dans l'application" }),
+    ).toBeVisible();
+  }
+
   /** Donnée introuvable : l'alerte « Donnée introuvable » s'affiche. */
   async expectNotFound(): Promise<void> {
     await expect(this.notFound()).toBeVisible();

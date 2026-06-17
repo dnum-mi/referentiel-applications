@@ -14,6 +14,7 @@ export class ChromePage extends BasePage {
   private quickLink = (name: string) =>
     this.header().getByRole("link", { name });
   private quickSearch = () => this.header().getByRole("combobox");
+  private footer = () => this.page.getByRole("contentinfo");
 
   /** Ouvre la page d'accueil (porteuse du chrome global). */
   async open(): Promise<void> {
@@ -59,6 +60,22 @@ export class ChromePage extends BasePage {
     await expect(
       this.mainNav().getByRole("link", { name: label }),
     ).toBeVisible();
+  }
+
+  /** Clique un item de la navigation principale et attend l'URL cible. */
+  async clickNavItem(label: string, urlPattern: RegExp): Promise<void> {
+    await this.mainNav().getByRole("link", { name: label }).click();
+    await expect(this.page).toHaveURL(urlPattern);
+  }
+
+  // --- Footer ---
+  async expectFooterVisible(): Promise<void> {
+    await expect(this.footer()).toBeVisible();
+  }
+
+  /** Un lien du footer (par nom accessible) est présent. */
+  async expectFooterLink(name: string | RegExp): Promise<void> {
+    await expect(this.footer().getByRole("link", { name })).toBeVisible();
   }
 
   // --- Recherche rapide du header ---

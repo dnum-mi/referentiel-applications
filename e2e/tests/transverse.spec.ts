@@ -44,6 +44,15 @@ test.describe("Pages transverses", () => {
         await notFound.expectNotFound();
       },
     );
+
+    base(
+      "TRV-07 - la page Accessibilité affiche ses sections",
+      async ({ page }) => {
+        const accessibility = new AccessibilityPage(page);
+        await accessibility.open();
+        await accessibility.expectSections();
+      },
+    );
   });
 
   // --- Cas connectés ---

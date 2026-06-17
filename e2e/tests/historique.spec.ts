@@ -145,4 +145,20 @@ test.describe("Historique des modifications", () => {
     await fiche.openFirstModificationDetail();
     await new MetadataDetailPage(page).expectDetailLoaded();
   });
+
+  test("HIS-11 - la pagination de l'historique change de page", async ({
+    page,
+    data,
+  }) => {
+    test.skip(
+      !(await data.anyMetadata()),
+      "Aucune modification dans le journal",
+    );
+
+    const history = new HistoryPage(page);
+    await history.open();
+    await history.expectHasRows();
+    test.skip(!(await history.hasSecondPage()), "Une seule page d'historique");
+    await history.goToSecondPage();
+  });
 });

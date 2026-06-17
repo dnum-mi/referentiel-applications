@@ -59,6 +59,17 @@ test.describe("Accueil & chrome", () => {
         await chrome.expectQuickSearchAbsent();
       },
     );
+
+    base(
+      "ACC-09 - le footer affiche les liens obligatoires",
+      async ({ page }) => {
+        const chrome = new ChromePage(page);
+        await chrome.open();
+        await chrome.expectFooterVisible();
+        await chrome.expectFooterLink(/Accessibilité/);
+        await chrome.expectFooterLink(/Plan du site/);
+      },
+    );
   });
 
   // --- Cas connectés ---
@@ -75,6 +86,16 @@ test.describe("Accueil & chrome", () => {
     await chrome.expectProfileLink();
     await chrome.expectLogoutLink();
     await chrome.expectNoSignInLink();
+  });
+
+  test("ACC-10 - un item de navigation principale ouvre sa page", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    await chrome.clickNavItem("Applications", /\/recherche-application/);
   });
 
   test("ACC-06 - le raccourci « Admin » n'apparaît que pour un administrateur", async ({

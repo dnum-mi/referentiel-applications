@@ -18,6 +18,9 @@ export class HistoryPage extends BasePage {
   private seeMore = () => this.byTestId("history-see-more-button");
   private columnHeader = (name: string) =>
     this.table().getByRole("columnheader", { name });
+  private pagination = () => this.byTestId("pagination-component");
+  private pageLink = (n: string) =>
+    this.pagination().getByRole("link", { name: n, exact: true });
 
   async open(): Promise<void> {
     await this.goto("/historique");
@@ -63,6 +66,18 @@ export class HistoryPage extends BasePage {
   async openFirstDetail(): Promise<void> {
     await this.seeMore().first().click();
     await expect(this.page).toHaveURL(/\/metadatas\//);
+  }
+
+  /** Indique si une 2ᵉ page d'historique est proposée par la pagination. */
+  async hasSecondPage(): Promise<boolean> {
+    return (await this.pageLink("2").count()) > 0;
+  }
+
+  /** Va à la page 2 de l'historique et vérifie qu'elle devient la page courante. */
+  async goToSecondPage(): Promise<void> {
+    await this.pageLink("2").click();
+    await expect(this.pageLink("2")).toHaveAttribute("aria-current", "page");
+    await expect(this.rows().first()).toBeVisible();
   }
 }
 
