@@ -263,6 +263,32 @@ export class DataFeature {
     return this.api.application(id);
   }
 
+  // --- Admin CRUD resolvers (ADM-* tests) ---
+
+  createOrganization(path: string, sigle?: string) {
+    return this.api.createOrganization({ path, sigle });
+  }
+
+  deleteOrganization(id: string) {
+    return this.api.deleteOrganization(id);
+  }
+
+  createTag(name: string) {
+    return this.api.createTag({ name });
+  }
+
+  deleteTag(id: string) {
+    return this.api.deleteTag(id);
+  }
+
+  createLabelSource(source: string) {
+    return this.api.createLabelSource({ source });
+  }
+
+  deleteLabelSource(id: string) {
+    return this.api.deleteLabelSource(id);
+  }
+
   async anyOrganizationPath(): Promise<string | null> {
     const orgs = await this.api.organizations("a");
     if (orgs && orgs.length > 0) return orgs[0].path;

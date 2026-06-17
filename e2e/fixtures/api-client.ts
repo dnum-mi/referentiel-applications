@@ -340,6 +340,36 @@ export class ApiClient {
     );
   }
 
+  createOrganization(
+    body: Record<string, unknown>,
+  ): Promise<{ id: string; path: string } | null> {
+    return this.post<{ id: string; path: string }>("/organizations", body);
+  }
+
+  deleteOrganization(id: string): Promise<boolean> {
+    return this.del(`/organizations/${id}`);
+  }
+
+  createTag(body: {
+    name: string;
+  }): Promise<{ id: string; name: string } | null> {
+    return this.post<{ id: string; name: string }>("/tags", body);
+  }
+
+  deleteTag(id: string): Promise<boolean> {
+    return this.del(`/tags/${id}`);
+  }
+
+  createLabelSource(body: {
+    source: string;
+  }): Promise<{ id: string; source: string } | null> {
+    return this.post<{ id: string; source: string }>("/label-sources", body);
+  }
+
+  deleteLabelSource(id: string): Promise<boolean> {
+    return this.del(`/label-sources/${id}`);
+  }
+
   // --- Conformités (provisioning éco-index / homologation, requiert ComplianceWrite) ---
   compliance(appId: string): Promise<ComplianceShape | null> {
     return this.get<ComplianceShape>(`/applications/${appId}/compliances`);

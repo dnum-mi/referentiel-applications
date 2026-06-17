@@ -74,6 +74,13 @@ const DOMAINS = [
     template: "qa-actions-crud.md",
     colorLabel: "qa:actions-crud",
   },
+  {
+    domain: "administration-referentiels",
+    prefix: "ADM",
+    label: "Administration des référentiels",
+    template: "qa-administration-referentiels.md",
+    colorLabel: "qa:administration-referentiels",
+  },
 ];
 
 function required(key) {

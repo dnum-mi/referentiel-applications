@@ -163,6 +163,219 @@ export class AdminPage extends BasePage {
     await expect(this.page).not.toHaveURL(/\/administration/);
   }
 
+  // --- Onglet « Organisations » (ADM-01 to ADM-04) ---
+
+  private orgsTable = () => this.byTestId("admin-organizations-table");
+  private orgsSearch = () => this.byTestId("admin-organizations-search");
+
+  async openOrganizationsTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: /organisations/i })
+      .click();
+    await expect(this.orgsTable()).toBeVisible();
+  }
+
+  async searchOrganization(value: string): Promise<void> {
+    const refetch = this.page
+      .waitForResponse(
+        (r) =>
+          /\/organizations\?/.test(r.url()) && r.request().method() === "GET",
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+    await this.orgsSearch().locator("input").fill(value);
+    await refetch;
+  }
+
+  private visibleDialog() {
+    return this.page.locator("dialog[open]").first();
+  }
+
+  async createOrganization(path: string, sigle?: string): Promise<void> {
+    await this.byTestId("admin-create-organization-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Chemin/i).fill(path);
+    if (sigle) {
+      await dialog.getByLabel(/Sigle/i).fill(sigle);
+    }
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/créée avec succès/i);
+  }
+
+  async expectOrganizationRow(path: string): Promise<void> {
+    await this.searchOrganization(path);
+    await expect(this.orgsTable()).toContainText(path);
+  }
+
+  async editOrganization(orgPath: string, newSigle: string): Promise<void> {
+    await this.searchOrganization(orgPath);
+    const row = this.orgsTable().locator("tr", { hasText: orgPath });
+    await row.getByTestId("admin-organization-edit-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Sigle/i).fill(newSigle);
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/mise à jour avec succès/i);
+  }
+
+  async addMaiaReference(orgPath: string, ref: string): Promise<void> {
+    await this.searchOrganization(orgPath);
+    const row = this.orgsTable().locator("tr", { hasText: orgPath });
+    await row.getByTestId("admin-organization-edit-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Ajouter une référence MAIA/i).fill(ref);
+    await dialog.getByTestId("organization-maia-reference-add-btn").click();
+    await this.expectToaster(/Référence MAIA ajoutée/i);
+  }
+
+  async deleteMaiaReference(orgPath: string): Promise<void> {
+    const dialog = this.visibleDialog();
+    if (!(await dialog.isVisible().catch(() => false))) {
+      await this.searchOrganization(orgPath);
+      const row = this.orgsTable().locator("tr", { hasText: orgPath });
+      await row.getByTestId("admin-organization-edit-btn").click();
+      await expect(this.visibleDialog()).toBeVisible();
+    }
+    await this.visibleDialog()
+      .getByTestId("organization-maia-reference-delete-btn")
+      .first()
+      .click();
+    await this.expectToaster(/Référence MAIA supprimée/i);
+  }
+
+  async deleteOrganization(orgPath: string): Promise<void> {
+    await this.searchOrganization(orgPath);
+    const row = this.orgsTable().locator("tr", { hasText: orgPath });
+    await row.getByTestId("admin-organization-delete-btn").click();
+    await expect(this.byTestId("admin-delete-confirm-btn")).toBeVisible();
+    await this.byTestId("admin-delete-confirm-btn").click();
+    await this.expectToaster(/supprimée avec succès/i);
+  }
+
+  async expectOrganizationAbsent(path: string): Promise<void> {
+    await this.searchOrganization(path);
+    await expect(this.orgsTable()).not.toContainText(path);
+  }
+
+  // --- Onglet « Tags » (ADM-05) ---
+
+  private tagsTable = () => this.byTestId("admin-tags-table");
+
+  async openTagsTab(): Promise<void> {
+    await this.adminTabs().getByRole("tab", { name: /tags/i }).click();
+    await expect(this.tagsTable()).toBeVisible();
+  }
+
+  async createTag(name: string): Promise<void> {
+    await this.byTestId("admin-create-tag-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Nom du tag/i).fill(name);
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/Tag créé avec succès/i);
+  }
+
+  async searchTag(value: string): Promise<void> {
+    const refetch = this.page
+      .waitForResponse(
+        (r) => /\/tags\?/.test(r.url()) && r.request().method() === "GET",
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+    await this.byTestId("admin-tag-search").locator("input").fill(value);
+    await refetch;
+  }
+
+  async expectTagRow(name: string): Promise<void> {
+    await this.searchTag(name);
+    await expect(this.tagsTable()).toContainText(name);
+  }
+
+  async editTag(name: string, newName: string): Promise<void> {
+    await this.searchTag(name);
+    const row = this.tagsTable().locator("tr", { hasText: name });
+    await row.getByTestId("admin-tag-edit-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Nom du tag/i).fill(newName);
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/Tag mis à jour avec succès/i);
+  }
+
+  async deleteTag(name: string): Promise<void> {
+    await this.searchTag(name);
+    const row = this.tagsTable().locator("tr", { hasText: name });
+    await row.getByTestId("admin-tag-delete-btn").click();
+    await expect(this.byTestId("admin-delete-confirm-btn")).toBeVisible();
+    await this.byTestId("admin-delete-confirm-btn").click();
+    await this.expectToaster(/Tag supprimé avec succès/i);
+  }
+
+  // --- Onglet « Sources de noms alternatifs » (ADM-06) ---
+
+  private labelSourcesTable = () => this.byTestId("admin-label-sources-table");
+
+  async openLabelSourcesTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: /sources/i })
+      .click();
+    await expect(this.labelSourcesTable()).toBeVisible();
+  }
+
+  async createLabelSource(source: string): Promise<void> {
+    await this.byTestId("admin-create-label-source-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Valeur de la source/i).fill(source);
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/Source créée avec succès/i);
+  }
+
+  async searchLabelSource(value: string): Promise<void> {
+    const refetch = this.page
+      .waitForResponse(
+        (r) =>
+          /\/label-sources\?/.test(r.url()) && r.request().method() === "GET",
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+    await this.byTestId("admin-label-source-search")
+      .locator("input")
+      .fill(value);
+    await refetch;
+  }
+
+  async expectLabelSourceRow(source: string): Promise<void> {
+    await this.searchLabelSource(source);
+    await expect(this.labelSourcesTable()).toContainText(source);
+  }
+
+  async editLabelSource(source: string, newSource: string): Promise<void> {
+    await this.searchLabelSource(source);
+    const row = this.labelSourcesTable().locator("tr", {
+      hasText: source,
+    });
+    await row.getByTestId("admin-label-source-edit-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Valeur de la source/i).fill(newSource);
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/Source mise à jour avec succès/i);
+  }
+
+  async deleteLabelSource(source: string): Promise<void> {
+    await this.searchLabelSource(source);
+    const row = this.labelSourcesTable().locator("tr", {
+      hasText: source,
+    });
+    await row.getByTestId("admin-label-source-delete-btn").click();
+    await expect(this.byTestId("admin-delete-confirm-btn")).toBeVisible();
+    await this.byTestId("admin-delete-confirm-btn").click();
+    await this.expectToaster(/Source supprimée avec succès/i);
+  }
+
   // --- Onglet « Batch de données » : synchronisation MAIA (#1825, MAI-04) ---
   async openBatchDataTab(): Promise<void> {
     await this.adminTabs()
