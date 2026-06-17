@@ -7,3 +7,10 @@ export { AdminPage } from "./admin.page";
 export { ReportsPage } from "./reports.page";
 export { UserProfilePage } from "./user-profile.page";
 export { QualityPage, TimePage, HistoryPage } from "./quality.page";
+export {
+  HomePage,
+  SiteMapPage,
+  AccessibilityPage,
+  NotFoundPage,
+  ReportsListPage,
+} from "./navigation.page";

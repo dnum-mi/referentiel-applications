@@ -20,6 +20,7 @@ test.describe("Profil utilisateur", () => {
     page,
     data,
   }) => {
+    void data;
     const profile = new UserProfilePage(page);
     await profile.open();
     await profile.toggleEmailNotificationsAndRestore();
@@ -62,6 +63,7 @@ test.describe("Profil utilisateur", () => {
   });
 
   test("PRF-05 - onglet Tokens API (présence)", async ({ page, data }) => {
+    void data;
     const profile = new UserProfilePage(page);
     await profile.open();
     await profile.openTokensTab();

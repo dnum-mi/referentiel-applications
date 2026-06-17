@@ -68,7 +68,6 @@ test.describe("Actions CRUD de base", () => {
   });
 
   test("CRU-04 - droits d'écriture sur les acteurs (lecteur)", async ({
-    page,
     data,
     browser,
   }) => {

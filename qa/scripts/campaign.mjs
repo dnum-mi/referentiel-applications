@@ -95,6 +95,13 @@ const DOMAINS = [
     template: "qa-qualite-generale.md",
     colorLabel: "qa:qualite-generale",
   },
+  {
+    domain: "navigation-globale",
+    prefix: "NAV",
+    label: "Navigation globale & pages statiques",
+    template: "qa-navigation-globale.md",
+    colorLabel: "qa:navigation-globale",
+  },
 ];
 
 function required(key) {
