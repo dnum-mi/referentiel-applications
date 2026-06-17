@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { Injectable } from "@nestjs/common";
+import { convert } from "html-to-text";
 import { LoggerService } from "src/logger/logger.service";
 
 @Injectable()
@@ -101,22 +102,16 @@ export class EmailTemplateService {
   }
 
   public htmlToText(html: string): string {
-    let text = html
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
-
-    text = text.replace(/<[^>]+>/g, "");
-
-    text = text
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'");
-
-    text = text.replace(/\n\s*\n\s*\n/g, "\n\n");
-
-    return text.trim();
+    // Use a real HTML parser instead of hand-rolled regexes: regex-based tag
+    // stripping and entity decoding are inherently incomplete (CodeQL
+    // js/bad-tag-filter, js/incomplete-multi-character-sanitization,
+    // js/double-escaping) and easy to bypass.
+    return convert(html, {
+      wordwrap: false,
+      selectors: [
+        { selector: "img", format: "skip" },
+        { selector: "a", options: { ignoreHref: true } },
+      ],
+    });
   }
 }

@@ -14,6 +14,9 @@ on:
 jobs:
   build-backend:
     name: Build Backend
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/dnum-mi/referentiel-applications/backend
@@ -22,6 +25,9 @@ jobs:
 
   build-frontend:
     name: Build Frontend
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/dnum-mi/referentiel-applications/frontend
@@ -32,6 +38,8 @@ jobs:
     name: Test Linting & Formatting
     runs-on: ubuntu-latest
     continue-on-error: true
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -46,6 +54,9 @@ jobs:
   unit-tests:
     name: Unit Tests
     needs: [build-backend]
+    permissions:
+      contents: write
+      pull-requests: write
     uses: ./.github/workflows/tests-unit.yml
     with:
       backend_image_tag: ${{ needs.build-backend.outputs.image_tag }}
