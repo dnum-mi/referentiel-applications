@@ -95,6 +95,13 @@ const DOMAINS = [
     template: "qa-accueil.md",
     colorLabel: "qa:accueil",
   },
+  {
+    domain: "time",
+    prefix: "TIM",
+    label: "Diagramme Time",
+    template: "qa-time.md",
+    colorLabel: "qa:time",
+  },
 ];
 
 function required(key) {
