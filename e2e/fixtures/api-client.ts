@@ -91,6 +91,13 @@ export class ApiClient {
     );
   }
 
+  /** Données (data-catalog) d'une application. */
+  applicationData(appId: string): Promise<Paginated<{ id: string }> | null> {
+    return this.get<Paginated<{ id: string }>>(
+      `/data-catalog/applications/${appId}?pageSize=10&page=0`,
+    );
+  }
+
   me(): Promise<{ id: string; email: string } | null> {
     return this.get<{ id: string; email: string }>(`/users/me`);
   }

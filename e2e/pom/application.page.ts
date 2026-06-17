@@ -123,9 +123,24 @@ export class ApplicationPage extends BasePage {
     ).toBeVisible();
   }
 
-  // --- Onglet Sources de données (FIC-09) ---
+  // --- Onglet Sources de données (FIC-09, DAT) ---
   async expectDataSourcesTabLoaded(): Promise<void> {
     await expect(this.byTestId("data-application-table")).toBeVisible();
+  }
+
+  /** Nombre de lignes de données dans l'onglet Sources de données. */
+  dataRowCount(): Promise<number> {
+    return this.byTestId("data-application-table").locator("tbody tr").count();
+  }
+
+  /** Ouvre le détail de la 1ʳᵉ donnée (clic sur le bouton de nom) et attend la page de détail (DAT). */
+  async openFirstDataDetail(): Promise<void> {
+    await this.byTestId("data-application-table")
+      .locator("tbody")
+      .getByRole("button")
+      .first()
+      .click();
+    await expect(this.page).toHaveURL(/\/applications\/[^/]+\/data\/[^/]+/);
   }
 
   // --- Onglet Signalements de l'application (FIC-13) ---

@@ -15,3 +15,4 @@ export {
   AccessibilityPage,
   NotFoundPage,
 } from "./transverse.page";
+export { DataDetailPage } from "./data-detail.page";

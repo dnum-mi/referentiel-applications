@@ -87,23 +87,24 @@ function goToProfileApp(appId: string) {
 </script>
 
 <template>
-  <div class="fr-py-4w fr-px-4w">
+  <div class="fr-py-4w fr-px-4w" data-testid="data-application-detail">
     <!-- ── Retour ─────────────────────────────────────────────────── -->
     <DsfrButton
       label="Retour à la liste"
       secondary
       icon="ri-arrow-left-line"
       class="fr-mb-3w"
+      data-testid="data-application-detail-back"
       @click="goToProfileApp(props.applicationId)"
     />
 
     <!-- ── Loading ────────────────────────────────────────────────── -->
-    <div v-if="isLoading" role="status" aria-live="polite" class="fr-py-6w fr-text--center">
+    <div v-if="isLoading" role="status" aria-live="polite" class="fr-py-6w fr-text--center" data-testid="data-application-detail-loading">
       <span class="fr-text--sm">Chargement…</span>
     </div>
 
     <!-- ── Not found ──────────────────────────────────────────────── -->
-    <div v-else-if="!item" role="alert" class="fr-alert fr-alert--warning fr-mt-2w">
+    <div v-else-if="!item" role="alert" class="fr-alert fr-alert--warning fr-mt-2w" data-testid="data-application-detail-not-found">
       <p>Donnée introuvable.</p>
     </div>
 
@@ -114,7 +115,7 @@ function goToProfileApp(appId: string) {
         <div class="fr-col">
           <!-- Titre + badge Source de vérité -->
           <div class="detail-title-row">
-            <h1 class="fr-h3 fr-mb-0">{{ item?.dataDescription?.name ?? "—" }}</h1>
+            <h1 class="fr-h3 fr-mb-0" data-testid="data-application-detail-name">{{ item?.dataDescription?.name ?? "—" }}</h1>
             <span v-if="item?.isReference" class="fr-badge fr-badge--success fr-badge--icon-left fr-icon-check-line">
               Source de vérité
             </span>

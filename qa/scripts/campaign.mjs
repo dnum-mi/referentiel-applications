@@ -109,6 +109,13 @@ const DOMAINS = [
     template: "qa-transverse.md",
     colorLabel: "qa:transverse",
   },
+  {
+    domain: "data-application",
+    prefix: "DAT",
+    label: "Détail d'une donnée",
+    template: "qa-data-application.md",
+    colorLabel: "qa:data-application",
+  },
 ];
 
 function required(key) {

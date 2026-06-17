@@ -60,6 +60,19 @@ export class DataFeature {
     return page?.results?.[0] ?? null;
   }
 
+  /** Une application possédant ≥ 1 donnée (data-catalog) + l'id de sa 1ʳᵉ donnée, ou `null`. */
+  async applicationWithData(
+    probe = 15,
+  ): Promise<{ appId: string; dataId: string } | null> {
+    const list = await this.api.applications(`pageSize=${probe}&page=0`);
+    for (const app of list?.results ?? []) {
+      const data = await this.api.applicationData(app.id);
+      const first = data?.results?.[0];
+      if (first) return { appId: app.id, dataId: first.id };
+    }
+    return null;
+  }
+
   /** Profil de l'utilisateur connecté. */
   currentUser() {
     return this.api.me();
