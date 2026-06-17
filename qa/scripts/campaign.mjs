@@ -67,6 +67,13 @@ const DOMAINS = [
     template: "qa-maia.md",
     colorLabel: "qa:maia",
   },
+  {
+    domain: "actions-crud",
+    prefix: "CRU",
+    label: "Actions CRUD de base",
+    template: "qa-actions-crud.md",
+    colorLabel: "qa:actions-crud",
+  },
 ];
 
 function required(key) {

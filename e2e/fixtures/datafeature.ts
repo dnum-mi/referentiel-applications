@@ -144,6 +144,138 @@ export class DataFeature {
   async setHomologationStatus(appId: string, status: string): Promise<void> {
     await this.api.setCompliance(appId, { homologation_status: status });
   }
+
+  // --- CRUD resolvers (CRU-* tests) ---
+
+  async createTestApplication(label: string): Promise<AppRef> {
+    const created = await this.api.createApplication({
+      label,
+      shortName: label,
+      description: `Auto-created by e2e test: ${label}`,
+    });
+    if (!created)
+      throw new Error(`Création d'application impossible : ${label}`);
+    return created;
+  }
+
+  removeApplication(id: string): Promise<boolean> {
+    return this.api.deleteApplication(id);
+  }
+
+  async applicationWithActors(probe = 15): Promise<AppRef | null> {
+    const list = await this.api.applications(`pageSize=${probe}&page=0`);
+    for (const app of list?.results ?? []) {
+      const actors = await this.api.actors(app.id);
+      if (actors && actors.length > 0) return app;
+    }
+    return null;
+  }
+
+  actorTypes() {
+    return this.api.actorTypes();
+  }
+
+  actors(appId: string) {
+    return this.api.actors(appId);
+  }
+
+  createActor(appId: string, body: Record<string, unknown>) {
+    return this.api.createActor(appId, body);
+  }
+
+  deleteActor(appId: string, actorId: string) {
+    return this.api.deleteActor(appId, actorId);
+  }
+
+  createStatus(appId: string, body: Record<string, unknown>) {
+    return this.api.createStatus(appId, body);
+  }
+
+  deleteStatus(appId: string, statusId: string) {
+    return this.api.deleteStatus(appId, statusId);
+  }
+
+  statuses(appId: string) {
+    return this.api.statuses(appId);
+  }
+
+  createRelation(appId: string, body: Record<string, unknown>) {
+    return this.api.createRelation(appId, body);
+  }
+
+  deleteRelation(appId: string, relationId: string) {
+    return this.api.deleteRelation(appId, relationId);
+  }
+
+  relations(appId: string) {
+    return this.api.relations(appId);
+  }
+
+  createLink(appId: string, body: Record<string, unknown>) {
+    return this.api.createLink(appId, body);
+  }
+
+  deleteLink(appId: string, linkId: string) {
+    return this.api.deleteLink(appId, linkId);
+  }
+
+  links(appId: string) {
+    return this.api.links(appId);
+  }
+
+  createHosting(appId: string, body: Record<string, unknown>) {
+    return this.api.createHosting(appId, body);
+  }
+
+  deleteHosting(appId: string, hostingId: string) {
+    return this.api.deleteHosting(appId, hostingId);
+  }
+
+  hostings(appId: string) {
+    return this.api.hostings(appId);
+  }
+
+  createAppLabel(appId: string, body: Record<string, unknown>) {
+    return this.api.createLabel(appId, body);
+  }
+
+  deleteAppLabel(appId: string, labelId: string) {
+    return this.api.deleteLabel(appId, labelId);
+  }
+
+  appLabels(appId: string) {
+    return this.api.labels(appId);
+  }
+
+  createRgaa(appId: string, body: Record<string, unknown>) {
+    return this.api.createRgaa(appId, body);
+  }
+
+  deleteRgaa(appId: string, rgaaId: string) {
+    return this.api.deleteRgaa(appId, rgaaId);
+  }
+
+  rgaaCompliances(appId: string) {
+    return this.api.rgaaCompliances(appId);
+  }
+
+  applicationDetail(id: string): Promise<Record<string, unknown> | null> {
+    return this.api.application(id);
+  }
+
+  async anyOrganizationPath(): Promise<string | null> {
+    const orgs = await this.api.organizations("a");
+    if (orgs && orgs.length > 0) return orgs[0].path;
+    const orgs2 = await this.api.organizations("direction");
+    if (orgs2 && orgs2.length > 0) return orgs2[0].path;
+    return null;
+  }
+
+  async twoApplications(): Promise<[AppRef, AppRef] | null> {
+    const list = await this.api.applications("pageSize=2&page=0");
+    if (!list?.results || list.results.length < 2) return null;
+    return [list.results[0], list.results[1]];
+  }
 }
 
 /** Détecte une liste de relations non vide quel que soit le nom du champ dans le DTO. */
