@@ -1,15 +1,12 @@
 import {
   ConflictException,
   ForbiddenException,
-  Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { ConfigType } from "@nestjs/config";
 import { Permission, Prisma, Roles, UserType } from "@prisma/client";
-import { createHash, createHmac } from "node:crypto";
+import { createHash } from "node:crypto";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
-import { appConfig } from "src/config/configs";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor, UserEntity } from "src/user/entities/user.entity";
 import { generateRandomPassword, stringToSlug } from "src/utils/functions";
@@ -29,8 +26,6 @@ export class TokenService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly checkPermissions: CheckPermissions,
-    @Inject(appConfig.KEY)
-    private readonly app: ConfigType<typeof appConfig>,
   ) {}
 
   async list({ requestor }: { requestor?: Requestor }): Promise<TokenDto[]> {
@@ -161,22 +156,15 @@ export class TokenService {
   };
 
   async findUserByToken(tokenHeader: string): Promise<UserEntity | null> {
-    const findByHash = (hash: string) =>
-      this.prisma.token.findUnique({
-        where: { hash },
-        include: {
-          createdBy: true,
-          userImpersonate: true,
-        },
-        omit: { hash: true },
-      });
-
-    let token = await findByHash(this.generateHash(tokenHeader));
-    // Backward compatibility: tokens issued before TOKEN_PEPPER was enabled were
-    // stored with the legacy plain SHA-512 hash. Fall back to it on a miss.
-    if (!token && this.app.tokenPepper) {
-      token = await findByHash(this.legacyHash(tokenHeader));
-    }
+    const hash = this.generateHash(tokenHeader);
+    const token = await this.prisma.token.findUnique({
+      where: { hash },
+      include: {
+        createdBy: true,
+        userImpersonate: true,
+      },
+      omit: { hash: true },
+    });
 
     const userImpersonate = token?.userImpersonate ?? null;
     const isInvalid = isTokenInvalid(token);
@@ -263,19 +251,6 @@ export class TokenService {
   }
 
   generateHash(token: string): string {
-    const pepper = this.app.tokenPepper;
-    // Defense in depth: when a server-side pepper is configured, derive the
-    // stored hash with HMAC-SHA512 so a read-only DB leak does not expose
-    // reversible token hashes. The hash stays deterministic, preserving the
-    // O(1) `where: { hash }` lookup. Without a pepper, keep the legacy hash so
-    // tokens issued previously remain valid.
-    if (pepper) {
-      return createHmac("sha512", pepper).update(token).digest("hex");
-    }
-    return this.legacyHash(token);
-  }
-
-  private legacyHash(token: string): string {
     return createHash("sha512").update(token).digest("hex");
   }
 }

@@ -14,12 +14,6 @@ export interface AppConfig {
   version: string;
   footerLinks: FooterLink[];
   nonActorPermissions: APP_PERMISSIONS[];
-  /**
-   * Optional server-side secret used to derive API token hashes (HMAC-SHA512).
-   * When unset, token hashing falls back to the legacy plain SHA-512 so that
-   * existing tokens keep working. Set it to enable defense-in-depth hardening.
-   */
-  tokenPepper?: string;
 }
 export default registerAs("app", (): AppConfig => {
   let footerLinks: FooterLink[] = [];
@@ -43,6 +37,5 @@ export default registerAs("app", (): AppConfig => {
     environmentLabel: process.env.ENV_LABEL,
     footerLinks,
     nonActorPermissions,
-    tokenPepper: process.env.TOKEN_PEPPER || undefined,
   };
 });
