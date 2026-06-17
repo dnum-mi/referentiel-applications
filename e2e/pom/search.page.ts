@@ -3,6 +3,16 @@ import { BasePage } from "./base.page";
 import { parseFirstNumber, waitForSearchParams } from "../support/helpers";
 
 const SEARCH_PATH = "/recherche-application";
+const STATUS_LABELS: Record<string, string> = {
+  under_construction: "En construction",
+  to_validate: "A valider",
+  poc: "POC (Preuve de concept)",
+  in_production_mvp: "MVP en production",
+  in_production: "En production",
+  in_production_decommissioning: "À décommissionner",
+  decommissioned: "Décommissionné",
+  deleted: "Supprimé",
+};
 
 /** Page Object — Catalogue & recherche (`/recherche-application`). */
 export class SearchPage extends BasePage {
@@ -232,13 +242,30 @@ export class SearchPage extends BasePage {
 
   // --- Filtres additionnels ---
   async filterByStatus(status: string): Promise<void> {
-    const checkbox = this.byTestId(`status-option-${status}`);
+    const checkbox = this.statusCheckbox(status);
     await this.openAccordion("sidebar-accordion-status", checkbox);
-    await checkbox.check();
+    if (!(await checkbox.isChecked())) {
+      await this.statusCheckboxLabel(status).click();
+    }
     await expect(checkbox).toBeChecked();
     await waitForSearchParams(this.page, (p) =>
       (p.get("currentStatus__in") ?? "").split(",").includes(status),
     );
+  }
+
+  private statusCheckbox(status: string): Locator {
+    return this.sidebar()
+      .getByTestId("status-filter")
+      .getByRole("checkbox", {
+        name: STATUS_LABELS[status] ?? status,
+        exact: true,
+      });
+  }
+
+  private statusCheckboxLabel(status: string): Locator {
+    return this.sidebar()
+      .getByTestId("status-filter")
+      .locator(`label[for="status-option-${status}"]`);
   }
 
   async filterByOrganization(value: string): Promise<void> {
