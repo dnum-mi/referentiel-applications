@@ -1,22 +1,29 @@
+import { randomInt } from "node:crypto";
+
 export function generateRandomPassword(
   length = 24,
   chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_",
 ) {
-  return Array.from(crypto.getRandomValues(new Uint32Array(length)))
-    .map((x) => chars[x % chars.length])
-    .join("");
+  // randomInt rejects out-of-range values internally, avoiding the modulo bias
+  // that `value % chars.length` would introduce.
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars[randomInt(chars.length)];
+  }
+  return result;
 }
 
 export function stringToSlug(str: string): string {
-  str = str.replace(/^\s+|\s+$/g, ""); // trim
+  str = str.trim();
   str = str.toLowerCase();
 
   // remove accents, swap ñ for n, etc
   const from = "àáäâèéëêìíïîòóöôùúüûñç·/_,:;";
   const to = "aaaaeeeeiiiioooouuuunc------";
-  for (let i = 0, l = from.length; i < l; i++) {
-    str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
-  }
+  const charMap = new Map(
+    Array.from(from, (char, i) => [char, to[i]] as const),
+  );
+  str = Array.from(str, (char) => charMap.get(char) ?? char).join("");
 
   str = str
     .replace(/[^a-z0-9 -]/g, "") // remove invalid chars
