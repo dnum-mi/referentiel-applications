@@ -9,6 +9,10 @@ jobs:
   release:
     name: Create new release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     outputs:
       release-created: ${{ steps.release.outputs.release_created }}
       major-tag: ${{ steps.release.outputs.major }}

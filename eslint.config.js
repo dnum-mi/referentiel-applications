@@ -13,6 +13,8 @@ export default tseslint.config(
       "**/dist/**",
       "**/build/**",
       "**/coverage/**",
+      "**/playwright-report/**",
+      "**/test-results/**",
       "**/.turbo/**",
       "**/*.d.ts",
       "**/prisma/migrations/**",

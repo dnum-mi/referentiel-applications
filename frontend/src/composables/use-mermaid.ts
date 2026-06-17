@@ -1,5 +1,6 @@
 import type { Directive } from "vue";
 import mermaid from "mermaid";
+import DOMPurify from "dompurify";
 
 mermaid.initialize({
   startOnLoad: false,
@@ -36,7 +37,7 @@ async function renderMermaid(el: HTMLElement) {
 
       const container = document.createElement("div");
       container.className = "mermaid-container";
-      container.innerHTML = svg;
+      container.innerHTML = DOMPurify.sanitize(svg);
 
       const parent = codeBlock.parentElement;
       if (parent?.tagName === "PRE") {
@@ -55,10 +56,13 @@ export function useMermaid() {
     try {
       const id = `mermaid-${Date.now()}`;
       const { svg } = await mermaid.render(id, code);
-      element.innerHTML = svg;
+      element.innerHTML = DOMPurify.sanitize(svg);
     } catch (error) {
       console.error("Mermaid rendering error:", error);
-      element.innerHTML = `<pre class="mermaid-error">${error}</pre>`;
+      const pre = document.createElement("pre");
+      pre.className = "mermaid-error";
+      pre.textContent = String(error);
+      element.replaceChildren(pre);
     }
   };
 
