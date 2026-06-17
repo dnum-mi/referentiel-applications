@@ -88,6 +88,13 @@ const DOMAINS = [
     template: "qa-profil-utilisateur.md",
     colorLabel: "qa:profil-utilisateur",
   },
+  {
+    domain: "qualite-generale",
+    prefix: "QUA",
+    label: "Qualité générale & tableaux de bord",
+    template: "qa-qualite-generale.md",
+    colorLabel: "qa:qualite-generale",
+  },
 ];
 
 function required(key) {
