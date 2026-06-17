@@ -232,10 +232,13 @@ export class SearchPage extends BasePage {
 
   // --- Filtres additionnels ---
   async filterByStatus(status: string): Promise<void> {
-    const checkbox = this.byTestId(`status-option-${status}`);
-    await this.openAccordion("sidebar-accordion-status", checkbox);
-    await checkbox.check();
-    await expect(checkbox).toBeChecked();
+    // Les options du `DsfrCheckboxSet` n'exposent pas de `data-testid` (vue-dsfr) : on cible la case
+    // par son `<label for>` (l'`id` de l'option vaut `status-option-<status>`) et on clique le label.
+    const label = this.sidebar().locator(
+      `label[for="status-option-${status}"]`,
+    );
+    await this.openAccordion("sidebar-accordion-status", label);
+    await label.click();
     await waitForSearchParams(this.page, (p) =>
       (p.get("currentStatus__in") ?? "").split(",").includes(status),
     );
