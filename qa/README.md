@@ -37,6 +37,7 @@ résultat du test, et au testeur de savoir d'un coup d'œil ce qui est déjà co
 | `CSF-`  | Catalogue — filtres avancés                 | [`protocoles/catalogue-filtres.md`](protocoles/catalogue-filtres.md)               |
 | `ACC-`  | Accueil & chrome                            | [`protocoles/accueil.md`](protocoles/accueil.md)                                   |
 | `TIM-`  | Diagramme Time                              | [`protocoles/time.md`](protocoles/time.md)                                         |
+| `TRV-`  | Pages transverses                           | [`protocoles/transverse.md`](protocoles/transverse.md)                             |
 
 ## Cycle de vie d'une campagne (équivalent QASE « test run »)
 

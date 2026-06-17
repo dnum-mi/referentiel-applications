@@ -98,13 +98,13 @@ const protectedPages = computed(() => {
 </script>
 
 <template>
-  <div class="fr-container fr-my-5w">
+  <div class="fr-container fr-my-5w" data-testid="sitemap-page">
     <div class="fr-grid-row fr-grid-row--center">
       <div class="fr-col-12 fr-col-lg-10 fr-col-xl-8">
-        <h1 class="fr-mb-5w">Plan du site</h1>
+        <h1 class="fr-mb-5w" data-testid="sitemap-title">Plan du site</h1>
 
         <h2 class="fr-h4 fr-mb-3w">Pages publiques</h2>
-        <ul class="fr-links-group fr-links-group--lg">
+        <ul class="fr-links-group fr-links-group--lg" data-testid="sitemap-public-links">
           <li v-for="page in publicPages" :key="page.to.name">
             <RouterLink :to="page.to" class="fr-link">
               {{ page.label }}
@@ -114,7 +114,7 @@ const protectedPages = computed(() => {
 
         <div v-if="protectedPages.length > 0" class="fr-mt-5w">
           <h2 class="fr-h4 fr-mb-3w">Espace connecté</h2>
-          <ul class="fr-links-group fr-links-group--lg">
+          <ul class="fr-links-group fr-links-group--lg" data-testid="sitemap-protected-links">
             <li v-for="page in protectedPages" :key="page.to.name">
               <RouterLink :to="page.to" class="fr-link">
                 {{ page.label }}

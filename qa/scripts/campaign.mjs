@@ -102,6 +102,13 @@ const DOMAINS = [
     template: "qa-time.md",
     colorLabel: "qa:time",
   },
+  {
+    domain: "transverse",
+    prefix: "TRV",
+    label: "Pages transverses",
+    template: "qa-transverse.md",
+    colorLabel: "qa:transverse",
+  },
 ];
 
 function required(key) {

@@ -10,3 +10,8 @@ export { HistoryPage, MetadataDetailPage } from "./history.page";
 export { HomePage } from "./home.page";
 export { ChromePage } from "./chrome.page";
 export { TimePage } from "./time.page";
+export {
+  SiteMapPage,
+  AccessibilityPage,
+  NotFoundPage,
+} from "./transverse.page";
