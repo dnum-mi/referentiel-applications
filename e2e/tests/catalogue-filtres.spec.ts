@@ -149,4 +149,64 @@ test.describe("Catalogue — filtres avancés", () => {
       "dataSourceName",
     );
   });
+
+  test("CSF-14 - filtre Type d'acteur reflété dans actorType", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const search = new SearchPage(page);
+    await search.open();
+    const values = await search.actorTypeOptionValues();
+    test.skip(
+      values.length === 0,
+      "Aucun type d'acteur dans le jeu de données",
+    );
+    await search.filterByActorType(values[0]);
+  });
+
+  test("CSF-15 - filtre Hébergement par fournisseur reflété dans hostingProvider", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const search = new SearchPage(page);
+    await search.open();
+    const values = await search.hostingProviderOptionValues();
+    test.skip(
+      values.length === 0,
+      "Aucune option d'hébergement dans le jeu de données",
+    );
+    await search.filterByHostingProvider(values[0]);
+  });
+
+  test("CSF-16 - filtre Tag reflété dans tag", async ({ page, data }) => {
+    const tag = await data.firstTag();
+    test.skip(!tag, "Aucun tag dans le jeu de données");
+    const search = new SearchPage(page);
+    await search.open();
+    await search.filterByTag(tag!.name);
+  });
+
+  test("CSF-17 - filtre Direction de métier reflété dans businessDivisionId", async ({
+    page,
+    data,
+  }) => {
+    const bd = await data.firstBusinessDivision();
+    test.skip(!bd, "Aucune direction de métier dans le jeu de données");
+    const search = new SearchPage(page);
+    await search.open();
+    await search.filterByBusinessDivision(bd!.label);
+  });
+
+  test("CSF-18 - filtre Relations : cible reflétée dans relationAppId", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+    const search = new SearchPage(page);
+    await search.open();
+    await search.filterByRelationTarget(app!.label.slice(0, 4));
+  });
 });

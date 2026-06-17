@@ -365,6 +365,103 @@ export class SearchPage extends BasePage {
     await waitForSearchParams(this.page, (p) => p.get("link") === link);
   }
 
+  // --- Filtres résiduels data-dépendants (compléments) ---
+
+  private optionValues(testId: string): Promise<string[]> {
+    return this.byTestId(testId)
+      .locator("option")
+      .evaluateAll((opts) => opts.map((o) => (o as HTMLOptionElement).value));
+  }
+
+  /** Valeurs réelles du select « type d'acteur » (hors « Tous » / MOA / MOE), après chargement async. */
+  async actorTypeOptionValues(): Promise<string[]> {
+    const select = this.byTestId("actor-filter-select");
+    await this.openAccordion("sidebar-accordion-organization", select);
+    const real = (vals: string[]) =>
+      vals.filter((v) => v && v !== "missingMoa" && v !== "missingMoe");
+    await expect
+      .poll(
+        async () => real(await this.optionValues("actor-filter-select")).length,
+        {
+          timeout: 8000,
+        },
+      )
+      .toBeGreaterThan(0)
+      .catch(() => {});
+    return real(await this.optionValues("actor-filter-select"));
+  }
+
+  /** Filtre par un type d'acteur (valeur d'option) → param `actorType`. */
+  async filterByActorType(optionValue: string): Promise<void> {
+    const select = this.byTestId("actor-filter-select");
+    await this.openAccordion("sidebar-accordion-organization", select);
+    await select.selectOption(optionValue);
+    await waitForSearchParams(this.page, (p) => !!p.get("actorType"));
+  }
+
+  /** Valeurs réelles du select « fournisseur d'hébergement » (hors « Tous »), après chargement async. */
+  async hostingProviderOptionValues(): Promise<string[]> {
+    const select = this.byTestId("hosting-provider-select");
+    await this.openAccordion("sidebar-accordion-hosting", select);
+    await expect
+      .poll(
+        async () =>
+          (await this.optionValues("hosting-provider-select")).filter(Boolean)
+            .length,
+        { timeout: 8000 },
+      )
+      .toBeGreaterThan(0)
+      .catch(() => {});
+    return (await this.optionValues("hosting-provider-select")).filter(Boolean);
+  }
+
+  /** Filtre par fournisseur d'hébergement → param `hostingProvider`. */
+  async filterByHostingProvider(value: string): Promise<void> {
+    const select = this.byTestId("hosting-provider-select");
+    await this.openAccordion("sidebar-accordion-hosting", select);
+    await select.selectOption(value);
+    await waitForSearchParams(
+      this.page,
+      (p) => p.get("hostingProvider") === value,
+    );
+  }
+
+  /** Filtre par tag (autocomplete) → param `tag`. */
+  async filterByTag(tagName: string): Promise<void> {
+    const tagSearch = this.byTestId("search-tags");
+    await this.openAccordion("sidebar-accordion-general", tagSearch);
+    await tagSearch.getByRole("combobox").fill(tagName);
+    await this.page
+      .getByRole("listbox", { name: "Tags proposés" })
+      .getByRole("option")
+      .filter({ hasNotText: "Aucun résultat" })
+      .first()
+      .click();
+    await waitForSearchParams(this.page, (p) => !!p.get("tag"));
+  }
+
+  /** Filtre par direction de métier (suggestion) → param `businessDivisionId`. */
+  async filterByBusinessDivision(label: string): Promise<void> {
+    const input = this.byTestId("business-division-suggestions-input");
+    await this.openAccordion("sidebar-accordion-organization", input);
+    await input.locator("input").fill(label);
+    const list = this.sidebar().getByTestId("suggestions-list");
+    await expect(list).toBeVisible();
+    await list.locator('[data-testid^="suggestion-item-"]').first().click();
+    await waitForSearchParams(this.page, (p) => !!p.get("businessDivisionId"));
+  }
+
+  /** Filtre par relation : choisit une application cible (suggestion) → param `relationAppId`. */
+  async filterByRelationTarget(query: string): Promise<void> {
+    const input = this.byTestId("relation-suggestions-input");
+    await this.openAccordion("sidebar-accordion-relations", input);
+    await input.locator("input").fill(query);
+    const list = this.sidebar().getByTestId("suggestions-list");
+    await expect(list).toBeVisible();
+    await list.locator('[data-testid^="suggestion-item-"]').first().click();
+    await waitForSearchParams(this.page, (p) => !!p.get("relationAppId"));
+  }
+
   /** Replie puis ré-affiche la sidebar des filtres via son bouton de bascule. */
   async toggleSidebarTwice(): Promise<void> {
     const initiallyVisible = await this.sidebar().isVisible();

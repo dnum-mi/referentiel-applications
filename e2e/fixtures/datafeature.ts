@@ -60,6 +60,18 @@ export class DataFeature {
     return page?.results?.[0] ?? null;
   }
 
+  /** Une direction de métier (business division) du référentiel, ou `null` si aucune. */
+  async firstBusinessDivision(): Promise<{ id: string; label: string } | null> {
+    const page = await this.api.businessDivisions("pageSize=5&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
+  /** Un tag du référentiel, ou `null` si aucun. */
+  async firstTag(): Promise<{ id: string; name: string } | null> {
+    const page = await this.api.tags("pageSize=5&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
   /** Une application possédant ≥ 1 donnée (data-catalog) + l'id de sa 1ʳᵉ donnée, ou `null`. */
   async applicationWithData(
     probe = 15,

@@ -98,6 +98,22 @@ export class ApiClient {
     );
   }
 
+  /** Directions de métier (business divisions). */
+  businessDivisions(
+    query = "",
+  ): Promise<Paginated<{ id: string; label: string }> | null> {
+    return this.get<Paginated<{ id: string; label: string }>>(
+      `/business-division${query ? `?${query}` : ""}`,
+    );
+  }
+
+  /** Tags du référentiel. */
+  tags(query = ""): Promise<Paginated<{ id: string; name: string }> | null> {
+    return this.get<Paginated<{ id: string; name: string }>>(
+      `/tags${query ? `?${query}` : ""}`,
+    );
+  }
+
   me(): Promise<{ id: string; email: string } | null> {
     return this.get<{ id: string; email: string }>(`/users/me`);
   }

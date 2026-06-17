@@ -90,3 +90,35 @@
 - **Action** : appliquer une borne Qualité, « Sans hébergement » et une source de données.
 - **Résultat attendu** : l'URL porte simultanément `iqGte`, `iqLte`, `missingHosting` et
   `dataSourceName`.
+
+### CSF-14 — Filtre Type d'acteur reflété dans actorType ✅
+
+- **Datafeature** : ≥ 1 type d'acteur (lu dans les options du select).
+- **Action** : accordéon Organisation & Acteurs → choisir un type d'acteur réel.
+- **Résultat attendu** : l'URL porte `actorType`. (Cas `skipped` si aucun type d'acteur.)
+
+### CSF-15 — Filtre Hébergement par fournisseur reflété dans hostingProvider ✅
+
+- **Datafeature** : ≥ 1 option de fournisseur d'hébergement (lue dans le select).
+- **Action** : accordéon Hébergement → choisir un fournisseur.
+- **Résultat attendu** : l'URL porte `hostingProvider` à la valeur choisie. (Cas `skipped` si aucune
+  option.)
+
+### CSF-16 — Filtre Tag reflété dans tag ✅
+
+- **Datafeature** : ≥ 1 tag (résolu via l'API).
+- **Action** : accordéon Général → saisir un tag dans l'autocomplétion et sélectionner la suggestion.
+- **Résultat attendu** : l'URL porte `tag`. (Cas `skipped` si aucun tag.)
+
+### CSF-17 — Filtre Direction de métier reflété dans businessDivisionId ✅
+
+- **Datafeature** : ≥ 1 direction de métier (résolue via l'API).
+- **Action** : accordéon Organisation & Acteurs → saisir une direction de métier et sélectionner la
+  suggestion.
+- **Résultat attendu** : l'URL porte `businessDivisionId`. (Cas `skipped` si aucune direction.)
+
+### CSF-18 — Filtre Relations : cible reflétée dans relationAppId ✅
+
+- **Datafeature** : ≥ 1 application (cible de relation).
+- **Action** : accordéon Relations → saisir une application et sélectionner la suggestion.
+- **Résultat attendu** : l'URL porte `relationAppId`. (Cas `skipped` si aucune application.)

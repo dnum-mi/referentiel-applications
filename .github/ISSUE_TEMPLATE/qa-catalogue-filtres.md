@@ -21,7 +21,7 @@ labels: ["qa", "non-regression", "qa:catalogue-filtres"]
 
 | Total | ✅ Passés | ❌ Échecs | ⏭️ Non testés |
 | ----- | --------- | --------- | ------------- |
-| 13    |           |           |               |
+| 18    |           |           |               |
 
 ## Protocole
 
