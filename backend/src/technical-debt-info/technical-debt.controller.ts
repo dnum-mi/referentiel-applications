@@ -31,4 +31,20 @@ export class TechnicalDebtController {
       requestor,
     );
   }
+
+  @Get("millesimes")
+  @ApiOperation({
+    summary: "Lister les millésimes de campagne dette IT disponibles",
+    description:
+      "Retourne les millésimes (années) de campagne dette IT enregistrés, " +
+      "triés du plus récent au plus ancien.",
+  })
+  @ApiOkResponse({
+    description: "Liste des millésimes disponibles",
+    type: Number,
+    isArray: true,
+  })
+  async getMillesimes(): Promise<number[]> {
+    return this.applicationService.getTechnicalDebtMillesimes();
+  }
 }

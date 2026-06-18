@@ -53,6 +53,7 @@ const DEFAULT_FILTERS: Filters = {
   relationAppId: undefined,
   businessDivisionId: undefined,
   dataSourceName: undefined,
+  millesime: undefined,
 };
 
 // Shared state across components (singleton pattern)
@@ -191,6 +192,7 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     relationAppId: parseQueryParam(query.relationAppId),
     businessDivisionId: parseQueryParam(query.businessDivisionId),
     dataSourceName: parseQueryParam(query.dataSourceName),
+    millesime: parseQueryParamNumber(query.millesime),
   };
 }
 
@@ -293,6 +295,12 @@ export function useApplicationSearch() {
     return response.data ?? [];
   }
 
+  /** Millésimes de campagne dette IT disponibles, triés du plus récent au plus ancien. */
+  async function fetchTechnicalDebtMillesimes(): Promise<number[]> {
+    const response = await api.technicalDebtControllerGetMillesimes({ throwOnError: true });
+    return response.data ?? [];
+  }
+
   // Auto-search when filters change
   watch(
     () => route.query,
@@ -316,6 +324,7 @@ export function useApplicationSearch() {
     DEFAULT_FILTERS,
     searchApplications,
     fetchTechnicalDebtPoints,
+    fetchTechnicalDebtMillesimes,
     setFilter,
     setOrder,
     resetFilters,

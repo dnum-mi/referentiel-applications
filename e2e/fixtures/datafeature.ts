@@ -90,6 +90,45 @@ export class DataFeature {
     return this.api.me();
   }
 
+  // --- Campagnes dette IT / millésimes (TIM-05/06) ---
+
+  /** Millésimes de campagne dette IT disponibles, triés du plus récent au plus ancien. */
+  async availableMillesimes(): Promise<number[]> {
+    const list = await this.api.technicalDebtMillesimes();
+    return (list ?? []).slice().sort((a, b) => b - a);
+  }
+
+  /**
+   * Garantit l'existence d'au moins deux campagnes dette IT (millésimes) afin de
+   * pouvoir tester le sélecteur. Sème une campagne précédente sur la première
+   * application si nécessaire (jamais un millésime futur, pour ne pas altérer le
+   * « plus récent » présenté par défaut). Renvoie les deux millésimes les plus
+   * récents `[latest, previous]`, ou `null` si l'état ne peut être garanti.
+   */
+  async ensureTwoMillesimes(): Promise<[number, number] | null> {
+    const existing = await this.availableMillesimes();
+    if (existing.length >= 2) return [existing[0], existing[1]];
+
+    const app = await this.firstApplication();
+    if (!app) return null;
+
+    const latest = existing[0] ?? new Date().getFullYear();
+    const previous = latest - 1;
+    if (existing.length === 0) {
+      await this.api.createTechnicalDebtInfo(app.id, {
+        technicalMaturity: 3,
+        millesime: latest,
+      });
+    }
+    await this.api.createTechnicalDebtInfo(app.id, {
+      technicalMaturity: 2,
+      millesime: previous,
+    });
+
+    const refreshed = await this.availableMillesimes();
+    return refreshed.length >= 2 ? [refreshed[0], refreshed[1]] : null;
+  }
+
   // --- Provisioning pour les tests de permissions (effectué avec le token admin) ---
 
   /** Récupère un utilisateur (admin) par email. */

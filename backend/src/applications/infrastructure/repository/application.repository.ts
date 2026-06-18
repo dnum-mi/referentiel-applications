@@ -211,6 +211,19 @@ export class ApplicationRepository implements IApplicationRepository {
     return latest._max.millesime ?? null;
   }
 
+  /**
+   * Millésimes de campagne dette IT disponibles, triés du plus récent au plus
+   * ancien.
+   */
+  public async findDistinctMillesimes(): Promise<number[]> {
+    const rows = await this.prisma.technicalDebtInfo.findMany({
+      distinct: ["millesime"],
+      select: { millesime: true },
+      orderBy: { millesime: "desc" },
+    });
+    return rows.map((row) => row.millesime);
+  }
+
   public async findTechnicalDebtPoints(
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,

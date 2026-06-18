@@ -118,6 +118,22 @@ export class ApiClient {
     return this.get<{ id: string; email: string }>(`/users/me`);
   }
 
+  /** Millésimes de campagne dette IT disponibles (triés du plus récent au plus ancien). */
+  technicalDebtMillesimes(): Promise<number[] | null> {
+    return this.get<number[]>(`/technical-debts/millesimes`);
+  }
+
+  /** Crée une évaluation de dette technique (campagne `millesime`) pour une application. */
+  createTechnicalDebtInfo(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string; millesime?: number } | null> {
+    return this.post<{ id: string; millesime?: number }>(
+      `/applications/${appId}/technical-debt-info`,
+      body,
+    );
+  }
+
   /** Profil complet de l'utilisateur courant (inclut `organization`). */
   meRaw(): Promise<Record<string, unknown> | null> {
     return this.get<Record<string, unknown>>(`/users/me`);

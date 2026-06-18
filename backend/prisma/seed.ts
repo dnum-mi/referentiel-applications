@@ -144,13 +144,20 @@ async function seed({
     });
   }
 
-  // Add technical debt info
+  // Add technical debt info across several IT-debt campaigns (millésimes), so the
+  // campaign selector has previous years to pick from. The most recent campaign
+  // is the current year.
   console.log("💸 Adding technical debt info...");
+  const currentYear = new Date().getFullYear();
+  const campaignMillesimes = [currentYear - 2, currentYear - 1, currentYear];
   for (const app of applications) {
-    await TechnicalDebtInfoFaker.create({
-      application: app,
-      user: adminUser,
-    });
+    for (const millesime of campaignMillesimes) {
+      await TechnicalDebtInfoFaker.create({
+        application: app,
+        user: adminUser,
+        millesime,
+      });
+    }
   }
 
   // Create Business Division

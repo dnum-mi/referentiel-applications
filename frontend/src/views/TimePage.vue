@@ -1,25 +1,53 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useApplicationSearch, type TechnicalDebtPoint } from "@/composables/use-application-search";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
 import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
+import { DsfrSelect } from "@gouvminint/vue-dsfr";
 import { watchDebounced } from "@vueuse/core";
 import { useUserStore } from "@/stores/userStore";
 
-const { filters, setFilter, fetchTechnicalDebtPoints } = useApplicationSearch();
+const { filters, setFilter, fetchTechnicalDebtPoints, fetchTechnicalDebtMillesimes } = useApplicationSearch();
 const userStore = useUserStore();
 
 const technicalDebtPoints = ref<TechnicalDebtPoint[]>([]);
 const isTechnicalDebtLoading = ref(false);
 
-onMounted(() => {
+// Campagnes dette IT (millésimes) disponibles : la plus récente est présentée par défaut,
+// l'utilisateur peut sélectionner une campagne précédente.
+const availableMillesimes = ref<number[]>([]);
+
+const millesimeOptions = computed(() => availableMillesimes.value.map((year) => ({ value: String(year), text: String(year) })));
+
+const selectedMillesime = computed(() => {
+  const current = filters.value.millesime ?? availableMillesimes.value[0];
+  return current != null ? String(current) : "";
+});
+
+function onSelectMillesime(value: string | number): void {
+  const year = Number(value);
+  if (!Number.isNaN(year)) {
+    setFilter({ millesime: year, page: 0 });
+  }
+}
+
+onMounted(async () => {
   const businessDivisionId = userStore.getBusinessDivisionId();
   if (businessDivisionId && !filters.value.businessDivisionId) {
     setFilter({ businessDivisionId });
   }
+  await loadMillesimes();
   loadTechnicalDebtPoints();
 });
+
+async function loadMillesimes() {
+  try {
+    availableMillesimes.value = await fetchTechnicalDebtMillesimes();
+  } catch {
+    availableMillesimes.value = [];
+  }
+}
 
 async function loadTechnicalDebtPoints() {
   isTechnicalDebtLoading.value = true;
@@ -47,6 +75,16 @@ watchDebounced(
 
     <main class="main-content" id="main-content" data-testid="main-content" role="main">
       <h1 class="fr-h1" data-testid="time-title">Diagramme Time</h1>
+
+      <div v-if="millesimeOptions.length" class="millesime-selector" data-testid="time-millesime">
+        <DsfrSelect
+          :model-value="selectedMillesime"
+          label="Campagne dette IT (millésime)"
+          :options="millesimeOptions"
+          data-testid="time-millesime-select"
+          @update:model-value="onSelectMillesime($event)"
+        />
+      </div>
 
       <section id="technical-debt-chart" class="chart-section" data-testid="technical-debt-chart-section">
         <div v-if="isTechnicalDebtLoading" class="loader" role="status" aria-live="polite" aria-atomic="true">
@@ -81,6 +119,11 @@ watchDebounced(
   display: flex;
   justify-content: center;
   margin-top: 3rem;
+}
+
+.millesime-selector {
+  max-width: 18rem;
+  margin-top: 1rem;
 }
 
 .chart-section {

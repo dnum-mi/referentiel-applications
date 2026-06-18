@@ -29,4 +29,5 @@ export interface IApplicationRepository {
     millesime?: number,
   ) => Promise<TechnicalDebtPointDto[]>;
   findLatestMillesime: () => Promise<number | null>;
+  findDistinctMillesimes: () => Promise<number[]>;
 }

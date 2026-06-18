@@ -408,6 +408,10 @@ export class ApplicationService {
     return [];
   }
 
+  public async getTechnicalDebtMillesimes(): Promise<number[]> {
+    return this.applicationRepository.findDistinctMillesimes();
+  }
+
   public async exportApplications(): Promise<any[]> {
     return this.applicationRepository.findAllWithFullRelations();
   }

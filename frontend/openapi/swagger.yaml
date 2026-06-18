@@ -4318,8 +4318,25 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TechnicalDebtPointDto"
-      tags:
+      tags: &a24
         - technical-debts
+  /api/v2/technical-debts/millesimes:
+    get:
+      operationId: TechnicalDebtController_getMillesimes
+      summary: Lister les millésimes de campagne dette IT disponibles
+      description: Retourne les millésimes (années) de campagne dette IT enregistrés,
+        triés du plus récent au plus ancien.
+      parameters: []
+      responses:
+        "200":
+          description: Liste des millésimes disponibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: number
+      tags: *a24
   /api/v2/applications/{applicationId}/rgaa-compliances:
     get:
       operationId: RgaaController_findAll
@@ -4340,7 +4357,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RgaaComplianceDto"
-      tags: &a24
+      tags: &a25
         - RGAA Compliances
     post:
       operationId: RgaaController_create
@@ -4371,7 +4388,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceErrorResponseDto"
-      tags: *a24
+      tags: *a25
   /api/v2/applications/{applicationId}/rgaa-compliances/{id}:
     patch:
       operationId: RgaaController_update
@@ -4402,7 +4419,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceDto"
-      tags: *a24
+      tags: *a25
     delete:
       operationId: RgaaController_delete
       summary: Supprimer une conformité RGAA
@@ -4422,7 +4439,7 @@ paths:
       responses:
         "204":
           description: Conformité RGAA supprimée
-      tags: *a24
+      tags: *a25
   /api/v2/stats/iq-avg/period:
     get:
       operationId: StatsController_getIqAvgGrouped
@@ -4553,7 +4570,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: &a25
+      tags: &a26
         - Reports
     post:
       operationId: ReportsController_create
@@ -4572,7 +4589,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a25
+      tags: *a26
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -4603,7 +4620,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a25
+      tags: *a26
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -4628,7 +4645,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a26
+      tags: &a27
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -4692,7 +4709,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: *a26
+      tags: *a27
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -4716,7 +4733,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a26
+      tags: *a27
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -4752,7 +4769,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a26
+      tags: *a27
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -4771,7 +4788,7 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a26
+      tags: *a27
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -5357,7 +5374,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a27
+          example: &a28
             - population 1
             - population 2
           description: population associated with the application
@@ -5367,7 +5384,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a28
+          example: &a29
             - finance
             - HR
           description: Purposes of the application
@@ -5378,7 +5395,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a29
+          example: &a30
             - tag1
             - tag2
           type: array
@@ -5664,7 +5681,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a27
+          example: *a28
           description: population associated with the application
           type: array
           items:
@@ -5672,7 +5689,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a28
+          example: *a29
           description: Purposes of the application
           type: array
           items:
@@ -5681,7 +5698,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a29
+          example: *a30
           type: array
           items:
             type: string
@@ -6602,7 +6619,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a30
+          enum: &a31
             - OK
             - KO
           type: string
@@ -6628,7 +6645,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a31
+          enum: &a32
             - S3
             - LOCAL
             - EXTERNE
@@ -6639,7 +6656,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a32
+          enum: &a33
             - OK
             - KO
           type: string
@@ -6649,7 +6666,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a33
+          enum: &a34
             - homologuee
             - en_cours
             - dispensee
@@ -6713,7 +6730,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a30
+          enum: *a31
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6737,7 +6754,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a31
+          enum: *a32
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6745,7 +6762,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a32
+          enum: *a33
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6753,7 +6770,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a33
+          enum: *a34
           type: string
           description: Homologation status
         homologation_date_end:
@@ -6835,7 +6852,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a30
+          enum: *a31
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6859,7 +6876,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a31
+          enum: *a32
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6867,7 +6884,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a32
+          enum: *a33
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6875,7 +6892,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a33
+          enum: *a34
           type: string
           description: Homologation status
         homologation_date_end:
