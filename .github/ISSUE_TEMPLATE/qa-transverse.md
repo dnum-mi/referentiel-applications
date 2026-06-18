@@ -1,8 +1,8 @@
 ---
-name: "🧪 QA — Qualité générale"
-about: "Campagne de non-régression de la page Qualité générale pour une version"
-title: "[QA][vX.Y.Z] Qualité générale"
-labels: ["qa", "non-regression", "qa:qualite"]
+name: "🧪 QA — Pages transverses"
+about: "Campagne de non-régression des pages transverses (plan du site, accessibilité, 404) pour une version"
+title: "[QA][vX.Y.Z] Pages transverses"
+labels: ["qa", "non-regression", "qa:transverse"]
 ---
 
 ## Campagne
@@ -13,7 +13,7 @@ labels: ["qa", "non-regression", "qa:qualite"]
 - **Testeur** :
 - **Date** :
 
-> Protocole de référence : [`qa/protocoles/qualite-generale.md`](../blob/main/qa/protocoles/qualite-generale.md).
+> Protocole de référence : [`qa/protocoles/transverse.md`](../blob/main/qa/protocoles/transverse.md).
 > Cocher chaque étape validée et **glisser une capture** dans la zone `📎`. Tout échec → ouvrir un
 > 🐛 (template _Rapport de bug_) et lier l'issue ici, laisser la case décochée.
 

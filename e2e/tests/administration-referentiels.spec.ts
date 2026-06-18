@@ -2,6 +2,13 @@ import { test } from "../fixtures/test";
 import { AdminPage } from "../pom";
 
 test.describe("Administration des référentiels", () => {
+  // L'administration requiert une session admin. Certains cas n'utilisent que `page` : on consomme
+  // la fixture `data` (qui exécute `loginAs(admin)`) ici pour garantir l'authentification de chaque
+  // test, sinon `/administration` redirige vers Keycloak et `admin-tabs` n'apparaît jamais.
+  test.beforeEach(async ({ data }) => {
+    void data;
+  });
+
   test("ADM-01 - créer une organisation et la retrouver", async ({ page }) => {
     const ts = Date.now();
     const orgPath = `E2E/ADM01/${ts}`;

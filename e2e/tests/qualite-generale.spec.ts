@@ -1,61 +1,86 @@
 import { test } from "../fixtures/test";
-import { HistoryPage, QualityPage, TimePage } from "../pom";
+import { QualityPage } from "../pom";
 
-test.describe("Qualité générale & tableaux de bord", () => {
-  test("QUA-01 - charger la page qualité générale", async ({ page }) => {
-    const quality = new QualityPage(page);
-    await quality.open();
-    await quality.expectTitle();
-    await quality.expectGlobalStats();
-  });
-
-  test("QUA-02 - graphique de répartition IQ par tranche", async ({ page }) => {
-    const quality = new QualityPage(page);
-    await quality.open();
-    await quality.expectIqChart();
-  });
-
-  test("QUA-03 - courbe de tendance IQ avec filtres", async ({ page }) => {
-    const quality = new QualityPage(page);
-    await quality.open();
-    await quality.expectIqTrendChart();
-    await quality.expectNoIqTrendError();
-  });
-
-  test("QUA-04 - bascule graphique / tableau sur la répartition IQ", async ({
+/**
+ * Non-régression — Qualité générale (protocole `qa/protocoles/qualite-generale.md`).
+ * POM strict : aucune spec ne manipule de sélecteur, tout passe par `QualityPage`. Pour la dataviz,
+ * on asserte via la bascule graphique/tableau (canvas + tableau coexistent en `v-show`).
+ */
+test.describe("Qualité générale", () => {
+  // La fixture `data` connecte `admin` : indispensable car `/qualite-generale` requiert l'auth.
+  test("QAL-01 - la page Qualité générale charge ses widgets", async ({
     page,
+    data,
   }) => {
+    void data;
     const quality = new QualityPage(page);
     await quality.open();
-    await quality.expectIqChart();
-    await quality.toggleIqChartView();
-    await quality.expectIqChartTableVisible();
-    await quality.toggleIqChartView();
-    await quality.expectIqChartCanvasVisible();
+    await quality.expectLoaded();
   });
 
-  test("QUA-05 - charger le diagramme TIME", async ({ page }) => {
-    const time = new TimePage(page);
-    await time.open();
-    await time.expectTitle();
-    await time.expectChartSection();
-    await time.expectFilters();
+  test("QAL-02 - statistiques globales affichées", async ({ page, data }) => {
+    void data;
+    const quality = new QualityPage(page);
+    await quality.open();
+    await quality.expectGlobalStatsVisible();
   });
 
-  test("QUA-06 - charger l'historique des modifications", async ({ page }) => {
-    const history = new HistoryPage(page);
-    await history.open();
-    await history.expectFiltersVisible();
-    await history.expectTableOrEmpty();
+  test("QAL-03 - répartition par IQ : bascule graphique / tableau", async ({
+    page,
+    data,
+  }) => {
+    test.skip(
+      !(await data.firstApplication()),
+      "Aucune application dans le jeu de données",
+    );
+
+    const quality = new QualityPage(page);
+    await quality.open();
+    await quality.expectIqRepartitionTogglesView();
   });
 
-  test("QUA-07 - filtrer l'historique par plage de dates", async ({ page }) => {
-    const history = new HistoryPage(page);
-    await history.open();
-    await history.expectFiltersVisible();
-    await history.applyFilters();
-    await history.expectTableOrEmpty();
-    await history.clearFilters();
-    await history.expectTableOrEmpty();
+  test("QAL-04 - applications par mois : bascule graphique / tableau", async ({
+    page,
+    data,
+  }) => {
+    test.skip(
+      !(await data.firstApplication()),
+      "Aucune application dans le jeu de données",
+    );
+
+    const quality = new QualityPage(page);
+    await quality.open();
+    await quality.expectApplicationsPerMonthTogglesView();
+  });
+
+  test("QAL-05 - évolution de l'IQ moyen : bascule graphique / tableau", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const quality = new QualityPage(page);
+    await quality.open();
+    await quality.expectIqTrendTogglesView();
+  });
+
+  test("QAL-06 - évolution de l'IQ moyen : période future affiche l'état vide", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const quality = new QualityPage(page);
+    await quality.open();
+    await quality.expectIqTrendEmptyForFuturePeriod();
+  });
+
+  test("QAL-07 - évolution de l'IQ moyen : changer le regroupement recharge sans erreur", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const quality = new QualityPage(page);
+    await quality.open();
+    await quality.changeIqTrendGroupBy("week");
+    await quality.changeIqTrendGroupBy("day");
   });
 });

@@ -6,11 +6,14 @@ export { CreateApplicationPage } from "./create-application.page";
 export { AdminPage } from "./admin.page";
 export { ReportsPage } from "./reports.page";
 export { UserProfilePage } from "./user-profile.page";
-export { QualityPage, TimePage, HistoryPage } from "./quality.page";
+export { QualityPage } from "./quality.page";
+export { HistoryPage, MetadataDetailPage } from "./history.page";
+export { HomePage } from "./home.page";
+export { ChromePage } from "./chrome.page";
+export { TimePage } from "./time.page";
 export {
-  HomePage,
   SiteMapPage,
   AccessibilityPage,
   NotFoundPage,
-  ReportsListPage,
-} from "./navigation.page";
+} from "./transverse.page";
+export { DataDetailPage } from "./data-detail.page";

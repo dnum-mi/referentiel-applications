@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Gère le cycle de vie des issues de campagne QA d'une version.
 //
-//   node qa/scripts/campaign.mjs open   → crée (si absentes) les 4 issues [QA][vX.Y.Z] <domaine>
+//   node qa/scripts/campaign.mjs open   → crée (si absentes) une issue [QA][vX.Y.Z] <domaine> par domaine
 //                                          et écrit qa-campaign.json = [{ domain, prefix, issue }]
 //   node qa/scripts/campaign.mjs close  → ferme toutes les issues ouvertes [QA][vX.Y.Z]
 //
@@ -68,6 +68,55 @@ const DOMAINS = [
     colorLabel: "qa:maia",
   },
   {
+    domain: "qualite-generale",
+    prefix: "QAL",
+    label: "Qualité générale",
+    template: "qa-qualite-generale.md",
+    colorLabel: "qa:qualite",
+  },
+  {
+    domain: "historique",
+    prefix: "HIS",
+    label: "Historique des modifications",
+    template: "qa-historique.md",
+    colorLabel: "qa:historique",
+  },
+  {
+    domain: "catalogue-filtres",
+    prefix: "CSF",
+    label: "Catalogue — filtres avancés",
+    template: "qa-catalogue-filtres.md",
+    colorLabel: "qa:catalogue-filtres",
+  },
+  {
+    domain: "accueil",
+    prefix: "ACC",
+    label: "Accueil & chrome",
+    template: "qa-accueil.md",
+    colorLabel: "qa:accueil",
+  },
+  {
+    domain: "time",
+    prefix: "TIM",
+    label: "Diagramme Time",
+    template: "qa-time.md",
+    colorLabel: "qa:time",
+  },
+  {
+    domain: "transverse",
+    prefix: "TRV",
+    label: "Pages transverses",
+    template: "qa-transverse.md",
+    colorLabel: "qa:transverse",
+  },
+  {
+    domain: "data-application",
+    prefix: "DAT",
+    label: "Détail d'une donnée",
+    template: "qa-data-application.md",
+    colorLabel: "qa:data-application",
+  },
+  {
     domain: "actions-crud",
     prefix: "CRU",
     label: "Actions CRUD de base",
@@ -87,20 +136,6 @@ const DOMAINS = [
     label: "Profil utilisateur",
     template: "qa-profil-utilisateur.md",
     colorLabel: "qa:profil-utilisateur",
-  },
-  {
-    domain: "qualite-generale",
-    prefix: "QUA",
-    label: "Qualité générale & tableaux de bord",
-    template: "qa-qualite-generale.md",
-    colorLabel: "qa:qualite-generale",
-  },
-  {
-    domain: "navigation-globale",
-    prefix: "NAV",
-    label: "Navigation globale & pages statiques",
-    template: "qa-navigation-globale.md",
-    colorLabel: "qa:navigation-globale",
   },
 ];
 

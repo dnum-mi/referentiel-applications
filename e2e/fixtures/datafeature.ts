@@ -54,6 +54,37 @@ export class DataFeature {
     return page?.results?.[0] ?? null;
   }
 
+  /** Une entrée de l'historique global des modifications (metadata), ou `null` si le journal est vide. */
+  async anyMetadata(): Promise<{ id: string } | null> {
+    const page = await this.api.metadatas("pageSize=1&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
+  /** Une direction de métier (business division) du référentiel, ou `null` si aucune. */
+  async firstBusinessDivision(): Promise<{ id: string; label: string } | null> {
+    const page = await this.api.businessDivisions("pageSize=5&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
+  /** Un tag du référentiel, ou `null` si aucun. */
+  async firstTag(): Promise<{ id: string; name: string } | null> {
+    const page = await this.api.tags("pageSize=5&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
+  /** Une application possédant ≥ 1 donnée (data-catalog) + l'id de sa 1ʳᵉ donnée, ou `null`. */
+  async applicationWithData(
+    probe = 15,
+  ): Promise<{ appId: string; dataId: string } | null> {
+    const list = await this.api.applications(`pageSize=${probe}&page=0`);
+    for (const app of list?.results ?? []) {
+      const data = await this.api.applicationData(app.id);
+      const first = data?.results?.[0];
+      if (first) return { appId: app.id, dataId: first.id };
+    }
+    return null;
+  }
+
   /** Profil de l'utilisateur connecté. */
   currentUser() {
     return this.api.me();

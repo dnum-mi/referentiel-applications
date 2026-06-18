@@ -84,6 +84,36 @@ export class ApiClient {
     );
   }
 
+  /** Historique global des modifications (metadatas). */
+  metadatas(query = ""): Promise<Paginated<{ id: string }> | null> {
+    return this.get<Paginated<{ id: string }>>(
+      `/metadatas${query ? `?${query}` : ""}`,
+    );
+  }
+
+  /** Données (data-catalog) d'une application. */
+  applicationData(appId: string): Promise<Paginated<{ id: string }> | null> {
+    return this.get<Paginated<{ id: string }>>(
+      `/data-catalog/applications/${appId}?pageSize=10&page=0`,
+    );
+  }
+
+  /** Directions de métier (business divisions). */
+  businessDivisions(
+    query = "",
+  ): Promise<Paginated<{ id: string; label: string }> | null> {
+    return this.get<Paginated<{ id: string; label: string }>>(
+      `/business-division${query ? `?${query}` : ""}`,
+    );
+  }
+
+  /** Tags du référentiel. */
+  tags(query = ""): Promise<Paginated<{ id: string; name: string }> | null> {
+    return this.get<Paginated<{ id: string; name: string }>>(
+      `/tags${query ? `?${query}` : ""}`,
+    );
+  }
+
   me(): Promise<{ id: string; email: string } | null> {
     return this.get<{ id: string; email: string }>(`/users/me`);
   }
@@ -368,6 +398,15 @@ export class ApiClient {
 
   deleteLabelSource(id: string): Promise<boolean> {
     return this.del(`/label-sources/${id}`);
+  }
+
+  /** Liste paginée des sources de noms alternatifs (utilisée par le nettoyage global). */
+  labelSources(
+    query = "",
+  ): Promise<Paginated<{ id: string; source: string }> | null> {
+    return this.get<Paginated<{ id: string; source: string }>>(
+      `/label-sources${query ? `?${query}` : ""}`,
+    );
   }
 
   // --- Conformités (provisioning éco-index / homologation, requiert ComplianceWrite) ---

@@ -1,8 +1,8 @@
 ---
-name: "🧪 QA — Navigation globale & pages statiques"
-about: "Campagne de non-régression de la navigation globale et des pages statiques pour une version"
-title: "[QA][vX.Y.Z] Navigation globale & pages statiques"
-labels: ["qa", "non-regression", "qa:navigation-globale"]
+name: "🧪 QA — Détail d'une donnée"
+about: "Campagne de non-régression du détail d'une donnée applicative pour une version"
+title: "[QA][vX.Y.Z] Détail d'une donnée"
+labels: ["qa", "non-regression", "qa:data-application"]
 ---
 
 ## Campagne
@@ -13,7 +13,7 @@ labels: ["qa", "non-regression", "qa:navigation-globale"]
 - **Testeur** :
 - **Date** :
 
-> Protocole de référence : [`qa/protocoles/navigation-globale.md`](../blob/main/qa/protocoles/navigation-globale.md).
+> Protocole de référence : [`qa/protocoles/data-application.md`](../blob/main/qa/protocoles/data-application.md).
 > Cocher chaque étape validée et **glisser une capture** dans la zone `📎`. Tout échec → ouvrir un
 > 🐛 (template _Rapport de bug_) et lier l'issue ici, laisser la case décochée.
 
@@ -21,7 +21,7 @@ labels: ["qa", "non-regression", "qa:navigation-globale"]
 
 | Total | ✅ Passés | ❌ Échecs | ⏭️ Non testés |
 | ----- | --------- | --------- | ------------- |
-| 9     |           |           |               |
+| 5     |           |           |               |
 
 ## Protocole
 

@@ -123,9 +123,24 @@ export class ApplicationPage extends BasePage {
     ).toBeVisible();
   }
 
-  // --- Onglet Sources de données (FIC-09) ---
+  // --- Onglet Sources de données (FIC-09, DAT) ---
   async expectDataSourcesTabLoaded(): Promise<void> {
     await expect(this.byTestId("data-application-table")).toBeVisible();
+  }
+
+  /** Nombre de lignes de données dans l'onglet Sources de données. */
+  dataRowCount(): Promise<number> {
+    return this.byTestId("data-application-table").locator("tbody tr").count();
+  }
+
+  /** Ouvre le détail de la 1ʳᵉ donnée (clic sur le bouton de nom) et attend la page de détail (DAT). */
+  async openFirstDataDetail(): Promise<void> {
+    await this.byTestId("data-application-table")
+      .locator("tbody")
+      .getByRole("button")
+      .first()
+      .click();
+    await expect(this.page).toHaveURL(/\/applications\/[^/]+\/data\/[^/]+/);
   }
 
   // --- Onglet Signalements de l'application (FIC-13) ---
@@ -141,9 +156,20 @@ export class ApplicationPage extends BasePage {
     await this.expectToaster(/prise en compte|proposition/i);
   }
 
-  // --- Onglet Modifications / historique (FIC-14) ---
+  // --- Onglet Modifications / historique (FIC-14, HIS-11) ---
   async expectModificationsTabLoaded(): Promise<void> {
     await expect(this.byTestId("modifications-table")).toBeVisible();
+  }
+
+  /** Nombre de boutons « Voir plus » de l'onglet Modifications (0 si aucune modification). */
+  modificationsSeeMoreCount(): Promise<number> {
+    return this.byTestId("modifications-see-more-button").count();
+  }
+
+  /** Ouvre le détail de la 1ʳᵉ modification depuis l'onglet et attend la page de détail (HIS-11). */
+  async openFirstModificationDetail(): Promise<void> {
+    await this.byTestId("modifications-see-more-button").first().click();
+    await expect(this.page).toHaveURL(/\/metadatas\//);
   }
 
   // --- Abonnement (bouton sans data-testid → ciblé par nom accessible, encapsulé ici) ---
@@ -516,12 +542,17 @@ export class ApplicationPage extends BasePage {
       .locator('[data-testid="relation-suggestions-input"] input')
       .first();
     await expect(input).toBeVisible({ timeout: 10000 });
-    await input.fill(targetLabel.slice(0, 5));
+    await input.fill(targetLabel);
     const suggestionsList = this.page
       .locator('[data-testid="suggestions-list"]')
       .first();
     await expect(suggestionsList).toBeVisible({ timeout: 10000 });
-    await suggestionsList.locator(".suggestion-item").first().click();
+    // Sélectionne la suggestion correspondant EXACTEMENT à la cible (pas la 1ʳᵉ, non déterministe) ;
+    // le filtre par texte laisse Playwright auto-attendre la stabilisation de la liste débouncée.
+    await suggestionsList
+      .locator(".suggestion-item", { hasText: targetLabel })
+      .first()
+      .click();
     const saveBtn = this.page
       .getByRole("button", { name: /Enregistrer/i })
       .first();

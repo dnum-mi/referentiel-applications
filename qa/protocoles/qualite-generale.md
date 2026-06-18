@@ -1,55 +1,61 @@
-# Protocole de non-régression — Qualité générale & tableaux de bord (`QUA-`)
+# Protocole de non-régression — Qualité générale (`QAL-`)
 
-> Couvre la page `/qualite-generale` (statistiques globales, répartition IQ, courbes de tendance) et
-> le diagramme TIME (`/time`). Pages en lecture seule : on vérifie le chargement, l'affichage des
-> données et les interactions (filtres, bascule graphique/tableau). Utilisateur par défaut :
-> `admin` / `pass`.
+> Page `/qualite-generale` (`QualityPage`) : statistiques globales et 3 graphiques dataviz
+> (« Répartition des applications par IQ », « Applications par mois », « Évolution de l'IQ moyen »).
+> Pour la dataviz, on valide via la **bascule graphique ↔ tableau** (canvas et tableau coexistent en
+> `v-show`), jamais sur le rendu interne du canvas. Utilisateur par défaut : `admin` / `pass`.
 
-| Légende           |                                                                   |
-| :---------------- | :---------------------------------------------------------------- |
-| **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/qualite-generale.spec.ts` |
-| **Statut**        | 🟢 automatisé — 7 cas couverts par la CI                          |
+| Légende           |                                                         |
+| :---------------- | :------------------------------------------------------ |
+| **Automatisé** ✅ | `e2e/tests/qualite-generale.spec.ts`                    |
+| **Statut**        | ✅ 100 % des cas automatisés (POM strict + datafeature) |
 
 ---
 
-### QUA-01 — Charger la page qualité générale ✅
+### QAL-01 — La page Qualité générale charge ses widgets ✅
 
-- **Action** : naviguer vers `/qualite-generale`.
-- **Résultat attendu** : `quality-page` visible ; `quality-page-title` affiche « Qualité générale » ;
-  `global-stats-data` contient au moins un indicateur (`global-stats-item-*`).
+- **Datafeature** : aucune (session `admin`).
+- **Action** : ouvrir `/qualite-generale`.
+- **Résultat attendu** : le titre « Qualité générale » est visible ; le bloc de statistiques globales
+  est chargé et les 3 graphiques exposent leur bouton de bascule.
 
-### QUA-02 — Graphique de répartition IQ par tranche ✅
+### QAL-02 — Statistiques globales affichées ✅
 
-- **Action** : observer la section `quality-iq-chart`.
-- **Résultat attendu** : `applications-iq-chart-canvas` (graphique) ou `applications-iq-chart-table`
-  (tableau) est visible ; le toggle `applications-iq-chart-toggle-view` permet de basculer entre les
-  deux vues.
+- **Datafeature** : aucune (session `admin`).
+- **Action** : ouvrir `/qualite-generale` et observer le bloc de statistiques globales.
+- **Résultat attendu** : `global-stats-data` est visible et affiche au moins un indicateur.
 
-### QUA-03 — Courbe de tendance IQ avec filtres ✅
+### QAL-03 — Répartition par IQ : bascule graphique / tableau ✅
 
-- **Action** : section `quality-iq-trend-chart` → vérifier le chargement.
-- **Résultat attendu** : le graphique, tableau ou message « pas de données » est visible ; pas de
-  `iq-chart-error`.
+- **Datafeature** : ≥ 1 application dans le jeu de données.
+- **Action** : sur le widget « Répartition par IQ », cliquer « Voir le tableau » puis « Voir le
+  graphique ».
+- **Résultat attendu** : le graphique est affiché par défaut ; la bascule montre le tableau puis
+  revient au graphique.
 
-### QUA-04 — Bascule graphique / tableau sur la répartition IQ ✅
+### QAL-04 — Applications par mois : bascule graphique / tableau ✅
 
-- **Action** : cliquer `applications-iq-chart-toggle-view`.
-- **Résultat attendu** : si le canvas était visible, `applications-iq-chart-table` s'affiche à la
-  place (et inversement) ; les données sont cohérentes entre les deux vues.
+- **Datafeature** : ≥ 1 application dans le jeu de données.
+- **Action** : sur le widget « Applications par mois », basculer graphique → tableau → graphique.
+- **Résultat attendu** : la bascule affiche le tableau puis revient au graphique sans erreur.
 
-### QUA-05 — Charger le diagramme TIME ✅
+### QAL-05 — Évolution de l'IQ moyen : bascule graphique / tableau ✅
 
-- **Action** : naviguer vers `/time`.
-- **Résultat attendu** : `time-view` visible ; `time-title` affiche « Diagramme Time » ;
-  `technical-debt-chart-section` est présente ; `time-filters` (sidebar) est accessible.
+- **Datafeature** : aucune (session `admin`).
+- **Action** : sur la frise « Évolution de l'IQ moyen », basculer vers le tableau puis revenir au
+  graphique.
+- **Résultat attendu** : le tableau s'affiche après bascule et disparaît au retour au graphique.
 
-### QUA-06 — Charger l'historique des modifications ✅
+### QAL-06 — Évolution de l'IQ moyen : période future affiche l'état vide ✅
 
-- **Action** : naviguer vers `/historique`.
-- **Résultat attendu** : la table de l'historique est visible (ou `history-empty` si aucune donnée) ;
-  les filtres `history-filter-date-from` / `history-filter-date-to` sont accessibles.
+- **Datafeature** : aucune (session `admin`).
+- **Action** : régler les bornes « Du » / « Au » de la frise sur une période future (2099).
+- **Résultat attendu** : le rechargement est déclenché et l'état « Aucune donnée disponible pour la
+  période sélectionnée » s'affiche.
 
-### QUA-07 — Filtrer l'historique par plage de dates ✅
+### QAL-07 — Évolution de l'IQ moyen : changer le regroupement recharge sans erreur ✅
 
-- **Action** : cliquer `history-apply-filters` → vérifier la table ; cliquer `history-clear-filters`.
-- **Résultat attendu** : la liste est filtrée puis réinitialisée ; pas d'erreur.
+- **Datafeature** : aucune (session `admin`).
+- **Action** : changer le regroupement de la frise (« Semaine » puis « Jour »).
+- **Résultat attendu** : la frise se recharge à chaque changement sans message d'erreur ; la bascule
+  reste disponible.
