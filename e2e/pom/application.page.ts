@@ -542,12 +542,17 @@ export class ApplicationPage extends BasePage {
       .locator('[data-testid="relation-suggestions-input"] input')
       .first();
     await expect(input).toBeVisible({ timeout: 10000 });
-    await input.fill(targetLabel.slice(0, 5));
+    await input.fill(targetLabel);
     const suggestionsList = this.page
       .locator('[data-testid="suggestions-list"]')
       .first();
     await expect(suggestionsList).toBeVisible({ timeout: 10000 });
-    await suggestionsList.locator(".suggestion-item").first().click();
+    // Sélectionne la suggestion correspondant EXACTEMENT à la cible (pas la 1ʳᵉ, non déterministe) ;
+    // le filtre par texte laisse Playwright auto-attendre la stabilisation de la liste débouncée.
+    await suggestionsList
+      .locator(".suggestion-item", { hasText: targetLabel })
+      .first()
+      .click();
     const saveBtn = this.page
       .getByRole("button", { name: /Enregistrer/i })
       .first();
