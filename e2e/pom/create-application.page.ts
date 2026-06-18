@@ -1,0 +1,91 @@
+import { expect } from "@playwright/test";
+import { BasePage } from "./base.page";
+
+export class CreateApplicationPage extends BasePage {
+  private form = () => this.byTestId("application-form");
+
+  async open(): Promise<void> {
+    await this.goto("/applications/creer");
+    await expect(this.form()).toBeVisible();
+  }
+
+  async fillStep1(label: string, description: string): Promise<void> {
+    await this.byTestId("application-label").fill(label);
+    await this.byTestId("application-shortname").fill(
+      label.replace(/\s+/g, "-").toLowerCase(),
+    );
+    await this.byTestId("application-description")
+      .locator('[data-testid="markdown-textarea"]')
+      .fill(description);
+  }
+
+  private async searchAndSelectOrg(
+    labelText: RegExp,
+    orgPath: string,
+  ): Promise<void> {
+    const input = this.page.getByLabel(labelText, { exact: false }).first();
+    await input.fill(orgPath.slice(0, 10));
+    const selectLabel = this.page.getByLabel(/Choisir une organisation/i);
+    const allSelects = await selectLabel.all();
+    const sel =
+      allSelects.length > 0
+        ? allSelects[allSelects.length - 1]
+        : selectLabel.first();
+    await expect
+      .poll(async () => (await sel.locator("option").count()) > 1, {
+        timeout: 10000,
+      })
+      .toBeTruthy();
+    const options = sel.locator("option");
+    for (let i = 1; i < (await options.count()); i++) {
+      const text = await options.nth(i).textContent();
+      if (text?.includes(orgPath.slice(0, 5))) {
+        const val = await options.nth(i).getAttribute("value");
+        if (val) {
+          await sel.selectOption(val);
+          return;
+        }
+      }
+    }
+    const val = await options.nth(1).getAttribute("value");
+    if (val) await sel.selectOption(val);
+  }
+
+  async fillMoaStep(
+    email: string,
+    firstname: string,
+    lastname: string,
+    orgPath: string,
+  ): Promise<void> {
+    await this.searchAndSelectOrg(/Organisation MOA/i, orgPath);
+    await this.byTestId("application-moa-email").fill(email);
+    await this.byTestId("application-moa-firstname").fill(firstname);
+    await this.byTestId("application-moa-lastname").fill(lastname);
+  }
+
+  async fillMoeStep(
+    email: string,
+    firstname: string,
+    lastname: string,
+    orgPath: string,
+  ): Promise<void> {
+    await this.searchAndSelectOrg(/Organisation MOE/i, orgPath);
+    await this.byTestId("application-moe-email").fill(email);
+    await this.byTestId("application-moe-firstname").fill(firstname);
+    await this.byTestId("application-moe-lastname").fill(lastname);
+  }
+
+  async nextStep(): Promise<void> {
+    await this.byTestId("application-next-btn").click();
+  }
+
+  async submit(): Promise<void> {
+    await this.byTestId("application-submit-btn").click();
+  }
+
+  async expectRedirectedToApp(): Promise<void> {
+    await expect(this.byTestId("application-profile")).toBeVisible({
+      timeout: 15000,
+    });
+  }
+}

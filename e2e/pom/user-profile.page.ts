@@ -71,9 +71,58 @@ export class UserProfilePage extends BasePage {
    * (Le message de succès est une alerte inline, pas le toaster global → on vérifie le décompte.)
    */
   async unsubscribeFirst(): Promise<void> {
+    await expect
+      .poll(() => this.unsubscribeButtons().count(), { timeout: 10000 })
+      .toBeGreaterThan(0);
     const before = await this.unsubscribeButtons().count();
-    expect(before).toBeGreaterThan(0);
     await this.unsubscribeButtons().first().click();
     await expect(this.unsubscribeButtons()).toHaveCount(before - 1);
+  }
+
+  // --- PRF: profil utilisateur (PRF-01 to PRF-06) ---
+
+  async expectProfileInfos(): Promise<void> {
+    await expect(this.byTestId("user-profile-table")).toBeVisible();
+    await expect(this.byTestId("user-profile-email")).toBeVisible();
+    await expect(this.byTestId("user-profile-email")).not.toBeEmpty();
+  }
+
+  async profileEmail(): Promise<string> {
+    return (await this.byTestId("user-profile-email").innerText()).trim();
+  }
+
+  async openTokensTab(): Promise<void> {
+    await this.tabs()
+      .getByRole("tab", { name: /tokens/i })
+      .click();
+  }
+
+  async expectTokensTabLoaded(): Promise<void> {
+    await expect(
+      this.page.getByRole("heading", { name: /Tokens applicatifs/i }),
+    ).toBeVisible();
+  }
+
+  async followedAppCount(): Promise<number> {
+    return this.unsubscribeButtons().count();
+  }
+
+  async expectFollowedAppsTable(): Promise<void> {
+    await expect(this.byTestId("user-followed-apps-table")).toBeVisible();
+  }
+
+  async firstFollowedAppLabel(): Promise<string | null> {
+    const link = this.byTestId("user-followed-apps-table")
+      .locator("a.fr-link")
+      .first();
+    if (!(await link.isVisible().catch(() => false))) return null;
+    return (await link.innerText()).trim();
+  }
+
+  async clickFirstFollowedApp(): Promise<void> {
+    await this.byTestId("user-followed-apps-table")
+      .locator("a.fr-link")
+      .first()
+      .click();
   }
 }

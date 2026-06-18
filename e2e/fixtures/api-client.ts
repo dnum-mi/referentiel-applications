@@ -206,6 +206,200 @@ export class ApiClient {
     return this.post(`/email/digest?day=${day}`);
   }
 
+  // --- CRUD helpers (CRU-* tests) ---
+
+  async createApplication(
+    body: Record<string, unknown>,
+  ): Promise<{ id: string; label: string } | null> {
+    const res = await this.page.request.post(`/api/v2/applications`, {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      data: body,
+    });
+    if (!res.ok()) {
+      const text = await res.text().catch(() => "");
+      console.error(`POST /applications ${res.status()}: ${text}`);
+      return null;
+    }
+    return (await res.json()) as { id: string; label: string };
+  }
+
+  deleteApplication(id: string): Promise<boolean> {
+    return this.del(`/applications/${id}`);
+  }
+
+  createActor(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>(`/applications/${appId}/actors`, body);
+  }
+
+  deleteActor(appId: string, actorId: string): Promise<boolean> {
+    return this.del(`/applications/${appId}/actors/${actorId}`);
+  }
+
+  updateActor(
+    appId: string,
+    actorId: string,
+    body: Record<string, unknown>,
+  ): Promise<unknown> {
+    return this.patch(`/applications/${appId}/actors/${actorId}`, body);
+  }
+
+  actors(
+    appId: string,
+  ): Promise<
+    | { id: string; firstname?: string; lastname?: string; isGroup?: boolean }[]
+    | null
+  > {
+    return this.get<
+      { id: string; firstname?: string; lastname?: string; isGroup?: boolean }[]
+    >(`/applications/${appId}/actors`);
+  }
+
+  createStatus(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>(`/applications/${appId}/statuses`, body);
+  }
+
+  deleteStatus(appId: string, statusId: string): Promise<boolean> {
+    return this.del(`/applications/${appId}/statuses/${statusId}`);
+  }
+
+  statuses(appId: string): Promise<{ id: string }[] | null> {
+    return this.get<{ id: string }[]>(`/applications/${appId}/statuses`);
+  }
+
+  createRelation(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>(`/applications/${appId}/relations`, body);
+  }
+
+  deleteRelation(appId: string, relationId: string): Promise<boolean> {
+    return this.del(`/applications/${appId}/relations/${relationId}`);
+  }
+
+  relations(appId: string): Promise<{ id: string }[] | null> {
+    return this.get<{ id: string }[]>(`/applications/${appId}/relations`);
+  }
+
+  createLink(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>(`/applications/${appId}/links`, body);
+  }
+
+  deleteLink(appId: string, linkId: string): Promise<boolean> {
+    return this.del(`/applications/${appId}/links/${linkId}`);
+  }
+
+  links(appId: string): Promise<{ id: string }[] | null> {
+    return this.get<{ id: string }[]>(`/applications/${appId}/links`);
+  }
+
+  createHosting(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>(`/applications/${appId}/hostings`, body);
+  }
+
+  deleteHosting(appId: string, hostingId: string): Promise<boolean> {
+    return this.del(`/applications/${appId}/hostings/${hostingId}`);
+  }
+
+  hostings(appId: string): Promise<{ id: string }[] | null> {
+    return this.get<{ id: string }[]>(`/applications/${appId}/hostings`);
+  }
+
+  createLabel(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>(`/applications/${appId}/labels`, body);
+  }
+
+  deleteLabel(appId: string, labelId: string): Promise<boolean> {
+    return this.del(`/applications/${appId}/labels/${labelId}`);
+  }
+
+  labels(appId: string): Promise<{ id: string; value?: string }[] | null> {
+    return this.get<{ id: string; value?: string }[]>(
+      `/applications/${appId}/labels`,
+    );
+  }
+
+  createRgaa(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>(
+      `/applications/${appId}/rgaa-compliances`,
+      body,
+    );
+  }
+
+  deleteRgaa(appId: string, rgaaId: string): Promise<boolean> {
+    return this.del(`/applications/${appId}/rgaa-compliances/${rgaaId}`);
+  }
+
+  rgaaCompliances(appId: string): Promise<{ id: string }[] | null> {
+    return this.get<{ id: string }[]>(
+      `/applications/${appId}/rgaa-compliances`,
+    );
+  }
+
+  actorTypes(): Promise<{ id: string; label: string }[] | null> {
+    return this.get<{ id: string; label: string }[]>("/actor-types");
+  }
+
+  organizations(
+    query: string,
+  ): Promise<{ id: string; label: string; path: string }[] | null> {
+    return this.get<{ id: string; label: string; path: string }[]>(
+      `/organizations?search=${encodeURIComponent(query)}&pageSize=5`,
+    );
+  }
+
+  createOrganization(
+    body: Record<string, unknown>,
+  ): Promise<{ id: string; path: string } | null> {
+    return this.post<{ id: string; path: string }>("/organizations", body);
+  }
+
+  deleteOrganization(id: string): Promise<boolean> {
+    return this.del(`/organizations/${id}`);
+  }
+
+  createTag(body: {
+    name: string;
+  }): Promise<{ id: string; name: string } | null> {
+    return this.post<{ id: string; name: string }>("/tags", body);
+  }
+
+  deleteTag(id: string): Promise<boolean> {
+    return this.del(`/tags/${id}`);
+  }
+
+  createLabelSource(body: {
+    source: string;
+  }): Promise<{ id: string; source: string } | null> {
+    return this.post<{ id: string; source: string }>("/label-sources", body);
+  }
+
+  deleteLabelSource(id: string): Promise<boolean> {
+    return this.del(`/label-sources/${id}`);
+  }
+
   // --- Conformités (provisioning éco-index / homologation, requiert ComplianceWrite) ---
   compliance(appId: string): Promise<ComplianceShape | null> {
     return this.get<ComplianceShape>(`/applications/${appId}/compliances`);

@@ -116,6 +116,27 @@ const DOMAINS = [
     template: "qa-data-application.md",
     colorLabel: "qa:data-application",
   },
+  {
+    domain: "actions-crud",
+    prefix: "CRU",
+    label: "Actions CRUD de base",
+    template: "qa-actions-crud.md",
+    colorLabel: "qa:actions-crud",
+  },
+  {
+    domain: "administration-referentiels",
+    prefix: "ADM",
+    label: "Administration des référentiels",
+    template: "qa-administration-referentiels.md",
+    colorLabel: "qa:administration-referentiels",
+  },
+  {
+    domain: "profil-utilisateur",
+    prefix: "PRF",
+    label: "Profil utilisateur",
+    template: "qa-profil-utilisateur.md",
+    colorLabel: "qa:profil-utilisateur",
+  },
 ];
 
 function required(key) {

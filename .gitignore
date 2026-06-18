@@ -301,6 +301,8 @@ dist
 # Serverless Webpack directories
 .webpack/
 
+.claude/
+
 # Optional stylelint cache
 
 # SvelteKit build / generate output
