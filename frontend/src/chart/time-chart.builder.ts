@@ -42,7 +42,7 @@ export class TimeChartBuilder {
       .attr("fill", "var(--blue-france-sun-113-625)")
       .attr("font-size", "16px")
       .attr("font-weight", "bold")
-      .text("TIME analysis");
+      .text("Portefeuille");
     return this;
   }
 
@@ -83,7 +83,7 @@ export class TimeChartBuilder {
           .attr("fill", "currentColor")
           .attr("text-anchor", "end")
           .attr("font-size", "12px")
-          .text("Maturite technique"),
+          .text("Maturite metier"),
       );
 
     this.g
@@ -99,7 +99,7 @@ export class TimeChartBuilder {
           .attr("fill", "currentColor")
           .attr("text-anchor", "end")
           .attr("font-size", "12px")
-          .text("Maturite metier"),
+          .text("Maturite technique"),
       );
 
     return this;
@@ -111,10 +111,10 @@ export class TimeChartBuilder {
     const gap = 15;
 
     const quadrants = [
-      { tx: 0 + gap, ty: 0 + gap, anchor: "start", baseline: "hanging", label: "Tolerate" },
-      { tx: plotWidth - gap, ty: 0 + gap, anchor: "end", baseline: "hanging", label: "Invest" },
-      { tx: 0 + gap, ty: plotHeight - gap, anchor: "start", baseline: "auto", label: "Eliminate" },
-      { tx: plotWidth - gap, ty: plotHeight - gap, anchor: "end", baseline: "auto", label: "Migrate" },
+      { tx: 0 + gap, ty: 0 + gap, anchor: "start", baseline: "hanging", label: "Tolérer" },
+      { tx: plotWidth - gap, ty: 0 + gap, anchor: "end", baseline: "hanging", label: "A privilégier" },
+      { tx: 0 + gap, ty: plotHeight - gap, anchor: "start", baseline: "auto", label: "A décommissionner" },
+      { tx: plotWidth - gap, ty: plotHeight - gap, anchor: "end", baseline: "auto", label: "A Migrer" },
     ] as const;
 
     quadrants.forEach(({ tx, ty, anchor, baseline, label }) => {
@@ -135,8 +135,8 @@ export class TimeChartBuilder {
 
   /**
    * Légendes des axes hors plot area :
-   * - bas    : Worse · Business Fitness · Better
-   * - gauche : Worse (bas) · Technical Fitness (milieu) · Better (haut) — perpendiculaires
+   * - bas    : Pire · Maturité métier · Meilleur
+   * - gauche : Pire (bas) · Maturité technique (milieu) · Meilleur (haut) — perpendiculaires
    */
   drawAxisLegends(): this {
     const { plotWidth, plotHeight } = this.layout;
@@ -150,7 +150,7 @@ export class TimeChartBuilder {
       .attr("fill", "currentColor")
       .attr("font-size", "11px")
       .attr("font-style", "italic")
-      .text("Worse");
+      .text("Pire");
 
     this.g
       .append("text")
@@ -160,7 +160,7 @@ export class TimeChartBuilder {
       .attr("fill", "currentColor")
       .attr("font-size", "13px")
       .attr("font-weight", "bold")
-      .text("Business Fitness");
+      .text("Maturité métier");
 
     this.g
       .append("text")
@@ -170,7 +170,7 @@ export class TimeChartBuilder {
       .attr("fill", "currentColor")
       .attr("font-size", "11px")
       .attr("font-style", "italic")
-      .text("Better");
+      .text("Meilleur");
 
     // Axe vertical (gauche) — perpendiculaire
     // rotate(-90) + translate : text-anchor "start" = part vers le haut / "end" = vers le bas
@@ -181,7 +181,7 @@ export class TimeChartBuilder {
       .attr("fill", "currentColor")
       .attr("font-size", "11px")
       .attr("font-style", "italic")
-      .text("Worse");
+      .text("Pire");
 
     this.g
       .append("text")
@@ -190,7 +190,7 @@ export class TimeChartBuilder {
       .attr("fill", "currentColor")
       .attr("font-size", "11px")
       .attr("font-style", "italic")
-      .text("Better");
+      .text("Meilleur");
 
     this.g
       .append("text")
@@ -199,7 +199,7 @@ export class TimeChartBuilder {
       .attr("fill", "currentColor")
       .attr("font-size", "13px")
       .attr("font-weight", "bold")
-      .text("Technical Fitness");
+      .text("Maturité technique");
 
     return this;
   }
@@ -229,18 +229,19 @@ export class TimeChartBuilder {
 
     const tooltip = this.tooltip;
 
-    const points = this.g
+    this.g
       .selectAll("circle")
       .data(this.data)
       .enter()
       .append("circle")
-      .attr("cx", (d) => x(d.technicalDebtInfo?.technicalMaturity ?? 0))
-      .attr("cy", (d) => y(d.technicalDebtInfo?.businessMaturity ?? 0))
+      .attr("cx", (d) => x(d.technicalDebtInfo?.businessMaturity ?? 0))
+      .attr("cy", (d) => y(d.technicalDebtInfo?.technicalMaturity ?? 0))
       .attr("r", (d) => radius(d.technicalDebtInfo?.costMaturity ?? 0))
       .attr("fill", (d) => color(d.technicalDebtInfo?.costMaturity ?? 0))
       .attr("opacity", 0.9)
       .attr("stroke", "#9F0126")
       .attr("stroke-width", 0.6)
+      .attr("cursor", "pointer")
       .attr("data-testid", "technical-debt-point")
       .on("mouseenter", (_, d) => {
         tooltip
@@ -257,15 +258,10 @@ export class TimeChartBuilder {
       })
       .on("mouseleave", () => {
         tooltip.style("display", "none");
+      })
+      .on("click", (_, d) => {
+        window.location.href = `http://localhost:5173/applications/${d.id}`;
       });
-
-    // Titre SVG natif pour l'accessibilité (lecteurs d'écran, hover navigateur)
-    points
-      .append("title")
-      .text(
-        (d) =>
-          `${d.shortName ?? d.label} - T:${d.technicalDebtInfo?.technicalMaturity ?? "-"} / M:${d.technicalDebtInfo?.businessMaturity ?? "-"} / C:${d.technicalDebtInfo?.costMaturity ?? "-"}`,
-      );
 
     return this;
   }
