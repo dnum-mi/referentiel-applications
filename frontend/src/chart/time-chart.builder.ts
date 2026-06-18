@@ -49,7 +49,7 @@ export class TimeChartBuilder {
   /** Axes X et Y qui se croisent au centre du domaine (2.5, 2.5) */
   drawAxes(): this {
     const { x, y } = this.scales;
-    const { plotWidth, plotHeight, margin } = this.layout;
+    const { plotWidth, plotHeight } = this.layout;
 
     // Contour carré autour de la zone du graphe
     this.g
@@ -204,7 +204,11 @@ export class TimeChartBuilder {
       .style("border", "1px solid #ddd")
       .style("border-radius", "4px")
       .style("box-shadow", "0 4px 12px rgba(0,0,0,0.08)")
-      .style("display", "none");
+      .style("display", "none")
+      .style("max-width", "250px")
+      .style("overflow", "hidden")
+      .style("text-overflow", "ellipsis")
+      .style("white-space", "nowrap");
 
     const tooltip = this.tooltip;
 
@@ -226,7 +230,8 @@ export class TimeChartBuilder {
         tooltip
           .style("display", "block")
           .html(
-            `<strong>${d.label}</strong> ${d.shortName ? `(<em>${d.shortName}<em/>)` : ""}<br/>` +
+            `<strong>${d.label}</strong><br/>` +
+              `${d.shortName ? `<em>${d.shortName}<em/>` : ""}<br/>` +
               `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}<br/>` +
               `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}<br/>` +
               `Coût MCO: ${d.technicalDebtInfo?.costMaturity ?? "-"}`,
