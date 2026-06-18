@@ -13,6 +13,8 @@ const outputDir = process.env.CI
 export default defineConfig({
   testDir: "./tests",
   outputDir,
+  // Nettoie les résidus de test (`E2E…`) avant chaque suite → rejouable à l'infini sans re-seed.
+  globalSetup: "./support/global-cleanup.ts",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "html",

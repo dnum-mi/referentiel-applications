@@ -400,6 +400,15 @@ export class ApiClient {
     return this.del(`/label-sources/${id}`);
   }
 
+  /** Liste paginée des sources de noms alternatifs (utilisée par le nettoyage global). */
+  labelSources(
+    query = "",
+  ): Promise<Paginated<{ id: string; source: string }> | null> {
+    return this.get<Paginated<{ id: string; source: string }>>(
+      `/label-sources${query ? `?${query}` : ""}`,
+    );
+  }
+
   // --- Conformités (provisioning éco-index / homologation, requiert ComplianceWrite) ---
   compliance(appId: string): Promise<ComplianceShape | null> {
     return this.get<ComplianceShape>(`/applications/${appId}/compliances`);
