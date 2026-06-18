@@ -1,0 +1,19 @@
+/// Campagne annuelle de dette IT (millésime), gérée par l'administration.
+/// Les évaluations de dette (`TechnicalDebtInfo.millesime`) se rattachent à
+/// l'année d'une campagne.
+///
+/// @namespace Applications
+model MditCampaign {
+  /// Identifiant unique
+  id        String   @id @default(uuid())
+  /// Année de la campagne (millésime), unique
+  year      Int      @unique
+  /// Libellé optionnel de la campagne
+  label     String?
+  /// Campagne active : présentée dans le sélecteur de campagne
+  isActive  Boolean  @default(true)
+  /// Date de création
+  createdAt DateTime @default(now())
+
+  @@index([year(sort: Desc)])
+}

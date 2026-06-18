@@ -6,6 +6,7 @@ import AdminOrganizationsTab from "@/components/admin/AdminOrganizationsTab.vue"
 import { markRaw, ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
+import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
 
 interface DsfrTab {
   title: string;
@@ -44,6 +45,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-label-sources",
     panelId: "panel-label-sources",
     component: markRaw(AdminLabelSourcesTab),
+  },
+  {
+    title: "Campagnes dette IT",
+    icon: "ri-calendar-event-line",
+    tabId: "tab-mdit-campaigns",
+    panelId: "panel-mdit-campaigns",
+    component: markRaw(AdminMditCampaignsTab),
   },
   {
     title: "Batch de données",

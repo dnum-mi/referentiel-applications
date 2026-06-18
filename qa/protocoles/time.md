@@ -39,15 +39,15 @@
 
 ### TIM-05 — Le sélecteur de campagne présente le millésime le plus récent par défaut ✅
 
-- **Datafeature** : garantir au moins deux campagnes dette IT (millésimes) via l'API (semis d'une
-  campagne précédente sur la première application si besoin).
+- **Datafeature** : garantir au moins deux campagnes dette IT via l'API admin (`/mdit-campaigns`,
+  création d'une campagne précédente si besoin).
 - **Action** : ouvrir `/time`.
-- **Résultat attendu** : le sélecteur de campagne dette IT (millésime) est visible et propose au
-  moins deux millésimes ; le plus récent est présenté (sélectionné) par défaut.
+- **Résultat attendu** : le sélecteur de campagne dette IT (millésime), dans la sidebar, est visible
+  et propose au moins deux millésimes ; le plus récent est présenté (sélectionné) par défaut.
 
 ### TIM-06 — Sélectionner une campagne précédente reflète millesime dans l'URL et recharge le diagramme ✅
 
-- **Datafeature** : garantir au moins deux campagnes dette IT (millésimes) via l'API.
+- **Datafeature** : garantir au moins deux campagnes dette IT via l'API admin (`/mdit-campaigns`).
 - **Action** : depuis `/time`, sélectionner une campagne précédente dans le sélecteur de millésime.
 - **Résultat attendu** : l'URL porte `millesime=<année>` ; le diagramme se recharge et reste affiché
   (graphique ou état vide), sans erreur.

@@ -295,12 +295,6 @@ export function useApplicationSearch() {
     return response.data ?? [];
   }
 
-  /** Millésimes de campagne dette IT disponibles, triés du plus récent au plus ancien. */
-  async function fetchTechnicalDebtMillesimes(): Promise<number[]> {
-    const response = await api.technicalDebtControllerGetMillesimes({ throwOnError: true });
-    return response.data ?? [];
-  }
-
   // Auto-search when filters change
   watch(
     () => route.query,
@@ -324,7 +318,6 @@ export function useApplicationSearch() {
     DEFAULT_FILTERS,
     searchApplications,
     fetchTechnicalDebtPoints,
-    fetchTechnicalDebtMillesimes,
     setFilter,
     setOrder,
     resetFilters,

@@ -123,6 +123,29 @@ export class ApiClient {
     return this.get<number[]>(`/technical-debts/millesimes`);
   }
 
+  /** Campagnes dette IT (millésimes) gérées par l'admin, actives, triées desc. */
+  mditCampaigns(): Promise<Paginated<{ id: string; year: number }> | null> {
+    return this.get<Paginated<{ id: string; year: number }>>(
+      `/mdit-campaigns?onlyActive=true&pageSize=100&page=0`,
+    );
+  }
+
+  /** Crée une campagne dette IT (requiert AdminPanelManage). */
+  createMditCampaign(
+    body: Record<string, unknown>,
+  ): Promise<{ id: string; year: number } | null> {
+    return this.post<{ id: string; year: number }>(`/mdit-campaigns`, body);
+  }
+
+  /** Supprime la campagne du millésime donné si elle existe (idempotence des tests). */
+  async deleteMditCampaignByYear(year: number): Promise<void> {
+    const list = await this.get<Paginated<{ id: string; year: number }>>(
+      `/mdit-campaigns?pageSize=100&page=0`,
+    );
+    const found = list?.results?.find((c) => c.year === year);
+    if (found) await this.del(`/mdit-campaigns/${found.id}`);
+  }
+
   /** Crée une évaluation de dette technique (campagne `millesime`) pour une application. */
   createTechnicalDebtInfo(
     appId: string,
