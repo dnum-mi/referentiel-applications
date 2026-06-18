@@ -15,9 +15,18 @@ export class TimePage extends BasePage {
   // L'aria-label du SVG est posé dynamiquement par D3 (« …maturites TIME »).
   private scatter = () => this.page.getByRole("img", { name: /maturit/i });
   private empty = () => this.byTestId("technical-debt-empty");
-  // Sélecteur de campagne dette IT (millésime). Le `data-testid` du DsfrSelect porte le <select>.
+  // Sélecteur de campagne dette IT (millésime), dans l'accordéon « Général » de la sidebar.
+  // Le `data-testid` du DsfrSelect porte le <select>.
+  private generalAccordion = () => this.byTestId("sidebar-accordion-general");
   private millesimeSelector = () => this.byTestId("time-millesime");
   private millesimeSelect = () => this.byTestId("time-millesime-select");
+
+  /** Déploie l'accordéon « Général » si le sélecteur de campagne n'est pas déjà visible. */
+  private async ensureCampaignVisible(): Promise<void> {
+    if (await this.millesimeSelector().isVisible()) return;
+    await this.generalAccordion().getByRole("button").first().click();
+    await expect(this.millesimeSelector()).toBeVisible();
+  }
 
   async open(): Promise<void> {
     await this.goto("/time");
@@ -40,18 +49,21 @@ export class TimePage extends BasePage {
     await expect(this.filters()).toBeVisible();
   }
 
-  /** Le sélecteur de campagne dette IT (millésime) est présent. */
+  /** Le sélecteur de campagne dette IT (millésime) est présent (accordéon « Général »). */
   async expectMillesimeSelectorPresent(): Promise<void> {
+    await this.ensureCampaignVisible();
     await expect(this.millesimeSelector()).toBeVisible();
   }
 
   /** Millésime actuellement sélectionné dans le sélecteur de campagne. */
   async selectedMillesime(): Promise<string> {
+    await this.ensureCampaignVisible();
     return this.millesimeSelect().inputValue();
   }
 
   /** Millésimes proposés par le sélecteur (valeurs numériques, hors option vide). */
   async availableMillesimes(): Promise<string[]> {
+    await this.ensureCampaignVisible();
     const values = await this.millesimeSelect()
       .locator("option")
       .evaluateAll((options) =>
@@ -62,6 +74,7 @@ export class TimePage extends BasePage {
 
   /** Sélectionne un millésime et attend sa propagation dans l'URL (`millesime`). */
   async selectMillesime(year: string): Promise<void> {
+    await this.ensureCampaignVisible();
     await this.millesimeSelect().selectOption(year);
     await waitForSearchParams(
       this.page,

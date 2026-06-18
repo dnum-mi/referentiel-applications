@@ -131,54 +131,66 @@ async function deleteCampaign() {
 
   <DsfrModal
     :opened="isEditModalOpen"
-    :title="!campaign?.id ? 'Créer une campagne' : 'Modifier la campagne'"
+    :title="!campaign?.id ? 'Créer une campagne dette IT' : `Modifier la campagne ${campaign?.year}`"
     :data-testid="!campaign?.id ? 'admin-create-campaign-modal' : 'admin-edit-campaign-modal'"
     @close="closeEditModal"
   >
+    <p class="fr-text--sm fr-hint-text fr-mb-3w">
+      Une campagne correspond à un millésime (année) de collecte de la dette IT. La campagne active la plus récente est présentée par défaut
+      dans le diagramme Time.
+    </p>
+
+    <DsfrAlert v-if="errorMessage" type="error" :description="errorMessage" small class="fr-mb-3w" data-testid="campaign-form-error" />
+
     <DsfrInputGroup
       v-model.number="editingYear"
-      class="fr-mb-2w"
+      class="fr-mb-3w"
       type="number"
       label="Millésime (année)"
-      hint="Année de la campagne, ex. 2027"
+      hint="Année sur 4 chiffres, entre 2000 et 2100 (ex. 2027)"
       label-visible
       required
+      :min="2000"
+      :max="2100"
       data-testid="campaign-year"
     />
 
     <DsfrInputGroup
       v-model="editingLabel"
-      class="fr-mb-2w"
+      class="fr-mb-3w"
       label="Libellé (optionnel)"
+      hint="Texte affiché dans le sélecteur de campagne ; à défaut, l'année est utilisée"
       label-visible
-      :error-message="errorMessage"
       data-testid="campaign-label"
     />
 
     <DsfrToggleSwitch
       :model-value="editingActive"
       label="Campagne active"
+      hint="Seules les campagnes actives apparaissent dans le sélecteur du diagramme Time"
       data-testid="campaign-active"
       @update:model-value="editingActive = $event"
     />
 
     <template #footer>
-      <DsfrButton
-        label="Annuler"
-        secondary
-        data-testid="admin-campaign-cancel-btn"
-        title="Annuler"
-        aria-label="Annuler"
-        @click="closeEditModal"
-      />
-      <DsfrButton
-        label="Enregistrer"
-        title="Enregistrer"
-        aria-label="Enregistrer"
-        :disabled="isSaving"
-        data-testid="admin-campaign-save-btn"
-        @click="saveCampaign"
-      />
+      <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
+        <DsfrButton
+          label="Annuler"
+          secondary
+          data-testid="admin-campaign-cancel-btn"
+          title="Annuler"
+          aria-label="Annuler"
+          @click="closeEditModal"
+        />
+        <DsfrButton
+          :label="isSaving ? 'Enregistrement…' : 'Enregistrer'"
+          title="Enregistrer"
+          aria-label="Enregistrer"
+          :disabled="isSaving"
+          data-testid="admin-campaign-save-btn"
+          @click="saveCampaign"
+        />
+      </DsfrButtonGroup>
     </template>
   </DsfrModal>
 
@@ -193,23 +205,25 @@ async function deleteCampaign() {
     />
 
     <template #footer>
-      <DsfrButton
-        label="Annuler"
-        secondary
-        data-testid="admin-campaign-delete-cancel-btn"
-        title="Annuler la suppression"
-        aria-label="Annuler la suppression"
-        @click="closeDeleteModal"
-      />
-      <DsfrButton
-        label="Supprimer"
-        data-testid="admin-campaign-delete-confirm-btn"
-        title="Confirmer la suppression"
-        aria-label="Confirmer la suppression"
-        danger
-        :disabled="isDeleting"
-        @click="deleteCampaign"
-      />
+      <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
+        <DsfrButton
+          label="Annuler"
+          secondary
+          data-testid="admin-campaign-delete-cancel-btn"
+          title="Annuler la suppression"
+          aria-label="Annuler la suppression"
+          @click="closeDeleteModal"
+        />
+        <DsfrButton
+          label="Supprimer"
+          data-testid="admin-campaign-delete-confirm-btn"
+          title="Confirmer la suppression"
+          aria-label="Confirmer la suppression"
+          danger
+          :disabled="isDeleting"
+          @click="deleteCampaign"
+        />
+      </DsfrButtonGroup>
     </template>
   </DsfrModal>
 </template>

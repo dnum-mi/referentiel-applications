@@ -56,8 +56,6 @@ function toggleSubscribedAppsFilter(value: boolean) {
           {{ total }} application(s) trouvée(s) sur {{ statsStore.totalApplications }}
         </p>
 
-        <CampaignFilter v-if="isTimeRoute" />
-
         <DsfrToggleSwitch
           v-if="userStore.user?.email"
           :model-value="isMyAppsFilterActive"
@@ -78,6 +76,7 @@ function toggleSubscribedAppsFilter(value: boolean) {
         />
 
         <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">
+          <CampaignFilter v-if="isTimeRoute" />
           <ApplicationFilter />
           <PriorityRestartFilter />
         </DsfrAccordion>
