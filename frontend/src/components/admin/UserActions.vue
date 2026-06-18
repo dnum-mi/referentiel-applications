@@ -9,6 +9,7 @@ import {
 } from "@/client/types.gen";
 import { Roles } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
 import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { useMemoize } from "@vueuse/core";
@@ -22,6 +23,22 @@ const emit = defineEmits<{
 }>();
 
 const toaster = useToasterStore();
+const userStore = useUserStore();
+
+// On peut impersonner tout utilisateur humain, sauf soi-même.
+const canImpersonate = computed(() => props.user.type !== "bot" && props.user.id !== userStore.user?.id);
+const isImpersonating = ref(false);
+
+async function impersonate() {
+  isImpersonating.value = true;
+  try {
+    await userStore.startImpersonation(props.user);
+  } catch (err) {
+    toaster.addErrorMessage("Impossible d'impersonner cet utilisateur");
+    console.error(err);
+    isImpersonating.value = false;
+  }
+}
 
 const isEditModalOpen = ref(false);
 const isSaving = ref(false);
@@ -176,6 +193,17 @@ const isScopeDisabled = computed(() => {
         title="Modifier les permissions de l'utilisateur"
         aria-label="Modifier les permissions de l'utilisateur"
         @click="openEditModal"
+      />
+      <DsfrButton
+        v-if="canImpersonate"
+        :label="isImpersonating ? '...' : 'Se connecter en tant que'"
+        size="sm"
+        tertiary
+        :disabled="isImpersonating"
+        data-testid="admin-user-impersonate-btn"
+        title="Se connecter en tant que cet utilisateur"
+        aria-label="Se connecter en tant que cet utilisateur"
+        @click="impersonate"
       />
     </div>
 

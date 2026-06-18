@@ -163,6 +163,55 @@ export class AdminPage extends BasePage {
     await expect(this.page).not.toHaveURL(/\/administration/);
   }
 
+  // --- Impersonation (#1764) ---
+
+  private impersonationBanner = () => this.byTestId("impersonation-banner");
+
+  /** Impersonne l'utilisateur dont la LIGNE contient l'email (recharge l'app sous son identité). */
+  async impersonateUser(email: string): Promise<void> {
+    await this.expectUserRow(email);
+    const row = this.usersTable().locator("tr", { hasText: email });
+    const impersonated = this.page
+      .waitForResponse(
+        (r) =>
+          /\/users\/[^/]+\/impersonate$/.test(r.url()) &&
+          r.request().method() === "POST",
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+    await row.getByTestId("admin-user-impersonate-btn").first().click();
+    await impersonated;
+  }
+
+  /** Vérifie que le bandeau d'impersonation est affiché pour `email`. */
+  async expectImpersonationBanner(email: string): Promise<void> {
+    await expect(this.impersonationBanner()).toBeVisible();
+    await expect(this.impersonationBanner()).toContainText(email);
+  }
+
+  /** Vérifie qu'aucun bouton d'impersonation n'est proposé sur la ligne de `email` (ex. soi-même). */
+  async expectImpersonateUnavailable(email: string): Promise<void> {
+    await this.expectUserRow(email);
+    const row = this.usersTable().locator("tr", { hasText: email });
+    await expect(row.getByTestId("admin-user-impersonate-btn")).toHaveCount(0);
+  }
+
+  /** Recharge la page et vérifie que l'impersonation de `email` est toujours active. */
+  async expectImpersonationPersistsAfterReload(email: string): Promise<void> {
+    await this.page.reload();
+    await this.expectImpersonationBanner(email);
+  }
+
+  /** Arrête l'impersonation depuis le bandeau (recharge l'app sous l'identité admin). */
+  async stopImpersonation(): Promise<void> {
+    await this.byTestId("impersonation-stop-btn").click();
+  }
+
+  /** Vérifie que plus aucune impersonation n'est en cours. */
+  async expectNotImpersonating(): Promise<void> {
+    await expect(this.impersonationBanner()).toBeHidden();
+  }
+
   // --- Onglet « Organisations » (ADM-01 to ADM-04) ---
 
   private orgsTable = () => this.byTestId("admin-organizations-table");

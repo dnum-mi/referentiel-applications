@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { Prisma, Roles, User } from "@prisma/client";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { Prisma, Roles, User, UserType } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
 import { OrganizationMaiaReferencesService } from "src/organization-maia-references/organization-maia-references.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -222,6 +226,64 @@ export class UserService {
 
   getCurrentUser(requestor: UserEntity): UserEntity {
     return requestor;
+  }
+
+  findByIdWithRelations(id: string): Promise<UserEntity | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        organization: true,
+        followedApplications: true,
+        scopeOrganization: true,
+      },
+    });
+  }
+
+  async startImpersonation(
+    admin: Requestor,
+    targetId: string,
+  ): Promise<UserEntity> {
+    if (admin.id === targetId) {
+      throw new BadRequestException("Vous ne pouvez pas vous impersonner.");
+    }
+
+    const target = await this.findByIdWithRelations(targetId);
+    if (!target) {
+      throw new NotFoundException("Utilisateur introuvable");
+    }
+    if (target.type === UserType.bot) {
+      throw new BadRequestException(
+        "Impossible d'impersonner un compte de service.",
+      );
+    }
+
+    await this.prisma.impersonationLog.create({
+      data: { adminId: admin.id, targetId },
+    });
+
+    this.logger.warn(
+      `[Impersonation] ${admin.email} (admin ${admin.id}) impersonne ${target.email} (${target.id})`,
+    );
+
+    return target;
+  }
+
+  async stopImpersonation(adminId: string, targetId: string): Promise<void> {
+    const openLog = await this.prisma.impersonationLog.findFirst({
+      where: { adminId, targetId, endedAt: null },
+      orderBy: { startedAt: "desc" },
+    });
+
+    if (openLog) {
+      await this.prisma.impersonationLog.update({
+        where: { id: openLog.id },
+        data: { endedAt: new Date() },
+      });
+    }
+
+    this.logger.warn(
+      `[Impersonation] Fin de l'impersonation de ${targetId} par l'admin ${adminId}`,
+    );
   }
 
   async syncOrganizationFromMaiaByEmail(email: string) {
