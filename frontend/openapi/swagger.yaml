@@ -2515,7 +2515,7 @@ paths:
         identifie l'administrateur réel.
       parameters: []
       responses:
-        "200":
+        "204":
           description: Impersonation arrêtée
       tags: *a13
   /api/v2/users/{id}/impersonate:

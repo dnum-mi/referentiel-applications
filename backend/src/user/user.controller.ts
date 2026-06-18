@@ -18,6 +18,7 @@ import {
   ApiCreatedResponse,
   ApiExtraModels,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -176,13 +177,13 @@ export class UserController {
   }
 
   @Post("impersonate/stop")
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: "Arrêter l'impersonation en cours",
     description:
       "Clôture la session d'impersonation active de l'administrateur. À appeler en conservant le header d'impersonation pour que le serveur identifie l'administrateur réel.",
   })
-  @ApiOkResponse({ description: "Impersonation arrêtée" })
+  @ApiNoContentResponse({ description: "Impersonation arrêtée" })
   async stopImpersonation(
     @Impersonator() impersonator: Requestor | undefined,
     @User() current: UserEntity,

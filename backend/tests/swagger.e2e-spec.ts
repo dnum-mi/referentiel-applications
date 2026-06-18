@@ -41,6 +41,8 @@ describe("Test Swagger documentation", () => {
       "/users/me/subscribe/{appId}",
       "/applications/{applicationId}/compliances/ecoindex/scan",
       "/users/{id}/sync-organization-from-maia",
+      "/users/{id}/impersonate",
+      "/users/impersonate/stop",
       "/actors/sync-maia",
       "/email/digest",
     ];
