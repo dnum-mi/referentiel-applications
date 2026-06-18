@@ -74,33 +74,12 @@ export class TimeChartBuilder {
     this.g
       .append("g")
       .attr("transform", `translate(0,${y(TRESHOLD_TIME_MATURITY)})`)
-      .call(xAxis)
-      .call((axis) =>
-        axis
-          .append("text")
-          .attr("x", plotWidth)
-          .attr("y", 25)
-          .attr("fill", "currentColor")
-          .attr("text-anchor", "end")
-          .attr("font-size", "12px")
-          .text("Maturite metier"),
-      );
+      .call(xAxis);
 
     this.g
       .append("g")
       .attr("transform", `translate(${x(TRESHOLD_TIME_MATURITY)},0)`)
-      .call(yAxis)
-      .call((axis) =>
-        axis
-          .append("text")
-          .attr("transform", "rotate(-90)")
-          .attr("x", -margin.top)
-          .attr("y", -25)
-          .attr("fill", "currentColor")
-          .attr("text-anchor", "end")
-          .attr("font-size", "12px")
-          .text("Maturite technique"),
-      );
+      .call(yAxis);
 
     return this;
   }
@@ -247,7 +226,7 @@ export class TimeChartBuilder {
         tooltip
           .style("display", "block")
           .html(
-            `<strong>${d.shortName ?? d.label}</strong><br/>` +
+            `<strong>${d.label}</strong> ${d.shortName ? `(<em>${d.shortName}<em/>)` : ""}<br/>` +
               `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}<br/>` +
               `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}<br/>` +
               `Coût MCO: ${d.technicalDebtInfo?.costMaturity ?? "-"}`,
