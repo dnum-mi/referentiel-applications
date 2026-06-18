@@ -57,14 +57,6 @@ const tabs = ref<
     requiredPerms: [Permission.APP_READ],
   },
   {
-    title: "Données",
-    icon: "ri-database-line",
-    tabId: "tab-data",
-    panelId: "panel-data",
-    component: markRaw(DataApplicationTab),
-    requiredPerms: [Permission.APP_READ],
-  },
-  {
     title: "Liens",
     icon: "ri-links-line",
     tabId: "tab-links",
@@ -95,6 +87,14 @@ const tabs = ref<
     panelId: "panel-relations",
     component: markRaw(Relationships),
     requiredPerms: [Permission.RELATION_READ],
+  },
+  {
+    title: "Données",
+    icon: "ri-database-line",
+    tabId: "tab-data",
+    panelId: "panel-data",
+    component: markRaw(DataApplicationTab),
+    requiredPerms: [Permission.APP_READ],
   },
   {
     title: "Statuts",
