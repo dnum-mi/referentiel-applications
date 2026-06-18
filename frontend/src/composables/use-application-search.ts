@@ -9,6 +9,7 @@ import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
 import { useDebounceFn } from "@vueuse/core";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
+import { useStatisticsStore } from "@/stores/statisticsStore";
 
 export type TechnicalDebtPoint = TechnicalDebtControllerGetTechnicalDebtPointsResponses[200][number];
 
@@ -264,6 +265,8 @@ export function useApplicationSearch() {
       const query = cleanFilters(currentFilters);
 
       const response = await api.applicationControllerSearch({ query });
+      const statsStore = useStatisticsStore();
+      await statsStore.countApplications();
 
       if (!response.response.ok || !response.data) {
         throw new Error("Erreur lors de la recherche d'applications");
