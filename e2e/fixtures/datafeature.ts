@@ -54,6 +54,37 @@ export class DataFeature {
     return page?.results?.[0] ?? null;
   }
 
+  /** Une entrée de l'historique global des modifications (metadata), ou `null` si le journal est vide. */
+  async anyMetadata(): Promise<{ id: string } | null> {
+    const page = await this.api.metadatas("pageSize=1&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
+  /** Une direction de métier (business division) du référentiel, ou `null` si aucune. */
+  async firstBusinessDivision(): Promise<{ id: string; label: string } | null> {
+    const page = await this.api.businessDivisions("pageSize=5&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
+  /** Un tag du référentiel, ou `null` si aucun. */
+  async firstTag(): Promise<{ id: string; name: string } | null> {
+    const page = await this.api.tags("pageSize=5&page=0");
+    return page?.results?.[0] ?? null;
+  }
+
+  /** Une application possédant ≥ 1 donnée (data-catalog) + l'id de sa 1ʳᵉ donnée, ou `null`. */
+  async applicationWithData(
+    probe = 15,
+  ): Promise<{ appId: string; dataId: string } | null> {
+    const list = await this.api.applications(`pageSize=${probe}&page=0`);
+    for (const app of list?.results ?? []) {
+      const data = await this.api.applicationData(app.id);
+      const first = data?.results?.[0];
+      if (first) return { appId: app.id, dataId: first.id };
+    }
+    return null;
+  }
+
   /** Profil de l'utilisateur connecté. */
   currentUser() {
     return this.api.me();
@@ -143,6 +174,164 @@ export class DataFeature {
   /** Affecte un statut d'homologation. */
   async setHomologationStatus(appId: string, status: string): Promise<void> {
     await this.api.setCompliance(appId, { homologation_status: status });
+  }
+
+  // --- CRUD resolvers (CRU-* tests) ---
+
+  async createTestApplication(label: string): Promise<AppRef> {
+    const created = await this.api.createApplication({
+      label,
+      shortName: label,
+      description: `Auto-created by e2e test: ${label}`,
+    });
+    if (!created)
+      throw new Error(`Création d'application impossible : ${label}`);
+    return created;
+  }
+
+  removeApplication(id: string): Promise<boolean> {
+    return this.api.deleteApplication(id);
+  }
+
+  async applicationWithActors(probe = 15): Promise<AppRef | null> {
+    const list = await this.api.applications(`pageSize=${probe}&page=0`);
+    for (const app of list?.results ?? []) {
+      const actors = await this.api.actors(app.id);
+      if (actors && actors.length > 0) return app;
+    }
+    return null;
+  }
+
+  actorTypes() {
+    return this.api.actorTypes();
+  }
+
+  actors(appId: string) {
+    return this.api.actors(appId);
+  }
+
+  createActor(appId: string, body: Record<string, unknown>) {
+    return this.api.createActor(appId, body);
+  }
+
+  deleteActor(appId: string, actorId: string) {
+    return this.api.deleteActor(appId, actorId);
+  }
+
+  createStatus(appId: string, body: Record<string, unknown>) {
+    return this.api.createStatus(appId, body);
+  }
+
+  deleteStatus(appId: string, statusId: string) {
+    return this.api.deleteStatus(appId, statusId);
+  }
+
+  statuses(appId: string) {
+    return this.api.statuses(appId);
+  }
+
+  createRelation(appId: string, body: Record<string, unknown>) {
+    return this.api.createRelation(appId, body);
+  }
+
+  deleteRelation(appId: string, relationId: string) {
+    return this.api.deleteRelation(appId, relationId);
+  }
+
+  relations(appId: string) {
+    return this.api.relations(appId);
+  }
+
+  createLink(appId: string, body: Record<string, unknown>) {
+    return this.api.createLink(appId, body);
+  }
+
+  deleteLink(appId: string, linkId: string) {
+    return this.api.deleteLink(appId, linkId);
+  }
+
+  links(appId: string) {
+    return this.api.links(appId);
+  }
+
+  createHosting(appId: string, body: Record<string, unknown>) {
+    return this.api.createHosting(appId, body);
+  }
+
+  deleteHosting(appId: string, hostingId: string) {
+    return this.api.deleteHosting(appId, hostingId);
+  }
+
+  hostings(appId: string) {
+    return this.api.hostings(appId);
+  }
+
+  createAppLabel(appId: string, body: Record<string, unknown>) {
+    return this.api.createLabel(appId, body);
+  }
+
+  deleteAppLabel(appId: string, labelId: string) {
+    return this.api.deleteLabel(appId, labelId);
+  }
+
+  appLabels(appId: string) {
+    return this.api.labels(appId);
+  }
+
+  createRgaa(appId: string, body: Record<string, unknown>) {
+    return this.api.createRgaa(appId, body);
+  }
+
+  deleteRgaa(appId: string, rgaaId: string) {
+    return this.api.deleteRgaa(appId, rgaaId);
+  }
+
+  rgaaCompliances(appId: string) {
+    return this.api.rgaaCompliances(appId);
+  }
+
+  applicationDetail(id: string): Promise<Record<string, unknown> | null> {
+    return this.api.application(id);
+  }
+
+  // --- Admin CRUD resolvers (ADM-* tests) ---
+
+  createOrganization(path: string, sigle?: string) {
+    return this.api.createOrganization({ path, sigle });
+  }
+
+  deleteOrganization(id: string) {
+    return this.api.deleteOrganization(id);
+  }
+
+  createTag(name: string) {
+    return this.api.createTag({ name });
+  }
+
+  deleteTag(id: string) {
+    return this.api.deleteTag(id);
+  }
+
+  createLabelSource(source: string) {
+    return this.api.createLabelSource({ source });
+  }
+
+  deleteLabelSource(id: string) {
+    return this.api.deleteLabelSource(id);
+  }
+
+  async anyOrganizationPath(): Promise<string | null> {
+    const orgs = await this.api.organizations("a");
+    if (orgs && orgs.length > 0) return orgs[0].path;
+    const orgs2 = await this.api.organizations("direction");
+    if (orgs2 && orgs2.length > 0) return orgs2[0].path;
+    return null;
+  }
+
+  async twoApplications(): Promise<[AppRef, AppRef] | null> {
+    const list = await this.api.applications("pageSize=2&page=0");
+    if (!list?.results || list.results.length < 2) return null;
+    return [list.results[0], list.results[1]];
   }
 }
 

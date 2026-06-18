@@ -123,9 +123,24 @@ export class ApplicationPage extends BasePage {
     ).toBeVisible();
   }
 
-  // --- Onglet Sources de données (FIC-09) ---
+  // --- Onglet Sources de données (FIC-09, DAT) ---
   async expectDataSourcesTabLoaded(): Promise<void> {
     await expect(this.byTestId("data-application-table")).toBeVisible();
+  }
+
+  /** Nombre de lignes de données dans l'onglet Sources de données. */
+  dataRowCount(): Promise<number> {
+    return this.byTestId("data-application-table").locator("tbody tr").count();
+  }
+
+  /** Ouvre le détail de la 1ʳᵉ donnée (clic sur le bouton de nom) et attend la page de détail (DAT). */
+  async openFirstDataDetail(): Promise<void> {
+    await this.byTestId("data-application-table")
+      .locator("tbody")
+      .getByRole("button")
+      .first()
+      .click();
+    await expect(this.page).toHaveURL(/\/applications\/[^/]+\/data\/[^/]+/);
   }
 
   // --- Onglet Signalements de l'application (FIC-13) ---
@@ -141,9 +156,20 @@ export class ApplicationPage extends BasePage {
     await this.expectToaster(/prise en compte|proposition/i);
   }
 
-  // --- Onglet Modifications / historique (FIC-14) ---
+  // --- Onglet Modifications / historique (FIC-14, HIS-11) ---
   async expectModificationsTabLoaded(): Promise<void> {
     await expect(this.byTestId("modifications-table")).toBeVisible();
+  }
+
+  /** Nombre de boutons « Voir plus » de l'onglet Modifications (0 si aucune modification). */
+  modificationsSeeMoreCount(): Promise<number> {
+    return this.byTestId("modifications-see-more-button").count();
+  }
+
+  /** Ouvre le détail de la 1ʳᵉ modification depuis l'onglet et attend la page de détail (HIS-11). */
+  async openFirstModificationDetail(): Promise<void> {
+    await this.byTestId("modifications-see-more-button").first().click();
+    await expect(this.page).toHaveURL(/\/metadatas\//);
   }
 
   // --- Abonnement (bouton sans data-testid → ciblé par nom accessible, encapsulé ici) ---
@@ -289,5 +315,346 @@ export class ApplicationPage extends BasePage {
     expect(emailBox).not.toBeNull();
     expect(orgBox).not.toBeNull();
     expect(emailBox!.y).toBeLessThan(orgBox!.y);
+  }
+
+  // --- CRU: Actors CRUD (CRU-01 to CRU-04) ---
+
+  async editFirstActor(firstname: string, lastname: string): Promise<void> {
+    await this.byTestId("actor-edit-btn").first().click();
+    await expect(this.byTestId("actor-form-container")).toBeVisible();
+    await this.byTestId("actor-firstname-input").fill(firstname);
+    await this.byTestId("actor-lastname-input").fill(lastname);
+    await this.byTestId("actor-submit-btn").click();
+    await this.expectToaster(/sauvegardé avec succès|enregistré/i);
+  }
+
+  async expectActorRowContains(text: string): Promise<void> {
+    await expect(
+      this.byTestId("actor-tab").locator("tr", { hasText: text }).first(),
+    ).toBeVisible();
+  }
+
+  async bulkDeleteActors(count: number): Promise<void> {
+    const rows = this.byTestId("actor-tab").locator("tbody tr");
+    for (let i = 0; i < count; i++) {
+      await rows.nth(i).locator("input[type=checkbox]").check();
+    }
+    await this.byTestId("actor-bulk-delete-btn").click();
+    await expect(async () => {
+      await expect(this.byTestId("actor-delete-modal")).toBeVisible();
+      await this.byTestId("actor-delete-modal")
+        .getByRole("button", { name: /supprimer|confirmer/i })
+        .click();
+    }).toPass({ timeout: 5000 });
+    await this.expectToaster(/supprimé|succès/i);
+  }
+
+  async addGroupActor(actorType: string, organization: string): Promise<void> {
+    await this.byTestId("actor-add-btn").click();
+    await expect(this.byTestId("actor-form-container")).toBeVisible();
+    const checkbox = this.byTestId("actor-is-group-checkbox");
+    await checkbox
+      .locator("..")
+      .getByText(/groupe/i)
+      .click();
+    await this.byTestId("actor-type-select").selectOption({
+      label: actorType,
+    });
+    await this.byTestId("actor-organization").fill(organization);
+    await this.byTestId("actor-submit-btn").click();
+    await this.expectToaster(/sauvegardé avec succès|enregistré/i);
+  }
+
+  async expectActorAddDisabled(): Promise<void> {
+    await expect(this.byTestId("actor-add-btn")).toBeDisabled();
+  }
+
+  async expectActorEmptyState(): Promise<void> {
+    await expect(this.byTestId("actor-empty-state")).toBeVisible();
+  }
+
+  // --- CRU: Informations générales (CRU-05 to CRU-07) ---
+
+  async openInfoEdit(): Promise<void> {
+    await this.byTestId("info-edit-btn").click();
+    await expect(this.byTestId("info-edit-modal")).toBeVisible();
+  }
+
+  async editInfos(
+    label: string,
+    description: string,
+    priority: string,
+  ): Promise<void> {
+    await this.openInfoEdit();
+    await this.byTestId("application-label").fill(label);
+    await this.byTestId("application-description")
+      .locator('[data-testid="markdown-textarea"]')
+      .fill(description);
+    await this.byTestId("application-priority-restart").selectOption(priority);
+    await this.byTestId("application-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|mis à jour/i);
+  }
+
+  async expectTitle(label: string): Promise<void> {
+    await expect(this.byTestId("application-title")).toContainText(label);
+  }
+
+  async expectDescription(description: string): Promise<void> {
+    await expect(this.byTestId("info-description")).toContainText(description);
+  }
+
+  async expectPriority(priority: string): Promise<void> {
+    await expect(this.byTestId("info-priority-badge")).toContainText(priority);
+  }
+
+  async addPurpose(): Promise<void> {
+    await this.byTestId("application-purpose-add").click();
+  }
+
+  async addPopulation(): Promise<void> {
+    await this.byTestId("application-population-add").click();
+  }
+
+  async editAndSaveInfos(): Promise<void> {
+    await this.openInfoEdit();
+    await this.byTestId("application-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|mis à jour/i);
+  }
+
+  // --- CRU: Delete application (CRU-09) ---
+
+  async deleteApplication(confirmLabel: string): Promise<void> {
+    await this.byTestId("application-delete-btn").click();
+    await expect(this.byTestId("application-delete-modal")).toBeVisible();
+    await this.byTestId("application-delete-input").fill(confirmLabel);
+    await this.byTestId("application-delete-modal")
+      .getByRole("button", { name: /supprimer|confirmer/i })
+      .click();
+  }
+
+  // --- CRU: Hosting CRUD (CRU-10) ---
+
+  async addHosting(label: string): Promise<void> {
+    await this.byTestId("info-add-hosting-btn").click();
+    await expect(this.byTestId("hosting-modal")).toBeVisible();
+    await this.byTestId("hosting-label-input").fill(label);
+    const optionSearch = this.byTestId("hosting-option-search-input");
+    await expect(optionSearch).toBeVisible();
+    const firstOption = this.byTestId("hosting-options-list")
+      .locator("option")
+      .first();
+    await expect(firstOption).toBeAttached();
+    const optionText = await firstOption.textContent();
+    await optionSearch.fill(optionText?.trim() ?? "");
+    await expect(this.byTestId("hosting-submit-btn")).toBeEnabled();
+    await this.byTestId("hosting-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|créé/i);
+  }
+
+  async editFirstHosting(newLabel: string): Promise<void> {
+    await this.byTestId("hosting-edit-btn").first().click();
+    await expect(this.byTestId("hosting-modal")).toBeVisible();
+    await this.byTestId("hosting-label-input").fill(newLabel);
+    await expect(this.byTestId("hosting-submit-btn")).toBeEnabled();
+    await this.byTestId("hosting-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|mis à jour/i);
+    await expect(this.byTestId("hosting-modal")).toBeHidden();
+  }
+
+  async deleteFirstHosting(): Promise<void> {
+    await this.byTestId("hosting-delete-btn").first().click();
+    await expect(this.byTestId("delete-confirm-btn")).toBeVisible();
+    await this.byTestId("delete-confirm-btn").click();
+    await this.expectToaster(/succès|supprimé/i);
+  }
+
+  // --- CRU: Label / nom alternatif CRUD (CRU-11) ---
+
+  async addLabel(value: string): Promise<void> {
+    await this.byTestId("info-add-label-btn").click();
+    await expect(this.byTestId("label-modal")).toBeVisible();
+    await this.byTestId("label-value-input").fill(value);
+    await this.byTestId("label-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|créé/i);
+  }
+
+  async editFirstLabel(newValue: string): Promise<void> {
+    await this.byTestId("label-edit-btn").first().click();
+    await expect(this.byTestId("label-modal")).toBeVisible();
+    await this.byTestId("label-value-input").fill(newValue);
+    await this.byTestId("label-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|mis à jour/i);
+  }
+
+  async deleteFirstLabel(): Promise<void> {
+    await this.byTestId("label-delete-btn").first().click();
+    await expect(this.byTestId("delete-confirm-btn")).toBeVisible();
+    await this.byTestId("delete-confirm-btn").click();
+    await this.expectToaster(/succès|supprimé/i);
+  }
+
+  // --- CRU: Statuses CRUD (CRU-12) ---
+
+  async addStatus(statusValue: string): Promise<void> {
+    await this.byTestId("add-status-btn").click();
+    await expect(this.byTestId("status-form-modal")).toBeVisible();
+    await this.byTestId("status-select").selectOption(statusValue);
+    await this.byTestId("status-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|créé/i);
+  }
+
+  async editFirstStatus(newStatusValue: string): Promise<void> {
+    await this.byTestId("status-edit-btn").first().click();
+    await expect(this.byTestId("status-form-modal")).toBeVisible();
+    await this.byTestId("status-select").selectOption(newStatusValue);
+    await this.byTestId("status-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|mis à jour/i);
+  }
+
+  async deleteFirstStatus(): Promise<void> {
+    await this.byTestId("status-delete-btn").first().click();
+    await expect(this.byTestId("delete-status-modal")).toBeVisible();
+    await this.byTestId("delete-status-modal")
+      .getByRole("button", { name: /supprimer/i })
+      .click();
+    await this.expectToaster(/succès|supprimé/i);
+  }
+
+  async expectStatusesTableContains(text: string): Promise<void> {
+    await expect(
+      this.byTestId("statuses-table").locator("tr", { hasText: text }).first(),
+    ).toBeVisible();
+  }
+
+  // --- CRU: Relations CRUD (CRU-13) ---
+
+  private addRelationBtn(): Locator {
+    return this.page.getByRole("button", {
+      name: /Ajouter une relation/i,
+    });
+  }
+
+  async addRelation(targetLabel: string): Promise<void> {
+    const btn = this.addRelationBtn();
+    await expect(btn).toBeEnabled();
+    await btn.click();
+    const input = this.page
+      .locator('[data-testid="relation-suggestions-input"] input')
+      .first();
+    await expect(input).toBeVisible({ timeout: 10000 });
+    await input.fill(targetLabel);
+    const suggestionsList = this.page
+      .locator('[data-testid="suggestions-list"]')
+      .first();
+    await expect(suggestionsList).toBeVisible({ timeout: 10000 });
+    // Sélectionne la suggestion correspondant EXACTEMENT à la cible (pas la 1ʳᵉ, non déterministe) ;
+    // le filtre par texte laisse Playwright auto-attendre la stabilisation de la liste débouncée.
+    await suggestionsList
+      .locator(".suggestion-item", { hasText: targetLabel })
+      .first()
+      .click();
+    const saveBtn = this.page
+      .getByRole("button", { name: /Enregistrer/i })
+      .first();
+    await expect(saveBtn).toBeVisible({ timeout: 5000 });
+    await saveBtn.click();
+    await this.expectToaster(/succès|enregistré|créé/i);
+  }
+
+  async editFirstRelationType(typeLabel: string): Promise<void> {
+    await this.byTestId("relation-edit-btn").first().click();
+    await expect(this.byTestId("relation-edit-modal")).toBeVisible();
+    await this.byTestId("edit-relation-type-select").selectOption({
+      label: typeLabel,
+    });
+    await this.byTestId("edit-relation-save-btn").click();
+    await this.expectToaster(/succès|enregistré|mis à jour/i);
+  }
+
+  async deleteSelectedRelations(): Promise<void> {
+    const rows = this.byTestId("relations-table").locator("tbody tr");
+    await rows.first().locator("input[type=checkbox]").check();
+    await this.byTestId("relation-delete-selected-btn").click();
+    await expect(async () => {
+      await expect(this.byTestId("relation-delete-modal")).toBeVisible();
+      await this.byTestId("relation-delete-modal")
+        .getByRole("button", { name: /supprimer|confirmer/i })
+        .click();
+    }).toPass({ timeout: 5000 });
+    await this.expectToaster(/supprimé|succès/i);
+  }
+
+  async expectRelationsTableContains(text: string): Promise<void> {
+    await expect(
+      this.byTestId("relations-table").locator("tr", { hasText: text }).first(),
+    ).toBeVisible();
+  }
+
+  async expectRelationsEmpty(): Promise<void> {
+    await expect(this.byTestId("relations-empty")).toBeVisible();
+  }
+
+  // --- CRU: Links CRUD (CRU-14) ---
+
+  async addLink(url: string, description: string): Promise<void> {
+    await this.byTestId("link-add-btn").click();
+    await expect(this.byTestId("link-modal")).toBeVisible();
+    await this.byTestId("link-type-select").selectOption("documentation");
+    await this.byTestId("link-url-input").fill(url);
+    await this.byTestId("link-description-input").fill(description);
+    await this.byTestId("link-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|créé/i);
+  }
+
+  async editFirstLink(newUrl: string): Promise<void> {
+    await this.byTestId("link-edit-btn").first().click();
+    await expect(this.byTestId("link-modal")).toBeVisible();
+    await this.byTestId("link-url-input").fill(newUrl);
+    await this.byTestId("link-submit-btn").click();
+    await this.expectToaster(/succès|enregistré|mis à jour/i);
+  }
+
+  async deleteFirstLink(): Promise<void> {
+    await this.byTestId("link-delete-btn").first().click();
+    await expect(this.byTestId("delete-confirm-btn")).toBeVisible();
+    await this.byTestId("delete-confirm-btn").click();
+    await this.expectToaster(/succès|supprimé/i);
+  }
+
+  async expectLinkItemContains(text: string): Promise<void> {
+    await expect(this.byTestId("link-item").first()).toContainText(text);
+  }
+
+  // --- CRU: RGAA CRUD (CRU-15) ---
+
+  async addRgaaDeclaration(serviceUrl: string, score: string): Promise<void> {
+    await this.byTestId("rgaa-add-btn").click();
+    await this.byTestId("rgaa-form-service-url").fill(serviceUrl);
+    await this.byTestId("rgaa-form-score").fill(score);
+    await this.byTestId("rgaa-form-submit").click();
+    await this.expectToaster(/succès|enregistré|créé/i);
+  }
+
+  async editFirstRgaa(newScore: string): Promise<void> {
+    await this.byTestId("rgaa-edit-btn").first().click();
+    await this.byTestId("rgaa-form-score").fill(newScore);
+    await this.byTestId("rgaa-form-submit").click();
+    await this.expectToaster(/succès|enregistré|mis à jour/i);
+  }
+
+  async deleteFirstRgaa(): Promise<void> {
+    this.page.once("dialog", (dialog) => dialog.accept());
+    await this.byTestId("rgaa-delete-btn").first().click();
+    await this.expectToaster(/supprimé/i);
+  }
+
+  async expectRgaaTableContains(text: string): Promise<void> {
+    await expect(
+      this.byTestId("rgaa-table").locator("tr", { hasText: text }).first(),
+    ).toBeVisible();
+  }
+
+  async expectRgaaEmpty(): Promise<void> {
+    await expect(this.byTestId("rgaa-empty")).toBeVisible();
   }
 }

@@ -23,12 +23,25 @@ C'est ce pivot qui permet à la CI (`qa-sync.yml`) de cocher automatiquement la 
 résultat du test, et au testeur de savoir d'un coup d'œil ce qui est déjà couvert (colonne
 **Automatisé** des protocoles).
 
-| Préfixe | Domaine                    | Protocole                                                                          |
-| :------ | :------------------------- | :--------------------------------------------------------------------------------- |
-| `CAT-`  | Catalogue & recherche      | [`protocoles/catalogue.md`](protocoles/catalogue.md)                               |
-| `FIC-`  | Fiche application          | [`protocoles/fiche-application.md`](protocoles/fiche-application.md)               |
-| `PRM-`  | Permissions & rôles        | [`protocoles/permissions.md`](protocoles/permissions.md)                           |
-| `SIG-`  | Signalements & abonnements | [`protocoles/signalements-abonnements.md`](protocoles/signalements-abonnements.md) |
+| Préfixe | Domaine                                     | Protocole                                                                                |
+| :------ | :------------------------------------------ | :--------------------------------------------------------------------------------------- |
+| `CAT-`  | Catalogue & recherche                       | [`protocoles/catalogue.md`](protocoles/catalogue.md)                                     |
+| `FIC-`  | Fiche application                           | [`protocoles/fiche-application.md`](protocoles/fiche-application.md)                     |
+| `PRM-`  | Permissions & rôles                         | [`protocoles/permissions.md`](protocoles/permissions.md)                                 |
+| `SIG-`  | Signalements & abonnements                  | [`protocoles/signalements-abonnements.md`](protocoles/signalements-abonnements.md)       |
+| `CMP-`  | Conformités (éco-conception & homologation) | [`protocoles/conformites.md`](protocoles/conformites.md)                                 |
+| `SCP-`  | Périmètres admin & groupes d'acteurs        | [`protocoles/scope-acteurs.md`](protocoles/scope-acteurs.md)                             |
+| `MAI-`  | Intégration MAIA                            | [`protocoles/maia.md`](protocoles/maia.md)                                               |
+| `QAL-`  | Qualité générale                            | [`protocoles/qualite-generale.md`](protocoles/qualite-generale.md)                       |
+| `HIS-`  | Historique des modifications                | [`protocoles/historique.md`](protocoles/historique.md)                                   |
+| `CSF-`  | Catalogue — filtres avancés                 | [`protocoles/catalogue-filtres.md`](protocoles/catalogue-filtres.md)                     |
+| `ACC-`  | Accueil & chrome                            | [`protocoles/accueil.md`](protocoles/accueil.md)                                         |
+| `TIM-`  | Diagramme Time                              | [`protocoles/time.md`](protocoles/time.md)                                               |
+| `TRV-`  | Pages transverses                           | [`protocoles/transverse.md`](protocoles/transverse.md)                                   |
+| `DAT-`  | Détail d'une donnée                         | [`protocoles/data-application.md`](protocoles/data-application.md)                       |
+| `CRU-`  | Actions CRUD de base (fiche)                | [`protocoles/actions-crud.md`](protocoles/actions-crud.md)                               |
+| `ADM-`  | Administration des référentiels             | [`protocoles/administration-referentiels.md`](protocoles/administration-referentiels.md) |
+| `PRF-`  | Profil utilisateur                          | [`protocoles/profil-utilisateur.md`](protocoles/profil-utilisateur.md)                   |
 
 ## Cycle de vie d'une campagne (équivalent QASE « test run »)
 
@@ -81,8 +94,8 @@ pnpm type-check          # tsc --noEmit (vérifie le typage du POM)
 
 Le cycle de campagne est **entièrement automatisé** autour de release-please :
 
-1. **PR release-please ouverte** (version `vX.Y.Z` à venir) → `qa/scripts/campaign.mjs open` crée les
-   4 issues `[QA][vX.Y.Z] <domaine>` (idempotent), la CI monte la stack, rejoue **toute** la
+1. **PR release-please ouverte** (version `vX.Y.Z` à venir) → `qa/scripts/campaign.mjs open` crée une
+   issue `[QA][vX.Y.Z] <domaine>` par domaine (idempotent), la CI monte la stack, rejoue **toute** la
    non-régression, publie les screenshots (branche `qa-screenshots`) et `qa/scripts/sync-issue.mjs`
    **remplit chaque issue** (cases + captures par étape + verdict `qa:pass`/`qa:fail`).
 2. **Gate** : si la non-régression échoue, le job **échoue** → à condition d'avoir ajouté ce check

@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const outputDir = process.env.CI
+  ? "test-results"
+  : `test-results/local-${Date.now()}-${process.pid}`;
+
 /**
  * Configuration e2e de non-régression.
  * Les specs vivent dans ce package racine `e2e/` (et non plus dans `frontend/`) car elles couvrent
@@ -8,6 +12,9 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./tests",
+  outputDir,
+  // Nettoie les résidus de test (`E2E…`) avant chaque suite → rejouable à l'infini sans re-seed.
+  globalSetup: "./support/global-cleanup.ts",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "html",

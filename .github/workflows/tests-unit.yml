@@ -74,6 +74,8 @@ jobs:
     name: Code Scan
     needs: test-backend
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checks-out repository
         uses: actions/checkout@v4

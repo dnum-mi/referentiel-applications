@@ -200,7 +200,7 @@ const metadataTableRows = computed(() =>
         :total-records="data.total"
         :sort-field="sortField"
         :sort-order="sortOrder"
-        data-test-id="history-table"
+        data-testid="history-table"
         empty-message="Aucune donnée recensée."
         @sort="onSort"
       >
