@@ -15,11 +15,18 @@ import HostingModal from "./hosting/HostingModal.vue";
 import TechnicalDebtCard from "./technical-debt/TechnicalDebtCard.vue";
 import TechnicalDebtModal from "./technical-debt/TechnicalDebtModal.vue";
 
-const props = defineProps<{
-  application: ApplicationWithPerms;
-  targetPopulations: string[];
-  small?: boolean;
-}>();
+defineOptions({ inheritAttrs: false });
+
+const props = withDefaults(
+  defineProps<{
+    application: ApplicationWithPerms;
+    targetPopulations?: string[];
+    small?: boolean;
+  }>(),
+  {
+    targetPopulations: () => [],
+  },
+);
 const emit = defineEmits(["update:application"]);
 const toaster = useToasterStore();
 const errorMessage = ref<string>("");
@@ -247,7 +254,7 @@ watch(
 
 <template>
   <AppLoader v-if="isLoading" data-testid="informations-generales-loader" />
-  <div v-else class="responsive-layout" data-testid="informations-generales">
+  <div v-else class="responsive-layout" v-bind="$attrs" data-testid="informations-generales">
     <div class="responsive-column">
       <div class="fr-card">
         <div class="fr-card__body">

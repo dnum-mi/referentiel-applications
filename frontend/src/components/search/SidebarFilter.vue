@@ -13,6 +13,8 @@ import { useUserStore } from "@/stores/userStore";
 import StatusFilter from "./StatusFilter.vue";
 import { DsfrButton, DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
 
+defineOptions({ inheritAttrs: false });
+
 const sidebarOpen = ref(true);
 const { total, resetFilters, filters, setFilter } = useApplicationSearch();
 const statsStore = useStatisticsStore();
@@ -38,7 +40,7 @@ function toggleSubscribedAppsFilter(value: boolean) {
 
 <template>
   <Transition name="sidebar-width">
-    <aside v-if="sidebarOpen" class="sidebar" data-testid="sidebar-filter">
+    <aside v-if="sidebarOpen" class="sidebar" v-bind="$attrs" data-testid="sidebar-filter">
       <div class="filters-wrapper">
         <DsfrButton tertiary size="small" class="reset-link" data-testid="sidebar-reset-filters-button" @click="resetFilters">
           ✕ Réinitialiser

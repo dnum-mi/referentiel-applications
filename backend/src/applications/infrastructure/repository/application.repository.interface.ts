@@ -18,6 +18,11 @@ export interface IApplicationRepository {
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,
   ) => Promise<ApplicationSearchResultDto>;
+  findApplicationsRanked: (
+    filters: ApplicationSearchFilters,
+    where: Prisma.ApplicationWhereInput,
+    rankedIds: string[],
+  ) => Promise<ApplicationSearchResultDto>;
   findTechnicalDebtPoints: (
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,

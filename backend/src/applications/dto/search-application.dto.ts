@@ -49,6 +49,31 @@ export class ApplicationSearchDto extends PaginationDto {
   search?: string;
 
   @ApiPropertyOptional({
+    description:
+      "Recherche full-text sur l'ensemble des informations descriptives de la fiche " +
+      "(libellé, nom court, description, finalités, populations cibles, tags, labels, acteurs). " +
+      "Insensible à la casse et aux accents, avec lemmatisation française et tri par pertinence. " +
+      "Tous les mots saisis doivent être présents (ET) ; la ponctuation est ignorée.",
+    example: "gestion des factures",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  q?: string;
+
+  @ApiPropertyOptional({
+    description:
+      "Recherche full-text en mode préfixe, pour l'autocomplétion au fil de la frappe " +
+      "(chaque mot saisi est traité comme un préfixe). Même périmètre que `q`. " +
+      "Prioritaire sur `q` s'il est fourni.",
+    example: "tow muel",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  qPrefix?: string;
+
+  @ApiPropertyOptional({
     description: "Recherche par label",
     example: "Mon Application",
   })

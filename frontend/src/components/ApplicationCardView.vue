@@ -2,11 +2,13 @@
 import { useApplicationSearch } from "@/composables/use-application-search";
 import PaginationFooter from "./PaginationFooter.vue";
 
+defineOptions({ inheritAttrs: false });
+
 const { results, total, page, pageSize } = useApplicationSearch();
 </script>
 
 <template>
-  <div class="card-container" data-testid="application-card-container">
+  <div class="card-container" v-bind="$attrs" data-testid="application-card-container">
     <DsfrCard
       v-for="app in results"
       :key="app.id"

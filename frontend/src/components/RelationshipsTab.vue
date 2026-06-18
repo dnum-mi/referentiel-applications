@@ -10,6 +10,8 @@ import RefAppTable from "./RefAppTable.vue";
 import RelationshipGraph from "./RelationShipGraph.vue";
 import { Permission, type RelationDto } from "@/client";
 
+defineOptions({ inheritAttrs: false });
+
 const props = defineProps<{ application: ApplicationWithPerms; isMobile?: boolean }>();
 
 const isLoading = ref(false);
@@ -149,7 +151,7 @@ onMounted(async () => {
 <template>
   <AppLoader v-if="isLoading" data-testid="relationship-loader" />
   <!-- Header avec boutons -->
-  <div v-else class="fr-grid-row fr-grid-row--middle fr-mb-3w" data-testid="relations-header">
+  <div v-else class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="relations-header">
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des relations</h3>
     </div>

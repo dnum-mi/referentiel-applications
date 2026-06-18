@@ -8,6 +8,8 @@ import type { TableColumn } from "@/types/table";
 import { computed, onMounted, ref, watch } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 
+defineOptions({ inheritAttrs: false });
+
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
 const toaster = useToasterStore();
@@ -99,7 +101,7 @@ const loading = computed(() => isLoading.value);
 
 <template>
   <AppLoader v-if="loading" data-testid="reports-loader" />
-  <div v-else>
+  <div v-else v-bind="$attrs">
     <RefAppTable
       :items="reportRows"
       :columns="tableColumns"

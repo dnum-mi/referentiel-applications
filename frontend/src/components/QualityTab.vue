@@ -5,6 +5,8 @@ import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
 import { onMounted, ref } from "vue";
 
+defineOptions({ inheritAttrs: false });
+
 const props = defineProps<{ application: Application }>();
 
 const toaster = useToasterStore();
@@ -56,7 +58,7 @@ onMounted(fetchQuality);
 </script>
 
 <template>
-  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+  <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs">
     <div class="fr-col">
       <h2 class="fr-mb-0" data-testid="quality-title">Informations de qualité</h2>
     </div>

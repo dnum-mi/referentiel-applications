@@ -2,6 +2,8 @@
 import type { TagDto } from "@/client";
 import api from "@/api";
 
+defineOptions({ inheritAttrs: false });
+
 const props = withDefaults(
   defineProps<{
     tags?: string[];
@@ -46,7 +48,7 @@ function removeTag(index: number) {
 }
 </script>
 <template>
-  <ul class="fr-tags-group" data-testid="info-tags">
+  <ul class="fr-tags-group" v-bind="$attrs" data-testid="info-tags">
     <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
       <DsfrTag
         :label="tag"
