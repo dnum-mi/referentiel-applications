@@ -799,6 +799,16 @@ paths:
           description: Recherche par nom de source de données
           schema:
             type: string
+        - name: millesime
+          required: false
+          in: query
+          description: Millésime (année) de la campagne dette IT à présenter. Par défaut,
+            le millésime le plus récent disponible.
+          schema:
+            minimum: 2000
+            maximum: 2100
+            example: 2026
+            type: number
       responses:
         "200":
           description: Liste des applications correspondant aux critères de recherche avec
@@ -1295,6 +1305,16 @@ paths:
           description: Recherche par nom de source de données
           schema:
             type: string
+        - name: millesime
+          required: false
+          in: query
+          description: Millésime (année) de la campagne dette IT à présenter. Par défaut,
+            le millésime le plus récent disponible.
+          schema:
+            minimum: 2000
+            maximum: 2100
+            example: 2026
+            type: number
       responses:
         "200":
           description: Export Excel des applications
@@ -4279,6 +4299,16 @@ paths:
           description: Recherche par nom de source de données
           schema:
             type: string
+        - name: millesime
+          required: false
+          in: query
+          description: Millésime (année) de la campagne dette IT à présenter. Par défaut,
+            le millésime le plus récent disponible.
+          schema:
+            minimum: 2000
+            maximum: 2100
+            example: 2026
+            type: number
       responses:
         "200":
           description: Liste des points de dette technique filtrés
@@ -5413,6 +5443,13 @@ components:
           maximum: 5
           example: 2.75
           description: Cost maturity score (0-5)
+        millesime:
+          type: number
+          minimum: 2000
+          maximum: 2100
+          example: 2026
+          description: Millésime (année) de la campagne dette IT. Par défaut, l'année
+            courante.
         id:
           type: string
           example: uuid-example
@@ -7205,6 +7242,13 @@ components:
           maximum: 5
           example: 2.75
           description: Cost maturity score (0-5)
+        millesime:
+          type: number
+          minimum: 2000
+          maximum: 2100
+          example: 2026
+          description: Millésime (année) de la campagne dette IT. Par défaut, l'année
+            courante.
     PaginatedTechnicalDebtInfoDto:
       type: object
       properties:

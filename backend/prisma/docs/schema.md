@@ -78,6 +78,7 @@ erDiagram
   Decimal(3) technicalMaturity
   Decimal(3) businessMaturity
   Decimal(3) costMaturity
+  Int millesime
   DateTime createdAt
 }
 "_ApplicationToUser" {
@@ -217,6 +218,7 @@ Properties as follows:
 - `technicalMaturity`: Score de maturité technique (0-1)
 - `businessMaturity`: Score de maturité métier (0-1)
 - `costMaturity`: Score de maturité des coûts (0-1)
+- `millesime`: Millésime (année) de la campagne dette IT à laquelle se rattache l'évaluation
 - `createdAt`: Date de création de l'évaluation
 
 ### `_ApplicationToUser`

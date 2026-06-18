@@ -200,9 +200,21 @@ export class ApplicationRepository implements IApplicationRepository {
     } as unknown as ApplicationSearchResultDto;
   }
 
+  /**
+   * Millésime de campagne dette IT le plus récent enregistré, tous applications
+   * confondues. `null` s'il n'existe aucune évaluation.
+   */
+  public async findLatestMillesime(): Promise<number | null> {
+    const latest = await this.prisma.technicalDebtInfo.aggregate({
+      _max: { millesime: true },
+    });
+    return latest._max.millesime ?? null;
+  }
+
   public async findTechnicalDebtPoints(
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,
+    millesime?: number,
   ): Promise<TechnicalDebtPointDto[]> {
     const results = await this.prisma.application.findMany({
       where,
@@ -212,12 +224,14 @@ export class ApplicationRepository implements IApplicationRepository {
         label: true,
         shortName: true,
         technicalDebtInfo: {
+          where: millesime != null ? { millesime } : undefined,
           orderBy: { createdAt: "desc" as const },
           take: 1,
           select: {
             technicalMaturity: true,
             businessMaturity: true,
             costMaturity: true,
+            millesime: true,
           },
         },
       },

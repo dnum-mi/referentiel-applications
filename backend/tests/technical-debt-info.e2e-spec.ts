@@ -43,6 +43,35 @@ describe("TechnicalDebtInfo", () => {
     expect(response.body.technicalMaturity).toEqual(3.25);
     expect(response.body.businessMaturity).toEqual(4.1);
     expect(response.body.costMaturity).toEqual(2.75);
+    // Le millésime est renseigné par défaut avec l'année courante.
+    expect(response.body.millesime).toEqual(new Date().getFullYear());
+  });
+
+  it("/POST applications/:applicationId/technical-debt-info - should accept an explicit millesime", async () => {
+    const newApplication = await ApplicationFaker.create(user);
+
+    const response = await request(app().getHttpServer())
+      .post(`/applications/${newApplication.id}/technical-debt-info`)
+      .send({
+        technicalMaturity: 2,
+        millesime: 2024,
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+
+    expect(response.body.millesime).toEqual(2024);
+  });
+
+  it("/POST applications/:applicationId/technical-debt-info - should reject an out-of-range millesime", async () => {
+    const newApplication = await ApplicationFaker.create(user);
+
+    await request(app().getHttpServer())
+      .post(`/applications/${newApplication.id}/technical-debt-info`)
+      .send({
+        millesime: 1999,
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(400);
   });
 
   it("/GET applications/:applicationId/technical-debt-info - should return the technical debt info", async () => {
@@ -208,5 +237,49 @@ describe("TechnicalDebts", () => {
     const resultIds = response.body.map((item: { id: string }) => item.id);
     expect(resultIds).toContain(applicationA.id);
     expect(resultIds).not.toContain(applicationB.id);
+  });
+
+  it("/GET technical-debts - should filter by millesime and default to the latest", async () => {
+    const application = await ApplicationFaker.create(user);
+
+    // Deux campagnes pour la même application.
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/technical-debt-info`)
+      .send({ technicalMaturity: 1, millesime: 2030 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/technical-debt-info`)
+      .send({ technicalMaturity: 4, millesime: 2031 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+
+    // Millésime explicite : on récupère la campagne demandée.
+    const filtered = await request(app().getHttpServer())
+      .get("/technical-debts")
+      .query({ label: application.label, millesime: 2030 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const point2030 = filtered.body.find(
+      (item: { id: string }) => item.id === application.id,
+    );
+    expect(point2030).toBeDefined();
+    expect(point2030.technicalDebtInfo.millesime).toEqual(2030);
+    expect(point2030.technicalDebtInfo.technicalMaturity).toEqual(1);
+
+    // Sans millésime : on présente la campagne la plus récente.
+    const latest = await request(app().getHttpServer())
+      .get("/technical-debts")
+      .query({ label: application.label })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const pointLatest = latest.body.find(
+      (item: { id: string }) => item.id === application.id,
+    );
+    expect(pointLatest).toBeDefined();
+    expect(pointLatest.technicalDebtInfo.millesime).toEqual(2031);
+    expect(pointLatest.technicalDebtInfo.technicalMaturity).toEqual(4);
   });
 });

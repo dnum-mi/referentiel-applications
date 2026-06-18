@@ -418,4 +418,17 @@ export class ApplicationSearchDto extends PaginationDto {
   @IsOptional()
   @IsString()
   dataSourceName?: string;
+
+  @ApiPropertyOptional({
+    description:
+      "Millésime (année) de la campagne dette IT à présenter. " +
+      "Par défaut, le millésime le plus récent disponible.",
+    example: 2026,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(2000)
+  @Max(2100)
+  millesime?: number;
 }

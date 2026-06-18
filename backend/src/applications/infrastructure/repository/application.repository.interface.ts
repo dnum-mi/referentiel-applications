@@ -26,5 +26,7 @@ export interface IApplicationRepository {
   findTechnicalDebtPoints: (
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,
+    millesime?: number,
   ) => Promise<TechnicalDebtPointDto[]>;
+  findLatestMillesime: () => Promise<number | null>;
 }
