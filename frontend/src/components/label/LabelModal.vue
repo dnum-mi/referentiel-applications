@@ -137,7 +137,7 @@ async function handleSubmit() {
         <DsfrButton type="button" secondary label="Annuler" data-testid="label-cancel-btn" @click="$emit('close')" />
         <DsfrButton
           type="submit"
-          :disabled="isSubmitting || isLoadingSources"
+          :disabled="isSubmitting || isLoadingSources || !labelForm.value.trim()"
           :label="props.initialLabel ? 'Modifier' : 'Créer'"
           data-testid="label-submit-btn"
         >

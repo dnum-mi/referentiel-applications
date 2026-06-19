@@ -152,7 +152,7 @@ async function deleteLabelSource() {
         label="Enregistrer"
         title="Enregistrer les modifications"
         aria-label="Enregistrer les modifications"
-        :disabled="isSaving"
+        :disabled="isSaving || !editingSource.trim()"
         data-testid="admin-save-perms-btn"
         @click="saveLabelSource"
       />
