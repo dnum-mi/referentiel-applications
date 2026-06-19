@@ -311,6 +311,12 @@ export class ApplicationService {
           },
     );
 
+    if (searchParams.millesime != null) {
+      where.AND.push(
+        this.prismaQueryBuilder.buildTechnicalDebtInfo(searchParams.millesime),
+      );
+    }
+
     // Recherche full-text : on restreint l'ensemble aux applications retournées
     // par le moteur de recherche, en conservant leur ordre de pertinence.
     let rankedIds: string[] | undefined;

@@ -1,27 +1,30 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { Permission } from "@/client";
+import AppLoader from "@/components/AppLoader.vue";
+import SidebarFilters from "@/components/search/SidebarFilter.vue";
+import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
 import { useApplicationSearch, type TechnicalDebtPoint } from "@/composables/use-application-search";
 import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
-import SidebarFilters from "@/components/search/SidebarFilter.vue";
-import AppLoader from "@/components/AppLoader.vue";
-import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
-import { watchDebounced } from "@vueuse/core";
 import { useUserStore } from "@/stores/userStore";
+import { watchDebounced } from "@vueuse/core";
+import { computed, onMounted, ref } from "vue";
 
-const { filters, setFilter, fetchTechnicalDebtPoints } = useApplicationSearch();
+const { results: applications, searchApplications, setFilter, filters } = useApplicationSearch();
 const { loadActiveCampaigns, latestYear } = useMditCampaigns();
 const userStore = useUserStore();
 
 const technicalDebtPoints = ref<TechnicalDebtPoint[]>([]);
 const isTechnicalDebtLoading = ref(false);
+const hasMDITReadPermission = computed(() => userStore.hasPermissions([Permission.MDIT_LIST]));
 
 onMounted(async () => {
   const businessDivisionId = userStore.getBusinessDivisionId();
   if (businessDivisionId && !filters.value.businessDivisionId) {
     setFilter({ businessDivisionId });
   }
-  // Charge les campagnes (sélecteur en sidebar) avant le premier rendu : la plus
-  // récente est présentée par défaut.
+  if (!hasMDITReadPermission.value) {
+    setFilter({ myApplications: true });
+  }
   await loadActiveCampaigns();
   loadTechnicalDebtPoints();
 });
@@ -31,7 +34,7 @@ async function loadTechnicalDebtPoints() {
   try {
     // Sans choix explicite, on présente la campagne la plus récente.
     const millesime = filters.value.millesime ?? latestYear.value;
-    technicalDebtPoints.value = await fetchTechnicalDebtPoints(millesime != null ? { millesime } : undefined);
+    await searchApplications({ pageSize: 0, ...(millesime != null ? { millesime } : undefined) });
   } catch {
     technicalDebtPoints.value = [];
   } finally {
@@ -50,7 +53,7 @@ watchDebounced(
 
 <template>
   <div class="layout" data-testid="time-view">
-    <SidebarFilters data-testid="time-filters" />
+    <SidebarFilters :is-lock-my-permission="!hasMDITReadPermission" data-testid="time-filters" />
 
     <main class="main-content" id="main-content" data-testid="main-content" role="main">
       <h1 class="fr-h1" data-testid="time-title">Diagramme Time</h1>
@@ -60,7 +63,7 @@ watchDebounced(
           <AppLoader />
           <span class="sr-only">Chargement du graphique…</span>
         </div>
-        <TechnicalDebtChart v-else :data="technicalDebtPoints" />
+        <TechnicalDebtChart v-else :data="applications" />
       </section>
     </main>
   </div>

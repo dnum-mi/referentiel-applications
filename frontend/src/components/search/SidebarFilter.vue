@@ -17,6 +17,15 @@ import { DsfrButton, DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
 
 defineOptions({ inheritAttrs: false });
 
+const props = withDefaults(
+  defineProps<{
+    isLockMyPermission?: boolean;
+  }>(),
+  {
+    isLockMyPermission: false,
+  },
+);
+
 const sidebarOpen = ref(true);
 const route = useRoute();
 // Le sélecteur de campagne (millésime) ne concerne que le diagramme Time.
@@ -58,6 +67,7 @@ function toggleSubscribedAppsFilter(value: boolean) {
 
         <DsfrToggleSwitch
           v-if="userStore.user?.email"
+          :disabled="props.isLockMyPermission"
           :model-value="isMyAppsFilterActive"
           label="Mes Applications"
           no-text
