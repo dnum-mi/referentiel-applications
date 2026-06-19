@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useApplicationSearch, type TechnicalDebtPoint } from "@/composables/use-application-search";
-import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
 import { Permission } from "@/client";
 import AppLoader from "@/components/AppLoader.vue";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
+import { useApplicationSearch, type TechnicalDebtPoint } from "@/composables/use-application-search";
+import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
 import { useUserStore } from "@/stores/userStore";
 import { watchDebounced } from "@vueuse/core";
+import { computed, onMounted, ref } from "vue";
 
-const { results: applications, searchApplications, setFilter, filters, fetchTechnicalDebtPoints } = useApplicationSearch();
+const { results: applications, searchApplications, setFilter, filters } = useApplicationSearch();
 const { loadActiveCampaigns, latestYear } = useMditCampaigns();
 const userStore = useUserStore();
 
@@ -21,12 +21,10 @@ onMounted(async () => {
   const businessDivisionId = userStore.getBusinessDivisionId();
   if (businessDivisionId && !filters.value.businessDivisionId) {
     setFilter({ businessDivisionId });
-onMounted(() => {
+  }
   if (!hasMDITReadPermission.value) {
     setFilter({ myApplications: true });
   }
-  // Charge les campagnes (sélecteur en sidebar) avant le premier rendu : la plus
-  // récente est présentée par défaut.
   await loadActiveCampaigns();
   loadTechnicalDebtPoints();
 });
@@ -36,8 +34,7 @@ async function loadTechnicalDebtPoints() {
   try {
     // Sans choix explicite, on présente la campagne la plus récente.
     const millesime = filters.value.millesime ?? latestYear.value;
-    technicalDebtPoints.value = await fetchTechnicalDebtPoints(millesime != null ? { millesime } : undefined);
-    await searchApplications({ pageSize: 0 });
+    await searchApplications({ pageSize: 0, ...(millesime != null ? { millesime } : undefined) });
   } catch {
     technicalDebtPoints.value = [];
   } finally {

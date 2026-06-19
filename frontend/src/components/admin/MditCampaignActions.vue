@@ -135,7 +135,7 @@ async function deleteCampaign() {
     :data-testid="!campaign?.id ? 'admin-create-campaign-modal' : 'admin-edit-campaign-modal'"
     @close="closeEditModal"
   >
-    <p class="fr-text--sm fr-hint-text fr-mb-3w">
+    <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
       Une campagne correspond à un millésime (année) de collecte de la dette IT. La campagne active la plus récente est présentée par défaut
       dans le diagramme Time.
     </p>
