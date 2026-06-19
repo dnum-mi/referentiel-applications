@@ -27,7 +27,7 @@ async function loadData() {
   try {
     countApplicationsByIq.value = await statisticsStore.countApplicationsByIq();
 
-    const labels = Array.from({ length: 21 }, (_, i) => `${(20 - i) * 5}%`).reverse();
+    const labels = Array.from({ length: 21 }, (_, i) => (i === 20 ? "100%" : `${i * 5}-${i * 5 + 4}%`));
     const data: number[] = Array.from({ length: 21 }, () => 0);
 
     countApplicationsByIq.value.forEach(({ iq, total }) => {
