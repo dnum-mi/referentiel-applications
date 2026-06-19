@@ -475,4 +475,38 @@ export class AdminPage extends BasePage {
     await this.byTestId("admin-actor-maia-batch-btn").click();
     await this.expectToaster(/Batch MAIA lancé en tâche de fond/i);
   }
+
+  // --- Onglet « Batch de données » : import Excel des acteurs (#751, ADM-08/09) ---
+
+  /** Sélectionne le classeur Excel et lance l'import, puis attend l'affichage du rapport. */
+  async importActorsFromExcel(file: {
+    name: string;
+    mimeType: string;
+    buffer: Buffer;
+  }): Promise<void> {
+    await this.byTestId("admin-import-actors-file").setInputFiles({
+      name: file.name,
+      mimeType: file.mimeType,
+      buffer: file.buffer,
+    });
+    await this.byTestId("admin-import-actors-submit").click();
+    await expect(this.byTestId("admin-import-report")).toBeVisible();
+  }
+
+  /** Vérifie le résumé du rapport d'exécution (créés / mis à jour / erreurs). */
+  async expectImportReportSummary(text: string | RegExp): Promise<void> {
+    await expect(this.byTestId("admin-import-report-summary")).toContainText(
+      text,
+    );
+  }
+
+  /** Vérifie que le rapport d'exécution est téléchargeable. */
+  async expectImportReportDownloadable(): Promise<void> {
+    await expect(this.byTestId("admin-import-report-download")).toBeVisible();
+  }
+
+  /** Vérifie que le détail du rapport (par ligne) contient un texte (ex. motif d'erreur). */
+  async expectImportReportContains(text: string | RegExp): Promise<void> {
+    await expect(this.byTestId("admin-import-report")).toContainText(text);
+  }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,10 +10,14 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -23,6 +28,7 @@ import {
 import { Actor, Permission } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 import { UserId } from "../common/decorators/user-id.decorator";
+import { ActorImportService } from "./actor-import.service";
 import { ActorService } from "./actor.service";
 import {
   ActorDto,
@@ -30,6 +36,7 @@ import {
   CreateActorDto,
   UpdateActorDto,
 } from "./dto/actor.dto";
+import { ImportReportDto } from "./dto/import-report.dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 
@@ -37,7 +44,67 @@ import { RequiredPermissions } from "src/common/decorators/required-permissions.
 @UseGuards(PermissionGuard)
 @Controller("actors")
 export class ActorController {
-  constructor(private readonly actorService: ActorService) {}
+  constructor(
+    private readonly actorService: ActorService,
+    private readonly actorImportService: ActorImportService,
+  ) {}
+
+  @Post("import/excel")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
+  @ApiOperation({
+    summary: "Importer des acteurs depuis un fichier Excel",
+    description: `Importe ou met à jour des acteurs en masse à partir d'un fichier Excel
+au même format que l'export (un onglet par table). Seul l'onglet « Acteurs » est traité.
+Chaque ligne dont la colonne « ID Acteur » est renseignée met à jour l'acteur correspondant ;
+sinon un nouvel acteur est créé. Les contrôles et métadonnées sont identiques à ceux de l'API.
+Un rapport d'exécution est retourné.`,
+  })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        file: { type: "string", format: "binary" },
+      },
+      required: ["file"],
+    },
+  })
+  @ApiOkResponse({
+    description: "Rapport d'exécution de l'import",
+    type: ImportReportDto,
+  })
+  public async importExcel(
+    @UploadedFile()
+    file:
+      | { buffer: Buffer; originalname: string; mimetype: string }
+      | undefined,
+    @UserId() userId: string,
+  ): Promise<ImportReportDto> {
+    if (!file) {
+      throw new BadRequestException("Aucun fichier fourni.");
+    }
+    const isXlsx =
+      file.originalname?.toLowerCase().endsWith(".xlsx") ||
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    if (!isXlsx) {
+      throw new BadRequestException(
+        "Le fichier doit être un classeur Excel (.xlsx).",
+      );
+    }
+    Logger.log({
+      message: "Début de l'import Excel des acteurs",
+      userId,
+      action: "import",
+    });
+    try {
+      return await this.actorImportService.importFromExcel(file.buffer, userId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new BadRequestException(message);
+    }
+  }
 
   @Get("count")
   @ApiOperation({

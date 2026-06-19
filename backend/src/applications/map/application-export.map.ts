@@ -70,6 +70,7 @@ export function mapActors(app: ApplicationWithAllRelations) {
     app.actors?.map((a) => ({
       applicationId: app.id,
       applicationLabel: app.label,
+      "actors.id": a.id,
       "actors.firstname": a.firstname,
       "actors.lastname": a.lastname,
       "actors.role": a.actorType?.code || "",

@@ -38,6 +38,7 @@ export const columnLabels: Record<string, string> = {
   "compliances.type": "Type de conformité",
 
   actors: "Acteurs",
+  "actors.id": "ID Acteur",
   "actors.firstname": "Prénom de l’acteur",
   "actors.lastname": "Nom de l’acteur",
   "actors.role": "Rôle",

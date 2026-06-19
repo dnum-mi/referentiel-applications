@@ -72,6 +72,7 @@ export class ExportApplicationsUseCase {
         columns: [
           col("applicationId", 30),
           col("applicationLabel", 30),
+          col("actors.id", 36),
           col("actors.firstname", 25),
           col("actors.lastname", 25),
           col("actors.role", 30),

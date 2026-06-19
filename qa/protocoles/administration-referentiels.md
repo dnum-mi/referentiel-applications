@@ -8,7 +8,7 @@
 | Légende           |                                                                              |
 | :---------------- | :--------------------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/administration-referentiels.spec.ts` |
-| **Statut**        | 🟢 automatisé — 7 cas couverts par la CI                                     |
+| **Statut**        | 🟢 automatisé — 10 cas couverts par la CI                                    |
 
 ---
 
@@ -63,3 +63,30 @@
   `admin-campaign-delete-btn` pour la supprimer.
 - **Résultat attendu** : la campagne créée apparaît dans le tableau ; sa suppression la retire ; les
   actions admin sont réservées au privilège `AdminPanelManage`.
+
+### ADM-08 — Importer un acteur via un fichier Excel (création) ✅
+
+- **Datafeature** : une application existante (lecture API) et un type d'acteur (résolu en base) ;
+  le classeur Excel est généré à la volée au format de l'export (onglet « Acteurs »).
+- **Action** : administration → onglet Batch de données → section « Import Excel des acteurs » →
+  sélectionner le fichier (`admin-import-actors-file`) → `admin-import-actors-submit`.
+- **Résultat attendu** : le rapport d'exécution (`admin-import-report`) indique « 1 créé(s) » et
+  « 0 en erreur », est téléchargeable (`admin-import-report-download`), et l'acteur est bien créé.
+
+### ADM-09 — Importer un acteur via un fichier Excel (mise à jour) ✅
+
+- **Datafeature** : un acteur de test créé via l'API (nettoyé en fin de test) ; le classeur Excel
+  reprend son « ID Acteur » avec un nom modifié.
+- **Action** : administration → onglet Batch de données → section « Import Excel des acteurs » →
+  importer le fichier contenant l'identifiant de l'acteur.
+- **Résultat attendu** : le rapport indique « 1 mis à jour » et « 0 en erreur » ; la modification du
+  nom est appliquée à l'acteur existant (même identifiant).
+
+### ADM-10 — Import Excel : ligne fautive consignée, traitement poursuivi ✅
+
+- **Datafeature** : une application existante et un type d'acteur (résolu en base) ; le classeur
+  contient deux lignes — une valide (création) et une fautive (rôle inexistant, non résolu).
+- **Action** : administration → onglet Batch de données → section « Import Excel des acteurs » →
+  importer le fichier multi-lignes.
+- **Résultat attendu** : le traitement continue malgré l'erreur ; le rapport indique « 1 créé(s) » et
+  « 1 en erreur » avec le motif (« introuvable »). La ligne valide est créée, la fautive ne l'est pas.
