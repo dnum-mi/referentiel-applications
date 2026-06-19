@@ -18,6 +18,7 @@
         "Accept-Language",
         "X-User-Id",
         "X-User-Email",
+        "X-Impersonate-User-Id",
         "Authorization",
         "Content-Type",
         "Origin"
@@ -72,6 +73,7 @@
         "Authorization",
         "X-User",
         "X-Role",
+        "X-Impersonate-User-Id",
         "ClientId",
         "X-Requested-With",
         "Content-Type",
@@ -93,6 +95,7 @@
         "Authorization",
         "X-User",
         "X-Role",
+        "X-Impersonate-User-Id",
         "ClientId",
         "X-Requested-With",
         "Content-Type",

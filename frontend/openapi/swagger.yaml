@@ -2506,6 +2506,44 @@ paths:
         "403":
           description: Accès refusé - Privilège admin requis
       tags: *a13
+  /api/v2/users/impersonate/stop:
+    post:
+      operationId: UserController_stopImpersonation
+      summary: Arrêter l'impersonation en cours
+      description: Clôture la session d'impersonation active de l'administrateur. À
+        appeler en conservant le header d'impersonation pour que le serveur
+        identifie l'administrateur réel.
+      parameters: []
+      responses:
+        "204":
+          description: Impersonation arrêtée
+      tags: *a13
+  /api/v2/users/{id}/impersonate:
+    post:
+      operationId: UserController_impersonate
+      summary: Impersonner un utilisateur
+      description: "Démarre une session d'impersonation : l'administrateur se fait
+        passer pour l'utilisateur cible. Renvoie les informations de
+        l'utilisateur impersonné. Accès limité aux administrateurs."
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur à impersonner
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session d'impersonation démarrée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a13
   /api/v2/users/{id}:
     patch:
       operationId: UserController_update

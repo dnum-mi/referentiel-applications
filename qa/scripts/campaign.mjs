@@ -137,6 +137,13 @@ const DOMAINS = [
     template: "qa-profil-utilisateur.md",
     colorLabel: "qa:profil-utilisateur",
   },
+  {
+    domain: "impersonation",
+    prefix: "IMP",
+    label: "Impersonation",
+    template: "qa-impersonation.md",
+    colorLabel: "qa:impersonation",
+  },
 ];
 
 function required(key) {

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -17,6 +18,7 @@ import {
   ApiCreatedResponse,
   ApiExtraModels,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -24,6 +26,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
+import { Impersonator } from "src/common/decorators/impersonator.decorator";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
@@ -171,6 +174,48 @@ export class UserController {
   })
   async syncOrganizationsFromMaia(@Body() body: SyncOrganizationsDto) {
     return this.userService.startSyncOrganizationsFromMaiaInBackground(body);
+  }
+
+  @Post("impersonate/stop")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: "Arrêter l'impersonation en cours",
+    description:
+      "Clôture la session d'impersonation active de l'administrateur. À appeler en conservant le header d'impersonation pour que le serveur identifie l'administrateur réel.",
+  })
+  @ApiNoContentResponse({ description: "Impersonation arrêtée" })
+  async stopImpersonation(
+    @Impersonator() impersonator: Requestor | undefined,
+    @User() current: UserEntity,
+  ): Promise<void> {
+    if (!impersonator) {
+      throw new BadRequestException("Aucune impersonation en cours");
+    }
+    return this.userService.stopImpersonation(impersonator.id, current.id);
+  }
+
+  @Post(":id/impersonate")
+  @HttpCode(HttpStatus.OK)
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Impersonner un utilisateur",
+    description:
+      "Démarre une session d'impersonation : l'administrateur se fait passer pour l'utilisateur cible. Renvoie les informations de l'utilisateur impersonné. Accès limité aux administrateurs.",
+  })
+  @ApiParam({ name: "id", description: "ID de l'utilisateur à impersonner" })
+  @ApiOkResponse({
+    description: "Session d'impersonation démarrée",
+    type: UserWithPermissions,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
+  async impersonate(
+    @Param("id") id: string,
+    @User() requestor: Requestor,
+  ): Promise<UserEntity> {
+    return this.userService.startImpersonation(requestor, id);
   }
 
   @Patch(":id")

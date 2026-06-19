@@ -14,8 +14,26 @@ model UserConnexionLog {
   id             String   @id @default(cuid())
   userId         String
   user           User     @relation(fields: [userId], references: [id], onDelete: Restrict)
-  authTime  DateTime @db.Date 
+  authTime  DateTime @db.Date
   createdAt      DateTime @default(now())
 
   @@unique([userId, authTime])
+}
+
+/// Journal des sessions d'impersonation : trace quel administrateur s'est fait
+/// passer pour quel utilisateur, et sur quelle période.
+model ImpersonationLog {
+  id        String    @id @default(cuid())
+  /// Administrateur réel à l'origine de l'impersonation
+  adminId   String
+  admin     User      @relation("ImpersonationAdmin", fields: [adminId], references: [id], onDelete: Restrict)
+  /// Utilisateur cible impersonné
+  targetId  String
+  target    User      @relation("ImpersonationTarget", fields: [targetId], references: [id], onDelete: Restrict)
+  /// Début de la session d'impersonation
+  startedAt DateTime  @default(now())
+  /// Fin de la session d'impersonation (null tant qu'elle est active)
+  endedAt   DateTime?
+
+  @@index([adminId, startedAt])
 }

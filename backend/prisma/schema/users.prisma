@@ -41,6 +41,10 @@ model User {
   additionalPermissions     Permission[]
   userPermissionLog         UserPermissionLog[]
   userConnexionLog          UserConnexionLog[]
+  /// Sessions d'impersonation initiées par cet utilisateur (en tant qu'admin)
+  impersonationsAsAdmin     ImpersonationLog[]  @relation("ImpersonationAdmin")
+  /// Sessions où cet utilisateur a été impersonné
+  impersonationsAsTarget    ImpersonationLog[]  @relation("ImpersonationTarget")
 }
 
 /// @namespace Roles
