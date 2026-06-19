@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsOptional, IsString } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class CreateLabelDto {
   @ApiProperty({
@@ -14,6 +14,7 @@ export class CreateLabelDto {
     example: "short-app-name",
     description: "Value of the label",
   })
+  @IsNotEmpty()
   @IsString()
   value: string;
 }
