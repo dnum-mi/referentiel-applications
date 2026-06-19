@@ -33,6 +33,7 @@ import { MditCampaignModule } from "./mdit-campaign/mdit-campaign.module";
 import { RgaaModule } from "./rgaa/rgaa.module";
 import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
 import { OrganizationMaiaReferencesModule } from "./organization-maia-references/organization-maia-references.module";
+import { ImportModule } from "./import/import.module";
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { OrganizationMaiaReferencesModule } from "./organization-maia-references
     ActorModule,
     ActorTypeModule,
     CompliancesModule,
+    ImportModule,
     HostingsModule,
     HostingOptionModule,
     LabelsModule,

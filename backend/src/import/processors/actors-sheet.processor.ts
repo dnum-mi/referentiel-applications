@@ -2,12 +2,16 @@ import { Injectable, Logger } from "@nestjs/common";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
+import { ActorService } from "src/actor/actor.service";
+import { CreateActorDto, UpdateActorDto } from "src/actor/dto/actor.dto";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
 import { PrismaService } from "src/prisma/prisma.service";
-import { ActorService } from "./actor.service";
-import { CreateActorDto, UpdateActorDto } from "./dto/actor.dto";
-import { ImportReportDto, ImportReportEntryDto } from "./dto/import-report.dto";
+import {
+  ImportReportDto,
+  ImportReportEntryDto,
+} from "../dto/import-report.dto";
+import { buildHeaderIndex, makeCellReader } from "../utils/excel.utils";
 
 /** En-têtes (libellés) attendus dans l'onglet « Acteurs », alignés sur l'export. */
 const HEADERS = {
@@ -24,120 +28,55 @@ const HEADERS = {
 const REQUIRED_HEADERS = [HEADERS.id, HEADERS.applicationId, HEADERS.role];
 
 @Injectable()
-export class ActorImportService {
-  private readonly logger = new Logger(ActorImportService.name);
+export class ActorsSheetProcessor {
+  readonly sheetName = sheetLabels.Actors;
+  private readonly logger = new Logger(ActorsSheetProcessor.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly actorService: ActorService,
   ) {}
 
-  async importFromExcel(
-    buffer: Buffer,
-    requestorId: string,
-  ): Promise<ImportReportDto> {
-    const report: ImportReportDto = {
-      summary: {
-        processedSheets: [],
-        ignoredSheets: [],
-        created: 0,
-        updated: 0,
-        errors: 0,
-      },
-      entries: [],
-      logs: [],
-    };
-
-    const workbook = new ExcelJS.Workbook();
-    try {
-      // exceljs déclare son propre `interface Buffer extends ArrayBuffer`,
-      // incompatible avec le Buffer générique de Node bien que correct au runtime.
-      await workbook.xlsx.load(
-        buffer as unknown as Parameters<typeof workbook.xlsx.load>[0],
-      );
-    } catch {
-      report.logs.push("Le fichier fourni n'est pas un classeur Excel valide.");
-      throw new Error("Le fichier fourni n'est pas un classeur Excel valide.");
-    }
-
-    // L'onglet « Applications » est toujours traité en premier (phases ultérieures).
-    // Phase 1 : seul l'onglet « Acteurs » est traité ici.
-    await this.processActorsSheet(workbook, requestorId, report);
-
-    // Onglets présents mais non pris en charge en phase 1.
-    for (const sheet of workbook.worksheets) {
-      if (
-        sheet.name !== sheetLabels.Actors &&
-        !report.summary.ignoredSheets.includes(sheet.name)
-      ) {
-        report.summary.ignoredSheets.push(sheet.name);
-      }
-    }
-
-    return report;
-  }
-
-  private async processActorsSheet(
-    workbook: ExcelJS.Workbook,
+  async process(
+    worksheet: ExcelJS.Worksheet,
     requestorId: string,
     report: ImportReportDto,
   ): Promise<void> {
-    const sheetName = sheetLabels.Actors;
-    const worksheet = workbook.getWorksheet(sheetName);
-
-    if (!worksheet) {
-      report.summary.ignoredSheets.push(sheetName);
-      report.logs.push(`Onglet « ${sheetName} » absent : ignoré.`);
-      return;
-    }
-
-    const headerIndex = this.buildHeaderIndex(worksheet);
+    const headerIndex = buildHeaderIndex(worksheet);
     const missing = REQUIRED_HEADERS.filter((h) => !(h in headerIndex));
     if (missing.length > 0) {
-      const message = `Onglet « ${sheetName} » non traité : colonnes manquantes (${missing.join(", ")}).`;
+      const message = `Onglet « ${this.sheetName} » non traité : colonnes manquantes (${missing.join(", ")}).`;
       report.logs.push(message);
       this.logger.warn(message);
       return;
     }
 
-    report.summary.processedSheets.push(sheetName);
-
-    const getCell = (row: ExcelJS.Row, header: string): string => {
-      const col = headerIndex[header];
-      if (!col) return "";
-      return this.cellToString(row.getCell(col).value);
-    };
+    report.summary.processedSheets.push(this.sheetName);
 
     for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
-      const row = worksheet.getRow(rowNumber);
-
+      const getCell = makeCellReader(headerIndex, worksheet.getRow(rowNumber));
       const data = {
-        id: getCell(row, HEADERS.id),
-        applicationId: getCell(row, HEADERS.applicationId),
-        firstname: getCell(row, HEADERS.firstname),
-        lastname: getCell(row, HEADERS.lastname),
-        role: getCell(row, HEADERS.role),
-        type: getCell(row, HEADERS.type),
-        email: getCell(row, HEADERS.email),
+        id: getCell(HEADERS.id),
+        applicationId: getCell(HEADERS.applicationId),
+        firstname: getCell(HEADERS.firstname),
+        lastname: getCell(HEADERS.lastname),
+        role: getCell(HEADERS.role),
+        type: getCell(HEADERS.type),
+        email: getCell(HEADERS.email),
       };
 
       // Ligne entièrement vide : ignorée silencieusement.
       if (Object.values(data).every((v) => v === "")) continue;
 
       try {
-        const entry = await this.processActorRow(
-          sheetName,
-          rowNumber,
-          data,
-          requestorId,
-        );
+        const entry = await this.processRow(rowNumber, data, requestorId);
         report.entries.push(entry);
         if (entry.status === "created") report.summary.created++;
         else if (entry.status === "updated") report.summary.updated++;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         report.entries.push({
-          sheet: sheetName,
+          sheet: this.sheetName,
           row: rowNumber,
           status: "error",
           identifier: data.id || data.email || undefined,
@@ -145,14 +84,13 @@ export class ActorImportService {
         });
         report.summary.errors++;
         this.logger.warn(
-          `Ligne ${rowNumber} (${sheetName}) en erreur : ${message}`,
+          `Ligne ${rowNumber} (${this.sheetName}) en erreur : ${message}`,
         );
       }
     }
   }
 
-  private async processActorRow(
-    sheet: string,
+  private async processRow(
     row: number,
     data: {
       id: string;
@@ -213,7 +151,7 @@ export class ActorImportService {
         requestorId,
       );
 
-      return { sheet, row, status: "updated", identifier };
+      return { sheet: this.sheetName, row, status: "updated", identifier };
     }
 
     const dto = plainToInstance(CreateActorDto, {
@@ -223,7 +161,7 @@ export class ActorImportService {
     await this.validateDto(dto);
     await this.actorService.create(dto, data.applicationId, requestorId);
 
-    return { sheet, row, status: "created", identifier };
+    return { sheet: this.sheetName, row, status: "created", identifier };
   }
 
   /** Résout l'ActorType par code (colonne « Rôle ») puis par libellé (colonne « Type »). */
@@ -262,45 +200,5 @@ export class ActorImportService {
         .join(" ; ");
       throw new Error(`Validation échouée : ${details}`);
     }
-  }
-
-  private buildHeaderIndex(
-    worksheet: ExcelJS.Worksheet,
-  ): Record<string, number> {
-    const headerRow = worksheet.getRow(1);
-    const index: Record<string, number> = {};
-    headerRow.eachCell((cell, colNumber) => {
-      const label = this.cellToString(cell.value);
-      if (label) index[label] = colNumber;
-    });
-    return index;
-  }
-
-  private cellToString(value: ExcelJS.CellValue): string {
-    if (value === null || value === undefined) return "";
-    if (typeof value === "string") return value.trim();
-    if (typeof value === "number" || typeof value === "boolean") {
-      return String(value);
-    }
-    if (value instanceof Date) return value.toISOString();
-    if (typeof value === "object") {
-      const obj = value as {
-        text?: string;
-        hyperlink?: string;
-        result?: unknown;
-        richText?: { text: string }[];
-      };
-      if (typeof obj.text === "string") return obj.text.trim();
-      if (Array.isArray(obj.richText)) {
-        return obj.richText
-          .map((part) => part.text)
-          .join("")
-          .trim();
-      }
-      if (obj.result !== undefined && obj.result !== null) {
-        return String(obj.result).trim();
-      }
-    }
-    return "";
   }
 }

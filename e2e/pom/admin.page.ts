@@ -476,20 +476,20 @@ export class AdminPage extends BasePage {
     await this.expectToaster(/Batch MAIA lancé en tâche de fond/i);
   }
 
-  // --- Onglet « Batch de données » : import Excel des acteurs (#751, ADM-08/09) ---
+  // --- Onglet « Batch de données » : import Excel générique (#751/#753, ADM-08..12) ---
 
   /** Sélectionne le classeur Excel et lance l'import, puis attend l'affichage du rapport. */
-  async importActorsFromExcel(file: {
+  async importExcel(file: {
     name: string;
     mimeType: string;
     buffer: Buffer;
   }): Promise<void> {
-    await this.byTestId("admin-import-actors-file").setInputFiles({
+    await this.byTestId("admin-import-file").setInputFiles({
       name: file.name,
       mimeType: file.mimeType,
       buffer: file.buffer,
     });
-    await this.byTestId("admin-import-actors-submit").click();
+    await this.byTestId("admin-import-submit").click();
     await expect(this.byTestId("admin-import-report")).toBeVisible();
   }
 

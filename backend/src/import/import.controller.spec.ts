@@ -5,12 +5,12 @@ jest.mock("src/metadatas/metadatas.service", () => ({
 }));
 
 import { BadRequestException } from "@nestjs/common";
-import { ActorController } from "./actor.controller";
-import type { ActorImportService } from "./actor-import.service";
-import type { ActorService } from "./actor.service";
-import type { ImportReportDto } from "./dto/import-report.dto";
+import type { ExcelImportService } from "./excel-import.service";
+import { ImportController } from "./import.controller";
+import { createEmptyReport, ImportReportDto } from "./dto/import-report.dto";
 
 const REPORT: ImportReportDto = {
+  ...createEmptyReport(),
   summary: {
     processedSheets: ["Acteurs"],
     ignoredSheets: [],
@@ -18,17 +18,14 @@ const REPORT: ImportReportDto = {
     updated: 0,
     errors: 0,
   },
-  entries: [],
-  logs: [],
 };
 
 function setup(importImpl?: jest.Mock) {
   const importService = {
     importFromExcel: importImpl ?? jest.fn().mockResolvedValue(REPORT),
   };
-  const controller = new ActorController(
-    {} as unknown as ActorService,
-    importService as unknown as ActorImportService,
+  const controller = new ImportController(
+    importService as unknown as ExcelImportService,
   );
   return { controller, importService };
 }
@@ -39,7 +36,7 @@ const xlsxFile = {
   mimetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 };
 
-describe("ActorController.importExcel", () => {
+describe("ImportController.importExcel", () => {
   it("rejette quand aucun fichier n'est fourni", async () => {
     const { controller } = setup();
     await expect(controller.importExcel(undefined, "user-1")).rejects.toThrow(

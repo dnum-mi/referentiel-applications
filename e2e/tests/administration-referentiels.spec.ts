@@ -1,6 +1,7 @@
 import { expect, test } from "../fixtures/test";
 import { AdminPage } from "../pom";
 import { buildActorImportWorkbook } from "../support/actor-import-xlsx";
+import { buildSheetWorkbook } from "../support/import-xlsx";
 import { dbQuery } from "../support/db";
 
 const XLSX_MIME =
@@ -15,6 +16,29 @@ async function firstActorType(): Promise<{ id: string; code: string } | null> {
     `SELECT id, code FROM "ActorType" WHERE code IS NOT NULL ORDER BY code LIMIT 1`,
   );
   return rows[0] ?? null;
+}
+
+/**
+ * Crée une application jetable directement en base (la conformité est 1:1 ; on isole chaque test
+ * sur sa propre application pour éviter toute collision entre navigateurs exécutés en parallèle).
+ */
+async function createThrowawayApp(label: string): Promise<string> {
+  const rows = await dbQuery<{ id: string }>(
+    `INSERT INTO "Application" (id, label, description, quality)
+     VALUES (gen_random_uuid(), $1, $2, 0) RETURNING id`,
+    [label, "Application de test e2e (import)"],
+  );
+  return rows[0].id;
+}
+
+/** Supprime l'application jetable et sa conformité éventuelle. */
+async function deleteThrowawayApp(appId: string): Promise<void> {
+  await dbQuery(`DELETE FROM "Compliance" WHERE "applicationId" = $1`, [
+    appId,
+  ]).catch(() => {});
+  await dbQuery(`DELETE FROM "Application" WHERE id = $1`, [appId]).catch(
+    () => {},
+  );
 }
 
 test.describe("Administration des référentiels", () => {
@@ -159,7 +183,7 @@ test.describe("Administration des référentiels", () => {
       const admin = new AdminPage(page);
       await admin.open();
       await admin.openBatchDataTab();
-      await admin.importActorsFromExcel({
+      await admin.importExcel({
         name: `import-adm08-${ts}.xlsx`,
         mimeType: XLSX_MIME,
         buffer: workbook,
@@ -218,7 +242,7 @@ test.describe("Administration des référentiels", () => {
       const admin = new AdminPage(page);
       await admin.open();
       await admin.openBatchDataTab();
-      await admin.importActorsFromExcel({
+      await admin.importExcel({
         name: `import-adm09-${ts}.xlsx`,
         mimeType: XLSX_MIME,
         buffer: workbook,
@@ -273,7 +297,7 @@ test.describe("Administration des référentiels", () => {
       const admin = new AdminPage(page);
       await admin.open();
       await admin.openBatchDataTab();
-      await admin.importActorsFromExcel({
+      await admin.importExcel({
         name: `import-adm10-${ts}.xlsx`,
         mimeType: XLSX_MIME,
         buffer: workbook,
@@ -297,6 +321,99 @@ test.describe("Administration des référentiels", () => {
       await dbQuery(`DELETE FROM "Actor" WHERE email = ANY($1)`, [
         [okEmail, koEmail],
       ]).catch(() => {});
+    }
+  });
+
+  test("ADM-11 - importer une conformité via un fichier Excel (création)", async ({
+    page,
+  }) => {
+    const ts = Date.now();
+    const impact = `E2E-IMPACT-${ts}`;
+    const appId = await createThrowawayApp(`E2E ADM11 ${ts}`);
+
+    try {
+      const workbook = await buildSheetWorkbook(
+        "Conformités",
+        [
+          "ID Application",
+          "DIMA Impact métier",
+          "DIMA Durée (heures)",
+          "DSFR Implémenté",
+        ],
+        [[appId, impact, 5, "Oui"]],
+      );
+
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openBatchDataTab();
+      await admin.importExcel({
+        name: `import-adm11-${ts}.xlsx`,
+        mimeType: XLSX_MIME,
+        buffer: workbook,
+      });
+
+      await admin.expectImportReportSummary(/1 créé\(s\)/);
+      await admin.expectImportReportSummary(/0 en erreur/);
+
+      // Non-régression : la conformité est créée avec les valeurs coercées.
+      const rows = await dbQuery<{
+        dima_business_impact: string;
+        dima_duration_hours: number;
+        dsfr_implemented: boolean;
+      }>(
+        `SELECT dima_business_impact, dima_duration_hours, dsfr_implemented
+         FROM "Compliance" WHERE "applicationId" = $1`,
+        [appId],
+      );
+      expect(rows[0]?.dima_business_impact).toBe(impact);
+      expect(rows[0]?.dima_duration_hours).toBe(5);
+      expect(rows[0]?.dsfr_implemented).toBe(true);
+    } finally {
+      await deleteThrowawayApp(appId);
+    }
+  });
+
+  test("ADM-12 - importer une conformité via un fichier Excel (mise à jour)", async ({
+    page,
+  }) => {
+    const ts = Date.now();
+    const newImpact = `E2E-IMPACT-MAJ-${ts}`;
+    const appId = await createThrowawayApp(`E2E ADM12 ${ts}`);
+
+    // Conformité initiale posée en base (état de départ du protocole).
+    await dbQuery(
+      `INSERT INTO "Compliance" (id, "applicationId", dima_business_impact)
+       VALUES (gen_random_uuid(), $1, $2)`,
+      [appId, `OLD-${ts}`],
+    );
+
+    try {
+      const workbook = await buildSheetWorkbook(
+        "Conformités",
+        ["ID Application", "DIMA Impact métier"],
+        [[appId, newImpact]],
+      );
+
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openBatchDataTab();
+      await admin.importExcel({
+        name: `import-adm12-${ts}.xlsx`,
+        mimeType: XLSX_MIME,
+        buffer: workbook,
+      });
+
+      await admin.expectImportReportSummary(/1 mis à jour/);
+      await admin.expectImportReportSummary(/0 en erreur/);
+
+      // Non-régression : la conformité existante est bien mise à jour.
+      const rows = await dbQuery<{ dima_business_impact: string }>(
+        `SELECT dima_business_impact FROM "Compliance" WHERE "applicationId" = $1`,
+        [appId],
+      );
+      expect(rows[0]?.dima_business_impact).toBe(newImpact);
+    } finally {
+      await deleteThrowawayApp(appId);
     }
   });
 });

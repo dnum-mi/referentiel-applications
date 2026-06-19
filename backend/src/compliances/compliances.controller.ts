@@ -25,33 +25,7 @@ import {
 } from "./dto/create-compliance.dto";
 import { UpdateComplianceDto } from "./dto/update-compliance.dto";
 import { detectCompliances } from "./utils/compliance.utils";
-
-const COMPLIANCE_METADATA_FIELDS = {
-  dima_duration_hours: "durée DIMA (heures)",
-  dima_is_hno: "HNO DIMA",
-  dima_business_impact: "impact métier DIMA",
-  dima_recovery_plan: "plan de reprise DIMA",
-  dima_recovery_solutions: "solutions de reprise DIMA",
-  dima_last_test_date: "date dernier test DIMA",
-  dima_test_result: "résultat test DIMA",
-  dima_recovery_manager: "responsable reprise DIMA",
-  pdma_duration_hours: "durée PDMA (heures)",
-  pdma_data_types: "types de données PDMA",
-  pdma_backup_frequency: "fréquence sauvegarde PDMA",
-  pdma_backup_method: "méthode sauvegarde PDMA",
-  pdma_backup_storage: "stockage sauvegarde PDMA",
-  pdma_last_test_date: "date dernier test PDMA",
-  pdma_test_result: "résultat test PDMA",
-  pdma_restoration_manager: "responsable restauration PDMA",
-  homologation_date_end: "date fin homologation",
-  homologation_rssi_id: "RSSI homologation",
-  homologation_status: "statut d'homologation",
-  dsfr_implemented: "DSFR implémenté",
-  dsfr_version: "version DSFR",
-  rgpd_has_aipd: "AIPD RGPD",
-  rgpd_dpo_name: "nom DPO RGPD",
-  eco_index_target_url: "URL cible EcoIndex",
-};
+import { COMPLIANCE_METADATA_FIELDS } from "./constants/compliance-metadata.constants";
 
 @ApiTags("Compliances")
 @Controller("compliances")
