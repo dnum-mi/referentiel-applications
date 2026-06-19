@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useRoute } from "vue-router";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import CampaignFilter from "@/components/search/CampaignFilter.vue";
 import ActorFilter from "@/components/search/ActorFilter.vue";
 import HostingFilter from "@/components/search/HostingFilter.vue";
 import QualityFilter from "@/components/search/QualityFilter.vue";
@@ -16,6 +18,9 @@ import { DsfrButton, DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
 defineOptions({ inheritAttrs: false });
 
 const sidebarOpen = ref(true);
+const route = useRoute();
+// Le sélecteur de campagne (millésime) ne concerne que le diagramme Time.
+const isTimeRoute = computed(() => route.path === "/time");
 const { total, resetFilters, filters, setFilter } = useApplicationSearch();
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
@@ -71,6 +76,7 @@ function toggleSubscribedAppsFilter(value: boolean) {
         />
 
         <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">
+          <CampaignFilter v-if="isTimeRoute" />
           <ApplicationFilter />
           <PriorityRestartFilter />
         </DsfrAccordion>

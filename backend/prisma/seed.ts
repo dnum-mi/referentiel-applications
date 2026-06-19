@@ -144,13 +144,31 @@ async function seed({
     });
   }
 
-  // Add technical debt info
+  // Register the IT-debt campaigns (millésimes) managed by the admin. The most
+  // recent campaign is the current year; previous years let the selector offer
+  // earlier campaigns.
+  console.log("🗓️  Creating MDIT campaigns...");
+  const currentYear = new Date().getFullYear();
+  const campaignMillesimes = [currentYear - 2, currentYear - 1, currentYear];
+  for (const year of campaignMillesimes) {
+    await prisma.mditCampaign.upsert({
+      where: { year },
+      update: {},
+      create: { year, label: `Campagne dette IT ${year}`, isActive: true },
+    });
+  }
+
+  // Add technical debt info across the registered campaigns, so each application
+  // has data for every millésime.
   console.log("💸 Adding technical debt info...");
   for (const app of applications) {
-    await TechnicalDebtInfoFaker.create({
-      application: app,
-      user: adminUser,
-    });
+    for (const millesime of campaignMillesimes) {
+      await TechnicalDebtInfoFaker.create({
+        application: app,
+        user: adminUser,
+        millesime,
+      });
+    }
   }
 
   // Create Business Division

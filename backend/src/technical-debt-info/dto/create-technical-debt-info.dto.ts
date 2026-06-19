@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNumber, IsOptional, Max, Min } from "class-validator";
+import { Type } from "class-transformer";
+import { IsInt, IsNumber, IsOptional, Max, Min } from "class-validator";
 
 export class CreateTechnicalDebtInfoDto {
   @ApiProperty({
@@ -40,6 +41,21 @@ export class CreateTechnicalDebtInfoDto {
   @Min(0)
   @Max(5)
   costMaturity?: number;
+
+  @ApiProperty({
+    example: 2026,
+    description:
+      "Millésime (année) de la campagne dette IT. Par défaut, l'année courante.",
+    required: false,
+    minimum: 2000,
+    maximum: 2100,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  @Max(2100)
+  millesime?: number;
 }
 
 export class TechnicalDebtInfoDto extends CreateTechnicalDebtInfoDto {

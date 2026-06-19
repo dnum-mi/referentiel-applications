@@ -8,7 +8,7 @@
 | Légende           |                                                                              |
 | :---------------- | :--------------------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/administration-referentiels.spec.ts` |
-| **Statut**        | 🟢 automatisé — 6 cas couverts par la CI                                     |
+| **Statut**        | 🟢 automatisé — 7 cas couverts par la CI                                     |
 
 ---
 
@@ -54,3 +54,12 @@
   `admin-label-source-edit-btn` pour la modifier → `admin-label-source-delete-btn` pour la supprimer.
 - **Résultat attendu** : `admin-label-sources-table` reflète chaque étape ; le compteur de noms
   alternatifs liés est cohérent.
+
+### ADM-07 — Créer une campagne dette IT et la retrouver ✅
+
+- **Datafeature** : nettoyage idempotent du millésime de test via l'API admin (suppression si présent).
+- **Action** : administration → onglet Campagnes dette IT → `admin-create-campaign-btn` pour créer une
+  campagne (millésime + libellé) → vérifier sa présence dans `admin-campaigns-table` →
+  `admin-campaign-delete-btn` pour la supprimer.
+- **Résultat attendu** : la campagne créée apparaît dans le tableau ; sa suppression la retire ; les
+  actions admin sont réservées au privilège `AdminPanelManage`.

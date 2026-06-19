@@ -360,6 +360,12 @@ export class ApplicationService {
     const { sortBy = "shortName", order = "asc" } = searchParams;
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
+    // Par défaut, on présente le millésime de campagne le plus récent disponible.
+    const millesime =
+      searchParams.millesime ??
+      (await this.applicationRepository.findLatestMillesime()) ??
+      undefined;
+
     const hasMDITList = await this.checkPermissions.can(
       [Permission.MDITList],
       requestor,
@@ -369,8 +375,12 @@ export class ApplicationService {
         searchParams,
         requestor,
       );
-      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
-      return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
+      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo(millesime));
+      return this.applicationRepository.findTechnicalDebtPoints(
+        where,
+        orderBy,
+        millesime,
+      );
     }
 
     const hasAppRead = await this.checkPermissions.can(
@@ -387,11 +397,19 @@ export class ApplicationService {
           businessDivisionId: requestor?.organization?.businessDivisionId,
         },
       );
-      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo());
-      return this.applicationRepository.findTechnicalDebtPoints(where, orderBy);
+      where.AND.push(this.prismaQueryBuilder.buildTechnicalDebtInfo(millesime));
+      return this.applicationRepository.findTechnicalDebtPoints(
+        where,
+        orderBy,
+        millesime,
+      );
     }
 
     return [];
+  }
+
+  public async getTechnicalDebtMillesimes(): Promise<number[]> {
+    return this.applicationRepository.findDistinctMillesimes();
   }
 
   public async exportApplications(): Promise<any[]> {

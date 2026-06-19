@@ -799,6 +799,16 @@ paths:
           description: Recherche par nom de source de données
           schema:
             type: string
+        - name: millesime
+          required: false
+          in: query
+          description: Millésime (année) de la campagne dette IT à présenter. Par défaut,
+            le millésime le plus récent disponible.
+          schema:
+            minimum: 2000
+            maximum: 2100
+            example: 2026
+            type: number
       responses:
         "200":
           description: Liste des applications correspondant aux critères de recherche avec
@@ -1295,6 +1305,16 @@ paths:
           description: Recherche par nom de source de données
           schema:
             type: string
+        - name: millesime
+          required: false
+          in: query
+          description: Millésime (année) de la campagne dette IT à présenter. Par défaut,
+            le millésime le plus récent disponible.
+          schema:
+            minimum: 2000
+            maximum: 2100
+            example: 2026
+            type: number
       responses:
         "200":
           description: Export Excel des applications
@@ -3689,6 +3709,132 @@ paths:
         "404":
           description: Source non trouvée
       tags: *a21
+  /api/v2/mdit-campaigns:
+    post:
+      operationId: MditCampaignController_create
+      summary: Créer une campagne dette IT (millésime)
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMditCampaignDto"
+      responses:
+        "201":
+          description: Campagne créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MditCampaignDto"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "409":
+          description: Une campagne existe déjà pour ce millésime
+      tags: &a22
+        - MDIT Campaigns
+    get:
+      operationId: MditCampaignController_findAll
+      summary: Lister les campagnes dette IT, triées du millésime le plus récent au
+        plus ancien
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: onlyActive
+          required: false
+          in: query
+          description: Ne retourner que les campagnes actives
+          schema:
+            example: true
+            type: boolean
+      responses:
+        "200":
+          description: Liste des campagnes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedMditCampaignDto"
+      tags: *a22
+  /api/v2/mdit-campaigns/{id}:
+    patch:
+      operationId: MditCampaignController_update
+      summary: Modifier une campagne dette IT
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMditCampaignDto"
+      responses:
+        "200":
+          description: Campagne mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MditCampaignDto"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Campagne non trouvée
+        "409":
+          description: Une campagne existe déjà pour ce millésime
+      tags: *a22
+    delete:
+      operationId: MditCampaignController_remove
+      summary: Supprimer une campagne dette IT
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Campagne supprimée avec succès
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Campagne non trouvée
+      tags: *a22
   /api/v2/applications/{applicationId}/links:
     post:
       operationId: ApplicationLinksController_create
@@ -3713,7 +3859,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: &a22
+      tags: &a23
         - Links
     get:
       operationId: ApplicationLinksController_findAll
@@ -3768,7 +3914,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedLinkDto"
-      tags: *a22
+      tags: *a23
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
       operationId: ApplicationLinksController_update
@@ -3799,7 +3945,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: *a22
+      tags: *a23
     delete:
       operationId: ApplicationLinksController_delete
       summary: Delete a link for an application
@@ -3819,7 +3965,7 @@ paths:
       responses:
         "204":
           description: Link deleted successfully
-      tags: *a22
+      tags: *a23
   /api/v2/applications/{applicationId}/technical-debt-info:
     post:
       operationId: ApplicationTechnicalDebtInfoController_create
@@ -3846,7 +3992,7 @@ paths:
                 $ref: "#/components/schemas/TechnicalDebtInfoDto"
         "409":
           description: Technical debt info already exists for this application
-      tags: &a23
+      tags: &a24
         - Technical Debt Info
     get:
       operationId: ApplicationTechnicalDebtInfoController_find
@@ -3900,7 +4046,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedTechnicalDebtInfoDto"
-      tags: *a23
+      tags: *a24
   /api/v2/technical-debts:
     get:
       operationId: TechnicalDebtController_getTechnicalDebtPoints
@@ -4317,6 +4463,16 @@ paths:
           description: Recherche par nom de source de données
           schema:
             type: string
+        - name: millesime
+          required: false
+          in: query
+          description: Millésime (année) de la campagne dette IT à présenter. Par défaut,
+            le millésime le plus récent disponible.
+          schema:
+            minimum: 2000
+            maximum: 2100
+            example: 2026
+            type: number
       responses:
         "200":
           description: Liste des points de dette technique filtrés
@@ -4326,8 +4482,25 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TechnicalDebtPointDto"
-      tags:
+      tags: &a25
         - technical-debts
+  /api/v2/technical-debts/millesimes:
+    get:
+      operationId: TechnicalDebtController_getMillesimes
+      summary: Lister les millésimes de campagne dette IT disponibles
+      description: Retourne les millésimes (années) de campagne dette IT enregistrés,
+        triés du plus récent au plus ancien.
+      parameters: []
+      responses:
+        "200":
+          description: Liste des millésimes disponibles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: number
+      tags: *a25
   /api/v2/applications/{applicationId}/rgaa-compliances:
     get:
       operationId: RgaaController_findAll
@@ -4348,7 +4521,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RgaaComplianceDto"
-      tags: &a24
+      tags: &a26
         - RGAA Compliances
     post:
       operationId: RgaaController_create
@@ -4379,7 +4552,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceErrorResponseDto"
-      tags: *a24
+      tags: *a26
   /api/v2/applications/{applicationId}/rgaa-compliances/{id}:
     patch:
       operationId: RgaaController_update
@@ -4410,7 +4583,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceDto"
-      tags: *a24
+      tags: *a26
     delete:
       operationId: RgaaController_delete
       summary: Supprimer une conformité RGAA
@@ -4430,7 +4603,7 @@ paths:
       responses:
         "204":
           description: Conformité RGAA supprimée
-      tags: *a24
+      tags: *a26
   /api/v2/stats/iq-avg/period:
     get:
       operationId: StatsController_getIqAvgGrouped
@@ -4561,7 +4734,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: &a25
+      tags: &a27
         - Reports
     post:
       operationId: ReportsController_create
@@ -4580,7 +4753,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a25
+      tags: *a27
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -4611,7 +4784,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a25
+      tags: *a27
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -4636,7 +4809,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a26
+      tags: &a28
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -4700,7 +4873,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: *a26
+      tags: *a28
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -4724,7 +4897,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a26
+      tags: *a28
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -4760,7 +4933,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a26
+      tags: *a28
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -4779,7 +4952,7 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a26
+      tags: *a28
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -5365,7 +5538,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a27
+          example: &a29
             - population 1
             - population 2
           description: population associated with the application
@@ -5375,7 +5548,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a28
+          example: &a30
             - finance
             - HR
           description: Purposes of the application
@@ -5386,7 +5559,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a29
+          example: &a31
             - tag1
             - tag2
           type: array
@@ -5451,6 +5624,13 @@ components:
           maximum: 5
           example: 2.75
           description: Cost maturity score (0-5)
+        millesime:
+          type: number
+          minimum: 2000
+          maximum: 2100
+          example: 2026
+          description: Millésime (année) de la campagne dette IT. Par défaut, l'année
+            courante.
         id:
           type: string
           example: uuid-example
@@ -5665,7 +5845,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a27
+          example: *a29
           description: population associated with the application
           type: array
           items:
@@ -5673,7 +5853,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a28
+          example: *a30
           description: Purposes of the application
           type: array
           items:
@@ -5682,7 +5862,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a29
+          example: *a31
           type: array
           items:
             type: string
@@ -6603,7 +6783,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a30
+          enum: &a32
             - OK
             - KO
           type: string
@@ -6629,7 +6809,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a31
+          enum: &a33
             - S3
             - LOCAL
             - EXTERNE
@@ -6640,7 +6820,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a32
+          enum: &a34
             - OK
             - KO
           type: string
@@ -6650,7 +6830,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a33
+          enum: &a35
             - homologuee
             - en_cours
             - dispensee
@@ -6714,7 +6894,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a30
+          enum: *a32
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6738,7 +6918,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a31
+          enum: *a33
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6746,7 +6926,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a32
+          enum: *a34
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6754,7 +6934,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a33
+          enum: *a35
           type: string
           description: Homologation status
         homologation_date_end:
@@ -6836,7 +7016,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a30
+          enum: *a32
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -6860,7 +7040,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a31
+          enum: *a33
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -6868,7 +7048,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a32
+          enum: *a34
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -6876,7 +7056,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a33
+          enum: *a35
           type: string
           description: Homologation status
         homologation_date_end:
@@ -7148,6 +7328,84 @@ components:
           example: CODE_PAI
       required:
         - source
+    CreateMditCampaignDto:
+      type: object
+      properties:
+        year:
+          type: number
+          minimum: 2000
+          maximum: 2100
+          description: Année de la campagne (millésime)
+          example: 2027
+        label:
+          type: string
+          description: Libellé optionnel de la campagne
+          example: Campagne dette IT 2027
+        isActive:
+          type: boolean
+          description: Campagne active (présentée dans le sélecteur)
+          example: true
+          default: true
+      required:
+        - year
+    MditCampaignDto:
+      type: object
+      properties:
+        year:
+          type: number
+          minimum: 2000
+          maximum: 2100
+          description: Année de la campagne (millésime)
+          example: 2027
+        label:
+          type: string
+          description: Libellé optionnel de la campagne
+          example: Campagne dette IT 2027
+        isActive:
+          type: boolean
+          description: Campagne active (présentée dans le sélecteur)
+          example: true
+          default: true
+        id:
+          type: string
+          description: Identifiant unique de la campagne
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+      required:
+        - year
+        - id
+    PaginatedMditCampaignDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/MditCampaignDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    UpdateMditCampaignDto:
+      type: object
+      properties:
+        year:
+          type: number
+          minimum: 2000
+          maximum: 2100
+          description: Année de la campagne (millésime)
+          example: 2027
+        label:
+          type: string
+          description: Libellé optionnel de la campagne
+          example: Campagne dette IT 2027
+        isActive:
+          type: boolean
+          description: Campagne active (présentée dans le sélecteur)
+          example: true
+          default: true
     ExternalRessourceType:
       type: string
       description: Type of the external resource
@@ -7243,6 +7501,13 @@ components:
           maximum: 5
           example: 2.75
           description: Cost maturity score (0-5)
+        millesime:
+          type: number
+          minimum: 2000
+          maximum: 2100
+          example: 2026
+          description: Millésime (année) de la campagne dette IT. Par défaut, l'année
+            courante.
     PaginatedTechnicalDebtInfoDto:
       type: object
       properties:

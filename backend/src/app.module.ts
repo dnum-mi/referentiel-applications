@@ -29,6 +29,7 @@ import { TechnicalDebtInfoModule } from "./technical-debt-info/technical-debt-in
 import { TokenModule } from "./token/token.module";
 import { UserModule } from "./user/user.module";
 import { LabelSourceModule } from "./label-source/label-source.module";
+import { MditCampaignModule } from "./mdit-campaign/mdit-campaign.module";
 import { RgaaModule } from "./rgaa/rgaa.module";
 import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
 import { OrganizationMaiaReferencesModule } from "./organization-maia-references/organization-maia-references.module";
@@ -60,6 +61,7 @@ import { OrganizationMaiaReferencesModule } from "./organization-maia-references
     HostingOptionModule,
     LabelsModule,
     LabelSourceModule,
+    MditCampaignModule,
     LinksModule,
     TagsModule,
     TechnicalDebtInfoModule,

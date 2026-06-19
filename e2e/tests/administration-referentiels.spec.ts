@@ -100,4 +100,20 @@ test.describe("Administration des référentiels", () => {
     await admin.expectLabelSourceRow(renamedSource);
     await admin.deleteLabelSource(renamedSource);
   });
+
+  test("ADM-07 - créer une campagne dette IT et la retrouver", async ({
+    page,
+    data,
+  }) => {
+    const year = 2099;
+    // Idempotence : repartir d'un état propre si un run précédent a laissé la campagne.
+    await data.removeCampaignYear(year);
+
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.openCampaignsTab();
+    await admin.createCampaign(year, "Campagne E2E ADM-07");
+    await admin.expectCampaignRow(year);
+    await admin.deleteCampaign(year);
+  });
 });

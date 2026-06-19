@@ -53,6 +53,7 @@ const DEFAULT_FILTERS: Filters = {
   relationAppId: undefined,
   businessDivisionId: undefined,
   dataSourceName: undefined,
+  millesime: undefined,
 };
 
 // Shared state across components (singleton pattern)
@@ -191,6 +192,7 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     relationAppId: parseQueryParam(query.relationAppId),
     businessDivisionId: parseQueryParam(query.businessDivisionId),
     dataSourceName: parseQueryParam(query.dataSourceName),
+    millesime: parseQueryParamNumber(query.millesime),
   };
 }
 

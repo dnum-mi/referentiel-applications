@@ -17,8 +17,11 @@ model TechnicalDebtInfo {
   businessMaturity  Decimal  @default(0) @db.Decimal(3, 2)
   /// Score de maturité des coûts (0-1)
   costMaturity      Decimal  @default(0) @db.Decimal(3, 2)
+  /// Millésime (année) de la campagne dette IT à laquelle se rattache l'évaluation
+  millesime         Int      @default(dbgenerated("(EXTRACT(YEAR FROM CURRENT_DATE))::integer"))
   /// Date de création de l'évaluation
   createdAt         DateTime @default(now())
 
   @@index([applicationId, createdAt(sort: Desc)])
+  @@index([applicationId, millesime(sort: Desc)])
 }

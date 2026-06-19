@@ -9,6 +9,7 @@ export class TechnicalDebtInfoFaker {
     technicalMaturity?: number | null;
     businessMaturity?: number | null;
     costMaturity?: number | null;
+    millesime?: number;
   }) {
     const prisma = getPrismaClient();
 
@@ -43,6 +44,9 @@ export class TechnicalDebtInfoFaker {
           faker.helpers.maybe(() =>
             faker.number.float({ min: 0, max: 5, multipleOf: 0.01 }),
           ),
+        ...(restOverride.millesime != null
+          ? { millesime: restOverride.millesime }
+          : {}),
       },
     });
   }

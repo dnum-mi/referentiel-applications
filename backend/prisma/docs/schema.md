@@ -78,6 +78,14 @@ erDiagram
   Decimal(3) technicalMaturity
   Decimal(3) businessMaturity
   Decimal(3) costMaturity
+  Int millesime
+  DateTime createdAt
+}
+"MditCampaign" {
+  String id PK
+  Int year UK
+  String label "nullable"
+  Boolean isActive
   DateTime createdAt
 }
 "_ApplicationToUser" {
@@ -217,7 +225,22 @@ Properties as follows:
 - `technicalMaturity`: Score de maturité technique (0-1)
 - `businessMaturity`: Score de maturité métier (0-1)
 - `costMaturity`: Score de maturité des coûts (0-1)
+- `millesime`: Millésime (année) de la campagne dette IT à laquelle se rattache l'évaluation
 - `createdAt`: Date de création de l'évaluation
+
+### `MditCampaign`
+
+Campagne annuelle de dette IT (millésime), gérée par l'administration.
+Les évaluations de dette (`TechnicalDebtInfo.millesime`) se rattachent à
+l'année d'une campagne.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `year`: Année de la campagne (millésime), unique
+- `label`: Libellé optionnel de la campagne
+- `isActive`: Campagne active : présentée dans le sélecteur de campagne
+- `createdAt`: Date de création
 
 ### `_ApplicationToUser`
 

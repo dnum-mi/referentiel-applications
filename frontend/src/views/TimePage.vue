@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useApplicationSearch, type TechnicalDebtPoint } from "@/composables/use-application-search";
+import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
 import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import AppLoader from "@/components/AppLoader.vue";
 import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
@@ -8,23 +9,29 @@ import { watchDebounced } from "@vueuse/core";
 import { useUserStore } from "@/stores/userStore";
 
 const { filters, setFilter, fetchTechnicalDebtPoints } = useApplicationSearch();
+const { loadActiveCampaigns, latestYear } = useMditCampaigns();
 const userStore = useUserStore();
 
 const technicalDebtPoints = ref<TechnicalDebtPoint[]>([]);
 const isTechnicalDebtLoading = ref(false);
 
-onMounted(() => {
+onMounted(async () => {
   const businessDivisionId = userStore.getBusinessDivisionId();
   if (businessDivisionId && !filters.value.businessDivisionId) {
     setFilter({ businessDivisionId });
   }
+  // Charge les campagnes (sélecteur en sidebar) avant le premier rendu : la plus
+  // récente est présentée par défaut.
+  await loadActiveCampaigns();
   loadTechnicalDebtPoints();
 });
 
 async function loadTechnicalDebtPoints() {
   isTechnicalDebtLoading.value = true;
   try {
-    technicalDebtPoints.value = await fetchTechnicalDebtPoints();
+    // Sans choix explicite, on présente la campagne la plus récente.
+    const millesime = filters.value.millesime ?? latestYear.value;
+    technicalDebtPoints.value = await fetchTechnicalDebtPoints(millesime != null ? { millesime } : undefined);
   } catch {
     technicalDebtPoints.value = [];
   } finally {

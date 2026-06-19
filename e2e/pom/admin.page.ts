@@ -425,6 +425,43 @@ export class AdminPage extends BasePage {
     await this.expectToaster(/Source supprimée avec succès/i);
   }
 
+  // --- Onglet « Campagnes dette IT » (ADM-07) ---
+
+  private campaignsTable = () => this.byTestId("admin-campaigns-table");
+
+  async openCampaignsTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: /campagnes dette/i })
+      .click();
+    await expect(this.campaignsTable()).toBeVisible();
+  }
+
+  async createCampaign(year: number, label?: string): Promise<void> {
+    await this.byTestId("admin-create-campaign-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Millésime/i).fill(String(year));
+    if (label) {
+      await dialog.getByLabel(/Libellé/i).fill(label);
+    }
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/Campagne créée avec succès/i);
+  }
+
+  async expectCampaignRow(year: number): Promise<void> {
+    await expect(this.campaignsTable()).toContainText(String(year));
+  }
+
+  async deleteCampaign(year: number): Promise<void> {
+    const row = this.campaignsTable().locator("tr", { hasText: String(year) });
+    await row.getByTestId("admin-campaign-delete-btn").click();
+    await expect(
+      this.byTestId("admin-campaign-delete-confirm-btn"),
+    ).toBeVisible();
+    await this.byTestId("admin-campaign-delete-confirm-btn").click();
+    await this.expectToaster(/Campagne supprimée avec succès/i);
+  }
+
   // --- Onglet « Batch de données » : synchronisation MAIA (#1825, MAI-04) ---
   async openBatchDataTab(): Promise<void> {
     await this.adminTabs()

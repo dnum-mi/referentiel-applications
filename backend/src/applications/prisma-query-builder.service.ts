@@ -664,7 +664,9 @@ export class PrismaQueryBuilder {
     return sortOptions[sortKey] || { shortName: safeOrder };
   }
 
-  public buildTechnicalDebtInfo() {
-    return { technicalDebtInfo: { some: {} } };
+  public buildTechnicalDebtInfo(millesime?: number) {
+    return {
+      technicalDebtInfo: { some: millesime != null ? { millesime } : {} },
+    };
   }
 }

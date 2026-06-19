@@ -4,4 +4,5 @@ export class TechnicalDebtInfo {
   technicalMaturity?: number | null;
   businessMaturity?: number | null;
   costMaturity?: number | null;
+  millesime?: number | null;
 }
