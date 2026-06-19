@@ -237,4 +237,66 @@ test.describe("Administration des référentiels", () => {
       if (seeded) await data.deleteActor(app!.id, seeded.id).catch(() => {});
     }
   });
+
+  test("ADM-10 - import Excel : ligne fautive consignée, traitement poursuivi", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const okEmail = `e2e-adm10-ok-${ts}@example.com`;
+    const koEmail = `e2e-adm10-ko-${ts}@example.com`;
+    const okLastname = `IMPORT-OK-${ts}`;
+    const app = await data.firstApplication();
+    const actorType = await firstActorType();
+    test.skip(!app, "Aucune application disponible");
+    test.skip(!actorType, "Aucun type d'acteur disponible");
+
+    try {
+      // Une ligne valide (création) + une ligne fautive (rôle inexistant → non résolu).
+      const workbook = await buildActorImportWorkbook([
+        {
+          applicationId: app!.id,
+          firstname: "Acteur",
+          lastname: okLastname,
+          role: actorType!.code,
+          email: okEmail,
+        },
+        {
+          applicationId: app!.id,
+          firstname: "Acteur",
+          lastname: `IMPORT-KO-${ts}`,
+          role: `ROLE_INEXISTANT_${ts}`,
+          email: koEmail,
+        },
+      ]);
+
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openBatchDataTab();
+      await admin.importActorsFromExcel({
+        name: `import-adm10-${ts}.xlsx`,
+        mimeType: XLSX_MIME,
+        buffer: workbook,
+      });
+
+      // Le traitement continue malgré l'erreur : 1 création + 1 ligne en erreur.
+      await admin.expectImportReportSummary(/1 créé\(s\)/);
+      await admin.expectImportReportSummary(/1 en erreur/);
+      await admin.expectImportReportContains(/introuvable/i);
+
+      // La ligne valide est bien créée, la fautive ne l'est pas.
+      const ok = await dbQuery(`SELECT id FROM "Actor" WHERE email = $1`, [
+        okEmail,
+      ]);
+      const ko = await dbQuery(`SELECT id FROM "Actor" WHERE email = $1`, [
+        koEmail,
+      ]);
+      expect(ok.length).toBe(1);
+      expect(ko.length).toBe(0);
+    } finally {
+      await dbQuery(`DELETE FROM "Actor" WHERE email = ANY($1)`, [
+        [okEmail, koEmail],
+      ]).catch(() => {});
+    }
+  });
 });

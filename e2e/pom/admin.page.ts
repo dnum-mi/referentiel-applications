@@ -504,4 +504,9 @@ export class AdminPage extends BasePage {
   async expectImportReportDownloadable(): Promise<void> {
     await expect(this.byTestId("admin-import-report-download")).toBeVisible();
   }
+
+  /** Vérifie que le détail du rapport (par ligne) contient un texte (ex. motif d'erreur). */
+  async expectImportReportContains(text: string | RegExp): Promise<void> {
+    await expect(this.byTestId("admin-import-report")).toContainText(text);
+  }
 }

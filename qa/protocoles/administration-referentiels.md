@@ -8,7 +8,7 @@
 | Légende           |                                                                              |
 | :---------------- | :--------------------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/administration-referentiels.spec.ts` |
-| **Statut**        | 🟢 automatisé — 9 cas couverts par la CI                                     |
+| **Statut**        | 🟢 automatisé — 10 cas couverts par la CI                                    |
 
 ---
 
@@ -81,3 +81,12 @@
   importer le fichier contenant l'identifiant de l'acteur.
 - **Résultat attendu** : le rapport indique « 1 mis à jour » et « 0 en erreur » ; la modification du
   nom est appliquée à l'acteur existant (même identifiant).
+
+### ADM-10 — Import Excel : ligne fautive consignée, traitement poursuivi ✅
+
+- **Datafeature** : une application existante et un type d'acteur (résolu en base) ; le classeur
+  contient deux lignes — une valide (création) et une fautive (rôle inexistant, non résolu).
+- **Action** : administration → onglet Batch de données → section « Import Excel des acteurs » →
+  importer le fichier multi-lignes.
+- **Résultat attendu** : le traitement continue malgré l'erreur ; le rapport indique « 1 créé(s) » et
+  « 1 en erreur » avec le motif (« introuvable »). La ligne valide est créée, la fautive ne l'est pas.

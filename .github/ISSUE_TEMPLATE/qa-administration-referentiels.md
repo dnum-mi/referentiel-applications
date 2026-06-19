@@ -21,7 +21,7 @@ labels: ["qa", "non-regression", "qa:administration-referentiels"]
 
 | Total | ✅ Passés | ❌ Échecs | ⏭️ Non testés |
 | ----- | --------- | --------- | ------------- |
-| 9     |           |           |               |
+| 10    |           |           |               |
 
 ## Protocole
 
