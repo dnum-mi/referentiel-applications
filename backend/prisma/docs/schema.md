@@ -67,6 +67,13 @@ erDiagram
   String labelSourceId FK "nullable"
   String applicationId FK
 }
+"MditCampaign" {
+  String id PK
+  Int year UK
+  String label "nullable"
+  Boolean isActive
+  DateTime createdAt
+}
 "Tag" {
   String id PK
   String(100) name UK
@@ -79,13 +86,6 @@ erDiagram
   Decimal(3) businessMaturity
   Decimal(3) costMaturity
   Int millesime
-  DateTime createdAt
-}
-"MditCampaign" {
-  String id PK
-  Int year UK
-  String label "nullable"
-  Boolean isActive
   DateTime createdAt
 }
 "_ApplicationToUser" {
@@ -202,6 +202,20 @@ Properties as follows:
 - `labelSourceId`:
 - `applicationId`:
 
+### `MditCampaign`
+
+Campagne annuelle de dette IT (millésime), gérée par l'administration.
+Les évaluations de dette (`TechnicalDebtInfo.millesime`) se rattachent à
+l'année d'une campagne.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `year`: Année de la campagne (millésime), unique
+- `label`: Libellé optionnel de la campagne
+- `isActive`: Campagne active : présentée dans le sélecteur de campagne
+- `createdAt`: Date de création
+
 ### `Tag`
 
 Tag pour catégoriser les applications.
@@ -227,20 +241,6 @@ Properties as follows:
 - `costMaturity`: Score de maturité des coûts (0-1)
 - `millesime`: Millésime (année) de la campagne dette IT à laquelle se rattache l'évaluation
 - `createdAt`: Date de création de l'évaluation
-
-### `MditCampaign`
-
-Campagne annuelle de dette IT (millésime), gérée par l'administration.
-Les évaluations de dette (`TechnicalDebtInfo.millesime`) se rattachent à
-l'année d'une campagne.
-
-Properties as follows:
-
-- `id`: Identifiant unique
-- `year`: Année de la campagne (millésime), unique
-- `label`: Libellé optionnel de la campagne
-- `isActive`: Campagne active : présentée dans le sélecteur de campagne
-- `createdAt`: Date de création
 
 ### `_ApplicationToUser`
 
@@ -1016,6 +1016,13 @@ erDiagram
   DateTime authTime
   DateTime createdAt
 }
+"ImpersonationLog" {
+  String id PK
+  String adminId FK
+  String targetId FK
+  DateTime startedAt
+  DateTime endedAt "nullable"
+}
 ```
 
 ### `UserPermissionLog`
@@ -1041,3 +1048,16 @@ Properties as follows:
 - `userId`:
 - `authTime`:
 - `createdAt`:
+
+### `ImpersonationLog`
+
+Journal des sessions d'impersonation : trace quel administrateur s'est fait
+passer pour quel utilisateur, et sur quelle période.
+
+Properties as follows:
+
+- `id`:
+- `adminId`: Administrateur réel à l'origine de l'impersonation
+- `targetId`: Utilisateur cible impersonné
+- `startedAt`: Début de la session d'impersonation
+- `endedAt`: Fin de la session d'impersonation (null tant qu'elle est active)
