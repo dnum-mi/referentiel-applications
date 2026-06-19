@@ -9,6 +9,7 @@ import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
+import ImpersonationBanner from "./components/ImpersonationBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import ReloadPrompt from "./components/ReloadPrompt.vue";
@@ -184,6 +185,7 @@ function close() {
       { id: 'footer', text: 'Aller au pied de page' },
     ]"
   />
+  <ImpersonationBanner />
   <DsfrHeader
     :service-description="serviceDescription"
     :service-title="serviceTitle"

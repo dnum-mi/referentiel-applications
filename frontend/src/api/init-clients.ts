@@ -1,6 +1,7 @@
 import axios from "axios";
 import { client } from "@/client/client.gen";
 import { USER_MANAGER } from "@/services/authentication";
+import { IMPERSONATE_HEADER, getImpersonatedUserId } from "@/services/impersonation";
 
 axios.defaults.baseURL = "/api/v2";
 axios.defaults.withCredentials = true;
@@ -14,6 +15,10 @@ const requestInterceptor: ReqInterceptor = async (req) => {
   const token = user?.access_token;
   if (token) {
     req.headers.set("Authorization", `Bearer ${token}`);
+  }
+  const impersonatedUserId = getImpersonatedUserId();
+  if (impersonatedUserId) {
+    req.headers.set(IMPERSONATE_HEADER, impersonatedUserId);
   }
   return req;
 };

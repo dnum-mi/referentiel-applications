@@ -1,24 +1,29 @@
 import {
+  ForbiddenException,
   Inject,
   Injectable,
   NestMiddleware,
+  NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
+import { Roles } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { oidcConfig } from "src/config/configs";
 import { roleToPermissions } from "src/permissions/role-to-permissions";
 import { TokenService } from "src/token/token.service";
-import { Requestor, UserEntity } from "src/user/entities/user.entity";
+import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
 import { UserConnexionLogService } from "src/user/user-connexion-log.service";
 import { UserService } from "src/user/user.service";
-import { API_KEY_HEADER } from "src/utils/constants.util";
+import { API_KEY_HEADER, IMPERSONATE_HEADER } from "src/utils/constants.util";
 import { LoggerService } from "src/logger/logger.service";
 
 declare module "express" {
   export interface Request {
     user?: Requestor | null;
+    /// Administrateur réel lorsqu'une impersonation est en cours.
+    impersonator?: Requestor | null;
   }
 }
 
@@ -60,18 +65,65 @@ export class AuthMiddleware implements NestMiddleware {
         res.json({ message: "L'authentification a échoué" });
         return;
       }
-      req.user = {
+
+      // L'utilisateur réellement authentifié (avant toute impersonation).
+      const authenticatedUser: Requestor = {
         ...user,
         permissions: roleToPermissions(user.role),
       };
+      req.user = authenticatedUser;
 
-      await this.userConnexionLogService.log(user.id);
+      // Impersonation : un administrateur peut se faire passer pour un autre
+      // utilisateur en fournissant son identifiant via un header dédié. Seule
+      // l'authentification humaine (JWT) y donne droit, pas les tokens API.
+      const impersonateUserId = req.headers[IMPERSONATE_HEADER] as
+        | string
+        | undefined;
+      if (impersonateUserId && authorization) {
+        req.user = await this.resolveImpersonatedUser(
+          authenticatedUser,
+          impersonateUserId,
+        );
+        req.impersonator = authenticatedUser;
+      }
+
+      // On journalise toujours la connexion de l'utilisateur réellement
+      // authentifié, jamais celle de la cible impersonnée.
+      await this.userConnexionLogService.log(authenticatedUser.id);
 
       next();
     } catch (error) {
       this.logger.error(error);
 
+      if (
+        error instanceof ForbiddenException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+
       throw new UnauthorizedException("L'authentification a échoué");
     }
+  }
+
+  private async resolveImpersonatedUser(
+    admin: Requestor,
+    targetUserId: string,
+  ): Promise<Requestor> {
+    if (admin.role !== Roles.ADMIN) {
+      throw new ForbiddenException(
+        "Seuls les administrateurs peuvent impersonner un utilisateur",
+      );
+    }
+
+    const target = await this.userService.findByIdWithRelations(targetUserId);
+    if (!target || target.type === UserType.bot) {
+      throw new NotFoundException("Utilisateur à impersonner introuvable");
+    }
+
+    return {
+      ...target,
+      permissions: roleToPermissions(target.role),
+    };
   }
 }

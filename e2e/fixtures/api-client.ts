@@ -177,6 +177,44 @@ export class ApiClient {
     return (await res.json()) as T;
   }
 
+  /**
+   * Tente de démarrer une impersonation et renvoie le code HTTP brut (sans suivre la redirection
+   * d'identité). `impersonateUserId` permet de simuler une requête déjà impersonnée (chaînage).
+   */
+  async impersonateStatus(
+    targetId: string,
+    opts: { impersonateUserId?: string } = {},
+  ): Promise<number> {
+    const res = await this.page.request.post(
+      `/api/v2/users/${targetId}/impersonate`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          Accept: "application/json",
+          ...(opts.impersonateUserId
+            ? { "x-impersonate-user-id": opts.impersonateUserId }
+            : {}),
+        },
+      },
+    );
+    return res.status();
+  }
+
+  /** Crée un token de service (génère un compte de service `bot` côté backend). */
+  createServiceToken(body: {
+    name: string;
+    description: string;
+    expiresAt: string;
+    role: string;
+  }): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>("/tokens", body);
+  }
+
+  /** Révoque (supprime) un token de service. */
+  deleteToken(id: string): Promise<boolean> {
+    return this.del(`/tokens/${id}`);
+  }
+
   /** Récupère un utilisateur par email (recherche admin). */
   async userByEmail(email: string): Promise<UserAdmin | null> {
     const page = await this.get<Paginated<UserAdmin>>(

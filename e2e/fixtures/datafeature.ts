@@ -1,3 +1,4 @@
+import { type Page } from "@playwright/test";
 import { ApiClient } from "./api-client";
 import { dbQuery } from "../support/db";
 
@@ -13,6 +14,11 @@ export interface AppRef {
  */
 export class DataFeature {
   constructor(private readonly api: ApiClient) {}
+
+  /** Construit une datafeature depuis une page déjà authentifiée (rôle quelconque). */
+  static async forPage(page: Page): Promise<DataFeature> {
+    return new DataFeature(await ApiClient.fromPage(page));
+  }
 
   /** Première application du catalogue. */
   async firstApplication(): Promise<AppRef | null> {
@@ -161,6 +167,60 @@ export class DataFeature {
       role: "READER",
       additionalPermissions: [],
     });
+  }
+
+  // --- Impersonation (#1764) ---
+
+  /** Tente de démarrer une impersonation et renvoie le code HTTP (autorisations). */
+  impersonateStatus(
+    targetId: string,
+    opts: { impersonateUserId?: string } = {},
+  ): Promise<number> {
+    return this.api.impersonateStatus(targetId, opts);
+  }
+
+  /** Id d'un compte de service (bot) du jeu de données, ou `null` si aucun. */
+  async findBotUserId(): Promise<string | null> {
+    const rows = await dbQuery<{ id: string }>(
+      `SELECT id FROM "User" WHERE type = 'bot' LIMIT 1`,
+    );
+    return rows[0]?.id ?? null;
+  }
+
+  /** Crée un token de service (donc un compte `bot`) ; renvoie l'id du token, ou `null`. */
+  async createServiceToken(name: string): Promise<string | null> {
+    const expiresAt = new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const token = await this.api.createServiceToken({
+      name,
+      description:
+        "Compte de service éphémère pour la non-régression impersonation",
+      expiresAt,
+      role: "VISITOR",
+    });
+    return token?.id ?? null;
+  }
+
+  /** Révoque un token de service (nettoyage). */
+  revokeToken(id: string): Promise<boolean> {
+    return this.api.deleteToken(id);
+  }
+
+  /** Dernière entrée d'audit d'impersonation visant la cible `email`, ou `null`. */
+  async latestImpersonationLog(
+    email: string,
+  ): Promise<{ startedAt: string; endedAt: string | null } | null> {
+    const rows = await dbQuery<{ startedAt: string; endedAt: string | null }>(
+      `SELECT l."startedAt", l."endedAt"
+         FROM "ImpersonationLog" l
+         JOIN "User" u ON u.id = l."targetId"
+        WHERE u.email = $1
+        ORDER BY l."startedAt" DESC
+        LIMIT 1`,
+      [email],
+    );
+    return rows[0] ?? null;
   }
 
   // --- Abonnements & digest (SIG-10), avec le token de l'utilisateur courant ---
