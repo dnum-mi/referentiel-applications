@@ -3,6 +3,7 @@ import AdminUsersTab from "@/components/admin/AdminUsersTab.vue";
 import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminBatchData from "@/components/admin/AdminBatchData.vue";
 import AdminOrganizationsTab from "@/components/admin/AdminOrganizationsTab.vue";
+import AdminActorsTab from "@/components/admin/AdminActorsTab.vue";
 import { markRaw, ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
@@ -31,6 +32,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-organizations",
     panelId: "panel-organizations",
     component: markRaw(AdminOrganizationsTab),
+  },
+  {
+    title: "Gestion des acteurs",
+    icon: "ri-team-line",
+    tabId: "tab-actors",
+    panelId: "panel-actors",
+    component: markRaw(AdminActorsTab),
   },
   {
     title: "Gestions des tags",

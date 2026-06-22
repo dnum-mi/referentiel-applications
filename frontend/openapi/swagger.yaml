@@ -2856,6 +2856,170 @@ paths:
         "204":
           description: Acteur supprimé avec succès
       tags: *a14
+  /api/v2/actors/import/excel:
+    post:
+      operationId: ActorController_importExcel
+      summary: Importer des acteurs depuis un fichier Excel
+      description: >-
+        Importe ou met à jour des acteurs en masse à partir d'un fichier Excel
+
+        au même format que l'export (un onglet par table). Seul l'onglet «
+        Acteurs » est traité.
+
+        Chaque ligne dont la colonne « ID Acteur » est renseignée met à jour
+        l'acteur correspondant ;
+
+        sinon un nouvel acteur est créé. Les contrôles et métadonnées sont
+        identiques à ceux de l'API.
+
+        Un rapport d'exécution est retourné.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        "200":
+          description: Rapport d'exécution de l'import
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportReportDto"
+        "201":
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportReportDto"
+      tags: &a15
+        - Actors
+  /api/v2/actors:
+    get:
+      operationId: ActorController_findAll
+      summary: Récupérer tous les acteurs (admin)
+      description: Liste paginée de tous les acteurs avec recherche par email, prénom,
+        nom ou application.
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Recherche par email, prénom, nom ou application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste paginée des acteurs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedActorDto"
+      tags: *a15
+  /api/v2/actors/applications-by-email:
+    get:
+      operationId: ActorController_findApplicationsByEmail
+      summary: Récupérer les applications d'un acteur par email
+      description: Retourne la liste des applications dans lesquelles un acteur avec
+        cet email est présent.
+      parameters:
+        - name: email
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApplicationRefDto"
+      tags: *a15
+  /api/v2/actors/by-email:
+    delete:
+      operationId: ActorController_deleteAllByEmail
+      summary: Supprimer des acteurs par email (admin)
+      description: Supprime les acteurs partageant le même email dans les applications
+        sélectionnées (ou toutes si non spécifié).
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkActorByEmailDto"
+      responses:
+        "200":
+          description: Nombre d'acteurs supprimés
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkResultDto"
+      tags: *a15
+    patch:
+      operationId: ActorController_updateAllByEmail
+      summary: Modifier des acteurs par email (admin)
+      description: Met à jour les acteurs partageant le même email dans les
+        applications sélectionnées (ou toutes si non spécifié).
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkUpdateActorByEmailDto"
+      responses:
+        "200":
+          description: Nombre d'acteurs mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkResultDto"
+      tags: *a15
   /api/v2/actors/count:
     get:
       operationId: ActorController_countAllActors
@@ -2870,6 +3034,46 @@ paths:
                 type: number
       tags: &a15
         - Actors
+      tags: *a15
+  /api/v2/actors/{id}:
+    patch:
+      operationId: ActorController_updateActor
+      summary: Mettre à jour un acteur (admin)
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'acteur
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateActorDto"
+      responses:
+        "200":
+          description: Acteur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActorDto"
+      tags: *a15
+    delete:
+      operationId: ActorController_deleteActor
+      summary: Supprimer un acteur (admin)
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'acteur
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Acteur supprimé avec succès
+      tags: *a15
   /api/v2/actors/sync-maia:
     post:
       operationId: ActorController_syncFromMaia
@@ -6035,8 +6239,10 @@ components:
       properties:
         id:
           type: string
+          description: ID de l'application
         label:
           type: string
+          description: Libellé de l'application
       required:
         - id
         - label
@@ -6671,6 +6877,148 @@ components:
         isGroup:
           type: boolean
           description: Indique si l'acteur est un groupe d'acteurs ou non
+    ImportReportSummaryDto:
+      type: object
+      properties:
+        processedSheets:
+          description: Onglets effectivement traités
+          type: array
+          items:
+            type: string
+        ignoredSheets:
+          description: Onglets ignorés (absents ou non reconnus)
+          type: array
+          items:
+            type: string
+        created:
+          type: number
+          description: Nombre d'enregistrements créés
+        updated:
+          type: number
+          description: Nombre d'enregistrements mis à jour
+        errors:
+          type: number
+          description: Nombre de lignes en erreur
+      required:
+        - processedSheets
+        - ignoredSheets
+        - created
+        - updated
+        - errors
+    ImportReportEntryDto:
+      type: object
+      properties:
+        sheet:
+          type: string
+          description: Nom de l'onglet traité
+          example: Acteurs
+        row:
+          type: number
+          description: Numéro de la ligne dans l'onglet (1 = en-tête)
+          example: 4
+        status:
+          type: string
+          description: Résultat du traitement de la ligne
+          enum:
+            - created
+            - updated
+            - error
+          example: updated
+        identifier:
+          type: string
+          description: Identifiant lisible de l'enregistrement concerné
+          example: "MOA : jean.dupont@example.com"
+        message:
+          type: string
+          description: Détail (motif d'erreur ou information)
+          example: Type d'acteur introuvable pour le rôle « XYZ »
+      required:
+        - sheet
+        - row
+        - status
+    ImportReportDto:
+      type: object
+      properties:
+        summary:
+          $ref: "#/components/schemas/ImportReportSummaryDto"
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportReportEntryDto"
+        logs:
+          description: Journal d'exécution (erreurs au niveau onglet, etc.)
+          type: array
+          items:
+            type: string
+      required:
+        - summary
+        - entries
+        - logs
+    BulkActorByEmailDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@example.com
+          description: Email des acteurs à cibler
+        applicationIds:
+          description: Liste des IDs d'applications à cibler (toutes si vide)
+          type: array
+          items:
+            type: string
+      required:
+        - email
+    BulkResultDto:
+      type: object
+      properties:
+        count:
+          type: number
+          description: Nombre d'acteurs affectés
+      required:
+        - count
+    BulkUpdateActorByEmailDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: example@example.com
+          description: Email de l'acteur (Optionel)
+        firstname:
+          type: string
+          example: Jean
+          description: Prénom de l’acteur
+        lastname:
+          type: string
+          example: Dupont
+          description: Nom de l’acteur
+        actorTypeId:
+          type: string
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+          description: ID du type d'acteur lié
+        organizationId:
+          type: string
+          nullable: true
+          example: 9965dc19-1c5a-472d-83e3-8bf65093c86c
+          description: ID de l'organization lié (Optionel)
+        applicationId:
+          type: string
+          nullable: true
+          example: 035869dc-47a6-4cee-828f-f6a28d050b35
+          description: ID de l'application lié (Optionel)
+        isGroup:
+          type: boolean
+          description: Indique si l'acteur est un groupe d'acteurs ou non
+        targetEmail:
+          type: string
+          example: example@example.com
+          description: Email actuel des acteurs à cibler
+        applicationIds:
+          description: Liste des IDs d'applications à cibler (toutes si vide)
+          type: array
+          items:
+            type: string
+      required:
+        - targetEmail
     CreateActorTypeDto:
       type: object
       properties:
