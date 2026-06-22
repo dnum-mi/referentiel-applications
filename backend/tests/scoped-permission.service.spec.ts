@@ -336,6 +336,55 @@ describe("ScopedPermissionService", () => {
       });
     });
 
+    // ── omitted fields (undefined) ─────────────────────────────────────
+
+    describe("omitted fields (undefined) should be treated as UNCHANGED", () => {
+      it("does not crash when scopeOrganizationId is omitted from the dto", async () => {
+        mockPrismaService.user.findFirst.mockResolvedValue(
+          makeUser(null, orgInScope.id),
+        );
+        setupOrgMock();
+        const dto = {
+          organizationId: null,
+        } as UpdateUserDto;
+        await expect(
+          service.assertCanUpdate("target-1", dto, scopedAdmin),
+        ).resolves.toBeUndefined();
+        expect(
+          mockPrismaService.organization.findUnique,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("does not crash when organizationId is omitted from the dto", async () => {
+        mockPrismaService.user.findFirst.mockResolvedValue(
+          makeUser(orgInScope.id, null),
+        );
+        setupOrgMock();
+        const dto = {
+          scopeOrganizationId: null,
+        } as UpdateUserDto;
+        await expect(
+          service.assertCanUpdate("target-1", dto, scopedAdmin),
+        ).resolves.toBeUndefined();
+        expect(
+          mockPrismaService.organization.findUnique,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("does not crash when both fields are omitted from the dto", async () => {
+        mockPrismaService.user.findFirst.mockResolvedValue(
+          makeUser(orgInScope.id, orgInScope.id),
+        );
+        const dto = {} as UpdateUserDto;
+        await expect(
+          service.assertCanUpdate("target-1", dto, scopedAdmin),
+        ).resolves.toBeUndefined();
+        expect(
+          mockPrismaService.organization.findUnique,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
     // ── organizationId ────────────────────────────────────────────────────
 
     describe("organizationId", () => {

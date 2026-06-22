@@ -137,6 +137,7 @@ export class ScopedPermissionService {
     // null -> update la valeur de X -> null, undefined -> ne change pas la valeur de X, string -> update la valeur de X -> string
     incoming: string | null | undefined,
   ): FieldAction {
+    if (incoming === undefined) return { type: "UNCHANGED" };
     if (incoming === current) return { type: "UNCHANGED" };
     if (current === null && incoming !== null)
       return { type: "SET", to: incoming };
