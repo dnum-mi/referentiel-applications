@@ -18,11 +18,11 @@ function onImportFileChange(event: Event) {
   importReport.value = null;
 }
 
-async function runActorImport() {
+async function runImport() {
   if (!selectedFile.value) return;
   isImporting.value = true;
   try {
-    const response = await api.actorControllerImportExcel({ body: { file: selectedFile.value } });
+    const response = await api.importControllerImportExcel({ body: { file: selectedFile.value } });
     if (!response.data) {
       throw new Error("Réponse d'import vide.");
     }
@@ -141,29 +141,30 @@ async function runMaiaActorSync() {
       </div>
     </div>
     <div class="section-card--mt">
-      <h2 class="fr-h2">Import Excel des acteurs</h2>
+      <h2 class="fr-h2">Import Excel (acteurs, conformités)</h2>
       <p class="fr-hint-text">
-        Importez ou mettez à jour des acteurs en masse à partir d'un fichier Excel au même format que l'export (un onglet « Acteurs »). Une
-        ligne avec un « ID Acteur » met à jour l'acteur ; sans identifiant, un acteur est créé.
+        Importez ou mettez à jour des données en masse à partir d'un fichier Excel au même format que l'export (un onglet par table). Les
+        onglets pris en charge sont traités (« Acteurs », « Conformités ») ; les autres sont ignorés. Une ligne avec un identifiant met à
+        jour l'enregistrement ; sans identifiant, il est créé.
       </p>
       <div class="import-actor-container">
         <div class="fr-upload-group">
-          <label class="fr-label" for="admin-import-actors-file">Fichier Excel (.xlsx)</label>
+          <label class="fr-label" for="admin-import-file">Fichier Excel (.xlsx)</label>
           <input
-            id="admin-import-actors-file"
+            id="admin-import-file"
             class="fr-upload"
             type="file"
             accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            data-testid="admin-import-actors-file"
+            data-testid="admin-import-file"
             @change="onImportFileChange"
           />
         </div>
         <DsfrButton
-          :label="isImporting ? 'Import en cours...' : 'Importer les acteurs'"
+          :label="isImporting ? 'Import en cours...' : 'Importer le fichier'"
           :disabled="isImporting || !selectedFile"
           :icon="{ name: 'ri-upload-2-line', animation: isImporting ? 'spin' : undefined }"
-          data-testid="admin-import-actors-submit"
-          @click="runActorImport()"
+          data-testid="admin-import-submit"
+          @click="runImport()"
         />
       </div>
 

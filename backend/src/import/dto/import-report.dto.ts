@@ -70,3 +70,18 @@ export class ImportReportDto {
   })
   logs: string[];
 }
+
+/** Fabrique un rapport vide. */
+export function createEmptyReport(): ImportReportDto {
+  return {
+    summary: {
+      processedSheets: [],
+      ignoredSheets: [],
+      created: 0,
+      updated: 0,
+      errors: 0,
+    },
+    entries: [],
+    logs: [],
+  };
+}

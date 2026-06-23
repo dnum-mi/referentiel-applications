@@ -9,7 +9,6 @@ import {
   ActorController,
   ApplicationActorsController,
 } from "./actor.controller";
-import { ActorImportService } from "./actor-import.service";
 import { ActorService } from "./actor.service";
 
 @Module({
@@ -22,7 +21,7 @@ import { ActorService } from "./actor.service";
     OrganizationMaiaReferencesModule,
   ],
   controllers: [ApplicationActorsController, ActorController],
-  providers: [ActorService, ActorImportService],
+  providers: [ActorService],
   exports: [ActorService],
 })
 export class ActorModule {}

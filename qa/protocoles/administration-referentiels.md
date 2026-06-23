@@ -8,7 +8,7 @@
 | Légende           |                                                                              |
 | :---------------- | :--------------------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/administration-referentiels.spec.ts` |
-| **Statut**        | 🟢 automatisé — 10 cas couverts par la CI                                    |
+| **Statut**        | 🟢 automatisé — 12 cas couverts par la CI                                    |
 
 ---
 
@@ -90,3 +90,20 @@
   importer le fichier multi-lignes.
 - **Résultat attendu** : le traitement continue malgré l'erreur ; le rapport indique « 1 créé(s) » et
   « 1 en erreur » avec le motif (« introuvable »). La ligne valide est créée, la fautive ne l'est pas.
+
+### ADM-11 — Importer une conformité via un fichier Excel (création) ✅
+
+- **Datafeature** : une application jetable créée en base (la conformité est 1:1) ; le classeur
+  contient un onglet « Conformités » avec quelques champs (impact métier, durée DIMA, DSFR).
+- **Action** : administration → onglet Batch de données → section « Import Excel » → importer le
+  fichier contenant l'onglet « Conformités ».
+- **Résultat attendu** : le rapport indique « 1 créé(s) » et « 0 en erreur » ; la conformité est
+  créée avec les valeurs coercées (booléen « Oui » → vrai, durée entière).
+
+### ADM-12 — Importer une conformité via un fichier Excel (mise à jour) ✅
+
+- **Datafeature** : une application jetable avec une conformité initiale posée en base.
+- **Action** : administration → onglet Batch de données → section « Import Excel » → importer un
+  fichier « Conformités » modifiant l'impact métier.
+- **Résultat attendu** : le rapport indique « 1 mis à jour » et « 0 en erreur » ; la conformité
+  existante (même application) reflète la nouvelle valeur.

@@ -13,5 +13,6 @@ import { CompliancesService } from "./compliances.service";
   imports: [MetadatasModule, ApplicationModule, PrismaModule, CommonModule],
   controllers: [ApplicationCompliancesController, ComplianceController],
   providers: [CompliancesService],
+  exports: [CompliancesService],
 })
 export class CompliancesModule {}
