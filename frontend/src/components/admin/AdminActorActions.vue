@@ -278,7 +278,7 @@ const actorDisplayName = computed(() => {
 <template>
   <div class="actions-row">
     <DsfrButton
-      label="Modifier"
+      label="Modifier cet acteur"
       title="Modifier cet acteur"
       size="sm"
       secondary
@@ -286,7 +286,7 @@ const actorDisplayName = computed(() => {
       @click="openEditModal"
     />
     <DsfrButton
-      label="Supprimer"
+      label="Supprimer cet acteur"
       title="Supprimer cet acteur"
       size="sm"
       secondary
@@ -295,7 +295,7 @@ const actorDisplayName = computed(() => {
     />
     <DsfrButton
       v-if="actor.email"
-      label="Modifier tous"
+      label="Modifier par email"
       title="Modifier tous les acteurs avec cet email"
       size="sm"
       tertiary
@@ -304,7 +304,7 @@ const actorDisplayName = computed(() => {
     />
     <DsfrButton
       v-if="actor.email"
-      label="Supprimer tous"
+      label="Supprimer par email"
       title="Supprimer tous les acteurs avec cet email"
       size="sm"
       tertiary
@@ -413,7 +413,7 @@ const actorDisplayName = computed(() => {
       v-model="editAllForm.isGroup"
       name="isGroupAll"
       :value="true"
-      label="Cet acteur est un groupe"
+      label="Cet acteur est rattaché(e) à une entité"
       data-testid="admin-actor-all-is-group-checkbox"
       class="fr-mb-3w checkbox-align"
     />

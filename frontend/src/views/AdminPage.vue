@@ -88,7 +88,6 @@ const tabsStyle = ref({ "--tabs-height": "auto" });
           v-if="activeTab === index"
           :panel-id="tab.panelId"
           :tab-id="tab.tabId"
-          :title="`Onglet ${tab.title}`"
           :aria-label="`Onglet ${tab.title}`"
           :data-testid="tab.panelId"
         >

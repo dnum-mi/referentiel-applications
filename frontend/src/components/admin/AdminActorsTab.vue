@@ -21,7 +21,7 @@ const headers = [
   { key: "lastname", label: "Nom", isSortable: true },
   { key: "actorType", label: "Type", isSortable: false },
   { key: "organization", label: "Organisation", isSortable: false },
-  { key: "isGroup", label: "Groupe", isSortable: false },
+  { key: "isGroup", label: "Rattaché(e)", isSortable: false },
   { key: "actions", label: "Actions", isSortable: false },
 ] as const satisfies (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[];
 
@@ -88,7 +88,7 @@ const tableRows = computed(() =>
     lastname: actor.lastname || "-",
     actorType: getActorTypeLabel(actor.actorTypeId),
     organization: actor.organizationId,
-    application: (actor as any).application?.label || "-",
+    application: (actor as any).application || null,
     isGroup: actor.isGroup ? "Oui" : "Non",
     actions: actor,
   })),
@@ -145,6 +145,11 @@ onMounted(async () => {
         @sort="onSort"
         @page="onPage"
       >
+        <template #body-application="{ data: { application } }">
+          <RouterLink v-if="application" :to="`/applications/${application.id}`">{{ application.label }}</RouterLink>
+          <template v-else>-</template>
+        </template>
+
         <template #body-organization="{ data: { organization } }">
           <OrgaLink v-if="organization" :organization-id="organization" />
           <template v-else>-</template>
@@ -153,6 +158,15 @@ onMounted(async () => {
         <template #body-actorType="{ data: { actorType } }">
           <DsfrTag v-if="actorType && actorType !== '-'" :label="String(actorType)" small />
           <template v-else>-</template>
+        </template>
+
+        <template #header-isGroup>
+          <DsfrTooltip
+            on-hover
+            content="Établir le lien entre une personne physique et une boîte e-mail fonctionnelle (ex: equipe, service)"
+          >
+            Rattaché(e)
+          </DsfrTooltip>
         </template>
 
         <template #body-actions="{ data: { actions } }">

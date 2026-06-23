@@ -157,7 +157,7 @@ function handleSubmit() {
       v-model="form.isGroup"
       name="isGroup"
       :value="true"
-      label="Cette acteur est un groupe"
+      label="Cet acteur est rattaché(e) à une entité"
       data-testid="actor-is-group-checkbox"
       class="fr-mb-3w"
     />
