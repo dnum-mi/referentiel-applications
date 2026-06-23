@@ -7,7 +7,9 @@ jest.mock("src/metadatas/metadatas.service", () => ({
 import * as ExcelJS from "exceljs";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
 import type { ActorsSheetProcessor } from "./processors/actors-sheet.processor";
+import type { ApplicationsSheetProcessor } from "./processors/applications-sheet.processor";
 import type { CompliancesSheetProcessor } from "./processors/compliances-sheet.processor";
+import type { HostingsSheetProcessor } from "./processors/hostings-sheet.processor";
 import { ExcelImportService } from "./excel-import.service";
 
 async function workbookBuffer(sheetNames: string[]): Promise<Buffer> {
@@ -16,20 +18,28 @@ async function workbookBuffer(sheetNames: string[]): Promise<Buffer> {
   return Buffer.from(await wb.xlsx.writeBuffer());
 }
 
+function makeProcessor(sheetName: string) {
+  return { sheetName, process: jest.fn().mockResolvedValue(undefined) };
+}
+
 function setup() {
-  const actorsProcessor = {
-    sheetName: sheetLabels.Actors,
-    process: jest.fn().mockResolvedValue(undefined),
-  };
-  const compliancesProcessor = {
-    sheetName: sheetLabels.Compliances,
-    process: jest.fn().mockResolvedValue(undefined),
-  };
+  const applicationsProcessor = makeProcessor(sheetLabels.Applications);
+  const hostingsProcessor = makeProcessor(sheetLabels.Hostings);
+  const actorsProcessor = makeProcessor(sheetLabels.Actors);
+  const compliancesProcessor = makeProcessor(sheetLabels.Compliances);
   const service = new ExcelImportService(
+    applicationsProcessor as unknown as ApplicationsSheetProcessor,
+    hostingsProcessor as unknown as HostingsSheetProcessor,
     actorsProcessor as unknown as ActorsSheetProcessor,
     compliancesProcessor as unknown as CompliancesSheetProcessor,
   );
-  return { service, actorsProcessor, compliancesProcessor };
+  return {
+    service,
+    applicationsProcessor,
+    hostingsProcessor,
+    actorsProcessor,
+    compliancesProcessor,
+  };
 }
 
 describe("ExcelImportService", () => {

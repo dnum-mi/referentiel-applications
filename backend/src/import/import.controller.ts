@@ -35,10 +35,11 @@ export class ImportController {
   @ApiOperation({
     summary: "Importer des données depuis un fichier Excel",
     description: `Importe ou met à jour des données en masse à partir d'un fichier Excel
-au même format que l'export (un onglet par table). Les onglets pris en charge sont traités
-(actuellement : « Acteurs » et « Conformités ») ; les autres sont ignorés. Pour chaque ligne,
-la présence de l'identifiant déclenche une mise à jour, sinon une création. Les contrôles et
-les métadonnées sont identiques à ceux de l'API. Un rapport d'exécution est retourné.`,
+au même format que l'export (un onglet par table). L'onglet « Applications » est toujours traité
+en premier, puis les onglets pris en charge (« Hébergements », « Acteurs », « Conformités ») ;
+les autres sont ignorés. Pour chaque ligne, la présence de l'identifiant déclenche une mise à jour,
+sinon une création. Les contrôles et les métadonnées sont identiques à ceux de l'API. Un rapport
+d'exécution est retourné.`,
   })
   @ApiBody({
     schema: {

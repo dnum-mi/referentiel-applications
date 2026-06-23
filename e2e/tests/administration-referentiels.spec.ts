@@ -416,4 +416,123 @@ test.describe("Administration des référentiels", () => {
       await deleteThrowawayApp(appId);
     }
   });
+
+  test("ADM-13 - importer une application via un fichier Excel (mise à jour)", async ({
+    page,
+  }) => {
+    const ts = Date.now();
+    const newLabel = `E2E-ADM13-MAJ-${ts}`;
+    const appId = await createThrowawayApp(`E2E ADM13 ${ts}`);
+
+    try {
+      const workbook = await buildSheetWorkbook(
+        "Applications",
+        ["Identifiant", "Libellé", "Description"],
+        [[appId, newLabel, "Mise à jour par import"]],
+      );
+
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openBatchDataTab();
+      await admin.importExcel({
+        name: `import-adm13-${ts}.xlsx`,
+        mimeType: XLSX_MIME,
+        buffer: workbook,
+      });
+
+      await admin.expectImportReportSummary(/1 mis à jour/);
+      await admin.expectImportReportSummary(/0 en erreur/);
+
+      // Non-régression : le nouveau libellé est appliqué à l'application existante.
+      const rows = await dbQuery<{ label: string }>(
+        `SELECT label FROM "Application" WHERE id = $1`,
+        [appId],
+      );
+      expect(rows[0]?.label).toBe(newLabel);
+    } finally {
+      await deleteThrowawayApp(appId);
+    }
+  });
+
+  test("ADM-14 - importer une application via un fichier Excel (création)", async ({
+    page,
+  }) => {
+    const ts = Date.now();
+    const label = `E2E-ADM14-${ts}`;
+    let createdId: string | undefined;
+
+    try {
+      const workbook = await buildSheetWorkbook(
+        "Applications",
+        ["Identifiant", "Libellé", "Description"],
+        [["", label, "Créée par import Excel"]],
+      );
+
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openBatchDataTab();
+      await admin.importExcel({
+        name: `import-adm14-${ts}.xlsx`,
+        mimeType: XLSX_MIME,
+        buffer: workbook,
+      });
+
+      await admin.expectImportReportSummary(/1 créé\(s\)/);
+      await admin.expectImportReportSummary(/0 en erreur/);
+
+      // Non-régression : une application au libellé fourni existe désormais en base.
+      const rows = await dbQuery<{ id: string }>(
+        `SELECT id FROM "Application" WHERE label = $1`,
+        [label],
+      );
+      expect(rows.length).toBe(1);
+      createdId = rows[0]?.id;
+    } finally {
+      if (createdId) await deleteThrowawayApp(createdId);
+    }
+  });
+
+  test("ADM-15 - importer un hébergement via un fichier Excel (création)", async ({
+    page,
+  }) => {
+    const ts = Date.now();
+    const appId = await createThrowawayApp(`E2E ADM15 ${ts}`);
+
+    try {
+      const workbook = await buildSheetWorkbook(
+        "Hébergements",
+        [
+          "ID Hébergement",
+          "ID Application",
+          "Label d’hébergement",
+          "Fournisseur d’hébergement",
+          "Site",
+          "Plateforme",
+        ],
+        [["", appId, `E2E-ADM15-HOST-${ts}`, "DTNUM", "RENNES", "PHYSIQUE"]],
+      );
+
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openBatchDataTab();
+      await admin.importExcel({
+        name: `import-adm15-${ts}.xlsx`,
+        mimeType: XLSX_MIME,
+        buffer: workbook,
+      });
+
+      await admin.expectImportReportSummary(/1 créé\(s\)/);
+      await admin.expectImportReportSummary(/0 en erreur/);
+
+      // Non-régression : l'application possède désormais un hébergement.
+      const rows = await dbQuery<{ id: string }>(
+        `SELECT id FROM "Hosting" WHERE "applicationId" = $1`,
+        [appId],
+      );
+      expect(rows.length).toBeGreaterThanOrEqual(1);
+    } finally {
+      // La suppression de l'application supprime ses hébergements en cascade.
+      await deleteThrowawayApp(appId);
+    }
+  });
 });

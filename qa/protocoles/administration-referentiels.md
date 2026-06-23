@@ -8,7 +8,7 @@
 | Légende           |                                                                              |
 | :---------------- | :--------------------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/administration-referentiels.spec.ts` |
-| **Statut**        | 🟢 automatisé — 12 cas couverts par la CI                                    |
+| **Statut**        | 🟢 automatisé — 15 cas couverts par la CI                                    |
 
 ---
 
@@ -107,3 +107,30 @@
   fichier « Conformités » modifiant l'impact métier.
 - **Résultat attendu** : le rapport indique « 1 mis à jour » et « 0 en erreur » ; la conformité
   existante (même application) reflète la nouvelle valeur.
+
+### ADM-13 — Importer une application via un fichier Excel (mise à jour) ✅
+
+- **Datafeature** : une application jetable créée en base ; le classeur reprend son « Identifiant »
+  (onglet « Applications ») avec un libellé modifié.
+- **Action** : administration → onglet Batch de données → section « Import Excel » → importer le
+  fichier contenant l'identifiant de l'application.
+- **Résultat attendu** : le rapport indique « 1 mis à jour » et « 0 en erreur » ; le nouveau libellé
+  est appliqué à l'application existante en base.
+
+### ADM-14 — Importer une application via un fichier Excel (création) ✅
+
+- **Datafeature** : aucune (l'application est créée par l'import) ; le classeur contient une ligne
+  « Applications » sans identifiant (libellé + description).
+- **Action** : administration → onglet Batch de données → section « Import Excel » → importer le
+  fichier.
+- **Résultat attendu** : le rapport indique « 1 créé(s) » et « 0 en erreur » ; une application au
+  libellé fourni existe désormais en base (nettoyée en fin de test).
+
+### ADM-15 — Importer un hébergement via un fichier Excel (création) ✅
+
+- **Datafeature** : une application jetable créée en base ; le classeur contient une ligne
+  « Hébergements » rattachée à son « ID Application » (fournisseur/site/plateforme).
+- **Action** : administration → onglet Batch de données → section « Import Excel » → importer le
+  fichier.
+- **Résultat attendu** : le rapport indique « 1 créé(s) » et « 0 en erreur » ; l'application possède
+  désormais un hébergement (l'option d'hébergement est résolue ou créée comme via l'API).
