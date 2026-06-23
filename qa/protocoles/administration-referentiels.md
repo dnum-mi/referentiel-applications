@@ -8,7 +8,7 @@
 | Légende           |                                                                              |
 | :---------------- | :--------------------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/administration-referentiels.spec.ts` |
-| **Statut**        | 🟢 automatisé — 15 cas couverts par la CI                                    |
+| **Statut**        | 🟢 automatisé — 16 cas couverts par la CI                                    |
 
 ---
 
@@ -134,3 +134,12 @@
   fichier.
 - **Résultat attendu** : le rapport indique « 1 créé(s) » et « 0 en erreur » ; l'application possède
   désormais un hébergement (l'option d'hébergement est résolue ou créée comme via l'API).
+
+### ADM-16 — Import refusé hors périmètre pour un administrateur scopé (#1890) ✅
+
+- **Datafeature** : seed QA (`pnpm db:seed:qa`) — administrateur scopé `scope-admin` (périmètre TOTO/)
+  et application `QA-SCOPE-ABCD` hors de ce périmètre ; le test se skippe si la fixture est absente.
+- **Action** : se connecter en `scope-admin` → administration → onglet Batch de données → section
+  « Import Excel » → importer un onglet « Applications » mettant à jour `QA-SCOPE-ABCD`.
+- **Résultat attendu** : la ligne est **refusée** ; le rapport indique « 1 en erreur » / « 0 mis à
+  jour » avec le motif « Droits insuffisants » ; le libellé de l'application reste inchangé en base.
