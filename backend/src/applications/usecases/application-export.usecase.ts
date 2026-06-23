@@ -58,6 +58,7 @@ export class ExportApplicationsUseCase {
         columns: [
           col("applicationId", 30),
           col("applicationLabel", 30),
+          col("hostings.id", 36),
           col("hostings.label", 30),
           col("hostings.provider", 30),
           col("hostings.site", 25),

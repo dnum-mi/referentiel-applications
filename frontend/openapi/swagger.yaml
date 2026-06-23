@@ -3187,17 +3187,19 @@ paths:
       description: >-
         Importe ou met à jour des données en masse à partir d'un fichier Excel
 
-        au même format que l'export (un onglet par table). Les onglets pris en
-        charge sont traités
+        au même format que l'export (un onglet par table). L'onglet «
+        Applications » est toujours traité
 
-        (actuellement : « Acteurs » et « Conformités ») ; les autres sont
-        ignorés. Pour chaque ligne,
+        en premier, puis les onglets pris en charge (« Hébergements », « Acteurs
+        », « Conformités ») ;
 
-        la présence de l'identifiant déclenche une mise à jour, sinon une
-        création. Les contrôles et
+        les autres sont ignorés. Pour chaque ligne, la présence de l'identifiant
+        déclenche une mise à jour,
 
-        les métadonnées sont identiques à ceux de l'API. Un rapport d'exécution
-        est retourné.
+        sinon une création. Les contrôles et les métadonnées sont identiques à
+        ceux de l'API. Un rapport
+
+        d'exécution est retourné.
       parameters: []
       requestBody:
         required: true

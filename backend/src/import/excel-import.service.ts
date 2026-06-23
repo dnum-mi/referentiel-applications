@@ -2,11 +2,15 @@ import { Injectable } from "@nestjs/common";
 import * as ExcelJS from "exceljs";
 import { createEmptyReport, ImportReportDto } from "./dto/import-report.dto";
 import { ActorsSheetProcessor } from "./processors/actors-sheet.processor";
+import { ApplicationsSheetProcessor } from "./processors/applications-sheet.processor";
 import { CompliancesSheetProcessor } from "./processors/compliances-sheet.processor";
+import { HostingsSheetProcessor } from "./processors/hostings-sheet.processor";
 
 @Injectable()
 export class ExcelImportService {
   constructor(
+    private readonly applicationsProcessor: ApplicationsSheetProcessor,
+    private readonly hostingsProcessor: HostingsSheetProcessor,
     private readonly actorsProcessor: ActorsSheetProcessor,
     private readonly compliancesProcessor: CompliancesSheetProcessor,
   ) {}
@@ -29,8 +33,13 @@ export class ExcelImportService {
     const report = createEmptyReport();
 
     // Onglets pris en charge, dans l'ordre de traitement.
-    // (L'onglet « Applications », traité en premier, relève de la phase 3.)
-    const processors = [this.actorsProcessor, this.compliancesProcessor];
+    // L'onglet « Applications » est toujours traité en premier (les autres s'y rattachent).
+    const processors = [
+      this.applicationsProcessor,
+      this.hostingsProcessor,
+      this.actorsProcessor,
+      this.compliancesProcessor,
+    ];
     const knownSheets = new Set(processors.map((p) => p.sheetName));
 
     for (const processor of processors) {

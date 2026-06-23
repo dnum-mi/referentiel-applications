@@ -141,11 +141,11 @@ async function runMaiaActorSync() {
       </div>
     </div>
     <div class="section-card--mt">
-      <h2 class="fr-h2">Import Excel (acteurs, conformités)</h2>
+      <h2 class="fr-h2">Import Excel (applications, hébergements, acteurs, conformités)</h2>
       <p class="fr-hint-text">
-        Importez ou mettez à jour des données en masse à partir d'un fichier Excel au même format que l'export (un onglet par table). Les
-        onglets pris en charge sont traités (« Acteurs », « Conformités ») ; les autres sont ignorés. Une ligne avec un identifiant met à
-        jour l'enregistrement ; sans identifiant, il est créé.
+        Importez ou mettez à jour des données en masse à partir d'un fichier Excel au même format que l'export (un onglet par table).
+        L'onglet « Applications » est traité en premier, puis les onglets pris en charge (« Hébergements », « Acteurs », « Conformités ») ;
+        les autres sont ignorés. Une ligne avec un identifiant met à jour l'enregistrement ; sans identifiant, il est créé.
       </p>
       <div class="import-actor-container">
         <div class="fr-upload-group">

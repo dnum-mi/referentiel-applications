@@ -55,6 +55,7 @@ export function mapHostings(app: ApplicationWithAllRelations) {
     app.hostings?.map((h) => ({
       applicationId: app.id,
       applicationLabel: app.label,
+      "hostings.id": h.id,
       "hostings.label": h.label || "",
       "hostings.provider": h.hostingOption?.provider || "",
       "hostings.site": h.hostingOption?.site || "",

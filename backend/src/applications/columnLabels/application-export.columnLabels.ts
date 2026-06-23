@@ -25,6 +25,7 @@ export const columnLabels: Record<string, string> = {
   "labels.labelSource.source": "Source du label",
 
   hostings: "Hébergements",
+  "hostings.id": "ID Hébergement",
   "hostings.provider": "Fournisseur d’hébergement",
   "hostings.label": "Label d’hébergement",
   "hostings.region": "Région",
