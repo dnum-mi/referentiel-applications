@@ -2856,51 +2856,6 @@ paths:
         "204":
           description: Acteur supprimé avec succès
       tags: *a14
-  /api/v2/actors/import/excel:
-    post:
-      operationId: ActorController_importExcel
-      summary: Importer des acteurs depuis un fichier Excel
-      description: >-
-        Importe ou met à jour des acteurs en masse à partir d'un fichier Excel
-
-        au même format que l'export (un onglet par table). Seul l'onglet «
-        Acteurs » est traité.
-
-        Chaque ligne dont la colonne « ID Acteur » est renseignée met à jour
-        l'acteur correspondant ;
-
-        sinon un nouvel acteur est créé. Les contrôles et métadonnées sont
-        identiques à ceux de l'API.
-
-        Un rapport d'exécution est retourné.
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-              required:
-                - file
-      responses:
-        "200":
-          description: Rapport d'exécution de l'import
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ImportReportDto"
-        "201":
-          description: ""
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ImportReportDto"
-      tags: &a15
-        - Actors
   /api/v2/actors:
     get:
       operationId: ActorController_findAll
@@ -2956,7 +2911,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedActorDto"
-      tags: *a15
+      tags: &a15
+        - Actors
   /api/v2/actors/applications-by-email:
     get:
       operationId: ActorController_findApplicationsByEmail
@@ -3032,8 +2988,6 @@ paths:
             application/json:
               schema:
                 type: number
-      tags: &a15
-        - Actors
       tags: *a15
   /api/v2/actors/{id}:
     patch:
@@ -6877,83 +6831,6 @@ components:
         isGroup:
           type: boolean
           description: Indique si l'acteur est un groupe d'acteurs ou non
-    ImportReportSummaryDto:
-      type: object
-      properties:
-        processedSheets:
-          description: Onglets effectivement traités
-          type: array
-          items:
-            type: string
-        ignoredSheets:
-          description: Onglets ignorés (absents ou non reconnus)
-          type: array
-          items:
-            type: string
-        created:
-          type: number
-          description: Nombre d'enregistrements créés
-        updated:
-          type: number
-          description: Nombre d'enregistrements mis à jour
-        errors:
-          type: number
-          description: Nombre de lignes en erreur
-      required:
-        - processedSheets
-        - ignoredSheets
-        - created
-        - updated
-        - errors
-    ImportReportEntryDto:
-      type: object
-      properties:
-        sheet:
-          type: string
-          description: Nom de l'onglet traité
-          example: Acteurs
-        row:
-          type: number
-          description: Numéro de la ligne dans l'onglet (1 = en-tête)
-          example: 4
-        status:
-          type: string
-          description: Résultat du traitement de la ligne
-          enum:
-            - created
-            - updated
-            - error
-          example: updated
-        identifier:
-          type: string
-          description: Identifiant lisible de l'enregistrement concerné
-          example: "MOA : jean.dupont@example.com"
-        message:
-          type: string
-          description: Détail (motif d'erreur ou information)
-          example: Type d'acteur introuvable pour le rôle « XYZ »
-      required:
-        - sheet
-        - row
-        - status
-    ImportReportDto:
-      type: object
-      properties:
-        summary:
-          $ref: "#/components/schemas/ImportReportSummaryDto"
-        entries:
-          type: array
-          items:
-            $ref: "#/components/schemas/ImportReportEntryDto"
-        logs:
-          description: Journal d'exécution (erreurs au niveau onglet, etc.)
-          type: array
-          items:
-            type: string
-      required:
-        - summary
-        - entries
-        - logs
     BulkActorByEmailDto:
       type: object
       properties:
