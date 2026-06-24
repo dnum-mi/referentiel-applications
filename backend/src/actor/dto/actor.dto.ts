@@ -1,5 +1,6 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import {
+  IsArray,
   IsBoolean,
   IsEmail,
   IsOptional,
@@ -90,4 +91,69 @@ export class ActorFiltersDto extends PaginationDto {
   @IsOptional()
   @IsString()
   applicationId?: string;
+}
+
+export class AdminActorFiltersDto extends PaginationDto {
+  @ApiProperty({
+    description: "Recherche par email, prénom, nom ou application",
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+}
+
+export class BulkResultDto {
+  @ApiProperty({ description: "Nombre d'acteurs affectés" })
+  count: number;
+}
+
+export class ApplicationRefDto {
+  @ApiProperty({ description: "ID de l'application" })
+  @IsString()
+  id: string;
+
+  @ApiProperty({ description: "Libellé de l'application" })
+  @IsString()
+  label: string;
+}
+
+export class BulkActorByEmailDto {
+  @ApiProperty({
+    example: "example@example.com",
+    description: "Email des acteurs à cibler",
+    required: true,
+  })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({
+    description: "Liste des IDs d'applications à cibler (toutes si vide)",
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  applicationIds?: string[];
+}
+
+export class BulkUpdateActorByEmailDto extends UpdateActorDto {
+  @ApiProperty({
+    example: "example@example.com",
+    description: "Email actuel des acteurs à cibler",
+    required: true,
+  })
+  @IsEmail()
+  targetEmail: string;
+
+  @ApiProperty({
+    description: "Liste des IDs d'applications à cibler (toutes si vide)",
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  applicationIds?: string[];
 }

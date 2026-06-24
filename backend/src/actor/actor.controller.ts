@@ -27,6 +27,11 @@ import { ActorService } from "./actor.service";
 import {
   ActorDto,
   ActorFiltersDto,
+  AdminActorFiltersDto,
+  ApplicationRefDto,
+  BulkResultDto,
+  BulkActorByEmailDto,
+  BulkUpdateActorByEmailDto,
   CreateActorDto,
   UpdateActorDto,
 } from "./dto/actor.dto";
@@ -39,6 +44,97 @@ import { RequiredPermissions } from "src/common/decorators/required-permissions.
 export class ActorController {
   constructor(private readonly actorService: ActorService) {}
 
+  @Get()
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Récupérer tous les acteurs (admin)",
+    description:
+      "Liste paginée de tous les acteurs avec recherche par email, prénom, nom ou application.",
+  })
+  @ApiOkResponse({
+    description: "Liste paginée des acteurs",
+    type: PaginatedResponseDto.of(ActorDto),
+  })
+  public async findAll(@Query() filters: AdminActorFiltersDto) {
+    return this.actorService.findAllGlobal(filters);
+  }
+
+  @Get("applications-by-email")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Récupérer les applications d'un acteur par email",
+    description:
+      "Retourne la liste des applications dans lesquelles un acteur avec cet email est présent.",
+  })
+  @ApiOkResponse({
+    description: "Liste des applications",
+    type: [ApplicationRefDto],
+  })
+  public async findApplicationsByEmail(@Query("email") email: string) {
+    return this.actorService.findApplicationsByEmail(email);
+  }
+
+  @Delete("by-email")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @HttpCode(200)
+  @ApiOperation({
+    summary: "Supprimer des acteurs par email (admin)",
+    description:
+      "Supprime les acteurs partageant le même email dans les applications sélectionnées (ou toutes si non spécifié).",
+  })
+  @ApiOkResponse({
+    description: "Nombre d'acteurs supprimés",
+    type: BulkResultDto,
+  })
+  @ApiBody({ type: BulkActorByEmailDto })
+  public async deleteAllByEmail(
+    @UserId() userId: string,
+    @Body() body: BulkActorByEmailDto,
+  ) {
+    Logger.log({
+      message: "Suppression d'acteurs par email (admin)",
+      email: body.email,
+      applicationIds: body.applicationIds,
+      action: "bulk-delete",
+    });
+    return this.actorService.deleteAllByEmail(
+      body.email,
+      userId,
+      body.applicationIds,
+    );
+  }
+
+  @Patch("by-email")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Modifier des acteurs par email (admin)",
+    description:
+      "Met à jour les acteurs partageant le même email dans les applications sélectionnées (ou toutes si non spécifié).",
+  })
+  @ApiOkResponse({
+    description: "Nombre d'acteurs mis à jour",
+    type: BulkResultDto,
+  })
+  @ApiBody({ type: BulkUpdateActorByEmailDto })
+  public async updateAllByEmail(
+    @UserId() userId: string,
+    @Body() body: BulkUpdateActorByEmailDto,
+  ) {
+    const { targetEmail, applicationIds, ...updateData } = body;
+    Logger.log({
+      message: "Modification d'acteurs par email (admin)",
+      email: targetEmail,
+      applicationIds,
+      action: "bulk-update",
+    });
+    return this.actorService.updateAllByEmail(
+      targetEmail,
+      updateData,
+      userId,
+      applicationIds,
+    );
+  }
+
   @Get("count")
   @ApiOperation({
     summary: "Récupérer le nombre total d'acteurs (toutes applications)",
@@ -49,6 +145,42 @@ export class ActorController {
   })
   public async countAllActors(): Promise<number> {
     return this.actorService.count();
+  }
+
+  @Patch(":id")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({ summary: "Mettre à jour un acteur (admin)" })
+  @ApiOkResponse({
+    description: "Acteur mis à jour avec succès",
+    type: ActorDto,
+  })
+  @ApiParam({ name: "id", description: "ID de l'acteur" })
+  public async updateActor(
+    @UserId() userId: string,
+    @Param("id") id: string,
+    @Body() actorToUpdate: UpdateActorDto,
+  ) {
+    Logger.log({
+      message: "Modification globale de l'acteur (admin)",
+      actorToUpdate,
+      action: "patch",
+    });
+    return this.actorService.updateGlobal(id, actorToUpdate, userId);
+  }
+
+  @Delete(":id")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @HttpCode(204)
+  @ApiOperation({ summary: "Supprimer un acteur (admin)" })
+  @ApiNoContentResponse({ description: "Acteur supprimé avec succès" })
+  @ApiParam({ name: "id", description: "ID de l'acteur" })
+  public async deleteActor(@UserId() userId: string, @Param("id") id: string) {
+    Logger.log({
+      message: "Suppression globale de l'acteur (admin)",
+      actorId: id,
+      action: "delete",
+    });
+    return this.actorService.deleteGlobal(id, userId);
   }
 
   @Post("sync-maia")

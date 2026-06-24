@@ -136,11 +136,14 @@ watch(
         v-for="column in columns"
         :key="column.field"
         :field="column.field"
-        :header="column.header"
+        :header="$slots[`header-${column.field}`] ? undefined : column.header"
         :sortable="column.sortable"
         :style="column.width ? { width: column.width } : undefined"
         :aria-label="column.header"
       >
+        <template v-if="$slots[`header-${column.field}`]" #header>
+          <slot :name="`header-${column.field}`" />
+        </template>
         <template #body="slotProps">
           <Skeleton v-if="isSorting" width="80%" height="1rem" aria-label="Chargement en cours" />
           <slot v-else :name="`body-${column.field}`" v-bind="slotProps">

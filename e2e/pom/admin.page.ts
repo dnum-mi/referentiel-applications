@@ -493,6 +493,94 @@ export class AdminPage extends BasePage {
     await expect(this.byTestId("admin-import-report")).toBeVisible();
   }
 
+  // --- Onglet « Gestion des acteurs » (ADM-16 to ADM-20) ---
+
+  private actorsTable = () => this.byTestId("admin-actors-table");
+  private actorSearch = () => this.byTestId("admin-actor-search");
+
+  async openActorsTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: /gestion des acteurs/i })
+      .click();
+    await expect(this.byTestId("admin-actors-title")).toBeVisible();
+  }
+
+  async searchActor(value: string): Promise<void> {
+    const refetch = this.page
+      .waitForResponse(
+        (r) =>
+          /\/actors\?/.test(r.url()) &&
+          r.url().includes("search") &&
+          r.request().method() === "GET",
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+    await this.actorSearch().locator("input").fill(value);
+    await refetch;
+  }
+
+  async expectActorRow(email: string): Promise<void> {
+    await this.searchActor(email);
+    await expect(this.actorsTable()).toContainText(email);
+  }
+
+  async expectActorAbsent(email: string): Promise<void> {
+    await this.searchActor(email);
+    await expect(this.actorsTable()).not.toContainText(email);
+  }
+
+  private actorRow(email: string) {
+    return this.actorsTable().locator("tr", { hasText: email });
+  }
+
+  /** Ouvre le modal de modification d'un acteur unique, change le nom, enregistre (ADM-17). */
+  async editActorAndSave(email: string, newLastname: string): Promise<void> {
+    await this.expectActorRow(email);
+    const row = this.actorRow(email);
+    await row.getByTestId("admin-actor-edit-btn").first().click();
+    await expect(this.byTestId("actor-form")).toBeVisible();
+    await this.page.getByLabel("Nom", { exact: true }).fill(newLastname);
+    await this.page.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/mis à jour avec succès/i);
+  }
+
+  /** Ouvre le modal de suppression d'un acteur unique, confirme (ADM-18). */
+  async deleteActorAndConfirm(email: string): Promise<void> {
+    await this.expectActorRow(email);
+    const row = this.actorRow(email);
+    await row.getByTestId("admin-actor-delete-btn").first().click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByTestId("admin-actor-delete-confirm-btn").click();
+    await this.expectToaster(/supprimé avec succès/i);
+  }
+
+  /** Ouvre le modal « Modifier tous » par email, change le prénom, enregistre (ADM-19). */
+  async editAllActorsAndSave(
+    email: string,
+    newFirstname: string,
+  ): Promise<void> {
+    await this.expectActorRow(email);
+    const row = this.actorRow(email);
+    await row.getByTestId("admin-actor-edit-all-btn").first().click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel("Prénom").fill(newFirstname);
+    await dialog.getByTestId("admin-actor-save-all-btn").click();
+    await this.expectToaster(/acteur\(s\) mis à jour avec succès/i);
+  }
+
+  /** Ouvre le modal « Supprimer tous » par email, confirme (ADM-20). */
+  async deleteAllActorsAndConfirm(email: string): Promise<void> {
+    await this.expectActorRow(email);
+    const row = this.actorRow(email);
+    await row.getByTestId("admin-actor-delete-all-btn").first().click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByTestId("admin-actor-delete-all-confirm-btn").click();
+    await this.expectToaster(/acteur\(s\) supprimé\(s\) avec succès/i);
+  }
+
   /** Vérifie le résumé du rapport d'exécution (créés / mis à jour / erreurs). */
   async expectImportReportSummary(text: string | RegExp): Promise<void> {
     await expect(this.byTestId("admin-import-report-summary")).toContainText(

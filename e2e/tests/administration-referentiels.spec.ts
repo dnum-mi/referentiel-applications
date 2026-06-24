@@ -41,6 +41,13 @@ async function deleteThrowawayApp(appId: string): Promise<void> {
   );
 }
 
+async function firstOrganizationId(): Promise<string | null> {
+  const rows = await dbQuery<{ id: string }>(
+    `SELECT id FROM "Organization" LIMIT 1`,
+  );
+  return rows[0]?.id ?? null;
+}
+
 test.describe("Administration des référentiels", () => {
   // L'administration requiert une session admin. Certains cas n'utilisent que `page` : on consomme
   // la fixture `data` (qui exécute `loginAs(admin)`) ici pour garantir l'authentification de chaque
@@ -259,6 +266,190 @@ test.describe("Administration des référentiels", () => {
       expect(updated[0]?.lastname).toBe(newLastname);
     } finally {
       if (seeded) await data.deleteActor(app!.id, seeded.id).catch(() => {});
+    }
+  });
+
+  test("ADM-16 - lister et rechercher les acteurs (admin)", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const email = `e2e-adm11-${ts}@example.com`;
+    const app = await data.firstApplication();
+    const actorType = await firstActorType();
+    const orgId = await firstOrganizationId();
+    test.skip(!app, "Aucune application disponible");
+    test.skip(!actorType, "Aucun type d'acteur disponible");
+    test.skip(!orgId, "Aucune organisation disponible");
+
+    const seeded = await data.createActor(app!.id, {
+      firstname: "Acteur",
+      lastname: `ADM13-${ts}`,
+      email,
+      actorTypeId: actorType!.id,
+      organizationId: orgId,
+      isGroup: false,
+    });
+    test.skip(!seeded, "Impossible de créer l'acteur de test");
+
+    try {
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openActorsTab();
+      await admin.expectActorRow(email);
+    } finally {
+      if (seeded) await data.deleteActor(app!.id, seeded.id).catch(() => {});
+    }
+  });
+
+  test("ADM-17 - modifier un acteur unique (admin)", async ({ page, data }) => {
+    const ts = Date.now();
+    const email = `e2e-adm16-${ts}@example.com`;
+    const newLastname = `MODIFIED-${ts}`;
+    const app = await data.firstApplication();
+    const actorType = await firstActorType();
+    const orgId = await firstOrganizationId();
+    test.skip(!app, "Aucune application disponible");
+    test.skip(!actorType, "Aucun type d'acteur disponible");
+    test.skip(!orgId, "Aucune organisation disponible");
+
+    const seeded = await data.createActor(app!.id, {
+      firstname: "Acteur",
+      lastname: `SEED-${ts}`,
+      email,
+      actorTypeId: actorType!.id,
+      organizationId: orgId,
+      isGroup: false,
+    });
+    test.skip(!seeded, "Impossible de créer l'acteur de test");
+
+    try {
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openActorsTab();
+      await admin.editActorAndSave(email, newLastname);
+    } finally {
+      if (seeded) await data.deleteActor(app!.id, seeded.id).catch(() => {});
+    }
+  });
+
+  test("ADM-18 - supprimer un acteur unique (admin)", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const email = `e2e-adm17-${ts}@example.com`;
+    const app = await data.firstApplication();
+    const actorType = await firstActorType();
+    const orgId = await firstOrganizationId();
+    test.skip(!app, "Aucune application disponible");
+    test.skip(!actorType, "Aucun type d'acteur disponible");
+    test.skip(!orgId, "Aucune organisation disponible");
+
+    const seeded = await data.createActor(app!.id, {
+      firstname: "Acteur",
+      lastname: `SEED-${ts}`,
+      email,
+      actorTypeId: actorType!.id,
+      organizationId: orgId,
+      isGroup: false,
+    });
+    test.skip(!seeded, "Impossible de créer l'acteur de test");
+
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.openActorsTab();
+    await admin.deleteActorAndConfirm(email);
+    await admin.expectActorAbsent(email);
+  });
+
+  test("ADM-19 - modifier tous les acteurs par email (admin)", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const email = `e2e-adm16-${ts}@example.com`;
+    const newFirstname = `BULKEDIT-${ts}`;
+    const apps = await data.twoApplications();
+    const actorType = await firstActorType();
+    const orgId = await firstOrganizationId();
+    test.skip(!apps, "Besoin de deux applications");
+    test.skip(!actorType, "Aucun type d'acteur disponible");
+    test.skip(!orgId, "Aucune organisation disponible");
+
+    const actor1 = await data.createActor(apps![0].id, {
+      firstname: "Acteur",
+      lastname: `SEED1-${ts}`,
+      email,
+      actorTypeId: actorType!.id,
+      organizationId: orgId,
+      isGroup: false,
+    });
+    const actor2 = await data.createActor(apps![1].id, {
+      firstname: "Acteur",
+      lastname: `SEED2-${ts}`,
+      email,
+      actorTypeId: actorType!.id,
+      organizationId: orgId,
+      isGroup: false,
+    });
+    test.skip(!actor1 || !actor2, "Impossible de créer les acteurs de test");
+
+    try {
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openActorsTab();
+      await admin.editAllActorsAndSave(email, newFirstname);
+    } finally {
+      if (actor1)
+        await data.deleteActor(apps![0].id, actor1.id).catch(() => {});
+      if (actor2)
+        await data.deleteActor(apps![1].id, actor2.id).catch(() => {});
+    }
+  });
+
+  test("ADM-20 - supprimer tous les acteurs par email (admin)", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const email = `e2e-adm17-${ts}@example.com`;
+    const apps = await data.twoApplications();
+    const actorType = await firstActorType();
+    const orgId = await firstOrganizationId();
+    test.skip(!apps, "Besoin de deux applications");
+    test.skip(!actorType, "Aucun type d'acteur disponible");
+    test.skip(!orgId, "Aucune organisation disponible");
+
+    const actor1 = await data.createActor(apps![0].id, {
+      firstname: "Acteur",
+      lastname: `SEED1-${ts}`,
+      email,
+      actorTypeId: actorType!.id,
+      organizationId: orgId,
+      isGroup: false,
+    });
+    const actor2 = await data.createActor(apps![1].id, {
+      firstname: "Acteur",
+      lastname: `SEED2-${ts}`,
+      email,
+      actorTypeId: actorType!.id,
+      organizationId: orgId,
+      isGroup: false,
+    });
+    test.skip(!actor1 || !actor2, "Impossible de créer les acteurs de test");
+
+    try {
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openActorsTab();
+      await admin.deleteAllActorsAndConfirm(email);
+      await admin.expectActorAbsent(email);
+    } finally {
+      if (actor1)
+        await data.deleteActor(apps![0].id, actor1.id).catch(() => {});
+      if (actor2)
+        await data.deleteActor(apps![1].id, actor2.id).catch(() => {});
     }
   });
 
