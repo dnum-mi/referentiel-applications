@@ -99,9 +99,15 @@ function goToProfileApp(appId: string) {
     />
 
     <!-- ── Loading ────────────────────────────────────────────────── -->
-    <div v-if="isLoading" role="status" aria-live="polite" class="fr-py-6w fr-text--center" data-testid="data-application-detail-loading">
+    <output
+      v-if="isLoading"
+      aria-live="polite"
+      class="fr-py-6w fr-text--center"
+      data-testid="data-application-detail-loading"
+      style="display: block"
+    >
       <span class="fr-text--sm">Chargement…</span>
-    </div>
+    </output>
 
     <!-- ── Not found ──────────────────────────────────────────────── -->
     <div v-else-if="!item" role="alert" class="fr-alert fr-alert--warning fr-mt-2w" data-testid="data-application-detail-not-found">

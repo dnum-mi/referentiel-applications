@@ -114,9 +114,9 @@ onMounted(async () => {
           <div v-else-if="error" data-testid="iq-chart-error" role="alert" aria-live="assertive">
             {{ error }}
           </div>
-          <div v-else-if="!iqStats.length" data-testid="iq-chart-no-data" role="status">
+          <output v-else-if="!iqStats.length" data-testid="iq-chart-no-data" style="display: block">
             Aucune donnée disponible pour la période sélectionnée.
-          </div>
+          </output>
           <figure v-show="!isLoading && !error && !isTableView" focus-visible>
             <figcaption class="fr-sr-only">
               Graphique linéaire représentant l’évolution de l’IQ moyen, avec l’axe des X pour la date et l’axe des Y pour l’IQ moyen.
