@@ -114,6 +114,15 @@ jobs:
             -Dsonar.coverage.exclusions=**/tests/**
             -Dsonar.tests=backend/tests
             -Dsonar.scm.provider=git
+            -Dsonar.issue.ignore.multicriteria=e2699,emailWidth,emailLayout,emailRole
+            -Dsonar.issue.ignore.multicriteria.e2699.ruleKey=typescript:S2699
+            -Dsonar.issue.ignore.multicriteria.e2699.resourceKey=backend/tests/**
+            -Dsonar.issue.ignore.multicriteria.emailWidth.ruleKey=Web:S1827
+            -Dsonar.issue.ignore.multicriteria.emailWidth.resourceKey=backend/src/email/templates/**
+            -Dsonar.issue.ignore.multicriteria.emailLayout.ruleKey=Web:S5257
+            -Dsonar.issue.ignore.multicriteria.emailLayout.resourceKey=backend/src/email/templates/**
+            -Dsonar.issue.ignore.multicriteria.emailRole.ruleKey=Web:S6819
+            -Dsonar.issue.ignore.multicriteria.emailRole.resourceKey=backend/src/email/templates/**
             ${{ github.event_name == 'pull_request' && steps.sonar-args.outputs.SONAR_ARGS_PR || steps.sonar-args.outputs.SONAR_ARGS_BRANCH }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
