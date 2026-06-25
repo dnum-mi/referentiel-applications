@@ -21,6 +21,7 @@ import {
 } from "@nestjs/swagger";
 import { ActorType, Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { UserId } from "src/common/decorators/user-id.decorator";
 import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { ActorTypeService } from "./actorType.service";
@@ -131,8 +132,9 @@ Vous devez fournir les informations suivantes :
   })
   public async updateMatrix(
     @Body() appPermsMatrix: AppPermsDto[],
+    @UserId() requestorId: string,
   ): Promise<AppPermsDto[]> {
-    return this.actorTypeService.updatePermsMatrix(appPermsMatrix);
+    return this.actorTypeService.updatePermsMatrix(appPermsMatrix, requestorId);
   }
 
   @Get()
