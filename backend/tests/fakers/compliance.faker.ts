@@ -38,7 +38,7 @@ const complianceSeeds: ComplianceSeedData[] = [
   },
 
   {
-    pdma_duration_hours: 1,
+    pdma_duration_hours: 2,
     pdma_data_types: "Transactions critiques, journaux de securite",
     pdma_backup_frequency: "Horaire",
     pdma_backup_method: "Snapshots incrementaux",
@@ -48,7 +48,7 @@ const complianceSeeds: ComplianceSeedData[] = [
     pdma_restoration_manager: "Equipe Sauvegarde",
   },
   {
-    pdma_duration_hours: 4,
+    pdma_duration_hours: 24,
     pdma_data_types: "Documents metier et pieces jointes",
     pdma_backup_frequency: "Quotidienne",
     pdma_backup_method: "Sauvegarde complete nocturne",

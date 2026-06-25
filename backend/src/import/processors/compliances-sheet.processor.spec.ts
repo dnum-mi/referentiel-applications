@@ -55,7 +55,7 @@ describe("CompliancesSheetProcessor", () => {
           "DSFR Implémenté",
           "DIMA HNO",
         ],
-        [["app-1", 5, "Oui", "Non"]],
+        [["app-1", 4, "Oui", "Non"]],
       ),
       requestor,
       report,
@@ -68,7 +68,7 @@ describe("CompliancesSheetProcessor", () => {
     ).toHaveBeenCalledWith(
       "app-1",
       expect.objectContaining({
-        dima_duration_hours: 5,
+        dima_duration_hours: 4,
         dsfr_implemented: true,
         dima_is_hno: false,
       }),

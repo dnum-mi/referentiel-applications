@@ -306,6 +306,27 @@ export class ApplicationPage extends BasePage {
     ).toBeDisabled();
   }
 
+  // --- Durées DIMA / PDMA : valeurs autorisées (#1901, CMP-05/06) ---
+  /**
+   * Ouvre l'édition d'un axe (par son libellé de ligne, p. ex. « DIMA ») et vérifie que la liste
+   * déroulante de durée propose exactement les valeurs autorisées (en heures), dans l'ordre attendu.
+   */
+  async expectComplianceDurationOptions(
+    rowLabel: string,
+    durationTestId: string,
+    expectedHours: number[],
+  ): Promise<void> {
+    await this.openComplianceEdit(rowLabel);
+    const values = await this.byTestId(durationTestId)
+      .locator("option")
+      .evaluateAll((els) =>
+        els
+          .map((el) => (el as HTMLOptionElement).value)
+          .filter((value) => value !== ""),
+      );
+    expect(values).toEqual(expectedHours.map(String));
+  }
+
   // --- Onglet Acteurs : ajout & import MAIA (#1825, MAI-*) ---
   /** Ouvre le formulaire d'ajout d'acteur depuis l'onglet Acteurs. */
   async openAddActorForm(): Promise<void> {
