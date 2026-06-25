@@ -23,7 +23,10 @@ export function cellToString(value: ExcelJS.CellValue): string {
         .trim();
     }
     if (obj.result !== undefined && obj.result !== null) {
-      return String(obj.result).trim();
+      const { result } = obj;
+      if (result instanceof Date) return result.toISOString();
+      if (typeof result === "object") return JSON.stringify(result).trim();
+      return String(result).trim();
     }
   }
   return "";

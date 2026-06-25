@@ -25,7 +25,9 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
 
 RUN pnpm api:generate
-# Temporary disable type checking
+# Type-check désactivé au build : vue-tsc nécessite les d.ts d'auto-imports
+# (unplugin-auto-import) générés pendant le build Vite, et inclurait les specs.
+# Le type-check tourne via `pnpm type-check` (dev / job CI dédié), pas dans l'image.
 RUN pnpm build-only
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod

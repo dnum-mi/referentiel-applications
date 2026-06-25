@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { watchDebounced } from "@vueuse/core";
-import { onClickOutside } from "@vueuse/core";
+import { onClickOutside, watchDebounced } from "@vueuse/core";
 import { computed, ref } from "vue";
 
 interface Props<T> {
@@ -170,7 +169,9 @@ onClickOutside(containerEl, () => {
         </button>
       </li>
 
-      <li v-if="!hasResults && displayNoResult" class="no-result" role="option" aria-disabled="true">Aucun résultat</li>
+      <li v-if="!hasResults && displayNoResult" class="no-result" role="option" :aria-selected="false" aria-disabled="true">
+        Aucun résultat
+      </li>
     </ul>
 
     <div class="visually-hidden" aria-live="polite" aria-atomic="true">{{ liveRegionText }}</div>

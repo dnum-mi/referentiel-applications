@@ -97,7 +97,7 @@ export class CompliancesService extends BaseService<Compliance> {
     const complianceRecord = await this.findByApplicationId(applicationId);
     const targetUrl = complianceRecord?.eco_index_target_url;
 
-    if (!targetUrl || !targetUrl.startsWith("http")) {
+    if (!targetUrl?.startsWith("http")) {
       throw new NotFoundException(
         "Aucune URL cible EcoIndex valide trouvée. Veuillez renseigner eco_index_target_url dans la conformité.",
       );

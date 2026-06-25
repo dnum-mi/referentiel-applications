@@ -62,7 +62,7 @@ const selectOptions = computed(() => {
   });
 
   // Add initial organization if it exists and is not already in the search results
-  if (props.initialOrganization && !organizations.value.find((org) => org.id === props.initialOrganization?.id)) {
+  if (props.initialOrganization && !organizations.value.some((org) => org.id === props.initialOrganization?.id)) {
     options.push({
       text: props.initialOrganization.path,
       value: props.initialOrganization.id,

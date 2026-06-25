@@ -34,7 +34,7 @@ async function loadTechnicalDebtPoints() {
   try {
     // Sans choix explicite, on présente la campagne la plus récente.
     const millesime = filters.value.millesime ?? latestYear.value;
-    await searchApplications({ pageSize: 0, ...(millesime != null ? { millesime } : undefined) });
+    await searchApplications({ pageSize: 0, ...(millesime == null ? undefined : { millesime }) });
   } catch {
     technicalDebtPoints.value = [];
   } finally {
@@ -59,10 +59,10 @@ watchDebounced(
       <h1 class="fr-h1" data-testid="time-title">Diagramme Time</h1>
 
       <section id="technical-debt-chart" class="chart-section" data-testid="technical-debt-chart-section">
-        <div v-if="isTechnicalDebtLoading" class="loader" role="status" aria-live="polite" aria-atomic="true">
+        <output v-if="isTechnicalDebtLoading" class="loader" aria-live="polite" aria-atomic="true">
           <AppLoader />
           <span class="sr-only">Chargement du graphique…</span>
-        </div>
+        </output>
         <TechnicalDebtChart v-else :data="applications" />
       </section>
     </main>

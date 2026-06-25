@@ -80,7 +80,6 @@
           class="fr-col fr-btn fr-btn--secondary fr-btn--md"
           data-testid="home-contact-link"
           title="Contacter l’équipe sur Tchap"
-          aria-label="Contacter l’équipe sur Tchap"
           href="https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr"
           target="_blank"
           ><span class="fr-icon-mail-open-line fr-icon--sm fr-mr-1w"></span>

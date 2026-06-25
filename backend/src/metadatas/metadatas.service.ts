@@ -108,8 +108,6 @@ export class MetadatasService extends BaseService<any> {
       } else {
         descriptionLines.push(
           `Ancienne(s) valeur(s): ${JSON.stringify(changedOldValues)}`,
-        );
-        descriptionLines.push(
           `Nouvelle(s) valeur(s): ${JSON.stringify(changedNewValues)}`,
         );
       }

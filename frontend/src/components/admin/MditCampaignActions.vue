@@ -60,22 +60,20 @@ async function saveCampaign() {
     isActive: editingActive.value,
   };
 
-  const response = !props.campaign?.id
-    ? await api.mditCampaignControllerCreate({ body })
-    : await api.mditCampaignControllerUpdate({ path: { id: props.campaign.id }, body });
+  const response = props.campaign?.id
+    ? await api.mditCampaignControllerUpdate({ path: { id: props.campaign.id }, body })
+    : await api.mditCampaignControllerCreate({ body });
 
-  if (!response.response.ok) {
-    if (response.response.status === 409) {
-      errorMessage.value = "Une campagne existe déjà pour ce millésime.";
-    } else if (response.response.status === 400) {
-      errorMessage.value = "Les informations saisies sont incorrectes.";
-    } else {
-      errorMessage.value = "Erreur lors de la sauvegarde de la campagne.";
-    }
-  } else {
-    toaster.addSuccessMessage(!props.campaign?.id ? "Campagne créée avec succès" : "Campagne mise à jour avec succès");
+  if (response.response.ok) {
+    toaster.addSuccessMessage(props.campaign?.id ? "Campagne mise à jour avec succès" : "Campagne créée avec succès");
     closeEditModal();
     emit("fetchCampaigns");
+  } else if (response.response.status === 409) {
+    errorMessage.value = "Une campagne existe déjà pour ce millésime.";
+  } else if (response.response.status === 400) {
+    errorMessage.value = "Les informations saisies sont incorrectes.";
+  } else {
+    errorMessage.value = "Erreur lors de la sauvegarde de la campagne.";
   }
   isSaving.value = false;
 }
@@ -86,12 +84,12 @@ async function deleteCampaign() {
   isDeleting.value = true;
 
   const response = await api.mditCampaignControllerRemove({ path: { id: props.campaign.id } });
-  if (!response.response.ok) {
-    toaster.addErrorMessage("Erreur lors de la suppression de la campagne");
-  } else {
+  if (response.response.ok) {
     toaster.addSuccessMessage("Campagne supprimée avec succès");
     closeDeleteModal();
     emit("fetchCampaigns");
+  } else {
+    toaster.addErrorMessage("Erreur lors de la suppression de la campagne");
   }
   isDeleting.value = false;
 }

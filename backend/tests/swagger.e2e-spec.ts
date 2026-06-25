@@ -105,6 +105,8 @@ describe("Test Swagger documentation", () => {
     }
   });
 
+  // Skipped: certaines réponses générées contiennent encore "properties: {}"
+  // (schémas DTO partiels). À réactiver une fois la génération OpenAPI corrigée.
   it.skip("test all schemas", async () => {
     const response = await request(app().getHttpServer()).get("/swagger/yaml");
     const openapiYaml = response.text;

@@ -80,7 +80,7 @@ function onPage(event: DataTablePageEvent) {
 
 function onColumnResize(event: any) {
   if (event.element && event.element.style) {
-    const field = event.element.getAttribute("data-p-column-field") || event.element.getAttribute("aria-label");
+    const field = event.element.dataset.pColumnField || event.element.getAttribute("aria-label");
     const width = event.element.style.width;
     if (field && width) {
       emit("columnResize", { field, width });
@@ -102,7 +102,7 @@ watch(
 </script>
 
 <template>
-  <div class="fr-table" role="region" :aria-label="`Tableau de ${totalRecords} éléments`">
+  <section class="fr-table" :aria-label="`Tableau de ${totalRecords} éléments`">
     <DataTable
       :value="items"
       :lazy="lazy"
@@ -129,7 +129,7 @@ watch(
       table-style="min-width: 50rem"
     >
       <template #empty>
-        <div class="fr-py-2w fr-text--center" role="status" aria-live="polite">{{ emptyMessage }}</div>
+        <output class="fr-py-2w fr-text--center" aria-live="polite" style="display: block">{{ emptyMessage }}</output>
       </template>
 
       <Column
@@ -152,7 +152,7 @@ watch(
         </template>
       </Column>
     </DataTable>
-  </div>
+  </section>
 </template>
 
 <style scoped>
