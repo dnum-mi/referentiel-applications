@@ -40,3 +40,17 @@
 - **Action** : ouvrir l'onglet conformités après avoir posé un score de 95 puis de 12.
 - **Résultat attendu** : le résumé de la ligne Écoconception affiche le grade correspondant (95 → A,
   12 → F) selon les seuils 80/70/55/40/25/10.
+
+### CMP-05 — DIMA : valeurs de durée autorisées ✅
+
+- **Datafeature** : 1ʳᵉ application existante (admin).
+- **Action** : onglet `tab-compliances` → éditer l'axe DIMA, dérouler `compliance-dima-duration`.
+- **Résultat attendu** : la liste propose exactement **96H, 72H, 48H, 24H, 4H, 1H, 0H** (cf. ticket
+  #1901), dans cet ordre.
+
+### CMP-06 — PDMA : valeurs de durée autorisées ✅
+
+- **Datafeature** : 1ʳᵉ application existante (admin).
+- **Action** : onglet `tab-compliances` → éditer l'axe PDMA, dérouler `compliance-pdma-duration`.
+- **Résultat attendu** : la liste propose exactement **48H, 24H, 2H, 0H** (cf. ticket #1901), dans cet
+  ordre.

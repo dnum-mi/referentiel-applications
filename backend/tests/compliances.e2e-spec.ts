@@ -89,6 +89,34 @@ describe("Compliances", () => {
     expect(response.body.rgpd_has_aipd).toEqual(true);
     expect(response.body.rgpd_dpo_name).toEqual("Jean Dupont");
   });
+
+  // Ticket #1901 : la durée DIMA/PDMA est restreinte à une liste de valeurs autorisées.
+  it("/POST applications/:applicationId/compliances - should reject an out-of-range DIMA duration", async () => {
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/compliances`)
+      .send({ dima_duration_hours: 5 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(400);
+  });
+
+  it("/POST applications/:applicationId/compliances - should reject an out-of-range PDMA duration", async () => {
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/compliances`)
+      .send({ pdma_duration_hours: 4 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(400);
+  });
+
+  it("/POST applications/:applicationId/compliances - should accept the allowed DIMA/PDMA durations", async () => {
+    const response = await request(app().getHttpServer())
+      .post(`/applications/${application.id}/compliances`)
+      .send({ dima_duration_hours: 96, pdma_duration_hours: 48 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(response.body.dima_duration_hours).toEqual(96);
+    expect(response.body.pdma_duration_hours).toEqual(48);
+  });
 });
 
 describe("application guard", () => {

@@ -7033,8 +7033,16 @@ components:
       properties:
         dima_duration_hours:
           type: number
+          enum: &a32
+            - 96
+            - 72
+            - 48
+            - 24
+            - 4
+            - 1
+            - 0
           example: 4
-          description: DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+          description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
           type: boolean
           example: true
@@ -7056,7 +7064,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a32
+          enum: &a33
             - OK
             - KO
           type: string
@@ -7067,8 +7075,13 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          example: 8
-          description: PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+          enum: &a34
+            - 48
+            - 24
+            - 2
+            - 0
+          example: 24
+          description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
           type: string
           example: Transactions, logs, fichiers utilisateur
@@ -7082,7 +7095,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a33
+          enum: &a35
             - S3
             - LOCAL
             - EXTERNE
@@ -7093,7 +7106,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a34
+          enum: &a36
             - OK
             - KO
           type: string
@@ -7103,7 +7116,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a35
+          enum: &a37
             - homologuee
             - en_cours
             - dispensee
@@ -7144,8 +7157,9 @@ components:
       properties:
         dima_duration_hours:
           type: number
+          enum: *a32
           example: 4
-          description: DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+          description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
           type: boolean
           example: true
@@ -7167,7 +7181,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a32
+          enum: *a33
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -7176,8 +7190,9 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          example: 8
-          description: PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+          enum: *a34
+          example: 24
+          description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
           type: string
           example: Transactions, logs, fichiers utilisateur
@@ -7191,7 +7206,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a33
+          enum: *a35
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -7199,7 +7214,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a34
+          enum: *a36
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -7207,7 +7222,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a35
+          enum: *a37
           type: string
           description: Homologation status
         homologation_date_end:
@@ -7266,8 +7281,9 @@ components:
       properties:
         dima_duration_hours:
           type: number
+          enum: *a32
           example: 4
-          description: DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+          description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
           type: boolean
           example: true
@@ -7289,7 +7305,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a32
+          enum: *a33
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -7298,8 +7314,9 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          example: 8
-          description: PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)
+          enum: *a34
+          example: 24
+          description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
           type: string
           example: Transactions, logs, fichiers utilisateur
@@ -7313,7 +7330,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a33
+          enum: *a35
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -7321,7 +7338,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a34
+          enum: *a36
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -7329,7 +7346,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a35
+          enum: *a37
           type: string
           description: Homologation status
         homologation_date_end:

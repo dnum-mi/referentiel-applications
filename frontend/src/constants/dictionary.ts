@@ -60,18 +60,22 @@ export const homologationStatusDict = {
   a_mettre_en_place: "À mettre en place",
 } as const satisfies Record<NonNullable<CreateComplianceDto["homologation_status"]>, string>;
 
+// Valeurs autorisées DIMA / PDMA (cf. ticket #1901), présentées du plus permissif au plus strict.
 export const dimaDurationHoursOptions = [
-  { value: 1, text: "1H" },
-  { value: 4, text: "4H" },
-  { value: 24, text: "24H" },
   { value: 96, text: "96H" },
+  { value: 72, text: "72H" },
+  { value: 48, text: "48H" },
+  { value: 24, text: "24H" },
+  { value: 4, text: "4H" },
+  { value: 1, text: "1H" },
+  { value: 0, text: "0H" },
 ];
 
 export const pdmaDurationHoursOptions = [
-  { value: 0, text: "0H" },
-  { value: 2, text: "2H" },
-  { value: 24, text: "24H" },
   { value: 48, text: "48H" },
+  { value: 24, text: "24H" },
+  { value: 2, text: "2H" },
+  { value: 0, text: "0H" },
 ];
 
 export const linkTypesDict = {

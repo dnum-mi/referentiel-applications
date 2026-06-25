@@ -1,3 +1,15 @@
+/**
+ * Valeurs autorisées (en heures) pour la durée DIMA (Délai d'Indisponibilité Maximale Admissible),
+ * du plus permissif au plus strict (cf. ticket #1901).
+ */
+export const DIMA_DURATION_HOURS_VALUES = [96, 72, 48, 24, 4, 1, 0] as const;
+
+/**
+ * Valeurs autorisées (en heures) pour la durée PDMA (Perte de Données Maximale Admissible),
+ * du plus permissif au plus strict (cf. ticket #1901).
+ */
+export const PDMA_DURATION_HOURS_VALUES = [48, 24, 2, 0] as const;
+
 /** Libellés FR des champs de conformité, utilisés pour tracer les métadonnées de modification. */
 export const COMPLIANCE_METADATA_FIELDS = {
   dima_duration_hours: "durée DIMA (heures)",

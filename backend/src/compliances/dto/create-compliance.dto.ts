@@ -3,21 +3,28 @@ import {
   IsBoolean,
   IsDateString,
   IsEnum,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
 } from "class-validator";
 import { BackupStorage, HomologationStatus, TestResult } from "src/enum";
+import {
+  DIMA_DURATION_HOURS_VALUES,
+  PDMA_DURATION_HOURS_VALUES,
+} from "../constants/compliance-metadata.constants";
 
 export class CreateComplianceDto {
   // DIMA specific fields
   @ApiProperty({
     example: 4,
-    description: "DIMA duration in hours (1, 4, 8, 12, 24, 48, 72)",
+    description: "DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)",
     required: false,
+    enum: DIMA_DURATION_HOURS_VALUES,
   })
   @IsOptional()
   @IsInt()
+  @IsIn(DIMA_DURATION_HOURS_VALUES)
   dima_duration_hours?: number;
 
   @ApiProperty({
@@ -85,12 +92,14 @@ export class CreateComplianceDto {
 
   // PDMA specific fields
   @ApiProperty({
-    example: 8,
-    description: "PDMA duration in hours (1, 4, 8, 12, 24, 48, 72)",
+    example: 24,
+    description: "PDMA duration in hours (one of 48, 24, 2, 0)",
     required: false,
+    enum: PDMA_DURATION_HOURS_VALUES,
   })
   @IsOptional()
   @IsInt()
+  @IsIn(PDMA_DURATION_HOURS_VALUES)
   pdma_duration_hours?: number;
 
   @ApiProperty({

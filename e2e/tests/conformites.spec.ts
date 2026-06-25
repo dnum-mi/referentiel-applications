@@ -91,4 +91,36 @@ test.describe("Conformités — éco-conception & homologation", () => {
       await ctx.close();
     }
   });
+
+  test("CMP-05 - DIMA : la liste de durée propose les valeurs autorisées (#1901)", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(app!.id, "tab-compliances");
+    await fiche.expectComplianceDurationOptions(
+      "DIMA",
+      "compliance-dima-duration",
+      [96, 72, 48, 24, 4, 1, 0],
+    );
+  });
+
+  test("CMP-06 - PDMA : la liste de durée propose les valeurs autorisées (#1901)", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(app!.id, "tab-compliances");
+    await fiche.expectComplianceDurationOptions(
+      "PDMA",
+      "compliance-pdma-duration",
+      [48, 24, 2, 0],
+    );
+  });
 });
