@@ -32,9 +32,9 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
 
 USER 0
 
-RUN chmod 777 /usr/share/nginx/html
+RUN chown -R 1001:1001 /usr/share/nginx/html && chmod -R 755 /usr/share/nginx/html
 COPY --chown=1001:1001 --chmod=444 nginx.conf /etc/nginx/nginx.conf
-COPY --chown=1001:1001 --chmod=777 --from=build /app/dist /app
+COPY --chown=1001:1001 --chmod=755 --from=build /app/dist /app
 
 COPY --chown=1001:1001 --chmod=775 entrypoint.sh /docker-entrypoint.d/entrypoint.sh
 
