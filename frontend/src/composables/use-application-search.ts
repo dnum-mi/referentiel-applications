@@ -102,7 +102,10 @@ function parseQueryParamArray(value: QueryParam): string[] | undefined {
 }
 
 function sortAsStrings(values: readonly unknown[]): string[] {
-  return values.map(String).slice().sort();
+  return values
+    .map(String)
+    .slice()
+    .sort((a, b) => a.localeCompare(b));
 }
 
 function sameStringArray(a: readonly string[], b: readonly string[]): boolean {
