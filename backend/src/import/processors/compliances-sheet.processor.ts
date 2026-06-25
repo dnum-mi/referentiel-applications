@@ -1,14 +1,17 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { Permission } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { COMPLIANCE_METADATA_FIELDS } from "src/compliances/constants/compliance-metadata.constants";
 import { CreateComplianceDto } from "src/compliances/dto/create-compliance.dto";
 import { CompliancesService } from "src/compliances/compliances.service";
 import { detectCompliances } from "src/compliances/utils/compliance.utils";
 import { PrismaService } from "src/prisma/prisma.service";
+import { Requestor } from "src/user/entities/user.entity";
 import {
   ImportReportDto,
   ImportReportEntryDto,
@@ -18,6 +21,7 @@ import {
   coerceDate,
   coerceNumber,
   coerceOuiNon,
+  insufficientRightsMessage,
   makeCellReader,
 } from "../utils/excel.utils";
 
@@ -57,11 +61,12 @@ export class CompliancesSheetProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly compliancesService: CompliancesService,
+    private readonly checkPermissions: CheckPermissions,
   ) {}
 
   async process(
     worksheet: ExcelJS.Worksheet,
-    requestorId: string,
+    requestor: Requestor,
     report: ImportReportDto,
   ): Promise<void> {
     const headerIndex = buildHeaderIndex(worksheet);
@@ -87,7 +92,7 @@ export class CompliancesSheetProcessor {
           rowNumber,
           applicationId,
           values,
-          requestorId,
+          requestor,
         );
         report.entries.push(entry);
         if (entry.status === "created") report.summary.created++;
@@ -144,7 +149,7 @@ export class CompliancesSheetProcessor {
     row: number,
     applicationId: string,
     values: Record<string, string | number | boolean>,
-    requestorId: string,
+    requestor: Requestor,
   ): Promise<ImportReportEntryDto> {
     if (!applicationId) {
       throw new Error("Colonne « ID Application » vide.");
@@ -156,6 +161,18 @@ export class CompliancesSheetProcessor {
     });
     if (!application) {
       throw new Error(`Application introuvable (id=${applicationId}).`);
+    }
+
+    // Droits applicatifs (portée incluse) sur CETTE application, comme l'API conformités.
+    const allowed = await this.checkPermissions.can(
+      [Permission.ComplianceWrite],
+      requestor,
+      applicationId,
+    );
+    if (!allowed) {
+      throw new Error(
+        insufficientRightsMessage("ComplianceWrite", applicationId),
+      );
     }
 
     const dto = plainToInstance(CreateComplianceDto, values);
@@ -173,7 +190,7 @@ export class CompliancesSheetProcessor {
       {
         applicationId,
         metadata: {
-          userId: requestorId,
+          userId: requestor.id,
           gender: "de la conformité",
           getColumn: () => sectionSuffix,
           entity: "complianceId",

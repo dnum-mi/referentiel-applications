@@ -1,9 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { Permission } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { CreateHostingOptionDto } from "src/hosting-option/dto/hosting-option.dto";
 import {
   CreateHostingDto,
@@ -11,11 +13,16 @@ import {
 } from "src/hostings/dto/hosting.dto";
 import { HostingsService } from "src/hostings/hostings.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { Requestor } from "src/user/entities/user.entity";
 import {
   ImportReportDto,
   ImportReportEntryDto,
 } from "../dto/import-report.dto";
-import { buildHeaderIndex, makeCellReader } from "../utils/excel.utils";
+import {
+  buildHeaderIndex,
+  insufficientRightsMessage,
+  makeCellReader,
+} from "../utils/excel.utils";
 
 /** En-têtes (libellés) attendus dans l'onglet « Hébergements », alignés sur l'export. */
 const HEADERS = {
@@ -46,11 +53,12 @@ export class HostingsSheetProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly hostingsService: HostingsService,
+    private readonly checkPermissions: CheckPermissions,
   ) {}
 
   async process(
     worksheet: ExcelJS.Worksheet,
-    requestorId: string,
+    requestor: Requestor,
     report: ImportReportDto,
   ): Promise<void> {
     const headerIndex = buildHeaderIndex(worksheet);
@@ -81,7 +89,7 @@ export class HostingsSheetProcessor {
       if (Object.values(data).every((v) => v === "")) continue;
 
       try {
-        const entry = await this.processRow(rowNumber, data, requestorId);
+        const entry = await this.processRow(rowNumber, data, requestor);
         report.entries.push(entry);
         if (entry.status === "created") report.summary.created++;
         else if (entry.status === "updated") report.summary.updated++;
@@ -114,7 +122,7 @@ export class HostingsSheetProcessor {
       building: string;
       room: string;
     },
-    requestorId: string,
+    requestor: Requestor,
   ): Promise<ImportReportEntryDto> {
     if (!data.applicationId) {
       throw new Error("Colonne « ID Application » vide.");
@@ -126,6 +134,18 @@ export class HostingsSheetProcessor {
     });
     if (!application) {
       throw new Error(`Application introuvable (id=${data.applicationId}).`);
+    }
+
+    // Droits applicatifs (portée incluse) sur CETTE application, comme l'API hébergements.
+    const allowed = await this.checkPermissions.can(
+      [Permission.HostingWrite],
+      requestor,
+      data.applicationId,
+    );
+    if (!allowed) {
+      throw new Error(
+        insufficientRightsMessage("HostingWrite", data.applicationId),
+      );
     }
 
     const hostingOptionId = await this.resolveHostingOptionId(data);
@@ -146,7 +166,7 @@ export class HostingsSheetProcessor {
         ...(hostingOptionId && { hostingOptionId }),
       });
       await this.validateDto(dto);
-      await this.hostingsService.updateHosting(data.id, dto, requestorId);
+      await this.hostingsService.updateHosting(data.id, dto, requestor.id);
       return { sheet: this.sheetName, row, status: "updated", identifier };
     }
 
@@ -157,7 +177,7 @@ export class HostingsSheetProcessor {
       isActive: null,
     });
     await this.validateDto(dto);
-    await this.hostingsService.createHosting(dto, requestorId);
+    await this.hostingsService.createHosting(dto, requestor.id);
     return { sheet: this.sheetName, row, status: "created", identifier };
   }
 

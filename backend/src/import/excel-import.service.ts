@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import * as ExcelJS from "exceljs";
+import { Requestor } from "src/user/entities/user.entity";
 import { createEmptyReport, ImportReportDto } from "./dto/import-report.dto";
 import { ActorsSheetProcessor } from "./processors/actors-sheet.processor";
 import { ApplicationsSheetProcessor } from "./processors/applications-sheet.processor";
@@ -17,7 +18,7 @@ export class ExcelImportService {
 
   async importFromExcel(
     buffer: Buffer,
-    requestorId: string,
+    requestor: Requestor,
   ): Promise<ImportReportDto> {
     const workbook = new ExcelJS.Workbook();
     try {
@@ -49,7 +50,7 @@ export class ExcelImportService {
         report.logs.push(`Onglet « ${processor.sheetName} » absent : ignoré.`);
         continue;
       }
-      await processor.process(worksheet, requestorId, report);
+      await processor.process(worksheet, requestor, report);
     }
 
     // Onglets non reconnus présents dans le fichier : ignorés.

@@ -1,5 +1,5 @@
 import { expect, test } from "../fixtures/test";
-import { AdminPage } from "../pom";
+import { AdminPage, loginAs } from "../pom";
 import { buildActorImportWorkbook } from "../support/actor-import-xlsx";
 import { buildSheetWorkbook } from "../support/import-xlsx";
 import { dbQuery } from "../support/db";
@@ -725,5 +725,48 @@ test.describe("Administration des référentiels", () => {
       // La suppression de l'application supprime ses hébergements en cascade.
       await deleteThrowawayApp(appId);
     }
+  });
+
+  test("ADM-16 - import refusé hors périmètre pour un administrateur scopé (#1890)", async ({
+    page,
+    data,
+  }) => {
+    // L'application QA-SCOPE-ABCD est hors du périmètre de `scope-admin` (scopé TOTO/).
+    // On résout son id avec la session admin (fixture `data`) avant de basculer sur l'admin scopé,
+    // pour que le test se skippe proprement si le seed QA est absent.
+    const app = await data.applicationByLabel("QA-SCOPE-ABCD");
+    test.skip(!app, "Fixture QA absente — `pnpm db:seed:qa` requis.");
+
+    const ts = Date.now();
+    const attemptedLabel = `E2E-ADM16-${ts}`;
+    const originalLabel = app!.label;
+
+    await loginAs(page, "scope-admin");
+
+    const workbook = await buildSheetWorkbook(
+      "Applications",
+      ["Identifiant", "Libellé", "Description"],
+      [[app!.id, attemptedLabel, "Tentative de mise à jour hors périmètre"]],
+    );
+
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.openBatchDataTab();
+    await admin.importExcel({
+      name: `import-adm16-${ts}.xlsx`,
+      mimeType: XLSX_MIME,
+      buffer: workbook,
+    });
+
+    // La ligne est refusée (droits insuffisants) et consignée dans le rapport ; rien n'est modifié.
+    await admin.expectImportReportSummary(/1 en erreur/);
+    await admin.expectImportReportSummary(/0 mis à jour/);
+    await admin.expectImportReportContains(/Droits insuffisants/i);
+
+    const rows = await dbQuery<{ label: string }>(
+      `SELECT label FROM "Application" WHERE id = $1`,
+      [app!.id],
+    );
+    expect(rows[0]?.label).toBe(originalLabel);
   });
 });

@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Status, priorityRestart } from "@prisma/client";
+import { Permission, Status, priorityRestart } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
@@ -11,15 +11,18 @@ import {
   CreateApplicationDto,
   PatchApplicationDto,
 } from "src/applications/dto/create-application.dto";
-import { roleToPermissions } from "src/permissions/role-to-permissions";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
-import { UserService } from "src/user/user.service";
 import {
   ImportReportDto,
   ImportReportEntryDto,
 } from "../dto/import-report.dto";
-import { buildHeaderIndex, makeCellReader } from "../utils/excel.utils";
+import {
+  buildHeaderIndex,
+  insufficientRightsMessage,
+  makeCellReader,
+} from "../utils/excel.utils";
 
 /** En-têtes (libellés) attendus dans l'onglet « Applications », alignés sur l'export. */
 const HEADERS = {
@@ -72,28 +75,18 @@ export class ApplicationsSheetProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly applicationService: ApplicationService,
-    private readonly userService: UserService,
+    private readonly checkPermissions: CheckPermissions,
   ) {}
 
   async process(
     worksheet: ExcelJS.Worksheet,
-    requestorId: string,
+    requestor: Requestor,
     report: ImportReportDto,
   ): Promise<void> {
     const headerIndex = buildHeaderIndex(worksheet);
     const missing = REQUIRED_HEADERS.filter((h) => !(h in headerIndex));
     if (missing.length > 0) {
       const message = `Onglet « ${this.sheetName} » non traité : colonnes manquantes (${missing.join(", ")}).`;
-      report.logs.push(message);
-      this.logger.warn(message);
-      return;
-    }
-
-    // La mise à jour d'application requiert le `Requestor` complet (permissions) ; on le résout
-    // une fois pour tout l'onglet à partir de l'utilisateur courant.
-    const requestor = await this.resolveRequestor(requestorId);
-    if (!requestor) {
-      const message = `Onglet « ${this.sheetName} » non traité : utilisateur courant introuvable.`;
       report.logs.push(message);
       this.logger.warn(message);
       return;
@@ -179,6 +172,18 @@ export class ApplicationsSheetProcessor {
         throw new Error(`Application introuvable (id=${data.id}).`);
       }
 
+      // Droits applicatifs (portée incluse) sur CETTE application, comme l'API `PATCH`.
+      // L'appel renseigne aussi `requestor.appPerms`, que `update` réutilise pour la protection
+      // des champs (ex. priorité de redémarrage).
+      const allowed = await this.checkPermissions.can(
+        [Permission.AppWrite],
+        requestor,
+        data.id,
+      );
+      if (!allowed) {
+        throw new Error(insufficientRightsMessage("AppWrite", data.id));
+      }
+
       const dto = plainToInstance(PatchApplicationDto, baseFields);
       await this.validateDto(dto);
       await this.applicationService.update({
@@ -187,6 +192,15 @@ export class ApplicationsSheetProcessor {
         requestor,
       });
       return { sheet: this.sheetName, row, status: "updated", identifier };
+    }
+
+    // Création : permission globale `CreateApplication`, comme l'API `POST /applications`.
+    const allowed = await this.checkPermissions.can(
+      [Permission.CreateApplication],
+      requestor,
+    );
+    if (!allowed) {
+      throw new Error(insufficientRightsMessage("CreateApplication"));
     }
 
     const dto = plainToInstance(CreateApplicationDto, {
@@ -199,15 +213,6 @@ export class ApplicationsSheetProcessor {
     await this.validateDto(dto);
     await this.applicationService.createApplication(requestor.id, dto);
     return { sheet: this.sheetName, row, status: "created", identifier };
-  }
-
-  /** Reconstitue le `Requestor` (avec permissions) de l'utilisateur courant. */
-  private async resolveRequestor(
-    requestorId: string,
-  ): Promise<Requestor | null> {
-    const user = await this.userService.findByIdWithRelations(requestorId);
-    if (!user) return null;
-    return { ...user, permissions: roleToPermissions(user.role) };
   }
 
   /** Résout la priorité de redémarrage par code (« R0 ») puis par libellé d'export. */

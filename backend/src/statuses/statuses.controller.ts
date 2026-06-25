@@ -82,7 +82,7 @@ export class StatusesController {
     type: [ApplicationStatusDto],
   })
   async find(@Param("applicationId") applicationId: string) {
-    return this.statusesService.find({ applicationId }) || [];
+    return this.statusesService.find({ applicationId });
   }
 
   @Patch(":statusId")

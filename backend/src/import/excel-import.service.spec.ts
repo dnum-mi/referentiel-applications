@@ -11,6 +11,9 @@ import type { ApplicationsSheetProcessor } from "./processors/applications-sheet
 import type { CompliancesSheetProcessor } from "./processors/compliances-sheet.processor";
 import type { HostingsSheetProcessor } from "./processors/hostings-sheet.processor";
 import { ExcelImportService } from "./excel-import.service";
+import type { Requestor } from "src/user/entities/user.entity";
+
+const requestor = { id: "user-1" } as unknown as Requestor;
 
 async function workbookBuffer(sheetNames: string[]): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
@@ -51,7 +54,7 @@ describe("ExcelImportService", () => {
       "Feuille inconnue",
     ]);
 
-    const report = await service.importFromExcel(buffer, "user-1");
+    const report = await service.importFromExcel(buffer, requestor);
 
     expect(actorsProcessor.process).toHaveBeenCalledTimes(1);
     expect(compliancesProcessor.process).toHaveBeenCalledTimes(1);
@@ -63,7 +66,7 @@ describe("ExcelImportService", () => {
     const { service, actorsProcessor, compliancesProcessor } = setup();
     const buffer = await workbookBuffer(["Autre"]);
 
-    const report = await service.importFromExcel(buffer, "user-1");
+    const report = await service.importFromExcel(buffer, requestor);
 
     expect(actorsProcessor.process).not.toHaveBeenCalled();
     expect(compliancesProcessor.process).not.toHaveBeenCalled();
@@ -79,7 +82,7 @@ describe("ExcelImportService", () => {
   it("rejette un fichier non Excel", async () => {
     const { service } = setup();
     await expect(
-      service.importFromExcel(Buffer.from("pas un xlsx"), "user-1"),
+      service.importFromExcel(Buffer.from("pas un xlsx"), requestor),
     ).rejects.toThrow(/Excel/i);
   });
 });

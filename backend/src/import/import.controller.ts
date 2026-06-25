@@ -18,7 +18,8 @@ import {
 import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
-import { UserId } from "src/common/decorators/user-id.decorator";
+import { User } from "src/common/decorators/user.decorator";
+import { Requestor } from "src/user/entities/user.entity";
 import { ImportReportDto } from "./dto/import-report.dto";
 import { ExcelImportService } from "./excel-import.service";
 
@@ -59,7 +60,7 @@ d'exécution est retourné.`,
     file:
       | { buffer: Buffer; originalname: string; mimetype: string }
       | undefined,
-    @UserId() userId: string,
+    @User() requestor: Requestor,
   ): Promise<ImportReportDto> {
     if (!file) {
       throw new BadRequestException("Aucun fichier fourni.");
@@ -75,11 +76,14 @@ d'exécution est retourné.`,
     }
     Logger.log({
       message: "Début de l'import Excel",
-      userId,
+      userId: requestor.id,
       action: "import",
     });
     try {
-      return await this.excelImportService.importFromExcel(file.buffer, userId);
+      return await this.excelImportService.importFromExcel(
+        file.buffer,
+        requestor,
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       throw new BadRequestException(message);

@@ -6,10 +6,14 @@ jest.mock("src/metadatas/metadatas.service", () => ({
 
 import * as ExcelJS from "exceljs";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
+import type { CheckPermissions } from "src/common/service/check-permissions.service";
 import type { CompliancesService } from "src/compliances/compliances.service";
 import type { PrismaService } from "src/prisma/prisma.service";
+import type { Requestor } from "src/user/entities/user.entity";
 import { createEmptyReport } from "../dto/import-report.dto";
 import { CompliancesSheetProcessor } from "./compliances-sheet.processor";
+
+const requestor = { id: "user-1" } as unknown as Requestor;
 
 function buildSheet(
   headers: string[],
@@ -30,11 +34,13 @@ function setup() {
     findByApplicationId: jest.fn().mockResolvedValue(null),
     createOrUpdateByApplicationId: jest.fn().mockResolvedValue({ id: "c-1" }),
   };
+  const checkPermissions = { can: jest.fn().mockResolvedValue(true) };
   const processor = new CompliancesSheetProcessor(
     prisma as unknown as PrismaService,
     compliancesService as unknown as CompliancesService,
+    checkPermissions as unknown as CheckPermissions,
   );
-  return { processor, prisma, compliancesService };
+  return { processor, prisma, compliancesService, checkPermissions };
 }
 
 describe("CompliancesSheetProcessor", () => {
@@ -51,7 +57,7 @@ describe("CompliancesSheetProcessor", () => {
         ],
         [["app-1", 5, "Oui", "Non"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -76,7 +82,7 @@ describe("CompliancesSheetProcessor", () => {
     const report = createEmptyReport();
     await processor.process(
       buildSheet(["ID Application", "DIMA Impact métier"], [["app-1", "X"]]),
-      "user-1",
+      requestor,
       report,
     );
     expect(report.summary.updated).toBe(1);
@@ -89,7 +95,7 @@ describe("CompliancesSheetProcessor", () => {
     const report = createEmptyReport();
     await processor.process(
       buildSheet(["ID Application", "DIMA Impact métier"], [["ghost", "X"]]),
-      "user-1",
+      requestor,
       report,
     );
     expect(report.summary.errors).toBe(1);
@@ -104,7 +110,7 @@ describe("CompliancesSheetProcessor", () => {
         ["ID Application", "DIMA Résultat test"],
         [["app-1", "PEUT_ETRE"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
     expect(report.summary.errors).toBe(1);
@@ -119,7 +125,7 @@ describe("CompliancesSheetProcessor", () => {
     const report = createEmptyReport();
     await processor.process(
       buildSheet(["ID Application", "DIMA Impact métier"], [["", "X"]]),
-      "user-1",
+      requestor,
       report,
     );
     expect(report.summary.errors).toBe(1);
@@ -137,7 +143,7 @@ describe("CompliancesSheetProcessor", () => {
           ["app-1", "X"],
         ],
       ),
-      "user-1",
+      requestor,
       report,
     );
     expect(report.entries).toHaveLength(1);
@@ -149,12 +155,30 @@ describe("CompliancesSheetProcessor", () => {
     const report = createEmptyReport();
     await processor.process(
       buildSheet(["DIMA Impact métier"], [["X"]]),
-      "user-1",
+      requestor,
       report,
     );
     expect(report.summary.processedSheets).not.toContain(
       sheetLabels.Compliances,
     );
     expect(report.logs.join(" ")).toMatch(/colonnes manquantes/i);
+  });
+
+  it("refuse la ligne et consigne le motif sans droits ComplianceWrite sur l'application", async () => {
+    const { processor, checkPermissions, compliancesService } = setup();
+    checkPermissions.can.mockResolvedValue(false);
+    const report = createEmptyReport();
+    await processor.process(
+      buildSheet(["ID Application", "DIMA Impact métier"], [["app-1", "X"]]),
+      requestor,
+      report,
+    );
+    expect(report.summary.errors).toBe(1);
+    expect(report.entries[0].message).toMatch(
+      /Droits insuffisants.*ComplianceWrite/i,
+    );
+    expect(
+      compliancesService.createOrUpdateByApplicationId,
+    ).not.toHaveBeenCalled();
   });
 });

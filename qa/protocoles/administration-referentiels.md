@@ -8,7 +8,7 @@
 | Légende           |                                                                              |
 | :---------------- | :--------------------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/administration-referentiels.spec.ts` |
-| **Statut**        | 🟢 automatisé — 20 cas couverts par la CI                                    |
+| **Statut**        | 🟢 automatisé — 21 cas couverts par la CI                                    |
 
 ---
 
@@ -135,20 +135,29 @@
 - **Résultat attendu** : le rapport indique « 1 créé(s) » et « 0 en erreur » ; l'application possède
   désormais un hébergement (l'option d'hébergement est résolue ou créée comme via l'API).
 
-### ADM-16 — Lister et rechercher les acteurs (admin) ✅
+### ADM-16 — Import refusé hors périmètre pour un administrateur scopé (#1890) ✅
+
+- **Datafeature** : seed QA (`pnpm db:seed:qa`) — administrateur scopé `scope-admin` (périmètre TOTO/)
+  et application `QA-SCOPE-ABCD` hors de ce périmètre ; le test se skippe si la fixture est absente.
+- **Action** : se connecter en `scope-admin` → administration → onglet Batch de données → section
+  « Import Excel » → importer un onglet « Applications » mettant à jour `QA-SCOPE-ABCD`.
+- **Résultat attendu** : la ligne est **refusée** ; le rapport indique « 1 en erreur » / « 0 mis à
+  jour » avec le motif « Droits insuffisants » ; le libellé de l'application reste inchangé en base.
+
+### ADM-17 — Lister et rechercher les acteurs (admin) ✅
 
 - **Datafeature** : un acteur de test créé via l'API (nettoyé en fin de test).
 - **Action** : administration → onglet Gestion des acteurs → rechercher l'acteur par email.
 - **Résultat attendu** : `admin-actors-table` affiche l'acteur correspondant à la recherche.
 
-### ADM-17 — Modifier un acteur unique (admin) ✅
+### ADM-18 — Modifier un acteur unique (admin) ✅
 
 - **Datafeature** : un acteur de test créé via l'API (nettoyé en fin de test).
 - **Action** : administration → onglet Gestion des acteurs → rechercher l'acteur → `admin-actor-edit-btn`
   → modifier le nom dans le formulaire → enregistrer.
 - **Résultat attendu** : toast « Acteur mis à jour avec succès ».
 
-### ADM-18 — Supprimer un acteur unique (admin) ✅
+### ADM-19 — Supprimer un acteur unique (admin) ✅
 
 - **Datafeature** : un acteur de test créé via l'API.
 - **Action** : administration → onglet Gestion des acteurs → rechercher l'acteur → `admin-actor-delete-btn`
@@ -156,7 +165,7 @@
 - **Résultat attendu** : toast « Acteur supprimé avec succès » ; l'acteur disparaît de
   `admin-actors-table`.
 
-### ADM-19 — Modifier tous les acteurs par email (admin) ✅
+### ADM-20 — Modifier tous les acteurs par email (admin) ✅
 
 - **Datafeature** : deux acteurs avec le même email dans deux applications différentes, créés via l'API
   (nettoyés en fin de test).
@@ -164,7 +173,7 @@
   `admin-actor-edit-all-btn` → modifier le prénom dans le modal bulk → enregistrer.
 - **Résultat attendu** : toast « N acteur(s) mis à jour avec succès ».
 
-### ADM-20 — Supprimer tous les acteurs par email (admin) ✅
+### ADM-21 — Supprimer tous les acteurs par email (admin) ✅
 
 - **Datafeature** : deux acteurs avec le même email dans deux applications différentes, créés via l'API
   (nettoyage résiduel en fin de test).
@@ -172,3 +181,4 @@
   `admin-actor-delete-all-btn` → confirmer dans le modal de suppression bulk.
 - **Résultat attendu** : toast « N acteur(s) supprimé(s) avec succès » ; l'email disparaît de
   `admin-actors-table`.
+  > > > > > > > origin/main
