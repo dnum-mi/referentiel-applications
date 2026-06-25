@@ -84,7 +84,7 @@ const applications = computed(() =>
       statusDisplay: formatStatus(app.currentStatus?.status),
       technicalMaturity: app.technicalDebtInfo?.technicalMaturity,
       businessMaturity: app.technicalDebtInfo?.businessMaturity,
-      costMaturity: app.technicalDebtInfo?.costMaturity,
+      costContainment: app.technicalDebtInfo?.costContainment,
     };
   }),
 );

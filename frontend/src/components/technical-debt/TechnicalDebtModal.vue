@@ -18,40 +18,51 @@ const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const isEditMode = computed(() => !!props.initialData);
 
+// Champ vide = score non noté (`null`). Une valeur saisie doit être comprise entre 1 et 5.
 function toInputValue(value: number | string | null | undefined): string {
-  if (value == null) return "0";
+  if (value == null) return "";
   return String(value);
 }
 
 const form = ref({
   technicalMaturity: toInputValue(props.initialData?.technicalMaturity),
   businessMaturity: toInputValue(props.initialData?.businessMaturity),
-  costMaturity: toInputValue(props.initialData?.costMaturity),
+  costContainment: toInputValue(props.initialData?.costContainment),
 });
 
-function toNumberOrZero(value: string): number {
-  const parsed = Number(value);
-  return Number.isNaN(parsed) ? 0 : parsed;
+// Renvoie le score saisi (1-5) ou `undefined` si le champ est vide (non noté).
+function toScoreOrUndefined(value: string): number | undefined {
+  const trimmed = value.trim();
+  if (trimmed === "") return undefined;
+  const parsed = Number(trimmed);
+  return Number.isNaN(parsed) ? undefined : parsed;
 }
 
+// Un champ est valide s'il est vide (non noté) ou contient une valeur entre 1 et 5.
 function isValidScore(value: string): boolean {
-  const parsed = Number(value);
-  return !Number.isNaN(parsed) && parsed >= 0 && parsed <= 5;
+  const trimmed = value.trim();
+  if (trimmed === "") return true;
+  const parsed = Number(trimmed);
+  return !Number.isNaN(parsed) && parsed >= 1 && parsed <= 5;
 }
 
 async function handleSubmit() {
   isSubmitting.value = true;
 
-  if (!isValidScore(form.value.technicalMaturity) || !isValidScore(form.value.businessMaturity) || !isValidScore(form.value.costMaturity)) {
+  if (
+    !isValidScore(form.value.technicalMaturity) ||
+    !isValidScore(form.value.businessMaturity) ||
+    !isValidScore(form.value.costContainment)
+  ) {
     isSubmitting.value = false;
-    toaster.addErrorMessage("Les valeurs de maturité doivent être comprises entre 0 et 5.");
+    toaster.addErrorMessage("Les valeurs de maturité doivent être comprises entre 1 et 5 (ou laissées vides).");
     return;
   }
 
   const body: CreateTechnicalDebtInfoDto = {
-    technicalMaturity: toNumberOrZero(form.value.technicalMaturity),
-    businessMaturity: toNumberOrZero(form.value.businessMaturity),
-    costMaturity: toNumberOrZero(form.value.costMaturity),
+    technicalMaturity: toScoreOrUndefined(form.value.technicalMaturity),
+    businessMaturity: toScoreOrUndefined(form.value.businessMaturity),
+    costContainment: toScoreOrUndefined(form.value.costContainment),
   };
 
   const response = await api.applicationTechnicalDebtInfoControllerCreate({ path: { applicationId: props.applicationId }, body });
@@ -83,10 +94,10 @@ async function handleSubmit() {
           label="Maturité technique"
           label-visible
           type="number"
-          min="0"
+          min="1"
           max="5"
           step=".01"
-          hint="Entre 0 et 5, avec 2 décimales (ex : 1,20)"
+          hint="Entre 1 et 5 (laisser vide si non noté)"
           class="fr-mb-3w"
           data-testid="technical-maturity-select"
         />
@@ -95,24 +106,24 @@ async function handleSubmit() {
           label="Maturité métier"
           label-visible
           type="number"
-          min="0"
+          min="1"
           max="5"
           step=".01"
-          hint="Entre 0 et 5, avec 2 décimales (ex : 1,20)"
+          hint="Entre 1 et 5 (laisser vide si non noté)"
           class="fr-mb-3w"
           data-testid="business-maturity-select"
         />
         <DsfrInput
-          v-model="form.costMaturity"
-          label="Maturité des coûts"
+          v-model="form.costContainment"
+          label="Maîtrise des coûts"
           label-visible
           type="number"
-          min="0"
+          min="1"
           max="5"
           step=".01"
-          hint="Entre 0 et 5, avec 2 décimales (ex : 1,20)"
+          hint="Entre 1 et 5 (laisser vide si non noté)"
           class="fr-mb-3w"
-          data-testid="cost-maturity-select"
+          data-testid="cost-containment-select"
         />
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">

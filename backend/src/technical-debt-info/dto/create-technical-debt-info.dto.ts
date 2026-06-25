@@ -5,42 +5,42 @@ import { IsInt, IsNumber, IsOptional, Max, Min } from "class-validator";
 export class CreateTechnicalDebtInfoDto {
   @ApiProperty({
     example: 3.2,
-    description: "Technical maturity score (0-5)",
+    description: "Technical maturity score (1-5). Omit / null = not rated.",
     required: false,
-    minimum: 0,
+    minimum: 1,
     maximum: 5,
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
+  @Min(1)
   @Max(5)
   technicalMaturity?: number;
 
   @ApiProperty({
     example: 4.5,
-    description: "Business maturity score (0-5)",
+    description: "Business maturity score (1-5). Omit / null = not rated.",
     required: false,
-    minimum: 0,
+    minimum: 1,
     maximum: 5,
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
+  @Min(1)
   @Max(5)
   businessMaturity?: number;
 
   @ApiProperty({
     example: 2.75,
-    description: "Cost maturity score (0-5)",
+    description: "Cost containment score (1-5). Omit / null = not rated.",
     required: false,
-    minimum: 0,
+    minimum: 1,
     maximum: 5,
   })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
+  @Min(1)
   @Max(5)
-  costMaturity?: number;
+  costContainment?: number;
 
   @ApiProperty({
     example: 2026,

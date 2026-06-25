@@ -204,7 +204,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     alwaysAvailable: true,
   },
   {
-    field: "costMaturity",
+    field: "costContainment",
     header: "Coûts",
     sortable: false,
     defaultWidth: "120px",

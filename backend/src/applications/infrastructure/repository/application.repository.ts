@@ -243,7 +243,7 @@ export class ApplicationRepository implements IApplicationRepository {
           select: {
             technicalMaturity: true,
             businessMaturity: true,
-            costMaturity: true,
+            costContainment: true,
             millesime: true,
           },
         },
