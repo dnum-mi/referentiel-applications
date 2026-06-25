@@ -1,5 +1,5 @@
 import { type Page } from "@playwright/test";
-import { ApiClient } from "./api-client";
+import { ApiClient, type PermsMatrixEntry } from "./api-client";
 import { dbQuery } from "../support/db";
 
 export interface AppRef {
@@ -154,6 +154,19 @@ export class DataFeature {
     const user = await this.api.userByEmail(email);
     if (!user) throw new Error(`Utilisateur introuvable: ${email}`);
     await this.api.setUser(user.id, {
+      role: "READER",
+      additionalPermissions: permissions,
+    });
+  }
+
+  /** Comme `setUserAdditionalPermissions` avec diagnostic HTTP complet. */
+  async setUserAdditionalPermissionsVerbose(
+    email: string,
+    permissions: string[],
+  ): Promise<{ ok: boolean; status: number; body: string }> {
+    const user = await this.api.userByEmail(email);
+    if (!user) throw new Error(`Utilisateur introuvable: ${email}`);
+    return this.api.setUserVerbose(user.id, {
       role: "READER",
       additionalPermissions: permissions,
     });
@@ -428,6 +441,18 @@ export class DataFeature {
     const list = await this.api.applications("pageSize=2&page=0");
     if (!list?.results || list.results.length < 2) return null;
     return [list.results[0], list.results[1]];
+  }
+
+  // --- Matrice des permissions (PRM-12) ---
+
+  permsMatrix(): Promise<PermsMatrixEntry[] | null> {
+    return this.api.permsMatrix();
+  }
+
+  updatePermsMatrix(
+    body: PermsMatrixEntry[],
+  ): Promise<PermsMatrixEntry[] | null> {
+    return this.api.updatePermsMatrix(body);
   }
 }
 

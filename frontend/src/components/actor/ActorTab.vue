@@ -35,7 +35,7 @@ const canEdit = computed(() => userStore.hasPermissions([Permission.ACTOR_WRITE]
 const columns: TableColumn[] = [
   { field: "Sélection", header: "Sélection", sortable: false },
   { field: "Organisation", header: "Organisation", sortable: false },
-  { field: "Groupe", header: "Groupe", sortable: true },
+  { field: "Groupe", header: "Rattaché(e)", sortable: true },
   { field: "Type", header: "Type", sortable: false },
   { field: "Email", header: "Email", sortable: false },
   { field: "Prénom", header: "Prénom", sortable: false },
@@ -277,6 +277,15 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
           </span>
         </template>
 
+        <template #header-Groupe>
+          <DsfrTooltip
+            on-hover
+            content="Établir le lien entre une personne physique et une boîte e-mail fonctionnelle (ex: equipe, service)"
+          >
+            Rattaché(e)
+          </DsfrTooltip>
+        </template>
+
         <template #body-Actions="{ data }">
           <DsfrButton
             title="Modifier les informations de l'acteur"
@@ -313,7 +322,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
         :description="actor.email || ''"
         :buttons="getCardButtons(actor)"
         size="sm"
-        :noArrow="true"
+        :no-arrow="true"
         class="fr-mb-2w"
         :data-testid="`actor-card-${actor.id}`"
       >

@@ -10,6 +10,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/applications/application.service";
 import {
   ActorFiltersDto,
+  AdminActorFiltersDto,
   CreateActorDto,
   UpdateActorDto,
 } from "./dto/actor.dto";
@@ -100,6 +101,119 @@ export class ActorService {
       page: filters?.page,
       pageSize: filters?.pageSize,
     });
+  }
+
+  public async findAllGlobal(
+    filters: AdminActorFiltersDto,
+  ): Promise<PaginatedResponseDto<ActorWithRelations>> {
+    const where: Prisma.ActorWhereInput = {};
+
+    if (filters.search) {
+      where.OR = [
+        { email: { contains: filters.search, mode: "insensitive" } },
+        { firstname: { contains: filters.search, mode: "insensitive" } },
+        { lastname: { contains: filters.search, mode: "insensitive" } },
+        {
+          application: {
+            label: { contains: filters.search, mode: "insensitive" },
+          },
+        },
+      ];
+    }
+
+    const orderBy: Prisma.ActorOrderByWithRelationInput = {};
+    if (filters.sortBy) {
+      orderBy[filters.sortBy] = filters.order ?? "asc";
+    }
+
+    return this.prisma.actor.paginate({
+      where,
+      include: this.actorInclude,
+      orderBy: filters.sortBy ? orderBy : undefined,
+      page: filters.page,
+      pageSize: filters.pageSize,
+    });
+  }
+
+  public async updateGlobal(
+    id: string,
+    data: UpdateActorDto,
+    requestorId: string,
+  ): Promise<ActorWithRelations> {
+    const actor = await this.baseService.findOne(id, this.actorInclude);
+    const applicationId = (actor as any).applicationId;
+    return this.update(id, data, applicationId, requestorId);
+  }
+
+  public async deleteGlobal(id: string, requestorId: string) {
+    const actor = await this.baseService.findOne(id, this.actorInclude);
+    const applicationId = (actor as any).applicationId;
+    return this.delete(id, applicationId, requestorId);
+  }
+
+  public async findApplicationsByEmail(email: string) {
+    const actors = await this.prisma.actor.findMany({
+      where: { email },
+      include: { application: true },
+      distinct: ["applicationId"],
+    });
+
+    return actors
+      .filter((a) => a.application)
+      .map((a) => ({
+        id: a.application!.id,
+        label: a.application!.label,
+      }));
+  }
+
+  public async deleteAllByEmail(
+    email: string,
+    requestorId: string,
+    applicationIds?: string[],
+  ): Promise<{ count: number }> {
+    const where: Prisma.ActorWhereInput = { email };
+    if (applicationIds?.length) {
+      where.applicationId = { in: applicationIds };
+    }
+
+    const actors = await this.prisma.actor.findMany({
+      where,
+      include: this.actorInclude,
+    });
+
+    for (const actor of actors) {
+      await this.delete(actor.id, actor.applicationId, requestorId);
+    }
+
+    return { count: actors.length };
+  }
+
+  public async updateAllByEmail(
+    email: string,
+    data: UpdateActorDto,
+    requestorId: string,
+    applicationIds?: string[],
+  ): Promise<{ count: number }> {
+    if (data.isGroup) {
+      data.firstname = "";
+      data.lastname = "";
+    }
+
+    const where: Prisma.ActorWhereInput = { email };
+    if (applicationIds?.length) {
+      where.applicationId = { in: applicationIds };
+    }
+
+    const actors = await this.prisma.actor.findMany({
+      where,
+      include: this.actorInclude,
+    });
+
+    for (const actor of actors) {
+      await this.update(actor.id, data, actor.applicationId, requestorId);
+    }
+
+    return { count: actors.length };
   }
 
   public async update(
