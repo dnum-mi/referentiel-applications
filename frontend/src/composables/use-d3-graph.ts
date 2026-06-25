@@ -178,7 +178,7 @@ export function useD3Graph() {
       const lineHeight = 1.1;
       let fontSize = 11;
       const minFontSize = 6;
-      let maxLines = Math.floor(maxHeight / fontSize / lineHeight);
+      const maxLines = Math.floor(maxHeight / fontSize / lineHeight);
       const lines: string[] = [];
       let line = "";
       let lineNumber = 0;
@@ -213,7 +213,6 @@ export function useD3Graph() {
       while (text.node()!.getBBox().width > maxTextWidth && fontSize > minFontSize) {
         fontSize--;
         text.attr("font-size", `${fontSize}px`);
-        maxLines = Math.floor(maxHeight / fontSize / lineHeight);
       }
       // Remove all tspans after measurement
       text.selectAll("tspan").remove();
@@ -325,7 +324,7 @@ export function useD3Graph() {
         const serializer = new XMLSerializer();
         let svgString = serializer.serializeToString(svgElement);
 
-        if (!svgString.match(/^<\?xml/)) {
+        if (!/^<\?xml/.test(svgString)) {
           svgString = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${svgString}`;
         }
 
@@ -354,7 +353,7 @@ export function useD3Graph() {
         link.download = `graph-relations-${new Date().toISOString().slice(0, 10)}.svg`;
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        link.remove();
         URL.revokeObjectURL(url);
       },
     };

@@ -504,8 +504,10 @@ export class PrismaQueryBuilder {
       },
     });
 
-    where.AND.push(this.buildRelationsQuery(filters));
-    where.AND.push(this.buildBusinessDivision(filters));
+    where.AND.push(
+      this.buildRelationsQuery(filters),
+      this.buildBusinessDivision(filters),
+    );
 
     return where;
   }
@@ -666,7 +668,7 @@ export class PrismaQueryBuilder {
 
   public buildTechnicalDebtInfo(millesime?: number) {
     return {
-      technicalDebtInfo: { some: millesime != null ? { millesime } : {} },
+      technicalDebtInfo: { some: millesime == null ? {} : { millesime } },
     };
   }
 }

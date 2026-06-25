@@ -146,100 +146,22 @@ export class RelationRepository implements IRelationRepository {
         return;
       }
 
-      if (!nodesMap.has(app.id)) {
-        nodesMap.set(app.id, {
-          id: app.id,
-          label: app.label,
-          status: app.currentStatus?.status,
-        });
+      this.upsertNode(nodesMap, app.id, app.label, app.currentStatus?.status);
+
+      if (depth >= maxDepth) {
+        return;
       }
 
-      if (depth < maxDepth) {
-        const relations = await this.prisma.relation.findMany({
-          where: {
-            OR: [
-              { applicationSourceId: currentAppId },
-              { applicationTargetId: currentAppId },
-            ],
-          },
-          include: {
-            sourceApplication: {
-              select: {
-                id: true,
-                label: true,
-                currentStatus: {
-                  select: {
-                    status: true,
-                  },
-                },
-              },
-            },
-            targetApplication: {
-              select: {
-                id: true,
-                label: true,
-                currentStatus: {
-                  select: {
-                    status: true,
-                  },
-                },
-              },
-            },
-            mediationService: {
-              select: {
-                id: true,
-                label: true,
-                currentStatus: {
-                  select: {
-                    status: true,
-                  },
-                },
-              },
-            },
-          },
-        });
+      const relations = await this.findRelationsForApp(currentAppId);
 
-        for (const rel of relations) {
-          if (
-            rel.sourceApplication.currentStatus?.status === Status.deleted ||
-            rel.targetApplication.currentStatus?.status === Status.deleted
-          ) {
-            continue;
-          }
-
-          if (!nodesMap.has(rel.applicationSourceId)) {
-            nodesMap.set(rel.applicationSourceId, {
-              id: rel.applicationSourceId,
-              label: rel.sourceApplication.label,
-              status: rel.sourceApplication.currentStatus?.status,
-            });
-          }
-
-          if (!nodesMap.has(rel.applicationTargetId)) {
-            nodesMap.set(rel.applicationTargetId, {
-              id: rel.applicationTargetId,
-              label: rel.targetApplication.label,
-              status: rel.targetApplication.currentStatus?.status,
-            });
-          }
-
-          const edgeKey = `${rel.id}`;
-          if (!edgesMap.has(edgeKey)) {
-            edgesMap.set(edgeKey, {
-              id: rel.id,
-              sourceId: rel.applicationSourceId,
-              sourceLabel: rel.sourceApplication.label,
-              targetId: rel.applicationTargetId,
-              targetLabel: rel.targetApplication.label,
-              type: rel.type,
-            });
-          }
-
-          const nextAppId =
-            rel.applicationSourceId === currentAppId
-              ? rel.applicationTargetId
-              : rel.applicationSourceId;
-
+      for (const rel of relations) {
+        const nextAppId = this.processRelation(
+          rel,
+          currentAppId,
+          nodesMap,
+          edgesMap,
+        );
+        if (nextAppId !== null) {
           await traverse(nextAppId, depth + 1);
         }
       }
@@ -252,5 +174,109 @@ export class RelationRepository implements IRelationRepository {
       edges: Array.from(edgesMap.values()),
       rootId: applicationId,
     };
+  }
+
+  private findRelationsForApp(currentAppId: string) {
+    return this.prisma.relation.findMany({
+      where: {
+        OR: [
+          { applicationSourceId: currentAppId },
+          { applicationTargetId: currentAppId },
+        ],
+      },
+      include: {
+        sourceApplication: {
+          select: {
+            id: true,
+            label: true,
+            currentStatus: {
+              select: {
+                status: true,
+              },
+            },
+          },
+        },
+        targetApplication: {
+          select: {
+            id: true,
+            label: true,
+            currentStatus: {
+              select: {
+                status: true,
+              },
+            },
+          },
+        },
+        mediationService: {
+          select: {
+            id: true,
+            label: true,
+            currentStatus: {
+              select: {
+                status: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  private upsertNode(
+    nodesMap: Map<string, GraphNodeDto>,
+    id: string,
+    label: string,
+    status: Status | undefined,
+  ): void {
+    if (!nodesMap.has(id)) {
+      nodesMap.set(id, { id, label, status });
+    }
+  }
+
+  /**
+   * Met à jour les nœuds et l'arête d'une relation, puis renvoie l'identifiant
+   * de l'application voisine à explorer (ou null si la relation est ignorée).
+   */
+  private processRelation(
+    rel: Awaited<ReturnType<RelationRepository["findRelationsForApp"]>>[number],
+    currentAppId: string,
+    nodesMap: Map<string, GraphNodeDto>,
+    edgesMap: Map<string, GraphEdgeDto>,
+  ): string | null {
+    if (
+      rel.sourceApplication.currentStatus?.status === Status.deleted ||
+      rel.targetApplication.currentStatus?.status === Status.deleted
+    ) {
+      return null;
+    }
+
+    this.upsertNode(
+      nodesMap,
+      rel.applicationSourceId,
+      rel.sourceApplication.label,
+      rel.sourceApplication.currentStatus?.status,
+    );
+    this.upsertNode(
+      nodesMap,
+      rel.applicationTargetId,
+      rel.targetApplication.label,
+      rel.targetApplication.currentStatus?.status,
+    );
+
+    const edgeKey = `${rel.id}`;
+    if (!edgesMap.has(edgeKey)) {
+      edgesMap.set(edgeKey, {
+        id: rel.id,
+        sourceId: rel.applicationSourceId,
+        sourceLabel: rel.sourceApplication.label,
+        targetId: rel.applicationTargetId,
+        targetLabel: rel.targetApplication.label,
+        type: rel.type,
+      });
+    }
+
+    return rel.applicationSourceId === currentAppId
+      ? rel.applicationTargetId
+      : rel.applicationSourceId;
   }
 }

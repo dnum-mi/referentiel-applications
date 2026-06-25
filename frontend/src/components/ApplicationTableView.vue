@@ -47,7 +47,10 @@ const formatBusinessDivision = (businessDivision?: BusinessDivisionDto): string 
 
 const formatHours = (value: number | null | undefined): string => (value == null ? "" : `${value}h`);
 const formatPercent = (value: number | null | undefined): string => (value == null ? "" : `${value}%`);
-const formatBooleanText = (value: boolean | null | undefined): string => (value == null ? "" : value ? "Oui" : "Non");
+const formatBooleanText = (value: boolean | null | undefined): string => {
+  if (value == null) return "";
+  return value ? "Oui" : "Non";
+};
 const formatHomologation = (value: string | null | undefined): string =>
   value ? homologationStatusDict[value as keyof typeof homologationStatusDict] || value : "";
 const formatDate = (value: string | null | undefined): string => (value ? formatDateFR(value) : "");

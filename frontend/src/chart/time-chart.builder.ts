@@ -22,12 +22,12 @@ export class TimeChartBuilder {
   private tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
 
   constructor(
-    private g: GSelection,
-    private svg: SvgSelection,
-    private root: HTMLDivElement,
-    private scales: ChartScales,
-    private layout: ChartLayout,
-    private data: TechnicalDebtPoint[],
+    private readonly g: GSelection,
+    private readonly svg: SvgSelection,
+    private readonly root: HTMLDivElement,
+    private readonly scales: ChartScales,
+    private readonly layout: ChartLayout,
+    private readonly data: TechnicalDebtPoint[],
   ) {}
 
   /** Titre principal en haut au centre */
@@ -227,11 +227,12 @@ export class TimeChartBuilder {
       .attr("cursor", "pointer")
       .attr("data-testid", "technical-debt-point")
       .on("mouseenter", (_, d) => {
+        const shortNameHtml = d.shortName ? `<em>${d.shortName}<em/>` : "";
         tooltip
           .style("display", "block")
           .html(
             `<strong>${d.label}</strong><br/>` +
-              `${d.shortName ? `<em>${d.shortName}<em/>` : ""}<br/>` +
+              `${shortNameHtml}<br/>` +
               `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}<br/>` +
               `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}<br/>` +
               `Coût MCO: ${d.technicalDebtInfo?.costMaturity ?? "-"}`,
@@ -244,7 +245,7 @@ export class TimeChartBuilder {
         tooltip.style("display", "none");
       })
       .on("click", (_, d) => {
-        window.location.href = `http://localhost:5173/applications/${d.id}`;
+        globalThis.location.href = `http://localhost:5173/applications/${d.id}`;
       });
 
     return this;

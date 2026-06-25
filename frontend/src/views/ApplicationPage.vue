@@ -73,9 +73,10 @@ async function copyToClipboard() {
       toaster.addErrorMessage("Impossible de copier le lien.");
       return;
     }
-    await navigator.clipboard.writeText(window.location.href);
+    await navigator.clipboard.writeText(globalThis.location.href);
     toaster.addSuccessMessage("Lien copié dans le presse-papier !");
   } catch (err) {
+    console.error("Failed to copy link to clipboard:", err);
     toaster.addErrorMessage("Impossible de copier le lien.");
   }
 }

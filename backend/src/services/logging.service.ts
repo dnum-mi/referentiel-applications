@@ -30,7 +30,8 @@ export class LoggingService {
         email: decoded.email,
       };
     } catch (err) {
-      this.logger.error(`[${correlationId}] JWT decode error: ${err}`);
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`[${correlationId}] JWT decode error: ${message}`);
       return {};
     }
   }

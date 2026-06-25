@@ -59,7 +59,7 @@ const WRITE_APP_PERMISSIONS = new Set([
   Permission.LinkWrite,
   Permission.AppWritePriority,
 ]);
-const ADMIN_APP_PERMISSIONS = new Set([...Array.from(WRITE_APP_PERMISSIONS)]);
+const ADMIN_APP_PERMISSIONS = new Set(WRITE_APP_PERMISSIONS);
 
 export const roleToAppPermissions = (role: Roles) => {
   switch (role) {

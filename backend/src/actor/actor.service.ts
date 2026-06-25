@@ -374,8 +374,9 @@ export class ActorService {
           data: updateData,
         });
       } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         Logger.warn(
-          `Échec de la synchronisation MAIA pour l'acteur ${actor.email}: ${error}`,
+          `Échec de la synchronisation MAIA pour l'acteur ${actor.email}: ${message}`,
         );
       }
     }
@@ -441,8 +442,9 @@ export class ActorService {
         );
         applicationName = application?.label;
       } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         Logger.warn(
-          `Could not fetch application ${actor.applicationId} for email notification: ${error}`,
+          `Could not fetch application ${actor.applicationId} for email notification: ${message}`,
         );
       }
     }

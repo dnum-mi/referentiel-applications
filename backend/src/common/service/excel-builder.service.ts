@@ -37,15 +37,26 @@ export class ExcelBuilderService {
     return Buffer.from(buffer);
   }
 
+  private stringifyCellValue(value: ExcelJS.CellValue): string | undefined {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value === "object") return JSON.stringify(value);
+    return String(value);
+  }
+
   private applyApplicationRowColors(sheet: ExcelJS.Worksheet) {
     const headerRow = sheet.getRow(1);
     const headerValues = (headerRow.values as ExcelJS.CellValue[]).filter(
       Boolean,
     );
 
-    const appIdKeys = ["applicationId", "id", "Application", "ID Application"];
+    const appIdKeys = new Set([
+      "applicationId",
+      "id",
+      "Application",
+      "ID Application",
+    ]);
     const appIdColIndex = headerValues.findIndex(
-      (val) => typeof val === "string" && appIdKeys.includes(val),
+      (val) => typeof val === "string" && appIdKeys.has(val),
     );
 
     if (appIdColIndex === -1) return;
@@ -58,7 +69,7 @@ export class ExcelBuilderService {
 
     for (let i = 2; i <= sheet.rowCount; i++) {
       const row = sheet.getRow(i);
-      const appId = row.getCell(columnIndex).value?.toString();
+      const appId = this.stringifyCellValue(row.getCell(columnIndex).value);
 
       if (appId && appId !== currentAppId) {
         currentAppId = appId;

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { watchDebounced } from "@vueuse/core";
-import { onClickOutside } from "@vueuse/core";
+import { onClickOutside, watchDebounced } from "@vueuse/core";
 import { computed, ref } from "vue";
 
 interface Props<T> {

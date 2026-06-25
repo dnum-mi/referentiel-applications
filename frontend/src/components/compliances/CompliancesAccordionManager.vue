@@ -110,50 +110,57 @@ const isNewType = computed(() => {
   return selectedType.value != null && !typesWithData.value.includes(selectedType.value);
 });
 
-function getPreview(type: ManagedComplianceType): string {
-  if (!compliance.value) return "";
-
-  if (type === "dima") {
-    const parts: string[] = [];
-    if (compliance.value.dima_duration_hours != null) parts.push(`${compliance.value.dima_duration_hours}H`);
-    parts.push(compliance.value.dima_is_hno ? "Heure non ouvrée" : "Heure ouvrée");
-    return parts.join(" • ");
-  }
-
-  if (type === "pdma") {
-    return `${compliance.value.pdma_duration_hours ?? ""}H`.trim();
-  }
-
-  if (type === "homologation") {
-    const parts: string[] = [];
-    if (compliance.value.homologation_status) {
-      parts.push(homologationStatusDict[compliance.value.homologation_status] ?? compliance.value.homologation_status);
-    }
-    if (compliance.value.homologation_date_end) parts.push(formatDateFR(compliance.value.homologation_date_end));
-    return parts.join(" - ");
-  }
-
-  if (type === "dsfr") {
-    const parts: string[] = [];
-    if (compliance.value.dsfr_implemented === true) parts.push("Implémenté");
-    else if (compliance.value.dsfr_implemented === false) parts.push("Non implémenté");
-    if (compliance.value.dsfr_version) parts.push(`Version ${compliance.value.dsfr_version}`);
-    return parts.join(" • ");
-  }
-
-  if (type === "eco_index") {
-    const score = compliance.value.eco_index_score;
-    const date = compliance.value.eco_index_last_calculated_at;
-    if (score == null) return NO_ECOINDEX_LABEL;
-    const datePart = date ? ` • Le ${formatDateFR(date)}` : "";
-    return `Score: ${getEcoIndexGrade(score)} (${score}/100) ${datePart}`;
-  }
-
+function getDimaPreview(value: NonNullable<typeof compliance.value>): string {
   const parts: string[] = [];
-  if (compliance.value.rgpd_has_aipd === true) parts.push("AIPD: Oui");
-  else if (compliance.value.rgpd_has_aipd === false) parts.push("AIPD: Non");
-  if (compliance.value.rgpd_dpo_name) parts.push(`DPO: ${compliance.value.rgpd_dpo_name}`);
+  if (value.dima_duration_hours != null) parts.push(`${value.dima_duration_hours}H`);
+  parts.push(value.dima_is_hno ? "Heure non ouvrée" : "Heure ouvrée");
   return parts.join(" • ");
+}
+
+function getHomologationPreview(value: NonNullable<typeof compliance.value>): string {
+  const parts: string[] = [];
+  if (value.homologation_status) {
+    parts.push(homologationStatusDict[value.homologation_status] ?? value.homologation_status);
+  }
+  if (value.homologation_date_end) parts.push(formatDateFR(value.homologation_date_end));
+  return parts.join(" - ");
+}
+
+function getDsfrPreview(value: NonNullable<typeof compliance.value>): string {
+  const parts: string[] = [];
+  if (value.dsfr_implemented === true) parts.push("Implémenté");
+  else if (value.dsfr_implemented === false) parts.push("Non implémenté");
+  if (value.dsfr_version) parts.push(`Version ${value.dsfr_version}`);
+  return parts.join(" • ");
+}
+
+function getEcoIndexPreview(value: NonNullable<typeof compliance.value>): string {
+  const score = value.eco_index_score;
+  const date = value.eco_index_last_calculated_at;
+  if (score == null) return NO_ECOINDEX_LABEL;
+  const datePart = date ? ` • Le ${formatDateFR(date)}` : "";
+  return `Score: ${getEcoIndexGrade(score)} (${score}/100) ${datePart}`;
+}
+
+function getRgpdPreview(value: NonNullable<typeof compliance.value>): string {
+  const parts: string[] = [];
+  if (value.rgpd_has_aipd === true) parts.push("AIPD: Oui");
+  else if (value.rgpd_has_aipd === false) parts.push("AIPD: Non");
+  if (value.rgpd_dpo_name) parts.push(`DPO: ${value.rgpd_dpo_name}`);
+  return parts.join(" • ");
+}
+
+function getPreview(type: ManagedComplianceType): string {
+  const value = compliance.value;
+  if (!value) return "";
+
+  if (type === "dima") return getDimaPreview(value);
+  if (type === "pdma") return `${value.pdma_duration_hours ?? ""}H`.trim();
+  if (type === "homologation") return getHomologationPreview(value);
+  if (type === "dsfr") return getDsfrPreview(value);
+  if (type === "eco_index") return getEcoIndexPreview(value);
+
+  return getRgpdPreview(value);
 }
 
 function formatFieldValue(key: string, value: unknown): string {

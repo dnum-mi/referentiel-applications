@@ -45,30 +45,28 @@ async function saveLabelSource() {
   isSaving.value = true;
   errorMessage.value = "";
 
-  const response = !props.labelSource?.id
-    ? await api.labelSourceControllerCreate({
+  const response = props.labelSource?.id
+    ? await api.labelSourceControllerUpdate({
+        path: { id: props.labelSource.id },
         body: {
           source: editingSource.value,
         },
       })
-    : await api.labelSourceControllerUpdate({
-        path: { id: props.labelSource.id },
+    : await api.labelSourceControllerCreate({
         body: {
           source: editingSource.value,
         },
       });
 
-  if (!response.response.ok) {
-    if (response.response.status === 400) {
-      errorMessage.value = "La valeur est incorrecte.";
-    } else {
-      errorMessage.value = "Erreur lors de la sauvegarde de la source";
-    }
-  } else {
-    toaster.addSuccessMessage(!props.labelSource?.id ? "Source créée avec succès" : "Source mise à jour avec succès");
+  if (response.response.ok) {
+    toaster.addSuccessMessage(props.labelSource?.id ? "Source mise à jour avec succès" : "Source créée avec succès");
 
     closeEditModal();
     emit("fetchLabelSources");
+  } else if (response.response.status === 400) {
+    errorMessage.value = "La valeur est incorrecte.";
+  } else {
+    errorMessage.value = "Erreur lors de la sauvegarde de la source";
   }
   isSaving.value = false;
 }
@@ -79,12 +77,12 @@ async function deleteLabelSource() {
   isDeleting.value = true;
 
   const response = await api.labelSourceControllerRemove({ path: { id: props.labelSource.id } });
-  if (!response.response.ok) {
-    toaster.addErrorMessage("Erreur lors de la suppression de la source");
-  } else {
+  if (response.response.ok) {
     toaster.addSuccessMessage("Source supprimée avec succès");
     closeDeleteModal();
     emit("fetchLabelSources");
+  } else {
+    toaster.addErrorMessage("Erreur lors de la suppression de la source");
   }
   isDeleting.value = false;
 }

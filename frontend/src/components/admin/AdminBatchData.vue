@@ -56,11 +56,14 @@ function downloadImportReport() {
   link.download = `rapport_import_acteurs_${date}.csv`;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
   URL.revokeObjectURL(link.href);
 }
 
-async function runMaiaBatch(body: NonNullable<UserControllerSyncOrganizationsFromMaiaData["body"]> = { onlyMissing: true }) {
+type MaiaBatchBody = NonNullable<UserControllerSyncOrganizationsFromMaiaData["body"]>;
+const DEFAULT_MAIA_BATCH_BODY: MaiaBatchBody = { onlyMissing: true };
+
+async function runMaiaBatch(body: MaiaBatchBody = DEFAULT_MAIA_BATCH_BODY) {
   isBatchLoading.value = true;
   try {
     await api.userControllerSyncOrganizationsFromMaia({ body });

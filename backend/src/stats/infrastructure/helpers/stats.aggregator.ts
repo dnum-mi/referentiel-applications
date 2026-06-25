@@ -49,8 +49,9 @@ export class StatsAggregator {
           break;
       }
 
-      if (!grouped.has(label)) grouped.set(label, []);
-      grouped.get(label)!.push(entry.valeur);
+      const bucket = grouped.get(label) ?? [];
+      bucket.push(entry.valeur);
+      grouped.set(label, bucket);
     }
 
     return Array.from(grouped.entries()).map(([label, valeurs]) => {

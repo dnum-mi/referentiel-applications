@@ -42,7 +42,7 @@ export const useReportStore = defineStore("reportStore", () => {
     }
   };
 
-  async function updateReport(id: string, applicationId: string, status: ReportStatus, notify: boolean = false) {
+  const updateReport = async (id: string, applicationId: string, status: ReportStatus, notify: boolean = false) => {
     try {
       if (applicationId) {
         await api.applicationReportsControllerUpdate({ path: { applicationId, id }, body: { status }, query: { notify } });
@@ -53,16 +53,16 @@ export const useReportStore = defineStore("reportStore", () => {
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des modifications : ", error);
     }
-  }
+  };
 
-  async function updateNotes(id: string, notes: string = "", notify: boolean = false) {
+  const updateNotes = async (id: string, notes: string = "", notify: boolean = false) => {
     try {
       await api.reportsControllerUpdate({ path: { id }, body: { notes }, query: { notify } });
       return true;
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des modifications : ", error);
     }
-  }
+  };
 
   return {
     proposeReport,

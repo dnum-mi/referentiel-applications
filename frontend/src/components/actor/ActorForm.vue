@@ -54,6 +54,7 @@ async function syncFromMaiaByEmail() {
       toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
     }
   } catch (error) {
+    console.error("Erreur lors de la synchronisation MAIA:", error);
     toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
   } finally {
     isSyncingFromMaia.value = false;
@@ -104,8 +105,8 @@ function handleSubmit() {
   const formData = {
     ...form.value,
     email: form.value.email?.trim() || "",
-    firstname: !isGroup.value ? (form.value.firstname?.trim() ?? undefined) : null,
-    lastname: !isGroup.value ? (form.value.lastname?.trim() ?? undefined) : null,
+    firstname: isGroup.value ? null : (form.value.firstname?.trim() ?? undefined),
+    lastname: isGroup.value ? null : (form.value.lastname?.trim() ?? undefined),
   };
 
   emit("submit", formData);
