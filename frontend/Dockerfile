@@ -25,8 +25,8 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY . .
 
 RUN pnpm api:generate
-# Temporary disable type checking
-RUN pnpm build-only
+# build = type-check (vue-tsc) + build-only, en parallèle
+RUN pnpm build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
 
