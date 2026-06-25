@@ -11,11 +11,11 @@ model TechnicalDebtInfo {
   /// Entrées de métadonnées pour cette évaluation
   metadatas     Metadata[]
 
-  /// Score de maturité technique (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
+  /// Score de maturité technique (1-5). `null` = non noté (valeurs < 1 migrées vers `null`).
   technicalMaturity Decimal? @db.Decimal(3, 2)
-  /// Score de maturité métier (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
+  /// Score de maturité métier (1-5). `null` = non noté (valeurs < 1 migrées vers `null`).
   businessMaturity  Decimal? @db.Decimal(3, 2)
-  /// Score de maîtrise des coûts (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
+  /// Score de maîtrise des coûts (1-5). `null` = non noté (valeurs < 1 migrées vers `null`).
   costContainment   Decimal? @db.Decimal(3, 2)
   /// Millésime (année) de la campagne dette IT à laquelle se rattache l'évaluation
   millesime         Int      @default(dbgenerated("(EXTRACT(YEAR FROM CURRENT_DATE))::integer"))

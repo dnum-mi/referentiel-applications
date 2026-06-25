@@ -13,7 +13,7 @@ defineEmits<{
   edit: [];
 }>();
 
-const NOT_EVALUATED_LABEL = "Non évalué";
+const NOT_RATED_LABEL = "Non notée";
 
 const maturityLabels: Record<number, string> = {
   1: "Faible",
@@ -28,9 +28,9 @@ function getMaturityLabel(value: number): string {
   return maturityLabels[rounded] ?? "Non défini";
 }
 
-// `null` = non évalué (les scores < 1 ont été migrés vers `null`, cf. ticket #1900).
+// `null` = non noté (les scores < 1 ont été migrés vers `null`, cf. ticket #1900).
 function getBadgeLabel(value: number | null): string {
-  return value == null ? NOT_EVALUATED_LABEL : `${value}/5 - ${getMaturityLabel(value)}`;
+  return value == null ? NOT_RATED_LABEL : `${value}/5 - ${getMaturityLabel(value)}`;
 }
 
 function getMaturityBadgeType(value: number | null): "error" | "warning" | "info" | "success" | undefined {

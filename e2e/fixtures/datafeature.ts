@@ -54,9 +54,9 @@ export class DataFeature {
   }
 
   /**
-   * Sème une évaluation de dette technique dont la maîtrise des coûts est **non évaluée**
+   * Sème une évaluation de dette technique dont la maîtrise des coûts est **non notée**
    * (`costContainment` omis → `null`) sur la première application, et la renvoie. Sert à vérifier
-   * que la carte affiche « Non évalué » pour un axe sans score (FIC-16, ticket #1900). Comme les
+   * que la carte affiche « Non notée » pour un axe sans score (FIC-16, ticket #1900). Comme les
    * évaluations sont historisées, la plus récente — celle-ci — pilote l'affichage.
    */
   async seedTechnicalDebtWithoutCost(): Promise<AppRef | null> {

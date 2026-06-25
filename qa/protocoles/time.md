@@ -24,7 +24,7 @@
 - **Résultat attendu** : le graphique SVG de maturité TIME s'affiche, ou l'état vide « Aucune donnée
   TIME disponible » si l'utilisateur n'a pas de données autorisées.
 - **Note (ticket #1900)** : échelle de maturité 1-5, axes du quadrant qui se croisent à **3** ; seuls
-  les points dont les trois maturités sont évaluées (≥ 1) sont tracés — un score non évalué (`null`,
+  les points dont les trois maturités sont notées (≥ 1) sont tracés — un score non noté (`null`,
   issu de la migration des valeurs < 1) exclut le point du diagramme.
 
 ### TIM-03 — La sidebar de filtres est présente ✅

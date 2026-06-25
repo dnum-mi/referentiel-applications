@@ -45,8 +45,8 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
       radius: d3.scaleLinear().domain([1, 5]).range([4, 12]),
     };
 
-    // Un point n'apparaît que si ses trois maturités sont évaluées (≥ 1) : les valeurs
-    // non évaluées (`null`, issues de la migration des valeurs < 1) sont exclues (ticket #1900).
+    // Un point n'apparaît que si ses trois maturités sont notées (≥ 1) : les valeurs
+    // non notées (`null`, issues de la migration des valeurs < 1) sont exclues (ticket #1900).
     const points = props.data.filter((d) => {
       const t = d.technicalDebtInfo;
       return t != null && t.technicalMaturity != null && t.businessMaturity != null && t.costContainment != null;

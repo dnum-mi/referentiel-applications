@@ -5,7 +5,7 @@ import { IsInt, IsNumber, IsOptional, Max, Min } from "class-validator";
 export class CreateTechnicalDebtInfoDto {
   @ApiProperty({
     example: 3.2,
-    description: "Technical maturity score (1-5). Omit / null = not evaluated.",
+    description: "Technical maturity score (1-5). Omit / null = not rated.",
     required: false,
     minimum: 1,
     maximum: 5,
@@ -18,7 +18,7 @@ export class CreateTechnicalDebtInfoDto {
 
   @ApiProperty({
     example: 4.5,
-    description: "Business maturity score (1-5). Omit / null = not evaluated.",
+    description: "Business maturity score (1-5). Omit / null = not rated.",
     required: false,
     minimum: 1,
     maximum: 5,
@@ -31,7 +31,7 @@ export class CreateTechnicalDebtInfoDto {
 
   @ApiProperty({
     example: 2.75,
-    description: "Cost containment score (1-5). Omit / null = not evaluated.",
+    description: "Cost containment score (1-5). Omit / null = not rated.",
     required: false,
     minimum: 1,
     maximum: 5,

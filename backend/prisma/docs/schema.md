@@ -236,9 +236,9 @@ Properties as follows:
 
 - `id`: Identifiant unique
 - `applicationId`:
-- `technicalMaturity`: Score de maturité technique (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
-- `businessMaturity`: Score de maturité métier (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
-- `costContainment`: Score de maîtrise des coûts (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
+- `technicalMaturity`: Score de maturité technique (1-5). `null` = non noté (valeurs < 1 migrées vers `null`).
+- `businessMaturity`: Score de maturité métier (1-5). `null` = non noté (valeurs < 1 migrées vers `null`).
+- `costContainment`: Score de maîtrise des coûts (1-5). `null` = non noté (valeurs < 1 migrées vers `null`).
 - `millesime`: Millésime (année) de la campagne dette IT à laquelle se rattache l'évaluation
 - `createdAt`: Date de création de l'évaluation
 

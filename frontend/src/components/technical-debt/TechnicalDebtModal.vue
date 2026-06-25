@@ -18,7 +18,7 @@ const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const isEditMode = computed(() => !!props.initialData);
 
-// Champ vide = score non évalué (`null`). Une valeur saisie doit être comprise entre 1 et 5.
+// Champ vide = score non noté (`null`). Une valeur saisie doit être comprise entre 1 et 5.
 function toInputValue(value: number | string | null | undefined): string {
   if (value == null) return "";
   return String(value);
@@ -30,7 +30,7 @@ const form = ref({
   costContainment: toInputValue(props.initialData?.costContainment),
 });
 
-// Renvoie le score saisi (1-5) ou `undefined` si le champ est vide (non évalué).
+// Renvoie le score saisi (1-5) ou `undefined` si le champ est vide (non noté).
 function toScoreOrUndefined(value: string): number | undefined {
   const trimmed = value.trim();
   if (trimmed === "") return undefined;
@@ -38,7 +38,7 @@ function toScoreOrUndefined(value: string): number | undefined {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
-// Un champ est valide s'il est vide (non évalué) ou contient une valeur entre 1 et 5.
+// Un champ est valide s'il est vide (non noté) ou contient une valeur entre 1 et 5.
 function isValidScore(value: string): boolean {
   const trimmed = value.trim();
   if (trimmed === "") return true;
@@ -97,7 +97,7 @@ async function handleSubmit() {
           min="1"
           max="5"
           step=".01"
-          hint="Entre 1 et 5 (laisser vide si non évalué)"
+          hint="Entre 1 et 5 (laisser vide si non noté)"
           class="fr-mb-3w"
           data-testid="technical-maturity-select"
         />
@@ -109,7 +109,7 @@ async function handleSubmit() {
           min="1"
           max="5"
           step=".01"
-          hint="Entre 1 et 5 (laisser vide si non évalué)"
+          hint="Entre 1 et 5 (laisser vide si non noté)"
           class="fr-mb-3w"
           data-testid="business-maturity-select"
         />
@@ -121,7 +121,7 @@ async function handleSubmit() {
           min="1"
           max="5"
           step=".01"
-          hint="Entre 1 et 5 (laisser vide si non évalué)"
+          hint="Entre 1 et 5 (laisser vide si non noté)"
           class="fr-mb-3w"
           data-testid="cost-containment-select"
         />

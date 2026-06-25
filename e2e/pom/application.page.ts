@@ -127,10 +127,10 @@ export class ApplicationPage extends BasePage {
     await expect(card.getByText("Maturité des coûts")).toHaveCount(0);
   }
 
-  /** Le badge « Maîtrise des coûts » affiche « Non évalué » quand le score est `null` (FIC-16, #1900). */
-  async expectCostContainmentNotEvaluated(): Promise<void> {
+  /** Le badge « Maîtrise des coûts » affiche « Non notée » quand le score est `null` (FIC-16, #1900). */
+  async expectCostContainmentNotRated(): Promise<void> {
     await expect(this.byTestId("costContainment-badge")).toContainText(
-      "Non évalué",
+      "Non notée",
     );
   }
 

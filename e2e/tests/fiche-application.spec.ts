@@ -157,7 +157,7 @@ test.describe("Fiche application", () => {
     await fiche.expectCostContainmentLabel();
   });
 
-  test("FIC-16 - onglet Informations générales : un score non évalué affiche « Non évalué »", async ({
+  test("FIC-16 - onglet Informations générales : un score non noté affiche « Non notée »", async ({
     page,
     data,
   }) => {
@@ -169,6 +169,6 @@ test.describe("Fiche application", () => {
 
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
-    await fiche.expectCostContainmentNotEvaluated();
+    await fiche.expectCostContainmentNotRated();
   });
 });
