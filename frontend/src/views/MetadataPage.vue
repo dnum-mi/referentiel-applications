@@ -119,7 +119,7 @@ const metadataTableRows = computed(() =>
       id: meta.id,
       Application: {
         id: meta.id,
-        label: meta.application?.label ?? "Application inconnue",
+        label: meta.applicationId ? (meta.application?.label ?? "Application inconnue") : "-",
         to: meta.applicationId ? { name: "application", params: { id: meta.applicationId } } : undefined,
       },
       Auteur: meta.createdBy?.email ?? "Inconnu",
