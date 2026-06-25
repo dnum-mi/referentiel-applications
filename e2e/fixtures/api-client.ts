@@ -236,6 +236,23 @@ export class ApiClient {
     return this.patch<UserAdmin>(`/users/${id}`, body);
   }
 
+  /** Comme `setUser` mais renvoie le statut HTTP brut + corps pour diagnostic. */
+  async setUserVerbose(
+    id: string,
+    body: Record<string, unknown>,
+  ): Promise<{ ok: boolean; status: number; body: string }> {
+    const res = await this.page.request.patch(`/api/v2/users/${id}`, {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      data: body,
+    });
+    const text = await res.text().catch(() => "");
+    return { ok: res.ok(), status: res.status(), body: text };
+  }
+
   private async post<T>(path: string, body: unknown = {}): Promise<T | null> {
     const res = await this.page.request.post(`/api/v2${path}`, {
       headers: {
@@ -439,6 +456,16 @@ export class ApiClient {
     return this.get<{ id: string; label: string }[]>("/actor-types");
   }
 
+  permsMatrix(): Promise<PermsMatrixEntry[] | null> {
+    return this.get<PermsMatrixEntry[]>("/actorTypes/perms-matrix");
+  }
+
+  updatePermsMatrix(
+    body: PermsMatrixEntry[],
+  ): Promise<PermsMatrixEntry[] | null> {
+    return this.patch<PermsMatrixEntry[]>("/actorTypes/perms-matrix", body);
+  }
+
   organizations(
     query: string,
   ): Promise<{ id: string; label: string; path: string }[] | null> {
@@ -515,4 +542,9 @@ export interface ComplianceShape {
   homologation_status: string | null;
   eco_index_target_url: string | null;
   eco_index_score: number | null;
+}
+
+export interface PermsMatrixEntry {
+  actorTypeId: string;
+  [perm: string]: string | boolean;
 }
