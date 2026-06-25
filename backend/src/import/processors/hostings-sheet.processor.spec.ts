@@ -6,13 +6,16 @@ jest.mock("src/metadatas/metadatas.service", () => ({
 
 import * as ExcelJS from "exceljs";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
+import type { CheckPermissions } from "src/common/service/check-permissions.service";
 import type { HostingsService } from "src/hostings/hostings.service";
 import type { PrismaService } from "src/prisma/prisma.service";
+import type { Requestor } from "src/user/entities/user.entity";
 import { createEmptyReport } from "../dto/import-report.dto";
 import { HostingsSheetProcessor } from "./hostings-sheet.processor";
 
 /** Les ID d'application sont des UUID en base (cf. schema) → requis par CreateHostingDto. */
 const APP_UUID = "11111111-1111-4111-8111-111111111111";
+const requestor = { id: "user-1" } as unknown as Requestor;
 
 function buildSheet(
   headers: string[],
@@ -46,11 +49,13 @@ function setup() {
     createHosting: jest.fn().mockResolvedValue({ id: "new-host" }),
     updateHosting: jest.fn().mockResolvedValue({ id: "host-1" }),
   };
+  const checkPermissions = { can: jest.fn().mockResolvedValue(true) };
   const processor = new HostingsSheetProcessor(
     prisma as unknown as PrismaService,
     hostingsService as unknown as HostingsService,
+    checkPermissions as unknown as CheckPermissions,
   );
-  return { processor, prisma, hostingsService };
+  return { processor, prisma, hostingsService, checkPermissions };
 }
 
 const HEADERS = [
@@ -70,7 +75,7 @@ describe("HostingsSheetProcessor", () => {
       buildSheet(HEADERS, [
         ["", APP_UUID, "Prod", "DTNUM", "RENNES", "PHYSIQUE"],
       ]),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -94,7 +99,7 @@ describe("HostingsSheetProcessor", () => {
       buildSheet(HEADERS, [
         ["", APP_UUID, "Prod", "DTNUM", "RENNES", "PHYSIQUE"],
       ]),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -109,7 +114,7 @@ describe("HostingsSheetProcessor", () => {
       buildSheet(HEADERS, [
         ["host-1", APP_UUID, "Prod", "DTNUM", "RENNES", "PHYSIQUE"],
       ]),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -128,7 +133,7 @@ describe("HostingsSheetProcessor", () => {
       buildSheet(HEADERS, [
         ["", "ghost", "Prod", "DTNUM", "RENNES", "PHYSIQUE"],
       ]),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -143,7 +148,7 @@ describe("HostingsSheetProcessor", () => {
       buildSheet(HEADERS, [
         ["ghost-host", APP_UUID, "Prod", "DTNUM", "RENNES", "PHYSIQUE"],
       ]),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -159,11 +164,30 @@ describe("HostingsSheetProcessor", () => {
         ["ID Application", "Fournisseur d’hébergement"],
         [[APP_UUID, "DTNUM"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
 
     expect(report.summary.processedSheets).not.toContain(sheetLabels.Hostings);
     expect(report.logs.join(" ")).toMatch(/colonnes manquantes/i);
+  });
+
+  it("refuse la ligne et consigne le motif sans droits HostingWrite sur l'application", async () => {
+    const { processor, checkPermissions, hostingsService } = setup();
+    checkPermissions.can.mockResolvedValue(false);
+    const report = createEmptyReport();
+    await processor.process(
+      buildSheet(HEADERS, [
+        ["", APP_UUID, "Prod", "DTNUM", "RENNES", "PHYSIQUE"],
+      ]),
+      requestor,
+      report,
+    );
+
+    expect(report.summary.errors).toBe(1);
+    expect(report.entries[0].message).toMatch(
+      /Droits insuffisants.*HostingWrite/i,
+    );
+    expect(hostingsService.createHosting).not.toHaveBeenCalled();
   });
 });

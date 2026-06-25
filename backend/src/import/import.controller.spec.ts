@@ -5,9 +5,12 @@ jest.mock("src/metadatas/metadatas.service", () => ({
 }));
 
 import { BadRequestException } from "@nestjs/common";
+import type { Requestor } from "src/user/entities/user.entity";
 import type { ExcelImportService } from "./excel-import.service";
 import { ImportController } from "./import.controller";
 import { createEmptyReport, ImportReportDto } from "./dto/import-report.dto";
+
+const requestor = { id: "user-1" } as unknown as Requestor;
 
 const REPORT: ImportReportDto = {
   ...createEmptyReport(),
@@ -39,7 +42,7 @@ const xlsxFile = {
 describe("ImportController.importExcel", () => {
   it("rejette quand aucun fichier n'est fourni", async () => {
     const { controller } = setup();
-    await expect(controller.importExcel(undefined, "user-1")).rejects.toThrow(
+    await expect(controller.importExcel(undefined, requestor)).rejects.toThrow(
       BadRequestException,
     );
   });
@@ -53,17 +56,17 @@ describe("ImportController.importExcel", () => {
           originalname: "x.txt",
           mimetype: "text/plain",
         },
-        "user-1",
+        requestor,
       ),
     ).rejects.toThrow(BadRequestException);
   });
 
   it("traite un .xlsx et renvoie le rapport", async () => {
     const { controller, importService } = setup();
-    const result = await controller.importExcel(xlsxFile, "user-1");
+    const result = await controller.importExcel(xlsxFile, requestor);
     expect(importService.importFromExcel).toHaveBeenCalledWith(
       xlsxFile.buffer,
-      "user-1",
+      requestor,
     );
     expect(result.summary.created).toBe(1);
   });
@@ -72,7 +75,7 @@ describe("ImportController.importExcel", () => {
     const { controller } = setup(
       jest.fn().mockRejectedValue(new Error("fichier illisible")),
     );
-    await expect(controller.importExcel(xlsxFile, "user-1")).rejects.toThrow(
+    await expect(controller.importExcel(xlsxFile, requestor)).rejects.toThrow(
       /fichier illisible/,
     );
   });

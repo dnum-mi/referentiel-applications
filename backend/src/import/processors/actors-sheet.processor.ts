@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { Permission } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
 import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
@@ -6,12 +7,18 @@ import { ActorService } from "src/actor/actor.service";
 import { CreateActorDto, UpdateActorDto } from "src/actor/dto/actor.dto";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
+import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
+import { Requestor } from "src/user/entities/user.entity";
 import {
   ImportReportDto,
   ImportReportEntryDto,
 } from "../dto/import-report.dto";
-import { buildHeaderIndex, makeCellReader } from "../utils/excel.utils";
+import {
+  buildHeaderIndex,
+  insufficientRightsMessage,
+  makeCellReader,
+} from "../utils/excel.utils";
 
 /** En-têtes (libellés) attendus dans l'onglet « Acteurs », alignés sur l'export. */
 const HEADERS = {
@@ -35,11 +42,12 @@ export class ActorsSheetProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly actorService: ActorService,
+    private readonly checkPermissions: CheckPermissions,
   ) {}
 
   async process(
     worksheet: ExcelJS.Worksheet,
-    requestorId: string,
+    requestor: Requestor,
     report: ImportReportDto,
   ): Promise<void> {
     const headerIndex = buildHeaderIndex(worksheet);
@@ -69,7 +77,7 @@ export class ActorsSheetProcessor {
       if (Object.values(data).every((v) => v === "")) continue;
 
       try {
-        const entry = await this.processRow(rowNumber, data, requestorId);
+        const entry = await this.processRow(rowNumber, data, requestor);
         report.entries.push(entry);
         if (entry.status === "created") report.summary.created++;
         else if (entry.status === "updated") report.summary.updated++;
@@ -101,7 +109,7 @@ export class ActorsSheetProcessor {
       type: string;
       email: string;
     },
-    requestorId: string,
+    requestor: Requestor,
   ): Promise<ImportReportEntryDto> {
     if (!data.applicationId) {
       throw new Error("Colonne « ID Application » vide.");
@@ -113,6 +121,18 @@ export class ActorsSheetProcessor {
     });
     if (!application) {
       throw new Error(`Application introuvable (id=${data.applicationId}).`);
+    }
+
+    // Droits applicatifs (portée incluse) sur CETTE application, comme l'API acteurs.
+    const allowed = await this.checkPermissions.can(
+      [Permission.ActorWrite],
+      requestor,
+      data.applicationId,
+    );
+    if (!allowed) {
+      throw new Error(
+        insufficientRightsMessage("ActorWrite", data.applicationId),
+      );
     }
 
     const actorTypeId = await this.resolveActorTypeId(data.role, data.type);
@@ -148,7 +168,7 @@ export class ActorsSheetProcessor {
         data.id,
         dto,
         data.applicationId,
-        requestorId,
+        requestor.id,
       );
 
       return { sheet: this.sheetName, row, status: "updated", identifier };
@@ -159,7 +179,7 @@ export class ActorsSheetProcessor {
       isGroup: false,
     });
     await this.validateDto(dto);
-    await this.actorService.create(dto, data.applicationId, requestorId);
+    await this.actorService.create(dto, data.applicationId, requestor.id);
 
     return { sheet: this.sheetName, row, status: "created", identifier };
   }

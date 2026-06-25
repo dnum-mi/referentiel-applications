@@ -80,3 +80,16 @@ export function coerceDate(value: string): string | undefined {
   const parsed = new Date(trimmed);
   return Number.isNaN(parsed.getTime()) ? trimmed : parsed.toISOString();
 }
+
+/**
+ * Motif explicite consigné dans le rapport quand une ligne est refusée faute de droits
+ * suffisants (US #1890). Reprend le nom de la permission exigée et, le cas échéant, l'application
+ * concernée — pour distinguer un refus de droits d'une erreur générique.
+ */
+export function insufficientRightsMessage(
+  permission: string,
+  applicationId?: string,
+): string {
+  const scope = applicationId ? ` sur l'application ${applicationId}` : "";
+  return `Droits insuffisants : permission « ${permission} » requise${scope}.`;
+}

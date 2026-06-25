@@ -7,10 +7,13 @@ jest.mock("src/metadatas/metadatas.service", () => ({
 import * as ExcelJS from "exceljs";
 import type { ApplicationService } from "src/applications/application.service";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
+import type { CheckPermissions } from "src/common/service/check-permissions.service";
 import type { PrismaService } from "src/prisma/prisma.service";
-import type { UserService } from "src/user/user.service";
+import type { Requestor } from "src/user/entities/user.entity";
 import { createEmptyReport } from "../dto/import-report.dto";
 import { ApplicationsSheetProcessor } from "./applications-sheet.processor";
+
+const requestor = { id: "user-1" } as unknown as Requestor;
 
 function buildSheet(
   headers: string[],
@@ -35,17 +38,13 @@ function setup() {
     createApplication: jest.fn().mockResolvedValue({ id: "new-app" }),
     update: jest.fn().mockResolvedValue({ id: "app-1" }),
   };
-  const userService = {
-    findByIdWithRelations: jest
-      .fn()
-      .mockResolvedValue({ id: "user-1", role: "ADMIN" }),
-  };
+  const checkPermissions = { can: jest.fn().mockResolvedValue(true) };
   const processor = new ApplicationsSheetProcessor(
     prisma as unknown as PrismaService,
     applicationService as unknown as ApplicationService,
-    userService as unknown as UserService,
+    checkPermissions as unknown as CheckPermissions,
   );
-  return { processor, prisma, applicationService, userService };
+  return { processor, prisma, applicationService, checkPermissions };
 }
 
 describe("ApplicationsSheetProcessor", () => {
@@ -57,7 +56,7 @@ describe("ApplicationsSheetProcessor", () => {
         ["Identifiant", "Libellé", "Description"],
         [["", "Nouvelle App", "Une description"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -78,7 +77,7 @@ describe("ApplicationsSheetProcessor", () => {
         ["Identifiant", "Libellé", "Description"],
         [["app-1", "App MAJ", "Desc"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -102,7 +101,7 @@ describe("ApplicationsSheetProcessor", () => {
         ],
         [["", "App listes", "Desc", "a, b, c", "R0 - Immédiat (H24)"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -124,7 +123,7 @@ describe("ApplicationsSheetProcessor", () => {
         ["Identifiant", "Libellé", "Description"],
         [["ghost", "Fantôme", "Desc"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -140,7 +139,7 @@ describe("ApplicationsSheetProcessor", () => {
         ["Identifiant", "Libellé", "Description"],
         [["", "X", "Desc"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -154,7 +153,7 @@ describe("ApplicationsSheetProcessor", () => {
     const report = createEmptyReport();
     await processor.process(
       buildSheet(["Libellé", "Description"], [["App", "Desc"]]),
-      "user-1",
+      requestor,
       report,
     );
 
@@ -164,22 +163,41 @@ describe("ApplicationsSheetProcessor", () => {
     expect(report.logs.join(" ")).toMatch(/colonnes manquantes/i);
   });
 
-  it("ne traite pas l'onglet si l'utilisateur courant est introuvable", async () => {
-    const { processor, userService } = setup();
-    userService.findByIdWithRelations.mockResolvedValue(null);
+  it("refuse la création sans la permission globale CreateApplication", async () => {
+    const { processor, checkPermissions, applicationService } = setup();
+    checkPermissions.can.mockResolvedValue(false);
     const report = createEmptyReport();
     await processor.process(
       buildSheet(
         ["Identifiant", "Libellé", "Description"],
-        [["", "App", "Desc"]],
+        [["", "Nouvelle App", "Desc"]],
       ),
-      "user-1",
+      requestor,
       report,
     );
 
-    expect(report.summary.processedSheets).not.toContain(
-      sheetLabels.Applications,
+    expect(report.summary.errors).toBe(1);
+    expect(report.entries[0].message).toMatch(
+      /Droits insuffisants.*CreateApplication/i,
     );
-    expect(report.logs.join(" ")).toMatch(/utilisateur courant introuvable/i);
+    expect(applicationService.createApplication).not.toHaveBeenCalled();
+  });
+
+  it("refuse la mise à jour sans droits AppWrite sur l'application", async () => {
+    const { processor, checkPermissions, applicationService } = setup();
+    checkPermissions.can.mockResolvedValue(false);
+    const report = createEmptyReport();
+    await processor.process(
+      buildSheet(
+        ["Identifiant", "Libellé", "Description"],
+        [["app-1", "App MAJ", "Desc"]],
+      ),
+      requestor,
+      report,
+    );
+
+    expect(report.summary.errors).toBe(1);
+    expect(report.entries[0].message).toMatch(/Droits insuffisants.*AppWrite/i);
+    expect(applicationService.update).not.toHaveBeenCalled();
   });
 });
