@@ -148,10 +148,6 @@ export class RelationRepository implements IRelationRepository {
 
       this.upsertNode(nodesMap, app.id, app.label, app.currentStatus?.status);
 
-      if (depth >= maxDepth) {
-        return;
-      }
-
       const relations = await this.findRelationsForApp(currentAppId);
 
       for (const rel of relations) {
