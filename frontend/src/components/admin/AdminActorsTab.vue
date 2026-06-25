@@ -95,7 +95,7 @@ const tableRows = computed(() =>
 );
 
 function onSort(event: TableSortEvent) {
-  sortColumn.value = event.sortField;
+  sortColumn.value = event.sortField as (typeof headers)[number]["key"];
   isSortDescending.value = event.sortOrder === -1;
 }
 
