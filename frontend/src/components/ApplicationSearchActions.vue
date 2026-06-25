@@ -62,7 +62,7 @@ const hasCreateGlobalReport = computed(() => {
 
 <template>
   <div class="fr-container-fluid" data-testid="application-search-actions">
-    <div aria-live="polite" class="sr-only" role="status">{{ reportStatusMessage }}</div>
+    <output aria-live="polite" class="sr-only">{{ reportStatusMessage }}</output>
 
     <div class="actions">
       <DsfrButton

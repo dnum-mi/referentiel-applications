@@ -170,7 +170,9 @@ onClickOutside(containerEl, () => {
         </button>
       </li>
 
-      <li v-if="!hasResults && displayNoResult" class="no-result" role="option" aria-disabled="true">Aucun résultat</li>
+      <li v-if="!hasResults && displayNoResult" class="no-result" role="option" :aria-selected="false" aria-disabled="true">
+        Aucun résultat
+      </li>
     </ul>
 
     <div class="visually-hidden" aria-live="polite" aria-atomic="true">{{ liveRegionText }}</div>

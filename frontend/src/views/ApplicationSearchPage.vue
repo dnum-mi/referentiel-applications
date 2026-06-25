@@ -35,10 +35,10 @@ const averageIqDisplay = computed(() => {
     <main class="main-content" id="main-content" data-testid="main-content" role="main">
       <h1 class="fr-h1" data-testid="application-search-title">Recherche d'applications</h1>
 
-      <div v-if="isLoading" class="loader" data-testid="application-loader" role="status" aria-live="polite" aria-atomic="true">
+      <output v-if="isLoading" class="loader" data-testid="application-loader" aria-live="polite" aria-atomic="true">
         <AppLoader />
         <span class="sr-only">Chargement des résultats…</span>
-      </div>
+      </output>
 
       <div class="search-actions-wrapper" data-testid="application-search-actions-wrapper">
         <ApplicationSearchActions />

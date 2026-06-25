@@ -66,9 +66,9 @@ const unsubscribe = async (appId: string) => {
     </DsfrTable>
 
     <div v-if="successMessage" class="fr-mt-2w">
-      <div class="fr-alert fr-alert--success" role="status" aria-live="polite">
+      <output class="fr-alert fr-alert--success" aria-live="polite" style="display: block">
         {{ successMessage }}
-      </div>
+      </output>
     </div>
 
     <div v-if="errorMessage" class="fr-mt-2w">

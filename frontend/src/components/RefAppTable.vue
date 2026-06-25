@@ -102,7 +102,7 @@ watch(
 </script>
 
 <template>
-  <div class="fr-table" role="region" :aria-label="`Tableau de ${totalRecords} éléments`">
+  <section class="fr-table" :aria-label="`Tableau de ${totalRecords} éléments`">
     <DataTable
       :value="items"
       :lazy="lazy"
@@ -129,7 +129,7 @@ watch(
       table-style="min-width: 50rem"
     >
       <template #empty>
-        <div class="fr-py-2w fr-text--center" role="status" aria-live="polite">{{ emptyMessage }}</div>
+        <output class="fr-py-2w fr-text--center" aria-live="polite" style="display: block">{{ emptyMessage }}</output>
       </template>
 
       <Column
@@ -152,7 +152,7 @@ watch(
         </template>
       </Column>
     </DataTable>
-  </div>
+  </section>
 </template>
 
 <style scoped>
