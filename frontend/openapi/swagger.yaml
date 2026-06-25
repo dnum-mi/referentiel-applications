@@ -5814,22 +5814,22 @@ components:
       properties:
         technicalMaturity:
           type: number
-          minimum: 0
+          minimum: 1
           maximum: 5
           example: 3.2
-          description: Technical maturity score (0-5)
+          description: Technical maturity score (1-5). Omit / null = not rated.
         businessMaturity:
           type: number
-          minimum: 0
+          minimum: 1
           maximum: 5
           example: 4.5
-          description: Business maturity score (0-5)
-        costMaturity:
+          description: Business maturity score (1-5). Omit / null = not rated.
+        costContainment:
           type: number
-          minimum: 0
+          minimum: 1
           maximum: 5
           example: 2.75
-          description: Cost maturity score (0-5)
+          description: Cost containment score (1-5). Omit / null = not rated.
         millesime:
           type: number
           minimum: 2000
@@ -7835,22 +7835,22 @@ components:
       properties:
         technicalMaturity:
           type: number
-          minimum: 0
+          minimum: 1
           maximum: 5
           example: 3.2
-          description: Technical maturity score (0-5)
+          description: Technical maturity score (1-5). Omit / null = not rated.
         businessMaturity:
           type: number
-          minimum: 0
+          minimum: 1
           maximum: 5
           example: 4.5
-          description: Business maturity score (0-5)
-        costMaturity:
+          description: Business maturity score (1-5). Omit / null = not rated.
+        costContainment:
           type: number
-          minimum: 0
+          minimum: 1
           maximum: 5
           example: 2.75
-          description: Cost maturity score (0-5)
+          description: Cost containment score (1-5). Omit / null = not rated.
         millesime:
           type: number
           minimum: 2000

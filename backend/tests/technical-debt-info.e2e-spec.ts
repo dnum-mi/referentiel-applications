@@ -34,7 +34,7 @@ describe("TechnicalDebtInfo", () => {
       .send({
         technicalMaturity: 3.25,
         businessMaturity: 4.1,
-        costMaturity: 2.75,
+        costContainment: 2.75,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
@@ -42,7 +42,7 @@ describe("TechnicalDebtInfo", () => {
     expect(response.body.id).toBeDefined();
     expect(response.body.technicalMaturity).toEqual(3.25);
     expect(response.body.businessMaturity).toEqual(4.1);
-    expect(response.body.costMaturity).toEqual(2.75);
+    expect(response.body.costContainment).toEqual(2.75);
     // Le millésime est renseigné par défaut avec l'année courante.
     expect(response.body.millesime).toEqual(new Date().getFullYear());
   });
@@ -86,7 +86,7 @@ describe("TechnicalDebtInfo", () => {
     expect(latest.id).toBeDefined();
     expect(latest.technicalMaturity).toEqual(3.25);
     expect(latest.businessMaturity).toEqual(4.1);
-    expect(latest.costMaturity).toEqual(2.75);
+    expect(latest.costContainment).toEqual(2.75);
   });
 
   it("/POST applications/:applicationId/technical-debt-info - should add a new historic entry", async () => {
@@ -94,14 +94,14 @@ describe("TechnicalDebtInfo", () => {
       .post(`/applications/${application.id}/technical-debt-info`)
       .send({
         technicalMaturity: 4.5,
-        costMaturity: 0,
+        // costContainment omis → non noté (null), cf. ticket #1900.
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
 
     expect(response.body.id).toBeDefined();
     expect(response.body.technicalMaturity).toEqual(4.5);
-    expect(response.body.costMaturity).toEqual(0);
+    expect(response.body.costContainment ?? null).toBeNull();
 
     const listResponse = await request(app().getHttpServer())
       .get(`/applications/${application.id}/technical-debt-info`)
@@ -123,11 +123,11 @@ describe("TechnicalDebtInfo", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(400);
 
-    // Test value < 0
+    // Test value < 1 (l'échelle est désormais 1-5 ; en deçà = non noté/null, cf. #1900).
     await request(app().getHttpServer())
       .post(`/applications/${newApplication.id}/technical-debt-info`)
       .send({
-        businessMaturity: -1,
+        businessMaturity: 0.5,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(400);
@@ -213,7 +213,7 @@ describe("TechnicalDebts", () => {
       .send({
         technicalMaturity: 2.2,
         businessMaturity: 3.15,
-        costMaturity: 4.05,
+        costContainment: 4.05,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
@@ -223,7 +223,7 @@ describe("TechnicalDebts", () => {
       .send({
         technicalMaturity: 1.1,
         businessMaturity: 2.25,
-        costMaturity: 3.5,
+        costContainment: 3.5,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);

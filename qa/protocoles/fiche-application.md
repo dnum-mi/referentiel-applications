@@ -88,3 +88,13 @@
 
 - **Action** : onglet `tab-modifications`.
 - **Résultat attendu** : l'historique d'audit (qui/quoi/quand) de l'application est affiché.
+
+### FIC-15 — Onglet Informations générales : libellé « Maîtrise des coûts » ✅
+
+- **Action** : sur une application disposant d'une évaluation de dette technique, ouvrir l'onglet `tab-infos` et consulter la carte « Dette technique ».
+- **Résultat attendu** : la troisième dimension est libellée **« Maîtrise des coûts »** (renommée depuis « Maturité des coûts », cf. ticket #1900) ; l'ancien libellé n'apparaît plus.
+
+### FIC-16 — Onglet Informations générales : score non noté ✅
+
+- **Action** : sur une application dont un axe de maturité n'est pas renseigné (`null`, p. ex. maîtrise des coûts), ouvrir l'onglet `tab-infos` et consulter la carte « Dette technique ».
+- **Résultat attendu** : le badge de l'axe affiche **« Non notée »** (et non « 0/5 »). L'échelle est désormais 1-5 ; toute valeur < 1 est traitée comme non notée (`null`), cf. ticket #1900.

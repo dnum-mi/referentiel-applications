@@ -146,6 +146,15 @@ export class ApiClient {
     if (found) await this.del(`/mdit-campaigns/${found.id}`);
   }
 
+  /** Évaluations de dette technique d'une application (plus récente d'abord), paginées. */
+  applicationTechnicalDebtInfo(
+    appId: string,
+  ): Promise<Paginated<{ id: string; costContainment?: number }> | null> {
+    return this.get<Paginated<{ id: string; costContainment?: number }>>(
+      `/applications/${appId}/technical-debt-info?pageSize=1&page=0`,
+    );
+  }
+
   /** Crée une évaluation de dette technique (campagne `millesime`) pour une application. */
   createTechnicalDebtInfo(
     appId: string,

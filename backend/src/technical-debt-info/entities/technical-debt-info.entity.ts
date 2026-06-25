@@ -3,6 +3,6 @@ export class TechnicalDebtInfo {
   applicationId: string;
   technicalMaturity?: number | null;
   businessMaturity?: number | null;
-  costMaturity?: number | null;
+  costContainment?: number | null;
   millesime?: number | null;
 }

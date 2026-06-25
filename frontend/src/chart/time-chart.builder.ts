@@ -219,8 +219,8 @@ export class TimeChartBuilder {
       .append("circle")
       .attr("cx", (d) => x(d.technicalDebtInfo?.businessMaturity ?? 0))
       .attr("cy", (d) => y(d.technicalDebtInfo?.technicalMaturity ?? 0))
-      .attr("r", (d) => radius(d.technicalDebtInfo?.costMaturity ?? 0))
-      .attr("fill", (d) => color(d.technicalDebtInfo?.costMaturity ?? 0))
+      .attr("r", (d) => radius(d.technicalDebtInfo?.costContainment ?? 0))
+      .attr("fill", (d) => color(d.technicalDebtInfo?.costContainment ?? 0))
       .attr("opacity", 0.9)
       .attr("stroke", "#9F0126")
       .attr("stroke-width", 0.6)
@@ -235,7 +235,7 @@ export class TimeChartBuilder {
               `${shortNameHtml}<br/>` +
               `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}<br/>` +
               `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}<br/>` +
-              `Coût MCO: ${d.technicalDebtInfo?.costMaturity ?? "-"}`,
+              `Coût MCO: ${d.technicalDebtInfo?.costContainment ?? "-"}`,
           );
       })
       .on("mousemove", (event) => {
@@ -251,7 +251,7 @@ export class TimeChartBuilder {
     return this;
   }
 
-  /** Barre de dégradé couleur MCO en bas à droite (jaune → rouge, valeurs 0-5) */
+  /** Barre de dégradé couleur MCO en bas à droite (jaune → rouge, valeurs 1-5) */
   drawColorLegend(): this {
     const { color } = this.scales;
     const { plotWidth, plotHeight } = this.layout;
@@ -270,7 +270,7 @@ export class TimeChartBuilder {
       .attr("y1", "0%")
       .attr("y2", "0%");
 
-    gradient.append("stop").attr("offset", "0%").attr("stop-color", color(0));
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", color(1));
     gradient.append("stop").attr("offset", "100%").attr("stop-color", color(5));
 
     legend
@@ -282,7 +282,7 @@ export class TimeChartBuilder {
       .attr("ry", 2);
 
     const legendAxis = d3
-      .axisBottom(d3.scaleLinear().domain([0, 5]).range([0, legendWidth]))
+      .axisBottom(d3.scaleLinear().domain([1, 5]).range([0, legendWidth]))
       .ticks(5)
       .tickFormat((d) => `${d}`)
       .tickSize(legendHeight);
