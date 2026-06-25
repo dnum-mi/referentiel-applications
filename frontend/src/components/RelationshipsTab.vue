@@ -141,6 +141,7 @@ onMounted(async () => {
   try {
     await relationsStore.fetchRelationsByApplication(props.application.id);
   } catch (error) {
+    console.error(error);
     toaster.addErrorMessage("Erreur lors du chargement des relations.");
   } finally {
     isLoading.value = false;

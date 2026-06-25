@@ -122,17 +122,27 @@ export class CompliancesSheetProcessor {
     for (const { key, coerce } of FIELDS) {
       const raw = getCell(columnLabels[key] ?? key);
       if (raw === "") continue;
-      const value =
-        coerce === "boolean"
-          ? coerceOuiNon(raw)
-          : coerce === "number"
-            ? coerceNumber(raw)
-            : coerce === "date"
-              ? coerceDate(raw)
-              : raw;
+      const value = this.coerceValue(coerce, raw);
       if (value !== undefined) values[key] = value;
     }
     return values;
+  }
+
+  /** Applique la coercion adaptée au type de champ. */
+  private coerceValue(
+    coerce: Coercion,
+    raw: string,
+  ): string | number | boolean | undefined {
+    switch (coerce) {
+      case "boolean":
+        return coerceOuiNon(raw);
+      case "number":
+        return coerceNumber(raw);
+      case "date":
+        return coerceDate(raw);
+      default:
+        return raw;
+    }
   }
 
   private async processRow(

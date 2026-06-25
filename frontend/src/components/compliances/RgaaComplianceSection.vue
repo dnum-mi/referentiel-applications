@@ -5,8 +5,7 @@ import type { CreateRgaaComplianceDto, RgaaComplianceDto } from "@/client/types.
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import { Permission } from "@/client/types.gen";
-import { formatDateFR } from "@/composables/use-date";
-import { toDateInputValue, toISODateTime } from "@/composables/use-date";
+import { formatDateFR, toDateInputValue, toISODateTime } from "@/composables/use-date";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 import type { ApplicationWithPerms } from "@/models/Application";
@@ -80,41 +79,54 @@ function closeModal() {
   editingItem.value = null;
 }
 
-async function save() {
-  submitting.value = true;
-  const payload: CreateRgaaComplianceDto = {
+function buildPayload(): CreateRgaaComplianceDto {
+  return {
     service_url: form.value.service_url && form.value.service_url !== "" ? String(form.value.service_url) : null,
     accessibility_url: form.value.accessibility_url && form.value.accessibility_url !== "" ? String(form.value.accessibility_url) : null,
     score_percentage:
       form.value.score_percentage != null && form.value.score_percentage !== "" ? Number(form.value.score_percentage) : null,
     audit_date: form.value.audit_date ? (toISODateTime(String(form.value.audit_date)) ?? null) : null,
   };
+}
+
+async function saveUpdate(payload: CreateRgaaComplianceDto, editing: RgaaComplianceDto) {
+  const res = await rgaaControllerUpdate({
+    path: { applicationId: props.applicationId, id: editing.id },
+    body: payload,
+  });
+  const idx = items.value.findIndex((i) => i.id === editing.id);
+  if (idx !== -1 && res.data) items.value[idx] = res.data;
+  toaster.addSuccessMessage("Conformité RGAA mise à jour avec succès !");
+}
+
+async function saveCreate(payload: CreateRgaaComplianceDto) {
+  const res = await rgaaControllerCreate({
+    path: { applicationId: props.applicationId },
+    body: payload,
+  });
+  if (res?.error?.message) {
+    toaster.addErrorMessage(res.error.message);
+  }
+  if (res.data) {
+    items.value.push(res.data);
+    toaster.addSuccessMessage("Conformité RGAA créée avec succès !");
+  }
+}
+
+async function save() {
+  submitting.value = true;
+  const payload = buildPayload();
+  const editing = editingItem.value;
   try {
-    if (editingItem.value) {
-      const res = await rgaaControllerUpdate({
-        path: { applicationId: props.applicationId, id: editingItem.value.id },
-        body: payload,
-      });
-      const idx = items.value.findIndex((i) => i.id === editingItem.value!.id);
-      if (idx !== -1 && res.data) items.value[idx] = res.data;
-      toaster.addSuccessMessage("Conformité RGAA mise à jour avec succès !");
+    if (editing) {
+      await saveUpdate(payload, editing);
     } else {
-      const res = await rgaaControllerCreate({
-        path: { applicationId: props.applicationId },
-        body: payload,
-      });
-      if (res?.error?.message) {
-        toaster.addErrorMessage(res.error.message);
-      }
-      if (res.data) {
-        items.value.push(res.data);
-        toaster.addSuccessMessage("Conformité RGAA créée avec succès !");
-      }
+      await saveCreate(payload);
     }
     closeModal();
   } catch {
     toaster.addErrorMessage(
-      editingItem.value ? "Erreur lors de la modification de la conformité RGAA." : "Erreur lors de la création de la conformité RGAA.",
+      editing ? "Erreur lors de la modification de la conformité RGAA." : "Erreur lors de la création de la conformité RGAA.",
     );
   } finally {
     submitting.value = false;

@@ -161,17 +161,15 @@ async function saveOrganization() {
           body: toPayload() as PatchOrganizationDto,
         });
 
-    if (!response.response.ok) {
-      if (response.response.status === 400) {
-        const error = response.error as BadRequestResponse;
-        errorMessage.value = error.message.join(", ");
-      } else {
-        errorMessage.value = "Erreur lors de la sauvegarde de l'organisation";
-      }
-    } else {
+    if (response.response.ok) {
       toaster.addSuccessMessage(isCreateMode.value ? "Organisation créée avec succès" : "Organisation mise à jour avec succès");
       closeEditModal();
       emit("fetchOrganizations");
+    } else if (response.response.status === 400) {
+      const error = response.error as BadRequestResponse;
+      errorMessage.value = error.message.join(", ");
+    } else {
+      errorMessage.value = "Erreur lors de la sauvegarde de l'organisation";
     }
   } finally {
     isSaving.value = false;
@@ -189,12 +187,12 @@ async function deleteOrganization() {
       path: { id: props.organization!.id },
     });
 
-    if (!response.response.ok) {
-      toaster.addErrorMessage("Erreur lors de la suppression de l'organisation");
-    } else {
+    if (response.response.ok) {
       toaster.addSuccessMessage("Organisation supprimée avec succès");
       closeDeleteModal();
       emit("fetchOrganizations");
+    } else {
+      toaster.addErrorMessage("Erreur lors de la suppression de l'organisation");
     }
   } finally {
     isDeleting.value = false;

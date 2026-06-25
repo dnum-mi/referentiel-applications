@@ -14,7 +14,7 @@ const options = computed(() =>
 // La campagne la plus récente est présentée par défaut ; sinon celle choisie.
 const selected = computed(() => {
   const current = filters.value.millesime ?? campaigns.value[0]?.year;
-  return current != null ? String(current) : "";
+  return current == null ? "" : String(current);
 });
 
 function onSelect(value: string | number): void {

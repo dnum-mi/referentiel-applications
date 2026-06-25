@@ -55,7 +55,7 @@ export async function login(page: Page, userData = keycloakDataAdmin) {
 }
 
 export function parseFirstNumber(text: string): number {
-  const match = text.match(/\d+/);
+  const match = /\d+/.exec(text);
   return match ? Number.parseInt(match[0], 10) : 0;
 }
 

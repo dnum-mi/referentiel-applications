@@ -33,10 +33,8 @@ export class TagsService extends BaseService<Tag> {
     });
 
     if (existingTags.length !== tagNames.length) {
-      const existingNames = existingTags.map((tag) => tag.name);
-      const missingNames = tagNames.filter(
-        (name) => !existingNames.includes(name),
-      );
+      const existingNames = new Set(existingTags.map((tag) => tag.name));
+      const missingNames = tagNames.filter((name) => !existingNames.has(name));
 
       throw new BadRequestException({
         message: "Certains tags n’existent pas.",

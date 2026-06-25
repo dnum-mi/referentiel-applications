@@ -33,7 +33,15 @@ const permDict = {
 };
 const permOrder = props.permOrder;
 
-const foundIndex = permOrder.findIndex((option) => option === (props.write ? "Write" : props.read ? "Read" : "none"));
+let currentPermission: PermissionValue;
+if (props.write) {
+  currentPermission = "Write";
+} else if (props.read) {
+  currentPermission = "Read";
+} else {
+  currentPermission = "none";
+}
+const foundIndex = permOrder.indexOf(currentPermission);
 const permIndex = ref(foundIndex === -1 ? 0 : foundIndex);
 
 function togglePermission() {

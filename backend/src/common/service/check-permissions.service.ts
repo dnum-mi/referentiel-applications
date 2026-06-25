@@ -53,11 +53,11 @@ export class CheckPermissions {
         include: { actorType: { include: { appPermissions: true } } },
         distinct: ["actorTypeId"],
       }),
-      userOrganization !== null
-        ? this.prisma.$queryRawUnsafe<{ actorTypeId: string }[]>(
+      userOrganization === null
+        ? Promise.resolve([])
+        : this.prisma.$queryRawUnsafe<{ actorTypeId: string }[]>(
             this.queryBuilderGroupActor.buildByApplication(applicationId, user),
-          )
-        : Promise.resolve([]),
+          ),
     ]);
 
     const groupActorTypes =

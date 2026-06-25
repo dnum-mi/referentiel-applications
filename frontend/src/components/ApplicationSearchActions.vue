@@ -43,6 +43,7 @@ async function exportToExcel() {
   try {
     await applicationStore.downloadExcel(filters.value);
   } catch (error) {
+    console.error("Erreur lors de l'exportation Excel", error);
     toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }
 }
@@ -62,7 +63,7 @@ const hasCreateGlobalReport = computed(() => {
 
 <template>
   <div class="fr-container-fluid" data-testid="application-search-actions">
-    <div aria-live="polite" class="sr-only" role="status">{{ reportStatusMessage }}</div>
+    <output aria-live="polite" class="sr-only">{{ reportStatusMessage }}</output>
 
     <div class="actions">
       <DsfrButton
