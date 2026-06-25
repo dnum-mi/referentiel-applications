@@ -50,12 +50,29 @@ export class AdminPage extends BasePage {
   }
 
   /**
+   * Cible la LIGNE dont la cellule Email vaut EXACTEMENT `email`.
+   * Le matching par sous-chaîne (`hasText`) ne suffit pas : `admin@example.com` est contenu dans
+   * `scope-admin@example.com`, ce qui ramènerait deux lignes (cf. #1891). On scope donc sur la
+   * cellule email en correspondance exacte.
+   */
+  private userRow(email: string) {
+    // Cellule email dont le texte est EXACTEMENT `email` (regex ancrée) : la colonne Email
+    // rend uniquement l'adresse, donc `^email$` distingue `admin@example.com` de `scope-admin@example.com`.
+    const escaped = email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return this.usersTable()
+      .locator("tbody tr")
+      .filter({
+        has: this.page.locator("td", { hasText: new RegExp(`^${escaped}$`) }),
+      });
+  }
+
+  /**
    * Ouvre le modal d'édition de l'utilisateur dont la LIGNE contient l'email.
    * (On scope à la ligne pour ne jamais éditer un autre compte — ex. l'admin — par erreur.)
    */
   async openEditUser(email: string): Promise<void> {
     await this.expectUserRow(email);
-    const row = this.usersTable().locator("tr", { hasText: email });
+    const row = this.userRow(email);
     await row.getByTestId("admin-user-edit-btn").first().click();
     await expect(this.editModal()).toBeVisible();
     // Modal pleinement rendu (footer présent) avant toute interaction → évite les races de re-render.
@@ -188,7 +205,7 @@ export class AdminPage extends BasePage {
   /** Impersonne l'utilisateur dont la LIGNE contient l'email (recharge l'app sous son identité). */
   async impersonateUser(email: string): Promise<void> {
     await this.expectUserRow(email);
-    const row = this.usersTable().locator("tr", { hasText: email });
+    const row = this.userRow(email);
     const impersonated = this.page
       .waitForResponse(
         (r) =>
@@ -210,7 +227,7 @@ export class AdminPage extends BasePage {
   /** Vérifie qu'aucun bouton d'impersonation n'est proposé sur la ligne de `email` (ex. soi-même). */
   async expectImpersonateUnavailable(email: string): Promise<void> {
     await this.expectUserRow(email);
-    const row = this.usersTable().locator("tr", { hasText: email });
+    const row = this.userRow(email);
     await expect(row.getByTestId("admin-user-impersonate-btn")).toHaveCount(0);
   }
 
