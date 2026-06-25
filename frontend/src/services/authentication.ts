@@ -1,7 +1,7 @@
 import { UserManager } from "oidc-client-ts";
 import { getConfig } from "./config";
 
-const FRONTEND_URL = window.location.origin;
+const FRONTEND_URL = globalThis.location.origin;
 
 const config = await getConfig();
 if (config instanceof Error) {

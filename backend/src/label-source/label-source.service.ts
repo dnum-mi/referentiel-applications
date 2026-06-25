@@ -15,7 +15,7 @@ export class LabelSourceService extends BaseService<LabelSource> {
     filters?: LabelSourceFiltersDto,
   ): Promise<PaginatedResponseDto<LabelSource>> {
     const where: Prisma.LabelSourceWhereInput = {};
-    if (filters && filters.source) {
+    if (filters?.source) {
       where.source = { contains: filters.source, mode: "insensitive" };
     }
 

@@ -13,7 +13,7 @@ import {
 
 @Injectable()
 export class ApplicationRepository implements IApplicationRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   public async create(
     application: Omit<CreateApplicationDto, "status" | "labels">,
@@ -237,7 +237,7 @@ export class ApplicationRepository implements IApplicationRepository {
         label: true,
         shortName: true,
         technicalDebtInfo: {
-          where: millesime != null ? { millesime } : undefined,
+          where: millesime == null ? undefined : { millesime },
           orderBy: { createdAt: "desc" as const },
           take: 1,
           select: {

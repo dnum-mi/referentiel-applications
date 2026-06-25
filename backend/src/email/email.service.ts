@@ -142,6 +142,16 @@ export class EmailService {
     }
   }
 
+  private getActionLabel(action: string): string {
+    if (action === "add") {
+      return "Ajout";
+    }
+    if (action === "update") {
+      return "Modification";
+    }
+    return "Suppression";
+  }
+
   async sendDailyDigestNotification(
     recipient: string,
     applications: Array<{
@@ -190,12 +200,7 @@ export class EmailService {
                 minute: "2-digit",
               },
             );
-            const actionLabel =
-              change.action === "add"
-                ? "Ajout"
-                : change.action === "update"
-                  ? "Modification"
-                  : "Suppression";
+            const actionLabel = this.getActionLabel(change.action);
             return `<li style="margin-bottom: 8px;"><strong>${time}</strong> - ${actionLabel}: ${change.description}</li>`;
           })
           .join("");
@@ -395,6 +400,10 @@ export class EmailService {
         html,
       });
     } catch (error) {
+      this.logger.error(
+        `Failed to send report status update email to ${recipientEmail}:`,
+        error,
+      );
       throw new MailSendException(
         `Failed to send report status update email to ${recipientEmail}:`,
       );

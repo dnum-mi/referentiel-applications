@@ -323,6 +323,68 @@ function closeCancelModal() {
   cancelModalOpen.value = false;
 }
 
+function validateMoaActor(): string[] {
+  const moaErrors: string[] = [];
+
+  if (!moaActor.value.organizationId) {
+    moaErrors.push("L'organisation MOA est obligatoire.");
+    moaOrganizationError.value = "L'organisation MOA est obligatoire.";
+  }
+  if (!moaActor.value.email) {
+    moaErrors.push("L'email du contact MOA est obligatoire.");
+    moaEmailError.value = "L'email du contact MOA est obligatoire.";
+  } else if (!isEmailValid(moaActor.value.email)) {
+    moaErrors.push("L'email du contact MOA est invalide.");
+    moaEmailError.value = "L'email du contact MOA est invalide.";
+  }
+  if (!moaActor.value.firstname) {
+    moaErrors.push("Le prénom du contact MOA est obligatoire.");
+    moaFirstnameError.value = "Le prénom du contact MOA est obligatoire.";
+  }
+  if (!moaActor.value.lastname) {
+    moaErrors.push("Le nom du contact MOA est obligatoire.");
+    moaLastnameError.value = "Le nom du contact MOA est obligatoire.";
+  }
+
+  return moaErrors;
+}
+
+function validateMoeActor(): string[] {
+  const moeErrors: string[] = [];
+
+  if (!moeActor.value.organizationId) {
+    moeErrors.push("L'organisation MOE est obligatoire.");
+    moeOrganizationError.value = "L'organisation MOE est obligatoire.";
+  }
+  if (!moeActor.value.email) {
+    moeErrors.push("L'email du contact MOE est obligatoire.");
+    moeEmailError.value = "L'email du contact MOE est obligatoire.";
+  } else if (!isEmailValid(moeActor.value.email)) {
+    moeErrors.push("L'email du contact MOE est invalide.");
+    moeEmailError.value = "L'email du contact MOE est invalide.";
+  }
+  if (!moeActor.value.firstname) {
+    moeErrors.push("Le prénom du contact MOE est obligatoire.");
+    moeFirstnameError.value = "Le prénom du contact MOE est obligatoire.";
+  }
+  if (!moeActor.value.lastname) {
+    moeErrors.push("Le nom du contact MOE est obligatoire.");
+    moeLastnameError.value = "Le nom du contact MOE est obligatoire.";
+  }
+
+  return moeErrors;
+}
+
+function validateActors(): boolean {
+  const moaErrors = validateMoaActor();
+  const moeErrors = validateMoeActor();
+
+  moaError.value = moaErrors.length > 0 ? moaErrors.join(" ") : undefined;
+  moeError.value = moeErrors.length > 0 ? moeErrors.join(" ") : undefined;
+
+  return moeErrors.length > 0 || moaErrors.length > 0;
+}
+
 function isFormValid(): boolean {
   labelError.value = undefined;
   descriptionError.value = undefined;
@@ -347,54 +409,8 @@ function isFormValid(): boolean {
     hasError = true;
   }
 
-  if (isCreateMode.value) {
-    const moaErrors: string[] = [];
-    const moeErrors: string[] = [];
-
-    if (!moaActor.value.organizationId) {
-      moaErrors.push("L'organisation MOA est obligatoire.");
-      moaOrganizationError.value = "L'organisation MOA est obligatoire.";
-    }
-    if (!moaActor.value.email) {
-      moaErrors.push("L'email du contact MOA est obligatoire.");
-      moaEmailError.value = "L'email du contact MOA est obligatoire.";
-    } else if (!isEmailValid(moaActor.value.email)) {
-      moaErrors.push("L'email du contact MOA est invalide.");
-      moaEmailError.value = "L'email du contact MOA est invalide.";
-    }
-    if (!moaActor.value.firstname) {
-      moaErrors.push("Le prénom du contact MOA est obligatoire.");
-      moaFirstnameError.value = "Le prénom du contact MOA est obligatoire.";
-    }
-    if (!moaActor.value.lastname) {
-      moaErrors.push("Le nom du contact MOA est obligatoire.");
-      moaLastnameError.value = "Le nom du contact MOA est obligatoire.";
-    }
-    if (!moeActor.value.organizationId) {
-      moeErrors.push("L'organisation MOE est obligatoire.");
-      moeOrganizationError.value = "L'organisation MOE est obligatoire.";
-    }
-    if (!moeActor.value.email) {
-      moeErrors.push("L'email du contact MOE est obligatoire.");
-      moeEmailError.value = "L'email du contact MOE est obligatoire.";
-    } else if (!isEmailValid(moeActor.value.email)) {
-      moeErrors.push("L'email du contact MOE est invalide.");
-      moeEmailError.value = "L'email du contact MOE est invalide.";
-    }
-    if (!moeActor.value.firstname) {
-      moeErrors.push("Le prénom du contact MOE est obligatoire.");
-      moeFirstnameError.value = "Le prénom du contact MOE est obligatoire.";
-    }
-    if (!moeActor.value.lastname) {
-      moeErrors.push("Le nom du contact MOE est obligatoire.");
-      moeLastnameError.value = "Le nom du contact MOE est obligatoire.";
-    }
-    if (moeErrors.length > 0 || moaErrors.length > 0) {
-      hasError = true;
-    }
-
-    moaError.value = moaErrors.length > 0 ? moaErrors.join(" ") : undefined;
-    moeError.value = moeErrors.length > 0 ? moeErrors.join(" ") : undefined;
+  if (isCreateMode.value && validateActors()) {
+    hasError = true;
   }
 
   return !hasError;
@@ -488,7 +504,14 @@ async function handleUpdate() {
     emit("success", props.initialData as ApplicationDto);
   } catch (error) {
     const raw = error && typeof error === "object" && "message" in error ? (error as { message?: unknown }).message : undefined;
-    const message = Array.isArray(raw) ? raw.join(", ") : typeof raw === "string" ? raw : "Une erreur est survenue";
+    let message: string;
+    if (Array.isArray(raw)) {
+      message = raw.join(", ");
+    } else if (typeof raw === "string") {
+      message = raw;
+    } else {
+      message = "Une erreur est survenue";
+    }
     toaster.addErrorMessage(message);
   }
 }

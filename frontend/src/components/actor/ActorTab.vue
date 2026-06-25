@@ -111,13 +111,13 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
   actorModal.closeModal();
 
   try {
-    if (!actor.id) {
+    if (actor.id) {
+      await updateActor(actor, props.application.id, actor.id);
+    } else {
       await api.applicationActorsControllerCreate({
         path: { applicationId: props.application.id },
         body: actor,
       });
-    } else {
-      await updateActor(actor, props.application.id, actor.id);
     }
     await fetchActorsByApplication(props.application.id);
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");

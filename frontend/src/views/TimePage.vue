@@ -34,7 +34,7 @@ async function loadTechnicalDebtPoints() {
   try {
     // Sans choix explicite, on présente la campagne la plus récente.
     const millesime = filters.value.millesime ?? latestYear.value;
-    await searchApplications({ pageSize: 0, ...(millesime != null ? { millesime } : undefined) });
+    await searchApplications({ pageSize: 0, ...(millesime == null ? undefined : { millesime }) });
   } catch {
     technicalDebtPoints.value = [];
   } finally {

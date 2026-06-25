@@ -49,7 +49,8 @@ export function useRelationManager(applicationId: string) {
 
   function getRelationLabelForSide(type: RelationType, isSource: boolean): string {
     const rel = relationTypes[type];
-    return rel ? (isSource ? rel.source : rel.target) : type;
+    if (!rel) return type;
+    return isSource ? rel.source : rel.target;
   }
 
   function editRelation(rel: RelationDto) {

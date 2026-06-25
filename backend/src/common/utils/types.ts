@@ -31,7 +31,7 @@ export const AppPermissionsRecord = {
   AppWritePriority: null,
 } as const satisfies Record<APP_PERMISSIONS, null>;
 
-export const AppPermissionsValues: APP_PERMISSIONS[] = Object.keys(
+export const AppPermissionsValues = Object.keys(
   AppPermissionsRecord,
 ) as APP_PERMISSIONS[];
 

@@ -3,6 +3,22 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
 
+async function countApplicationsByMonth(): Promise<CountByMonthDto[]> {
+  const response = await api.applicationControllerCountByMonth();
+  if (!response.response.ok || !response.data) {
+    throw new Error("Erreur lors de la récupération des applications par mois");
+  }
+  return response.data;
+}
+
+async function countApplicationsByIq(): Promise<CountByIqDto[]> {
+  const response = await api.applicationControllerCountByIq();
+  if (!response.response.ok || !response.data) {
+    throw new Error("Erreur lors de la récupération des applications par IQ");
+  }
+  return response.data;
+}
+
 export const useStatisticsStore = defineStore("statisticsStore", () => {
   const totalApplications = ref<number | null>(null);
   const isLoading = ref(false);
@@ -13,22 +29,6 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
   async function countApplications() {
     const response = await api.applicationControllerSearch();
     totalApplications.value = response.data?.total ?? 0;
-  }
-
-  async function countApplicationsByMonth(): Promise<CountByMonthDto[]> {
-    const response = await api.applicationControllerCountByMonth();
-    if (!response.response.ok || !response.data) {
-      throw new Error("Erreur lors de la récupération des applications par mois");
-    }
-    return response.data;
-  }
-
-  async function countApplicationsByIq(): Promise<CountByIqDto[]> {
-    const response = await api.applicationControllerCountByIq();
-    if (!response.response.ok || !response.data) {
-      throw new Error("Erreur lors de la récupération des applications par IQ");
-    }
-    return response.data;
   }
 
   async function fetchIqStats(from?: string, to?: string, groupBy: "day" | "week" | "month" | "year" = "month") {

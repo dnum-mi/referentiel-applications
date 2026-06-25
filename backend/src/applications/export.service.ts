@@ -57,11 +57,11 @@ export class ApplicationExportService {
     }
 
     // Get full relations for the filtered applications
-    const filteredIds = allMatchingApps.results.map((app) => app.id);
+    const filteredIds = new Set(allMatchingApps.results.map((app) => app.id));
     const applicationsWithRelations =
       await this.repository.findAllWithFullRelations();
     const filteredApplications = applicationsWithRelations.filter((app) =>
-      filteredIds.includes(app.id),
+      filteredIds.has(app.id),
     );
 
     return this.exportApplicationsUseCase.executeWithApps(filteredApplications);

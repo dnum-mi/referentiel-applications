@@ -80,7 +80,7 @@ function onPage(event: DataTablePageEvent) {
 
 function onColumnResize(event: any) {
   if (event.element && event.element.style) {
-    const field = event.element.getAttribute("data-p-column-field") || event.element.getAttribute("aria-label");
+    const field = event.element.dataset.pColumnField || event.element.getAttribute("aria-label");
     const width = event.element.style.width;
     if (field && width) {
       emit("columnResize", { field, width });

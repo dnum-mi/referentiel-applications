@@ -43,6 +43,7 @@ async function exportToExcel() {
   try {
     await applicationStore.downloadExcel(filters.value);
   } catch (error) {
+    console.error("Erreur lors de l'exportation Excel", error);
     toaster.addErrorMessage("Une erreur est survenue lors de l'exportation Excel. Veuillez réessayer.");
   }
 }
