@@ -1,6 +1,12 @@
 import { test as base } from "@playwright/test";
 import { test, expect } from "../fixtures/test";
-import { AdminPage, ApplicationPage, loginAs } from "../pom";
+import {
+  AdminPage,
+  ApplicationPage,
+  HistoryPage,
+  MetadataDetailPage,
+  loginAs,
+} from "../pom";
 import { captureStepScreenshot } from "../support/screenshots";
 
 const USER_EMAIL = "user@example.com";
@@ -138,13 +144,17 @@ test.describe("Permissions & rôles", () => {
 
     const ctx = await browser.newContext();
     try {
-      // Droit d'écriture accordé globalement (robuste quel que soit le scope/acteur).
       await data.setUserAdditionalPermissions(USER_EMAIL, ["AppWrite"]);
       const userPage = await ctx.newPage();
       await loginAs(userPage, "user");
       const fiche = new ApplicationPage(userPage);
-      await fiche.open(app!.id, "tab-infos");
-      await fiche.expectInfoEditAvailable();
+      // Les workers parallèles (PRM-04/05 sur un autre navigateur) peuvent appeler
+      // resetUser au même moment → re-appliquer les permissions avant chaque tentative.
+      await expect(async () => {
+        await data.setUserAdditionalPermissions(USER_EMAIL, ["AppWrite"]);
+        await fiche.open(app!.id, "tab-infos");
+        await fiche.expectInfoEditAvailable();
+      }).toPass({ timeout: 45000 });
     } finally {
       await ctx.close();
       await data.resetUser(USER_EMAIL);
@@ -159,6 +169,40 @@ test.describe("Permissions & rôles", () => {
       expect(user?.additionalPermissions).not.toContain("AppWrite");
     } finally {
       await data.resetUser(USER_EMAIL);
+    }
+  });
+
+  test("PRM-12 - modifier la matrice des droits génère une entrée dans l'historique", async ({
+    page,
+    data,
+  }) => {
+    const matrix = await data.permsMatrix();
+    test.skip(!matrix || matrix.length === 0, "Matrice des permissions vide");
+
+    const snapshot = structuredClone(matrix!);
+    try {
+      await loginAs(page, "admin");
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.openPermsMatrixTab();
+      await admin.editMatrixAndSave();
+
+      const history = new HistoryPage(page);
+      await history.open();
+      await history.expectHasRows();
+      await history.expectFirstRowContains(
+        "Modification de la matrice des droits",
+      );
+      await history.openFirstDetail();
+
+      const detail = new MetadataDetailPage(page);
+      await detail.expectDetailLoaded();
+      await detail.expectDescriptionContains(
+        "Modification de la matrice des droits",
+      );
+      await detail.expectDescriptionContains("Type d'acteur");
+    } finally {
+      await data.updatePermsMatrix(snapshot);
     }
   });
 });
