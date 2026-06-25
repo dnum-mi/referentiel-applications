@@ -37,7 +37,7 @@ function getMaturityBadgeType(value: number): "error" | "warning" | "info" | "su
 const maturityFields = computed(() => [
   { key: "technicalMaturity", label: "Maturité technique", value: props.technicalDebtInfo?.technicalMaturity ?? 0 },
   { key: "businessMaturity", label: "Maturité métier", value: props.technicalDebtInfo?.businessMaturity ?? 0 },
-  { key: "costMaturity", label: "Maturité des coûts", value: props.technicalDebtInfo?.costMaturity ?? 0 },
+  { key: "costContainment", label: "Maîtrise des coûts", value: props.technicalDebtInfo?.costContainment ?? 0 },
 ]);
 </script>
 

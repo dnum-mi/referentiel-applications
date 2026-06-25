@@ -5824,12 +5824,12 @@ components:
           maximum: 5
           example: 4.5
           description: Business maturity score (0-5)
-        costMaturity:
+        costContainment:
           type: number
           minimum: 0
           maximum: 5
           example: 2.75
-          description: Cost maturity score (0-5)
+          description: Cost containment score (0-5)
         millesime:
           type: number
           minimum: 2000
@@ -7845,12 +7845,12 @@ components:
           maximum: 5
           example: 4.5
           description: Business maturity score (0-5)
-        costMaturity:
+        costContainment:
           type: number
           minimum: 0
           maximum: 5
           example: 2.75
-          description: Cost maturity score (0-5)
+          description: Cost containment score (0-5)
         millesime:
           type: number
           minimum: 2000

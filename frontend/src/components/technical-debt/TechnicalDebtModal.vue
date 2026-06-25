@@ -26,7 +26,7 @@ function toInputValue(value: number | string | null | undefined): string {
 const form = ref({
   technicalMaturity: toInputValue(props.initialData?.technicalMaturity),
   businessMaturity: toInputValue(props.initialData?.businessMaturity),
-  costMaturity: toInputValue(props.initialData?.costMaturity),
+  costContainment: toInputValue(props.initialData?.costContainment),
 });
 
 function toNumberOrZero(value: string): number {
@@ -42,7 +42,11 @@ function isValidScore(value: string): boolean {
 async function handleSubmit() {
   isSubmitting.value = true;
 
-  if (!isValidScore(form.value.technicalMaturity) || !isValidScore(form.value.businessMaturity) || !isValidScore(form.value.costMaturity)) {
+  if (
+    !isValidScore(form.value.technicalMaturity) ||
+    !isValidScore(form.value.businessMaturity) ||
+    !isValidScore(form.value.costContainment)
+  ) {
     isSubmitting.value = false;
     toaster.addErrorMessage("Les valeurs de maturité doivent être comprises entre 0 et 5.");
     return;
@@ -51,7 +55,7 @@ async function handleSubmit() {
   const body: CreateTechnicalDebtInfoDto = {
     technicalMaturity: toNumberOrZero(form.value.technicalMaturity),
     businessMaturity: toNumberOrZero(form.value.businessMaturity),
-    costMaturity: toNumberOrZero(form.value.costMaturity),
+    costContainment: toNumberOrZero(form.value.costContainment),
   };
 
   const response = await api.applicationTechnicalDebtInfoControllerCreate({ path: { applicationId: props.applicationId }, body });
@@ -103,8 +107,8 @@ async function handleSubmit() {
           data-testid="business-maturity-select"
         />
         <DsfrInput
-          v-model="form.costMaturity"
-          label="Maturité des coûts"
+          v-model="form.costContainment"
+          label="Maîtrise des coûts"
           label-visible
           type="number"
           min="0"
@@ -112,7 +116,7 @@ async function handleSubmit() {
           step=".01"
           hint="Entre 0 et 5, avec 2 décimales (ex : 1,20)"
           class="fr-mb-3w"
-          data-testid="cost-maturity-select"
+          data-testid="cost-containment-select"
         />
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">

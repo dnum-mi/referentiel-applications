@@ -219,8 +219,8 @@ export class TimeChartBuilder {
       .append("circle")
       .attr("cx", (d) => x(d.technicalDebtInfo?.businessMaturity ?? 0))
       .attr("cy", (d) => y(d.technicalDebtInfo?.technicalMaturity ?? 0))
-      .attr("r", (d) => radius(d.technicalDebtInfo?.costMaturity ?? 0))
-      .attr("fill", (d) => color(d.technicalDebtInfo?.costMaturity ?? 0))
+      .attr("r", (d) => radius(d.technicalDebtInfo?.costContainment ?? 0))
+      .attr("fill", (d) => color(d.technicalDebtInfo?.costContainment ?? 0))
       .attr("opacity", 0.9)
       .attr("stroke", "#9F0126")
       .attr("stroke-width", 0.6)
@@ -235,7 +235,7 @@ export class TimeChartBuilder {
               `${shortNameHtml}<br/>` +
               `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}<br/>` +
               `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}<br/>` +
-              `Coût MCO: ${d.technicalDebtInfo?.costMaturity ?? "-"}`,
+              `Coût MCO: ${d.technicalDebtInfo?.costContainment ?? "-"}`,
           );
       })
       .on("mousemove", (event) => {

@@ -34,6 +34,25 @@ export class DataFeature {
     return page?.results?.find((a) => a.label === label) ?? null;
   }
 
+  /**
+   * Une application possédant une évaluation de dette technique, afin que la carte « Dette
+   * technique » (et son libellé « Maîtrise des coûts ») soit rendue sur l'onglet Informations
+   * générales (FIC-15, ticket #1900). Sème l'évaluation « create-if-absent » sur la première
+   * application si elle n'en a pas. Renvoie `null` si aucune application n'existe.
+   */
+  async applicationWithTechnicalDebt(): Promise<AppRef | null> {
+    const app = await this.firstApplication();
+    if (!app) return null;
+    const existing = await this.api.applicationTechnicalDebtInfo(app.id);
+    if (existing?.results?.length) return app;
+    const created = await this.api.createTechnicalDebtInfo(app.id, {
+      technicalMaturity: 3,
+      businessMaturity: 3,
+      costContainment: 3,
+    });
+    return created ? app : null;
+  }
+
   /** Une application possédant au moins une relation inter-applications. */
   async applicationWithRelations(probe = 15): Promise<AppRef | null> {
     const list = await this.api.applications(`pageSize=${probe}&page=0`);

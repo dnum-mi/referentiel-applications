@@ -31,7 +31,7 @@ export class CreateTechnicalDebtInfoDto {
 
   @ApiProperty({
     example: 2.75,
-    description: "Cost maturity score (0-5)",
+    description: "Cost containment score (0-5)",
     required: false,
     minimum: 0,
     maximum: 5,
@@ -40,7 +40,7 @@ export class CreateTechnicalDebtInfoDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @Max(5)
-  costMaturity?: number;
+  costContainment?: number;
 
   @ApiProperty({
     example: 2026,

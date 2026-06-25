@@ -88,3 +88,8 @@
 
 - **Action** : onglet `tab-modifications`.
 - **Résultat attendu** : l'historique d'audit (qui/quoi/quand) de l'application est affiché.
+
+### FIC-15 — Onglet Informations générales : libellé « Maîtrise des coûts » ✅
+
+- **Action** : sur une application disposant d'une évaluation de dette technique, ouvrir l'onglet `tab-infos` et consulter la carte « Dette technique ».
+- **Résultat attendu** : la troisième dimension est libellée **« Maîtrise des coûts »** (renommée depuis « Maturité des coûts », cf. ticket #1900) ; l'ancien libellé n'apparaît plus.

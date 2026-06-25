@@ -115,6 +115,18 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("info-edit-btn")).toBeDisabled();
   }
 
+  // --- Carte Dette technique sur l'onglet Infos (FIC-15, ticket #1900) ---
+  /**
+   * La carte dette technique affiche le libellé « Maîtrise des coûts » (renommé depuis
+   * « Maturité des coûts ») et ne présente plus l'ancien libellé.
+   */
+  async expectCostContainmentLabel(): Promise<void> {
+    const card = this.byTestId("info-technical-debt");
+    await expect(card).toBeVisible();
+    await expect(card.getByText("Maîtrise des coûts")).toBeVisible();
+    await expect(card.getByText("Maturité des coûts")).toHaveCount(0);
+  }
+
   // --- Axe RGAA, section dédiée en bas de l'onglet conformités (FIC-06) ---
   async expectRgaaSectionVisible(): Promise<void> {
     await expect(this.page.getByText(/Conformités RGAA/i)).toBeVisible();

@@ -84,7 +84,7 @@ erDiagram
   String applicationId FK
   Decimal(3) technicalMaturity
   Decimal(3) businessMaturity
-  Decimal(3) costMaturity
+  Decimal(3) costContainment
   Int millesime
   DateTime createdAt
 }
@@ -238,7 +238,7 @@ Properties as follows:
 - `applicationId`:
 - `technicalMaturity`: Score de maturité technique (0-1)
 - `businessMaturity`: Score de maturité métier (0-1)
-- `costMaturity`: Score de maturité des coûts (0-1)
+- `costContainment`: Score de maîtrise des coûts (0-1)
 - `millesime`: Millésime (année) de la campagne dette IT à laquelle se rattache l'évaluation
 - `createdAt`: Date de création de l'évaluation
 
