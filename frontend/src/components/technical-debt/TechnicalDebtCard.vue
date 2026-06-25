@@ -13,8 +13,9 @@ defineEmits<{
   edit: [];
 }>();
 
+const NOT_EVALUATED_LABEL = "Non évalué";
+
 const maturityLabels: Record<number, string> = {
-  0: "Très faible",
   1: "Faible",
   2: "Moyen",
   3: "Correct",
@@ -23,11 +24,17 @@ const maturityLabels: Record<number, string> = {
 };
 
 function getMaturityLabel(value: number): string {
-  const rounded = Math.min(5, Math.max(0, Math.round(value)));
+  const rounded = Math.min(5, Math.max(1, Math.round(value)));
   return maturityLabels[rounded] ?? "Non défini";
 }
 
-function getMaturityBadgeType(value: number): "error" | "warning" | "info" | "success" {
+// `null` = non évalué (les scores < 1 ont été migrés vers `null`, cf. ticket #1900).
+function getBadgeLabel(value: number | null): string {
+  return value == null ? NOT_EVALUATED_LABEL : `${value}/5 - ${getMaturityLabel(value)}`;
+}
+
+function getMaturityBadgeType(value: number | null): "error" | "warning" | "info" | "success" | undefined {
+  if (value == null) return undefined;
   if (value <= 1) return "error";
   if (value <= 2) return "warning";
   if (value <= 3) return "info";
@@ -35,9 +42,9 @@ function getMaturityBadgeType(value: number): "error" | "warning" | "info" | "su
 }
 
 const maturityFields = computed(() => [
-  { key: "technicalMaturity", label: "Maturité technique", value: props.technicalDebtInfo?.technicalMaturity ?? 0 },
-  { key: "businessMaturity", label: "Maturité métier", value: props.technicalDebtInfo?.businessMaturity ?? 0 },
-  { key: "costContainment", label: "Maîtrise des coûts", value: props.technicalDebtInfo?.costContainment ?? 0 },
+  { key: "technicalMaturity", label: "Maturité technique", value: props.technicalDebtInfo?.technicalMaturity ?? null },
+  { key: "businessMaturity", label: "Maturité métier", value: props.technicalDebtInfo?.businessMaturity ?? null },
+  { key: "costContainment", label: "Maîtrise des coûts", value: props.technicalDebtInfo?.costContainment ?? null },
 ]);
 </script>
 
@@ -69,7 +76,7 @@ const maturityFields = computed(() => [
                 {{ field.label }}
               </p>
               <DsfrBadge
-                :label="`${field.value}/5 - ${getMaturityLabel(field.value)}`"
+                :label="getBadgeLabel(field.value)"
                 :type="getMaturityBadgeType(field.value)"
                 :small="small"
                 :data-testid="`${field.key}-badge`"

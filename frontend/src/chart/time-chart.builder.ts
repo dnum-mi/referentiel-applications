@@ -251,7 +251,7 @@ export class TimeChartBuilder {
     return this;
   }
 
-  /** Barre de dégradé couleur MCO en bas à droite (jaune → rouge, valeurs 0-5) */
+  /** Barre de dégradé couleur MCO en bas à droite (jaune → rouge, valeurs 1-5) */
   drawColorLegend(): this {
     const { color } = this.scales;
     const { plotWidth, plotHeight } = this.layout;
@@ -270,7 +270,7 @@ export class TimeChartBuilder {
       .attr("y1", "0%")
       .attr("y2", "0%");
 
-    gradient.append("stop").attr("offset", "0%").attr("stop-color", color(0));
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", color(1));
     gradient.append("stop").attr("offset", "100%").attr("stop-color", color(5));
 
     legend
@@ -282,7 +282,7 @@ export class TimeChartBuilder {
       .attr("ry", 2);
 
     const legendAxis = d3
-      .axisBottom(d3.scaleLinear().domain([0, 5]).range([0, legendWidth]))
+      .axisBottom(d3.scaleLinear().domain([1, 5]).range([0, legendWidth]))
       .ticks(5)
       .tickFormat((d) => `${d}`)
       .tickSize(legendHeight);

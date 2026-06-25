@@ -94,14 +94,14 @@ describe("TechnicalDebtInfo", () => {
       .post(`/applications/${application.id}/technical-debt-info`)
       .send({
         technicalMaturity: 4.5,
-        costContainment: 0,
+        // costContainment omis → non évalué (null), cf. ticket #1900.
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
 
     expect(response.body.id).toBeDefined();
     expect(response.body.technicalMaturity).toEqual(4.5);
-    expect(response.body.costContainment).toEqual(0);
+    expect(response.body.costContainment ?? null).toBeNull();
 
     const listResponse = await request(app().getHttpServer())
       .get(`/applications/${application.id}/technical-debt-info`)
@@ -123,11 +123,11 @@ describe("TechnicalDebtInfo", () => {
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(400);
 
-    // Test value < 0
+    // Test value < 1 (l'échelle est désormais 1-5 ; en deçà = non évalué/null, cf. #1900).
     await request(app().getHttpServer())
       .post(`/applications/${newApplication.id}/technical-debt-info`)
       .send({
-        businessMaturity: -1,
+        businessMaturity: 0.5,
       })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(400);

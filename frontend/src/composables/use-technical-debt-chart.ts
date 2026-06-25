@@ -39,13 +39,20 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
     const scales: ChartScales = {
-      x: d3.scaleLinear().domain([0, 5]).range([0, plotWidth]),
-      y: d3.scaleLinear().domain([0, 5]).range([plotHeight, 0]),
-      color: d3.scaleSequential(d3.interpolateYlOrRd).domain([0, 5]),
-      radius: d3.scaleLinear().domain([0, 5]).range([4, 12]),
+      x: d3.scaleLinear().domain([1, 5]).range([0, plotWidth]),
+      y: d3.scaleLinear().domain([1, 5]).range([plotHeight, 0]),
+      color: d3.scaleSequential(d3.interpolateYlOrRd).domain([1, 5]),
+      radius: d3.scaleLinear().domain([1, 5]).range([4, 12]),
     };
 
-    new TimeChartBuilder(g, svg, root, scales, { plotWidth, plotHeight, margin }, props.data)
+    // Un point n'apparaît que si ses trois maturités sont évaluées (≥ 1) : les valeurs
+    // non évaluées (`null`, issues de la migration des valeurs < 1) sont exclues (ticket #1900).
+    const points = props.data.filter((d) => {
+      const t = d.technicalDebtInfo;
+      return t != null && t.technicalMaturity != null && t.businessMaturity != null && t.costContainment != null;
+    });
+
+    new TimeChartBuilder(g, svg, root, scales, { plotWidth, plotHeight, margin }, points)
       .drawTitle()
       .drawAxes()
       .drawQuadrants()

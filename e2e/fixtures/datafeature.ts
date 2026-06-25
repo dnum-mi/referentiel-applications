@@ -53,6 +53,22 @@ export class DataFeature {
     return created ? app : null;
   }
 
+  /**
+   * Sème une évaluation de dette technique dont la maîtrise des coûts est **non évaluée**
+   * (`costContainment` omis → `null`) sur la première application, et la renvoie. Sert à vérifier
+   * que la carte affiche « Non évalué » pour un axe sans score (FIC-16, ticket #1900). Comme les
+   * évaluations sont historisées, la plus récente — celle-ci — pilote l'affichage.
+   */
+  async seedTechnicalDebtWithoutCost(): Promise<AppRef | null> {
+    const app = await this.firstApplication();
+    if (!app) return null;
+    const created = await this.api.createTechnicalDebtInfo(app.id, {
+      technicalMaturity: 3,
+      businessMaturity: 3,
+    });
+    return created ? app : null;
+  }
+
   /** Une application possédant au moins une relation inter-applications. */
   async applicationWithRelations(probe = 15): Promise<AppRef | null> {
     const list = await this.api.applications(`pageSize=${probe}&page=0`);

@@ -82,9 +82,9 @@ erDiagram
 "TechnicalDebtInfo" {
   String id PK
   String applicationId FK
-  Decimal(3) technicalMaturity
-  Decimal(3) businessMaturity
-  Decimal(3) costContainment
+  Decimal(3) technicalMaturity "nullable"
+  Decimal(3) businessMaturity "nullable"
+  Decimal(3) costContainment "nullable"
   Int millesime
   DateTime createdAt
 }
@@ -236,9 +236,9 @@ Properties as follows:
 
 - `id`: Identifiant unique
 - `applicationId`:
-- `technicalMaturity`: Score de maturité technique (0-1)
-- `businessMaturity`: Score de maturité métier (0-1)
-- `costContainment`: Score de maîtrise des coûts (0-1)
+- `technicalMaturity`: Score de maturité technique (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
+- `businessMaturity`: Score de maturité métier (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
+- `costContainment`: Score de maîtrise des coûts (1-5). `null` = non évalué (valeurs < 1 migrées vers `null`).
 - `millesime`: Millésime (année) de la campagne dette IT à laquelle se rattache l'évaluation
 - `createdAt`: Date de création de l'évaluation
 

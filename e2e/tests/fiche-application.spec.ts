@@ -156,4 +156,19 @@ test.describe("Fiche application", () => {
     await fiche.open(app!.id, "tab-infos");
     await fiche.expectCostContainmentLabel();
   });
+
+  test("FIC-16 - onglet Informations générales : un score non évalué affiche « Non évalué »", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.seedTechnicalDebtWithoutCost();
+    test.skip(
+      !app,
+      "Impossible de garantir une application avec dette technique partielle",
+    );
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(app!.id, "tab-infos");
+    await fiche.expectCostContainmentNotEvaluated();
+  });
 });

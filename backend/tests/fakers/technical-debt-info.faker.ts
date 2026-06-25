@@ -32,17 +32,17 @@ export class TechnicalDebtInfoFaker {
         technicalMaturity:
           restOverride.technicalMaturity ??
           faker.helpers.maybe(() =>
-            faker.number.float({ min: 0, max: 5, multipleOf: 0.01 }),
+            faker.number.float({ min: 1, max: 5, multipleOf: 0.01 }),
           ),
         businessMaturity:
           restOverride.businessMaturity ??
           faker.helpers.maybe(() =>
-            faker.number.float({ min: 0, max: 5, multipleOf: 0.01 }),
+            faker.number.float({ min: 1, max: 5, multipleOf: 0.01 }),
           ),
         costContainment:
           restOverride.costContainment ??
           faker.helpers.maybe(() =>
-            faker.number.float({ min: 0, max: 5, multipleOf: 0.01 }),
+            faker.number.float({ min: 1, max: 5, multipleOf: 0.01 }),
           ),
         ...(restOverride.millesime != null
           ? { millesime: restOverride.millesime }
