@@ -32,10 +32,14 @@ function getComplianceColor(key: keyof QualitySummaryDto["compliances"]): string
   if (!summary.value) return "yellow-tournesol";
   const c = summary.value.compliances;
   switch (key) {
-    case "DSFR":
-      return c.DSFR === null ? "yellow-tournesol" : c.DSFR ? "green-emeraude" : "yellow-tournesol";
-    case "RGPD":
-      return c.RGPD === null ? "yellow-tournesol" : c.RGPD ? "green-emeraude" : "yellow-tournesol";
+    case "DSFR": {
+      if (c.DSFR === null) return "yellow-tournesol";
+      return c.DSFR ? "green-emeraude" : "yellow-tournesol";
+    }
+    case "RGPD": {
+      if (c.RGPD === null) return "yellow-tournesol";
+      return c.RGPD ? "green-emeraude" : "yellow-tournesol";
+    }
     default:
       return c[key] ? "green-emeraude" : "yellow-tournesol";
   }
@@ -45,10 +49,14 @@ function getComplianceStatus(key: keyof QualitySummaryDto["compliances"]): strin
   if (!summary.value) return "non";
   const c = summary.value.compliances;
   switch (key) {
-    case "DSFR":
-      return c.DSFR === null ? "non configuré" : c.DSFR ? "oui" : "non implémenté";
-    case "RGPD":
-      return c.RGPD === null ? "non configuré" : c.RGPD ? "oui" : "non réalisée";
+    case "DSFR": {
+      if (c.DSFR === null) return "non configuré";
+      return c.DSFR ? "oui" : "non implémenté";
+    }
+    case "RGPD": {
+      if (c.RGPD === null) return "non configuré";
+      return c.RGPD ? "oui" : "non réalisée";
+    }
     default:
       return c[key] ? "oui" : "non";
   }

@@ -97,7 +97,7 @@ export const useUserStore = defineStore("userStore", () => {
         adminEmail,
       });
       impersonation.value = getImpersonationState();
-      window.location.assign("/");
+      globalThis.location.assign("/");
     }
   }
 
@@ -109,7 +109,7 @@ export const useUserStore = defineStore("userStore", () => {
     } finally {
       clearImpersonationState();
       impersonation.value = null;
-      window.location.assign("/");
+      globalThis.location.assign("/");
     }
   }
 

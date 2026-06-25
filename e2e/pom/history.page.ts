@@ -62,6 +62,11 @@ export class HistoryPage extends BasePage {
     await expect(this.rows().first()).toBeVisible();
   }
 
+  /** Vérifie que la première ligne de l'historique contient le texte attendu. */
+  async expectFirstRowContains(text: string | RegExp): Promise<void> {
+    await expect(this.rows().first()).toContainText(text);
+  }
+
   /** Ouvre le détail de la première ligne via « Voir plus » et attend la page de détail. */
   async openFirstDetail(): Promise<void> {
     await this.seeMore().first().click();
@@ -124,6 +129,11 @@ export class MetadataDetailPage extends BasePage {
   async openApplicationFromLink(): Promise<void> {
     await this.applicationLink().click();
     await expect(this.page).toHaveURL(/\/applications\//);
+  }
+
+  /** Vérifie que la description contient le texte attendu. */
+  async expectDescriptionContains(text: string | RegExp): Promise<void> {
+    await expect(this.description()).toContainText(text);
   }
 
   /** Revient à l'historique via le bouton « Retour à l'historique ». */

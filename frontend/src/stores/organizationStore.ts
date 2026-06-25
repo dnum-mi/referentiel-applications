@@ -24,7 +24,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
     if (!response.response.ok) {
       throw new Error("Failed to fetch organizations");
     }
-    if (!response.data || !response.data.results) {
+    if (!response.data?.results) {
       return [];
     }
     const organizations = response.data.results;
@@ -43,7 +43,7 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
         query: { ids },
       });
 
-      if (response.response.ok && response.data && response.data.results) {
+      if (response.response.ok && response.data?.results) {
         const organizations = response.data.results;
         storeOrganization(organizations);
 

@@ -44,41 +44,64 @@ async function fetchMetadata() {
   }
 }
 
+function formatArrayValue(value: unknown[]): string {
+  if (value.every((v) => typeof v === "string")) {
+    return value.join(", ");
+  }
+  return value.map((v) => (v as { name: string }).name).join(", ");
+}
+
+function formatValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return formatArrayValue(value);
+  }
+  if (typeof value === "object" && value !== null) {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
+function formatValueLines(label: string, raw: string): string[] {
+  const obj = JSON.parse(raw);
+  const lines = [`${label}:`];
+  for (const [key, value] of Object.entries(obj)) {
+    lines.push(`  • ${key}: ${formatValue(value)}`);
+  }
+  return lines;
+}
+
+function formatDescriptionLine(line: string): string[] {
+  const newMatch = line.match(/Nouvelle\(s\) valeur\(s\):\s*(\{[\s\S]*?\})$/);
+  const oldMatch = line.match(/Ancienne\(s\) valeur\(s\):\s*(\{[\s\S]*?\})$/);
+  const match = newMatch ?? oldMatch;
+  if (match) {
+    const label = newMatch ? "Nouvelle(s) valeur(s)" : "Ancienne(s) valeur(s)";
+    try {
+      return formatValueLines(label, match[1]);
+    } catch {
+      return [line];
+    }
+  }
+  if (line.trim()) {
+    return [line];
+  }
+  return [];
+}
+
 const formattedDescription = computed(() => {
   const description = metadata.value?.description || "";
   const lines = description.split("\n");
   const title = lines[0];
   const details: string[] = [];
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    const newMatch = line.match(/Nouvelle\(s\) valeur\(s\):\s*(\{[\s\S]*?\})$/);
-    const oldMatch = line.match(/Ancienne\(s\) valeur\(s\):\s*(\{[\s\S]*?\})$/);
-    if (newMatch || oldMatch) {
-      try {
-        const match = newMatch || oldMatch;
-        const label = newMatch ? "Nouvelle(s) valeur(s)" : "Ancienne(s) valeur(s)";
-        const obj = JSON.parse(match![1]);
-        details.push(`${label}:`);
-        for (const [key, value] of Object.entries(obj)) {
-          const formattedValue = Array.isArray(value)
-            ? value.every((v) => typeof v === "string")
-              ? value.join(", ")
-              : value.map((v) => v.name).join(", ")
-            : typeof value === "object" && value !== null
-              ? JSON.stringify(value)
-              : String(value);
-
-          details.push(`  • ${key}: ${formattedValue}`);
-        }
-      } catch {
-        details.push(line);
-      }
-    } else if (line.trim()) {
-      details.push(line);
-    }
+    details.push(...formatDescriptionLine(lines[i]));
   }
   return { title, details };
 });
+
+function formatBold(text: string): string {
+  return text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
 
 onMounted(() => {
   fetchMetadata();
@@ -116,7 +139,7 @@ onMounted(() => {
             {{ metadata.application.label }}
           </router-link>
         </template>
-        <span v-else data-testid="metadata-application">Application inconnue</span>
+        <span v-else data-testid="metadata-application">{{ metadata.applicationId ? "Application inconnue" : "-" }}</span>
       </div>
 
       <div class="fr-mb-3w">
@@ -139,9 +162,7 @@ onMounted(() => {
         <div class="metadata-description" data-testid="metadata-description">
           <h3 class="fr-text--lg fr-mb-2w">{{ formattedDescription.title }}</h3>
           <div class="description-details">
-            <p v-for="(detail, index) in formattedDescription.details" :key="index" class="detail-line">
-              {{ detail }}
-            </p>
+            <p v-for="(detail, index) in formattedDescription.details" :key="index" class="detail-line" v-html="formatBold(detail)" />
           </div>
         </div>
       </div>

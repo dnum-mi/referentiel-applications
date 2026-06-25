@@ -78,3 +78,12 @@
 - **Action** : accorder `AppWritePriority` sans `AppWrite` à un utilisateur, ouvrir une fiche.
 - **Résultat attendu** : il peut modifier la **priorité de redémarrage** (R0–R3) mais pas le reste de
   la fiche.
+
+### PRM-12 — Modifier la matrice des droits génère une entrée dans l'historique ✅
+
+- **Datafeature** : matrice des permissions existante (sinon skip).
+- **Action** : modifier un sélecteur `app-perms-select-*` → `app-perms-save-btn` → naviguer vers
+  `/historique`.
+- **Résultat attendu** : la première entrée de l'historique contient « Modification de la matrice des
+  droits » ; le détail mentionne le type d'acteur modifié et les permissions changées. La matrice est
+  restaurée via l'API en `finally`.

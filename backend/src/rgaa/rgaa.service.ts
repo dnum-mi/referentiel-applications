@@ -27,7 +27,7 @@ export class RgaaService extends BaseService<RgaaCompliance> {
     return this.prisma.rgaaCompliance.findMany({
       where: { applicationId },
       orderBy: { service_url: "asc" },
-    }) as unknown as RgaaCompliance[];
+    }) as unknown as Promise<RgaaCompliance[]>;
   }
 
   async createRgaa(
@@ -61,10 +61,7 @@ export class RgaaService extends BaseService<RgaaCompliance> {
       }
     }
 
-    return super.create(
-      { ...dto, applicationId },
-      options,
-    ) as unknown as RgaaCompliance;
+    return super.create({ ...dto, applicationId }, options);
   }
 
   async updateRgaa(
@@ -76,7 +73,7 @@ export class RgaaService extends BaseService<RgaaCompliance> {
     const existing = await this.prisma.rgaaCompliance.findUnique({
       where: { id },
     });
-    if (!existing || existing.applicationId !== applicationId) {
+    if (existing?.applicationId !== applicationId) {
       throw new NotFoundException("Conformité RGAA introuvable");
     }
 
@@ -96,7 +93,7 @@ export class RgaaService extends BaseService<RgaaCompliance> {
       }
     }
 
-    return super.update(id, dto, options) as unknown as RgaaCompliance;
+    return super.update(id, dto, options);
   }
 
   async deleteRgaa(
@@ -107,7 +104,7 @@ export class RgaaService extends BaseService<RgaaCompliance> {
     const existing = await this.prisma.rgaaCompliance.findUnique({
       where: { id },
     });
-    if (!existing || existing.applicationId !== applicationId) {
+    if (existing?.applicationId !== applicationId) {
       throw new NotFoundException("Conformité RGAA introuvable");
     }
     await super.delete(id, options);

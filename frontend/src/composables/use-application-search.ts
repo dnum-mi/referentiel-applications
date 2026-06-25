@@ -102,7 +102,10 @@ function parseQueryParamArray(value: QueryParam): string[] | undefined {
 }
 
 function sortAsStrings(values: readonly unknown[]): string[] {
-  return values.map(String).slice().sort();
+  return values
+    .map(String)
+    .slice()
+    .sort((a, b) => a.localeCompare(b));
 }
 
 function sameStringArray(a: readonly string[], b: readonly string[]): boolean {
@@ -115,20 +118,15 @@ function filtersToQuery(filters: Filters): Record<string, string> {
 
   for (const [key, value] of Object.entries(filters)) {
     if (value === undefined || value === null || value === "") continue;
+    const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
     if (Array.isArray(value)) {
       if (value.length === 0) continue;
       // Compare with defaults for arrays
-      const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
       const sorted = sortAsStrings(value);
       if (Array.isArray(defaultValue) && sameStringArray(sorted, sortAsStrings(defaultValue))) continue;
       // Store arrays in the URL as CSV (more compact than explode).
       query[key] = sorted.join(",");
-    } else if (typeof value === "number") {
-      const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
-      if (value === defaultValue) continue;
-      query[key] = String(value);
     } else {
-      const defaultValue = DEFAULT_FILTERS[key as keyof Filters];
       if (value === defaultValue) continue;
       query[key] = String(value);
     }
@@ -145,24 +143,9 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     link: parseQueryParam(query.link),
     priorityRestart: parseQueryParamArray(query.priorityRestart) as Filters["priorityRestart"],
     currentStatus__in: (parseQueryParamArray(query.currentStatus__in) ?? DEFAULT_FILTERS.currentStatus__in) as Filters["currentStatus__in"],
-    currentStatus__isNull:
-      parseQueryParam(query.currentStatus__isNull) === "true"
-        ? true
-        : parseQueryParam(query.currentStatus__isNull) === "false"
-          ? false
-          : DEFAULT_FILTERS.currentStatus__isNull,
-    subscribersEmail:
-      parseQueryParam(query.subscribersEmail) === "true"
-        ? true
-        : parseQueryParam(query.subscribersEmail) === "false"
-          ? false
-          : DEFAULT_FILTERS.subscribersEmail,
-    myApplications:
-      parseQueryParam(query.myApplications) === "true"
-        ? true
-        : parseQueryParam(query.myApplications) === "false"
-          ? false
-          : DEFAULT_FILTERS.myApplications,
+    currentStatus__isNull: parseQueryParamBoolean(query.currentStatus__isNull) ?? DEFAULT_FILTERS.currentStatus__isNull,
+    subscribersEmail: parseQueryParamBoolean(query.subscribersEmail) ?? DEFAULT_FILTERS.subscribersEmail,
+    myApplications: parseQueryParamBoolean(query.myApplications) ?? DEFAULT_FILTERS.myApplications,
     compliancePresent__in: parseQueryParamArray(query.compliancePresent__in) as Filters["compliancePresent__in"],
     complianceAbsent__in: parseQueryParamArray(query.complianceAbsent__in) as Filters["complianceAbsent__in"],
     complianceUnset__in: parseQueryParamArray(query.complianceUnset__in) as Filters["complianceUnset__in"],

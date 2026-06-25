@@ -78,8 +78,9 @@ function handleKeydown(event: KeyboardEvent) {
     event.preventDefault();
     const lines = localValue.value.slice(start, end).split("\n");
     const isShift = event.shiftKey;
+    const outdentLine = (line: string) => (line.startsWith("  ") ? line.slice(2) : line.replace(/^\t/, ""));
     const modifiedLines = lines.map((line) => {
-      return isShift ? (line.startsWith("  ") ? line.slice(2) : line.replace(/^\t/, "")) : `  ${line}`;
+      return isShift ? outdentLine(line) : `  ${line}`;
     });
     const newText = modifiedLines.join("\n");
     localValue.value = localValue.value.slice(0, start) + newText + localValue.value.slice(end);

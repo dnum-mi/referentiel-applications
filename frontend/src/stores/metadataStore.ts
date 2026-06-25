@@ -24,12 +24,12 @@ export const useMetadataStore = defineStore("metadataStore", () => {
       console.error("Error fetching first and last metadata:", response.error);
       throw new Error(`Failed to fetch first and last metadata: ${response.response.statusText}`);
     }
-    if (!response.data) {
-      firstMetadata.value = null;
-      lastMetadata.value = null;
-    } else {
+    if (response.data) {
       firstMetadata.value = response.data.first;
       lastMetadata.value = response.data.last;
+    } else {
+      firstMetadata.value = null;
+      lastMetadata.value = null;
     }
   }
 

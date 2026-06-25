@@ -51,31 +51,31 @@ async function saveTag() {
   isSaving.value = true;
   errorMessage.value = "";
 
-  const response = !props.tag?.id
-    ? await api.tagsControllerCreate({
+  const response = props.tag?.id
+    ? await api.tagsControllerUpdate({
+        path: { id: props.tag.id },
         body: {
           name: editingName.value,
         },
       })
-    : await api.tagsControllerUpdate({
-        path: { id: props.tag.id },
+    : await api.tagsControllerCreate({
         body: {
           name: editingName.value,
         },
       });
 
-  if (!response.response.ok) {
+  if (response.response.ok) {
+    toaster.addSuccessMessage(props.tag?.id ? "Tag mis à jour avec succès" : "Tag créé avec succès");
+
+    closeEditModal();
+    emit("fetchTags");
+  } else {
     if (response.response.status === 400) {
       const error = response.error as BadRequestResponse;
       errorMessage.value = error.message.join(", ");
     } else {
       errorMessage.value = "Erreur lors de la sauvegarde du tag";
     }
-  } else {
-    toaster.addSuccessMessage(!props.tag?.id ? "Tag créé avec succès" : "Tag mis à jour avec succès");
-
-    closeEditModal();
-    emit("fetchTags");
   }
   isSaving.value = false;
 }
@@ -86,12 +86,12 @@ async function deleteTag() {
   isDeleting.value = true;
 
   const response = await api.tagsControllerDelete({ path: { id: props.tag.id } });
-  if (!response.response.ok) {
-    toaster.addErrorMessage("Erreur lors de la suppression du tag");
-  } else {
+  if (response.response.ok) {
     toaster.addSuccessMessage("Tag supprimé avec succès");
     closeDeleteModal();
     emit("fetchTags");
+  } else {
+    toaster.addErrorMessage("Erreur lors de la suppression du tag");
   }
   isDeleting.value = false;
 }
