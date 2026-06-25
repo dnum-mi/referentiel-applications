@@ -31,13 +31,13 @@ const ADMIN_PERMISSIONS = new Set([
 export const roleToPermissions = (role: Roles) => {
   switch (role) {
     case Roles.ADMIN:
-      return Array.from(ADMIN_PERMISSIONS).sort();
+      return Array.from(ADMIN_PERMISSIONS).sort((a, b) => a.localeCompare(b));
     case Roles.CONTRIBUTOR:
-      return Array.from(WRITE_PERMISSIONS).sort();
+      return Array.from(WRITE_PERMISSIONS).sort((a, b) => a.localeCompare(b));
     case Roles.READER:
-      return Array.from(READ_PERMISSIONS).sort();
+      return Array.from(READ_PERMISSIONS).sort((a, b) => a.localeCompare(b));
     case Roles.VISITOR:
-      return Array.from(NONE_PERMISSIONS).sort();
+      return Array.from(NONE_PERMISSIONS).sort((a, b) => a.localeCompare(b));
   }
 };
 
@@ -64,11 +64,17 @@ const ADMIN_APP_PERMISSIONS = new Set([...Array.from(WRITE_APP_PERMISSIONS)]);
 export const roleToAppPermissions = (role: Roles) => {
   switch (role) {
     case Roles.ADMIN:
-      return Array.from(ADMIN_APP_PERMISSIONS).sort();
+      return Array.from(ADMIN_APP_PERMISSIONS).sort((a, b) =>
+        a.localeCompare(b),
+      );
     case Roles.CONTRIBUTOR:
-      return Array.from(WRITE_APP_PERMISSIONS).sort();
+      return Array.from(WRITE_APP_PERMISSIONS).sort((a, b) =>
+        a.localeCompare(b),
+      );
     case Roles.READER:
-      return Array.from(READ_APP_PERMISSIONS).sort();
+      return Array.from(READ_APP_PERMISSIONS).sort((a, b) =>
+        a.localeCompare(b),
+      );
     case Roles.VISITOR:
       return [];
   }

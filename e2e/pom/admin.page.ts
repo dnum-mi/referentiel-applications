@@ -158,6 +158,24 @@ export class AdminPage extends BasePage {
     );
   }
 
+  /**
+   * Modifie une cellule de la matrice (toggle) et enregistre SANS restaurer (PRM-12).
+   * L'appelant restaure via l'API dans son `finally`.
+   */
+  async editMatrixAndSave(): Promise<void> {
+    const toggle = () =>
+      this.matrixPanel().locator('[data-testid$="-App"]').first();
+    await expect(toggle()).toBeVisible();
+    const original = (await toggle().innerText()).trim();
+
+    await toggle().click();
+    await expect(toggle()).not.toHaveText(original);
+    await this.permsSave().click();
+    await this.expectToaster(
+      /Matrice des permissions mise à jour avec succès/i,
+    );
+  }
+
   /** Vérifie qu'on n'est PAS sur la page admin (cas non-admin). */
   async expectAccessDenied(): Promise<void> {
     await expect(this.page).not.toHaveURL(/\/administration/);
