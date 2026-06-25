@@ -99,6 +99,10 @@ const formattedDescription = computed(() => {
   return { title, details };
 });
 
+function formatBold(text: string): string {
+  return text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+
 onMounted(() => {
   fetchMetadata();
 });
@@ -135,7 +139,7 @@ onMounted(() => {
             {{ metadata.application.label }}
           </router-link>
         </template>
-        <span v-else data-testid="metadata-application">Application inconnue</span>
+        <span v-else data-testid="metadata-application">{{ metadata.applicationId ? "Application inconnue" : "-" }}</span>
       </div>
 
       <div class="fr-mb-3w">
@@ -158,9 +162,7 @@ onMounted(() => {
         <div class="metadata-description" data-testid="metadata-description">
           <h3 class="fr-text--lg fr-mb-2w">{{ formattedDescription.title }}</h3>
           <div class="description-details">
-            <p v-for="(detail, index) in formattedDescription.details" :key="index" class="detail-line">
-              {{ detail }}
-            </p>
+            <p v-for="(detail, index) in formattedDescription.details" :key="index" class="detail-line" v-html="formatBold(detail)" />
           </div>
         </div>
       </div>
