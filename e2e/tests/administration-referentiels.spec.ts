@@ -531,7 +531,8 @@ test.describe("Administration des référentiels", () => {
           "DIMA Durée (heures)",
           "DSFR Implémenté",
         ],
-        [[appId, impact, 5, "Oui"]],
+        // 4 h : valeur de durée DIMA autorisée (cf. DIMA_DURATION_HOURS_VALUES, #1901/#1910).
+        [[appId, impact, 4, "Oui"]],
       );
 
       const admin = new AdminPage(page);
@@ -557,7 +558,7 @@ test.describe("Administration des référentiels", () => {
         [appId],
       );
       expect(rows[0]?.dima_business_impact).toBe(impact);
-      expect(rows[0]?.dima_duration_hours).toBe(5);
+      expect(rows[0]?.dima_duration_hours).toBe(4);
       expect(rows[0]?.dsfr_implemented).toBe(true);
     } finally {
       await deleteThrowawayApp(appId);
