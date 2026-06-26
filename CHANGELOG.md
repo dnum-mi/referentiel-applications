@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.80.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.80.0...v1.80.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* **docker:** make frontend image writable under OpenShift arbitrary UID ([#1914](https://github.com/dnum-mi/referentiel-applications/issues/1914)) ([4778a34](https://github.com/dnum-mi/referentiel-applications/commit/4778a34dd96de70d76f23a0f5fdf22e0d0ced06e))
+
 ## [1.80.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.79.0...v1.80.0) (2026-06-26)
 
 
