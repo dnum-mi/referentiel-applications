@@ -4,7 +4,7 @@ import type { ApplicationWithPerms } from "@/models/Application";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useRoute } from "vue-router";
 import type { MetadataDto } from "@/client/types.gen";
-import type { TableColumn } from "@/types/table";
+import type { TableColumn, TableSortEvent } from "@/types/table";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
@@ -15,10 +15,19 @@ const currentPage = ref(0);
 const pageSize = ref(5);
 const firstIndex = computed(() => currentPage.value * pageSize.value);
 
+const sortField = ref("Date");
+const sortOrder = ref<number>(-1);
+
+const fieldToSortBy: Record<string, string> = {
+  Date: "createdAt",
+  Auteur: "createdBy.email",
+  Titre: "description",
+};
+
 const tableColumns: TableColumn[] = [
-  { field: "Date", header: "Date", sortable: false },
-  { field: "Auteur", header: "Auteur", sortable: false },
-  { field: "Titre", header: "Titre", sortable: false },
+  { field: "Date", header: "Date", sortable: true },
+  { field: "Auteur", header: "Auteur", sortable: true },
+  { field: "Titre", header: "Titre", sortable: true },
   { field: "Actions", header: "Actions", sortable: false },
 ];
 
@@ -26,13 +35,20 @@ async function fetchMetadatas() {
   await metadataStore.fetchMetadatasByApplication(props.application.id, {
     page: currentPage.value,
     pageSize: pageSize.value,
-    sortBy: "createdAt",
-    order: "desc",
+    sortBy: fieldToSortBy[sortField.value] || "createdAt",
+    order: sortOrder.value === -1 ? "desc" : "asc",
   });
 }
 
 watch([currentPage, pageSize], fetchMetadatas);
 onMounted(fetchMetadatas);
+
+function onSort(event: TableSortEvent) {
+  sortField.value = event.sortField || "Date";
+  sortOrder.value = event.sortOrder;
+  currentPage.value = 0;
+  fetchMetadatas();
+}
 
 function onPage(event: any) {
   currentPage.value = event.page;
@@ -69,8 +85,11 @@ const loading = computed(() => metadataStore.isLoading);
       :rows="pageSize"
       :first="firstIndex"
       :total-records="metadataStore.total"
+      :sort-field="sortField"
+      :sort-order="sortOrder"
       data-testid="modifications-table"
       empty-message="Aucune modification enregistrée."
+      @sort="onSort"
       @page="onPage"
     >
       <template #body-Actions="{ data }">

@@ -54,7 +54,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "moa",
     header: "MOA",
-    sortable: false,
+    sortable: true,
     defaultWidth: "200px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -62,7 +62,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "moe",
     header: "MOE",
-    sortable: false,
+    sortable: true,
     defaultWidth: "200px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -84,9 +84,9 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
     requiredPermissions: ["ColumnRead"],
   },
   {
-    field: "hostingManagerDisplay",
+    field: "hostingManager",
     header: "Responsable hébergement",
-    sortable: false,
+    sortable: true,
     defaultWidth: "200px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -102,7 +102,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "rsimm",
     header: "RSIMM",
-    sortable: false,
+    sortable: true,
     defaultWidth: "200px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -110,7 +110,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "dima",
     header: "DIMA",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -118,7 +118,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "pdma",
     header: "PDMA",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -126,7 +126,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "rgaa",
     header: "RGAA",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -134,7 +134,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "dsfr",
     header: "DSFR",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -142,7 +142,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "rgpd",
     header: "RGPD",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -150,7 +150,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "pra",
     header: "PRA",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -158,7 +158,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "homologation",
     header: "Homologation",
-    sortable: false,
+    sortable: true,
     defaultWidth: "180px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -166,7 +166,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "homologationDateEnd",
     header: "Date de fin d'homologation",
-    sortable: false,
+    sortable: true,
     defaultWidth: "220px",
     visible: false,
     requiredPermissions: ["ColumnRead"],
@@ -174,7 +174,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "status",
     header: "Statut",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     alwaysAvailable: true,
@@ -190,7 +190,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "technicalMaturity",
     header: "Maturité technique",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     alwaysAvailable: true,
@@ -198,7 +198,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "businessMaturity",
     header: "Maturité métier",
-    sortable: false,
+    sortable: true,
     defaultWidth: "150px",
     visible: false,
     alwaysAvailable: true,
@@ -206,7 +206,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   {
     field: "costContainment",
     header: "Coûts",
-    sortable: false,
+    sortable: true,
     defaultWidth: "120px",
     visible: false,
     alwaysAvailable: true,

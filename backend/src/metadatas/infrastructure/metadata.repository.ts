@@ -48,6 +48,7 @@ export class MetadataRepository implements IMetadataRepository {
           break;
         case "action":
         case "createdAt":
+        case "description":
           orderBy = { [filters.sortBy]: order };
           break;
         default:

@@ -52,19 +52,20 @@ const fieldMap: Record<string, string> = {
 const tableColumns: TableColumn[] = headers.map((header: string) => ({
   field: fieldMap[header] || header,
   header: header,
-  sortable: false,
+  sortable: !["Sélection", "Actions"].includes(header),
 }));
 
-// Transform rows to use normalized field names
 const normalizedRows = computed(() =>
   rows.value.map((row) => ({
     selection: row.Sélection,
     applicationSource: row["Application Source"],
     relation: row.Relation,
-    applicationCible: row["Application Cible"],
-    mediationService: row["Mediation Service"],
+    applicationCible: row["Application Cible"].label,
+    applicationCibleId: row["Application Cible"].id,
+    mediationService: row["Mediation Service"].label || "",
+    mediationServiceId: row["Mediation Service"].id,
     actions: row.Actions,
-    originalRow: row, // Keep original for reference
+    originalRow: row,
   })),
 );
 
@@ -214,8 +215,8 @@ onMounted(async () => {
         </template>
 
         <template #body-applicationCible="{ data }">
-          <a :href="`/applications/${data.applicationCible.id}`" class="fr-link" data-testid="relation-target-link">
-            {{ data.applicationCible.label }}
+          <a :href="`/applications/${data.applicationCibleId}`" class="fr-link" data-testid="relation-target-link">
+            {{ data.applicationCible }}
           </a>
         </template>
 
@@ -232,12 +233,12 @@ onMounted(async () => {
 
         <template #body-mediationService="{ data }">
           <a
-            v-if="data.mediationService.label"
-            :href="`/applications/${data.mediationService.id}`"
+            v-if="data.mediationService && data.mediationServiceId"
+            :href="`/applications/${data.mediationServiceId}`"
             class="fr-link"
             data-testid="relation-target-link"
           >
-            {{ data.mediationService.label }}
+            {{ data.mediationService }}
           </a>
           <template v-else> - </template>
         </template>

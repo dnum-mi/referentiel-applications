@@ -47,6 +47,49 @@ export class ApplicationPage extends BasePage {
     await expect.poll(() => new URL(this.page.url()).pathname).toContain(tab);
   }
 
+  // --- Tri dans les onglets ---
+
+  /**
+   * Clic sur un en-tête de colonne triable dans une table d'onglet, identifiée par son
+   * `data-testid`. Attend que la table reste visible après le re-rendu (client-side ou lazy).
+   */
+  async sortTabColumn(tableTestId: string, headerName: string): Promise<void> {
+    const table = this.byTestId(tableTestId);
+    await expect(table).toBeVisible();
+    await table
+      .getByRole("columnheader", { name: headerName, exact: true })
+      .click();
+    await expect(table).toBeVisible();
+  }
+
+  /**
+   * Tri dans l'onglet Acteurs : le wrapper `actor-tab` encapsule la table PrimeVue
+   * (pas de `data-testid` standard sur la `<DataTable>` — cf. `data-test-id` avec tiret).
+   * On localise le `columnheader` dans le scope du wrapper.
+   */
+  async sortActorColumn(headerName: string): Promise<void> {
+    const wrapper = this.byTestId("actor-tab");
+    await expect(wrapper).toBeVisible();
+    await wrapper
+      .getByRole("columnheader", { name: headerName, exact: true })
+      .click();
+    await expect(wrapper).toBeVisible();
+  }
+
+  /**
+   * Tri dans l'onglet Modifications (lazy/server-side) : le clic déclenche un appel réseau.
+   * On attend que le loader disparaisse (ou n'apparaisse pas) puis que la table soit visible.
+   */
+  async sortModificationsColumn(headerName: string): Promise<void> {
+    const table = this.byTestId("modifications-table");
+    await expect(table).toBeVisible();
+    await table
+      .getByRole("columnheader", { name: headerName, exact: true })
+      .click();
+    // Le loader peut apparaitre brievement, on attend la stabilisation de la table.
+    await expect(table).toBeVisible({ timeout: 10000 });
+  }
+
   // --- En-tête (titre + tags) ---
   // Seul le tag IQ est toujours rendu ; statut (`v-if statusDate`) et type (`v-if type`) sont
   // conditionnels selon les données → on ne les exige pas (robuste quel que soit le seed).

@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import type { Prisma, RelationType } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import type { RelationType } from "@prisma/client";
 import { RelationTypeFilter } from "../product/application/dto/relation-type.dto";
 import { ApplicationSearchFilters } from "src/applications/infrastructure/repository/application.repository.interface";
 import { Requestor } from "src/user/entities/user.entity";
@@ -637,28 +638,170 @@ export class PrismaQueryBuilder {
     };
   }
 
+  private static readonly RAW_SORT_FIELDS = new Set([
+    "hostingDisplay",
+    "hostingSite",
+    "hostingProviderDisplay",
+    "hostingPlatformDisplay",
+    "tag",
+    "moa",
+    "moe",
+    "hostingManager",
+    "rsimm",
+    "rgaa",
+    "technicalMaturity",
+    "businessMaturity",
+    "costMaturity",
+  ]);
+
+  public isRawSort(sortBy: string | undefined): boolean {
+    return PrismaQueryBuilder.RAW_SORT_FIELDS.has(sortBy ?? "");
+  }
+
+  public async sortApplicationIdsRaw(
+    ids: string[],
+    sortBy: string,
+    order: "asc" | "desc",
+  ): Promise<string[]> {
+    if (ids.length === 0) return [];
+
+    const dir = Prisma.raw(order === "desc" ? "DESC" : "ASC");
+
+    const hostingSortQuery = (field: "site" | "provider" | "platform") =>
+      this.prisma.$queryRaw<{ id: string }[]>(
+        Prisma.sql`
+          SELECT a."id" FROM "Application" a
+          LEFT JOIN "Hosting" h ON h."applicationId" = a."id"
+          LEFT JOIN "HostingOption" ho ON h."hostingOptionId" = ho."id"
+          WHERE a."id" = ANY(${ids})
+          GROUP BY a."id"
+          ORDER BY MIN(LOWER(ho.${Prisma.raw(`"${field}"`)})) ${dir} NULLS LAST
+        `,
+      );
+
+    const actorSortQuery = (actorTypeCode: string) =>
+      this.prisma.$queryRaw<{ id: string }[]>(
+        Prisma.sql`
+          SELECT a."id" FROM "Application" a
+          LEFT JOIN "Actor" ac ON ac."applicationId" = a."id"
+          LEFT JOIN "ActorType" at2 ON ac."actorTypeId" = at2."id"
+          LEFT JOIN "Organization" o ON ac."organizationId" = o."id"
+          WHERE a."id" = ANY(${ids})
+          GROUP BY a."id"
+          ORDER BY MIN(
+            CASE WHEN at2."code" = ${actorTypeCode}
+              THEN LOWER(COALESCE(o."sigle", o."path", ac."email", ''))
+            END
+          ) ${dir} NULLS LAST
+        `,
+      );
+
+    const debtSortQuery = (
+      field: "technicalMaturity" | "businessMaturity" | "costMaturity",
+    ) =>
+      this.prisma.$queryRaw<{ id: string }[]>(
+        Prisma.sql`
+          SELECT a."id" FROM "Application" a
+          LEFT JOIN LATERAL (
+            SELECT ${Prisma.raw(`"${field}"`)} AS val FROM "TechnicalDebtInfo"
+            WHERE "applicationId" = a."id"
+            ORDER BY "createdAt" DESC LIMIT 1
+          ) tdi ON true
+          WHERE a."id" = ANY(${ids})
+          ORDER BY tdi.val ${dir} NULLS LAST
+        `,
+      );
+
+    let rows: { id: string }[];
+
+    switch (sortBy) {
+      case "hostingDisplay":
+      case "hostingSite":
+        rows = await hostingSortQuery("site");
+        break;
+      case "hostingProviderDisplay":
+        rows = await hostingSortQuery("provider");
+        break;
+      case "hostingPlatformDisplay":
+        rows = await hostingSortQuery("platform");
+        break;
+      case "moa":
+        rows = await actorSortQuery("MOA");
+        break;
+      case "moe":
+        rows = await actorSortQuery("MOE");
+        break;
+      case "hostingManager":
+        rows = await actorSortQuery("HEB");
+        break;
+      case "rsimm":
+        rows = await actorSortQuery("RSSI");
+        break;
+      case "tag":
+        rows = await this.prisma.$queryRaw<{ id: string }[]>(
+          Prisma.sql`
+            SELECT a."id" FROM "Application" a
+            LEFT JOIN "_ApplicationToTag" att ON att."A" = a."id"
+            LEFT JOIN "Tag" t ON t."id" = att."B"
+            WHERE a."id" = ANY(${ids})
+            GROUP BY a."id"
+            ORDER BY MIN(LOWER(t."name")) ${dir} NULLS LAST
+          `,
+        );
+        break;
+      case "rgaa":
+        rows = await this.prisma.$queryRaw<{ id: string }[]>(
+          Prisma.sql`
+            SELECT a."id" FROM "Application" a
+            LEFT JOIN "RgaaCompliance" rc ON rc."applicationId" = a."id"
+            WHERE a."id" = ANY(${ids})
+            GROUP BY a."id"
+            ORDER BY MAX(rc."score_percentage") ${dir} NULLS LAST
+          `,
+        );
+        break;
+      case "technicalMaturity":
+        rows = await debtSortQuery("technicalMaturity");
+        break;
+      case "businessMaturity":
+        rows = await debtSortQuery("businessMaturity");
+        break;
+      case "costMaturity":
+        rows = await debtSortQuery("costMaturity");
+        break;
+      default:
+        return ids;
+    }
+
+    return rows.map((r) => r.id);
+  }
+
   public buildOrderBy(
     sortBy: string | undefined,
     order: "asc" | "desc" | undefined,
   ): Prisma.ApplicationOrderByWithRelationInput {
     const safeOrder = order === "desc" ? "desc" : "asc";
 
-    // Handle different sorting options with fallback
     const sortOptions: Record<
       string,
       Prisma.ApplicationOrderByWithRelationInput
     > = {
-      hostingSite: { hostings: { _count: safeOrder } },
       shortName: { shortName: safeOrder },
       priorityRestart: { priorityRestart: safeOrder },
       quality: { quality: safeOrder },
       label: { label: safeOrder },
-      businessDivision: { label: safeOrder },
-      applicationViews: {
-        applicationViews: {
-          _count: safeOrder,
-        },
-      },
+      businessDivision: { businessDivision: { label: safeOrder } },
+      applicationViews: { applicationViews: { _count: safeOrder } },
+
+      dima: { compliance: { dima_duration_hours: safeOrder } },
+      pdma: { compliance: { pdma_duration_hours: safeOrder } },
+      dsfr: { compliance: { dsfr_implemented: safeOrder } },
+      rgpd: { compliance: { rgpd_has_aipd: safeOrder } },
+      pra: { compliance: { dima_recovery_plan: safeOrder } },
+      homologation: { compliance: { homologation_status: safeOrder } },
+      homologationDateEnd: { compliance: { homologation_date_end: safeOrder } },
+
+      status: { currentStatus: { status: safeOrder } },
     };
 
     const sortKey = sortBy ?? "shortName";

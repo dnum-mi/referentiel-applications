@@ -30,6 +30,8 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
         AND: [] as Prisma.ApplicationWhereInput[],
       })),
       buildOrderBy: jest.fn().mockReturnValue({}),
+      isRawSort: jest.fn().mockReturnValue(false),
+      sortApplicationIdsRaw: jest.fn().mockResolvedValue([]),
     };
     const applicationSearchService = {
       fullTextSearch: jest

@@ -4,8 +4,8 @@ import { Permission, type PaginatedReportDto, type ReportDto } from "@/client/ty
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
-import type { TableColumn } from "@/types/table";
-import { computed, onMounted, ref, watch } from "vue";
+import type { TableColumn, TableSortEvent } from "@/types/table";
+import { computed, onMounted, ref } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 
 defineOptions({ inheritAttrs: false });
@@ -22,10 +22,10 @@ const pageSize = ref(5);
 const firstIndex = computed(() => currentPage.value * pageSize.value);
 
 const tableColumns: TableColumn[] = [
-  { field: "Date", header: "Date", sortable: false },
-  { field: "Auteur", header: "Auteur", sortable: false },
-  { field: "Titre", header: "Titre", sortable: false },
-  { field: "Description", header: "Description", sortable: false },
+  { field: "Date", header: "Date", sortable: true },
+  { field: "Auteur", header: "Auteur", sortable: true },
+  { field: "Titre", header: "Titre", sortable: true },
+  { field: "Description", header: "Description", sortable: true },
 ];
 
 const canPost = computed(() => {
@@ -35,13 +35,9 @@ const canPost = computed(() => {
 async function fetchIssues() {
   isLoading.value = true;
   try {
-    const query = {
-      page: currentPage.value,
-      limit: pageSize.value,
-    };
     const response = await api.applicationReportsControllerFindAll({
       path: { applicationId: props.application.id },
-      query,
+      query: { limit: 10000 },
     });
     if (!response.data) {
       issues.value = { results: [], total: 0 };
@@ -53,8 +49,15 @@ async function fetchIssues() {
   }
 }
 
-watch([currentPage, pageSize], fetchIssues);
 onMounted(fetchIssues);
+
+const sortField = ref("Date");
+const sortOrder = ref<number>(-1);
+
+function onSort(event: TableSortEvent) {
+  sortField.value = event.sortField || "Date";
+  sortOrder.value = event.sortOrder;
+}
 
 function onPage(event: any) {
   currentPage.value = event.page;
@@ -85,16 +88,13 @@ async function submitReport() {
 
 const reportRows = computed(() => {
   const title = "Signalement";
-  return issues.value.results
-    .map((report: ReportDto) => ({
-      sortKey: new Date(report.createdAt).getTime(),
-      Date: new Date(report.createdAt).toLocaleDateString("fr-FR"),
-      Auteur: report.notifier?.email || "Inconnu",
-      Titre: title,
-      Description: report.description,
-    }))
-    .sort((a, b) => b.sortKey - a.sortKey)
-    .map((item, index) => ({ ...item, index }));
+  return issues.value.results.map((report: ReportDto) => ({
+    Date: report.createdAt,
+    dateDisplay: new Date(report.createdAt).toLocaleDateString("fr-FR"),
+    Auteur: report.notifier?.email || "Inconnu",
+    Titre: title,
+    Description: report.description,
+  }));
 });
 
 const loading = computed(() => isLoading.value);
@@ -107,14 +107,19 @@ const loading = computed(() => isLoading.value);
       :items="reportRows"
       :columns="tableColumns"
       :paginator="true"
-      :lazy="true"
       :rows="pageSize"
       :first="firstIndex"
-      :total-records="issues.total"
+      :total-records="reportRows.length"
+      :sort-field="sortField"
+      :sort-order="sortOrder"
       data-testid="reports-table"
       empty-message="Aucun signalement proposé."
+      @sort="onSort"
       @page="onPage"
     >
+      <template #body-Date="{ data }">
+        {{ data.dateDisplay }}
+      </template>
     </RefAppTable>
   </div>
   <div v-if="canPost" data-testid="reports-report-issue">

@@ -171,4 +171,55 @@ test.describe("Fiche application", () => {
     await fiche.open(app!.id, "tab-infos");
     await fiche.expectCostContainmentNotRated();
   });
+
+  test("FIC-17 - tri onglet Acteurs", async ({ page, data }) => {
+    const app = await data.applicationWithActors();
+    test.skip(!app, "Aucune application avec acteurs dans le jeu de données");
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(app!.id, "tab-actors");
+    await fiche.expectActorsTabLoaded();
+
+    await fiche.sortActorColumn("Organisation");
+    await fiche.sortActorColumn("Nom");
+  });
+
+  test("FIC-18 - tri onglet Relations", async ({ page, data }) => {
+    const app = await data.applicationWithRelations();
+    test.skip(!app, "Aucune application avec relation dans le jeu de données");
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(app!.id, "tab-relations");
+    await fiche.expectRelationsWithTarget();
+
+    await fiche.sortTabColumn("relations-table", "Application Cible");
+    await fiche.sortTabColumn("relations-table", "Relation");
+  });
+
+  test("FIC-19 - tri onglet Signalements", async ({ page, data }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(app!.id, "tab-reports");
+    await fiche.expectReportsTabLoaded();
+
+    await fiche.sortTabColumn("reports-table", "Date");
+    await fiche.sortTabColumn("reports-table", "Auteur");
+  });
+
+  test("FIC-20 - tri onglet Modifications (lazy server-side)", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(app!.id, "tab-modifications");
+    await fiche.expectModificationsTabLoaded();
+
+    await fiche.sortModificationsColumn("Date");
+    await fiche.sortModificationsColumn("Titre");
+  });
 });

@@ -286,4 +286,62 @@ test.describe("Catalogue & recherche", () => {
       await search.expectColumnVisible(header);
     }
   });
+
+  test("CAT-18 - tri colonne Hébergement", async ({ page, data }) => {
+    test.skip(
+      !(await data.firstApplication()),
+      "Aucune application dans le jeu de données",
+    );
+
+    const search = new SearchPage(page);
+    await search.open();
+    await search.expectColumnVisible("Hébergement");
+
+    await search.sortByColumn("Hébergement", "hostingDisplay");
+    const firstOrder = search.currentSortOrder();
+    await search.sortByColumn("Hébergement", "hostingDisplay");
+    await search.expectSortOrderChangedFrom(firstOrder);
+  });
+
+  test("CAT-19 - tri colonnes avancées (Direction métier, Statut)", async ({
+    page,
+    data,
+  }) => {
+    test.skip(
+      !(await data.firstApplication()),
+      "Aucune application dans le jeu de données",
+    );
+
+    const search = new SearchPage(page);
+    await search.open();
+
+    await search.openColumnCustomization();
+    await search.enableColumn("Direction métier");
+    await search.enableColumn("Statut");
+    await search.closeColumnCustomization();
+
+    await search.sortByColumn("Direction métier", "businessDivision");
+    await search.sortByColumn("Statut", "status");
+  });
+
+  test("CAT-20 - tri colonnes conformité (DIMA, Homologation)", async ({
+    page,
+    data,
+  }) => {
+    test.skip(
+      !(await data.firstApplication()),
+      "Aucune application dans le jeu de données",
+    );
+
+    const search = new SearchPage(page);
+    await search.open();
+
+    await search.openColumnCustomization();
+    await search.enableColumn("DIMA");
+    await search.enableColumn("Homologation");
+    await search.closeColumnCustomization();
+
+    await search.sortByColumn("DIMA", "dima");
+    await search.sortByColumn("Homologation", "homologation");
+  });
 });
