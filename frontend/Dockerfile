@@ -34,11 +34,15 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine AS prod
 
 USER 0
 
-RUN chown -R 1001:1001 /usr/share/nginx/html && chmod -R 755 /usr/share/nginx/html
-COPY --chown=1001:1001 --chmod=444 nginx.conf /etc/nginx/nginx.conf
-COPY --chown=1001:1001 --chmod=755 --from=build /app/dist /app
+# OpenShift (et tout runtime "arbitrary UID") lance le conteneur avec un UID
+# aléatoire mais toujours dans le groupe 0. L'entrypoint réécrit /app et recopie
+# vers /usr/share/nginx/html à chaque démarrage : ces deux dossiers doivent donc
+# être inscriptibles par le groupe 0. On reste NON world-writable (Sonar S2612 OK).
+RUN chown -R 1001:0 /usr/share/nginx/html && chmod -R g=u /usr/share/nginx/html
+COPY --chown=1001:0 --chmod=444 nginx.conf /etc/nginx/nginx.conf
+COPY --chown=1001:0 --chmod=775 --from=build /app/dist /app
 
-COPY --chown=1001:1001 --chmod=775 entrypoint.sh /docker-entrypoint.d/entrypoint.sh
+COPY --chown=1001:0 --chmod=775 entrypoint.sh /docker-entrypoint.d/entrypoint.sh
 
 USER 1001
 
