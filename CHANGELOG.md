@@ -1,5 +1,44 @@
 # Changelog
 
+## [1.80.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.79.0...v1.80.0) (2026-06-26)
+
+
+### Features
+
+* [RGAA] Lot A — combobox / autocomplete accessible ([#1823](https://github.com/dnum-mi/referentiel-applications/issues/1823)) ([1126589](https://github.com/dnum-mi/referentiel-applications/commit/1126589d54aa7e2431f1511f141e86e56eb070eb))
+* 1772 rgaa lot b étiquettes de champs manquantes critère 111 ([#1820](https://github.com/dnum-mi/referentiel-applications/issues/1820)) ([37147ab](https://github.com/dnum-mi/referentiel-applications/commit/37147abfe902a0994da4a53d6866dfe42166c9f8))
+* add check maia email when edit user ([#1818](https://github.com/dnum-mi/referentiel-applications/issues/1818)) ([6ab7b35](https://github.com/dnum-mi/referentiel-applications/commit/6ab7b358e0d8118922668cdb5b55917c5e58a294))
+* add global modification by actor in panel admin ([#1888](https://github.com/dnum-mi/referentiel-applications/issues/1888)) ([e0c5645](https://github.com/dnum-mi/referentiel-applications/commit/e0c564570284b08e9fadc1dc76a9fbc9c756dea7))
+* add MditCampaign and ImpersonationLog models to schema ([#1874](https://github.com/dnum-mi/referentiel-applications/issues/1874)) ([9b794ac](https://github.com/dnum-mi/referentiel-applications/commit/9b794accd13cc746f7e5d98c0afcc9e34b963909))
+* generic Excel import with Conformités sheet ([#753](https://github.com/dnum-mi/referentiel-applications/issues/753)) ([#1881](https://github.com/dnum-mi/referentiel-applications/issues/1881)) ([459389f](https://github.com/dnum-mi/referentiel-applications/commit/459389fcbf1550d62c8d0ecd7e20bee654fefa90))
+* impersonation d'un utilisateur par un administrateur ([#1764](https://github.com/dnum-mi/referentiel-applications/issues/1764)) ([#1873](https://github.com/dnum-mi/referentiel-applications/issues/1873)) ([cb4a99e](https://github.com/dnum-mi/referentiel-applications/commit/cb4a99e3eaa48e8979df1ddc73ba04c5fddbb4df))
+* implement compliance filters and update related components ([#1788](https://github.com/dnum-mi/referentiel-applications/issues/1788)) ([07ddf45](https://github.com/dnum-mi/referentiel-applications/commit/07ddf45c904740d3151eff65ccb38572d1853be3))
+* import des acteurs depuis un fichier Excel ([#751](https://github.com/dnum-mi/referentiel-applications/issues/751)) ([#1876](https://github.com/dnum-mi/referentiel-applications/issues/1876)) ([02c2429](https://github.com/dnum-mi/referentiel-applications/commit/02c24294aea1c1e4c5223240501238eecc59753b))
+* import Excel applique les droits par application et consigne les refus ([#1890](https://github.com/dnum-mi/referentiel-applications/issues/1890)) ([#1892](https://github.com/dnum-mi/referentiel-applications/issues/1892)) ([5396d13](https://github.com/dnum-mi/referentiel-applications/commit/5396d1349a2874bef15d1c69222b74d83054f1a2))
+* import Excel des onglets applications et hébergements ([#752](https://github.com/dnum-mi/referentiel-applications/issues/752)) ([#1889](https://github.com/dnum-mi/referentiel-applications/issues/1889)) ([13836f8](https://github.com/dnum-mi/referentiel-applications/commit/13836f8a91ca5cc7ba1fb97745af09771612879f))
+* millésime MDIT — campagnes dette IT + sélecteur Time + admin ([#1848](https://github.com/dnum-mi/referentiel-applications/issues/1848)) ([#1872](https://github.com/dnum-mi/referentiel-applications/issues/1872)) ([c584396](https://github.com/dnum-mi/referentiel-applications/commit/c5843966c54e433bef57e51ddf59388554749dab))
+* pouvoir tracer les modifications de la matrice des droits dans lhistorique de refapp ([#1899](https://github.com/dnum-mi/referentiel-applications/issues/1899)) ([45e1eea](https://github.com/dnum-mi/referentiel-applications/commit/45e1eeae97755d2ea7d945cdaa0392fa80ee3cb0))
+* recherche full-text des applications ([#1753](https://github.com/dnum-mi/referentiel-applications/issues/1753)) ([#1842](https://github.com/dnum-mi/referentiel-applications/issues/1842)) ([94fb28e](https://github.com/dnum-mi/referentiel-applications/commit/94fb28e2eb4260f5bfcb6833b17d5749951916ae))
+* restrict DIMA/PDMA duration to allowed values ([#1901](https://github.com/dnum-mi/referentiel-applications/issues/1901)) ([#1910](https://github.com/dnum-mi/referentiel-applications/issues/1910)) ([59fe778](https://github.com/dnum-mi/referentiel-applications/commit/59fe7786fae74f1fbe46c11b6b948ebef72b4798))
+* tests add more non regression tests ([#1853](https://github.com/dnum-mi/referentiel-applications/issues/1853)) ([31c1c04](https://github.com/dnum-mi/referentiel-applications/commit/31c1c04d4c3bdd395b06f8f3e8f4c0c97d74a179))
+
+
+### Bug Fixes
+
+* **a11y:** use native elements over ARIA roles in Vue components ([#1897](https://github.com/dnum-mi/referentiel-applications/issues/1897)) ([#1907](https://github.com/dnum-mi/referentiel-applications/issues/1907)) ([108da04](https://github.com/dnum-mi/referentiel-applications/commit/108da047fe011c4964d340100a913c304c3f2a8f))
+* add interval value into iqchart ([#1879](https://github.com/dnum-mi/referentiel-applications/issues/1879)) ([acfb7b7](https://github.com/dnum-mi/referentiel-applications/commit/acfb7b79e1f6e1169b4171d29330752af50d140e))
+* do not allow empty source name for label creation ([#1875](https://github.com/dnum-mi/referentiel-applications/issues/1875)) ([36f8fc2](https://github.com/dnum-mi/referentiel-applications/commit/36f8fc26a116619c172fc03fb83ce2ca57390919))
+* **docker:** drop world-writable perms on frontend image (sonar S2612) ([#1904](https://github.com/dnum-mi/referentiel-applications/issues/1904)) ([ad0675d](https://github.com/dnum-mi/referentiel-applications/commit/ad0675d3dad381247840f83c503af4577f4b9fa3))
+* **frontend:** corrige un bug de type AdminActorsTab et la config des tests unitaires ([#1906](https://github.com/dnum-mi/referentiel-applications/issues/1906)) ([23e9ed0](https://github.com/dnum-mi/referentiel-applications/commit/23e9ed0e1b599d676d4739c0c5a55ffe30b25d33))
+* handle undefined value into scope permission service ([#1880](https://github.com/dnum-mi/referentiel-applications/issues/1880)) ([558c25c](https://github.com/dnum-mi/referentiel-applications/commit/558c25cc196da865d26f1aa5faffea79a7ae4b4e))
+* logout user when 401 ([#1843](https://github.com/dnum-mi/referentiel-applications/issues/1843)) ([c9c9e79](https://github.com/dnum-mi/referentiel-applications/commit/c9c9e797bc06a10cd390b73a4c29c8bf46c0d3a2))
+* mdit représentation graphique ([#1871](https://github.com/dnum-mi/referentiel-applications/issues/1871)) ([03067d0](https://github.com/dnum-mi/referentiel-applications/commit/03067d0784593c6de0fe6e9c8d8ce27d1dd7794f))
+* provide compare function for array sorts (sonar S2871) ([#1902](https://github.com/dnum-mi/referentiel-applications/issues/1902)) ([a55744c](https://github.com/dnum-mi/referentiel-applications/commit/a55744cdd6589d94a3f8d233c5da081c77ab3489))
+* relabel "Maîtrise des coûts" & rename costMaturity → costContainment ([#1900](https://github.com/dnum-mi/referentiel-applications/issues/1900)) ([#1909](https://github.com/dnum-mi/referentiel-applications/issues/1909)) ([39fde52](https://github.com/dnum-mi/referentiel-applications/commit/39fde52a0d842184e4c9778973e935289bea2e1d))
+* **security:** résolution des alertes de code scanning CodeQL ([#1846](https://github.com/dnum-mi/referentiel-applications/issues/1846)) ([7612506](https://github.com/dnum-mi/referentiel-applications/commit/7612506412ecb76f13fb6948405f316ac62ded7d))
+* **statuses:** remove dead Promise fallback in find (sonar S6544) ([#1903](https://github.com/dnum-mi/referentiel-applications/issues/1903)) ([db12e33](https://github.com/dnum-mi/referentiel-applications/commit/db12e33aff9cd5b22a9b1a75eb26454479a19ecb))
+* update OIDC Swagger URLs and refactor FooterLink interface ([#1719](https://github.com/dnum-mi/referentiel-applications/issues/1719)) ([431bab7](https://github.com/dnum-mi/referentiel-applications/commit/431bab7d07df09ceb7240b201998c8103bbe3e71))
+
 ## [1.79.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.78.0...v1.79.0) (2026-06-11)
 
 
