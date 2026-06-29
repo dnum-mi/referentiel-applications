@@ -399,7 +399,7 @@ test.describe("ApplicationsView", () => {
 
     await expect(page.getByRole("main")).toBeVisible();
 
-    const h1 = page.locator("h1");
+    const h1 = page.locator("h1:not([data-testid='page-title-announcer'])");
     await expect(h1).toHaveCount(1);
     await expect(page.getByTestId(APPLICATION_SEARCH_TITLE_TEST_ID)).toBeVisible();
 

@@ -98,4 +98,38 @@ export class ChromePage extends BasePage {
     await option.click();
     await expect(this.page).toHaveURL(/\/applications\/[^/]+/);
   }
+
+  // --- Assertions RGAA (RGA-03, RGA-04) ---
+
+  /**
+   * RGA-03 (RGAA 12.8) : navigue vers la page Catalogue via le lien SPA de la nav principale
+   * et attend que l'URL reflète la destination. L'`afterEach` du routeur Vue appelle ensuite
+   * `pageTitleAnnouncer.value?.focus()` (via `nextTick`), déclenchant le comportement à tester.
+   */
+  async navigateViaSpaToSearch(): Promise<void> {
+    await this.mainNav().getByRole("link", { name: "Applications" }).click();
+    await this.page.waitForURL(/recherche-application/);
+  }
+
+  /**
+   * RGA-03 (RGAA 12.8) : le `page-title-announcer` (h1 hors-écran, `tabindex="-1"`) doit recevoir
+   * le focus après une navigation SPA. On attend l'état DOM avant l'assertion Playwright pour
+   * absorber le délai introduit par `nextTick()` dans `router.afterEach`.
+   */
+  async expectAnnouncerFocused(): Promise<void> {
+    await this.page.waitForFunction(
+      () =>
+        document.activeElement?.getAttribute("data-testid") ===
+        "page-title-announcer",
+    );
+    await expect(this.byTestId("page-title-announcer")).toBeFocused();
+  }
+
+  /**
+   * RGA-04 (RGAA 7.1) : le texte du `page-title-announcer` doit contenir le titre de page attendu
+   * (ex. `"Recherche d'applications"`), fourni via `to.meta.title` par le routeur.
+   */
+  async expectAnnouncerText(text: string | RegExp): Promise<void> {
+    await expect(this.byTestId("page-title-announcer")).toContainText(text);
+  }
 }

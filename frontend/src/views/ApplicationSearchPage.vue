@@ -32,7 +32,7 @@ const averageIqDisplay = computed(() => {
   <div class="layout" data-testid="application-view">
     <SidebarFilters data-testid="application-filters" />
 
-    <main class="main-content" id="main-content" data-testid="main-content" role="main">
+    <section class="main-content" data-testid="main-content">
       <h1 class="fr-h1" data-testid="application-search-title">Recherche d'applications</h1>
 
       <output v-if="isLoading" class="loader" data-testid="application-loader" aria-live="polite" aria-atomic="true">
@@ -53,7 +53,7 @@ const averageIqDisplay = computed(() => {
         <ApplicationTableView v-if="displayMode === 'table'" data-testid="application-table-view" />
         <ApplicationCardView v-else data-testid="application-card-view" />
       </section>
-    </main>
+    </section>
   </div>
 </template>
 

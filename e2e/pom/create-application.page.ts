@@ -4,6 +4,16 @@ import { BasePage } from "./base.page";
 export class CreateApplicationPage extends BasePage {
   private form = () => this.byTestId("application-form");
 
+  /**
+   * Textarea du champ Description (MarkdownEditor) — encapsulé ici pour les assertions RGAA.
+   * Scoped dans le conteneur `application-description` pour éviter toute ambiguïté si plusieurs
+   * MarkdownEditor coexistent sur la page.
+   */
+  private descriptionTextarea = () =>
+    this.byTestId("application-description").locator(
+      '[data-testid="markdown-textarea"]',
+    );
+
   async open(): Promise<void> {
     await this.goto("/applications/creer");
     await expect(this.form()).toBeVisible();
@@ -87,5 +97,32 @@ export class CreateApplicationPage extends BasePage {
     await expect(this.byTestId("application-profile")).toBeVisible({
       timeout: 15000,
     });
+  }
+
+  // --- Assertions RGAA (RGA-01, RGA-02) ---
+
+  /**
+   * RGA-02 (RGAA 11.1) : l'attribut `title` du textarea doit correspondre au libellé du champ.
+   * Le `MarkdownEditor` reçoit `aria-label="Description"` → `:title="ariaLabel"` → title="Description".
+   */
+  async expectDescriptionTextareaTitle(expected: string): Promise<void> {
+    await expect(this.descriptionTextarea()).toHaveAttribute("title", expected);
+  }
+
+  /**
+   * RGA-01 (RGAA 12.9) : clique le textarea sans sélectionner de texte puis envoie Tab.
+   * Le `handleKeydown` du MarkdownEditor ne consomme Tab que lorsque du texte est sélectionné ;
+   * sans sélection le comportement natif est préservé → le focus quitte le champ.
+   */
+  async focusDescriptionAndPressTab(): Promise<void> {
+    await this.descriptionTextarea().click();
+    await this.page.keyboard.press("Tab");
+  }
+
+  /**
+   * RGA-01 (RGAA 12.9) : après `focusDescriptionAndPressTab()`, le textarea ne doit plus être focusé.
+   */
+  async expectDescriptionTextareaNotFocused(): Promise<void> {
+    await expect(this.descriptionTextarea()).not.toBeFocused();
   }
 }

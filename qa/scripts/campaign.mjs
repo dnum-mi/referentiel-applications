@@ -144,6 +144,13 @@ const DOMAINS = [
     template: "qa-impersonation.md",
     colorLabel: "qa:impersonation",
   },
+  {
+    domain: "rgaa",
+    prefix: "RGA",
+    label: "Accessibilité RGAA",
+    template: "qa-rgaa.md",
+    colorLabel: "qa:rgaa",
+  },
 ];
 
 function required(key) {
