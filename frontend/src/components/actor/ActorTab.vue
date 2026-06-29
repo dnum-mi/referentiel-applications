@@ -5,6 +5,7 @@ import OrgaLink from "@/components/organization/OgaLink.vue";
 import useModal from "@/composables/use-modal";
 import type { APP_PERMISSIONS, Application } from "@/models/Application";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
+import { useOrganizationStore } from "@/stores/organizationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
@@ -22,6 +23,7 @@ const props = defineProps<{
 
 const userStore = useUserStore();
 const actorTypeStore = useActorTypeStore();
+const orgStore = useOrganizationStore();
 const toaster = useToasterStore();
 const actorModal = useModal<ActorDto>();
 const actors = ref<ActorDto[]>([]);
@@ -34,12 +36,12 @@ const canEdit = computed(() => userStore.hasPermissions([Permission.ACTOR_WRITE]
 
 const columns: TableColumn[] = [
   { field: "Sélection", header: "Sélection", sortable: false },
-  { field: "Organisation", header: "Organisation", sortable: false },
+  { field: "Organisation", header: "Organisation", sortable: true },
   { field: "Groupe", header: "Rattaché(e)", sortable: true },
-  { field: "Type", header: "Type", sortable: false },
-  { field: "Email", header: "Email", sortable: false },
-  { field: "Prénom", header: "Prénom", sortable: false },
-  { field: "Nom", header: "Nom", sortable: false },
+  { field: "Type", header: "Type", sortable: true },
+  { field: "Email", header: "Email", sortable: true },
+  { field: "Prénom", header: "Prénom", sortable: true },
+  { field: "Nom", header: "Nom", sortable: true },
   { field: "Actions", header: "Actions", sortable: false },
 ];
 
@@ -53,22 +55,23 @@ function getActorTypeLabel(typeId: string): string {
 }
 
 const tableRows = computed(() =>
-  actors.value.map((actor) => ({
-    id: actor.id,
-    Sélection: actor.id,
-    Organisation: actor.organizationId ?? undefined,
-    Type: getActorTypeLabel(actor.actorTypeId),
-    Email: {
-      label: actor.email || "",
-      to: actor.email ? `mailto:${actor.email}` : "",
-    },
-    Prénom: actor.firstname || "",
-    Nom: actor.lastname || "",
-    Actions: {
-      edit: () => actorModal.openModal(actor),
-    },
-    Groupe: actor.isGroup ? "Oui" : "Non",
-  })),
+  actors.value.map((actor) => {
+    const org = actor.organizationId ? orgStore.organizations[actor.organizationId] : undefined;
+    return {
+      id: actor.id,
+      Sélection: actor.id,
+      organisationId: actor.organizationId ?? undefined,
+      Organisation: org?.sigle || org?.path || "",
+      Type: getActorTypeLabel(actor.actorTypeId),
+      Email: actor.email || "",
+      Prénom: actor.firstname || "",
+      Nom: actor.lastname || "",
+      Actions: {
+        edit: () => actorModal.openModal(actor),
+      },
+      Groupe: actor.isGroup ? "Oui" : "Non",
+    };
+  }),
 );
 
 async function fetchActorsByApplication(applicationId: string) {
@@ -101,6 +104,11 @@ onBeforeMount(async () => {
   try {
     await actorTypeStore.fetchAll();
     await fetchActorsByApplication(props.application.id);
+    for (const actor of actors.value) {
+      if (actor.organizationId && !orgStore.organizations[actor.organizationId]) {
+        orgStore.fetchById(actor.organizationId);
+      }
+    }
   } finally {
     loading.value = false;
   }
@@ -255,26 +263,22 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
         </template>
 
         <template #body-Organisation="{ data }">
-          <OrgaLink v-if="data.Organisation" :organization-id="data.Organisation"></OrgaLink>
+          <OrgaLink v-if="data.organisationId" :organization-id="data.organisationId"></OrgaLink>
           <template v-else> Aucune organisation </template>
         </template>
 
         <template #body-Email="{ data }">
           <a
-            v-if="data.Email.to"
-            :href="data.Email.to"
+            v-if="data.Email"
+            :href="`mailto:${data.Email}`"
             target="_blank"
             rel="noopener noreferrer"
             data-testid="actor-email-link"
-            :title="`Envoyer un email à ${data.Email.label}`"
-            :aria-label="`Envoyer un email à ${data.Email.label}`"
+            :title="`Envoyer un email à ${data.Email}`"
+            :aria-label="`Envoyer un email à ${data.Email}`"
           >
-            {{ data.Email.label }}
+            {{ data.Email }}
           </a>
-
-          <span v-else>
-            {{ data.Email.label }}
-          </span>
         </template>
 
         <template #header-Groupe>

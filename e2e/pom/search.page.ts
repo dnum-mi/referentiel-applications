@@ -170,10 +170,12 @@ export class SearchPage extends BasePage {
 
   // --- Tri ---
   async sortByName(): Promise<void> {
+    const currentOrder = new URL(this.page.url()).searchParams.get("order");
     await this.page.getByRole("columnheader", { name: /Nom/i }).click();
-    await waitForSearchParams(this.page, (params) =>
-      ["asc", "desc"].includes(params.get("order") ?? "asc"),
-    );
+    await waitForSearchParams(this.page, (params) => {
+      const newOrder = params.get("order");
+      return newOrder !== null && newOrder !== currentOrder;
+    });
   }
 
   async sortByIq(): Promise<void> {
@@ -181,6 +183,20 @@ export class SearchPage extends BasePage {
     await waitForSearchParams(
       this.page,
       (params) => params.get("sortBy") === "quality",
+    );
+  }
+
+  /** Clic sur un en-tête de colonne et attend que l'URL reflète le `sortBy` attendu. */
+  async sortByColumn(
+    headerName: string,
+    expectedSortBy: string,
+  ): Promise<void> {
+    await this.page
+      .getByRole("columnheader", { name: headerName, exact: true })
+      .click();
+    await waitForSearchParams(
+      this.page,
+      (params) => params.get("sortBy") === expectedSortBy,
     );
   }
 

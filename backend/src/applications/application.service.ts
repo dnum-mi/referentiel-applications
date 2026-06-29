@@ -331,18 +331,39 @@ export class ApplicationService {
     }
 
     const useRelevance = hasFullText && sortBy === "relevance";
+    const useRawSort =
+      !useRelevance && this.prismaQueryBuilder.isRawSort(sortBy);
 
-    const paginatedResult = useRelevance
-      ? await this.applicationRepository.findApplicationsRanked(
-          searchParams,
-          where,
-          rankedIds ?? [],
-        )
-      : await this.applicationRepository.findApplications(
-          searchParams,
-          where,
-          orderBy,
-        );
+    let paginatedResult: ApplicationSearchResultDto;
+
+    if (useRawSort) {
+      const matching = await this.prisma.application.findMany({
+        where,
+        select: { id: true },
+      });
+      const sortedIds = await this.prismaQueryBuilder.sortApplicationIdsRaw(
+        matching.map((a) => a.id),
+        sortBy,
+        order,
+      );
+      paginatedResult = await this.applicationRepository.findApplicationsRanked(
+        searchParams,
+        where,
+        sortedIds,
+      );
+    } else if (useRelevance) {
+      paginatedResult = await this.applicationRepository.findApplicationsRanked(
+        searchParams,
+        where,
+        rankedIds ?? [],
+      );
+    } else {
+      paginatedResult = await this.applicationRepository.findApplications(
+        searchParams,
+        where,
+        orderBy,
+      );
+    }
 
     const dataWithViews = paginatedResult.results.map((app: any) => {
       const { _count, ...rest } = app;
