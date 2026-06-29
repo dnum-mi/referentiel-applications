@@ -84,3 +84,11 @@ body,
 :deep(.fr-input-group) {
   margin-bottom: 0.5rem !important;
 }
+
+/* RGAA-011 : la page courante ne doit pas être signalée par la seule couleur. */
+.fr-nav__link[aria-current="page"] {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-thickness: 2px;
+}

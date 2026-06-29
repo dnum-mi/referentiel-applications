@@ -6,6 +6,7 @@ import { useMetadataStore } from "@/stores/metadataStore";
 import { formatDate } from "@/composables/use-date";
 import { metadataActionLabels } from "@/constants/dictionary";
 import PaginationFooter from "@/components/PaginationFooter.vue";
+import { setPageTitle } from "@/router";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { PaginatedMetadataDto } from "@/client/types.gen";
@@ -44,6 +45,9 @@ const columnToFieldKeyMap: Record<string, string> = {
 watch([currentPage, pageSize], () => {
   fetchData();
 });
+
+// RGAA-007 : titre de page explicite reflétant la pagination courante.
+watch(currentPage, (page) => setPageTitle(`Modifications - page ${page + 1}`), { immediate: true });
 
 function convertLocalToUTC(localDateTimeString: string): string {
   if (!localDateTimeString) return "";

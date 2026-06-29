@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import { setPageTitle } from "@/router";
 import { formatDateFR } from "@/composables/use-date";
 import { statusApplicationDictionary, typeApplicationDictionary } from "@/constants/dictionary";
 import { useApplicationStore } from "@/stores/applicationStore";
@@ -42,6 +43,15 @@ async function toggleSubscription() {
 const deleteModalOpened = ref(false);
 const deleteConfirmationInput = ref("");
 const applicationLabel = computed(() => application.value?.label ?? "");
+
+// RGAA-007 : titre de page explicite reprenant le nom de l'application.
+watch(
+  applicationLabel,
+  (label) => {
+    if (label) setPageTitle(`Profil d'application : ${label}`);
+  },
+  { immediate: true },
+);
 
 const canReadMetadata = computed(() => {
   return userStore.hasPermissions([Permission.METADATA_READ], Array.from(application.value.myPerms));
