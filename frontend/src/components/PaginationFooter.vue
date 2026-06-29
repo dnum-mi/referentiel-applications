@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 const props = defineProps<{
   totalFiltered: number;
@@ -20,6 +20,23 @@ const pages = computed(() => {
     href: `#page-${index + 1}`,
   }));
 });
+
+// RGAA-032 : DsfrPagination ne restitue le `title` que sur la page courante. On pose
+// un intitulé explicite « Page N » (aria-label) sur chaque lien numéroté, à l'init et
+// à chaque re-rendu (changement de page / de nombre de pages).
+const paginationRoot = ref<HTMLElement>();
+function labelPaginationLinks() {
+  paginationRoot.value?.querySelectorAll<HTMLAnchorElement>("a.fr-pagination__link").forEach((link) => {
+    const text = link.textContent?.trim() ?? "";
+    if (/^\d+$/.test(text)) {
+      link.setAttribute("aria-label", `Page ${text}`);
+    }
+  });
+}
+onMounted(labelPaginationLinks);
+watch([() => props.page, () => props.totalFiltered, () => props.limit], () => nextTick(labelPaginationLinks), {
+  flush: "post",
+});
 </script>
 
 <template>
@@ -39,7 +56,7 @@ const pages = computed(() => {
       </select>
     </div>
 
-    <nav class="footer-item pagination-centered" role="navigation" aria-label="Pagination">
+    <nav ref="paginationRoot" class="footer-item pagination-centered" role="navigation" aria-label="Pagination">
       <DsfrPagination
         :current-page="page"
         :pages="pages"
