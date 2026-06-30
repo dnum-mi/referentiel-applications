@@ -67,10 +67,19 @@ export class CreateApplicationPage extends BasePage {
     lastname: string,
     orgPath: string,
   ): Promise<void> {
-    await this.searchAndSelectOrg(/Organisation MOA/i, orgPath);
     await this.byTestId("application-moa-email").fill(email);
+    await this.searchAndSelectOrg(/Organisation MOA/i, orgPath);
     await this.byTestId("application-moa-firstname").fill(firstname);
     await this.byTestId("application-moa-lastname").fill(lastname);
+  }
+
+  async fillMoaStepAsGroup(email: string, orgPath: string): Promise<void> {
+    await this.byTestId("application-moa-email").fill(email);
+    await this.searchAndSelectOrg(/Organisation MOA/i, orgPath);
+    await this.byTestId("application-moa-is-group")
+      .locator("..")
+      .getByText(/entité/i)
+      .click();
   }
 
   async fillMoeStep(
@@ -79,10 +88,19 @@ export class CreateApplicationPage extends BasePage {
     lastname: string,
     orgPath: string,
   ): Promise<void> {
-    await this.searchAndSelectOrg(/Organisation MOE/i, orgPath);
     await this.byTestId("application-moe-email").fill(email);
+    await this.searchAndSelectOrg(/Organisation MOE/i, orgPath);
     await this.byTestId("application-moe-firstname").fill(firstname);
     await this.byTestId("application-moe-lastname").fill(lastname);
+  }
+
+  async fillMoeStepAsGroup(email: string, orgPath: string): Promise<void> {
+    await this.byTestId("application-moe-email").fill(email);
+    await this.searchAndSelectOrg(/Organisation MOE/i, orgPath);
+    await this.byTestId("application-moe-is-group")
+      .locator("..")
+      .getByText(/entité/i)
+      .click();
   }
 
   async nextStep(): Promise<void> {

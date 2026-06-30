@@ -187,6 +187,46 @@ test.describe("Actions CRUD de base", () => {
     }
   });
 
+  test("CRU-16 - créer une application avec MOA et MOE de type groupe (isGroup)", async ({
+    page,
+    data,
+  }) => {
+    const orgPath = await data.anyOrganizationPath();
+    test.skip(!orgPath, "Aucune organisation dans le jeu de données");
+
+    const ts = Date.now();
+    const label = `E2E-CRU16-${ts}`;
+    const createPage = new CreateApplicationPage(page);
+    await createPage.open();
+    await createPage.fillStep1(
+      label,
+      "Test app created by CRU-16 with group actors",
+    );
+    await createPage.nextStep();
+    await createPage.nextStep();
+    await createPage.fillMoaStepAsGroup(
+      `moa-group-${ts}@test.example.com`,
+      orgPath!,
+    );
+    await createPage.nextStep();
+    await createPage.fillMoeStepAsGroup(
+      `moe-group-${ts}@test.example.com`,
+      orgPath!,
+    );
+    await createPage.submit();
+    await createPage.expectRedirectedToApp();
+
+    const created = await data.applicationByLabel(label);
+    try {
+      expect(created).not.toBeNull();
+      const actors = await data.applicationActors(created!.id);
+      expect(actors?.length).toBeGreaterThanOrEqual(2);
+      expect(actors?.every((a) => a.isGroup === true)).toBe(true);
+    } finally {
+      if (created) await data.removeApplication(created!.id);
+    }
+  });
+
   test("CRU-09 - supprimer une application", async ({ page, data }) => {
     const orgPath = await data.anyOrganizationPath();
     test.skip(!orgPath, "Aucune organisation dans le jeu de données");

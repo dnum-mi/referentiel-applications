@@ -118,6 +118,12 @@
 - **Résultat attendu** : `links-table` reflète chaque étape ; le lien créé/modifié (`link-item`) ouvre
   bien l'URL renseignée dans un nouvel onglet.
 
+### CRU-16 — Créer une application avec MOA et MOE de type groupe (isGroup) ✅
+
+- **Datafeature** : au moins une organisation disponible ; utilisateur avec la permission `CreateApplication`.
+- **Action** : `/applications/creer` → remplir libellé et description → étape MOA : renseigner l'email, sélectionner une organisation et cocher `application-moa-is-group` (prénom/nom masqués) → étape MOE : même chose avec `application-moe-is-group` → `application-submit-btn`.
+- **Résultat attendu** : redirection vers la fiche de la nouvelle application (aucun 400) ; l'API renvoie bien ≥ 2 acteurs avec `isGroup = true` et sans prénom ni nom.
+
 ### CRU-15 — Cycle de vie d'une déclaration RGAA ✅
 
 - **Action** : onglet `tab-compliances` → carte RGAA → `rgaa-add-btn` → créer une déclaration →

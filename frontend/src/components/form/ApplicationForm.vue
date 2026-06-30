@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
+import { useOrganizationStore } from "@/stores/organizationStore";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 import TagSearchSelect from "@/components/common/TagSearchSelect.vue";
 import OrganizationSearchSelect from "@/components/common/OrganizationSearchSelect.vue";
@@ -17,6 +18,7 @@ import {
   type CreateActorDto,
   type ApplicationType,
   type BusinessDivisionDto,
+  type OrganizationDto,
   Permission,
 } from "@/client/types.gen";
 import type { ApplicationFormInitialData } from "@/models/Application";
@@ -52,7 +54,12 @@ const emit = defineEmits<{
 const toaster = useToasterStore();
 const applicationStore = useApplicationStore();
 const actorTypeStore = useActorTypeStore();
+const organizationStore = useOrganizationStore();
 const router = useRouter();
+const isSyncingFromMaiaMoa = ref(false);
+const isSyncingFromMaiaMoe = ref(false);
+const initialMoaOrganization = ref<OrganizationDto | null>(null);
+const initialMoeOrganization = ref<OrganizationDto | null>(null);
 const isSubmitting = ref(false);
 const labelError = ref<string | undefined>(undefined);
 const descriptionError = ref<string | undefined>(undefined);
@@ -73,6 +80,7 @@ const currentStep = ref(1);
 
 const moaActor = ref<CreateActorDto>({
   actorTypeId: "",
+  isGroup: false,
   organizationId: undefined,
   email: "",
   firstname: "",
@@ -81,11 +89,73 @@ const moaActor = ref<CreateActorDto>({
 
 const moeActor = ref<CreateActorDto>({
   actorTypeId: "",
+  isGroup: false,
   organizationId: undefined,
   email: "",
   firstname: "",
   lastname: "",
 });
+
+const isMoaGroup = computed(() => !!moaActor.value.isGroup);
+const isMoeGroup = computed(() => !!moeActor.value.isGroup);
+
+async function syncMoaFromMaia() {
+  isSyncingFromMaiaMoa.value = true;
+  if (!moaActor.value.email) {
+    toaster.addErrorMessage("L'email est requis pour synchroniser depuis MAIA");
+    isSyncingFromMaiaMoa.value = false;
+    return;
+  }
+  try {
+    const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email: moaActor.value.email } });
+    if (response.response.ok && response.data) {
+      const { organizationId: newOrgId, firstName, lastName } = response.data;
+      moaActor.value.firstname = firstName;
+      moaActor.value.lastname = lastName;
+      if (newOrgId) {
+        const org = await organizationStore.getById(newOrgId);
+        if (org) initialMoaOrganization.value = org;
+        moaOrganizationId.value = newOrgId;
+        toaster.addSuccessMessage("Organisation MOA synchronisée depuis MAIA");
+      }
+    } else {
+      toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
+    }
+  } catch {
+    toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
+  } finally {
+    isSyncingFromMaiaMoa.value = false;
+  }
+}
+
+async function syncMoeFromMaia() {
+  isSyncingFromMaiaMoe.value = true;
+  if (!moeActor.value.email) {
+    toaster.addErrorMessage("L'email est requis pour synchroniser depuis MAIA");
+    isSyncingFromMaiaMoe.value = false;
+    return;
+  }
+  try {
+    const response = await api.userControllerSyncOrganizationFromMaiaByEmail({ path: { email: moeActor.value.email } });
+    if (response.response.ok && response.data) {
+      const { organizationId: newOrgId, firstName, lastName } = response.data;
+      moeActor.value.firstname = firstName;
+      moeActor.value.lastname = lastName;
+      if (newOrgId) {
+        const org = await organizationStore.getById(newOrgId);
+        if (org) initialMoeOrganization.value = org;
+        moeOrganizationId.value = newOrgId;
+        toaster.addSuccessMessage("Organisation MOE synchronisée depuis MAIA");
+      }
+    } else {
+      toaster.addErrorMessage("Erreur lors de la synchronisation MAIA (email non trouvé)");
+    }
+  } catch {
+    toaster.addErrorMessage("Erreur lors de la synchronisation MAIA");
+  } finally {
+    isSyncingFromMaiaMoe.value = false;
+  }
+}
 
 const isCreateMode = computed(() => props.mode === "create");
 const userStore = useUserStore();
@@ -217,13 +287,15 @@ function validateStep3(): boolean {
     moaErrors.push("L'email du contact MOA est invalide.");
     moaEmailError.value = "L'email du contact MOA est invalide.";
   }
-  if (!moaActor.value.firstname) {
-    moaErrors.push("Le prénom du contact MOA est obligatoire.");
-    moaFirstnameError.value = "Le prénom du contact MOA est obligatoire.";
-  }
-  if (!moaActor.value.lastname) {
-    moaErrors.push("Le nom du contact MOA est obligatoire.");
-    moaLastnameError.value = "Le nom du contact MOA est obligatoire.";
+  if (!isMoaGroup.value) {
+    if (!moaActor.value.firstname) {
+      moaErrors.push("Le prénom du contact MOA est obligatoire.");
+      moaFirstnameError.value = "Le prénom du contact MOA est obligatoire.";
+    }
+    if (!moaActor.value.lastname) {
+      moaErrors.push("Le nom du contact MOA est obligatoire.");
+      moaLastnameError.value = "Le nom du contact MOA est obligatoire.";
+    }
   }
 
   if (moaErrors.length > 0) {
@@ -252,13 +324,15 @@ function validateStep4(): boolean {
     moeErrors.push("L'email du contact MOE est invalide.");
     moeEmailError.value = "L'email du contact MOE est invalide.";
   }
-  if (!moeActor.value.firstname) {
-    moeErrors.push("Le prénom du contact MOE est obligatoire.");
-    moeFirstnameError.value = "Le prénom du contact MOE est obligatoire.";
-  }
-  if (!moeActor.value.lastname) {
-    moeErrors.push("Le nom du contact MOE est obligatoire.");
-    moeLastnameError.value = "Le nom du contact MOE est obligatoire.";
+  if (!isMoeGroup.value) {
+    if (!moeActor.value.firstname) {
+      moeErrors.push("Le prénom du contact MOE est obligatoire.");
+      moeFirstnameError.value = "Le prénom du contact MOE est obligatoire.";
+    }
+    if (!moeActor.value.lastname) {
+      moeErrors.push("Le nom du contact MOE est obligatoire.");
+      moeLastnameError.value = "Le nom du contact MOE est obligatoire.";
+    }
   }
 
   if (moeErrors.length > 0) {
@@ -337,13 +411,15 @@ function validateMoaActor(): string[] {
     moaErrors.push("L'email du contact MOA est invalide.");
     moaEmailError.value = "L'email du contact MOA est invalide.";
   }
-  if (!moaActor.value.firstname) {
-    moaErrors.push("Le prénom du contact MOA est obligatoire.");
-    moaFirstnameError.value = "Le prénom du contact MOA est obligatoire.";
-  }
-  if (!moaActor.value.lastname) {
-    moaErrors.push("Le nom du contact MOA est obligatoire.");
-    moaLastnameError.value = "Le nom du contact MOA est obligatoire.";
+  if (!isMoaGroup.value) {
+    if (!moaActor.value.firstname) {
+      moaErrors.push("Le prénom du contact MOA est obligatoire.");
+      moaFirstnameError.value = "Le prénom du contact MOA est obligatoire.";
+    }
+    if (!moaActor.value.lastname) {
+      moaErrors.push("Le nom du contact MOA est obligatoire.");
+      moaLastnameError.value = "Le nom du contact MOA est obligatoire.";
+    }
   }
 
   return moaErrors;
@@ -363,13 +439,15 @@ function validateMoeActor(): string[] {
     moeErrors.push("L'email du contact MOE est invalide.");
     moeEmailError.value = "L'email du contact MOE est invalide.";
   }
-  if (!moeActor.value.firstname) {
-    moeErrors.push("Le prénom du contact MOE est obligatoire.");
-    moeFirstnameError.value = "Le prénom du contact MOE est obligatoire.";
-  }
-  if (!moeActor.value.lastname) {
-    moeErrors.push("Le nom du contact MOE est obligatoire.");
-    moeLastnameError.value = "Le nom du contact MOE est obligatoire.";
+  if (!isMoeGroup.value) {
+    if (!moeActor.value.firstname) {
+      moeErrors.push("Le prénom du contact MOE est obligatoire.");
+      moeFirstnameError.value = "Le prénom du contact MOE est obligatoire.";
+    }
+    if (!moeActor.value.lastname) {
+      moeErrors.push("Le nom du contact MOE est obligatoire.");
+      moeLastnameError.value = "Le nom du contact MOE est obligatoire.";
+    }
   }
 
   return moeErrors;
@@ -466,10 +544,11 @@ async function handleCreate() {
 async function createActors(applicationId: string) {
   const moaPayload: CreateActorDto = {
     actorTypeId: moaActor.value.actorTypeId,
+    isGroup: moaActor.value.isGroup,
     organizationId: moaActor.value.organizationId || undefined,
     email: moaActor.value.email || undefined,
-    firstname: moaActor.value.firstname || undefined,
-    lastname: moaActor.value.lastname || undefined,
+    firstname: isMoaGroup.value ? null : moaActor.value.firstname || undefined,
+    lastname: isMoaGroup.value ? null : moaActor.value.lastname || undefined,
     applicationId,
   };
 
@@ -480,10 +559,11 @@ async function createActors(applicationId: string) {
 
   const moePayload: CreateActorDto = {
     actorTypeId: moeActor.value.actorTypeId,
+    isGroup: moeActor.value.isGroup,
     organizationId: moeActor.value.organizationId || undefined,
     email: moeActor.value.email || undefined,
-    firstname: moeActor.value.firstname || undefined,
-    lastname: moeActor.value.lastname || undefined,
+    firstname: isMoeGroup.value ? null : moeActor.value.firstname || undefined,
+    lastname: isMoeGroup.value ? null : moeActor.value.lastname || undefined,
     applicationId,
   };
 
@@ -743,14 +823,6 @@ Aucun espace en début ou en fin."
         <span class="fr-icon-information-line fr-mr-1w" aria-hidden="true" />
         Toutes les informations du contact MOA sont obligatoires.
       </p>
-      <OrganizationSearchSelect
-        v-model="moaOrganizationId"
-        label="Organisation MOA"
-        class="fr-mb-3w"
-        required
-        :error-message="moaOrganizationError"
-        data-testid="application-moa-organization"
-      />
       <DsfrInputGroup
         v-model.trim="moaActor.email"
         label="Email du contact MOA"
@@ -759,29 +831,61 @@ Aucun espace en début ou en fin."
         type="email"
         :error-message="moaEmailError"
         data-testid="application-moa-email"
+        class="fr-mb-2w"
       />
-      <div class="fr-grid-row fr-grid-row--gutters">
-        <div class="fr-col-6">
-          <DsfrInputGroup
-            v-model.trim="moaActor.firstname"
-            label="Prénom du contact MOA"
-            label-visible
-            required
-            :error-message="moaFirstnameError"
-            data-testid="application-moa-firstname"
-          />
+      <DsfrButton
+        type="button"
+        label="Synchroniser depuis MAIA (par email)"
+        size="sm"
+        tertiary
+        :disabled="isSyncingFromMaiaMoa || !moaActor.email"
+        data-testid="application-moa-sync-maia-btn"
+        title="Synchroniser l'organisation MOA depuis MAIA"
+        aria-label="Synchroniser l'organisation MOA depuis MAIA"
+        class="fr-mb-3w"
+        @click="syncMoaFromMaia"
+      />
+      <OrganizationSearchSelect
+        v-model="moaOrganizationId"
+        :initial-organization="initialMoaOrganization"
+        label="Organisation MOA"
+        class="fr-mb-3w"
+        required
+        :error-message="moaOrganizationError"
+        data-testid="application-moa-organization"
+      />
+      <DsfrCheckbox
+        v-model="moaActor.isGroup"
+        name="moaIsGroup"
+        :value="true"
+        label="Cet acteur est rattaché(e) à une entité"
+        data-testid="application-moa-is-group"
+        class="fr-mb-3w"
+      />
+      <template v-if="!isMoaGroup">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-6">
+            <DsfrInputGroup
+              v-model.trim="moaActor.firstname"
+              label="Prénom du contact MOA"
+              label-visible
+              required
+              :error-message="moaFirstnameError"
+              data-testid="application-moa-firstname"
+            />
+          </div>
+          <div class="fr-col-6">
+            <DsfrInputGroup
+              v-model.trim="moaActor.lastname"
+              label="Nom du contact MOA"
+              label-visible
+              required
+              :error-message="moaLastnameError"
+              data-testid="application-moa-lastname"
+            />
+          </div>
         </div>
-        <div class="fr-col-6">
-          <DsfrInputGroup
-            v-model.trim="moaActor.lastname"
-            label="Nom du contact MOA"
-            label-visible
-            required
-            :error-message="moaLastnameError"
-            data-testid="application-moa-lastname"
-          />
-        </div>
-      </div>
+      </template>
     </div>
 
     <!-- Step 4: MOE Section -->
@@ -791,14 +895,6 @@ Aucun espace en début ou en fin."
         <span class="fr-icon-information-line fr-mr-1w" aria-hidden="true" />
         Toutes les informations du contact MOE sont obligatoires.
       </p>
-      <OrganizationSearchSelect
-        v-model="moeOrganizationId"
-        label="Organisation MOE"
-        required
-        class="fr-mb-3w"
-        :error-message="moeOrganizationError"
-        data-testid="application-moe-organization"
-      />
       <DsfrInputGroup
         v-model.trim="moeActor.email"
         label="Email du contact MOE"
@@ -807,29 +903,61 @@ Aucun espace en début ou en fin."
         type="email"
         :error-message="moeEmailError"
         data-testid="application-moe-email"
+        class="fr-mb-2w"
       />
-      <div class="fr-grid-row fr-grid-row--gutters">
-        <div class="fr-col-6">
-          <DsfrInputGroup
-            v-model.trim="moeActor.firstname"
-            label="Prénom du contact MOE"
-            label-visible
-            required
-            :error-message="moeFirstnameError"
-            data-testid="application-moe-firstname"
-          />
+      <DsfrButton
+        type="button"
+        label="Synchroniser depuis MAIA (par email)"
+        size="sm"
+        tertiary
+        :disabled="isSyncingFromMaiaMoe || !moeActor.email"
+        data-testid="application-moe-sync-maia-btn"
+        title="Synchroniser l'organisation MOE depuis MAIA"
+        aria-label="Synchroniser l'organisation MOE depuis MAIA"
+        class="fr-mb-3w"
+        @click="syncMoeFromMaia"
+      />
+      <OrganizationSearchSelect
+        v-model="moeOrganizationId"
+        :initial-organization="initialMoeOrganization"
+        label="Organisation MOE"
+        required
+        class="fr-mb-3w"
+        :error-message="moeOrganizationError"
+        data-testid="application-moe-organization"
+      />
+      <DsfrCheckbox
+        v-model="moeActor.isGroup"
+        name="moeIsGroup"
+        :value="true"
+        label="Cet acteur est rattaché(e) à une entité"
+        data-testid="application-moe-is-group"
+        class="fr-mb-3w"
+      />
+      <template v-if="!isMoeGroup">
+        <div class="fr-grid-row fr-grid-row--gutters">
+          <div class="fr-col-6">
+            <DsfrInputGroup
+              v-model.trim="moeActor.firstname"
+              label="Prénom du contact MOE"
+              label-visible
+              required
+              :error-message="moeFirstnameError"
+              data-testid="application-moe-firstname"
+            />
+          </div>
+          <div class="fr-col-6">
+            <DsfrInputGroup
+              v-model.trim="moeActor.lastname"
+              label="Nom du contact MOE"
+              label-visible
+              required
+              :error-message="moeLastnameError"
+              data-testid="application-moe-lastname"
+            />
+          </div>
         </div>
-        <div class="fr-col-6">
-          <DsfrInputGroup
-            v-model.trim="moeActor.lastname"
-            label="Nom du contact MOE"
-            label-visible
-            required
-            :error-message="moeLastnameError"
-            data-testid="application-moe-lastname"
-          />
-        </div>
-      </div>
+      </template>
     </div>
 
     <!-- Navigation buttons -->
