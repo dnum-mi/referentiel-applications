@@ -9,7 +9,7 @@ import { useUserStore } from "@/stores/userStore";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref } from "vue";
 
-const { results: applications, searchApplications, setFilter, filters } = useApplicationSearch();
+const { searchApplications, setFilter, filters, technicalDebtPoints: applications } = useApplicationSearch();
 const { loadActiveCampaigns, latestYear } = useMditCampaigns();
 const userStore = useUserStore();
 
@@ -53,7 +53,7 @@ watchDebounced(
 
 <template>
   <div class="layout" data-testid="time-view">
-    <SidebarFilters :is-lock-my-permission="!hasMDITReadPermission" data-testid="time-filters" />
+    <SidebarFilters :is-lock-my-permission="!hasMDITReadPermission" data-testid="time-filters" type="technicalDebtPoints" />
 
     <section class="main-content" data-testid="main-content">
       <h1 class="fr-h1" data-testid="time-title">Diagramme Time</h1>

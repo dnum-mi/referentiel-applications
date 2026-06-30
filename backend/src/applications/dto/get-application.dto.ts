@@ -138,6 +138,13 @@ export class ApplicationSearchResultDto extends PaginatedResponseDto<Application
     nullable: false,
   })
   averageIq: number;
+
+  @ApiProperty({
+    description:
+      "Liste des applications correspondant aux critères de recherche et legitime au technical debt point",
+    type: [ApplicationDto],
+  })
+  technicalDebtPoints: ApplicationDto[];
 }
 
 export class ApplicationMinimalDto extends PickType(ApplicationDto, [

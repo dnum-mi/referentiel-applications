@@ -35,7 +35,12 @@ export class ApplicationExportService {
     );
     let allMatchingApps: ApplicationSearchResultDto;
     if (!hasAppList && !hasAppRead) {
-      allMatchingApps = { results: [], total: 0, averageIq: 0 };
+      allMatchingApps = {
+        results: [],
+        total: 0,
+        averageIq: 0,
+        technicalDebtPoints: [],
+      };
     } else {
       const where = await this.prismaQueryBuilder.buildSearchWhere(
         searchParams,

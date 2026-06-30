@@ -59,6 +59,7 @@ const DEFAULT_FILTERS: Filters = {
 
 // Shared state across components (singleton pattern)
 const results = ref<ApplicationDto[]>([]);
+const technicalDebtPoints = ref<ApplicationDto[]>([]);
 const total = ref(0);
 const averageIq = ref<number>(0);
 const isLoading = ref(false);
@@ -250,6 +251,7 @@ export function useApplicationSearch() {
       const response = await api.applicationControllerSearch({ query });
       const statsStore = useStatisticsStore();
       await statsStore.countApplications();
+      statsStore.countTechnicalDebtPoints(response.data?.technicalDebtPoints.length ?? 0);
 
       if (!response.response.ok || !response.data) {
         throw new Error("Erreur lors de la recherche d'applications");
@@ -258,6 +260,8 @@ export function useApplicationSearch() {
       if (store) {
         const dataWithAverage = response.data;
         results.value = response.data.results;
+        technicalDebtPoints.value = response.data.technicalDebtPoints;
+
         total.value = response.data.total;
         averageIq.value =
           typeof dataWithAverage.averageIq === "number" && Number.isFinite(dataWithAverage.averageIq) ? dataWithAverage.averageIq : 0;
@@ -295,6 +299,7 @@ export function useApplicationSearch() {
   return {
     filters,
     results,
+    technicalDebtPoints,
     total,
     averageIq,
     page,

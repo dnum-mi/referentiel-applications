@@ -297,7 +297,7 @@ export class ApplicationService {
     );
 
     if (!hasAppList && !hasAppRead) {
-      return { results: [], total: 0, averageIq: 0 };
+      return { results: [], total: 0, averageIq: 0, technicalDebtPoints: [] };
     }
 
     const where = await this.prismaQueryBuilder.buildSearchWhere(
@@ -377,6 +377,15 @@ export class ApplicationService {
     return {
       ...paginatedResult,
       results: dataWithViews,
+      technicalDebtPoints: dataWithViews.filter((d) => {
+        const t = d.technicalDebtInfo;
+        return (
+          t != null &&
+          t.technicalMaturity != null &&
+          t.businessMaturity != null &&
+          t.costContainment != null
+        );
+      }),
     };
   }
 
