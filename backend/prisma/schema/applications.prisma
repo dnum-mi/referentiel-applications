@@ -89,7 +89,7 @@ model ApplicationStatus {
   /// La valeur du statut à ce moment
   status        Status
   /// Quand ce statut a été défini
-  statusDate    DateTime      @default(now())
+  statusDate    DateTime?
   /// La version du statut
   version       String?
   /// Application associée à ce statut

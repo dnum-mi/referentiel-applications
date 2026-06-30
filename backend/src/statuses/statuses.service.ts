@@ -12,14 +12,14 @@ export class StatusesService extends BaseService<ApplicationStatus> {
   async find(filters: { applicationId: string }) {
     return this.prisma.applicationStatus.findMany({
       where: { applicationId: filters.applicationId },
-      orderBy: [{ statusDate: "desc" }],
+      orderBy: [{ statusDate: { sort: "desc", nulls: "last" } }],
     });
   }
 
   async updateCurrentStatus(applicationId: string): Promise<void> {
     const latestStatus = await this.prisma.applicationStatus.findFirst({
       where: { applicationId },
-      orderBy: [{ statusDate: "desc" }],
+      orderBy: [{ statusDate: { sort: "desc", nulls: "last" } }],
     });
 
     if (latestStatus) {

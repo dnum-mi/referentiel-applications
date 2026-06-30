@@ -4,5 +4,5 @@ export class ApplicationStatus {
   id: string;
   applicationId: string;
   status: Status;
-  statusDate: Date;
+  statusDate: Date | null;
 }
