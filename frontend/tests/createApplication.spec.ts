@@ -83,7 +83,7 @@ test.describe("CreateApplication page", () => {
   test("CA-01 — Afficher le formulaire de création", async ({ page }) => {
     await openCreatePage(page);
 
-    await expect(page.getByRole("heading", { level: 1, name: "Créer une application" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Créer une application", exact: true })).toBeVisible();
   });
 
   test("CA-02 — Bloquer l’envoi si champs obligatoires vides", async ({ page }) => {

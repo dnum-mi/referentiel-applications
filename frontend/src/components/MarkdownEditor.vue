@@ -74,7 +74,8 @@ function handleKeydown(event: KeyboardEvent) {
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
 
-  if (event.key === "Tab") {
+  // 12.9 : Tab sans sélection → comportement natif (sortie du champ). Indentation uniquement sur sélection.
+  if (event.key === "Tab" && start !== end) {
     event.preventDefault();
     const lines = localValue.value.slice(start, end).split("\n");
     const isShift = event.shiftKey;
@@ -167,6 +168,7 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           class="editor fr-input"
           :disabled
           :aria-label="ariaLabel"
+          :title="ariaLabel"
           rows="10"
           data-testid="markdown-textarea"
           @input="emitChange"

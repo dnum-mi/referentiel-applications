@@ -43,6 +43,7 @@ résultat du test, et au testeur de savoir d'un coup d'œil ce qui est déjà co
 | `ADM-`  | Administration des référentiels             | [`protocoles/administration-referentiels.md`](protocoles/administration-referentiels.md) |
 | `PRF-`  | Profil utilisateur                          | [`protocoles/profil-utilisateur.md`](protocoles/profil-utilisateur.md)                   |
 | `IMP-`  | Impersonation                               | [`protocoles/impersonation.md`](protocoles/impersonation.md)                             |
+| `RGA-`  | Accessibilité RGAA                          | [`protocoles/rgaa.md`](protocoles/rgaa.md)                                               |
 
 ## Cycle de vie d'une campagne (équivalent QASE « test run »)
 

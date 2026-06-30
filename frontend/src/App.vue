@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Permission, type ConfigDto } from "@/client";
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
 import { getConfig } from "./services/config";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
@@ -15,6 +15,17 @@ import { useScheme } from "@gouvminint/vue-dsfr";
 import ReloadPrompt from "./components/ReloadPrompt.vue";
 
 const route = useRoute();
+const router = useRouter();
+
+const pageTitleAnnouncer = ref<HTMLElement | null>(null);
+const currentPageTitle = ref("");
+
+// 12.8 / 7.1 : simuler un rechargement de page pour les TA après chaque navigation SPA.
+router.afterEach(async (to) => {
+  currentPageTitle.value = (to.meta.title as string) ?? document.title;
+  await nextTick();
+  pageTitleAnnouncer.value?.focus();
+});
 
 const userStore = useUserStore();
 const appConfig = ref<ConfigDto>();
@@ -177,6 +188,10 @@ function close() {
 </script>
 
 <template>
+  <h1 ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
+    {{ currentPageTitle }}
+  </h1>
+
   <DsfrSkipLinks
     :links="[
       { id: 'header-search', text: 'Aller à la recherche' },
@@ -206,9 +221,9 @@ function close() {
       <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
     </template>
   </DsfrHeader>
-  <div class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content">
+  <main class="fr-mt-3w fr-mt-md-5w fr-mb-5w" id="main-content" role="main">
     <RouterView :key="String(route.params.id ?? '')" />
-  </div>
+  </main>
 
   <DsfrFooter
     :logo-text="logoText"

@@ -55,7 +55,7 @@ watchDebounced(
   <div class="layout" data-testid="time-view">
     <SidebarFilters :is-lock-my-permission="!hasMDITReadPermission" data-testid="time-filters" />
 
-    <main class="main-content" id="main-content" data-testid="main-content" role="main">
+    <section class="main-content" data-testid="main-content">
       <h1 class="fr-h1" data-testid="time-title">Diagramme Time</h1>
 
       <section id="technical-debt-chart" class="chart-section" data-testid="technical-debt-chart-section">
@@ -65,7 +65,7 @@ watchDebounced(
         </output>
         <TechnicalDebtChart v-else :data="applications" />
       </section>
-    </main>
+    </section>
   </div>
 </template>
 
