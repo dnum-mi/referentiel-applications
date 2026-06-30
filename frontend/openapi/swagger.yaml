@@ -5799,7 +5799,6 @@ components:
         statusDate:
           format: date-time
           type: string
-          nullable: true
           description: Date du changement de statut
         version:
           type: string
@@ -5809,6 +5808,7 @@ components:
         - id
         - applicationId
         - status
+        - statusDate
     TechnicalDebtInfoDto:
       type: object
       properties:

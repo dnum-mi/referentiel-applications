@@ -438,6 +438,10 @@ export class DataFeature {
     return this.api.application(id);
   }
 
+  applicationActors(appId: string) {
+    return this.api.actors(appId);
+  }
+
   // --- Admin CRUD resolvers (ADM-* tests) ---
 
   createOrganization(path: string, sigle?: string) {

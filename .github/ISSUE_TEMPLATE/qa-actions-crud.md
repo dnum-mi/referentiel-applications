@@ -21,7 +21,7 @@ labels: ["qa", "non-regression", "qa:actions-crud"]
 
 | Total | ✅ Passés | ❌ Échecs | ⏭️ Non testés |
 | ----- | --------- | --------- | ------------- |
-| 15    |           |           |               |
+| 16    |           |           |               |
 
 ## Protocole
 
