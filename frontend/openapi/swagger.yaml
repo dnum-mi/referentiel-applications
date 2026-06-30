@@ -5799,6 +5799,7 @@ components:
         statusDate:
           format: date-time
           type: string
+          nullable: true
           description: Date du changement de statut
         version:
           type: string
@@ -5808,7 +5809,6 @@ components:
         - id
         - applicationId
         - status
-        - statusDate
     TechnicalDebtInfoDto:
       type: object
       properties:
@@ -5964,10 +5964,17 @@ components:
             critères (toutes pages confondues)
           example: 72.5
           nullable: false
+        technicalDebtPoints:
+          description: Liste des applications correspondant aux critères de recherche et
+            legitime au technical debt point
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationDto"
       required:
         - results
         - total
         - averageIq
+        - technicalDebtPoints
     QualitySummaryActorsDto:
       type: object
       properties:

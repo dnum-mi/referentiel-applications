@@ -20,9 +20,11 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
     isLockMyPermission?: boolean;
+    type?: "technicalDebtPoints" | "applications";
   }>(),
   {
     isLockMyPermission: false,
+    type: "applications",
   },
 );
 
@@ -30,7 +32,7 @@ const sidebarOpen = ref(true);
 const route = useRoute();
 // Le sélecteur de campagne (millésime) ne concerne que le diagramme Time.
 const isTimeRoute = computed(() => route.path === "/time");
-const { total, resetFilters, filters, setFilter } = useApplicationSearch();
+const { total: applicationsTotal, resetFilters, filters, setFilter } = useApplicationSearch();
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
 
@@ -50,6 +52,10 @@ function toggleMyAppsFilter(value: boolean) {
 function toggleSubscribedAppsFilter(value: boolean) {
   setFilter({ subscribersEmail: value ? true : undefined, page: 0 });
 }
+
+const total = computed(() => {
+  return props.type === "applications" ? applicationsTotal : statsStore.technicalDebtPointTotal;
+});
 </script>
 
 <template>

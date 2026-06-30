@@ -162,7 +162,12 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
       requestor,
     );
 
-    expect(result).toEqual({ results: [], total: 0, averageIq: 0 });
+    expect(result).toEqual({
+      results: [],
+      total: 0,
+      averageIq: 0,
+      technicalDebtPoints: [],
+    });
     expect(applicationRepository.findApplications).not.toHaveBeenCalled();
     expect(applicationRepository.findApplicationsRanked).not.toHaveBeenCalled();
   });

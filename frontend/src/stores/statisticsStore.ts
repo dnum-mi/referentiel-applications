@@ -21,6 +21,7 @@ async function countApplicationsByIq(): Promise<CountByIqDto[]> {
 
 export const useStatisticsStore = defineStore("statisticsStore", () => {
   const totalApplications = ref<number | null>(null);
+  const technicalDebtPointTotal = ref<number | null>(null);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const iqStats = ref<GetIqAvgGroupedDto[]>([]);
@@ -29,6 +30,10 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
   async function countApplications() {
     const response = await api.applicationControllerSearch();
     totalApplications.value = response.data?.total ?? 0;
+  }
+
+  function countTechnicalDebtPoints(count: number) {
+    technicalDebtPointTotal.value = count;
   }
 
   async function fetchIqStats(from?: string, to?: string, groupBy: "day" | "week" | "month" | "year" = "month") {
@@ -58,6 +63,7 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     // State properties
     iqStats,
     totalApplications,
+    technicalDebtPointTotal,
     isLoading,
     totalCompliances,
     error,
@@ -68,5 +74,6 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
     countApplicationsByMonth,
     countApplicationsByIq,
     fetchIqStats,
+    countTechnicalDebtPoints,
   };
 });
