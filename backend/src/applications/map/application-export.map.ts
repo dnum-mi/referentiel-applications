@@ -175,7 +175,9 @@ export function mapStatuses(app: ApplicationWithAllRelations) {
       applicationId: app.id,
       applicationLabel: app.label,
       status: translateEnum(ApplicationStatusLabels, status.status),
-      statusDate: new Date(status.statusDate).toISOString().split("T")[0],
+      statusDate: status.statusDate
+        ? new Date(status.statusDate).toISOString().split("T")[0]
+        : null,
     })) ?? []
   );
 }

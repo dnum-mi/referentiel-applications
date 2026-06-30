@@ -26,11 +26,13 @@ export class ApplicationStatusDto {
 
   @ApiProperty({
     description: "Date du changement de statut",
-    required: true,
+    required: false,
+    nullable: true,
     type: Date,
   })
+  @IsOptional()
   @Type(() => Date)
-  statusDate: Date;
+  statusDate: Date | null;
 
   @ApiProperty({
     description: "Version du statut",

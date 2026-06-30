@@ -38,7 +38,7 @@ erDiagram
   String id PK
   String applicationId FK
   Status status
-  DateTime statusDate
+  DateTime statusDate "nullable"
   String version "nullable"
 }
 "Relation" {

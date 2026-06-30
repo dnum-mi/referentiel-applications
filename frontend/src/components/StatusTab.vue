@@ -2,9 +2,9 @@
 import api from "@/api/index";
 import { Permission, type ApplicationStatusDto, type CreateApplicationStatusDto } from "@/client/types.gen";
 import { formatDateFR } from "@/composables/use-date";
-import { statusApplicationDictionary } from "@/constants/dictionary";
 import useModal from "@/composables/use-modal";
 import { BREAKPOINTS } from "@/constants/breakpoint";
+import { statusApplicationDictionary } from "@/constants/dictionary";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -18,8 +18,8 @@ import RefAppTable from "./RefAppTable.vue";
 
 interface StatusFormData {
   status: CreateApplicationStatusDto["status"];
-  statusDate?: string;
-  version?: string;
+  statusDate?: string | null;
+  version?: string | null;
 }
 
 defineOptions({ inheritAttrs: false });
@@ -113,7 +113,8 @@ function getStatusLabel(status: ApplicationStatusDto): string {
   return (statusApplicationDictionary as Record<string, string>)[status.status] ?? status.status;
 }
 
-function formatStatusDateDisplay(statusDate: string | Date): string {
+function formatStatusDateDisplay(statusDate: string | Date | null | undefined): string {
+  if (!statusDate) return "Non renseignée";
   return formatDateFR(statusDate);
 }
 
@@ -267,8 +268,12 @@ function buildStatusPayload(formData: StatusFormData): CreateApplicationStatusDt
     payload.statusDate = new Date(formData.statusDate);
   }
 
-  if (formData.version) {
+  if (formData.version !== undefined) {
     payload.version = formData.version;
+  }
+
+  if (formData.statusDate !== undefined) {
+    payload.statusDate = formData.statusDate ? new Date(formData.statusDate) : null;
   }
 
   return payload;
