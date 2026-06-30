@@ -11,14 +11,52 @@
 
     <h2 class="fr-h2">État de conformité</h2>
     <p>
-      Le référentiel des applications est en cours d'audit d'accessibilité pour évaluer sa conformité aux RGAA (Référentiel Général
-      d'Amélioration de l'Accessibilité).
+      Le référentiel des applications est
+      <strong>partiellement conforme</strong>
+      au RGAA 4.1.2 (Référentiel Général d'Amélioration de l'Accessibilité) en raison des non-conformités énumérées ci-dessous.
     </p>
 
-    <h2 class="fr-h2">Signaler un problème d'accessibilité</h2>
+    <h2 class="fr-h2">Résultats des tests</h2>
+    <!-- TODO #1784 : renseigner le taux de conformité exact issu de l'audit avant publication. -->
     <p>
-      Si vous rencontrez un défaut d'accessibilité vous empêchant d'accéder à un contenu ou une fonctionnalité du site, merci de nous le
-      signaler.
+      L'audit de conformité réalisé en 2026 révèle 28 critères non conformes. Le taux de conformité global au RGAA 4.1.2 est de
+      <strong>XX&nbsp;%</strong>
+      (valeur à confirmer avec les résultats définitifs de l'audit).
     </p>
+
+    <h2 class="fr-h2">Établissement de cette déclaration</h2>
+    <!-- TODO #1784 : renseigner la date d'établissement de la déclaration avant publication. -->
+    <p>Cette déclaration a été établie le JJ/MM/AAAA (date à confirmer).</p>
+
+    <h2 class="fr-h2">Retour d'information et contact</h2>
+    <p>
+      Si vous rencontrez un défaut d'accessibilité vous empêchant d'accéder à un contenu ou à une fonctionnalité du site, merci de nous le
+      signaler en contactant l'équipe à l'adresse
+      <a href="mailto:support-referentiel-applications@interieur.gouv.fr">support-referentiel-applications@interieur.gouv.fr</a>.
+    </p>
+
+    <h2 class="fr-h2">Voies de recours</h2>
+    <p>
+      Cette procédure est à utiliser dans le cas suivant : vous avez signalé au responsable du site un défaut d'accessibilité qui vous
+      empêche d'accéder à un contenu ou à un service et vous n'avez pas obtenu de réponse satisfaisante.
+    </p>
+    <p>Vous pouvez :</p>
+    <ul>
+      <li>
+        écrire un message au
+        <a href="https://formulaire.defenseurdesdroits.fr/" target="_blank" rel="noopener noreferrer"
+          >Défenseur des droits - nouvelle fenêtre</a
+        >&nbsp;;
+      </li>
+      <li>
+        contacter le délégué du
+        <a href="https://www.defenseurdesdroits.fr/saisir/delegues" target="_blank" rel="noopener noreferrer"
+          >Défenseur des droits dans votre région - nouvelle fenêtre</a
+        >&nbsp;;
+      </li>
+      <li>
+        envoyer un courrier par la poste (gratuit, sans timbre) à&nbsp;: Défenseur des droits, Libre réponse 71120, 75342 Paris CEDEX 07.
+      </li>
+    </ul>
   </div>
 </template>
