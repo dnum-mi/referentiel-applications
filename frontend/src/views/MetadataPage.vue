@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch } from "vue";
+import { onMounted, ref, computed, watch, nextTick } from "vue";
 import { useRoute } from "vue-router";
 const route = useRoute();
 import { useMetadataStore } from "@/stores/metadataStore";
@@ -79,9 +79,16 @@ function fetchData() {
     });
 }
 
+// RGAA-064 (7.5 / 12.8) : annoncer le nombre de résultats aux TA + focus sur le tableau.
+const resultsAnnouncement = ref("");
+const tableRegion = ref<HTMLElement | null>(null);
+
 async function applyFilters() {
   currentPage.value = 0;
   await fetchData();
+  resultsAnnouncement.value = `${data.value.total} résultat(s)`;
+  await nextTick();
+  tableRegion.value?.focus();
 }
 
 function clearFilters() {
@@ -191,11 +198,15 @@ const metadataTableRows = computed(() =>
       </div>
     </form>
 
+    <div aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="history-results-status">
+      <p v-if="resultsAnnouncement">{{ resultsAnnouncement }}</p>
+    </div>
+
     <div v-if="metadataTableRows.length === 0" class="text-center fr-mb-3w" data-testid="history-empty">
       <p>Aucune donnée recensée.</p>
     </div>
 
-    <div v-else>
+    <div v-else ref="tableRegion" tabindex="-1" data-testid="history-table-region">
       <RefAppTable
         :items="metadataTableRows"
         :columns="columns"
