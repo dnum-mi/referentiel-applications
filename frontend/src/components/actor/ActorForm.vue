@@ -164,23 +164,15 @@ function handleSubmit() {
     />
 
     <template v-if="!isGroup">
-      <DsfrInput
-        v-model="form.firstname"
-        label="Prénom"
-        label-visible
-        placeholder="Prénom"
-        data-testid="actor-firstname-input"
-        class="fr-mb-3w"
-      />
-
-      <DsfrInput
-        v-model="form.lastname"
-        label="Nom"
-        label-visible
-        placeholder="Nom de famille"
-        data-testid="actor-lastname-input"
-        class="fr-mb-3w"
-      />
+      <fieldset class="fr-fieldset fr-mb-3w" aria-labelledby="actor-identity-legend">
+        <legend id="actor-identity-legend" class="fr-fieldset__legend">Identité de l'acteur</legend>
+        <div class="fr-fieldset__element">
+          <DsfrInput v-model="form.firstname" label="Prénom" label-visible placeholder="Prénom" data-testid="actor-firstname-input" />
+        </div>
+        <div class="fr-fieldset__element">
+          <DsfrInput v-model="form.lastname" label="Nom" label-visible placeholder="Nom de famille" data-testid="actor-lastname-input" />
+        </div>
+      </fieldset>
     </template>
 
     <div class="fr-btns-group fr-btns-group--right fr-mt-4w">

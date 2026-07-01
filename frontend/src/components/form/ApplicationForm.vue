@@ -725,8 +725,8 @@ Aucun espace en début ou en fin."
         data-testid="application-priority-restart"
       />
 
-      <div class="fr-form-group fr-mt-3w">
-        <legend class="fr-label">Populations</legend>
+      <fieldset class="fr-fieldset fr-mt-3w">
+        <legend class="fr-fieldset__legend fr-label">Populations</legend>
         <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
         <div class="fr-mt-2w">
           <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
@@ -765,10 +765,10 @@ Aucun espace en début ou en fin."
             @click="addPopulation"
           />
         </div>
-      </div>
+      </fieldset>
 
-      <div class="fr-form-group fr-mt-3w">
-        <legend class="fr-label">Objectifs</legend>
+      <fieldset class="fr-fieldset fr-mt-3w">
+        <legend class="fr-fieldset__legend fr-label">Objectifs</legend>
         <div class="fr-mt-2w">
           <div v-for="(_purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
             <div class="fr-col">
@@ -806,14 +806,14 @@ Aucun espace en début ou en fin."
             @click="addPurpose"
           />
         </div>
-      </div>
+      </fieldset>
 
-      <div class="fr-form-group fr-mt-3w autocomplete-tags">
-        <legend class="fr-label">Tags</legend>
+      <fieldset class="fr-fieldset fr-mt-3w autocomplete-tags">
+        <legend class="fr-fieldset__legend fr-label">Tags</legend>
         <div class="fr-mt-2w fr-col">
           <TagSearchSelect v-model:tags="form.tags" />
         </div>
-      </div>
+      </fieldset>
     </div>
 
     <!-- Step 3: MOA Section -->
