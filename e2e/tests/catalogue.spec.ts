@@ -152,7 +152,7 @@ test.describe("Catalogue & recherche", () => {
 
     const search = new SearchPage(page);
     await search.open();
-    await search.filterByStatus("to_validate");
+    await search.filterByStatus("deleted");
     search.expectParamsPresent("currentStatus__in");
   });
 
@@ -182,7 +182,7 @@ test.describe("Catalogue & recherche", () => {
 
     const search = new SearchPage(page);
     await search.open();
-    await search.filterByStatus("to_validate");
+    await search.filterByStatus("deleted");
     await search.filterByOrganization("Minist");
     await search.searchByLabel("combo");
     await search.expectSearchApplied("combo");
@@ -215,7 +215,7 @@ test.describe("Catalogue & recherche", () => {
 
     const search = new SearchPage(page);
     await search.open();
-    await search.filterByStatus("to_validate");
+    await search.filterByStatus("deleted");
     await search.searchByLabel("persist-cat12");
     await search.expectSearchApplied("persist-cat12");
 

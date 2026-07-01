@@ -203,11 +203,12 @@ test.describe("ApplicationsView", () => {
     const statusCheckbox = page.locator("#status-option-to_validate");
     const statusLabel = page.locator('label[for="status-option-to_validate"]');
     await openAccordionIfNeeded(page, SIDEBAR_ACC_STATUS, statusCheckbox);
-    await statusLabel.click();
     await expect(statusCheckbox).toBeChecked();
+    await statusLabel.click();
+    await expect(statusCheckbox).not.toBeChecked();
     await waitForSearchParams(page, (params) => {
       const statuses = (params.get("currentStatus__in") ?? "").split(",").filter(Boolean);
-      return statuses.includes("to_validate");
+      return !statuses.includes("to_validate");
     });
 
     const organizationInput = getOrganizationInput(page);
@@ -233,7 +234,7 @@ test.describe("ApplicationsView", () => {
     const hostingParam = await selectHostingSiteOrFallback(page);
 
     const params = new URL(page.url()).searchParams;
-    expect((params.get("currentStatus__in") ?? "").split(",")).toContain("to_validate");
+    expect((params.get("currentStatus__in") ?? "").split(",")).not.toContain("to_validate");
     expect(params.has("organization")).toBeTruthy();
     expect(params.has(hostingParam)).toBeTruthy();
   });
@@ -252,12 +253,12 @@ test.describe("ApplicationsView", () => {
 
     await waitForSearchParams(page, (params) => {
       const statuses = (params.get("currentStatus__in") ?? "").split(",").filter(Boolean);
-      return statuses.includes("to_validate") && params.get("search") === "av08-persist";
+      return !statuses.includes("to_validate") && params.get("search") === "av08-persist";
     });
 
     await page.reload();
     await expect(searchInput).toHaveValue("av08-persist");
-    expect((new URL(page.url()).searchParams.get("currentStatus__in") ?? "").split(",")).toContain("to_validate");
+    expect((new URL(page.url()).searchParams.get("currentStatus__in") ?? "").split(",")).not.toContain("to_validate");
 
     await page.goto(`${BASE_URL}/`);
     await page.goBack({ waitUntil: "domcontentloaded" });
@@ -266,7 +267,7 @@ test.describe("ApplicationsView", () => {
 
     const params = new URL(page.url()).searchParams;
     expect(params.get("search")).toBe("av08-persist");
-    expect((params.get("currentStatus__in") ?? "").split(",")).toContain("to_validate");
+    expect((params.get("currentStatus__in") ?? "").split(",")).not.toContain("to_validate");
   });
 
   test("AV-09 - reset filtres nettoie URL et restaure les champs", async ({ page }) => {
