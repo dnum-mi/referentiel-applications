@@ -13,10 +13,7 @@ const { filters, setFilter } = useApplicationSearch();
       data-testid="application-filter-label"
       @update:model-value="setFilter({ search: $event?.toString(), page: 0 })"
     />
-    <fieldset class="fr-fieldset">
-      <legend class="fr-fieldset__legend fr-label">Tags</legend>
-      <TagSearchSelect :tags="filters.tag" data-testid="application-filter-tag" @update:tags="setFilter({ tag: $event, page: 0 })" />
-    </fieldset>
+    <TagSearchSelect :tags="filters.tag" data-testid="application-filter-tag" @update:tags="setFilter({ tag: $event, page: 0 })" />
     <DsfrInput
       :model-value="filters.link"
       label-visible
