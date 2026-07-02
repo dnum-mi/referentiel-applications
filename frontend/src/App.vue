@@ -22,7 +22,10 @@ const pageTitleAnnouncer = ref<HTMLElement | null>(null);
 const currentPageTitle = ref("");
 
 // 12.8 / 7.1 : simuler un rechargement de page pour les TA après chaque navigation SPA.
-router.afterEach(async (to) => {
+// On ignore les navigations qui ne changent que la query string (ex. filtres de recherche mis à jour
+// via router.replace) : sinon le focus est repris au h1 pendant que l'utilisateur saisit dans un champ.
+router.afterEach(async (to, from) => {
+  if (to.path === from.path) return;
   currentPageTitle.value = (to.meta.title as string) ?? document.title;
   await nextTick();
   pageTitleAnnouncer.value?.focus();
