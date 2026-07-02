@@ -58,27 +58,62 @@ watchDebounced(
 </script>
 
 <template>
-  <DsfrSelect v-model="selectedActorTypeId" :options="actorTypeOptions" label="Type d'acteur" data-testid="actor-filter-select" />
+  <DsfrSelect
+    v-model="selectedActorTypeId"
+    :options="actorTypeOptions"
+    aria-describedby="actor-type-tooltip-desc"
+    data-testid="actor-filter-select"
+  >
+    <template #label>
+      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+        Type d'acteur
+        <DsfrTooltip
+          id="actor-type-tooltip-desc"
+          content="Filtre les applications selon le type d'acteur associé (maîtrise d'ouvrage, maîtrise d'œuvre…), ou selon l'absence de MOA ou de MOE."
+        />
+      </span>
+    </template>
+  </DsfrSelect>
 
   <DsfrInput
     :model-value="filters.actorEmail || ''"
     label-visible
-    label="Email"
     type="email"
+    aria-describedby="actor-email-tooltip-desc"
     data-testid="actor-email-filter-input"
     class="fr-mb-2w"
     @update:model-value="setFilter({ actorEmail: $event ? String($event) : undefined, page: 0 })"
-  />
+  >
+    <template #label>
+      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+        Email
+        <DsfrTooltip
+          id="actor-email-tooltip-desc"
+          content="Recherche les applications ayant un acteur dont l'adresse email contient le texte saisi."
+        />
+      </span>
+    </template>
+  </DsfrInput>
 
   <DsfrInput
     :model-value="filters.organization || ''"
     label-visible
-    label="Nom de l'organisation"
     list="organizationSuggestionsList"
     placeholder="Rechercher une organisation"
+    aria-describedby="actor-organization-tooltip-desc"
     data-testid="organization-filter-input"
     @update:model-value="setFilter({ organization: $event ? String($event) : undefined, page: 0 })"
-  />
+  >
+    <template #label>
+      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+        Nom de l'organisation
+        <DsfrTooltip
+          id="actor-organization-tooltip-desc"
+          content="Recherche les applications rattachées à une organisation dont le nom contient le texte saisi."
+        />
+      </span>
+    </template>
+  </DsfrInput>
   <datalist id="organizationSuggestionsList" data-testid="organization-suggestions-list">
     <option v-for="organization in organizations" :key="organization.id" :data-testid="`organization-option-${organization.id}`">
       {{ organization.path }}

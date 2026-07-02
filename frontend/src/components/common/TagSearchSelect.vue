@@ -7,9 +7,11 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
     tags?: string[];
+    tooltipContent?: string;
   }>(),
   {
     tags: () => [],
+    tooltipContent: undefined,
   },
 );
 
@@ -49,7 +51,10 @@ function removeTag(index: number) {
 </script>
 <template>
   <fieldset class="tag-search-fieldset" v-bind="$attrs">
-    <legend class="fr-label">Tags</legend>
+    <legend class="fr-label tag-search-legend">
+      Tags
+      <DsfrTooltip v-if="tooltipContent" :content="tooltipContent" />
+    </legend>
     <ul class="fr-tags-group" data-testid="info-tags">
       <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
         <DsfrTag
@@ -83,5 +88,11 @@ function removeTag(index: number) {
   border: none;
   margin: 0;
   padding: 0;
+}
+
+.tag-search-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 </style>

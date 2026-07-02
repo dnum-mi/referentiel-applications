@@ -110,8 +110,8 @@ const total = computed(() => {
           <CampaignFilter v-if="isTimeRoute" />
           <BusinessDivisionSearch
             label="Direction de métier principale"
+            tooltip-content="Recherche les applications rattachées à la direction de métier sélectionnée."
             :business-division-id="filters.businessDivisionId"
-            :show-label="false"
             @update="setFilter({ businessDivisionId: $event?.id, page: 0 })"
           />
         </DsfrAccordion>

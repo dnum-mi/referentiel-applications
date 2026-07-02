@@ -4,6 +4,7 @@ import {
   complianceBooleanCriteria,
   complianceFilterCriteria,
   complianceFilterLabels,
+  complianceFilterTooltips,
   type ComplianceFilterCriterion,
 } from "@/constants/dictionary";
 
@@ -58,17 +59,32 @@ function setState(criterion: ComplianceFilterCriterion, state: string | number) 
 
 <template>
   <fieldset data-testid="compliance-filter" class="fr-fieldset compliance-filters">
-    <legend class="fr-fieldset__legend fr-label">Conformité</legend>
+    <legend class="fr-fieldset__legend fr-label">
+      <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+        Conformité
+        <DsfrTooltip
+          id="compliance-legend-tooltip-desc"
+          content="Filtre les applications selon leurs critères de conformité (continuité d'activité, sécurité, accessibilité, protection des données…)."
+        />
+      </span>
+    </legend>
     <DsfrSelect
       v-for="criterion in complianceFilterCriteria"
       :key="criterion"
-      :label="complianceFilterLabels[criterion]"
       :model-value="stateOf(criterion)"
       :options="optionsFor(criterion)"
       :name="`compliance-${criterion}`"
+      :aria-describedby="`compliance-${criterion}-tooltip-desc`"
       :data-testid="`compliance-option-${criterion}`"
       @update:model-value="(state: string | number) => setState(criterion, state)"
-    />
+    >
+      <template #label>
+        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+          {{ complianceFilterLabels[criterion] }}
+          <DsfrTooltip :id="`compliance-${criterion}-tooltip-desc`" :content="complianceFilterTooltips[criterion]" />
+        </span>
+      </template>
+    </DsfrSelect>
   </fieldset>
 </template>
 
