@@ -162,7 +162,19 @@ router.beforeEach(async (to) => {
   }
 });
 
-// Update document title when navigating
+const APP_TITLE_SUFFIX = "Référentiel des applications";
+
+/**
+ * RGAA-007 : titres de page uniques et explicites. Appelable depuis les vues
+ * dont le titre dépend de données chargées après la navigation (nom d'application,
+ * pagination…). Le `afterEach` ci-dessous fournit le titre par défaut.
+ */
+export function setPageTitle(parts: string | string[]) {
+  const segments = Array.isArray(parts) ? parts : [parts];
+  document.title = [...segments, APP_TITLE_SUFFIX].filter(Boolean).join(" - ");
+}
+
+// Update document title when navigating (titre par défaut)
 router.afterEach((to) => {
   if (to.meta.title) {
     document.title = to.meta.title as string;

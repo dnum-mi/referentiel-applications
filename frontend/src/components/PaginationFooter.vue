@@ -39,14 +39,14 @@ const pages = computed(() => {
       </select>
     </div>
 
-    <div class="footer-item pagination-centered">
+    <nav class="footer-item pagination-centered" role="navigation" aria-label="Pagination">
       <DsfrPagination
         :current-page="page"
         :pages="pages"
         data-testid="pagination-component"
         @update:current-page="emit('update:page', $event)"
       />
-    </div>
+    </nav>
 
     <div class="footer-item total-count" data-testid="pagination-total-count">{{ totalFiltered }} résultat(s)</div>
   </div>

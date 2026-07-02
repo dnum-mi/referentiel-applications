@@ -13,6 +13,7 @@ import ImpersonationBanner from "./components/ImpersonationBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import ReloadPrompt from "./components/ReloadPrompt.vue";
+import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 
 const route = useRoute();
 const router = useRouter();
@@ -36,9 +37,14 @@ configureClients(toaster);
 const appVersion = __APP_VERSION__;
 const environmentLabel = computed(() => appConfig.value?.environmentLabel);
 
+// RGAA-016 : pas d'emoji « 📦 » lu tel quel par les lecteurs d'écran.
+// RGAA-015 : mention « nouvelle fenêtre » (le lien s'ouvre dans un nouvel onglet).
 const versionLink = computed(() => ({
-  label: `📦 ${appVersion}`,
+  label: appVersion,
+  title: `Version ${appVersion} - nouvelle fenêtre`,
   href: `https://github.com/dnum-mi/referentiel-applications/releases/tag/${appVersion}`,
+  target: "_blank",
+  to: undefined,
 }));
 
 interface QuickLink {
@@ -142,43 +148,58 @@ const ecosystemLinks = computed(() => {
   if (appConfig.value?.footerLinks) {
     links.push(...appConfig.value.footerLinks);
   }
-  return links;
+  // RGAA-015 : ces liens sont rendus par DSFR avec target="_blank" → l'indiquer dans l'intitulé.
+  return links.map((link) => ({
+    ...link,
+    title: link.title?.includes("nouvelle fenêtre") ? link.title : `${link.title ?? link.label} - nouvelle fenêtre`,
+  }));
 });
 const mandatoryLinks = computed(() => [
   { label: "Accessibilité : non conforme", title: "Aller à la page d'accessibilité", to: "accessibilite" },
   { label: "Plan du site", title: "Aller au plan du site", to: "plan-du-site" },
   {
+    // RGAA-015 : ouverture dans un nouvel onglet mentionnée dans l'intitulé.
     label: "Contact Tchap",
-    title: "Aller au contact Tchap",
+    title: "Contact Tchap - nouvelle fenêtre",
     href: "https://www.tchap.gouv.fr/#/room/!ydoKqFOXRAQPQYFvqa:agent.interieur.tchap.gouv.fr?via=agent.interieur.tchap.gouv.fr",
-    to: "",
     target: "_blank",
+    to: undefined,
   },
   {
     label: "Contacter l'équipe",
-    title: "Envoyer un email à l'équipe du Référentiel des Applications",
+    title: "Contacter l'équipe par email - nouvelle fenêtre",
     href: "mailto:support-referentiel-applications@interieur.gouv.fr",
-    to: "",
     target: "_blank",
     icon: "fr-icon-mail-line",
+    to: undefined,
   },
-  { ...versionLink.value, to: "" },
+  versionLink.value,
 ]);
-const afterMandatoryLinks = [
-  {
-    label: "Paramètres d'affichage",
-    button: true,
-    class: "fr-icon-theme-fill fr-link--icon-left fr-px-2v",
-    to: "/settings",
-    onclick: changeTheme,
-  },
-];
-
 const scheme = useScheme();
 function changeTheme() {
   if (!scheme) return;
   scheme.setScheme(scheme.theme.value === "light" ? "dark" : "light");
 }
+
+// RGAA-017 : le bouton « Paramètres d'affichage » doit restituer son état (mode courant).
+const themeButtonTitle = computed(() =>
+  scheme?.theme.value === "dark"
+    ? "Paramètres d'affichage : actuellement en mode sombre, passer en mode clair"
+    : "Paramètres d'affichage : actuellement en mode clair, passer en mode sombre",
+);
+
+const afterMandatoryLinks = computed(() => [
+  {
+    label: "Paramètres d'affichage",
+    button: true,
+    title: themeButtonTitle.value,
+    class: "fr-icon-theme-fill fr-link--icon-left fr-px-2v",
+    to: "/settings",
+    onclick: changeTheme,
+  },
+]);
+
+useRgaaGlobalA11y();
 
 const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW();
 function close() {
@@ -227,6 +248,7 @@ function close() {
 
   <DsfrFooter
     :logo-text="logoText"
+    desc-text="Référentiel des applications du ministère de l'Intérieur : recensement des applications, de leurs données et de leurs relations."
     :operator-img-src="operatorImgSrc"
     :operator-img-alt="operatorImgAlt"
     :operator-img-style="operatorImgStyle"
