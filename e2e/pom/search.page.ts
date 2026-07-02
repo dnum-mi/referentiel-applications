@@ -483,7 +483,7 @@ export class SearchPage extends BasePage {
   /** Filtre par direction de métier (suggestion) → param `businessDivisionId`. */
   async filterByBusinessDivision(label: string): Promise<void> {
     const input = this.byTestId("business-division-suggestions-input");
-    await this.openAccordion("sidebar-accordion-organization", input);
+    await this.openAccordion("sidebar-accordion-portfolio", input);
     await input.locator("input").fill(label);
     const list = this.sidebar().getByTestId("suggestions-list");
     await expect(list).toBeVisible();

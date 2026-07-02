@@ -84,12 +84,4 @@ watchDebounced(
       {{ organization.path }}
     </option>
   </datalist>
-
-  <BusinessDivisionSearch
-    :style="{ marginTop: '1rem' }"
-    label="Direction de métier principale"
-    :business-division-id="filters.businessDivisionId"
-    :show-label="false"
-    @update="setFilter({ businessDivisionId: $event?.id, page: 0 })"
-  />
 </template>

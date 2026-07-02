@@ -36,7 +36,7 @@ const { total: applicationsTotal, resetFilters, filters, setFilter } = useApplic
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
 
-const { openAccordions, toggle } = useAccordionManager(8, true);
+const { openAccordions, toggle } = useAccordionManager(9, true);
 
 const isMyAppsFilterActive = computed(() => {
   return !!(userStore.user?.email && filters.value.myApplications);
@@ -91,57 +91,76 @@ const total = computed(() => {
           @update:model-value="toggleSubscribedAppsFilter"
         />
 
-        <DsfrAccordion :selected="openAccordions.includes(0)" title="Général" data-testid="sidebar-accordion-general" @click="toggle(0)">
-          <CampaignFilter v-if="isTimeRoute" />
+        <DsfrAccordion
+          :selected="openAccordions.includes(0)"
+          title="Applications"
+          data-testid="sidebar-accordion-general"
+          @click="toggle(0)"
+        >
           <ApplicationFilter />
           <PriorityRestartFilter />
         </DsfrAccordion>
 
         <DsfrAccordion
           :selected="openAccordions.includes(1)"
+          title="Portefeuille"
+          data-testid="sidebar-accordion-portfolio"
+          @click="toggle(1)"
+        >
+          <CampaignFilter v-if="isTimeRoute" />
+          <BusinessDivisionSearch
+            label="Direction de métier principale"
+            :business-division-id="filters.businessDivisionId"
+            :show-label="false"
+            @update="setFilter({ businessDivisionId: $event?.id, page: 0 })"
+          />
+        </DsfrAccordion>
+
+        <DsfrAccordion
+          :selected="openAccordions.includes(2)"
           title="Organisation & Acteurs"
           data-testid="sidebar-accordion-organization"
-          @click="toggle(1)"
+          @click="toggle(2)"
         >
           <ActorFilter />
         </DsfrAccordion>
 
         <DsfrAccordion
-          :selected="openAccordions.includes(2)"
+          :selected="openAccordions.includes(3)"
           title="Hébergement"
           data-testid="sidebar-accordion-hosting"
-          @click="toggle(2)"
+          @click="toggle(3)"
         >
           <HostingFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(3)" title="Qualité" data-testid="sidebar-accordion-quality" @click="toggle(3)">
+        <DsfrAccordion :selected="openAccordions.includes(4)" title="Qualité" data-testid="sidebar-accordion-quality" @click="toggle(4)">
           <QualityFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(4)" title="Statut" data-testid="sidebar-accordion-status" @click="toggle(4)">
+        <DsfrAccordion :selected="openAccordions.includes(5)" title="Statut" data-testid="sidebar-accordion-status" @click="toggle(5)">
           <StatusFilter />
         </DsfrAccordion>
 
         <DsfrAccordion
-          :selected="openAccordions.includes(5)"
+          :selected="openAccordions.includes(6)"
           title="Conformité"
           data-testid="sidebar-accordion-compliance"
-          @click="toggle(5)"
+          @click="toggle(6)"
         >
           <ComplianceFilter />
         </DsfrAccordion>
 
         <DsfrAccordion
-          :selected="openAccordions.includes(6)"
+          :selected="openAccordions.includes(7)"
           title="Relations"
           data-testid="sidebar-accordion-relations"
-          @click="toggle(6)"
+          @click="toggle(7)"
         >
           <RelationFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(7)" title="Données" data-testid="sidebar-accordion-donnees" @click="toggle(7)">
+        <DsfrAccordion :selected="openAccordions.includes(8)" title="Données" data-testid="sidebar-accordion-donnees" @click="toggle(8)">
           <DataFilter />
         </DsfrAccordion>
       </div>

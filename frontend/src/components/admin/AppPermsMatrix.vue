@@ -26,7 +26,7 @@ const permissionSuffixes = {
   Compliance: { label: "Conformités", title: "Conformités" },
   Actor: { label: "Acteurs", title: "Acteurs" },
   Relation: { label: "Relations", title: "Relations" },
-  Metadata: { label: "Historique", title: "Historique" },
+  Metadata: { label: "Modifications", title: "Modifications" },
 } as const satisfies Record<string, { label: string; title: string }>;
 const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissionSuffixes)[];
 
