@@ -243,7 +243,14 @@ onMounted(async () => {
           @page="onPage"
         >
           <template #body-lien="{ data }">
-            <a :href="data.lien.to" target="_blank" rel="noopener noreferrer" data-testid="link-item">{{ data.lien.label }}</a>
+            <a
+              :href="data.lien.to"
+              target="_blank"
+              rel="noopener noreferrer"
+              :title="`${data.lien.label} - nouvelle fenêtre`"
+              data-testid="link-item"
+              >{{ data.lien.label }}</a
+            >
           </template>
 
           <template #body-typeDeLien="{ data }">
