@@ -155,7 +155,7 @@ const ecosystemLinks = computed(() => {
   }));
 });
 const mandatoryLinks = computed(() => [
-  { label: "Accessibilité : non conforme", title: "Aller à la page d'accessibilité", to: "accessibilite" },
+  { label: "Accessibilité : Partiellement conforme", title: "Aller à la page d'accessibilité", to: "accessibilite" },
   { label: "Plan du site", title: "Aller au plan du site", to: "plan-du-site" },
   {
     // RGAA-015 : ouverture dans un nouvel onglet mentionnée dans l'intitulé.
