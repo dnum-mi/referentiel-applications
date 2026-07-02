@@ -26,6 +26,7 @@ const permissionSuffixes = {
   Compliance: { label: "Conformités", title: "Conformités" },
   Actor: { label: "Acteurs", title: "Acteurs" },
   Relation: { label: "Relations", title: "Relations" },
+  Data: { label: "Données", title: "Données" },
   Metadata: { label: "Modifications", title: "Modifications" },
 } as const satisfies Record<string, { label: string; title: string }>;
 const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissionSuffixes)[];
@@ -40,7 +41,7 @@ function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSu
     return;
   }
   updatedMatrix.value[actorTypeIdx][`${permission}Read`] = value === "Read" || value === "Write";
-  if (permission !== "Metadata") {
+  if (permission !== "Metadata" && permission !== "Data") {
     updatedMatrix.value[actorTypeIdx][`${permission}Write`] = value === "Write";
   }
 }
@@ -94,6 +95,15 @@ function saveAppPermsMatrix() {
         />
         <PermissionSelect
           v-else-if="perm === 'Metadata'"
+          :id="`${perms.actorTypeId}-${perm}`"
+          class="permission-select"
+          :read="perms[`${perm}Read`] || false"
+          :perm-order="['none', 'Read']"
+          :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
+          @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
+        />
+        <PermissionSelect
+          v-else-if="perm === 'Data'"
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
           :read="perms[`${perm}Read`] || false"

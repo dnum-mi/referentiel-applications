@@ -1250,6 +1250,7 @@ paths:
                     - LinkRead
                     - LinkWrite
                     - MetadataRead
+                    - DataRead
                     - ReportRead
                     - ReportManage
                     - ReportPost
@@ -5568,6 +5569,7 @@ components:
         - LinkWrite
         - AppWritePriority
         - MetadataRead
+        - DataRead
         - ReportRead
         - ReportPost
         - ReportManage
@@ -7037,6 +7039,8 @@ components:
           type: boolean
         MetadataRead:
           type: boolean
+        DataRead:
+          type: boolean
         RelationRead:
           type: boolean
         RelationWrite:
@@ -7063,6 +7067,7 @@ components:
         - HostingRead
         - HostingWrite
         - MetadataRead
+        - DataRead
         - RelationRead
         - RelationWrite
         - LinkRead

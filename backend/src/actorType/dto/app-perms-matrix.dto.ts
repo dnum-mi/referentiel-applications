@@ -48,6 +48,10 @@ export class AppPermsDto {
 
   @ApiProperty()
   @IsBoolean()
+  DataRead: boolean;
+
+  @ApiProperty()
+  @IsBoolean()
   RelationRead: boolean;
 
   @ApiProperty()
