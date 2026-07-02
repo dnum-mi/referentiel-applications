@@ -85,10 +85,12 @@ body,
   margin-bottom: 0.5rem !important;
 }
 
-/* RGAA-011 : la page courante ne doit pas être signalée par la seule couleur. */
+/*
+ * RGAA 3.1 : la page courante ne doit pas être signalée par la seule couleur.
+ * Le DSFR utilise déjà une barre bleue (couleur seule) pour indiquer l'onglet actif.
+ * Le font-weight: 700 suffit comme indicateur non-coloré — text-decoration: underline
+ * a été retiré car il créait un double underline avec le style natif du lien DSFR.
+ */
 .fr-nav__link[aria-current="page"] {
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-  text-decoration-thickness: 2px;
 }
