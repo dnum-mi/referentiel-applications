@@ -300,7 +300,7 @@ export class TimeChartBuilder {
           .attr("text-anchor", "end")
           .attr("fill", "currentColor")
           .attr("font-size", "12px")
-          .text("Cout du MCO"),
+          .text("Coût du MCO"),
       );
 
     return this;
