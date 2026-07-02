@@ -10,7 +10,7 @@ import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
-import { computed, onBeforeMount, ref } from "vue";
+import { computed, nextTick, onBeforeMount, ref } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import ActorForm from "./ActorForm.vue";
 
@@ -114,6 +114,13 @@ onBeforeMount(async () => {
   }
 });
 
+// RGAA-059 (7.5 / 12.8) : message de statut restitué aux TA + focus rendu au bouton déclencheur.
+const statusMessage = ref("");
+const lastTrigger = ref<HTMLElement | null>(null);
+function rememberTrigger(event: Event) {
+  lastTrigger.value = (event.currentTarget as HTMLElement) ?? null;
+}
+
 async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
   loading.value = true;
   actorModal.closeModal();
@@ -128,7 +135,10 @@ async function handleSaveActors(actor: CreateActorDto & { id?: string }) {
       });
     }
     await fetchActorsByApplication(props.application.id);
+    statusMessage.value = "Acteur sauvegardé avec succès !";
     toaster.addSuccessMessage("Acteur sauvegardé avec succès !");
+    await nextTick();
+    lastTrigger.value?.focus();
   } catch {
     toaster.addErrorMessage("Erreur lors de la sauvegarde de l’acteur.");
   } finally {
@@ -205,6 +215,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
 </script>
 
 <template>
+  <p class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="actor-status">{{ statusMessage }}</p>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="actor-tab">
     <div class="fr-col">
       <h3 class="fr-mb-0">Gestion des acteurs</h3>
@@ -217,7 +228,12 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
         class="fr-btn--icon-left fr-icon-add-line"
         :disabled="!canEdit"
         data-testid="actor-add-btn"
-        @click="actorModal.openCreateModal()"
+        @click="
+          (e) => {
+            rememberTrigger(e);
+            actorModal.openCreateModal();
+          }
+        "
       >
         Ajouter un acteur
       </DsfrButton>
@@ -299,7 +315,12 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
             icon="fr-icon-edit-line"
             :disabled="!canEdit"
             data-testid="actor-edit-btn"
-            @click="data.Actions.edit"
+            @click="
+              (e) => {
+                rememberTrigger(e);
+                data.Actions.edit();
+              }
+            "
           >
             Modifier
           </DsfrButton>

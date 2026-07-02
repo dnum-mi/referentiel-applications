@@ -61,6 +61,16 @@ const itemsPerPage = ref<number>(15);
 const currentPage = ref<number>(0);
 const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 
+// RGAA-084 (7.5) : message de statut sur le nombre de résultats, restitué aux TA.
+const statusMessage = computed(() => {
+  if (isLoading.value) return "Chargement des utilisateurs…";
+  const total = data.value.total;
+  if (total === 0) return "Aucune donnée ne correspond à votre recherche : Résultat 0 à 0";
+  const from = firstIndex.value + 1;
+  const to = Math.min(firstIndex.value + data.value.results.length, total);
+  return `Résultat ${from} à ${to} sur ${total}`;
+});
+
 async function fetchUsers() {
   try {
     isLoading.value = true;
@@ -141,6 +151,10 @@ onMounted(fetchUsers);
         class="fr-col-12"
         data-testid="admin-user-search"
       />
+    </div>
+
+    <div aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="admin-users-status">
+      <p>{{ statusMessage }}</p>
     </div>
 
     <div v-if="isLoading" class="fr-alert fr-alert--info" data-testid="admin-users-loading">

@@ -13,7 +13,7 @@ import { useUserStore } from "@/stores/userStore";
 import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
 import type { DsfrCheckboxProps } from "@gouvminint/vue-dsfr";
 import { useMemoize } from "@vueuse/core";
-import { computed, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 
 const props = defineProps<{ user: Required<UserEntity> }>();
@@ -86,6 +86,17 @@ function closeEditModal() {
   maiaSuggestion.value = null;
 }
 
+// RGAA-088 (7.5 / 12.8) : confirmation restituée aux TA + focus rendu au bouton « Modifier ».
+const editBtn = ref<{ $el?: HTMLElement } | null>(null);
+const confirmationMessage = ref("");
+function focusOpener() {
+  nextTick(() => {
+    const el = editBtn.value?.$el;
+    const btn = el instanceof HTMLButtonElement ? el : (el?.querySelector?.("button") ?? null);
+    btn?.focus();
+  });
+}
+
 async function saveUser() {
   isSaving.value = true;
   try {
@@ -99,9 +110,11 @@ async function saveUser() {
       } as UpdateUserDto,
     });
     if (!response.error && response.data) {
+      confirmationMessage.value = "Utilisateur mis à jour avec succès";
       toaster.addSuccessMessage("Utilisateur mis à jour avec succès");
       closeEditModal();
       emit("userUpdated", response.data);
+      focusOpener();
     } else {
       const errorMessage =
         (response.error as { message: string })?.message ?? "Une erreur est survenue lors de la mise à jour de l'utilisateur";
@@ -186,6 +199,7 @@ const isScopeDisabled = computed(() => {
         @click="syncFromMaia"
       />
       <DsfrButton
+        ref="editBtn"
         label="Modifier"
         size="sm"
         secondary
@@ -194,6 +208,10 @@ const isScopeDisabled = computed(() => {
         aria-label="Modifier les permissions de l'utilisateur"
         @click="openEditModal"
       />
+
+      <div aria-live="polite" aria-atomic="true" class="fr-sr-only" data-testid="admin-user-edit-status">
+        <p v-if="confirmationMessage">{{ confirmationMessage }}</p>
+      </div>
       <DsfrButton
         v-if="canImpersonate"
         :label="isImpersonating ? '...' : 'Se connecter en tant que'"

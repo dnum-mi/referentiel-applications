@@ -51,6 +51,16 @@ const searchLabel = computed(() => {
   return props.required ? "Organisation *" : "Organisation";
 });
 
+// RGAA-040 / RGAA-058 / RGAA-087 (7.5) : message de statut unique restitué aux TA
+// via une région live (nombre de suggestions / recherche en cours / absence de résultat).
+const searchStatus = computed(() => {
+  if (!searchQuery.value) return "";
+  if (isLoading.value) return "Recherche en cours…";
+  const n = organizations.value.length;
+  if (n === 0) return "Aucune organisation trouvée";
+  return `${n} résultat${n > 1 ? "s" : ""} trouvé${n > 1 ? "s" : ""}`;
+});
+
 // Computed options for the select
 const selectOptions = computed(() => {
   const options = [];
@@ -155,18 +165,8 @@ watchDebounced(searchQuery, searchOrganizations, { debounce: 300 });
       />
     </div>
 
-    <div v-if="searchQuery && !isLoading && organizations.length > 0" class="fr-mt-1w">
-      <p class="fr-text--xs fr-text--mention-grey">
-        {{ organizations.length }} résultat{{ organizations.length > 1 ? "s" : "" }} trouvé{{ organizations.length > 1 ? "s" : "" }}
-      </p>
-    </div>
-
-    <div v-if="isLoading" class="fr-mt-1w">
-      <p class="fr-text--sm">Recherche en cours...</p>
-    </div>
-
-    <div v-else-if="searchQuery && organizations.length === 0" class="fr-mt-1w">
-      <p class="fr-text--xs fr-text--mention-grey">Aucune organisation trouvée</p>
+    <div class="fr-mt-1w" aria-live="polite" aria-atomic="true" data-testid="org-search-status">
+      <p v-if="searchStatus" class="fr-text--xs fr-text--mention-grey">{{ searchStatus }}</p>
     </div>
   </div>
 </template>

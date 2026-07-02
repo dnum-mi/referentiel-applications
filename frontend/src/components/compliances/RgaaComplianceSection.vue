@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, nextTick } from "vue";
 import { rgaaControllerFindAll, rgaaControllerCreate, rgaaControllerUpdate, rgaaControllerDelete } from "@/client/sdk.gen";
 import type { CreateRgaaComplianceDto, RgaaComplianceDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -22,6 +22,17 @@ const editingItem = ref<RgaaComplianceDto | null>(null);
 const submitting = ref(false);
 
 const form = ref<Record<string, string | number | undefined>>({});
+
+// RGAA-055 (7.5 / 12.8) : message de statut restitué aux TA + focus rendu au bouton « Ajouter ».
+const statusMessage = ref("");
+const addBtn = ref<{ $el?: HTMLElement } | null>(null);
+function focusAddButton() {
+  nextTick(() => {
+    const el = addBtn.value?.$el;
+    const btn = el instanceof HTMLButtonElement ? el : (el?.querySelector?.("button") ?? null);
+    btn?.focus();
+  });
+}
 
 const canWrite = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.appPerms)));
 
@@ -109,6 +120,7 @@ async function saveCreate(payload: CreateRgaaComplianceDto) {
   }
   if (res.data) {
     items.value.push(res.data);
+    statusMessage.value = "Conformité RGAA créée.";
     toaster.addSuccessMessage("Conformité RGAA créée avec succès !");
   }
 }
@@ -124,6 +136,7 @@ async function save() {
       await saveCreate(payload);
     }
     closeModal();
+    focusAddButton();
   } catch {
     toaster.addErrorMessage(
       editing ? "Erreur lors de la modification de la conformité RGAA." : "Erreur lors de la création de la conformité RGAA.",
@@ -140,7 +153,9 @@ async function remove(item: RgaaComplianceDto) {
       path: { applicationId: props.applicationId, id: item.id },
     });
     items.value = items.value.filter((i) => i.id !== item.id);
+    statusMessage.value = "Conformité RGAA supprimée.";
     toaster.addSuccessMessage("Conformité RGAA supprimée.");
+    focusAddButton();
   } catch {
     toaster.addErrorMessage("Erreur lors de la suppression de la conformité RGAA.");
   }
@@ -149,10 +164,12 @@ async function remove(item: RgaaComplianceDto) {
 
 <template>
   <section data-testid="rgaa-section">
+    <p class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="rgaa-status">{{ statusMessage }}</p>
     <div class="fr-grid-row fr-grid-row--middle fr-justify-content-between fr-mb-2w">
       <h4 class="fr-mb-0">Conformités RGAA</h4>
       <DsfrButton
         v-if="canWrite"
+        ref="addBtn"
         icon="fr-icon-add-line"
         size="sm"
         label="Ajouter"
