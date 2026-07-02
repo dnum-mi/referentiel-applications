@@ -228,27 +228,41 @@ const isScopeDisabled = computed(() => {
     <DsfrModal :opened="isEditModalOpen" title="Modifier l'utilisateur" data-testid="admin-edit-user-modal" @close="closeEditModal">
       <p><strong>Utilisateur :</strong> {{ user.email }}</p>
 
-      <OrganizationSearchSelect
-        v-model="editingOrganizationId"
-        class="fr-mb-1w"
-        description="Recherchez et sélectionnez une organisation pour cet utilisateur"
-        :initial-organization="user.organization"
-        data-testid="user-organization-search"
-      />
+      <!-- RGAA-086 (11.5) : regroupement des champs organisation de même nature. -->
+      <fieldset class="fr-fieldset">
+        <legend class="fr-fieldset__legend">Organisations</legend>
+        <OrganizationSearchSelect
+          v-model="editingOrganizationId"
+          class="fr-mb-1w"
+          description="Recherchez et sélectionnez une organisation pour cet utilisateur"
+          :initial-organization="user.organization"
+          data-testid="user-organization-search"
+        />
 
-      <div class="fr-mb-2w">
-        <p v-if="isFetchingMaiaSuggestion" class="fr-text--sm fr-text-mention--grey fr-mb-0">Récupération de la suggestion MAIA…</p>
-        <template v-else-if="maiaSuggestion?.organizationPath">
-          <p class="fr-text--sm fr-mb-1v">
-            <span class="fr-text-mention--grey">Organisation MAIA : </span>
-            <strong>{{ maiaSuggestion.organizationPath }}</strong>
-          </p>
-          <p v-if="isNotValidated" class="fr-badge fr-badge--error fr-badge--no-icon fr-mb-0" data-testid="user-org-not-validated-badge">
-            NON VALIDÉE
-          </p>
-          <p v-else class="fr-badge fr-badge--success fr-badge--no-icon fr-mb-0" data-testid="user-org-not-validated-badge">VALIDÉE</p>
-        </template>
-      </div>
+        <div class="fr-mb-2w">
+          <p v-if="isFetchingMaiaSuggestion" class="fr-text--sm fr-text-mention--grey fr-mb-0">Récupération de la suggestion MAIA…</p>
+          <template v-else-if="maiaSuggestion?.organizationPath">
+            <p class="fr-text--sm fr-mb-1v">
+              <span class="fr-text-mention--grey">Organisation MAIA : </span>
+              <strong>{{ maiaSuggestion.organizationPath }}</strong>
+            </p>
+            <p v-if="isNotValidated" class="fr-badge fr-badge--error fr-badge--no-icon fr-mb-0" data-testid="user-org-not-validated-badge">
+              NON VALIDÉE
+            </p>
+            <p v-else class="fr-badge fr-badge--success fr-badge--no-icon fr-mb-0" data-testid="user-org-not-validated-badge">VALIDÉE</p>
+          </template>
+        </div>
+
+        <OrganizationSearchSelect
+          v-show="!isScopeDisabled"
+          v-model="editingScopePermissions"
+          class="fr-mb-2w"
+          :label="labelScope"
+          :initial-organization="user.scopeOrganization"
+          data-testid="user-organization-search-scope"
+        />
+      </fieldset>
+
       <DsfrCheckboxSet
         v-model="editingAdditionalPermissions"
         legend="Capacités"
@@ -263,15 +277,6 @@ const isScopeDisabled = computed(() => {
         :options="RolesOptions"
         name="admin-level-radio"
         data-testid="admin-level-radio"
-      />
-
-      <OrganizationSearchSelect
-        v-show="!isScopeDisabled"
-        v-model="editingScopePermissions"
-        class="fr-mb-2w"
-        :label="labelScope"
-        :initial-organization="user.scopeOrganization"
-        data-testid="user-organization-search"
       />
 
       <template #footer>

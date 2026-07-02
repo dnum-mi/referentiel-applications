@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, useId } from "vue";
 import { watchDebounced } from "@vueuse/core";
 import type { PropType } from "vue";
 import type { OrganizationDto } from "@/client/types.gen";
@@ -38,6 +38,9 @@ const emit = defineEmits<{
 }>();
 
 const organizationStore = useOrganizationStore();
+
+// RGAA-039 (11.5) : regrouper le champ de recherche et le select de résultats (même nature).
+const groupLabelId = useId();
 
 const searchQuery = ref("");
 const organizations = ref<OrganizationDto[]>([]);
@@ -139,7 +142,8 @@ watchDebounced(searchQuery, searchOrganizations, { debounce: 300 });
 </script>
 
 <template>
-  <div>
+  <div role="group" :aria-labelledby="groupLabelId">
+    <p :id="groupLabelId" class="fr-sr-only">{{ searchLabel }}</p>
     <div class="fr-form-group">
       <DsfrInputGroup
         v-model.trim="searchQuery"

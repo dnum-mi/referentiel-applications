@@ -28,8 +28,8 @@ function updateMax(value: string | number | undefined) {
 </script>
 
 <template>
-  <div data-testid="quality-filter">
-    <legend class="fr-label fr-mb-2w">
+  <fieldset class="fr-fieldset" data-testid="quality-filter">
+    <legend class="fr-fieldset__legend fr-label fr-mb-2w">
       Indice de qualité<br />
       <small>entre {{ filters.iqGte ?? 0 }}% et {{ filters.iqLte ?? 100 }}%</small>
     </legend>
@@ -57,5 +57,5 @@ function updateMax(value: string | number | undefined) {
         @update:model-value="updateMax"
       />
     </DsfrInputGroup>
-  </div>
+  </fieldset>
 </template>

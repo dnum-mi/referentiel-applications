@@ -49,11 +49,9 @@ defineExpose({ showDialog });
     />
 
     <DsfrModal :opened="visible" title="Personnaliser les colonnes" data-testid="customize-columns-dialog" @close="hideDialog">
-      <p class="fr-text--sm description">Sélectionnez les colonnes à afficher dans le tableau :</p>
-
       <DsfrCheckboxSet
         v-model="selectedColumns"
-        legend=""
+        legend="Sélectionnez les colonnes à afficher dans le tableau :"
         :options="columnOptions"
         name="column-selection"
         data-testid="column-selection-checkboxes"

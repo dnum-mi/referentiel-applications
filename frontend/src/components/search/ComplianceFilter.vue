@@ -57,7 +57,8 @@ function setState(criterion: ComplianceFilterCriterion, state: string | number) 
 </script>
 
 <template>
-  <div data-testid="compliance-filter" class="compliance-filters">
+  <fieldset data-testid="compliance-filter" class="fr-fieldset compliance-filters">
+    <legend class="fr-fieldset__legend fr-label">Conformité</legend>
     <DsfrSelect
       v-for="criterion in complianceFilterCriteria"
       :key="criterion"
@@ -68,7 +69,7 @@ function setState(criterion: ComplianceFilterCriterion, state: string | number) 
       :data-testid="`compliance-option-${criterion}`"
       @update:model-value="(state: string | number) => setState(criterion, state)"
     />
-  </div>
+  </fieldset>
 </template>
 
 <style scoped>
