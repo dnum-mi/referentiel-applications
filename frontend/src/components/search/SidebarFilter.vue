@@ -108,7 +108,7 @@ const total = computed(() => {
 
         <DsfrAccordion
           :selected="openAccordions.includes(1)"
-          title="Applications"
+          title="Informations génerales"
           data-testid="sidebar-accordion-general"
           @click="toggle(0)"
         >
@@ -116,52 +116,52 @@ const total = computed(() => {
           <PriorityRestartFilter />
         </DsfrAccordion>
 
+        <DsfrAccordion :selected="openAccordions.includes(2)" title="Statut" data-testid="sidebar-accordion-status" @click="toggle(2)">
+          <StatusFilter />
+        </DsfrAccordion>
+
         <DsfrAccordion
-          :selected="openAccordions.includes(2)"
+          :selected="openAccordions.includes(3)"
           title="Organisation & Acteurs"
           data-testid="sidebar-accordion-organization"
-          @click="toggle(2)"
+          @click="toggle(3)"
         >
           <ActorFilter />
         </DsfrAccordion>
 
         <DsfrAccordion
-          :selected="openAccordions.includes(3)"
+          :selected="openAccordions.includes(4)"
           title="Hébergement"
           data-testid="sidebar-accordion-hosting"
-          @click="toggle(3)"
+          @click="toggle(4)"
         >
           <HostingFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(4)" title="Qualité" data-testid="sidebar-accordion-quality" @click="toggle(4)">
-          <QualityFilter />
-        </DsfrAccordion>
-
-        <DsfrAccordion :selected="openAccordions.includes(5)" title="Statut" data-testid="sidebar-accordion-status" @click="toggle(5)">
-          <StatusFilter />
-        </DsfrAccordion>
-
         <DsfrAccordion
-          :selected="openAccordions.includes(6)"
+          :selected="openAccordions.includes(5)"
           title="Conformité"
           data-testid="sidebar-accordion-compliance"
-          @click="toggle(6)"
+          @click="toggle(5)"
         >
           <ComplianceFilter />
         </DsfrAccordion>
 
         <DsfrAccordion
-          :selected="openAccordions.includes(7)"
+          :selected="openAccordions.includes(6)"
           title="Relations"
           data-testid="sidebar-accordion-relations"
-          @click="toggle(7)"
+          @click="toggle(6)"
         >
           <RelationFilter />
         </DsfrAccordion>
 
-        <DsfrAccordion :selected="openAccordions.includes(8)" title="Données" data-testid="sidebar-accordion-donnees" @click="toggle(8)">
+        <DsfrAccordion :selected="openAccordions.includes(7)" title="Données" data-testid="sidebar-accordion-donnees" @click="toggle(7)">
           <DataFilter />
+        </DsfrAccordion>
+
+        <DsfrAccordion :selected="openAccordions.includes(8)" title="Qualité" data-testid="sidebar-accordion-quality" @click="toggle(8)">
+          <QualityFilter />
         </DsfrAccordion>
       </div>
     </aside>
