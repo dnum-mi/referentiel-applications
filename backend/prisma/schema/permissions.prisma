@@ -30,7 +30,7 @@ model AppPermissions {
   MetadataRead Boolean
 
   /// Peut lire les données de l'application (onglet Données)
-  DataRead Boolean @default(false)
+  DataRead Boolean @default(true)
 
   /// Peut lire les relations d'application
   RelationRead  Boolean
