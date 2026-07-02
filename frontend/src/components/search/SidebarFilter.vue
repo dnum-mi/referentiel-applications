@@ -93,27 +93,27 @@ const total = computed(() => {
 
         <DsfrAccordion
           :selected="openAccordions.includes(0)"
+          title="Portefeuille"
+          data-testid="sidebar-accordion-portfolio"
+          @click="toggle(1)"
+        >
+          <BusinessDivisionSearch
+            label="Direction métier"
+            tooltip-content="Recherche les applications rattachées à la direction de métier sélectionnée."
+            :business-division-id="filters.businessDivisionId"
+            @update="setFilter({ businessDivisionId: $event?.id, page: 0 })"
+          />
+          <CampaignFilter v-if="isTimeRoute" />
+        </DsfrAccordion>
+
+        <DsfrAccordion
+          :selected="openAccordions.includes(1)"
           title="Applications"
           data-testid="sidebar-accordion-general"
           @click="toggle(0)"
         >
           <ApplicationFilter />
           <PriorityRestartFilter />
-        </DsfrAccordion>
-
-        <DsfrAccordion
-          :selected="openAccordions.includes(1)"
-          title="Portefeuille"
-          data-testid="sidebar-accordion-portfolio"
-          @click="toggle(1)"
-        >
-          <CampaignFilter v-if="isTimeRoute" />
-          <BusinessDivisionSearch
-            label="Direction de métier principale"
-            tooltip-content="Recherche les applications rattachées à la direction de métier sélectionnée."
-            :business-division-id="filters.businessDivisionId"
-            @update="setFilter({ businessDivisionId: $event?.id, page: 0 })"
-          />
         </DsfrAccordion>
 
         <DsfrAccordion
