@@ -43,7 +43,6 @@ const personalTokenColumns: TableColumn[] = personalTokenHeaders.map((h) => ({
   sortable: h.isSortable,
 }));
 
-const tokens = ref<TokenDto[]>([]);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
@@ -60,8 +59,65 @@ const newToken = ref<CreateServiceTokenDto>({
   scopeOrganizationId: "",
 });
 
-const serviceTokens = computed(() => tokens.value.filter((token) => token.kind === "service"));
-const personalTokens = computed(() => tokens.value.filter((token) => token.kind === "personal"));
+const serviceTokens = ref<TokenDto[]>([]);
+const serviceTokensTotal = ref(0);
+const isServiceLoading = ref(false);
+const currentServiceTokenPage = ref(0);
+const serviceTokenPageSize = ref(10);
+const serviceTokenFirstIndex = computed(() => currentServiceTokenPage.value * serviceTokenPageSize.value);
+
+const personalTokens = ref<TokenDto[]>([]);
+const personalTokensTotal = ref(0);
+const isPersonalLoading = ref(false);
+const currentPersonalTokenPage = ref(0);
+const personalTokenPageSize = ref(10);
+const personalTokenFirstIndex = computed(() => currentPersonalTokenPage.value * personalTokenPageSize.value);
+
+async function fetchServiceTokens() {
+  isServiceLoading.value = true;
+
+  const response = await api.tokenControllerList({
+    query: { kind: "service", page: currentServiceTokenPage.value, pageSize: serviceTokenPageSize.value },
+  });
+  if (response.error) {
+    error.value = "Erreur lors du chargement des tokens";
+    isServiceLoading.value = false;
+    return;
+  }
+
+  serviceTokens.value = response.data?.results ?? [];
+  serviceTokensTotal.value = response.data?.total ?? 0;
+  isServiceLoading.value = false;
+}
+
+async function fetchPersonalTokens() {
+  isPersonalLoading.value = true;
+
+  const response = await api.tokenControllerList({
+    query: { kind: "personal", page: currentPersonalTokenPage.value, pageSize: personalTokenPageSize.value },
+  });
+  if (response.error) {
+    error.value = "Erreur lors du chargement des tokens";
+    isPersonalLoading.value = false;
+    return;
+  }
+
+  personalTokens.value = response.data?.results ?? [];
+  personalTokensTotal.value = response.data?.total ?? 0;
+  isPersonalLoading.value = false;
+}
+
+function onServiceTokenPage(event: any) {
+  currentServiceTokenPage.value = event.page;
+  serviceTokenPageSize.value = event.rows;
+  fetchServiceTokens();
+}
+
+function onPersonalTokenPage(event: any) {
+  currentPersonalTokenPage.value = event.page;
+  personalTokenPageSize.value = event.rows;
+  fetchPersonalTokens();
+}
 
 const serviceTokenRows = computed(() =>
   serviceTokens.value.map((token) => ({
@@ -103,18 +159,8 @@ function resetMessages() {
 }
 
 async function fetchTokens() {
-  isLoading.value = true;
   error.value = null;
-
-  const response = await api.tokenControllerList();
-  if (response.error) {
-    error.value = "Erreur lors du chargement des tokens";
-    isLoading.value = false;
-    return;
-  }
-
-  tokens.value = response.data || [];
-  isLoading.value = false;
+  await Promise.all([fetchServiceTokens(), fetchPersonalTokens()]);
 }
 
 async function createServiceToken() {
@@ -297,7 +343,7 @@ onMounted(() => {
         </form>
       </div>
 
-      <div v-if="isLoading && serviceTokens.length === 0" class="fr-py-6w fr-text--center">Chargement...</div>
+      <div v-if="isServiceLoading && serviceTokens.length === 0" class="fr-py-6w fr-text--center">Chargement...</div>
 
       <div v-else-if="serviceTokens.length === 0" class="fr-card fr-p-3w">
         <p class="fr-text--center fr-mb-0">Aucun token applicatif créé pour le moment.</p>
@@ -307,8 +353,14 @@ onMounted(() => {
         v-else
         :items="serviceTokenRows"
         :columns="serviceTokenColumns"
-        :loading="isLoading"
+        :loading="isServiceLoading"
+        :lazy="true"
+        :paginator="true"
+        :rows="serviceTokenPageSize"
+        :first="serviceTokenFirstIndex"
+        :total-records="serviceTokensTotal"
         data-testid="admin-service-tokens-table"
+        @page="onServiceTokenPage"
       >
         <template #body-expiresAt="{ data }">
           {{ formatDate(data.expiresAt) }}
@@ -336,7 +388,7 @@ onMounted(() => {
       <h2 class="fr-h3 fr-mb-2w">Tokens utilisateurs</h2>
       <p class="fr-text--sm">Tokens personnels créés par les utilisateurs depuis leur profil.</p>
 
-      <div v-if="isLoading && personalTokens.length === 0" class="fr-py-6w fr-text--center">Chargement...</div>
+      <div v-if="isPersonalLoading && personalTokens.length === 0" class="fr-py-6w fr-text--center">Chargement...</div>
 
       <div v-else-if="personalTokens.length === 0" class="fr-card fr-p-3w">
         <p class="fr-text--center fr-mb-0">Aucun token utilisateur créé pour le moment.</p>
@@ -346,8 +398,14 @@ onMounted(() => {
         v-else
         :items="personalTokenRows"
         :columns="personalTokenColumns"
-        :loading="isLoading"
+        :loading="isPersonalLoading"
+        :lazy="true"
+        :paginator="true"
+        :rows="personalTokenPageSize"
+        :first="personalTokenFirstIndex"
+        :total-records="personalTokensTotal"
         data-testid="admin-personal-tokens-table"
+        @page="onPersonalTokenPage"
       >
         <template #body-expiresAt="{ data }">
           {{ formatDate(data.expiresAt) }}

@@ -30,18 +30,61 @@ paths:
   /api/v2/tokens:
     get:
       operationId: TokenController_list
-      summary: Récupère tous les tokens de service
-      description: Cette méthode permet de récupérer tous les tokens de service.
-      parameters: []
+      summary: Récupère les tokens de manière paginée
+      description: Cette méthode permet de récupérer les tokens (applicatifs et
+        personnels), avec pagination et filtre optionnel par type.
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: kind
+          required: false
+          in: query
+          description: Filtre par type de token (service ou personal)
+          schema:
+            enum:
+              - personal
+              - service
+            type: string
       responses:
         "200":
-          description: Liste des tokens récupérée avec succès
+          description: Liste paginée des tokens récupérée avec succès
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TokenDto"
+                $ref: "#/components/schemas/PaginatedTokenDto"
       tags: &a1
         - tokens
     post:
@@ -5412,6 +5455,21 @@ components:
         - status
         - kind
         - createdBy
+    PaginatedTokenDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/TokenDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     CreateServiceTokenDto:
       type: object
       properties:

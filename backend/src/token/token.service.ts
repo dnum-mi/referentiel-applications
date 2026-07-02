@@ -60,6 +60,41 @@ export class TokenService {
     return tokens.map((token) => this.toDto(token));
   }
 
+  async listPaginated({
+    kind,
+    page,
+    pageSize,
+  }: {
+    kind?: (typeof TokenKind)[keyof typeof TokenKind];
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ results: TokenDto[]; total: number }> {
+    const where: Prisma.TokenWhereInput = {
+      status: {
+        not: "revoked",
+      },
+    };
+
+    if (kind) {
+      where.userImpersonate = {
+        type: kind === TokenKind.service ? UserType.bot : UserType.human,
+      };
+    }
+
+    const [tokens, total] = await Promise.all([
+      this.prisma.token.findMany({
+        where,
+        include: TOKEN_INCLUDE,
+        omit: { hash: true },
+        orderBy: { createdAt: "desc" },
+        ...(pageSize ? { skip: (page ?? 0) * pageSize, take: pageSize } : {}),
+      }),
+      this.prisma.token.count({ where }),
+    ]);
+
+    return { results: tokens.map((token) => this.toDto(token)), total };
+  }
+
   async create(
     requestor: Requestor,
     personal: boolean,

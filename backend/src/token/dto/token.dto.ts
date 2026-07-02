@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional, PickType } from "@nestjs/swagger";
 import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
 import { OrganizationDto } from "src/organizations/dto/organizations.dto";
+import { PaginationDto } from "src/common/dto";
 import { TokenStatus } from "../domain/token-status.entity";
 import { Roles } from "@prisma/client";
 
@@ -8,6 +9,16 @@ export const TokenKind = {
   personal: "personal",
   service: "service",
 } as const;
+
+export class ListTokensDto extends PaginationDto {
+  @ApiPropertyOptional({
+    description: "Filtre par type de token (service ou personal)",
+    enum: TokenKind,
+  })
+  @IsOptional()
+  @IsEnum(TokenKind)
+  kind?: (typeof TokenKind)[keyof typeof TokenKind];
+}
 
 export class TokenOwnerDto {
   @ApiProperty({
