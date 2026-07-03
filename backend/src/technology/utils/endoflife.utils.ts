@@ -67,12 +67,17 @@ export async function fetchTechnologyEol(
   if (!technology?.trim() || !version?.trim()) return empty;
 
   const product = toEndoflifeProduct(technology);
-  if (!product) return empty;
+  // Garde stricte : le segment produit ne peut contenir que [a-z0-9] (pas de « / »,
+  // « . » ni caractère spécial) → pas d'injection de chemin ni de SSRF possible.
+  if (!/^[a-z0-9]+$/.test(product)) return empty;
 
   try {
-    const response = await fetch(`${ENDOFLIFE_BASE_URL}/${product}`, {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    });
+    const response = await fetch(
+      `${ENDOFLIFE_BASE_URL}/${encodeURIComponent(product)}`,
+      {
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      },
+    );
     if (!response.ok) return empty;
 
     const payload = (await response.json()) as {
