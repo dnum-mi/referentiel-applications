@@ -53,6 +53,14 @@ model Metadata {
   rgaaComplianceId String?
   /// Conformité RGAA associée
   rgaaCompliance   RgaaCompliance? @relation(fields: [rgaaComplianceId], references: [id])
+
+  technologyStackId String?
+  /// Élément de stack technique associé
+  technologyStack   TechnologyStack? @relation(fields: [technologyStackId], references: [id])
+
+  licenseId String?
+  /// Licence associée
+  license   License? @relation(fields: [licenseId], references: [id])
   dataApplicationId String?
   dataApplication   DataApplication? @relation("DataApplicationMetadata", fields: [dataApplicationId], references: [id])
 

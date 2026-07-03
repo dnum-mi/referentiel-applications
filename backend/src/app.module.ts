@@ -31,6 +31,8 @@ import { UserModule } from "./user/user.module";
 import { LabelSourceModule } from "./label-source/label-source.module";
 import { MditCampaignModule } from "./mdit-campaign/mdit-campaign.module";
 import { RgaaModule } from "./rgaa/rgaa.module";
+import { TechnologyModule } from "./technology/technology.module";
+import { LicenseModule } from "./license/license.module";
 import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
 import { OrganizationMaiaReferencesModule } from "./organization-maia-references/organization-maia-references.module";
 import { ImportModule } from "./import/import.module";
@@ -68,6 +70,8 @@ import { ImportModule } from "./import/import.module";
     TagsModule,
     TechnicalDebtInfoModule,
     RgaaModule,
+    TechnologyModule,
+    LicenseModule,
     PrismaModule,
     ConfigModule,
     StatusesModule,

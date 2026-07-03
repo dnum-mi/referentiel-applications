@@ -4854,6 +4854,212 @@ paths:
         "204":
           description: Conformité RGAA supprimée
       tags: *a26
+  /api/v2/applications/{applicationId}/technologies:
+    get:
+      operationId: TechnologyController_findAll
+      summary: Lister la stack technique d'une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des technologies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TechnologyDto"
+      tags: &a27
+        - Technologies
+    post:
+      operationId: TechnologyController_create
+      summary: Ajouter une technologie à la stack d'une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTechnologyDto"
+      responses:
+        "201":
+          description: Technologie ajoutée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechnologyDto"
+        "409":
+          description: Cette technologie est déjà renseignée pour cette application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechnologyErrorResponseDto"
+      tags: *a27
+  /api/v2/applications/{applicationId}/technologies/{id}:
+    patch:
+      operationId: TechnologyController_update
+      summary: Mettre à jour une technologie
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de la technologie
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTechnologyDto"
+      responses:
+        "200":
+          description: Technologie mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechnologyDto"
+      tags: *a27
+    delete:
+      operationId: TechnologyController_delete
+      summary: Supprimer une technologie
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de la technologie
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Technologie supprimée
+      tags: *a27
+  /api/v2/applications/{applicationId}/licenses:
+    get:
+      operationId: LicenseController_findAll
+      summary: Lister les licences d'une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste des licences
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LicenseDto"
+      tags: &a28
+        - Licenses
+    post:
+      operationId: LicenseController_create
+      summary: Ajouter une licence à une application
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLicenseDto"
+      responses:
+        "201":
+          description: Licence ajoutée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LicenseDto"
+        "409":
+          description: Cette licence est déjà renseignée pour cette application
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LicenseErrorResponseDto"
+      tags: *a28
+  /api/v2/applications/{applicationId}/licenses/{id}:
+    patch:
+      operationId: LicenseController_update
+      summary: Mettre à jour une licence
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de la licence
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLicenseDto"
+      responses:
+        "200":
+          description: Licence mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LicenseDto"
+      tags: *a28
+    delete:
+      operationId: LicenseController_delete
+      summary: Supprimer une licence
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
+        - name: id
+          required: true
+          in: path
+          description: ID de la licence
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Licence supprimée
+      tags: *a28
   /api/v2/stats/iq-avg/period:
     get:
       operationId: StatsController_getIqAvgGrouped
@@ -4984,7 +5190,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: &a27
+      tags: &a29
         - Reports
     post:
       operationId: ReportsController_create
@@ -5003,7 +5209,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a27
+      tags: *a29
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -5034,7 +5240,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a27
+      tags: *a29
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -5059,7 +5265,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a28
+      tags: &a30
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -5123,7 +5329,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: *a28
+      tags: *a30
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -5147,7 +5353,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a28
+      tags: *a30
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -5183,7 +5389,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a28
+      tags: *a30
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -5202,7 +5408,7 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a28
+      tags: *a30
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -6055,7 +6261,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a29
+          example: &a31
             - population 1
             - population 2
           description: population associated with the application
@@ -6065,7 +6271,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a30
+          example: &a32
             - finance
             - HR
           description: Purposes of the application
@@ -6076,7 +6282,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a31
+          example: &a33
             - tag1
             - tag2
           type: array
@@ -6369,7 +6575,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a29
+          example: *a31
           description: population associated with the application
           type: array
           items:
@@ -6377,7 +6583,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a30
+          example: *a32
           description: Purposes of the application
           type: array
           items:
@@ -6386,7 +6592,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a31
+          example: *a33
           type: array
           items:
             type: string
@@ -7169,7 +7375,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a32
+          enum: &a34
             - 96
             - 72
             - 48
@@ -7200,7 +7406,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a33
+          enum: &a35
             - OK
             - KO
           type: string
@@ -7211,7 +7417,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a34
+          enum: &a36
             - 48
             - 24
             - 2
@@ -7231,7 +7437,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a35
+          enum: &a37
             - S3
             - LOCAL
             - EXTERNE
@@ -7242,7 +7448,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a36
+          enum: &a38
             - OK
             - KO
           type: string
@@ -7252,7 +7458,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a37
+          enum: &a39
             - homologuee
             - en_cours
             - dispensee
@@ -7293,7 +7499,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a32
+          enum: *a34
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -7317,7 +7523,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a33
+          enum: *a35
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -7326,7 +7532,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a34
+          enum: *a36
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -7342,7 +7548,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a35
+          enum: *a37
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -7350,7 +7556,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a36
+          enum: *a38
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -7358,7 +7564,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a37
+          enum: *a39
           type: string
           description: Homologation status
         homologation_date_end:
@@ -7417,7 +7623,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a32
+          enum: *a34
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -7441,7 +7647,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a33
+          enum: *a35
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -7450,7 +7656,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a34
+          enum: *a36
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -7466,7 +7672,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a35
+          enum: *a37
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -7474,7 +7680,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a36
+          enum: *a38
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -7482,7 +7688,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a37
+          enum: *a39
           type: string
           description: Homologation status
         homologation_date_end:
@@ -8116,6 +8322,116 @@ components:
           maximum: 100
           example: 85.5
           description: Score de conformité RGAA en pourcentage (0-100)
+    TechnologyErrorResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Cette technologie est déjà renseignée pour cette application
+          description: Message d'erreur en cas de conflit
+      required:
+        - message
+    TechnologyDto:
+      type: object
+      properties:
+        technology:
+          type: string
+          example: Node.js
+          description: Nom de la technologie
+        version:
+          type: string
+          nullable: true
+          maxLength: 50
+          example: "20.11"
+          description: Version utilisée
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant unique de la technologie
+        applicationId:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant de l'application
+        eolDate:
+          type: string
+          nullable: true
+          format: date-time
+          example: 2026-04-30
+          description: Date de fin de support/vie de la version (source endoflife.date)
+        eolCheckedAt:
+          type: string
+          nullable: true
+          format: date-time
+          example: 2026-07-03T10:00:00.000Z
+          description: Date de dernière vérification du statut de fin de vie
+      required:
+        - technology
+        - id
+        - applicationId
+    CreateTechnologyDto:
+      type: object
+      properties:
+        technology:
+          type: string
+          example: Node.js
+          description: Nom de la technologie
+        version:
+          type: string
+          nullable: true
+          maxLength: 50
+          example: "20.11"
+          description: Version utilisée
+      required:
+        - technology
+    LicenseErrorResponseDto:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Cette licence est déjà renseignée pour cette application
+          description: Message d'erreur en cas de conflit
+      required:
+        - message
+    LicenseDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: MIT
+          description: Nom / identifiant SPDX de la licence
+        version:
+          type: string
+          nullable: true
+          maxLength: 50
+          example: "2.0"
+          description: Version de la licence si pertinent
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant unique de la licence
+        applicationId:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+          description: Identifiant de l'application
+      required:
+        - name
+        - id
+        - applicationId
+    CreateLicenseDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: MIT
+          description: Nom / identifiant SPDX de la licence
+        version:
+          type: string
+          nullable: true
+          maxLength: 50
+          example: "2.0"
+          description: Version de la licence si pertinent
+      required:
+        - name
     GetIqAvgGroupedDto:
       type: object
       properties:
