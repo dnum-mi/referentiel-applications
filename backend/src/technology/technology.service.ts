@@ -10,6 +10,7 @@ import { CreateTechnologyDto } from "./dto/technology.dto";
 import { TechnologyStack } from "./entities/technology.entity";
 import { ServiceOptions } from "src/common/utils/types";
 import { ApplicationService } from "src/applications/application.service";
+import { fetchTechnologyEol } from "./utils/endoflife.utils";
 
 @Injectable()
 export class TechnologyService extends BaseService<TechnologyStack> {
@@ -19,6 +20,21 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     applicationService: ApplicationService,
   ) {
     super(prisma.technologyStack, prisma, metadataService, applicationService);
+  }
+
+  // Interroge endoflife.date pour dater la fin de vie. Désactivé en test et via
+  // ENDOFLIFE_ENABLED=false pour éviter tout appel réseau non déterministe.
+  private async resolveEol(
+    technology: string,
+    version?: string | null,
+  ): Promise<{ eolDate?: Date | null; eolCheckedAt?: Date | null }> {
+    if (
+      process.env.NODE_ENV === "test" ||
+      process.env.ENDOFLIFE_ENABLED === "false"
+    ) {
+      return {};
+    }
+    return fetchTechnologyEol(technology, version);
   }
 
   async findAllByApplicationId(
@@ -59,7 +75,8 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       );
     }
 
-    return super.create({ ...dto, applicationId }, options);
+    const eol = await this.resolveEol(dto.technology, dto.version);
+    return super.create({ ...dto, ...eol, applicationId }, options);
   }
 
   async updateTechnology(
@@ -91,7 +108,17 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       }
     }
 
-    return super.update(id, dto, options);
+    // Recalcule la fin de vie si la technologie ou la version change.
+    const technologyChanged =
+      dto.technology !== undefined || dto.version !== undefined;
+    const eol = technologyChanged
+      ? await this.resolveEol(
+          dto.technology ?? existing.technology,
+          dto.version ?? existing.version,
+        )
+      : {};
+
+    return super.update(id, { ...dto, ...eol }, options);
   }
 
   async deleteTechnology(

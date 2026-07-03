@@ -43,16 +43,20 @@ function formatEol(value?: string | Date | null): string {
 }
 
 const tableRows = computed(() =>
-  technologies.value.map((techno) => ({
-    id: techno.id,
-    Technologie: techno.technology,
-    Version: techno.version || "—",
-    FinDeVie: formatEol(techno.eolDate) || "—",
-    Actions: {
-      edit: () => technologyModal.openModal(techno),
-      remove: () => askDelete(techno),
-    },
-  })),
+  technologies.value.map((techno) => {
+    const eol = techno.eolDate ? new Date(techno.eolDate) : null;
+    return {
+      id: techno.id,
+      Technologie: techno.technology,
+      Version: techno.version || "—",
+      FinDeVie: formatEol(techno.eolDate),
+      isEol: eol ? eol.getTime() < Date.now() : false,
+      Actions: {
+        edit: () => technologyModal.openModal(techno),
+        remove: () => askDelete(techno),
+      },
+    };
+  }),
 );
 
 async function fetchTechnologies(applicationId: string) {
@@ -160,6 +164,12 @@ function cancelDelete() {
   </div>
 
   <RefAppTable v-else :items="tableRows" :columns="columns" data-test-id="technology-table" empty-message="Aucune technologie renseignée.">
+    <template #body-FinDeVie="{ data }">
+      <DsfrBadge v-if="data.isEol" type="error" label="Fin de vie" small :data-testid="`technology-eol-badge-${data.id}`"></DsfrBadge>
+      <span v-else-if="data.FinDeVie" :title="`Fin de support prévue le ${data.FinDeVie}`">{{ data.FinDeVie }}</span>
+      <template v-else>—</template>
+    </template>
+
     <template #body-Actions="{ data }">
       <DsfrButton
         title="Modifier la technologie"
