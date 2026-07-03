@@ -15,6 +15,7 @@ const PERM_FIELDS: Record<string, string> = {
   HostingRead: "Hébergements - Lecture",
   HostingWrite: "Hébergements - Écriture",
   MetadataRead: "Historique - Lecture",
+  DataRead: "Données - Lecture",
   RelationRead: "Relations - Lecture",
   RelationWrite: "Relations - Écriture",
   LinkRead: "Liens - Lecture",

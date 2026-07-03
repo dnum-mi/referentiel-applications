@@ -96,7 +96,7 @@ export class DataCatalogController {
   @Get("applications/:applicationId/:dataApplicationId")
   @ApiOperation({ summary: "Détail d'une donnée dans une application" })
   @ApiOkResponse({ type: DataApplicationDto })
-  @RequiredPermissions([Permission.AppRead])
+  @RequiredPermissions([Permission.DataRead])
   async findOneApplicationData(
     @Param("applicationId") applicationId: string,
     @Param("dataApplicationId") dataApplicationId: string,
@@ -110,7 +110,7 @@ export class DataCatalogController {
   @Get("applications/:applicationId")
   @ApiOperation({ summary: "Lister les données d'une application" })
   @ApiOkResponse({ type: PaginatedResponseDto.of(DataApplicationDto) })
-  @RequiredPermissions([Permission.AppRead])
+  @RequiredPermissions([Permission.DataRead])
   findByApplication(
     @Param("applicationId") applicationId: string,
     @Query() pagination: PaginationDto,

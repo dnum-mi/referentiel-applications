@@ -8,6 +8,7 @@ import { markRaw, ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
+import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
 
 interface DsfrTab {
   title: string;
@@ -74,6 +75,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-app-perms-matrix",
     panelId: "panel-app-perms-matrix",
     component: markRaw(AdminPermsMatrixTab),
+  },
+  {
+    title: "Gestion des tokens",
+    icon: "ri-key-2-line",
+    tabId: "tab-tokens",
+    panelId: "panel-tokens",
+    component: markRaw(AdminTokensTab),
   },
 ]);
 

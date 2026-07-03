@@ -25,6 +25,7 @@ export const AppPermissionsRecord = {
   LinkRead: null,
   LinkWrite: null,
   MetadataRead: null,
+  DataRead: null,
   ReportRead: null,
   ReportManage: null,
   ReportPost: null,

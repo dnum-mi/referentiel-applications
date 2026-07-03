@@ -6,6 +6,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import {
@@ -16,6 +17,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
+import { PaginatedResponseDto } from "src/common/dto";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
@@ -24,6 +26,7 @@ import {
   CreatePersonalTokenDto,
   CreateServiceTokenDto,
   ExposedTokenDto,
+  ListTokensDto,
   RegenerateTokenDto,
   TokenDto,
 } from "./dto/token.dto";
@@ -42,17 +45,22 @@ export class TokenController {
   @Get()
   @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
-    summary: "Récupère tous les tokens de service",
+    summary: "Récupère les tokens de manière paginée",
     description:
-      "Cette méthode permet de récupérer tous les tokens de service.",
+      "Cette méthode permet de récupérer les tokens (applicatifs et personnels), avec pagination et filtre optionnel par type.",
   })
   @ApiOkResponse({
-    description: "Liste des tokens récupérée avec succès",
-    type: TokenDto,
-    isArray: true,
+    description: "Liste paginée des tokens récupérée avec succès",
+    type: PaginatedResponseDto.of(TokenDto),
   })
-  async list(): Promise<TokenDto[]> {
-    return this.tokenService.list({});
+  async list(
+    @Query() query: ListTokensDto,
+  ): Promise<PaginatedResponseDto<TokenDto>> {
+    return this.tokenService.listPaginated({
+      kind: query.kind,
+      page: query.page,
+      pageSize: query.pageSize,
+    });
   }
 
   @Get("personal")

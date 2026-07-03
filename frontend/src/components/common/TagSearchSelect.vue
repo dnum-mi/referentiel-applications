@@ -7,9 +7,11 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
     tags?: string[];
+    tooltipContent?: string;
   }>(),
   {
     tags: () => [],
+    tooltipContent: undefined,
   },
 );
 
@@ -48,29 +50,49 @@ function removeTag(index: number) {
 }
 </script>
 <template>
-  <ul class="fr-tags-group" v-bind="$attrs" data-testid="info-tags">
-    <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
-      <DsfrTag
-        :label="tag"
-        tag-name="button"
-        class="fr-tag--dismiss"
-        :title="`Supprimer le tag : ${tag}`"
-        @click.stop.prevent="removeTag(index)"
-      />
-    </li>
-  </ul>
-  <label for="tag-search" class="fr-label">Tags</label>
-  <AccessibleAutocomplete
-    id="tag-search"
-    data-testid="search-tags"
-    title="Tags"
-    list-label="Tags proposés"
-    :search="getTagsOptions"
-    display-menu="overlay"
-    placeholder="Rechercher un tag"
-    :min-length="2"
-    :onChange="addTag"
-    :displayNoResult="true"
-    :displayLabel="(item) => item.name"
-  />
+  <fieldset class="tag-search-fieldset" v-bind="$attrs">
+    <legend class="fr-label tag-search-legend">
+      Tags
+      <DsfrTooltip v-if="tooltipContent" :content="tooltipContent" />
+    </legend>
+    <ul class="fr-tags-group" data-testid="info-tags">
+      <li v-for="(tag, index) in props.tags" :key="index" class="tag-item">
+        <DsfrTag
+          :label="tag"
+          tag-name="button"
+          class="fr-tag--dismiss"
+          :aria-label="`Retirer le tag : ${tag}`"
+          @click.stop.prevent="removeTag(index)"
+        />
+      </li>
+    </ul>
+    <label for="tag-search" class="fr-sr-only">Rechercher un tag à ajouter</label>
+    <AccessibleAutocomplete
+      id="tag-search"
+      data-testid="search-tags"
+      title="Rechercher un tag à ajouter"
+      list-label="Tags proposés"
+      :search="getTagsOptions"
+      display-menu="overlay"
+      placeholder="Rechercher un tag"
+      :min-length="2"
+      :on-change="addTag"
+      :display-no-result="true"
+      :display-label="(item) => item.name"
+    />
+  </fieldset>
 </template>
+
+<style scoped>
+.tag-search-fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tag-search-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+</style>

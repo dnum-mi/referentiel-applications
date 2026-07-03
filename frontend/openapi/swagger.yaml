@@ -30,18 +30,61 @@ paths:
   /api/v2/tokens:
     get:
       operationId: TokenController_list
-      summary: Récupère tous les tokens de service
-      description: Cette méthode permet de récupérer tous les tokens de service.
-      parameters: []
+      summary: Récupère les tokens de manière paginée
+      description: Cette méthode permet de récupérer les tokens (applicatifs et
+        personnels), avec pagination et filtre optionnel par type.
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: kind
+          required: false
+          in: query
+          description: Filtre par type de token (service ou personal)
+          schema:
+            enum:
+              - personal
+              - service
+            type: string
       responses:
         "200":
-          description: Liste des tokens récupérée avec succès
+          description: Liste paginée des tokens récupérée avec succès
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TokenDto"
+                $ref: "#/components/schemas/PaginatedTokenDto"
       tags: &a1
         - tokens
     post:
@@ -159,6 +202,375 @@ paths:
         "204":
           description: Token supprimé avec succès
       tags: *a1
+  /api/v2/users/me:
+    get:
+      operationId: UserController_findMe
+      summary: Récupérer ses propres informations utilisateur
+      parameters: []
+      responses:
+        "200":
+          description: Informations utilisateur trouvées
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "404":
+          description: Utilisateur non trouvé
+      tags: &a2
+        - users
+    patch:
+      operationId: UserController_updateMe
+      summary: Mettre à jour ses propres préférences utilisateur
+      description: "Permet à un utilisateur de modifier ses propres préférences (ex:
+        notifications par email)."
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserPreferencesDto"
+      responses:
+        "200":
+          description: Préférences mises à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a2
+  /api/v2/users/me/subscribe/{appId}:
+    post:
+      operationId: UserController_subscribe
+      summary: S'abonner aux notifications d'une application
+      parameters:
+        - name: appId
+          required: true
+          in: path
+          description: ID de l'application à suivre
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Abonnement pris en compte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "201":
+          description: Abonnement pris en compte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+      tags: *a2
+    delete:
+      operationId: UserController_unsubscribe
+      summary: Se désabonner des notifications d'une application
+      parameters:
+        - name: appId
+          required: true
+          in: path
+          description: ID de l'application à ne plus suivre
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Désabonnement pris en compte
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+      tags: *a2
+  /api/v2/users/by-email/{email}/sync-organization-from-maia:
+    get:
+      operationId: UserController_syncOrganizationFromMaiaByEmail
+      summary: Récupérer les informations MAIA d'un utilisateur par email
+      description: Interroge MAIA pour récupérer l'organisation et les informations
+        personnelles associées à cet email, sans modifier l'utilisateur en base.
+      parameters:
+        - name: email
+          required: true
+          in: path
+          description: Email de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Informations MAIA récupérées
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaiaOrganizationSuggestionDto"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a2
+  /api/v2/users/{id}/sync-organization-from-maia:
+    post:
+      operationId: UserController_syncOrganizationFromMaia
+      summary: Synchroniser l'organisation d'un utilisateur depuis MAIA
+      description: Recherche l'utilisateur dans MAIA à partir de son email, crée
+        l'organisation si nécessaire, puis l'associe à l'utilisateur ciblé.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Organisation synchronisée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a2
+  /api/v2/users/sync-organizations-from-maia:
+    post:
+      operationId: UserController_syncOrganizationsFromMaia
+      summary: Synchroniser les organisations depuis MAIA (batch)
+      description: Lance une synchronisation des organisations utilisateurs depuis
+        MAIA en tâche de fond.
+      parameters: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncOrganizationsDto"
+      responses:
+        "200":
+          description: Batch MAIA lancé en tâche de fond
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncOrganizationsResponseDto"
+        "201":
+          description: ""
+        "403":
+          description: Accès refusé - Privilège admin requis
+      tags: *a2
+  /api/v2/users/impersonate/stop:
+    post:
+      operationId: UserController_stopImpersonation
+      summary: Arrêter l'impersonation en cours
+      description: Clôture la session d'impersonation active de l'administrateur. À
+        appeler en conservant le header d'impersonation pour que le serveur
+        identifie l'administrateur réel.
+      parameters: []
+      responses:
+        "204":
+          description: Impersonation arrêtée
+      tags: *a2
+  /api/v2/users/{id}/impersonate:
+    post:
+      operationId: UserController_impersonate
+      summary: Impersonner un utilisateur
+      description: "Démarre une session d'impersonation : l'administrateur se fait
+        passer pour l'utilisateur cible. Renvoie les informations de
+        l'utilisateur impersonné. Accès limité aux administrateurs."
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur à impersonner
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session d'impersonation démarrée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a2
+  /api/v2/users/{id}:
+    patch:
+      operationId: UserController_update
+      summary: Mettre à jour les permissions d'un utilisateur
+      description: Permet de modifier les permissions d'un utilisateur. Accès limité
+        aux administrateurs.
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserDto"
+      responses:
+        "200":
+          description: Utilisateur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      tags: *a2
+  /api/v2/users:
+    get:
+      operationId: UserController_findAll
+      summary: Lister tous les utilisateurs
+      description: Récupère la liste de tous les utilisateurs avec leurs permissions.
+        Supporte la recherche par email. Accès limité aux administrateurs.
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: type
+          required: false
+          in: query
+          description: Type d'utilisateur. Utiliser les valeurs de /userTypes
+          schema:
+            default:
+              - human
+            example:
+              - human
+            type: array
+            items:
+              type: string
+              enum:
+                - human
+                - bot
+        - name: search
+          required: false
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste paginée des utilisateurs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedUserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+      tags: *a2
+  /api/v2/organization-maia-references:
+    post:
+      operationId: OrganizationMaiaReferencesController_create
+      summary: Créer une référence MAIA vers une organisation
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrganizationMaiaReferenceDto"
+      responses:
+        "201":
+          description: Référence créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationMaiaReferenceDto"
+        "404":
+          description: Organisation non trouvée
+        "409":
+          description: La référence MAIA existe déjà
+      tags: &a3
+        - organization-maia-references
+    get:
+      operationId: OrganizationMaiaReferencesController_findAll
+      summary: Lister les références MAIA
+      parameters:
+        - name: organizationId
+          required: false
+          in: query
+          description: Filtrer par organisation locale
+          schema:
+            example: f09ed26a-8415-476a-be3b-ada479291c34
+            type: string
+      responses:
+        "200":
+          description: Liste des références MAIA
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedOrganizationMaiaReferenceDto"
+      tags: *a3
+  /api/v2/organization-maia-references/{id}:
+    delete:
+      operationId: OrganizationMaiaReferencesController_remove
+      summary: Supprimer une référence MAIA
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Référence supprimée
+      tags: *a3
+  /api/v2/email/digest:
+    post:
+      operationId: EmailController_runDigest
+      summary: Exécute le digest email des abonnés (admin)
+      parameters:
+        - name: day
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Digest déclenché
+      tags:
+        - email
   /api/v2/applications/{applicationId}/metadatas:
     get:
       operationId: ApplicationMetadatasController_find
@@ -226,7 +638,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedMetadataDto"
-      tags: &a2
+      tags: &a4
         - Metadatas
   /api/v2/applications/{applicationId}/metadatas/first-last:
     get:
@@ -246,7 +658,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FirstLastMetadataDto"
-      tags: *a2
+      tags: *a4
   /api/v2/metadatas:
     get:
       operationId: MetadatasController_find
@@ -308,7 +720,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedMetadataDto"
-      tags: &a3
+      tags: &a5
         - Metadatas
   /api/v2/metadatas/{id}:
     get:
@@ -328,7 +740,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MetadataDto"
-      tags: *a3
+      tags: *a5
   /api/v2/applications:
     post:
       operationId: ApplicationController_create
@@ -380,7 +792,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
-      tags: &a4
+      tags: &a6
         - applications
     get:
       operationId: ApplicationController_search
@@ -817,7 +1229,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationSearchResultDto"
-      tags: *a4
+      tags: *a6
   /api/v2/applications/count-by-month:
     get:
       operationId: ApplicationController_countByMonth
@@ -832,7 +1244,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CountByMonthDto"
-      tags: *a4
+      tags: *a6
   /api/v2/applications/count-by-iq:
     get:
       operationId: ApplicationController_countByIq
@@ -847,7 +1259,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CountByIqDto"
-      tags: *a4
+      tags: *a6
   /api/v2/applications/{applicationId}/my-perms:
     get:
       operationId: ApplicationController_getMyPerms
@@ -881,11 +1293,12 @@ paths:
                     - LinkRead
                     - LinkWrite
                     - MetadataRead
+                    - DataRead
                     - ReportRead
                     - ReportManage
                     - ReportPost
                     - AppWritePriority
-      tags: *a4
+      tags: *a6
   /api/v2/applications/export/excel:
     get:
       operationId: ApplicationController_exportExcel
@@ -1325,7 +1738,7 @@ paths:
                 format: binary
         "403":
           description: Accès refusé - Privilège admin requis
-      tags: *a4
+      tags: *a6
   /api/v2/applications/{applicationId}:
     get:
       operationId: ApplicationController_findOne
@@ -1352,7 +1765,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
-      tags: *a4
+      tags: *a6
     patch:
       operationId: ApplicationController_update
       summary: Mettre à jour une application
@@ -1382,7 +1795,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
-      tags: *a4
+      tags: *a6
     delete:
       operationId: ApplicationController_remove
       summary: Supprimer une application
@@ -1398,7 +1811,7 @@ paths:
           description: Application supprimée avec succès.
         "404":
           description: Application non trouvée.
-      tags: *a4
+      tags: *a6
   /api/v2/applications/{applicationId}/quality-summary:
     get:
       operationId: ApplicationController_getQualitySummary
@@ -1418,7 +1831,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/QualitySummaryDto"
-      tags: *a4
+      tags: *a6
   /api/v2/applications/data-quality/update:
     get:
       operationId: ApplicationController_updateAllApplicationsQuality
@@ -1439,7 +1852,7 @@ paths:
                 type: string
         "403":
           description: Accès refusé - Privilège admin requis
-      tags: *a4
+      tags: *a6
   /api/v2/applications/{applicationId}/statuses:
     post:
       operationId: StatusesController_create
@@ -1464,7 +1877,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: &a5
+      tags: &a7
         - statuses
     get:
       operationId: StatusesController_find
@@ -1484,7 +1897,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: *a5
+      tags: *a7
   /api/v2/applications/{applicationId}/statuses/{statusId}:
     patch:
       operationId: StatusesController_update
@@ -1515,7 +1928,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApplicationStatusDto"
-      tags: *a5
+      tags: *a7
     delete:
       operationId: StatusesController_delete
       summary: Supprimer un statut
@@ -1535,7 +1948,7 @@ paths:
       responses:
         "204":
           description: Statut supprimé avec succès
-      tags: *a5
+      tags: *a7
   /api/v2/tags:
     post:
       operationId: TagsController_create
@@ -1566,7 +1979,7 @@ paths:
                 $ref: "#/components/schemas/TagDto"
         "403":
           description: Accès refusé - Privilège admin requis
-      tags: &a6
+      tags: &a8
         - Tags
     get:
       operationId: TagsController_findAll
@@ -1642,7 +2055,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedTagDto"
-      tags: *a6
+      tags: *a8
   /api/v2/tags/{id}:
     get:
       operationId: TagsController_findOne
@@ -1663,7 +2076,7 @@ paths:
                 $ref: "#/components/schemas/TagDto"
         "404":
           description: Tag non trouvé
-      tags: *a6
+      tags: *a8
     patch:
       operationId: TagsController_update
       summary: Modifier un tag.
@@ -1691,7 +2104,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Tag non trouvé
-      tags: *a6
+      tags: *a8
     delete:
       operationId: TagsController_delete
       summary: Supprimer un tag.
@@ -1709,7 +2122,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Tag non trouvé
-      tags: *a6
+      tags: *a8
   /api/v2/business-division:
     get:
       operationId: BusinessDivisionController_findAll
@@ -1781,7 +2194,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedBusinessDivisionDTO"
-      tags: &a7
+      tags: &a9
         - Business Division
   /api/v2/business-division/{id}:
     get:
@@ -1803,7 +2216,7 @@ paths:
                 $ref: "#/components/schemas/BusinessDivisionDTO"
         "404":
           description: Business Division non trouvé
-      tags: *a7
+      tags: *a9
   /api/v2/data-catalog/descriptions:
     post:
       operationId: DataCatalogController_createDescription
@@ -1822,9 +2235,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataDescriptionDto"
-      tags: &a8
+      tags: &a10
         - Data Catalog
-      security: &a9
+      security: &a11
         - bearer: []
     get:
       operationId: DataCatalogController_findAllDescriptions
@@ -1874,8 +2287,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/DataDescriptionDto"
-      tags: *a8
-      security: *a9
+      tags: *a10
+      security: *a11
   /api/v2/data-catalog/descriptions/{id}:
     patch:
       operationId: DataCatalogController_updateDescription
@@ -1899,8 +2312,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataDescriptionDto"
-      tags: *a8
-      security: *a9
+      tags: *a10
+      security: *a11
     delete:
       operationId: DataCatalogController_deleteDescription
       summary: Supprimer une data description
@@ -1913,8 +2326,8 @@ paths:
       responses:
         "204":
           description: Data description deleted successfully
-      tags: *a8
-      security: *a9
+      tags: *a10
+      security: *a11
   /api/v2/data-catalog/applications/{applicationId}/{dataApplicationId}:
     get:
       operationId: DataCatalogController_findOneApplicationData
@@ -1937,8 +2350,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataApplicationDto"
-      tags: *a8
-      security: *a9
+      tags: *a10
+      security: *a11
   /api/v2/data-catalog/applications/{applicationId}:
     get:
       operationId: DataCatalogController_findByApplication
@@ -1991,8 +2404,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedDataApplicationDto"
-      tags: *a8
-      security: *a9
+      tags: *a10
+      security: *a11
   /api/v2/applications/{applicationId}/relations:
     post:
       operationId: RelationController_create
@@ -2018,7 +2431,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RelationDto"
-      tags: &a10
+      tags: &a12
         - relation
     get:
       operationId: RelationController_findAll
@@ -2040,7 +2453,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RelationDto"
-      tags: *a10
+      tags: *a12
   /api/v2/applications/{applicationId}/relations/graph:
     get:
       operationId: RelationController_getRelationGraph
@@ -2068,7 +2481,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RelationGraphDto"
-      tags: *a10
+      tags: *a12
   /api/v2/applications/{applicationId}/relations/{id}:
     get:
       operationId: RelationController_findOne
@@ -2093,7 +2506,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RelationDto"
-      tags: *a10
+      tags: *a12
     patch:
       operationId: RelationController_update
       summary: Mettre à jour une relation
@@ -2123,7 +2536,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RelationDto"
-      tags: *a10
+      tags: *a12
     delete:
       operationId: RelationController_delete
       summary: Supprimer une relation
@@ -2143,7 +2556,7 @@ paths:
       responses:
         "204":
           description: Relation supprimée avec succès
-      tags: *a10
+      tags: *a12
   /api/v2/organizations:
     post:
       operationId: OrganizationsController_create
@@ -2178,7 +2591,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: &a11
+      tags: &a13
         - organizations
     get:
       operationId: OrganizationsController_findAll
@@ -2254,7 +2667,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedOrganizationDto"
-      tags: *a11
+      tags: *a13
   /api/v2/organizations/{id}:
     get:
       operationId: OrganizationsController_findOne
@@ -2276,7 +2689,7 @@ paths:
                 $ref: "#/components/schemas/OrganizationDto"
         "404":
           description: Organisation non trouvée
-      tags: *a11
+      tags: *a13
     patch:
       operationId: OrganizationsController_update
       summary: Mettre à jour une organisation
@@ -2299,7 +2712,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OrganizationDto"
-      tags: *a11
+      tags: *a13
     delete:
       operationId: OrganizationsController_delete
       summary: Supprimer une organisation
@@ -2312,376 +2725,7 @@ paths:
       responses:
         "204":
           description: Organisation supprimée
-      tags: *a11
-  /api/v2/organization-maia-references:
-    post:
-      operationId: OrganizationMaiaReferencesController_create
-      summary: Créer une référence MAIA vers une organisation
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateOrganizationMaiaReferenceDto"
-      responses:
-        "201":
-          description: Référence créée
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/OrganizationMaiaReferenceDto"
-        "404":
-          description: Organisation non trouvée
-        "409":
-          description: La référence MAIA existe déjà
-      tags: &a12
-        - organization-maia-references
-    get:
-      operationId: OrganizationMaiaReferencesController_findAll
-      summary: Lister les références MAIA
-      parameters:
-        - name: organizationId
-          required: false
-          in: query
-          description: Filtrer par organisation locale
-          schema:
-            example: f09ed26a-8415-476a-be3b-ada479291c34
-            type: string
-      responses:
-        "200":
-          description: Liste des références MAIA
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedOrganizationMaiaReferenceDto"
-      tags: *a12
-  /api/v2/organization-maia-references/{id}:
-    delete:
-      operationId: OrganizationMaiaReferencesController_remove
-      summary: Supprimer une référence MAIA
-      parameters:
-        - name: id
-          required: true
-          in: path
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Référence supprimée
-      tags: *a12
-  /api/v2/users/me:
-    get:
-      operationId: UserController_findMe
-      summary: Récupérer ses propres informations utilisateur
-      parameters: []
-      responses:
-        "200":
-          description: Informations utilisateur trouvées
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "404":
-          description: Utilisateur non trouvé
-      tags: &a13
-        - users
-    patch:
-      operationId: UserController_updateMe
-      summary: Mettre à jour ses propres préférences utilisateur
-      description: "Permet à un utilisateur de modifier ses propres préférences (ex:
-        notifications par email)."
-      parameters: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateUserPreferencesDto"
-      responses:
-        "200":
-          description: Préférences mises à jour avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "404":
-          description: Utilisateur non trouvé
       tags: *a13
-  /api/v2/users/me/subscribe/{appId}:
-    post:
-      operationId: UserController_subscribe
-      summary: S'abonner aux notifications d'une application
-      parameters:
-        - name: appId
-          required: true
-          in: path
-          description: ID de l'application à suivre
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Abonnement pris en compte
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "201":
-          description: Abonnement pris en compte
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-      tags: *a13
-    delete:
-      operationId: UserController_unsubscribe
-      summary: Se désabonner des notifications d'une application
-      parameters:
-        - name: appId
-          required: true
-          in: path
-          description: ID de l'application à ne plus suivre
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Désabonnement pris en compte
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-      tags: *a13
-  /api/v2/users/by-email/{email}/sync-organization-from-maia:
-    get:
-      operationId: UserController_syncOrganizationFromMaiaByEmail
-      summary: Récupérer les informations MAIA d'un utilisateur par email
-      description: Interroge MAIA pour récupérer l'organisation et les informations
-        personnelles associées à cet email, sans modifier l'utilisateur en base.
-      parameters:
-        - name: email
-          required: true
-          in: path
-          description: Email de l'utilisateur
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Informations MAIA récupérées
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MaiaOrganizationSuggestionDto"
-        "403":
-          description: Accès refusé - Privilège admin requis
-        "404":
-          description: Utilisateur non trouvé
-      tags: *a13
-  /api/v2/users/{id}/sync-organization-from-maia:
-    post:
-      operationId: UserController_syncOrganizationFromMaia
-      summary: Synchroniser l'organisation d'un utilisateur depuis MAIA
-      description: Recherche l'utilisateur dans MAIA à partir de son email, crée
-        l'organisation si nécessaire, puis l'associe à l'utilisateur ciblé.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: ID de l'utilisateur
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Organisation synchronisée avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "403":
-          description: Accès refusé - Privilège admin requis
-        "404":
-          description: Utilisateur non trouvé
-      tags: *a13
-  /api/v2/users/sync-organizations-from-maia:
-    post:
-      operationId: UserController_syncOrganizationsFromMaia
-      summary: Synchroniser les organisations depuis MAIA (batch)
-      description: Lance une synchronisation des organisations utilisateurs depuis
-        MAIA en tâche de fond.
-      parameters: []
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/SyncOrganizationsDto"
-      responses:
-        "200":
-          description: Batch MAIA lancé en tâche de fond
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SyncOrganizationsResponseDto"
-        "201":
-          description: ""
-        "403":
-          description: Accès refusé - Privilège admin requis
-      tags: *a13
-  /api/v2/users/impersonate/stop:
-    post:
-      operationId: UserController_stopImpersonation
-      summary: Arrêter l'impersonation en cours
-      description: Clôture la session d'impersonation active de l'administrateur. À
-        appeler en conservant le header d'impersonation pour que le serveur
-        identifie l'administrateur réel.
-      parameters: []
-      responses:
-        "204":
-          description: Impersonation arrêtée
-      tags: *a13
-  /api/v2/users/{id}/impersonate:
-    post:
-      operationId: UserController_impersonate
-      summary: Impersonner un utilisateur
-      description: "Démarre une session d'impersonation : l'administrateur se fait
-        passer pour l'utilisateur cible. Renvoie les informations de
-        l'utilisateur impersonné. Accès limité aux administrateurs."
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: ID de l'utilisateur à impersonner
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Session d'impersonation démarrée
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "403":
-          description: Accès refusé - Privilège admin requis
-        "404":
-          description: Utilisateur non trouvé
-      tags: *a13
-  /api/v2/users/{id}:
-    patch:
-      operationId: UserController_update
-      summary: Mettre à jour les permissions d'un utilisateur
-      description: Permet de modifier les permissions d'un utilisateur. Accès limité
-        aux administrateurs.
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: ID de l'utilisateur
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateUserDto"
-      responses:
-        "200":
-          description: Utilisateur mis à jour avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UserWithPermissions"
-        "403":
-          description: Accès refusé - Privilège admin requis
-        "404":
-          description: Utilisateur non trouvé
-      tags: *a13
-  /api/v2/users:
-    get:
-      operationId: UserController_findAll
-      summary: Lister tous les utilisateurs
-      description: Récupère la liste de tous les utilisateurs avec leurs permissions.
-        Supporte la recherche par email. Accès limité aux administrateurs.
-      parameters:
-        - name: page
-          required: false
-          in: query
-          description: Numéro de page
-          schema:
-            minimum: 0
-            example: 0
-            type: number
-        - name: pageSize
-          required: false
-          in: query
-          description: Nombre de résultats par page, 0 pour supprimer la pagination
-          schema:
-            minimum: 0
-            maximum: 100
-            default: 15
-            example: 15
-            type: number
-        - name: sortBy
-          required: false
-          in: query
-          description: Champ utilisé pour le tri
-          schema:
-            example: label
-            type: string
-        - name: order
-          required: false
-          in: query
-          description: Ordre de tri
-          schema:
-            example: asc
-            enum:
-              - asc
-              - desc
-            type: string
-        - name: type
-          required: false
-          in: query
-          description: Type d'utilisateur. Utiliser les valeurs de /userTypes
-          schema:
-            default:
-              - human
-            example:
-              - human
-            type: array
-            items:
-              type: string
-              enum:
-                - human
-                - bot
-        - name: search
-          required: false
-          in: query
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Liste paginée des utilisateurs
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedUserWithPermissions"
-        "403":
-          description: Accès refusé - Privilège admin requis
-      tags: *a13
-  /api/v2/email/digest:
-    post:
-      operationId: EmailController_runDigest
-      summary: Exécute le digest email des abonnés (admin)
-      parameters:
-        - name: day
-          required: true
-          in: query
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Digest déclenché
-      tags:
-        - email
   /api/v2/applications/{applicationId}/actors:
     post:
       operationId: ApplicationActorsController_create
@@ -5267,142 +5311,27 @@ components:
         - READER
         - CONTRIBUTOR
         - ADMIN
-    TokenDto:
-      type: object
-      properties:
-        id:
-          type: string
-          example: abc123def456ghi789jkl012mno345pq
-          description: Identifiant unique du token
-        role:
-          $ref: "#/components/schemas/Roles"
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-        status:
-          type: object
-          example: active
-          description: Statut du token
-      required:
-        - id
-        - description
-        - name
-        - status
-    CreateServiceTokenDto:
-      type: object
-      properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-      required:
-        - role
-        - description
-        - name
-    ExposedTokenDto:
-      type: object
-      properties:
-        id:
-          type: string
-          example: abc123def456ghi789jkl012mno345pq
-          description: Identifiant unique du token
-        role:
-          $ref: "#/components/schemas/Roles"
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-        status:
-          type: object
-          example: active
-          description: Statut du token
-        password:
-          type: string
-          example: xyz987uvw654rst321opq098nml765kj
-          description: Valeur du token (ne sera pas stockée, à afficher une seule fois)
-      required:
-        - id
-        - description
-        - name
-        - status
-        - password
-    CreatePersonalTokenDto:
-      type: object
-      properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        description:
-          type: string
-          example: Token pour l'application X
-          description: Description du token
-        name:
-          type: string
-          example: Service X
-          description: Nom du service ou de l'application utilisant le token
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-      required:
-        - description
-        - name
-    RegenerateTokenDto:
-      type: object
-      properties:
-        expiresAt:
-          type: string
-          example: 2023-12-31T23:59:59.999Z
-          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
-            le futur
-    MetadataAction:
+    TokenKind:
       type: string
-      description: Action effectuée sur la metadata
+      description: "Type de token : personnel (créé par un utilisateur pour lui-même)
+        ou applicatif (compte de service pour un système tiers)"
       enum:
-        - add
-        - update
-        - delete
-        - export
-    ApplicationLightDto:
+        - personal
+        - service
+    TokenOwnerDto:
       type: object
       properties:
         id:
           type: string
-        label:
+          example: abc123def456ghi789jkl012mno345pq
+          description: Identifiant de l'utilisateur
+        email:
           type: string
+          example: jean.dupont@beta.gouv.fr
+          description: Email de l'utilisateur
       required:
         - id
-        - label
+        - email
     OrganizationMaiaReferenceDto:
       type: object
       properties:
@@ -5475,6 +5404,184 @@ components:
         - sigle
         - parentId
         - businessDivisionId
+    TokenDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: abc123def456ghi789jkl012mno345pq
+          description: Identifiant unique du token
+        role:
+          $ref: "#/components/schemas/Roles"
+        description:
+          type: string
+          example: Token pour l'application X
+          description: Description du token
+        name:
+          type: string
+          example: Service X
+          description: Nom du service ou de l'application utilisant le token
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
+        status:
+          type: object
+          example: active
+          description: Statut du token
+        kind:
+          example: personal
+          $ref: "#/components/schemas/TokenKind"
+        createdBy:
+          description: Utilisateur ayant créé le token
+          allOf:
+            - $ref: "#/components/schemas/TokenOwnerDto"
+        userImpersonate:
+          description: Utilisateur usurpé par le token (le propriétaire pour un token
+            personnel)
+          allOf:
+            - $ref: "#/components/schemas/TokenOwnerDto"
+        scopeOrganization:
+          nullable: true
+          description: Organisation de périmètre du compte de service usurpé par ce token
+            (tokens applicatifs uniquement)
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+      required:
+        - id
+        - description
+        - name
+        - status
+        - kind
+        - createdBy
+    PaginatedTokenDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/TokenDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    CreateServiceTokenDto:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        description:
+          type: string
+          example: Token pour l'application X
+          description: Description du token
+        name:
+          type: string
+          example: Service X
+          description: Nom du service ou de l'application utilisant le token
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
+        scopeOrganizationId:
+          type: string
+          nullable: true
+          description: ID de l'organisation de périmètre du compte de service créé. Ignoré
+            si le rôle est VISITOR, comme pour le périmètre d'un utilisateur.
+      required:
+        - role
+        - description
+        - name
+    ExposedTokenDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: abc123def456ghi789jkl012mno345pq
+          description: Identifiant unique du token
+        role:
+          $ref: "#/components/schemas/Roles"
+        description:
+          type: string
+          example: Token pour l'application X
+          description: Description du token
+        name:
+          type: string
+          example: Service X
+          description: Nom du service ou de l'application utilisant le token
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
+        status:
+          type: object
+          example: active
+          description: Statut du token
+        kind:
+          example: personal
+          $ref: "#/components/schemas/TokenKind"
+        createdBy:
+          description: Utilisateur ayant créé le token
+          allOf:
+            - $ref: "#/components/schemas/TokenOwnerDto"
+        userImpersonate:
+          description: Utilisateur usurpé par le token (le propriétaire pour un token
+            personnel)
+          allOf:
+            - $ref: "#/components/schemas/TokenOwnerDto"
+        scopeOrganization:
+          nullable: true
+          description: Organisation de périmètre du compte de service usurpé par ce token
+            (tokens applicatifs uniquement)
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        password:
+          type: string
+          example: xyz987uvw654rst321opq098nml765kj
+          description: Valeur du token (ne sera pas stockée, à afficher une seule fois)
+      required:
+        - id
+        - description
+        - name
+        - status
+        - kind
+        - createdBy
+        - password
+    CreatePersonalTokenDto:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        description:
+          type: string
+          example: Token pour l'application X
+          description: Description du token
+        name:
+          type: string
+          example: Service X
+          description: Nom du service ou de l'application utilisant le token
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
+      required:
+        - description
+        - name
+    RegenerateTokenDto:
+      type: object
+      properties:
+        expiresAt:
+          type: string
+          example: 2023-12-31T23:59:59.999Z
+          description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
+            le futur
     UserType:
       type: string
       enum:
@@ -5492,7 +5599,7 @@ components:
         - label
     Permission:
       type: string
-      description: Liste des permissions lié au role d'un user
+      description: Liste des permissions supplémentaire accordé a un user
       enum:
         - CreateApplication
         - DeleteApplication
@@ -5520,9 +5627,213 @@ components:
         - LinkWrite
         - AppWritePriority
         - MetadataRead
+        - DataRead
         - ReportRead
         - ReportPost
         - ReportManage
+    UserWithPermissions:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        organization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        scopeOrganization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        type:
+          $ref: "#/components/schemas/UserType"
+        emailNotificationsEnabled:
+          type: boolean
+          description: Préférence de notification par email
+          default: true
+        followedApplications:
+          description: Applications suivies par l'utilisateur
+          type: array
+          items:
+            $ref: "#/components/schemas/UserFollowedApplicationDto"
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        permissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        id:
+          type: string
+        email:
+          type: string
+        organizationId:
+          type: string
+          nullable: true
+        scopeOrganizationId:
+          type: string
+          nullable: true
+      required:
+        - role
+        - type
+        - additionalPermissions
+        - id
+        - email
+        - organizationId
+        - scopeOrganizationId
+    UpdateUserPreferencesDto:
+      type: object
+      properties:
+        emailNotificationsEnabled:
+          type: boolean
+          description: Indique si les notifications par email sont activées pour
+            l'utilisateur
+    MaiaOrganizationSuggestionDto:
+      type: object
+      properties:
+        organizationId:
+          type: string
+          nullable: true
+          description: ID de l'organisation correspondante dans le référentiel
+        organizationPath:
+          type: string
+          nullable: true
+          description: Chemin de l'organisation proposée par MAIA
+          example: MINISTERE/DIRECTION/SERVICE
+        firstName:
+          type: string
+          description: Prénom récupéré depuis MAIA
+        lastName:
+          type: string
+          description: Nom récupéré depuis MAIA
+        fullName:
+          type: string
+          description: Nom complet récupéré depuis MAIA
+      required:
+        - organizationId
+        - organizationPath
+        - firstName
+        - lastName
+        - fullName
+    SyncOrganizationsDto:
+      type: object
+      properties:
+        onlyMissing:
+          type: boolean
+          default: true
+          description: "Si true, traite uniquement les utilisateurs sans organisation
+            (défaut: true)"
+    SyncOrganizationsResponseDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Statut de la tâche de synchronisation
+          example: queued
+          enum:
+            - queued
+        message:
+          type: string
+          description: Message descriptif
+          example: Tâche de synchronisation MAIA lancée.
+      required:
+        - status
+        - message
+    ScopePermissionsErrorDto:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Scope permissions denied
+          description: Impossible de modifier un utilisateur en dehors de son scope
+            d'organisation.
+      required:
+        - message
+    UpdateUserDto:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/Roles"
+        organizationId:
+          type: string
+          nullable: true
+          description: ID de l'organisation
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+        scopeOrganization:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/OrganizationDto"
+        scopeOrganizationId:
+          type: string
+          nullable: true
+      required:
+        - additionalPermissions
+        - scopeOrganizationId
+    PaginatedUserWithPermissions:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/UserWithPermissions"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    CreateOrganizationMaiaReferenceDto:
+      type: object
+      properties:
+        maiaRef:
+          type: string
+          example: MI/DNUM/SDID
+          description: Référence MAIA à associer
+        organizationId:
+          type: string
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: Identifiant de l'organisation locale cible
+      required:
+        - maiaRef
+        - organizationId
+    PaginatedOrganizationMaiaReferenceDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/OrganizationMaiaReferenceDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    MetadataAction:
+      type: string
+      description: Action effectuée sur la metadata
+      enum:
+        - add
+        - update
+        - delete
+        - export
+    ApplicationLightDto:
+      type: object
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+      required:
+        - id
+        - label
     UserEntity:
       type: object
       properties:
@@ -6533,191 +6844,6 @@ components:
           type: string
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
-    CreateOrganizationMaiaReferenceDto:
-      type: object
-      properties:
-        maiaRef:
-          type: string
-          example: MI/DNUM/SDID
-          description: Référence MAIA à associer
-        organizationId:
-          type: string
-          example: f09ed26a-8415-476a-be3b-ada479291c34
-          description: Identifiant de l'organisation locale cible
-      required:
-        - maiaRef
-        - organizationId
-    PaginatedOrganizationMaiaReferenceDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/OrganizationMaiaReferenceDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
-    UserWithPermissions:
-      type: object
-      properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        organization:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/OrganizationDto"
-        scopeOrganization:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/OrganizationDto"
-        type:
-          $ref: "#/components/schemas/UserType"
-        emailNotificationsEnabled:
-          type: boolean
-          description: Préférence de notification par email
-          default: true
-        followedApplications:
-          description: Applications suivies par l'utilisateur
-          type: array
-          items:
-            $ref: "#/components/schemas/UserFollowedApplicationDto"
-        additionalPermissions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Permission"
-        permissions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Permission"
-        id:
-          type: string
-        email:
-          type: string
-        organizationId:
-          type: string
-          nullable: true
-        scopeOrganizationId:
-          type: string
-          nullable: true
-      required:
-        - role
-        - type
-        - additionalPermissions
-        - id
-        - email
-        - organizationId
-        - scopeOrganizationId
-    UpdateUserPreferencesDto:
-      type: object
-      properties:
-        emailNotificationsEnabled:
-          type: boolean
-          description: Indique si les notifications par email sont activées pour
-            l'utilisateur
-    MaiaOrganizationSuggestionDto:
-      type: object
-      properties:
-        organizationId:
-          type: string
-          nullable: true
-          description: ID de l'organisation correspondante dans le référentiel
-        organizationPath:
-          type: string
-          nullable: true
-          description: Chemin de l'organisation proposée par MAIA
-          example: MINISTERE/DIRECTION/SERVICE
-        firstName:
-          type: string
-          description: Prénom récupéré depuis MAIA
-        lastName:
-          type: string
-          description: Nom récupéré depuis MAIA
-        fullName:
-          type: string
-          description: Nom complet récupéré depuis MAIA
-      required:
-        - organizationId
-        - organizationPath
-        - firstName
-        - lastName
-        - fullName
-    SyncOrganizationsDto:
-      type: object
-      properties:
-        onlyMissing:
-          type: boolean
-          default: true
-          description: "Si true, traite uniquement les utilisateurs sans organisation
-            (défaut: true)"
-    SyncOrganizationsResponseDto:
-      type: object
-      properties:
-        status:
-          type: string
-          description: Statut de la tâche de synchronisation
-          example: queued
-          enum:
-            - queued
-        message:
-          type: string
-          description: Message descriptif
-          example: Tâche de synchronisation MAIA lancée.
-      required:
-        - status
-        - message
-    ScopePermissionsErrorDto:
-      type: object
-      properties:
-        message:
-          type: string
-          example: Scope permissions denied
-          description: Impossible de modifier un utilisateur en dehors de son scope
-            d'organisation.
-      required:
-        - message
-    UpdateUserDto:
-      type: object
-      properties:
-        role:
-          $ref: "#/components/schemas/Roles"
-        organizationId:
-          type: string
-          nullable: true
-          description: ID de l'organisation
-        additionalPermissions:
-          type: array
-          items:
-            $ref: "#/components/schemas/Permission"
-        scopeOrganization:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/OrganizationDto"
-        scopeOrganizationId:
-          type: string
-          nullable: true
-      required:
-        - additionalPermissions
-        - scopeOrganizationId
-    PaginatedUserWithPermissions:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/UserWithPermissions"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
     CreateActorDto:
       type: object
       properties:
@@ -6971,6 +7097,8 @@ components:
           type: boolean
         MetadataRead:
           type: boolean
+        DataRead:
+          type: boolean
         RelationRead:
           type: boolean
         RelationWrite:
@@ -6997,6 +7125,7 @@ components:
         - HostingRead
         - HostingWrite
         - MetadataRead
+        - DataRead
         - RelationRead
         - RelationWrite
         - LinkRead

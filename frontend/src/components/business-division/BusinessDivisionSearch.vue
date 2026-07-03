@@ -8,9 +8,11 @@ const props = withDefaults(
   defineProps<{
     businessDivisionId?: BusinessDivisionDto["id"] | null;
     label?: string;
+    tooltipContent?: string;
   }>(),
   {
     label: "",
+    tooltipContent: undefined,
   },
 );
 
@@ -80,6 +82,7 @@ async function performSearch(query: string) {
       :search-data-function="performSearch"
       :default-value="defaultLabel"
       :label="props.label"
+      :tooltip-content="props.tooltipContent"
       placeholder="Tapez au moins 3 caractères"
       data-testid="business-division-suggestions-input"
     />

@@ -48,6 +48,7 @@ const READ_APP_PERMISSIONS = new Set([
   Permission.RelationRead,
   Permission.LinkRead,
   Permission.MetadataRead,
+  Permission.DataRead,
 ]);
 const WRITE_APP_PERMISSIONS = new Set([
   ...Array.from(READ_APP_PERMISSIONS),

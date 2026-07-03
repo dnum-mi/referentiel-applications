@@ -23,4 +23,7 @@ export class ExposedTokenEntity extends TokenEntity {
 export type NewTokenEntity = Pick<
   TokenEntity,
   "name" | "description" | "expiresAt" | "role"
->;
+> & {
+  /** Organisation de périmètre pour le compte de service créé (ignorée pour les tokens personnels). */
+  scopeOrganizationId?: string | null;
+};

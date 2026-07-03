@@ -29,6 +29,9 @@ model AppPermissions {
   /// Peut lire les métadonnées
   MetadataRead Boolean
 
+  /// Peut lire les données de l'application (onglet Données)
+  DataRead Boolean @default(true)
+
   /// Peut lire les relations d'application
   RelationRead  Boolean
   /// Peut écrire les relations d'application
@@ -100,6 +103,7 @@ enum Permission {
   // Permissions autonomes binaires (pas de couple read/write)
   AppWritePriority // Modifier la priorite de redemarrage. Lecture couverte par AppRead.
   MetadataRead // Voir l'historique des metadonnees. Pas de write : donnees generees automatiquement.
+  DataRead // Voir les donnees de l'application (onglet Donnees). Pas de write pour le moment.
   // Signalements (3 niveaux)
   ReportRead // Voir les signalements
   ReportPost // Creer des signalements sur une app
