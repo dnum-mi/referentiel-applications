@@ -18,10 +18,6 @@ const isTechnicalDebtLoading = ref(false);
 const hasMDITReadPermission = computed(() => userStore.hasPermissions([Permission.MDIT_LIST]));
 
 onMounted(async () => {
-  const businessDivisionId = userStore.getBusinessDivisionId();
-  if (businessDivisionId && !filters.value.businessDivisionId) {
-    setFilter({ businessDivisionId });
-  }
   if (!hasMDITReadPermission.value) {
     setFilter({ myApplications: true });
   }
