@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useApplicationStore } from "@/stores/applicationStore";
@@ -361,9 +361,16 @@ function validateCurrentStep(): boolean {
   }
 }
 
-function nextStep() {
+// 12.8 : après changement d'étape (SPA), porter le focus sur le titre de l'étape courante.
+async function focusStepTitle() {
+  await nextTick();
+  document.querySelector<HTMLElement>(`[data-testid="application-step-title-${currentStep.value}"]`)?.focus();
+}
+
+async function nextStep() {
   if (validateCurrentStep() && currentStep.value < steps.length) {
     currentStep.value++;
+    await focusStepTitle();
   }
 }
 
@@ -373,9 +380,10 @@ function submitCurrentStep() {
   }
 }
 
-function previousStep() {
+async function previousStep() {
   if (currentStep.value > 1) {
     currentStep.value--;
+    await focusStepTitle();
   }
 }
 
@@ -596,20 +604,33 @@ async function handleUpdate() {
   }
 }
 
-function addPurpose() {
+// 12.8 : après ajout/suppression d'un champ répétable, déplacer le focus sur un endroit logique.
+function focusByTestId(testId: string) {
+  document.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.focus();
+}
+
+async function addPurpose() {
   form.value.purposes.push("");
+  await nextTick();
+  focusByTestId(`application-purpose-${form.value.purposes.length - 1}`);
 }
 
-function removePurpose(index: number) {
+async function removePurpose(index: number) {
   form.value.purposes.splice(index, 1);
+  await nextTick();
+  focusByTestId(form.value.purposes.length > 0 ? "application-purpose-0" : "application-purpose-add");
 }
 
-function addPopulation() {
+async function addPopulation() {
   form.value.targetPopulations.push("");
+  await nextTick();
+  focusByTestId(`application-population-${form.value.targetPopulations.length - 1}`);
 }
 
-function removePopulation(index: number) {
+async function removePopulation(index: number) {
   form.value.targetPopulations.splice(index, 1);
+  await nextTick();
+  focusByTestId(form.value.targetPopulations.length > 0 ? "application-population-0" : "application-population-add");
 }
 
 const updateBusinessDivision = (payload: BusinessDivisionDto | null) => {
@@ -644,7 +665,9 @@ onMounted(async () => {
 
     <!-- Step 1: Informations principales de l'application -->
     <div v-if="!isCreateMode || currentStep === 1" class="fr-card fr-p-3w">
-      <h3 class="fr-mb-3w">Informations principales</h3>
+      <h3 tabindex="-1" class="fr-mb-3w" data-testid="application-step-title-1">
+        <template v-if="isCreateMode">Étape {{ currentStep }} sur {{ steps.length }} — </template>Informations principales
+      </h3>
 
       <DsfrInputGroup
         v-model.trim="form.label"
@@ -724,7 +747,9 @@ Aucun espace en début ou en fin."
 
     <!-- Step 2: Détails de l'application -->
     <div v-if="!isCreateMode || currentStep === 2" class="fr-card fr-mt-3w fr-p-3w">
-      <h3 class="fr-mb-3w">Détails de l'application</h3>
+      <h3 tabindex="-1" class="fr-mb-3w" data-testid="application-step-title-2">
+        <template v-if="isCreateMode">Étape {{ currentStep }} sur {{ steps.length }} — </template>Détails de l'application
+      </h3>
 
       <DsfrSelect
         v-model="form.priorityRestart"
@@ -755,8 +780,8 @@ Aucun espace en début ou en fin."
                 size="sm"
                 icon="delete-line"
                 label="Supprimer"
-                title="Supprimer cette population"
-                aria-label="Supprimer cette population"
+                :title="`Supprimer le champ de la population numéro ${index + 1}`"
+                :aria-label="`Supprimer le champ de la population numéro ${index + 1}`"
                 :disabled="!canEditBase"
                 :data-testid="`application-population-remove-${index}`"
                 @click="removePopulation(index)"
@@ -796,8 +821,8 @@ Aucun espace en début ou en fin."
                 size="sm"
                 icon="delete-line"
                 label="Supprimer"
-                title="Supprimer cet objectif"
-                aria-label="Supprimer cet objectif"
+                :title="`Supprimer le champ de l'objectif numéro ${index + 1}`"
+                :aria-label="`Supprimer le champ de l'objectif numéro ${index + 1}`"
                 :disabled="!canEditBase"
                 :data-testid="`application-purpose-remove-${index}`"
                 @click="removePurpose(index)"
@@ -828,7 +853,9 @@ Aucun espace en début ou en fin."
 
     <!-- Step 3: MOA Section -->
     <div v-if="isCreateMode && currentStep === 3" class="fr-card fr-mt-3w fr-p-3w">
-      <h3 class="fr-mb-3w">MOA (Maîtrise d'Ouvrage)</h3>
+      <h3 tabindex="-1" class="fr-mb-3w" data-testid="application-step-title-3">
+        Étape {{ currentStep }} sur {{ steps.length }} — MOA (Maîtrise d'Ouvrage)
+      </h3>
       <p class="fr-text--sm fr-mb-3w">
         <span class="fr-icon-information-line fr-mr-1w" aria-hidden="true" />
         Toutes les informations du contact MOA sont obligatoires.
@@ -900,7 +927,9 @@ Aucun espace en début ou en fin."
 
     <!-- Step 4: MOE Section -->
     <div v-if="isCreateMode && currentStep === 4" class="fr-card fr-mt-3w fr-p-3w">
-      <h3 class="fr-mb-3w">MOE (Maîtrise d'Œuvre)</h3>
+      <h3 tabindex="-1" class="fr-mb-3w" data-testid="application-step-title-4">
+        Étape {{ currentStep }} sur {{ steps.length }} — MOE (Maîtrise d'Œuvre)
+      </h3>
       <p class="fr-text--sm fr-mb-3w">
         <span class="fr-icon-information-line fr-mr-1w" aria-hidden="true" />
         Toutes les informations du contact MOE sont obligatoires.

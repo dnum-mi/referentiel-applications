@@ -57,6 +57,18 @@ function resetMessages() {
   successMessage.value = null;
 }
 
+// 12.8 : après création/révocation, porter le focus au début du message de statut (succès ou erreur).
+const messageRef = useTemplateRef<HTMLElement>("messageRef");
+
+async function focusMessage() {
+  await nextTick();
+  const el = messageRef.value;
+  if (el) {
+    el.setAttribute("tabindex", "-1");
+    el.focus();
+  }
+}
+
 async function fetchTokens() {
   isLoading.value = true;
   error.value = null;
@@ -83,12 +95,14 @@ async function createToken() {
   if (response.error) {
     error.value = "Erreur lors de la création du token";
     isLoading.value = false;
+    await focusMessage();
     return;
   }
 
   if (!response.data) {
     error.value = "Erreur lors de la création du token";
     isLoading.value = false;
+    await focusMessage();
     return;
   }
 
@@ -98,6 +112,7 @@ async function createToken() {
   showCreateForm.value = false;
   await fetchTokens();
   isLoading.value = false;
+  await focusMessage();
 }
 
 function requestRevokeToken(tokenId: string) {
@@ -117,6 +132,7 @@ async function confirmRevokeToken() {
     isLoading.value = false;
     showDeleteConfirmation.value = false;
     tokenToRevoke.value = null;
+    await focusMessage();
     return;
   }
 
@@ -125,6 +141,7 @@ async function confirmRevokeToken() {
   isLoading.value = false;
   showDeleteConfirmation.value = false;
   tokenToRevoke.value = null;
+  await focusMessage();
 }
 
 function cancelRevokeToken() {
@@ -183,24 +200,28 @@ onMounted(() => {
       Les tokens applicatifs vous permettent d'accéder à l'API du référentiel. Vous pouvez créer jusqu'à 5 tokens personnels.
     </p>
 
-    <DsfrAlert v-if="error" type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
+    <div ref="messageRef">
+      <DsfrAlert v-if="error" type="error" :title="error" class="fr-mb-2w" closeable @close="error = null" />
 
-    <DsfrAlert
-      v-if="successMessage && !newlyCreatedToken"
-      type="success"
-      :title="successMessage"
-      class="fr-mb-2w"
-      closeable
-      @close="successMessage = null"
-    />
+      <DsfrAlert
+        v-if="successMessage && !newlyCreatedToken"
+        type="success"
+        :title="successMessage"
+        class="fr-mb-2w"
+        closeable
+        @close="successMessage = null"
+      />
 
-    <DsfrAlert v-if="newlyCreatedToken" type="success" title="Token créé avec succès" class="fr-mb-2w" closeable @close="dismissNewToken">
-      <p class="fr-mb-1w"><strong>Attention :</strong> Copiez ce token maintenant, il ne sera plus affiché.</p>
-      <div class="token-display fr-mb-1w">
-        <code class="token-value">{{ newlyCreatedToken.password }}</code>
-        <DsfrButton size="sm" secondary icon="ri-file-copy-line" @click="copyToClipboard(newlyCreatedToken.password)"> Copier </DsfrButton>
-      </div>
-    </DsfrAlert>
+      <DsfrAlert v-if="newlyCreatedToken" type="success" title="Token créé avec succès" class="fr-mb-2w" closeable @close="dismissNewToken">
+        <p class="fr-mb-1w"><strong>Attention :</strong> Copiez ce token maintenant, il ne sera plus affiché.</p>
+        <div class="token-display fr-mb-1w">
+          <code class="token-value">{{ newlyCreatedToken.password }}</code>
+          <DsfrButton size="sm" secondary icon="ri-file-copy-line" @click="copyToClipboard(newlyCreatedToken.password)">
+            Copier
+          </DsfrButton>
+        </div>
+      </DsfrAlert>
+    </div>
 
     <div class="fr-mb-3w">
       <DsfrButton v-if="!showCreateForm" icon="ri-add-line" :disabled="maxTokensReached" @click="toggleCreateForm">

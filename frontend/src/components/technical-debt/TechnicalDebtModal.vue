@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import type { TechnicalDebtInfoDto, CreateTechnicalDebtInfoDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api/index.js";
@@ -28,6 +28,12 @@ const form = ref({
   technicalMaturity: toInputValue(props.initialData?.technicalMaturity),
   businessMaturity: toInputValue(props.initialData?.businessMaturity),
   costContainment: toInputValue(props.initialData?.costContainment),
+});
+
+// 12.8 : à l'ouverture, porter le focus sur le premier élément interactif de la modale (bouton « Fermer »).
+onMounted(async () => {
+  await nextTick();
+  document.querySelector<HTMLButtonElement>('[data-testid="technical-debt-modal"] .fr-btn--close')?.focus();
 });
 
 // Renvoie le score saisi (1-5) ou `undefined` si le champ est vide (non noté).
