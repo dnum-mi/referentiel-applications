@@ -3,7 +3,7 @@ import { ref, watch, computed, nextTick } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 
-const props = defineProps<{ modelValue: string; disabled: boolean; ariaLabel?: string }>();
+const props = defineProps<{ modelValue: string; disabled: boolean; ariaLabel?: string; describedby?: string }>();
 const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
 
 const localValue = ref(props.modelValue);
@@ -168,6 +168,7 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           class="editor fr-input"
           :disabled
           :aria-label="ariaLabel"
+          :aria-describedby="describedby"
           :title="ariaLabel"
           rows="10"
           data-testid="markdown-textarea"

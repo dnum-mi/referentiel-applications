@@ -284,8 +284,8 @@ function validateStep3(): boolean {
     moaErrors.push("L'email du contact MOA est obligatoire.");
     moaEmailError.value = "L'email du contact MOA est obligatoire.";
   } else if (!isEmailValid(moaActor.value.email)) {
-    moaErrors.push("L'email du contact MOA est invalide.");
-    moaEmailError.value = "L'email du contact MOA est invalide.";
+    moaErrors.push("L'email du contact MOA est invalide. Format attendu – ex : exemple@mail.fr");
+    moaEmailError.value = "L'email du contact MOA est invalide. Format attendu – ex : exemple@mail.fr";
   }
   if (!isMoaGroup.value) {
     if (!moaActor.value.firstname) {
@@ -321,8 +321,8 @@ function validateStep4(): boolean {
     moeErrors.push("L'email du contact MOE est obligatoire.");
     moeEmailError.value = "L'email du contact MOE est obligatoire.";
   } else if (!isEmailValid(moeActor.value.email)) {
-    moeErrors.push("L'email du contact MOE est invalide.");
-    moeEmailError.value = "L'email du contact MOE est invalide.";
+    moeErrors.push("L'email du contact MOE est invalide. Format attendu – ex : exemple@mail.fr");
+    moeEmailError.value = "L'email du contact MOE est invalide. Format attendu – ex : exemple@mail.fr";
   }
   if (!isMoeGroup.value) {
     if (!moeActor.value.firstname) {
@@ -408,8 +408,8 @@ function validateMoaActor(): string[] {
     moaErrors.push("L'email du contact MOA est obligatoire.");
     moaEmailError.value = "L'email du contact MOA est obligatoire.";
   } else if (!isEmailValid(moaActor.value.email)) {
-    moaErrors.push("L'email du contact MOA est invalide.");
-    moaEmailError.value = "L'email du contact MOA est invalide.";
+    moaErrors.push("L'email du contact MOA est invalide. Format attendu – ex : exemple@mail.fr");
+    moaEmailError.value = "L'email du contact MOA est invalide. Format attendu – ex : exemple@mail.fr";
   }
   if (!isMoaGroup.value) {
     if (!moaActor.value.firstname) {
@@ -436,8 +436,8 @@ function validateMoeActor(): string[] {
     moeErrors.push("L'email du contact MOE est obligatoire.");
     moeEmailError.value = "L'email du contact MOE est obligatoire.";
   } else if (!isEmailValid(moeActor.value.email)) {
-    moeErrors.push("L'email du contact MOE est invalide.");
-    moeEmailError.value = "L'email du contact MOE est invalide.";
+    moeErrors.push("L'email du contact MOE est invalide. Format attendu – ex : exemple@mail.fr");
+    moeEmailError.value = "L'email du contact MOE est invalide. Format attendu – ex : exemple@mail.fr";
   }
   if (!isMoeGroup.value) {
     if (!moeActor.value.firstname) {
@@ -640,6 +640,8 @@ onMounted(async () => {
   <DsfrStepper v-if="isCreateMode" :steps="steps" :current-step="currentStep" class="fr-mb-4w" />
 
   <form data-testid="application-form" @submit.prevent="handleSubmit">
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
+
     <!-- Step 1: Informations principales de l'application -->
     <div v-if="!isCreateMode || currentStep === 1" class="fr-card fr-p-3w">
       <h3 class="fr-mb-3w">Informations principales</h3>
@@ -691,11 +693,19 @@ Aucun espace en début ou en fin."
         data-testid="application-type"
       />
 
-      <DsfrInputGroup class="fr-mt-3w" label="Description" label-visible required :error-message="descriptionError">
+      <DsfrInputGroup
+        class="fr-mt-3w"
+        label="Description"
+        label-visible
+        required
+        description-id="application-description-error"
+        :error-message="descriptionError"
+      >
         <MarkdownEditor
           v-model.trim="form.description"
           :disabled="!canEditBase"
           aria-label="Description"
+          :describedby="descriptionError ? 'application-description-error' : undefined"
           data-testid="application-description"
         />
       </DsfrInputGroup>
@@ -825,7 +835,7 @@ Aucun espace en début ou en fin."
       </p>
       <DsfrInputGroup
         v-model.trim="moaActor.email"
-        label="Email du contact MOA"
+        label="Email du contact MOA – ex : exemple@mail.fr"
         label-visible
         required
         type="email"
@@ -897,7 +907,7 @@ Aucun espace en début ou en fin."
       </p>
       <DsfrInputGroup
         v-model.trim="moeActor.email"
-        label="Email du contact MOE"
+        label="Email du contact MOE – ex : exemple@mail.fr"
         label-visible
         required
         type="email"

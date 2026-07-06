@@ -20,10 +20,36 @@ const newToken = ref<CreatePersonalTokenDto>({
   expiresAt: "",
 });
 
+const fieldErrors = ref<{ name?: string; description?: string; expiresAt?: string }>({});
+
 const maxTokensReached = computed(() => tokens.value.length >= 5);
 
 function resetForm() {
   newToken.value = { name: "", description: "", expiresAt: "" };
+  fieldErrors.value = {};
+}
+
+function validateForm(): boolean {
+  fieldErrors.value = {};
+
+  if (!newToken.value.name.trim()) {
+    fieldErrors.value.name = "Veuillez saisir le nom";
+  }
+  if (!newToken.value.description.trim()) {
+    fieldErrors.value.description = "Veuillez saisir la description";
+  }
+
+  const min = new Date();
+  min.setDate(min.getDate() + 1);
+  const max = new Date();
+  max.setFullYear(max.getFullYear() + 1);
+  const expiresAt = newToken.value.expiresAt ? new Date(newToken.value.expiresAt) : null;
+  if (!expiresAt || Number.isNaN(expiresAt.getTime()) || expiresAt < min || expiresAt > max) {
+    fieldErrors.value.expiresAt =
+      "Veuillez saisir la date d'expiration, comprise entre demain et 1 an maximum, format attendu : JJ/MM/AAAA";
+  }
+
+  return Object.keys(fieldErrors.value).length === 0;
 }
 
 function resetMessages() {
@@ -47,6 +73,8 @@ async function fetchTokens() {
 }
 
 async function createToken() {
+  if (!validateForm()) return;
+
   isLoading.value = true;
   newlyCreatedToken.value = null;
   resetMessages();
@@ -184,12 +212,14 @@ onMounted(() => {
     <div v-if="showCreateForm" class="fr-card fr-p-3w fr-mb-3w">
       <h3 class="fr-h5 fr-mb-2w">Nouveau token</h3>
       <form @submit.prevent="createToken">
+        <p class="fr-text--sm" data-testid="token-required-fields-hint">* = champs obligatoires</p>
         <DsfrInputGroup
           v-model.trim="newToken.name"
           label="Nom"
           label-visible
           required
           hint="Nom du service ou de l'application utilisant ce token"
+          :error-message="fieldErrors.name"
         />
 
         <DsfrInputGroup
@@ -198,6 +228,7 @@ onMounted(() => {
           label-visible
           required
           hint="Description de l'usage du token"
+          :error-message="fieldErrors.description"
         />
 
         <DsfrInputGroup
@@ -206,7 +237,8 @@ onMounted(() => {
           label-visible
           required
           type="date"
-          hint="Maximum 1 an dans le futur"
+          hint="La date ne peut être comprise qu'entre demain et 1 an maximum, format : JJ/MM/AAAA"
+          :error-message="fieldErrors.expiresAt"
         />
 
         <div class="fr-mt-2w">

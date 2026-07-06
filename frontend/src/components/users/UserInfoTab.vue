@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useUserStore } from "@/stores/userStore";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick, useTemplateRef } from "vue";
 
 const userStore = useUserStore();
 const isUpdating = ref(false);
 const emailNotificationsEnabled = ref(true);
 const successMessage = ref("");
 const errorMessage = ref("");
+const toggleRef = useTemplateRef<{ $el?: HTMLElement } | null>("toggleRef");
 
 async function handleToggleEmailNotifications() {
   isUpdating.value = true;
@@ -29,6 +30,9 @@ async function handleToggleEmailNotifications() {
     emailNotificationsEnabled.value = !emailNotificationsEnabled.value;
   } finally {
     isUpdating.value = false;
+    // 12.8 : conserver le focus sur le champ après l'opération (le :disabled le retire pendant la requête).
+    await nextTick();
+    toggleRef.value?.$el?.querySelector("input")?.focus();
   }
 }
 
@@ -59,9 +63,10 @@ onMounted(async () => {
     <div class="fr-mt-4w">
       <h2 class="fr-h6">Préférences de notification</h2>
       <DsfrToggleSwitch
+        ref="toggleRef"
         v-model="emailNotificationsEnabled"
         label="Recevoir les notifications par email"
-        hint="Recevoir des notifications par email lorsque des changements sont apportés à vos applications suivies."
+        aria-label="Recevoir des notifications par email lorsque des changements sont apportés à vos applications suivies."
         data-testid="user-profile-email-notifications-checkbox"
         :disabled="isUpdating"
         @update:model-value="handleToggleEmailNotifications"

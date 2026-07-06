@@ -19,6 +19,10 @@ const emit = defineEmits(["submit", "cancel"]);
 
 const form = ref({ ...props.initialData });
 
+const typeError = ref<string | undefined>(undefined);
+const linkError = ref<string | undefined>(undefined);
+const descriptionError = ref<string | undefined>(undefined);
+
 const linkTypes = computed(() => [
   { value: "", text: "Sélectionner un type de lien" },
   ...Object.entries(linkTypesDict).map(([key, label]) => ({
@@ -28,12 +32,18 @@ const linkTypes = computed(() => [
 ]);
 
 function handleSubmit() {
+  typeError.value = form.value.type ? undefined : "Veuillez compléter le champ : Type de lien";
+  linkError.value = form.value.link ? undefined : "Veuillez compléter le champ : URL";
+  descriptionError.value = form.value.description ? undefined : "Veuillez compléter le champ : Description";
+  if (typeError.value || linkError.value || descriptionError.value) return;
+
   emit("submit", form.value);
 }
 </script>
 
 <template>
   <form data-testid="link-form" @submit.prevent="handleSubmit">
+    <p class="fr-text--sm fr-mb-3w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
     <DsfrSelect
       v-model="form.type"
       class="fr-mb-3w"
@@ -41,16 +51,27 @@ function handleSubmit() {
       label="Type de lien"
       label-visible
       required
+      :error-message="typeError"
       data-testid="link-type-select"
     />
-    <DsfrInput v-model="form.link" class="fr-mb-3w" label="URL" type="url" label-visible required data-testid="link-url-input" />
-    <DsfrInput
+    <DsfrInputGroup
+      v-model="form.link"
+      class="fr-mb-3w"
+      label="URL"
+      type="url"
+      label-visible
+      required
+      :error-message="linkError"
+      data-testid="link-url-input"
+    />
+    <DsfrInputGroup
       v-model="form.description"
       class="fr-mb-3w"
       label="Description"
       label-visible
       required
       is-textarea
+      :error-message="descriptionError"
       data-testid="link-description-input"
     />
 

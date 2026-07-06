@@ -21,6 +21,7 @@ const labelSourcesList = ref<LabelSourceDto[]>([]);
 const isLoadingSources = ref(false);
 const labelSourceSearch = ref("");
 const isSubmitting = ref(false);
+const valueError = ref<string | undefined>(undefined);
 const toaster = useToasterStore();
 
 watch(labelSourceSearch, (newValue) => {
@@ -58,6 +59,9 @@ watch(() => props.initialLabel, setInitialValues, { immediate: true });
 watch(labelSourcesList, setInitialValues, { immediate: true });
 
 async function handleSubmit() {
+  valueError.value = labelForm.value.value.trim() ? undefined : "Veuillez compléter le champ : Valeur";
+  if (valueError.value) return;
+
   isSubmitting.value = true;
   try {
     if (props.initialLabel) {
@@ -110,6 +114,7 @@ async function handleSubmit() {
       :description="props.errorMessage"
     />
     <form data-testid="label-form" @submit.prevent="handleSubmit">
+      <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
       <div v-if="isLoadingSources" class="fr-text--center fr-mb-2w" data-testid="label-sources-loading">
         <span class="fr-loading fr-loading--sm" data-testid="label-sources-spinner">
           <span class="fr-loading__icon" aria-hidden="true" />
@@ -117,7 +122,15 @@ async function handleSubmit() {
         Chargement des sources...
       </div>
       <div v-else class="fr-form-group">
-        <DsfrInput v-model="labelForm.value" required label-visible label="Valeur" class="fr-mb-3w" data-testid="label-value-input" />
+        <DsfrInputGroup
+          v-model="labelForm.value"
+          required
+          label-visible
+          label="Valeur"
+          class="fr-mb-3w"
+          :error-message="valueError"
+          data-testid="label-value-input"
+        />
         <DsfrInput
           v-model="labelSourceSearch"
           label-visible
@@ -137,7 +150,7 @@ async function handleSubmit() {
         <DsfrButton type="button" secondary label="Annuler" data-testid="label-cancel-btn" @click="$emit('close')" />
         <DsfrButton
           type="submit"
-          :disabled="isSubmitting || isLoadingSources || !labelForm.value.trim()"
+          :disabled="isSubmitting || isLoadingSources"
           :label="props.initialLabel ? 'Modifier' : 'Créer'"
           data-testid="label-submit-btn"
         >
