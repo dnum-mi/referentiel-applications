@@ -31,8 +31,7 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
 
     const svg = d3
       .select(svgEl)
-      .attr("width", width)
-      .attr("height", height)
+      .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("role", "img")
       .attr("aria-label", "Distribution des applications selon les maturites TIME");
 
