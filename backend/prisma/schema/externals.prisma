@@ -16,6 +16,8 @@ model ExternalRessource {
   application   Application           @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   /// Entrées de métadonnées pour cette ressource
   metadatas     Metadata[]
+
+  @@index([applicationId])
 }
 
 /// Types de ressources externes
