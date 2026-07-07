@@ -80,7 +80,12 @@ watchDebounced(
 .main-content {
   flex: 1;
   padding: 1rem 2rem;
-  overflow-x: auto;
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 0.5rem 1rem;
+  }
 }
 
 .loader {
