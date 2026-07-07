@@ -107,7 +107,8 @@ function saveAppPermsMatrix() {
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
           :read="perms[`${perm}Read`] || false"
-          :perm-order="['none', 'Read']"
+          :write="perms[`${perm}Write`] || false"
+          :perm-order="['Read', 'Write', 'none']"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
