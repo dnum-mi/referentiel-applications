@@ -68,10 +68,12 @@ const form = ref<CreateActorDto>({
   applicationId: props.application.id,
 });
 
-const actorTypeOptions = props.actorTypes.map((type) => ({
-  text: type.label,
-  value: type.id,
-}));
+const actorTypeOptions = [...props.actorTypes]
+  .sort((a, b) => a.label.localeCompare(b.label, "fr"))
+  .map((type) => ({
+    text: type.label,
+    value: type.id,
+  }));
 
 // Handle organization ID with proper typing
 const organizationId = computed({
