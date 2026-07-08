@@ -7,6 +7,8 @@ import { onBeforeMount, ref, watch, markRaw } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import ActorManager from "./actor/ActorTab.vue";
+import TechnologyTab from "./technology/TechnologyTab.vue";
+import LicenseTab from "./license/LicenseTab.vue";
 import ApplicationMetadatasTab from "./ApplicationMetadatasTab.vue";
 import ApplicationReportsTab from "./ApplicationReportsTab.vue";
 import CompliancesAccordionManager from "./compliances/CompliancesAccordionManager.vue";
@@ -79,6 +81,22 @@ const tabs = ref<
     panelId: "panel-actors",
     component: markRaw(ActorManager),
     requiredPerms: [Permission.ACTOR_READ],
+  },
+  {
+    title: "Stack technique",
+    icon: "ri-stack-line",
+    tabId: "tab-technologies",
+    panelId: "panel-technologies",
+    component: markRaw(TechnologyTab),
+    requiredPerms: [Permission.APP_READ],
+  },
+  {
+    title: "Licences",
+    icon: "ri-copyright-line",
+    tabId: "tab-licenses",
+    panelId: "panel-licenses",
+    component: markRaw(LicenseTab),
+    requiredPerms: [Permission.APP_READ],
   },
   {
     title: "Relations",

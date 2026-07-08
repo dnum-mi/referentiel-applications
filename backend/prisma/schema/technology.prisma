@@ -1,0 +1,29 @@
+/// Élément de la stack technique d'une application (technologie + version).
+/// Une application peut référencer 0 à N technologies, une par technologie.
+/// Les champs de fin de vie (eolDate / eolCheckedAt) sont prévus pour une
+/// intégration ultérieure de https://endoflife.date (cf. #1099).
+///
+/// @namespace Technology
+model TechnologyStack {
+  /// Identifiant unique
+  id            String      @id @default(uuid())
+  /// Identifiant de l'application
+  applicationId String
+  /// Application à laquelle cette technologie appartient
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  /// Nom de la technologie (ex. « Node.js », « PostgreSQL »)
+  technology String
+  /// Version utilisée (ex. « 20.11 »)
+  version    String? @db.VarChar(50)
+
+  /// Date de fin de support/vie de la version (renseignée via endoflife.date)
+  eolDate       DateTime?
+  /// Date de dernière vérification du statut de fin de vie
+  eolCheckedAt  DateTime?
+
+  metadatas Metadata[] @relation()
+
+  @@unique([applicationId, technology])
+  @@index([applicationId])
+}
