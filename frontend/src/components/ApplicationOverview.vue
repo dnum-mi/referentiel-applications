@@ -94,7 +94,7 @@ const tabs = ref<
     tabId: "tab-data",
     panelId: "panel-data",
     component: markRaw(DataApplicationTab),
-    requiredPerms: [Permission.APP_READ],
+    requiredPerms: [Permission.DATA_READ],
   },
   {
     title: "Statuts",

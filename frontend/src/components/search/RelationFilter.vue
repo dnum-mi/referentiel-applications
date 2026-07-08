@@ -65,32 +65,48 @@ watch([() => filters.value.relationAppId], ([relationAppId]) => {
 
 type RelationField = RelationType | MediationServiceField;
 
-const relationFields: { field: RelationField; label: string; testId: string }[] = [
-  { field: RelationType.IS_PART_OF, label: "Fait partie de", testId: "relation-is_part_of-select" },
+const relationFields: { field: RelationField; label: string; testId: string; tooltip: string }[] = [
+  {
+    field: RelationType.IS_PART_OF,
+    label: "Fait partie de",
+    testId: "relation-is_part_of-select",
+    tooltip:
+      "Applications qui font partie de l’application sélectionnée ci-dessus. Inclure pour ne garder que celles-ci, Exclure pour les retirer, Neutre pour ignorer ce critère.",
+  },
   {
     field: RelationType.IN_REPLACEMENT_OF,
     label: "Remplace",
     testId: "relation-in_replacement_of-select",
+    tooltip:
+      "Applications qui remplacent l’application sélectionnée ci-dessus. Inclure pour ne garder que celles-ci, Exclure pour les retirer, Neutre pour ignorer ce critère.",
   },
   {
     field: RelationType.IS_SERVICE_USER_OF,
     label: "Utilise le service de",
     testId: "relation-is_service_user_of-select",
+    tooltip:
+      "Applications qui utilisent un service fourni par l’application sélectionnée ci-dessus. Inclure pour ne garder que celles-ci, Exclure pour les retirer, Neutre pour ignorer ce critère.",
   },
   {
     field: RelationType.IS_DATA_USER_OF,
     label: "Utilise la donnée de",
     testId: "relation-is_data_user_of-select",
+    tooltip:
+      "Applications qui utilisent des données fournies par l’application sélectionnée ci-dessus. Inclure pour ne garder que celles-ci, Exclure pour les retirer, Neutre pour ignorer ce critère.",
   },
   {
     field: RelationType.USE_SSO_OF,
     label: "Utilise le SSO de",
     testId: "relation-use_sso_of-select",
+    tooltip:
+      "Applications qui utilisent l’authentification unique (SSO) de l’application sélectionnée ci-dessus. Inclure pour ne garder que celles-ci, Exclure pour les retirer, Neutre pour ignorer ce critère.",
   },
   {
     field: IS_MEDIATION_SERVICE,
     label: "Mediation de service",
     testId: "relation-mediation-service-select",
+    tooltip:
+      "Applications qui assurent un service de médiation pour l’application sélectionnée ci-dessus. Inclure pour ne garder que celles-ci, Exclure pour les retirer, Neutre pour ignorer ce critère.",
   },
 ];
 
@@ -138,19 +154,27 @@ watch(
       :default-value="defaultValue"
       :search-data-function="performSearch"
       label="Rechercher une application"
+      tooltip-content="Sélectionne l’application de référence utilisée pour filtrer les relations ci-dessous (fait partie de, remplace, utilise le service de…)."
       placeholder="Tapez au moins 3 caractères"
       data-testid="relation-suggestions-input"
     />
     <DsfrSelect
-      v-for="{ field, testId, label } in relationFields"
+      v-for="{ field, testId, label, tooltip } in relationFields"
       :key="field"
       :model-value="filters[field] || RELATION_TYPE_FILTERS.neutral"
-      :label="label"
       :options="optionsMap"
       :disabled="isLoading"
+      :aria-describedby="`relation-${field}-tooltip-desc`"
       :data-testid="testId"
       @update:model-value="updateFilter(field, $event)"
-    />
+    >
+      <template #label>
+        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+          {{ label }}
+          <DsfrTooltip :id="`relation-${field}-tooltip-desc`" :content="tooltip" />
+        </span>
+      </template>
+    </DsfrSelect>
   </div>
 </template>
 

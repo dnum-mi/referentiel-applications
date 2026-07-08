@@ -210,6 +210,17 @@ export const complianceFilterLabels: Record<ComplianceFilterCriterion, string> =
   rgpd: "RGPD",
 };
 
+/** Descriptions affichées dans les info-bulles du filtre conformité de la sidebar. */
+export const complianceFilterTooltips: Record<ComplianceFilterCriterion, string> = {
+  pra: "Plan de Reprise d'Activité (PRA) : capacité à relancer le service après un sinistre majeur.",
+  dima: "Délai d'Indisponibilité Maximale Admissible (DIMA) : durée maximale d'interruption tolérée avant impact critique.",
+  pdma: "Perte de Données Maximale Admissible (PDMA) : volume de données pouvant être perdu sans impact critique.",
+  homologation: "Homologation de sécurité du système d'information, attestant de la maîtrise des risques.",
+  rgaa: "Référentiel Général d'Amélioration de l'Accessibilité (RGAA) : conformité aux normes d'accessibilité numérique.",
+  dsfr: "Système de Design de l'État (DSFR) : utilisation du design system dans l'interface de l'application.",
+  rgpd: "Règlement Général sur la Protection des Données (RGPD) : conformité en matière de protection des données personnelles.",
+};
+
 /**
  * Critères de conformité réellement booléens (oui / non / non renseigné).
  * Pour ceux-ci le filtre propose 4 états ; les autres se limitent à présent / absent.

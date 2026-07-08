@@ -30,7 +30,7 @@ body,
 }
 
 .fr-input {
-  margin-bottom: 1 0.1rem;
+  margin-bottom: 0.5rem;
 }
 
 .filter-block {
@@ -40,6 +40,9 @@ body,
   background-color: #fff;
   font-size: 0.85rem;
   gap: 0.25rem;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 .selected-tag {
@@ -50,6 +53,10 @@ body,
   border-radius: 4px;
   margin-top: 0.3rem;
   font-size: 0.8rem;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  flex-wrap: wrap;
 }
 
 .tag-label {
@@ -79,16 +86,35 @@ body,
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 :deep(.fr-input-group) {
   margin-bottom: 0.5rem !important;
 }
 
-/* RGAA-011 : la page courante ne doit pas être signalée par la seule couleur. */
+/*
+ * RGAA 3.1 : la page courante ne doit pas être signalée par la seule couleur.
+ * Le DSFR utilise déjà une barre bleue (couleur seule) pour indiquer l'onglet actif.
+ * Le font-weight: 700 suffit comme indicateur non-coloré — text-decoration: underline
+ * a été retiré car il créait un double underline avec le style natif du lien DSFR.
+ */
 .fr-nav__link[aria-current="page"] {
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-  text-decoration-thickness: 2px;
+}
+
+/*
+ * RGAA-004 (10.12) : garde-fou de non-régression « text spacing » (WCAG 1.4.12).
+ * Inactif par défaut — à appliquer sur <body> pendant la recette d'accessibilité
+ * pour vérifier qu'aucun texte n'est tronqué avec un espacement maximal.
+ */
+.a11y-text-spacing-test * {
+  line-height: 1.5 !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+.a11y-text-spacing-test p {
+  margin-bottom: 2em !important;
 }

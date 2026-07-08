@@ -1,5 +1,5 @@
 import type { TechnicalDebtPoint } from "@/composables/use-application-search";
-import { TRESHOLD_TIME_MATURITY } from "@/utils/get-time-quadrant";
+import { TimeQuadrantWording, TRESHOLD_TIME_MATURITY } from "@/utils/get-time-quadrant";
 import * as d3 from "d3";
 
 type GSelection = d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -90,10 +90,10 @@ export class TimeChartBuilder {
     const gap = 15;
 
     const quadrants = [
-      { tx: 0 + gap, ty: 0 + gap, anchor: "start", baseline: "hanging", label: "Tolérer" },
-      { tx: plotWidth - gap, ty: 0 + gap, anchor: "end", baseline: "hanging", label: "A privilégier" },
-      { tx: 0 + gap, ty: plotHeight - gap, anchor: "start", baseline: "auto", label: "A décommissionner" },
-      { tx: plotWidth - gap, ty: plotHeight - gap, anchor: "end", baseline: "auto", label: "A Migrer" },
+      { tx: 0 + gap, ty: 0 + gap, anchor: "start", baseline: "hanging", label: TimeQuadrantWording.Tolerate },
+      { tx: plotWidth - gap, ty: 0 + gap, anchor: "end", baseline: "hanging", label: TimeQuadrantWording.Invest },
+      { tx: 0 + gap, ty: plotHeight - gap, anchor: "start", baseline: "auto", label: TimeQuadrantWording.Eliminate },
+      { tx: plotWidth - gap, ty: plotHeight - gap, anchor: "end", baseline: "auto", label: TimeQuadrantWording.Migrate },
     ] as const;
 
     quadrants.forEach(({ tx, ty, anchor, baseline, label }) => {
@@ -245,7 +245,8 @@ export class TimeChartBuilder {
         tooltip.style("display", "none");
       })
       .on("click", (_, d) => {
-        globalThis.location.href = `http://localhost:5173/applications/${d.id}`;
+        const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+        globalThis.location.href = `${base}/applications/${d.id}`;
       });
 
     return this;

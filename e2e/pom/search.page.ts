@@ -170,11 +170,13 @@ export class SearchPage extends BasePage {
 
   // --- Tri ---
   async sortByName(): Promise<void> {
-    const currentOrder = new URL(this.page.url()).searchParams.get("order");
+    // "asc" est la valeur par défaut : l'appli omet `order` de l'URL quand on y revient
+    // (ex. 2e clic desc -> asc), il faut donc normaliser l'absence de paramètre comme "asc".
+    const currentOrder = this.currentSortOrder();
     await this.page.getByRole("columnheader", { name: /Nom/i }).click();
     await waitForSearchParams(this.page, (params) => {
-      const newOrder = params.get("order");
-      return newOrder !== null && newOrder !== currentOrder;
+      const newOrder = params.get("order") ?? "asc";
+      return newOrder !== currentOrder;
     });
   }
 
@@ -483,7 +485,7 @@ export class SearchPage extends BasePage {
   /** Filtre par direction de métier (suggestion) → param `businessDivisionId`. */
   async filterByBusinessDivision(label: string): Promise<void> {
     const input = this.byTestId("business-division-suggestions-input");
-    await this.openAccordion("sidebar-accordion-organization", input);
+    await this.openAccordion("sidebar-accordion-portfolio", input);
     await input.locator("input").fill(label);
     const list = this.sidebar().getByTestId("suggestions-list");
     await expect(list).toBeVisible();

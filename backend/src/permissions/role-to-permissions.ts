@@ -5,6 +5,7 @@ const NONE_PERMISSIONS: Set<Permission> = new Set([
   Permission.AppList,
   Permission.ReportRead,
   Permission.ReportPost,
+  Permission.DataRead,
 ]);
 const READ_PERMISSIONS = new Set([
   ...Array.from(NONE_PERMISSIONS),
@@ -48,6 +49,7 @@ const READ_APP_PERMISSIONS = new Set([
   Permission.RelationRead,
   Permission.LinkRead,
   Permission.MetadataRead,
+  Permission.DataRead,
 ]);
 const WRITE_APP_PERMISSIONS = new Set([
   ...Array.from(READ_APP_PERMISSIONS),
@@ -58,6 +60,7 @@ const WRITE_APP_PERMISSIONS = new Set([
   Permission.RelationWrite,
   Permission.LinkWrite,
   Permission.AppWritePriority,
+  Permission.DataWrite,
 ]);
 const ADMIN_APP_PERMISSIONS = new Set(WRITE_APP_PERMISSIONS);
 
