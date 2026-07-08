@@ -31,11 +31,21 @@ onMounted(loadActiveCampaigns);
   <div v-if="options.length" class="campaign-filter" data-testid="time-millesime">
     <DsfrSelect
       :model-value="selected"
-      label="Campagne dette IT (millésime)"
       :options="options"
+      aria-describedby="campaign-millesime-tooltip-desc"
       data-testid="time-millesime-select"
       @update:model-value="onSelect($event)"
-    />
+    >
+      <template #label>
+        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+          Campagne dette IT (millésime)
+          <DsfrTooltip
+            id="campaign-millesime-tooltip-desc"
+            content="Sélectionne l’année (millésime) de la campagne de collecte de la dette technique à afficher."
+          />
+        </span>
+      </template>
+    </DsfrSelect>
   </div>
 </template>
 

@@ -10,6 +10,7 @@ const props = defineProps<{
   label: string;
   placeholder: string;
   defaultValue?: string;
+  tooltipContent?: string;
 }>();
 
 const emit = defineEmits<{
@@ -62,8 +63,17 @@ const resetInput = () => {
 
 <template>
   <div data-testid="suggestions-input">
-    <label class="fr-label" :for="inputId">{{ props.label }}</label>
-    <DsfrInput :id="inputId" v-model="input" :label="props.label" :placeholder="props.placeholder" />
+    <label class="fr-label suggestions-input-label" :for="inputId">
+      {{ props.label }}
+      <DsfrTooltip v-if="props.tooltipContent" :id="`${inputId}-tooltip`" :content="props.tooltipContent" />
+    </label>
+    <DsfrInput
+      :id="inputId"
+      v-model="input"
+      :label="props.label"
+      :placeholder="props.placeholder"
+      :aria-describedby="props.tooltipContent ? `${inputId}-tooltip` : undefined"
+    />
 
     <div v-if="isLoading" data-testid="suggestions-loading">Chargement ...</div>
     <ul v-if="suggestions.length" class="suggestions-list" data-testid="suggestions-list">
@@ -93,6 +103,12 @@ const resetInput = () => {
 </template>
 
 <style scoped>
+.suggestions-input-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .suggestions-list {
   list-style: none;
   padding: 0;

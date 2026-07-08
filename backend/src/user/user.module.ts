@@ -25,6 +25,6 @@ import { ScopedPermissionService } from "./scope-permission/scoped-permission.se
     UserConnexionLogService,
     ScopedPermissionService,
   ],
-  exports: [UserService, UserConnexionLogService],
+  exports: [UserService, UserConnexionLogService, ScopedPermissionService],
 })
 export class UserModule {}

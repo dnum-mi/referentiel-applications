@@ -74,6 +74,14 @@ const labels: Record<HostingField, string> = {
   building: "Bâtiment",
   room: "Pièce",
 };
+
+const tooltips: Record<HostingField, string> = {
+  provider: "Filtre les applications selon leur fournisseur d’hébergement (ex. cloud, datacenter interne…).",
+  platform: "Filtre les applications selon la plateforme d’hébergement utilisée.",
+  site: "Filtre les applications selon le site d’hébergement physique.",
+  building: "Filtre les applications selon le bâtiment d’hébergement.",
+  room: "Filtre les applications selon la pièce (salle) d’hébergement.",
+};
 </script>
 
 <template>
@@ -82,20 +90,34 @@ const labels: Record<HostingField, string> = {
       v-model="missingHosting"
       name="hosting-missing-checkbox"
       :value="true"
-      label="Sans hébergement"
+      aria-describedby="hosting-missing-tooltip-desc"
       data-testid="hosting-missing-checkbox"
-    />
+    >
+      <template #label>
+        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+          Sans hébergement
+          <DsfrTooltip id="hosting-missing-tooltip-desc" content="Affiche uniquement les applications sans hébergement renseigné." />
+        </span>
+      </template>
+    </DsfrCheckbox>
 
     <DsfrSelect
       v-for="{ field, filterKey, testId } in hostingFields"
       :key="field"
       :model-value="filters[filterKey] || ''"
-      :label="labels[field]"
       :options="optionsMap[field].value"
       :disabled="isLoading"
+      :aria-describedby="`hosting-${field}-tooltip-desc`"
       :data-testid="testId"
       @update:model-value="updateFilter(filterKey, String($event ?? ''))"
-    />
+    >
+      <template #label>
+        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+          {{ labels[field] }}
+          <DsfrTooltip :id="`hosting-${field}-tooltip-desc`" :content="tooltips[field]" />
+        </span>
+      </template>
+    </DsfrSelect>
   </div>
 </template>
 

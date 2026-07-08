@@ -13,6 +13,8 @@ function permissionsToObject(
     HostingRead: permissions.has("HostingRead"),
     HostingWrite: permissions.has("HostingWrite"),
     MetadataRead: permissions.has("MetadataRead"),
+    DataRead: permissions.has("DataRead"),
+    DataWrite: permissions.has("DataWrite"),
     RelationRead: permissions.has("RelationRead"),
     RelationWrite: permissions.has("RelationWrite"),
     LinkRead: permissions.has("LinkRead"),

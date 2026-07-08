@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.81.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.80.1...v1.81.0) (2026-07-04)
+
+
+### Features
+
+* fp8 gerer tokens applicatifs admin 1885 ([#1939](https://github.com/dnum-mi/referentiel-applications/issues/1939)) ([778eea7](https://github.com/dnum-mi/referentiel-applications/commit/778eea71f32c8f5dfd3676c27c323e0075878dc7))
+* **rgaa:** fix keyboard trap and SPA focus management (RGAA-026, RGAA-041) ([#1919](https://github.com/dnum-mi/referentiel-applications/issues/1919)) ([ff04216](https://github.com/dnum-mi/referentiel-applications/commit/ff04216428be375c0a216d7e22175dff2468a298))
+* status date is optional ([#1925](https://github.com/dnum-mi/referentiel-applications/issues/1925)) ([3b22f5c](https://github.com/dnum-mi/referentiel-applications/commit/3b22f5cc65fe4ab39addc2ec3a68e9402f0d3907))
+
+
+### Bug Fixes
+
+* **a11y:** rgaa lot e global template - header, footer, landmarks, titles ([#1775](https://github.com/dnum-mi/referentiel-applications/issues/1775)) ([#1921](https://github.com/dnum-mi/referentiel-applications/issues/1921)) ([e13ec3a](https://github.com/dnum-mi/referentiel-applications/commit/e13ec3aabcbcd6009abcaf6a8746338cf44ce7f4))
+* **a11y:** rgaa lot f group fields with fieldset/legend ([#1776](https://github.com/dnum-mi/referentiel-applications/issues/1776)) ([#1932](https://github.com/dnum-mi/referentiel-applications/issues/1932)) ([2b469a6](https://github.com/dnum-mi/referentiel-applications/commit/2b469a6487622433d9516151cbce8a83c8f6d1a9))
+* **a11y:** rgaa lot i status messages via aria-live and focus management ([#1779](https://github.com/dnum-mi/referentiel-applications/issues/1779)) ([#1930](https://github.com/dnum-mi/referentiel-applications/issues/1930)) ([ec01b62](https://github.com/dnum-mi/referentiel-applications/commit/ec01b62890c08578f15e97578ba2815760e38918))
+* **a11y:** rgaa lot j explicit links and new-window mentions ([#1780](https://github.com/dnum-mi/referentiel-applications/issues/1780)) ([#1922](https://github.com/dnum-mi/referentiel-applications/issues/1922)) ([f4aeeda](https://github.com/dnum-mi/referentiel-applications/commit/f4aeedae17ba16b9d54d90df64b367c321a920b6))
+* **a11y:** rgaa lot m time chart transcription and label ([#1770](https://github.com/dnum-mi/referentiel-applications/issues/1770)) ([#1924](https://github.com/dnum-mi/referentiel-applications/issues/1924)) ([5e10628](https://github.com/dnum-mi/referentiel-applications/commit/5e10628c5bfce463fd542a5d97edfa2a2eed7135))
+* **a11y:** rgaa lot o accessibility statement and footer mention ([#1784](https://github.com/dnum-mi/referentiel-applications/issues/1784)) ([#1929](https://github.com/dnum-mi/referentiel-applications/issues/1929)) ([4e81c4e](https://github.com/dnum-mi/referentiel-applications/commit/4e81c4eb260afb8c45d68e95f4658f34ab1cc54d))
+* add is group and maia import for moa/moe when app creation ([#1927](https://github.com/dnum-mi/referentiel-applications/issues/1927)) ([303bed4](https://github.com/dnum-mi/referentiel-applications/commit/303bed4920cde12500e9ee964ca1c38da46a7d8b))
+* add validate by default in filter apps ([#1931](https://github.com/dnum-mi/referentiel-applications/issues/1931)) ([625329f](https://github.com/dnum-mi/referentiel-applications/commit/625329f892b054fe4d40d37eacba92e079448f37))
+* **e2e:** disambiguate "Détails de la modification" heading locator (HIS-04/05/07/10) ([#1966](https://github.com/dnum-mi/referentiel-applications/issues/1966)) ([cdd2011](https://github.com/dnum-mi/referentiel-applications/commit/cdd2011dc663a9a49ca7bb4c65d5bf2144208272))
+* total value for mdit is now correct ([#1923](https://github.com/dnum-mi/referentiel-applications/issues/1923)) ([600bdf6](https://github.com/dnum-mi/referentiel-applications/commit/600bdf6de677cc5b6e3a3407df0a7b8fd8305576))
+* update refapptable  with sorting ([#1916](https://github.com/dnum-mi/referentiel-applications/issues/1916)) ([01de11c](https://github.com/dnum-mi/referentiel-applications/commit/01de11cf14615be13d851b2ade5485ffa414fa98))
+* update search page POM with defautl value for sorting ([#1965](https://github.com/dnum-mi/referentiel-applications/issues/1965)) ([55632de](https://github.com/dnum-mi/referentiel-applications/commit/55632de574d9c7254023d3f03b3c25d2c7cc9e7b))
+
 ## [1.80.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.80.0...v1.80.1) (2026-06-26)
 
 
