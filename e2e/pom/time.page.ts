@@ -15,16 +15,17 @@ export class TimePage extends BasePage {
   // L'aria-label du SVG est posé dynamiquement par D3 (« …maturites TIME »).
   private scatter = () => this.page.getByRole("img", { name: /maturit/i });
   private empty = () => this.byTestId("technical-debt-empty");
-  // Sélecteur de campagne dette IT (millésime), dans l'accordéon « Général » de la sidebar.
+  // Sélecteur de campagne dette IT (millésime), dans l'accordéon « Portefeuille » de la sidebar.
   // Le `data-testid` du DsfrSelect porte le <select>.
-  private generalAccordion = () => this.byTestId("sidebar-accordion-general");
+  private portfolioAccordion = () =>
+    this.byTestId("sidebar-accordion-portfolio");
   private millesimeSelector = () => this.byTestId("time-millesime");
   private millesimeSelect = () => this.byTestId("time-millesime-select");
 
-  /** Déploie l'accordéon « Général » si le sélecteur de campagne n'est pas déjà visible. */
+  /** Déploie l'accordéon « Portefeuille » si le sélecteur de campagne n'est pas déjà visible. */
   private async ensureCampaignVisible(): Promise<void> {
     if (await this.millesimeSelector().isVisible()) return;
-    await this.generalAccordion().getByRole("button").first().click();
+    await this.portfolioAccordion().getByRole("button").first().click();
     await expect(this.millesimeSelector()).toBeVisible();
   }
 
@@ -49,7 +50,7 @@ export class TimePage extends BasePage {
     await expect(this.filters()).toBeVisible();
   }
 
-  /** Le sélecteur de campagne dette IT (millésime) est présent (accordéon « Général »). */
+  /** Le sélecteur de campagne dette IT (millésime) est présent (accordéon « Portefeuille »). */
   async expectMillesimeSelectorPresent(): Promise<void> {
     await this.ensureCampaignVisible();
     await expect(this.millesimeSelector()).toBeVisible();

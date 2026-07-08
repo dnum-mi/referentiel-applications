@@ -3,6 +3,7 @@ import type { CreatePersonalTokenDto, ExposedTokenDto, TokenDto } from "@/client
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import api from "@/api";
+import { TokenKindWording } from "@/utils/token-utils";
 
 const tokens = ref<TokenDto[]>([]);
 const isLoading = ref(false);
@@ -119,15 +120,12 @@ function formatDate(dateString?: string): string {
   }
 }
 
-function isExpired(dateString?: string): boolean {
-  if (!dateString) {
-    return false;
-  }
-  return new Date(dateString) < new Date();
+function isExpired(token: TokenDto): boolean {
+  return token.status === "expired";
 }
 
 function isRevoked(token: TokenDto): boolean {
-  return token.status?.status === "revoked";
+  return token.status === "revoked";
 }
 
 function copyToClipboard(text: string) {
@@ -227,15 +225,16 @@ onMounted(() => {
     <DsfrTable
       v-else
       title="Liste de vos tokens"
-      :headers="['Nom', 'Description', 'Date d\'expiration', 'Statut', 'Actions']"
+      :headers="['Type', 'Nom', 'Description', 'Date d\'expiration', 'Statut', 'Actions']"
       class="fr-table--layout-fixed"
     >
       <tr v-for="token in tokens" :key="token.id">
+        <td>{{ TokenKindWording[token.kind] }}</td>
         <td>{{ token.name }}</td>
         <td>{{ token.description }}</td>
         <td>{{ formatDate(token.expiresAt) }}</td>
         <td>
-          <span v-if="isExpired(token.expiresAt)" class="fr-badge fr-badge--error"> Expiré </span>
+          <span v-if="isExpired(token)" class="fr-badge fr-badge--error"> Expiré </span>
           <span v-else-if="isRevoked(token)" class="fr-badge fr-badge--warning"> Révoqué </span>
           <span v-else class="fr-badge fr-badge--success"> Actif </span>
         </td>
@@ -245,7 +244,7 @@ onMounted(() => {
             tertiary
             icon="ri-delete-bin-line"
             label="Révoquer"
-            :disabled="isLoading || isRevoked(token) || isExpired(token.expiresAt)"
+            :disabled="isLoading"
             @click="requestRevokeToken(token.id)"
           />
         </td>

@@ -112,6 +112,33 @@ export class ScopedPermissionService {
     }
   }
 
+  /**
+   * Valide l'assignation d'un périmètre à un nouveau principal (ex: le compte
+   * de service créé pour un token applicatif), qui n'a donc pas d'état
+   * précédent à comparer, contrairement à `assertCanUpdate`.
+   */
+  async assertCanAssignScopeToNewPrincipal(
+    scopeOrganizationId: string | null | undefined,
+    requestor: Requestor,
+  ): Promise<void> {
+    const requestorScopePath = requestor?.scopeOrganization?.path;
+    // Si le requestor n'a pas de scope, c'est qu'il est super admin et peut tout faire → PAS DE CHECK
+    if (!requestorScopePath) return;
+
+    if (!scopeOrganizationId) {
+      throw new ScopePermissionsException(
+        "Vous devez assigner un périmètre à l'intérieur du vôtre",
+      );
+    }
+
+    const scopeOrg = await this.fetchOrganization(scopeOrganizationId);
+    this.assertWithinScope(
+      scopeOrg.path,
+      requestorScopePath,
+      "Vous ne pouvez pas assigner un périmètre hors de votre périmètre",
+    );
+  }
+
   private async fetchOrganization(id: string) {
     const org = await this.prisma.organization.findUnique({ where: { id } });
     if (!org)

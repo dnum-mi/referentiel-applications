@@ -63,13 +63,14 @@ export function isRequestorAllowedToUpdateToken(
   }
   // so token is active or expired
 
-  // bot tokens
-  if (token.userImpersonate.type === UserType.bot) {
-    // only admins can update bot tokens
-    if (!hasPermission) {
-      return false;
-    }
+  // admins can manage any token (personal or service) from the admin panel
+  if (hasPermission) {
     return true;
+  }
+
+  // bot tokens can only be managed by admins
+  if (token.userImpersonate.type === UserType.bot) {
+    return false;
   }
 
   // personal tokens

@@ -52,7 +52,9 @@ const transcriptionRows = computed(() =>
       <svg
         ref="svgRef"
         role="img"
+        class="td-svg"
         aria-label="Diagramme TIME de la maturité technique et métier du portefeuille applicatif. La transcription détaillée est disponible juste après le graphique."
+        preserveAspectRatio="xMidYMid meet"
       ></svg>
 
       <details class="fr-mt-2w" data-testid="technical-debt-transcription">
@@ -98,5 +100,11 @@ const transcriptionRows = computed(() =>
 
 .td-tooltip {
   z-index: 1;
+}
+
+.td-svg {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
 }
 </style>

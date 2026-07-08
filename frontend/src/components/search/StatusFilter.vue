@@ -37,12 +37,28 @@ const selectedStatuses = computed({
         v-model="withoutStatus"
         name="status-option-none"
         :value="true"
-        label="Sans statut"
         hint="Filtrer les applications sans statut"
+        aria-describedby="status-none-tooltip-desc"
         data-testid="status-option-none"
-      />
+      >
+        <template #label>
+          <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+            Sans statut
+            <DsfrTooltip id="status-none-tooltip-desc" content="Affiche uniquement les applications sans statut renseigné." />
+          </span>
+        </template>
+      </DsfrCheckbox>
     </div>
-    <DsfrCheckboxSet v-model="selectedStatuses" legend="Statut de l'application" :options="statusCheckboxOptions" />
+    <DsfrCheckboxSet v-model="selectedStatuses" :options="statusCheckboxOptions">
+      <template #legend>
+        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+          Statut de l'application
+          <DsfrTooltip
+            content="Filtre les applications selon leur statut de cycle de vie (en construction, en production, décommissionnée…)."
+          />
+        </span>
+      </template>
+    </DsfrCheckboxSet>
   </div>
 </template>
 

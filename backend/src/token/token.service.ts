@@ -9,10 +9,16 @@ import { createHash } from "node:crypto";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor, UserEntity } from "src/user/entities/user.entity";
+import { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
 import { generateRandomPassword, stringToSlug } from "src/utils/functions";
 import { TokenStatus } from "./domain/token-status.entity";
 import { NewTokenEntity } from "./domain/token.entity";
-import { ExposedTokenDto, TokenDto } from "./dto/token.dto";
+import {
+  ExposedTokenDto,
+  TokenDto,
+  TokenKind,
+  TokenOwnerDto,
+} from "./dto/token.dto";
 import {
   isNewTokenInvalid,
   isRequestorAllowedToUpdateToken,
@@ -21,11 +27,17 @@ import {
 
 const ACTIVE_TOKEN_LIMIT = 5;
 
+const TOKEN_INCLUDE = {
+  createdBy: true,
+  userImpersonate: { include: { scopeOrganization: true } },
+} satisfies Prisma.TokenInclude;
+
 @Injectable()
 export class TokenService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly checkPermissions: CheckPermissions,
+    private readonly scopedPermissionService: ScopedPermissionService,
   ) {}
 
   async list({ requestor }: { requestor?: Requestor }): Promise<TokenDto[]> {
@@ -41,17 +53,46 @@ export class TokenService {
 
     const tokens = await this.prisma.token.findMany({
       where,
-      include: {
-        createdBy: true,
-        userImpersonate: true,
-      },
+      include: TOKEN_INCLUDE,
       omit: { hash: true },
     });
 
-    return tokens.map((token) => ({
-      ...token,
-      expiresAt: token.expiresAt.toISOString(),
-    }));
+    return tokens.map((token) => this.toDto(token));
+  }
+
+  async listPaginated({
+    kind,
+    page,
+    pageSize,
+  }: {
+    kind?: (typeof TokenKind)[keyof typeof TokenKind];
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ results: TokenDto[]; total: number }> {
+    const where: Prisma.TokenWhereInput = {
+      status: {
+        not: "revoked",
+      },
+    };
+
+    if (kind) {
+      where.userImpersonate = {
+        type: kind === TokenKind.service ? UserType.bot : UserType.human,
+      };
+    }
+
+    const [tokens, total] = await Promise.all([
+      this.prisma.token.findMany({
+        where,
+        include: TOKEN_INCLUDE,
+        omit: { hash: true },
+        orderBy: { createdAt: "desc" },
+        ...(pageSize ? { skip: (page ?? 0) * pageSize, take: pageSize } : {}),
+      }),
+      this.prisma.token.count({ where }),
+    ]);
+
+    return { results: tokens.map((token) => this.toDto(token)), total };
   }
 
   async create(
@@ -70,6 +111,12 @@ export class TokenService {
     );
     if (!personal && !hasPermission) {
       throw new ForbiddenException("Only admins can create service tokens");
+    }
+    if (!personal) {
+      await this.scopedPermissionService.assertCanAssignScopeToNewPrincipal(
+        data.scopeOrganizationId,
+        requestor,
+      );
     }
     const existingTokens = await this.list({ requestor });
     const tokenCount = existingTokens.length;
@@ -95,6 +142,7 @@ export class TokenService {
           email: `${nameSlug}-${Date.now()}@bot.internal`,
           role: data.role || Roles.VISITOR,
           type: UserType.bot,
+          scopeOrganizationId: data.scopeOrganizationId || null,
         },
       });
       userIdImpersonate = user.id;
@@ -113,27 +161,20 @@ export class TokenService {
         status: TokenStatus.active,
         hash,
       },
-      include: {
-        createdBy: true,
-        userImpersonate: true,
-      },
+      include: TOKEN_INCLUDE,
       omit: { hash: true },
     });
 
     return {
-      ...token,
+      ...this.toDto(token),
       password,
-      expiresAt: token.expiresAt.toISOString(),
     };
   }
 
   delete = async (requestor: Requestor, id: string): Promise<void> => {
     const token = await this.prisma.token.findUnique({
       where: { id },
-      include: {
-        createdBy: true,
-        userImpersonate: true,
-      },
+      include: TOKEN_INCLUDE,
       omit: { hash: true },
     });
 
@@ -159,10 +200,7 @@ export class TokenService {
     const hash = this.generateHash(tokenHeader);
     const token = await this.prisma.token.findUnique({
       where: { hash },
-      include: {
-        createdBy: true,
-        userImpersonate: true,
-      },
+      include: TOKEN_INCLUDE,
       omit: { hash: true },
     });
 
@@ -211,10 +249,7 @@ export class TokenService {
   ): Promise<ExposedTokenDto> {
     const token = await this.prisma.token.findUnique({
       where: { id },
-      include: {
-        createdBy: true,
-        userImpersonate: true,
-      },
+      include: TOKEN_INCLUDE,
       omit: { hash: true },
     });
 
@@ -236,21 +271,41 @@ export class TokenService {
         expiresAt,
         updatedAt: new Date(),
       },
-      include: {
-        createdBy: true,
-        userImpersonate: true,
-      },
+      include: TOKEN_INCLUDE,
       omit: { hash: true },
     });
 
     return {
-      ...newToken,
+      ...this.toDto(newToken),
       password,
-      expiresAt: newToken.expiresAt.toISOString(),
     };
   }
 
   generateHash(token: string): string {
     return createHash("sha512").update(token).digest("hex");
+  }
+
+  private toDto(
+    token: Prisma.TokenGetPayload<{
+      include: typeof TOKEN_INCLUDE;
+      omit: { hash: true };
+    }>,
+  ): TokenDto {
+    const toOwner = (user: { id: string; email: string }): TokenOwnerDto => ({
+      id: user.id,
+      email: user.email,
+    });
+
+    return {
+      ...token,
+      expiresAt: token.expiresAt.toISOString(),
+      kind:
+        token.userImpersonate.type === UserType.bot
+          ? TokenKind.service
+          : TokenKind.personal,
+      createdBy: toOwner(token.createdBy),
+      userImpersonate: toOwner(token.userImpersonate),
+      scopeOrganization: token.userImpersonate.scopeOrganization,
+    };
   }
 }
