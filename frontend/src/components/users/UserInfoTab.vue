@@ -43,20 +43,28 @@ onMounted(async () => {
 
 <template>
   <div v-if="userStore.user" class="fr-mt-3w" data-testid="user-profile-card">
-    <DsfrTable title="Informations personnelles" data-testid="user-profile-table">
-      <tr>
-        <th scope="row">Organisation</th>
-        <td data-testid="user-profile-organization">
-          {{ userStore.user.organization?.path || "Non renseignée" }}
-        </td>
-      </tr>
-      <tr>
-        <th scope="row">Email</th>
-        <td data-testid="user-profile-email">
-          {{ userStore.user.email }}
-        </td>
-      </tr>
-    </DsfrTable>
+    <!-- RGAA-072 : tableau clé/valeur à en-têtes de ligne, sans <thead> vide → table native dans le conteneur DSFR. -->
+    <div class="fr-table" data-testid="user-profile-table">
+      <table>
+        <caption class="fr-sr-only">
+          Informations personnelles
+        </caption>
+        <tbody>
+          <tr>
+            <th scope="row">Organisation</th>
+            <td data-testid="user-profile-organization">
+              {{ userStore.user.organization?.path || "Non renseignée" }}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Email</th>
+            <td data-testid="user-profile-email">
+              {{ userStore.user.email }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <div class="fr-mt-4w">
       <UserPermissions :user="userStore.user" />
     </div>
