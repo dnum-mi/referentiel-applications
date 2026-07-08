@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, nextTick } from "vue";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { LabelDto, LabelSourceDto } from "@/client/types.gen";
@@ -43,6 +43,12 @@ async function fetchLabelSources() {
 }
 
 onMounted(fetchLabelSources);
+
+// 12.8 : à l'ouverture, porter le focus sur le premier élément interactif de la modale (bouton « Fermer »).
+onMounted(async () => {
+  await nextTick();
+  document.querySelector<HTMLButtonElement>('[data-testid="label-modal"] .fr-btn--close')?.focus();
+});
 
 function setInitialValues() {
   const label = props.initialLabel;

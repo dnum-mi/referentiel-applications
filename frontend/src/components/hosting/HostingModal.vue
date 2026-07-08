@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from "vue";
+import { ref, watch, onMounted, computed, nextTick } from "vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { CreateHostingDto, HostingDto, HostingOptionDto } from "@/client/types.gen";
@@ -55,6 +55,12 @@ async function fetchHostingOptions() {
 }
 
 onMounted(fetchHostingOptions);
+
+// 12.8 : à l'ouverture, porter le focus sur le premier élément interactif de la modale (bouton « Fermer »).
+onMounted(async () => {
+  await nextTick();
+  document.querySelector<HTMLButtonElement>('[data-testid="hosting-modal"] .fr-btn--close')?.focus();
+});
 
 function setInitialValues() {
   if (!props.initialHosting) {

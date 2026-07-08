@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, nextTick } from "vue";
 import { useRoute } from "vue-router";
 import { setPageTitle } from "@/router";
 import { formatDateFR } from "@/composables/use-date";
@@ -24,6 +24,7 @@ const errorMessage = ref("");
 
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
+const subscribeBtn = ref<{ $el?: HTMLElement } | null>(null);
 
 async function toggleSubscription() {
   isSubscriptionLoading.value = true;
@@ -37,6 +38,9 @@ async function toggleSubscription() {
     console.error("Erreur lors de la modification de l'abonnement", err);
   } finally {
     isSubscriptionLoading.value = false;
+    // 12.8 : le bouton reste monté (seul le label change) → conserver le focus dessus après la bascule.
+    await nextTick();
+    subscribeBtn.value?.$el?.querySelector("button")?.focus();
   }
 }
 
@@ -156,12 +160,15 @@ const actions = computed(() => [
         </template>
       </DsfrHighlight>
       <DsfrButton
+        ref="subscribeBtn"
         class="fr-btn--tertiary-no-outline fr-btn--icon-left"
         :class="isSubscribed ? 'fr-icon-notification-3-fill' : 'fr-icon-notification-3-line'"
         :disabled="isSubscriptionLoading"
         @click="toggleSubscription"
         :title="
-          isSubscribed ? 'Ne plus recevoir de notifications pour cette application' : 'Recevoir des notifications lors des modifications'
+          isSubscribed
+            ? 'Abonné(e) - Ne plus recevoir de notifications pour cette application'
+            : `S'abonner - Recevoir des notifications lors des modifications`
         "
       >
         {{ isSubscribed ? "Abonné(e)" : "S'abonner" }}
