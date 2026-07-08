@@ -54,7 +54,17 @@ const maturityFields = computed(() => [
       <div class="fr-card__content">
         <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
           <div class="fr-col">
-            <h3 class="fr-card__title">Dette technique</h3>
+            <h3 class="fr-card__title">
+              Dette technique
+              <DsfrBadge
+                v-if="technicalDebtInfo?.millesime"
+                :label="`Millésime ${technicalDebtInfo.millesime}`"
+                type="info"
+                :small="small"
+                data-testid="technical-debt-millesime-badge"
+                class="fr-ml-1w"
+              />
+            </h3>
           </div>
           <div class="fr-col-auto">
             <DsfrButton

@@ -747,6 +747,7 @@ erDiagram
   Boolean HostingWrite
   Boolean MetadataRead
   Boolean DataRead
+  Boolean DataWrite
   Boolean RelationRead
   Boolean RelationWrite
   Boolean LinkRead
@@ -824,6 +825,7 @@ Properties as follows:
 - `HostingWrite`: Peut écrire les informations d'hébergement
 - `MetadataRead`: Peut lire les métadonnées
 - `DataRead`: Peut lire les données de l'application (onglet Données)
+- `DataWrite`:
 - `RelationRead`: Peut lire les relations d'application
 - `RelationWrite`: Peut écrire les relations d'application
 - `LinkRead`: Peut lire les liens externes

@@ -858,20 +858,22 @@ Aucun espace en début ou en fin."
       <OrganizationSearchSelect
         v-model="moaOrganizationId"
         :initial-organization="initialMoaOrganization"
-        label="Organisation MOA"
+        label="Organisation MOA *"
         class="fr-mb-3w"
         required
         :error-message="moaOrganizationError"
         data-testid="application-moa-organization"
       />
-      <DsfrCheckbox
-        v-model="moaActor.isGroup"
-        name="moaIsGroup"
-        :value="true"
-        label="Cet acteur est rattaché(e) à une entité"
-        data-testid="application-moa-is-group"
-        class="fr-mb-3w"
-      />
+      <div class="moa-is-group-checkbox">
+        <DsfrCheckbox v-model="moaActor.isGroup" name="moaIsGroup" :value="true" data-testid="application-moa-is-group">
+          <template #label>
+            <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+              Cet acteur est rattaché(e) à une entité
+              <DsfrTooltip content="Établir le lien entre une personne physique et une boîte e-mail fonctionnelle (ex: equipe, service)" />
+            </span>
+          </template>
+        </DsfrCheckbox>
+      </div>
       <template v-if="!isMoaGroup">
         <div class="fr-grid-row fr-grid-row--gutters">
           <div class="fr-col-6">
@@ -1026,3 +1028,10 @@ Aucun espace en début ou en fin."
     </div>
   </DsfrModal>
 </template>
+
+<style scoped>
+.moa-is-group-checkbox :deep(.fr-checkbox-group input[type="checkbox"] + label::before) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+</style>
