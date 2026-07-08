@@ -76,6 +76,22 @@ jobs:
       - uses: actions/checkout@v3
       - name: Start stack using docker compose
         run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend postgres keycloak -d
+      - name: Wait for backend to be ready
+        run: |
+          IMG=${{ needs.build-backend.outputs.image_tag }}
+          for i in $(seq 1 60); do
+            if IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend \
+                 node -e "require('http').get('http://localhost:3500/api/v2/health-check', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" 2>/dev/null; then
+              echo "✅ Backend ready after ~$((i * 3))s"
+              exit 0
+            fi
+            echo "⏳ Waiting for backend to be ready ($i/60)..."
+            sleep 3
+          done
+          echo "❌ Backend never became ready within 180s — diagnostics below:"
+          IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
+          IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend
+          exit 1
       - name: Seed backend database for E2E
         run: |
           for i in {1..10}; do
