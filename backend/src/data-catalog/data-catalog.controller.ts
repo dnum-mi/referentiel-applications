@@ -46,7 +46,7 @@ export class DataCatalogController {
   @Post("descriptions")
   @ApiOperation({ summary: "Créer une data description" })
   @ApiCreatedResponse({ type: DataDescriptionDto })
-  @RequiredPermissions([Permission.AppWrite])
+  @RequiredPermissions([Permission.DataWrite])
   createDescription(
     @Body() dto: CreateDataDescriptionDto,
     @UserId() userId: string,
@@ -57,7 +57,7 @@ export class DataCatalogController {
   @Get("descriptions")
   @ApiOperation({ summary: "Lister les data descriptions" })
   @ApiOkResponse({ type: [DataDescriptionDto] })
-  @RequiredPermissions([Permission.AppRead])
+  @RequiredPermissions([Permission.DataRead])
   findAllDescriptions(@Query() pagination: PaginationDto) {
     return this.dataCatalogService.findAllDescriptions(
       pagination.page ?? 0,
@@ -69,7 +69,7 @@ export class DataCatalogController {
   @ApiOperation({ summary: "Mettre à jour une data description" })
   @ApiBody({ type: CreateDataDescriptionDto })
   @ApiOkResponse({ type: DataDescriptionDto })
-  @RequiredPermissions([Permission.AppWrite])
+  @RequiredPermissions([Permission.DataWrite])
   updateDescription(
     @Param("id") id: string,
     @Body() dto: Partial<CreateDataDescriptionDto>,
@@ -81,10 +81,10 @@ export class DataCatalogController {
   @Delete("descriptions/:id")
   @HttpCode(204)
   @ApiOperation({ summary: "Supprimer une data description" })
+  @RequiredPermissions([Permission.DataWrite])
   @ApiNoContentResponse({
     description: "Data description deleted successfully",
   })
-  @RequiredPermissions([Permission.AppWrite])
   deleteDescription(@Param("id") id: string, @UserId() userId: string) {
     return this.dataCatalogService.deleteDescription(id, userId);
   }

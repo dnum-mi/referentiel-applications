@@ -15,9 +15,9 @@ const organizations = ref<OrganizationDto[]>([]);
 
 const actorTypeOptions = computed(() => [
   { text: "Tous", value: "" },
-  ...actorTypeStore.actorTypes.map((actor) => ({ text: actor.label, value: actor.id })),
-  { text: "Sans Maîtrise d'Ouvrage (MOA)", value: "missingMoa" },
-  { text: "Sans Maîtrise d'Œuvre (MOE)", value: "missingMoe" },
+  ...[...actorTypeStore.actorTypes]
+    .sort((a, b) => a.label.localeCompare(b.label, "fr"))
+    .map((actor) => ({ text: actor.label, value: actor.id })),
 ]);
 
 const selectedActorTypeId = computed({

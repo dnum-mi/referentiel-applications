@@ -22,7 +22,7 @@ describe("DataCatalog", () => {
     readerUser = await UserFaker.create({ role: Roles.READER });
     writerUser = await UserFaker.create({
       role: Roles.READER,
-      additionalPermissions: [Permission.AppWrite],
+      additionalPermissions: [Permission.AppWrite, Permission.DataWrite],
     });
 
     READER_TOKEN = await getToken(readerUser);
