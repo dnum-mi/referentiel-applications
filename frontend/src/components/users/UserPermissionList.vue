@@ -13,6 +13,6 @@ const props = defineProps<{ permissions: Permission[]; label: string }>();
         <DsfrTag small class="fr-tag--dismiss" :label="PERMISSIONS_LABELS[perm]" />
       </div>
     </div>
-    <span v-else class="fr-text--disabled">—</span>
+    <p v-else class="fr-text--disabled">Aucune permission.</p>
   </div>
 </template>

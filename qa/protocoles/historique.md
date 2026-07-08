@@ -86,3 +86,15 @@
 - **Action** : cliquer la page 2 de la pagination de l'historique.
 - **Résultat attendu** : la page 2 devient la page courante et la liste reste affichée. (Cas
   `skipped` s'il n'y a qu'une seule page.)
+
+### HIS-12 — Le bloc de détails de description n'apparaît que pour une description multi-ligne ✅
+
+- **Datafeature** : une entrée d'historique à description mono-ligne (`ensureMonoLineMetadata`) et
+  une à description multi-ligne (`ensureMultiLineMetadata`) ; chacune résout d'abord une entrée
+  existante, sinon sème une application de test dédiée (nettoyée en `finally`).
+- **Action** : ouvrir directement `/metadatas/:id` pour l'entrée mono-ligne, puis pour l'entrée
+  multi-ligne.
+- **Résultat attendu** : pour l'entrée mono-ligne, le sous-bloc `description-details` (dans
+  `metadata-description`) n'est pas présent ; pour l'entrée multi-ligne, il est présent et contient
+  au moins une ligne de détail. (Cas `skipped` si aucun profil mono ou multi-ligne n'est trouvable ni
+  créable.)

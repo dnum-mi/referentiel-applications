@@ -90,6 +90,7 @@ const mainButtons = computed(() =>
           icon: "fr-icon-list-unordered",
           onClick: () => setViewMode("list"),
           tertiary: viewMode.value !== "list",
+          "aria-current": viewMode.value === "list" ? ("true" as const) : undefined,
         },
         {
           label: "Graphe",
@@ -97,6 +98,7 @@ const mainButtons = computed(() =>
           icon: "fr-icon-eye-line",
           onClick: () => setViewMode("graph"),
           tertiary: viewMode.value !== "graph",
+          "aria-current": viewMode.value === "graph" ? ("true" as const) : undefined,
         },
       ],
 );

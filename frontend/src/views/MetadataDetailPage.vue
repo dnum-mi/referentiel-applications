@@ -160,8 +160,8 @@ onMounted(() => {
       <div class="fr-mb-3w">
         <h2 class="fr-h6">Description</h2>
         <div class="metadata-description" data-testid="metadata-description">
-          <h3 class="fr-text--lg fr-mb-2w">{{ formattedDescription.title }}</h3>
-          <div class="description-details">
+          <p class="fr-text--lg fr-text--bold fr-mb-2w">{{ formattedDescription.title }}</p>
+          <div v-if="formattedDescription.details.length" class="description-details">
             <p v-for="(detail, index) in formattedDescription.details" :key="index" class="detail-line" v-html="formatBold(detail)" />
           </div>
         </div>
