@@ -94,7 +94,7 @@ const tooltips: Record<HostingField, string> = {
       data-testid="hosting-missing-checkbox"
     >
       <template #label>
-        <span style="display: inline-flex; align-items: center; gap: 0.25rem">
+        <span class="content" style="display: inline-flex; align-items: center; gap: 0.25rem">
           Sans hébergement
           <DsfrTooltip id="hosting-missing-tooltip-desc" content="Affiche uniquement les applications sans hébergement renseigné." />
         </span>
@@ -125,5 +125,17 @@ const tooltips: Record<HostingField, string> = {
 .hosting-filters {
   display: flex;
   flex-direction: column;
+}
+
+.content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+}
+
+:deep(.fr-checkbox-group input[type="checkbox"] + .fr-label)::before {
+  top: 50%;
+  transform: translateY(-50%);
 }
 </style>
