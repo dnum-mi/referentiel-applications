@@ -19,10 +19,14 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
   const emptyResult = { results: [], total: 0, averageIq: 0 };
   const requestor = { email: "user@example.com" } as unknown as Requestor;
 
-  const setup = (fullTextIds: string[] = ["app-x"]) => {
+  const setup = (
+    fullTextIds: string[] = ["app-x"],
+    matching: { id: string; quality: number }[] = [],
+  ) => {
     const applicationRepository = {
       findApplications: jest.fn().mockResolvedValue(emptyResult),
-      findApplicationsRanked: jest.fn().mockResolvedValue(emptyResult),
+      findMatchingApplications: jest.fn().mockResolvedValue(matching),
+      findApplicationsPage: jest.fn().mockResolvedValue([]),
     };
     const prismaQueryBuilder = {
       // Un nouvel objet à chaque appel : le service y pousse le filtre `id IN`.
@@ -77,14 +81,19 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
 
     expect(applicationSearchService.fullTextSearch).not.toHaveBeenCalled();
     expect(applicationRepository.findApplications).toHaveBeenCalledTimes(1);
-    expect(applicationRepository.findApplicationsRanked).not.toHaveBeenCalled();
+    expect(
+      applicationRepository.findMatchingApplications,
+    ).not.toHaveBeenCalled();
   });
 
   it("avec q : interroge le moteur, restreint aux ids trouvés et trie par pertinence", async () => {
-    const { service, applicationRepository, applicationSearchService } = setup([
-      "app-x",
-      "app-y",
-    ]);
+    const { service, applicationRepository, applicationSearchService } = setup(
+      ["app-x", "app-y"],
+      [
+        { id: "app-y", quality: 40 },
+        { id: "app-x", quality: 80 },
+      ],
+    );
 
     await service.search(
       { q: "gestion factures" } as ApplicationSearchDto,
@@ -94,22 +103,46 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     expect(applicationSearchService.fullTextSearch).toHaveBeenCalledWith(
       "gestion factures",
     );
-    // Tri par pertinence => findApplicationsRanked (et pas findApplications).
-    expect(applicationRepository.findApplicationsRanked).toHaveBeenCalledTimes(
-      1,
-    );
+    // Tri par pertinence => une passe filtrée + chargement de la page.
+    expect(
+      applicationRepository.findMatchingApplications,
+    ).toHaveBeenCalledTimes(1);
     expect(applicationRepository.findApplications).not.toHaveBeenCalled();
 
-    const [, where, rankedIds] =
-      applicationRepository.findApplicationsRanked.mock.calls[0];
+    const [where] =
+      applicationRepository.findMatchingApplications.mock.calls[0];
     expect(where.AND).toContainEqual({ id: { in: ["app-x", "app-y"] } });
-    expect(rankedIds).toEqual(["app-x", "app-y"]);
+
+    // La page est chargée dans l'ordre de pertinence du moteur (app-x d'abord),
+    // pas dans l'ordre de la passe filtrée.
+    const [, orderedIds] =
+      applicationRepository.findApplicationsPage.mock.calls[0];
+    expect(orderedIds).toEqual(["app-x", "app-y"]);
+  });
+
+  it("avec q : total et IQ moyen calculés depuis la passe filtrée", async () => {
+    const { service } = setup(
+      ["app-x", "app-y"],
+      [
+        { id: "app-x", quality: 80 },
+        { id: "app-y", quality: 40 },
+      ],
+    );
+
+    const result = await service.search(
+      { q: "gestion" } as ApplicationSearchDto,
+      requestor,
+    );
+
+    expect(result.total).toBe(2);
+    expect(result.averageIq).toBe(60);
   });
 
   it("avec qPrefix : utilise le moteur préfixe (prioritaire sur q) et trie par pertinence", async () => {
-    const { service, applicationRepository, applicationSearchService } = setup([
-      "app-x",
-    ]);
+    const { service, applicationRepository, applicationSearchService } = setup(
+      ["app-x"],
+      [{ id: "app-x", quality: 50 }],
+    );
 
     await service.search(
       { qPrefix: "tow muel", q: "ignore" } as ApplicationSearchDto,
@@ -120,9 +153,9 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
       "tow muel",
     );
     expect(applicationSearchService.fullTextSearch).not.toHaveBeenCalled();
-    expect(applicationRepository.findApplicationsRanked).toHaveBeenCalledTimes(
-      1,
-    );
+    expect(
+      applicationRepository.findMatchingApplications,
+    ).toHaveBeenCalledTimes(1);
   });
 
   it("avec q ET un tri explicite : conserve le filtre full-text mais respecte le tri demandé", async () => {
@@ -143,10 +176,46 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     );
     // Tri explicite (quality) => findApplications classique, pas le tri pertinence.
     expect(applicationRepository.findApplications).toHaveBeenCalledTimes(1);
-    expect(applicationRepository.findApplicationsRanked).not.toHaveBeenCalled();
+    expect(
+      applicationRepository.findMatchingApplications,
+    ).not.toHaveBeenCalled();
 
     const [, where] = applicationRepository.findApplications.mock.calls[0];
     expect(where.AND).toContainEqual({ id: { in: ["app-x"] } });
+  });
+
+  it("avec un tri SQL brut : une seule passe filtrée puis tri des ids", async () => {
+    const { service, applicationRepository, prismaQueryBuilder } = setup(
+      [],
+      [
+        { id: "app-a", quality: 20 },
+        { id: "app-b", quality: 60 },
+      ],
+    );
+    prismaQueryBuilder.isRawSort.mockReturnValue(true);
+    prismaQueryBuilder.sortApplicationIdsRaw.mockResolvedValue([
+      "app-b",
+      "app-a",
+    ]);
+
+    const result = await service.search(
+      { sortBy: "moa", order: "asc" } as ApplicationSearchDto,
+      requestor,
+    );
+
+    expect(
+      applicationRepository.findMatchingApplications,
+    ).toHaveBeenCalledTimes(1);
+    expect(prismaQueryBuilder.sortApplicationIdsRaw).toHaveBeenCalledWith(
+      ["app-a", "app-b"],
+      "moa",
+      "asc",
+    );
+    const [, orderedIds] =
+      applicationRepository.findApplicationsPage.mock.calls[0];
+    expect(orderedIds).toEqual(["app-b", "app-a"]);
+    expect(result.total).toBe(2);
+    expect(result.averageIq).toBe(40);
   });
 
   it("sans aucune permission : renvoie un résultat vide", async () => {
@@ -169,6 +238,8 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
       technicalDebtPoints: [],
     });
     expect(applicationRepository.findApplications).not.toHaveBeenCalled();
-    expect(applicationRepository.findApplicationsRanked).not.toHaveBeenCalled();
+    expect(
+      applicationRepository.findMatchingApplications,
+    ).not.toHaveBeenCalled();
   });
 });

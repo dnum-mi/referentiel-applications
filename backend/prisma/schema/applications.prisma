@@ -77,6 +77,10 @@ model Application {
   @@index([label])
   @@index([shortName])
   @@index([currentStatusId])
+  // Index trigramme pour les filtres « contient » (ILIKE '%...%') des
+  // paramètres de recherche `search`, `label` et `shortName`.
+  @@index([label(ops: raw("gin_trgm_ops"))], map: "Application_label_trgm_idx", type: Gin)
+  @@index([shortName(ops: raw("gin_trgm_ops"))], map: "Application_shortName_trgm_idx", type: Gin)
 }
 
 /// Suit l'historique des statuts d'une application.

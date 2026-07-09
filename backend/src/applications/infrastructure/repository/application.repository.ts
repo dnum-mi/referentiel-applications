@@ -111,93 +111,83 @@ export class ApplicationRepository implements IApplicationRepository {
     where: Prisma.ApplicationWhereInput,
     orderBy: Prisma.ApplicationOrderByWithRelationInput,
   ): Promise<ApplicationSearchResultDto> {
-    const { page, pageSize } = filters;
+    const { page = 0, pageSize } = filters;
+    const skip =
+      pageSize && pageSize > 0 ? Math.max(0, page) * pageSize : undefined;
+    const take = pageSize && pageSize > 0 ? pageSize : undefined;
 
-    const paginatedResult = await this.prisma.application.paginate({
-      where,
-      orderBy,
-      page,
-      pageSize,
-      include: this.buildListInclude(),
-    });
-
-    // Calculate average IQ across all matching applications (not just paginated results)
-    const avgResult = await this.prisma.application.aggregate({
-      where,
-      _avg: {
-        quality: true,
-      },
-    });
+    // Une seule requête d'agrégation (total + IQ moyen sur l'ensemble des
+    // résultats, toutes pages confondues), lancée en parallèle de la page.
+    const [results, aggregate] = await Promise.all([
+      this.prisma.application.findMany({
+        where,
+        orderBy,
+        skip,
+        take,
+        include: this.buildListInclude(),
+      }),
+      this.prisma.application.aggregate({
+        where,
+        _count: { _all: true },
+        _avg: { quality: true },
+      }),
+    ]);
 
     // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
     return {
-      ...paginatedResult,
-      // must use assertion due to paginate plugin doesn't preserve types if we are using limit select
-      results: paginatedResult.results.map((app) =>
-        this.flattenTechnicalDebt(app),
-      ),
-      averageIq: avgResult._avg.quality ?? 0,
+      results: results.map((app) => this.flattenTechnicalDebt(app)),
+      total: aggregate._count._all,
+      averageIq: aggregate._avg.quality ?? 0,
     } as unknown as ApplicationSearchResultDto;
   }
 
   /**
-   * Liste des applications triée par pertinence full-text.
-   *
-   * `where` contient déjà la restriction `id IN (matches FTS)` et l'ensemble des
-   * filtres structurels (droits, conformité, hébergement, statut...). On
-   * intersecte ces filtres avec l'ordre de pertinence fourni par le moteur de
-   * recherche, puis on pagine et on charge les fiches de la page uniquement.
+   * Identifiants (et IQ) des applications passant les filtres structurels.
+   * Une seule passe filtrée qui donne à la fois l'ensemble des résultats,
+   * leur total et de quoi calculer l'IQ moyen — sans requête d'agrégation
+   * supplémentaire.
    */
-  public async findApplicationsRanked(
-    filters: ApplicationSearchFilters,
+  public async findMatchingApplications(
     where: Prisma.ApplicationWhereInput,
-    rankedIds: string[],
-  ): Promise<ApplicationSearchResultDto> {
+  ): Promise<{ id: string; quality: number }[]> {
+    return this.prisma.application.findMany({
+      where,
+      select: { id: true, quality: true },
+    });
+  }
+
+  /**
+   * Charge les fiches complètes d'une page d'identifiants, dans l'ordre fourni
+   * (pertinence full-text ou tri SQL brut). `orderedIds` est déjà filtré ;
+   * la pagination est appliquée ici (pageSize <= 0 => pas de pagination).
+   */
+  public async findApplicationsPage(
+    filters: ApplicationSearchFilters,
+    orderedIds: string[],
+  ): Promise<ApplicationSearchResultDto["results"]> {
     const { page = 0, pageSize = 15 } = filters;
 
-    // 1. Quels ids (déjà restreints aux matches FTS) passent les filtres structurels ?
-    const passing = await this.prisma.application.findMany({
-      where,
-      select: { id: true },
-    });
-    const passingSet = new Set(passing.map((app) => app.id));
-
-    // 2. Conserver l'ordre de pertinence renvoyé par le moteur de recherche.
-    const orderedIds = rankedIds.filter((id) => passingSet.has(id));
-    const total = orderedIds.length;
-
-    // 3. Paginer la liste d'ids (pageSize <= 0 => pas de pagination).
     const safePage = Math.max(0, page);
     const pageIds =
       pageSize > 0
         ? orderedIds.slice(safePage * pageSize, safePage * pageSize + pageSize)
         : orderedIds;
 
-    // 4. Charger les fiches complètes de la page, puis ré-ordonner par pertinence.
-    const records = pageIds.length
-      ? await this.prisma.application.findMany({
-          where: { id: { in: pageIds } },
-          include: this.buildListInclude(),
-        })
-      : [];
-    const byId = new Map(records.map((record) => [record.id, record]));
-    const orderedResults = pageIds
-      .map((id) => byId.get(id))
-      .filter((record): record is NonNullable<typeof record> =>
-        Boolean(record),
-      );
+    if (!pageIds.length) return [];
 
-    // 5. IQ moyen sur l'ensemble du résultat (toutes pages confondues).
-    const avgResult = await this.prisma.application.aggregate({
-      where: { id: { in: orderedIds } },
-      _avg: { quality: true },
+    const records = await this.prisma.application.findMany({
+      where: { id: { in: pageIds } },
+      include: this.buildListInclude(),
     });
+    const byId = new Map(records.map((record) => [record.id, record]));
 
-    return {
-      results: orderedResults.map((app) => this.flattenTechnicalDebt(app)),
-      total,
-      averageIq: avgResult._avg.quality ?? 0,
-    } as unknown as ApplicationSearchResultDto;
+    // Prisma decimal extension returns runtime numbers, so we cast to API DTOs.
+    return pageIds
+      .map((id) => byId.get(id))
+      .filter((record): record is NonNullable<typeof record> => Boolean(record))
+      .map((app) =>
+        this.flattenTechnicalDebt(app),
+      ) as unknown as ApplicationSearchResultDto["results"];
   }
 
   /**

@@ -246,6 +246,108 @@ describe("Applications", () => {
   });
 });
 
+describe("Applications — recherche full-text (q / qPrefix)", () => {
+  const app = setupTestSuite();
+  let user: UserFakerReturnType;
+  let TOKEN: string;
+  let appStrongMatch: AsyncReturnType<typeof ApplicationFaker.create>;
+  let appWeakMatch: AsyncReturnType<typeof ApplicationFaker.create>;
+  // Terme de recherche unique à cette exécution : la base de test est partagée
+  // entre les fichiers de test (workers parallèles), un libellé en dur
+  // violerait l'unicité (label, description) et fausserait les correspondances.
+  const token = `zorglub${faker.string.alpha({ length: 8, casing: "lower" })}`;
+
+  beforeAll(async () => {
+    user = await UserFaker.create({ role: Roles.READER });
+    TOKEN = await getToken(user);
+
+    const prisma = getPrismaClient();
+    appStrongMatch = await ApplicationFaker.create(user);
+    appWeakMatch = await ApplicationFaker.create(user);
+
+    // Libellés contrôlés : le jeton n'apparaît que dans ces deux fiches.
+    // Match fort = terme dans le label (poids A), match faible = seulement
+    // dans la description (poids B).
+    await prisma.application.update({
+      where: { id: appStrongMatch.id },
+      data: {
+        label: `Facturation ${token}`,
+        description: `Portail de gestion des factures ${token}`,
+      },
+    });
+    await prisma.application.update({
+      where: { id: appWeakMatch.id },
+      data: {
+        label: "Application quelconque",
+        description: `Application sans rapport qui mentionne ${token} une fois`,
+      },
+    });
+
+    // L'index full-text est une vue matérialisée : on la rafraîchit
+    // explicitement plutôt que d'attendre le rafraîchissement différé.
+    await prisma.$executeRawUnsafe(
+      "REFRESH MATERIALIZED VIEW application_search_index",
+    );
+  });
+
+  it("q= : restreint aux fiches correspondantes, triées par pertinence", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ q: token, pageSize: 0 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const resultIds = response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+    expect(resultIds).toEqual([appStrongMatch.id, appWeakMatch.id]);
+    expect(response.body.total).toBe(2);
+    expect(typeof response.body.averageIq).toBe("number");
+  });
+
+  it("q= : la pagination conserve le total de l'ensemble des résultats", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ q: token, page: 0, pageSize: 1 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(response.body.results).toHaveLength(1);
+    expect(response.body.results[0].id).toBe(appStrongMatch.id);
+    expect(response.body.total).toBe(2);
+  });
+
+  it("qPrefix= : trouve les fiches dès les premières lettres", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ qPrefix: token.slice(0, -3), pageSize: 8 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const resultIds = response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+    expect(resultIds).toContain(appStrongMatch.id);
+    expect(resultIds).toContain(appWeakMatch.id);
+  });
+
+  it("q= combiné à un tri SQL brut (sortBy=moa) : filtre conservé", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ q: token, sortBy: "moa", order: "asc", pageSize: 0 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const resultIds = response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+    expect(resultIds).toHaveLength(2);
+    expect(resultIds).toContain(appStrongMatch.id);
+    expect(resultIds).toContain(appWeakMatch.id);
+    expect(response.body.total).toBe(2);
+  });
+});
+
 describe("application guard", () => {
   const app = setupTestSuite();
   let appOwner: UserFakerReturnType;
