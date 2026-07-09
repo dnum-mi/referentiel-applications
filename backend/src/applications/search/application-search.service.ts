@@ -23,14 +23,56 @@ export interface ApplicationSearchEngine {
 
 const MATERIALIZED_VIEW = "application_search_index";
 
+/**
+ * Plafond de résultats pour la recherche préfixe (autocomplétion). Un préfixe
+ * court (« a ») peut matcher quasi toutes les applications ; l'autocomplétion
+ * n'affiche que les premiers résultats, inutile de classer et transporter
+ * l'intégralité de la base.
+ */
+const PREFIX_RESULT_LIMIT = 200;
+
+/** Durée de vie du cache des résultats FTS. Courte : elle borne seulement la
+ * staleness si l'index est rafraîchi par une autre instance de l'application. */
+const CACHE_TTL_MS = 30_000;
+const CACHE_MAX_ENTRIES = 500;
+
 @Injectable()
 export class ApplicationSearchService implements ApplicationSearchEngine {
   private readonly logger = new Logger(ApplicationSearchService.name);
   private refreshTimer?: ReturnType<typeof setTimeout>;
   private isRefreshing = false;
   private refreshQueued = false;
+  /**
+   * Cache mémoire des résultats par requête normalisée. L'index ne change
+   * qu'au REFRESH de la vue matérialisée : le cache est vidé à ce moment-là
+   * (+ TTL de sécurité). Il absorbe les requêtes répétées de l'autocomplétion
+   * et les allers-retours de pagination sur une même recherche.
+   */
+  private readonly resultCache = new Map<
+    string,
+    { at: number; rows: RankedApplication[] }
+  >();
 
   constructor(private readonly prisma: PrismaService) {}
+
+  private getCached(key: string): RankedApplication[] | undefined {
+    const entry = this.resultCache.get(key);
+    if (!entry) return undefined;
+    if (Date.now() - entry.at > CACHE_TTL_MS) {
+      this.resultCache.delete(key);
+      return undefined;
+    }
+    return entry.rows;
+  }
+
+  private setCached(key: string, rows: RankedApplication[]): void {
+    if (this.resultCache.size >= CACHE_MAX_ENTRIES) {
+      // Éviction simple de la plus ancienne entrée (ordre d'insertion).
+      const oldest = this.resultCache.keys().next().value;
+      if (oldest !== undefined) this.resultCache.delete(oldest);
+    }
+    this.resultCache.set(key, { at: Date.now(), rows });
+  }
 
   /**
    * Recherche full-text : renvoie les identifiants d'applications correspondant
@@ -46,6 +88,10 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
     const trimmed = query?.trim();
     if (!trimmed) return [];
 
+    const cacheKey = `f:${trimmed.toLowerCase()}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
     const rows = await this.prisma.$queryRaw<
       { applicationId: string; rank: number }[]
     >`
@@ -57,7 +103,12 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
       ORDER BY rank DESC
     `;
 
-    return rows.map((row) => ({ id: row.applicationId, rank: row.rank }));
+    const results = rows.map((row) => ({
+      id: row.applicationId,
+      rank: row.rank,
+    }));
+    this.setCached(cacheKey, results);
+    return results;
   }
 
   /**
@@ -67,6 +118,9 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
    * ET. Ainsi « tow muel » trouve « Towne, Mueller… » avant même que les mots
    * soient complets. Les caractères non alphanumériques sont retirés pour
    * produire une `to_tsquery` toujours valide (pas d'injection d'opérateurs).
+   *
+   * Résultats plafonnés à {@link PREFIX_RESULT_LIMIT} : un préfixe très court
+   * matcherait toute la base, or l'autocomplétion n'en affiche qu'une poignée.
    */
   public async fullTextSearchPrefix(
     query: string,
@@ -81,6 +135,10 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
 
     const tsQuery = tokens.map((token) => `${token}:*`).join(" & ");
 
+    const cacheKey = `p:${tsQuery.toLowerCase()}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
     const rows = await this.prisma.$queryRaw<
       { applicationId: string; rank: number }[]
     >`
@@ -90,9 +148,15 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
            to_tsquery('french', immutable_unaccent(${tsQuery})) AS q(query)
       WHERE asi.document @@ q.query
       ORDER BY rank DESC
+      LIMIT ${PREFIX_RESULT_LIMIT}
     `;
 
-    return rows.map((row) => ({ id: row.applicationId, rank: row.rank }));
+    const results = rows.map((row) => ({
+      id: row.applicationId,
+      rank: row.rank,
+    }));
+    this.setCached(cacheKey, results);
+    return results;
   }
 
   /**
@@ -103,6 +167,8 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
     await this.prisma.$executeRawUnsafe(
       `REFRESH MATERIALIZED VIEW CONCURRENTLY ${MATERIALIZED_VIEW}`,
     );
+    // L'index vient de changer : les résultats mémorisés sont périmés.
+    this.resultCache.clear();
   }
 
   /**

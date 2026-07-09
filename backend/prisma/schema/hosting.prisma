@@ -39,6 +39,8 @@ model Hosting {
   metadatas       Metadata[]
   /// Indique si ce site d'hébergement est actif 
   isActive        Boolean?
+
+  @@index([applicationId])
 }
 
 /// Nature/type d'infrastructure d'hébergement

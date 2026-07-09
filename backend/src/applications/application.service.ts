@@ -287,29 +287,37 @@ export class ApplicationService {
       searchParams.sortBy ?? (hasFullText ? "relevance" : "shortName");
     const orderBy = this.prismaQueryBuilder.buildOrderBy(sortBy, order);
 
-    const hasAppList = await this.checkPermissions.can(
-      [Permission.AppList],
-      requestor,
-    );
-    const hasAppRead = await this.checkPermissions.can(
-      [Permission.AppRead],
-      requestor,
-    );
+    const [hasAppList, hasAppRead] = await Promise.all([
+      this.checkPermissions.can([Permission.AppList], requestor),
+      this.checkPermissions.can([Permission.AppRead], requestor),
+    ]);
 
     if (!hasAppList && !hasAppRead) {
       return { results: [], total: 0, averageIq: 0, technicalDebtPoints: [] };
     }
 
-    const where = await this.prismaQueryBuilder.buildSearchWhere(
-      searchParams,
-      requestor,
-      hasAppList
-        ? undefined
-        : {
-            actorEmail: requestor?.email,
-            businessDivisionId: requestor?.organization?.businessDivisionId,
-          },
-    );
+    // La recherche full-text est indépendante de la construction des filtres
+    // structurels : les deux sont lancées en parallèle.
+    const rankedPromise: Promise<string[] | undefined> = !hasFullText
+      ? Promise.resolve(undefined)
+      : (prefixText
+          ? this.applicationSearchService.fullTextSearchPrefix(prefixText)
+          : this.applicationSearchService.fullTextSearch(fullText as string)
+        ).then((ranked) => ranked.map((result) => result.id));
+
+    const [where, rankedIds] = await Promise.all([
+      this.prismaQueryBuilder.buildSearchWhere(
+        searchParams,
+        requestor,
+        hasAppList
+          ? undefined
+          : {
+              actorEmail: requestor?.email,
+              businessDivisionId: requestor?.organization?.businessDivisionId,
+            },
+      ),
+      rankedPromise,
+    ]);
 
     if (searchParams.millesime != null) {
       where.AND.push(
@@ -319,14 +327,7 @@ export class ApplicationService {
 
     // Recherche full-text : on restreint l'ensemble aux applications retournées
     // par le moteur de recherche, en conservant leur ordre de pertinence.
-    let rankedIds: string[] | undefined;
-    if (hasFullText) {
-      const ranked = prefixText
-        ? await this.applicationSearchService.fullTextSearchPrefix(prefixText)
-        : await this.applicationSearchService.fullTextSearch(
-            fullText as string,
-          );
-      rankedIds = ranked.map((result) => result.id);
+    if (rankedIds) {
       where.AND.push({ id: { in: rankedIds } });
     }
 
@@ -336,27 +337,38 @@ export class ApplicationService {
 
     let paginatedResult: ApplicationSearchResultDto;
 
-    if (useRawSort) {
-      const matching = await this.prisma.application.findMany({
-        where,
-        select: { id: true },
-      });
-      const sortedIds = await this.prismaQueryBuilder.sortApplicationIdsRaw(
-        matching.map((a) => a.id),
-        sortBy,
-        order,
-      );
-      paginatedResult = await this.applicationRepository.findApplicationsRanked(
+    if (useRelevance || useRawSort) {
+      // Une seule passe filtrée donne les ids retenus, le total et l'IQ moyen ;
+      // seules les fiches de la page demandée sont ensuite chargées.
+      const matching =
+        await this.applicationRepository.findMatchingApplications(where);
+      const total = matching.length;
+      const averageIq = total
+        ? matching.reduce((sum, app) => sum + app.quality, 0) / total
+        : 0;
+
+      let orderedIds: string[];
+      if (useRelevance) {
+        // Conserver l'ordre de pertinence renvoyé par le moteur de recherche.
+        const matchingSet = new Set(matching.map((app) => app.id));
+        orderedIds = (rankedIds ?? []).filter((id) => matchingSet.has(id));
+      } else {
+        orderedIds = await this.prismaQueryBuilder.sortApplicationIdsRaw(
+          matching.map((app) => app.id),
+          sortBy,
+          order,
+        );
+      }
+
+      const results = await this.applicationRepository.findApplicationsPage(
         searchParams,
-        where,
-        sortedIds,
+        orderedIds,
       );
-    } else if (useRelevance) {
-      paginatedResult = await this.applicationRepository.findApplicationsRanked(
-        searchParams,
-        where,
-        rankedIds ?? [],
-      );
+      paginatedResult = {
+        results,
+        total,
+        averageIq,
+      } as ApplicationSearchResultDto;
     } else {
       paginatedResult = await this.applicationRepository.findApplications(
         searchParams,

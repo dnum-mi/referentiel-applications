@@ -7,7 +7,6 @@ import type {
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
-import { useDebounceFn } from "@vueuse/core";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 
@@ -72,6 +71,33 @@ const total = ref(0);
 const averageIq = ref<number>(0);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
+
+// Filtres saisis au clavier (texte, curseurs) : la recherche est débouncée pour
+// ne pas interroger l'API à chaque frappe. Les autres filtres (cases à cocher,
+// tri, pagination) déclenchent une recherche immédiate, sans latence perçue.
+const DEBOUNCED_FILTER_KEYS = new Set<string>([
+  "search",
+  "label",
+  "link",
+  "hostingSite",
+  "hostingPlatform",
+  "hostingProvider",
+  "hostingBuilding",
+  "hostingRoom",
+  "organization",
+  "actorEmail",
+  "dataSourceName",
+  "iqGte",
+  "iqLte",
+]);
+
+// Timer partagé entre toutes les instances du composable : une seule recherche
+// en attente à la fois, quel que soit le composant qui modifie les filtres.
+let pendingSearchTimer: ReturnType<typeof setTimeout> | undefined;
+
+// Identifiant de la dernière recherche « stockée » partie sur le réseau : une
+// réponse dépassée par une requête plus récente ne doit pas écraser l'état.
+let latestStoredSearchId = 0;
 
 type QueryParam = LocationQueryValue | LocationQueryValue[];
 
@@ -204,7 +230,20 @@ export function useApplicationSearch() {
   const route = useRoute();
   const router = useRouter();
 
-  const debouncedSearch = useDebounceFn(() => searchApplications(), 300);
+  function scheduleSearch(immediate: boolean) {
+    if (pendingSearchTimer) clearTimeout(pendingSearchTimer);
+    // Même en mode immédiat, on passe par un timer à 0 ms : plusieurs
+    // modifications de filtres dans un même tick (ex. initialisation d'une
+    // page) sont ainsi coalescées en une seule requête.
+    pendingSearchTimer = setTimeout(
+      () => {
+        pendingSearchTimer = undefined;
+        // Les erreurs sont déjà capturées dans `error` par searchApplications.
+        searchApplications().catch(() => {});
+      },
+      immediate ? 0 : 300,
+    );
+  }
 
   const filters = ref<Filters>({
     ...DEFAULT_FILTERS,
@@ -233,7 +272,10 @@ export function useApplicationSearch() {
 
     router.replace({ query: nextQuery });
 
-    debouncedSearch();
+    // Seule la saisie texte est débouncée ; cocher un filtre, trier ou changer
+    // de page lance la recherche immédiatement.
+    const needsDebounce = Object.keys(values).some((key) => DEBOUNCED_FILTER_KEYS.has(key));
+    scheduleSearch(!needsDebounce);
   }
 
   function setOrder(ascending: boolean) {
@@ -243,10 +285,16 @@ export function useApplicationSearch() {
   function resetFilters() {
     filters.value = { ...DEFAULT_FILTERS };
     router.replace({ query: {} });
-    searchApplications();
+    // Annule une éventuelle recherche débouncée en attente avant de relancer.
+    scheduleSearch(true);
   }
 
   async function searchApplications(customFilters?: Partial<Filters>, store = true) {
+    // Les appels « stockés » sont numérotés : si une requête plus récente est
+    // partie entre-temps, la réponse courante est ignorée (anti-course).
+    const searchId = store ? ++latestStoredSearchId : 0;
+    const isCurrent = () => !store || searchId === latestStoredSearchId;
+
     if (store) {
       isLoading.value = true;
     }
@@ -257,15 +305,19 @@ export function useApplicationSearch() {
       const query = cleanFilters(currentFilters);
 
       const response = await api.applicationControllerSearch({ query });
-      const statsStore = useStatisticsStore();
-      await statsStore.countApplications();
-      statsStore.countTechnicalDebtPoints(response.data?.technicalDebtPoints.length ?? 0);
 
       if (!response.response.ok || !response.data) {
         throw new Error("Erreur lors de la recherche d'applications");
       }
 
-      if (store) {
+      // Le total non filtré est mémoïsé dans le store : au plus un appel léger,
+      // hors du chemin critique de la recherche.
+      const statsStore = useStatisticsStore();
+      statsStore.countApplications().catch(() => {});
+
+      if (store && isCurrent()) {
+        statsStore.countTechnicalDebtPoints(response.data.technicalDebtPoints.length ?? 0);
+
         const dataWithAverage = response.data;
         results.value = response.data.results;
         technicalDebtPoints.value = response.data.technicalDebtPoints;
@@ -277,10 +329,12 @@ export function useApplicationSearch() {
 
       return response.data;
     } catch (err: unknown) {
-      error.value = err instanceof Error ? err.message : "Erreur inconnue";
+      if (isCurrent()) {
+        error.value = err instanceof Error ? err.message : "Erreur inconnue";
+      }
       throw err;
     } finally {
-      if (store) {
+      if (store && isCurrent()) {
         isLoading.value = false;
       }
     }
