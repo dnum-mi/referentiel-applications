@@ -8,12 +8,14 @@
 - [DataCatalog](#datacatalog)
 - [Hosting](#hosting)
 - [Labels](#labels)
+- [License](#license)
 - [Metadata](#metadata)
 - [Notifications](#notifications)
 - [Organizations](#organizations)
 - [Users](#users)
 - [Signalements](#signalements)
 - [Statistics](#statistics)
+- [Technology](#technology)
 - [default](#default)
 
 ## Applications
@@ -598,6 +600,32 @@ Properties as follows:
 - `id`: Identifiant unique
 - `source`: Nom unique du système source
 
+## License
+
+```mermaid
+erDiagram
+"License" {
+  String id PK
+  String applicationId FK
+  String name
+  String(50) version "nullable"
+}
+```
+
+### `License`
+
+Licence logicielle utilisée par une application.
+Une application peut référencer 0 à N licences, une par identifiant de licence.
+Le nom suit de préférence un identifiant SPDX (ex. « MIT », « Apache-2.0 »),
+mais la saisie libre reste possible (normalisation assurée côté frontend).
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `applicationId`: Identifiant de l'application
+- `name`: Nom / identifiant SPDX de la licence (ex. « MIT », « Apache-2.0 »)
+- `version`: Version de la licence si pertinent (ex. « 2.0 »)
+
 ## Metadata
 
 ```mermaid
@@ -617,6 +645,8 @@ erDiagram
   String hostingId FK "nullable"
   String technicalDebtInfoId FK "nullable"
   String rgaaComplianceId FK "nullable"
+  String technologyStackId FK "nullable"
+  String licenseId FK "nullable"
   String dataApplicationId FK "nullable"
   String dataDescriptionId FK "nullable"
 }
@@ -643,6 +673,8 @@ Properties as follows:
 - `hostingId`:
 - `technicalDebtInfoId`:
 - `rgaaComplianceId`:
+- `technologyStackId`:
+- `licenseId`:
 - `dataApplicationId`:
 - `dataDescriptionId`:
 
@@ -1001,6 +1033,36 @@ Properties as follows:
 - `valeur`: Valeur numérique de cette statistique
 - `type`: Type de statistique
 - `date`: Date à laquelle cette statistique s'applique
+
+## Technology
+
+```mermaid
+erDiagram
+"TechnologyStack" {
+  String id PK
+  String applicationId FK
+  String technology
+  String(50) version "nullable"
+  DateTime eolDate "nullable"
+  DateTime eolCheckedAt "nullable"
+}
+```
+
+### `TechnologyStack`
+
+Élément de la stack technique d'une application (technologie + version).
+Une application peut référencer 0 à N technologies, une par technologie.
+Les champs de fin de vie (eolDate / eolCheckedAt) sont prévus pour une
+intégration ultérieure de https://endoflife.date (cf. #1099).
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `applicationId`: Identifiant de l'application
+- `technology`: Nom de la technologie (ex. « Node.js », « PostgreSQL »)
+- `version`: Version utilisée (ex. « 20.11 »)
+- `eolDate`: Date de fin de support/vie de la version (renseignée via endoflife.date)
+- `eolCheckedAt`: Date de dernière vérification du statut de fin de vie
 
 ## default
 
