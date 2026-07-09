@@ -20,14 +20,17 @@ const emit = defineEmits<{
 const permDict = {
   none: {
     label: "-",
+    text: "Aucun droit (-)",
     class: "permission-none",
   },
   Read: {
     label: "RO",
+    text: "Lecture seule (RO)",
     class: "permission-Read",
   },
   Write: {
     label: "RW",
+    text: "Lecture et écriture (RW)",
     class: "permission-Write",
   },
 };
@@ -43,6 +46,13 @@ if (props.write) {
 }
 const foundIndex = permOrder.indexOf(currentPermission);
 const permIndex = ref(foundIndex === -1 ? 0 : foundIndex);
+
+const toggleTitle = computed(() => {
+  const current = permDict[permOrder[permIndex.value]];
+  const nextIndex = permIndex.value >= permOrder.length - 1 ? 0 : permIndex.value + 1;
+  const next = permDict[permOrder[nextIndex]];
+  return `Sélection actuelle : ${current.text}, après activation : ${next.text}`;
+});
 
 function togglePermission() {
   if (permIndex.value >= permOrder.length - 1) {
@@ -61,6 +71,8 @@ function togglePermission() {
     tertiary
     small
     :class="permDict[permOrder[permIndex]].class ?? 'permission-error'"
+    :title="toggleTitle"
+    :aria-label="toggleTitle"
     data-testid="permission-toggle"
     :data-state="permOrder[permIndex]"
     @click="togglePermission"

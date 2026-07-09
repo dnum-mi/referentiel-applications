@@ -205,4 +205,14 @@ test.describe("Permissions & rôles", () => {
       await data.updatePermsMatrix(snapshot);
     }
   });
+
+  test("PRM-13 - la légende de la matrice des permissions est visible avant la table", async ({
+    page,
+  }) => {
+    await loginAs(page, "admin");
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.openPermsMatrixTab();
+    await admin.expectPermsMatrixLegendVisible();
+  });
 });

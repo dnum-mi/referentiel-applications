@@ -55,7 +55,8 @@ const unsubscribe = async (appId: string) => {
               class="fr-btn--secondary fr-btn--sm"
               :disabled="isUpdating"
               @click="unsubscribe(app.id)"
-              title="Ne plus suivre cette application"
+              :title="`${app.label} - Désabonner`"
+              :aria-label="`Désabonner de ${app.label}`"
               data-testid="user-unsubscribe-button"
             >
               Désabonner

@@ -44,10 +44,10 @@ const averageIqDisplay = computed(() => {
         <ApplicationSearchActions />
       </div>
 
-      <div class="average-iq" data-testid="application-average-iq">
+      <p class="average-iq" data-testid="application-average-iq">
         <span class="average-iq__label">IQ moyen (Applications Filtrées) : </span>
         <span class="average-iq__value">{{ averageIqDisplay }}</span>
-      </div>
+      </p>
 
       <section id="application-results" class="application-results" aria-live="polite" :aria-busy="isLoading" tabindex="-1">
         <ApplicationTableView v-if="displayMode === 'table'" data-testid="application-table-view" />

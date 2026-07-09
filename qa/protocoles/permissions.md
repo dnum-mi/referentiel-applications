@@ -87,3 +87,10 @@
 - **Résultat attendu** : la première entrée de l'historique contient « Modification de la matrice des
   droits » ; le détail mentionne le type d'acteur modifié et les permissions changées. La matrice est
   restaurée via l'API en `finally`.
+
+### PRM-13 — Légende de la matrice des permissions visible ✅
+
+- **Datafeature** : utilisateur `admin` (lecture seule, aucune dépendance de données).
+- **Action** : onglet matrice (`panel-app-perms-matrix`) → observer la zone au-dessus du tableau.
+- **Résultat attendu** : `app-perms-legend` affiche la légende (`-` aucun droit, `RO` lecture seule,
+  `RW` lecture et écriture) et précède `app-perms-table` dans le DOM (affichée juste au-dessus).

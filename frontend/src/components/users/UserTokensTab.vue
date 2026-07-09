@@ -170,7 +170,15 @@ onMounted(() => {
       <p class="fr-mb-1w"><strong>Attention :</strong> Copiez ce token maintenant, il ne sera plus affiché.</p>
       <div class="token-display fr-mb-1w">
         <code class="token-value">{{ newlyCreatedToken.password }}</code>
-        <DsfrButton size="sm" secondary icon="ri-file-copy-line" @click="copyToClipboard(newlyCreatedToken.password)"> Copier </DsfrButton>
+        <DsfrButton
+          size="sm"
+          secondary
+          icon="ri-file-copy-line"
+          aria-label="Copier le token"
+          @click="copyToClipboard(newlyCreatedToken.password)"
+        >
+          Copier
+        </DsfrButton>
       </div>
     </DsfrAlert>
 

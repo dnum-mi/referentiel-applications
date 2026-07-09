@@ -101,6 +101,118 @@ export class DataFeature {
     return page?.results?.[0] ?? null;
   }
 
+  // --- Historique des modifications (HIS-12) ---
+  //
+  // Le journal des `Metadata` est **généré automatiquement** par le backend en réaction à des
+  // actions (création/modification d'application, etc.) : il n'y a pas de droit d'écriture dédié
+  // (cf. `permissions.prisma` : « MetadataRead // Voir l'historique des metadonnees. Pas de write :
+  // donnees generees automatiquement »), donc aucun `POST /metadatas`. On ne peut donc pas semer une
+  // entrée directement ; en revanche on peut **provoquer** sa création en écrivant sur une ressource
+  // qu'elle documente (`applications.service.ts` → `MetadatasService.createMetadata`) :
+  //   - `POST /applications` déclenche une entrée `action=add` dont la description tient sur une
+  //     seule ligne (titre seul, pas de diff de champs) → profil "mono-ligne" (HIS-12 cas 1).
+  //   - `PATCH /applications/{id}` (avec un champ suivi réellement modifié, ex. `label`) déclenche
+  //     une entrée `action=update` dont la description tient sur 3 lignes (titre + « Ancienne(s)
+  //     valeur(s) » + « Nouvelle(s) valeur(s) ») → profil "multi-ligne" (HIS-12 cas 2).
+  // Stratégie retenue : lecture API pure d'abord (`findMonoLineMetadata`/`findMultiLineMetadata`,
+  // pattern `anyMetadata`) ; si le jeu courant ne contient aucune entrée du profil recherché parmi
+  // les plus récentes, on sème "create-if-absent" via une application de test jetable
+  // (`ensureMonoLineMetadata`/`ensureMultiLineMetadata`), nettoyée par l'appelant (`removeApplication`
+  // en `finally`) — la suppression cascade sur ses `Metadata` (`onDelete: Cascade` côté schéma).
+
+  /**
+   * Une entrée existante de l'historique dont la description est mono-ligne (pas de `\n`), parmi
+   * les `probe` plus récentes, ou `null` si aucune ne correspond.
+   */
+  async findMonoLineMetadata(probe = 50): Promise<{ id: string } | null> {
+    const list = await this.api.metadatas(
+      `pageSize=${probe}&page=0&sortBy=createdAt&order=desc`,
+    );
+    return (
+      list?.results?.find(
+        (m) => (m.description ?? "").split("\n").length === 1,
+      ) ?? null
+    );
+  }
+
+  /**
+   * Une entrée existante de l'historique dont la description est multi-ligne (≥ 2 lignes), parmi
+   * les `probe` plus récentes, ou `null` si aucune ne correspond.
+   */
+  async findMultiLineMetadata(probe = 50): Promise<{ id: string } | null> {
+    const list = await this.api.metadatas(
+      `pageSize=${probe}&page=0&sortBy=createdAt&order=desc`,
+    );
+    return (
+      list?.results?.find(
+        (m) => (m.description ?? "").split("\n").length > 1,
+      ) ?? null
+    );
+  }
+
+  /**
+   * Garantit une entrée d'historique à description mono-ligne (HIS-12 cas 1 : le bloc
+   * `description-details` ne doit PAS apparaître). Lit d'abord le jeu courant ; à défaut, sème une
+   * application de test (`POST /applications`, `action=add` → description mono-ligne garantie) et
+   * renvoie l'id de la metadata créée. `seededAppId` est non nul uniquement si une application a été
+   * créée pour l'occasion : l'appelant doit alors la supprimer (`removeApplication`) en `finally`.
+   */
+  async ensureMonoLineMetadata(): Promise<{
+    metadataId: string;
+    seededAppId: string | null;
+  } | null> {
+    const existing = await this.findMonoLineMetadata();
+    if (existing) return { metadataId: existing.id, seededAppId: null };
+
+    const label = `E2E-HIS12-mono-${Date.now()}`;
+    const app = await this.createTestApplication(label);
+    const list = await this.api.applicationMetadatas(
+      app.id,
+      "pageSize=5&page=0&sortBy=createdAt&order=desc",
+    );
+    const entry = list?.results?.find(
+      (m) => (m.description ?? "").split("\n").length === 1,
+    );
+    if (!entry) {
+      await this.removeApplication(app.id);
+      return null;
+    }
+    return { metadataId: entry.id, seededAppId: app.id };
+  }
+
+  /**
+   * Garantit une entrée d'historique à description multi-ligne (HIS-12 cas 2 : le bloc
+   * `description-details` doit apparaître avec au moins une `.detail-line`). Lit d'abord le jeu
+   * courant ; à défaut, sème une application de test puis modifie son libellé (`PATCH
+   * /applications/{id}`, `action=update` avec un champ réellement changé → description sur 3 lignes
+   * garantie) et renvoie l'id de la metadata créée. `seededAppId` est non nul uniquement si une
+   * application a été créée pour l'occasion : l'appelant doit alors la supprimer
+   * (`removeApplication`) en `finally`.
+   */
+  async ensureMultiLineMetadata(): Promise<{
+    metadataId: string;
+    seededAppId: string | null;
+  } | null> {
+    const existing = await this.findMultiLineMetadata();
+    if (existing) return { metadataId: existing.id, seededAppId: null };
+
+    const label = `E2E-HIS12-multi-${Date.now()}`;
+    const app = await this.createTestApplication(label);
+    await this.modifyApplication(app.id, { label: `${label}-modifiee` });
+    const list = await this.api.applicationMetadatas(
+      app.id,
+      "pageSize=5&page=0&sortBy=createdAt&order=desc",
+    );
+    const entry = list?.results?.find(
+      (m) => (m.description ?? "").split("\n").length > 1,
+    );
+    if (!entry) {
+      await this.removeApplication(app.id);
+      return null;
+    }
+    return { metadataId: entry.id, seededAppId: app.id };
+  }
+
   /** Une direction de métier (business division) du référentiel, ou `null` si aucune. */
   async firstBusinessDivision(): Promise<{ id: string; label: string } | null> {
     const page = await this.api.businessDivisions("pageSize=5&page=0");
@@ -327,6 +439,7 @@ export class DataFeature {
       label,
       shortName: label,
       description: `Auto-created by e2e test: ${label}`,
+      tags: [],
     });
     if (!created)
       throw new Error(`Création d'application impossible : ${label}`);
