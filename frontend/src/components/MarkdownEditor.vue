@@ -3,7 +3,7 @@ import { ref, watch, computed, nextTick } from "vue";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 
-const props = defineProps<{ modelValue: string; disabled: boolean; ariaLabel?: string }>();
+const props = defineProps<{ modelValue: string; disabled: boolean; ariaLabel?: string; describedby?: string }>();
 const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
 
 const localValue = ref(props.modelValue);
@@ -154,9 +154,11 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           type="button"
           class="icon-button"
           :class="{ active: currentTab === tab.value }"
+          :aria-current="currentTab === tab.value ? 'true' : undefined"
           @click="currentTab = tab.value"
         >
           <i :class="`fr-icon-${tab.icon}`" aria-hidden="true" />
+          <span class="fr-sr-only">{{ tab.value === "edit" ? "Éditer le texte en format markdown" : "Visualiser l'aperçu" }}</span>
         </button>
       </div>
 
@@ -168,6 +170,7 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           class="editor fr-input"
           :disabled
           :aria-label="ariaLabel"
+          :aria-describedby="describedby"
           :title="ariaLabel"
           rows="10"
           data-testid="markdown-textarea"

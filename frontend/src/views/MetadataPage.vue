@@ -27,6 +27,11 @@ const sortField = ref("Date");
 const sortOrder = ref(-1);
 const createdAtGte = ref<string>("");
 const createdAtLte = ref<string>("");
+const dateErrors = ref<{ from?: string; to?: string }>({});
+
+function isValidDateTime(value: string): boolean {
+  return !value || !Number.isNaN(new Date(value).getTime());
+}
 
 const metadataStore = useMetadataStore();
 
@@ -84,6 +89,15 @@ const resultsAnnouncement = ref("");
 const tableRegion = ref<HTMLElement | null>(null);
 
 async function applyFilters() {
+  dateErrors.value = {};
+  if (!isValidDateTime(createdAtGte.value)) {
+    dateErrors.value.from = "Date de début – veuillez saisir une date et une heure valides, exemple : 23/05/2026 14:30";
+  }
+  if (!isValidDateTime(createdAtLte.value)) {
+    dateErrors.value.to = "Date de fin – veuillez saisir une date et une heure valides, exemple : 23/05/2026 14:30";
+  }
+  if (dateErrors.value.from || dateErrors.value.to) return;
+
   currentPage.value = 0;
   await fetchData();
   resultsAnnouncement.value = `${data.value.total} résultat(s)`;
@@ -162,16 +176,24 @@ const metadataTableRows = computed(() =>
       <!-- Date filters -->
       <div class="fr-grid-row fr-grid-row--gutters fr-mb-1w">
         <div class="fr-col-12 fr-col-md-4">
-          <DsfrInput
+          <DsfrInputGroup
             v-model="createdAtGte"
             label="Date de début"
             label-visible
             type="datetime-local"
+            :error-message="dateErrors.from"
             data-testid="history-filter-date-from"
           />
         </div>
         <div class="fr-col-12 fr-col-md-4">
-          <DsfrInput v-model="createdAtLte" label="Date de fin" label-visible type="datetime-local" data-testid="history-filter-date-to" />
+          <DsfrInputGroup
+            v-model="createdAtLte"
+            label="Date de fin"
+            label-visible
+            type="datetime-local"
+            :error-message="dateErrors.to"
+            data-testid="history-filter-date-to"
+          />
         </div>
       </div>
 

@@ -104,6 +104,12 @@ export class MetadataDetailPage extends BasePage {
   private backBtn = () => this.byTestId("back-button");
   private error = () => this.byTestId("metadata-error");
   private notFound = () => this.byTestId("metadata-not-found");
+  // Pas de testid dédié pour ce sous-bloc : recherche par classe scopée à `metadata-description`
+  // (pattern déjà employé pour `app-perms-table`, cf. `AdminPage.expectPermsMatrixLegendVisible`).
+  private descriptionDetails = () =>
+    this.description().locator(".description-details");
+  private descriptionDetailLines = () =>
+    this.descriptionDetails().locator(".detail-line");
 
   async open(id: string): Promise<void> {
     await this.goto(`/metadatas/${id}`);
@@ -137,6 +143,24 @@ export class MetadataDetailPage extends BasePage {
   /** Vérifie que la description contient le texte attendu. */
   async expectDescriptionContains(text: string | RegExp): Promise<void> {
     await expect(this.description()).toContainText(text);
+  }
+
+  /**
+   * Description mono-ligne (pas de saut de ligne) : le sous-bloc `description-details` ne doit
+   * pas être présent dans `metadata-description` (HIS-12).
+   */
+  async expectDescriptionDetailsHidden(): Promise<void> {
+    await expect(this.description()).toBeVisible();
+    await expect(this.descriptionDetails()).toHaveCount(0);
+  }
+
+  /**
+   * Description multi-ligne : le sous-bloc `description-details` est présent avec au moins une
+   * `.detail-line` (HIS-12).
+   */
+  async expectDescriptionDetailsVisible(): Promise<void> {
+    await expect(this.descriptionDetails()).toBeVisible();
+    await expect(this.descriptionDetailLines().first()).toBeVisible();
   }
 
   /** Revient à l'historique via le bouton « Retour à l'historique ». */

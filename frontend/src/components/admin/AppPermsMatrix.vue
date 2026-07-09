@@ -70,6 +70,10 @@ function saveAppPermsMatrix() {
 </script>
 
 <template>
+  <p class="fr-text--sm fr-mb-1w" data-testid="app-perms-legend">
+    Légende : <strong>-</strong> aucun droit · <strong>RO</strong> lecture seule (Read Only) · <strong>RW</strong> lecture et écriture
+    (Read/Write).
+  </p>
   <DsfrTable title="Tableau des permissions des applications" data-testid="app-perms-table">
     <template #header>
       <tr>

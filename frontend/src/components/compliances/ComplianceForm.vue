@@ -32,6 +32,7 @@ const userStore = useUserStore();
 const toaster = useToasterStore();
 const form = ref<Partial<ComplianceDto>>({});
 const submitting = ref(false);
+const dimaDurationError = ref<string | undefined>(undefined);
 
 const isHomologationHomologuee = computed(() => form.value.homologation_status === "homologuee");
 const showHomologationDateEnd = computed(() => isHomologationHomologuee.value || Boolean(form.value.homologation_date_end));
@@ -57,6 +58,12 @@ onMounted(() => {
 });
 
 async function save() {
+  if (props.type === "dima") {
+    dimaDurationError.value =
+      form.value.dima_duration_hours == null ? "Veuillez compléter le champ : Durée d'interruption maximale" : undefined;
+    if (dimaDurationError.value) return;
+  }
+
   submitting.value = true;
   const payload = {
     dima_duration_hours: toOptionalNumber(form.value?.dima_duration_hours),
@@ -123,6 +130,7 @@ async function save() {
           required
           default-unselected-text="Choisir..."
           :disabled="!canEdit"
+          :error-message="dimaDurationError"
           data-testid="compliance-dima-duration"
         />
         <DsfrCheckbox
