@@ -141,6 +141,23 @@ export class AdminPage extends BasePage {
     await expect(this.permsSave()).toBeVisible();
   }
 
+  private permsLegend = () => this.byTestId("app-perms-legend");
+
+  /**
+   * Vérifie que la légende de la matrice (`-`/`RO`/`RW`) est visible et qu'elle précède la table
+   * dans le DOM — donc affichée au-dessus (PRM-13). Purement en lecture, aucune donnée requise.
+   */
+  async expectPermsMatrixLegendVisible(): Promise<void> {
+    await expect(this.permsLegend()).toBeVisible();
+    await expect(this.permsLegend()).toContainText(/aucun droit/i);
+    // `xpath=following::` : n'a de résultat que si la table suit la légende dans le DOM.
+    await expect(
+      this.permsLegend().locator(
+        'xpath=following::*[@data-testid="app-perms-table"]',
+      ),
+    ).toHaveCount(1);
+  }
+
   /**
    * Modifie une cellule de la matrice (toggle `-`/`RO`/`RW`), enregistre, puis rétablit la valeur
    * d'origine en recyclant le toggle (PRM-07).

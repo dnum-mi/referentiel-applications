@@ -154,9 +154,11 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           type="button"
           class="icon-button"
           :class="{ active: currentTab === tab.value }"
+          :aria-current="currentTab === tab.value ? 'true' : undefined"
           @click="currentTab = tab.value"
         >
           <i :class="`fr-icon-${tab.icon}`" aria-hidden="true" />
+          <span class="fr-sr-only">{{ tab.value === "edit" ? "Éditer le texte en format markdown" : "Visualiser l'aperçu" }}</span>
         </button>
       </div>
 

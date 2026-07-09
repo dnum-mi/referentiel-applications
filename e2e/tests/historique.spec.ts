@@ -161,4 +161,37 @@ test.describe("Historique des modifications", () => {
     test.skip(!(await history.hasSecondPage()), "Une seule page d'historique");
     await history.goToSecondPage();
   });
+
+  test("HIS-12 - le bloc de détails de description n'apparaît que pour une description multi-ligne", async ({
+    page,
+    data,
+  }) => {
+    const [mono, multi] = await Promise.all([
+      data.ensureMonoLineMetadata(),
+      data.ensureMultiLineMetadata(),
+    ]);
+    test.skip(
+      !mono && !multi,
+      "Aucune modification mono/multi-ligne trouvable ni créable",
+    );
+
+    try {
+      const detail = new MetadataDetailPage(page);
+      // Cas A (mono-ligne) : le sous-bloc `description-details` ne doit pas être présent.
+      if (mono) {
+        await detail.open(mono.metadataId);
+        await detail.expectDetailLoaded();
+        await detail.expectDescriptionDetailsHidden();
+      }
+      // Cas B (multi-ligne) : le sous-bloc apparaît avec au moins une ligne de détail.
+      if (multi) {
+        await detail.open(multi.metadataId);
+        await detail.expectDetailLoaded();
+        await detail.expectDescriptionDetailsVisible();
+      }
+    } finally {
+      if (mono?.seededAppId) await data.removeApplication(mono.seededAppId);
+      if (multi?.seededAppId) await data.removeApplication(multi.seededAppId);
+    }
+  });
 });

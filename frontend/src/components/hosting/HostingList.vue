@@ -45,12 +45,14 @@ const getActiveBadgeProps = (
             <!-- Location info -->
             <p v-if="hosting.hostingOption?.site || hosting.hostingOption?.building || hosting.hostingOption?.room" class="fr-mb-0">
               <span class="fr-icon-map-pin-2-line fr-mr-1w" aria-hidden="true" />
+              <span class="fr-sr-only">Géolocalisation : </span>
               {{ [hosting.hostingOption?.site, hosting.hostingOption?.building, hosting.hostingOption?.room].filter(Boolean).join(" - ") }}
             </p>
 
             <!-- Platform & Provider info -->
             <p v-if="hosting.hostingOption?.platform || hosting.hostingOption?.provider" class="fr-mb-0">
               <span class="fr-icon-server-line fr-mr-1w" aria-hidden="true" />
+              <span class="fr-sr-only">Technologie : </span>
               {{ hosting.hostingOption?.platform || "" }}
               {{ hosting.hostingOption?.provider ? `(${hosting.hostingOption.provider})` : "" }}
             </p>
