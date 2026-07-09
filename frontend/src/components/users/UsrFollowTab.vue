@@ -38,32 +38,36 @@ const unsubscribe = async (appId: string) => {
 
 <template>
   <div v-if="userStore.user" class="fr-mt-3w" data-testid="user-profile-card">
-    <DsfrTable title="Applications suivies" data-testid="user-followed-apps-table">
-      <template #default>
-        <tr v-if="userStore.user.followedApplications?.length === 0">
-          <td colspan="2">Aucune application suivie</td>
-        </tr>
+    <!-- RGAA-081 : tableau de mise en forme (nom + bouton) → role="presentation", titre en <h2>, sans th/thead/scope/caption. -->
+    <div data-testid="user-followed-apps-table">
+      <h2 class="fr-h5">Applications suivies</h2>
+      <table role="presentation" class="fr-table">
+        <tbody>
+          <tr v-if="userStore.user.followedApplications?.length === 0">
+            <td colspan="2">Aucune application suivie</td>
+          </tr>
 
-        <tr v-for="app in userStore.user.followedApplications" :key="app.id" class="fr-mb-1w">
-          <th scope="row" style="width: 100%">
-            <RouterLink :to="{ name: 'application', params: { id: app.id } }" class="fr-link">
-              {{ app.label }}
-            </RouterLink>
-          </th>
-          <td style="white-space: nowrap">
-            <DsfrButton
-              class="fr-btn--secondary fr-btn--sm"
-              :disabled="isUpdating"
-              @click="unsubscribe(app.id)"
-              title="Ne plus suivre cette application"
-              data-testid="user-unsubscribe-button"
-            >
-              Désabonner
-            </DsfrButton>
-          </td>
-        </tr>
-      </template>
-    </DsfrTable>
+          <tr v-for="app in userStore.user.followedApplications" :key="app.id" class="fr-mb-1w">
+            <td style="width: 100%">
+              <RouterLink :to="{ name: 'application', params: { id: app.id } }" class="fr-link">
+                {{ app.label }}
+              </RouterLink>
+            </td>
+            <td style="white-space: nowrap">
+              <DsfrButton
+                class="fr-btn--secondary fr-btn--sm"
+                :disabled="isUpdating"
+                @click="unsubscribe(app.id)"
+                :title="`${app.label} - Désabonner`"
+                data-testid="user-unsubscribe-button"
+              >
+                Désabonner
+              </DsfrButton>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <div v-if="successMessage" class="fr-mt-2w">
       <output class="fr-alert fr-alert--success" aria-live="polite" style="display: block">

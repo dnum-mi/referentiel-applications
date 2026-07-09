@@ -84,10 +84,20 @@ export class ApiClient {
     );
   }
 
-  /** Historique global des modifications (metadatas). */
-  metadatas(query = ""): Promise<Paginated<{ id: string }> | null> {
-    return this.get<Paginated<{ id: string }>>(
+  /** Historique global des modifications (metadatas), trié desc par défaut (le plus récent en tête). */
+  metadatas(query = ""): Promise<Paginated<MetadataEntry> | null> {
+    return this.get<Paginated<MetadataEntry>>(
       `/metadatas${query ? `?${query}` : ""}`,
+    );
+  }
+
+  /** Historique des modifications (metadatas) d'une application donnée. */
+  applicationMetadatas(
+    appId: string,
+    query = "",
+  ): Promise<Paginated<MetadataEntry> | null> {
+    return this.get<Paginated<MetadataEntry>>(
+      `/applications/${appId}/metadatas${query ? `?${query}` : ""}`,
     );
   }
 
@@ -556,4 +566,12 @@ export interface ComplianceShape {
 export interface PermsMatrixEntry {
   actorTypeId: string;
   [perm: string]: string | boolean;
+}
+
+/** Entrée de l'historique des modifications (Metadata), champs utiles aux tests HIS-*. */
+export interface MetadataEntry {
+  id: string;
+  action: string;
+  description: string | null;
+  applicationId?: string | null;
 }

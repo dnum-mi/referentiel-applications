@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from "vue";
+import { ref, watch, onMounted, computed, nextTick } from "vue";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { CreateHostingDto, HostingDto, HostingOptionDto } from "@/client/types.gen";
@@ -22,6 +22,7 @@ const hostingOptionsList = ref<HostingOptionDto[]>([]);
 const isLoadingOptions = ref(false);
 const hostingOptionSearch = ref("");
 const isSubmitting = ref(false);
+const optionError = ref<string | undefined>(undefined);
 const hostingStore = useHostingStore();
 const toaster = useToasterStore();
 
@@ -55,6 +56,12 @@ async function fetchHostingOptions() {
 
 onMounted(fetchHostingOptions);
 
+// 12.8 : à l'ouverture, porter le focus sur le premier élément interactif de la modale (bouton « Fermer »).
+onMounted(async () => {
+  await nextTick();
+  document.querySelector<HTMLButtonElement>('[data-testid="hosting-modal"] .fr-btn--close')?.focus();
+});
+
 function setInitialValues() {
   if (!props.initialHosting) {
     hostingForm.value = { hostingOptionId: "", label: "", isActive: null };
@@ -80,6 +87,9 @@ watch(() => props.initialHosting, setInitialValues, { immediate: true });
 watch(hostingOptionsList, setInitialValues, { immediate: true });
 
 async function handleSubmit() {
+  optionError.value = isFormValid.value ? undefined : "Veuillez compléter le champ : Option d'hébergement";
+  if (optionError.value) return;
+
   isSubmitting.value = true;
   try {
     const formData = {
@@ -124,6 +134,7 @@ async function handleSubmit() {
       :description="props.errorMessage"
     />
     <form data-testid="hosting-form" @submit.prevent="handleSubmit">
+      <p class="fr-text--sm fr-mb-2w" data-testid="required-fields-hint">Tous les champs avec un * sont obligatoires</p>
       <div v-if="isLoadingOptions" class="fr-text--center fr-mb-2w" data-testid="hosting-options-loading">
         <span class="fr-loading fr-loading--sm" data-testid="hosting-options-spinner">
           <span class="fr-loading__icon" aria-hidden="true" />
@@ -132,7 +143,7 @@ async function handleSubmit() {
       </div>
       <div v-else class="fr-form-group">
         <DsfrInput v-model="hostingForm.label" label-visible label="Label" class="fr-mb-3w" data-testid="hosting-label-input" />
-        <DsfrInput
+        <DsfrInputGroup
           v-model="hostingOptionSearch"
           label-visible
           label="Option d'hébergement"
@@ -140,6 +151,7 @@ async function handleSubmit() {
           list="hostingOptionsList"
           required
           class="fr-mb-3w"
+          :error-message="optionError"
           data-testid="hosting-option-search-input"
         />
         <datalist id="hostingOptionsList" data-testid="hosting-options-list">
@@ -163,7 +175,7 @@ async function handleSubmit() {
         <DsfrButton type="button" secondary label="Annuler" data-testid="hosting-cancel-btn" @click="$emit('close')" />
         <DsfrButton
           type="submit"
-          :disabled="isSubmitting || isLoadingOptions || !isFormValid"
+          :disabled="isSubmitting || isLoadingOptions"
           :label="props.initialHosting ? 'Modifier' : 'Créer'"
           data-testid="hosting-submit-btn"
         >

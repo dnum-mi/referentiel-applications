@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 import type { TagDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
 import api from "@/api";
@@ -26,6 +26,13 @@ const isSaving = ref(false);
 const isDeleting = ref(false);
 const editingName = ref<string>("");
 const errorMessage = ref<string>("");
+const tagInput = ref<{ $el?: HTMLElement } | null>(null);
+
+function focusTagField() {
+  nextTick(() => {
+    tagInput.value?.$el?.querySelector?.("input")?.focus();
+  });
+}
 
 async function openEditModal() {
   editingName.value = props.tag?.name || "";
@@ -76,6 +83,8 @@ async function saveTag() {
     } else {
       errorMessage.value = "Erreur lors de la sauvegarde du tag";
     }
+    // 12.8 : porter le focus sur le champ en erreur après l'activation d'« Enregistrer ».
+    focusTagField();
   }
   isSaving.value = false;
 }
@@ -136,10 +145,11 @@ async function deleteTag() {
     @close="closeEditModal"
   >
     <DsfrInputGroup
+      ref="tagInput"
       v-model="editingName"
       class="fr-mb-2w"
       label="Nom du tag"
-      hint="Les tags sont en minuscules"
+      hint="Les tags sont en minuscules et doivent contenir au moins 2 caractères"
       label-visible
       required
       :error-message="errorMessage"

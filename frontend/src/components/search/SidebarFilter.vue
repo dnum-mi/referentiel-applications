@@ -66,7 +66,7 @@ const total = computed(() => {
           ✕ Réinitialiser
         </DsfrButton>
 
-        <h5>Filtres</h5>
+        <h2 class="fr-h6">Filtres</h2>
         <p class="total-count" data-testid="sidebar-total-count">
           {{ total }} application(s) trouvée(s) sur {{ statsStore.totalApplications }}
         </p>

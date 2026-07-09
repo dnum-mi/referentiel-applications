@@ -1,10 +1,22 @@
 <script setup lang="ts">
-defineProps({
+import { nextTick, watch } from "vue";
+
+const props = defineProps({
   opened: Boolean,
   itemName: String,
 });
 
 const emit = defineEmits(["confirm", "cancel"]);
+
+// 12.8 : à l'ouverture, porter le focus sur le premier élément interactif de la modale (bouton « Fermer »).
+watch(
+  () => props.opened,
+  async (isOpen) => {
+    if (!isOpen) return;
+    await nextTick();
+    document.querySelector<HTMLButtonElement>('[data-testid="delete-confirmation-modal"] .fr-btn--close')?.focus();
+  },
+);
 
 function confirm() {
   emit("confirm");
