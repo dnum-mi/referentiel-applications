@@ -10,7 +10,9 @@ RUN apt-get update \
 RUN npm install -g pnpm
 
 # Copy necessary files
-COPY package.json pnpm-lock.yaml ./
+# pnpm-workspace.yaml porte les overrides de sécurité (pnpm 10 ne les lit plus
+# depuis package.json) : il doit être présent avant `pnpm install --frozen-lockfile`.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 FROM base AS dev
 RUN pnpm install

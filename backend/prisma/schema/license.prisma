@@ -1,0 +1,24 @@
+/// Licence logicielle utilisée par une application.
+/// Une application peut référencer 0 à N licences, une par identifiant de licence.
+/// Le nom suit de préférence un identifiant SPDX (ex. « MIT », « Apache-2.0 »),
+/// mais la saisie libre reste possible (normalisation assurée côté frontend).
+///
+/// @namespace License
+model License {
+  /// Identifiant unique
+  id            String      @id @default(uuid())
+  /// Identifiant de l'application
+  applicationId String
+  /// Application à laquelle cette licence appartient
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  /// Nom / identifiant SPDX de la licence (ex. « MIT », « Apache-2.0 »)
+  name    String
+  /// Version de la licence si pertinent (ex. « 2.0 »)
+  version String? @db.VarChar(50)
+
+  metadatas Metadata[] @relation()
+
+  @@unique([applicationId, name])
+  @@index([applicationId])
+}

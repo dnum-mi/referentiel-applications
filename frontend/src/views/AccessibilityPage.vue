@@ -17,16 +17,14 @@
     </p>
 
     <h2 class="fr-h2">Résultats des tests</h2>
-    <!-- TODO #1784 : renseigner le taux de conformité exact issu de l'audit avant publication. -->
     <p>
       L'audit de conformité réalisé en 2026 révèle 28 critères non conformes. Le taux de conformité global au RGAA 4.1.2 est de
-      <strong>XX&nbsp;%</strong>
-      (valeur à confirmer avec les résultats définitifs de l'audit).
+      <strong>73,6&nbsp;%</strong>
+      (78 critères conformes sur les 106 critères du RGAA 4.1.2).
     </p>
 
     <h2 class="fr-h2">Établissement de cette déclaration</h2>
-    <!-- TODO #1784 : renseigner la date d'établissement de la déclaration avant publication. -->
-    <p>Cette déclaration a été établie le JJ/MM/AAAA (date à confirmer).</p>
+    <p>Cette déclaration a été établie le 02/07/2026.</p>
 
     <h2 class="fr-h2">Retour d'information et contact</h2>
     <p>

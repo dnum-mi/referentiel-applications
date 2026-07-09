@@ -1,0 +1,24 @@
+# Overrides de sécurité (forçage de versions patchées pour les dépendances
+# transitives signalées par Dependabot). pnpm 10 lit les overrides depuis ce
+# fichier et non plus depuis le champ « pnpm » de package.json.
+#
+# Les clés scopées (« pkg@major ») ne ciblent que la ligne de version vulnérable :
+# un override global casserait les consommateurs restés sur un ancien major.
+overrides:
+  # même major que la version résolue → sûr
+  handlebars: 4.7.9
+  fast-uri: 3.1.2
+  form-data: 4.0.6
+  multer: 2.2.0
+  ip-address: 10.1.1
+  qs: 6.15.2
+  webpack: 5.104.1
+  "@babel/core": 7.29.6
+  # scopés : on ne touche que le major vulnérable
+  "ajv@8": 8.18.0
+  "brace-expansion@1": 1.1.13
+  "brace-expansion@2": 2.0.3
+  "js-yaml@4": 4.2.0
+  "uuid@11": 11.1.1
+  "tmp@0.2": 0.2.6
+  "path-to-regexp@0.1.12": 0.1.13

@@ -1,0 +1,18 @@
+# Overrides de sécurité (forçage de versions patchées pour les dépendances transitives
+# signalées par Dependabot). pnpm 10 lit les overrides depuis ce fichier et non plus
+# depuis le champ « pnpm » de package.json.
+overrides:
+  handlebars: 4.7.9
+  shell-quote: 1.8.4
+  tar: 7.5.16
+  form-data: 4.0.6
+  serialize-javascript: 7.0.5
+  fast-uri: 3.1.2
+  js-yaml: 4.2.0
+  js-cookie: 3.0.7
+  defu: 6.1.5
+  follow-redirects: 1.16.0
+  uuid: 11.1.1
+  postcss: 8.5.10
+  "@babel/core": 7.29.6
+  "@babel/plugin-transform-modules-systemjs": 7.29.4
