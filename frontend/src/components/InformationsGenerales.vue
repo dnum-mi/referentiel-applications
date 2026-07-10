@@ -4,11 +4,13 @@ import { Permission, type HostingDto, type LabelDto, type TechnicalDebtInfoDto }
 import MarkdownDisplay from "@/components/MarkdownDisplay.vue";
 import useModal from "@/composables/use-modal";
 import type { ApplicationWithPerms } from "@/models/Application";
+import { routeNames } from "@/router/route-names";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
 import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import ApplicationForm from "./form/ApplicationForm.vue";
 import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
@@ -111,6 +113,12 @@ onMounted(async () => {
     isLoading.value = false;
   }
 });
+
+const router = useRouter();
+function tagSearchLink(tag: string) {
+  return router.resolve({ name: routeNames.SEARCHAPP, query: { tag } }).fullPath;
+}
+
 const applicationModal = useModal();
 const isModalOpened = computed(() => applicationModal.isModalOpen.value);
 
@@ -315,7 +323,14 @@ watch(
               <h4 class="fr-mt-3w">Tags</h4>
               <ul class="fr-tags-group" data-testid="info-tags">
                 <li v-for="tag in application.tags" :key="tag">
-                  <DsfrTag :label="tag" :small="small" />
+                  <DsfrTag
+                    :label="tag"
+                    :small="small"
+                    :link="tagSearchLink(tag)"
+                    :title="`Voir les applications avec le tag ${tag}`"
+                    :aria-label="`Voir les applications avec le tag ${tag}`"
+                    data-testid="info-tag-link"
+                  />
                 </li>
               </ul>
             </div>
@@ -414,7 +429,7 @@ watch(
     :application-id="application.id"
     :error-message="errorMessage"
     @close="isHostingModalOpen = false"
-    @hostingCreated="isHostingModalOpen = false"
+    @hosting-created="isHostingModalOpen = false"
   />
 
   <HostingModal
@@ -423,7 +438,7 @@ watch(
     :initial-hosting="hostingToEdit"
     :error-message="errorMessage"
     @close="hostingToEdit = null"
-    @hostingUpdated="hostingToEdit = null"
+    @hosting-updated="hostingToEdit = null"
   />
   <DeleteConfirmationModal
     v-if="isDeleteModalOpen"
@@ -439,11 +454,11 @@ watch(
     :initial-label="labelToEdit ?? undefined"
     :error-message="errorMessage"
     @close="isLabelModalOpen = false"
-    @labelCreated="
+    @label-created="
       fetchLabels(application.id);
       isLabelModalOpen = false;
     "
-    @labelUpdated="
+    @label-updated="
       fetchLabels(application.id);
       isLabelModalOpen = false;
     "

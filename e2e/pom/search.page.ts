@@ -99,6 +99,18 @@ export class SearchPage extends BasePage {
     );
   }
 
+  /**
+   * Vérifie que le paramètre d'URL `tag` vaut exactement `tagValue` (FIC-21 : trajet clic sur un
+   * tag de la fiche → navigation vers le catalogue). Ne revérifie PAS le filtrage réel des
+   * résultats, déjà couvert par CSF-16 (`catalogue-filtres.md`/`.spec.ts`).
+   */
+  async expectTagParamEquals(tagValue: string): Promise<void> {
+    await waitForSearchParams(
+      this.page,
+      (params) => params.get("tag") === tagValue,
+    );
+  }
+
   async resetFilters(): Promise<void> {
     await expect(this.resetButton()).toBeVisible();
     await this.resetButton().click();
