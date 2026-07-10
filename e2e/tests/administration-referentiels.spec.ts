@@ -1,8 +1,8 @@
 import { expect, test } from "../fixtures/test";
-import { AdminPage, loginAs } from "../pom";
+import { AdminPage, switchTo } from "../pom";
 import { buildActorImportWorkbook } from "../support/actor-import-xlsx";
-import { buildSheetWorkbook } from "../support/import-xlsx";
 import { dbQuery } from "../support/db";
+import { buildSheetWorkbook } from "../support/import-xlsx";
 
 const XLSX_MIME =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -742,7 +742,10 @@ test.describe("Administration des référentiels", () => {
     const attemptedLabel = `E2E-ADM16-${ts}`;
     const originalLabel = app!.label;
 
-    await loginAs(page, "scope-admin");
+    // `switchTo` (pas `loginAs`) : la fixture `data` a déjà connecté `page` en `admin` ; sans
+    // `logout()` préalable, `login()` détecte une session active et ne change pas d'utilisateur
+    // (#1890 flaky — le test s'exécutait alors avec les droits `admin`).
+    await switchTo(page, "scope-admin");
 
     const workbook = await buildSheetWorkbook(
       "Applications",
