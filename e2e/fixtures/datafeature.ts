@@ -225,6 +225,66 @@ export class DataFeature {
     return page?.results?.[0] ?? null;
   }
 
+  /**
+   * Une application possédant ≥ 1 tag, avec la valeur du premier, pour vérifier que le clic sur un
+   * tag dans l'onglet « Informations générales » navigue vers `/recherche-application?tag=<valeur>`
+   * (FIC-21). Lecture API d'abord (`probe` premières applications, détail par détail comme
+   * `applicationWithRelations`) ; à défaut, sème « create-if-absent » sur la première application.
+   *
+   * Le `PATCH /applications/{id}` fait un `set:` complet sur la relation tags côté backend
+   * (`TagsService.findByNames`, voir `application.service.ts:131-133`) : on **ajoute** donc le tag
+   * au tableau des tags existants de l'application plutôt que de le remplacer, pour ne pas effacer
+   * silencieusement les tags déjà posés par d'autres tests/campagnes partagées. `TagsService
+   * .findByNames` ne crée aucun tag à la volée : le nom doit exister au préalable (`firstTag`, sinon
+   * `createTag`).
+   *
+   * Les tags créés pour ce test ne sont pas nettoyés — cohérent avec les autres résolveurs
+   * create-if-absent de ce fichier (ex. `applicationWithTechnicalDebt`) : un tag est une donnée
+   * référentielle réutilisable, pas un état à restaurer.
+   */
+  async applicationWithTags(
+    probe = 15,
+  ): Promise<{ app: AppRef; tagValue: string } | null> {
+    const list = await this.api.applications(`pageSize=${probe}&page=0`);
+    for (const app of list?.results ?? []) {
+      const detail = await this.api.application(app.id);
+      const tags = detail?.tags;
+      if (
+        Array.isArray(tags) &&
+        tags.length > 0 &&
+        typeof tags[0] === "string"
+      ) {
+        return { app, tagValue: tags[0] };
+      }
+    }
+
+    const target = list?.results?.[0];
+    if (!target) return null;
+
+    let tag = await this.firstTag();
+    if (!tag) {
+      tag = await this.createTag(`E2E-FIC21-${Date.now()}`);
+    }
+    if (!tag) return null;
+
+    const detail = await this.api.application(target.id);
+    const currentTags = Array.isArray(detail?.tags)
+      ? (detail.tags as unknown[]).filter(
+          (t): t is string => typeof t === "string",
+        )
+      : [];
+    const nextTags = currentTags.includes(tag.name)
+      ? currentTags
+      : [...currentTags, tag.name];
+
+    const updated = await this.modifyApplication(target.id, {
+      tags: nextTags,
+    });
+    if (!updated) return null;
+
+    return { app: target, tagValue: tag.name };
+  }
+
   /** Une application possédant ≥ 1 donnée (data-catalog) + l'id de sa 1ʳᵉ donnée, ou `null`. */
   async applicationWithData(
     probe = 15,

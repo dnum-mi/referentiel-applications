@@ -1,5 +1,5 @@
 import { test } from "../fixtures/test";
-import { ApplicationPage } from "../pom";
+import { ApplicationPage, SearchPage } from "../pom";
 
 /**
  * Non-régression — Fiche application (protocole `qa/protocoles/fiche-application.md`).
@@ -170,6 +170,24 @@ test.describe("Fiche application", () => {
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-infos");
     await fiche.expectCostContainmentNotRated();
+  });
+
+  test("FIC-21 - clic sur un tag de la fiche → navigation filtrée sur le tag", async ({
+    page,
+    data,
+  }) => {
+    const result = await data.applicationWithTags();
+    test.skip(
+      !result,
+      "Impossible de garantir une application avec au moins un tag",
+    );
+
+    const fiche = new ApplicationPage(page);
+    await fiche.open(result!.app.id, "tab-infos");
+    await fiche.clickInfoTag(result!.tagValue);
+
+    const search = new SearchPage(page);
+    await search.expectTagParamEquals(result!.tagValue);
   });
 
   test("FIC-17 - tri onglet Acteurs", async ({ page, data }) => {

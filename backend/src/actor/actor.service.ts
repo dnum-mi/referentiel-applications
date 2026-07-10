@@ -123,7 +123,17 @@ export class ActorService {
 
     const orderBy: Prisma.ActorOrderByWithRelationInput = {};
     if (filters.sortBy) {
-      orderBy[filters.sortBy] = filters.order ?? "asc";
+      const order = filters.order ?? "asc";
+      switch (filters.sortBy) {
+        case "application":
+          orderBy.application = { label: order };
+          break;
+        case "organization":
+          orderBy.organization = { path: order };
+          break;
+        default:
+          orderBy[filters.sortBy] = order;
+      }
     }
 
     return this.prisma.actor.paginate({
