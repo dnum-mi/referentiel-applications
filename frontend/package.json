@@ -42,7 +42,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
     "@faker-js/faker": "^9.9.0",
-    "@hey-api/openapi-ts": "^0.80.18",
+    "@hey-api/openapi-ts": "^0.97.3",
     "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/vue": "^8.1.0",
