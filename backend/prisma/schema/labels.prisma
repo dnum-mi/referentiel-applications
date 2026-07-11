@@ -26,4 +26,9 @@ model Label {
   applicationId String
   /// Application à laquelle ce label appartient 
   application   Application  @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  // Index trigramme pour les filtres « contient » sur les libellés alternatifs
+  // (paramètres de recherche `search` et `label`).
+  @@index([value(ops: raw("gin_trgm_ops"))], map: "Label_value_trgm_idx", type: Gin)
 }

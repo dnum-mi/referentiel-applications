@@ -50,7 +50,7 @@ watch([() => props.sortField, () => props.sortOrder], ([newField, newOrder]) => 
   internalSortOrder.value = newOrder as number;
 });
 
-function onSort(event: DataTableSortEvent) {
+function applySort(sortField: string, sortOrder: number) {
   const scrollPos = window?.scrollY || 0;
 
   if (props.lazy) {
@@ -60,12 +60,7 @@ function onSort(event: DataTableSortEvent) {
     }, 120);
   }
 
-  const sortField = typeof event.sortField === "string" ? event.sortField : "";
-
-  emit("sort", {
-    sortField,
-    sortOrder: event.sortOrder ?? 1,
-  });
+  emit("sort", { sortField, sortOrder });
 
   if (window !== undefined) {
     nextTick(() => {
@@ -74,8 +69,28 @@ function onSort(event: DataTableSortEvent) {
   }
 }
 
+function onSort(event: DataTableSortEvent) {
+  const sortField = typeof event.sortField === "string" ? event.sortField : "";
+  applySort(sortField, event.sortOrder ?? 1);
+}
+
+// RGAA-027 : le tri est déclenché depuis le bouton interne de l'en-tête (PrimeVue ignore les clics
+// dont la cible est « cliquable »). On bascule croissant ⇄ décroissant sur la colonne visée.
+function requestSort(column: TableColumn) {
+  const nextOrder = internalSortField.value === column.field && internalSortOrder.value === 1 ? -1 : 1;
+  applySort(column.field, nextOrder);
+}
+
 function onPage(event: DataTablePageEvent) {
   emit("page", event);
+}
+
+// RGAA-027 : intitulé du bouton de tri décrivant le libellé + l'état/action de tri.
+function sortTitle(column: TableColumn): string {
+  if (internalSortField.value !== column.field) {
+    return `${column.header} - Trier par ordre croissant`;
+  }
+  return internalSortOrder.value === -1 ? `${column.header} - Tri descendant` : `${column.header} - Tri ascendant`;
 }
 
 function onColumnResize(event: any) {
@@ -117,6 +132,7 @@ watch(
       :sort-order="internalSortOrder"
       :loading="loading && !isSorting"
       :data-testid="dataTestId"
+      :pt="{ column: { headerCell: { tabindex: null } } }"
       striped-rows
       resizable-columns
       column-resize-mode="fit"
@@ -136,13 +152,18 @@ watch(
         v-for="column in columns"
         :key="column.field"
         :field="column.field"
-        :header="$slots[`header-${column.field}`] ? undefined : column.header"
+        :header="$slots[`header-${column.field}`] || column.sortable ? undefined : column.header"
         :sortable="column.sortable"
         :style="column.width ? { width: column.width } : undefined"
         :aria-label="column.header"
       >
-        <template v-if="$slots[`header-${column.field}`]" #header>
-          <slot :name="`header-${column.field}`" />
+        <!-- RGAA-027 : en-tête personnalisé — soit le slot fourni par le parent, soit un bouton de tri accessible
+             (le th n'est plus focusable via pt.headerCell.tabindex ; le bouton déclenche le tri via requestSort). -->
+        <template v-if="$slots[`header-${column.field}`] || column.sortable" #header>
+          <slot v-if="$slots[`header-${column.field}`]" :name="`header-${column.field}`" />
+          <button v-else type="button" class="ref-table-sort-button" :title="sortTitle(column)" @click="requestSort(column)">
+            {{ column.header }}
+          </button>
         </template>
         <template #body="slotProps">
           <Skeleton v-if="isSorting" width="80%" height="1rem" aria-label="Chargement en cours" />
@@ -201,6 +222,25 @@ watch(
 
 :deep(.p-datatable .p-sortable-column) {
   cursor: pointer;
+}
+
+/* RGAA-027 : le bouton de tri interne reprend l'apparence de l'en-tête sans chrome de bouton. */
+.ref-table-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ref-table-sort-button:focus-visible {
+  outline: 2px solid var(--text-action-high-blue-france, #000);
+  outline-offset: 2px;
 }
 
 :deep(.p-datatable .p-sortable-column.p-highlight) {

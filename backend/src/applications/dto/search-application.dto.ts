@@ -65,7 +65,7 @@ export class ApplicationSearchDto extends PaginationDto {
     description:
       "Recherche full-text en mode préfixe, pour l'autocomplétion au fil de la frappe " +
       "(chaque mot saisi est traité comme un préfixe). Même périmètre que `q`. " +
-      "Prioritaire sur `q` s'il est fourni.",
+      "Prioritaire sur `q` s'il est fourni. Limité aux 200 résultats les plus pertinents.",
     example: "tow muel",
     required: false,
   })

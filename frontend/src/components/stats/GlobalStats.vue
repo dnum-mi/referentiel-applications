@@ -23,7 +23,8 @@ const datasGroup = computed(() => [
 async function loadStats() {
   isLoading.value = true;
   try {
-    await statisticStore.countApplications();
+    // La page de statistiques veut un chiffre à jour : on force le rechargement.
+    await statisticStore.countApplications(true);
     const actorsResponse = await api.actorControllerCountAllActors();
     actorsNb.value = actorsResponse.data ?? 0;
     compliancesNb.value = await statisticStore.countCompliances();

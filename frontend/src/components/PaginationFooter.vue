@@ -60,12 +60,16 @@ watch([() => props.page, () => props.totalFiltered, () => props.limit], () => ne
       <DsfrPagination
         :current-page="page"
         :pages="pages"
+        first-page-title="Aller à la première page"
+        prev-page-title="Page précédente"
+        next-page-title="Page suivante"
+        last-page-title="Aller à la dernière page"
         data-testid="pagination-component"
         @update:current-page="emit('update:page', $event)"
       />
     </nav>
 
-    <div class="footer-item total-count" data-testid="pagination-total-count">{{ totalFiltered }} résultat(s)</div>
+    <p class="footer-item total-count" data-testid="pagination-total-count">{{ totalFiltered }} résultat(s)</p>
   </div>
 </template>
 
@@ -77,5 +81,10 @@ watch([() => props.page, () => props.totalFiltered, () => props.limit], () => ne
   justify-content: space-between;
   align-items: center;
   margin-top: 2rem;
+}
+
+/* Le compteur est désormais un <p> (RGAA-028/031) : neutraliser ses marges par défaut. */
+.total-count {
+  margin: 0;
 }
 </style>

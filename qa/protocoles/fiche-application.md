@@ -98,3 +98,13 @@
 
 - **Action** : sur une application dont un axe de maturité n'est pas renseigné (`null`, p. ex. maîtrise des coûts), ouvrir l'onglet `tab-infos` et consulter la carte « Dette technique ».
 - **Résultat attendu** : le badge de l'axe affiche **« Non notée »** (et non « 0/5 »). L'échelle est désormais 1-5 ; toute valeur < 1 est traitée comme non notée (`null`), cf. ticket #1900.
+
+### FIC-21 — Onglet Informations générales : clic sur un tag → navigation filtrée ✅
+
+- **Datafeature** : application avec ≥ 1 tag (create-if-absent si nécessaire).
+- **Action** : sur l'onglet `tab-infos`, cliquer un tag de la liste `info-tags`.
+- **Résultat attendu** : navigation vers `/recherche-application?tag=<valeur>` avec le paramètre
+  `tag` égal à la valeur du tag cliqué (cf. ticket #1967, tags devenus cliquables). Ne duplique pas
+  CSF-16 (`catalogue-filtres.md`) qui couvre déjà le filtrage réel des résultats côté page de
+  recherche ; ce cas vérifie uniquement le trajet clic (fiche) → navigation (URL avec le bon
+  paramètre tag).

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick } from "vue";
+import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { rgaaControllerFindAll, rgaaControllerCreate, rgaaControllerUpdate, rgaaControllerDelete } from "@/client/sdk.gen";
 import type { CreateRgaaComplianceDto, RgaaComplianceDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -35,6 +35,13 @@ function focusAddButton() {
 }
 
 const canWrite = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.appPerms)));
+
+// 12.8 : à l'ouverture de la modale, porter le focus sur son premier élément interactif (bouton « Fermer »).
+watch(showModal, async (isOpen) => {
+  if (!isOpen) return;
+  await nextTick();
+  document.querySelector<HTMLButtonElement>('[data-testid="rgaa-section"] .fr-modal .fr-btn--close')?.focus();
+});
 
 const tableColumns: TableColumn[] = [
   { field: "service_url", header: "URL du service", sortable: false },

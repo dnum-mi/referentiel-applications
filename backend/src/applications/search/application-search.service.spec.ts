@@ -59,6 +59,54 @@ describe("ApplicationSearchService", () => {
     });
   });
 
+  describe("cache des résultats", () => {
+    it("ne réinterroge pas la base pour une même requête répétée", async () => {
+      const { service, prisma } = makeService([
+        { applicationId: "app-1", rank: 0.9 },
+      ]);
+
+      const first = await service.fullTextSearch("gestion");
+      const second = await service.fullTextSearch("gestion");
+
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+      expect(second).toEqual(first);
+    });
+
+    it("est insensible à la casse de la requête", async () => {
+      const { service, prisma } = makeService([
+        { applicationId: "app-1", rank: 0.9 },
+      ]);
+
+      await service.fullTextSearch("Gestion");
+      await service.fullTextSearch("gestion");
+
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+    });
+
+    it("est vidé lorsque l'index est rafraîchi", async () => {
+      const { service, prisma } = makeService([
+        { applicationId: "app-1", rank: 0.9 },
+      ]);
+
+      await service.fullTextSearch("gestion");
+      await service.refreshIndex();
+      await service.fullTextSearch("gestion");
+
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    });
+
+    it("sépare les entrées préfixe des entrées plein-texte", async () => {
+      const { service, prisma } = makeService([
+        { applicationId: "app-1", rank: 0.9 },
+      ]);
+
+      await service.fullTextSearch("gestion");
+      await service.fullTextSearchPrefix("gestion");
+
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe("refreshIndex", () => {
     it("rafraîchit la vue matérialisée en mode CONCURRENTLY", async () => {
       const { service, prisma } = makeService();

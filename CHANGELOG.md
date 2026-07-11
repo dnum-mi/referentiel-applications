@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.82.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.81.0...v1.82.0) (2026-07-10)
+
+
+### Features
+
+* add rgaa n ([#1986](https://github.com/dnum-mi/referentiel-applications/issues/1986)) ([56d7648](https://github.com/dnum-mi/referentiel-applications/commit/56d7648fd6bdf055f9be4ae34ded5372c894d976))
+* add write permission for edit data app ([#1980](https://github.com/dnum-mi/referentiel-applications/issues/1980)) ([d913b97](https://github.com/dnum-mi/referentiel-applications/commit/d913b9753e0d9c69eb96877a3d19bdd8c3d9347d))
+* **applications:** stack technique & licences sur la fiche d'application ([#1099](https://github.com/dnum-mi/referentiel-applications/issues/1099)) ([6f9d877](https://github.com/dnum-mi/referentiel-applications/commit/6f9d8778929dce52e379a8b6464cde2449963cb3))
+* **rgaa:** lot G — formulaires (obligatoire, erreurs, formats & suggestions) ([ea2b000](https://github.com/dnum-mi/referentiel-applications/commit/ea2b000082d41c14532ee7dacf5dfd3b9c218742))
+* tags et sélections ([#1992](https://github.com/dnum-mi/referentiel-applications/issues/1992)) ([34f3926](https://github.com/dnum-mi/referentiel-applications/commit/34f39267f5ef316e6121de24d49d476181456373))
+* trier les types dacteur ([#1974](https://github.com/dnum-mi/referentiel-applications/issues/1974)) ([1d2a331](https://github.com/dnum-mi/referentiel-applications/commit/1d2a33187fb1498ede4b6740aa9e3d029dcb34a8))
+
+
+### Bug Fixes
+
+* **a11y:** rendre le graphique TIME responsive et corriger le text-spacing RGAA ([#1978](https://github.com/dnum-mi/referentiel-applications/issues/1978)) ([91817ee](https://github.com/dnum-mi/referentiel-applications/commit/91817ee8f968763a19d4c5ed3a12911358a30dc7))
+* **a11y:** renseigner le taux de conformité et la date de la déclaration d'accessibilité ([#1935](https://github.com/dnum-mi/referentiel-applications/issues/1935)) ([d8c7982](https://github.com/dnum-mi/referentiel-applications/commit/d8c79829034ec927e06bd78c5cc8e0fd8462474a))
+* **e2e:** restore missing actor filter options and fix scope-admin login reuse (ADM-16) ([#2012](https://github.com/dnum-mi/referentiel-applications/issues/2012)) ([7f6c336](https://github.com/dnum-mi/referentiel-applications/commit/7f6c3363829e7d28502bcaa7035061fcff0cdfb4))
+
+
+### Performance Improvements
+
+* **search:** speed up application search end to end ([#1975](https://github.com/dnum-mi/referentiel-applications/issues/1975)) ([ca7d336](https://github.com/dnum-mi/referentiel-applications/commit/ca7d336567124640b47c272ffe8ca915ad6d33c7))
+
 ## [1.81.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.80.1...v1.81.0) (2026-07-04)
 
 

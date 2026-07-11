@@ -16,11 +16,11 @@ const data = ref<PaginatedActorDto>({ results: [], total: 0 });
 
 const headers = [
   { key: "email", label: "Email", isSortable: true },
-  { key: "application", label: "Application", isSortable: false },
+  { key: "application", label: "Application", isSortable: true },
   { key: "firstname", label: "Prénom", isSortable: true },
   { key: "lastname", label: "Nom", isSortable: true },
   { key: "actorType", label: "Type", isSortable: false },
-  { key: "organization", label: "Organisation", isSortable: false },
+  { key: "organization", label: "Organisation", isSortable: true },
   { key: "isGroup", label: "Rattaché(e)", isSortable: false },
   { key: "actions", label: "Actions", isSortable: false },
 ] as const satisfies (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[];

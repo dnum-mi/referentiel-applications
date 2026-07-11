@@ -27,8 +27,12 @@ export const useStatisticsStore = defineStore("statisticsStore", () => {
   const iqStats = ref<GetIqAvgGroupedDto[]>([]);
   const totalCompliances = ref<number>(0);
 
-  async function countApplications() {
-    const response = await api.applicationControllerSearch();
+  async function countApplications(force = false) {
+    // Le total (non filtré) ne bouge pas au fil des recherches : on ne le
+    // recharge pas s'il est déjà connu, et on ne demande qu'une ligne — seul
+    // `total` nous intéresse, pas les fiches complètes.
+    if (!force && totalApplications.value !== null) return;
+    const response = await api.applicationControllerSearch({ query: { pageSize: 1 } });
     totalApplications.value = response.data?.total ?? 0;
   }
 

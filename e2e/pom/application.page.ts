@@ -158,6 +158,35 @@ export class ApplicationPage extends BasePage {
     await expect(this.byTestId("info-edit-btn")).toBeDisabled();
   }
 
+  // --- Tags cliquables de l'onglet infos (FIC-21, #1967) ---
+  // ATTENTION collision de `data-testid` : `info-tags` est AUSSI utilisé par
+  // `TagSearchSelect.vue` (modale d'édition de la fiche ET sidebar de filtres de la page de
+  // recherche). On scope donc TOUJOURS ce locator à l'intérieur du conteneur
+  // `informations-generales` de l'onglet infos — jamais un `byTestId("info-tags")` global, qui
+  // pourrait remonter un faux positif hors de cette vue (mode strict Playwright en plus).
+  private infoTagLink(tagValue: string): Locator {
+    // Correspondance exacte (regex ancrée) : un tag peut être préfixe d'un autre (cf. pattern
+    // déjà utilisé pour les lignes email dans `admin.page.ts`).
+    const escaped = tagValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return this.byTestId("informations-generales")
+      .getByTestId("info-tags")
+      .getByTestId("info-tag-link")
+      .filter({ hasText: new RegExp(`^${escaped}$`) });
+  }
+
+  /**
+   * Clique sur le tag `tagValue` de l'onglet infos et attend la navigation vers le catalogue
+   * filtré par ce tag (`/recherche-application?tag=...`) — FIC-21.
+   */
+  async clickInfoTag(tagValue: string): Promise<void> {
+    const link = this.infoTagLink(tagValue);
+    await expect(link).toBeVisible();
+    await Promise.all([
+      this.page.waitForURL(/\/recherche-application\?/),
+      link.click(),
+    ]);
+  }
+
   // --- Carte Dette technique sur l'onglet Infos (FIC-15, ticket #1900) ---
   /**
    * La carte dette technique affiche le libellé « Maîtrise des coûts » (renommé depuis
