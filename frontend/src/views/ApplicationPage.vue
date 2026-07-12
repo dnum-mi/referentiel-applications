@@ -184,9 +184,13 @@ const actions = computed(() => [
       </DsfrButton>
       <div class="status-tags" aria-hidden="false" data-testid="application-tags">
         <DsfrTag
-          v-if="application.currentStatus?.statusDate"
+          v-if="application.currentStatus?.status"
           class="fr-mr-1v"
-          :label="`${statusApplicationDictionary[application.currentStatus.status]} depuis le ${formatDateFR(application.currentStatus.statusDate)}`"
+          :label="
+            application.currentStatus.statusDate
+              ? `${statusApplicationDictionary[application.currentStatus.status]} depuis le ${formatDateFR(application.currentStatus.statusDate)}`
+              : statusApplicationDictionary[application.currentStatus.status]
+          "
           data-testid="application-status-tag"
         />
 
