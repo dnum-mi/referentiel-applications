@@ -68,11 +68,11 @@ body,
   border: none;
   font-size: 1rem;
   cursor: pointer;
-  color: #555;
+  color: #3a3a3a;
   line-height: 1;
 }
 .tag-remove:hover {
-  color: #d60000;
+  color: var(--text-default-error);
 }
 
 .checkbox-list {
