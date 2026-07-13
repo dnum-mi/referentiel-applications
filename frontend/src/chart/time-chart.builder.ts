@@ -223,7 +223,7 @@ export class TimeChartBuilder {
       .attr("fill", (d) => color(d.technicalDebtInfo?.costContainment ?? 0))
       .attr("opacity", 0.9)
       .attr("stroke", "#9F0126")
-      .attr("stroke-width", 0.6)
+      .attr("stroke-width", 1)
       .attr("cursor", "pointer")
       .attr("data-testid", "technical-debt-point")
       .on("mouseenter", (_, d) => {

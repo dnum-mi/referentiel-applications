@@ -282,14 +282,14 @@ const metadataTableRows = computed(() =>
 <style scoped>
 .add {
   background-color: #e6f8ea;
-  color: #1aa779;
+  color: #0a6c4d;
 }
 .update {
   background-color: #f8f3e6;
-  color: #a7791a;
+  color: #6d4e0f;
 }
 .delete {
   background-color: #f8e6e6;
-  color: #a71a1a;
+  color: #8e1212;
 }
 </style>

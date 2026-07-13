@@ -184,7 +184,7 @@ const total = computed(() => {
 
 .sidebar {
   width: 280px;
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid var(--border-contrast-grey);
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
   max-height: 100%;
   position: relative;
@@ -207,7 +207,7 @@ const total = computed(() => {
     overflow-y: auto;
     z-index: 1000;
     border-right: none;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid var(--border-contrast-grey);
     padding: 1rem;
   }
 
@@ -224,14 +224,14 @@ const total = computed(() => {
   left: 0;
   transform: translateY(-50%);
   background: white;
-  border: 1px solid #dcdfe3;
+  border: 1px solid var(--border-contrast-grey);
   border-radius: 0 6px 6px 0;
   width: 32px;
   height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #555;
+  color: #3a3a3a;
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
