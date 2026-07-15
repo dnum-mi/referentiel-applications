@@ -47,6 +47,13 @@ describe("ApplicationSearchService", () => {
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
       // La valeur interpolée dans le tagged template = la tsquery construite.
       expect(prisma.$queryRaw.mock.calls[0][1]).toBe("tow:* & muel:*");
+      // L'autocomplétion par préfixe cible le document `simple` (non lemmatisé),
+      // sinon la frappe partielle d'un mot ne matche pas le lexème lemmatisé.
+      const prefixSql = (
+        prisma.$queryRaw.mock.calls[0][0] as unknown as string[]
+      ).join("");
+      expect(prefixSql).toContain("document_simple");
+      expect(prefixSql).toContain("to_tsquery('simple'");
       expect(result).toEqual([{ id: "app-1", rank: 1 }]);
     });
 

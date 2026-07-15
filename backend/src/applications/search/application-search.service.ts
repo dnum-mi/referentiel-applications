@@ -143,10 +143,10 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
       { applicationId: string; rank: number }[]
     >`
       SELECT asi."applicationId",
-             ts_rank(asi.document, q.query)::float8 AS rank
+             ts_rank(asi.document_simple, q.query)::float8 AS rank
       FROM application_search_index asi,
-           to_tsquery('french', immutable_unaccent(${tsQuery})) AS q(query)
-      WHERE asi.document @@ q.query
+           to_tsquery('simple', immutable_unaccent(${tsQuery})) AS q(query)
+      WHERE asi.document_simple @@ q.query
       ORDER BY rank DESC
       LIMIT ${PREFIX_RESULT_LIMIT}
     `;
