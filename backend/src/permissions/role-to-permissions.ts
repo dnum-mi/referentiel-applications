@@ -27,6 +27,11 @@ const WRITE_PERMISSIONS = new Set([
   Permission.OrganizationManage,
   Permission.ActorTypeDelete,
   Permission.ActorTypeManage,
+  // Gère le catalogue de données partagé (data descriptions, familles, sensibilités) :
+  // ces entités ne sont rattachées à aucune application, donc DataWrite doit être résolu ici en
+  // tant que permission globale (les routes /data-catalog/descriptions|families|sensibilities
+  // n'ont pas de :applicationId permettant de le résoudre via roleToAppPermissions).
+  Permission.DataWrite,
 ]);
 const ADMIN_PERMISSIONS = new Set([
   ...Array.from(WRITE_PERMISSIONS),

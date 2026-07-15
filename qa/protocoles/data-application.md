@@ -42,3 +42,61 @@
 - **Datafeature** : une application avec ≥ 1 donnée.
 - **Action** : ouvrir le détail d'une donnée.
 - **Résultat attendu** : la section « Usage dans l'application » est affichée.
+
+### DAT-06 — Trier la table Données d'une application (colonnes Nom, Famille métier) ✅
+
+- **Datafeature** : une application avec ≥ 1 donnée (résolue via l'API).
+- **Action** : sur l'onglet Sources de données, cliquer successivement les en-têtes de colonne
+  « Nom » puis « Famille métier » de la table Données.
+- **Résultat attendu** : la table reste affichée avec au moins une ligne après chaque tri.
+
+### DAT-07 — Rattacher une donnée existante du catalogue depuis l'onglet Données ✅
+
+- **Datafeature** : une donnée de catalogue non rattachée, créée pour le test (nom unique), sur la
+  première application du jeu de données.
+- **Action** : ouvrir le modal d'ajout de donnée depuis l'onglet Données, rechercher la donnée par
+  son nom (≥ 3 caractères) puis la sélectionner dans les suggestions, et valider le rattachement.
+- **Résultat attendu** : la ligne de la donnée rattachée apparaît dans le tableau Données de la
+  fiche (nom affiché).
+
+### DAT-08 — Créer une nouvelle donnée de catalogue (nom + nouvelle famille inline + tag) et la rattacher ✅
+
+- **Datafeature** : la première application du jeu de données et le premier tag disponible.
+- **Action** : depuis l'onglet Données, ouvrir le modal d'ajout, basculer en mode « créer une
+  nouvelle donnée », saisir un nom unique, créer une nouvelle famille métier inline (« + Créer une
+  nouvelle famille »), ajouter un tag existant, puis valider.
+- **Résultat attendu** : la ligne créée apparaît dans le tableau Données avec le nom saisi ET la
+  famille métier créée.
+
+### DAT-09 — Modifier la sensibilité d'une donnée rattachée depuis l'onglet Données ✅
+
+- **Datafeature** : une application avec ≥ 1 donnée rattachée (résolue via l'API).
+- **Action** : depuis l'onglet Données, ouvrir le modal d'édition de la donnée (le champ de
+  recherche de donnée est verrouillé), choisir une sensibilité différente de la valeur actuelle,
+  puis valider.
+- **Résultat attendu** : la ligne de la donnée dans le tableau affiche le nouveau libellé de
+  sensibilité.
+
+### DAT-10 — Détacher une donnée depuis l'onglet Données ✅
+
+- **Datafeature** : une donnée de catalogue créée puis rattachée à une application pour le test
+  (jetable).
+- **Action** : depuis l'onglet Données, cliquer le bouton « Détacher » de la ligne, puis confirmer
+  dans la fenêtre de confirmation.
+- **Résultat attendu** : la ligne de la donnée n'apparaît plus dans le tableau Données.
+
+### DAT-11 — Modifier une donnée depuis la page de détail (statut open data) ✅
+
+- **Datafeature** : une application avec ≥ 1 donnée rattachée (résolue via l'API).
+- **Action** : sur la page de détail de la donnée, ouvrir le modal d'édition, sélectionner un
+  statut open data différent de la valeur actuelle, puis valider.
+- **Résultat attendu** : la section « Usage dans l'application » affiche le nouveau libellé de
+  statut open data.
+
+### DAT-12 — Détacher une donnée depuis la page de détail ✅
+
+- **Datafeature** : une donnée de catalogue créée puis rattachée à une application pour le test
+  (jetable).
+- **Action** : sur la page de détail de la donnée, cliquer le bouton de détachement puis confirmer
+  dans la fenêtre de confirmation.
+- **Résultat attendu** : redirection vers l'onglet Données (`tab-data`) de la fiche application.

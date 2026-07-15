@@ -708,6 +708,116 @@ export class DataFeature {
     return [list.results[0], list.results[1]];
   }
 
+  // --- Catalogue de données applicatives (DAT-*) ---
+  //
+  // Fonctionnalité CRUD encore non commitée côté backend/frontend au moment de l'écriture de ces
+  // résolveurs : `POST /data-catalog/descriptions` crée une `DataDescription` (référentielle,
+  // réutilisable — pas de rattachement à une application) ; `POST
+  // /data-catalog/applications/{applicationId}` rattache une description existante à une
+  // application (crée une ligne `DataApplication`). `applicationWithData()` lit déjà la 1ʳᵉ donnée
+  // trouvée dans le jeu courant pour les cas de lecture ; les résolveurs ci-dessous sèment
+  // « create-if-absent » une donnée **jetable et dédiée** pour les cas qui la modifient ou la
+  // suppriment, afin de ne pas interférer avec les cas qui lisent la liste partagée.
+
+  /** Crée une data description du catalogue (`POST /data-catalog/descriptions`). */
+  async createDataDescription({
+    name,
+    familyId,
+  }: {
+    name: string;
+    familyId?: string;
+  }): Promise<{ id: string; name: string }> {
+    const created = await this.api.createDataDescription({
+      name,
+      ...(familyId ? { familyId } : {}),
+    });
+    if (!created)
+      throw new Error(`Création de data description impossible : ${name}`);
+    return created;
+  }
+
+  /** Supprime une data description (nettoyage, ex. `provisionUnattachedDataDescription`). */
+  deleteDataDescription(id: string): Promise<boolean> {
+    return this.api.deleteDataDescription(id);
+  }
+
+  /**
+   * Rattache une data description existante à une application
+   * (`POST /data-catalog/applications/{applicationId}`). Renvoie l'objet `DataApplication` créé.
+   */
+  async attachDataToApplication(
+    applicationId: string,
+    dataDescriptionId: string,
+    body: Record<string, unknown> = {},
+  ): Promise<{ id: string }> {
+    const created = await this.api.attachDataToApplication(applicationId, {
+      dataDescriptionId,
+      ...body,
+    });
+    if (!created)
+      throw new Error(
+        `Rattachement de la donnée ${dataDescriptionId} à l'application ${applicationId} impossible`,
+      );
+    return created;
+  }
+
+  /** Détache une donnée applicative (nettoyage, ex. `provisionAttachedData`). */
+  detachDataFromApplication(
+    applicationId: string,
+    dataApplicationId: string,
+  ): Promise<boolean> {
+    return this.api.detachDataFromApplication(applicationId, dataApplicationId);
+  }
+
+  /**
+   * Compose une `DataDescription` **non rattachée** sur une application **dédiée et jetable**, pour
+   * les cas DAT qui testent le rattachement d'une donnée existante (formulaire d'ajout, recherche...).
+   * Crée sa propre application (`createTestApplication`) plutôt que de réutiliser `firstApplication()` :
+   * ce dernier est aussi la première application scannée par `applicationWithData()` (même tri/page
+   * par défaut), et une ligne transitoirement rattachée là-bas peut en devenir la « première » (tri
+   * par nom) le temps du test, cassant le `dataId` déjà résolu par un cas de lecture concurrent
+   * (DAT-09/DAT-11 notamment). L'isolation sur une application dédiée élimine cette course.
+   * L'appelant doit nettoyer en `finally` : supprimer la description (`deleteDataDescription`) puis
+   * l'application (`removeApplication`).
+   */
+  async provisionUnattachedDataDescription(): Promise<{
+    applicationId: string;
+    description: { id: string; name: string };
+  }> {
+    const app = await this.createTestApplication(`E2E DAT ${Date.now()}`);
+    const description = await this.createDataDescription({
+      name: `E2E DAT ${Date.now()}`,
+    });
+    return { applicationId: app.id, description };
+  }
+
+  /**
+   * Comme `provisionUnattachedDataDescription`, mais rattache immédiatement la description créée à
+   * l'application dédiée (`attachDataToApplication`), pour fournir une ligne `DataApplication`
+   * jetable aux cas qui la suppriment (DAT-10, DAT-12). L'appelant doit nettoyer en `finally` :
+   * détacher la donnée (`detachDataFromApplication`, si le test ne l'a pas déjà supprimée
+   * lui-même), supprimer la description (`deleteDataDescription`) puis l'application
+   * (`removeApplication`).
+   */
+  async provisionAttachedData(): Promise<{
+    applicationId: string;
+    dataApplicationId: string;
+  }> {
+    const { applicationId, description } =
+      await this.provisionUnattachedDataDescription();
+    try {
+      const dataApplication = await this.attachDataToApplication(
+        applicationId,
+        description.id,
+      );
+      return { applicationId, dataApplicationId: dataApplication.id };
+    } catch (err) {
+      await this.deleteDataDescription(description.id);
+      await this.removeApplication(applicationId);
+      throw err;
+    }
+  }
+
   // --- Matrice des permissions (PRM-12) ---
 
   permsMatrix(): Promise<PermsMatrixEntry[] | null> {

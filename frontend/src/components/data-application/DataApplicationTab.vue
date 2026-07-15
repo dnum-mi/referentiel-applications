@@ -2,20 +2,72 @@
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
-import type { DataApplicationDto } from "@/client/types.gen";
+import { Permission, type DataApplicationDto } from "@/client/types.gen";
+import type { ApplicationWithPerms } from "@/models/Application";
 import type { TableSortEvent } from "@/types/table";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
 import { routeNames } from "@/router/route-names";
 import RefAppTable from "@/components/RefAppTable.vue";
+import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
 import { OPEN_DATA_BADGE_CLASS, OPEN_DATA_STATUS_LABELS } from "@/constants/data-catalog.constants";
 import type { OpenDataStatus } from "@/client/types.gen.js";
+import DataApplicationModal from "./DataApplicationModal.vue";
 
 const props = defineProps<{
-  application: { id: string };
+  application: ApplicationWithPerms;
 }>();
 
 const router = useRouter();
 const toaster = useToasterStore();
+const userStore = useUserStore();
+
+const canEdit = computed(() => userStore.hasPermissions([Permission.DATA_WRITE], Array.from(props.application.myPerms ?? [])));
+
+const isCreateModalOpen = ref(false);
+const itemToEdit = ref<DataApplicationDto | null>(null);
+const itemToDelete = ref<DataApplicationDto | null>(null);
+const isDeleteModalOpen = ref(false);
+const errorMessage = ref("");
+
+function openEditModal(item: DataApplicationDto) {
+  itemToEdit.value = item;
+}
+
+function openDeleteModal(item: DataApplicationDto) {
+  itemToDelete.value = item;
+  isDeleteModalOpen.value = true;
+}
+
+function cancelDeletion() {
+  itemToDelete.value = null;
+  isDeleteModalOpen.value = false;
+}
+
+async function confirmDeletion() {
+  if (!itemToDelete.value) return;
+  try {
+    const response = await api.dataCatalogControllerDeleteApplicationData({
+      path: { applicationId: props.application.id, dataApplicationId: itemToDelete.value.id },
+    });
+    if (!response.response.ok) throw new Error("delete failed");
+    toaster.addSuccessMessage("Donnée détachée avec succès");
+    await fetchByApplication(props.application.id);
+  } catch (error) {
+    console.error(error);
+    errorMessage.value = "Erreur lors de la suppression de la donnée.";
+    toaster.addErrorMessage(errorMessage.value);
+  } finally {
+    itemToDelete.value = null;
+    isDeleteModalOpen.value = false;
+  }
+}
+
+async function onDataSaved() {
+  isCreateModalOpen.value = false;
+  itemToEdit.value = null;
+  await fetchByApplication(props.application.id);
+}
 
 const items = ref<DataApplicationDto[]>([]);
 const total = ref(0);
@@ -36,6 +88,7 @@ async function fetchByApplication(id: string) {
         page: currentPage.value,
         pageSize: pageSize.value,
         order: sortOrder.value === -1 ? "desc" : "asc",
+        sortBy: sortField.value,
       },
     });
     if (!response.response.ok) {
@@ -64,14 +117,15 @@ function onPage(event: any) {
   fetchByApplication(props.application.id);
 }
 
-const columns = [
+const columns = computed(() => [
   { field: "name", header: "Nom", sortable: true },
-  { field: "family", header: "Famille métier", sortable: false, width: "30%" },
-  { field: "sensibility", header: "Sensibilité", sortable: false },
-  { field: "openDataStatus", header: "Open data", sortable: false },
-  { field: "isReference", header: "Référentiel", sortable: false },
-  { field: "tags", header: "Tags", sortable: false },
-];
+  { field: "family", header: "Famille métier", sortable: true, width: "25%" },
+  { field: "sensibility", header: "Sensibilité", sortable: true },
+  { field: "openDataStatus", header: "Open data", sortable: true },
+  { field: "isReference", header: "Référentiel", sortable: true },
+  { field: "tags", header: "Tags", sortable: true },
+  ...(canEdit.value ? [{ field: "actions", header: "Actions", sortable: false }] : []),
+]);
 
 interface DataRow {
   id: string;
@@ -83,6 +137,7 @@ interface DataRow {
   isReference: boolean;
   _familyParts: string[];
   _tagsRaw: Array<{ id: string; name: string }>;
+  _raw: DataApplicationDto;
 }
 
 const tableItems = computed<DataRow[]>(() =>
@@ -96,6 +151,7 @@ const tableItems = computed<DataRow[]>(() =>
     isReference: dto.isReference ?? false,
     _familyParts: dto.dataDescription?.family?.path?.split(" > ") ?? [],
     _tagsRaw: dto.dataDescription?.tags ?? [],
+    _raw: dto,
   })),
 );
 
@@ -123,10 +179,25 @@ watch(
 
 <template>
   <div class="fr-py-4w">
-    <h2 class="fr-mb-2w">
-      Données de l'application
-      <span v-if="!isLoading" class="fr-text--sm fr-text-mention--grey fr-ml-1w">({{ total }} donnée{{ total > 1 ? "s" : "" }})</span>
-    </h2>
+    <div class="fr-grid-row fr-grid-row--middle fr-mb-2w">
+      <div class="fr-col">
+        <h2 class="fr-mb-0">
+          Données de l'application
+          <span v-if="!isLoading" class="fr-text--sm fr-text-mention--grey fr-ml-1w">({{ total }} donnée{{ total > 1 ? "s" : "" }})</span>
+        </h2>
+      </div>
+      <div v-if="canEdit" class="fr-col-auto">
+        <DsfrButton
+          tertiary
+          size="sm"
+          class="fr-btn--icon-left fr-icon-add-line"
+          label="Ajouter"
+          title="Rattacher une donnée à l'application"
+          data-testid="data-application-add-btn"
+          @click="isCreateModalOpen = true"
+        />
+      </div>
+    </div>
 
     <RefAppTable
       :items="tableItems"
@@ -197,7 +268,53 @@ watch(
         </div>
         <span v-else class="fr-text-mention--grey">—</span>
       </template>
+
+      <!-- ACTIONS — édition / détachement -->
+      <template #body-actions="{ data }: { data: DataRow }">
+        <DsfrButton
+          tertiary
+          size="sm"
+          icon="fr-icon-edit-line"
+          title="Modifier"
+          class="fr-mr-1w"
+          :data-testid="`data-application-edit-btn-${data.id}`"
+          @click="openEditModal(data._raw)"
+        />
+        <DsfrButton
+          tertiary
+          size="sm"
+          icon="fr-icon-delete-bin-line"
+          title="Détacher"
+          :data-testid="`data-application-delete-btn-${data.id}`"
+          @click="openDeleteModal(data._raw)"
+        />
+      </template>
     </RefAppTable>
+
+    <DataApplicationModal
+      v-if="isCreateModalOpen"
+      :application-id="application.id"
+      :error-message="errorMessage"
+      @close="isCreateModalOpen = false"
+      @data-created="onDataSaved"
+    />
+
+    <DataApplicationModal
+      v-if="itemToEdit"
+      :application-id="application.id"
+      :initial-item="itemToEdit"
+      :error-message="errorMessage"
+      @close="itemToEdit = null"
+      @data-updated="onDataSaved"
+    />
+
+    <DeleteConfirmationModal
+      v-if="isDeleteModalOpen"
+      :opened="isDeleteModalOpen"
+      item-name="cette donnée"
+      @confirm="confirmDeletion"
+      @cancel="cancelDeletion"
+    />
   </div>
 </template>
 

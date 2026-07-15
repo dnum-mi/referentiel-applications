@@ -2,8 +2,11 @@
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
-import type { DataApplicationDto } from "@/client/types.gen";
+import { Permission, type DataApplicationDto } from "@/client/types.gen";
+import type { APP_PERMISSIONS } from "@/models/Application";
+import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
 import { routeNames } from "@/router/route-names";
 import {
   OPEN_DATA_STATUS_LABELS,
@@ -14,6 +17,8 @@ import {
 } from "@/constants/data-catalog.constants";
 import type { OpenDataStatus, UpdateFrequency } from "@/client/types.gen.js";
 import RefAppTable from "@/components/RefAppTable.vue";
+import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
+import DataApplicationModal from "./DataApplicationModal.vue";
 
 const props = defineProps<{
   applicationId: string;
@@ -22,9 +27,18 @@ const props = defineProps<{
 
 const router = useRouter();
 const toaster = useToasterStore();
+const applicationStore = useApplicationStore();
+const userStore = useUserStore();
 
 const item = ref<DataApplicationDto | null>(null);
 const isLoading = ref(false);
+const myPerms = ref<Set<APP_PERMISSIONS>>(new Set());
+
+const canEdit = computed(() => userStore.hasPermissions([Permission.DATA_WRITE], Array.from(myPerms.value)));
+
+const isEditModalOpen = ref(false);
+const isDeleteModalOpen = ref(false);
+const errorMessage = ref("");
 
 async function fetchOne() {
   item.value = null;
@@ -45,7 +59,38 @@ async function fetchOne() {
   }
 }
 
+async function fetchMyPerms() {
+  try {
+    myPerms.value = await applicationStore.getMyPerms(props.applicationId);
+  } catch (error) {
+    console.error("Error fetching permissions:", error);
+  }
+}
+
 onMounted(fetchOne);
+onMounted(fetchMyPerms);
+
+async function onDataUpdated() {
+  isEditModalOpen.value = false;
+  await fetchOne();
+}
+
+async function confirmDeletion() {
+  try {
+    const response = await api.dataCatalogControllerDeleteApplicationData({
+      path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId },
+    });
+    if (!response.response.ok) throw new Error("delete failed");
+    toaster.addSuccessMessage("Donnée détachée avec succès");
+    goToProfileApp(props.applicationId);
+  } catch (error) {
+    console.error(error);
+    errorMessage.value = "Erreur lors de la suppression de la donnée.";
+    toaster.addErrorMessage(errorMessage.value);
+  } finally {
+    isDeleteModalOpen.value = false;
+  }
+}
 
 // Découpe la famille en segments pour l'affichage hiérarchique
 const familyParts = computed(() => item.value?.dataDescription?.family?.path?.split(" > ") ?? []);
@@ -88,15 +133,34 @@ function goToProfileApp(appId: string) {
 
 <template>
   <div class="fr-py-4w fr-px-4w" data-testid="data-application-detail">
-    <!-- ── Retour ─────────────────────────────────────────────────── -->
-    <DsfrButton
-      label="Retour à la liste"
-      secondary
-      icon="ri-arrow-left-line"
-      class="fr-mb-3w"
-      data-testid="data-application-detail-back"
-      @click="goToProfileApp(props.applicationId)"
-    />
+    <!-- ── Retour + actions ───────────────────────────────────────── -->
+    <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+      <div class="fr-col">
+        <DsfrButton
+          label="Retour à la liste"
+          secondary
+          icon="ri-arrow-left-line"
+          data-testid="data-application-detail-back"
+          @click="goToProfileApp(props.applicationId)"
+        />
+      </div>
+      <div v-if="canEdit && item" class="fr-col-auto fr-btns-group fr-btns-group--inline-md detail-actions">
+        <DsfrButton
+          tertiary
+          icon="fr-icon-edit-line"
+          label="Modifier"
+          data-testid="data-application-detail-edit-btn"
+          @click="isEditModalOpen = true"
+        />
+        <DsfrButton
+          tertiary
+          icon="fr-icon-delete-bin-line"
+          label="Détacher"
+          data-testid="data-application-detail-delete-btn"
+          @click="isDeleteModalOpen = true"
+        />
+      </div>
+    </div>
 
     <!-- ── Loading ────────────────────────────────────────────────── -->
     <output
@@ -416,11 +480,39 @@ function goToProfileApp(appId: string) {
         </div>
       </div>
     </template>
+
+    <DataApplicationModal
+      v-if="isEditModalOpen && item"
+      :application-id="props.applicationId"
+      :initial-item="item"
+      :error-message="errorMessage"
+      @close="isEditModalOpen = false"
+      @data-updated="onDataUpdated"
+    />
+
+    <DeleteConfirmationModal
+      v-if="isDeleteModalOpen"
+      :opened="isDeleteModalOpen"
+      item-name="cette donnée"
+      @confirm="confirmDeletion"
+      @cancel="isDeleteModalOpen = false"
+    />
   </div>
 </template>
 
 <style scoped>
 /* ── Layout helpers ──────────────────────────────────────────── */
+/* .fr-btns-group impose margin-bottom: 1rem et align-items: stretch sur ses .fr-btn (pensé pour un
+   empilement mobile) : on neutralise pour aligner ces boutons avec « Retour à la liste ». */
+.detail-actions {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.detail-actions :deep(.fr-btn) {
+  margin-bottom: 0;
+}
+
 .detail-title-row {
   display: flex;
   align-items: center;

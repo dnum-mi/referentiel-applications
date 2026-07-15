@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsArray, IsOptional, IsString, IsUrl, IsUUID } from "class-validator";
+import { PaginationDto } from "../../common/dto";
+
+export class DataDescriptionFiltersDto extends PaginationDto {
+  @ApiPropertyOptional({
+    description: "Filtre par nom (recherche partielle, insensible à la casse)",
+  })
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
 
 export class CreateDataDescriptionDto {
   @ApiProperty()

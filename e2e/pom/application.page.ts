@@ -769,4 +769,204 @@ export class ApplicationPage extends BasePage {
   async expectRgaaEmpty(): Promise<void> {
     await expect(this.byTestId("rgaa-empty")).toBeVisible();
   }
+
+  // --- Catalogue de données applicatives : rattachement / création / édition / détachement
+  // depuis l'onglet Données (DAT-07 à DAT-10, feature CRUD catalogue de données) ---
+
+  /** Ligne portant les boutons « Modifier »/« Détacher » de `dataApplicationId`. */
+  private dataRow(dataApplicationId: string): Locator {
+    return this.byTestId(`data-application-edit-btn-${dataApplicationId}`)
+      .locator("..")
+      .locator("..");
+  }
+
+  /** Ouvre le modal de rattachement/création d'une donnée (DAT-07, DAT-08). */
+  async openAddDataModal(): Promise<void> {
+    await this.byTestId("data-application-add-btn").click();
+    await expect(this.byTestId("data-application-modal")).toBeVisible();
+  }
+
+  /**
+   * Recherche une donnée existante du catalogue par un terme (≥ 3 caractères, recherche serveur
+   * débouncée 300 ms) puis sélectionne l'option correspondant à `descriptionId` dans la datalist.
+   * Un `<option>` de `<datalist>` natif n'est jamais « visible » pour Playwright : on attend
+   * `state: "attached"`. Le texte injecté dans le champ est celui réellement rendu par l'option
+   * (nom + famille éventuelle entre parenthèses), jamais reconstruit côté test — DAT-07.
+   */
+  async searchAndSelectExistingData(
+    searchTerm: string,
+    descriptionId: string,
+  ): Promise<void> {
+    const input = this.byTestId("data-description-search-input");
+    await input.fill(searchTerm);
+    const option = this.byTestId(`data-description-option-${descriptionId}`);
+    await option.waitFor({ state: "attached" });
+    const optionText = (await option.textContent())?.trim() ?? "";
+    await input.fill(optionText);
+  }
+
+  /** Bascule le modal en mode « création d'une nouvelle donnée de catalogue » (DAT-08). */
+  async switchToCreateNewDescription(): Promise<void> {
+    await this.byTestId("data-application-create-description-toggle").click();
+  }
+
+  /** Renseigne le nom de la nouvelle donnée de catalogue (DAT-08). */
+  async fillNewDescriptionName(name: string): Promise<void> {
+    await this.byTestId("new-description-name-input").fill(name);
+  }
+
+  /**
+   * Choisit « + Créer une nouvelle famille » (valeur `__new__` du select famille) et renseigne le
+   * chemin de la nouvelle famille (DAT-08).
+   */
+  async createNewFamilyInline(path: string): Promise<void> {
+    await this.byTestId("new-description-family-select").selectOption(
+      "__new__",
+    );
+    await this.byTestId("new-family-path-input").fill(path);
+  }
+
+  /**
+   * Ajoute un tag à la nouvelle donnée via le picker `AccessibleAutocomplete` : les suggestions
+   * n'ont pas de `data-testid` par item mais sont exposées en `role="option"` (nom du tag = nom
+   * accessible) — DAT-08.
+   */
+  async addNewDescriptionTag(tagName: string): Promise<void> {
+    const picker = this.byTestId("new-description-tag-search");
+    await picker.locator("input").fill(tagName);
+    const option = picker.getByRole("option", { name: tagName });
+    await expect(option).toBeVisible();
+    await option.click();
+  }
+
+  /**
+   * Soumet le modal de rattachement/création (POST) et renvoie l'identifiant de la ligne
+   * `DataApplication` créée, capturé depuis la réponse réseau, pour permettre un nettoyage précis
+   * en `finally` (DAT-07, DAT-08).
+   */
+  async submitNewDataAttachment(): Promise<string | null> {
+    const [response] = await Promise.all([
+      this.page.waitForResponse(
+        (r) =>
+          /\/data-catalog\/applications\/[^/]+$/.test(r.url()) &&
+          r.request().method() === "POST",
+      ),
+      this.byTestId("data-application-submit-btn").click(),
+    ]);
+    await this.expectToaster(/succès/i);
+    const body = (await response.json().catch(() => null)) as {
+      id?: string;
+    } | null;
+    return body?.id ?? null;
+  }
+
+  /** Ouvre le modal d'édition d'une donnée déjà rattachée, depuis sa ligne (DAT-09). */
+  async openEditDataModal(dataApplicationId: string): Promise<void> {
+    await this.byTestId(
+      `data-application-edit-btn-${dataApplicationId}`,
+    ).click();
+    await expect(this.byTestId("data-application-modal")).toBeVisible();
+  }
+
+  /** En édition, le champ de recherche de donnée est verrouillé (la donnée liée ne se remplace pas) — DAT-09. */
+  async expectDataSearchLocked(): Promise<void> {
+    await expect(this.byTestId("data-description-search-input")).toBeDisabled();
+  }
+
+  /** Valeur actuellement sélectionnée du select sensibilité, modal d'édition déjà ouvert (DAT-09). */
+  currentSensibilityValue(): Promise<string> {
+    return this.byTestId("data-application-sensibility-select").inputValue();
+  }
+
+  /**
+   * Sélectionne, dans le modal d'édition déjà ouvert, une sensibilité DIFFÉRENTE de `excludeValue`
+   * et renvoie `{ value, label }` ; `null` si le référentiel n'expose aucune alternative (jeu de
+   * données trop pauvre — repli `test.skip` côté spec) — DAT-09.
+   */
+  async selectDifferentSensibility(
+    excludeValue: string,
+  ): Promise<{ value: string; label: string } | null> {
+    const select = this.byTestId("data-application-sensibility-select");
+    const options = await select.locator("option").evaluateAll(
+      (els, exclude) =>
+        els
+          .map((el) => ({
+            value: (el as HTMLOptionElement).value,
+            label: (el.textContent ?? "").trim(),
+          }))
+          .filter((o) => o.value !== "" && o.value !== exclude),
+      excludeValue,
+    );
+    if (!options.length) return null;
+    const [chosen] = options;
+    await select.selectOption(chosen.value);
+    return chosen;
+  }
+
+  /** Soumet le modal d'édition (formulaire déjà rempli) — DAT-09. */
+  async submitDataEdit(): Promise<void> {
+    await this.byTestId("data-application-submit-btn").click();
+    await this.expectToaster(/succès/i);
+  }
+
+  /**
+   * Rouvre le modal d'édition d'une donnée et lui applique la sensibilité `value` (id d'option) —
+   * sert à restaurer l'état initial en `finally` (DAT-09).
+   */
+  async setDataSensibility(
+    dataApplicationId: string,
+    value: string,
+  ): Promise<void> {
+    await this.openEditDataModal(dataApplicationId);
+    await this.byTestId("data-application-sensibility-select").selectOption(
+      value,
+    );
+    await this.submitDataEdit();
+  }
+
+  /** La ligne de la donnée `dataApplicationId` affiche le libellé de sensibilité attendu (DAT-09). */
+  async expectDataRowSensibility(
+    dataApplicationId: string,
+    label: string,
+  ): Promise<void> {
+    await expect(this.dataRow(dataApplicationId)).toContainText(label);
+  }
+
+  /** Détache une donnée depuis sa ligne dans l'onglet Données (DAT-10). */
+  async deleteDataRow(dataApplicationId: string): Promise<void> {
+    await this.byTestId(
+      `data-application-delete-btn-${dataApplicationId}`,
+    ).click();
+    await expect(this.byTestId("delete-confirmation-modal")).toBeVisible();
+    await this.byTestId("delete-confirm-btn").click();
+    await this.expectToaster(/succès/i);
+  }
+
+  /** La ligne de la donnée `dataApplicationId` n'est plus présente dans le tableau (DAT-10). */
+  async expectDataRowAbsent(dataApplicationId: string): Promise<void> {
+    await expect(
+      this.byTestId(`data-application-delete-btn-${dataApplicationId}`),
+    ).toHaveCount(0);
+  }
+
+  /** Une ligne du tableau Données contient `text` (ex. le nom) — DAT-07, DAT-08. */
+  async expectDataRowContains(text: string): Promise<void> {
+    await expect(
+      this.byTestId("data-application-table")
+        .locator("tbody tr", { hasText: text })
+        .first(),
+    ).toBeVisible();
+  }
+
+  /** La ligne portant `rowText` (ex. le nom) contient aussi `additionalText` (ex. la famille) — DAT-08. */
+  async expectDataRowContainsAll(
+    rowText: string,
+    additionalText: string,
+  ): Promise<void> {
+    const row = this.byTestId("data-application-table")
+      .locator("tbody tr", { hasText: rowText })
+      .first();
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(additionalText);
+  }
 }

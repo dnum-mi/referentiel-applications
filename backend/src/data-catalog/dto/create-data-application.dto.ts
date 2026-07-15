@@ -93,11 +93,7 @@ export class DataSensibilityDto {
   color: string;
 }
 
-export class DataExposureDto {
-  @ApiProperty()
-  @IsUUID()
-  id: string;
-
+export class CreateDataExposureDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
@@ -127,6 +123,12 @@ export class DataExposureDto {
   @IsOptional()
   @IsString()
   authenticationType?: string;
+}
+
+export class DataExposureDto extends CreateDataExposureDto {
+  @ApiProperty()
+  @IsUUID()
+  id: string;
 }
 
 export class DataApplicationDto {
