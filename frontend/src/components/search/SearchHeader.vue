@@ -15,6 +15,7 @@ const router = useRouter();
 const { searchApplications } = useApplicationSearch();
 const searchRef = ref<{ clear?: () => void; focus?: () => void } | null>(null);
 const openBtnRef = ref<{ $el?: HTMLElement } | null>(null);
+const closeBtnRef = ref<{ $el?: HTMLElement } | null>(null);
 const isMobile = useMediaQuery("(max-width: 768px)");
 const showInput = ref(!isMobile.value);
 
@@ -38,6 +39,23 @@ function closeSearch() {
   showInput.value = false;
   searchRef.value?.clear?.();
   restoreLoupeFocus();
+}
+
+// Piège de focus de la boîte de dialogue mobile : le Tab boucle entre le champ
+// de recherche et le bouton « Fermer », sans jamais sortir de l'overlay.
+function onOverlayKeydown(e: KeyboardEvent) {
+  if (e.key !== "Tab") return;
+  const input = document.getElementById("app-search");
+  const closeBtn = closeBtnRef.value?.$el?.querySelector("button");
+  if (!input || !closeBtn) return;
+  const active = document.activeElement;
+  if (!e.shiftKey && active === closeBtn) {
+    e.preventDefault();
+    input.focus();
+  } else if (e.shiftKey && active === input) {
+    e.preventDefault();
+    closeBtn.focus();
+  }
 }
 
 async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[]> {
@@ -98,6 +116,7 @@ function onClose() {
       :role="isMobile && showInput ? 'dialog' : undefined"
       :aria-modal="isMobile && showInput ? 'true' : undefined"
       :aria-label="isMobile && showInput ? 'Recherche d’une application' : undefined"
+      @keydown="isMobile && showInput ? onOverlayKeydown($event) : undefined"
     >
       <div :class="{ 'overlay-header': isMobile && showInput }">
         <AccessibleAutocomplete
@@ -122,6 +141,7 @@ function onClose() {
 
         <DsfrButton
           v-if="isMobile && showInput"
+          ref="closeBtnRef"
           @click="closeSearch"
           tertiary
           class="close-overlay"
@@ -164,6 +184,11 @@ function onClose() {
   flex-shrink: 0;
 }
 
+/* FIXME : `-18.99em` est un nombre magique fragile qui remonte la loupe dans le
+   bandeau. Il dépend de la hauteur du header et casserait à la moindre évolution
+   de mise en page. À remplacer par un positionnement robuste (le header devrait
+   piloter l'alignement, p. ex. flex/grid) — à faire avec une vérification
+   visuelle mobile, non modifié ici pour ne pas régresser à l'aveugle. */
 .loupe-button {
   position: relative;
   margin-top: -18.99em;

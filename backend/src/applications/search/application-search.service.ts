@@ -28,8 +28,17 @@ const MATERIALIZED_VIEW = "application_search_index";
  * court (« a ») peut matcher quasi toutes les applications ; l'autocomplétion
  * n'affiche que les premiers résultats, inutile de classer et transporter
  * l'intégralité de la base.
+ *
+ * ATTENTION : ce plafond s'applique au classement FTS *avant* le filtrage par
+ * permissions (l'intersection `id IN (rankedIds)` est faite ensuite côté Prisma,
+ * cf. application.service). Une valeur trop basse pourrait masquer des
+ * applications autorisées d'un utilisateur si elles sont classées au-delà du
+ * plafond pour un préfixe donné. 1000 rend ce cas très improbable tout en
+ * gardant la requête rapide (index GIN + LIMIT). Le filtrage des permissions
+ * dans la requête SQL elle-même serait la solution complète mais bien plus
+ * lourde (la logique de droits vit dans buildSearchWhere).
  */
-const PREFIX_RESULT_LIMIT = 200;
+const PREFIX_RESULT_LIMIT = 1000;
 
 /** Durée de vie du cache des résultats FTS. Courte : elle borne seulement la
  * staleness si l'index est rafraîchi par une autre instance de l'application. */
