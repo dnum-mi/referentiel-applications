@@ -1,24 +1,28 @@
 <script setup lang="ts">
-import { ref, nextTick } from "vue";
+import { ref, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import AccessibleAutocomplete from "../AccessibleAutocomplete.vue";
 import { useApplicationSearch } from "@/composables/use-application-search";
-import { useDebounceFn, useMediaQuery } from "@vueuse/core";
+import { useMediaQuery } from "@vueuse/core";
 
 interface ApplicationOption {
   id: string | number;
   label: string;
   shortName?: string;
-  organization?: string;
 }
 
 const router = useRouter();
 const { searchApplications } = useApplicationSearch();
 const searchRef = ref<{ clear?: () => void; focus?: () => void } | null>(null);
+const openBtnRef = ref<{ $el?: HTMLElement } | null>(null);
 const isMobile = useMediaQuery("(max-width: 768px)");
 const showInput = ref(!isMobile.value);
-const suggestions = ref<ApplicationOption[]>([]);
-const trimmedQuery = ref("");
+
+// Bascule desktop⇄mobile : ne pas laisser surgir l'overlay plein écran sur un
+// simple redimensionnement (il ne doit s'ouvrir que sur action explicite).
+watch(isMobile, (mobile) => {
+  showInput.value = !mobile;
+});
 
 async function onLoupeClick() {
   showInput.value = true;
@@ -26,42 +30,48 @@ async function onLoupeClick() {
   searchRef.value?.focus?.();
 }
 
+function restoreLoupeFocus() {
+  nextTick(() => openBtnRef.value?.$el?.querySelector("button")?.focus());
+}
+
 function closeSearch() {
   showInput.value = false;
   searchRef.value?.clear?.();
+  restoreLoupeFocus();
 }
 
 async function fetchSuggestions(searchQuery: string): Promise<ApplicationOption[]> {
-  trimmedQuery.value = searchQuery.trim();
-  if (!trimmedQuery.value) return [];
+  const trimmed = searchQuery.trim();
+  if (!trimmed) return [];
 
-  return new Promise((resolve) => {
-    debouncedSearch(resolve);
-  });
+  try {
+    // Recherche INDÉPENDANTE des filtres de la page (mergeCurrentFilters = false)
+    // et triée par PERTINENCE (ts_rank), pas par le tri de la page de recherche.
+    const response = await searchApplications({ qPrefix: trimmed, page: 0, pageSize: 8, sortBy: "relevance" }, false, false);
+
+    return (response?.results ?? []).map(
+      (app): ApplicationOption => ({ id: app.id, label: app.label, shortName: app.shortName ?? undefined }),
+    );
+  } catch {
+    // L'autocomplete gère l'affichage ; on renvoie une liste vide en cas d'échec.
+    return [];
+  }
 }
-
-const debouncedSearch = useDebounceFn(async (resolve: (res: ApplicationOption[]) => void) => {
-  const response = await searchApplications({ qPrefix: trimmedQuery.value, page: 0, pageSize: 8 }, false);
-
-  suggestions.value = (response?.results ?? []).map(
-    (app): ApplicationOption => ({ id: app.id, label: app.label, shortName: app.shortName ?? undefined }),
-  );
-
-  resolve(suggestions.value);
-}, 400);
 
 function displayLabel(application: ApplicationOption | null) {
   return application ? (application.label ?? application.shortName ?? "") : "";
 }
 
 function onConfirm(selection: ApplicationOption | null) {
-  if (!selection) return;
-  if (selection.id != null) {
-    const applicationId = selection.id;
-    router.push({ name: "application", params: { id: applicationId } });
-    searchRef.value?.clear?.();
-    if (isMobile.value) closeSearch();
-  }
+  if (!selection || selection.id == null) return;
+  router.push({ name: "application", params: { id: selection.id } });
+  searchRef.value?.clear?.();
+  if (isMobile.value) closeSearch();
+}
+
+// Échap depuis l'autocomplete (liste déjà fermée) → ferme l'overlay mobile.
+function onClose() {
+  if (isMobile.value && showInput.value) closeSearch();
 }
 </script>
 
@@ -71,6 +81,7 @@ function onConfirm(selection: ApplicationOption | null) {
 
     <DsfrButton
       v-show="isMobile && !showInput"
+      ref="openBtnRef"
       @click="onLoupeClick"
       tertiary
       class="loupe-button"
@@ -80,8 +91,14 @@ function onConfirm(selection: ApplicationOption | null) {
       <v-icon name="ri-search-line" />
     </DsfrButton>
 
-    <!-- Desktop : champ inline ; Mobile : overlay plein écran ouvert via la loupe. -->
-    <div v-if="!isMobile || showInput" :class="['search-field', { 'mobile-search-overlay': isMobile && showInput }]">
+    <!-- Desktop : champ inline ; Mobile : overlay plein écran (boîte de dialogue) ouvert via la loupe. -->
+    <div
+      v-if="!isMobile || showInput"
+      :class="['search-field', { 'mobile-search-overlay': isMobile && showInput }]"
+      :role="isMobile && showInput ? 'dialog' : undefined"
+      :aria-modal="isMobile && showInput ? 'true' : undefined"
+      :aria-label="isMobile && showInput ? 'Recherche d’une application' : undefined"
+    >
       <div :class="{ 'overlay-header': isMobile && showInput }">
         <AccessibleAutocomplete
           ref="searchRef"
@@ -93,14 +110,12 @@ function onConfirm(selection: ApplicationOption | null) {
           :on-change="onConfirm"
           :display-no-result="true"
           placeholder="Rechercher une application…"
+          @close="onClose"
         >
           <template #suggestion="{ item }">
             <div class="suggestion">
               <strong>{{ item.label }}</strong>
-              <template v-if="item.shortName || item.organization">
-                <small v-if="item.shortName"> ({{ item.shortName }})</small>
-                <em v-if="item.organization"> — {{ item.organization }}</em>
-              </template>
+              <small v-if="item.shortName"> ({{ item.shortName }})</small>
             </div>
           </template>
         </AccessibleAutocomplete>
@@ -156,18 +171,13 @@ function onConfirm(selection: ApplicationOption | null) {
   margin-right: 1.2em;
 }
 
-.close-search {
-  margin-left: 0.5rem;
-}
-
 .suggestion {
   display: flex;
   flex-direction: column;
   font-size: 0.95rem;
 }
 
-.suggestion small,
-.suggestion em {
+.suggestion small {
   color: #6b7280;
   font-size: 0.85rem;
 }

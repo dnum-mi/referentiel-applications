@@ -100,7 +100,7 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
       FROM application_search_index asi,
            plainto_tsquery('french', immutable_unaccent(${trimmed})) AS q(query)
       WHERE asi.document @@ q.query
-      ORDER BY rank DESC
+      ORDER BY rank DESC, asi."applicationId"
     `;
 
     const results = rows.map((row) => ({
@@ -147,7 +147,7 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
       FROM application_search_index asi,
            to_tsquery('simple', immutable_unaccent(${tsQuery})) AS q(query)
       WHERE asi.document_simple @@ q.query
-      ORDER BY rank DESC
+      ORDER BY rank DESC, asi."applicationId"
       LIMIT ${PREFIX_RESULT_LIMIT}
     `;
 
