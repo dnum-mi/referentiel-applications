@@ -79,3 +79,36 @@
 - **Datafeature** : session `admin`.
 - **Action** : cliquer l'entrée « Applications » de la navigation principale.
 - **Résultat attendu** : navigation vers `/recherche-application`.
+
+### ACC-11 — Recherche rapide : un préfixe court non lemmatisé ramène des suggestions ✅
+
+- **Datafeature** : ≥ 1 application dans le jeu de données.
+- **Action** : connecté, saisir dans la recherche rapide du bandeau le préfixe court (4 lettres)
+  d'un libellé d'application réel.
+- **Résultat attendu** : au moins une suggestion est proposée. Non-régression du bug de recherche
+  FTS : le dictionnaire `french` racinisait les libellés (« Application » → « appliqu ») et un
+  préfixe court ne matchait plus ; la recherche préfixe repose désormais sur l'index
+  `document_simple` (dictionnaire `simple`, non lemmatisé).
+
+### ACC-12 — Recherche rapide indépendante des filtres de la page de recherche ✅
+
+- **Datafeature** : ≥ 1 application dans le jeu de données.
+- **Action** : sur `/recherche-application`, filtrer la liste jusqu'à un état vide (0 résultat),
+  puis saisir dans la recherche rapide du bandeau le préfixe d'un libellé réel.
+- **Résultat attendu** : la recherche rapide propose des suggestions malgré la page filtrée à vide —
+  elle interroge l'API indépendamment des filtres de la page et trie par pertinence.
+
+### ACC-13 — Recherche rapide : un terme sans correspondance affiche « Aucun résultat » ✅
+
+- **Datafeature** : aucune (chaîne improbable ne correspondant à aucune application).
+- **Action** : connecté, saisir dans la recherche rapide un terme ne correspondant à aucune application.
+- **Résultat attendu** : la liste de suggestions affiche l'état « Aucun résultat ».
+
+### ACC-14 — Recherche rapide : navigation clavier dans l'autocomplete (RGAA 4.1.2) ✅
+
+- **Datafeature** : ≥ 1 application dans le jeu de données.
+- **Action** : connecté, saisir le préfixe d'un libellé réel, puis utiliser la flèche bas et la
+  touche Échap.
+- **Résultat attendu** : la liste est déployée (`aria-expanded=true`) ; la flèche bas active la
+  première option (`aria-activedescendant` la désigne, `aria-selected="true"`) ; Échap referme la
+  liste (`aria-expanded=false`).
