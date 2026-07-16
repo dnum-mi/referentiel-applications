@@ -827,6 +827,7 @@ erDiagram
   String(50) code UK "nullable"
   String(255) label
   String description "nullable"
+  Boolean isAdmin
 }
 "_ApplicationToUser" {
   String A FK
@@ -947,6 +948,10 @@ Properties as follows:
 - `code`: Code court pour le rôle
 - `label`: Nom d'affichage du rôle
 - `description`: Description des responsabilités de ce rôle
+- `isAdmin`
+  > Type d'acteur « administrateur de l'application » : ses acteurs disposent
+  > toujours de l'ensemble des droits (lecture + écriture) sur l'application
+  > concernée, indépendamment de la matrice AppPermissions éditable.
 
 ### `_ApplicationToUser`
 

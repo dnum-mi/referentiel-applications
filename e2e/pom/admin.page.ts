@@ -164,10 +164,13 @@ export class AdminPage extends BasePage {
    */
   async editMatrixAndRestore(): Promise<void> {
     // Le testid `app-perms-select-*` (passé par le parent) écrase `permission-toggle`.
-    // On vise un toggle Lecture/Écriture (texte `-` / `RO` / `RW`), pas la case PriorityRestart.
-    // Colonne « App » du 1ᵉʳ type d'acteur : un toggle Lecture/Écriture (`-`/`RO`/`RW`).
+    // On vise un toggle Lecture/Écriture (texte `-` / `RO` / `RW`) de la colonne « App », mais
+    // sur une ligne ÉDITABLE : les lignes d'un type d'acteur « admin d'application » (isAdmin,
+    // ex. MOA/MOE) ont leurs contrôles verrouillés (`disabled`) — les cliquer expirerait.
     const toggle = () =>
-      this.matrixPanel().locator('[data-testid$="-App"]').first();
+      this.matrixPanel()
+        .locator('[data-testid$="-App"]:not([disabled])')
+        .first();
     await expect(toggle()).toBeVisible();
     const original = (await toggle().innerText()).trim();
 
@@ -197,8 +200,12 @@ export class AdminPage extends BasePage {
    * L'appelant restaure via l'API dans son `finally`.
    */
   async editMatrixAndSave(): Promise<void> {
+    // Ligne ÉDITABLE uniquement : les types « admin d'application » (isAdmin) ont leurs
+    // contrôles verrouillés (`disabled`), les cliquer expirerait.
     const toggle = () =>
-      this.matrixPanel().locator('[data-testid$="-App"]').first();
+      this.matrixPanel()
+        .locator('[data-testid$="-App"]:not([disabled])')
+        .first();
     await expect(toggle()).toBeVisible();
     const original = (await toggle().innerText()).trim();
 
