@@ -7288,8 +7288,6 @@ components:
       properties:
         actorTypeId:
           type: string
-        isAdmin:
-          type: boolean
         AppRead:
           type: boolean
         AppWrite:

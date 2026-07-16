@@ -18,10 +18,10 @@ describe("Tags", () => {
   });
 
   it("/POST tags", async () => {
-    const name =
-      faker.word
-        .noun({ length: { min: 2, max: 100 } })
-        .replace(/[^a-z._-]/g, "") || `tag-test-${Date.now()}`;
+    const baseName = faker.word
+      .noun({ length: { min: 2, max: 80 } })
+      .replace(/[^a-z._-]/g, "");
+    const name = `${baseName}-${Date.now()}`;
 
     await request(app().getHttpServer())
       .post("/tags")
