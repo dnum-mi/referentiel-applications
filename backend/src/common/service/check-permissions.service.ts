@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Permission } from "@prisma/client";
+import { Permission, Roles } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
 import {
@@ -68,7 +68,7 @@ export class CheckPermissions {
           })
         : [];
 
-    return [
+    const matrixPermissions = [
       ...emailActors.flatMap((actor) =>
         actor.actorType.appPermissions.flatMap((perm) =>
           transformAppPermissionsObjectToArray(perm),
@@ -80,6 +80,20 @@ export class CheckPermissions {
         ),
       ),
     ];
+
+    // Un acteur rattaché à un type « administrateur de l'application » dispose
+    // TOUJOURS de l'ensemble des droits applicatifs (lecture + écriture) sur CETTE
+    // application, indépendamment de la matrice AppPermissions éditable. La garantie
+    // reste bornée à `applicationId` (les acteurs sont chargés pour cette seule app).
+    const isAdminActor =
+      emailActors.some((actor) => actor.actorType.isAdmin) ||
+      groupActorTypes.some((actorType) => actorType.isAdmin);
+
+    if (!isAdminActor) return matrixPermissions;
+
+    return Array.from(
+      new Set([...matrixPermissions, ...roleToAppPermissions(Roles.ADMIN)]),
+    );
   }
 
   private async getUserRolePermissions(

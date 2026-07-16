@@ -1,4 +1,5 @@
 import { Permission, Roles } from "@prisma/client";
+import { AppPermissionsValues } from "src/common/utils/types";
 
 const NONE_PERMISSIONS: Set<Permission> = new Set([
   Permission.AppRead,
@@ -62,7 +63,13 @@ const WRITE_APP_PERMISSIONS = new Set([
   Permission.AppWritePriority,
   Permission.DataWrite,
 ]);
-const ADMIN_APP_PERMISSIONS = new Set(WRITE_APP_PERMISSIONS);
+// Jeu applicatif COMPLET de l'administrateur d'une application : l'intégralité des
+// droits de la matrice AppPermissions (tous les couples read/write + AppRead,
+// AppWritePriority, MetadataRead, DataRead/Write, ReportRead/Post/Manage). Dérivé de
+// la source canonique `AppPermissionsValues` afin de rester exhaustif si une colonne
+// de permission applicative est ajoutée. Contrairement à `WRITE_APP_PERMISSIONS`, il
+// inclut notamment `AppRead` et les signalements, absents du niveau « write ».
+const ADMIN_APP_PERMISSIONS = new Set(AppPermissionsValues);
 
 export const roleToAppPermissions = (role: Roles) => {
   switch (role) {
