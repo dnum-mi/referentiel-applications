@@ -43,9 +43,18 @@ export class DataFeature {
    * jeu courant n'en contient aucune.
    */
   async applicationWithPunctuationInLabel(): Promise<AppRef | null> {
-    const page = await this.api.applications("pageSize=200&page=0");
     const internalPunct = /[\p{L}\p{N}][^\p{L}\p{N}\s][\p{L}\p{N}]/u;
-    return page?.results?.find((a) => internalPunct.test(a.label)) ?? null;
+    const pageSize = 100; // plafond API ; on pagine car les noms ponctués (O…, Q…) sont plus loin.
+    for (let page = 0; page < 30; page++) {
+      const res = await this.api.applications(
+        `pageSize=${pageSize}&page=${page}`,
+      );
+      const results = res?.results ?? [];
+      const match = results.find((a) => internalPunct.test(a.label));
+      if (match) return match;
+      if (results.length < pageSize) break; // dernière page atteinte
+    }
+    return null;
   }
 
   /**
