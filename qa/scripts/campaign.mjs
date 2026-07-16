@@ -177,13 +177,31 @@ async function gh(path, init = {}) {
 
 const titleFor = (label) => `[QA][v${version}] ${label}`;
 
-/** Cherche une issue ouverte par titre exact. */
+// Cache des issues QA ouvertes : évite d'interroger l'API `/search/issues` (plafonnée à ~30
+// req/min) une fois par domaine, ce qui déclenchait des 403 « rate limit exceeded ». On liste
+// les issues QA ouvertes UNE seule fois via l'API REST (plafond 5000/h) et on matche en mémoire.
+let openQaIssuesCache = null;
+
+async function listOpenQaIssues() {
+  if (openQaIssuesCache) return openQaIssuesCache;
+  const issues = [];
+  for (let page = 1; page <= 10; page += 1) {
+    const batch = await gh(
+      `/repos/${owner}/${name}/issues?state=open&labels=qa&per_page=100&page=${page}`,
+    );
+    if (!Array.isArray(batch) || batch.length === 0) break;
+    // L'endpoint `issues` renvoie aussi les PR : on les exclut.
+    issues.push(...batch.filter((i) => !i.pull_request));
+    if (batch.length < 100) break;
+  }
+  openQaIssuesCache = issues;
+  return issues;
+}
+
+/** Cherche une issue QA ouverte par titre exact (via la liste REST en cache, sans `/search`). */
 async function findOpenIssue(title) {
-  const q = encodeURIComponent(
-    `repo:${owner}/${name} is:issue is:open in:title "${title}"`,
-  );
-  const res = await gh(`/search/issues?q=${q}`);
-  return res.items?.find((i) => i.title === title) ?? null;
+  const issues = await listOpenQaIssues();
+  return issues.find((i) => i.title === title) ?? null;
 }
 
 /** Extrait les étapes (id, titre, action, attendu) du protocole d'un domaine. */
