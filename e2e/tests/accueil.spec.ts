@@ -189,4 +189,18 @@ test.describe("Accueil & chrome", () => {
     await chrome.quickSearchHighlightFirstOption(); // flèche bas → 1re option active
     await chrome.quickSearchEscapeCollapses(); // Échap → liste refermée
   });
+
+  test("ACC-15 - recherche rapide : une app au nom ponctué est trouvable par son nom complet", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.applicationWithPunctuationInLabel();
+    test.skip(!app, "Aucune application au nom ponctué dans le jeu de données");
+
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    // Non-régression : taper le nom COMPLET (avec sa ponctuation interne, ex. « O'Kon »,
+    // « QA-GROUP-CHILD ») doit bien remonter cette application précise.
+    await chrome.expectQuickSearchSuggestion(app!.label, app!.label);
+  });
 });

@@ -124,6 +124,20 @@ export class ChromePage extends BasePage {
   }
 
   /**
+   * ACC-15 : après saisie de `query`, une suggestion portant `expectedLabel` est proposée.
+   * Plus fort que « au moins une suggestion » : vérifie que l'application ciblée remonte bien.
+   */
+  async expectQuickSearchSuggestion(
+    query: string,
+    expectedLabel: string,
+  ): Promise<void> {
+    await this.fillQuickSearch(query);
+    await expect(
+      this.quickSearchOptions().filter({ hasText: expectedLabel }).first(),
+    ).toBeVisible();
+  }
+
+  /**
    * ACC-13 : un terme sans correspondance affiche « Aucun résultat » (état vide de l'autocomplete).
    * On cible le message dans la liste, pas la région `aria-live` (qui porte le même texte).
    */

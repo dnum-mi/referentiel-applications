@@ -112,3 +112,15 @@
 - **Résultat attendu** : la liste est déployée (`aria-expanded=true`) ; la flèche bas active la
   première option (`aria-activedescendant` la désigne, `aria-selected="true"`) ; Échap referme la
   liste (`aria-expanded=false`).
+
+### ACC-15 — Recherche rapide : une application au nom ponctué est trouvable par son nom complet ✅
+
+- **Datafeature** : une application dont le libellé contient une ponctuation interne (ex. « O'Kon »,
+  « QA-GROUP-CHILD »).
+- **Action** : connecté, saisir le **nom complet** de l'application (avec sa ponctuation) dans la
+  recherche rapide du bandeau.
+- **Résultat attendu** : cette application précise apparaît dans les suggestions. Non-régression du
+  bug de tokenisation : la ponctuation interne était supprimée puis collée (« O'Kon » → « OKon »),
+  produisant un lexème absent de l'index et rendant l'application introuvable par son nom ; la
+  saisie est désormais **découpée** sur la ponctuation (« O'Kon » → `o` + `kon`), comme le parseur
+  plein-texte Postgres.

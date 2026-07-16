@@ -125,8 +125,15 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
    *
    * Chaque mot saisi est transformé en motif préfixe (`mot:*`) puis combiné en
    * ET. Ainsi « tow muel » trouve « Towne, Mueller… » avant même que les mots
-   * soient complets. Les caractères non alphanumériques sont retirés pour
-   * produire une `to_tsquery` toujours valide (pas d'injection d'opérateurs).
+   * soient complets.
+   *
+   * La saisie est **découpée** sur tout caractère non alphanumérique (espaces ET
+   * ponctuation), pas seulement sur les espaces : le parseur plein-texte de
+   * Postgres segmente lui aussi sur la ponctuation (« O'Kon » → `o`,`kon` ;
+   * « QA-GROUP-CHILD » → `qa`,`group`,`child`). Retirer la ponctuation *en
+   * collant* les morceaux (« OKon », « QAGROUPCHILD ») produirait un lexème
+   * absent de l'index : l'application devenait alors introuvable en tapant son
+   * propre nom. Le découpage garantit qu'un nom se retrouve toujours lui-même.
    *
    * Résultats plafonnés à {@link PREFIX_RESULT_LIMIT} : un préfixe très court
    * matcherait toute la base, or l'autocomplétion n'en affiche qu'une poignée.
@@ -136,8 +143,7 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
   ): Promise<RankedApplication[]> {
     const tokens = query
       ?.trim()
-      .split(/\s+/)
-      .map((token) => token.replace(/[^\p{L}\p{N}]/gu, ""))
+      .split(/[^\p{L}\p{N}]+/u)
       .filter(Boolean);
 
     if (!tokens?.length) return [];

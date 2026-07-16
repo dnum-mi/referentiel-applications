@@ -35,6 +35,20 @@ export class DataFeature {
   }
 
   /**
+   * Une application dont le libellé contient une ponctuation **interne** (entre deux
+   * caractères alphanumériques, sans espace) — ex. « O'Kon », « QA-GROUP-CHILD ».
+   * Sert à vérifier qu'un tel nom reste trouvable en le tapant en entier dans la
+   * recherche du header : non-régression du bug de tokenisation (la ponctuation doit
+   * être découpée, pas supprimée-collée en un lexème absent de l'index). `null` si le
+   * jeu courant n'en contient aucune.
+   */
+  async applicationWithPunctuationInLabel(): Promise<AppRef | null> {
+    const page = await this.api.applications("pageSize=200&page=0");
+    const internalPunct = /[\p{L}\p{N}][^\p{L}\p{N}\s][\p{L}\p{N}]/u;
+    return page?.results?.find((a) => internalPunct.test(a.label)) ?? null;
+  }
+
+  /**
    * Une application possédant une évaluation de dette technique, afin que la carte « Dette
    * technique » (et son libellé « Maîtrise des coûts ») soit rendue sur l'onglet Informations
    * générales (FIC-15, ticket #1900). Sème l'évaluation « create-if-absent » sur la première
