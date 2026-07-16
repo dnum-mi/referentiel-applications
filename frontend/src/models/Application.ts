@@ -62,4 +62,6 @@ export type Relation = RelationDto & {
 };
 
 // refer directly to columns in database
-export type APP_PERMISSIONS = Exclude<keyof AppPermsDto, "actorTypeId">;
+// `isAdmin` est un flag du type d'acteur (marque la ligne comme admin de l'app), pas une
+// permission applicative : on l'exclut comme `actorTypeId` des permissions manipulées.
+export type APP_PERMISSIONS = Exclude<keyof AppPermsDto, "actorTypeId" | "isAdmin">;
