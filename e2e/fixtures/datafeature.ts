@@ -558,6 +558,30 @@ export class DataFeature {
     return this.api.deleteActor(appId, actorId);
   }
 
+  /**
+   * Crée un type d'acteur dédié au test, **directement en base** : l'API de création n'expose pas
+   * le flag `isAdmin`, et un type sans ligne de matrice `AppPermissions` n'accorde aucun droit —
+   * c'est exactement le scénario voulu pour PRM-14/15 (les droits viennent alors *uniquement* de
+   * `isAdmin`, matrice vide). SQL justifié : l'API ne permet pas de poser cet état. À supprimer en
+   * `finally` (`deleteActorType`).
+   */
+  async createActorType(opts: {
+    code: string;
+    label: string;
+    isAdmin: boolean;
+  }): Promise<{ id: string }> {
+    const rows = await dbQuery<{ id: string }>(
+      `INSERT INTO "ActorType" (id, code, label, "isAdmin")
+       VALUES (gen_random_uuid(), $1, $2, $3) RETURNING id`,
+      [opts.code, opts.label, opts.isAdmin],
+    );
+    return rows[0];
+  }
+
+  deleteActorType(id: string): Promise<unknown[]> {
+    return dbQuery(`DELETE FROM "ActorType" WHERE id = $1`, [id]);
+  }
+
   createStatus(appId: string, body: Record<string, unknown>) {
     return this.api.createStatus(appId, body);
   }
