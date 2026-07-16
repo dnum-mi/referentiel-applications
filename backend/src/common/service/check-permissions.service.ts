@@ -1,12 +1,15 @@
 import { Injectable } from "@nestjs/common";
-import { Permission, Roles } from "@prisma/client";
+import { Permission } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
 import {
   APP_PERMISSIONS,
   transformAppPermissionsObjectToArray,
 } from "../utils/types";
-import { roleToAppPermissions } from "src/permissions/role-to-permissions";
+import {
+  APP_ADMIN_PERMISSIONS,
+  roleToAppPermissions,
+} from "src/permissions/role-to-permissions";
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
 
 @Injectable()
@@ -81,10 +84,12 @@ export class CheckPermissions {
       ),
     ];
 
-    // Un acteur rattaché à un type « administrateur de l'application » dispose
-    // TOUJOURS de l'ensemble des droits applicatifs (lecture + écriture) sur CETTE
-    // application, indépendamment de la matrice AppPermissions éditable. La garantie
-    // reste bornée à `applicationId` (les acteurs sont chargés pour cette seule app).
+    // Un acteur rattaché à un type « administrateur de l'application » dispose TOUJOURS
+    // de l'ensemble des droits applicatifs (lecture + écriture) sur CETTE application,
+    // indépendamment de la matrice AppPermissions éditable. C'est le 3e niveau d'admin
+    // (distinct du rôle ADMIN global/périmètre) : la garantie reste bornée à
+    // `applicationId` (les acteurs sont chargés pour cette seule app) et n'emploie PAS le
+    // jeu du rôle global, mais le jeu applicatif dédié `APP_ADMIN_PERMISSIONS`.
     const isAdminActor =
       emailActors.some((actor) => actor.actorType.isAdmin) ||
       groupActorTypes.some((actorType) => actorType.isAdmin);
@@ -92,7 +97,7 @@ export class CheckPermissions {
     if (!isAdminActor) return matrixPermissions;
 
     return Array.from(
-      new Set([...matrixPermissions, ...roleToAppPermissions(Roles.ADMIN)]),
+      new Set([...matrixPermissions, ...APP_ADMIN_PERMISSIONS]),
     );
   }
 

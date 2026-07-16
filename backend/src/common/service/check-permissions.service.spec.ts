@@ -113,4 +113,18 @@ describe("CheckPermissions.getUserAppPermissions", () => {
       }),
     );
   });
+
+  it("découplage des 3 niveaux : le rôle ADMIN global projette l'écriture, pas le jeu « admin d'application » complet", async () => {
+    // Admin global (rôle ADMIN, sans scope), sans acteur sur l'app : seul le rôle projeté
+    // s'applique. Il vaut le niveau écriture (CONTRIBUTOR), pas les droits réservés à
+    // l'acteur admin de l'app (ex. gestion des signalements). Empêche qu'un admin global
+    // devienne « admin complet de chaque application » par son seul rôle.
+    const { service } = makeService([]);
+    const user = { ...baseUser(), role: Roles.ADMIN };
+
+    expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(true);
+    expect(await service.can([Permission.ReportManage], user, "app-1")).toBe(
+      false,
+    );
+  });
 });

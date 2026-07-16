@@ -150,6 +150,17 @@ Symétriquement, `roleToAppPermissions(role)` projette un rôle en **permissions
 - **CONTRIBUTOR** : les lectures READER + `AppWrite`, `ActorWrite`, `ComplianceWrite`, `HostingWrite`, `RelationWrite`, `LinkWrite`, **et** `AppWritePriority`.
 - **ADMIN** : identique à CONTRIBUTOR au niveau applicatif (`ADMIN_APP_PERMISSIONS = WRITE_APP_PERMISSIONS`).
 
+> **Trois niveaux d'administration distincts.** Le rôle `ADMIN` ci-dessus est le niveau _global_ (sans
+> scope → droits de rôle sur **toutes** les applications) ou _de périmètre_ (avec `scopeOrganization` →
+> sur les apps du périmètre, cf. [section 6](#6-scope-administratif-périmètre-organisationnel)). Un
+> **troisième** niveau, l'**administrateur d'une application**, est indépendant du rôle : un `ActorType`
+> marqué `isAdmin` (backfill `MOA`/`MOE`/`ProductOwner`/`ProductManager`) confère à ses acteurs
+> l'**intégralité** des droits applicatifs (`APP_ADMIN_PERMISSIONS`, jeu complet dérivé de
+> `AppPermissionsValues`) — mais **uniquement sur leur application** (`getUserAppPermissions`, borné à
+> `applicationId`). Ce jeu est **découplé** de `roleToAppPermissions(ADMIN)` : être admin d'une app ne
+> confère aucun droit sur les autres, et un admin global ne devient pas « admin complet de chaque
+> application » par son seul rôle.
+
 ## 4. Catalogue de l'énumération Permission
 
 L'énumération `Permission` (`backend/prisma/schema/permissions.prisma:59-105`) distingue les permissions **globales** (portée transverse) des permissions **applicatives** (portée par application). Les permissions applicatives suivent majoritairement un couple lecture/écriture.
