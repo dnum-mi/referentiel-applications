@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.82.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.82.0...v1.82.1) (2026-07-16)
+
+
+### Bug Fixes
+
+* **a11y:** RGAA lot L — contraste couleurs & éléments graphiques ([#1782](https://github.com/dnum-mi/referentiel-applications/issues/1782)) ([7b6c505](https://github.com/dnum-mi/referentiel-applications/commit/7b6c505f9c3e5d7527837c45d2f91adac27a026d))
+* **applications:** afficher le libellé de statut même sans date ([#2017](https://github.com/dnum-mi/referentiel-applications/issues/2017)) ([#2019](https://github.com/dnum-mi/referentiel-applications/issues/2019)) ([bc75773](https://github.com/dnum-mi/referentiel-applications/commit/bc75773aab8431160379274403b8e41e7354d148))
+* **e2e:** éditer une ligne de matrice non verrouillée (débloque la release 1.82.1) ([#2052](https://github.com/dnum-mi/referentiel-applications/issues/2052)) ([547efb7](https://github.com/dnum-mi/referentiel-applications/commit/547efb718d85d08606fad611475fb20c72093e40))
+* **permissions:** l'admin d'une application a les droits complets (lecture + écriture) sur sa propre application ([#2028](https://github.com/dnum-mi/referentiel-applications/issues/2028)) ([#2031](https://github.com/dnum-mi/referentiel-applications/issues/2031)) ([22eeb78](https://github.com/dnum-mi/referentiel-applications/commit/22eeb78b746ad510bc17359fcfaaf115efbd43be))
+* **qa:** look up campaign issues via REST list, not the rate-limited search API ([#2053](https://github.com/dnum-mi/referentiel-applications/issues/2053)) ([97f9fba](https://github.com/dnum-mi/referentiel-applications/commit/97f9fba6c6b6252b01ef9b6d07be261faa4facbd))
+* **search:** recherche globale du header — préfixe + fiabilisation complète ([#2025](https://github.com/dnum-mi/referentiel-applications/issues/2025)) ([#2030](https://github.com/dnum-mi/referentiel-applications/issues/2030)) ([cae2dee](https://github.com/dnum-mi/referentiel-applications/commit/cae2dee1c33fc5e4dc37adc6a4863cc161832575))
+
 ## [1.82.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.81.0...v1.82.0) (2026-07-10)
 
 
