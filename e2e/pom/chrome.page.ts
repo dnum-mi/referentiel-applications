@@ -99,6 +99,87 @@ export class ChromePage extends BasePage {
     await expect(this.page).toHaveURL(/\/applications\/[^/]+/);
   }
 
+  // Liste de suggestions et options réelles de la recherche rapide (encapsulées, POM strict).
+  private quickSearchListbox = () =>
+    this.header().getByRole("listbox", { name: "Applications proposées" });
+  private quickSearchOptions = () =>
+    this.quickSearchListbox().getByRole("option");
+
+  /** Saisit une requête dans la recherche rapide (déclenche l'autocomplétion débouncée). */
+  async fillQuickSearch(query: string): Promise<void> {
+    await this.quickSearch().fill(query);
+  }
+
+  /**
+   * ACC-11 : un préfixe court **non lemmatisé** doit ramener au moins une suggestion.
+   * Non-régression du bug FTS : le dictionnaire `french` racinisait « Application » en
+   * « appliqu », si bien qu'un préfixe court (« appli ») ne matchait plus ; la recherche
+   * préfixe s'appuie désormais sur `document_simple` (dictionnaire `simple`).
+   */
+  async expectQuickSearchHasSuggestions(query: string): Promise<void> {
+    await this.fillQuickSearch(query);
+    await expect
+      .poll(() => this.quickSearchOptions().count(), { timeout: 10000 })
+      .toBeGreaterThan(0);
+  }
+
+  /**
+   * ACC-15 : après saisie de `query`, une suggestion portant `expectedLabel` est proposée.
+   * Plus fort que « au moins une suggestion » : vérifie que l'application ciblée remonte bien.
+   */
+  async expectQuickSearchSuggestion(
+    query: string,
+    expectedLabel: string,
+  ): Promise<void> {
+    await this.fillQuickSearch(query);
+    await expect(
+      this.quickSearchOptions().filter({ hasText: expectedLabel }).first(),
+    ).toBeVisible();
+  }
+
+  /**
+   * ACC-13 : un terme sans correspondance affiche « Aucun résultat » (état vide de l'autocomplete).
+   * On cible le message dans la liste, pas la région `aria-live` (qui porte le même texte).
+   */
+  async expectQuickSearchNoResult(query: string): Promise<void> {
+    await this.fillQuickSearch(query);
+    await expect(
+      this.quickSearchListbox().getByText("Aucun résultat"),
+    ).toBeVisible();
+  }
+
+  /** ACC-14 : après saisie, la liste est déployée (`aria-expanded=true`) et visible. */
+  async expectQuickSearchExpanded(): Promise<void> {
+    await expect(this.quickSearch()).toHaveAttribute("aria-expanded", "true");
+    await expect(this.quickSearchListbox()).toBeVisible();
+  }
+
+  /**
+   * ACC-14 (RGAA 4.1.2) : la flèche bas active la première option — `aria-activedescendant`
+   * du combobox la désigne et l'option porte `aria-selected="true"`.
+   */
+  async quickSearchHighlightFirstOption(): Promise<void> {
+    await expect
+      .poll(() => this.quickSearchOptions().count(), { timeout: 10000 })
+      .toBeGreaterThan(0);
+    await this.quickSearch().press("ArrowDown");
+    await expect(this.quickSearch()).toHaveAttribute(
+      "aria-activedescendant",
+      /-item-0$/,
+    );
+    await expect(this.quickSearchOptions().first()).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  }
+
+  /** ACC-14 (RGAA 4.1.2) : Échap referme la liste (`aria-expanded=false`, liste masquée). */
+  async quickSearchEscapeCollapses(): Promise<void> {
+    await this.quickSearch().press("Escape");
+    await expect(this.quickSearch()).toHaveAttribute("aria-expanded", "false");
+    await expect(this.quickSearchListbox()).toBeHidden();
+  }
+
   // --- Assertions RGAA (RGA-03, RGA-04) ---
 
   /**

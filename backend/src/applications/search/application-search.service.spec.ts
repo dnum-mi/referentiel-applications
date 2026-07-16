@@ -37,7 +37,7 @@ describe("ApplicationSearchService", () => {
   });
 
   describe("fullTextSearchPrefix", () => {
-    it("construit une to_tsquery préfixe et nettoie la ponctuation", async () => {
+    it("construit une to_tsquery préfixe ciblant le document `simple`", async () => {
       const { service, prisma } = makeService([
         { applicationId: "app-1", rank: 1 },
       ]);
@@ -47,7 +47,36 @@ describe("ApplicationSearchService", () => {
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
       // La valeur interpolée dans le tagged template = la tsquery construite.
       expect(prisma.$queryRaw.mock.calls[0][1]).toBe("tow:* & muel:*");
+      // L'autocomplétion par préfixe cible le document `simple` (non lemmatisé),
+      // sinon la frappe partielle d'un mot ne matche pas le lexème lemmatisé.
+      const prefixSql = (
+        prisma.$queryRaw.mock.calls[0][0] as unknown as string[]
+      ).join("");
+      expect(prefixSql).toContain("document_simple");
+      expect(prefixSql).toContain("to_tsquery('simple'");
       expect(result).toEqual([{ id: "app-1", rank: 1 }]);
+    });
+
+    it("DÉCOUPE la ponctuation interne au lieu de coller les morceaux (nom trouvable)", async () => {
+      // Non-régression : retirer la ponctuation *en concaténant* (« O'Kon » → « OKon »,
+      // « QA-GROUP-CHILD » → « QAGROUPCHILD ») produit un lexème absent de l'index,
+      // rendant l'application introuvable en tapant son propre nom. Le parseur PG
+      // segmente sur la ponctuation → la tsquery doit faire de même.
+      const { service, prisma } = makeService([
+        { applicationId: "app-1", rank: 1 },
+      ]);
+
+      await service.fullTextSearchPrefix("O'Kon");
+      await service.fullTextSearchPrefix("QA-GROUP-CHILD");
+      await service.fullTextSearchPrefix("Runolfsdottir - O'Kon");
+
+      expect(prisma.$queryRaw.mock.calls[0][1]).toBe("O:* & Kon:*");
+      expect(prisma.$queryRaw.mock.calls[1][1]).toBe(
+        "QA:* & GROUP:* & CHILD:*",
+      );
+      expect(prisma.$queryRaw.mock.calls[2][1]).toBe(
+        "Runolfsdottir:* & O:* & Kon:*",
+      );
     });
 
     it("retourne [] sans interroger la base pour une requête vide ou ponctuation seule", async () => {

@@ -289,7 +289,10 @@ export function useApplicationSearch() {
     scheduleSearch(true);
   }
 
-  async function searchApplications(customFilters?: Partial<Filters>, store = true) {
+  // `mergeCurrentFilters = false` : recherche indépendante des filtres de la page
+  // courante (utilisée par la recherche globale du header, qui ne doit hériter ni
+  // des filtres ni du tri de la page de recherche).
+  async function searchApplications(customFilters?: Partial<Filters>, store = true, mergeCurrentFilters = true) {
     // Les appels « stockés » sont numérotés : si une requête plus récente est
     // partie entre-temps, la réponse courante est ignorée (anti-course).
     const searchId = store ? ++latestStoredSearchId : 0;
@@ -301,7 +304,7 @@ export function useApplicationSearch() {
     error.value = null;
 
     try {
-      const currentFilters = { ...filters.value, ...customFilters };
+      const currentFilters = { ...(mergeCurrentFilters ? filters.value : DEFAULT_FILTERS), ...customFilters };
       const query = cleanFilters(currentFilters);
 
       const response = await api.applicationControllerSearch({ query });

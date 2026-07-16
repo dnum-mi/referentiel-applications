@@ -28,8 +28,17 @@ const MATERIALIZED_VIEW = "application_search_index";
  * court (« a ») peut matcher quasi toutes les applications ; l'autocomplétion
  * n'affiche que les premiers résultats, inutile de classer et transporter
  * l'intégralité de la base.
+ *
+ * ATTENTION : ce plafond s'applique au classement FTS *avant* le filtrage par
+ * permissions (l'intersection `id IN (rankedIds)` est faite ensuite côté Prisma,
+ * cf. application.service). Une valeur trop basse pourrait masquer des
+ * applications autorisées d'un utilisateur si elles sont classées au-delà du
+ * plafond pour un préfixe donné. 1000 rend ce cas très improbable tout en
+ * gardant la requête rapide (index GIN + LIMIT). Le filtrage des permissions
+ * dans la requête SQL elle-même serait la solution complète mais bien plus
+ * lourde (la logique de droits vit dans buildSearchWhere).
  */
-const PREFIX_RESULT_LIMIT = 200;
+const PREFIX_RESULT_LIMIT = 1000;
 
 /** Durée de vie du cache des résultats FTS. Courte : elle borne seulement la
  * staleness si l'index est rafraîchi par une autre instance de l'application. */
@@ -100,7 +109,7 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
       FROM application_search_index asi,
            plainto_tsquery('french', immutable_unaccent(${trimmed})) AS q(query)
       WHERE asi.document @@ q.query
-      ORDER BY rank DESC
+      ORDER BY rank DESC, asi."applicationId"
     `;
 
     const results = rows.map((row) => ({
@@ -116,8 +125,15 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
    *
    * Chaque mot saisi est transformé en motif préfixe (`mot:*`) puis combiné en
    * ET. Ainsi « tow muel » trouve « Towne, Mueller… » avant même que les mots
-   * soient complets. Les caractères non alphanumériques sont retirés pour
-   * produire une `to_tsquery` toujours valide (pas d'injection d'opérateurs).
+   * soient complets.
+   *
+   * La saisie est **découpée** sur tout caractère non alphanumérique (espaces ET
+   * ponctuation), pas seulement sur les espaces : le parseur plein-texte de
+   * Postgres segmente lui aussi sur la ponctuation (« O'Kon » → `o`,`kon` ;
+   * « QA-GROUP-CHILD » → `qa`,`group`,`child`). Retirer la ponctuation *en
+   * collant* les morceaux (« OKon », « QAGROUPCHILD ») produirait un lexème
+   * absent de l'index : l'application devenait alors introuvable en tapant son
+   * propre nom. Le découpage garantit qu'un nom se retrouve toujours lui-même.
    *
    * Résultats plafonnés à {@link PREFIX_RESULT_LIMIT} : un préfixe très court
    * matcherait toute la base, or l'autocomplétion n'en affiche qu'une poignée.
@@ -127,8 +143,7 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
   ): Promise<RankedApplication[]> {
     const tokens = query
       ?.trim()
-      .split(/\s+/)
-      .map((token) => token.replace(/[^\p{L}\p{N}]/gu, ""))
+      .split(/[^\p{L}\p{N}]+/u)
       .filter(Boolean);
 
     if (!tokens?.length) return [];
@@ -143,11 +158,11 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
       { applicationId: string; rank: number }[]
     >`
       SELECT asi."applicationId",
-             ts_rank(asi.document, q.query)::float8 AS rank
+             ts_rank(asi.document_simple, q.query)::float8 AS rank
       FROM application_search_index asi,
-           to_tsquery('french', immutable_unaccent(${tsQuery})) AS q(query)
-      WHERE asi.document @@ q.query
-      ORDER BY rank DESC
+           to_tsquery('simple', immutable_unaccent(${tsQuery})) AS q(query)
+      WHERE asi.document_simple @@ q.query
+      ORDER BY rank DESC, asi."applicationId"
       LIMIT ${PREFIX_RESULT_LIMIT}
     `;
 
