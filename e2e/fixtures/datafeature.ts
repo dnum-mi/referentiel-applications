@@ -523,6 +523,12 @@ export class DataFeature {
       shortName: label,
       description: `Auto-created by e2e test: ${label}`,
       tags: [],
+      // `status` est requis par l'API (le service crée un ApplicationStatus initial :
+      // `createApplicationDto.status.status`). L'omettre provoque un 500.
+      status: {
+        status: "under_construction",
+        statusDate: new Date().toISOString(),
+      },
     });
     if (!created)
       throw new Error(`Création d'application impossible : ${label}`);
