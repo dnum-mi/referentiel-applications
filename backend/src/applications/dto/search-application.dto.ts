@@ -9,6 +9,7 @@ import {
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
 } from "class-validator";
 import { PaginationDto } from "src/common/dto";
@@ -59,6 +60,7 @@ export class ApplicationSearchDto extends PaginationDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   q?: string;
 
   @ApiPropertyOptional({
@@ -71,6 +73,7 @@ export class ApplicationSearchDto extends PaginationDto {
   })
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   qPrefix?: string;
 
   @ApiPropertyOptional({

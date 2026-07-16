@@ -1,6 +1,6 @@
 import { test as base } from "@playwright/test";
 import { test, expect } from "../fixtures/test";
-import { ChromePage, HomePage, loginAs } from "../pom";
+import { ChromePage, HomePage, SearchPage, loginAs } from "../pom";
 import { captureStepScreenshot } from "../support/screenshots";
 
 /**
@@ -131,5 +131,76 @@ test.describe("Accueil & chrome", () => {
     await chrome.open();
     // Préfixe court d'un libellé réel → ramène des suggestions dans l'autocomplete du header.
     await chrome.quickSearchToFiche(app!.label.slice(0, 4));
+  });
+
+  test("ACC-11 - recherche rapide : un préfixe court non lemmatisé ramène des suggestions", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    // Préfixe court d'un libellé réel : doit ramener ≥ 1 suggestion (garde la non-régression du
+    // bug de racinisation française — l'index préfixe repose sur `document_simple`).
+    await chrome.expectQuickSearchHasSuggestions(app!.label.slice(0, 4));
+  });
+
+  test("ACC-12 - recherche rapide indépendante des filtres de la page de recherche", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    // On filtre la page de recherche jusqu'à un état vide (0 résultat)…
+    const search = new SearchPage(page);
+    await search.open();
+    await search.searchByLabel("zzqxwvkjno-aucune-correspondance");
+    await search.expectEmptyState();
+
+    // … la recherche rapide du bandeau reste alimentée (indépendante des filtres, triée par pertinence).
+    const chrome = new ChromePage(page);
+    await chrome.expectQuickSearchHasSuggestions(app!.label.slice(0, 4));
+  });
+
+  test("ACC-13 - recherche rapide : un terme sans correspondance affiche « Aucun résultat »", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    await chrome.expectQuickSearchNoResult("zzqxwvkjno-aucune-correspondance");
+  });
+
+  test("ACC-14 - recherche rapide : navigation clavier dans l'autocomplete (RGAA 4.1.2)", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
+
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    await chrome.fillQuickSearch(app!.label.slice(0, 4));
+    await chrome.expectQuickSearchExpanded();
+    await chrome.quickSearchHighlightFirstOption(); // flèche bas → 1re option active
+    await chrome.quickSearchEscapeCollapses(); // Échap → liste refermée
+  });
+
+  test("ACC-15 - recherche rapide : une app au nom ponctué est trouvable par son nom complet", async ({
+    page,
+    data,
+  }) => {
+    const app = await data.applicationWithPunctuationInLabel();
+    test.skip(!app, "Aucune application au nom ponctué dans le jeu de données");
+
+    const chrome = new ChromePage(page);
+    await chrome.open();
+    // Non-régression : taper le nom COMPLET (avec sa ponctuation interne, ex. « O'Kon »,
+    // « QA-GROUP-CHILD ») doit bien remonter cette application précise.
+    await chrome.expectQuickSearchSuggestion(app!.label, app!.label);
   });
 });
