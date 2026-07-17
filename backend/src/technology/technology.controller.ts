@@ -43,7 +43,7 @@ export class TechnologyController {
   constructor(private readonly technologyService: TechnologyService) {}
 
   @Get()
-  @RequiredPermissions([Permission.AppRead])
+  @RequiredPermissions([Permission.TechnologyRead])
   @ApiOperation({
     summary: "Lister la stack technique d'une application",
   })
@@ -57,7 +57,7 @@ export class TechnologyController {
   }
 
   @Post()
-  @RequiredPermissions([Permission.AppWrite])
+  @RequiredPermissions([Permission.TechnologyWrite])
   @ApiOperation({
     summary: "Ajouter une technologie à la stack d'une application",
   })
@@ -88,7 +88,7 @@ export class TechnologyController {
   }
 
   @Patch(":id")
-  @RequiredPermissions([Permission.AppWrite])
+  @RequiredPermissions([Permission.TechnologyWrite])
   @HttpCode(200)
   @ApiOperation({
     summary: "Mettre à jour une technologie",
@@ -118,7 +118,7 @@ export class TechnologyController {
   }
 
   @Delete(":id")
-  @RequiredPermissions([Permission.AppWrite])
+  @RequiredPermissions([Permission.TechnologyWrite])
   @HttpCode(204)
   @ApiOperation({
     summary: "Supprimer une technologie",

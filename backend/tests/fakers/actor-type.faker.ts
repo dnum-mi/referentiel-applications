@@ -15,6 +15,8 @@ function permissionsToObject(
     MetadataRead: permissions.has("MetadataRead"),
     DataRead: permissions.has("DataRead"),
     DataWrite: permissions.has("DataWrite"),
+    TechnologyRead: permissions.has("TechnologyRead"),
+    TechnologyWrite: permissions.has("TechnologyWrite"),
     RelationRead: permissions.has("RelationRead"),
     RelationWrite: permissions.has("RelationWrite"),
     LinkRead: permissions.has("LinkRead"),

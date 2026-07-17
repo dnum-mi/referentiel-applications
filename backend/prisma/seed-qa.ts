@@ -198,6 +198,8 @@ async function seedQa() {
       RelationWrite: false,
       LinkRead: true,
       LinkWrite: false,
+      TechnologyRead: true,
+      TechnologyWrite: false,
     },
     update: { AppRead: true, AppWrite: true },
   });

@@ -33,6 +33,11 @@ model AppPermissions {
   DataRead Boolean @default(true)
   DataWrite Boolean @default(true)
 
+  /// Peut lire la stack technique (onglet Technologies) — ouvert à tous par défaut
+  TechnologyRead  Boolean @default(true)
+  /// Peut modifier la stack technique — réservé par défaut
+  TechnologyWrite Boolean @default(false)
+
   /// Peut lire les relations d'application
   RelationRead  Boolean
   /// Peut écrire les relations d'application
@@ -106,6 +111,8 @@ enum Permission {
   MetadataRead // Voir l'historique des metadonnees. Pas de write : donnees generees automatiquement.
   DataRead // Voir les donnees de l'application (onglet Donnees).
   DataWrite // Modifier les donnees de l'application (onglet Donnees).
+  TechnologyRead // Voir la stack technique (onglet Technologies).
+  TechnologyWrite // Modifier la stack technique.
   // Signalements (3 niveaux)
   ReportRead // Voir les signalements
   ReportPost // Creer des signalements sur une app

@@ -51,6 +51,7 @@ const READ_APP_PERMISSIONS = new Set([
   Permission.LinkRead,
   Permission.MetadataRead,
   Permission.DataRead,
+  Permission.TechnologyRead,
 ]);
 const WRITE_APP_PERMISSIONS = new Set([
   ...Array.from(READ_APP_PERMISSIONS),
@@ -62,6 +63,7 @@ const WRITE_APP_PERMISSIONS = new Set([
   Permission.LinkWrite,
   Permission.AppWritePriority,
   Permission.DataWrite,
+  Permission.TechnologyWrite,
 ]);
 // 3e niveau d'administration — l'administrateur d'UNE application (ActorType.isAdmin).
 // Jeu applicatif COMPLET (toute la matrice AppPermissions : couples read/write + AppRead,

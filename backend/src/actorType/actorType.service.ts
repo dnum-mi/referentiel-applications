@@ -20,6 +20,8 @@ const PERM_FIELDS: Record<string, string> = {
   MetadataRead: "Historique - Lecture",
   DataRead: "Données - Lecture",
   DataWrite: "Données - Écriture",
+  TechnologyRead: "Technologies - Lecture",
+  TechnologyWrite: "Technologies - Écriture",
   RelationRead: "Relations - Lecture",
   RelationWrite: "Relations - Écriture",
   LinkRead: "Liens - Lecture",
