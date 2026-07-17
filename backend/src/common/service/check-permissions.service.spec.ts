@@ -19,6 +19,8 @@ const READ_ONLY_MATRIX = {
   MetadataRead: true,
   DataRead: true,
   DataWrite: false,
+  TechnologyRead: true,
+  TechnologyWrite: false,
   RelationRead: true,
   RelationWrite: false,
   LinkRead: true,
