@@ -58,9 +58,6 @@ model Metadata {
   /// Élément de stack technique associé
   technologyStack   TechnologyStack? @relation(fields: [technologyStackId], references: [id])
 
-  licenseId String?
-  /// Licence associée
-  license   License? @relation(fields: [licenseId], references: [id])
   dataApplicationId String?
   dataApplication   DataApplication? @relation("DataApplicationMetadata", fields: [dataApplicationId], references: [id])
 
