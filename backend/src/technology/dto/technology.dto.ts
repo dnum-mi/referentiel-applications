@@ -1,13 +1,26 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDateString, IsOptional, IsString, MaxLength } from "class-validator";
+import {
+  IsDateString,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from "class-validator";
 
 export class CreateTechnologyDto {
   @ApiProperty({
-    example: "Node.js",
-    description: "Nom de la technologie",
+    example: "Base de données",
+    description: "Famille / catégorie de technologie",
   })
   @IsString()
   technology: string;
+
+  @ApiProperty({
+    example: "PostgreSQL",
+    description: "Produit concret (sert à résoudre la fin de vie)",
+  })
+  @IsString()
+  product: string;
 
   @ApiProperty({
     example: "20.11",
@@ -19,6 +32,17 @@ export class CreateTechnologyDto {
   @IsString()
   @MaxLength(50)
   version?: string | null;
+
+  @ApiProperty({
+    example: "https://www.postgresql.org/docs/",
+    description: "Lien documentaire (URL) associé au produit",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsUrl()
+  @MaxLength(2048)
+  docUrl?: string | null;
 }
 
 export class TechnologyDto extends CreateTechnologyDto {

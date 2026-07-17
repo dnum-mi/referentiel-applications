@@ -32,7 +32,9 @@ const canEdit = computed(() => userStore.hasPermissions([Permission.APP_WRITE], 
 
 const columns: TableColumn[] = [
   { field: "Technologie", header: "Technologie", sortable: true },
+  { field: "Produit", header: "Produit", sortable: true },
   { field: "Version", header: "Version", sortable: true },
+  { field: "Documentation", header: "Documentation", sortable: false },
   { field: "FinDeVie", header: "Fin de vie", sortable: true },
   { field: "Actions", header: "Actions", sortable: false },
 ];
@@ -48,7 +50,9 @@ const tableRows = computed(() =>
     return {
       id: techno.id,
       Technologie: techno.technology,
+      Produit: techno.product,
       Version: techno.version || "—",
+      Documentation: techno.docUrl || "",
       FinDeVie: formatEol(techno.eolDate),
       isEol: eol ? eol.getTime() < Date.now() : false,
       Actions: {
@@ -77,19 +81,31 @@ onBeforeMount(async () => {
   }
 });
 
-async function handleSave(technology: { id?: string; technology: string; version?: string | null }) {
+async function handleSave(technology: {
+  id?: string;
+  technology: string;
+  product: string;
+  version?: string | null;
+  docUrl?: string | null;
+}) {
   loading.value = true;
   technologyModal.closeModal();
+  const body = {
+    technology: technology.technology,
+    product: technology.product,
+    version: technology.version,
+    docUrl: technology.docUrl,
+  };
   try {
     if (technology.id) {
       await api.technologyControllerUpdate({
         path: { applicationId: props.application.id, id: technology.id },
-        body: { technology: technology.technology, version: technology.version },
+        body,
       });
     } else {
       await api.technologyControllerCreate({
         path: { applicationId: props.application.id },
-        body: { technology: technology.technology, version: technology.version },
+        body,
       });
     }
     await fetchTechnologies(props.application.id);
@@ -164,6 +180,20 @@ function cancelDelete() {
   </div>
 
   <RefAppTable v-else :items="tableRows" :columns="columns" data-test-id="technology-table" empty-message="Aucune technologie renseignée.">
+    <template #body-Documentation="{ data }">
+      <a
+        v-if="data.Documentation"
+        :href="data.Documentation"
+        target="_blank"
+        rel="noopener noreferrer"
+        :title="data.Documentation"
+        :data-testid="`technology-doc-link-${data.id}`"
+      >
+        Documentation
+      </a>
+      <template v-else>—</template>
+    </template>
+
     <template #body-FinDeVie="{ data }">
       <DsfrBadge v-if="data.isEol" type="error" label="Fin de vie" small :data-testid="`technology-eol-badge-${data.id}`"></DsfrBadge>
       <span v-else-if="data.FinDeVie" :title="`Fin de support prévue le ${data.FinDeVie}`">{{ data.FinDeVie }}</span>

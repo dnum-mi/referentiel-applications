@@ -28,31 +28,37 @@ describe("Technologies", () => {
     expect(response.body).toHaveLength(0);
   });
 
-  it("POST /applications/:applicationId/technologies - ajoute une technologie", async () => {
+  it("POST - ajoute une entrée (technologie + produit + version + docUrl)", async () => {
     const response = await request(app().getHttpServer())
       .post(`/applications/${application.id}/technologies`)
-      .send({ technology: "Node.js", version: "20.11" })
+      .send({
+        technology: "Base de données",
+        product: "PostgreSQL",
+        version: "16.0",
+        docUrl: "https://www.postgresql.org/docs/",
+      })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
 
     expect(response.body.id).toBeDefined();
     expect(response.body.applicationId).toEqual(application.id);
-    expect(response.body.technology).toEqual("Node.js");
-    expect(response.body.version).toEqual("20.11");
+    expect(response.body.technology).toEqual("Base de données");
+    expect(response.body.product).toEqual("PostgreSQL");
+    expect(response.body.version).toEqual("16.0");
+    expect(response.body.docUrl).toEqual("https://www.postgresql.org/docs/");
   });
 
-  it("POST /applications/:applicationId/technologies - ajoute une deuxième technologie", async () => {
+  it("POST - accepte une même technologie avec un produit différent", async () => {
     const response = await request(app().getHttpServer())
       .post(`/applications/${application.id}/technologies`)
-      .send({ technology: "PostgreSQL" })
+      .send({ technology: "Base de données", product: "MySQL" })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(201);
 
-    expect(response.body.id).toBeDefined();
-    expect(response.body.technology).toEqual("PostgreSQL");
+    expect(response.body.product).toEqual("MySQL");
   });
 
-  it("GET /applications/:applicationId/technologies - retourne les deux technologies", async () => {
+  it("GET - retourne les deux entrées", async () => {
     const response = await request(app().getHttpServer())
       .get(`/applications/${application.id}/technologies`)
       .set("Authorization", `Bearer ${TOKEN}`)
@@ -61,31 +67,47 @@ describe("Technologies", () => {
     expect(response.body).toHaveLength(2);
   });
 
-  it("POST - rejette un doublon de technologie sur la même application", async () => {
+  it("POST - rejette un doublon (même technologie + produit) avec un 409", async () => {
     await request(app().getHttpServer())
       .post(`/applications/${application.id}/technologies`)
-      .send({ technology: "Node.js", version: "18.0" })
+      .send({
+        technology: "Base de données",
+        product: "PostgreSQL",
+        version: "15.0",
+      })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(409);
   });
 
-  it("PATCH /applications/:applicationId/technologies/:id - met à jour une technologie", async () => {
+  it("POST - rejette une entrée sans produit (produit requis) avec un 400", async () => {
+    await request(app().getHttpServer())
+      .post(`/applications/${application.id}/technologies`)
+      .send({ technology: "Langage" })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(400);
+  });
+
+  it("PATCH - met à jour une entrée (version)", async () => {
     const list = await request(app().getHttpServer())
       .get(`/applications/${application.id}/technologies`)
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
     const target = list.body.find(
-      (t: { technology: string }) => t.technology === "Node.js",
+      (t: { product: string }) => t.product === "PostgreSQL",
     );
 
     const response = await request(app().getHttpServer())
       .patch(`/applications/${application.id}/technologies/${target.id}`)
-      .send({ technology: "Node.js", version: "22.0" })
+      .send({
+        technology: "Base de données",
+        product: "PostgreSQL",
+        version: "17.0",
+      })
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(200);
 
-    expect(response.body.version).toEqual("22.0");
+    expect(response.body.version).toEqual("17.0");
     expect(response.body.id).toEqual(target.id);
   });
 
