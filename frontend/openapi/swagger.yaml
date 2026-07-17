@@ -7077,6 +7077,12 @@ components:
           type: array
           items:
             type: string
+        applicationSourceIds:
+          description: Applications sources de cette donnée (celles qui la produisent sur
+            RefApp)
+          type: array
+          items:
+            type: string
       required:
         - name
     DataFamilyDto:
@@ -7131,6 +7137,12 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TagDto"
+        applicationsSource:
+          description: Applications sources de cette donnée (celles qui la produisent sur
+            RefApp)
+          type: array
+          items:
+            $ref: "#/components/schemas/ApplicationRefDto"
         dataApplications:
           type: array
           items:

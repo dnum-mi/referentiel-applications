@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
-import { Permission, type DataApplicationDto } from "@/client/types.gen";
+import { Permission, type ApplicationRefDto, type DataApplicationDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import type { TableSortEvent } from "@/types/table";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -118,7 +118,8 @@ function onPage(event: any) {
 }
 
 const columns = computed(() => [
-  { field: "name", header: "Nom", sortable: true },
+  { field: "name", header: "Nom de la donnée", sortable: true },
+  { field: "applicationsSource", header: "Applications source", sortable: false },
   { field: "family", header: "Famille métier", sortable: true, width: "25%" },
   { field: "sensibility", header: "Sensibilité", sortable: true },
   { field: "openDataStatus", header: "Open data", sortable: true },
@@ -137,6 +138,7 @@ interface DataRow {
   isReference: boolean;
   _familyParts: string[];
   _tagsRaw: Array<{ id: string; name: string }>;
+  _applicationsSourceRaw: ApplicationRefDto[];
   _raw: DataApplicationDto;
 }
 
@@ -151,6 +153,7 @@ const tableItems = computed<DataRow[]>(() =>
     isReference: dto.isReference ?? false,
     _familyParts: dto.dataDescription?.family?.path?.split(" > ") ?? [],
     _tagsRaw: dto.dataDescription?.tags ?? [],
+    _applicationsSourceRaw: dto.dataDescription?.applicationsSource ?? [],
     _raw: dto,
   })),
 );
@@ -163,6 +166,10 @@ function goToDetail(row: DataRow) {
       dataApplicationId: row.id,
     },
   });
+}
+
+function goToSourceApplication(applicationId: string) {
+  router.push({ name: routeNames.PROFILEAPP, params: { id: applicationId } });
 }
 
 watch(
@@ -182,7 +189,7 @@ watch(
     <div class="fr-grid-row fr-grid-row--middle fr-mb-2w">
       <div class="fr-col">
         <h2 class="fr-mb-0">
-          Données de l'application
+          Données réutilisées par l'application
           <span v-if="!isLoading" class="fr-text--sm fr-text-mention--grey fr-ml-1w">({{ total }} donnée{{ total > 1 ? "s" : "" }})</span>
         </h2>
       </div>
@@ -269,6 +276,22 @@ watch(
         <span v-else class="fr-text-mention--grey">—</span>
       </template>
 
+      <!-- APPLICATIONS SOURCE — chips cliquables vers la fiche de l'application source -->
+      <template #body-applicationsSource="{ data }: { data: DataRow }">
+        <div v-if="data._applicationsSourceRaw.length" class="fr-tags-group">
+          <button
+            v-for="sourceApp in data._applicationsSourceRaw"
+            :key="sourceApp.id"
+            type="button"
+            class="fr-tag fr-mr-1v fr-mb-1v application-source-tag"
+            @click="goToSourceApplication(sourceApp.id)"
+          >
+            {{ sourceApp.label }}
+          </button>
+        </div>
+        <span v-else class="fr-text-mention--grey">—</span>
+      </template>
+
       <!-- ACTIONS — édition / détachement -->
       <template #body-actions="{ data }: { data: DataRow }">
         <DsfrButton
@@ -321,5 +344,13 @@ watch(
 <style scoped>
 .family-part--last {
   font-weight: bold;
+}
+
+.application-source-tag {
+  cursor: pointer;
+}
+
+.application-source-tag:hover {
+  text-decoration: underline;
 }
 </style>

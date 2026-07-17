@@ -35,6 +35,15 @@ export class CreateDataDescriptionDto {
   @IsOptional()
   @IsUUID("4", { each: true })
   tagIds?: string[];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Applications sources de cette donnée (celles qui la produisent sur RefApp)",
+  })
+  @IsOptional()
+  @IsUUID("4", { each: true })
+  applicationSourceIds?: string[];
 }
 
 export class DataFamilyDto {
@@ -105,6 +114,15 @@ export class DataDescriptionDto {
   @IsOptional()
   @IsArray()
   tags?: TagDto[];
+
+  @ApiPropertyOptional({
+    type: () => [ApplicationRefDto],
+    description:
+      "Applications sources de cette donnée (celles qui la produisent sur RefApp)",
+  })
+  @IsOptional()
+  @IsArray()
+  applicationsSource?: ApplicationRefDto[];
 
   @ApiPropertyOptional({ type: () => [DataApplicationRefDto] })
   @IsOptional()

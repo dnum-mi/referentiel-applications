@@ -100,6 +100,17 @@ const otherApplications = computed(() =>
   (item.value?.dataDescription?.dataApplications ?? []).filter((dataApplication) => dataApplication.applicationId !== props.applicationId),
 );
 
+// Application courante, retrouvée dans les usages de la donnée (pour afficher son libellé dans
+// la section « Usage dans l'application », sans dépendre d'un fetch séparé de l'application).
+const currentUsageApplication = computed(
+  () =>
+    item.value?.dataDescription?.dataApplications?.find((dataApplication) => dataApplication.applicationId === props.applicationId)
+      ?.application ?? null,
+);
+
+// Applications sources de la donnée générique (celles qui la produisent sur RefApp)
+const applicationsSourceList = computed(() => item.value?.dataDescription?.applicationsSource ?? []);
+
 const documentationItems = computed(() => (item.value?.documentationUrl ?? []).map((url) => ({ url })));
 
 const exposureItems = computed(() => item.value?.exposures ?? []);
@@ -117,6 +128,8 @@ const hasInfoContent = computed(
 const hasUsageContent = computed(
   () =>
     !!(
+      currentUsageApplication.value ||
+      applicationsSourceList.value.length ||
       item.value?.sensibility ||
       item.value?.updateFrequency ||
       item.value?.openDataStatus ||
@@ -128,6 +141,13 @@ const hasUsageContent = computed(
 
 function goToProfileApp(appId: string) {
   router.push({ name: routeNames.PROFILEAPP, params: { id: appId, tab: "tab-data" } });
+}
+
+// Redirige vers la fiche générale d'une application (contrairement à `goToProfileApp`, qui force
+// l'onglet Données) : cohérent avec la navigation depuis les chips « Applications source » de
+// l'onglet Données (`DataApplicationTab.vue`).
+function goToApplicationProfile(appId: string) {
+  router.push({ name: routeNames.PROFILEAPP, params: { id: appId } });
 }
 </script>
 
@@ -313,6 +333,35 @@ function goToProfileApp(appId: string) {
             </h2>
             <hr class="fr-hr fr-my-2w" />
 
+            <!-- Application utilisant cette donnée -->
+            <div v-if="currentUsageApplication" class="fr-mb-3w">
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Application utilisant cette donnée</p>
+              <button
+                type="button"
+                class="fr-tag application-link-tag"
+                data-testid="data-application-detail-usage-application"
+                @click="goToApplicationProfile(currentUsageApplication.id)"
+              >
+                {{ currentUsageApplication.label }}
+              </button>
+            </div>
+
+            <!-- Applications source -->
+            <div v-if="applicationsSourceList.length" class="fr-mb-3w">
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Applications source</p>
+              <div class="fr-tags-group" data-testid="data-application-detail-source-applications">
+                <button
+                  v-for="sourceApp in applicationsSourceList"
+                  :key="sourceApp.id"
+                  type="button"
+                  class="fr-tag fr-mr-1v fr-mb-1v application-link-tag"
+                  @click="goToApplicationProfile(sourceApp.id)"
+                >
+                  {{ sourceApp.label }}
+                </button>
+              </div>
+            </div>
+
             <!-- Sensibilité -->
             <div v-if="item?.sensibility" class="fr-mb-3w">
               <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Sensibilité</p>
@@ -460,7 +509,7 @@ function goToProfileApp(appId: string) {
           <div class="fr-p-3w section-card--mt">
             <h2 class="fr-h5 data-detail__section-title">
               <span class="fr-icon-arrow-right-up-line fr-icon--md fr-mr-2w icon-success" aria-hidden="true" />
-              Applications réutilisant cette donnée
+              Réutilisation
             </h2>
             <hr class="fr-hr fr-my-2w" />
 
@@ -604,5 +653,14 @@ function goToProfileApp(appId: string) {
 .field-label {
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* ── Chips cliquables vers une fiche application ──────────────── */
+.application-link-tag {
+  cursor: pointer;
+}
+
+.application-link-tag:hover {
+  text-decoration: underline;
 }
 </style>

@@ -32,6 +32,12 @@ function buildDataApplicationOrderBy(
 export class DataCatalogPrismaRepository implements IDataCatalogRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private static readonly dataDescriptionInclude = {
+    family: true,
+    tags: true,
+    applicationsSource: { select: { id: true, label: true } },
+  };
+
   // =====================================================
   // DATA DESCRIPTION
   // =====================================================
@@ -48,11 +54,13 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
               connect: dto.tagIds.map((id: string) => ({ id })),
             }
           : undefined,
+        applicationsSource: dto.applicationSourceIds
+          ? {
+              connect: dto.applicationSourceIds.map((id: string) => ({ id })),
+            }
+          : undefined,
       },
-      include: {
-        family: true,
-        tags: true,
-      },
+      include: DataCatalogPrismaRepository.dataDescriptionInclude,
     });
   }
 
@@ -63,10 +71,7 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
       where: name
         ? { name: { contains: name, mode: "insensitive" } }
         : undefined,
-      include: {
-        family: true,
-        tags: true,
-      },
+      include: DataCatalogPrismaRepository.dataDescriptionInclude,
       orderBy: {
         name: "asc",
       },
@@ -77,8 +82,7 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
     return this.prisma.dataDescription.findUnique({
       where: { id },
       include: {
-        family: true,
-        tags: true,
+        ...DataCatalogPrismaRepository.dataDescriptionInclude,
         dataApplications: {
           include: {
             application: {
@@ -104,11 +108,14 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
               connect: dto.tagIds.map((id: string) => ({ id })),
             }
           : undefined,
+        applicationsSource: dto.applicationSourceIds
+          ? {
+              set: [],
+              connect: dto.applicationSourceIds.map((id: string) => ({ id })),
+            }
+          : undefined,
       },
-      include: {
-        family: true,
-        tags: true,
-      },
+      include: DataCatalogPrismaRepository.dataDescriptionInclude,
     });
   }
 
@@ -132,8 +139,7 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
         exposures: true,
         dataDescription: {
           include: {
-            family: true,
-            tags: true,
+            ...DataCatalogPrismaRepository.dataDescriptionInclude,
             dataApplications: {
               include: {
                 sensibility: true,
@@ -163,10 +169,7 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
       where: { applicationId },
       include: {
         dataDescription: {
-          include: {
-            family: true,
-            tags: true,
-          },
+          include: DataCatalogPrismaRepository.dataDescriptionInclude,
         },
         sensibility: true,
         exposures: true,
@@ -179,10 +182,7 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
 
   private static readonly applicationDataInclude = {
     dataDescription: {
-      include: {
-        family: true,
-        tags: true,
-      },
+      include: DataCatalogPrismaRepository.dataDescriptionInclude,
     },
     sensibility: true,
     exposures: true,

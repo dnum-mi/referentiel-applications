@@ -54,6 +54,7 @@ export class DataDescriptionFaker {
       familyId?: string;
       tagIds?: string[];
       officialUrl?: string | null;
+      applicationSourceIds?: string[];
     } = {},
   ) {
     const prisma = getPrismaClient();
@@ -77,6 +78,9 @@ export class DataDescriptionFaker {
           "officialUrl" in params
             ? params.officialUrl
             : faker.helpers.arrayElement(OFFICIAL_URLS),
+        applicationsSource: params.applicationSourceIds?.length
+          ? { connect: params.applicationSourceIds.map((id) => ({ id })) }
+          : undefined,
         tags: params.tagIds?.length
           ? { connect: params.tagIds.map((id) => ({ id })) }
           : undefined,

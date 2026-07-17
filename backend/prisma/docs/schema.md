@@ -102,6 +102,10 @@ erDiagram
   String A FK
   String B FK
 }
+"_ApplicationToDataDescription" {
+  String A FK
+  String B FK
+}
 "_DataDescriptionToTag" {
   String A FK
   String B FK
@@ -120,6 +124,7 @@ erDiagram
 "_ApplicationToApplicationStatus" }o--|| "ApplicationStatus" : ApplicationStatus
 "_ApplicationToTag" }o--|| "Application" : Application
 "_ApplicationToTag" }o--|| "Tag" : Tag
+"_ApplicationToDataDescription" }o--|| "Application" : Application
 "_DataDescriptionToTag" }o--|| "Tag" : Tag
 ```
 
@@ -265,6 +270,15 @@ Properties as follows:
 ### `_ApplicationToTag`
 
 Pair relationship table between [Application](#Application) and [Tag](#Tag)
+
+Properties as follows:
+
+- `A`:
+- `B`:
+
+### `_ApplicationToDataDescription`
+
+Pair relationship table between [Application](#Application) and [DataDescription](#DataDescription)
 
 Properties as follows:
 
@@ -446,11 +460,16 @@ erDiagram
   String A FK
   String B FK
 }
+"_ApplicationToDataDescription" {
+  String A FK
+  String B FK
+}
 "DataDescription" }o--o| "DataFamily" : family
 "DataApplication" }o--|| "DataDescription" : dataDescription
 "DataApplication" }o--o| "DataSensibility" : sensibility
 "DataExposure" }o--|| "DataApplication" : dataApplication
 "_DataDescriptionToTag" }o--|| "DataDescription" : DataDescription
+"_ApplicationToDataDescription" }o--|| "DataDescription" : DataDescription
 ```
 
 ### `DataFamily`
@@ -475,8 +494,9 @@ Properties as follows:
 
 ### `DataDescription`
 
-Description générique d'une donnée, indépendante d'une application.
-Peut être réutilisée dans plusieurs applications.
+Description générique d'une donnée. Provient d'une ou plusieurs applications sources sur RefApp
+(les applications qui produisent/possèdent cette donnée) et peut ensuite être réutilisée par
+d'autres applications (voir `DataApplication`, qui représente cet usage).
 
 Properties as follows:
 
@@ -525,6 +545,15 @@ Properties as follows:
 ### `_DataDescriptionToTag`
 
 Pair relationship table between [DataDescription](#DataDescription) and [Tag](#Tag)
+
+Properties as follows:
+
+- `A`:
+- `B`:
+
+### `_ApplicationToDataDescription`
+
+Pair relationship table between [Application](#Application) and [DataDescription](#DataDescription)
 
 Properties as follows:
 

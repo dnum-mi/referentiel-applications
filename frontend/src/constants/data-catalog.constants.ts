@@ -3,7 +3,7 @@ import type { TableColumn } from "@/types/table";
 
 export const OPEN_DATA_STATUS_LABELS = {
   EXPOSED: "Exposé",
-  NOT_EXPOSED: "Non exposé",
+  NOT_EXPOSED: "Exposable",
   NOT_EXPOSABLE: "Non exposable",
 } as const satisfies Record<OpenDataStatus, string>;
 
