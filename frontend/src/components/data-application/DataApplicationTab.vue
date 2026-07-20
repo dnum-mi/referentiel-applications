@@ -2,7 +2,7 @@
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
-import { Permission, type ApplicationRefDto, type DataApplicationDto } from "@/client/types.gen";
+import { Permission, type ApplicationRefDto, type DataApplicationDto, type DataFamilyDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import type { TableSortEvent } from "@/types/table";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -131,12 +131,11 @@ const columns = computed(() => [
 interface DataRow {
   id: string;
   name: string;
-  family: string;
   sensibility: string;
   _sensibilityColor: string | null;
   openDataStatus: string | null;
   isReference: boolean;
-  _familyParts: string[];
+  _familiesRaw: DataFamilyDto[];
   _tagsRaw: Array<{ id: string; name: string }>;
   _applicationsSourceRaw: ApplicationRefDto[];
   _raw: DataApplicationDto;
@@ -146,12 +145,11 @@ const tableItems = computed<DataRow[]>(() =>
   items.value.map((dto) => ({
     id: dto.id,
     name: dto.dataDescription?.name ?? "",
-    family: dto.dataDescription?.family?.path ?? "",
     sensibility: dto.sensibility?.label ?? "",
     _sensibilityColor: dto.sensibility?.color ?? null,
     openDataStatus: dto.openDataStatus ?? null,
     isReference: dto.isReference ?? false,
-    _familyParts: dto.dataDescription?.family?.path?.split(" > ") ?? [],
+    _familiesRaw: dto.dataDescription?.families ?? [],
     _tagsRaw: dto.dataDescription?.tags ?? [],
     _applicationsSourceRaw: dto.dataDescription?.applicationsSource ?? [],
     _raw: dto,
@@ -227,15 +225,14 @@ watch(
         <DsfrButton tertiary no-outline :label="data.name || '—'" @click="goToDetail(data)" />
       </template>
 
-      <!-- FAMILLE MÉTIER — hiérarchie depuis _familyParts -->
+      <!-- FAMILLE MÉTIER — une donnée peut appartenir à plusieurs familles, affichées en chips -->
       <template #body-family="{ data }: { data: DataRow }">
-        <span v-if="!data._familyParts.length" class="fr-text-mention--grey">—</span>
-        <template v-else>
-          <template v-for="(part, index) in data._familyParts" :key="part">
-            <span :class="{ 'family-part--last': index === data._familyParts.length - 1 }">{{ part }}</span>
-            <span v-if="index < data._familyParts.length - 1" class="fr-mx-1v fr-text-mention--grey">&gt;</span>
-          </template>
-        </template>
+        <div v-if="data._familiesRaw.length" class="fr-tags-group">
+          <span v-for="family in data._familiesRaw" :key="family.id" class="fr-tag fr-mr-1v fr-mb-1v">
+            {{ family.path }}
+          </span>
+        </div>
+        <span v-else class="fr-text-mention--grey">—</span>
       </template>
 
       <!-- SENSIBILITÉ — badge coloré depuis la couleur BD -->
@@ -342,10 +339,6 @@ watch(
 </template>
 
 <style scoped>
-.family-part--last {
-  font-weight: bold;
-}
-
 .application-source-tag {
   cursor: pointer;
 }

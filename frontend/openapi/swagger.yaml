@@ -7069,8 +7069,12 @@ components:
           type: string
         description:
           type: string
-        familyId:
-          type: string
+        familyIds:
+          description: Familles de données parentes (une donnée peut appartenir à
+            plusieurs familles)
+          type: array
+          items:
+            type: string
         officialUrl:
           type: string
         tagIds:
@@ -7131,8 +7135,12 @@ components:
           type: string
         officialUrl:
           type: string
-        family:
-          $ref: "#/components/schemas/DataFamilyDto"
+        families:
+          description: Familles de données parentes (une donnée peut appartenir à
+            plusieurs familles)
+          type: array
+          items:
+            $ref: "#/components/schemas/DataFamilyDto"
         tags:
           type: array
           items:

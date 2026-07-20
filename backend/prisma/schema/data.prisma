@@ -37,13 +37,11 @@ model DataDescription {
   name        String  @db.VarChar(255)
   /// Description détaillée
   description String? @db.Text
-  /// Identifiant de la famille de données
-  familyId    String?
   /// URL vers la source officielle de la donnée
   officialUrl String? @db.VarChar(255)
 
-  /// Famille de données parente
-  family             DataFamily?       @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  /// Familles de données parentes (une donnée peut appartenir à plusieurs familles)
+  families           DataFamily[]
   /// Applications sources de cette donnée (celles qui la produisent sur RefApp)
   applicationsSource Application[]
   dataApplications   DataApplication[]

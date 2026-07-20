@@ -428,7 +428,6 @@ erDiagram
   String id PK
   String(255) name
   String description "nullable"
-  String familyId FK "nullable"
   String(255) officialUrl "nullable"
 }
 "DataApplication" {
@@ -456,6 +455,10 @@ erDiagram
   String swaggerUrl "nullable"
   String(255) authenticationType "nullable"
 }
+"_DataDescriptionToDataFamily" {
+  String A FK
+  String B FK
+}
 "_DataDescriptionToTag" {
   String A FK
   String B FK
@@ -464,10 +467,11 @@ erDiagram
   String A FK
   String B FK
 }
-"DataDescription" }o--o| "DataFamily" : family
 "DataApplication" }o--|| "DataDescription" : dataDescription
 "DataApplication" }o--o| "DataSensibility" : sensibility
 "DataExposure" }o--|| "DataApplication" : dataApplication
+"_DataDescriptionToDataFamily" }o--|| "DataDescription" : DataDescription
+"_DataDescriptionToDataFamily" }o--|| "DataFamily" : DataFamily
 "_DataDescriptionToTag" }o--|| "DataDescription" : DataDescription
 "_ApplicationToDataDescription" }o--|| "DataDescription" : DataDescription
 ```
@@ -503,7 +507,6 @@ Properties as follows:
 - `id`: Identifiant unique
 - `name`: Nom de la donnée
 - `description`: Description détaillée
-- `familyId`: Identifiant de la famille de données
 - `officialUrl`: URL vers la source officielle de la donnée
 
 ### `DataApplication`
@@ -541,6 +544,15 @@ Properties as follows:
 - `format`: Format des données échangées (ex: JSON, CSV, XML)
 - `swaggerUrl`: URL de la documentation Swagger/OpenAPI
 - `authenticationType`: Type d'authentification requis (ex: OAuth2, API Key)
+
+### `_DataDescriptionToDataFamily`
+
+Pair relationship table between [DataDescription](#DataDescription) and [DataFamily](#DataFamily)
+
+Properties as follows:
+
+- `A`:
+- `B`:
 
 ### `_DataDescriptionToTag`
 

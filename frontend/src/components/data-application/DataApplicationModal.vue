@@ -17,8 +17,6 @@ import { OPEN_DATA_STATUS_LABELS, UPDATE_FREQUENCY_LABELS } from "@/constants/da
 import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 import AccessibleAutocomplete from "@/components/AccessibleAutocomplete.vue";
 
-const NEW_FAMILY_VALUE = "__new__";
-
 const props = defineProps<{
   applicationId: string;
   initialItem?: DataApplicationDto;
@@ -43,18 +41,24 @@ const descriptionError = ref<string | undefined>(undefined);
 // (bascule manuelle depuis la recherche), soit en édition pour modifier celle déjà liée (identité
 // verrouillée, mais ses propres informations restent modifiables).
 const isCreatingNewDescription = ref(false);
-const descriptionForm = ref({ name: "", description: "", officialUrl: "", familyId: "" });
-const newFamilyPath = ref("");
+const descriptionForm = ref({ name: "", description: "", officialUrl: "" });
 const newDescriptionError = ref<string | undefined>(undefined);
 const descriptionTags = ref<TagDto[]>([]);
 const descriptionApplicationsSource = ref<ApplicationRefDto[]>([]);
+const descriptionFamilies = ref<DataFamilyDto[]>([]);
+const isCreatingNewFamily = ref(false);
+const newFamilyPath = ref("");
+const newFamilyError = ref<string | undefined>(undefined);
 
 function resetDescriptionFormFields() {
-  descriptionForm.value = { name: "", description: "", officialUrl: "", familyId: "" };
-  newFamilyPath.value = "";
+  descriptionForm.value = { name: "", description: "", officialUrl: "" };
   newDescriptionError.value = undefined;
   descriptionTags.value = [];
   descriptionApplicationsSource.value = [];
+  descriptionFamilies.value = [];
+  isCreatingNewFamily.value = false;
+  newFamilyPath.value = "";
+  newFamilyError.value = undefined;
 }
 
 async function searchTags(query: string): Promise<TagDto[]> {
@@ -85,6 +89,47 @@ function addDescriptionApplicationSource(application: ApplicationRefDto | null) 
 
 function removeDescriptionApplicationSource(index: number) {
   descriptionApplicationsSource.value = descriptionApplicationsSource.value.filter((_, i) => i !== index);
+}
+
+async function searchFamilies(query: string): Promise<DataFamilyDto[]> {
+  const normalizedQuery = query.trim().toLowerCase();
+  return familiesList.value.filter(
+    (family) =>
+      family.path.toLowerCase().includes(normalizedQuery) && !descriptionFamilies.value.some((selected) => selected.id === family.id),
+  );
+}
+
+function addDescriptionFamily(family: DataFamilyDto | null) {
+  if (family && !descriptionFamilies.value.some((f) => f.id === family.id)) {
+    descriptionFamilies.value = [...descriptionFamilies.value, family];
+  }
+}
+
+function removeDescriptionFamily(index: number) {
+  descriptionFamilies.value = descriptionFamilies.value.filter((_, i) => i !== index);
+}
+
+function toggleCreateNewFamily(value: boolean) {
+  isCreatingNewFamily.value = value;
+  newFamilyPath.value = "";
+  newFamilyError.value = undefined;
+}
+
+async function createAndAddFamily() {
+  if (!newFamilyPath.value.trim()) {
+    newFamilyError.value = "Veuillez renseigner un chemin de famille.";
+    return;
+  }
+  try {
+    const response = await api.dataFamilyControllerCreate({ body: { path: newFamilyPath.value.trim() } });
+    if (!response.response.ok || !response.data) throw new Error("family creation failed");
+    familiesList.value = [...familiesList.value, response.data];
+    addDescriptionFamily(response.data);
+    toggleCreateNewFamily(false);
+  } catch (error) {
+    console.error("Error creating family:", error);
+    newFamilyError.value = "Erreur lors de la création de la famille.";
+  }
 }
 
 interface DataApplicationForm {
@@ -126,7 +171,8 @@ function toggleCreateNewDescription(value: boolean) {
 }
 
 function formatDescriptionText(description: DataDescriptionDto): string {
-  return description.family?.path ? `${description.name} (${description.family.path})` : description.name;
+  const familiesPath = (description.families ?? []).map((family) => family.path).join(", ");
+  return familiesPath ? `${description.name} (${familiesPath})` : description.name;
 }
 
 // Dérivé de descriptionSearch ET descriptionsList (pas un simple watch sur descriptionSearch) :
@@ -140,13 +186,9 @@ const matchedExistingDescription = computed(() => {
 
 const isExistingDescriptionValid = computed(() => !!matchedExistingDescription.value);
 
-// Valide le panneau d'informations de la donnée (nom + famille si "nouvelle famille" choisie) —
-// utilisé aussi bien à la création d'une nouvelle donnée qu'à l'édition de celle déjà liée.
-const isDescriptionFieldsValid = computed(() => {
-  if (!descriptionForm.value.name.trim()) return false;
-  if (descriptionForm.value.familyId === NEW_FAMILY_VALUE && !newFamilyPath.value.trim()) return false;
-  return true;
-});
+// Valide le panneau d'informations de la donnée (nom uniquement) — utilisé aussi bien à la création
+// d'une nouvelle donnée qu'à l'édition de celle déjà liée.
+const isDescriptionFieldsValid = computed(() => !!descriptionForm.value.name.trim());
 
 const isFormValid = computed(() => {
   if (props.initialItem) return isDescriptionFieldsValid.value;
@@ -236,12 +278,14 @@ function setInitialValues() {
       name: item.dataDescription.name,
       description: item.dataDescription.description ?? "",
       officialUrl: item.dataDescription.officialUrl ?? "",
-      familyId: item.dataDescription.family?.id ?? "",
     };
-    newFamilyPath.value = "";
     newDescriptionError.value = undefined;
     descriptionTags.value = item.dataDescription.tags ?? [];
     descriptionApplicationsSource.value = item.dataDescription.applicationsSource ?? [];
+    descriptionFamilies.value = item.dataDescription.families ?? [];
+    isCreatingNewFamily.value = false;
+    newFamilyPath.value = "";
+    newFamilyError.value = undefined;
   }
 }
 
@@ -260,29 +304,17 @@ function toNumberOrUndefined(value: unknown): number | undefined {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
-async function resolveFamilyId(): Promise<string | undefined> {
-  const familyId = descriptionForm.value.familyId || undefined;
-  if (familyId !== NEW_FAMILY_VALUE) return familyId;
-
-  const familyResponse = await api.dataFamilyControllerCreate({
-    body: { path: newFamilyPath.value.trim() },
-  });
-  if (!familyResponse.response.ok || !familyResponse.data) throw new Error("family creation failed");
-  return familyResponse.data.id;
-}
-
 async function resolveDataDescriptionId(): Promise<string> {
   if (!isCreatingNewDescription.value) {
     return matchedExistingDescription.value?.id ?? "";
   }
 
-  const familyId = await resolveFamilyId();
   const descriptionResponse = await api.dataCatalogControllerCreateDescription({
     body: {
       name: descriptionForm.value.name.trim(),
       description: descriptionForm.value.description || undefined,
       officialUrl: descriptionForm.value.officialUrl || undefined,
-      familyId,
+      familyIds: descriptionFamilies.value.map((family) => family.id),
       tagIds: descriptionTags.value.map((tag) => tag.id),
       applicationSourceIds: descriptionApplicationsSource.value.map((app) => app.id),
     },
@@ -291,17 +323,16 @@ async function resolveDataDescriptionId(): Promise<string> {
   return descriptionResponse.data.id;
 }
 
-// Édition : met à jour les informations propres à la donnée liée (nom, famille, tags, applications
+// Édition : met à jour les informations propres à la donnée liée (nom, familles, tags, applications
 // source), en plus des champs d'usage applicatif gérés par ailleurs.
 async function updateDescriptionFields(dataDescriptionId: string): Promise<void> {
-  const familyId = await resolveFamilyId();
   const response = await api.dataCatalogControllerUpdateDescription({
     path: { id: dataDescriptionId },
     body: {
       name: descriptionForm.value.name.trim(),
       description: descriptionForm.value.description || undefined,
       officialUrl: descriptionForm.value.officialUrl || undefined,
-      familyId,
+      familyIds: descriptionFamilies.value.map((family) => family.id),
       tagIds: descriptionTags.value.map((tag) => tag.id),
       applicationSourceIds: descriptionApplicationsSource.value.map((app) => app.id),
     },
@@ -311,9 +342,7 @@ async function updateDescriptionFields(dataDescriptionId: string): Promise<void>
 
 async function handleSubmit() {
   if (props.initialItem || isCreatingNewDescription.value) {
-    newDescriptionError.value = isDescriptionFieldsValid.value
-      ? undefined
-      : "Veuillez renseigner un nom (et une famille si « nouvelle » est choisie).";
+    newDescriptionError.value = isDescriptionFieldsValid.value ? undefined : "Veuillez renseigner un nom.";
     if (newDescriptionError.value) return;
   } else {
     descriptionError.value = isFormValid.value ? undefined : "Veuillez sélectionner une donnée existante dans la liste.";
@@ -486,29 +515,68 @@ async function handleSubmit() {
               data-testid="new-description-official-url-input"
             />
 
-            <DsfrSelect
-              v-model="descriptionForm.familyId"
-              label="Famille métier"
-              label-visible
-              class="fr-mb-3w"
-              data-testid="new-description-family-select"
-              :options="[
-                { value: '', text: 'Non renseignée' },
-                ...familiesList.map((family) => ({ value: family.id, text: family.path })),
-                { value: NEW_FAMILY_VALUE, text: '+ Créer une nouvelle famille' },
-              ]"
-            />
+            <fieldset class="tags-fieldset fr-mb-3w">
+              <legend class="fr-label">Familles métier</legend>
+              <ul v-if="descriptionFamilies.length" class="fr-tags-group" data-testid="new-description-families">
+                <li v-for="(family, index) in descriptionFamilies" :key="family.id" class="fr-mr-1v fr-mb-1v">
+                  <DsfrTag
+                    :label="family.path"
+                    tag-name="button"
+                    class="fr-tag--dismiss"
+                    :aria-label="`Retirer la famille : ${family.path}`"
+                    @click.stop.prevent="removeDescriptionFamily(index)"
+                  />
+                </li>
+              </ul>
+              <label for="new-description-family-search" class="fr-sr-only">Rechercher une famille à ajouter</label>
+              <AccessibleAutocomplete
+                id="new-description-family-search"
+                data-testid="new-description-family-search"
+                title="Rechercher une famille à ajouter"
+                list-label="Familles proposées"
+                :search="searchFamilies"
+                placeholder="Rechercher une famille"
+                :on-change="addDescriptionFamily"
+                :display-no-result="true"
+                :display-label="(item) => item?.path ?? ''"
+              />
 
-            <DsfrInput
-              v-if="descriptionForm.familyId === NEW_FAMILY_VALUE"
-              v-model="newFamilyPath"
-              label="Chemin de la nouvelle famille"
-              label-visible
-              required
-              hint="Ex : Identité / Etat civil"
-              class="fr-mb-3w"
-              data-testid="new-family-path-input"
-            />
+              <p v-if="!isCreatingNewFamily" class="fr-mt-1w fr-mb-0">
+                <DsfrButton
+                  tertiary
+                  no-outline
+                  size="sm"
+                  label="+ Créer une nouvelle famille"
+                  data-testid="new-description-create-family-toggle"
+                  @click="toggleCreateNewFamily(true)"
+                />
+              </p>
+              <div v-else class="fr-grid-row fr-grid-row--bottom fr-grid-row--gutters fr-mt-1w">
+                <div class="fr-col">
+                  <DsfrInput
+                    v-model="newFamilyPath"
+                    label="Chemin de la nouvelle famille"
+                    label-visible
+                    hint="Ex : Identité / Etat civil"
+                    :error-message="newFamilyError"
+                    data-testid="new-family-path-input"
+                  />
+                </div>
+                <div class="fr-col-auto">
+                  <DsfrButton
+                    type="button"
+                    secondary
+                    size="sm"
+                    label="Annuler"
+                    data-testid="new-family-cancel-btn"
+                    @click="toggleCreateNewFamily(false)"
+                  />
+                </div>
+                <div class="fr-col-auto">
+                  <DsfrButton type="button" size="sm" label="Ajouter" data-testid="new-family-add-btn" @click="createAndAddFamily" />
+                </div>
+              </div>
+            </fieldset>
 
             <fieldset class="tags-fieldset fr-mb-3w">
               <legend class="fr-label">Applications source</legend>

@@ -92,8 +92,8 @@ async function confirmDeletion() {
   }
 }
 
-// Découpe la famille en segments pour l'affichage hiérarchique
-const familyParts = computed(() => item.value?.dataDescription?.family?.path?.split(" > ") ?? []);
+// Une donnée peut appartenir à plusieurs familles métier, affichées en tags (comme dans le tableau).
+const families = computed(() => item.value?.dataDescription?.families ?? []);
 
 // Autres applications utilisant la même donnée (exclut l'application courante)
 const otherApplications = computed(() =>
@@ -211,17 +211,11 @@ function goToApplicationProfile(appId: string) {
             </span>
           </div>
 
-          <!-- Fil d'ariane famille métier -->
-          <div v-if="familyParts.length" class="fr-mt-1w">
-            <div class="fr-text--sm fr-mb-0 detail-breadcrumb">
-              <span class="fr-icon-links-line fr-icon--sm fr-mr-1v icon-blue" aria-hidden="true" />
-              <template v-for="(part, index) in familyParts" :key="part">
-                <span :class="{ 'family-part--last': index === familyParts.length - 1 }">
-                  {{ part }}
-                </span>
-                <span v-if="index < familyParts.length - 1" class="fr-mx-1v fr-text-mention--grey"> &gt; </span>
-              </template>
-            </div>
+          <!-- Familles métier (une donnée peut appartenir à plusieurs familles) -->
+          <div v-if="families.length" class="fr-tags-group fr-mt-1w" data-testid="data-application-detail-families">
+            <span v-for="family in families" :key="family.id" class="fr-tag fr-mr-1v fr-mb-1v">
+              {{ family.path }}
+            </span>
           </div>
         </div>
       </div>
@@ -569,12 +563,6 @@ function goToApplicationProfile(appId: string) {
   flex-wrap: wrap;
 }
 
-.detail-breadcrumb {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
 .data-detail__section-title {
   display: flex;
   align-items: center;
@@ -592,11 +580,6 @@ function goToApplicationProfile(appId: string) {
 }
 .icon-success {
   color: var(--success-425-625);
-}
-
-/* ── Family breadcrumb ───────────────────────────────────────── */
-.family-part--last {
-  font-weight: bold;
 }
 
 /* ── KPI cards ───────────────────────────────────────────────── */

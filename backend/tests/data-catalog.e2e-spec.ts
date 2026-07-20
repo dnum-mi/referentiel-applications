@@ -66,7 +66,7 @@ describe("DataCatalog", () => {
         .send({
           name: "Données de paie",
           description: "Données relatives aux paies mensuelles.",
-          familyId: family.id,
+          familyIds: [family.id],
           officialUrl: "https://www.data.gouv.fr/fr/datasets/base-sirene",
         })
         .expect(201);
@@ -74,7 +74,7 @@ describe("DataCatalog", () => {
       expect(response.body).toMatchObject({
         name: "Données de paie",
         description: "Données relatives aux paies mensuelles.",
-        family: { id: family.id },
+        families: [{ id: family.id }],
       });
     });
   });
@@ -197,22 +197,26 @@ describe("DataCatalog", () => {
   });
 
   describe("GET /data-catalog/applications/:applicationId (sorting)", () => {
-    it("sorts by family path (sortBy=family)", async () => {
+    it("sorts by family count (sortBy=family)", async () => {
       const sortApplication = await ApplicationFaker.create(writerUser);
       const familyA = await DataFamilyFaker.create({ path: "AAA sort family" });
       const familyZ = await DataFamilyFaker.create({ path: "ZZZ sort family" });
-      const descA = await DataDescriptionFaker.create({ familyId: familyA.id });
-      const descZ = await DataDescriptionFaker.create({ familyId: familyZ.id });
+      const descNoFamily = await DataDescriptionFaker.create({
+        familyIds: [],
+      });
+      const descTwoFamilies = await DataDescriptionFaker.create({
+        familyIds: [familyA.id, familyZ.id],
+      });
 
       await request(app().getHttpServer())
         .post(`/data-catalog/applications/${sortApplication.id}`)
         .set("Authorization", `Bearer ${WRITER_TOKEN}`)
-        .send({ dataDescriptionId: descZ.id })
+        .send({ dataDescriptionId: descTwoFamilies.id })
         .expect(201);
       await request(app().getHttpServer())
         .post(`/data-catalog/applications/${sortApplication.id}`)
         .set("Authorization", `Bearer ${WRITER_TOKEN}`)
-        .send({ dataDescriptionId: descA.id })
+        .send({ dataDescriptionId: descNoFamily.id })
         .expect(201);
 
       const response = await request(app().getHttpServer())
@@ -222,8 +226,8 @@ describe("DataCatalog", () => {
         .expect(200);
 
       expect(
-        response.body.results.map((r: any) => r.dataDescription.family.path),
-      ).toEqual(["AAA sort family", "ZZZ sort family"]);
+        response.body.results.map((r: any) => r.dataDescription.id),
+      ).toEqual([descNoFamily.id, descTwoFamilies.id]);
     });
 
     it("sorts by sensibility label (sortBy=sensibility)", async () => {

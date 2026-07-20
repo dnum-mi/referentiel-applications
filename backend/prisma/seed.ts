@@ -82,7 +82,11 @@ async function createDataDescriptions(
   const dataFamilies = await DataFamilyFaker.createAll();
   const dataDescriptions: SeededDataDescription[] = [];
   for (let i = 0; i < 50; i++) {
-    const family = faker.helpers.arrayElement(dataFamilies);
+    // Une donnée peut appartenir à plusieurs familles (occasionnellement).
+    const families = faker.helpers.arrayElements(dataFamilies, {
+      min: 1,
+      max: Math.min(3, dataFamilies.length),
+    });
     // Chaque donnée provient d'une ou plusieurs applications sources sur RefApp (celles qui la
     // produisent) ; occasionnellement aucune, pour couvrir le cas d'une donnée sans source renseignée.
     const sourceApplications = faker.helpers.maybe(
@@ -94,7 +98,7 @@ async function createDataDescriptions(
       { probability: 0.9 },
     );
     const dd = await DataDescriptionFaker.create({
-      familyId: family.id,
+      familyIds: families.map((family) => family.id),
       applicationSourceIds: sourceApplications?.map((app) => app.id) ?? [],
     });
     dataDescriptions.push(dd);

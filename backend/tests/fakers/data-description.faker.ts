@@ -51,7 +51,7 @@ export class DataDescriptionFaker {
     params: {
       name?: string;
       description?: string;
-      familyId?: string;
+      familyIds?: string[];
       tagIds?: string[];
       officialUrl?: string | null;
       applicationSourceIds?: string[];
@@ -73,7 +73,9 @@ export class DataDescriptionFaker {
             `Référentiel ${faker.word.noun()} alimenté par les systèmes métier et mis à disposition des applications consommatrices.`,
             null,
           ]),
-        familyId: params.familyId ?? null,
+        families: params.familyIds?.length
+          ? { connect: params.familyIds.map((id) => ({ id })) }
+          : undefined,
         officialUrl:
           "officialUrl" in params
             ? params.officialUrl

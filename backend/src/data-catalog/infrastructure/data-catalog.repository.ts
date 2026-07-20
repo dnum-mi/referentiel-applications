@@ -13,7 +13,9 @@ function buildDataApplicationOrderBy(
 ): Prisma.DataApplicationOrderByWithRelationInput {
   switch (sortBy) {
     case "family":
-      return { dataDescription: { family: { path: order } } };
+      // Une donnée peut appartenir à plusieurs familles : pas de valeur unique à trier
+      // alphabétiquement, on trie par nombre de familles (même approche que "tags").
+      return { dataDescription: { families: { _count: order } } };
     case "sensibility":
       return { sensibility: { label: order } };
     case "openDataStatus":
@@ -33,7 +35,7 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   private static readonly dataDescriptionInclude = {
-    family: true,
+    families: true,
     tags: true,
     applicationsSource: { select: { id: true, label: true } },
   };
@@ -47,8 +49,12 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
       data: {
         name: dto.name,
         description: dto.description,
-        familyId: dto.familyId,
         officialUrl: dto.officialUrl,
+        families: dto.familyIds
+          ? {
+              connect: dto.familyIds.map((id: string) => ({ id })),
+            }
+          : undefined,
         tags: dto.tagIds
           ? {
               connect: dto.tagIds.map((id: string) => ({ id })),
@@ -100,8 +106,13 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
       data: {
         name: dto.name,
         description: dto.description,
-        familyId: dto.familyId,
         officialUrl: dto.officialUrl,
+        families: dto.familyIds
+          ? {
+              set: [],
+              connect: dto.familyIds.map((id: string) => ({ id })),
+            }
+          : undefined,
         tags: dto.tagIds
           ? {
               set: [],

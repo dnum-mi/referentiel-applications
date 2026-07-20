@@ -21,10 +21,14 @@ export class CreateDataDescriptionDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Familles de données parentes (une donnée peut appartenir à plusieurs familles)",
+  })
   @IsOptional()
-  @IsUUID()
-  familyId?: string;
+  @IsUUID("4", { each: true })
+  familyIds?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -106,9 +110,14 @@ export class DataDescriptionDto {
   @IsUrl()
   officialUrl?: string;
 
-  @ApiPropertyOptional({ type: () => DataFamilyDto })
+  @ApiPropertyOptional({
+    type: () => [DataFamilyDto],
+    description:
+      "Familles de données parentes (une donnée peut appartenir à plusieurs familles)",
+  })
   @IsOptional()
-  family?: DataFamilyDto;
+  @IsArray()
+  families?: DataFamilyDto[];
 
   @ApiPropertyOptional({ type: () => [TagDto] })
   @IsOptional()
