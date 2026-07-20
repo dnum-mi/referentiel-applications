@@ -10,7 +10,15 @@ import { CreateTechnologyDto } from "./dto/technology.dto";
 import { TechnologyStack } from "./entities/technology.entity";
 import { ServiceOptions } from "src/common/utils/types";
 import { ApplicationService } from "src/applications/application.service";
-import { fetchTechnologyEol } from "./utils/endoflife.utils";
+import {
+  fetchProductReleases,
+  parseEolDate,
+  toEndoflifeProduct,
+  type EndoflifeRelease,
+} from "./utils/endoflife.utils";
+
+// Au-delà de ce délai, on rafraîchit paresseusement la fin de vie au GET.
+const EOL_REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
 @Injectable()
 export class TechnologyService extends BaseService<TechnologyStack> {
@@ -22,28 +30,80 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     super(prisma.technologyStack, prisma, metadataService, applicationService);
   }
 
-  // Interroge endoflife.date pour dater la fin de vie. Désactivé en test et via
-  // ENDOFLIFE_ENABLED=false pour éviter tout appel réseau non déterministe.
-  private async resolveEol(
-    technology: string,
-    version?: string | null,
-  ): Promise<{ eolDate?: Date | null; eolCheckedAt?: Date | null }> {
-    if (
+  // Appels réseau endoflife.date désactivés en test et via ENDOFLIFE_ENABLED=false,
+  // pour éviter tout appel non déterministe.
+  private eolDisabled(): boolean {
+    return (
       process.env.NODE_ENV === "test" ||
       process.env.ENDOFLIFE_ENABLED === "false"
-    ) {
-      return {};
-    }
-    return fetchTechnologyEol(technology, version);
+    );
+  }
+
+  // Résout la fin de vie à partir du PRODUIT (et de la version). En cas d'ÉCHEC réseau/HTTP
+  // (releases === null, distinct d'un produit connu sans EOL qui renvoie []), on ne renvoie
+  // RIEN : la valeur existante n'est ni écrasée ni son TTL réarmé (retentée au prochain GET).
+  private async resolveEol(
+    product: string,
+    version?: string | null,
+  ): Promise<{ eolDate?: Date | null; eolCheckedAt?: Date | null }> {
+    if (this.eolDisabled() || !product?.trim() || !version?.trim()) return {};
+    const releases = await fetchProductReleases(product);
+    if (releases === null) return {};
+    return {
+      eolDate: parseEolDate(releases, version),
+      eolCheckedAt: new Date(),
+    };
   }
 
   async findAllByApplicationId(
     applicationId: string,
   ): Promise<TechnologyStack[]> {
-    return this.prisma.technologyStack.findMany({
+    const rows = (await this.prisma.technologyStack.findMany({
       where: { applicationId },
-      orderBy: { technology: "asc" },
-    }) as unknown as Promise<TechnologyStack[]>;
+      orderBy: [{ technology: "asc" }, { product: "asc" }],
+    })) as unknown as TechnologyStack[];
+
+    if (this.eolDisabled()) return rows;
+
+    // Rafraîchissement paresseux best-effort des lignes dont la fin de vie n'a jamais
+    // été calculée ou dépasse le TTL. Les cycles d'un produit ne sont récupérés qu'UNE
+    // fois par requête (mémoïsation par slug produit) puis appliqués à chaque version.
+    const now = Date.now();
+    const releasesBySlug = new Map<
+      string,
+      Promise<EndoflifeRelease[] | null>
+    >();
+    const getReleases = (product: string) => {
+      const slug = toEndoflifeProduct(product);
+      let pending = releasesBySlug.get(slug);
+      if (!pending) {
+        pending = fetchProductReleases(product);
+        releasesBySlug.set(slug, pending);
+      }
+      return pending;
+    };
+
+    return Promise.all(
+      rows.map(async (row) => {
+        const stale =
+          !row.eolCheckedAt ||
+          now - new Date(row.eolCheckedAt).getTime() > EOL_REFRESH_TTL_MS;
+        if (!stale || !row.version) return row;
+
+        const releases = await getReleases(row.product);
+        // Échec réseau/HTTP : on NE réécrit PAS — sinon on écraserait une date valide par
+        // null et on figerait la ligne pour tout le TTL. On la laisse « périmée » : elle
+        // sera retentée au prochain GET dès qu'endoflife.date répond de nouveau.
+        if (releases === null) return row;
+        const eolDate = parseEolDate(releases, row.version);
+        const eolCheckedAt = new Date();
+        // Persistance best-effort : un échec d'écriture ne doit pas casser la lecture.
+        await this.prisma.technologyStack
+          .update({ where: { id: row.id }, data: { eolDate, eolCheckedAt } })
+          .catch(() => undefined);
+        return { ...row, eolDate, eolCheckedAt };
+      }),
+    );
   }
 
   async createTechnology(
@@ -63,19 +123,20 @@ export class TechnologyService extends BaseService<TechnologyStack> {
 
     const existing = await this.prisma.technologyStack.findUnique({
       where: {
-        applicationId_technology: {
+        applicationId_technology_product: {
           applicationId,
           technology: dto.technology,
+          product: dto.product,
         },
       },
     });
     if (existing) {
       throw new ConflictException(
-        "Cette technologie est déjà renseignée pour cette application",
+        "Ce produit est déjà renseigné pour cette technologie et cette application",
       );
     }
 
-    const eol = await this.resolveEol(dto.technology, dto.version);
+    const eol = await this.resolveEol(dto.product, dto.version);
     return super.create({ ...dto, ...eol, applicationId }, options);
   }
 
@@ -92,30 +153,32 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       throw new NotFoundException("Technologie introuvable");
     }
 
-    if (dto.technology && dto.technology !== existing.technology) {
+    const newTechnology = dto.technology ?? existing.technology;
+    const newProduct = dto.product ?? existing.product;
+    const pairChanged =
+      newTechnology !== existing.technology || newProduct !== existing.product;
+    if (pairChanged) {
       const conflict = await this.prisma.technologyStack.findUnique({
         where: {
-          applicationId_technology: {
+          applicationId_technology_product: {
             applicationId,
-            technology: dto.technology,
+            technology: newTechnology,
+            product: newProduct,
           },
         },
       });
-      if (conflict) {
+      if (conflict && conflict.id !== id) {
         throw new ConflictException(
-          "Cette technologie est déjà renseignée pour cette application",
+          "Ce produit est déjà renseigné pour cette technologie et cette application",
         );
       }
     }
 
-    // Recalcule la fin de vie si la technologie ou la version change.
-    const technologyChanged =
-      dto.technology !== undefined || dto.version !== undefined;
-    const eol = technologyChanged
-      ? await this.resolveEol(
-          dto.technology ?? existing.technology,
-          dto.version ?? existing.version,
-        )
+    // Recalcule la fin de vie si le produit ou la version change.
+    const eolInputChanged =
+      dto.product !== undefined || dto.version !== undefined;
+    const eol = eolInputChanged
+      ? await this.resolveEol(newProduct, dto.version ?? existing.version)
       : {};
 
     return super.update(id, { ...dto, ...eol }, options);

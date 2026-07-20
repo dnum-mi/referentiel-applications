@@ -14,10 +14,17 @@ const RELEASES: EndoflifeRelease[] = [
 
 describe("endoflife.utils", () => {
   describe("toEndoflifeProduct", () => {
-    it("normalise un nom de technologie en identifiant produit", () => {
+    it("normalise un nom de produit en identifiant endoflife.date", () => {
       expect(toEndoflifeProduct("Node.js")).toBe("nodejs");
       expect(toEndoflifeProduct("PostgreSQL")).toBe("postgresql");
       expect(toEndoflifeProduct("  Vue.js  ")).toBe("vuejs");
+    });
+
+    it("applique la table d'alias produit → slug", () => {
+      expect(toEndoflifeProduct("SQL Server")).toBe("mssqlserver");
+      expect(toEndoflifeProduct(".NET")).toBe("dotnet");
+      expect(toEndoflifeProduct(".NET Core")).toBe("dotnet");
+      expect(toEndoflifeProduct("Postgres")).toBe("postgresql");
     });
   });
 

@@ -12,10 +12,14 @@ model TechnologyStack {
   /// Application à laquelle cette technologie appartient
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
-  /// Nom de la technologie (ex. « Node.js », « PostgreSQL »)
+  /// Famille / catégorie de technologie (ex. « Base de données », « Langage »)
   technology String
+  /// Produit concret (ex. « PostgreSQL », « Node.js ») — sert à résoudre la fin de vie
+  product    String
   /// Version utilisée (ex. « 20.11 »)
   version    String? @db.VarChar(50)
+  /// Lien documentaire (URL) associé au produit
+  docUrl     String? @db.VarChar(2048)
 
   /// Date de fin de support/vie de la version (renseignée via endoflife.date)
   eolDate       DateTime?
@@ -24,6 +28,6 @@ model TechnologyStack {
 
   metadatas Metadata[] @relation()
 
-  @@unique([applicationId, technology])
+  @@unique([applicationId, technology, product])
   @@index([applicationId])
 }
