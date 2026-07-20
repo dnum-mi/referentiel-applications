@@ -92,7 +92,8 @@ async function createDataDescriptions(): Promise<SeededDataDescription[]> {
  * Garantit qu'un enregistrement existe pour chaque flag du catalogue. Les
  * métadonnées (label/description) sont rafraîchies, mais l'état `enabled` n'est
  * jamais écrasé pour un flag déjà en base. À la création, un flag est activé
- * uniquement s'il figure dans `FEATURE_FLAGS_DEFAULTS` (défaut par environnement).
+ * s'il porte `defaultEnabled` (fonctionnalité déjà en production) ou s'il figure
+ * dans `FEATURE_FLAGS_DEFAULTS` (défaut par environnement).
  */
 async function createFeatureFlags() {
   const defaults = new Set(
@@ -101,7 +102,12 @@ async function createFeatureFlags() {
       .map((key) => key.trim())
       .filter(Boolean),
   );
-  for (const { key, label, description } of FEATURE_FLAG_CATALOG) {
+  for (const {
+    key,
+    label,
+    description,
+    defaultEnabled,
+  } of FEATURE_FLAG_CATALOG) {
     await prisma.featureFlag.upsert({
       where: { key },
       update: { label, description: description ?? null },
@@ -109,7 +115,7 @@ async function createFeatureFlags() {
         key,
         label,
         description: description ?? null,
-        enabled: defaults.has(key),
+        enabled: defaultEnabled || defaults.has(key),
       },
     });
   }
