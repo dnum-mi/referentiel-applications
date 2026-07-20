@@ -12,18 +12,24 @@ export interface EndoflifeRelease {
   eolFrom?: string | null;
 }
 
-export interface TechnologyEol {
-  eolDate: Date | null;
-  eolCheckedAt: Date;
-}
+/// Alias produit libre (normalisé `[a-z0-9]`) → slug endoflife.date, pour les cas où
+/// la normalisation par suppression des caractères spéciaux ne donne pas le bon slug.
+const PRODUCT_ALIASES: Record<string, string> = {
+  sqlserver: "mssqlserver",
+  net: "dotnet",
+  netcore: "dotnet",
+  postgres: "postgresql",
+};
 
-/// Normalise un nom de technologie libre en identifiant produit endoflife.date
-/// (ex. « Node.js » → « nodejs », « PostgreSQL » → « postgresql »).
-export function toEndoflifeProduct(technology: string): string {
-  return technology
+/// Normalise un nom de produit libre en identifiant produit endoflife.date
+/// (ex. « Node.js » → « nodejs », « PostgreSQL » → « postgresql », « SQL Server » →
+/// « mssqlserver », « .NET » → « dotnet »).
+export function toEndoflifeProduct(product: string): string {
+  const slug = product
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
+  return PRODUCT_ALIASES[slug] ?? slug;
 }
 
 /// Sélectionne le cycle de release correspondant à une version : correspondance
@@ -55,37 +61,29 @@ export function parseEolDate(
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/// Interroge endoflife.date pour une technologie + version. Best-effort : toute
-/// erreur (produit inconnu, réseau, timeout) renvoie une date nulle.
-export async function fetchTechnologyEol(
-  technology: string,
-  version?: string | null,
-): Promise<TechnologyEol> {
-  const eolCheckedAt = new Date();
-  const empty: TechnologyEol = { eolDate: null, eolCheckedAt };
-
-  if (!technology?.trim() || !version?.trim()) return empty;
-
-  const product = toEndoflifeProduct(technology);
+/// Récupère les cycles de release d'un produit sur endoflife.date. Best-effort : toute
+/// erreur (produit inconnu, réseau, timeout) renvoie `null`. Isolé de la résolution de
+/// version pour pouvoir être mémoïsé par produit (dédup des appels réseau).
+export async function fetchProductReleases(
+  product: string,
+): Promise<EndoflifeRelease[] | null> {
+  const slug = toEndoflifeProduct(product);
   // Garde stricte : le segment produit ne peut contenir que [a-z0-9] (pas de « / »,
   // « . » ni caractère spécial) → pas d'injection de chemin ni de SSRF possible.
-  if (!/^[a-z0-9]+$/.test(product)) return empty;
+  if (!/^[a-z0-9]+$/.test(slug)) return null;
 
   try {
     const response = await fetch(
-      `${ENDOFLIFE_BASE_URL}/${encodeURIComponent(product)}`,
-      {
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      },
+      `${ENDOFLIFE_BASE_URL}/${encodeURIComponent(slug)}`,
+      { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) },
     );
-    if (!response.ok) return empty;
+    if (!response.ok) return null;
 
     const payload = (await response.json()) as {
       result?: { releases?: EndoflifeRelease[] };
     };
-    const releases = payload?.result?.releases ?? [];
-    return { eolDate: parseEolDate(releases, version), eolCheckedAt };
+    return payload?.result?.releases ?? [];
   } catch {
-    return empty;
+    return null;
   }
 }

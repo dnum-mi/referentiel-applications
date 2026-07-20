@@ -8251,14 +8251,24 @@ components:
       properties:
         technology:
           type: string
-          example: Node.js
-          description: Nom de la technologie
+          example: Base de données
+          description: Famille / catégorie de technologie
+        product:
+          type: string
+          example: PostgreSQL
+          description: Produit concret (sert à résoudre la fin de vie)
         version:
           type: string
           nullable: true
           maxLength: 50
           example: "20.11"
           description: Version utilisée
+        docUrl:
+          type: string
+          nullable: true
+          maxLength: 2048
+          example: https://www.postgresql.org/docs/
+          description: Lien documentaire (URL) associé au produit
         id:
           type: string
           example: 12345678-1234-1234-1234-123456789012
@@ -8281,6 +8291,7 @@ components:
           description: Date de dernière vérification du statut de fin de vie
       required:
         - technology
+        - product
         - id
         - applicationId
     CreateTechnologyDto:
@@ -8288,16 +8299,27 @@ components:
       properties:
         technology:
           type: string
-          example: Node.js
-          description: Nom de la technologie
+          example: Base de données
+          description: Famille / catégorie de technologie
+        product:
+          type: string
+          example: PostgreSQL
+          description: Produit concret (sert à résoudre la fin de vie)
         version:
           type: string
           nullable: true
           maxLength: 50
           example: "20.11"
           description: Version utilisée
+        docUrl:
+          type: string
+          nullable: true
+          maxLength: 2048
+          example: https://www.postgresql.org/docs/
+          description: Lien documentaire (URL) associé au produit
       required:
         - technology
+        - product
     GetIqAvgGroupedDto:
       type: object
       properties:

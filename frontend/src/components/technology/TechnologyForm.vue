@@ -10,18 +10,27 @@ const props = defineProps({
 
 const emit = defineEmits(["submit", "cancel"]);
 
-const form = ref<{ technology: string; version: string }>({
+const form = ref<{
+  technology: string;
+  product: string;
+  version: string;
+  docUrl: string;
+}>({
   technology: props.initialData?.technology ?? "",
+  product: props.initialData?.product ?? "",
   version: props.initialData?.version ?? "",
+  docUrl: props.initialData?.docUrl ?? "",
 });
 
-const isFormValid = computed(() => form.value.technology.trim() !== "");
+const isFormValid = computed(() => form.value.technology.trim() !== "" && form.value.product.trim() !== "");
 
 function handleSubmit() {
   emit("submit", {
     id: props.initialData?.id,
     technology: form.value.technology.trim(),
+    product: form.value.product.trim(),
     version: form.value.version?.trim() || null,
+    docUrl: form.value.docUrl?.trim() || null,
   });
 }
 </script>
@@ -33,8 +42,18 @@ function handleSubmit() {
       label="Technologie"
       label-visible
       required
-      placeholder="ex : Node.js, PostgreSQL"
+      placeholder="ex : Base de données, Langage"
       data-testid="technology-name-input"
+      class="fr-mb-3w"
+    />
+
+    <DsfrInput
+      v-model="form.product"
+      label="Produit"
+      label-visible
+      required
+      placeholder="ex : PostgreSQL, Node.js"
+      data-testid="technology-product-input"
       class="fr-mb-3w"
     />
 
@@ -44,6 +63,16 @@ function handleSubmit() {
       label-visible
       placeholder="ex : 20.11"
       data-testid="technology-version-input"
+      class="fr-mb-3w"
+    />
+
+    <DsfrInput
+      v-model="form.docUrl"
+      label="Documentation"
+      label-visible
+      type="url"
+      placeholder="ex : https://www.postgresql.org/docs/"
+      data-testid="technology-docurl-input"
       class="fr-mb-3w"
     />
 

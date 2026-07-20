@@ -32,7 +32,9 @@ import { TechnologyService } from "./technology.service";
 
 const TECHNOLOGY_METADATA_FIELDS = {
   technology: "technologie",
+  product: "produit",
   version: "version",
+  docUrl: "lien documentaire",
 };
 
 @ApiTags("Technologies")
