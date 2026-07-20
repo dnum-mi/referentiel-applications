@@ -1,4 +1,4 @@
-import { expect, test } from "../fixtures/test";
+import { test } from "../fixtures/test";
 import { AdminPage, ApplicationPage } from "../pom";
 
 /**
