@@ -5,6 +5,7 @@ import PrimeVue from "primevue/config";
 import { createApp } from "vue";
 import VueMatomo from "vue-matomo";
 import { vUseMermaid } from "@/composables/use-mermaid";
+import { vFeature } from "@/directives/feature-flag";
 import App from "./App.vue";
 
 import router from "./router/index";
@@ -57,5 +58,6 @@ app.use(PrimeVue, {
 
 app.component("VIcon", VIcon);
 app.directive("use-mermaid", vUseMermaid);
+app.directive("feature", vFeature);
 
 app.mount("#app");

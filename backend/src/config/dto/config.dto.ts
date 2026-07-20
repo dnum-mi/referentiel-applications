@@ -52,4 +52,12 @@ export class ConfigDto implements FrontendConfig {
     type: [FooterLinkDto],
   })
   footerLinks: FooterLinkDto[];
+
+  @ApiProperty({
+    description: "Feature flags state, keyed by technical flag key",
+    example: { "fulltext-search": true },
+    additionalProperties: { type: "boolean" },
+    type: "object",
+  })
+  featureFlags: Record<string, boolean>;
 }

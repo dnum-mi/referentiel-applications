@@ -17,7 +17,7 @@ export class ConfigController {
     description: "Configuration du client",
     type: ConfigDto,
   })
-  public countAllConfigs(): ConfigDto {
+  public countAllConfigs(): Promise<ConfigDto> {
     return this.configService.getFrontendConfig();
   }
 }

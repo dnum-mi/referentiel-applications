@@ -17,6 +17,7 @@ import { DataApplicationFaker } from "tests/fakers/data-application.faker";
 import { DataFamilyFaker } from "tests/fakers/data-family.faker";
 import { DataSensibilityFaker } from "tests/fakers/data-sensibility.faker";
 import { parseArgs } from "node:util";
+import { FEATURE_FLAG_CATALOG } from "../src/feature-flag/feature-flag.keys";
 
 const prisma = new PrismaClient();
 
@@ -85,6 +86,33 @@ async function createDataDescriptions(): Promise<SeededDataDescription[]> {
     dataDescriptions.push(dd);
   }
   return dataDescriptions;
+}
+
+/**
+ * Garantit qu'un enregistrement existe pour chaque flag du catalogue. Les
+ * métadonnées (label/description) sont rafraîchies, mais l'état `enabled` n'est
+ * jamais écrasé pour un flag déjà en base. À la création, un flag est activé
+ * uniquement s'il figure dans `FEATURE_FLAGS_DEFAULTS` (défaut par environnement).
+ */
+async function createFeatureFlags() {
+  const defaults = new Set(
+    (process.env.FEATURE_FLAGS_DEFAULTS ?? "")
+      .split(",")
+      .map((key) => key.trim())
+      .filter(Boolean),
+  );
+  for (const { key, label, description } of FEATURE_FLAG_CATALOG) {
+    await prisma.featureFlag.upsert({
+      where: { key },
+      update: { label, description: description ?? null },
+      create: {
+        key,
+        label,
+        description: description ?? null,
+        enabled: defaults.has(key),
+      },
+    });
+  }
 }
 
 async function createMditCampaigns(campaignMillesimes: number[]) {
@@ -305,6 +333,11 @@ async function seed({
 
   console.log("� Creating quality stats...");
   await createQualityStats();
+
+  // Register the known feature flags (disabled by default unless pre-activated
+  // via FEATURE_FLAGS_DEFAULTS), so the admin panel can toggle them at runtime.
+  console.log("🚩 Registering feature flags...");
+  await createFeatureFlags();
 
   console.log("✅ Database seeded successfully!");
 }

@@ -7,6 +7,7 @@ import { routeNames } from "./router/route-names";
 import { getConfig } from "./services/config";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
 import ImpersonationBanner from "./components/ImpersonationBanner.vue";
@@ -32,6 +33,7 @@ router.afterEach(async (to, from) => {
 });
 
 const userStore = useUserStore();
+const featureFlagStore = useFeatureFlagStore();
 const appConfig = ref<ConfigDto>();
 const toaster = useToasterStore();
 
@@ -60,6 +62,7 @@ interface QuickLink {
 getConfig().then((config) => {
   if (!(config instanceof Error)) {
     appConfig.value = config;
+    featureFlagStore.setFlags(config.featureFlags);
   }
 });
 

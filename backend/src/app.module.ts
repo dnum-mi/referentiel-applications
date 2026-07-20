@@ -35,6 +35,7 @@ import { TechnologyModule } from "./technology/technology.module";
 import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
 import { OrganizationMaiaReferencesModule } from "./organization-maia-references/organization-maia-references.module";
 import { ImportModule } from "./import/import.module";
+import { FeatureFlagModule } from "./feature-flag/feature-flag.module";
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { ImportModule } from "./import/import.module";
     MditCampaignModule,
     LinksModule,
     TagsModule,
+    FeatureFlagModule,
     TechnicalDebtInfoModule,
     RgaaModule,
     TechnologyModule,

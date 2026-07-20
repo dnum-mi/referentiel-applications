@@ -2,6 +2,8 @@ import { createRouter, createWebHistory, type RouteLocationNormalized, type Rout
 import { routeNames } from "./route-names";
 import { USER_MANAGER } from "@/services/authentication";
 import { useUserStore } from "@/stores/userStore";
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+import { getConfig } from "@/services/config";
 import { Permission } from "@/client";
 
 const oidcRoutes = [
@@ -158,6 +160,22 @@ router.beforeEach(async (to) => {
       if (!userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
         return { path: "/" };
       }
+    }
+  }
+
+  // Garde de fonctionnalité : redirige vers l'accueil si le flag requis est off.
+  // S'applique aussi aux routes publiques ; on s'assure que les flags sont
+  // chargés (au premier chargement, la navigation peut précéder le boot d'App.vue).
+  if (to.meta.requiresFeature) {
+    const featureFlagStore = useFeatureFlagStore();
+    if (!featureFlagStore.hasFlags) {
+      const config = await getConfig();
+      if (!(config instanceof Error)) {
+        featureFlagStore.setFlags(config.featureFlags);
+      }
+    }
+    if (!featureFlagStore.isEnabled(to.meta.requiresFeature as string)) {
+      return { path: "/" };
     }
   }
 });

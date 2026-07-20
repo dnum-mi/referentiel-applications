@@ -9,6 +9,7 @@ import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
 import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
+import AdminFeatureFlagsTab from "@/components/admin/AdminFeatureFlagsTab.vue";
 
 interface DsfrTab {
   title: string;
@@ -82,6 +83,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-tokens",
     panelId: "panel-tokens",
     component: markRaw(AdminTokensTab),
+  },
+  {
+    title: "Feature flags",
+    icon: "ri-toggle-line",
+    tabId: "tab-feature-flags",
+    panelId: "panel-feature-flags",
+    component: markRaw(AdminFeatureFlagsTab),
   },
 ]);
 

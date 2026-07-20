@@ -1,0 +1,20 @@
+/// Feature flag global activable à chaud.
+/// La table est la source de vérité : la bascule se fait au runtime via l'écran
+/// d'admin, sans redéploiement. Un catalogue de clés (`FeatureFlagKey`) et le
+/// seed garantissent que chaque flag connu existe (désactivé par défaut).
+///
+/// @namespace Config
+model FeatureFlag {
+  /// Clé technique stable (ex. "fulltext-search")
+  key         String   @id @db.VarChar(100)
+  /// Libellé affiché dans l'admin
+  label       String   @db.VarChar(150)
+  /// Description de la fonctionnalité
+  description String?
+  /// État courant
+  enabled     Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+  /// Dernier admin ayant basculé le flag (audit)
+  updatedById String?
+  updatedBy   User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+}

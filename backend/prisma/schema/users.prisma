@@ -45,6 +45,8 @@ model User {
   impersonationsAsAdmin     ImpersonationLog[]  @relation("ImpersonationAdmin")
   /// Sessions où cet utilisateur a été impersonné
   impersonationsAsTarget    ImpersonationLog[]  @relation("ImpersonationTarget")
+  /// Feature flags basculés par cet utilisateur (audit)
+  featureFlagsUpdated       FeatureFlag[]
 }
 
 /// @namespace Roles
