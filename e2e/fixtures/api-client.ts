@@ -546,6 +546,26 @@ export class ApiClient {
       body,
     );
   }
+
+  // --- Feature flags (lecture + bascule, requiert AdminPanelManage) ---
+
+  /** Liste complète des feature flags avec leur état courant. */
+  featureFlags(): Promise<FeatureFlag[] | null> {
+    return this.get<FeatureFlag[]>("/feature-flags");
+  }
+
+  /** Active/désactive un feature flag par sa clé technique. */
+  setFeatureFlag(key: string, enabled: boolean): Promise<FeatureFlag | null> {
+    return this.patch<FeatureFlag>(`/feature-flags/${key}`, { enabled });
+  }
+}
+
+/** Feature flag tel qu'exposé par `GET /feature-flags`. */
+export interface FeatureFlag {
+  key: string;
+  label: string;
+  description: string | null;
+  enabled: boolean;
 }
 
 export interface UserAdmin {

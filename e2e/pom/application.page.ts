@@ -47,6 +47,20 @@ export class ApplicationPage extends BasePage {
     await expect.poll(() => new URL(this.page.url()).pathname).toContain(tab);
   }
 
+  // Onglet de la barre (DsfrTabs) par son id d'onglet, ex "tab-technologies" → data-testid
+  // "test-tab-technologies". Sert à vérifier le gating par feature flag.
+  private appTab = (tabId: string) => this.byTestId(`test-${tabId}`);
+
+  /** Vérifie qu'un onglet de la fiche (par son id, ex "tab-technologies") est présent. */
+  async expectTabPresent(tabId: string): Promise<void> {
+    await expect(this.appTab(tabId)).toBeVisible();
+  }
+
+  /** Vérifie qu'un onglet de la fiche est absent (son feature flag est désactivé). */
+  async expectTabAbsent(tabId: string): Promise<void> {
+    await expect(this.appTab(tabId)).toHaveCount(0);
+  }
+
   // --- Tri dans les onglets ---
 
   /**

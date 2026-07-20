@@ -44,6 +44,7 @@ résultat du test, et au testeur de savoir d'un coup d'œil ce qui est déjà co
 | `PRF-`  | Profil utilisateur                          | [`protocoles/profil-utilisateur.md`](protocoles/profil-utilisateur.md)                   |
 | `IMP-`  | Impersonation                               | [`protocoles/impersonation.md`](protocoles/impersonation.md)                             |
 | `RGA-`  | Accessibilité RGAA                          | [`protocoles/rgaa.md`](protocoles/rgaa.md)                                               |
+| `FLG-`  | Feature flags                               | [`protocoles/feature-flags.md`](protocoles/feature-flags.md)                             |
 
 ## Cycle de vie d'une campagne (équivalent QASE « test run »)
 

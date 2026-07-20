@@ -151,6 +151,13 @@ const DOMAINS = [
     template: "qa-rgaa.md",
     colorLabel: "qa:rgaa",
   },
+  {
+    domain: "feature-flags",
+    prefix: "FLG",
+    label: "Feature flags",
+    template: "qa-feature-flags.md",
+    colorLabel: "qa:feature-flags",
+  },
 ];
 
 function required(key) {

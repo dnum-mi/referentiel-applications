@@ -515,6 +515,25 @@ export class DataFeature {
     await this.api.setCompliance(appId, { homologation_status: status });
   }
 
+  // --- Feature flags (FLG-*, provisioning + restauration, token admin) ---
+
+  /** Liste des feature flags, ou `null` si l'endpoint ne répond pas. */
+  featureFlags() {
+    return this.api.featureFlags();
+  }
+
+  /** État courant d'un flag par clé, ou `null` si le flag n'existe pas. */
+  async featureFlagState(key: string): Promise<boolean | null> {
+    const flags = await this.api.featureFlags();
+    const flag = flags?.find((f) => f.key === key);
+    return flag ? flag.enabled : null;
+  }
+
+  /** Active/désactive un feature flag (état global : toujours restaurer en `finally`). */
+  async setFeatureFlag(key: string, enabled: boolean): Promise<void> {
+    await this.api.setFeatureFlag(key, enabled);
+  }
+
   // --- CRUD resolvers (CRU-* tests) ---
 
   async createTestApplication(label: string): Promise<AppRef> {

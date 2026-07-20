@@ -656,4 +656,44 @@ export class AdminPage extends BasePage {
   async expectImportReportContains(text: string | RegExp): Promise<void> {
     await expect(this.byTestId("admin-import-report")).toContainText(text);
   }
+
+  // --- Onglet « Feature flags » (FLG-*) ---
+  private featureFlagToggle = (key: string) =>
+    this.byTestId(`feature-flag-toggle-${key}`);
+
+  /** Ouvre l'onglet Feature flags ; attend qu'un flag connu soit listé. */
+  async openFeatureFlagsTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: /feature flags/i })
+      .click();
+    await expect(this.byTestId("feature-flag-fulltext-search")).toBeVisible();
+  }
+
+  /** Vérifie qu'un flag (par clé technique) est listé avec son toggle. */
+  async expectFeatureFlagListed(key: string): Promise<void> {
+    await expect(this.featureFlagToggle(key)).toBeVisible();
+  }
+
+  /**
+   * Bascule un flag depuis l'UI si son état diffère de la cible, puis attend le toast de confirmation.
+   * Le `<input>` du toggle DSFR est masqué → on clique le `<label>` interactif.
+   */
+  async setFeatureFlagViaUi(key: string, enabled: boolean): Promise<void> {
+    const toggle = this.featureFlagToggle(key);
+    await expect(toggle).toBeVisible();
+    const input = toggle.locator('input[type="checkbox"]');
+    if ((await input.isChecked()) === enabled) return;
+    await toggle.locator("label").first().click();
+    await this.expectToaster();
+  }
+
+  /** Vérifie qu'un onglet d'administration est présent dans la barre. */
+  async expectAdminTabVisible(name: RegExp): Promise<void> {
+    await expect(this.adminTabs().getByRole("tab", { name })).toBeVisible();
+  }
+
+  /** Vérifie qu'un onglet d'administration est absent (son feature flag est désactivé). */
+  async expectAdminTabHidden(name: RegExp): Promise<void> {
+    await expect(this.adminTabs().getByRole("tab", { name })).toHaveCount(0);
+  }
 }
