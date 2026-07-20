@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.83.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.82.1...v1.83.0) (2026-07-20)
+
+
+### Features
+
+* **license:** remove the Licenses feature (model, API, UI, tests) ([#2057](https://github.com/dnum-mi/referentiel-applications/issues/2057)) ([f6653a8](https://github.com/dnum-mi/referentiel-applications/commit/f6653a8c8f0c483f89d195e164f9c1d920882bad))
+* **permissions:** matrice de droits Technologie + fix enregistrement colonne Données ([#2059](https://github.com/dnum-mi/referentiel-applications/issues/2059)) ([19f7460](https://github.com/dnum-mi/referentiel-applications/commit/19f746041e146b7662f340fda74ce7eba9394570))
+* **technology:** rework the technology stack by technology (product, doc link, EOL) ([#2058](https://github.com/dnum-mi/referentiel-applications/issues/2058)) ([bf78829](https://github.com/dnum-mi/referentiel-applications/commit/bf78829cd360bbf6115f8c5a9421ef1175bb3aab))
+
 ## [1.82.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.82.0...v1.82.1) (2026-07-16)
 
 
