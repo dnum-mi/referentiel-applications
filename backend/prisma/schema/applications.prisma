@@ -32,8 +32,6 @@ model Application {
   rgaaCompliances   RgaaCompliance[]
   /// Stack technique (0 à N technologies + versions)
   technologies      TechnologyStack[]
-  /// Licences logicielles utilisées (0 à N)
-  licenses          License[]
   /// Signalements pour cette application
   reports           Report[]
   /// Ressources externes liées à cette application
