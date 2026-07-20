@@ -4,7 +4,7 @@ import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminBatchData from "@/components/admin/AdminBatchData.vue";
 import AdminOrganizationsTab from "@/components/admin/AdminOrganizationsTab.vue";
 import AdminActorsTab from "@/components/admin/AdminActorsTab.vue";
-import { computed, markRaw, ref } from "vue";
+import { computed, markRaw, ref, watch } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
@@ -105,6 +105,15 @@ const tabs = ref<DsfrTab[]>([
 
 // Onglets réellement affichés : on retire ceux dont le feature flag est désactivé.
 const visibleTabs = computed(() => tabs.value.filter((tab) => !tab.featureKey || featureFlagStore.isEnabled(tab.featureKey)));
+
+// `activeTab` est un index sur `visibleTabs` : quand la liste change (bascule
+// d'un flag depuis l'onglet Feature flags), on réaligne l'index sur le même
+// onglet via son panelId stable, sinon on le ramène dans les bornes.
+watch(visibleTabs, (newTabs, oldTabs) => {
+  const currentPanelId = oldTabs?.[activeTab.value]?.panelId;
+  const nextIndex = currentPanelId ? newTabs.findIndex((tab) => tab.panelId === currentPanelId) : -1;
+  activeTab.value = nextIndex >= 0 ? nextIndex : Math.min(activeTab.value, Math.max(newTabs.length - 1, 0));
+});
 
 const tabsStyle = ref({ "--tabs-height": "auto" });
 </script>
