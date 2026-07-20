@@ -96,4 +96,45 @@ describe("FeatureFlags", () => {
       .send({ enabled: false })
       .expect(403);
   });
+
+  // Gating de bout en bout : le contrôleur mdit-campaigns est gardé par
+  // @FeatureFlag(MDIT_CAMPAIGNS). Le PATCH invalide le cache, donc la bascule
+  // prend effet immédiatement sur l'endpoint gaté (404 quand off, 200 quand on).
+  describe("guarded endpoint (mdit-campaigns)", () => {
+    const GATED_FLAG = "mdit-campaigns";
+
+    afterAll(async () => {
+      // Rétablit l'état par défaut pour ne pas impacter d'autres suites.
+      await request(app().getHttpServer())
+        .patch(`/feature-flags/${GATED_FLAG}`)
+        .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+        .send({ enabled: true });
+    });
+
+    it("returns 404 on the guarded route when the flag is off", async () => {
+      await request(app().getHttpServer())
+        .patch(`/feature-flags/${GATED_FLAG}`)
+        .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+        .send({ enabled: false })
+        .expect(200);
+
+      await request(app().getHttpServer())
+        .get("/mdit-campaigns")
+        .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+        .expect(404);
+    });
+
+    it("serves the guarded route again once the flag is back on", async () => {
+      await request(app().getHttpServer())
+        .patch(`/feature-flags/${GATED_FLAG}`)
+        .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+        .send({ enabled: true })
+        .expect(200);
+
+      await request(app().getHttpServer())
+        .get("/mdit-campaigns")
+        .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+        .expect(200);
+    });
+  });
 });

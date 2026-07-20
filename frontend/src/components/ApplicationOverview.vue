@@ -18,7 +18,9 @@ import Relationships from "./RelationshipsTab.vue";
 import StatusTab from "./StatusTab.vue";
 
 import { BREAKPOINTS } from "@/constants/breakpoint";
+import { FeatureFlagKey } from "@/constants/feature-flags";
 import { useUserStore } from "@/stores/userStore";
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
 import type { Tab } from "@/utils/types";
 import { Permission } from "@/client";
 import DataApplicationTab from "./data-application/DataApplicationTab.vue";
@@ -29,6 +31,7 @@ const emit = defineEmits<{
   (e: "errorMessage", message: string): void;
 }>();
 const userStore = useUserStore();
+const featureFlagStore = useFeatureFlagStore();
 
 // Local reactive state
 const application = ref<ApplicationWithPerms>(props.application);
@@ -47,6 +50,7 @@ const tabs = ref<
   (Tab<Record<string, never>> & {
     component: Component;
     requiredPerms: APP_PERMISSIONS[];
+    featureKey?: string;
   })[]
 >([
   {
@@ -64,6 +68,7 @@ const tabs = ref<
     panelId: "panel-links",
     component: markRaw(Links),
     requiredPerms: [Permission.LINK_READ],
+    featureKey: FeatureFlagKey.LINKS,
   },
   {
     title: "Conformités",
@@ -72,6 +77,7 @@ const tabs = ref<
     panelId: "panel-compliances",
     component: markRaw(CompliancesAccordionManager),
     requiredPerms: [Permission.COMPLIANCE_READ],
+    featureKey: FeatureFlagKey.COMPLIANCES,
   },
   {
     title: "Acteurs",
@@ -80,6 +86,7 @@ const tabs = ref<
     panelId: "panel-actors",
     component: markRaw(ActorManager),
     requiredPerms: [Permission.ACTOR_READ],
+    featureKey: FeatureFlagKey.ACTORS,
   },
   {
     title: "Stack technique",
@@ -88,6 +95,7 @@ const tabs = ref<
     panelId: "panel-technologies",
     component: markRaw(TechnologyTab),
     requiredPerms: [Permission.TECHNOLOGY_READ],
+    featureKey: FeatureFlagKey.TECHNOLOGY_STACK,
   },
   {
     title: "Relations",
@@ -96,6 +104,7 @@ const tabs = ref<
     panelId: "panel-relations",
     component: markRaw(Relationships),
     requiredPerms: [Permission.RELATION_READ],
+    featureKey: FeatureFlagKey.RELATIONS,
   },
   {
     title: "Données",
@@ -104,6 +113,7 @@ const tabs = ref<
     panelId: "panel-data",
     component: markRaw(DataApplicationTab),
     requiredPerms: [Permission.DATA_READ],
+    featureKey: FeatureFlagKey.DATA_CATALOG,
   },
   {
     title: "Statuts",
@@ -120,6 +130,7 @@ const tabs = ref<
     panelId: "panel-reports",
     component: markRaw(ApplicationReportsTab),
     requiredPerms: [],
+    featureKey: FeatureFlagKey.REPORTS,
   },
   {
     title: "Modifications",
@@ -128,6 +139,7 @@ const tabs = ref<
     panelId: "panel-modifications",
     component: markRaw(ApplicationMetadatasTab),
     requiredPerms: [Permission.METADATA_READ],
+    featureKey: FeatureFlagKey.APPLICATION_HISTORY,
   },
   {
     title: "Qualité",
@@ -136,14 +148,18 @@ const tabs = ref<
     panelId: "panel-quality",
     component: markRaw(Quality),
     requiredPerms: [Permission.COMPLIANCE_READ, Permission.ACTOR_READ, Permission.LINK_READ, Permission.APP_READ],
+    featureKey: FeatureFlagKey.QUALITY_DASHBOARD,
   },
 ]);
 const tabsStyle = ref({ "--tabs-height": "auto" });
 
 // Read tab from URL using tabId (string) — more stable than using numeric index
 onBeforeMount(async () => {
-  // filter tabs based on permissions
+  // filter tabs based on permissions and feature flags
   tabs.value = tabs.value.filter((tab) => {
+    if (tab.featureKey && !featureFlagStore.isEnabled(tab.featureKey)) {
+      return false;
+    }
     return userStore.hasPermissions(tab.requiredPerms, Array.from(props.application.myPerms));
   });
 

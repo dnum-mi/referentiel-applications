@@ -10,9 +10,10 @@ import { FeatureFlagService } from "./feature-flag.service";
 import { FeatureFlagKey } from "./feature-flag.keys";
 
 /**
- * Protège un endpoint marqué par `@FeatureFlag(key)`. Si le flag est désactivé,
- * la route renvoie 404 (plutôt que 403) pour ne pas divulguer l'existence d'une
- * fonctionnalité coupée.
+ * Protège un endpoint (ou un contrôleur entier) marqué par `@FeatureFlag(key)`.
+ * Si le flag est désactivé, la route renvoie 404 (plutôt que 403) pour ne pas
+ * divulguer l'existence d'une fonctionnalité coupée. La métadonnée posée au
+ * niveau méthode l'emporte sur celle posée au niveau classe.
  */
 @Injectable()
 export class FeatureFlagGuard implements CanActivate {
@@ -22,9 +23,9 @@ export class FeatureFlagGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const key = this.reflector.get<FeatureFlagKey | undefined>(
+    const key = this.reflector.getAllAndOverride<FeatureFlagKey | undefined>(
       FEATURE_FLAG_KEY,
-      context.getHandler(),
+      [context.getHandler(), context.getClass()],
     );
     if (!key) return true;
 

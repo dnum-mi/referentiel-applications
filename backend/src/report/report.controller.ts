@@ -21,9 +21,12 @@ import {
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { EmailService } from "src/email/email.service";
 import { Requestor } from "src/user/entities/user.entity";
 import { CreateReportRequestDto } from "./dto/create-report.dto";
@@ -36,7 +39,8 @@ import { UserNotificationService } from "./user-notification.service";
 
 @ApiTags("Reports")
 @Controller("reports")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.REPORTS)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
 export class ReportsController {
   constructor(
     protected service: ReportsService,
@@ -126,7 +130,8 @@ export class ReportsController {
   description: "ID de l'application",
   type: String,
 })
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.REPORTS)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
 @Controller("applications/:applicationId/reports")
 export class ApplicationReportsController {
   constructor(

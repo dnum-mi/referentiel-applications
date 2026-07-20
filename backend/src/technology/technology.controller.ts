@@ -21,7 +21,10 @@ import {
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { UserId } from "src/common/decorators/user-id.decorator";
 import {
   CreateTechnologyDto,
@@ -39,7 +42,8 @@ const TECHNOLOGY_METADATA_FIELDS = {
 
 @ApiTags("Technologies")
 @ApiExtraModels(TechnologyErrorResponseDto)
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.TECHNOLOGY_STACK)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
 @Controller("applications/:applicationId/technologies")
 export class TechnologyController {
   constructor(private readonly technologyService: TechnologyService) {}

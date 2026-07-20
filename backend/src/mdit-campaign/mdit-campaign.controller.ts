@@ -22,8 +22,11 @@ import {
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import {
   CreateMditCampaignDto,
   MditCampaignDto,
@@ -34,7 +37,8 @@ import { MditCampaignService } from "./mdit-campaign.service";
 
 @ApiTags("MDIT Campaigns")
 @Controller("mdit-campaigns")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.MDIT_CAMPAIGNS)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
 export class MditCampaignController {
   constructor(private readonly mditCampaignService: MditCampaignService) {}
 

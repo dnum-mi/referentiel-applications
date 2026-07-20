@@ -4,12 +4,14 @@ import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminBatchData from "@/components/admin/AdminBatchData.vue";
 import AdminOrganizationsTab from "@/components/admin/AdminOrganizationsTab.vue";
 import AdminActorsTab from "@/components/admin/AdminActorsTab.vue";
-import { markRaw, ref } from "vue";
+import { computed, markRaw, ref } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
 import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
 import AdminFeatureFlagsTab from "@/components/admin/AdminFeatureFlagsTab.vue";
+import { FeatureFlagKey } from "@/constants/feature-flags";
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
 
 interface DsfrTab {
   title: string;
@@ -17,8 +19,10 @@ interface DsfrTab {
   tabId: string;
   panelId: string;
   component: any;
+  featureKey?: string;
 }
 
+const featureFlagStore = useFeatureFlagStore();
 const activeTab = ref(0);
 const tabs = ref<DsfrTab[]>([
   {
@@ -48,6 +52,7 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-tags",
     panelId: "panel-tags",
     component: markRaw(AdminTagsTab),
+    featureKey: FeatureFlagKey.TAGS_MANAGEMENT,
   },
   {
     title: "Gestions des sources",
@@ -62,6 +67,7 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-mdit-campaigns",
     panelId: "panel-mdit-campaigns",
     component: markRaw(AdminMditCampaignsTab),
+    featureKey: FeatureFlagKey.MDIT_CAMPAIGNS,
   },
   {
     title: "Batch de données",
@@ -76,6 +82,7 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-app-perms-matrix",
     panelId: "panel-app-perms-matrix",
     component: markRaw(AdminPermsMatrixTab),
+    featureKey: FeatureFlagKey.PERMISSIONS_MATRIX,
   },
   {
     title: "Gestion des tokens",
@@ -83,8 +90,11 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-tokens",
     panelId: "panel-tokens",
     component: markRaw(AdminTokensTab),
+    featureKey: FeatureFlagKey.API_TOKENS,
   },
   {
+    // Volontairement non flaggé : désactiver ce flag verrouillerait l'accès à
+    // l'écran qui permet de le réactiver.
     title: "Feature flags",
     icon: "ri-toggle-line",
     tabId: "tab-feature-flags",
@@ -93,12 +103,15 @@ const tabs = ref<DsfrTab[]>([
   },
 ]);
 
+// Onglets réellement affichés : on retire ceux dont le feature flag est désactivé.
+const visibleTabs = computed(() => tabs.value.filter((tab) => !tab.featureKey || featureFlagStore.isEnabled(tab.featureKey)));
+
 const tabsStyle = ref({ "--tabs-height": "auto" });
 </script>
 
 <template>
-  <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="tabs" data-testid="admin-tabs" :style="tabsStyle">
-    <template v-for="(tab, index) in tabs" :key="tab.panelId">
+  <DsfrTabs v-model="activeTab" tab-list-name="Administration" :tab-titles="visibleTabs" data-testid="admin-tabs" :style="tabsStyle">
+    <template v-for="(tab, index) in visibleTabs" :key="tab.panelId">
       <KeepAlive>
         <DsfrTabContent
           v-if="activeTab === index"

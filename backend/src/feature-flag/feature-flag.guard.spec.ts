@@ -6,12 +6,13 @@ import { FeatureFlagService } from "./feature-flag.service";
 function contextMock(): ExecutionContext {
   return {
     getHandler: () => () => undefined,
+    getClass: () => class {},
   } as unknown as ExecutionContext;
 }
 
 function buildGuard(metadata: string | undefined, enabled: boolean) {
   const reflector = {
-    get: jest.fn().mockReturnValue(metadata),
+    getAllAndOverride: jest.fn().mockReturnValue(metadata),
   } as unknown as Reflector;
   const service = {
     isEnabled: jest.fn().mockResolvedValue(enabled),
