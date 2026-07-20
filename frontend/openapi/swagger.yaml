@@ -1296,6 +1296,8 @@ paths:
                     - MetadataRead
                     - DataRead
                     - DataWrite
+                    - TechnologyRead
+                    - TechnologyWrite
                     - ReportRead
                     - ReportManage
                     - ReportPost
@@ -5736,6 +5738,8 @@ components:
         - MetadataRead
         - DataRead
         - DataWrite
+        - TechnologyRead
+        - TechnologyWrite
         - ReportRead
         - ReportPost
         - ReportManage
@@ -7209,6 +7213,10 @@ components:
           type: boolean
         DataWrite:
           type: boolean
+        TechnologyRead:
+          type: boolean
+        TechnologyWrite:
+          type: boolean
         RelationRead:
           type: boolean
         RelationWrite:
@@ -7237,6 +7245,8 @@ components:
         - MetadataRead
         - DataRead
         - DataWrite
+        - TechnologyRead
+        - TechnologyWrite
         - RelationRead
         - RelationWrite
         - LinkRead

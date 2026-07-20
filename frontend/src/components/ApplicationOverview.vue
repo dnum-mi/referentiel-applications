@@ -87,7 +87,7 @@ const tabs = ref<
     tabId: "tab-technologies",
     panelId: "panel-technologies",
     component: markRaw(TechnologyTab),
-    requiredPerms: [Permission.APP_READ],
+    requiredPerms: [Permission.TECHNOLOGY_READ],
   },
   {
     title: "Relations",

@@ -27,6 +27,7 @@ const permissionSuffixes = {
   Actor: { label: "Acteurs", title: "Acteurs" },
   Relation: { label: "Relations", title: "Relations" },
   Data: { label: "Données", title: "Données" },
+  Technology: { label: "Techno.", title: "Technologies" },
   Metadata: { label: "Modifications", title: "Modifications" },
 } as const satisfies Record<string, { label: string; title: string }>;
 const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissionSuffixes)[];
@@ -41,7 +42,10 @@ function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSu
     return;
   }
   updatedMatrix.value[actorTypeIdx][`${permission}Read`] = value === "Read" || value === "Write";
-  if (permission !== "Metadata" && permission !== "Data") {
+  // Seul « Metadata » n'a pas d'écriture (historique auto-généré). « Data » — et « Technology » —
+  // ont bien un couple lecture/écriture : les exclure faisait que passer la colonne en RW ne
+  // persistait jamais le `Write` (bug d'enregistrement de la colonne Données).
+  if (permission !== "Metadata") {
     updatedMatrix.value[actorTypeIdx][`${permission}Write`] = value === "Write";
   }
 }
@@ -131,7 +135,7 @@ function saveAppPermsMatrix() {
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
         <PermissionSelect
-          v-else-if="perm === 'Data'"
+          v-else-if="perm === 'Data' || perm === 'Technology'"
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
           :disabled="perms.isAdmin ?? false"

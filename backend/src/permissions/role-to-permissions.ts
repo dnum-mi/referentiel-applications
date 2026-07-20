@@ -7,6 +7,12 @@ const NONE_PERMISSIONS: Set<Permission> = new Set([
   Permission.ReportRead,
   Permission.ReportPost,
   Permission.DataRead,
+  // « Lecture pour tous » de la stack technique (#2027) : comme DataRead, la lecture des
+  // technologies est accordée globalement (socle VISITOR) afin que l'onglet reste visible
+  // même pour un utilisateur non-acteur de l'application. Seule l'écriture (TechnologyWrite)
+  // est restreinte via la matrice / les rôles. Avant #2027 l'onglet était gardé par AppRead,
+  // déjà présent ici — sans cette ligne, migrer vers TechnologyRead masquerait l'onglet.
+  Permission.TechnologyRead,
 ]);
 const READ_PERMISSIONS = new Set([
   ...Array.from(NONE_PERMISSIONS),
@@ -51,6 +57,7 @@ const READ_APP_PERMISSIONS = new Set([
   Permission.LinkRead,
   Permission.MetadataRead,
   Permission.DataRead,
+  Permission.TechnologyRead,
 ]);
 const WRITE_APP_PERMISSIONS = new Set([
   ...Array.from(READ_APP_PERMISSIONS),
@@ -62,6 +69,7 @@ const WRITE_APP_PERMISSIONS = new Set([
   Permission.LinkWrite,
   Permission.AppWritePriority,
   Permission.DataWrite,
+  Permission.TechnologyWrite,
 ]);
 // 3e niveau d'administration — l'administrateur d'UNE application (ActorType.isAdmin).
 // Jeu applicatif COMPLET (toute la matrice AppPermissions : couples read/write + AppRead,

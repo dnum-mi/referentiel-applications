@@ -69,6 +69,8 @@ export const PERMISSIONS_LABELS: Record<Permission, string> = {
   MetadataRead: "Voir l'historique des modifications",
   DataRead: "Voir les données de l'application",
   DataWrite: "Modifier les données de l'application",
+  TechnologyRead: "Voir les technologies",
+  TechnologyWrite: "Modifier les technologies",
   ReportRead: "Voir les signalements",
   ReportPost: "Créer des signalements",
   ReportManage: "Gérer les signalements",

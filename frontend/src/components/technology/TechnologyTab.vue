@@ -28,7 +28,7 @@ const technologyToDelete = ref<TechnologyDto | null>(null);
 const statusMessage = ref("");
 const lastTrigger = ref<HTMLElement | null>(null);
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.APP_WRITE], Array.from(props.application.myPerms)));
+const canEdit = computed(() => userStore.hasPermissions([Permission.TECHNOLOGY_WRITE], Array.from(props.application.myPerms)));
 
 const columns: TableColumn[] = [
   { field: "Technologie", header: "Technologie", sortable: true },
