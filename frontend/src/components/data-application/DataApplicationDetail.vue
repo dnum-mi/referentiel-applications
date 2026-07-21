@@ -279,7 +279,12 @@ function goToApplicationProfile(appId: string) {
           <div class="fr-p-3w kpi-card">
             <div class="fr-icon-database-fill fr-icon--lg fr-mr-2w icon-blue" aria-hidden="true" />
             <div>
-              <p class="fr-text--sm fr-mb-0 kpi-label">Volumétrie totale</p>
+              <p class="fr-text--sm fr-mb-0 kpi-label">
+                <span class="tooltip-label">
+                  Volumétrie totale
+                  <DsfrTooltip id="detail-volumetry-tooltip-desc" content="Nombre total estimé d'enregistrements de cette donnée." />
+                </span>
+              </p>
               <strong class="fr-h4 fr-mb-0">
                 {{ item?.volumetry?.toLocaleString("fr-FR") }}
               </strong>
@@ -292,7 +297,15 @@ function goToApplicationProfile(appId: string) {
           <div class="fr-p-3w kpi-card">
             <div class="fr-icon-line-chart-line fr-icon--lg fr-mr-2w icon-info" aria-hidden="true" />
             <div>
-              <p class="fr-text--sm fr-mb-0 kpi-label">Ajouts mensuels</p>
+              <p class="fr-text--sm fr-mb-0 kpi-label">
+                <span class="tooltip-label">
+                  Ajouts mensuels
+                  <DsfrTooltip
+                    id="detail-monthly-volumetry-tooltip-desc"
+                    content="Nombre d'enregistrements ajoutés en moyenne chaque mois."
+                  />
+                </span>
+              </p>
               <strong class="fr-h4 fr-mb-0">
                 {{ item?.monthlyVolumetry?.toLocaleString("fr-FR") }}
               </strong>
@@ -305,7 +318,15 @@ function goToApplicationProfile(appId: string) {
           <div class="fr-p-3w kpi-card">
             <div class="fr-icon-timer-fill fr-icon--lg fr-mr-2w icon-warning" aria-hidden="true" />
             <div>
-              <p class="fr-text--sm fr-mb-0 kpi-label">Fréquence de MAJ</p>
+              <p class="fr-text--sm fr-mb-0 kpi-label">
+                <span class="tooltip-label">
+                  Fréquence de MAJ
+                  <DsfrTooltip
+                    id="detail-kpi-update-frequency-tooltip-desc"
+                    content="Fréquence à laquelle la donnée est mise à jour dans cette application."
+                  />
+                </span>
+              </p>
               <strong class="fr-h4 fr-mb-0">
                 {{ UPDATE_FREQUENCY_LABELS[(item?.updateFrequency ?? "") as UpdateFrequency] ?? item?.updateFrequency }}
               </strong>
@@ -327,7 +348,13 @@ function goToApplicationProfile(appId: string) {
 
             <!-- URL officielle (source de vérité) -->
             <div v-if="item?.dataDescription?.officialUrl" class="fr-mb-3w">
-              <strong>Source officielle&nbsp;:</strong>
+              <strong class="tooltip-label">
+                Source officielle&nbsp;:
+                <DsfrTooltip
+                  id="detail-official-url-tooltip-desc"
+                  content="Lien vers la source officielle faisant référence pour cette donnée (ex : référentiel externe, documentation métier)."
+                />
+              </strong>
               <div class="fr-mt-1v data-detail__section-title">
                 <span class="fr-icon-external-link-line fr-icon--sm fr-mr-1v icon-success" aria-hidden="true" />
                 <a
@@ -343,19 +370,37 @@ function goToApplicationProfile(appId: string) {
 
             <!-- Description -->
             <div v-if="item?.dataDescription?.description" class="fr-mb-3w">
-              <strong>Description&nbsp;:</strong>
+              <strong class="tooltip-label">
+                Description&nbsp;:
+                <DsfrTooltip
+                  id="detail-description-tooltip-desc"
+                  content="Description détaillée de la donnée, utile aux autres équipes qui envisagent de la réutiliser."
+                />
+              </strong>
               <p class="fr-mt-1v fr-mb-0">{{ item?.dataDescription?.description }}</p>
             </div>
 
             <!-- Exemple -->
             <div v-if="item?.example" class="fr-mb-3w">
-              <strong>Exemple de contenu&nbsp;:</strong>
+              <strong class="tooltip-label">
+                Exemple de contenu&nbsp;:
+                <DsfrTooltip
+                  id="detail-example-tooltip-desc"
+                  content="Exemple concret de contenu de la donnée, pour aider à sa compréhension."
+                />
+              </strong>
               <pre class="fr-mt-1w code-block"><code>{{ item?.example }}</code></pre>
             </div>
 
             <!-- Tags -->
             <div v-if="item?.dataDescription?.tags?.length" class="fr-mb-0">
-              <strong>Tags métier&nbsp;:</strong>
+              <strong class="tooltip-label">
+                Tags métier&nbsp;:
+                <DsfrTooltip
+                  id="detail-tags-tooltip-desc"
+                  content="Mots-clés libres facilitant la recherche et le filtrage de cette donnée dans le catalogue."
+                />
+              </strong>
               <div class="fr-tags-group fr-mt-1w">
                 <span v-for="tag in item?.dataDescription?.tags" :key="tag.id" class="fr-tag fr-mr-1v fr-mb-1v">
                   {{ tag.name }}
@@ -381,7 +426,15 @@ function goToApplicationProfile(appId: string) {
 
             <!-- Application utilisant cette donnée -->
             <div v-if="currentUsageApplication" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Application utilisant cette donnée</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Application utilisant cette donnée
+                  <DsfrTooltip
+                    id="detail-usage-application-tooltip-desc"
+                    content="Application dont vous consultez la fiche : elle réutilise cette donnée. Cliquez le tag pour accéder à sa fiche."
+                  />
+                </span>
+              </p>
               <button
                 type="button"
                 class="fr-tag application-link-tag"
@@ -394,7 +447,15 @@ function goToApplicationProfile(appId: string) {
 
             <!-- Applications source -->
             <div v-if="applicationsSourceList.length" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Applications source</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Applications source
+                  <DsfrTooltip
+                    id="detail-source-applications-tooltip-desc"
+                    content="Applications RefApp qui produisent ou possèdent cette donnée à l'origine. Cliquez un tag pour accéder à sa fiche."
+                  />
+                </span>
+              </p>
               <div class="fr-tags-group" data-testid="data-application-detail-source-applications">
                 <button
                   v-for="sourceApp in applicationsSourceList"
@@ -410,7 +471,15 @@ function goToApplicationProfile(appId: string) {
 
             <!-- Sensibilité -->
             <div v-if="item?.sensibility" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Sensibilité</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Sensibilité
+                  <DsfrTooltip
+                    id="detail-sensibility-tooltip-desc"
+                    content="Niveau de sensibilité de la donnée dans le contexte de cette application (ex : RGPD, donnée sensible)."
+                  />
+                </span>
+              </p>
               <span
                 class="fr-badge"
                 :style="
@@ -425,7 +494,15 @@ function goToApplicationProfile(appId: string) {
 
             <!-- Fréquence de MAJ -->
             <div v-if="item?.updateFrequency" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Fréquence de MAJ</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Fréquence de MAJ
+                  <DsfrTooltip
+                    id="detail-update-frequency-tooltip-desc"
+                    content="Fréquence à laquelle la donnée est mise à jour dans cette application."
+                  />
+                </span>
+              </p>
               <span class="fr-badge fr-badge--info">
                 {{ UPDATE_FREQUENCY_LABELS[(item?.updateFrequency ?? "") as UpdateFrequency] ?? item?.updateFrequency }}
               </span>
@@ -433,7 +510,15 @@ function goToApplicationProfile(appId: string) {
 
             <!-- Statut open data -->
             <div v-if="item?.openDataStatus" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Statut open data</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Statut open data
+                  <DsfrTooltip
+                    id="detail-open-data-tooltip-desc"
+                    content="Indique si cette donnée est exposée, exposable ou non exposable en open data."
+                  />
+                </span>
+              </p>
               <span class="fr-badge" :class="OPEN_DATA_BADGE_CLASS[(item?.openDataStatus ?? '') as OpenDataStatus] ?? 'fr-badge--info'">
                 {{ OPEN_DATA_STATUS_LABELS[(item?.openDataStatus ?? "") as OpenDataStatus] ?? item?.openDataStatus }}
               </span>
@@ -441,7 +526,15 @@ function goToApplicationProfile(appId: string) {
 
             <!-- Donnée référentielle -->
             <div v-if="item?.isReference != null" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Donnée référentielle</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Donnée référentielle
+                  <DsfrTooltip
+                    id="detail-is-reference-tooltip-desc"
+                    content="« Oui » si cette application est la source de vérité pour cette donnée (le référentiel faisant autorité)."
+                  />
+                </span>
+              </p>
               <span :class="item?.isReference ? 'fr-badge fr-badge--success' : 'fr-badge'">
                 {{ item?.isReference ? "Oui" : "Non" }}
               </span>
@@ -449,13 +542,29 @@ function goToApplicationProfile(appId: string) {
 
             <!-- Conservation -->
             <div v-if="item?.conservation" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Conservation</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Conservation
+                  <DsfrTooltip
+                    id="detail-conservation-tooltip-desc"
+                    content="Durée pendant laquelle la donnée est conservée dans cette application."
+                  />
+                </span>
+              </p>
               <span class="fr-badge fr-badge--info">{{ item?.conservation }}</span>
             </div>
 
             <!-- Usage métier -->
             <div v-if="item?.businessUsage" class="fr-mb-0">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Usage métier</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Usage métier
+                  <DsfrTooltip
+                    id="detail-business-usage-tooltip-desc"
+                    content="Description de l'usage métier fait de cette donnée dans cette application."
+                  />
+                </span>
+              </p>
               <p class="fr-text--sm fr-mb-0">{{ item?.businessUsage }}</p>
             </div>
 
@@ -665,6 +774,27 @@ function goToApplicationProfile(appId: string) {
 </template>
 
 <style scoped>
+/* `DsfrTooltip` positionne sa bulle via un `transform` calculé en JS par rapport à la largeur de LA
+   FENÊTRE entière : la bulle peut rester « dans l'écran » selon son propre calcul tout en débordant
+   de son conteneur (bug constaté, y compris après un simple passage en `position: absolute`). On
+   ignore complètement ce calcul et on ancre la bulle nous-mêmes, juste en dessous de son champ, avec
+   une largeur volontairement réduite. */
+.tooltip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+}
+
+:deep(.fr-tooltip) {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  transform: none !important;
+  margin-top: 0.25rem;
+  max-width: 220px;
+}
+
 /* ── Layout helpers ──────────────────────────────────────────── */
 /* .fr-btns-group impose margin-bottom: 1rem et align-items: stretch sur ses .fr-btn (pensé pour un
    empilement mobile) : on neutralise pour aligner ces boutons avec « Retour à la liste ». */

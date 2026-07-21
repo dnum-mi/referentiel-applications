@@ -434,15 +434,25 @@ async function handleSubmit() {
           <DsfrInputGroup
             v-model="descriptionSearch"
             label-visible
-            label="Donnée d'application"
             hint="Commencez à taper pour rechercher une donnée existante"
+            aria-describedby="data-description-search-tooltip-desc"
             list="dataDescriptionsList"
             required
             :disabled="!!props.initialItem"
             class="fr-mb-1w"
             :error-message="descriptionError"
             data-testid="data-description-search-input"
-          />
+          >
+            <template #label>
+              <span class="tooltip-label">
+                Donnée d'application
+                <DsfrTooltip
+                  id="data-description-search-tooltip-desc"
+                  content="Recherchez une donnée déjà existante dans le catalogue pour la rattacher à cette application. Si elle n'existe pas encore, utilisez le lien ci-dessous pour la créer."
+                />
+              </span>
+            </template>
+          </DsfrInputGroup>
           <datalist id="dataDescriptionsList" data-testid="data-descriptions-list">
             <option
               v-for="description in descriptionsList"
@@ -490,33 +500,71 @@ async function handleSubmit() {
 
             <DsfrInput
               v-model="descriptionForm.name"
-              label="Nom de la donnée"
               label-visible
               required
+              aria-describedby="new-description-name-tooltip-desc"
               class="fr-mb-3w"
               :error-message="newDescriptionError"
               data-testid="new-description-name-input"
-            />
+            >
+              <template #label>
+                <span class="tooltip-label">
+                  Nom de la donnée
+                  <DsfrTooltip
+                    id="new-description-name-tooltip-desc"
+                    content="Nom de la donnée du catalogue, visible par toutes les applications qui la réutilisent."
+                  />
+                </span>
+              </template>
+            </DsfrInput>
 
             <DsfrInput
               v-model="descriptionForm.description"
-              label="Description"
               label-visible
               is-textarea
+              aria-describedby="new-description-description-tooltip-desc"
               class="fr-mb-3w"
               data-testid="new-description-description-input"
-            />
+            >
+              <template #label>
+                <span class="tooltip-label">
+                  Description
+                  <DsfrTooltip
+                    id="new-description-description-tooltip-desc"
+                    content="Description détaillée de la donnée, utile aux autres équipes qui envisagent de la réutiliser."
+                  />
+                </span>
+              </template>
+            </DsfrInput>
 
             <DsfrInput
               v-model="descriptionForm.officialUrl"
-              label="URL officielle"
               label-visible
+              aria-describedby="new-description-official-url-tooltip-desc"
               class="fr-mb-3w"
               data-testid="new-description-official-url-input"
-            />
+            >
+              <template #label>
+                <span class="tooltip-label">
+                  URL officielle
+                  <DsfrTooltip
+                    id="new-description-official-url-tooltip-desc"
+                    content="Lien vers la source officielle faisant référence pour cette donnée (ex : référentiel externe, documentation métier)."
+                  />
+                </span>
+              </template>
+            </DsfrInput>
 
             <fieldset class="tags-fieldset fr-mb-3w">
-              <legend class="fr-label">Familles métier</legend>
+              <legend class="fr-label">
+                <span class="tooltip-label">
+                  Familles métier
+                  <DsfrTooltip
+                    id="new-description-families-tooltip-desc"
+                    content="Regroupement thématique de la donnée. Une donnée peut appartenir à plusieurs familles."
+                  />
+                </span>
+              </legend>
               <ul v-if="descriptionFamilies.length" class="fr-tags-group" data-testid="new-description-families">
                 <li v-for="(family, index) in descriptionFamilies" :key="family.id" class="fr-mr-1v fr-mb-1v">
                   <DsfrTag
@@ -579,7 +627,15 @@ async function handleSubmit() {
             </fieldset>
 
             <fieldset class="tags-fieldset fr-mb-3w">
-              <legend class="fr-label">Applications source</legend>
+              <legend class="fr-label">
+                <span class="tooltip-label">
+                  Applications source
+                  <DsfrTooltip
+                    id="new-description-applications-source-tooltip-desc"
+                    content="Applications RefApp qui produisent ou possèdent cette donnée à l'origine."
+                  />
+                </span>
+              </legend>
               <ul v-if="descriptionApplicationsSource.length" class="fr-tags-group" data-testid="new-description-applications-source">
                 <li v-for="(application, index) in descriptionApplicationsSource" :key="application.id" class="fr-mr-1v fr-mb-1v">
                   <DsfrTag
@@ -608,7 +664,15 @@ async function handleSubmit() {
             </fieldset>
 
             <fieldset class="tags-fieldset">
-              <legend class="fr-label">Tags</legend>
+              <legend class="fr-label">
+                <span class="tooltip-label">
+                  Tags
+                  <DsfrTooltip
+                    id="new-description-tags-tooltip-desc"
+                    content="Mots-clés libres facilitant la recherche et le filtrage de cette donnée dans le catalogue."
+                  />
+                </span>
+              </legend>
               <ul v-if="descriptionTags.length" class="fr-tags-group" data-testid="new-description-tags">
                 <li v-for="(tag, index) in descriptionTags" :key="tag.id" class="fr-mr-1v fr-mb-1v">
                   <DsfrTag
@@ -638,74 +702,143 @@ async function handleSubmit() {
 
         <DsfrSelect
           v-model="form.sensibilityId"
-          label="Sensibilité"
           label-visible
+          aria-describedby="data-application-sensibility-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-sensibility-select"
           :options="[
             { value: '', text: 'Non renseignée' },
             ...sensibilitiesList.map((sensibility) => ({ value: sensibility.id, text: sensibility.label })),
           ]"
-        />
+        >
+          <template #label>
+            <span class="tooltip-label">
+              Sensibilité
+              <DsfrTooltip
+                id="data-application-sensibility-tooltip-desc"
+                content="Niveau de sensibilité de la donnée dans le contexte de cette application (ex : RGPD, donnée sensible)."
+              />
+            </span>
+          </template>
+        </DsfrSelect>
 
         <DsfrSelect
           v-model="form.openDataStatus"
-          label="Statut open data"
           label-visible
+          aria-describedby="data-application-open-data-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-open-data-select"
           :options="[
             { value: '', text: 'Non renseigné' },
             ...Object.values(OpenDataStatus).map((status) => ({ value: status, text: OPEN_DATA_STATUS_LABELS[status] })),
           ]"
-        />
+        >
+          <template #label>
+            <span class="tooltip-label">
+              Statut open data
+              <DsfrTooltip
+                id="data-application-open-data-tooltip-desc"
+                content="Indique si cette donnée est exposée, exposable ou non exposable en open data."
+              />
+            </span>
+          </template>
+        </DsfrSelect>
 
         <DsfrSelect
           v-model="form.updateFrequency"
-          label="Fréquence de mise à jour"
           label-visible
+          aria-describedby="data-application-update-frequency-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-update-frequency-select"
           :options="[
             { value: '', text: 'Non renseignée' },
             ...Object.values(UpdateFrequency).map((frequency) => ({ value: frequency, text: UPDATE_FREQUENCY_LABELS[frequency] })),
           ]"
-        />
+        >
+          <template #label>
+            <span class="tooltip-label">
+              Fréquence de mise à jour
+              <DsfrTooltip
+                id="data-application-update-frequency-tooltip-desc"
+                content="Fréquence à laquelle la donnée est mise à jour dans cette application."
+              />
+            </span>
+          </template>
+        </DsfrSelect>
 
         <DsfrCheckbox
           v-model="form.isReference"
-          label="Donnée de référence (source de vérité)"
           name="isReference"
           :value="true"
           class="fr-mb-3w"
           data-testid="data-application-is-reference-checkbox"
-        />
+        >
+          <template #label>
+            <span class="tooltip-label">
+              Donnée de référence (source de vérité)
+              <DsfrTooltip
+                id="data-application-is-reference-tooltip-desc"
+                content="À cocher si cette application est la source de vérité pour cette donnée (le référentiel faisant autorité)."
+              />
+            </span>
+          </template>
+        </DsfrCheckbox>
 
         <DsfrInput
           v-model="form.businessUsage"
-          label="Usage métier"
           label-visible
           is-textarea
+          aria-describedby="data-application-business-usage-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-business-usage-input"
-        />
+        >
+          <template #label>
+            <span class="tooltip-label">
+              Usage métier
+              <DsfrTooltip
+                id="data-application-business-usage-tooltip-desc"
+                content="Description de l'usage métier fait de cette donnée dans cette application."
+              />
+            </span>
+          </template>
+        </DsfrInput>
 
         <DsfrInput
           v-model="form.example"
-          label="Exemple de valeur"
           label-visible
           is-textarea
+          aria-describedby="data-application-example-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-example-input"
-        />
+        >
+          <template #label>
+            <span class="tooltip-label">
+              Exemple de valeur
+              <DsfrTooltip
+                id="data-application-example-tooltip-desc"
+                content="Exemple concret de contenu de la donnée, pour aider à sa compréhension."
+              />
+            </span>
+          </template>
+        </DsfrInput>
 
         <DsfrInput
           v-model="form.conservation"
-          label="Durée de conservation"
           label-visible
+          aria-describedby="data-application-conservation-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-conservation-input"
-        />
+        >
+          <template #label>
+            <span class="tooltip-label">
+              Durée de conservation
+              <DsfrTooltip
+                id="data-application-conservation-tooltip-desc"
+                content="Durée pendant laquelle la donnée est conservée dans cette application."
+              />
+            </span>
+          </template>
+        </DsfrInput>
 
         <div class="fr-grid-row fr-grid-row--gutters fr-mb-3w">
           <div class="fr-col-6">
@@ -713,32 +846,62 @@ async function handleSubmit() {
               v-model="form.volumetry"
               type="number"
               min="0"
-              label="Volumétrie totale"
               label-visible
+              aria-describedby="data-application-volumetry-tooltip-desc"
               data-testid="data-application-volumetry-input"
-            />
+            >
+              <template #label>
+                <span class="tooltip-label">
+                  Volumétrie totale
+                  <DsfrTooltip
+                    id="data-application-volumetry-tooltip-desc"
+                    content="Nombre total estimé d'enregistrements de cette donnée."
+                  />
+                </span>
+              </template>
+            </DsfrInput>
           </div>
           <div class="fr-col-6">
             <DsfrInput
               v-model="form.monthlyVolumetry"
               type="number"
               min="0"
-              label="Volumétrie mensuelle"
               label-visible
+              aria-describedby="data-application-monthly-volumetry-tooltip-desc"
               data-testid="data-application-monthly-volumetry-input"
-            />
+            >
+              <template #label>
+                <span class="tooltip-label">
+                  Volumétrie mensuelle
+                  <DsfrTooltip
+                    id="data-application-monthly-volumetry-tooltip-desc"
+                    content="Nombre d'enregistrements ajoutés en moyenne chaque mois."
+                  />
+                </span>
+              </template>
+            </DsfrInput>
           </div>
         </div>
 
         <DsfrInput
           v-model="form.documentationUrl"
-          label="Liens de documentation"
           label-visible
           is-textarea
           hint="Une URL par ligne"
+          aria-describedby="data-application-documentation-tooltip-desc"
           class="fr-mb-3w"
           data-testid="data-application-documentation-input"
-        />
+        >
+          <template #label>
+            <span class="tooltip-label">
+              Liens de documentation
+              <DsfrTooltip
+                id="data-application-documentation-tooltip-desc"
+                content="URLs de documentation technique ou fonctionnelle associées à cette donnée, une par ligne."
+              />
+            </span>
+          </template>
+        </DsfrInput>
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
         <DsfrButton type="button" secondary label="Annuler" data-testid="data-application-cancel-btn" @click="$emit('close')" />
@@ -760,6 +923,28 @@ async function handleSubmit() {
 </template>
 
 <style scoped>
+/* `DsfrTooltip` positionne sa bulle via un `transform` calculé en JS par rapport à la largeur de LA
+   FENÊTRE entière, pas de la modale (plus étroite et centrée) : la bulle peut rester « dans l'écran »
+   selon son propre calcul tout en débordant largement de la modale (bug constaté, y compris après
+   un simple passage en `position: absolute`). On ignore complètement ce calcul et on ancre la bulle
+   nous-mêmes, juste en dessous de son champ, avec une largeur volontairement réduite : garanti de
+   tenir dans la modale quelle que soit la position du champ. */
+.tooltip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+}
+
+:deep(.fr-tooltip) {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  transform: none !important;
+  margin-top: 0.25rem;
+  max-width: 220px;
+}
+
 .new-description-panel {
   border: 1px solid #ddd;
   border-radius: 4px;

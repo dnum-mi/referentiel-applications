@@ -112,56 +112,116 @@ async function handleSubmit() {
 
       <DsfrInput
         v-model="form.type"
-        label="Type"
         label-visible
         required
         hint="Ex : API, Fichier, Flux"
+        aria-describedby="data-exposure-type-tooltip-desc"
         class="fr-mb-3w"
         :error-message="typeError"
         data-testid="data-exposure-type-input"
-      />
+      >
+        <template #label>
+          <span class="tooltip-label">
+            Type
+            <DsfrTooltip
+              id="data-exposure-type-tooltip-desc"
+              content="Mode d'exposition technique de la donnée : décrit COMMENT elle est mise à disposition (ex : API REST, fichier plat, flux)."
+            />
+          </span>
+        </template>
+      </DsfrInput>
 
       <DsfrInput
         v-model="form.format"
-        label="Format"
         label-visible
         hint="Ex : JSON, CSV, XML"
+        aria-describedby="data-exposure-format-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-format-input"
-      />
+      >
+        <template #label>
+          <span class="tooltip-label">
+            Format
+            <DsfrTooltip
+              id="data-exposure-format-tooltip-desc"
+              content="Format des données échangées lors de cette exposition (ex : JSON, CSV, XML)."
+            />
+          </span>
+        </template>
+      </DsfrInput>
 
       <DsfrInput
         v-model="form.endpoint"
-        label="Point de terminaison technique"
         label-visible
+        aria-describedby="data-exposure-endpoint-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-endpoint-input"
-      />
+      >
+        <template #label>
+          <span class="tooltip-label">
+            Point de terminaison technique
+            <DsfrTooltip
+              id="data-exposure-endpoint-tooltip-desc"
+              content="Chemin ou identifiant technique du point d'accès (ex : /api/v2/donnee), à distinguer de l'URL complète."
+            />
+          </span>
+        </template>
+      </DsfrInput>
 
       <DsfrInput
         v-model="form.url"
-        label="URL d'accès à la ressource"
         label-visible
+        aria-describedby="data-exposure-url-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-url-input"
-      />
+      >
+        <template #label>
+          <span class="tooltip-label">
+            URL d'accès à la ressource
+            <DsfrTooltip
+              id="data-exposure-url-tooltip-desc"
+              content="Adresse complète permettant d'accéder directement à la donnée exposée."
+            />
+          </span>
+        </template>
+      </DsfrInput>
 
       <DsfrInput
         v-model="form.swaggerUrl"
-        label="URL Swagger / OpenAPI"
         label-visible
+        aria-describedby="data-exposure-swagger-url-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-swagger-url-input"
-      />
+      >
+        <template #label>
+          <span class="tooltip-label">
+            URL Swagger / OpenAPI
+            <DsfrTooltip
+              id="data-exposure-swagger-url-tooltip-desc"
+              content="Lien vers la documentation technique de l'API (spécification Swagger/OpenAPI), si disponible."
+            />
+          </span>
+        </template>
+      </DsfrInput>
 
       <DsfrInput
         v-model="form.authenticationType"
-        label="Type d'authentification"
         label-visible
         hint="Ex : OAuth2, API Key"
+        aria-describedby="data-exposure-authentication-type-tooltip-desc"
         class="fr-mb-3w"
         data-testid="data-exposure-authentication-type-input"
-      />
+      >
+        <template #label>
+          <span class="tooltip-label">
+            Type d'authentification
+            <DsfrTooltip
+              id="data-exposure-authentication-type-tooltip-desc"
+              content="Mécanisme de sécurité requis pour accéder à cette exposition (ex : OAuth2, clé d'API, aucune)."
+            />
+          </span>
+        </template>
+      </DsfrInput>
 
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
         <DsfrButton type="button" secondary label="Annuler" data-testid="data-exposure-cancel-btn" @click="$emit('close')" />
@@ -181,3 +241,27 @@ async function handleSubmit() {
     </form>
   </DsfrModal>
 </template>
+
+<style scoped>
+/* `DsfrTooltip` positionne sa bulle via un `transform` calculé en JS par rapport à la largeur de LA
+   FENÊTRE entière, pas de la modale (plus étroite et centrée) : la bulle peut rester « dans l'écran »
+   selon son propre calcul tout en débordant largement de la modale (bug constaté, y compris après
+   un simple passage en `position: absolute`). On ignore complètement ce calcul et on ancre la bulle
+   nous-mêmes, juste en dessous de son champ, avec une largeur volontairement réduite : garanti de
+   tenir dans la modale quelle que soit la position du champ. */
+.tooltip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+}
+
+:deep(.fr-tooltip) {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  transform: none !important;
+  margin-top: 0.25rem;
+  max-width: 220px;
+}
+</style>
