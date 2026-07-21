@@ -543,6 +543,14 @@ erDiagram
   DateTime updatedAt
   String updatedById FK "nullable"
 }
+"FeatureFlagLog" {
+  String id PK
+  String(100) flagKey FK
+  Boolean enabled
+  String changedById FK "nullable"
+  DateTime changedAt
+}
+"FeatureFlagLog" }o--|| "FeatureFlag" : flag
 ```
 
 ### `FeatureFlag`
@@ -563,6 +571,19 @@ Properties as follows:
 - `enabled`: État courant
 - `updatedAt`:
 - `updatedById`: Dernier admin ayant basculé le flag (audit)
+
+### `FeatureFlagLog`
+
+Journal des bascules de feature flags : une entrée par PATCH, écrite dans la
+même transaction que la bascule (pattern `UserPermissionLog`).
+
+Properties as follows:
+
+- `id`:
+- `flagKey`: Flag concerné
+- `enabled`: État APRÈS la bascule
+- `changedById`: Admin réel ayant effectué la bascule (SetNull si le compte est supprimé)
+- `changedAt`:
 
 ## Hosting
 

@@ -6,14 +6,15 @@ import {
   ReportsPage,
   loginAs,
 } from "../pom";
-// Miroir front des clés (import direct : garde-fou anti-dérive — si une clé du
-// miroir n'existe pas côté backend, FLG-01 échoue au lieu de dériver en silence).
+// Clés des flags telles que le FRONT les consomme (ré-export du client généré
+// depuis l'OpenAPI). FLG-01 les confronte à la liste servie par le backend :
+// ceinture-bretelles sur toute la chaîne catalogue → swagger → client → front.
 import { FeatureFlagKey } from "../../frontend/src/constants/feature-flags";
 
 /**
  * Non-régression des feature flags (#2029). Les flags sont un état serveur
- * GLOBAL : la datafeature mémorise chaque bascule et la fixture `data` restaure
- * tout en teardown (y compris après un timeout). L'isolation temporelle est
+ * GLOBAL : la fixture `data` photographie l'état au setup et restaure toute
+ * dérive au teardown (bascules API comme UI, y compris après un timeout). L'isolation temporelle est
  * structurelle : la suite vit dans le projet Playwright « feature-flags »
  * (voir playwright.config.ts), exécuté APRÈS tous les projets navigateurs pour
  * qu'aucune fenêtre « flag off » ne percute une suite parallèle.
@@ -42,10 +43,6 @@ test.describe("Feature flags", () => {
   }) => {
     const state = await data.featureFlagState("api-tokens");
     test.skip(state === null, "Flag api-tokens absent du catalogue");
-    // La bascule se fait via l'UI : on mémorise l'état pour que la fixture
-    // restaure même si le test échoue entre le off et le re-on.
-    await data.trackFeatureFlag("api-tokens");
-
     const admin = new AdminPage(page);
     await admin.open();
     await admin.expectAdminTabVisible(/gestion des tokens/i);
@@ -144,7 +141,6 @@ test.describe("Feature flags", () => {
   }) => {
     const state = await data.featureFlagState("reports");
     test.skip(state === null, "Flag reports absent du catalogue");
-    await data.trackFeatureFlag("reports");
 
     const admin = new AdminPage(page);
     const chrome = new ChromePage(page);

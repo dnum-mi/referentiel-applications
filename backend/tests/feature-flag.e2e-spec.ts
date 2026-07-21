@@ -110,6 +110,40 @@ describe("FeatureFlags", () => {
     expect(config.body.featureFlags[TEST_FLAG_KEY]).toBe(true);
   });
 
+  it("/PATCH feature-flags/:key journalise chaque bascule (historique)", async () => {
+    await request(app().getHttpServer())
+      .patch(`/feature-flags/${TEST_FLAG_KEY}`)
+      .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+      .send({ enabled: false })
+      .expect(200);
+
+    const history = await request(app().getHttpServer())
+      .get(`/feature-flags/${TEST_FLAG_KEY}/history`)
+      .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+      .expect(200);
+
+    expect(history.body.length).toBeGreaterThanOrEqual(1);
+    // La plus récente d'abord, imputée à l'admin qui a basculé.
+    expect(history.body[0]).toMatchObject({
+      enabled: false,
+      changedByEmail: admin.email,
+    });
+  });
+
+  it("/GET feature-flags/:key/history returns 404 for an unknown flag", async () => {
+    await request(app().getHttpServer())
+      .get("/feature-flags/does-not-exist/history")
+      .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+      .expect(404);
+  });
+
+  it("/GET feature-flags/:key/history forbids non-admin users", async () => {
+    await request(app().getHttpServer())
+      .get(`/feature-flags/${TEST_FLAG_KEY}/history`)
+      .set("Authorization", `Bearer ${READER_TOKEN}`)
+      .expect(403);
+  });
+
   it("/PATCH feature-flags/:key returns 404 for an unknown flag", async () => {
     await request(app().getHttpServer())
       .patch("/feature-flags/does-not-exist")
@@ -153,6 +187,13 @@ describe("FeatureFlags", () => {
         .patch(`/feature-flags/${TEST_FLAG_KEY}`)
         .set("Authorization", `Bearer ${SCOPED_ADMIN_TOKEN}`)
         .send({ enabled: true })
+        .expect(403);
+    });
+
+    it("forbids a scoped admin from reading a flag history", async () => {
+      await request(app().getHttpServer())
+        .get(`/feature-flags/${TEST_FLAG_KEY}/history`)
+        .set("Authorization", `Bearer ${SCOPED_ADMIN_TOKEN}`)
         .expect(403);
     });
   });

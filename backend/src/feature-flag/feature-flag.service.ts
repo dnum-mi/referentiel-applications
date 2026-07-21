@@ -6,7 +6,11 @@ import {
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
-import { FeatureFlagDto, UpdateFeatureFlagDto } from "./dto/feature-flag.dto";
+import {
+  FeatureFlagDto,
+  FeatureFlagLogDto,
+  UpdateFeatureFlagDto,
+} from "./dto/feature-flag.dto";
 import { FeatureFlagPubSub } from "./feature-flag.pubsub";
 import { syncFeatureFlagCatalog } from "./feature-flag.sync";
 
@@ -90,11 +94,22 @@ export class FeatureFlagService implements OnModuleInit {
     userId?: string,
   ): Promise<FeatureFlagDto> {
     try {
-      const flag = await this.prisma.featureFlag.update({
-        where: { key },
-        data: { enabled: dto.enabled, updatedById: userId ?? null },
-        select: FLAG_DTO_SELECT,
-      });
+      // Bascule + entrée de journal dans la MÊME transaction : l'historique ne
+      // peut ni manquer une bascule ni en inventer une.
+      const [flag] = await this.prisma.$transaction([
+        this.prisma.featureFlag.update({
+          where: { key },
+          data: { enabled: dto.enabled, updatedById: userId ?? null },
+          select: FLAG_DTO_SELECT,
+        }),
+        this.prisma.featureFlagLog.create({
+          data: {
+            flagKey: key,
+            enabled: dto.enabled,
+            changedById: userId ?? null,
+          },
+        }),
+      ]);
       this.invalidateCache();
       // Diffusion aux autres instances (LISTEN/NOTIFY) — best-effort, le TTL
       // du cache reste le filet de sécurité.
@@ -115,6 +130,33 @@ export class FeatureFlagService implements OnModuleInit {
       }
       throw error;
     }
+  }
+
+  /** Historique des bascules d'un flag (les plus récentes d'abord). */
+  async history(key: string): Promise<FeatureFlagLogDto[]> {
+    const flag = await this.prisma.featureFlag.findUnique({
+      where: { key },
+      select: { key: true },
+    });
+    if (!flag) {
+      throw new NotFoundException(`Feature flag « ${key} » introuvable.`);
+    }
+    const entries = await this.prisma.featureFlagLog.findMany({
+      where: { flagKey: key },
+      orderBy: { changedAt: "desc" },
+      take: 20,
+      select: {
+        enabled: true,
+        changedAt: true,
+        changedBy: { select: { email: true } },
+      },
+    });
+    // Endpoint admin global uniquement : exposer l'email de l'auteur est voulu.
+    return entries.map((entry) => ({
+      enabled: entry.enabled,
+      changedAt: entry.changedAt,
+      changedByEmail: entry.changedBy?.email ?? null,
+    }));
   }
 
   /** État d'un flag, résolu via le cache (défaut : désactivé si inconnu). */

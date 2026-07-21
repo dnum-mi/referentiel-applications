@@ -1,10 +1,15 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsBoolean } from "class-validator";
+import { FeatureFlagKey } from "../feature-flag.keys";
 
 export class FeatureFlagDto {
   @ApiProperty({
     description: "Clé technique stable du flag",
     example: "fulltext-search",
+    // Source unique des clés : l'enum est propagé au contrat OpenAPI puis au
+    // client front généré — le front n'a AUCUN miroir manuel à maintenir.
+    enum: Object.values(FeatureFlagKey),
+    enumName: "FeatureFlagKey",
   })
   key: string;
 
@@ -45,4 +50,27 @@ export class UpdateFeatureFlagDto {
   })
   @IsBoolean()
   enabled: boolean;
+}
+
+/** Entrée du journal des bascules d'un flag (endpoint réservé à l'admin global). */
+export class FeatureFlagLogDto {
+  @ApiProperty({ description: "État APRÈS la bascule", example: false })
+  enabled: boolean;
+
+  @ApiProperty({
+    description: "Date de la bascule",
+    example: "2026-07-21T00:00:00.000Z",
+    type: String,
+    format: "date-time",
+  })
+  changedAt: Date;
+
+  @ApiProperty({
+    description:
+      "Email de l'administrateur ayant basculé (null si le compte a été supprimé)",
+    example: "admin@example.com",
+    nullable: true,
+    required: false,
+  })
+  changedByEmail?: string | null;
 }

@@ -14,7 +14,11 @@ import { UserId } from "src/common/decorators/user-id.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UnscopedAdminGuard } from "src/common/guards/unscoped-admin.guard";
 import { Requestor } from "src/user/entities/user.entity";
-import { FeatureFlagDto, UpdateFeatureFlagDto } from "./dto/feature-flag.dto";
+import {
+  FeatureFlagDto,
+  FeatureFlagLogDto,
+  UpdateFeatureFlagDto,
+} from "./dto/feature-flag.dto";
 import { FeatureFlagService } from "./feature-flag.service";
 
 @ApiTags("FeatureFlags")
@@ -42,6 +46,27 @@ export class FeatureFlagController {
   })
   findAll(): Promise<FeatureFlagDto[]> {
     return this.featureFlagService.findAll();
+  }
+
+  @Get(":key/history")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Historique des bascules d'un feature flag.",
+    description:
+      "Les 20 dernières bascules du flag, de la plus récente à la plus ancienne, avec l'auteur de chacune.",
+  })
+  @ApiParam({ name: "key", description: "Clé technique du flag" })
+  @ApiOkResponse({
+    description: "Historique des bascules",
+    type: [FeatureFlagLogDto],
+  })
+  @ApiForbiddenResponse({
+    description:
+      "Accès refusé - Réservé aux administrateurs globaux (non scopés)",
+  })
+  @ApiNotFoundResponse({ description: "Feature flag non trouvé" })
+  history(@Param("key") key: string): Promise<FeatureFlagLogDto[]> {
+    return this.featureFlagService.history(key);
   }
 
   @Patch(":key")

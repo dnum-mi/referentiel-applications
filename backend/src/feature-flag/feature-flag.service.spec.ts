@@ -9,10 +9,19 @@ function createPrismaMock() {
   return {
     featureFlag: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       deleteMany: jest.fn(),
     },
+    featureFlagLog: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+    },
+    // Exécute les opérations préparées, comme le ferait la vraie transaction.
+    $transaction: jest.fn((operations: Promise<unknown>[]) =>
+      Promise.all(operations),
+    ),
   };
 }
 
@@ -158,8 +167,9 @@ describe("FeatureFlagService", () => {
   });
 
   describe("update", () => {
-    it("persiste l'état et l'auteur de la bascule en une seule requête", async () => {
+    it("persiste l'état, l'auteur et l'entrée de journal dans une transaction", async () => {
       prisma.featureFlag.update.mockResolvedValue({ key: "a", enabled: true });
+      prisma.featureFlagLog.create.mockResolvedValue({});
 
       await service.update("a", { enabled: true }, "user-1");
 
@@ -174,6 +184,10 @@ describe("FeatureFlagService", () => {
           updatedAt: true,
         },
       });
+      expect(prisma.featureFlagLog.create).toHaveBeenCalledWith({
+        data: { flagKey: "a", enabled: true, changedById: "user-1" },
+      });
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     });
 
     it("lève NotFound quand le flag n'existe pas (P2025)", async () => {
@@ -190,6 +204,44 @@ describe("FeatureFlagService", () => {
       await service.update("a", { enabled: true }, "user-1");
 
       expect(pubSub.publishInvalidation).toHaveBeenCalledWith("a");
+    });
+  });
+
+  describe("history", () => {
+    it("renvoie les bascules mappées avec l'email de l'auteur", async () => {
+      prisma.featureFlag.findUnique.mockResolvedValue({ key: "a" });
+      prisma.featureFlagLog.findMany.mockResolvedValue([
+        {
+          enabled: false,
+          changedAt: new Date("2026-07-21T10:00:00Z"),
+          changedBy: { email: "admin@example.com" },
+        },
+        {
+          enabled: true,
+          changedAt: new Date("2026-07-21T09:00:00Z"),
+          changedBy: null,
+        },
+      ]);
+
+      await expect(service.history("a")).resolves.toEqual([
+        {
+          enabled: false,
+          changedAt: new Date("2026-07-21T10:00:00Z"),
+          changedByEmail: "admin@example.com",
+        },
+        {
+          enabled: true,
+          changedAt: new Date("2026-07-21T09:00:00Z"),
+          changedByEmail: null,
+        },
+      ]);
+    });
+
+    it("lève NotFound pour un flag inconnu", async () => {
+      prisma.featureFlag.findUnique.mockResolvedValue(null);
+      await expect(service.history("missing")).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 

@@ -47,6 +47,8 @@ model User {
   impersonationsAsTarget    ImpersonationLog[]  @relation("ImpersonationTarget")
   /// Feature flags basculés par cet utilisateur (audit)
   featureFlagsUpdated       FeatureFlag[]
+  /// Entrées du journal des bascules de feature flags effectuées par cet utilisateur
+  featureFlagLogs           FeatureFlagLog[]
 }
 
 /// @namespace Roles

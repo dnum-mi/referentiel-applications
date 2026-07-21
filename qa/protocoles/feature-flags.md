@@ -3,9 +3,10 @@
 > Couvre le pilotage des fonctionnalités par feature flags (#2029) : l'écran d'administration
 > `/administration` → onglet **Feature flags**, et l'effet d'un flag sur l'affichage des onglets
 > (administration et fiche application) et sur les routes gouvernées. Utilisateur par défaut :
-> `admin` / `pass`. Les flags sont un état serveur **global** : chaque bascule est mémorisée par la
-> datafeature et restaurée par le teardown de la fixture (même après un timeout). La suite ne tourne
-> que sur **chromium** (des projets navigateurs parallèles feraient entrer les bascules en collision).
+> `admin` / `pass`. Les flags sont un état serveur **global** : la fixture photographie l'état au
+> setup et restaure automatiquement toute dérive au teardown (bascules API comme UI, y compris
+> après un timeout). La suite vit dans le projet Playwright dédié « feature-flags », exécuté APRÈS
+> les projets navigateurs (aucune collision possible avec les suites parallèles).
 
 | Légende           |                                                                |
 | :---------------- | :------------------------------------------------------------- |

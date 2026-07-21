@@ -77,7 +77,9 @@ Nous retenons l'**option 3**, avec les choix structurants suivants :
 3. **Gating déclaratif, jamais conditionnel en place** : côté backend, décorateur `@FeatureFlag(clé)` (classe ou méthode) + `FeatureFlagGuard` répondant **404** (ne pas divulguer une fonctionnalité coupée) ; côté frontend, primitives `featureKey` (onglets), `meta.requiresFeature` (routes, typée), `v-feature` (directive réactive), `useFeatureFlag` et `allows()` (listes filtrées). Une règle ESLint (`no-restricted-syntax`) **interdit tout appel direct `isEnabled()` hors primitives** : ajouter une exception est une décision de revue, pas une dérive silencieuse.
 4. **Lecture et propagation** : cache mémoire par instance (TTL court, stale-while-error en panne de base, rechargements versionnés) ; une bascule invalide l'instance locale et **notifie les autres via Postgres LISTEN/NOTIFY** — le TTL n'est qu'un filet de sécurité. `GET /config` (public) n'expose que les flags **activés** (une clé absente vaut « désactivé »). Les navigateurs ouverts suivent par **polling** (60 s) avec réactivité complète (navigation, onglets, éjection d'une route dont le flag est coupé).
 5. **Gouvernance** : `GET`/`PATCH /feature-flags` réservés aux **administrateurs globaux** (`UnscopedAdminGuard` : 403 pour un compte restreint à un périmètre, l'effet d'un flag étant global) ; bascule imputée à l'admin réel même sous impersonation, journalisée en niveau info.
-6. **Hors périmètre du flipping** : la déclaration d'accessibilité (mention légale RGAA) n'est volontairement **pas flaggable**.
+6. **Périmètre** : les flags sont des **interrupteurs globaux par fonctionnalité** — c'est la demande du ticket #2029. Le ciblage par utilisateur, le déploiement progressif ou l'A/B testing sont **hors périmètre** : si ce besoin émerge, un nouvel ADR devra réévaluer l'option d'un service dédié (l'architecture actuelle — clé stable + `isEnabled` centralisé — n'y fait pas obstacle). La déclaration d'accessibilité (mention légale RGAA) n'est volontairement **pas flaggable**.
+7. **Historique** : chaque bascule écrit une entrée de journal (`FeatureFlagLog`, pattern `UserPermissionLog`) **dans la même transaction** que la bascule ; consultable par l'admin global (`GET /feature-flags/:key/history` et accordéon « Historique » de l'écran d'admin).
+8. **Source unique des clés** : le catalogue backend est propagé au contrat OpenAPI (enum `FeatureFlagKey` sur `FeatureFlagDto.key`) puis au client front généré — le front ré-exporte l'objet généré, il n'existe **aucun miroir manuel**.
 
 ## Conséquences
 
@@ -88,12 +90,13 @@ Positives :
 - kill-switches réels : un domaine coupé répond 404 côté API et disparaît de l'interface ;
 - doctrine anti-dispersion outillée (lint en CI) et catalogue protégé contre la dérive (tests e2e front/back).
 
-Négatives (assumées) :
+Négatives (résolues par la conception) :
 
-- le miroir front des clés (`frontend/src/constants/feature-flags.ts`) est un doublon contrôlé, gardé par un test e2e ;
-- pas d'historique des bascules (seul le dernier auteur est conservé) — un journal calqué sur `UserPermissionLog` est identifié comme suivi ;
-- pas de ciblage par utilisateur ni de déploiement progressif : si ce besoin émerge, un nouvel ADR devra réévaluer l'option service dédié ;
-- l'état global des flags impose une discipline e2e particulière (suite Playwright isolée dans un projet dédié exécuté après les navigateurs, restauration par le teardown de la fixture).
+- ~~miroir front des clés à maintenir~~ → **résolu** : les clés sont générées depuis l'OpenAPI (source unique = catalogue backend), un test e2e vérifie la chaîne complète ;
+- ~~pas d'historique des bascules~~ → **résolu** : journal `FeatureFlagLog` transactionnel, endpoint et écran d'admin ;
+- ~~discipline e2e à la charge des développeurs~~ → **résolu** : la suite Playwright vit dans un projet isolé exécuté après les navigateurs, et la fixture photographie/restaure automatiquement l'état des flags (bascules API comme UI, y compris après un timeout) — aucune convention à connaître pour écrire un test.
+
+Restent, par décision de périmètre (et non par dette) : pas de ciblage par utilisateur ni de déploiement progressif (cf. point 6 de la décision — nouvel ADR si le besoin émerge).
 
 ## Liens et Références
 

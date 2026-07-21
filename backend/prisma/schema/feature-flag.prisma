@@ -20,4 +20,26 @@ model FeatureFlag {
   /// Dernier admin ayant basculé le flag (audit)
   updatedById String?
   updatedBy   User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  /// Historique des bascules de ce flag
+  logs FeatureFlagLog[]
+}
+
+/// Journal des bascules de feature flags : une entrée par PATCH, écrite dans la
+/// même transaction que la bascule (pattern `UserPermissionLog`).
+///
+/// @namespace Config
+model FeatureFlagLog {
+  id          String      @id @default(cuid())
+  /// Flag concerné
+  flagKey     String      @db.VarChar(100)
+  flag        FeatureFlag @relation(fields: [flagKey], references: [key], onDelete: Cascade)
+  /// État APRÈS la bascule
+  enabled     Boolean
+  /// Admin réel ayant effectué la bascule (SetNull si le compte est supprimé)
+  changedById String?
+  changedBy   User?       @relation(fields: [changedById], references: [id], onDelete: SetNull)
+  changedAt   DateTime    @default(now())
+
+  @@index([flagKey, changedAt(sort: Desc)])
 }

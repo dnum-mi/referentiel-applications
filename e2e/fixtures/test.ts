@@ -22,11 +22,15 @@ export const test = base.extend<Fixtures>({
     await loginAs(page, "admin");
     const api = await ApiClient.fromPage(page);
     const dataFeature = new DataFeature(api);
+    // Les feature flags sont un état serveur GLOBAL : photographie au setup,
+    // restauration de toute dérive au teardown — quelle que soit la façon dont
+    // le test a basculé un flag (API ou UI), y compris après un timeout.
+    // Aucune discipline requise dans les specs.
+    const flagsSnapshot = await dataFeature
+      .snapshotFeatureFlags()
+      .catch(() => null);
     await use(dataFeature);
-    // Filet de sécurité : les feature flags sont un état serveur GLOBAL. Ce
-    // teardown restaure les flags touchés même si le test a timeouté (cas où
-    // un `finally` de corps de test ne s'exécute pas).
-    await dataFeature.restoreFeatureFlags();
+    await dataFeature.restoreFeatureFlags(flagsSnapshot);
   },
 
   // Fixture AUTO plutôt qu'un `test.afterEach` : un afterEach défini dans ce module partagé n'est
