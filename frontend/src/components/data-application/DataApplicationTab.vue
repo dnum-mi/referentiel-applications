@@ -120,7 +120,7 @@ function onPage(event: any) {
 const columns = computed(() => [
   { field: "name", header: "Nom de la donnée", sortable: true },
   { field: "applicationsSource", header: "Applications source", sortable: false },
-  { field: "family", header: "Famille métier", sortable: true, width: "25%" },
+  { field: "family", header: "Famille métier", sortable: false, width: "25%" },
   { field: "sensibility", header: "Sensibilité", sortable: true },
   { field: "openDataStatus", header: "Open data", sortable: true },
   { field: "isReference", header: "Référentiel", sortable: true },
@@ -187,7 +187,7 @@ watch(
     <div class="fr-grid-row fr-grid-row--middle fr-mb-2w">
       <div class="fr-col">
         <h2 class="fr-mb-0">
-          Données réutilisées par l'application
+          Données
           <span v-if="!isLoading" class="fr-text--sm fr-text-mention--grey fr-ml-1w">({{ total }} donnée{{ total > 1 ? "s" : "" }})</span>
         </h2>
       </div>

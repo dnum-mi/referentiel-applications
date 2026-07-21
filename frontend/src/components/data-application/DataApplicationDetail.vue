@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
-import { Permission, type DataApplicationDto } from "@/client/types.gen";
+import { Permission, type DataApplicationDto, type DataExposureDto } from "@/client/types.gen";
 import type { APP_PERMISSIONS } from "@/models/Application";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -13,12 +13,13 @@ import {
   UPDATE_FREQUENCY_LABELS,
   OPEN_DATA_BADGE_CLASS,
   DOCUMENTATION_COLUMNS as documentationColumns,
-  EXPOSURE_COLUMNS as exposureColumns,
+  EXPOSURE_COLUMNS as baseExposureColumns,
 } from "@/constants/data-catalog.constants";
 import type { OpenDataStatus, UpdateFrequency } from "@/client/types.gen.js";
 import RefAppTable from "@/components/RefAppTable.vue";
 import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
 import DataApplicationModal from "./DataApplicationModal.vue";
+import DataExposureModal from "./DataExposureModal.vue";
 
 const props = defineProps<{
   applicationId: string;
@@ -39,6 +40,13 @@ const canEdit = computed(() => userStore.hasPermissions([Permission.DATA_WRITE],
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const errorMessage = ref("");
+
+// --- Exposition (DataExposure) : CRUD depuis la page de détail ---
+const isAddExposureModalOpen = ref(false);
+const exposureToEdit = ref<DataExposureDto | null>(null);
+const exposureToDelete = ref<DataExposureDto | null>(null);
+const isDeleteExposureModalOpen = ref(false);
+const exposureErrorMessage = ref("");
 
 async function fetchOne() {
   item.value = null;
@@ -72,6 +80,45 @@ onMounted(fetchMyPerms);
 
 async function onDataUpdated() {
   isEditModalOpen.value = false;
+  await fetchOne();
+}
+
+function openEditExposureModal(exposure: DataExposureDto) {
+  exposureToEdit.value = exposure;
+}
+
+function openDeleteExposureModal(exposure: DataExposureDto) {
+  exposureToDelete.value = exposure;
+  isDeleteExposureModalOpen.value = true;
+}
+
+function cancelExposureDeletion() {
+  exposureToDelete.value = null;
+  isDeleteExposureModalOpen.value = false;
+}
+
+async function confirmExposureDeletion() {
+  if (!exposureToDelete.value) return;
+  try {
+    const response = await api.dataCatalogControllerDeleteExposure({
+      path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId, exposureId: exposureToDelete.value.id },
+    });
+    if (!response.response.ok) throw new Error("delete failed");
+    toaster.addSuccessMessage("Exposition supprimée avec succès");
+    await fetchOne();
+  } catch (error) {
+    console.error(error);
+    exposureErrorMessage.value = "Erreur lors de la suppression de l'exposition.";
+    toaster.addErrorMessage(exposureErrorMessage.value);
+  } finally {
+    exposureToDelete.value = null;
+    isDeleteExposureModalOpen.value = false;
+  }
+}
+
+async function onExposureSaved() {
+  isAddExposureModalOpen.value = false;
+  exposureToEdit.value = null;
   await fetchOne();
 }
 
@@ -114,6 +161,11 @@ const applicationsSourceList = computed(() => item.value?.dataDescription?.appli
 const documentationItems = computed(() => (item.value?.documentationUrl ?? []).map((url) => ({ url })));
 
 const exposureItems = computed(() => item.value?.exposures ?? []);
+
+const exposureColumns = computed(() => [
+  ...baseExposureColumns,
+  ...(canEdit.value ? [{ field: "actions", header: "Actions", sortable: false }] : []),
+]);
 
 const hasInfoContent = computed(
   () =>
@@ -444,15 +496,37 @@ function goToApplicationProfile(appId: string) {
         </div>
 
         <!-- Ligne inférieure : Exposition -->
-        <div v-if="item?.exposures?.length" class="fr-col-12">
+        <div v-if="item?.exposures?.length || canEdit" class="fr-col-12">
           <div class="fr-p-3w section-card--mt">
-            <h2 class="fr-h5 data-detail__section-title">
-              <span class="fr-icon-global-line fr-icon--md fr-mr-2w icon-blue" aria-hidden="true" />
-              Exposition
-            </h2>
+            <div class="fr-grid-row fr-grid-row--middle">
+              <div class="fr-col">
+                <h2 class="fr-h5 data-detail__section-title fr-mb-0">
+                  <span class="fr-icon-global-line fr-icon--md fr-mr-2w icon-blue" aria-hidden="true" />
+                  Exposition
+                </h2>
+              </div>
+              <div v-if="canEdit" class="fr-col-auto">
+                <DsfrButton
+                  tertiary
+                  size="sm"
+                  class="fr-btn--icon-left fr-icon-add-line"
+                  label="Ajouter"
+                  title="Ajouter une exposition"
+                  data-testid="data-exposure-add-btn"
+                  @click="isAddExposureModalOpen = true"
+                />
+              </div>
+            </div>
             <hr class="fr-hr fr-my-2w" />
 
-            <RefAppTable :items="exposureItems" :columns="exposureColumns" :total-records="exposureItems.length" :paginator="false">
+            <RefAppTable
+              :items="exposureItems"
+              :columns="exposureColumns"
+              :total-records="exposureItems.length"
+              :paginator="false"
+              data-testid="data-exposure-table"
+              empty-message="Aucune exposition renseignée."
+            >
               <template #body-type="{ data }">
                 <span v-if="data.type" class="fr-badge fr-badge--info">{{ data.type }}</span>
                 <span v-else class="fr-text-mention--grey">—</span>
@@ -493,6 +567,26 @@ function goToApplicationProfile(appId: string) {
               <template #body-authenticationType="{ data }">
                 <span v-if="data.authenticationType">{{ data.authenticationType }}</span>
                 <span v-else class="fr-text-mention--grey">—</span>
+              </template>
+
+              <template #body-actions="{ data }: { data: DataExposureDto }">
+                <DsfrButton
+                  tertiary
+                  size="sm"
+                  icon="fr-icon-edit-line"
+                  title="Modifier"
+                  class="fr-mr-1w"
+                  :data-testid="`data-exposure-edit-btn-${data.id}`"
+                  @click="openEditExposureModal(data)"
+                />
+                <DsfrButton
+                  tertiary
+                  size="sm"
+                  icon="fr-icon-delete-bin-line"
+                  title="Supprimer"
+                  :data-testid="`data-exposure-delete-btn-${data.id}`"
+                  @click="openDeleteExposureModal(data)"
+                />
               </template>
             </RefAppTable>
           </div>
@@ -539,6 +633,33 @@ function goToApplicationProfile(appId: string) {
       item-name="cette donnée"
       @confirm="confirmDeletion"
       @cancel="isDeleteModalOpen = false"
+    />
+
+    <DataExposureModal
+      v-if="isAddExposureModalOpen"
+      :application-id="props.applicationId"
+      :data-application-id="props.dataApplicationId"
+      :error-message="exposureErrorMessage"
+      @close="isAddExposureModalOpen = false"
+      @exposure-created="onExposureSaved"
+    />
+
+    <DataExposureModal
+      v-if="exposureToEdit"
+      :application-id="props.applicationId"
+      :data-application-id="props.dataApplicationId"
+      :initial-exposure="exposureToEdit"
+      :error-message="exposureErrorMessage"
+      @close="exposureToEdit = null"
+      @exposure-updated="onExposureSaved"
+    />
+
+    <DeleteConfirmationModal
+      v-if="isDeleteExposureModalOpen"
+      :opened="isDeleteExposureModalOpen"
+      item-name="cette exposition"
+      @confirm="confirmExposureDeletion"
+      @cancel="cancelExposureDeletion"
     />
   </div>
 </template>
