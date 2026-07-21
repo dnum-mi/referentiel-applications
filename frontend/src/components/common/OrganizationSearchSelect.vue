@@ -8,7 +8,8 @@ import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 
 const props = defineProps({
   modelValue: {
-    type: String,
+    // Nullable : les DTO d'API modélisent « aucune organisation » par null.
+    type: [String, null] as unknown as () => string | null,
     default: "",
   },
   description: {
@@ -45,7 +46,7 @@ const groupLabelId = useId();
 const searchQuery = ref("");
 const organizations = ref<OrganizationDto[]>([]);
 const isLoading = ref(false);
-const selectedOrganizationId = ref(props.modelValue);
+const selectedOrganizationId = ref(props.modelValue ?? "");
 
 // Computed label for the search input with asterisk if required
 const searchLabel = computed(() => {
@@ -96,7 +97,7 @@ const selectOptions = computed(() => {
 watch(
   () => props.modelValue,
   (newValue) => {
-    selectedOrganizationId.value = newValue;
+    selectedOrganizationId.value = newValue ?? "";
   },
 );
 

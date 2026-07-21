@@ -37,7 +37,8 @@ jobs:
   test-lint-format:
     name: Test Linting & Formatting
     runs-on: ubuntu-latest
-    continue-on-error: true
+    # Volontairement bloquant : lint, format et type-checks font partie du
+    # contrat de qualité — rien ne passe « sous le tapis ».
     permissions:
       contents: read
     steps:
@@ -50,6 +51,12 @@ jobs:
         run: pnpm run lint
       - name: Run Prettier
         run: pnpm exec prettier . --check
+      - name: Generate OpenAPI client (frontend)
+        run: pnpm --dir frontend run gen
+      - name: Type-check frontend
+        run: pnpm --dir frontend run type-check
+      - name: Type-check e2e
+        run: pnpm --dir e2e run type-check
 
   unit-tests:
     name: Unit Tests

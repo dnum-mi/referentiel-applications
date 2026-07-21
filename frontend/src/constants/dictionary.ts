@@ -61,6 +61,7 @@ export const homologationStatusDict = {
 } as const satisfies Record<NonNullable<CreateComplianceDto["homologation_status"]>, string>;
 
 // Valeurs autorisées DIMA / PDMA (cf. ticket #1901), présentées du plus permissif au plus strict.
+// `satisfies` sur les unions du DTO généré : une valeur hors contrat API ne compile pas.
 export const dimaDurationHoursOptions = [
   { value: 96, text: "96H" },
   { value: 72, text: "72H" },
@@ -69,14 +70,14 @@ export const dimaDurationHoursOptions = [
   { value: 4, text: "4H" },
   { value: 1, text: "1H" },
   { value: 0, text: "0H" },
-];
+] satisfies { value: NonNullable<CreateComplianceDto["dima_duration_hours"]>; text: string }[];
 
 export const pdmaDurationHoursOptions = [
   { value: 48, text: "48H" },
   { value: 24, text: "24H" },
   { value: 2, text: "2H" },
   { value: 0, text: "0H" },
-];
+] satisfies { value: NonNullable<CreateComplianceDto["pdma_duration_hours"]>; text: string }[];
 
 export const linkTypesDict = {
   documentation: "Documentation",

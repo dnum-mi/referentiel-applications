@@ -84,6 +84,10 @@ export class TokenDto {
     example: "active",
     description: "Statut du token",
     required: true,
+    // Sans `enum`, Swagger type `keyof typeof TokenStatus` en objet anonyme et
+    // le client front généré perd le type littéral (comparaisons impossibles).
+    enum: TokenStatus,
+    enumName: "TokenStatus",
   })
   @IsEnum(TokenStatus)
   status: keyof typeof TokenStatus;

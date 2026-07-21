@@ -20,7 +20,8 @@ const emit = defineEmits(["submit", "cancel"]);
 
 const form = ref({
   status: props.initialData?.status || "",
-  statusDate: toDateInputValue(props.initialData?.statusDate) as string | null,
+  // `toDateInputValue` renvoie toujours une chaîne ("" si pas de date).
+  statusDate: toDateInputValue(props.initialData?.statusDate),
   version: props.initialData?.version ?? "",
 });
 

@@ -555,8 +555,10 @@ async function createActors(applicationId: string) {
     isGroup: moaActor.value.isGroup,
     organizationId: moaActor.value.organizationId || undefined,
     email: moaActor.value.email || undefined,
-    firstname: isMoaGroup.value ? null : moaActor.value.firstname || undefined,
-    lastname: isMoaGroup.value ? null : moaActor.value.lastname || undefined,
+    // Groupe : pas de prénom/nom de personne — champ omis (le contrat ne
+    // déclare pas ces champs nullables ; à la création, absent == null en base).
+    firstname: isMoaGroup.value ? undefined : moaActor.value.firstname || undefined,
+    lastname: isMoaGroup.value ? undefined : moaActor.value.lastname || undefined,
     applicationId,
   };
 
@@ -570,8 +572,10 @@ async function createActors(applicationId: string) {
     isGroup: moeActor.value.isGroup,
     organizationId: moeActor.value.organizationId || undefined,
     email: moeActor.value.email || undefined,
-    firstname: isMoeGroup.value ? null : moeActor.value.firstname || undefined,
-    lastname: isMoeGroup.value ? null : moeActor.value.lastname || undefined,
+    // Groupe : pas de prénom/nom de personne — champ omis (le contrat ne
+    // déclare pas ces champs nullables ; à la création, absent == null en base).
+    firstname: isMoeGroup.value ? undefined : moeActor.value.firstname || undefined,
+    lastname: isMoeGroup.value ? undefined : moeActor.value.lastname || undefined,
     applicationId,
   };
 

@@ -5666,6 +5666,13 @@ components:
         - READER
         - CONTRIBUTOR
         - ADMIN
+    TokenStatus:
+      type: string
+      description: Statut du token
+      enum:
+        - active
+        - expired
+        - revoked
     TokenKind:
       type: string
       description: "Type de token : personnel (créé par un utilisateur pour lui-même)
@@ -5782,9 +5789,8 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          type: object
           example: active
-          description: Statut du token
+          $ref: "#/components/schemas/TokenStatus"
         kind:
           example: personal
           $ref: "#/components/schemas/TokenKind"
@@ -5875,9 +5881,8 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          type: object
           example: active
-          description: Statut du token
+          $ref: "#/components/schemas/TokenStatus"
         kind:
           example: personal
           $ref: "#/components/schemas/TokenKind"
