@@ -56,15 +56,6 @@ function updateWritePriorityRestart(actorTypeId: string, value: boolean) {
   updatedMatrix.value[actorTypeIdx].AppWritePriority = value;
 }
 
-// Marque (ou non) un type d'acteur comme « administrateur de l'application ». Les acteurs de ce
-// type disposent alors de tous les droits (forcés côté serveur) ; les contrôles de la ligne sont
-// verrouillés dans l'UI pour refléter que la matrice ne s'applique plus.
-function updateIsAdmin(actorTypeId: string, value: boolean) {
-  const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
-  if (actorTypeIdx === -1) return;
-  updatedMatrix.value[actorTypeIdx].isAdmin = value;
-}
-
 type ReportPermissionValue = "Read" | "Post" | "Manage";
 function updateReportMatrix(actorTypeId: string, values: ReportPermissionValue[]) {
   const actorTypeIdx = updatedMatrix.value.findIndex((at) => at.actorTypeId === actorTypeId);
@@ -85,14 +76,12 @@ function saveAppPermsMatrix() {
 <template>
   <p class="fr-text--sm fr-mb-1w" data-testid="app-perms-legend">
     Légende : <strong>-</strong> aucun droit · <strong>RO</strong> lecture seule (Read Only) · <strong>RW</strong> lecture et écriture
-    (Read/Write) · <strong>Admin</strong> : administrateur de l'application (tous les droits, forcés côté serveur — la ligne est alors
-    verrouillée).
+    (Read/Write).
   </p>
   <DsfrTable title="Tableau des permissions des applications" data-testid="app-perms-table">
     <template #header>
       <tr>
         <th scope="col">Type d'acteur</th>
-        <th scope="col" style="min-width: 4rem" title="Administrateur de l'application">Admin</th>
         <th v-for="perm in permissionSuffixes" :key="perm.label" scope="col" style="min-width: 6rem" :title="perm.title">
           {{ perm.label }}
         </th>
@@ -101,23 +90,11 @@ function saveAppPermsMatrix() {
     </template>
     <tr v-for="perms in updatedMatrix as AppPermsDto[]" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
       <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
-      <td>
-        <input
-          :id="`admin-toggle-${perms.actorTypeId}`"
-          type="checkbox"
-          class="admin-toggle"
-          :checked="perms.isAdmin ?? false"
-          aria-label="Administrateur de l'application : tous les droits"
-          :data-testid="`app-perms-admin-${perms.actorTypeId}`"
-          @change="(e: Event) => updateIsAdmin(perms.actorTypeId, (e.target as HTMLInputElement).checked)"
-        />
-      </td>
-      <td v-for="perm in permissionKeys" :key="perm" :class="{ 'admin-locked': perms.isAdmin }">
+      <td v-for="perm in permissionKeys" :key="perm">
         <PermissionSelect
           v-if="perm === 'App'"
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
-          :disabled="perms.isAdmin ?? false"
           :read="perms[`${perm}Read`] || false"
           :write="perms[`${perm}Write`] || false"
           :perm-order="['Read', 'Write']"
@@ -128,7 +105,6 @@ function saveAppPermsMatrix() {
           v-else-if="perm === 'Metadata'"
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
-          :disabled="perms.isAdmin ?? false"
           :read="perms[`${perm}Read`] || false"
           :perm-order="['none', 'Read']"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
@@ -138,7 +114,6 @@ function saveAppPermsMatrix() {
           v-else-if="perm === 'Data' || perm === 'Technology'"
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
-          :disabled="perms.isAdmin ?? false"
           :read="perms[`${perm}Read`] || false"
           :write="perms[`${perm}Write`] || false"
           :perm-order="['Read', 'Write', 'none']"
@@ -156,14 +131,13 @@ function saveAppPermsMatrix() {
           v-else
           :id="`${perms.actorTypeId}-${perm}`"
           class="permission-select"
-          :disabled="perms.isAdmin ?? false"
           :read="perms[`${perm}Read`] || false"
           :write="perms[`${perm}Write`] || false"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
       </td>
-      <td style="min-width: 15rem" :class="{ 'admin-locked': perms.isAdmin }">
+      <td style="min-width: 15rem">
         <ReportPermissionSelect
           :id="`${perms.actorTypeId}`"
           :read="perms.ReportRead"
@@ -201,18 +175,5 @@ function saveAppPermsMatrix() {
 <style scoped>
 .fr-table > table td {
   padding: 0.5rem !important;
-}
-
-/* Ligne « administrateur de l'application » : les droits sont forcés côté serveur, on verrouille
-   les contrôles de permission (le bascule Admin, lui, reste actionnable pour revenir en arrière). */
-.admin-locked {
-  pointer-events: none;
-  opacity: 0.45;
-}
-
-.admin-toggle {
-  width: 1.15rem;
-  height: 1.15rem;
-  cursor: pointer;
 }
 </style>

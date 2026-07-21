@@ -6,10 +6,7 @@ import {
   APP_PERMISSIONS,
   transformAppPermissionsObjectToArray,
 } from "../utils/types";
-import {
-  APP_ADMIN_PERMISSIONS,
-  roleToAppPermissions,
-} from "src/permissions/role-to-permissions";
+import { roleToAppPermissions } from "src/permissions/role-to-permissions";
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
 
 @Injectable()
@@ -71,7 +68,7 @@ export class CheckPermissions {
           })
         : [];
 
-    const matrixPermissions = [
+    return [
       ...emailActors.flatMap((actor) =>
         actor.actorType.appPermissions.flatMap((perm) =>
           transformAppPermissionsObjectToArray(perm),
@@ -83,22 +80,6 @@ export class CheckPermissions {
         ),
       ),
     ];
-
-    // Un acteur rattaché à un type « administrateur de l'application » dispose TOUJOURS
-    // de l'ensemble des droits applicatifs (lecture + écriture) sur CETTE application,
-    // indépendamment de la matrice AppPermissions éditable. C'est le 3e niveau d'admin
-    // (distinct du rôle ADMIN global/périmètre) : la garantie reste bornée à
-    // `applicationId` (les acteurs sont chargés pour cette seule app) et n'emploie PAS le
-    // jeu du rôle global, mais le jeu applicatif dédié `APP_ADMIN_PERMISSIONS`.
-    const isAdminActor =
-      emailActors.some((actor) => actor.actorType.isAdmin) ||
-      groupActorTypes.some((actorType) => actorType.isAdmin);
-
-    if (!isAdminActor) return matrixPermissions;
-
-    return Array.from(
-      new Set([...matrixPermissions, ...APP_ADMIN_PERMISSIONS]),
-    );
   }
 
   private async getUserRolePermissions(
