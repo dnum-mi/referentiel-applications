@@ -355,7 +355,8 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,node,windows,macos,linux,intellij
 .eslintrc-auto-import.json
-auto-imports.d.ts
+# auto-imports.d.ts et components.d.ts (unplugin) sont COMMITTÉS : le type-check
+# CI en a besoin sans lancer Vite (même logique que le swagger.yaml committé).
 
 *.pnpm-store/
 
@@ -373,7 +374,6 @@ auto-imports.d.ts
 
 .mongo-dev/
 
-components.d.ts
 
 # autogen client
 frontend/src/client
