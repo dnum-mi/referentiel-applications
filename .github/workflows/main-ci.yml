@@ -44,9 +44,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
+        # Pas de workspace pnpm : chaque package (racine, frontend, e2e) a son
+        # propre lockfile et s'installe séparément.
         run: |
           npm install -g pnpm
           pnpm install --frozen-lockfile
+          pnpm --dir frontend install --frozen-lockfile
+          pnpm --dir e2e install --frozen-lockfile
       - name: Run ESLint
         run: pnpm run lint
       - name: Run Prettier
