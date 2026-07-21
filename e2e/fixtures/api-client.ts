@@ -549,6 +549,15 @@ export class ApiClient {
     return this.del(`/data-catalog/descriptions/${id}`);
   }
 
+  /** Liste paginée des familles métier du catalogue de données (`GET /data-catalog/families`). */
+  dataFamilies(
+    query = "",
+  ): Promise<Paginated<{ id: string; path: string }> | null> {
+    return this.get<Paginated<{ id: string; path: string }>>(
+      `/data-catalog/families${query ? `?${query}` : ""}`,
+    );
+  }
+
   /** Rattache une donnée à une application (`POST /data-catalog/applications/{applicationId}`). */
   attachDataToApplication(
     applicationId: string,

@@ -21,7 +21,7 @@ labels: ["qa", "non-regression", "qa:data-application"]
 
 | Total | ✅ Passés | ❌ Échecs | ⏭️ Non testés |
 | ----- | --------- | --------- | ------------- |
-| 12    |           |           |               |
+| 16    |           |           |               |
 
 ## Protocole
 

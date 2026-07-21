@@ -816,14 +816,44 @@ export class ApplicationPage extends BasePage {
   }
 
   /**
-   * Choisit « + Créer une nouvelle famille » (valeur `__new__` du select famille) et renseigne le
-   * chemin de la nouvelle famille (DAT-08).
+   * Crée une nouvelle famille métier inline (bouton « + Créer une nouvelle famille » puis « Ajouter »)
+   * et l'ajoute au panier de familles de la donnée en cours de création/édition — DAT-08, DAT-13.
    */
   async createNewFamilyInline(path: string): Promise<void> {
-    await this.byTestId("new-description-family-select").selectOption(
-      "__new__",
-    );
+    await this.byTestId("new-description-create-family-toggle").click();
     await this.byTestId("new-family-path-input").fill(path);
+    await this.byTestId("new-family-add-btn").click();
+  }
+
+  /**
+   * Ajoute une famille métier EXISTANTE au panier de familles via le picker `AccessibleAutocomplete`
+   * (recherche par chemin, sélection par option accessible) — DAT-13, DAT-14.
+   */
+  async addExistingFamily(familyPath: string): Promise<void> {
+    const picker = this.byTestId("new-description-family-search");
+    await picker.locator("input").fill(familyPath);
+    const option = picker.getByRole("option", { name: familyPath });
+    await expect(option).toBeVisible();
+    await option.click();
+  }
+
+  /** Retire une famille du panier en cliquant son chip (identique en création et en édition) — DAT-14. */
+  async removeFamilyChip(familyPath: string): Promise<void> {
+    await this.byTestId("new-description-families")
+      .locator(".fr-tag", { hasText: familyPath })
+      .click();
+  }
+
+  /**
+   * Ajoute une application source au panier via le picker `AccessibleAutocomplete` (recherche par
+   * libellé, sélection par option accessible) — DAT-15, DAT-16.
+   */
+  async addApplicationSource(label: string): Promise<void> {
+    const picker = this.byTestId("new-description-application-source-search");
+    await picker.locator("input").fill(label);
+    const option = picker.getByRole("option", { name: label });
+    await expect(option).toBeVisible();
+    await option.click();
   }
 
   /**
@@ -958,15 +988,53 @@ export class ApplicationPage extends BasePage {
     ).toBeVisible();
   }
 
-  /** La ligne portant `rowText` (ex. le nom) contient aussi `additionalText` (ex. la famille) — DAT-08. */
+  /** La ligne portant `rowText` (ex. le nom) contient aussi tous les `additionalTexts` (ex. les familles) — DAT-08, DAT-13. */
   async expectDataRowContainsAll(
     rowText: string,
-    additionalText: string,
+    additionalTexts: string[],
   ): Promise<void> {
     const row = this.byTestId("data-application-table")
       .locator("tbody tr", { hasText: rowText })
       .first();
     await expect(row).toBeVisible();
-    await expect(row).toContainText(additionalText);
+    for (const text of additionalTexts) {
+      await expect(row).toContainText(text);
+    }
+  }
+
+  /** La ligne `dataApplicationId` contient `text` (ex. une famille ajoutée) — DAT-14. */
+  async expectDataRowByIdContains(
+    dataApplicationId: string,
+    text: string,
+  ): Promise<void> {
+    await expect(this.dataRow(dataApplicationId)).toContainText(text);
+  }
+
+  /** La ligne `dataApplicationId` NE contient PAS `text` (ex. une famille retirée) — DAT-14. */
+  async expectDataRowNotContains(
+    dataApplicationId: string,
+    text: string,
+  ): Promise<void> {
+    await expect(this.dataRow(dataApplicationId)).not.toContainText(text);
+  }
+
+  /**
+   * Clique le chip cliquable « application source » (libellé `label`) de la ligne
+   * `dataApplicationId`, qui redirige vers la fiche de cette application source — DAT-15.
+   */
+  async clickApplicationSourceTag(
+    dataApplicationId: string,
+    label: string,
+  ): Promise<void> {
+    await this.dataRow(dataApplicationId)
+      .locator(".application-source-tag", { hasText: label })
+      .click();
+  }
+
+  /** La navigation a redirigé vers la fiche de l'application `applicationId` — DAT-15, DAT-16. */
+  async expectOnApplicationProfile(applicationId: string): Promise<void> {
+    await expect(this.page).toHaveURL(
+      new RegExp(`/applications/${applicationId}(?:/|$)`),
+    );
   }
 }

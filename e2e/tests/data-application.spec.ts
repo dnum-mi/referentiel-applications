@@ -11,6 +11,10 @@ import { ApplicationPage, DataDetailPage } from "../pom";
  * Résolveurs dédiés : `provisionUnattachedDataDescription` (description non rattachée, à rattacher
  * dans le test) et `provisionAttachedData` (description créée ET rattachée, jetable pour les cas qui
  * suppriment).
+ *
+ * DAT-13/DAT-14 couvrent les familles métier multiples (une donnée peut appartenir à plusieurs
+ * familles) ; DAT-15/DAT-16 couvrent les applications sources (tags cliquables redirigeant vers la
+ * fiche de l'application source), dans le tableau Données et dans la page de détail.
  */
 test.describe("Détail d'une donnée applicative", () => {
   test("DAT-01 - le détail d'une donnée (URL directe) affiche ses champs", async ({
@@ -87,7 +91,7 @@ test.describe("Détail d'une donnée applicative", () => {
     await fiche.open(ref!.appId, "tab-data");
     await fiche.expectDataSourcesTabLoaded();
 
-    await fiche.sortTabColumn("data-application-table", "Nom");
+    await fiche.sortTabColumn("data-application-table", "Nom de la donnée");
     expect(await fiche.dataRowCount()).toBeGreaterThan(0);
 
     await fiche.sortTabColumn("data-application-table", "Famille métier");
@@ -151,7 +155,7 @@ test.describe("Détail d'une donnée applicative", () => {
       await fiche.createNewFamilyInline(familyPath);
       await fiche.addNewDescriptionTag(tag!.name);
       dataApplicationId = await fiche.submitNewDataAttachment();
-      await fiche.expectDataRowContainsAll(uniqueName, familyPath);
+      await fiche.expectDataRowContainsAll(uniqueName, [familyPath]);
     } finally {
       // Le résolveur ne renvoyant que l'id de la ligne `DataApplication` (pas celui de la
       // `DataDescription` créée par le formulaire), seul le rattachement est détaché ici. La
@@ -256,6 +260,156 @@ test.describe("Détail d'une donnée applicative", () => {
       // Le détachement est le geste testé lui-même (cf. DAT-10) : pas de détachement manuel ici.
     } finally {
       await data.removeApplication(applicationId);
+    }
+  });
+
+  test("DAT-13 - créer une donnée avec plusieurs familles métier (existante + nouvelle inline)", async ({
+    page,
+    data,
+  }) => {
+    const existingFamily = await data.firstDataFamily();
+    test.skip(!existingFamily, "Aucune famille métier dans le référentiel");
+
+    const ts = Date.now();
+    const uniqueName = `E2E DAT-13 ${ts}`;
+    const newFamilyPath = `E2E DAT-13 Famille ${ts}`;
+    const app = await data.createTestApplication(`E2E DAT-13 App ${ts}`);
+
+    const fiche = new ApplicationPage(page);
+    let dataApplicationId: string | null = null;
+    try {
+      await fiche.open(app.id, "tab-data");
+      await fiche.expectDataSourcesTabLoaded();
+      await fiche.openAddDataModal();
+      await fiche.switchToCreateNewDescription();
+      await fiche.fillNewDescriptionName(uniqueName);
+      await fiche.addExistingFamily(existingFamily!.path);
+      await fiche.createNewFamilyInline(newFamilyPath);
+      dataApplicationId = await fiche.submitNewDataAttachment();
+      await fiche.expectDataRowContainsAll(uniqueName, [
+        existingFamily!.path,
+        newFamilyPath,
+      ]);
+    } finally {
+      if (dataApplicationId) {
+        await data.detachDataFromApplication(app.id, dataApplicationId);
+      }
+      await data.removeApplication(app.id);
+    }
+  });
+
+  test("DAT-14 - modifier les familles d'une donnée existante (ajouter puis retirer) depuis l'onglet Données", async ({
+    page,
+    data,
+  }) => {
+    const family = await data.firstDataFamily();
+    test.skip(!family, "Aucune famille métier dans le référentiel");
+
+    // Application dédiée et jetable (cf. commentaire DAT-07).
+    const { applicationId, dataApplicationId } =
+      await data.provisionAttachedData();
+
+    const fiche = new ApplicationPage(page);
+    try {
+      await fiche.open(applicationId, "tab-data");
+      await fiche.expectDataSourcesTabLoaded();
+
+      // Ajout : la donnée provisionnée n'a initialement aucune famille.
+      await fiche.openEditDataModal(dataApplicationId);
+      await fiche.addExistingFamily(family!.path);
+      await fiche.submitDataEdit();
+      await fiche.expectDataRowByIdContains(dataApplicationId, family!.path);
+
+      // Retrait : rouvre l'édition et retire la famille ajoutée via son chip.
+      await fiche.openEditDataModal(dataApplicationId);
+      await fiche.removeFamilyChip(family!.path);
+      await fiche.submitDataEdit();
+      await fiche.expectDataRowNotContains(dataApplicationId, family!.path);
+    } finally {
+      await data.detachDataFromApplication(applicationId, dataApplicationId);
+      await data.removeApplication(applicationId);
+    }
+  });
+
+  test("DAT-15 - créer une donnée avec une application source (tag cliquable redirigeant vers sa fiche)", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const uniqueName = `E2E DAT-15 ${ts}`;
+    // Applications dédiées et jetables (cf. commentaire DAT-07) : la consommatrice porte l'onglet
+    // Données testé, la source sert uniquement de cible de navigation.
+    const consumerApp = await data.createTestApplication(
+      `E2E DAT-15 Consumer ${ts}`,
+    );
+    const sourceApp = await data.createTestApplication(
+      `E2E DAT-15 Source ${ts}`,
+    );
+
+    const fiche = new ApplicationPage(page);
+    let dataApplicationId: string | null = null;
+    try {
+      await fiche.open(consumerApp.id, "tab-data");
+      await fiche.expectDataSourcesTabLoaded();
+      await fiche.openAddDataModal();
+      await fiche.switchToCreateNewDescription();
+      await fiche.fillNewDescriptionName(uniqueName);
+      await fiche.addApplicationSource(sourceApp.label);
+      dataApplicationId = await fiche.submitNewDataAttachment();
+      await fiche.expectDataRowContainsAll(uniqueName, [sourceApp.label]);
+
+      await fiche.clickApplicationSourceTag(
+        dataApplicationId!,
+        sourceApp.label,
+      );
+      await fiche.expectOnApplicationProfile(sourceApp.id);
+    } finally {
+      if (dataApplicationId) {
+        await data.detachDataFromApplication(consumerApp.id, dataApplicationId);
+      }
+      await data.removeApplication(consumerApp.id);
+      await data.removeApplication(sourceApp.id);
+    }
+  });
+
+  test("DAT-16 - le détail affiche l'application utilisatrice et les applications sources (tags cliquables)", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const consumerApp = await data.createTestApplication(
+      `E2E DAT-16 Consumer ${ts}`,
+    );
+    const sourceApp = await data.createTestApplication(
+      `E2E DAT-16 Source ${ts}`,
+    );
+    const description = await data.createDataDescription({
+      name: `E2E DAT-16 ${ts}`,
+      applicationSourceIds: [sourceApp.id],
+    });
+    const dataApplication = await data.attachDataToApplication(
+      consumerApp.id,
+      description.id,
+    );
+
+    const detail = new DataDetailPage(page);
+    try {
+      await detail.open(consumerApp.id, dataApplication.id);
+      await detail.expectLoaded();
+      await detail.expectUsageApplication(consumerApp.label);
+      await detail.expectSourceApplication(sourceApp.label);
+
+      await detail.clickUsageApplication();
+      await detail.expectOnApplicationProfile(consumerApp.id);
+
+      await detail.open(consumerApp.id, dataApplication.id);
+      await detail.clickSourceApplication(sourceApp.label);
+      await detail.expectOnApplicationProfile(sourceApp.id);
+    } finally {
+      await data.detachDataFromApplication(consumerApp.id, dataApplication.id);
+      await data.deleteDataDescription(description.id);
+      await data.removeApplication(consumerApp.id);
+      await data.removeApplication(sourceApp.id);
     }
   });
 });

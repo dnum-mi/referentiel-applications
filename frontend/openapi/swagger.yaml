@@ -2251,7 +2251,48 @@ paths:
     get:
       operationId: DataCatalogController_findAllDescriptions
       summary: Lister les data descriptions
-      parameters: []
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: name
+          required: false
+          in: query
+          description: Filtre par nom (recherche partielle, insensible à la casse)
+          schema:
+            type: string
       responses:
         "200":
           description: ""
@@ -5333,109 +5374,6 @@ paths:
         "204":
           description: Technologie supprimée
       tags: *a31
-  /api/v2/applications/{applicationId}/licenses:
-    get:
-      operationId: LicenseController_findAll
-      summary: Lister les licences d'une application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Liste des licences
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/LicenseDto"
-      tags: &a32
-        - Licenses
-    post:
-      operationId: LicenseController_create
-      summary: Ajouter une licence à une application
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateLicenseDto"
-      responses:
-        "201":
-          description: Licence ajoutée avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LicenseDto"
-        "409":
-          description: Cette licence est déjà renseignée pour cette application
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LicenseErrorResponseDto"
-      tags: *a32
-  /api/v2/applications/{applicationId}/licenses/{id}:
-    patch:
-      operationId: LicenseController_update
-      summary: Mettre à jour une licence
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          description: ID de la licence
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateLicenseDto"
-      responses:
-        "200":
-          description: Licence mise à jour avec succès
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LicenseDto"
-      tags: *a32
-    delete:
-      operationId: LicenseController_delete
-      summary: Supprimer une licence
-      parameters:
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
-        - name: id
-          required: true
-          in: path
-          description: ID de la licence
-          schema:
-            type: string
-      responses:
-        "204":
-          description: Licence supprimée
-      tags: *a32
   /api/v2/stats/iq-avg/period:
     get:
       operationId: StatsController_getIqAvgGrouped
@@ -5566,7 +5504,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: &a33
+      tags: &a32
         - Reports
     post:
       operationId: ReportsController_create
@@ -5585,7 +5523,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a33
+      tags: *a32
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -5616,7 +5554,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a33
+      tags: *a32
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -5641,7 +5579,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a34
+      tags: &a33
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -5705,7 +5643,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: *a34
+      tags: *a33
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -5729,7 +5667,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a34
+      tags: *a33
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -5765,7 +5703,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a34
+      tags: *a33
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -5784,7 +5722,7 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a34
+      tags: *a33
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -6211,6 +6149,8 @@ components:
         - MetadataRead
         - DataRead
         - DataWrite
+        - TechnologyRead
+        - TechnologyWrite
         - ReportRead
         - ReportPost
         - ReportManage
@@ -6638,7 +6578,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a35
+          example: &a34
             - population 1
             - population 2
           description: population associated with the application
@@ -6648,7 +6588,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a36
+          example: &a35
             - finance
             - HR
           description: Purposes of the application
@@ -6659,7 +6599,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a37
+          example: &a36
             - tag1
             - tag2
           type: array
@@ -6952,7 +6892,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a35
+          example: *a34
           description: population associated with the application
           type: array
           items:
@@ -6960,7 +6900,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a36
+          example: *a35
           description: Purposes of the application
           type: array
           items:
@@ -6969,7 +6909,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a37
+          example: *a36
           type: array
           items:
             type: string
@@ -7907,7 +7847,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a38
+          enum: &a37
             - 96
             - 72
             - 48
@@ -7938,7 +7878,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a39
+          enum: &a38
             - OK
             - KO
           type: string
@@ -7949,7 +7889,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a40
+          enum: &a39
             - 48
             - 24
             - 2
@@ -7969,7 +7909,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a41
+          enum: &a40
             - S3
             - LOCAL
             - EXTERNE
@@ -7980,7 +7920,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a42
+          enum: &a41
             - OK
             - KO
           type: string
@@ -7990,7 +7930,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a43
+          enum: &a42
             - homologuee
             - en_cours
             - dispensee
@@ -8031,7 +7971,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a38
+          enum: *a37
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -8055,7 +7995,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a39
+          enum: *a38
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -8064,7 +8004,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a40
+          enum: *a39
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -8080,7 +8020,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a41
+          enum: *a40
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -8088,7 +8028,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a42
+          enum: *a41
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -8096,7 +8036,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a43
+          enum: *a42
           type: string
           description: Homologation status
         homologation_date_end:
@@ -8155,7 +8095,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a38
+          enum: *a37
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -8179,7 +8119,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a39
+          enum: *a38
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -8188,7 +8128,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a40
+          enum: *a39
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -8204,7 +8144,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a41
+          enum: *a40
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -8212,7 +8152,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a42
+          enum: *a41
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -8220,7 +8160,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a43
+          enum: *a42
           type: string
           description: Homologation status
         homologation_date_end:
@@ -8937,55 +8877,6 @@ components:
       required:
         - technology
         - product
-    LicenseErrorResponseDto:
-      type: object
-      properties:
-        message:
-          type: string
-          example: Cette licence est déjà renseignée pour cette application
-          description: Message d'erreur en cas de conflit
-      required:
-        - message
-    LicenseDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: MIT
-          description: Nom / identifiant SPDX de la licence
-        version:
-          type: string
-          nullable: true
-          maxLength: 50
-          example: "2.0"
-          description: Version de la licence si pertinent
-        id:
-          type: string
-          example: 12345678-1234-1234-1234-123456789012
-          description: Identifiant unique de la licence
-        applicationId:
-          type: string
-          example: 12345678-1234-1234-1234-123456789012
-          description: Identifiant de l'application
-      required:
-        - name
-        - id
-        - applicationId
-    CreateLicenseDto:
-      type: object
-      properties:
-        name:
-          type: string
-          example: MIT
-          description: Nom / identifiant SPDX de la licence
-        version:
-          type: string
-          nullable: true
-          maxLength: 50
-          example: "2.0"
-          description: Version de la licence si pertinent
-      required:
-        - name
     GetIqAvgGroupedDto:
       type: object
       properties:

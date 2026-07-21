@@ -8,7 +8,6 @@
 - [DataCatalog](#datacatalog)
 - [Hosting](#hosting)
 - [Labels](#labels)
-- [License](#license)
 - [Metadata](#metadata)
 - [Notifications](#notifications)
 - [Organizations](#organizations)
@@ -641,32 +640,6 @@ Properties as follows:
 - `id`: Identifiant unique
 - `source`: Nom unique du système source
 
-## License
-
-```mermaid
-erDiagram
-"License" {
-  String id PK
-  String applicationId FK
-  String name
-  String(50) version "nullable"
-}
-```
-
-### `License`
-
-Licence logicielle utilisée par une application.
-Une application peut référencer 0 à N licences, une par identifiant de licence.
-Le nom suit de préférence un identifiant SPDX (ex. « MIT », « Apache-2.0 »),
-mais la saisie libre reste possible (normalisation assurée côté frontend).
-
-Properties as follows:
-
-- `id`: Identifiant unique
-- `applicationId`: Identifiant de l'application
-- `name`: Nom / identifiant SPDX de la licence (ex. « MIT », « Apache-2.0 »)
-- `version`: Version de la licence si pertinent (ex. « 2.0 »)
-
 ## Metadata
 
 ```mermaid
@@ -687,7 +660,6 @@ erDiagram
   String technicalDebtInfoId FK "nullable"
   String rgaaComplianceId FK "nullable"
   String technologyStackId FK "nullable"
-  String licenseId FK "nullable"
   String dataApplicationId FK "nullable"
   String dataDescriptionId FK "nullable"
 }
@@ -715,7 +687,6 @@ Properties as follows:
 - `technicalDebtInfoId`:
 - `rgaaComplianceId`:
 - `technologyStackId`:
-- `licenseId`:
 - `dataApplicationId`:
 - `dataDescriptionId`:
 
@@ -821,6 +792,8 @@ erDiagram
   Boolean MetadataRead
   Boolean DataRead
   Boolean DataWrite
+  Boolean TechnologyRead
+  Boolean TechnologyWrite
   Boolean RelationRead
   Boolean RelationWrite
   Boolean LinkRead
@@ -900,6 +873,8 @@ Properties as follows:
 - `MetadataRead`: Peut lire les métadonnées
 - `DataRead`: Peut lire les données de l'application (onglet Données)
 - `DataWrite`:
+- `TechnologyRead`: Peut lire la stack technique (onglet Technologies) — ouvert à tous par défaut
+- `TechnologyWrite`: Peut modifier la stack technique — réservé par défaut
 - `RelationRead`: Peut lire les relations d'application
 - `RelationWrite`: Peut écrire les relations d'application
 - `LinkRead`: Peut lire les liens externes
@@ -1088,7 +1063,9 @@ erDiagram
   String id PK
   String applicationId FK
   String technology
+  String product
   String(50) version "nullable"
+  String(2048) docUrl "nullable"
   DateTime eolDate "nullable"
   DateTime eolCheckedAt "nullable"
 }
@@ -1105,8 +1082,10 @@ Properties as follows:
 
 - `id`: Identifiant unique
 - `applicationId`: Identifiant de l'application
-- `technology`: Nom de la technologie (ex. « Node.js », « PostgreSQL »)
+- `technology`: Famille / catégorie de technologie (ex. « Base de données », « Langage »)
+- `product`: Produit concret (ex. « PostgreSQL », « Node.js ») — sert à résoudre la fin de vie
 - `version`: Version utilisée (ex. « 20.11 »)
+- `docUrl`: Lien documentaire (URL) associé au produit
 - `eolDate`: Date de fin de support/vie de la version (renseignée via endoflife.date)
 - `eolCheckedAt`: Date de dernière vérification du statut de fin de vie
 

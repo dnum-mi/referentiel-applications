@@ -100,3 +100,40 @@
 - **Action** : sur la page de détail de la donnée, cliquer le bouton de détachement puis confirmer
   dans la fenêtre de confirmation.
 - **Résultat attendu** : redirection vers l'onglet Données (`tab-data`) de la fiche application.
+
+### DAT-13 — Créer une donnée avec plusieurs familles métier (existante + nouvelle inline) ✅
+
+- **Datafeature** : une famille métier existante du référentiel ; une application dédiée et jetable
+  créée pour le test.
+- **Action** : depuis l'onglet Données, ouvrir le modal d'ajout, basculer en mode « créer une
+  nouvelle donnée », saisir un nom unique, ajouter la famille existante via la recherche puis créer
+  une nouvelle famille inline (« + Créer une nouvelle famille »), puis valider.
+- **Résultat attendu** : la ligne créée dans le tableau Données affiche les DEUX familles (chips).
+
+### DAT-14 — Modifier les familles d'une donnée existante (ajouter puis retirer) depuis l'onglet Données ✅
+
+- **Datafeature** : une donnée de catalogue créée puis rattachée à une application pour le test
+  (jetable), sans famille initiale.
+- **Action** : ouvrir le modal d'édition, ajouter une famille métier existante via la recherche,
+  valider ; puis rouvrir l'édition, retirer cette famille via son chip, valider à nouveau.
+- **Résultat attendu** : la ligne affiche la famille après ajout, puis ne l'affiche plus après
+  retrait.
+
+### DAT-15 — Créer une donnée avec une application source (tag cliquable redirigeant vers sa fiche) ✅
+
+- **Datafeature** : deux applications dédiées et jetables (consommatrice et source).
+- **Action** : depuis l'onglet Données de l'application consommatrice, créer une nouvelle donnée en
+  lui ajoutant l'application source via la recherche, valider, puis cliquer le tag « application
+  source » de la ligne créée.
+- **Résultat attendu** : la ligne affiche le tag de l'application source ; le clic redirige vers la
+  fiche de cette application.
+
+### DAT-16 — Le détail affiche l'application utilisatrice et les applications sources (tags cliquables) ✅
+
+- **Datafeature** : une donnée de catalogue avec une application source, rattachée à une autre
+  application (consommatrice), les deux dédiées et jetables.
+- **Action** : ouvrir la page de détail de la donnée ; cliquer le tag « application utilisant cette
+  donnée » puis, après retour sur le détail, cliquer le tag de l'application source dans « Usage
+  dans l'application ».
+- **Résultat attendu** : les deux tags sont affichés (libellés corrects) et chaque clic redirige
+  vers la fiche de l'application correspondante.

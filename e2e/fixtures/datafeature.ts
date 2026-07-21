@@ -722,18 +722,30 @@ export class DataFeature {
   /** Crée une data description du catalogue (`POST /data-catalog/descriptions`). */
   async createDataDescription({
     name,
-    familyId,
+    familyIds,
+    applicationSourceIds,
+    tagIds,
   }: {
     name: string;
-    familyId?: string;
+    familyIds?: string[];
+    applicationSourceIds?: string[];
+    tagIds?: string[];
   }): Promise<{ id: string; name: string }> {
     const created = await this.api.createDataDescription({
       name,
-      ...(familyId ? { familyId } : {}),
+      ...(familyIds?.length ? { familyIds } : {}),
+      ...(applicationSourceIds?.length ? { applicationSourceIds } : {}),
+      ...(tagIds?.length ? { tagIds } : {}),
     });
     if (!created)
       throw new Error(`Création de data description impossible : ${name}`);
     return created;
+  }
+
+  /** Première famille métier du référentiel (picker de familles, DAT-13/DAT-14). */
+  async firstDataFamily(): Promise<{ id: string; path: string } | null> {
+    const page = await this.api.dataFamilies("pageSize=1&page=0");
+    return page?.results?.[0] ?? null;
   }
 
   /** Supprime une data description (nettoyage, ex. `provisionUnattachedDataDescription`). */

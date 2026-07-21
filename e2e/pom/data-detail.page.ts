@@ -119,6 +119,41 @@ export class DataDetailPage extends BasePage {
     await expect(section).toContainText(label);
   }
 
+  // --- Usage dans l'application : application utilisatrice + applications sources (DAT-16) ---
+
+  /** Le tag « application utilisant cette donnée » affiche `label` (DAT-16). */
+  async expectUsageApplication(label: string): Promise<void> {
+    await expect(
+      this.byTestId("data-application-detail-usage-application"),
+    ).toContainText(label);
+  }
+
+  /** Clique le tag « application utilisant cette donnée », qui redirige vers sa fiche (DAT-16). */
+  async clickUsageApplication(): Promise<void> {
+    await this.byTestId("data-application-detail-usage-application").click();
+  }
+
+  /** La liste des applications sources affiche `label` en tag cliquable (DAT-16). */
+  async expectSourceApplication(label: string): Promise<void> {
+    await expect(
+      this.byTestId("data-application-detail-source-applications"),
+    ).toContainText(label);
+  }
+
+  /** Clique le tag application source `label`, qui redirige vers sa fiche (DAT-16). */
+  async clickSourceApplication(label: string): Promise<void> {
+    await this.byTestId("data-application-detail-source-applications")
+      .locator(".fr-tag", { hasText: label })
+      .click();
+  }
+
+  /** La navigation a redirigé vers la fiche de l'application `applicationId` (DAT-16). */
+  async expectOnApplicationProfile(applicationId: string): Promise<void> {
+    await expect(this.page).toHaveURL(
+      new RegExp(`/applications/${applicationId}(?:/|$)`),
+    );
+  }
+
   /** Détache la donnée depuis la page de détail et confirme le modal DSFR (DAT-12). */
   async deleteFromDetail(): Promise<void> {
     await this.byTestId("data-application-detail-delete-btn").click();
