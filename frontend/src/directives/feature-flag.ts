@@ -1,20 +1,27 @@
-import type { Directive, DirectiveBinding } from "vue";
+import { watchEffect, type Directive, type WatchStopHandle } from "vue";
 import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+
+const STOP_HANDLE = Symbol("v-feature-stop");
+
+type FeatureElement = HTMLElement & { [STOP_HANDLE]?: WatchStopHandle };
 
 /**
  * Directive `v-feature="'ma-cle'"` : masque l'élément (retiré du flux, `hidden`)
- * si le flag est désactivé. On masque plutôt que de détacher le nœud pour rester
- * compatible avec le rendu de Vue et réversible si le flag bascule. Réévaluée au
- * montage et à chaque mise à jour du binding.
+ * tant que le flag est désactivé. RÉACTIVE : un `watchEffect` par élément suit
+ * l'état du store, donc une bascule reflétée dans le store (toggle admin) se
+ * répercute immédiatement, sans rechargement.
  */
-function apply(el: HTMLElement, binding: DirectiveBinding<string>) {
-  const store = useFeatureFlagStore();
-  const enabled = store.isEnabled(binding.value);
-  el.style.display = enabled ? "" : "none";
-  el.hidden = !enabled;
-}
-
-export const vFeature: Directive<HTMLElement, string> = {
-  mounted: apply,
-  updated: apply,
+export const vFeature: Directive<FeatureElement, string> = {
+  mounted(el, binding) {
+    const store = useFeatureFlagStore();
+    el[STOP_HANDLE] = watchEffect(() => {
+      const enabled = store.isEnabled(binding.value);
+      el.style.display = enabled ? "" : "none";
+      el.hidden = !enabled;
+    });
+  },
+  unmounted(el) {
+    el[STOP_HANDLE]?.();
+    delete el[STOP_HANDLE];
+  },
 };

@@ -3486,6 +3486,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImportReportDto"
+        "404":
+          description: Ressource non trouvée
       tags:
         - Import
   /api/v2/applications/{applicationId}/hostings:
@@ -4037,9 +4039,11 @@ paths:
                 $ref: "#/components/schemas/MditCampaignDto"
         "403":
           description: Accès refusé - Privilège admin requis
+        "404": &a23
+          description: Ressource non trouvée
         "409":
           description: Une campagne existe déjà pour ce millésime
-      tags: &a23
+      tags: &a24
         - MDIT Campaigns
     get:
       operationId: MditCampaignController_findAll
@@ -4095,7 +4099,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedMditCampaignDto"
-      tags: *a23
+        "404": *a23
+      tags: *a24
   /api/v2/mdit-campaigns/{id}:
     patch:
       operationId: MditCampaignController_update
@@ -4125,7 +4130,7 @@ paths:
           description: Campagne non trouvée
         "409":
           description: Une campagne existe déjà pour ce millésime
-      tags: *a23
+      tags: *a24
     delete:
       operationId: MditCampaignController_remove
       summary: Supprimer une campagne dette IT
@@ -4142,7 +4147,7 @@ paths:
           description: Accès refusé - Privilège admin requis
         "404":
           description: Campagne non trouvée
-      tags: *a23
+      tags: *a24
   /api/v2/applications/{applicationId}/links:
     post:
       operationId: ApplicationLinksController_create
@@ -4167,7 +4172,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: &a24
+      tags: &a25
         - Links
     get:
       operationId: ApplicationLinksController_findAll
@@ -4222,7 +4227,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedLinkDto"
-      tags: *a24
+      tags: *a25
   /api/v2/applications/{applicationId}/links/{id}:
     patch:
       operationId: ApplicationLinksController_update
@@ -4253,7 +4258,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LinkDto"
-      tags: *a24
+      tags: *a25
     delete:
       operationId: ApplicationLinksController_delete
       summary: Delete a link for an application
@@ -4273,7 +4278,7 @@ paths:
       responses:
         "204":
           description: Link deleted successfully
-      tags: *a24
+      tags: *a25
   /api/v2/applications/{applicationId}/technical-debt-info:
     post:
       operationId: ApplicationTechnicalDebtInfoController_create
@@ -4300,7 +4305,7 @@ paths:
                 $ref: "#/components/schemas/TechnicalDebtInfoDto"
         "409":
           description: Technical debt info already exists for this application
-      tags: &a25
+      tags: &a26
         - Technical Debt Info
     get:
       operationId: ApplicationTechnicalDebtInfoController_find
@@ -4354,7 +4359,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedTechnicalDebtInfoDto"
-      tags: *a25
+      tags: *a26
   /api/v2/technical-debts:
     get:
       operationId: TechnicalDebtController_getTechnicalDebtPoints
@@ -4793,7 +4798,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TechnicalDebtPointDto"
-      tags: &a26
+      tags: &a27
         - technical-debts
   /api/v2/technical-debts/millesimes:
     get:
@@ -4811,7 +4816,7 @@ paths:
                 type: array
                 items:
                   type: number
-      tags: *a26
+      tags: *a27
   /api/v2/applications/{applicationId}/rgaa-compliances:
     get:
       operationId: RgaaController_findAll
@@ -4832,7 +4837,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RgaaComplianceDto"
-      tags: &a27
+      tags: &a28
         - RGAA Compliances
     post:
       operationId: RgaaController_create
@@ -4863,7 +4868,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceErrorResponseDto"
-      tags: *a27
+      tags: *a28
   /api/v2/applications/{applicationId}/rgaa-compliances/{id}:
     patch:
       operationId: RgaaController_update
@@ -4894,7 +4899,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RgaaComplianceDto"
-      tags: *a27
+      tags: *a28
     delete:
       operationId: RgaaController_delete
       summary: Supprimer une conformité RGAA
@@ -4914,7 +4919,7 @@ paths:
       responses:
         "204":
           description: Conformité RGAA supprimée
-      tags: *a27
+      tags: *a28
   /api/v2/applications/{applicationId}/technologies:
     get:
       operationId: TechnologyController_findAll
@@ -4935,7 +4940,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TechnologyDto"
-      tags: &a28
+        "404": &a29
+          description: Ressource non trouvée
+      tags: &a30
         - Technologies
     post:
       operationId: TechnologyController_create
@@ -4960,13 +4967,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TechnologyDto"
+        "404": *a29
         "409":
           description: Cette technologie est déjà renseignée pour cette application
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/TechnologyErrorResponseDto"
-      tags: *a28
+      tags: *a30
   /api/v2/applications/{applicationId}/technologies/{id}:
     patch:
       operationId: TechnologyController_update
@@ -4997,7 +5005,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TechnologyDto"
-      tags: *a28
+        "404": *a29
+      tags: *a30
     delete:
       operationId: TechnologyController_delete
       summary: Supprimer une technologie
@@ -5017,7 +5026,8 @@ paths:
       responses:
         "204":
           description: Technologie supprimée
-      tags: *a28
+        "404": *a29
+      tags: *a30
   /api/v2/stats/iq-avg/period:
     get:
       operationId: StatsController_getIqAvgGrouped
@@ -5148,7 +5158,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: &a29
+        "404": &a31
+          description: Ressource non trouvée
+      tags: &a32
         - Reports
     post:
       operationId: ReportsController_create
@@ -5167,7 +5179,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a29
+        "404": *a31
+      tags: *a32
   /api/v2/reports/{id}:
     patch:
       operationId: ReportsController_update
@@ -5198,7 +5211,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a29
+        "404": *a31
+      tags: *a32
   /api/v2/applications/{applicationId}/reports:
     post:
       operationId: ApplicationReportsController_create
@@ -5223,7 +5237,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: &a30
+        "404": &a33
+          description: Ressource non trouvée
+      tags: &a34
         - ApplicationReports
     get:
       operationId: ApplicationReportsController_findAll
@@ -5287,7 +5303,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedReportDto"
-      tags: *a30
+        "404": *a33
+      tags: *a34
   /api/v2/applications/{applicationId}/reports/{id}:
     get:
       operationId: ApplicationReportsController_findOne
@@ -5311,7 +5328,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a30
+        "404": *a33
+      tags: *a34
     patch:
       operationId: ApplicationReportsController_update
       summary: Mettre à jour un signalement
@@ -5347,7 +5365,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ReportDto"
-      tags: *a30
+        "404": *a33
+      tags: *a34
     delete:
       operationId: ApplicationReportsController_remove
       summary: Supprimer un signalement
@@ -5366,7 +5385,8 @@ paths:
       responses:
         "204":
           description: Signalement supprimé avec succès
-      tags: *a30
+        "404": *a33
+      tags: *a34
   /api/v2/health-check:
     get:
       operationId: HealthCheckController_checkHealth
@@ -5500,6 +5520,7 @@ components:
           type: string
           description: Date de dernière modification du flag
           example: 2026-07-20T00:00:00.000Z
+          format: date-time
       required:
         - key
         - label
@@ -6269,7 +6290,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a31
+          example: &a35
             - population 1
             - population 2
           description: population associated with the application
@@ -6279,7 +6300,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a32
+          example: &a36
             - finance
             - HR
           description: Purposes of the application
@@ -6290,7 +6311,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a33
+          example: &a37
             - tag1
             - tag2
           type: array
@@ -6583,7 +6604,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a31
+          example: *a35
           description: population associated with the application
           type: array
           items:
@@ -6591,7 +6612,7 @@ components:
         priorityRestart:
           $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a32
+          example: *a36
           description: Purposes of the application
           type: array
           items:
@@ -6600,7 +6621,7 @@ components:
           example: business
           $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a33
+          example: *a37
           type: array
           items:
             type: string
@@ -7394,7 +7415,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a34
+          enum: &a38
             - 96
             - 72
             - 48
@@ -7425,7 +7446,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a35
+          enum: &a39
             - OK
             - KO
           type: string
@@ -7436,7 +7457,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a36
+          enum: &a40
             - 48
             - 24
             - 2
@@ -7456,7 +7477,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a37
+          enum: &a41
             - S3
             - LOCAL
             - EXTERNE
@@ -7467,7 +7488,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a38
+          enum: &a42
             - OK
             - KO
           type: string
@@ -7477,7 +7498,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a39
+          enum: &a43
             - homologuee
             - en_cours
             - dispensee
@@ -7518,7 +7539,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a34
+          enum: *a38
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -7542,7 +7563,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a35
+          enum: *a39
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -7551,7 +7572,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a36
+          enum: *a40
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -7567,7 +7588,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a37
+          enum: *a41
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -7575,7 +7596,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a38
+          enum: *a42
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -7583,7 +7604,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a39
+          enum: *a43
           type: string
           description: Homologation status
         homologation_date_end:
@@ -7642,7 +7663,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a34
+          enum: *a38
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -7666,7 +7687,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a35
+          enum: *a39
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -7675,7 +7696,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a36
+          enum: *a40
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -7691,7 +7712,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a37
+          enum: *a41
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -7699,7 +7720,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a38
+          enum: *a42
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -7707,7 +7728,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a39
+          enum: *a43
           type: string
           description: Homologation status
         homologation_date_end:

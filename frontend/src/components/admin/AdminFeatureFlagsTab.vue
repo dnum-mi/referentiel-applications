@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
+import { storeToRefs } from "pinia";
 import { DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
 import type { FeatureFlagDto } from "@/client/types.gen";
 import { useFeatureFlagStore } from "@/stores/featureFlagStore";
@@ -8,7 +9,9 @@ import { useToasterStore } from "@/stores/toasterStore";
 const featureFlagStore = useFeatureFlagStore();
 const toaster = useToasterStore();
 
-const flags = ref<FeatureFlagDto[]>([]);
+// La liste fait foi dans le store (mise à jour par fetchAll/toggle) ; le
+// composant ne garde que de l'état d'UI (chargement, bascules en cours).
+const { list } = storeToRefs(featureFlagStore);
 const isLoading = ref(false);
 // Clés en cours de bascule, pour désactiver le toggle le temps de l'aller-retour.
 const pending = ref<Set<string>>(new Set());
@@ -16,7 +19,7 @@ const pending = ref<Set<string>>(new Set());
 async function fetchFlags() {
   isLoading.value = true;
   try {
-    flags.value = await featureFlagStore.fetchAll();
+    await featureFlagStore.fetchAll();
   } catch {
     toaster.addErrorMessage("Impossible de charger les feature flags.");
   } finally {
@@ -27,8 +30,7 @@ async function fetchFlags() {
 async function onToggle(flag: FeatureFlagDto, enabled: boolean) {
   pending.value = new Set(pending.value).add(flag.key);
   try {
-    const updated = await featureFlagStore.toggle(flag.key, enabled);
-    flags.value = flags.value.map((f) => (f.key === updated.key ? updated : f));
+    await featureFlagStore.toggle(flag.key, enabled);
     toaster.addSuccessMessage(`« ${flag.label} » ${enabled ? "activé" : "désactivé"}.`);
   } catch {
     toaster.addErrorMessage(`Échec de la bascule de « ${flag.label} ».`);
@@ -51,10 +53,10 @@ onMounted(fetchFlags);
     </p>
 
     <p v-if="isLoading" role="status">Chargement des feature flags…</p>
-    <p v-else-if="flags.length === 0" role="status">Aucun feature flag n'est enregistré.</p>
+    <p v-else-if="list.length === 0" role="status">Aucun feature flag n'est enregistré.</p>
 
     <ul v-else class="fr-toggle__list">
-      <li v-for="flag in flags" :key="flag.key" class="fr-mb-2w" :data-testid="`feature-flag-${flag.key}`">
+      <li v-for="flag in list" :key="flag.key" class="fr-mb-2w" :data-testid="`feature-flag-${flag.key}`">
         <DsfrToggleSwitch
           :model-value="flag.enabled"
           :label="flag.label"

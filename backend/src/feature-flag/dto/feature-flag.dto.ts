@@ -33,6 +33,7 @@ export class FeatureFlagDto {
     description: "Date de dernière modification du flag",
     example: "2026-07-20T00:00:00.000Z",
     type: String,
+    format: "date-time",
   })
   updatedAt: Date;
 }

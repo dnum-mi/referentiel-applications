@@ -3,14 +3,19 @@
  *
  * Chaque flag est identifié par une clé technique stable, partagée entre le
  * backend (garde `@FeatureFlag`, service `isEnabled`) et le front (store,
- * composable `useFeatureFlag`, directive `v-feature`). Ajouter un flag = ajouter
- * une entrée ici ; le seed (`upsert` par clé) le fera apparaître sans écraser
- * l'état déjà en base.
+ * composable `useFeatureFlag`, directive `v-feature`, miroir
+ * `frontend/src/constants/feature-flags.ts` à maintenir à l'identique — un test
+ * e2e vérifie la correspondance). Ajouter un flag = ajouter une entrée ici : la
+ * synchronisation au démarrage du backend (`syncFeatureFlagCatalog`, appelée
+ * par `FeatureFlagService.onModuleInit` et par le seed) le fait apparaître dans
+ * TOUS les environnements — y compris la production, où le seed ne tourne
+ * jamais — sans écraser l'état déjà basculé en base.
  *
  * `defaultEnabled` fixe l'état à la CRÉATION uniquement : `true` pour les
  * fonctionnalités déjà en production (ne rien masquer une fois le flag câblé),
- * `false` pour l'expérimental. `FEATURE_FLAGS_DEFAULTS` peut forcer l'activation
- * de flags supplémentaires selon l'environnement.
+ * `false` pour l'expérimental. `FEATURE_FLAGS_DEFAULTS` (env, liste de clés)
+ * pré-active en plus, à chaque démarrage, les flags listés qu'aucun admin n'a
+ * encore basculés — elle ne désactive jamais et n'écrase jamais un choix humain.
  */
 export const FeatureFlagKey = {
   // — Fonctions transverses —
@@ -69,16 +74,16 @@ export interface FeatureFlagDefinition {
 }
 
 /**
- * Catalogue exhaustif servant de source au seed. Le libellé et la description
- * sont (ré)appliqués à chaque seed ; l'état `enabled` n'est jamais écrasé pour
- * un flag déjà en base.
+ * Catalogue exhaustif, source de la synchronisation au démarrage
+ * (`syncFeatureFlagCatalog`). Le libellé et la description sont (ré)alignés à
+ * chaque boot ; l'état `enabled` d'un flag déjà basculé n'est jamais écrasé.
  */
 export const FEATURE_FLAG_CATALOG: readonly FeatureFlagDefinition[] = [
   {
     key: FeatureFlagKey.FULLTEXT_SEARCH,
     label: "Recherche full-text",
     description:
-      "Active la recherche plein texte des applications (barre de recherche globale).",
+      "Réservé au câblage à venir de la recherche plein texte (ticket 1753) — sans effet pour l'instant.",
     defaultEnabled: false,
   },
   {
@@ -148,7 +153,8 @@ export const FEATURE_FLAG_CATALOG: readonly FeatureFlagDefinition[] = [
   {
     key: FeatureFlagKey.APPLICATION_HISTORY,
     label: "Historique des modifications",
-    description: "Onglet « Modifications » de la fiche application.",
+    description:
+      "Onglet « Modifications » de la fiche application et historique global.",
     defaultEnabled: true,
   },
   {

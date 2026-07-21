@@ -1,6 +1,6 @@
 import type { FeatureFlagDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import api from "@/api/index";
 
 /**
@@ -8,18 +8,24 @@ import api from "@/api/index";
  *
  * - `flags` est alimenté au boot depuis `GET /config` (`setFlags`) et sert au
  *   gating (composable `useFeatureFlag`, directive `v-feature`, garde de route).
+ *   `/config` n'expose QUE les flags activés : toute clé absente est traitée
+ *   comme désactivée.
+ * - `loaded` distingue « pas encore chargé » de « aucun flag activé » (la map
+ *   peut être légitimement vide).
  * - `list` n'est chargé qu'à la demande, pour l'écran d'admin (libellés + bascule).
  */
 export const useFeatureFlagStore = defineStore("featureFlagStore", () => {
   const flags = ref<Record<string, boolean>>({});
+  const loaded = ref(false);
   const list = ref<FeatureFlagDto[]>([]);
 
   /** Alimente l'état des flags depuis la config chargée au boot. */
   function setFlags(featureFlags: Record<string, boolean>) {
     flags.value = { ...featureFlags };
+    loaded.value = true;
   }
 
-  /** Un flag est actif s'il est explicitement à `true`. */
+  /** Un flag est actif s'il est explicitement à `true` (absent = désactivé). */
   function isEnabled(key: string): boolean {
     return flags.value[key] === true;
   }
@@ -51,11 +57,11 @@ export const useFeatureFlagStore = defineStore("featureFlagStore", () => {
 
   return {
     flags,
+    loaded,
     list,
     isEnabled,
     setFlags,
     fetchAll,
     toggle,
-    hasFlags: computed(() => Object.keys(flags.value).length > 0),
   };
 });

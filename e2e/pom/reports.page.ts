@@ -18,6 +18,15 @@ export class ReportsPage extends BasePage {
     await expect(this.root()).toBeVisible();
   }
 
+  /**
+   * Tente d'ouvrir la page alors que la fonctionnalité est désactivée (feature
+   * flag off) : la garde de route doit rediriger vers l'accueil.
+   */
+  async openExpectingRedirectToHome(): Promise<void> {
+    await this.goto("/signalements");
+    await expect.poll(() => new URL(this.page.url()).pathname).toBe("/");
+  }
+
   /** La page est chargée si les onglets sont là + soit la table, soit l'état vide. */
   async expectListLoaded(): Promise<void> {
     await expect(this.tabs()).toBeVisible();

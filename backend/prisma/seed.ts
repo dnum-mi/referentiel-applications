@@ -17,7 +17,7 @@ import { DataApplicationFaker } from "tests/fakers/data-application.faker";
 import { DataFamilyFaker } from "tests/fakers/data-family.faker";
 import { DataSensibilityFaker } from "tests/fakers/data-sensibility.faker";
 import { parseArgs } from "node:util";
-import { FEATURE_FLAG_CATALOG } from "../src/feature-flag/feature-flag.keys";
+import { syncFeatureFlagCatalog } from "../src/feature-flag/feature-flag.sync";
 
 const prisma = new PrismaClient();
 
@@ -89,36 +89,14 @@ async function createDataDescriptions(): Promise<SeededDataDescription[]> {
 }
 
 /**
- * Garantit qu'un enregistrement existe pour chaque flag du catalogue. Les
- * métadonnées (label/description) sont rafraîchies, mais l'état `enabled` n'est
- * jamais écrasé pour un flag déjà en base. À la création, un flag est activé
- * s'il porte `defaultEnabled` (fonctionnalité déjà en production) ou s'il figure
- * dans `FEATURE_FLAGS_DEFAULTS` (défaut par environnement).
+ * Aligne la table FeatureFlag sur le catalogue. Même logique qu'au démarrage du
+ * backend (`FeatureFlagService.onModuleInit`) : la fonction partagée
+ * `syncFeatureFlagCatalog` crée les flags manquants (état initial
+ * `defaultEnabled` ou pré-activation `FEATURE_FLAGS_DEFAULTS`), rafraîchit
+ * libellés/descriptions et ne touche jamais à l'état basculé par un admin.
  */
 async function createFeatureFlags() {
-  const defaults = new Set(
-    (process.env.FEATURE_FLAGS_DEFAULTS ?? "")
-      .split(",")
-      .map((key) => key.trim())
-      .filter(Boolean),
-  );
-  for (const {
-    key,
-    label,
-    description,
-    defaultEnabled,
-  } of FEATURE_FLAG_CATALOG) {
-    await prisma.featureFlag.upsert({
-      where: { key },
-      update: { label, description: description ?? null },
-      create: {
-        key,
-        label,
-        description: description ?? null,
-        enabled: defaultEnabled || defaults.has(key),
-      },
-    });
-  }
+  await syncFeatureFlagCatalog(prisma);
 }
 
 async function createMditCampaigns(campaignMillesimes: number[]) {
@@ -340,8 +318,9 @@ async function seed({
   console.log("� Creating quality stats...");
   await createQualityStats();
 
-  // Register the known feature flags (disabled by default unless pre-activated
-  // via FEATURE_FLAGS_DEFAULTS), so the admin panel can toggle them at runtime.
+  // Align the FeatureFlag table with the catalog (same sync as the backend
+  // boot): existing features start enabled, experimental ones disabled, and
+  // FEATURE_FLAGS_DEFAULTS pre-activates untouched flags for this environment.
   console.log("🚩 Registering feature flags...");
   await createFeatureFlags();
 

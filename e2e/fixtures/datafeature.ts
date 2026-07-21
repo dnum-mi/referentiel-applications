@@ -517,6 +517,13 @@ export class DataFeature {
 
   // --- Feature flags (FLG-*, provisioning + restauration, token admin) ---
 
+  /**
+   * États initiaux des flags touchés pendant le test. La fixture `data` les
+   * restaure dans son teardown — qui s'exécute même après un TIMEOUT du test,
+   * là où un `finally` de corps de test ne tournerait pas.
+   */
+  private touchedFlags = new Map<string, boolean>();
+
   /** Liste des feature flags, ou `null` si l'endpoint ne répond pas. */
   featureFlags() {
     return this.api.featureFlags();
@@ -529,9 +536,32 @@ export class DataFeature {
     return flag ? flag.enabled : null;
   }
 
-  /** Active/désactive un feature flag (état global : toujours restaurer en `finally`). */
+  /**
+   * Mémorise l'état courant d'un flag pour restauration automatique en fin de
+   * test. À appeler AVANT une bascule faite hors datafeature (ex. via l'UI).
+   */
+  async trackFeatureFlag(key: string): Promise<void> {
+    if (this.touchedFlags.has(key)) return;
+    const current = await this.featureFlagState(key);
+    if (current !== null) this.touchedFlags.set(key, current);
+  }
+
+  /** Active/désactive un feature flag (état global, restauré par la fixture `data`). */
   async setFeatureFlag(key: string, enabled: boolean): Promise<void> {
+    await this.trackFeatureFlag(key);
     await this.api.setFeatureFlag(key, enabled);
+  }
+
+  /** Restaure tous les flags touchés (appelée par le teardown de la fixture `data`). */
+  async restoreFeatureFlags(): Promise<void> {
+    for (const [key, original] of this.touchedFlags) {
+      try {
+        await this.api.setFeatureFlag(key, original);
+      } catch {
+        // best-effort : la page peut être en cours de fermeture
+      }
+    }
+    this.touchedFlags.clear();
   }
 
   // --- CRUD resolvers (CRU-* tests) ---

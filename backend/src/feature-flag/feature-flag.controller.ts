@@ -8,9 +8,11 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
+import { Impersonator } from "src/common/decorators/impersonator.decorator";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { UserId } from "src/common/decorators/user-id.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { Requestor } from "src/user/entities/user.entity";
 import { FeatureFlagDto, UpdateFeatureFlagDto } from "./dto/feature-flag.dto";
 import { FeatureFlagService } from "./feature-flag.service";
 
@@ -58,7 +60,14 @@ export class FeatureFlagController {
     @Param("key") key: string,
     @Body() updateFeatureFlagDto: UpdateFeatureFlagDto,
     @UserId() userId?: string,
+    @Impersonator() impersonator?: Requestor,
   ): Promise<FeatureFlagDto> {
-    return this.featureFlagService.update(key, updateFeatureFlagDto, userId);
+    // Audit : en cas d'impersonation, la bascule est imputée à l'admin RÉEL,
+    // pas à l'utilisateur impersonné.
+    return this.featureFlagService.update(
+      key,
+      updateFeatureFlagDto,
+      impersonator?.id ?? userId,
+    );
   }
 }

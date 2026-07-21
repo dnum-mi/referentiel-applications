@@ -1,6 +1,8 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
 import { Roles } from "@prisma/client";
 import request from "supertest";
+import { FeatureFlagKey } from "../src/feature-flag/feature-flag.keys";
+import { ApplicationFaker } from "./fakers/application.faker";
 import { getPrismaClient } from "./fakers/prisma";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
@@ -64,6 +66,32 @@ describe("FeatureFlags", () => {
     });
   });
 
+  it("/GET feature-flags matches the shared key catalog exactly (anti-drift)", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/feature-flags")
+      .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+      .expect(200);
+
+    // Le pivot de tout le système : la base (peuplée par la sync au boot),
+    // l'enum backend et — par miroir contrôlé côté front — les constantes du
+    // front doivent référencer exactement les mêmes clés.
+    const exposedKeys = (response.body as { key: string }[])
+      .map((f) => f.key)
+      .sort();
+    expect(exposedKeys).toEqual([...Object.values(FeatureFlagKey)].sort());
+  });
+
+  it("does not expose the audit field updatedById (DTO contract)", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/feature-flags")
+      .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+      .expect(200);
+
+    for (const flag of response.body as Record<string, unknown>[]) {
+      expect(flag).not.toHaveProperty("updatedById");
+    }
+  });
+
   it("/PATCH feature-flags/:key toggles a flag and reflects it in /config", async () => {
     await request(app().getHttpServer())
       .patch(`/feature-flags/${TEST_FLAG_KEY}`)
@@ -97,43 +125,109 @@ describe("FeatureFlags", () => {
       .expect(403);
   });
 
-  // Gating de bout en bout : le contrôleur mdit-campaigns est gardé par
-  // @FeatureFlag(MDIT_CAMPAIGNS). Le PATCH invalide le cache, donc la bascule
-  // prend effet immédiatement sur l'endpoint gaté (404 quand off, 200 quand on).
-  describe("guarded endpoint (mdit-campaigns)", () => {
-    const GATED_FLAG = "mdit-campaigns";
+  // Gating de bout en bout, paramétré sur chaque domaine gardé : le PATCH
+  // invalide le cache, donc la bascule prend effet immédiatement sur la route
+  // gatée (404 quand off, 200 quand on). Pour `technology-stack`, la route est
+  // imbriquée sous une application réelle — un id bidon renverrait 404 même
+  // flag on (mauvais oracle), on sème donc une application.
+  describe("guarded endpoints", () => {
+    let gatedApp: Awaited<ReturnType<typeof ApplicationFaker.create>>;
+
+    beforeAll(async () => {
+      gatedApp = await ApplicationFaker.create(admin);
+    });
 
     afterAll(async () => {
-      // Rétablit l'état par défaut pour ne pas impacter d'autres suites.
+      await prisma.application.delete({ where: { id: gatedApp.id } });
+    });
+
+    const GATED_DOMAINS: { flag: string; path: () => string }[] = [
+      { flag: "mdit-campaigns", path: () => "/mdit-campaigns" },
+      { flag: "reports", path: () => "/reports" },
+      {
+        flag: "technology-stack",
+        path: () => `/applications/${gatedApp.id}/technologies`,
+      },
+    ];
+
+    describe.each(GATED_DOMAINS)("$flag", ({ flag, path }) => {
+      afterAll(async () => {
+        // Rétablit l'état par défaut pour ne pas impacter d'autres suites.
+        await request(app().getHttpServer())
+          .patch(`/feature-flags/${flag}`)
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+          .send({ enabled: true });
+      });
+
+      it("returns 404 on the guarded route when the flag is off", async () => {
+        await request(app().getHttpServer())
+          .patch(`/feature-flags/${flag}`)
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+          .send({ enabled: false })
+          .expect(200);
+
+        await request(app().getHttpServer())
+          .get(path())
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+          .expect(404);
+      });
+
+      it("serves the guarded route again once the flag is back on", async () => {
+        await request(app().getHttpServer())
+          .patch(`/feature-flags/${flag}`)
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+          .send({ enabled: true })
+          .expect(200);
+
+        await request(app().getHttpServer())
+          .get(path())
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+          .expect(200);
+      });
+    });
+  });
+
+  // Kill-switch impersonation : header refusé (403) quand le flag est off.
+  describe("impersonation kill-switch", () => {
+    afterAll(async () => {
       await request(app().getHttpServer())
-        .patch(`/feature-flags/${GATED_FLAG}`)
+        .patch("/feature-flags/impersonation")
         .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
         .send({ enabled: true });
     });
 
-    it("returns 404 on the guarded route when the flag is off", async () => {
+    it("rejects impersonated requests when the flag is off", async () => {
       await request(app().getHttpServer())
-        .patch(`/feature-flags/${GATED_FLAG}`)
+        .patch("/feature-flags/impersonation")
         .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
         .send({ enabled: false })
         .expect(200);
 
+      // Toute requête portant le header d'impersonation est refusée…
       await request(app().getHttpServer())
-        .get("/mdit-campaigns")
+        .get("/users/me")
+        .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+        .set("x-impersonate-user-id", reader.id)
+        .expect(403);
+
+      // …et le démarrage d'une impersonation renvoie 404 (garde du endpoint).
+      await request(app().getHttpServer())
+        .post(`/users/${reader.id}/impersonate`)
         .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
         .expect(404);
     });
 
-    it("serves the guarded route again once the flag is back on", async () => {
+    it("allows impersonation again once the flag is back on", async () => {
       await request(app().getHttpServer())
-        .patch(`/feature-flags/${GATED_FLAG}`)
+        .patch("/feature-flags/impersonation")
         .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
         .send({ enabled: true })
         .expect(200);
 
       await request(app().getHttpServer())
-        .get("/mdit-campaigns")
+        .get("/users/me")
         .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+        .set("x-impersonate-user-id", reader.id)
         .expect(200);
     });
   });

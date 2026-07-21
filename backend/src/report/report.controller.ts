@@ -14,6 +14,7 @@ import {
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -41,6 +42,7 @@ import { UserNotificationService } from "./user-notification.service";
 @Controller("reports")
 @FeatureFlag(FeatureFlagKey.REPORTS)
 @UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 export class ReportsController {
   constructor(
     protected service: ReportsService,
@@ -132,6 +134,7 @@ export class ReportsController {
 })
 @FeatureFlag(FeatureFlagKey.REPORTS)
 @UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("applications/:applicationId/reports")
 export class ApplicationReportsController {
   constructor(

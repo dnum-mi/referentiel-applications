@@ -11,20 +11,26 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import {
   ApiBody,
   ApiConsumes,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { User } from "src/common/decorators/user.decorator";
 import { Requestor } from "src/user/entities/user.entity";
 import { ImportReportDto } from "./dto/import-report.dto";
 import { ExcelImportService } from "./excel-import.service";
 
 @ApiTags("Import")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.EXCEL_IMPORT)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("import")
 export class ImportController {
   constructor(private readonly excelImportService: ExcelImportService) {}

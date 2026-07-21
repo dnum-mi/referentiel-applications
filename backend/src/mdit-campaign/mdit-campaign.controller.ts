@@ -39,6 +39,7 @@ import { MditCampaignService } from "./mdit-campaign.service";
 @Controller("mdit-campaigns")
 @FeatureFlag(FeatureFlagKey.MDIT_CAMPAIGNS)
 @UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 export class MditCampaignController {
   constructor(private readonly mditCampaignService: MditCampaignService) {}
 

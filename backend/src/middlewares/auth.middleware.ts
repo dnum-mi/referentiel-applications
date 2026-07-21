@@ -11,6 +11,8 @@ import { Roles } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import { createRemoteJWKSet, decodeJwt, jwtVerify } from "jose";
 import { oidcConfig } from "src/config/configs";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
+import { FeatureFlagService } from "src/feature-flag/feature-flag.service";
 import { roleToPermissions } from "src/permissions/role-to-permissions";
 import { TokenService } from "src/token/token.service";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
@@ -37,6 +39,7 @@ export class AuthMiddleware implements NestMiddleware {
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
     private readonly userConnexionLogService: UserConnexionLogService,
+    private readonly featureFlagService: FeatureFlagService,
     private readonly logger: LoggerService,
   ) {
     this.jwks = createRemoteJWKSet(new URL(this.oidc.jwksUrl));
@@ -80,6 +83,16 @@ export class AuthMiddleware implements NestMiddleware {
         | string
         | undefined;
       if (impersonateUserId && authorization) {
+        // Kill-switch : l'impersonation est refusée (et non silencieusement
+        // ignorée, ce qui ferait agir l'admin sous sa propre identité à son
+        // insu) quand le feature flag est désactivé.
+        if (
+          !(await this.featureFlagService.isEnabled(
+            FeatureFlagKey.IMPERSONATION,
+          ))
+        ) {
+          throw new ForbiddenException("L'impersonation est désactivée.");
+        }
         req.user = await this.resolveImpersonatedUser(
           authenticatedUser,
           impersonateUserId,

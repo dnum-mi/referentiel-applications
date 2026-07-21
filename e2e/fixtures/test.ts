@@ -21,7 +21,12 @@ export const test = base.extend<Fixtures>({
   data: async ({ page }, use) => {
     await loginAs(page, "admin");
     const api = await ApiClient.fromPage(page);
-    await use(new DataFeature(api));
+    const dataFeature = new DataFeature(api);
+    await use(dataFeature);
+    // Filet de sécurité : les feature flags sont un état serveur GLOBAL. Ce
+    // teardown restaure les flags touchés même si le test a timeouté (cas où
+    // un `finally` de corps de test ne s'exécute pas).
+    await dataFeature.restoreFeatureFlags();
   },
 
   // Fixture AUTO plutôt qu'un `test.afterEach` : un afterEach défini dans ce module partagé n'est

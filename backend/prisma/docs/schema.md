@@ -549,8 +549,11 @@ erDiagram
 
 Feature flag global activable à chaud.
 La table est la source de vérité : la bascule se fait au runtime via l'écran
-d'admin, sans redéploiement. Un catalogue de clés (`FeatureFlagKey`) et le
-seed garantissent que chaque flag connu existe (désactivé par défaut).
+d'admin, sans redéploiement. La synchronisation au démarrage du backend
+(`syncFeatureFlagCatalog`) garantit que chaque flag du catalogue
+(`FeatureFlagKey`) existe dans tous les environnements ; l'état initial est
+fixé par le catalogue (activé pour les fonctionnalités déjà en production,
+désactivé pour l'expérimental) et n'est jamais écrasé ensuite.
 
 Properties as follows:
 

@@ -26,11 +26,14 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
 import { Impersonator } from "src/common/decorators/impersonator.decorator";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { PaginatedResponseDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { UserFilterDto } from "./dto/filters.dto";
 import { MaiaOrganizationSuggestionDto } from "./dto/maia-organization-suggestion.dto";
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
@@ -197,6 +200,11 @@ export class UserController {
   @Post(":id/impersonate")
   @HttpCode(HttpStatus.OK)
   @RequiredPermissions([Permission.AdminPanelManage])
+  // Kill-switch : démarrage refusé (404) quand le flag « impersonation » est
+  // off. `impersonate/stop` n'est volontairement PAS gaté : clore une session
+  // en cours doit toujours rester possible.
+  @FeatureFlag(FeatureFlagKey.IMPERSONATION)
+  @UseGuards(FeatureFlagGuard)
   @ApiOperation({
     summary: "Impersonner un utilisateur",
     description:

@@ -8,6 +8,7 @@ import { getConfig } from "./services/config";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+import { FeatureFlagKey } from "@/constants/feature-flags";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
 import ImpersonationBanner from "./components/ImpersonationBanner.vue";
@@ -115,13 +116,15 @@ const quickLinks = computed<QuickLink[]>(() => {
   return authenticatedQuickLinks.value;
 });
 
-const baseNavItems = [
+// Entrées de navigation, filtrées par feature flag quand la page correspondante
+// est gouvernée par un flag (cohérent avec `meta.requiresFeature` du router).
+const baseNavItems: { to: { name: string }; text: string; featureKey?: string }[] = [
   { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
   { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
   { to: { name: routeNames.TIMEPAGE }, text: "Time" },
-  { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
-  { to: { name: routeNames.REPORTS }, text: "Signalements" },
-  { to: { name: routeNames.HISTORY }, text: "Modifications" },
+  { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale", featureKey: FeatureFlagKey.QUALITY_DASHBOARD },
+  { to: { name: routeNames.REPORTS }, text: "Signalements", featureKey: FeatureFlagKey.REPORTS },
+  { to: { name: routeNames.HISTORY }, text: "Modifications", featureKey: FeatureFlagKey.APPLICATION_HISTORY },
 ];
 
 const publicNavItems = computed(() => {
@@ -129,7 +132,10 @@ const publicNavItems = computed(() => {
 });
 
 const navItemsComputed = computed(() => {
-  return userStore.authenticated ? baseNavItems : publicNavItems.value;
+  if (!userStore.authenticated) return publicNavItems.value;
+  return baseNavItems
+    .filter((item) => !item.featureKey || featureFlagStore.isEnabled(item.featureKey))
+    .map(({ to, text }) => ({ to, text }));
 });
 
 const logoText = ["Ministère", "de l'intérieur"];

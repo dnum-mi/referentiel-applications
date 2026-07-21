@@ -13,6 +13,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiExtraModels,
+  ApiNotFoundResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -44,6 +45,7 @@ const TECHNOLOGY_METADATA_FIELDS = {
 @ApiExtraModels(TechnologyErrorResponseDto)
 @FeatureFlag(FeatureFlagKey.TECHNOLOGY_STACK)
 @UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("applications/:applicationId/technologies")
 export class TechnologyController {
   constructor(private readonly technologyService: TechnologyService) {}

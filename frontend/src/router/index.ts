@@ -4,7 +4,18 @@ import { USER_MANAGER } from "@/services/authentication";
 import { useUserStore } from "@/stores/userStore";
 import { useFeatureFlagStore } from "@/stores/featureFlagStore";
 import { getConfig } from "@/services/config";
+import { FeatureFlagKey } from "@/constants/feature-flags";
 import { Permission } from "@/client";
+
+declare module "vue-router" {
+  interface RouteMeta {
+    requiresAuth?: boolean;
+    requiresAdmin?: boolean;
+    /** Feature flag requis pour accéder à la route (redirigé vers `/` si off). */
+    requiresFeature?: FeatureFlagKey;
+    title?: string;
+  }
+}
 
 const oidcRoutes = [
   {
@@ -66,13 +77,17 @@ const routes = [
     name: routeNames.ACCESSIBILITE,
     path: "/accessibilite",
     component: () => import("@/views/AccessibilityPage.vue"),
-    meta: { requiresAuth: false, title: "Accessibilité - Référentiel des applications" },
+    meta: {
+      requiresAuth: false,
+      requiresFeature: FeatureFlagKey.RGAA_ACCESSIBILITY,
+      title: "Accessibilité - Référentiel des applications",
+    },
   },
   {
     name: routeNames.REPORTS,
     path: "/signalements",
     component: () => import("@/views/ReportsPage.vue"),
-    meta: { requiresAuth: true, title: "Signalements - Référentiel des applications" },
+    meta: { requiresAuth: true, requiresFeature: FeatureFlagKey.REPORTS, title: "Signalements - Référentiel des applications" },
   },
   {
     name: routeNames.PROFILEAPP,
@@ -96,7 +111,11 @@ const routes = [
     name: routeNames.QUALITYPAGE,
     path: "/qualite-generale",
     component: () => import("@/views/QualityPage.vue"),
-    meta: { requiresAuth: true, title: "Qualité générale - Référentiel des applications" },
+    meta: {
+      requiresAuth: true,
+      requiresFeature: FeatureFlagKey.QUALITY_DASHBOARD,
+      title: "Qualité générale - Référentiel des applications",
+    },
   },
   {
     name: routeNames.TIMEPAGE,
@@ -108,13 +127,21 @@ const routes = [
     name: routeNames.HISTORY,
     path: "/historique",
     component: () => import("@/views/MetadataPage.vue"),
-    meta: { requiresAuth: true, title: "Historique global - Référentiel des applications" },
+    meta: {
+      requiresAuth: true,
+      requiresFeature: FeatureFlagKey.APPLICATION_HISTORY,
+      title: "Historique global - Référentiel des applications",
+    },
   },
   {
     name: routeNames.METADATADETAIL,
     path: "/metadatas/:id",
     component: () => import("@/views/MetadataDetailPage.vue"),
-    meta: { requiresAuth: true, title: "Détails de la modification - Référentiel des applications" },
+    meta: {
+      requiresAuth: true,
+      requiresFeature: FeatureFlagKey.APPLICATION_HISTORY,
+      title: "Détails de la modification - Référentiel des applications",
+    },
   },
 
   {
@@ -125,7 +152,7 @@ const routes = [
       applicationId: route.params.applicationId as string,
       dataApplicationId: route.params.dataApplicationId as string,
     }),
-    meta: { requiresAuth: true, title: "Détail de la donnée - Référentiel des applications" },
+    meta: { requiresAuth: true, requiresFeature: FeatureFlagKey.DATA_CATALOG, title: "Détail de la donnée - Référentiel des applications" },
   },
   {
     path: "/:pathMatch(.*)*",
@@ -168,13 +195,13 @@ router.beforeEach(async (to) => {
   // chargés (au premier chargement, la navigation peut précéder le boot d'App.vue).
   if (to.meta.requiresFeature) {
     const featureFlagStore = useFeatureFlagStore();
-    if (!featureFlagStore.hasFlags) {
+    if (!featureFlagStore.loaded) {
       const config = await getConfig();
       if (!(config instanceof Error)) {
         featureFlagStore.setFlags(config.featureFlags);
       }
     }
-    if (!featureFlagStore.isEnabled(to.meta.requiresFeature as string)) {
+    if (!featureFlagStore.isEnabled(to.meta.requiresFeature)) {
       return { path: "/" };
     }
   }

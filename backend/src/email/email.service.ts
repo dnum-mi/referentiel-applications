@@ -3,6 +3,8 @@ import { LoggerService } from "src/logger/logger.service";
 import { ConfigService } from "@nestjs/config";
 import type { Transporter } from "nodemailer";
 import * as nodemailer from "nodemailer";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
+import { FeatureFlagService } from "src/feature-flag/feature-flag.service";
 import { EmailTemplateService } from "./email-templates.services";
 import { MailSendException } from "./error/mail-send.exception";
 import { ReportStatus } from "@prisma/client";
@@ -18,6 +20,7 @@ export class EmailService {
   constructor(
     private readonly configService: ConfigService,
     private readonly templateService: EmailTemplateService,
+    private readonly featureFlagService: FeatureFlagService,
     private readonly logger: LoggerService,
   ) {
     const host = this.configService.get<string>("email.host");
@@ -45,12 +48,23 @@ export class EmailService {
     this.logger.log(`Email service initialized (enabled: ${this.enabled})`);
   }
 
+  /**
+   * L'envoi est actif si le SMTP est configuré (`SMTP_ENABLED`, statique) ET si
+   * le feature flag « email-notifications » est activé (coupure à chaud).
+   */
+  private async sendingEnabled(): Promise<boolean> {
+    if (!this.enabled) return false;
+    return this.featureFlagService.isEnabled(
+      FeatureFlagKey.EMAIL_NOTIFICATIONS,
+    );
+  }
+
   async sendActorAddedNotification(
     to: string,
     actorName: string,
     applicationName?: string,
   ): Promise<void> {
-    if (!this.enabled) {
+    if (!(await this.sendingEnabled())) {
       this.logger.log(`Email sending disabled. Would have sent to ${to}`);
       return;
     }
@@ -97,7 +111,7 @@ export class EmailService {
     applicationName?: string,
     changedFields?: string,
   ): Promise<void> {
-    if (!this.enabled) {
+    if (!(await this.sendingEnabled())) {
       this.logger.log(
         `Email sending disabled. Would have sent modification email to ${to}`,
       );
@@ -164,7 +178,7 @@ export class EmailService {
       }>;
     }>,
   ): Promise<void> {
-    if (!this.enabled) {
+    if (!(await this.sendingEnabled())) {
       this.logger.log(
         `Email sending disabled. Would have sent daily digest to ${recipient}`,
       );
@@ -258,7 +272,7 @@ export class EmailService {
     applicationLabel: string;
     lastModifiedDate: Date;
   }): Promise<void> {
-    if (!this.enabled) {
+    if (!(await this.sendingEnabled())) {
       this.logger.log(
         `Email sending disabled. Would have sent validation reminder to ${recipientEmail}`,
       );
@@ -318,7 +332,7 @@ export class EmailService {
     oldOrganization: string | null;
     newOrganization: string | null;
   }): Promise<void> {
-    if (!this.enabled) {
+    if (!(await this.sendingEnabled())) {
       this.logger.log(
         `Email sending disabled. Would have sent organization change notification to ${to}`,
       );

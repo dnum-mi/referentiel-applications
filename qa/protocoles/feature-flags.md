@@ -2,22 +2,25 @@
 
 > Couvre le pilotage des fonctionnalités par feature flags (#2029) : l'écran d'administration
 > `/administration` → onglet **Feature flags**, et l'effet d'un flag sur l'affichage des onglets
-> (administration et fiche application). Utilisateur par défaut : `admin` / `pass`. Les flags sont un
-> état **global** : chaque test qui en bascule un le restaure via l'API en fin de test.
+> (administration et fiche application) et sur les routes gouvernées. Utilisateur par défaut :
+> `admin` / `pass`. Les flags sont un état serveur **global** : chaque bascule est mémorisée par la
+> datafeature et restaurée par le teardown de la fixture (même après un timeout). La suite ne tourne
+> que sur **chromium** (des projets navigateurs parallèles feraient entrer les bascules en collision).
 
 | Légende           |                                                                |
 | :---------------- | :------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/feature-flags.spec.ts` |
-| **Statut**        | 🟢 automatisé — 3 cas couverts par la CI                       |
+| **Statut**        | 🟢 automatisé — 4 cas couverts par la CI                       |
 
 ---
 
-### FLG-01 — L'admin voit la liste des feature flags ✅
+### FLG-01 — L'admin voit chaque flag du catalogue partagé ✅
 
 - **Datafeature** : lecture `GET /feature-flags` (skip si l'endpoint est indisponible).
 - **Action** : administration → onglet **Feature flags**.
-- **Résultat attendu** : la liste des flags est affichée ; les flags `mdit-campaigns` et
-  `technology-stack` y figurent avec leur toggle.
+- **Résultat attendu** : chaque clé du miroir front (`frontend/src/constants/feature-flags.ts`)
+  est listée avec son toggle — une dérive entre le miroir front et le catalogue backend fait
+  échouer ce cas.
 
 ### FLG-02 — Désactiver un flag masque son onglet d'administration ✅
 
@@ -31,8 +34,15 @@
 ### FLG-03 — Désactiver un flag masque l'onglet correspondant de la fiche application ✅
 
 - **Datafeature** : une application du catalogue ; flag `technology-stack` désactivé via l'API puis
-  restauré à activé en fin de test.
+  restauré par le teardown de la fixture.
 - **Action** : ouvrir la fiche application (onglet « Stack technique » présent), désactiver
   `technology-stack`, recharger la fiche.
 - **Résultat attendu** : après rechargement, l'onglet « Stack technique » n'est plus présent dans la
   barre d'onglets de la fiche.
+
+### FLG-04 — Un flag désactivé redirige la route gouvernée vers l'accueil ✅
+
+- **Datafeature** : flag `reports` désactivé via l'API puis restauré par le teardown de la fixture.
+- **Action** : ouvrir `/signalements` (accessible flag actif), désactiver `reports`, recharger
+  `/signalements`.
+- **Résultat attendu** : la garde de route (`meta.requiresFeature`) redirige vers l'accueil (`/`).

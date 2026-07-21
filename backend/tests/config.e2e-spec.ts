@@ -1,4 +1,5 @@
 import request from "supertest";
+import { FeatureFlagKey } from "../src/feature-flag/feature-flag.keys";
 import { setupTestSuite } from "./setup";
 
 describe("Config", () => {
@@ -16,17 +17,21 @@ describe("Config", () => {
     });
   });
 
-  it("/GET config exposes the feature flags map", async () => {
+  it("/GET config exposes only ENABLED feature flags from the catalog", async () => {
     const response = await request(app().getHttpServer())
       .get("/config")
       .expect(200);
 
     expect(response.body).toHaveProperty("featureFlags");
-    expect(typeof response.body.featureFlags).toBe("object");
-    expect(Array.isArray(response.body.featureFlags)).toBe(false);
-    // Toutes les valeurs exposées sont des booléens.
-    for (const value of Object.values(response.body.featureFlags)) {
-      expect(typeof value).toBe("boolean");
+    const featureFlags = response.body.featureFlags as Record<string, boolean>;
+    expect(Array.isArray(featureFlags)).toBe(false);
+
+    // L'endpoint est public : il ne liste QUE les flags activés (une clé
+    // absente vaut « désactivé » côté front) et ne divulgue jamais les
+    // fonctionnalités coupées. Toute clé exposée appartient au catalogue.
+    for (const [key, value] of Object.entries(featureFlags)) {
+      expect(value).toBe(true);
+      expect(Object.values(FeatureFlagKey)).toContain(key);
     }
   });
 });
