@@ -62,6 +62,13 @@ export class ChromePage extends BasePage {
     ).toBeVisible();
   }
 
+  /** Vérifie qu'un item de navigation est absent (feature flag désactivé). */
+  async expectNavItemAbsent(label: string): Promise<void> {
+    await expect(this.mainNav().getByRole("link", { name: label })).toHaveCount(
+      0,
+    );
+  }
+
   /** Clique un item de la navigation principale et attend l'URL cible. */
   async clickNavItem(label: string, urlPattern: RegExp): Promise<void> {
     await this.mainNav().getByRole("link", { name: label }).click();

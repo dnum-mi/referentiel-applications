@@ -44,12 +44,21 @@ async function onToggle(flag: FeatureFlagDto, enabled: boolean) {
 }
 
 onMounted(fetchFlags);
+
+/** Date/heure de dernière bascule, au format français. */
+function formatUpdatedAt(updatedAt: string | Date): string {
+  return new Date(updatedAt).toLocaleString("fr-FR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
 </script>
 
 <template>
   <div class="fr-p-2w">
     <p class="fr-hint-text fr-mb-2w">
-      Activez ou désactivez des fonctionnalités à chaud, sans redéploiement. La bascule prend effet au prochain chargement du front.
+      Activez ou désactivez des fonctionnalités à chaud, sans redéploiement. La bascule est immédiate côté serveur et prise en compte par
+      les utilisateurs connectés en moins d'une minute (ou au prochain chargement).
     </p>
 
     <p v-if="isLoading" role="status">Chargement des feature flags…</p>
@@ -65,6 +74,9 @@ onMounted(fetchFlags);
           :data-testid="`feature-flag-toggle-${flag.key}`"
           @update:model-value="(value: boolean) => onToggle(flag, value)"
         />
+        <p class="fr-hint-text fr-mb-0" :data-testid="`feature-flag-updated-${flag.key}`">
+          Dernière bascule : {{ formatUpdatedAt(flag.updatedAt) }}
+        </p>
       </li>
     </ul>
   </div>

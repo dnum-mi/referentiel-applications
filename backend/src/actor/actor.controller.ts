@@ -12,6 +12,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiNotFoundResponse,
   ApiBody,
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -36,10 +37,15 @@ import {
   UpdateActorDto,
 } from "./dto/actor.dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 
 @ApiTags("Actors")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.ACTORS)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("actors")
 export class ActorController {
   constructor(private readonly actorService: ActorService) {}
@@ -200,7 +206,9 @@ export class ActorController {
 }
 
 @ApiTags("Actors")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.ACTORS)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @ApiParam({
   name: "applicationId",
   description: "ID de l'application",

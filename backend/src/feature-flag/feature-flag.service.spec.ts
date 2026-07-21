@@ -1,6 +1,8 @@
 import { NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
+import { FEATURE_FLAG_CATALOG } from "./feature-flag.keys";
+import { FeatureFlagPubSub } from "./feature-flag.pubsub";
 import { FeatureFlagService } from "./feature-flag.service";
 
 function createPrismaMock() {
@@ -9,7 +11,15 @@ function createPrismaMock() {
       findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      deleteMany: jest.fn(),
     },
+  };
+}
+
+function createPubSubMock() {
+  return {
+    subscribe: jest.fn(),
+    publishInvalidation: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -22,6 +32,7 @@ function p2025(): Prisma.PrismaClientKnownRequestError {
 
 describe("FeatureFlagService", () => {
   let prisma: ReturnType<typeof createPrismaMock>;
+  let pubSub: ReturnType<typeof createPubSubMock>;
   let service: FeatureFlagService;
 
   beforeEach(() => {
@@ -31,7 +42,11 @@ describe("FeatureFlagService", () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-01-01T00:00:00Z"));
     prisma = createPrismaMock();
-    service = new FeatureFlagService(prisma as unknown as PrismaService);
+    pubSub = createPubSubMock();
+    service = new FeatureFlagService(
+      prisma as unknown as PrismaService,
+      pubSub as unknown as FeatureFlagPubSub,
+    );
   });
 
   afterEach(() => {
@@ -168,6 +183,38 @@ describe("FeatureFlagService", () => {
         service.update("missing", { enabled: true }),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
+
+    it("diffuse l'invalidation aux autres instances (NOTIFY)", async () => {
+      prisma.featureFlag.update.mockResolvedValue({ key: "a", enabled: true });
+
+      await service.update("a", { enabled: true }, "user-1");
+
+      expect(pubSub.publishInvalidation).toHaveBeenCalledWith("a");
+    });
+  });
+
+  describe("propagation inter-instances", () => {
+    it("invalide le cache local quand une bascule distante est reçue", async () => {
+      // onModuleInit abonne le cache au canal.
+      prisma.featureFlag.findMany.mockResolvedValue([]);
+      await service.onModuleInit();
+      const [remoteInvalidation] = pubSub.subscribe.mock.calls[0] as [
+        () => void,
+      ];
+
+      prisma.featureFlag.findMany.mockResolvedValue([
+        { key: "a", enabled: false },
+      ]);
+      expect(await service.isEnabled("a")).toBe(false);
+
+      // Une autre instance bascule le flag : notification reçue.
+      remoteInvalidation();
+
+      prisma.featureFlag.findMany.mockResolvedValue([
+        { key: "a", enabled: true },
+      ]);
+      expect(await service.isEnabled("a")).toBe(true);
+    });
   });
 
   describe("onModuleInit (sync du catalogue)", () => {
@@ -188,8 +235,26 @@ describe("FeatureFlagService", () => {
       const fulltext = updates.find((u) => u.where.key === "fulltext-search");
       expect(fulltext).toBeDefined();
       expect(fulltext?.data).not.toHaveProperty("enabled");
-      // Les 17 autres flags du catalogue sont créés.
-      expect(prisma.featureFlag.create).toHaveBeenCalledTimes(17);
+      // Tous les autres flags du catalogue sont créés.
+      expect(prisma.featureFlag.create).toHaveBeenCalledTimes(
+        FEATURE_FLAG_CATALOG.length - 1,
+      );
+    });
+
+    it("supprime les flags retirés du catalogue (orphelins)", async () => {
+      prisma.featureFlag.findMany.mockResolvedValue([
+        { key: "flag-retire-du-code", updatedById: null },
+      ]);
+      prisma.featureFlag.create.mockResolvedValue({});
+      prisma.featureFlag.deleteMany.mockResolvedValue({});
+
+      await service.onModuleInit();
+
+      expect(prisma.featureFlag.deleteMany).toHaveBeenCalledWith({
+        where: {
+          key: { notIn: FEATURE_FLAG_CATALOG.map((def) => def.key) },
+        },
+      });
     });
 
     it("n'empêche pas le boot si la synchronisation échoue", async () => {

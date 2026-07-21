@@ -112,7 +112,7 @@ jobs:
           CI: "true"
           API_BASE_URL: http://localhost:3500
           PLAYWRIGHT_JSON_OUTPUT_NAME: results.json
-        run: pnpm exec playwright test --project=chromium --reporter=json
+        run: pnpm exec playwright test --project=chromium --project=feature-flags --reporter=json
 
       # --- Publier les screenshots sur la branche dédiée qa-screenshots ---
       - name: Publier les screenshots

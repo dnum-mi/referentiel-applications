@@ -11,11 +11,18 @@ let loaded = false;
 export function useMditCampaigns() {
   async function loadActiveCampaigns(force = false): Promise<MditCampaignDto[]> {
     if (loaded && !force) return campaigns.value;
-    const response = await api.mditCampaignControllerFindAll({
-      query: { onlyActive: true, page: 0, pageSize: 100 },
-      throwOnError: true,
-    });
-    campaigns.value = response.data?.results ?? [];
+    try {
+      const response = await api.mditCampaignControllerFindAll({
+        query: { onlyActive: true, page: 0, pageSize: 100 },
+        throwOnError: true,
+      });
+      campaigns.value = response.data?.results ?? [];
+    } catch {
+      // Feature coupée (kill-switch → 404) ou panne : liste vide plutôt que de
+      // casser les pages qui embarquent le sélecteur (Time, filtres). Le
+      // sélecteur se masque de lui-même quand il n'a pas d'options.
+      campaigns.value = [];
+    }
     loaded = true;
     return campaigns.value;
   }

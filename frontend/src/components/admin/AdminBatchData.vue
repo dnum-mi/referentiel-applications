@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import api from "@/api";
 import type { ImportReportDto, UserControllerSyncOrganizationsFromMaiaData } from "@/client";
+import { FeatureFlagKey } from "@/constants/feature-flags";
 import { useToasterStore } from "@/stores/toasterStore";
 
 const props = defineProps<{ loading: boolean }>();
@@ -143,7 +144,7 @@ async function runMaiaActorSync() {
         />
       </div>
     </div>
-    <div class="section-card--mt">
+    <div v-feature="FeatureFlagKey.EXCEL_IMPORT" class="section-card--mt">
       <h2 class="fr-h2">Import Excel (applications, hébergements, acteurs, conformités)</h2>
       <p class="fr-hint-text">
         Importez ou mettez à jour des données en masse à partir d'un fichier Excel au même format que l'export (un onglet par table).

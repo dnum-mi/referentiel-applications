@@ -17,7 +17,6 @@ export const FeatureFlagKey = {
   REPORTS: "reports",
   APPLICATION_HISTORY: "application-history",
   QUALITY_DASHBOARD: "quality-dashboard",
-  RGAA_ACCESSIBILITY: "rgaa-accessibility",
   MDIT_CAMPAIGNS: "mdit-campaigns",
   TAGS_MANAGEMENT: "tags-management",
   PERMISSIONS_MATRIX: "permissions-matrix",

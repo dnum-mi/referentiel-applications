@@ -7,6 +7,7 @@ import { useApplicationStore } from "@/stores/applicationStore";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useToasterStore } from "@/stores/toasterStore";
 import { routeNames } from "@/router/route-names";
+import { FeatureFlagKey } from "@/constants/feature-flags";
 import ReportModal from "@/components/modal/ReportModal.vue";
 import ColumnCustomization from "@/components/ColumnCustomization.vue";
 import { Permission } from "@/client";
@@ -80,6 +81,7 @@ const hasCreateGlobalReport = computed(() => {
       </DsfrButton>
 
       <DsfrButton
+        v-feature="FeatureFlagKey.REPORTS"
         secondary
         icon="fr-icon-alert-line"
         aria-haspopup="dialog"

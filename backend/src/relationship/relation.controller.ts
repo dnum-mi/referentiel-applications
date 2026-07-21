@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiNotFoundResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -22,6 +23,9 @@ import {
 import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { UserId } from "../common/decorators/user-id.decorator";
 import {
   RelationApplicationDto,
@@ -31,7 +35,9 @@ import {
 import { RelationService } from "./relation.service";
 
 @ApiTags("relation")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.RELATIONS)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @ApiParam({
   name: "applicationId",
   description: "ID de l'application",

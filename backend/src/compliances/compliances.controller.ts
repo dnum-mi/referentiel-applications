@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -17,6 +18,9 @@ import {
 import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { CompliancesService } from "./compliances.service";
 import {
@@ -28,6 +32,9 @@ import { detectCompliances } from "./utils/compliance.utils";
 import { COMPLIANCE_METADATA_FIELDS } from "./constants/compliance-metadata.constants";
 
 @ApiTags("Compliances")
+@FeatureFlag(FeatureFlagKey.COMPLIANCES)
+@UseGuards(FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("compliances")
 export class ComplianceController {
   constructor(private readonly complianceService: CompliancesService) {}
@@ -46,7 +53,9 @@ export class ComplianceController {
 }
 
 @ApiTags("Compliances")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.COMPLIANCES)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("applications/:applicationId/compliances")
 export class ApplicationCompliancesController {
   constructor(private readonly compliancesService: CompliancesService) {}

@@ -1,5 +1,6 @@
 import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import {
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -8,6 +9,9 @@ import {
 import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import {
   FirstLastMetadataDto,
   MetadataDto,
@@ -17,6 +21,9 @@ import { MetadatasService } from "./metadatas.service";
 import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
 @ApiTags("Metadatas")
+@FeatureFlag(FeatureFlagKey.APPLICATION_HISTORY)
+@UseGuards(FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("metadatas")
 export class MetadatasController {
   constructor(private readonly metadataService: MetadatasService) {}
@@ -47,7 +54,9 @@ export class MetadatasController {
 }
 
 @ApiTags("Metadatas")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.APPLICATION_HISTORY)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("applications/:applicationId/metadatas")
 export class ApplicationMetadatasController {
   constructor(private readonly metadataService: MetadatasService) {}

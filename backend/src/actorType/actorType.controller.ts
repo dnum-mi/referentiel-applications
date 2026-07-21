@@ -24,6 +24,9 @@ import { RequiredPermissions } from "src/common/decorators/required-permissions.
 import { UserId } from "src/common/decorators/user-id.decorator";
 import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { ActorTypeService } from "./actorType.service";
 import {
   ActorTypeDto,
@@ -75,6 +78,8 @@ Vous devez fournir les informations suivantes :
   }
 
   @Get("/perms-matrix")
+  @FeatureFlag(FeatureFlagKey.PERMISSIONS_MATRIX)
+  @UseGuards(FeatureFlagGuard)
   @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Récupérer la matrice des permissions",
@@ -113,6 +118,8 @@ Vous devez fournir les informations suivantes :
   }
 
   @Patch("/perms-matrix")
+  @FeatureFlag(FeatureFlagKey.PERMISSIONS_MATRIX)
+  @UseGuards(FeatureFlagGuard)
   @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({
     summary: "Mettre à jour la matrice des permissions",

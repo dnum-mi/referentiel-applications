@@ -11,6 +11,9 @@
  * TOUS les environnements — y compris la production, où le seed ne tourne
  * jamais — sans écraser l'état déjà basculé en base.
  *
+ * La déclaration d'accessibilité (mention légale RGAA, obligatoire sur tout le
+ * site) n'est volontairement PAS flaggable.
+ *
  * `defaultEnabled` fixe l'état à la CRÉATION uniquement : `true` pour les
  * fonctionnalités déjà en production (ne rien masquer une fois le flag câblé),
  * `false` pour l'expérimental. `FEATURE_FLAGS_DEFAULTS` (env, liste de clés)
@@ -19,7 +22,7 @@
  */
 export const FeatureFlagKey = {
   // — Fonctions transverses —
-  /** Recherche plein texte des applications (ticket 1753, expérimental). */
+  /** Barre de recherche rapide du header (recherche plein texte, ticket 1753). */
   FULLTEXT_SEARCH: "fulltext-search",
   /** Impersonation d'un utilisateur par un administrateur. */
   IMPERSONATION: "impersonation",
@@ -47,8 +50,6 @@ export const FeatureFlagKey = {
   APPLICATION_HISTORY: "application-history",
   /** Tableau de bord Qualité (onglet + page Qualité). */
   QUALITY_DASHBOARD: "quality-dashboard",
-  /** Déclaration d'accessibilité / RGAA (page dédiée). */
-  RGAA_ACCESSIBILITY: "rgaa-accessibility",
 
   // — Administration —
   /** Campagnes de dette IT (onglet admin + sélecteur de millésime). */
@@ -83,8 +84,9 @@ export const FEATURE_FLAG_CATALOG: readonly FeatureFlagDefinition[] = [
     key: FeatureFlagKey.FULLTEXT_SEARCH,
     label: "Recherche full-text",
     description:
-      "Réservé au câblage à venir de la recherche plein texte (ticket 1753) — sans effet pour l'instant.",
-    defaultEnabled: false,
+      "Barre de recherche rapide du header (recherche plein texte, ticket 1753).",
+    // La recherche est déjà en production : activée par défaut.
+    defaultEnabled: true,
   },
   {
     key: FeatureFlagKey.IMPERSONATION,
@@ -161,12 +163,6 @@ export const FEATURE_FLAG_CATALOG: readonly FeatureFlagDefinition[] = [
     key: FeatureFlagKey.QUALITY_DASHBOARD,
     label: "Tableau de bord Qualité",
     description: "Onglet et page Qualité (indicateurs).",
-    defaultEnabled: true,
-  },
-  {
-    key: FeatureFlagKey.RGAA_ACCESSIBILITY,
-    label: "Déclaration d'accessibilité",
-    description: "Page de déclaration d'accessibilité / RGAA.",
     defaultEnabled: true,
   },
   {

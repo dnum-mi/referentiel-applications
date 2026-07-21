@@ -2,9 +2,11 @@
 import { computed } from "vue";
 import router from "@/router";
 import { useUserStore } from "@/stores/userStore";
+import { useFeatureFlagStore } from "@/stores/featureFlagStore";
 import { routeNames } from "@/router/route-names";
 
 const userStore = useUserStore();
+const featureFlagStore = useFeatureFlagStore();
 
 import type { RouteRecordNormalized } from "vue-router";
 import { Permission } from "@/client";
@@ -36,6 +38,12 @@ function baseRouteFilter(currentRoute: RouteRecordNormalized): boolean {
   const routePath = currentRoute.path;
   const hasDynamicSegment = routePath.includes(":");
   if (hasDynamicSegment) {
+    return false;
+  }
+  // Pages gouvernées par un feature flag désactivé : lien mort (la garde de
+  // route redirigerait vers l'accueil) → exclues du plan du site, comme de la
+  // navigation principale.
+  if (!featureFlagStore.allows(currentRoute.meta?.requiresFeature)) {
     return false;
   }
 

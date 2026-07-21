@@ -8,6 +8,7 @@ import {
   Roles as RolesType,
 } from "@/client/types.gen";
 import { Roles } from "@/client/types.gen";
+import { FeatureFlagKey } from "@/constants/feature-flags";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import { RolesOptions, RolesScopes } from "@/utils/roles-utils";
@@ -214,6 +215,7 @@ const isScopeDisabled = computed(() => {
       </div>
       <DsfrButton
         v-if="canImpersonate"
+        v-feature="FeatureFlagKey.IMPERSONATION"
         :label="isImpersonating ? '...' : 'Se connecter en tant que'"
         size="sm"
         tertiary

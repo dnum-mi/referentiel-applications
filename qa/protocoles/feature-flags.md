@@ -10,7 +10,7 @@
 | Légende           |                                                                |
 | :---------------- | :------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/feature-flags.spec.ts` |
-| **Statut**        | 🟢 automatisé — 5 cas couverts par la CI                       |
+| **Statut**        | 🟢 automatisé — 6 cas couverts par la CI                       |
 
 ---
 
@@ -55,3 +55,11 @@
 - **Résultat attendu** : le panneau admin est accessible (onglet « Gestion des utilisateurs »
   visible) mais l'onglet « Feature flags » est absent ; côté API, `GET`/`PATCH /feature-flags`
   renvoient 403 pour un admin scopé (le feature flipping est global, réservé à l'admin global).
+
+### FLG-06 — Une bascule se reflète dans la navigation sans rechargement ✅
+
+- **Datafeature** : flag `reports` (état mémorisé, restauré par le teardown de la fixture).
+- **Action** : depuis l'onglet **Feature flags**, basculer `reports` off puis on, sans recharger la
+  page.
+- **Résultat attendu** : l'entrée « Signalements » de la navigation principale disparaît
+  immédiatement à la désactivation (réactivité du store) et réapparaît à la réactivation.

@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiNotFoundResponse,
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
@@ -30,11 +31,16 @@ import { DataApplicationDto } from "./dto/create-data-application.dto";
 import { UserId } from "../common/decorators/user-id.decorator";
 import { PaginatedResponseDto, PaginationDto } from "../common/dto";
 import { PermissionGuard } from "../common/guards/permission.guard";
+import { FeatureFlag } from "../common/decorators/feature-flag.decorator";
+import { FeatureFlagGuard } from "../feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "../feature-flag/feature-flag.keys";
 import { RequiredPermissions } from "../common/decorators/required-permissions.decorator";
 
 @ApiTags("Data Catalog")
 @ApiBearerAuth()
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.DATA_CATALOG)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 @Controller("data-catalog")
 export class DataCatalogController {
   constructor(private readonly dataCatalogService: DataCatalogService) {}

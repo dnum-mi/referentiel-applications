@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Permission, type ConfigDto } from "@/client";
-import { ref, computed, nextTick } from "vue";
+import { ref, computed, nextTick, watch } from "vue";
 import { useRegisterSW } from "virtual:pwa-register/vue";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
@@ -64,8 +64,20 @@ getConfig().then((config) => {
   if (!(config instanceof Error)) {
     appConfig.value = config;
     featureFlagStore.setFlags(config.featureFlags);
+    // Suivi quasi temps réel des bascules pour les sessions déjà ouvertes.
+    featureFlagStore.startPolling();
   }
 });
+
+// Éjection en direct : si le flag de la route COURANTE est coupé pendant que
+// l'utilisateur y est (bascule admin, reflétée par le polling), on le ramène à
+// l'accueil — même règle déclarative (meta.requiresFeature) que la garde.
+watch(
+  () => featureFlagStore.allows(route.meta.requiresFeature),
+  (allowed) => {
+    if (!allowed) void router.replace({ path: "/" });
+  },
+);
 
 const authenticatedQuickLinks = computed<QuickLink[]>(() => {
   const baseLinks: QuickLink[] = [
@@ -133,9 +145,7 @@ const publicNavItems = computed(() => {
 
 const navItemsComputed = computed(() => {
   if (!userStore.authenticated) return publicNavItems.value;
-  return baseNavItems
-    .filter((item) => !item.featureKey || featureFlagStore.isEnabled(item.featureKey))
-    .map(({ to, text }) => ({ to, text }));
+  return baseNavItems.filter((item) => featureFlagStore.allows(item.featureKey)).map(({ to, text }) => ({ to, text }));
 });
 
 const logoText = ["Ministère", "de l'intérieur"];
@@ -242,7 +252,7 @@ function close() {
     data-testid="main-header"
   >
     <div class="header-container" id="header-search">
-      <SearchHeader v-if="userStore.authenticated" />
+      <SearchHeader v-if="userStore.authenticated" v-feature="FeatureFlagKey.FULLTEXT_SEARCH" />
     </div>
 
     <template v-if="environmentLabel" #before-quick-links>

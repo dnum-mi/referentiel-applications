@@ -4,6 +4,7 @@ import { UnscopedAdminGuard } from "src/common/guards/unscoped-admin.guard";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { FeatureFlagController } from "./feature-flag.controller";
 import { FeatureFlagGuard } from "./feature-flag.guard";
+import { FeatureFlagPubSub } from "./feature-flag.pubsub";
 import { FeatureFlagService } from "./feature-flag.service";
 
 // Global : la garde `FeatureFlagGuard` et le service `isEnabled` doivent être
@@ -12,7 +13,12 @@ import { FeatureFlagService } from "./feature-flag.service";
 @Module({
   imports: [PrismaModule, CommonModule],
   controllers: [FeatureFlagController],
-  providers: [FeatureFlagService, FeatureFlagGuard, UnscopedAdminGuard],
+  providers: [
+    FeatureFlagService,
+    FeatureFlagGuard,
+    FeatureFlagPubSub,
+    UnscopedAdminGuard,
+  ],
   exports: [FeatureFlagService, FeatureFlagGuard],
 })
 export class FeatureFlagModule {}

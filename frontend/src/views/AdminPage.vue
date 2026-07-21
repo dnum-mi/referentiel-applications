@@ -49,6 +49,8 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-actors",
     panelId: "panel-actors",
     component: markRaw(AdminActorsTab),
+    // Cohérence kill-switch : l'API des acteurs est gatée par le même flag.
+    featureKey: FeatureFlagKey.ACTORS,
   },
   {
     title: "Gestions des tags",
@@ -110,14 +112,11 @@ const tabs = ref<DsfrTab[]>([
   },
 ]);
 
-// Onglets réellement affichés : on retire ceux dont le feature flag est
-// désactivé, et ceux réservés à l'admin global pour un compte scopé.
+// Onglets réellement affichés : chaque onglet DÉCLARE ses conditions
+// (featureKey, requiresGlobalAdmin) ; `canSee` est le seul juge.
 const isGlobalAdmin = computed(() => !userStore.user?.scopeOrganizationId);
-const visibleTabs = computed(() =>
-  tabs.value.filter(
-    (tab) => (!tab.featureKey || featureFlagStore.isEnabled(tab.featureKey)) && (!tab.requiresGlobalAdmin || isGlobalAdmin.value),
-  ),
-);
+const canSee = (tab: DsfrTab) => featureFlagStore.allows(tab.featureKey) && (isGlobalAdmin.value || !tab.requiresGlobalAdmin);
+const visibleTabs = computed(() => tabs.value.filter(canSee));
 
 // `activeTab` est un index sur `visibleTabs` : quand la liste change (bascule
 // d'un flag depuis l'onglet Feature flags), on réaligne l'index sur le même

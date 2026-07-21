@@ -203,6 +203,18 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `POST /tokens/:id/regenerate`                        | Régénérer un jeton |
 | `DELETE /tokens/:id` · `DELETE /tokens/personal/:id` | Révoquer un jeton  |
 
+### Feature flags
+
+| Verbe & chemin              | Rôle                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| `GET /feature-flags`        | Lister les flags et leur état (admin global uniquement)      |
+| `PATCH /feature-flags/:key` | Activer/désactiver un flag à chaud (admin global uniquement) |
+
+> Les fonctionnalités gouvernées par un flag désactivé répondent **404** sur leurs routes (garde
+> `@FeatureFlag`). L'état des flags **activés** est exposé au frontend via `GET /config`
+> (`featureFlags`) ; une clé absente vaut « désactivé ». Le catalogue des clés vit dans
+> `backend/src/feature-flag/feature-flag.keys.ts` (synchronisé en base au démarrage).
+
 > Il n'existe **pas de route d'import** ; l'export se limite à `GET /applications/export/excel` (admin).
 
 ## Variables d'environnement

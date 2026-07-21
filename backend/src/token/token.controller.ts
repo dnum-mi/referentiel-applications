@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import {
+  ApiNotFoundResponse,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -21,6 +22,9 @@ import { PaginatedResponseDto } from "src/common/dto";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { User } from "src/common/decorators/user.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import { Requestor } from "src/user/entities/user.entity";
 import {
   CreatePersonalTokenDto,
@@ -38,7 +42,9 @@ import { TokenService } from "./token.service";
  */
 @ApiTags("tokens")
 @Controller("tokens")
-@UseGuards(PermissionGuard)
+@FeatureFlag(FeatureFlagKey.API_TOKENS)
+@UseGuards(PermissionGuard, FeatureFlagGuard)
+@ApiNotFoundResponse({ description: "Ressource non trouvée" })
 export class TokenController {
   constructor(private readonly tokenService: TokenService) {}
 

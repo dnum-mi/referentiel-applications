@@ -1,5 +1,11 @@
 import { test } from "../fixtures/test";
-import { AdminPage, ApplicationPage, ReportsPage, loginAs } from "../pom";
+import {
+  AdminPage,
+  ApplicationPage,
+  ChromePage,
+  ReportsPage,
+  loginAs,
+} from "../pom";
 // Miroir front des clés (import direct : garde-fou anti-dérive — si une clé du
 // miroir n'existe pas côté backend, FLG-01 échoue au lieu de dériver en silence).
 import { FeatureFlagKey } from "../../frontend/src/constants/feature-flags";
@@ -7,16 +13,12 @@ import { FeatureFlagKey } from "../../frontend/src/constants/feature-flags";
 /**
  * Non-régression des feature flags (#2029). Les flags sont un état serveur
  * GLOBAL : la datafeature mémorise chaque bascule et la fixture `data` restaure
- * tout en teardown (y compris après un timeout). La suite est restreinte à
- * chromium : la faire tourner en parallèle sur plusieurs projets navigateurs
- * ferait entrer les bascules en collision entre elles.
+ * tout en teardown (y compris après un timeout). L'isolation temporelle est
+ * structurelle : la suite vit dans le projet Playwright « feature-flags »
+ * (voir playwright.config.ts), exécuté APRÈS tous les projets navigateurs pour
+ * qu'aucune fenêtre « flag off » ne percute une suite parallèle.
  */
 test.describe("Feature flags", () => {
-  test.skip(
-    ({ browserName }) => browserName !== "chromium",
-    "État serveur global partagé : un seul projet navigateur à la fois",
-  );
-
   test("FLG-01 - l'admin voit chaque flag du catalogue partagé", async ({
     page,
     data,
@@ -134,5 +136,28 @@ test.describe("Feature flags", () => {
       if (org) await data.deleteOrganization(org.id).catch(() => {});
       await ctx.close();
     }
+  });
+
+  test("FLG-06 - une bascule se reflète dans la navigation sans rechargement", async ({
+    page,
+    data,
+  }) => {
+    const state = await data.featureFlagState("reports");
+    test.skip(state === null, "Flag reports absent du catalogue");
+    await data.trackFeatureFlag("reports");
+
+    const admin = new AdminPage(page);
+    const chrome = new ChromePage(page);
+    await admin.open();
+    await chrome.expectNavItem("Signalements");
+
+    // La bascule depuis l'onglet admin met à jour le store local : la nav
+    // réagit IMMÉDIATEMENT, sans rechargement de page.
+    await admin.openFeatureFlagsTab();
+    await admin.setFeatureFlagViaUi("reports", false);
+    await chrome.expectNavItemAbsent("Signalements");
+
+    await admin.setFeatureFlagViaUi("reports", true);
+    await chrome.expectNavItem("Signalements");
   });
 });

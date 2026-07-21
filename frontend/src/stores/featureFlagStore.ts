@@ -30,6 +30,16 @@ export const useFeatureFlagStore = defineStore("featureFlagStore", () => {
     return flags.value[key] === true;
   }
 
+  /**
+   * Filtre déclaratif : un élément SANS clé de flag est toujours autorisé, un
+   * élément avec clé l'est si son flag est actif. C'est LA primitive des listes
+   * filtrées (navigation, onglets, plan du site) — le motif
+   * `!key || isEnabled(key)` ne doit jamais être réécrit en place.
+   */
+  function allows(key?: string): boolean {
+    return !key || isEnabled(key);
+  }
+
   /** Charge la liste complète des flags (admin). */
   async function fetchAll() {
     const response = await api.featureFlagControllerFindAll();
@@ -38,6 +48,31 @@ export const useFeatureFlagStore = defineStore("featureFlagStore", () => {
     }
     list.value = response.data;
     return list.value;
+  }
+
+  /** Recharge l'état des flags depuis `GET /config` (sans passer par le cache de boot). */
+  async function refresh() {
+    const response = await api.getConfig();
+    if (response.response.ok && response.data) {
+      setFlags(response.data.featureFlags);
+    }
+  }
+
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  /**
+   * Suivi quasi temps réel : rafraîchit périodiquement les flags pour que les
+   * utilisateurs DÉJÀ connectés voient une bascule sans recharger la page
+   * (navigation, onglets et directives sont réactifs au store ; App.vue éjecte
+   * d'une route dont le flag vient d'être coupé). Idempotent.
+   */
+  function startPolling(intervalMs = 60_000) {
+    if (pollTimer) return;
+    pollTimer = setInterval(() => {
+      void refresh().catch(() => {
+        // Erreur transitoire : on garde l'état courant, prochain tick dans une minute.
+      });
+    }, intervalMs);
   }
 
   /** Bascule un flag (admin) et met à jour l'état local. */
@@ -60,7 +95,10 @@ export const useFeatureFlagStore = defineStore("featureFlagStore", () => {
     loaded,
     list,
     isEnabled,
+    allows,
     setFlags,
+    refresh,
+    startPolling,
     fetchAll,
     toggle,
   };

@@ -77,9 +77,10 @@ const routes = [
     name: routeNames.ACCESSIBILITE,
     path: "/accessibilite",
     component: () => import("@/views/AccessibilityPage.vue"),
+    // Mention légale RGAA : volontairement NON gouvernée par un feature flag
+    // (le lien du footer est obligatoire sur tout le site).
     meta: {
       requiresAuth: false,
-      requiresFeature: FeatureFlagKey.RGAA_ACCESSIBILITY,
       title: "Accessibilité - Référentiel des applications",
     },
   },

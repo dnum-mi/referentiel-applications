@@ -173,6 +173,8 @@ describe("FeatureFlags", () => {
       await prisma.application.delete({ where: { id: gatedApp.id } });
     });
 
+    // Un domaine gaté = « off → 404, on → tout sauf 404 » : l'oracle vérifie la
+    // garde sans dépendre de la sémantique de chaque route.
     const GATED_DOMAINS: { flag: string; path: () => string }[] = [
       { flag: "mdit-campaigns", path: () => "/mdit-campaigns" },
       { flag: "reports", path: () => "/reports" },
@@ -180,6 +182,23 @@ describe("FeatureFlags", () => {
         flag: "technology-stack",
         path: () => `/applications/${gatedApp.id}/technologies`,
       },
+      {
+        flag: "compliances",
+        path: () => `/applications/${gatedApp.id}/compliances`,
+      },
+      { flag: "actors", path: () => `/applications/${gatedApp.id}/actors` },
+      { flag: "links", path: () => `/applications/${gatedApp.id}/links` },
+      {
+        flag: "relations",
+        path: () => `/applications/${gatedApp.id}/relations`,
+      },
+      { flag: "application-history", path: () => "/metadatas" },
+      {
+        flag: "data-catalog",
+        path: () => `/data-catalog/applications/${gatedApp.id}`,
+      },
+      { flag: "api-tokens", path: () => "/tokens" },
+      { flag: "permissions-matrix", path: () => "/actorTypes/perms-matrix" },
     ];
 
     describe.each(GATED_DOMAINS)("$flag", ({ flag, path }) => {
@@ -211,10 +230,41 @@ describe("FeatureFlags", () => {
           .send({ enabled: true })
           .expect(200);
 
-        await request(app().getHttpServer())
+        const response = await request(app().getHttpServer())
           .get(path())
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`);
+        expect(response.status).not.toBe(404);
+        expect(response.status).toBeLessThan(500);
+      });
+    });
+
+    // Nuance tags : le flag « tags-management » ne gate que l'ÉCRITURE admin —
+    // la lecture (filtre du catalogue, fiches) reste ouverte flag off.
+    describe("tags-management (écriture seulement)", () => {
+      afterAll(async () => {
+        await request(app().getHttpServer())
+          .patch("/feature-flags/tags-management")
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+          .send({ enabled: true });
+      });
+
+      it("keeps tag reads open but blocks admin writes when off", async () => {
+        await request(app().getHttpServer())
+          .patch("/feature-flags/tags-management")
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+          .send({ enabled: false })
+          .expect(200);
+
+        await request(app().getHttpServer())
+          .get("/tags")
           .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
           .expect(200);
+
+        await request(app().getHttpServer())
+          .post("/tags")
+          .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+          .send({ name: `e2e-flg-off-${Date.now()}` })
+          .expect(404);
       });
     });
   });

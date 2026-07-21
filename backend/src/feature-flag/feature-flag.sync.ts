@@ -22,7 +22,13 @@ interface FeatureFlagDelegate {
       where: { key: string };
       data: { label: string; description: string | null; enabled?: boolean };
     }): Promise<unknown>;
+    deleteMany(args: { where: { key: { notIn: string[] } } }): Promise<unknown>;
   };
+}
+
+/** Journal minimal des changements appliqués par la synchronisation. */
+export interface FeatureFlagSyncLogger {
+  log(message: string): void;
 }
 
 /**
@@ -40,10 +46,13 @@ interface FeatureFlagDelegate {
  *   `enabled` n'est JAMAIS modifié, sauf pré-activation par
  *   `FEATURE_FLAGS_DEFAULTS` d'un flag qu'aucun admin n'a encore basculé
  *   (`updatedById` null) — la variable pré-active, elle ne désactive jamais et
- *   n'écrase jamais un choix humain.
+ *   n'écrase jamais un choix humain ;
+ * - flag en base absent du catalogue (retiré du code) → supprimé, pour que
+ *   l'admin ne montre jamais un toggle sans aucun effet possible.
  */
 export async function syncFeatureFlagCatalog(
   prisma: FeatureFlagDelegate,
+  logger?: FeatureFlagSyncLogger,
 ): Promise<void> {
   const defaults = new Set(
     (process.env.FEATURE_FLAGS_DEFAULTS ?? "")
@@ -55,6 +64,7 @@ export async function syncFeatureFlagCatalog(
     select: { key: true, updatedById: true },
   });
   const byKey = new Map(existing.map((flag) => [flag.key, flag]));
+  const catalogKeys: string[] = FEATURE_FLAG_CATALOG.map((def) => def.key);
 
   for (const {
     key,
@@ -64,14 +74,16 @@ export async function syncFeatureFlagCatalog(
   } of FEATURE_FLAG_CATALOG) {
     const current = byKey.get(key);
     if (!current) {
+      const enabled = defaultEnabled || defaults.has(key);
       await prisma.featureFlag.create({
         data: {
           key,
           label,
           description: description ?? null,
-          enabled: defaultEnabled || defaults.has(key),
+          enabled,
         },
       });
+      logger?.log(`Feature flag « ${key} » créé (enabled=${enabled})`);
     } else {
       const preActivate = defaults.has(key) && current.updatedById === null;
       await prisma.featureFlag.update({
@@ -82,6 +94,25 @@ export async function syncFeatureFlagCatalog(
           ...(preActivate ? { enabled: true } : {}),
         },
       });
+      if (preActivate) {
+        logger?.log(
+          `Feature flag « ${key} » pré-activé via FEATURE_FLAGS_DEFAULTS`,
+        );
+      }
     }
+  }
+
+  // Purge des orphelins : un flag retiré du catalogue disparaît de la base (et
+  // donc de l'écran d'admin) au prochain démarrage.
+  const orphans = existing.filter((flag) => !catalogKeys.includes(flag.key));
+  if (orphans.length) {
+    await prisma.featureFlag.deleteMany({
+      where: { key: { notIn: [...catalogKeys] } },
+    });
+    logger?.log(
+      `Feature flags retirés du catalogue supprimés : ${orphans
+        .map((flag) => flag.key)
+        .join(", ")}`,
+    );
   }
 }

@@ -24,6 +24,9 @@ import { Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { FeatureFlag } from "src/common/decorators/feature-flag.decorator";
+import { FeatureFlagGuard } from "src/feature-flag/feature-flag.guard";
+import { FeatureFlagKey } from "src/feature-flag/feature-flag.keys";
 import {
   CreateTagDto,
   TagDto,
@@ -40,6 +43,8 @@ export class TagsController {
 
   @Post()
   @RequiredPermissions([Permission.AdminPanelManage])
+  @FeatureFlag(FeatureFlagKey.TAGS_MANAGEMENT)
+  @UseGuards(FeatureFlagGuard)
   @ApiOperation({
     summary: "Créer un nouveau tag.",
     description: `
@@ -97,6 +102,8 @@ Information requise :
 
   @Patch(":id")
   @RequiredPermissions([Permission.AdminPanelManage])
+  @FeatureFlag(FeatureFlagKey.TAGS_MANAGEMENT)
+  @UseGuards(FeatureFlagGuard)
   @ApiOperation({ summary: "Modifier un tag." })
   @ApiOkResponse({ description: "Tag mis à jour avec succès", type: TagDto })
   @ApiForbiddenResponse({
@@ -110,6 +117,8 @@ Information requise :
 
   @Delete(":id")
   @RequiredPermissions([Permission.AdminPanelManage])
+  @FeatureFlag(FeatureFlagKey.TAGS_MANAGEMENT)
+  @UseGuards(FeatureFlagGuard)
   @ApiOperation({ summary: "Supprimer un tag." })
   @HttpCode(204)
   @ApiNoContentResponse({ description: "Tag supprimé avec succès" })

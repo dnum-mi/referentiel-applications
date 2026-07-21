@@ -7,6 +7,7 @@ import {
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { FeatureFlagDto, UpdateFeatureFlagDto } from "./dto/feature-flag.dto";
+import { FeatureFlagPubSub } from "./feature-flag.pubsub";
 import { syncFeatureFlagCatalog } from "./feature-flag.sync";
 
 /** Projection Prisma alignée sur `FeatureFlagDto` (l'audit `updatedById` reste interne). */
@@ -26,9 +27,10 @@ const FLAG_DTO_SELECT = {
  * court, invalidé immédiatement à chaque `update` pour qu'une bascule via
  * l'admin soit reflétée sans redémarrage.
  *
- * Limites assumées du cache :
- * - l'invalidation est locale à l'instance : en multi-replicas, une bascule se
- *   propage aux autres instances au plus tard après `CACHE_TTL_MS` ;
+ * Comportement du cache :
+ * - une bascule est propagée aux AUTRES instances via Postgres LISTEN/NOTIFY
+ *   (`FeatureFlagPubSub`, quasi temps réel) ; le TTL n'est qu'un filet de
+ *   sécurité si le canal est indisponible ;
  * - en cas de panne DB, on sert le dernier état connu (stale-while-error) — ou
  *   « tout désactivé » si aucun état n'a jamais été chargé (fail-closed) — pour
  *   que `GET /config` (vital au boot du front) et les gardes ne tombent pas en 500.
@@ -51,17 +53,22 @@ export class FeatureFlagService implements OnModuleInit {
   // bascule ne peut pas écraser le cache avec des données déjà périmées.
   private cacheVersion = 0;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly pubSub: FeatureFlagPubSub,
+  ) {}
 
   /**
    * Aligne la table sur le catalogue au démarrage : c'est ce qui fait apparaître
    * un nouveau flag dans TOUS les environnements (en prod, le seed ne tourne
    * jamais). Best-effort : un échec est loggé mais n'empêche pas le boot (les
-   * flags déjà en base restent servis).
+   * flags déjà en base restent servis). Abonne aussi le cache aux invalidations
+   * diffusées par les autres instances (LISTEN/NOTIFY).
    */
   async onModuleInit(): Promise<void> {
+    this.pubSub.subscribe(() => this.invalidateCache());
     try {
-      await syncFeatureFlagCatalog(this.prisma);
+      await syncFeatureFlagCatalog(this.prisma, this.logger);
     } catch (error) {
       this.logger.error(
         "Synchronisation du catalogue de feature flags impossible au démarrage",
@@ -89,6 +96,14 @@ export class FeatureFlagService implements OnModuleInit {
         select: FLAG_DTO_SELECT,
       });
       this.invalidateCache();
+      // Diffusion aux autres instances (LISTEN/NOTIFY) — best-effort, le TTL
+      // du cache reste le filet de sécurité.
+      void this.pubSub.publishInvalidation(key);
+      // Action admin à effet global : trace attribuable en niveau info (même
+      // pattern que les changements de rôles dans user.service).
+      this.logger.log(
+        `[AdminPanel] Feature flag « ${key} » → ${dto.enabled ? "activé" : "désactivé"} par ${userId ?? "inconnu"}`,
+      );
       return flag;
     } catch (error) {
       // P2025 : la ligne n'existe pas — une seule requête, atomique.

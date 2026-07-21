@@ -34,9 +34,34 @@ export default defineConfig({
   timeout: 90_000,
 
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
+    // La suite feature-flags bascule un état SERVEUR global : elle est isolée
+    // dans son propre projet, exécuté APRÈS tous les autres (dependencies),
+    // pour qu'une fenêtre « flag off » n'entre jamais en collision avec les
+    // suites qui consomment les fonctionnalités gouvernées.
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: "**/feature-flags.spec.ts",
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+      testIgnore: "**/feature-flags.spec.ts",
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+      testIgnore: "**/feature-flags.spec.ts",
+    },
+    // Pas de `dependencies` : Playwright exécuterait les projets dépendants EN
+    // ENTIER en ignorant --grep (la campagne QA filtrée jouerait tout).
+    // L'ordre « navigateurs puis feature-flags » est garanti par le script
+    // `test:e2e` (deux invocations séquentielles) pour le run complet.
+    {
+      name: "feature-flags",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: "**/feature-flags.spec.ts",
+    },
   ],
 
   /* Démarre le serveur de dev du frontend (réutilise une instance déjà lancée en local). */

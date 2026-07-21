@@ -3,7 +3,7 @@ import type { APP_PERMISSIONS, ApplicationWithPerms } from "@/models/Application
 import { routeNames } from "@/router/route-names";
 import { useMediaQuery } from "@vueuse/core";
 import type { Component } from "vue";
-import { onBeforeMount, ref, watch, markRaw } from "vue";
+import { computed, onBeforeMount, ref, watch, markRaw } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import ActorManager from "./actor/ActorTab.vue";
@@ -46,13 +46,11 @@ function updateApplication() {
 }
 
 // Tabs definition — keep the same shape, but ensure errorKey is keyof errorMessages
-const tabs = ref<
-  (Tab<Record<string, never>> & {
-    component: Component;
-    requiredPerms: APP_PERMISSIONS[];
-    featureKey?: string;
-  })[]
->([
+const allTabs: (Tab<Record<string, never>> & {
+  component: Component;
+  requiredPerms: APP_PERMISSIONS[];
+  featureKey?: string;
+})[] = [
   {
     title: "Informations générales",
     icon: "ri-checkbox-circle-line",
@@ -150,20 +148,20 @@ const tabs = ref<
     requiredPerms: [Permission.COMPLIANCE_READ, Permission.ACTOR_READ, Permission.LINK_READ, Permission.APP_READ],
     featureKey: FeatureFlagKey.QUALITY_DASHBOARD,
   },
-]);
+];
 const tabsStyle = ref({ "--tabs-height": "auto" });
 
-// Read tab from URL using tabId (string) — more stable than using numeric index
-onBeforeMount(async () => {
-  // filter tabs based on permissions and feature flags
-  tabs.value = tabs.value.filter((tab) => {
-    if (tab.featureKey && !featureFlagStore.isEnabled(tab.featureKey)) {
-      return false;
-    }
-    return userStore.hasPermissions(tab.requiredPerms, Array.from(props.application.myPerms));
-  });
+// Onglets visibles : chaque onglet DÉCLARE ses conditions (requiredPerms,
+// featureKey) — le computed reste réactif à une bascule de flag en cours de
+// session (polling du featureFlagStore).
+const tabs = computed(() =>
+  allTabs.filter(
+    (tab) => featureFlagStore.allows(tab.featureKey) && userStore.hasPermissions(tab.requiredPerms, Array.from(props.application.myPerms)),
+  ),
+);
 
-  // Read requested tab from URL params after filtering
+// Read tab from URL using tabId (string) — more stable than using numeric index
+onBeforeMount(() => {
   const raw = Array.isArray(route.params.tab) ? route.params.tab[0] : route.params.tab;
   if (raw) {
     const idx = tabs.value.findIndex((t) => t.tabId === raw);
@@ -172,6 +170,14 @@ onBeforeMount(async () => {
 
   // clamp activeTab to valid range
   if (activeTab.value >= tabs.value.length) activeTab.value = Math.max(0, tabs.value.length - 1);
+});
+
+// Une bascule de flag peut retirer/rendre un onglet : réaligner l'onglet actif
+// sur son tabId stable (même approche que la page d'administration).
+watch(tabs, (newTabs, oldTabs) => {
+  const currentTabId = oldTabs?.[activeTab.value]?.tabId;
+  const nextIndex = currentTabId ? newTabs.findIndex((t) => t.tabId === currentTabId) : -1;
+  activeTab.value = nextIndex >= 0 ? nextIndex : Math.min(activeTab.value, Math.max(newTabs.length - 1, 0));
 });
 
 // keep props -> local ref in sync

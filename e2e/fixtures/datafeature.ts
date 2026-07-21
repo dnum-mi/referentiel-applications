@@ -452,19 +452,27 @@ export class DataFeature {
     return rows[0]?.id ?? null;
   }
 
-  /** Crée un token de service (donc un compte `bot`) ; renvoie l'id du token, ou `null`. */
+  /**
+   * Crée un token de service (donc un compte `bot`) ; renvoie l'id du token, ou
+   * `null`. Réessaie brièvement : l'API tokens est gouvernée par le flag
+   * « api-tokens », qu'un test FLG parallèle peut basculer pendant ~2 s.
+   */
   async createServiceToken(name: string): Promise<string | null> {
     const expiresAt = new Date(
       Date.now() + 7 * 24 * 60 * 60 * 1000,
     ).toISOString();
-    const token = await this.api.createServiceToken({
-      name,
-      description:
-        "Compte de service éphémère pour la non-régression impersonation",
-      expiresAt,
-      role: "VISITOR",
-    });
-    return token?.id ?? null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const token = await this.api.createServiceToken({
+        name,
+        description:
+          "Compte de service éphémère pour la non-régression impersonation",
+        expiresAt,
+        role: "VISITOR",
+      });
+      if (token) return token.id;
+      await new Promise((resolve) => setTimeout(resolve, 1_500));
+    }
+    return null;
   }
 
   /** Révoque un token de service (nettoyage). */
