@@ -81,6 +81,45 @@ export default tseslint.config(
     },
   },
 
+  // --- Doctrine feature flags : le gating est DÉCLARATIF, jamais conditionnel en place. ---
+  // `isEnabled()` est réservé aux primitives (garde, directive, composable,
+  // store, garde de route côté front ; garde et kill-switches sans route
+  // décorables côté back). Partout ailleurs : `@FeatureFlag` (backend),
+  // `featureKey`/`meta.requiresFeature`/`v-feature`/`useFeatureFlag`/`allows()`
+  // (frontend). Tout nouvel appel direct casse le lint : l'ajouter à la liste
+  // d'exceptions ci-dessous est une décision d'architecture à assumer en revue.
+  {
+    files: ["frontend/src/**/*.{ts,vue}", "backend/src/**/*.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            'CallExpression[callee.type="MemberExpression"][callee.property.name="isEnabled"]',
+          message:
+            "Gating par feature flag : pas d'appel direct à isEnabled() hors primitives. " +
+            "Utiliser @FeatureFlag (backend) ou featureKey / meta.requiresFeature / v-feature / useFeatureFlag / allows() (frontend).",
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      // Primitives frontend.
+      "frontend/src/stores/featureFlagStore.ts",
+      "frontend/src/composables/use-feature-flag.ts",
+      "frontend/src/directives/feature-flag.ts",
+      "frontend/src/router/index.ts",
+      // Primitives backend + kill-switches sans route décorables.
+      "backend/src/feature-flag/**",
+      "backend/src/middlewares/auth.middleware.ts",
+      "backend/src/email/email.service.ts",
+    ],
+    rules: {
+      "no-restricted-syntax": "off",
+    },
+  },
+
   // À garder en dernier : neutralise les règles ESLint qui entrent en conflit avec Prettier.
   configPrettier,
 );
