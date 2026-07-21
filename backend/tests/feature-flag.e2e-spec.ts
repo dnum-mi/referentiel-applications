@@ -3,6 +3,7 @@ import { Roles } from "@prisma/client";
 import request from "supertest";
 import { FeatureFlagKey } from "../src/feature-flag/feature-flag.keys";
 import { ApplicationFaker } from "./fakers/application.faker";
+import { OrganizationFaker } from "./fakers/organization.faker";
 import { getPrismaClient } from "./fakers/prisma";
 import { getToken } from "./getToken";
 import { setupTestSuite } from "./setup";
@@ -123,6 +124,37 @@ describe("FeatureFlags", () => {
       .set("Authorization", `Bearer ${READER_TOKEN}`)
       .send({ enabled: false })
       .expect(403);
+  });
+
+  // Le feature flipping a un effet global : un administrateur restreint à un
+  // périmètre (scopeOrganizationId) est refusé, même avec AdminPanelManage.
+  describe("global admin only (scoped admin locked out)", () => {
+    let SCOPED_ADMIN_TOKEN: string;
+
+    beforeAll(async () => {
+      const org = await OrganizationFaker.create();
+      const scopedAdmin = await UserFaker.create({ role: Roles.ADMIN });
+      await prisma.user.update({
+        where: { id: scopedAdmin.id },
+        data: { scopeOrganizationId: org.id },
+      });
+      SCOPED_ADMIN_TOKEN = getToken(scopedAdmin);
+    });
+
+    it("forbids a scoped admin from listing the flags", async () => {
+      await request(app().getHttpServer())
+        .get("/feature-flags")
+        .set("Authorization", `Bearer ${SCOPED_ADMIN_TOKEN}`)
+        .expect(403);
+    });
+
+    it("forbids a scoped admin from toggling a flag", async () => {
+      await request(app().getHttpServer())
+        .patch(`/feature-flags/${TEST_FLAG_KEY}`)
+        .set("Authorization", `Bearer ${SCOPED_ADMIN_TOKEN}`)
+        .send({ enabled: true })
+        .expect(403);
+    });
   });
 
   // Gating de bout en bout, paramétré sur chaque domaine gardé : le PATCH

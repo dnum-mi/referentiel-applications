@@ -12,12 +12,15 @@ import { Impersonator } from "src/common/decorators/impersonator.decorator";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { UserId } from "src/common/decorators/user-id.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
+import { UnscopedAdminGuard } from "src/common/guards/unscoped-admin.guard";
 import { Requestor } from "src/user/entities/user.entity";
 import { FeatureFlagDto, UpdateFeatureFlagDto } from "./dto/feature-flag.dto";
 import { FeatureFlagService } from "./feature-flag.service";
 
 @ApiTags("FeatureFlags")
-@UseGuards(PermissionGuard)
+// Le feature flipping a un effet GLOBAL : réservé aux administrateurs globaux,
+// un admin restreint à un périmètre (scopeOrganizationId) est refusé (403).
+@UseGuards(PermissionGuard, UnscopedAdminGuard)
 @Controller("feature-flags")
 export class FeatureFlagController {
   constructor(private readonly featureFlagService: FeatureFlagService) {}
@@ -34,7 +37,8 @@ export class FeatureFlagController {
     type: [FeatureFlagDto],
   })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description:
+      "Accès refusé - Réservé aux administrateurs globaux (non scopés)",
   })
   findAll(): Promise<FeatureFlagDto[]> {
     return this.featureFlagService.findAll();
@@ -53,7 +57,8 @@ export class FeatureFlagController {
     type: FeatureFlagDto,
   })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description:
+      "Accès refusé - Réservé aux administrateurs globaux (non scopés)",
   })
   @ApiNotFoundResponse({ description: "Feature flag non trouvé" })
   update(

@@ -12,6 +12,7 @@ import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
 import AdminFeatureFlagsTab from "@/components/admin/AdminFeatureFlagsTab.vue";
 import { FeatureFlagKey } from "@/constants/feature-flags";
 import { useFeatureFlagStore } from "@/stores/featureFlagStore";
+import { useUserStore } from "@/stores/userStore";
 
 interface DsfrTab {
   title: string;
@@ -20,9 +21,12 @@ interface DsfrTab {
   panelId: string;
   component: any;
   featureKey?: string;
+  /** Onglet réservé aux administrateurs globaux (non restreints à un périmètre). */
+  requiresGlobalAdmin?: boolean;
 }
 
 const featureFlagStore = useFeatureFlagStore();
+const userStore = useUserStore();
 const activeTab = ref(0);
 const tabs = ref<DsfrTab[]>([
   {
@@ -94,17 +98,26 @@ const tabs = ref<DsfrTab[]>([
   },
   {
     // Volontairement non flaggé : désactiver ce flag verrouillerait l'accès à
-    // l'écran qui permet de le réactiver.
+    // l'écran qui permet de le réactiver. Réservé aux administrateurs GLOBAUX :
+    // le feature flipping a un effet global, un admin de périmètre ne le voit
+    // pas (le backend refuse de toute façon un compte scopé, 403).
     title: "Feature flags",
     icon: "ri-toggle-line",
     tabId: "tab-feature-flags",
     panelId: "panel-feature-flags",
     component: markRaw(AdminFeatureFlagsTab),
+    requiresGlobalAdmin: true,
   },
 ]);
 
-// Onglets réellement affichés : on retire ceux dont le feature flag est désactivé.
-const visibleTabs = computed(() => tabs.value.filter((tab) => !tab.featureKey || featureFlagStore.isEnabled(tab.featureKey)));
+// Onglets réellement affichés : on retire ceux dont le feature flag est
+// désactivé, et ceux réservés à l'admin global pour un compte scopé.
+const isGlobalAdmin = computed(() => !userStore.user?.scopeOrganizationId);
+const visibleTabs = computed(() =>
+  tabs.value.filter(
+    (tab) => (!tab.featureKey || featureFlagStore.isEnabled(tab.featureKey)) && (!tab.requiresGlobalAdmin || isGlobalAdmin.value),
+  ),
+);
 
 // `activeTab` est un index sur `visibleTabs` : quand la liste change (bascule
 // d'un flag depuis l'onglet Feature flags), on réaligne l'index sur le même

@@ -402,6 +402,28 @@ export class DataFeature {
     });
   }
 
+  /** Rôle + périmètre actuels d'un compte (à mémoriser pour restauration). */
+  async userScopeState(
+    email: string,
+  ): Promise<{ role: string; scopeOrganizationId: string | null } | null> {
+    const user = await this.api.userByEmail(email);
+    if (!user) return null;
+    return {
+      role: user.role,
+      scopeOrganizationId: user.scopeOrganizationId ?? null,
+    };
+  }
+
+  /** Affecte rôle + périmètre à un compte (ex. promouvoir un admin scopé). */
+  async setUserScope(
+    email: string,
+    state: { role: string; scopeOrganizationId: string | null },
+  ): Promise<void> {
+    const user = await this.api.userByEmail(email);
+    if (!user) throw new Error(`Utilisateur introuvable: ${email}`);
+    await this.api.setUser(user.id, state);
+  }
+
   /** Rétablit un utilisateur à l'état Lecteur sans permission additionnelle. */
   async resetUser(email: string): Promise<void> {
     const user = await this.api.userByEmail(email);

@@ -43,7 +43,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/FeatureFlagDto"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - Réservé aux administrateurs globaux (non scopés)
       tags: &a1
         - FeatureFlags
   /api/v2/feature-flags/{key}:
@@ -72,7 +72,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FeatureFlagDto"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - Réservé aux administrateurs globaux (non scopés)
         "404":
           description: Feature flag non trouvé
       tags: *a1

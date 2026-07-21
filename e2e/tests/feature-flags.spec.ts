@@ -1,5 +1,5 @@
 import { test } from "../fixtures/test";
-import { AdminPage, ApplicationPage, ReportsPage } from "../pom";
+import { AdminPage, ApplicationPage, ReportsPage, loginAs } from "../pom";
 // Miroir front des clés (import direct : garde-fou anti-dérive — si une clé du
 // miroir n'existe pas côté backend, FLG-01 échoue au lieu de dériver en silence).
 import { FeatureFlagKey } from "../../frontend/src/constants/feature-flags";
@@ -91,5 +91,48 @@ test.describe("Feature flags", () => {
     // (meta.requiresFeature) renvoie vers l'accueil.
     await reports.openExpectingRedirectToHome();
     // Restauration : teardown de la fixture `data`.
+  });
+
+  test("FLG-05 - l'onglet Feature flags est réservé à l'administrateur global", async ({
+    browser,
+    data,
+  }) => {
+    const ts = Date.now();
+    const SCOPED_EMAIL = "scope-admin@example.com";
+    let org: { id: string } | null = null;
+    let original: { role: string; scopeOrganizationId: string | null } | null =
+      null;
+
+    // Contexte séparé : la session admin de la fixture reste intacte.
+    const ctx = await browser.newContext();
+    try {
+      // Le login crée le compte en base s'il n'existe pas encore.
+      const scopedPage = await ctx.newPage();
+      await loginAs(scopedPage, "scope-admin");
+
+      // L'admin global (fixture) promeut le compte en admin SCOPÉ sur une
+      // organisation jetable, après avoir mémorisé son état pour restauration.
+      original = await data.userScopeState(SCOPED_EMAIL);
+      test.skip(!original, "Compte scope-admin introuvable");
+      org = await data.createOrganization(`E2E/FLG05/${ts}`);
+      test.skip(!org, "Impossible de créer l'organisation de test");
+      await data.setUserScope(SCOPED_EMAIL, {
+        role: "ADMIN",
+        scopeOrganizationId: org!.id,
+      });
+
+      // L'admin scopé accède au panneau… mais pas au feature flipping
+      // (le backend refuse de toute façon un compte scopé : 403).
+      const admin = new AdminPage(scopedPage);
+      await admin.open();
+      await admin.expectAdminTabVisible(/gestion des utilisateurs/i);
+      await admin.expectAdminTabHidden(/feature flags/i);
+    } finally {
+      if (original) {
+        await data.setUserScope(SCOPED_EMAIL, original).catch(() => {});
+      }
+      if (org) await data.deleteOrganization(org.id).catch(() => {});
+      await ctx.close();
+    }
   });
 });

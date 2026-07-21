@@ -10,7 +10,7 @@
 | Légende           |                                                                |
 | :---------------- | :------------------------------------------------------------- |
 | **Automatisé** ✅ | tests Playwright dédiés dans `e2e/tests/feature-flags.spec.ts` |
-| **Statut**        | 🟢 automatisé — 4 cas couverts par la CI                       |
+| **Statut**        | 🟢 automatisé — 5 cas couverts par la CI                       |
 
 ---
 
@@ -46,3 +46,12 @@
 - **Action** : ouvrir `/signalements` (accessible flag actif), désactiver `reports`, recharger
   `/signalements`.
 - **Résultat attendu** : la garde de route (`meta.requiresFeature`) redirige vers l'accueil (`/`).
+
+### FLG-05 — L'onglet Feature flags est réservé à l'administrateur global ✅
+
+- **Datafeature** : compte `scope-admin` promu admin **scopé** sur une organisation jetable via
+  l'API (état d'origine mémorisé et restauré en fin de test ; organisation supprimée).
+- **Action** : connexion `scope-admin` dans un contexte navigateur séparé → `/administration`.
+- **Résultat attendu** : le panneau admin est accessible (onglet « Gestion des utilisateurs »
+  visible) mais l'onglet « Feature flags » est absent ; côté API, `GET`/`PATCH /feature-flags`
+  renvoient 403 pour un admin scopé (le feature flipping est global, réservé à l'admin global).

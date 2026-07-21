@@ -573,6 +573,8 @@ export interface UserAdmin {
   email: string;
   role: string;
   additionalPermissions: string[];
+  /** Périmètre d'administration (admin scopé) ; null pour un admin global. */
+  scopeOrganizationId?: string | null;
 }
 
 /** Champs de conformité utiles aux tests (sous-ensemble du DTO backend). */
