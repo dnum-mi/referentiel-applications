@@ -81,6 +81,36 @@ Nous retenons l'**option 3**, avec les choix structurants suivants :
 7. **Historique** : chaque bascule écrit une entrée de journal (`FeatureFlagLog`, pattern `UserPermissionLog`) **dans la même transaction** que la bascule ; consultable par l'admin global (`GET /feature-flags/:key/history` et accordéon « Historique » de l'écran d'admin).
 8. **Source unique des clés** : le catalogue backend est propagé au contrat OpenAPI (enum `FeatureFlagKey` sur `FeatureFlagDto.key`) puis au client front généré — le front ré-exporte l'objet généré, il n'existe **aucun miroir manuel**.
 
+## Versionner une feature : flag de variante et réversibilité des données
+
+Un flag est un **interrupteur**, pas une machine à remonter le temps : il ne peut
+pas ressusciter du code supprimé ni des données transformées. Pour qu'une
+refonte soit réversible à chaud (« désactiver la V2, retrouver la V1 »), elle
+doit suivre le pattern **flag de variante** (_parallel change_) :
+
+1. **Coexistence du code** : la V1 n'est pas supprimée ; les deux implémentations
+   vivent dans le même build, le flag choisit laquelle sert (primitives
+   habituelles : garde/branchement côté backend, composant conditionnel côté
+   frontend). La V1 + le flag ne sont supprimés qu'une fois la V2 validée en
+   production (la sync purge alors automatiquement le flag orphelin de l'admin).
+2. **Migrations additives uniquement (« expand »)** : tant que le flag existe,
+   une migration AJOUTE (tables/colonnes nouvelles) et ne détruit ni ne
+   transforme jamais l'ancien schéma — la V1 doit rester capable de lire ses
+   données.
+3. **Double écriture pendant la transition** : la V2 écrit dans les deux
+   formats tant que le flag existe, pour qu'un retour V1 ne perde aucune donnée
+   créée sous V2.
+4. **La destruction (« contract ») vient après la mort du flag** : le nettoyage
+   de l'ancien schéma se fait dans une release ULTÉRIEURE à la suppression du
+   flag. Séquence : expand → flag → validation → suppression du flag → contract.
+
+**Limite assumée** : quand une transformation est trop profonde pour une double
+écriture raisonnable, la refonte n'est PAS réversible par flag — le retour
+arrière devient un rollback de déploiement avec restauration de base (fenêtre
+courte, perte des écritures récentes). Ce choix doit être EXPLICITE dans la PR
+de refonte (« cette version est un point de non-retour fonctionnel »), jamais
+découvert a posteriori.
+
 ## Conséquences
 
 Positives :
