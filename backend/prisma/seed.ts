@@ -76,12 +76,31 @@ async function createApplications(
   return applications;
 }
 
-async function createDataDescriptions(): Promise<SeededDataDescription[]> {
+async function createDataDescriptions(
+  applications: SeededApplication[],
+): Promise<SeededDataDescription[]> {
   const dataFamilies = await DataFamilyFaker.createAll();
   const dataDescriptions: SeededDataDescription[] = [];
   for (let i = 0; i < 50; i++) {
-    const family = faker.helpers.arrayElement(dataFamilies);
-    const dd = await DataDescriptionFaker.create({ familyId: family.id });
+    // Une donnée peut appartenir à plusieurs familles (occasionnellement).
+    const families = faker.helpers.arrayElements(dataFamilies, {
+      min: 1,
+      max: Math.min(3, dataFamilies.length),
+    });
+    // Chaque donnée provient d'une ou plusieurs applications sources sur RefApp (celles qui la
+    // produisent) ; occasionnellement aucune, pour couvrir le cas d'une donnée sans source renseignée.
+    const sourceApplications = faker.helpers.maybe(
+      () =>
+        faker.helpers.arrayElements(applications, {
+          min: 1,
+          max: Math.min(3, applications.length),
+        }),
+      { probability: 0.9 },
+    );
+    const dd = await DataDescriptionFaker.create({
+      familyIds: families.map((family) => family.id),
+      applicationSourceIds: sourceApplications?.map((app) => app.id) ?? [],
+    });
     dataDescriptions.push(dd);
   }
   return dataDescriptions;
@@ -245,7 +264,7 @@ async function seed({
   const dataSensibilities = await DataSensibilityFaker.createAll();
 
   console.log("📚 Creating data descriptions...");
-  const dataDescriptions = await createDataDescriptions();
+  const dataDescriptions = await createDataDescriptions(applications);
 
   console.log("🔗 Creating data applications...");
   await createDataApplications(

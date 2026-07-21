@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { IsArray, IsOptional, IsString, IsUrl, IsUUID } from "class-validator";
+import { PaginationDto } from "../../common/dto";
+
+export class DataDescriptionFiltersDto extends PaginationDto {
+  @ApiPropertyOptional({
+    description: "Filtre par nom (recherche partielle, insensible à la casse)",
+  })
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
 
 export class CreateDataDescriptionDto {
   @ApiProperty()
@@ -11,10 +21,14 @@ export class CreateDataDescriptionDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Familles de données parentes (une donnée peut appartenir à plusieurs familles)",
+  })
   @IsOptional()
-  @IsUUID()
-  familyId?: string;
+  @IsUUID("4", { each: true })
+  familyIds?: string[];
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -25,6 +39,15 @@ export class CreateDataDescriptionDto {
   @IsOptional()
   @IsUUID("4", { each: true })
   tagIds?: string[];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Applications sources de cette donnée (celles qui la produisent sur RefApp)",
+  })
+  @IsOptional()
+  @IsUUID("4", { each: true })
+  applicationSourceIds?: string[];
 }
 
 export class DataFamilyDto {
@@ -87,14 +110,28 @@ export class DataDescriptionDto {
   @IsUrl()
   officialUrl?: string;
 
-  @ApiPropertyOptional({ type: () => DataFamilyDto })
+  @ApiPropertyOptional({
+    type: () => [DataFamilyDto],
+    description:
+      "Familles de données parentes (une donnée peut appartenir à plusieurs familles)",
+  })
   @IsOptional()
-  family?: DataFamilyDto;
+  @IsArray()
+  families?: DataFamilyDto[];
 
   @ApiPropertyOptional({ type: () => [TagDto] })
   @IsOptional()
   @IsArray()
   tags?: TagDto[];
+
+  @ApiPropertyOptional({
+    type: () => [ApplicationRefDto],
+    description:
+      "Applications sources de cette donnée (celles qui la produisent sur RefApp)",
+  })
+  @IsOptional()
+  @IsArray()
+  applicationsSource?: ApplicationRefDto[];
 
   @ApiPropertyOptional({ type: () => [DataApplicationRefDto] })
   @IsOptional()

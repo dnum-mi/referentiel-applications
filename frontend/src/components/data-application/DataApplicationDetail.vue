@@ -2,18 +2,24 @@
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
-import type { DataApplicationDto } from "@/client/types.gen";
+import { Permission, type DataApplicationDto, type DataExposureDto } from "@/client/types.gen";
+import type { APP_PERMISSIONS } from "@/models/Application";
+import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
 import { routeNames } from "@/router/route-names";
 import {
   OPEN_DATA_STATUS_LABELS,
   UPDATE_FREQUENCY_LABELS,
   OPEN_DATA_BADGE_CLASS,
   DOCUMENTATION_COLUMNS as documentationColumns,
-  EXPOSURE_COLUMNS as exposureColumns,
+  EXPOSURE_COLUMNS as baseExposureColumns,
 } from "@/constants/data-catalog.constants";
 import type { OpenDataStatus, UpdateFrequency } from "@/client/types.gen.js";
 import RefAppTable from "@/components/RefAppTable.vue";
+import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
+import DataApplicationModal from "./DataApplicationModal.vue";
+import DataExposureModal from "./DataExposureModal.vue";
 
 const props = defineProps<{
   applicationId: string;
@@ -22,9 +28,25 @@ const props = defineProps<{
 
 const router = useRouter();
 const toaster = useToasterStore();
+const applicationStore = useApplicationStore();
+const userStore = useUserStore();
 
 const item = ref<DataApplicationDto | null>(null);
 const isLoading = ref(false);
+const myPerms = ref<Set<APP_PERMISSIONS>>(new Set());
+
+const canEdit = computed(() => userStore.hasPermissions([Permission.DATA_WRITE], Array.from(myPerms.value)));
+
+const isEditModalOpen = ref(false);
+const isDeleteModalOpen = ref(false);
+const errorMessage = ref("");
+
+// --- Exposition (DataExposure) : CRUD depuis la page de détail ---
+const isAddExposureModalOpen = ref(false);
+const exposureToEdit = ref<DataExposureDto | null>(null);
+const exposureToDelete = ref<DataExposureDto | null>(null);
+const isDeleteExposureModalOpen = ref(false);
+const exposureErrorMessage = ref("");
 
 async function fetchOne() {
   item.value = null;
@@ -45,19 +67,105 @@ async function fetchOne() {
   }
 }
 
-onMounted(fetchOne);
+async function fetchMyPerms() {
+  try {
+    myPerms.value = await applicationStore.getMyPerms(props.applicationId);
+  } catch (error) {
+    console.error("Error fetching permissions:", error);
+  }
+}
 
-// Découpe la famille en segments pour l'affichage hiérarchique
-const familyParts = computed(() => item.value?.dataDescription?.family?.path?.split(" > ") ?? []);
+onMounted(fetchOne);
+onMounted(fetchMyPerms);
+
+async function onDataUpdated() {
+  isEditModalOpen.value = false;
+  await fetchOne();
+}
+
+function openEditExposureModal(exposure: DataExposureDto) {
+  exposureToEdit.value = exposure;
+}
+
+function openDeleteExposureModal(exposure: DataExposureDto) {
+  exposureToDelete.value = exposure;
+  isDeleteExposureModalOpen.value = true;
+}
+
+function cancelExposureDeletion() {
+  exposureToDelete.value = null;
+  isDeleteExposureModalOpen.value = false;
+}
+
+async function confirmExposureDeletion() {
+  if (!exposureToDelete.value) return;
+  try {
+    const response = await api.dataCatalogControllerDeleteExposure({
+      path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId, exposureId: exposureToDelete.value.id },
+    });
+    if (!response.response.ok) throw new Error("delete failed");
+    toaster.addSuccessMessage("Exposition supprimée avec succès");
+    await fetchOne();
+  } catch (error) {
+    console.error(error);
+    exposureErrorMessage.value = "Erreur lors de la suppression de l'exposition.";
+    toaster.addErrorMessage(exposureErrorMessage.value);
+  } finally {
+    exposureToDelete.value = null;
+    isDeleteExposureModalOpen.value = false;
+  }
+}
+
+async function onExposureSaved() {
+  isAddExposureModalOpen.value = false;
+  exposureToEdit.value = null;
+  await fetchOne();
+}
+
+async function confirmDeletion() {
+  try {
+    const response = await api.dataCatalogControllerDeleteApplicationData({
+      path: { applicationId: props.applicationId, dataApplicationId: props.dataApplicationId },
+    });
+    if (!response.response.ok) throw new Error("delete failed");
+    toaster.addSuccessMessage("Donnée détachée avec succès");
+    goToProfileApp(props.applicationId);
+  } catch (error) {
+    console.error(error);
+    errorMessage.value = "Erreur lors de la suppression de la donnée.";
+    toaster.addErrorMessage(errorMessage.value);
+  } finally {
+    isDeleteModalOpen.value = false;
+  }
+}
+
+// Une donnée peut appartenir à plusieurs familles métier, affichées en tags (comme dans le tableau).
+const families = computed(() => item.value?.dataDescription?.families ?? []);
 
 // Autres applications utilisant la même donnée (exclut l'application courante)
 const otherApplications = computed(() =>
   (item.value?.dataDescription?.dataApplications ?? []).filter((dataApplication) => dataApplication.applicationId !== props.applicationId),
 );
 
+// Application courante, retrouvée dans les usages de la donnée (pour afficher son libellé dans
+// la section « Usage dans l'application », sans dépendre d'un fetch séparé de l'application).
+const currentUsageApplication = computed(
+  () =>
+    item.value?.dataDescription?.dataApplications?.find((dataApplication) => dataApplication.applicationId === props.applicationId)
+      ?.application ?? null,
+);
+
+// Applications sources de la donnée générique (celles qui la produisent sur RefApp)
+const applicationsSourceList = computed(() => item.value?.dataDescription?.applicationsSource ?? []);
+
 const documentationItems = computed(() => (item.value?.documentationUrl ?? []).map((url) => ({ url })));
 
 const exposureItems = computed(() => item.value?.exposures ?? []);
+
+const exposureColumns = computed(() => [
+  ...baseExposureColumns,
+  ...(canEdit.value ? [{ field: "actions", header: "Actions", sortable: false }] : []),
+]);
 
 const hasInfoContent = computed(
   () =>
@@ -72,6 +180,8 @@ const hasInfoContent = computed(
 const hasUsageContent = computed(
   () =>
     !!(
+      currentUsageApplication.value ||
+      applicationsSourceList.value.length ||
       item.value?.sensibility ||
       item.value?.updateFrequency ||
       item.value?.openDataStatus ||
@@ -84,19 +194,45 @@ const hasUsageContent = computed(
 function goToProfileApp(appId: string) {
   router.push({ name: routeNames.PROFILEAPP, params: { id: appId, tab: "tab-data" } });
 }
+
+// Redirige vers la fiche générale d'une application (contrairement à `goToProfileApp`, qui force
+// l'onglet Données) : cohérent avec la navigation depuis les chips « Applications source » de
+// l'onglet Données (`DataApplicationTab.vue`).
+function goToApplicationProfile(appId: string) {
+  router.push({ name: routeNames.PROFILEAPP, params: { id: appId } });
+}
 </script>
 
 <template>
   <div class="fr-py-4w fr-px-4w" data-testid="data-application-detail">
-    <!-- ── Retour ─────────────────────────────────────────────────── -->
-    <DsfrButton
-      label="Retour à la liste"
-      secondary
-      icon="ri-arrow-left-line"
-      class="fr-mb-3w"
-      data-testid="data-application-detail-back"
-      @click="goToProfileApp(props.applicationId)"
-    />
+    <!-- ── Retour + actions ───────────────────────────────────────── -->
+    <div class="fr-grid-row fr-grid-row--middle fr-mb-3w">
+      <div class="fr-col">
+        <DsfrButton
+          label="Retour à la liste"
+          secondary
+          icon="ri-arrow-left-line"
+          data-testid="data-application-detail-back"
+          @click="goToProfileApp(props.applicationId)"
+        />
+      </div>
+      <div v-if="canEdit && item" class="fr-col-auto fr-btns-group fr-btns-group--inline-md detail-actions">
+        <DsfrButton
+          tertiary
+          icon="fr-icon-edit-line"
+          label="Modifier"
+          data-testid="data-application-detail-edit-btn"
+          @click="isEditModalOpen = true"
+        />
+        <DsfrButton
+          tertiary
+          icon="fr-icon-delete-bin-line"
+          label="Détacher"
+          data-testid="data-application-detail-delete-btn"
+          @click="isDeleteModalOpen = true"
+        />
+      </div>
+    </div>
 
     <!-- ── Loading ────────────────────────────────────────────────── -->
     <output
@@ -127,17 +263,11 @@ function goToProfileApp(appId: string) {
             </span>
           </div>
 
-          <!-- Fil d'ariane famille métier -->
-          <div v-if="familyParts.length" class="fr-mt-1w">
-            <div class="fr-text--sm fr-mb-0 detail-breadcrumb">
-              <span class="fr-icon-links-line fr-icon--sm fr-mr-1v icon-blue" aria-hidden="true" />
-              <template v-for="(part, index) in familyParts" :key="part">
-                <span :class="{ 'family-part--last': index === familyParts.length - 1 }">
-                  {{ part }}
-                </span>
-                <span v-if="index < familyParts.length - 1" class="fr-mx-1v fr-text-mention--grey"> &gt; </span>
-              </template>
-            </div>
+          <!-- Familles métier (une donnée peut appartenir à plusieurs familles) -->
+          <div v-if="families.length" class="fr-tags-group fr-mt-1w" data-testid="data-application-detail-families">
+            <span v-for="family in families" :key="family.id" class="fr-tag fr-mr-1v fr-mb-1v">
+              {{ family.path }}
+            </span>
           </div>
         </div>
       </div>
@@ -149,7 +279,12 @@ function goToProfileApp(appId: string) {
           <div class="fr-p-3w kpi-card">
             <div class="fr-icon-database-fill fr-icon--lg fr-mr-2w icon-blue" aria-hidden="true" />
             <div>
-              <p class="fr-text--sm fr-mb-0 kpi-label">Volumétrie totale</p>
+              <p class="fr-text--sm fr-mb-0 kpi-label">
+                <span class="tooltip-label">
+                  Volumétrie totale
+                  <DsfrTooltip id="detail-volumetry-tooltip-desc" content="Nombre total estimé d'enregistrements de cette donnée." />
+                </span>
+              </p>
               <strong class="fr-h4 fr-mb-0">
                 {{ item?.volumetry?.toLocaleString("fr-FR") }}
               </strong>
@@ -162,7 +297,15 @@ function goToProfileApp(appId: string) {
           <div class="fr-p-3w kpi-card">
             <div class="fr-icon-line-chart-line fr-icon--lg fr-mr-2w icon-info" aria-hidden="true" />
             <div>
-              <p class="fr-text--sm fr-mb-0 kpi-label">Ajouts mensuels</p>
+              <p class="fr-text--sm fr-mb-0 kpi-label">
+                <span class="tooltip-label">
+                  Ajouts mensuels
+                  <DsfrTooltip
+                    id="detail-monthly-volumetry-tooltip-desc"
+                    content="Nombre d'enregistrements ajoutés en moyenne chaque mois."
+                  />
+                </span>
+              </p>
               <strong class="fr-h4 fr-mb-0">
                 {{ item?.monthlyVolumetry?.toLocaleString("fr-FR") }}
               </strong>
@@ -175,7 +318,15 @@ function goToProfileApp(appId: string) {
           <div class="fr-p-3w kpi-card">
             <div class="fr-icon-timer-fill fr-icon--lg fr-mr-2w icon-warning" aria-hidden="true" />
             <div>
-              <p class="fr-text--sm fr-mb-0 kpi-label">Fréquence de MAJ</p>
+              <p class="fr-text--sm fr-mb-0 kpi-label">
+                <span class="tooltip-label">
+                  Fréquence de MAJ
+                  <DsfrTooltip
+                    id="detail-kpi-update-frequency-tooltip-desc"
+                    content="Fréquence à laquelle la donnée est mise à jour dans cette application."
+                  />
+                </span>
+              </p>
               <strong class="fr-h4 fr-mb-0">
                 {{ UPDATE_FREQUENCY_LABELS[(item?.updateFrequency ?? "") as UpdateFrequency] ?? item?.updateFrequency }}
               </strong>
@@ -197,7 +348,13 @@ function goToProfileApp(appId: string) {
 
             <!-- URL officielle (source de vérité) -->
             <div v-if="item?.dataDescription?.officialUrl" class="fr-mb-3w">
-              <strong>Source officielle&nbsp;:</strong>
+              <strong class="tooltip-label">
+                Source officielle&nbsp;:
+                <DsfrTooltip
+                  id="detail-official-url-tooltip-desc"
+                  content="Lien vers la source officielle faisant référence pour cette donnée (ex : référentiel externe, documentation métier)."
+                />
+              </strong>
               <div class="fr-mt-1v data-detail__section-title">
                 <span class="fr-icon-external-link-line fr-icon--sm fr-mr-1v icon-success" aria-hidden="true" />
                 <a
@@ -213,19 +370,37 @@ function goToProfileApp(appId: string) {
 
             <!-- Description -->
             <div v-if="item?.dataDescription?.description" class="fr-mb-3w">
-              <strong>Description&nbsp;:</strong>
+              <strong class="tooltip-label">
+                Description&nbsp;:
+                <DsfrTooltip
+                  id="detail-description-tooltip-desc"
+                  content="Description détaillée de la donnée, utile aux autres équipes qui envisagent de la réutiliser."
+                />
+              </strong>
               <p class="fr-mt-1v fr-mb-0">{{ item?.dataDescription?.description }}</p>
             </div>
 
             <!-- Exemple -->
             <div v-if="item?.example" class="fr-mb-3w">
-              <strong>Exemple de contenu&nbsp;:</strong>
+              <strong class="tooltip-label">
+                Exemple de contenu&nbsp;:
+                <DsfrTooltip
+                  id="detail-example-tooltip-desc"
+                  content="Exemple concret de contenu de la donnée, pour aider à sa compréhension."
+                />
+              </strong>
               <pre class="fr-mt-1w code-block"><code>{{ item?.example }}</code></pre>
             </div>
 
             <!-- Tags -->
             <div v-if="item?.dataDescription?.tags?.length" class="fr-mb-0">
-              <strong>Tags métier&nbsp;:</strong>
+              <strong class="tooltip-label">
+                Tags métier&nbsp;:
+                <DsfrTooltip
+                  id="detail-tags-tooltip-desc"
+                  content="Mots-clés libres facilitant la recherche et le filtrage de cette donnée dans le catalogue."
+                />
+              </strong>
               <div class="fr-tags-group fr-mt-1w">
                 <span v-for="tag in item?.dataDescription?.tags" :key="tag.id" class="fr-tag fr-mr-1v fr-mb-1v">
                   {{ tag.name }}
@@ -249,9 +424,62 @@ function goToProfileApp(appId: string) {
             </h2>
             <hr class="fr-hr fr-my-2w" />
 
+            <!-- Application utilisant cette donnée -->
+            <div v-if="currentUsageApplication" class="fr-mb-3w">
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Application utilisant cette donnée
+                  <DsfrTooltip
+                    id="detail-usage-application-tooltip-desc"
+                    content="Application dont vous consultez la fiche : elle réutilise cette donnée. Cliquez le tag pour accéder à sa fiche."
+                  />
+                </span>
+              </p>
+              <button
+                type="button"
+                class="fr-tag application-link-tag"
+                data-testid="data-application-detail-usage-application"
+                @click="goToApplicationProfile(currentUsageApplication.id)"
+              >
+                {{ currentUsageApplication.label }}
+              </button>
+            </div>
+
+            <!-- Applications source -->
+            <div v-if="applicationsSourceList.length" class="fr-mb-3w">
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Applications source
+                  <DsfrTooltip
+                    id="detail-source-applications-tooltip-desc"
+                    content="Applications RefApp qui produisent ou possèdent cette donnée à l'origine. Cliquez un tag pour accéder à sa fiche."
+                  />
+                </span>
+              </p>
+              <div class="fr-tags-group" data-testid="data-application-detail-source-applications">
+                <button
+                  v-for="sourceApp in applicationsSourceList"
+                  :key="sourceApp.id"
+                  type="button"
+                  class="fr-tag fr-mr-1v fr-mb-1v application-link-tag"
+                  @click="goToApplicationProfile(sourceApp.id)"
+                >
+                  {{ sourceApp.label }}
+                </button>
+              </div>
+            </div>
+
             <!-- Sensibilité -->
             <div v-if="item?.sensibility" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Sensibilité</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Sensibilité
+                  <DsfrTooltip
+                    id="detail-sensibility-tooltip-desc"
+                    content="Niveau de sensibilité de la donnée dans le contexte de cette application (ex : RGPD, donnée sensible)."
+                  />
+                </span>
+              </p>
               <span
                 class="fr-badge"
                 :style="
@@ -266,7 +494,15 @@ function goToProfileApp(appId: string) {
 
             <!-- Fréquence de MAJ -->
             <div v-if="item?.updateFrequency" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Fréquence de MAJ</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Fréquence de MAJ
+                  <DsfrTooltip
+                    id="detail-update-frequency-tooltip-desc"
+                    content="Fréquence à laquelle la donnée est mise à jour dans cette application."
+                  />
+                </span>
+              </p>
               <span class="fr-badge fr-badge--info">
                 {{ UPDATE_FREQUENCY_LABELS[(item?.updateFrequency ?? "") as UpdateFrequency] ?? item?.updateFrequency }}
               </span>
@@ -274,7 +510,15 @@ function goToProfileApp(appId: string) {
 
             <!-- Statut open data -->
             <div v-if="item?.openDataStatus" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Statut open data</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Statut open data
+                  <DsfrTooltip
+                    id="detail-open-data-tooltip-desc"
+                    content="Indique si cette donnée est exposée, exposable ou non exposable en open data."
+                  />
+                </span>
+              </p>
               <span class="fr-badge" :class="OPEN_DATA_BADGE_CLASS[(item?.openDataStatus ?? '') as OpenDataStatus] ?? 'fr-badge--info'">
                 {{ OPEN_DATA_STATUS_LABELS[(item?.openDataStatus ?? "") as OpenDataStatus] ?? item?.openDataStatus }}
               </span>
@@ -282,7 +526,15 @@ function goToProfileApp(appId: string) {
 
             <!-- Donnée référentielle -->
             <div v-if="item?.isReference != null" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Donnée référentielle</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Donnée référentielle
+                  <DsfrTooltip
+                    id="detail-is-reference-tooltip-desc"
+                    content="« Oui » si cette application est la source de vérité pour cette donnée (le référentiel faisant autorité)."
+                  />
+                </span>
+              </p>
               <span :class="item?.isReference ? 'fr-badge fr-badge--success' : 'fr-badge'">
                 {{ item?.isReference ? "Oui" : "Non" }}
               </span>
@@ -290,13 +542,29 @@ function goToProfileApp(appId: string) {
 
             <!-- Conservation -->
             <div v-if="item?.conservation" class="fr-mb-3w">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Conservation</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Conservation
+                  <DsfrTooltip
+                    id="detail-conservation-tooltip-desc"
+                    content="Durée pendant laquelle la donnée est conservée dans cette application."
+                  />
+                </span>
+              </p>
               <span class="fr-badge fr-badge--info">{{ item?.conservation }}</span>
             </div>
 
             <!-- Usage métier -->
             <div v-if="item?.businessUsage" class="fr-mb-0">
-              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">Usage métier</p>
+              <p class="fr-text--xs fr-text-mention--grey fr-mb-1v field-label">
+                <span class="tooltip-label">
+                  Usage métier
+                  <DsfrTooltip
+                    id="detail-business-usage-tooltip-desc"
+                    content="Description de l'usage métier fait de cette donnée dans cette application."
+                  />
+                </span>
+              </p>
               <p class="fr-text--sm fr-mb-0">{{ item?.businessUsage }}</p>
             </div>
 
@@ -337,15 +605,37 @@ function goToProfileApp(appId: string) {
         </div>
 
         <!-- Ligne inférieure : Exposition -->
-        <div v-if="item?.exposures?.length" class="fr-col-12">
+        <div v-if="item?.exposures?.length || canEdit" class="fr-col-12">
           <div class="fr-p-3w section-card--mt">
-            <h2 class="fr-h5 data-detail__section-title">
-              <span class="fr-icon-global-line fr-icon--md fr-mr-2w icon-blue" aria-hidden="true" />
-              Exposition
-            </h2>
+            <div class="fr-grid-row fr-grid-row--middle">
+              <div class="fr-col">
+                <h2 class="fr-h5 data-detail__section-title fr-mb-0">
+                  <span class="fr-icon-global-line fr-icon--md fr-mr-2w icon-blue" aria-hidden="true" />
+                  Exposition
+                </h2>
+              </div>
+              <div v-if="canEdit" class="fr-col-auto">
+                <DsfrButton
+                  tertiary
+                  size="sm"
+                  class="fr-btn--icon-left fr-icon-add-line"
+                  label="Ajouter"
+                  title="Ajouter une exposition"
+                  data-testid="data-exposure-add-btn"
+                  @click="isAddExposureModalOpen = true"
+                />
+              </div>
+            </div>
             <hr class="fr-hr fr-my-2w" />
 
-            <RefAppTable :items="exposureItems" :columns="exposureColumns" :total-records="exposureItems.length" :paginator="false">
+            <RefAppTable
+              :items="exposureItems"
+              :columns="exposureColumns"
+              :total-records="exposureItems.length"
+              :paginator="false"
+              data-testid="data-exposure-table"
+              empty-message="Aucune exposition renseignée."
+            >
               <template #body-type="{ data }">
                 <span v-if="data.type" class="fr-badge fr-badge--info">{{ data.type }}</span>
                 <span v-else class="fr-text-mention--grey">—</span>
@@ -387,6 +677,26 @@ function goToProfileApp(appId: string) {
                 <span v-if="data.authenticationType">{{ data.authenticationType }}</span>
                 <span v-else class="fr-text-mention--grey">—</span>
               </template>
+
+              <template #body-actions="{ data }: { data: DataExposureDto }">
+                <DsfrButton
+                  tertiary
+                  size="sm"
+                  icon="fr-icon-edit-line"
+                  title="Modifier"
+                  class="fr-mr-1w"
+                  :data-testid="`data-exposure-edit-btn-${data.id}`"
+                  @click="openEditExposureModal(data)"
+                />
+                <DsfrButton
+                  tertiary
+                  size="sm"
+                  icon="fr-icon-delete-bin-line"
+                  title="Supprimer"
+                  :data-testid="`data-exposure-delete-btn-${data.id}`"
+                  @click="openDeleteExposureModal(data)"
+                />
+              </template>
             </RefAppTable>
           </div>
         </div>
@@ -396,7 +706,7 @@ function goToProfileApp(appId: string) {
           <div class="fr-p-3w section-card--mt">
             <h2 class="fr-h5 data-detail__section-title">
               <span class="fr-icon-arrow-right-up-line fr-icon--md fr-mr-2w icon-success" aria-hidden="true" />
-              Applications réutilisant cette donnée
+              Réutilisation
             </h2>
             <hr class="fr-hr fr-my-2w" />
 
@@ -416,21 +726,91 @@ function goToProfileApp(appId: string) {
         </div>
       </div>
     </template>
+
+    <DataApplicationModal
+      v-if="isEditModalOpen && item"
+      :application-id="props.applicationId"
+      :initial-item="item"
+      :error-message="errorMessage"
+      @close="isEditModalOpen = false"
+      @data-updated="onDataUpdated"
+    />
+
+    <DeleteConfirmationModal
+      v-if="isDeleteModalOpen"
+      :opened="isDeleteModalOpen"
+      item-name="cette donnée"
+      @confirm="confirmDeletion"
+      @cancel="isDeleteModalOpen = false"
+    />
+
+    <DataExposureModal
+      v-if="isAddExposureModalOpen"
+      :application-id="props.applicationId"
+      :data-application-id="props.dataApplicationId"
+      :error-message="exposureErrorMessage"
+      @close="isAddExposureModalOpen = false"
+      @exposure-created="onExposureSaved"
+    />
+
+    <DataExposureModal
+      v-if="exposureToEdit"
+      :application-id="props.applicationId"
+      :data-application-id="props.dataApplicationId"
+      :initial-exposure="exposureToEdit"
+      :error-message="exposureErrorMessage"
+      @close="exposureToEdit = null"
+      @exposure-updated="onExposureSaved"
+    />
+
+    <DeleteConfirmationModal
+      v-if="isDeleteExposureModalOpen"
+      :opened="isDeleteExposureModalOpen"
+      item-name="cette exposition"
+      @confirm="confirmExposureDeletion"
+      @cancel="cancelExposureDeletion"
+    />
   </div>
 </template>
 
 <style scoped>
+/* `DsfrTooltip` positionne sa bulle via un `transform` calculé en JS par rapport à la largeur de LA
+   FENÊTRE entière : la bulle peut rester « dans l'écran » selon son propre calcul tout en débordant
+   de son conteneur (bug constaté, y compris après un simple passage en `position: absolute`). On
+   ignore complètement ce calcul et on ancre la bulle nous-mêmes, juste en dessous de son champ, avec
+   une largeur volontairement réduite. */
+.tooltip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  position: relative;
+}
+
+:deep(.fr-tooltip) {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  transform: none !important;
+  margin-top: 0.25rem;
+  max-width: 220px;
+}
+
 /* ── Layout helpers ──────────────────────────────────────────── */
+/* .fr-btns-group impose margin-bottom: 1rem et align-items: stretch sur ses .fr-btn (pensé pour un
+   empilement mobile) : on neutralise pour aligner ces boutons avec « Retour à la liste ». */
+.detail-actions {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.detail-actions :deep(.fr-btn) {
+  margin-bottom: 0;
+}
+
 .detail-title-row {
   display: flex;
   align-items: center;
   gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.detail-breadcrumb {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
 }
 
@@ -451,11 +831,6 @@ function goToProfileApp(appId: string) {
 }
 .icon-success {
   color: var(--success-425-625);
-}
-
-/* ── Family breadcrumb ───────────────────────────────────────── */
-.family-part--last {
-  font-weight: bold;
 }
 
 /* ── KPI cards ───────────────────────────────────────────────── */
@@ -512,5 +887,14 @@ function goToProfileApp(appId: string) {
 .field-label {
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+/* ── Chips cliquables vers une fiche application ──────────────── */
+.application-link-tag {
+  cursor: pointer;
+}
+
+.application-link-tag:hover {
+  text-decoration: underline;
 }
 </style>

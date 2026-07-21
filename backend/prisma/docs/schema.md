@@ -8,7 +8,6 @@
 - [DataCatalog](#datacatalog)
 - [Hosting](#hosting)
 - [Labels](#labels)
-- [License](#license)
 - [Metadata](#metadata)
 - [Notifications](#notifications)
 - [Organizations](#organizations)
@@ -102,6 +101,10 @@ erDiagram
   String A FK
   String B FK
 }
+"_ApplicationToDataDescription" {
+  String A FK
+  String B FK
+}
 "_DataDescriptionToTag" {
   String A FK
   String B FK
@@ -120,6 +123,7 @@ erDiagram
 "_ApplicationToApplicationStatus" }o--|| "ApplicationStatus" : ApplicationStatus
 "_ApplicationToTag" }o--|| "Application" : Application
 "_ApplicationToTag" }o--|| "Tag" : Tag
+"_ApplicationToDataDescription" }o--|| "Application" : Application
 "_DataDescriptionToTag" }o--|| "Tag" : Tag
 ```
 
@@ -271,6 +275,15 @@ Properties as follows:
 - `A`:
 - `B`:
 
+### `_ApplicationToDataDescription`
+
+Pair relationship table between [Application](#Application) and [DataDescription](#DataDescription)
+
+Properties as follows:
+
+- `A`:
+- `B`:
+
 ### `_DataDescriptionToTag`
 
 Pair relationship table between [DataDescription](#DataDescription) and [Tag](#Tag)
@@ -414,7 +427,6 @@ erDiagram
   String id PK
   String(255) name
   String description "nullable"
-  String familyId FK "nullable"
   String(255) officialUrl "nullable"
 }
 "DataApplication" {
@@ -442,15 +454,25 @@ erDiagram
   String swaggerUrl "nullable"
   String(255) authenticationType "nullable"
 }
+"_DataDescriptionToDataFamily" {
+  String A FK
+  String B FK
+}
 "_DataDescriptionToTag" {
   String A FK
   String B FK
 }
-"DataDescription" }o--o| "DataFamily" : family
+"_ApplicationToDataDescription" {
+  String A FK
+  String B FK
+}
 "DataApplication" }o--|| "DataDescription" : dataDescription
 "DataApplication" }o--o| "DataSensibility" : sensibility
 "DataExposure" }o--|| "DataApplication" : dataApplication
+"_DataDescriptionToDataFamily" }o--|| "DataDescription" : DataDescription
+"_DataDescriptionToDataFamily" }o--|| "DataFamily" : DataFamily
 "_DataDescriptionToTag" }o--|| "DataDescription" : DataDescription
+"_ApplicationToDataDescription" }o--|| "DataDescription" : DataDescription
 ```
 
 ### `DataFamily`
@@ -475,15 +497,15 @@ Properties as follows:
 
 ### `DataDescription`
 
-Description générique d'une donnée, indépendante d'une application.
-Peut être réutilisée dans plusieurs applications.
+Description générique d'une donnée. Provient d'une ou plusieurs applications sources sur RefApp
+(les applications qui produisent/possèdent cette donnée) et peut ensuite être réutilisée par
+d'autres applications (voir `DataApplication`, qui représente cet usage).
 
 Properties as follows:
 
 - `id`: Identifiant unique
 - `name`: Nom de la donnée
 - `description`: Description détaillée
-- `familyId`: Identifiant de la famille de données
 - `officialUrl`: URL vers la source officielle de la donnée
 
 ### `DataApplication`
@@ -522,9 +544,27 @@ Properties as follows:
 - `swaggerUrl`: URL de la documentation Swagger/OpenAPI
 - `authenticationType`: Type d'authentification requis (ex: OAuth2, API Key)
 
+### `_DataDescriptionToDataFamily`
+
+Pair relationship table between [DataDescription](#DataDescription) and [DataFamily](#DataFamily)
+
+Properties as follows:
+
+- `A`:
+- `B`:
+
 ### `_DataDescriptionToTag`
 
 Pair relationship table between [DataDescription](#DataDescription) and [Tag](#Tag)
+
+Properties as follows:
+
+- `A`:
+- `B`:
+
+### `_ApplicationToDataDescription`
+
+Pair relationship table between [Application](#Application) and [DataDescription](#DataDescription)
 
 Properties as follows:
 
@@ -600,32 +640,6 @@ Properties as follows:
 - `id`: Identifiant unique
 - `source`: Nom unique du système source
 
-## License
-
-```mermaid
-erDiagram
-"License" {
-  String id PK
-  String applicationId FK
-  String name
-  String(50) version "nullable"
-}
-```
-
-### `License`
-
-Licence logicielle utilisée par une application.
-Une application peut référencer 0 à N licences, une par identifiant de licence.
-Le nom suit de préférence un identifiant SPDX (ex. « MIT », « Apache-2.0 »),
-mais la saisie libre reste possible (normalisation assurée côté frontend).
-
-Properties as follows:
-
-- `id`: Identifiant unique
-- `applicationId`: Identifiant de l'application
-- `name`: Nom / identifiant SPDX de la licence (ex. « MIT », « Apache-2.0 »)
-- `version`: Version de la licence si pertinent (ex. « 2.0 »)
-
 ## Metadata
 
 ```mermaid
@@ -646,7 +660,6 @@ erDiagram
   String technicalDebtInfoId FK "nullable"
   String rgaaComplianceId FK "nullable"
   String technologyStackId FK "nullable"
-  String licenseId FK "nullable"
   String dataApplicationId FK "nullable"
   String dataDescriptionId FK "nullable"
 }
@@ -674,7 +687,6 @@ Properties as follows:
 - `technicalDebtInfoId`:
 - `rgaaComplianceId`:
 - `technologyStackId`:
-- `licenseId`:
 - `dataApplicationId`:
 - `dataDescriptionId`:
 
@@ -780,6 +792,8 @@ erDiagram
   Boolean MetadataRead
   Boolean DataRead
   Boolean DataWrite
+  Boolean TechnologyRead
+  Boolean TechnologyWrite
   Boolean RelationRead
   Boolean RelationWrite
   Boolean LinkRead
@@ -859,6 +873,8 @@ Properties as follows:
 - `MetadataRead`: Peut lire les métadonnées
 - `DataRead`: Peut lire les données de l'application (onglet Données)
 - `DataWrite`:
+- `TechnologyRead`: Peut lire la stack technique (onglet Technologies) — ouvert à tous par défaut
+- `TechnologyWrite`: Peut modifier la stack technique — réservé par défaut
 - `RelationRead`: Peut lire les relations d'application
 - `RelationWrite`: Peut écrire les relations d'application
 - `LinkRead`: Peut lire les liens externes
@@ -1047,7 +1063,9 @@ erDiagram
   String id PK
   String applicationId FK
   String technology
+  String product
   String(50) version "nullable"
+  String(2048) docUrl "nullable"
   DateTime eolDate "nullable"
   DateTime eolCheckedAt "nullable"
 }
@@ -1064,8 +1082,10 @@ Properties as follows:
 
 - `id`: Identifiant unique
 - `applicationId`: Identifiant de l'application
-- `technology`: Nom de la technologie (ex. « Node.js », « PostgreSQL »)
+- `technology`: Famille / catégorie de technologie (ex. « Base de données », « Langage »)
+- `product`: Produit concret (ex. « PostgreSQL », « Node.js ») — sert à résoudre la fin de vie
 - `version`: Version utilisée (ex. « 20.11 »)
+- `docUrl`: Lien documentaire (URL) associé au produit
 - `eolDate`: Date de fin de support/vie de la version (renseignée via endoflife.date)
 - `eolCheckedAt`: Date de dernière vérification du statut de fin de vie
 

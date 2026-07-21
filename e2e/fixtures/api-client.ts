@@ -532,6 +532,53 @@ export class ApiClient {
     );
   }
 
+  // --- Catalogue de données applicatives (DAT-*) ---
+
+  /** Crée une data description du catalogue (`POST /data-catalog/descriptions`). */
+  createDataDescription(
+    body: Record<string, unknown>,
+  ): Promise<{ id: string; name: string } | null> {
+    return this.post<{ id: string; name: string }>(
+      "/data-catalog/descriptions",
+      body,
+    );
+  }
+
+  /** Supprime une data description (nettoyage). */
+  deleteDataDescription(id: string): Promise<boolean> {
+    return this.del(`/data-catalog/descriptions/${id}`);
+  }
+
+  /** Liste paginée des familles métier du catalogue de données (`GET /data-catalog/families`). */
+  dataFamilies(
+    query = "",
+  ): Promise<Paginated<{ id: string; path: string }> | null> {
+    return this.get<Paginated<{ id: string; path: string }>>(
+      `/data-catalog/families${query ? `?${query}` : ""}`,
+    );
+  }
+
+  /** Rattache une donnée à une application (`POST /data-catalog/applications/{applicationId}`). */
+  attachDataToApplication(
+    applicationId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ id: string } | null> {
+    return this.post<{ id: string }>(
+      `/data-catalog/applications/${applicationId}`,
+      body,
+    );
+  }
+
+  /** Détache une donnée d'une application (nettoyage). */
+  detachDataFromApplication(
+    applicationId: string,
+    dataApplicationId: string,
+  ): Promise<boolean> {
+    return this.del(
+      `/data-catalog/applications/${applicationId}/${dataApplicationId}`,
+    );
+  }
+
   // --- Conformités (provisioning éco-index / homologation, requiert ComplianceWrite) ---
   compliance(appId: string): Promise<ComplianceShape | null> {
     return this.get<ComplianceShape>(`/applications/${appId}/compliances`);

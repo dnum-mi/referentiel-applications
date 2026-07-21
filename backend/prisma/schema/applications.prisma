@@ -61,6 +61,8 @@ model Application {
   notificationLogs            NotificationLog[]
   /// Différents source de données associées à cette application
   dataApplications DataApplication[]
+  /// Données du catalogue dont cette application est une source (voir `DataDescription.applicationsSource`)
+  sourceDataDescriptions DataDescription[]
   /// Niveau de priorité pour les opérations de redémarrage
   priorityRestart priorityRestart?
   /// Score de qualité de la fiche de l' application

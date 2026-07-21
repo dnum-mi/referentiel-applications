@@ -2,20 +2,72 @@
 import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index";
-import type { DataApplicationDto } from "@/client/types.gen";
+import { Permission, type ApplicationRefDto, type DataApplicationDto, type DataFamilyDto } from "@/client/types.gen";
+import type { ApplicationWithPerms } from "@/models/Application";
 import type { TableSortEvent } from "@/types/table";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useUserStore } from "@/stores/userStore";
 import { routeNames } from "@/router/route-names";
 import RefAppTable from "@/components/RefAppTable.vue";
+import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
 import { OPEN_DATA_BADGE_CLASS, OPEN_DATA_STATUS_LABELS } from "@/constants/data-catalog.constants";
 import type { OpenDataStatus } from "@/client/types.gen.js";
+import DataApplicationModal from "./DataApplicationModal.vue";
 
 const props = defineProps<{
-  application: { id: string };
+  application: ApplicationWithPerms;
 }>();
 
 const router = useRouter();
 const toaster = useToasterStore();
+const userStore = useUserStore();
+
+const canEdit = computed(() => userStore.hasPermissions([Permission.DATA_WRITE], Array.from(props.application.myPerms ?? [])));
+
+const isCreateModalOpen = ref(false);
+const itemToEdit = ref<DataApplicationDto | null>(null);
+const itemToDelete = ref<DataApplicationDto | null>(null);
+const isDeleteModalOpen = ref(false);
+const errorMessage = ref("");
+
+function openEditModal(item: DataApplicationDto) {
+  itemToEdit.value = item;
+}
+
+function openDeleteModal(item: DataApplicationDto) {
+  itemToDelete.value = item;
+  isDeleteModalOpen.value = true;
+}
+
+function cancelDeletion() {
+  itemToDelete.value = null;
+  isDeleteModalOpen.value = false;
+}
+
+async function confirmDeletion() {
+  if (!itemToDelete.value) return;
+  try {
+    const response = await api.dataCatalogControllerDeleteApplicationData({
+      path: { applicationId: props.application.id, dataApplicationId: itemToDelete.value.id },
+    });
+    if (!response.response.ok) throw new Error("delete failed");
+    toaster.addSuccessMessage("Donnée détachée avec succès");
+    await fetchByApplication(props.application.id);
+  } catch (error) {
+    console.error(error);
+    errorMessage.value = "Erreur lors de la suppression de la donnée.";
+    toaster.addErrorMessage(errorMessage.value);
+  } finally {
+    itemToDelete.value = null;
+    isDeleteModalOpen.value = false;
+  }
+}
+
+async function onDataSaved() {
+  isCreateModalOpen.value = false;
+  itemToEdit.value = null;
+  await fetchByApplication(props.application.id);
+}
 
 const items = ref<DataApplicationDto[]>([]);
 const total = ref(0);
@@ -36,6 +88,7 @@ async function fetchByApplication(id: string) {
         page: currentPage.value,
         pageSize: pageSize.value,
         order: sortOrder.value === -1 ? "desc" : "asc",
+        sortBy: sortField.value,
       },
     });
     if (!response.response.ok) {
@@ -64,38 +117,42 @@ function onPage(event: any) {
   fetchByApplication(props.application.id);
 }
 
-const columns = [
-  { field: "name", header: "Nom", sortable: true },
-  { field: "family", header: "Famille métier", sortable: false, width: "30%" },
-  { field: "sensibility", header: "Sensibilité", sortable: false },
-  { field: "openDataStatus", header: "Open data", sortable: false },
-  { field: "isReference", header: "Référentiel", sortable: false },
-  { field: "tags", header: "Tags", sortable: false },
-];
+const columns = computed(() => [
+  { field: "name", header: "Nom de la donnée", sortable: true },
+  { field: "applicationsSource", header: "Applications source", sortable: false },
+  { field: "family", header: "Famille métier", sortable: false, width: "25%" },
+  { field: "sensibility", header: "Sensibilité", sortable: true },
+  { field: "openDataStatus", header: "Open data", sortable: true },
+  { field: "isReference", header: "Référentiel", sortable: true },
+  { field: "tags", header: "Tags", sortable: true },
+  ...(canEdit.value ? [{ field: "actions", header: "Actions", sortable: false }] : []),
+]);
 
 interface DataRow {
   id: string;
   name: string;
-  family: string;
   sensibility: string;
   _sensibilityColor: string | null;
   openDataStatus: string | null;
   isReference: boolean;
-  _familyParts: string[];
+  _familiesRaw: DataFamilyDto[];
   _tagsRaw: Array<{ id: string; name: string }>;
+  _applicationsSourceRaw: ApplicationRefDto[];
+  _raw: DataApplicationDto;
 }
 
 const tableItems = computed<DataRow[]>(() =>
   items.value.map((dto) => ({
     id: dto.id,
     name: dto.dataDescription?.name ?? "",
-    family: dto.dataDescription?.family?.path ?? "",
     sensibility: dto.sensibility?.label ?? "",
     _sensibilityColor: dto.sensibility?.color ?? null,
     openDataStatus: dto.openDataStatus ?? null,
     isReference: dto.isReference ?? false,
-    _familyParts: dto.dataDescription?.family?.path?.split(" > ") ?? [],
+    _familiesRaw: dto.dataDescription?.families ?? [],
     _tagsRaw: dto.dataDescription?.tags ?? [],
+    _applicationsSourceRaw: dto.dataDescription?.applicationsSource ?? [],
+    _raw: dto,
   })),
 );
 
@@ -107,6 +164,10 @@ function goToDetail(row: DataRow) {
       dataApplicationId: row.id,
     },
   });
+}
+
+function goToSourceApplication(applicationId: string) {
+  router.push({ name: routeNames.PROFILEAPP, params: { id: applicationId } });
 }
 
 watch(
@@ -123,10 +184,25 @@ watch(
 
 <template>
   <div class="fr-py-4w">
-    <h2 class="fr-mb-2w">
-      Données de l'application
-      <span v-if="!isLoading" class="fr-text--sm fr-text-mention--grey fr-ml-1w">({{ total }} donnée{{ total > 1 ? "s" : "" }})</span>
-    </h2>
+    <div class="fr-grid-row fr-grid-row--middle fr-mb-2w">
+      <div class="fr-col">
+        <h2 class="fr-mb-0">
+          Données
+          <span v-if="!isLoading" class="fr-text--sm fr-text-mention--grey fr-ml-1w">({{ total }} donnée{{ total > 1 ? "s" : "" }})</span>
+        </h2>
+      </div>
+      <div v-if="canEdit" class="fr-col-auto">
+        <DsfrButton
+          tertiary
+          size="sm"
+          class="fr-btn--icon-left fr-icon-add-line"
+          label="Ajouter"
+          title="Rattacher une donnée à l'application"
+          data-testid="data-application-add-btn"
+          @click="isCreateModalOpen = true"
+        />
+      </div>
+    </div>
 
     <RefAppTable
       :items="tableItems"
@@ -149,15 +225,14 @@ watch(
         <DsfrButton tertiary no-outline :label="data.name || '—'" @click="goToDetail(data)" />
       </template>
 
-      <!-- FAMILLE MÉTIER — hiérarchie depuis _familyParts -->
+      <!-- FAMILLE MÉTIER — une donnée peut appartenir à plusieurs familles, affichées en chips -->
       <template #body-family="{ data }: { data: DataRow }">
-        <span v-if="!data._familyParts.length" class="fr-text-mention--grey">—</span>
-        <template v-else>
-          <template v-for="(part, index) in data._familyParts" :key="part">
-            <span :class="{ 'family-part--last': index === data._familyParts.length - 1 }">{{ part }}</span>
-            <span v-if="index < data._familyParts.length - 1" class="fr-mx-1v fr-text-mention--grey">&gt;</span>
-          </template>
-        </template>
+        <div v-if="data._familiesRaw.length" class="fr-tags-group">
+          <span v-for="family in data._familiesRaw" :key="family.id" class="fr-tag fr-mr-1v fr-mb-1v">
+            {{ family.path }}
+          </span>
+        </div>
+        <span v-else class="fr-text-mention--grey">—</span>
       </template>
 
       <!-- SENSIBILITÉ — badge coloré depuis la couleur BD -->
@@ -197,12 +272,78 @@ watch(
         </div>
         <span v-else class="fr-text-mention--grey">—</span>
       </template>
+
+      <!-- APPLICATIONS SOURCE — chips cliquables vers la fiche de l'application source -->
+      <template #body-applicationsSource="{ data }: { data: DataRow }">
+        <div v-if="data._applicationsSourceRaw.length" class="fr-tags-group">
+          <button
+            v-for="sourceApp in data._applicationsSourceRaw"
+            :key="sourceApp.id"
+            type="button"
+            class="fr-tag fr-mr-1v fr-mb-1v application-source-tag"
+            @click="goToSourceApplication(sourceApp.id)"
+          >
+            {{ sourceApp.label }}
+          </button>
+        </div>
+        <span v-else class="fr-text-mention--grey">—</span>
+      </template>
+
+      <!-- ACTIONS — édition / détachement -->
+      <template #body-actions="{ data }: { data: DataRow }">
+        <DsfrButton
+          tertiary
+          size="sm"
+          icon="fr-icon-edit-line"
+          title="Modifier"
+          class="fr-mr-1w"
+          :data-testid="`data-application-edit-btn-${data.id}`"
+          @click="openEditModal(data._raw)"
+        />
+        <DsfrButton
+          tertiary
+          size="sm"
+          icon="fr-icon-delete-bin-line"
+          title="Détacher"
+          :data-testid="`data-application-delete-btn-${data.id}`"
+          @click="openDeleteModal(data._raw)"
+        />
+      </template>
     </RefAppTable>
+
+    <DataApplicationModal
+      v-if="isCreateModalOpen"
+      :application-id="application.id"
+      :error-message="errorMessage"
+      @close="isCreateModalOpen = false"
+      @data-created="onDataSaved"
+    />
+
+    <DataApplicationModal
+      v-if="itemToEdit"
+      :application-id="application.id"
+      :initial-item="itemToEdit"
+      :error-message="errorMessage"
+      @close="itemToEdit = null"
+      @data-updated="onDataSaved"
+    />
+
+    <DeleteConfirmationModal
+      v-if="isDeleteModalOpen"
+      :opened="isDeleteModalOpen"
+      item-name="cette donnée"
+      @confirm="confirmDeletion"
+      @cancel="cancelDeletion"
+    />
   </div>
 </template>
 
 <style scoped>
-.family-part--last {
-  font-weight: bold;
+.application-source-tag {
+  cursor: pointer;
+}
+
+.application-source-tag:hover {
+  text-decoration: underline;
 }
 </style>

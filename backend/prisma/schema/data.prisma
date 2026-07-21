@@ -25,8 +25,9 @@ model DataSensibility {
   dataApplications DataApplication[]
 }
 
-/// Description générique d'une donnée, indépendante d'une application.
-/// Peut être réutilisée dans plusieurs applications.
+/// Description générique d'une donnée. Provient d'une ou plusieurs applications sources sur RefApp
+/// (les applications qui produisent/possèdent cette donnée) et peut ensuite être réutilisée par
+/// d'autres applications (voir `DataApplication`, qui représente cet usage).
 ///
 /// @namespace DataCatalog
 model DataDescription {
@@ -36,16 +37,16 @@ model DataDescription {
   name        String  @db.VarChar(255)
   /// Description détaillée
   description String? @db.Text
-  /// Identifiant de la famille de données
-  familyId    String?
   /// URL vers la source officielle de la donnée
   officialUrl String? @db.VarChar(255)
 
-  /// Famille de données parente
-  family           DataFamily?       @relation(fields: [familyId], references: [id], onDelete: SetNull)
-  dataApplications DataApplication[]
-  metadatas        Metadata[]        @relation("DataDescriptionMetadata")
-  tags             Tag[]
+  /// Familles de données parentes (une donnée peut appartenir à plusieurs familles)
+  families           DataFamily[]
+  /// Applications sources de cette donnée (celles qui la produisent sur RefApp)
+  applicationsSource Application[]
+  dataApplications   DataApplication[]
+  metadatas          Metadata[]        @relation("DataDescriptionMetadata")
+  tags               Tag[]
 }
 
 /// Utilisation d'une donnée dans le contexte d'une application spécifique.

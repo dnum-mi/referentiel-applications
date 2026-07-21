@@ -51,9 +51,10 @@ export class DataDescriptionFaker {
     params: {
       name?: string;
       description?: string;
-      familyId?: string;
+      familyIds?: string[];
       tagIds?: string[];
       officialUrl?: string | null;
+      applicationSourceIds?: string[];
     } = {},
   ) {
     const prisma = getPrismaClient();
@@ -72,11 +73,16 @@ export class DataDescriptionFaker {
             `Référentiel ${faker.word.noun()} alimenté par les systèmes métier et mis à disposition des applications consommatrices.`,
             null,
           ]),
-        familyId: params.familyId ?? null,
+        families: params.familyIds?.length
+          ? { connect: params.familyIds.map((id) => ({ id })) }
+          : undefined,
         officialUrl:
           "officialUrl" in params
             ? params.officialUrl
             : faker.helpers.arrayElement(OFFICIAL_URLS),
+        applicationsSource: params.applicationSourceIds?.length
+          ? { connect: params.applicationSourceIds.map((id) => ({ id })) }
+          : undefined,
         tags: params.tagIds?.length
           ? { connect: params.tagIds.map((id) => ({ id })) }
           : undefined,

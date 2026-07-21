@@ -33,6 +33,8 @@ import { MditCampaignModule } from "./mdit-campaign/mdit-campaign.module";
 import { RgaaModule } from "./rgaa/rgaa.module";
 import { TechnologyModule } from "./technology/technology.module";
 import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
+import { DataFamilyModule } from "./data-catalog/data-family/data-family.module";
+import { DataSensibilityModule } from "./data-catalog/data-sensibility/data-sensibility.module";
 import { OrganizationMaiaReferencesModule } from "./organization-maia-references/organization-maia-references.module";
 import { ImportModule } from "./import/import.module";
 
@@ -52,6 +54,8 @@ import { ImportModule } from "./import/import.module";
     MetadatasModule,
     ApplicationModule,
     DataCatalogModule,
+    DataFamilyModule,
+    DataSensibilityModule,
     RelationModule,
     OrganizationsModule,
     OrganizationMaiaReferencesModule,
