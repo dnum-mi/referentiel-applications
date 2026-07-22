@@ -193,12 +193,30 @@ watch(
   color: var(--text-title-grey) !important;
 }
 
+/* #2112 : en-tête épinglé — la zone de contenu PrimeVue devient la boîte de défilement
+   verticale (bornée). PrimeVue v4 pose déjà `position: sticky` sur `.p-datatable-thead`
+   mais sans `top` (inerte hors mode scrollable natif) : on fixe le point d'ancrage ici.
+   Ne PAS épingler les `th` : le mode colonnes redimensionnables les force en
+   `position: relative` (ancrage des poignées de resize) et gagnerait la cascade. */
+:deep(.p-datatable-table-container) {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+:deep(.p-datatable-thead) {
+  top: 0;
+  z-index: 2;
+}
+
 :deep(.p-datatable-thead > tr > th) {
   background-color: var(--background-alt-grey) !important;
   font-weight: 700;
   padding: 1rem;
   text-align: left;
-  border-bottom: 2px solid var(--border-default-grey);
+  /* box-shadow plutôt que border-bottom : avec `border-collapse: collapse`, la bordure d'un
+     `th` sticky reste collée au corps et disparaît au défilement. */
+  border-bottom: none;
+  box-shadow: inset 0 -2px 0 var(--border-default-grey);
   color: var(--text-default-grey) !important;
 }
 
