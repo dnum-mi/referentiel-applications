@@ -118,10 +118,6 @@ model ActorType {
   label       String  @db.VarChar(255)
   /// Description des responsabilités de ce rôle
   description String?
-  /// Type d'acteur « administrateur de l'application » : ses acteurs disposent
-  /// toujours de l'ensemble des droits (lecture + écriture) sur l'application
-  /// concernée, indépendamment de la matrice AppPermissions éditable.
-  isAdmin     Boolean @default(false)
 
   /// Acteurs avec ce type
   actors         Actor[]

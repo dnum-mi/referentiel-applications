@@ -7,7 +7,6 @@ const props = withDefaults(
     write?: boolean;
     id: string;
     permOrder?: PermissionValue[];
-    disabled?: boolean;
   }>(),
   {
     permOrder: () => ["none", "Read", "Write"] as PermissionValue[],
@@ -56,7 +55,6 @@ const toggleTitle = computed(() => {
 });
 
 function togglePermission() {
-  if (props.disabled) return; // ligne « admin » : droits forcés côté serveur, contrôle verrouillé
   if (permIndex.value >= permOrder.length - 1) {
     permIndex.value = 0; // Reset to "read" if minimum read is required
   } else {
@@ -73,7 +71,6 @@ function togglePermission() {
     tertiary
     small
     :class="permDict[permOrder[permIndex]].class ?? 'permission-error'"
-    :disabled="disabled"
     :title="toggleTitle"
     :aria-label="toggleTitle"
     data-testid="permission-toggle"

@@ -1,5 +1,4 @@
 import { Permission, Roles } from "@prisma/client";
-import { AppPermissionsValues } from "src/common/utils/types";
 
 const NONE_PERMISSIONS: Set<Permission> = new Set([
   Permission.AppRead,
@@ -76,20 +75,6 @@ const WRITE_APP_PERMISSIONS = new Set([
   Permission.DataWrite,
   Permission.TechnologyWrite,
 ]);
-// 3e niveau d'administration — l'administrateur d'UNE application (ActorType.isAdmin).
-// Jeu applicatif COMPLET (toute la matrice AppPermissions : couples read/write + AppRead,
-// AppWritePriority, MetadataRead, DataRead/Write, ReportRead/Post/Manage), dérivé de la
-// source canonique `AppPermissionsValues` pour rester exhaustif. Ce jeu est **borné à
-// l'application** de l'acteur (cf. check-permissions.service) et est DISTINCT du rôle ADMIN :
-//  - ADMIN global (sans scope)  → droits de rôle projetés sur TOUTES les apps ;
-//  - ADMIN de périmètre (+scope) → droits de rôle projetés sur les apps du périmètre ;
-//  - admin d'application         → CE jeu complet, sur sa seule application.
-export const APP_ADMIN_PERMISSIONS = new Set(AppPermissionsValues);
-
-// Au niveau applicatif, le rôle ADMIN (global ou de périmètre) projette les mêmes droits
-// que CONTRIBUTOR (écriture) — comportement historique. Les droits « admin complet d'une
-// app » ne viennent PAS du rôle mais de l'acteur admin (APP_ADMIN_PERMISSIONS ci-dessus),
-// afin de ne pas faire d'un admin global un admin-complet-de-chaque-app par son seul rôle.
 const ADMIN_APP_PERMISSIONS = new Set(WRITE_APP_PERMISSIONS);
 
 export const roleToAppPermissions = (role: Roles) => {
