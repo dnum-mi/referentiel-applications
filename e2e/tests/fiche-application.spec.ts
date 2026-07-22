@@ -1,5 +1,7 @@
 import { test } from "../fixtures/test";
-import { ApplicationPage, SearchPage } from "../pom";
+import { ApplicationPage, SearchPage, loginAs } from "../pom";
+
+const USER_EMAIL = "user@example.com";
 
 /**
  * Non-régression — Fiche application (protocole `qa/protocoles/fiche-application.md`).
@@ -239,5 +241,40 @@ test.describe("Fiche application", () => {
 
     await fiche.sortModificationsColumn("Date");
     await fiche.sortModificationsColumn("Titre");
+  });
+  // FIC-22 (#2088) — l'onglet Stack technique suit les droits, comme les autres onglets
+  // (défait la « lecture pour tous » de #2027) : un Visiteur (aucun droit Technologie) ne
+  // doit pas le voir ; un Lecteur le retrouve via la projection de rôle par application.
+  // CONTEXTE navigateur séparé pour la session `user` ; rôle restauré en `finally`.
+  test("FIC-22 - l'onglet Stack technique est masqué pour un Visiteur", async ({
+    browser,
+    data,
+  }) => {
+    // Application jetable : `user` n'y est PAS acteur — ses droits ne peuvent venir ni de
+    // la matrice ni du rôle projeté, seul le socle global s'applique (cas isolé du bug).
+    const app = await data.createTestApplication(`E2E-FIC22-${Date.now()}`);
+
+    await data.setUserRole(USER_EMAIL, "VISITOR");
+    const ctx = await browser.newContext();
+    try {
+      const userPage = await ctx.newPage();
+      await loginAs(userPage, "user");
+      const fiche = new ApplicationPage(userPage);
+
+      // Visiteur : la fiche se rend (témoin AppRead du socle) mais SANS l'onglet Stack
+      // technique — le bouton d'onglet n'est pas rendu du tout.
+      await fiche.open(app.id);
+      await fiche.expectTabButtonVisible("Informations générales");
+      await fiche.expectTabButtonAbsent("Stack technique");
+
+      // Lecteur : l'onglet revient via la projection de rôle (READ_APP_PERMISSIONS).
+      await data.resetUser(USER_EMAIL);
+      await fiche.open(app.id);
+      await fiche.expectTabButtonVisible("Stack technique");
+    } finally {
+      await ctx.close();
+      await data.removeApplication(app.id);
+      await data.resetUser(USER_EMAIL);
+    }
   });
 });

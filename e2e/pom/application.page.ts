@@ -47,6 +47,19 @@ export class ApplicationPage extends BasePage {
     await expect.poll(() => new URL(this.page.url()).pathname).toContain(tab);
   }
 
+  // Bouton d'onglet par son nom accessible : les onglets sans droits sont FILTRÉS du
+  // rendu (`ApplicationOverview.onBeforeMount`), le bouton n'existe alors pas du tout.
+  private tabButton = (title: string) =>
+    this.page.getByRole("tab", { name: title });
+
+  async expectTabButtonVisible(title: string): Promise<void> {
+    await expect(this.tabButton(title)).toBeVisible();
+  }
+
+  async expectTabButtonAbsent(title: string): Promise<void> {
+    await expect(this.tabButton(title)).toHaveCount(0);
+  }
+
   // --- Tri dans les onglets ---
 
   /**
