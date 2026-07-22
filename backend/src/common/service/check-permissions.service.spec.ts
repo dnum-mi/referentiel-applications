@@ -30,9 +30,9 @@ const READ_ONLY_MATRIX = {
   ReportManage: false,
 };
 
-/** Un acteur (par email) rattaché à un type d'acteur `isAdmin` ou non, avec la matrice lecture seule. */
-const emailActor = (isAdmin: boolean) => ({
-  actorType: { isAdmin, appPermissions: [READ_ONLY_MATRIX] },
+/** Un acteur (par email) avec la matrice lecture seule. */
+const emailActor = () => ({
+  actorType: { appPermissions: [READ_ONLY_MATRIX] },
 });
 
 const makeService = (findManyResult: unknown[]) => {
@@ -65,31 +65,13 @@ const baseUser = (): Requestor =>
   }) as unknown as Requestor;
 
 describe("CheckPermissions.getUserAppPermissions", () => {
-  it("acteur d'un type ADMIN : droits complets read+write sur l'application, même si la matrice est en lecture seule", async () => {
-    const { service } = makeService([emailActor(true)]);
-    const user = baseUser();
-
-    // Écriture forcée malgré la matrice read-only.
-    expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(true);
-    expect(await service.can([Permission.ActorWrite], user, "app-1")).toBe(
-      true,
-    );
-    expect(await service.can([Permission.ComplianceWrite], user, "app-1")).toBe(
-      true,
-    );
-    // Signalements complets (absents du niveau « write » classique).
-    expect(await service.can([Permission.ReportManage], user, "app-1")).toBe(
-      true,
-    );
-  });
-
-  it("acteur d'un type NON admin : conserve exactement les droits de la matrice (lecture seule)", async () => {
-    const { service } = makeService([emailActor(false)]);
+  it("acteur : dispose exactement des droits de la matrice de son type (lecture seule)", async () => {
+    const { service } = makeService([emailActor()]);
     const user = baseUser();
 
     // Lecture accordée par la matrice.
     expect(await service.can([Permission.AppRead], user, "app-1")).toBe(true);
-    // Écriture refusée : la matrice ne l'accorde pas, pas de court-circuit admin.
+    // Écriture refusée : la matrice ne l'accorde pas.
     expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(false);
     expect(await service.can([Permission.ActorWrite], user, "app-1")).toBe(
       false,
@@ -99,10 +81,10 @@ describe("CheckPermissions.getUserAppPermissions", () => {
     );
   });
 
-  it("droits admin bornés à l'application concernée (aucun acteur admin sur une autre app → pas d'écriture)", async () => {
+  it("droits bornés à l'application concernée (aucun acteur sur l'app cible → aucun droit applicatif)", async () => {
     // La requête d'acteurs est filtrée par applicationId : ici aucun acteur trouvé
-    // pour l'app cible → aucun droit applicatif, y compris pour un utilisateur qui
-    // serait admin d'une AUTRE application.
+    // pour l'app cible → aucun droit applicatif, même si l'utilisateur est acteur
+    // d'une AUTRE application.
     const { service, prisma } = makeService([]);
     const user = baseUser();
 
@@ -116,11 +98,9 @@ describe("CheckPermissions.getUserAppPermissions", () => {
     );
   });
 
-  it("découplage des 3 niveaux : le rôle ADMIN global projette l'écriture, pas le jeu « admin d'application » complet", async () => {
-    // Admin global (rôle ADMIN, sans scope), sans acteur sur l'app : seul le rôle projeté
-    // s'applique. Il vaut le niveau écriture (CONTRIBUTOR), pas les droits réservés à
-    // l'acteur admin de l'app (ex. gestion des signalements). Empêche qu'un admin global
-    // devienne « admin complet de chaque application » par son seul rôle.
+  it("rôle ADMIN global : projette le niveau écriture (CONTRIBUTOR), pas la gestion des signalements", async () => {
+    // Admin global (rôle ADMIN, sans scope), sans acteur sur l'app : seul le rôle
+    // projeté s'applique et vaut le niveau écriture — comportement historique.
     const { service } = makeService([]);
     const user = { ...baseUser(), role: Roles.ADMIN };
 

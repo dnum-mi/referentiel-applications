@@ -1,18 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsBoolean, IsOptional, IsString } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
+import { IsBoolean, IsString } from "class-validator";
 
 export class AppPermsDto {
   @ApiProperty()
   @IsString()
   actorTypeId: string;
-
-  /// Type d'acteur « administrateur de l'application » : ses acteurs disposent
-  /// toujours de tous les droits (lecture + écriture) sur leur application, quels
-  /// que soient les droits ci-dessous (forcés côté backend).
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  isAdmin?: boolean;
 
   @ApiProperty()
   @IsBoolean()
