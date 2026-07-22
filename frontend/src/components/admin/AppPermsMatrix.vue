@@ -184,21 +184,6 @@ function saveAppPermsMatrix() {
   padding: 0.5rem !important;
 }
 
-/* En-tête sticky (#2083). En DSFR legacy la `table` est ELLE-MÊME la boîte de défilement
-   (`.fr-table > table { display: block; overflow: auto }`) : c'est donc sa hauteur qu'on
-   borne — un max-height posé sur `.fr-table` ferait défiler l'en-tête avec le corps, le
-   sticky s'épinglant au scrollport le plus proche (la table). Le fond est porté par `thead`,
-   pas par `th` — un `th` sticky doit redéclarer fond opaque thémé et liseré bas.
-   `table` appartient au template interne de DsfrTable (pas au slot) → :deep obligatoire. */
-.fr-table :deep(> table) {
-  max-height: 70vh;
-}
-
-.fr-table > table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background-color: var(--background-alt-grey);
-  box-shadow: inset 0 -1px 0 var(--border-plain-grey);
-}
+/* En-tête sticky : porté par la règle GLOBALE de main.css (#2112), qui couvre toutes les
+   tables DSFR legacy (`.fr-table > table`), celle-ci comprise. */
 </style>
