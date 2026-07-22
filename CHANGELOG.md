@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.84.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.83.0...v1.84.0) (2026-07-21)
+
+
+### Features
+
+* add missing endpoint for data catalog and add front actions ([#2024](https://github.com/dnum-mi/referentiel-applications/issues/2024)) ([5b58c76](https://github.com/dnum-mi/referentiel-applications/commit/5b58c766048c195d2c0de164e11b36b9b2c14867))
+
 ## [1.83.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.82.1...v1.83.0) (2026-07-20)
 
 
