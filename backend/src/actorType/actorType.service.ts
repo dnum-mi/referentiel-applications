@@ -4,28 +4,30 @@ import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { AppPermsDto } from "./dto/app-perms-matrix.dto";
 
+// Libellés des lignes d'historique, dans l'ordre d'affichage de la matrice (= ordre des
+// onglets de la fiche, #2083).
 const PERM_FIELDS: Record<string, string> = {
   AppRead: "Informations - Lecture",
   AppWrite: "Informations - Écriture",
   AppWritePriority: "Prioritisation et redémarrage",
-  ActorRead: "Acteurs - Lecture",
-  ActorWrite: "Acteurs - Écriture",
-  ComplianceRead: "Conformités - Lecture",
-  ComplianceWrite: "Conformités - Écriture",
   HostingRead: "Hébergements - Lecture",
   HostingWrite: "Hébergements - Écriture",
-  MetadataRead: "Historique - Lecture",
-  DataRead: "Données - Lecture",
-  DataWrite: "Données - Écriture",
-  TechnologyRead: "Technologies - Lecture",
-  TechnologyWrite: "Technologies - Écriture",
-  RelationRead: "Relations - Lecture",
-  RelationWrite: "Relations - Écriture",
   LinkRead: "Liens - Lecture",
   LinkWrite: "Liens - Écriture",
+  ComplianceRead: "Conformités - Lecture",
+  ComplianceWrite: "Conformités - Écriture",
+  ActorRead: "Acteurs - Lecture",
+  ActorWrite: "Acteurs - Écriture",
+  TechnologyRead: "Technologie - Lecture",
+  TechnologyWrite: "Technologie - Écriture",
+  RelationRead: "Relations - Lecture",
+  RelationWrite: "Relations - Écriture",
+  DataRead: "Données - Lecture",
+  DataWrite: "Données - Écriture",
   ReportRead: "Signalements - Lecture",
   ReportPost: "Signalements - Publication",
   ReportManage: "Signalements - Gestion",
+  MetadataRead: "Historique - Lecture",
 };
 
 @Injectable()

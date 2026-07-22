@@ -151,7 +151,7 @@ function cancelDelete() {
   <p class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="technology-status">{{ statusMessage }}</p>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="technology-tab">
     <div class="fr-col">
-      <h3 class="fr-mb-0">Stack technique</h3>
+      <h3 class="fr-mb-0">Technologie</h3>
     </div>
     <div class="fr-col-auto">
       <DsfrButton

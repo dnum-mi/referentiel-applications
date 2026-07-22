@@ -82,7 +82,7 @@ const tabs = ref<
     requiredPerms: [Permission.ACTOR_READ],
   },
   {
-    title: "Stack technique",
+    title: "Technologie",
     icon: "ri-stack-line",
     tabId: "tab-technologies",
     panelId: "panel-technologies",

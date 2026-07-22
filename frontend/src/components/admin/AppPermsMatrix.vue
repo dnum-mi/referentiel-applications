@@ -18,6 +18,8 @@ onMounted(async () => {
   await actorTypeStore.fetchAll();
 });
 
+// Colonnes dans l'ordre des onglets de la fiche application (#2083) — « Priorit. Redémarr. »
+// et « Héberg. » n'ont pas d'onglet propre et restent accolées à « Infos » dont elles relèvent.
 const permissionSuffixes = {
   App: { label: "Infos", title: "Informations" },
   PriorityRestart: { label: "Priorit. Redémarr.", title: "Prioritisation et redémarrage" },
@@ -25,12 +27,15 @@ const permissionSuffixes = {
   Link: { label: "Liens", title: "Liens" },
   Compliance: { label: "Conformités", title: "Conformités" },
   Actor: { label: "Acteurs", title: "Acteurs" },
+  Technology: { label: "Techno.", title: "Technologie" },
   Relation: { label: "Relations", title: "Relations" },
   Data: { label: "Données", title: "Données" },
-  Technology: { label: "Techno.", title: "Technologies" },
   Metadata: { label: "Modifications", title: "Modifications" },
 } as const satisfies Record<string, { label: string; title: string }>;
 const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissionSuffixes)[];
+// « Modifications » (Metadata) est rendue à part, APRÈS la colonne Signalements, pour suivre
+// l'ordre des onglets de la fiche (Signalements avant Modifications).
+const gridKeys = permissionKeys.filter((k) => k !== "Metadata");
 
 const updatedMatrix = ref<AppPermsDto[]>(unref(props.appPermsMatrix));
 
@@ -82,15 +87,16 @@ function saveAppPermsMatrix() {
     <template #header>
       <tr>
         <th scope="col">Type d'acteur</th>
-        <th v-for="perm in permissionSuffixes" :key="perm.label" scope="col" style="min-width: 6rem" :title="perm.title">
-          {{ perm.label }}
+        <th v-for="key in gridKeys" :key="key" scope="col" style="min-width: 6rem" :title="permissionSuffixes[key].title">
+          {{ permissionSuffixes[key].label }}
         </th>
         <th scope="col">Signalements</th>
+        <th scope="col" style="min-width: 6rem" title="Modifications">Modifications</th>
       </tr>
     </template>
     <tr v-for="perms in updatedMatrix as AppPermsDto[]" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
       <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
-      <td v-for="perm in permissionKeys" :key="perm">
+      <td v-for="perm in gridKeys" :key="perm">
         <PermissionSelect
           v-if="perm === 'App'"
           :id="`${perms.actorTypeId}-${perm}`"
@@ -98,15 +104,6 @@ function saveAppPermsMatrix() {
           :read="perms[`${perm}Read`] || false"
           :write="perms[`${perm}Write`] || false"
           :perm-order="['Read', 'Write']"
-          :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
-          @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
-        />
-        <PermissionSelect
-          v-else-if="perm === 'Metadata'"
-          :id="`${perms.actorTypeId}-${perm}`"
-          class="permission-select"
-          :read="perms[`${perm}Read`] || false"
-          :perm-order="['none', 'Read']"
           :data-testid="`app-perms-select-${perms.actorTypeId}-${perm}`"
           @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, perm as keyof typeof permissionSuffixes, value)"
         />
@@ -147,6 +144,16 @@ function saveAppPermsMatrix() {
           @update:model-value="(value: ReportPermissionValue[]) => updateReportMatrix(perms.actorTypeId, value)"
         />
       </td>
+      <td>
+        <PermissionSelect
+          :id="`${perms.actorTypeId}-Metadata`"
+          class="permission-select"
+          :read="perms.MetadataRead || false"
+          :perm-order="['none', 'Read']"
+          :data-testid="`app-perms-select-${perms.actorTypeId}-Metadata`"
+          @update:model-value="(value: PermissionValue) => updateMatrix(perms.actorTypeId, 'Metadata', value)"
+        />
+      </td>
     </tr>
   </DsfrTable>
   <!-- Positionner à droite -->
@@ -175,5 +182,23 @@ function saveAppPermsMatrix() {
 <style scoped>
 .fr-table > table td {
   padding: 0.5rem !important;
+}
+
+/* En-tête sticky (#2083). En DSFR legacy la `table` est ELLE-MÊME la boîte de défilement
+   (`.fr-table > table { display: block; overflow: auto }`) : c'est donc sa hauteur qu'on
+   borne — un max-height posé sur `.fr-table` ferait défiler l'en-tête avec le corps, le
+   sticky s'épinglant au scrollport le plus proche (la table). Le fond est porté par `thead`,
+   pas par `th` — un `th` sticky doit redéclarer fond opaque thémé et liseré bas.
+   `table` appartient au template interne de DsfrTable (pas au slot) → :deep obligatoire. */
+.fr-table :deep(> table) {
+  max-height: 70vh;
+}
+
+.fr-table > table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--background-alt-grey);
+  box-shadow: inset 0 -1px 0 var(--border-plain-grey);
 }
 </style>
