@@ -369,11 +369,19 @@ export class DataFeature {
     return this.api.userByEmail(email);
   }
 
-  /** Affecte un rôle à un utilisateur. */
+  /**
+   * Affecte un rôle à un utilisateur (permissions additionnelles préservées).
+   * Le DTO du PATCH exige `additionalPermissions` : l'omettre fait un 400 silencieux
+   * (le rôle n'était alors jamais modifié).
+   */
   async setUserRole(email: string, role: string): Promise<void> {
     const user = await this.api.userByEmail(email);
     if (!user) throw new Error(`Utilisateur introuvable: ${email}`);
-    await this.api.setUser(user.id, { role });
+    const updated = await this.api.setUser(user.id, {
+      role,
+      additionalPermissions: user.additionalPermissions ?? [],
+    });
+    if (!updated) throw new Error(`Changement de rôle refusé pour ${email}`);
   }
 
   /** Affecte des permissions additionnelles (et force le rôle READER pour isoler l'effet). */

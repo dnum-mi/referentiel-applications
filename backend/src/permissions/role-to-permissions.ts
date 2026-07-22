@@ -6,12 +6,10 @@ const NONE_PERMISSIONS: Set<Permission> = new Set([
   Permission.ReportRead,
   Permission.ReportPost,
   Permission.DataRead,
-  // « Lecture pour tous » de la stack technique (#2027) : comme DataRead, la lecture des
-  // technologies est accordée globalement (socle VISITOR) afin que l'onglet reste visible
-  // même pour un utilisateur non-acteur de l'application. Seule l'écriture (TechnologyWrite)
-  // est restreinte via la matrice / les rôles. Avant #2027 l'onglet était gardé par AppRead,
-  // déjà présent ici — sans cette ligne, migrer vers TechnologyRead masquerait l'onglet.
-  Permission.TechnologyRead,
+  // TechnologyRead n'est volontairement PAS dans ce socle (#2088, défait la « lecture pour
+  // tous » de #2027) : comme les autres onglets (Acteurs, Liens…), la stack technique n'est
+  // visible que via la projection de rôle par application (READER+, cf. READ_APP_PERMISSIONS)
+  // ou via la matrice du type d'acteur — un VISITOR non-acteur ne voit pas l'onglet.
 ]);
 const READ_PERMISSIONS = new Set([
   ...Array.from(NONE_PERMISSIONS),
