@@ -113,11 +113,14 @@ export class CreateApplicationDto {
   status: CreateApplicationStatusDto;
 
   @ApiProperty({
-    description: "Id de la direction de metier de l'application MOA",
+    type: [String],
+    description: "Ids des directions de metier de l'application MOA",
+    required: false,
   })
-  @IsString()
+  @IsArray()
   @IsOptional()
-  businessDivisionId?: string | null;
+  @IsString({ each: true })
+  businessDivisionIds?: string[];
 }
 
 export class PatchApplicationDto extends PartialType(
