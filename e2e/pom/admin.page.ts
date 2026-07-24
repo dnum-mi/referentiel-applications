@@ -79,6 +79,38 @@ export class AdminPage extends BasePage {
     await expect(
       this.editModal().getByTestId("admin-save-perms-btn"),
     ).toBeVisible();
+    // DsfrModal pose son focus initial ~100 ms APRÈS l'ouverture (setTimeout interne de
+    // vue-dsfr) : interagir avant se fait voler le focus en pleine saisie — et Espace/Entrée
+    // sur le bouton « Fermer » fermerait le modal « tout seul » (#1830). On attend que le
+    // focus soit posé QUELQUE PART dans le modal (sans figer la cible exacte, interne à la lib).
+    await expect
+      .poll(() =>
+        this.editModal().evaluate((el) => el.contains(document.activeElement)),
+      )
+      .toBe(true);
+  }
+
+  /**
+   * Édite l'organisation d'un utilisateur via la recherche du modal et enregistre (#1830 :
+   * la saisie ne doit pas perdre le focus et le modal doit rester ouvert pendant tout le flux).
+   */
+  async editUserOrganizationAndSave(
+    email: string,
+    orgSearch: string,
+    orgPath: string,
+  ): Promise<void> {
+    await this.openEditUser(email);
+    const orgField = this.editModal().getByTestId("user-organization-search");
+    const input = orgField.locator("input").first();
+    await input.click();
+    await input.pressSequentially(orgSearch, { delay: 50 });
+    // La saisie complète est bien dans le champ (aucun vol de focus pendant la frappe).
+    await expect(input).toHaveValue(orgSearch);
+    // Les résultats alimentent le select ; on choisit l'organisation par son chemin exact.
+    await orgField.getByRole("combobox").selectOption({ label: orgPath });
+    // Anti-#1830 : le modal est TOUJOURS ouvert après recherche + sélection.
+    await expect(this.editModal()).toBeVisible();
+    await this.saveUserEdit();
   }
 
   /**

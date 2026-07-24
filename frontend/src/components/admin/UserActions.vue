@@ -43,6 +43,11 @@ async function impersonate() {
 const isEditModalOpen = ref(false);
 const isSaving = ref(false);
 const isSyncingFromMaia = ref(false);
+// Snapshot de l'utilisateur au moment de l'ouverture : si l'instance est réutilisée par la
+// table avec un AUTRE utilisateur pendant que le modal est ouvert (refetch qui réordonne),
+// l'enregistrement doit viser l'utilisateur AFFICHÉ à l'ouverture, jamais `props.user`
+// courant — sinon on écrirait le formulaire d'un compte sur l'id d'un autre (#1830).
+const editingUser = ref<Required<UserEntity> | null>(null);
 const editingUserRole = ref<RolesType>(Roles.VISITOR);
 const editingOrganizationId = ref<string>("");
 const editingAdditionalPermissions = ref<Permission[]>([]);
@@ -51,6 +56,7 @@ const maiaSuggestion = ref<MaiaOrganizationSuggestionDto | null>(null);
 const isFetchingMaiaSuggestion = ref(false);
 
 async function openEditModal() {
+  editingUser.value = props.user;
   editingUserRole.value = props.user.role;
   editingOrganizationId.value = props.user.organizationId || "";
   editingAdditionalPermissions.value = props.user.additionalPermissions ? [...props.user.additionalPermissions] : [];
@@ -80,6 +86,7 @@ async function fetchMaiaSuggestion() {
 
 function closeEditModal() {
   isEditModalOpen.value = false;
+  editingUser.value = null;
   editingUserRole.value = Roles.VISITOR;
   editingOrganizationId.value = "";
   editingScopePermissions.value = "";
@@ -98,10 +105,12 @@ function focusOpener() {
 }
 
 async function saveUser() {
+  const target = editingUser.value;
+  if (!target) return;
   isSaving.value = true;
   try {
     const response = await api.userControllerUpdate({
-      path: { id: props.user.id },
+      path: { id: target.id },
       body: {
         role: editingUserRole.value,
         organizationId: editingOrganizationId.value === "" ? null : editingOrganizationId.value,
@@ -226,7 +235,7 @@ const isScopeDisabled = computed(() => {
     </div>
 
     <DsfrModal :opened="isEditModalOpen" title="Modifier l'utilisateur" data-testid="admin-edit-user-modal" @close="closeEditModal">
-      <p><strong>Utilisateur :</strong> {{ user.email }}</p>
+      <p><strong>Utilisateur :</strong> {{ editingUser?.email ?? user.email }}</p>
 
       <!-- RGAA-086 (11.5) : regroupement des champs organisation de même nature. -->
       <fieldset class="fr-fieldset">

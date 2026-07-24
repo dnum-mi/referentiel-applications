@@ -5,6 +5,7 @@ import { ApiClient } from "../fixtures/api-client";
 import { DataFeature } from "../fixtures/datafeature";
 
 // Ids fixes des organisations du seed QA (cf. backend/prisma/seed-qa.ts).
+const ORG_TOTO_ID = "a0000000-0000-4000-8000-000000000001";
 const ORG_TOTO_TUTU_ID = "a0000000-0000-4000-8000-000000000002";
 const ORG_ABCD_ID = "a0000000-0000-4000-8000-000000000003";
 
@@ -80,9 +81,14 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
     await admin.editUserRoleWithinScopeAndSave("qa-target@example.com");
   });
 
-  // Note : la frontière de périmètre se vérifie au niveau de l'autorisation (cœur de #14/#15). L'édition
-  // via l'UI est instable (le modal d'édition se ferme au rafraîchissement de la liste, #1830) et un
-  // payload partiel déclenche une 500 (#1831) → on valide la règle via l'endpoint, token du requérant scopé.
+  // Le volet « autorisé » se joue via l'UI réelle (modal d'édition + recherche d'organisation),
+  // réactivé après le fix #1830 (le modal ne se ferme plus au rafraîchissement de la liste et le
+  // POM absorbe le focus initial différé de DsfrModal). Le volet « refusé » reste au niveau de
+  // l'autorisation API : c'est le garde-fou serveur qu'on veut verrouiller (le trajet UI existe —
+  // la liste n'est pas filtrée par périmètre — mais aboutirait au même contrôle serveur).
+  // Cible du changement : TOTO (≠ TOTO/TUTU, l'org du seed) — l'option n'est PAS pré-alimentée
+  // par `initial-organization`, la sélection prouve donc que la recherche a réellement abouti,
+  // et l'assertion finale n'est pas satisfaite d'avance. Restauration en `finally`.
   test("SCP-04 - changer l'organisation dans le périmètre est autorisé, éditer un user hors périmètre est refusé", async ({
     page,
   }) => {
@@ -92,19 +98,26 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
     const outside = await api.userByEmail("qa-outside@example.com");
     test.skip(!target || !outside, SEED_HINT);
 
-    // Payload complet (rôle + permissions + périmètre), comme l'UI, sur un user DANS le périmètre TOTO/.
-    const base = {
-      role: target!.role,
-      additionalPermissions: target!.additionalPermissions,
-      scopeOrganizationId: null,
-    };
-
-    // Affecter une organisation du périmètre (TOTO/TUTU) → autorisé.
-    const within = await api.setUser(target!.id, {
-      ...base,
-      organizationId: ORG_TOTO_TUTU_ID,
-    });
-    expect(within).not.toBeNull();
+    // Affecter une AUTRE organisation du périmètre (TOTO) via le MODAL → autorisé (toast succès).
+    const admin = new AdminPage(page);
+    await admin.open();
+    try {
+      await admin.editUserOrganizationAndSave(
+        "qa-target@example.com",
+        "TOTO",
+        "TOTO",
+      );
+      const updated = await api.userByEmail("qa-target@example.com");
+      expect(updated?.organizationId ?? null).toBe(ORG_TOTO_ID);
+    } finally {
+      // Restaure l'état du seed (TOTO/TUTU) pour les runs suivants et les autres cas SCP.
+      await api.setUser(target!.id, {
+        role: target!.role,
+        additionalPermissions: target!.additionalPermissions,
+        scopeOrganizationId: null,
+        organizationId: ORG_TOTO_TUTU_ID,
+      });
+    }
 
     // Éditer un utilisateur HORS du périmètre (organisation ABCD/) → refusé par le contrôle de périmètre.
     const denied = await api.setUser(outside!.id, {

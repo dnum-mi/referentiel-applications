@@ -6,10 +6,10 @@
 > `QA-SCOPE-*` et `QA-GROUP-*`. Signal « est admin / est acteur » sur une application = bouton
 > d'édition des informations actif.
 
-| Légende           |                                                                          |
-| :---------------- | :----------------------------------------------------------------------- |
-| **Automatisé** ✅ | `e2e/tests/scope-acteurs.spec.ts`                                        |
-| **Statut**        | ✅ 100 % des cas automatisés (POM strict + seed QA). SCP-04 : voir note. |
+| Légende           |                                                      |
+| :---------------- | :--------------------------------------------------- |
+| **Automatisé** ✅ | `e2e/tests/scope-acteurs.spec.ts`                    |
+| **Statut**        | ✅ 100 % des cas automatisés (POM strict + seed QA). |
 
 ---
 
@@ -34,8 +34,15 @@
 ### SCP-04 — Édition dans le périmètre autorisée, édition hors périmètre refusée ✅
 
 - **Datafeature** : `scope-admin`, `qa-target` (org `TOTO/TUTU`, dans le périmètre), `qa-outside` (org `ABCD`, hors périmètre).
-- **Action** : en `scope-admin`, affecter à `qa-target` une organisation du périmètre (`TOTO/TUTU`) ; tenter d'éditer `qa-outside`.
-- **Résultat attendu** : l'édition de `qa-target` réussit ; l'édition de `qa-outside` est refusée par le contrôle de périmètre.
+- **Action** : en `scope-admin`, ouvrir le **modal d'édition** de `qa-target`, rechercher « TOTO » dans le champ
+  organisation, sélectionner `TOTO` (≠ organisation du seed : l'assertion ne peut pas être vraie d'avance),
+  enregistrer, puis restaurer `TOTO/TUTU` ; tenter d'éditer `qa-outside` via l'API — c'est le **garde-fou
+  serveur** qu'on verrouille (la liste des utilisateurs n'est pas filtrée par périmètre, le trajet UI existe
+  mais aboutit au même contrôle serveur).
+- **Résultat attendu** : la saisie n'est pas interrompue et le **modal reste ouvert** pendant recherche + sélection
+  (non-régression #1830 : plus de fermeture au rafraîchissement de la liste, ni de vol de focus après le focus
+  initial différé de DsfrModal) ; toast de succès et organisation mise à jour (vérifiée via l'API) ; l'édition
+  de `qa-outside` est refusée par le contrôle de périmètre.
 
 ### SCP-05 — Un membre de `TOTO/TUTU` est acteur via un groupe `TOTO/` ✅
 

@@ -51,6 +51,11 @@ const tableColumns: TableColumn[] = headers.map((h) => ({
 }));
 
 const isLoading = ref(false);
+// Ne démonter la table qu'au chargement INITIAL : le `v-if isLoading` historique remplaçait la
+// table par l'alerte de chargement à CHAQUE refetch, démontant les `UserActions` des lignes et
+// fermant donc tout modal d'édition ouvert (#1830). Les refetchs suivants passent par l'état
+// `loading` de RefAppTable, qui garde la table (et ses modals) montée.
+const hasLoadedOnce = ref(false);
 const errorKeySet = ref<Set<ErrorKey>>(new Set());
 const searchQuery = ref("");
 
@@ -88,6 +93,7 @@ async function fetchUsers() {
     if (response.response.ok && response.data) {
       data.value = response.data;
       errorKeySet.value.delete("ERR_LOAD_USERS");
+      hasLoadedOnce.value = true;
     } else {
       errorKeySet.value.add("ERR_LOAD_USERS");
       console.error(response.error);
@@ -113,6 +119,7 @@ watch([sortColumn, isSortDescending], () => {
 
 const tableRows = computed(() =>
   data.value.results.map((user) => ({
+    id: user.id,
     email: user.email,
     organisation: user.organization?.path || "-",
     additionalPermissions: user.additionalPermissions,
@@ -157,20 +164,24 @@ onMounted(fetchUsers);
       <p>{{ statusMessage }}</p>
     </div>
 
-    <div v-if="isLoading" class="fr-alert fr-alert--info" data-testid="admin-users-loading">
-      <p>Chargement des utilisateurs...</p>
-    </div>
-
-    <div v-else-if="errorKeySet.size" class="fr-alert fr-alert--error" data-testid="admin-users-error">
+    <!-- Bannière (pas un remplacement) : une erreur de refetch ne doit pas démonter la table
+         déjà chargée — ni les modals d'édition ouverts dans ses lignes (#1830). -->
+    <div v-if="errorKeySet.size" class="fr-alert fr-alert--error fr-mb-2w" data-testid="admin-users-error">
       <p v-for="errorKey in Array.from(errorKeySet.keys())" :key="errorKey">
         {{ errorMessages[errorKey] }}
       </p>
     </div>
 
-    <div v-else>
+    <div v-if="isLoading && !hasLoadedOnce" class="fr-alert fr-alert--info" data-testid="admin-users-loading">
+      <p>Chargement des utilisateurs...</p>
+    </div>
+
+    <div v-else-if="hasLoadedOnce">
       <RefAppTable
         :items="tableRows"
         :columns="tableColumns"
+        data-key="id"
+        :loading="isLoading"
         :paginator="true"
         :lazy="true"
         :rows="itemsPerPage"

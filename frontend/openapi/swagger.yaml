@@ -7130,6 +7130,7 @@ components:
         - MONTHLY
         - YEARLY
         - ON_DEMAND
+        - NEVER
     DataExposureDto:
       type: object
       properties:
