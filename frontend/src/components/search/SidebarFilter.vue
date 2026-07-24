@@ -99,9 +99,9 @@ const total = computed(() => {
         >
           <BusinessDivisionSearch
             label="Direction métier"
-            tooltip-content="Recherche les applications rattachées à la direction de métier sélectionnée."
-            :business-division-id="filters.businessDivisionId"
-            @update="setFilter({ businessDivisionId: $event?.id, page: 0 })"
+            tooltip-content="Recherche les applications rattachées à au moins une des directions de métier sélectionnées."
+            :business-division-ids="filters.businessDivisionId"
+            @update:business-division-ids="(ids) => setFilter({ businessDivisionId: ids, page: 0 })"
           />
           <CampaignFilter v-if="isTimeRoute" />
         </DsfrAccordion>

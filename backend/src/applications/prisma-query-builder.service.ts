@@ -99,7 +99,9 @@ export class PrismaQueryBuilder {
       }
       if (restrictedFilter.businessDivisionId) {
         orConditions.push({
-          businessDivisionId: restrictedFilter.businessDivisionId,
+          businessDivisions: {
+            some: { id: restrictedFilter.businessDivisionId },
+          },
         });
       }
       where.AND.push({ OR: orConditions });
@@ -414,6 +416,14 @@ export class PrismaQueryBuilder {
         },
       },
       {
+        condition: filters.businessDivisionId?.length,
+        whereClause: {
+          businessDivisions: {
+            some: { id: { in: filters.businessDivisionId } },
+          },
+        },
+      },
+      {
         condition: filters.dataSourceName,
         whereClause: {
           dataSources: {
@@ -505,10 +515,7 @@ export class PrismaQueryBuilder {
       },
     });
 
-    where.AND.push(
-      this.buildRelationsQuery(filters),
-      this.buildBusinessDivision(filters),
-    );
+    where.AND.push(this.buildRelationsQuery(filters));
 
     return where;
   }
@@ -632,17 +639,12 @@ export class PrismaQueryBuilder {
     };
   }
 
-  private buildBusinessDivision(filters: ApplicationSearchFilters) {
-    return {
-      businessDivisionId: filters.businessDivisionId,
-    };
-  }
-
   private static readonly RAW_SORT_FIELDS = new Set([
     "hostingDisplay",
     "hostingSite",
     "hostingProviderDisplay",
     "hostingPlatformDisplay",
+    "businessDivision",
     "tag",
     "moa",
     "moe",
@@ -749,6 +751,18 @@ export class PrismaQueryBuilder {
           `,
         );
         break;
+      case "businessDivision":
+        rows = await this.prisma.$queryRaw<{ id: string }[]>(
+          Prisma.sql`
+            SELECT a."id" FROM "Application" a
+            LEFT JOIN "_ApplicationToBusinessDivision" abd ON abd."A" = a."id"
+            LEFT JOIN "BusinessDivision" bd ON bd."id" = abd."B"
+            WHERE a."id" = ANY(${ids})
+            GROUP BY a."id"
+            ORDER BY COUNT(abd."B") ${dir}, MIN(LOWER(bd."label")) ${dir} NULLS LAST
+          `,
+        );
+        break;
       case "rgaa":
         rows = await this.prisma.$queryRaw<{ id: string }[]>(
           Prisma.sql`
@@ -790,7 +804,6 @@ export class PrismaQueryBuilder {
       priorityRestart: { priorityRestart: safeOrder },
       quality: { quality: safeOrder },
       label: { label: safeOrder },
-      businessDivision: { businessDivision: { label: safeOrder } },
       applicationViews: { applicationViews: { _count: safeOrder } },
 
       dima: { compliance: { dima_duration_hours: safeOrder } },

@@ -183,6 +183,24 @@ async function linkOrganizationsToBusinessDivisions(
   }
 }
 
+async function linkBusinessDivisionsToApplications(
+  applications: SeededApplication[],
+  businessDivisions: SeededBusinessDivision[],
+) {
+  for (const [index, app] of applications.entries()) {
+    if (index % 5 === 0) continue; // ~1/5 des applications sans direction métier
+
+    const count = faker.number.int({ min: 1, max: 3 });
+    const divisions = faker.helpers.arrayElements(businessDivisions, count);
+    await prisma.application.update({
+      where: { id: app.id },
+      data: {
+        businessDivisions: { connect: divisions.map((bd) => ({ id: bd.id })) },
+      },
+    });
+  }
+}
+
 async function createQualityStats() {
   const now = new Date();
   const monthsCount = 6;
@@ -300,6 +318,10 @@ async function seed({
   // Link some organizations to business divisions
   console.log("🔗 Linking organizations to business divisions...");
   await linkOrganizationsToBusinessDivisions(businessDivisions);
+
+  // Link some applications to business divisions (0 à 3 par application)
+  console.log("🔗 Linking business divisions to applications...");
+  await linkBusinessDivisionsToApplications(applications, businessDivisions);
 
   // Add compliance data to existing applications (several apps per category)
   console.log("✅ Adding compliance data to existing applications...");

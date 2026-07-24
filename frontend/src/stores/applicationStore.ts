@@ -49,7 +49,7 @@ export const useApplicationStore = defineStore("applicationStore", () => {
       tags: app.tags,
       type: app.type,
       priorityRestart: app.priorityRestart,
-      businessDivisionId: app.businessDivisionId ?? null,
+      businessDivisionIds: app.businessDivisionIds ?? [],
     };
 
     const response = await api.applicationControllerUpdate({
