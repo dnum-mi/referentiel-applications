@@ -761,9 +761,14 @@ Aucun espace en début ou en fin."
       />
 
       <fieldset class="fr-fieldset fr-mt-3w">
-        <legend class="fr-fieldset__legend fr-label">Populations</legend>
-        <p class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</p>
-        <div class="fr-mt-2w">
+        <!-- #2054 : le hint vit DANS la légende (pattern DSFR) et le contenu dans un
+             `fr-fieldset__element` — des enfants directs « nus » d'un fr-fieldset se
+             placent en flex-row (le hint se collait à gauche du bouton d'ajout). -->
+        <legend class="fr-fieldset__legend fr-label">
+          Populations
+          <span class="fr-hint-text">Indiquez ici le public cible concerné (ex. : RH, agents publics, entreprises...)</span>
+        </legend>
+        <div class="fr-fieldset__element fr-mt-2w">
           <div v-for="(_targetPopulation, index) in form.targetPopulations" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
             <div class="fr-col">
               <DsfrInput
@@ -804,7 +809,7 @@ Aucun espace en début ou en fin."
 
       <fieldset class="fr-fieldset fr-mt-3w">
         <legend class="fr-fieldset__legend fr-label">Objectifs</legend>
-        <div class="fr-mt-2w">
+        <div class="fr-fieldset__element fr-mt-2w">
           <div v-for="(_purpose, index) in form.purposes" :key="index" class="fr-grid-row fr-grid-row--gutters fr-mb-2w">
             <div class="fr-col">
               <DsfrInput
@@ -843,12 +848,11 @@ Aucun espace en début ou en fin."
         </div>
       </fieldset>
 
-      <fieldset class="fr-fieldset fr-mt-3w autocomplete-tags">
-        <legend class="fr-fieldset__legend fr-label">Tags</legend>
-        <div class="fr-mt-2w fr-col">
-          <TagSearchSelect v-model:tags="form.tags" />
-        </div>
-      </fieldset>
+      <!-- #2054 : TagSearchSelect est déjà un fieldset avec sa propre légende « Tags » —
+           l'envelopper dans un second fieldset légendé doublait le libellé à l'écran. -->
+      <div class="fr-mt-3w">
+        <TagSearchSelect v-model:tags="form.tags" />
+      </div>
     </div>
 
     <!-- Step 3: MOA Section -->
