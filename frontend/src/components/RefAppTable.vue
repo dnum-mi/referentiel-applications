@@ -9,6 +9,13 @@ import type { DataTableSortEvent, DataTablePageEvent } from "primevue/datatable"
 export interface Props<T extends Record<string, any> = Record<string, any>> {
   items: T[];
   columns: TableColumn[];
+  /**
+   * Champ identifiant de ligne, transmis au `dataKey` PrimeVue. Sans lui, les lignes sont
+   * keyées par INDEX : lors d'un refetch qui réordonne/filtre, les composants des cellules
+   * (modals inclus) sont réutilisés avec les données d'une AUTRE ligne (#1830). À fournir
+   * dès qu'un slot de cellule porte un état local.
+   */
+  dataKey?: string;
   loading?: boolean;
   totalRecords?: number;
   rows?: number;
@@ -22,6 +29,7 @@ export interface Props<T extends Record<string, any> = Record<string, any>> {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  dataKey: undefined,
   loading: false,
   totalRecords: 0,
   rows: 10,
@@ -120,6 +128,7 @@ watch(
   <section class="fr-table" :aria-label="`Tableau de ${totalRecords} éléments`">
     <DataTable
       :value="items"
+      :data-key="dataKey"
       :lazy="lazy"
       :total-records="totalRecords"
       :rows="rows"
