@@ -1194,10 +1194,11 @@ paths:
         - name: businessDivisionId
           required: false
           in: query
-          description: Filtrage des directions de metier MOA
+          description: Filtrage des directions de metier MOA (une ou plusieurs)
           schema:
-            nullable: true
-            type: string
+            type: array
+            items:
+              type: string
         - name: is_mediation_service
           required: false
           in: query
@@ -1707,10 +1708,11 @@ paths:
         - name: businessDivisionId
           required: false
           in: query
-          description: Filtrage des directions de metier MOA
+          description: Filtrage des directions de metier MOA (une ou plusieurs)
           schema:
-            nullable: true
-            type: string
+            type: array
+            items:
+              type: string
         - name: is_mediation_service
           required: false
           in: query
@@ -5110,10 +5112,11 @@ paths:
         - name: businessDivisionId
           required: false
           in: query
-          description: Filtrage des directions de metier MOA
+          description: Filtrage des directions de metier MOA (une ou plusieurs)
           schema:
-            nullable: true
-            type: string
+            type: array
+            items:
+              type: string
         - name: is_mediation_service
           required: false
           in: query
@@ -6612,10 +6615,11 @@ components:
             statusDate: 2024-01-15T10:30:00Z
           allOf:
             - $ref: "#/components/schemas/CreateApplicationStatusDto"
-        businessDivisionId:
-          type: string
-          nullable: true
-          description: Id de la direction de metier de l'application MOA
+        businessDivisionIds:
+          description: Ids des directions de metier de l'application MOA
+          type: array
+          items:
+            type: string
       required:
         - label
         - description
@@ -6718,11 +6722,11 @@ components:
           description: Technical debt information for the application
           allOf:
             - $ref: "#/components/schemas/TechnicalDebtInfoDto"
-        businessDivision:
-          nullable: true
-          description: Business division MOA for the application
-          allOf:
-            - $ref: "#/components/schemas/BusinessDivisionDTO"
+        businessDivisions:
+          description: Business divisions MOA for the application
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessDivisionDTO"
         id:
           type: string
         label:
@@ -6913,10 +6917,11 @@ components:
           type: array
           items:
             type: string
-        businessDivisionId:
-          type: string
-          nullable: true
-          description: Id de la direction de metier de l'application MOA
+        businessDivisionIds:
+          description: Ids des directions de metier de l'application MOA
+          type: array
+          items:
+            type: string
     UpdateApplicationStatusDto:
       type: object
       properties:
@@ -7745,6 +7750,8 @@ components:
       properties:
         actorTypeId:
           type: string
+        isAdmin:
+          type: boolean
         AppRead:
           type: boolean
         AppWrite:

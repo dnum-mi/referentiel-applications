@@ -4,14 +4,21 @@ import { generateId } from "@/utils/generator-utils";
 import { watchDebounced } from "@vueuse/core";
 import { ref, type WatchHandle } from "vue";
 
-const props = defineProps<{
-  searchData?: Array<{ id: string; label: string }>;
-  searchDataFunction?: (query: string) => Promise<Array<{ id: string; label: string }>>;
-  label: string;
-  placeholder: string;
-  defaultValue?: string;
-  tooltipContent?: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    searchData?: Array<{ id: string; label: string }>;
+    searchDataFunction?: (query: string) => Promise<Array<{ id: string; label: string }>>;
+    label: string;
+    placeholder: string;
+    defaultValue?: string;
+    tooltipContent?: string;
+    /** Masque le tag de la sélection courante (utile en mode multi-sélection, géré par le parent). */
+    hideSelectedTag?: boolean;
+  }>(),
+  {
+    hideSelectedTag: false,
+  },
+);
 
 const emit = defineEmits<{
   "update:selectedValue": [application?: Pick<ApplicationDto, "id" | "label">];
@@ -89,7 +96,7 @@ const resetInput = () => {
     </ul>
     <slot name="application-label">
       <DsfrTag
-        v-if="searchSuggestion"
+        v-if="searchSuggestion && !props.hideSelectedTag"
         :label="searchSuggestion"
         :selected="false"
         :value="searchSuggestion"

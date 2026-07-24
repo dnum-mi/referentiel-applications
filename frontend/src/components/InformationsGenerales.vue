@@ -210,9 +210,9 @@ function cancelDeletionHosting() {
   isDeleteModalOpen.value = false;
 }
 
-const businessDivisionLabel = computed(() => {
-  return props.application.businessDivision?.label ?? "Aucun";
-});
+function businessDivisionSearchLink(businessDivisionId: string) {
+  return router.resolve({ name: routeNames.SEARCHAPP, query: { businessDivisionId } }).fullPath;
+}
 const openCreateLabelModal = () => {
   labelToEdit.value = null;
   isLabelModalOpen.value = true;
@@ -291,10 +291,20 @@ watch(
                 {{ application.id }}
               </p>
 
-              <h4>Direction métier principale</h4>
-              <p data-testid="info-application-id">
-                {{ businessDivisionLabel }}
-              </p>
+              <h4>Directions métier</h4>
+              <ul v-if="application.businessDivisions?.length" class="fr-tags-group" data-testid="info-business-divisions">
+                <li v-for="businessDivision in application.businessDivisions" :key="businessDivision.id">
+                  <DsfrTag
+                    :label="businessDivision.label"
+                    :small="small"
+                    :link="businessDivisionSearchLink(businessDivision.id)"
+                    :title="`Voir les applications de la direction métier ${businessDivision.label}`"
+                    :aria-label="`Voir les applications de la direction métier ${businessDivision.label}`"
+                    data-testid="info-business-division-link"
+                  />
+                </li>
+              </ul>
+              <p v-else data-testid="info-business-divisions">Aucune</p>
 
               <div v-if="application.shortName">
                 <h4>Nom court</h4>

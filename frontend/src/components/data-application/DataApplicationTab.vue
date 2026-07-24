@@ -170,6 +170,10 @@ function goToSourceApplication(applicationId: string) {
   router.push({ name: routeNames.PROFILEAPP, params: { id: applicationId } });
 }
 
+function tagSearchLink(tag: string) {
+  return router.resolve({ name: routeNames.SEARCHAPP, query: { tag } }).fullPath;
+}
+
 watch(
   () => props.application.id,
   (id) => {
@@ -264,11 +268,18 @@ watch(
       </template>
 
       <!-- TAGS — chips depuis _tagsRaw -->
-      <template #body-tags="{ data }">
+      <template #body-tags="{ data }: { data: DataRow }">
         <div v-if="data._tagsRaw.length" class="fr-tags-group">
-          <span v-for="tag in data._tagsRaw" :key="tag.id" class="fr-tag fr-mr-1v fr-mb-1v">
-            {{ tag.name }}
-          </span>
+          <DsfrTag
+            v-for="tag in data._tagsRaw"
+            :key="tag.id"
+            class="fr-mr-1v fr-mb-1v"
+            :label="tag.name"
+            :link="tagSearchLink(tag.name)"
+            :title="`Voir les applications avec le tag ${tag.name}`"
+            :aria-label="`Voir les applications avec le tag ${tag.name}`"
+            data-testid="data-application-tag-link"
+          />
         </div>
         <span v-else class="fr-text-mention--grey">—</span>
       </template>

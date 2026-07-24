@@ -17,7 +17,6 @@ import {
   type CreateApplicationStatusDto,
   type CreateActorDto,
   type ApplicationType,
-  type BusinessDivisionDto,
   type OrganizationDto,
   Permission,
 } from "@/client/types.gen";
@@ -213,7 +212,7 @@ const form = ref<FormState>({
   priorityRestart: props.initialData?.priorityRestart,
   type: props.initialData?.type,
   tags: props.initialData?.tags ?? [],
-  businessDivisionId: props?.initialData?.businessDivision?.id ?? null,
+  businessDivisionIds: props?.initialData?.businessDivisions?.map((bd) => bd.id) ?? [],
 });
 const initialStatusValue = ref(form.value.status?.status);
 
@@ -236,7 +235,7 @@ const isCreateFormDirty = computed(() => {
     form.value.priorityRestart !== undefined ||
     form.value.type !== undefined ||
     (form.value.tags?.length ?? 0) > 0 ||
-    form.value?.businessDivisionId ||
+    (form.value.businessDivisionIds?.length ?? 0) > 0 ||
     statusChanged ||
     !!moaActor.value.organizationId ||
     hasText(moaActor.value.email) ||
@@ -633,8 +632,8 @@ async function removePopulation(index: number) {
   focusByTestId(form.value.targetPopulations.length > 0 ? "application-population-0" : "application-population-add");
 }
 
-const updateBusinessDivision = (payload: BusinessDivisionDto | null) => {
-  form.value.businessDivisionId = payload?.id;
+const updateBusinessDivisionIds = (ids: string[]) => {
+  form.value.businessDivisionIds = ids;
 };
 
 onMounted(async () => {
@@ -702,8 +701,8 @@ Aucun espace en début ou en fin."
       />
 
       <BusinessDivisionSearch
-        :business-division-id="initialData.businessDivision?.id"
-        @update="updateBusinessDivision"
+        :business-division-ids="form.businessDivisionIds"
+        @update:business-division-ids="updateBusinessDivisionIds"
         label="Rechercher une direction de metier"
       />
 

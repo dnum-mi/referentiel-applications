@@ -201,6 +201,10 @@ function goToProfileApp(appId: string) {
 function goToApplicationProfile(appId: string) {
   router.push({ name: routeNames.PROFILEAPP, params: { id: appId } });
 }
+
+function tagSearchLink(tag: string) {
+  return router.resolve({ name: routeNames.SEARCHAPP, query: { tag } }).fullPath;
+}
 </script>
 
 <template>
@@ -402,9 +406,16 @@ function goToApplicationProfile(appId: string) {
                 />
               </strong>
               <div class="fr-tags-group fr-mt-1w">
-                <span v-for="tag in item?.dataDescription?.tags" :key="tag.id" class="fr-tag fr-mr-1v fr-mb-1v">
-                  {{ tag.name }}
-                </span>
+                <DsfrTag
+                  v-for="tag in item?.dataDescription?.tags"
+                  :key="tag.id"
+                  class="fr-mr-1v fr-mb-1v"
+                  :label="tag.name"
+                  :link="tagSearchLink(tag.name)"
+                  :title="`Voir les applications avec le tag ${tag.name}`"
+                  :aria-label="`Voir les applications avec le tag ${tag.name}`"
+                  data-testid="data-application-detail-tag-link"
+                />
               </div>
             </div>
 
