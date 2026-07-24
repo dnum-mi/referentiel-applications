@@ -600,6 +600,7 @@ export interface UserAdmin {
   email: string;
   role: string;
   additionalPermissions: string[];
+  organizationId?: string | null;
 }
 
 /** Champs de conformité utiles aux tests (sous-ensemble du DTO backend). */
