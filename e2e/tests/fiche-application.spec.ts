@@ -1,4 +1,4 @@
-import { test } from "../fixtures/test";
+import { test, expect } from "../fixtures/test";
 import { ApplicationPage, SearchPage, loginAs } from "../pom";
 
 const USER_EMAIL = "user@example.com";
@@ -242,11 +242,11 @@ test.describe("Fiche application", () => {
     await fiche.sortModificationsColumn("Date");
     await fiche.sortModificationsColumn("Titre");
   });
-  // FIC-22 (#2088) — l'onglet Stack technique suit les droits, comme les autres onglets
+  // FIC-22 (#2088) — l'onglet Technologie (ex-« Stack technique », #2083) suit les droits, comme les autres onglets
   // (défait la « lecture pour tous » de #2027) : un Visiteur (aucun droit Technologie) ne
   // doit pas le voir ; un Lecteur le retrouve via la projection de rôle par application.
   // CONTEXTE navigateur séparé pour la session `user` ; rôle restauré en `finally`.
-  test("FIC-22 - l'onglet Stack technique est masqué pour un Visiteur", async ({
+  test("FIC-22 - l'onglet Technologie est masqué pour un Visiteur", async ({
     browser,
     data,
   }) => {
@@ -261,16 +261,23 @@ test.describe("Fiche application", () => {
       await loginAs(userPage, "user");
       const fiche = new ApplicationPage(userPage);
 
-      // Visiteur : la fiche se rend (témoin AppRead du socle) mais SANS l'onglet Stack
-      // technique — le bouton d'onglet n'est pas rendu du tout.
-      await fiche.open(app.id);
-      await fiche.expectTabButtonVisible("Informations générales");
-      await fiche.expectTabButtonAbsent("Stack technique");
+      // Visiteur : la fiche se rend (témoin AppRead du socle) mais SANS l'onglet
+      // Technologie — le bouton d'onglet n'est pas rendu du tout. Les workers parallèles
+      // (PRM-04/05) peuvent restaurer le rôle Lecteur au même moment → re-poser le rôle
+      // avant chaque tentative (pattern PRM-10).
+      await expect(async () => {
+        await data.setUserRole(USER_EMAIL, "VISITOR");
+        await fiche.open(app.id);
+        await fiche.expectTabButtonVisible("Informations générales");
+        await fiche.expectTabButtonAbsent("Technologie");
+      }).toPass({ timeout: 45000 });
 
       // Lecteur : l'onglet revient via la projection de rôle (READ_APP_PERMISSIONS).
-      await data.resetUser(USER_EMAIL);
-      await fiche.open(app.id);
-      await fiche.expectTabButtonVisible("Stack technique");
+      await expect(async () => {
+        await data.resetUser(USER_EMAIL);
+        await fiche.open(app.id);
+        await fiche.expectTabButtonVisible("Technologie");
+      }).toPass({ timeout: 45000 });
     } finally {
       await ctx.close();
       await data.removeApplication(app.id);

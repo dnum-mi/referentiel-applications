@@ -118,3 +118,24 @@ body,
 .a11y-text-spacing-test p {
   margin-bottom: 2em !important;
 }
+
+/*
+ * #2112 : en-têtes de tableaux épinglés (sticky) pendant le défilement.
+ * Tables DSFR legacy (`.fr-table > table`) : la table est SA PROPRE boîte de défilement
+ * (`display: block; overflow: auto`), on borne donc sa hauteur pour que les `th` s'épinglent
+ * à son scrollport — un max-height posé sur `.fr-table` ferait défiler l'en-tête avec le
+ * corps. Le fond DSFR étant porté par `thead` (qui défile), les `th` redéclarent un fond
+ * opaque thémé + liseré bas. Les tableaux PrimeVue passent par `RefAppTable`, qui porte
+ * les règles équivalentes (`.p-datatable-table-container`).
+ */
+.fr-table > table {
+  max-height: 70vh;
+}
+
+.fr-table > table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--background-alt-grey);
+  box-shadow: inset 0 -1px 0 var(--border-plain-grey);
+}
