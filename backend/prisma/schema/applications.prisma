@@ -68,10 +68,8 @@ model Application {
   /// Score de qualité de la fiche de l' application
   quality         Int
 
-  /// Identifiant de la direction metier MOA de l'application
-  businessDivisionId String?
-  /// Direction metier MOA de l'application
-  businessDivision   BusinessDivision? @relation(fields: [businessDivisionId], references: [id], onDelete: SetNull)
+  /// Directions metier MOA de l'application
+  businessDivisions BusinessDivision[]
 
   @@unique([label, description])
   @@index([label])

@@ -33,7 +33,6 @@ erDiagram
   String currentStatusId FK "nullable"
   priorityRestart priorityRestart "nullable"
   Int quality
-  String businessDivisionId FK "nullable"
 }
 "ApplicationStatus" {
   String id PK
@@ -105,6 +104,10 @@ erDiagram
   String A FK
   String B FK
 }
+"_ApplicationToBusinessDivision" {
+  String A FK
+  String B FK
+}
 "_DataDescriptionToTag" {
   String A FK
   String B FK
@@ -124,6 +127,7 @@ erDiagram
 "_ApplicationToTag" }o--|| "Application" : Application
 "_ApplicationToTag" }o--|| "Tag" : Tag
 "_ApplicationToDataDescription" }o--|| "Application" : Application
+"_ApplicationToBusinessDivision" }o--|| "Application" : Application
 "_DataDescriptionToTag" }o--|| "Tag" : Tag
 ```
 
@@ -145,7 +149,6 @@ Properties as follows:
 - `currentStatusId`:
 - `priorityRestart`: Niveau de priorité pour les opérations de redémarrage
 - `quality`: Score de qualité de la fiche de l' application
-- `businessDivisionId`: Identifiant de la direction metier MOA de l'application
 
 ### `ApplicationStatus`
 
@@ -284,6 +287,15 @@ Properties as follows:
 - `A`:
 - `B`:
 
+### `_ApplicationToBusinessDivision`
+
+Pair relationship table between [Application](#Application) and [BusinessDivision](#BusinessDivision)
+
+Properties as follows:
+
+- `A`:
+- `B`:
+
 ### `_DataDescriptionToTag`
 
 Pair relationship table between [DataDescription](#DataDescription) and [Tag](#Tag)
@@ -301,6 +313,11 @@ erDiagram
   String id PK
   String(255) label UK
 }
+"_ApplicationToBusinessDivision" {
+  String A FK
+  String B FK
+}
+"_ApplicationToBusinessDivision" }o--|| "BusinessDivision" : BusinessDivision
 ```
 
 ### `BusinessDivision`
@@ -311,6 +328,15 @@ Properties as follows:
 
 - `id`: Identifiant unique
 - `label`: Label de la direction metier MOA
+
+### `_ApplicationToBusinessDivision`
+
+Pair relationship table between [Application](#Application) and [BusinessDivision](#BusinessDivision)
+
+Properties as follows:
+
+- `A`:
+- `B`:
 
 ## Compliance
 

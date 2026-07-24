@@ -46,7 +46,7 @@ export class ApplicationRepository implements IApplicationRepository {
           include: { sourceApplication: { select: { id: true, label: true } } },
         },
         tags: true,
-        businessDivision: true,
+        businessDivisions: true,
       },
     });
   }
@@ -66,7 +66,7 @@ export class ApplicationRepository implements IApplicationRepository {
         orderBy: { createdAt: "desc" },
         take: 1,
       },
-      businessDivision: true,
+      businessDivisions: true,
       hostings: {
         include: {
           hostingOption: true,

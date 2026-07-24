@@ -85,14 +85,14 @@ export class ApplicationDto {
   technicalDebtInfo?: TechnicalDebtInfoDto | null;
 
   @ApiProperty({
-    type: () => BusinessDivisionDTO,
-    description: "Business division MOA for the application",
+    type: () => [BusinessDivisionDTO],
+    description: "Business divisions MOA for the application",
     required: false,
-    nullable: true,
   })
   @IsOptional()
+  @IsArray()
   @Type(() => BusinessDivisionDTO)
-  businessDivision?: BusinessDivisionDTO | null;
+  businessDivisions?: BusinessDivisionDTO[];
 }
 
 export class CountByMonthDto {

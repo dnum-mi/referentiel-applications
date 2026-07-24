@@ -40,10 +40,10 @@ export class ActorTypeFaker {
     const label = faker.company
       .buzzPhrase()
       .replace(/\b\w/g, (c) => c.toUpperCase());
-    const code = label
+    const code = `${label
       .replace(/[a-z\s]+/g, "")
       .toUpperCase()
-      .slice(0, 5);
+      .slice(0, 5)}-${faker.string.alphanumeric(6).toUpperCase()}`;
     const actorType = await prisma.actorType.create({
       data: {
         id: faker.string.uuid(),

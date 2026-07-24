@@ -401,11 +401,13 @@ export class ApplicationSearchDto extends PaginationDto {
   relationAppId?: string;
 
   @ApiPropertyOptional({
-    description: "Filtrage des directions de metier MOA",
+    description: "Filtrage des directions de metier MOA (une ou plusieurs)",
   })
   @IsOptional()
-  @IsString()
-  businessDivisionId?: string | null;
+  @IsArray()
+  @IsString({ each: true })
+  @Transform(({ value }) => ApplicationSearchDto.toArray(value))
+  businessDivisionId?: string[];
 
   @ApiPropertyOptional({
     description: "Filtrée sur la mediation de service",

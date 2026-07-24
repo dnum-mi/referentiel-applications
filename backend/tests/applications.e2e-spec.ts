@@ -6,6 +6,7 @@ import request from "supertest";
 import { ActorTypeFaker } from "./fakers/actor-type.faker";
 import { ActorFaker } from "./fakers/actor.faker";
 import { ApplicationFaker } from "./fakers/application.faker";
+import { BusinessDivisionFaker } from "./fakers/business-division.faker";
 import { getPrismaClient } from "./fakers/prisma";
 import { TagFaker } from "./fakers/tag.faker";
 import { ComplianceFaker } from "./fakers/compliance.faker";
@@ -166,6 +167,109 @@ describe("Applications", () => {
 
     // Store the created application ID for the delete test
     createdApplicationId = response.body.id;
+  });
+
+  it("/POST applications - avec plusieurs directions métiers", async () => {
+    await user.update({
+      additionalPermissions: [Permission.CreateApplication],
+    });
+    const bd1 = await BusinessDivisionFaker.create();
+    const bd2 = await BusinessDivisionFaker.create();
+
+    const createResponse = await request(app().getHttpServer())
+      .post("/applications")
+      .send({
+        label: faker.company.name(),
+        description: faker.company.catchPhrase(),
+        status: { status: "in_production" },
+        tags: [],
+        businessDivisionIds: [bd1.id, bd2.id],
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+
+    const getResponse = await request(app().getHttpServer())
+      .get(`/applications/${createResponse.body.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const businessDivisionIds = getResponse.body.businessDivisions.map(
+      (bd: { id: string }) => bd.id,
+    );
+    expect(businessDivisionIds).toHaveLength(2);
+    expect(businessDivisionIds).toEqual(
+      expect.arrayContaining([bd1.id, bd2.id]),
+    );
+  });
+
+  it("/PATCH applications/:id - remplace les directions métiers (set complet)", async () => {
+    const admin = await UserFaker.create({ role: Roles.ADMIN });
+    const adminToken = await getToken(admin);
+    const application = await ApplicationFaker.create(admin);
+    const bd1 = await BusinessDivisionFaker.create();
+    const bd2 = await BusinessDivisionFaker.create();
+    const bd3 = await BusinessDivisionFaker.create();
+
+    const addResponse = await request(app().getHttpServer())
+      .patch(`/applications/${application.id}`)
+      .send({ businessDivisionIds: [bd1.id, bd2.id] })
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+    expect(
+      addResponse.body.businessDivisions.map((bd: { id: string }) => bd.id),
+    ).toEqual(expect.arrayContaining([bd1.id, bd2.id]));
+
+    const replaceResponse = await request(app().getHttpServer())
+      .patch(`/applications/${application.id}`)
+      .send({ businessDivisionIds: [bd3.id] })
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+    const replacedIds = replaceResponse.body.businessDivisions.map(
+      (bd: { id: string }) => bd.id,
+    );
+    expect(replacedIds).toEqual([bd3.id]);
+  });
+
+  it("/GET applications?businessDivisionId= - filtre sur au moins une direction métier", async () => {
+    const admin = await UserFaker.create({ role: Roles.ADMIN });
+    const adminToken = await getToken(admin);
+    const bd1 = await BusinessDivisionFaker.create();
+    const bd2 = await BusinessDivisionFaker.create();
+    const bdOther = await BusinessDivisionFaker.create();
+
+    const appWithBd1 = await ApplicationFaker.create(admin);
+    await request(app().getHttpServer())
+      .patch(`/applications/${appWithBd1.id}`)
+      .send({ businessDivisionIds: [bd1.id] })
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    const appWithBd2 = await ApplicationFaker.create(admin);
+    await request(app().getHttpServer())
+      .patch(`/applications/${appWithBd2.id}`)
+      .send({ businessDivisionIds: [bd2.id] })
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    const appWithOther = await ApplicationFaker.create(admin);
+    await request(app().getHttpServer())
+      .patch(`/applications/${appWithOther.id}`)
+      .send({ businessDivisionIds: [bdOther.id] })
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ businessDivisionId: [bd1.id, bd2.id], pageSize: 0 })
+      .set("Authorization", `Bearer ${adminToken}`)
+      .expect(200);
+
+    const resultIds = response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+    expect(resultIds).toContain(appWithBd1.id);
+    expect(resultIds).toContain(appWithBd2.id);
+    expect(resultIds).not.toContain(appWithOther.id);
   });
 
   it("/POST applications - should accept missing priorityRestart", async () => {
