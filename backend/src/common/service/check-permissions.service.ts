@@ -109,10 +109,12 @@ export class CheckPermissions {
     const businessDivisionFromScope = await this.prisma.application.findFirst({
       where: {
         id: applicationId,
-        businessDivision: {
-          label: {
-            contains: scopedPermissions,
-            mode: "insensitive" as const,
+        businessDivisions: {
+          some: {
+            label: {
+              contains: scopedPermissions,
+              mode: "insensitive" as const,
+            },
           },
         },
       },

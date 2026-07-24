@@ -49,7 +49,7 @@ export type ApplicationFormInitialData = {
   priorityRestart?: ApplicationPriorityRestart;
   type?: ApplicationType;
   tags?: string[];
-  businessDivision?: BusinessDivisionDto | null;
+  businessDivisions?: BusinessDivisionDto[];
   currentStatus?: ApplicationStatusDto | null;
   quality?: number | null;
   myPerms?: Set<APP_PERMISSIONS>;

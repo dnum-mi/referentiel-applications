@@ -40,9 +40,9 @@ const formatActors = (actors: any[], actorTypeCode: string): string => {
     .join("\n");
 };
 
-const formatBusinessDivision = (businessDivision?: BusinessDivisionDto): string => {
-  if (!businessDivision) return "";
-  return businessDivision.label;
+const formatBusinessDivisions = (businessDivisions?: BusinessDivisionDto[]): string => {
+  if (!businessDivisions?.length) return "";
+  return businessDivisions.map((businessDivision) => businessDivision.label).join("\n");
 };
 
 const formatHours = (value: number | null | undefined): string => (value == null ? "" : `${value}h`);
@@ -71,7 +71,7 @@ const applications = computed(() =>
       moaDisplay: formatActors(app.actors, "MOA"),
       moeDisplay: formatActors(app.actors, "MOE"),
       hostingManagerDisplay: formatActors(app.actors, "HEB"),
-      businessDivisionDisplay: formatBusinessDivision(app.businessDivision),
+      businessDivisionDisplay: formatBusinessDivisions(app.businessDivisions),
       rsimmDisplay: formatActors(app.actors, "RSSI"),
       dimaDisplay: formatHours(app.compliance?.dima_duration_hours),
       pdmaDisplay: formatHours(app.compliance?.pdma_duration_hours),

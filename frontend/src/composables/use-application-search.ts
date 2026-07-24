@@ -59,7 +59,7 @@ const DEFAULT_FILTERS: Filters = {
   use_sso_of: RELATION_TYPE_FILTERS.neutral,
   is_mediation_service: RELATION_TYPE_FILTERS.neutral,
   relationAppId: undefined,
-  businessDivisionId: undefined,
+  businessDivisionId: [],
   dataSourceName: undefined,
   millesime: undefined,
 };
@@ -209,7 +209,7 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     use_sso_of: parseQueryParamsEnum(query.use_sso_of) ?? DEFAULT_FILTERS.use_sso_of,
     is_mediation_service: parseQueryParamsEnum(query.is_mediation_service) ?? DEFAULT_FILTERS.is_mediation_service,
     relationAppId: parseQueryParam(query.relationAppId),
-    businessDivisionId: parseQueryParam(query.businessDivisionId),
+    businessDivisionId: parseQueryParamArray(query.businessDivisionId) ?? [],
     dataSourceName: parseQueryParam(query.dataSourceName),
     millesime: parseQueryParamNumber(query.millesime),
   };

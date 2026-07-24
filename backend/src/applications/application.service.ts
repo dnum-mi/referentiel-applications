@@ -1,7 +1,6 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { Application, Permission, Prisma } from "@prisma/client";
 import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
-import { BusinessDivisionService } from "src/business-division/business-division.service";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { MetadatasService } from "src/metadatas/metadatas.service";
@@ -38,7 +37,6 @@ export class ApplicationService {
     private readonly metadataService: MetadatasService,
     private readonly applicationViewService: ApplicationViewService,
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
-    private readonly businessDivisionService: BusinessDivisionService,
     private readonly checkPermissions: CheckPermissions,
     private readonly applicationSearchService: ApplicationSearchService,
   ) {}
@@ -66,11 +64,11 @@ export class ApplicationService {
           },
           priorityRestart: createApplicationDto.priorityRestart ?? null,
           quality: 0,
-          ...(createApplicationDto.businessDivisionId && {
-            businessDivision: {
-              connect: { id: createApplicationDto.businessDivisionId },
-            },
-          }),
+          businessDivisions: {
+            connect: (createApplicationDto.businessDivisionIds ?? []).map(
+              (id) => ({ id }),
+            ),
+          },
         },
       });
 
@@ -133,15 +131,10 @@ export class ApplicationService {
       applicationUpdates.tags = { set: existingTags };
     }
 
-    if (data.businessDivisionId !== undefined) {
-      if (data.businessDivisionId) {
-        await this.businessDivisionService.findById(data.businessDivisionId);
-        applicationUpdates.businessDivision = {
-          connect: { id: data.businessDivisionId },
-        };
-      } else {
-        applicationUpdates.businessDivision = { disconnect: true };
-      }
+    if (data.businessDivisionIds !== undefined) {
+      applicationUpdates.businessDivisions = {
+        set: data.businessDivisionIds.map((id) => ({ id })),
+      };
     }
 
     try {
@@ -150,7 +143,7 @@ export class ApplicationService {
       const updatedApplication = await this.prisma.application.update({
         where: { id: applicationId },
         data: applicationUpdates,
-        include: { tags: true, businessDivision: true },
+        include: { tags: true, businessDivisions: true },
       });
 
       await this.updateApplicationQuality(updatedApplication.id);
