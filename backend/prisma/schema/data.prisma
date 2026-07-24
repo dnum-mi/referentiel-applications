@@ -131,6 +131,8 @@ enum DataUpdateFrequency {
   YEARLY
   /// Mise à jour à la demande uniquement
   ON_DEMAND
+  /// Donnée jamais mise à jour (figée)
+  NEVER
 }
 
 /// Statut d'exposition d'une donnée en open data.
