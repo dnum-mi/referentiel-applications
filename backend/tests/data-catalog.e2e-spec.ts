@@ -391,6 +391,36 @@ describe("DataCatalog", () => {
         isReference: true,
       });
     });
+
+    // #2055 : la fréquence « Jamais » (NEVER) fait partie de l'enum de bout en bout —
+    // son absence faisait échouer les requêtes Prisma la mentionnant (500).
+    it("accepts the NEVER update frequency and returns it", async () => {
+      const description = await DataDescriptionFaker.create();
+
+      const response = await request(app().getHttpServer())
+        .post(`/data-catalog/applications/${application.id}`)
+        .set("Authorization", `Bearer ${WRITER_TOKEN}`)
+        .send({
+          dataDescriptionId: description.id,
+          updateFrequency: "NEVER",
+        })
+        .expect(201);
+
+      expect(response.body).toMatchObject({ updateFrequency: "NEVER" });
+    });
+
+    it("rejects an unknown update frequency with 400 (never a Prisma 500)", async () => {
+      const description = await DataDescriptionFaker.create();
+
+      await request(app().getHttpServer())
+        .post(`/data-catalog/applications/${application.id}`)
+        .set("Authorization", `Bearer ${WRITER_TOKEN}`)
+        .send({
+          dataDescriptionId: description.id,
+          updateFrequency: "SOMETIMES",
+        })
+        .expect(400);
+    });
   });
 
   describe("PATCH /data-catalog/applications/:applicationId/:dataApplicationId", () => {
