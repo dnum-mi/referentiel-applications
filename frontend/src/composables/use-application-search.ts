@@ -64,6 +64,14 @@ const DEFAULT_FILTERS: Filters = {
   millesime: undefined,
 };
 
+// Le diagramme Time affiche l'ensemble des points de dette technique (pas de
+// pagination) : la même liste de filtres que les applications, en ne
+// surchargeant que ce qui diffère.
+const TIME_DEFAULT_FILTERS: Filters = {
+  ...DEFAULT_FILTERS,
+  pageSize: 0,
+};
+
 // Shared state across components (singleton pattern)
 const results = ref<ApplicationDto[]>([]);
 const technicalDebtPoints = ref<ApplicationDto[]>([]);
@@ -282,8 +290,8 @@ export function useApplicationSearch() {
     setFilter({ order: ascending ? "asc" : "desc" });
   }
 
-  function resetFilters() {
-    filters.value = { ...DEFAULT_FILTERS };
+  function resetFilters(defaults: Filters = DEFAULT_FILTERS) {
+    filters.value = { ...defaults };
     router.replace({ query: {} });
     // Annule une éventuelle recherche débouncée en attente avant de relancer.
     scheduleSearch(true);
@@ -372,6 +380,7 @@ export function useApplicationSearch() {
     isLoading,
     error,
     DEFAULT_FILTERS,
+    TIME_DEFAULT_FILTERS,
     searchApplications,
     fetchTechnicalDebtPoints,
     setFilter,
