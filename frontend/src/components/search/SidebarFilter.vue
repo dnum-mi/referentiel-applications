@@ -95,6 +95,7 @@ const total = computed(() => {
           :selected="openAccordions.includes(0)"
           title="Portefeuille"
           data-testid="sidebar-accordion-portfolio"
+          class="portfolio-accordion"
           @click="toggle(1)"
         >
           <BusinessDivisionSearch
@@ -259,6 +260,10 @@ const total = computed(() => {
 
 .reset-link {
   align-self: flex-end;
+}
+
+.portfolio-accordion {
+  margin-bottom: 1rem;
 }
 
 .sidebar-header {
