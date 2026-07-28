@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useApplicationSearch } from "@/composables/use-application-search";
+import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
 import CampaignFilter from "@/components/search/CampaignFilter.vue";
 import ActorFilter from "@/components/search/ActorFilter.vue";
 import HostingFilter from "@/components/search/HostingFilter.vue";
@@ -32,7 +33,12 @@ const sidebarOpen = ref(true);
 const route = useRoute();
 // Le sélecteur de campagne (millésime) ne concerne que le diagramme Time.
 const isTimeRoute = computed(() => route.path === "/time");
-const { total: applicationsTotal, resetFilters, filters, setFilter } = useApplicationSearch();
+const { total: applicationsTotal, resetFilters, filters, setFilter, TIME_DEFAULT_FILTERS } = useApplicationSearch();
+const { latestYear } = useMditCampaigns();
+
+function handleReset() {
+  resetFilters(isTimeRoute.value ? { ...TIME_DEFAULT_FILTERS, millesime: latestYear.value } : undefined);
+}
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
 
@@ -62,7 +68,7 @@ const total = computed(() => {
   <Transition name="sidebar-width">
     <aside v-if="sidebarOpen" class="sidebar" v-bind="$attrs" data-testid="sidebar-filter">
       <div class="filters-wrapper">
-        <DsfrButton tertiary size="small" class="reset-link" data-testid="sidebar-reset-filters-button" @click="resetFilters">
+        <DsfrButton tertiary size="small" class="reset-link" data-testid="sidebar-reset-filters-button" @click="handleReset">
           ✕ Réinitialiser
         </DsfrButton>
 
