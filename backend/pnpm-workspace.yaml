@@ -26,5 +26,12 @@ overrides:
   "picomatch@2": 2.3.2
   "glob@10": 10.5.0
   "path-to-regexp@0.1.12": 0.1.13
-  # NON traité : tar@6 (via node-gyp > cacache@15, scope dev) — le patch est en 7.5.11,
-  # un override 6→7 casserait cacache ; à résorber via un bump de la chaîne node-gyp.
+  "body-parser@1": 1.20.6
+  "picomatch@4": 4.0.4
+  # NON traités (patch uniquement dans un major supérieur — cross-major risqué, à résorber
+  # par des bumps de parents dans une vague dédiée) :
+  #  - tar@6 (node-gyp > cacache@15, dev) : patch en 7.x ;
+  #  - @nestjs/core@10 : patch en 11.1.18 → migration Nest 11 ;
+  #  - file-type@17/@20 (runtime) : patch en 21.x (ESM-only) ;
+  #  - @tootallnate/once@1 (dev, low) : patch en 2.0.1 ;
+  #  - uuid@3/@8/@9 (vieux parents) : patch en 11.1.1 (le major 11 est déjà forcé).

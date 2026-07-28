@@ -4,7 +4,7 @@
 overrides:
   handlebars: 4.7.9
   shell-quote: 1.9.0
-  tar: 7.5.16
+  tar: 7.5.18
   form-data: 4.0.6
   serialize-javascript: 7.0.5
   fast-uri: 3.1.4
@@ -23,3 +23,9 @@ overrides:
   "brace-expansion@2": 2.1.2
   "brace-expansion@5": 5.0.8
   "ws@8": 8.21.0
+  "picomatch@4": 4.0.4
+  "dompurify@3": 3.4.12
+  "esbuild@0.27": 0.28.1
+  # NON traité : @hey-api/openapi-ts (dev, codegen) — le patch 0.97.3 impose une migration
+  # de la config de génération (postProcess, résolution ESLint) et régénère un client
+  # différent : chantier dédié, hors vague d'overrides.
