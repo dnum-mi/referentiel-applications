@@ -7,18 +7,24 @@
 overrides:
   # même major que la version résolue → sûr
   handlebars: 4.7.9
-  fast-uri: 3.1.2
+  fast-uri: 3.1.4
   form-data: 4.0.6
   multer: 2.2.0
   ip-address: 10.1.1
   qs: 6.15.2
   webpack: 5.104.1
+  lodash: 4.18.1
   "@babel/core": 7.29.6
   # scopés : on ne touche que le major vulnérable
   "ajv@8": 8.18.0
-  "brace-expansion@1": 1.1.13
-  "brace-expansion@2": 2.0.3
-  "js-yaml@4": 4.2.0
+  "brace-expansion@1": 1.1.16
+  "brace-expansion@2": 2.1.2
+  "js-yaml@3": 3.15.0
+  "js-yaml@4": 4.3.0
   "uuid@11": 11.1.1
-  "tmp@0.2": 0.2.6
+  "tmp@0.2": 0.2.7
+  "picomatch@2": 2.3.2
+  "glob@10": 10.5.0
   "path-to-regexp@0.1.12": 0.1.13
+  # NON traité : tar@6 (via node-gyp > cacache@15, scope dev) — le patch est en 7.5.11,
+  # un override 6→7 casserait cacache ; à résorber via un bump de la chaîne node-gyp.
