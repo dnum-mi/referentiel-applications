@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.85.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.84.0...v1.85.0) (2026-07-24)
+
+
+### Features
+
+* add multiple businessdivision ([#2114](https://github.com/dnum-mi/referentiel-applications/issues/2114)) ([1be1e6e](https://github.com/dnum-mi/referentiel-applications/commit/1be1e6e2b5b34ffca2d6efdc4fb8083b4f463226))
+
+
+### Bug Fixes
+
+* **admin:** keep the user edit modal open across list refreshes ([#1830](https://github.com/dnum-mi/referentiel-applications/issues/1830)) ([#2115](https://github.com/dnum-mi/referentiel-applications/issues/2115)) ([962310e](https://github.com/dnum-mi/referentiel-applications/commit/962310e6c8babf8476eb1f331dfb68f24fe10534))
+* **data-catalog:** add the NEVER update frequency ([#2055](https://github.com/dnum-mi/referentiel-applications/issues/2055)) ([#2116](https://github.com/dnum-mi/referentiel-applications/issues/2116)) ([b289960](https://github.com/dnum-mi/referentiel-applications/commit/b2899600eeb2ecbd13e3af74fe7b796a9345e611))
+* **permissions:** hide the technology tab from users without rights ([#2088](https://github.com/dnum-mi/referentiel-applications/issues/2088)) ([#2089](https://github.com/dnum-mi/referentiel-applications/issues/2089)) ([517be66](https://github.com/dnum-mi/referentiel-applications/commit/517be665a71af1626e266162bfa6bad7294ad524))
+* **permissions:** retrait du mécanisme isAdmin (revert [#2031](https://github.com/dnum-mi/referentiel-applications/issues/2031)) ([#2086](https://github.com/dnum-mi/referentiel-applications/issues/2086)) ([93b982f](https://github.com/dnum-mi/referentiel-applications/commit/93b982f8fe08c6dbf457ee789551ad6ac3250dc2))
+* **ui:** homogénéiser matrice des droits et onglets de la fiche (libellés, ordre, en-tête sticky) ([#2090](https://github.com/dnum-mi/referentiel-applications/issues/2090)) ([b35b7b2](https://github.com/dnum-mi/referentiel-applications/commit/b35b7b219dc2446708b6833c95768ea00128a70a))
+* **ui:** step-2 creation form labels ([#2054](https://github.com/dnum-mi/referentiel-applications/issues/2054)) ([#2118](https://github.com/dnum-mi/referentiel-applications/issues/2118)) ([b5fbd17](https://github.com/dnum-mi/referentiel-applications/commit/b5fbd17be6332e8636e53758e6c9081bd2662bff))
+
 ## [1.84.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.83.0...v1.84.0) (2026-07-21)
 
 
