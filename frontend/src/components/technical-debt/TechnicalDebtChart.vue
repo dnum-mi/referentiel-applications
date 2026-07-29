@@ -50,34 +50,36 @@ const transcriptionRows = computed(() =>
 <template>
   <div ref="containerRef" class="technical-debt-scatter">
     <template v-if="props.data.length">
-      <svg
-        ref="svgRef"
-        role="img"
-        class="td-svg"
-        aria-label="Diagramme TIME de la maturité technique et métier du portefeuille applicatif. La transcription détaillée est disponible juste après le graphique."
-        preserveAspectRatio="xMidYMid meet"
-      ></svg>
+      <details class="td-accordion fr-mt-2w" data-testid="technical-debt-diagram" open>
+        <summary>Diagramme TIME</summary>
+        <svg
+          ref="svgRef"
+          role="img"
+          class="td-svg"
+          aria-label="Diagramme TIME de la maturité technique et métier du portefeuille applicatif. La transcription détaillée est disponible juste après le graphique."
+          preserveAspectRatio="xMidYMid meet"
+        ></svg>
+      </details>
 
-      <details class="fr-mt-2w" data-testid="technical-debt-transcription">
-        <summary>Transcription du diagramme TIME</summary>
+      <details class="td-accordion fr-mt-2w" data-testid="technical-debt-transcription">
+        <summary id="technical-debt-transcription-title">Tableau de synthèse</summary>
         <div class="fr-table fr-table--bordered fr-mt-1w">
-          <table>
-            <caption>
-              Maturité TIME par application
-            </caption>
+          <table aria-labelledby="technical-debt-transcription-title">
             <thead>
               <tr>
                 <th scope="col">Application</th>
                 <th scope="col">Maturité technique</th>
                 <th scope="col">Maturité métier</th>
-                <th scope="col">Coût du MCO</th>
+                <th scope="col">Maîtrise des coûts MCO</th>
                 <th scope="col">Quadrant TIME</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="row in transcriptionRows" :key="row.key">
                 <td>
-                  <RouterLink :to="`/applications/${row.id}`">{{ row.name }}</RouterLink>
+                  <router-link :to="{ name: 'application', params: { id: row.key } }">
+                    {{ row.name }}
+                  </router-link>
                 </td>
                 <td>{{ row.technicalMaturity }}</td>
                 <td>{{ row.businessMaturity }}</td>
@@ -109,5 +111,10 @@ const transcriptionRows = computed(() =>
   width: 100%;
   height: auto;
   max-width: 100%;
+}
+
+.td-accordion > summary {
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 </style>

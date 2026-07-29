@@ -205,7 +205,7 @@ export const AVAILABLE_COLUMNS: ColumnConfig[] = [
   },
   {
     field: "costContainment",
-    header: "Coûts",
+    header: "Maîtrise des coûts MCO",
     sortable: true,
     defaultWidth: "120px",
     visible: false,

@@ -186,8 +186,8 @@ export class TimeChartBuilder {
   /**
    * Bulles du scatter plot :
    * - cx / cy : position selon maturité technique (x) et métier (y)
-   * - r       : taille selon coût MCO
-   * - fill    : couleur selon coût MCO (jaune → rouge)
+   * - r       : taille selon maîtrise des coûts MCO
+   * - fill    : couleur selon maîtrise des coûts MCO (jaune → rouge)
    * Crée aussi le tooltip HTML affiché au survol.
    */
   drawBubbles(): this {
@@ -235,7 +235,7 @@ export class TimeChartBuilder {
               `${shortNameHtml}<br/>` +
               `Technique: ${d.technicalDebtInfo?.technicalMaturity ?? "-"}<br/>` +
               `Metier: ${d.technicalDebtInfo?.businessMaturity ?? "-"}<br/>` +
-              `Coût MCO: ${d.technicalDebtInfo?.costContainment ?? "-"}`,
+              `Maîtrise des coûts MCO: ${d.technicalDebtInfo?.costContainment ?? "-"}`,
           );
       })
       .on("mousemove", (event) => {
@@ -301,7 +301,7 @@ export class TimeChartBuilder {
           .attr("text-anchor", "end")
           .attr("fill", "currentColor")
           .attr("font-size", "12px")
-          .text("Coût du MCO"),
+          .text("Maîtrise des coûts MCO"),
       );
 
     return this;

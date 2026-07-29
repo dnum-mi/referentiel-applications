@@ -37,9 +37,19 @@ export function useTechnicalDebtChart(props: { data: TechnicalDebtPoint[]; heigh
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // Marge entre les bornes du domaine (valeurs 1 et 5) et le bord du cadran,
+    // pour que les bulles au rayon max (cf. échelle radius) ne soient pas collées au bord.
+    const bubbleEdgePadding = 16;
+
     const scales: ChartScales = {
-      x: d3.scaleLinear().domain([1, 5]).range([0, plotWidth]),
-      y: d3.scaleLinear().domain([1, 5]).range([plotHeight, 0]),
+      x: d3
+        .scaleLinear()
+        .domain([1, 5])
+        .range([bubbleEdgePadding, plotWidth - bubbleEdgePadding]),
+      y: d3
+        .scaleLinear()
+        .domain([1, 5])
+        .range([plotHeight - bubbleEdgePadding, bubbleEdgePadding]),
       color: d3.scaleSequential(d3.interpolateYlOrRd).domain([1, 5]),
       radius: d3.scaleLinear().domain([1, 5]).range([4, 12]),
     };
