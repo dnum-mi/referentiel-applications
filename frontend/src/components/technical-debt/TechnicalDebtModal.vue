@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import type { TechnicalDebtInfoDto, CreateTechnicalDebtInfoDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
+import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
 import api from "@/api/index.js";
 
 const props = defineProps<{
@@ -24,7 +25,19 @@ function toInputValue(value: number | string | null | undefined): string {
   return String(value);
 }
 
+const { campaigns, loadActiveCampaigns, latestYear } = useMditCampaigns();
+
+// Millésimes sélectionnables : ceux des campagnes IT actives, complétés par celui du point
+// en cours d'édition s'il n'y figure pas (cas d'une campagne devenue inactive depuis).
+const millesimeOptions = computed(() => {
+  const years = new Set(campaigns.value.map((campaign) => campaign.year));
+  if (props.initialData?.millesime != null) years.add(props.initialData.millesime);
+  return [...years].sort((a, b) => b - a).map((year) => ({ value: String(year), text: String(year) }));
+});
+
+// Par défaut : le millésime du point de dette technique en cours, sinon la campagne IT la plus récente.
 const form = ref({
+  millesime: toInputValue(props.initialData?.millesime ?? latestYear.value),
   technicalMaturity: toInputValue(props.initialData?.technicalMaturity),
   businessMaturity: toInputValue(props.initialData?.businessMaturity),
   costContainment: toInputValue(props.initialData?.costContainment),
@@ -32,6 +45,8 @@ const form = ref({
 
 // 12.8 : à l'ouverture, porter le focus sur le premier élément interactif de la modale (bouton « Fermer »).
 onMounted(async () => {
+  await loadActiveCampaigns();
+  if (!form.value.millesime) form.value.millesime = toInputValue(latestYear.value);
   await nextTick();
   document.querySelector<HTMLButtonElement>('[data-testid="technical-debt-modal"] .fr-btn--close')?.focus();
 });
@@ -52,8 +67,18 @@ function isValidScore(value: string): boolean {
   return !Number.isNaN(parsed) && parsed >= 1 && parsed <= 5;
 }
 
+function isValidMillesime(value: string): boolean {
+  return millesimeOptions.value.some((option) => option.value === value);
+}
+
 async function handleSubmit() {
   isSubmitting.value = true;
+
+  if (!isValidMillesime(form.value.millesime)) {
+    isSubmitting.value = false;
+    toaster.addErrorMessage("Le millésime doit être une année valide.");
+    return;
+  }
 
   if (
     !isValidScore(form.value.technicalMaturity) ||
@@ -66,6 +91,7 @@ async function handleSubmit() {
   }
 
   const body: CreateTechnicalDebtInfoDto = {
+    millesime: Number(form.value.millesime),
     technicalMaturity: toScoreOrUndefined(form.value.technicalMaturity),
     businessMaturity: toScoreOrUndefined(form.value.businessMaturity),
     costContainment: toScoreOrUndefined(form.value.costContainment),
@@ -95,6 +121,15 @@ async function handleSubmit() {
   >
     <form data-testid="technical-debt-form" @submit.prevent="handleSubmit">
       <div class="fr-form-group">
+        <DsfrSelect
+          v-model="form.millesime"
+          label="Millésime"
+          label-visible
+          :options="millesimeOptions"
+          hint="Campagne dette IT"
+          class="fr-mb-3w"
+          data-testid="millesime-select"
+        />
         <DsfrInput
           v-model="form.technicalMaturity"
           label="Maturité technique"

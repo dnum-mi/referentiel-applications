@@ -52,7 +52,7 @@ watchDebounced(
     <SidebarFilters :is-lock-my-permission="!hasMDITReadPermission" data-testid="time-filters" type="technicalDebtPoints" />
 
     <section class="main-content" data-testid="main-content">
-      <h1 class="fr-h1" data-testid="time-title">Diagramme Time</h1>
+      <h1 class="fr-h1" data-testid="time-title">Time</h1>
 
       <section id="technical-debt-chart" class="chart-section" data-testid="technical-debt-chart-section">
         <output v-if="isTechnicalDebtLoading" class="loader" aria-live="polite" aria-atomic="true">
