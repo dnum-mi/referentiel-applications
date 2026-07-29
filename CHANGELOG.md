@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.86.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.85.0...v1.86.0) (2026-07-29)
+
+
+### Features
+
+* add gap between portfeuille & general information in app side filter ([#2124](https://github.com/dnum-mi/referentiel-applications/issues/2124)) ([3b2997b](https://github.com/dnum-mi/referentiel-applications/commit/3b2997b757de48f1eb029d2e29a6cc2a812d754d))
+* **frontend:** update app version without hard refresh ([#2158](https://github.com/dnum-mi/referentiel-applications/issues/2158)) ([f8c2de6](https://github.com/dnum-mi/referentiel-applications/commit/f8c2de689c77eef807c9653067cd1f1295ac6588))
+* update time with new name for mco ([#2159](https://github.com/dnum-mi/referentiel-applications/issues/2159)) ([8430c54](https://github.com/dnum-mi/referentiel-applications/commit/8430c547335e312b3d008f694a2c6d32577f1b76))
+
+
+### Bug Fixes
+
+* add label to technical debt chart if shortname is not existing ([#2154](https://github.com/dnum-mi/referentiel-applications/issues/2154)) ([566253e](https://github.com/dnum-mi/referentiel-applications/commit/566253e402c3523ed8ea178727e6e30bdb2fbd31))
+* synchronize all loading in batch data admin ([#2155](https://github.com/dnum-mi/referentiel-applications/issues/2155)) ([f5e7b55](https://github.com/dnum-mi/referentiel-applications/commit/f5e7b554327a88e4b67921b2fa2a8b18e03fab5d))
+* **tests:** stop polluting the dev database from test runs ([#2117](https://github.com/dnum-mi/referentiel-applications/issues/2117)) ([#2151](https://github.com/dnum-mi/referentiel-applications/issues/2151)) ([ef19258](https://github.com/dnum-mi/referentiel-applications/commit/ef192580ba1effcfbc3ff7a43613ee33e13eb5bb))
+* use correct default value for mdit filter ([#2147](https://github.com/dnum-mi/referentiel-applications/issues/2147)) ([6599352](https://github.com/dnum-mi/referentiel-applications/commit/65993521acc3dffe23db451d89c2d175d2a03ddc))
+
 ## [1.85.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.84.0...v1.85.0) (2026-07-24)
 
 
