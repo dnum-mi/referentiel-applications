@@ -3,6 +3,7 @@ import { routeNames } from "./route-names";
 import { USER_MANAGER } from "@/services/authentication";
 import { useUserStore } from "@/stores/userStore";
 import { Permission } from "@/client";
+import { isChunkLoadError, reloadOnStaleChunk } from "@/utils/stale-chunk";
 
 const oidcRoutes = [
   {
@@ -159,6 +160,14 @@ router.beforeEach(async (to) => {
         return { path: "/" };
       }
     }
+  }
+});
+
+// Échec de chargement d'un composant de route lazy (chunk obsolète après un
+// déploiement, #2149) : on recharge la page sur la destination visée.
+router.onError((error, to) => {
+  if (isChunkLoadError(error)) {
+    reloadOnStaleChunk(to.fullPath);
   }
 });
 

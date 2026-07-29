@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Permission, type ConfigDto } from "@/client";
 import { ref, computed, nextTick } from "vue";
-import { useRegisterSW } from "virtual:pwa-register/vue";
+import { useAppUpdate } from "./composables/use-app-update";
 import { useToasterStore } from "./stores/toasterStore";
 import { routeNames } from "./router/route-names";
 import { getConfig } from "./services/config";
@@ -204,11 +204,7 @@ const afterMandatoryLinks = computed(() => [
 
 useRgaaGlobalA11y();
 
-const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW();
-function close() {
-  offlineReady.value = false;
-  needRefresh.value = false;
-}
+const { offlineReady, needRefresh, updateServiceWorker, closePrompt } = useAppUpdate();
 </script>
 
 <template>
@@ -264,7 +260,12 @@ function close() {
   />
 
   <AppToaster :messages="toaster.messages" data-testid="app-toaster" @close-message="toaster.removeMessage($event)" />
-  <ReloadPrompt :offline-ready="offlineReady" :need-refresh="needRefresh" @update="updateServiceWorker(true)" @close="close" />
+  <ReloadPrompt
+    :offline-ready="offlineReady"
+    :need-refresh="needRefresh"
+    @update-service-worker="updateServiceWorker(true)"
+    @close="closePrompt"
+  />
 </template>
 
 <style>

@@ -9,6 +9,7 @@ import App from "./App.vue";
 
 import router from "./router/index";
 import { logDsfrVersion } from "./utils/log-dsfr-version";
+import { reloadOnStaleChunk } from "./utils/stale-chunk";
 import "@gouvfr/dsfr/dist/core/core.main.min.css";
 import "@gouvfr/dsfr/dist/component/component.main.min.css";
 import "@gouvfr/dsfr/dist/utility/utility.main.min.css";
@@ -18,6 +19,14 @@ import "@gouvfr/dsfr/dist/utility/icons/icons.min.css";
 import "./main.css";
 
 logDsfrVersion();
+
+// Chunk hashé introuvable après un déploiement : on recharge au lieu de laisser
+// l'application casser silencieusement (#2149).
+window.addEventListener("vite:preloadError", (event) => {
+  if (reloadOnStaleChunk()) {
+    event.preventDefault();
+  }
+});
 
 const app = createApp(App);
 

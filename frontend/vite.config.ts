@@ -18,7 +18,9 @@ export default defineConfig({
     vue(),
     vueJsx(),
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt" : le nouveau service worker attend que l'utilisateur clique sur
+      // « Recharger » (ReloadPrompt) au lieu de s'activer silencieusement — voir #2149.
+      registerType: "prompt",
       includeAssets: ["favicon.svg", "safari-pinned-tab.svg"],
       workbox: {
         maximumFileSizeToCacheInBytes: 5000000, // Pour le CSS du DSFR :-/
