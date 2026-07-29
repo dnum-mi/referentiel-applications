@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import api from "@/api";
 import type { ImportReportDto, UserControllerSyncOrganizationsFromMaiaData } from "@/client";
+import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 
-const props = defineProps<{ loading: boolean }>();
-const emit = defineEmits<(e: "recomputeQuality") => void>();
 const toaster = useToasterStore();
-const isBatchLoading = ref(false);
+const applicationStore = useApplicationStore();
+const isLoading = ref(false);
 
 const selectedFile = ref<File | null>(null);
-const isImporting = ref(false);
 const importReport = ref<ImportReportDto | null>(null);
 
 function onImportFileChange(event: Event) {
@@ -18,9 +17,21 @@ function onImportFileChange(event: Event) {
   importReport.value = null;
 }
 
+async function recomputeQuality() {
+  isLoading.value = true;
+  try {
+    await applicationStore.patchApplicationsQuality();
+    toaster.addSuccessMessage("Indice de qualité recalculé pour toutes les applications.");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
 async function runImport() {
   if (!selectedFile.value) return;
-  isImporting.value = true;
+  isLoading.value = true;
   try {
     const response = await api.importControllerImportExcel({ body: { file: selectedFile.value } });
     if (!response.data) {
@@ -38,7 +49,7 @@ async function runImport() {
     toaster.addErrorMessage("Erreur lors de l'import du fichier Excel.");
     console.error(error);
   } finally {
-    isImporting.value = false;
+    isLoading.value = false;
   }
 }
 
@@ -64,7 +75,7 @@ type MaiaBatchBody = NonNullable<UserControllerSyncOrganizationsFromMaiaData["bo
 const DEFAULT_MAIA_BATCH_BODY: MaiaBatchBody = { onlyMissing: true };
 
 async function runMaiaBatch(body: MaiaBatchBody = DEFAULT_MAIA_BATCH_BODY) {
-  isBatchLoading.value = true;
+  isLoading.value = true;
   try {
     await api.userControllerSyncOrganizationsFromMaia({ body });
     toaster.addSuccessMessage("Batch MAIA lancé en tâche de fond.");
@@ -72,12 +83,12 @@ async function runMaiaBatch(body: MaiaBatchBody = DEFAULT_MAIA_BATCH_BODY) {
     toaster.addErrorMessage("Erreur lors du lancement du batch MAIA.");
     console.error(error);
   } finally {
-    isBatchLoading.value = false;
+    isLoading.value = false;
   }
 }
 
 async function runMaiaActorSync() {
-  isBatchLoading.value = true;
+  isLoading.value = true;
   try {
     await api.actorControllerSyncFromMaia();
     toaster.addSuccessMessage("Batch MAIA lancé en tâche de fond.");
@@ -85,7 +96,7 @@ async function runMaiaActorSync() {
     toaster.addErrorMessage("Erreur lors du lancement du batch MAIA.");
     console.error(error);
   } finally {
-    isBatchLoading.value = false;
+    isLoading.value = false;
   }
 }
 </script>
@@ -95,13 +106,13 @@ async function runMaiaActorSync() {
     <div class="section-card--mt">
       <h2 class="fr-h2">Gestion de l'indice de qualité</h2>
       <DsfrButton
-        :label="props.loading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
-        :icon="{ name: 'ri-refresh-line', animation: props.loading ? 'spin' : undefined }"
-        :disabled="props.loading"
+        :label="isLoading ? 'Mise à jour en cours...' : 'Calculer l’indice de qualité de toutes les applications'"
+        :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
+        :disabled="isLoading"
         data-testid="admin-quality-recompute-btn"
         title="Lance le calcul de l'indice de qualité pour toutes les applications"
         aria-label="Calculer l'indice de qualité"
-        @click="emit('recomputeQuality')"
+        @click="recomputeQuality()"
       />
     </div>
     <div class="section-card--mt">
@@ -109,23 +120,23 @@ async function runMaiaActorSync() {
       <div class="maia-sync-organization-container">
         <DsfrButton
           :label="
-            isBatchLoading
+            isLoading
               ? 'Batch MAIA en cours...'
               : 'Synchroniser les utilisateurs et organisations avec MAIA (utilisateurs sans organisation)'
           "
-          :disabled="isBatchLoading"
-          :icon="{ name: 'ri-refresh-line', animation: isBatchLoading ? 'spin' : undefined }"
+          :disabled="isLoading"
+          :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-users-maia-batch-btn"
           @click="runMaiaBatch()"
         />
         <DsfrButton
           :label="
-            isBatchLoading
+            isLoading
               ? 'Batch MAIA en cours...'
               : 'Synchroniser les utilisateurs et organisations avec MAIA (utilisateurs avec organisation)'
           "
-          :disabled="isBatchLoading"
-          :icon="{ name: 'ri-refresh-line', animation: isBatchLoading ? 'spin' : undefined }"
+          :disabled="isLoading"
+          :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-users-maia-batch-btn"
           @click="runMaiaBatch({ onlyMissing: false })"
         />
@@ -135,9 +146,9 @@ async function runMaiaActorSync() {
       <h2 class="fr-h2">Synchronisation des acteurs avec MAIA</h2>
       <div class="maia-sync-actor-container">
         <DsfrButton
-          :label="isBatchLoading ? 'Batch MAIA en cours...' : 'Synchroniser les acteurs MAIA'"
-          :disabled="isBatchLoading"
-          :icon="{ name: 'ri-refresh-line', animation: isBatchLoading ? 'spin' : undefined }"
+          :label="isLoading ? 'Batch MAIA en cours...' : 'Synchroniser les acteurs MAIA'"
+          :disabled="isLoading"
+          :icon="{ name: 'ri-refresh-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-actor-maia-batch-btn"
           @click="runMaiaActorSync()"
         />
@@ -163,9 +174,9 @@ async function runMaiaActorSync() {
           />
         </div>
         <DsfrButton
-          :label="isImporting ? 'Import en cours...' : 'Importer le fichier'"
-          :disabled="isImporting || !selectedFile"
-          :icon="{ name: 'ri-upload-2-line', animation: isImporting ? 'spin' : undefined }"
+          :label="isLoading ? 'Import en cours...' : 'Importer le fichier'"
+          :disabled="isLoading || !selectedFile"
+          :icon="{ name: 'ri-upload-2-line', animation: isLoading ? 'spin' : undefined }"
           data-testid="admin-import-submit"
           @click="runImport()"
         />
