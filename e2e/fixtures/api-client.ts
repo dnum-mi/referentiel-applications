@@ -549,6 +549,20 @@ export class ApiClient {
     return this.del(`/data-catalog/descriptions/${id}`);
   }
 
+  /** Recherche des data descriptions par nom (`GET /data-catalog/descriptions?name=`). */
+  dataDescriptions(
+    name: string,
+  ): Promise<{ id: string; name: string }[] | null> {
+    return this.get<{ id: string; name: string }[]>(
+      `/data-catalog/descriptions?name=${encodeURIComponent(name)}`,
+    );
+  }
+
+  /** Supprime une famille métier (nettoyage des familles créées inline par les tests). */
+  deleteDataFamily(id: string): Promise<boolean> {
+    return this.del(`/data-catalog/families/${id}`);
+  }
+
   /** Liste paginée des familles métier du catalogue de données (`GET /data-catalog/families`). */
   dataFamilies(
     query = "",
