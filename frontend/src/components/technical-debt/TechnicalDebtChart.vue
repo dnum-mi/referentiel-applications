@@ -36,7 +36,8 @@ const transcriptionRows = computed(() =>
         : PLACEHOLDER;
     return {
       key: point.id,
-      name: point.shortName ?? point.label,
+      id: point.id,
+      name: point.shortName || point.label,
       technicalMaturity: technicalMaturity ?? PLACEHOLDER,
       businessMaturity: businessMaturity ?? PLACEHOLDER,
       cost: info?.costContainment ?? PLACEHOLDER,
@@ -75,7 +76,9 @@ const transcriptionRows = computed(() =>
             </thead>
             <tbody>
               <tr v-for="row in transcriptionRows" :key="row.key">
-                <td>{{ row.name }}</td>
+                <td>
+                  <RouterLink :to="`/applications/${row.id}`">{{ row.name }}</RouterLink>
+                </td>
                 <td>{{ row.technicalMaturity }}</td>
                 <td>{{ row.businessMaturity }}</td>
                 <td>{{ row.cost }}</td>
