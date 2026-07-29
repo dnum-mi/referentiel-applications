@@ -60,7 +60,7 @@
     "html-to-text": "^10.0.0",
     "jose": "^5.10.0",
     "jwks-rsa": "^3.2.2",
-    "lodash": "^4.17.23",
+    "lodash": "^4.18.1",
     "moment": "^2.30.1",
     "nestjs-pino": "^4.6.0",
     "nestjs-prisma": "^0.23.0",

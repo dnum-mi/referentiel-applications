@@ -22,7 +22,8 @@ développement vérifiées dans le dépôt et les briques techniques structurant
 - [7. Système de design](#7-système-de-design)
 - [8. Composables](#8-composables)
 - [9. Retours utilisateur et tests](#9-retours-utilisateur-et-tests)
-- [10. Récapitulatif](#10-récapitulatif)
+- [10. Mise à jour de l'application (service worker)](#10-mise-à-jour-de-lapplication-service-worker)
+- [11. Récapitulatif](#11-récapitulatif)
 
 ## 1. Vue d'ensemble
 
@@ -279,7 +280,36 @@ les erreurs 403 (§3).
 Détails des conventions de tests et de contribution :
 [Contribution](./11-contribution.md).
 
-## 10. Récapitulatif
+## 10. Mise à jour de l'application (service worker)
+
+Après un déploiement, les utilisateurs doivent disposer de la nouvelle version
+automatiquement, sans hard refresh ni action manuelle (#2149). Trois mécanismes
+complémentaires :
+
+**Mise à jour automatique (`vite-plugin-pwa`, mode `autoUpdate`).** Le service
+worker est configuré en `registerType: "autoUpdate"`
+(`frontend/vite.config.ts`) : quand une nouvelle version est détectée, elle est
+téléchargée, activée immédiatement (`skipWaiting` + `clientsClaim`), et
+vite-plugin-pwa recharge alors la page automatiquement (événement `activated`
+avec `isUpdate`). Le composable `useAppUpdate()`
+(`frontend/src/composables/use-app-update.ts`) force en plus une vérification
+toutes les 5 minutes (`UPDATE_CHECK_INTERVAL_MS`) — indispensable pour les
+onglets de SPA restant ouverts longtemps, car le navigateur ne vérifie le
+service worker qu'au chargement de la page. Un onglet ouvert dispose donc de la
+nouvelle version au plus tard 5 minutes après le déploiement.
+
+**Rechargement sur chunk obsolète.** Les vues sont lazy-loadées : après un
+déploiement, les chunks hashés de l'ancienne version n'existent plus et les
+imports dynamiques échouent. `frontend/src/utils/stale-chunk.ts` recharge alors
+automatiquement la page (listener `vite:preloadError` dans `main.ts` +
+`router.onError` dans `router/index.ts`), avec un garde-fou `sessionStorage`
+de 10 s contre les boucles de rechargement.
+
+**Cache HTTP (`frontend/nginx.conf`).** `index.html`, `sw.js` et
+`manifest.webmanifest` sont servis en `Cache-Control: no-cache` (toujours
+revalidés) ; les assets hashés `/assets/` en `max-age=31536000, immutable`.
+
+## 11. Récapitulatif
 
 **Conventions confirmées dans le dépôt :**
 

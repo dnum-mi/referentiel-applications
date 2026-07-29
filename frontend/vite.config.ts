@@ -18,6 +18,8 @@ export default defineConfig({
     vue(),
     vueJsx(),
     VitePWA({
+      // "autoUpdate" : dès qu'un nouveau service worker est activé, la page est
+      // rechargée automatiquement, sans action de l'utilisateur — voir #2149.
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "safari-pinned-tab.svg"],
       workbox: {

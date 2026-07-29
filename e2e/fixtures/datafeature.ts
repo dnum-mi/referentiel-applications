@@ -798,6 +798,7 @@ export class DataFeature {
   async provisionAttachedData(): Promise<{
     applicationId: string;
     dataApplicationId: string;
+    descriptionId: string;
   }> {
     const { applicationId, description } =
       await this.provisionUnattachedDataDescription();
@@ -806,12 +807,33 @@ export class DataFeature {
         applicationId,
         description.id,
       );
-      return { applicationId, dataApplicationId: dataApplication.id };
+      return {
+        applicationId,
+        dataApplicationId: dataApplication.id,
+        descriptionId: description.id,
+      };
     } catch (err) {
       await this.deleteDataDescription(description.id);
       await this.removeApplication(applicationId);
       throw err;
     }
+  }
+
+  /**
+   * Supprime une data description créée via l'UI (le formulaire ne restitue pas l'id) en la
+   * retrouvant par son nom exact — les tests utilisent des noms `E2E … <timestamp>` uniques.
+   */
+  async deleteDataDescriptionByName(name: string): Promise<void> {
+    const matches = await this.api.dataDescriptions(name);
+    const found = matches?.find((d) => d.name === name);
+    if (found) await this.api.deleteDataDescription(found.id);
+  }
+
+  /** Supprime une famille métier créée inline via l'UI, retrouvée par son chemin exact. */
+  async deleteDataFamilyByPath(path: string): Promise<void> {
+    const page = await this.api.dataFamilies("pageSize=100&page=0");
+    const found = page?.results?.find((f) => f.path === path);
+    if (found) await this.api.deleteDataFamily(found.id);
   }
 
   // --- Matrice des permissions (PRM-12) ---

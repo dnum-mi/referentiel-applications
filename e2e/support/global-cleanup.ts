@@ -76,6 +76,21 @@ export async function sweepE2EData(api: ApiClient): Promise<number> {
     if (E2E.test(a.label ?? "")) await drop(api.deleteApplication(a.id));
   }
 
+  // Catalogue de données : descriptions puis familles `E2E …` (#2117) — créées inline par les
+  // cas DAT ; à balayer APRÈS les applications (le delete d'une description est bloqué tant
+  // qu'un rattachement subsiste, et supprimer l'application hôte lève ce blocage).
+  const descriptions =
+    (await api.dataDescriptions("E2E").catch(() => null)) ?? [];
+  for (const d of descriptions) {
+    if (E2E.test(d.name ?? "")) await drop(api.deleteDataDescription(d.id));
+  }
+  const families = await api
+    .dataFamilies("pageSize=100&page=0")
+    .catch(() => null);
+  for (const f of families?.results ?? []) {
+    if (E2E.test(f.path ?? "")) await drop(api.deleteDataFamily(f.id));
+  }
+
   return removed;
 }
 
