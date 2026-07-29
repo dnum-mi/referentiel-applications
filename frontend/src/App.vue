@@ -12,7 +12,6 @@ import SearchHeader from "./components/search/SearchHeader.vue";
 import ImpersonationBanner from "./components/ImpersonationBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
-import ReloadPrompt from "./components/ReloadPrompt.vue";
 import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 
 const route = useRoute();
@@ -204,7 +203,7 @@ const afterMandatoryLinks = computed(() => [
 
 useRgaaGlobalA11y();
 
-const { offlineReady, needRefresh, updateServiceWorker, closePrompt } = useAppUpdate();
+useAppUpdate();
 </script>
 
 <template>
@@ -260,12 +259,6 @@ const { offlineReady, needRefresh, updateServiceWorker, closePrompt } = useAppUp
   />
 
   <AppToaster :messages="toaster.messages" data-testid="app-toaster" @close-message="toaster.removeMessage($event)" />
-  <ReloadPrompt
-    :offline-ready="offlineReady"
-    :need-refresh="needRefresh"
-    @update-service-worker="updateServiceWorker(true)"
-    @close="closePrompt"
-  />
 </template>
 
 <style>

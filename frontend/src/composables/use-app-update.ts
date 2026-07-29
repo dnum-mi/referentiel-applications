@@ -3,28 +3,21 @@ import { useRegisterSW } from "virtual:pwa-register/vue";
 export const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 /**
- * Détection des nouvelles versions de l'application (#2149).
+ * Mise à jour automatique de l'application (#2149).
  *
- * Le service worker (mode "prompt", cf. vite.config.ts) détecte une nouvelle
- * version au chargement de la page, mais un onglet de SPA peut rester ouvert
- * des jours : on force donc une vérification périodique. Quand une nouvelle
- * version est installée, `needRefresh` passe à true et ReloadPrompt propose
- * de recharger — plus besoin de hard refresh.
+ * Le service worker est en mode "autoUpdate" (cf. vite.config.ts) : dès qu'une
+ * nouvelle version est activée, vite-plugin-pwa recharge la page — l'utilisateur
+ * n'a rien à faire. Le navigateur ne vérifiant le service worker qu'au
+ * chargement de la page, on force en plus une vérification périodique pour les
+ * onglets de SPA restant ouverts longtemps.
  */
 export function useAppUpdate() {
-  const { offlineReady, needRefresh, updateServiceWorker } = useRegisterSW({
+  useRegisterSW({
     onRegisteredSW(swUrl, registration) {
       if (!registration) return;
       setInterval(() => checkForUpdate(swUrl, registration), UPDATE_CHECK_INTERVAL_MS);
     },
   });
-
-  function closePrompt() {
-    offlineReady.value = false;
-    needRefresh.value = false;
-  }
-
-  return { offlineReady, needRefresh, updateServiceWorker, closePrompt };
 }
 
 export async function checkForUpdate(swUrl: string, registration: ServiceWorkerRegistration) {

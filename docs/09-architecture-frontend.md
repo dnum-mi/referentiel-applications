@@ -283,17 +283,20 @@ Détails des conventions de tests et de contribution :
 ## 10. Mise à jour de l'application (service worker)
 
 Après un déploiement, les utilisateurs doivent disposer de la nouvelle version
-sans hard refresh (#2149). Trois mécanismes complémentaires :
+automatiquement, sans hard refresh ni action manuelle (#2149). Trois mécanismes
+complémentaires :
 
-**Détection de version (`vite-plugin-pwa`, mode `prompt`).** Le service worker
-est configuré en `registerType: "prompt"` (`frontend/vite.config.ts`) : quand
-une nouvelle version est détectée, elle est téléchargée puis mise en attente, et
-le bandeau `ReloadPrompt` (`frontend/src/components/ReloadPrompt.vue`) propose
-« Recharger ». Le composable `useAppUpdate()`
+**Mise à jour automatique (`vite-plugin-pwa`, mode `autoUpdate`).** Le service
+worker est configuré en `registerType: "autoUpdate"`
+(`frontend/vite.config.ts`) : quand une nouvelle version est détectée, elle est
+téléchargée, activée immédiatement (`skipWaiting` + `clientsClaim`), et
+vite-plugin-pwa recharge alors la page automatiquement (événement `activated`
+avec `isUpdate`). Le composable `useAppUpdate()`
 (`frontend/src/composables/use-app-update.ts`) force en plus une vérification
 toutes les 5 minutes (`UPDATE_CHECK_INTERVAL_MS`) — indispensable pour les
 onglets de SPA restant ouverts longtemps, car le navigateur ne vérifie le
-service worker qu'au chargement de la page.
+service worker qu'au chargement de la page. Un onglet ouvert dispose donc de la
+nouvelle version au plus tard 5 minutes après le déploiement.
 
 **Rechargement sur chunk obsolète.** Les vues sont lazy-loadées : après un
 déploiement, les chunks hashés de l'ancienne version n'existent plus et les
