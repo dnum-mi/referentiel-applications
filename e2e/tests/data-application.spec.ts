@@ -157,16 +157,14 @@ test.describe("Détail d'une donnée applicative", () => {
       dataApplicationId = await fiche.submitNewDataAttachment();
       await fiche.expectDataRowContainsAll(uniqueName, [familyPath]);
     } finally {
-      // Le résolveur ne renvoyant que l'id de la ligne `DataApplication` (pas celui de la
-      // `DataDescription` créée par le formulaire), seul le rattachement est détaché ici. La
-      // description de catalogue et la famille métier créées inline restent en base : aucun
-      // résolveur de suppression n'est fourni pour ces entités référentielles (même doctrine
-      // « create-if-absent, pas de nettoyage systématique » que `applicationWithTags`/
-      // `applicationWithTechnicalDebt` dans la datafeature). L'application dédiée, elle, est
-      // entièrement jetable et supprimée ici.
+      // Le formulaire ne restitue pas les ids de la description et de la famille créées inline :
+      // on les retrouve par leur nom unique (timestampé) pour les supprimer — sans quoi elles
+      // s'accumulaient en base à chaque run (#2117).
       if (dataApplicationId) {
         await data.detachDataFromApplication(app.id, dataApplicationId);
       }
+      await data.deleteDataDescriptionByName(uniqueName);
+      await data.deleteDataFamilyByPath(familyPath);
       await data.removeApplication(app.id);
     }
   });
@@ -204,7 +202,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     // Application dédiée et jetable (cf. commentaire DAT-07).
-    const { applicationId, dataApplicationId } =
+    const { applicationId, dataApplicationId, descriptionId } =
       await data.provisionAttachedData();
 
     const fiche = new ApplicationPage(page);
@@ -213,10 +211,9 @@ test.describe("Détail d'une donnée applicative", () => {
       await fiche.expectDataSourcesTabLoaded();
       await fiche.deleteDataRow(dataApplicationId);
       await fiche.expectDataRowAbsent(dataApplicationId);
-      // Le détachement est le geste testé lui-même : pas de `detachDataFromApplication` ici. La
-      // `DataDescription` sous-jacente reste orpheline en base — `provisionAttachedData()` ne
-      // renvoie pas son id, seulement `applicationId`/`dataApplicationId` (cf. commentaire DAT-08).
+      // Le détachement est le geste testé lui-même : pas de `detachDataFromApplication` ici.
     } finally {
+      await data.deleteDataDescription(descriptionId); // sinon la description resterait orpheline (#2117)
       await data.removeApplication(applicationId);
     }
   });
@@ -248,7 +245,7 @@ test.describe("Détail d'une donnée applicative", () => {
     data,
   }) => {
     // Application dédiée et jetable (cf. commentaire DAT-07).
-    const { applicationId, dataApplicationId } =
+    const { applicationId, dataApplicationId, descriptionId } =
       await data.provisionAttachedData();
 
     const detail = new DataDetailPage(page);
@@ -259,6 +256,7 @@ test.describe("Détail d'une donnée applicative", () => {
       await detail.expectRedirectedToDataTab(applicationId);
       // Le détachement est le geste testé lui-même (cf. DAT-10) : pas de détachement manuel ici.
     } finally {
+      await data.deleteDataDescription(descriptionId); // sinon la description resterait orpheline (#2117)
       await data.removeApplication(applicationId);
     }
   });
@@ -294,6 +292,9 @@ test.describe("Détail d'une donnée applicative", () => {
       if (dataApplicationId) {
         await data.detachDataFromApplication(app.id, dataApplicationId);
       }
+      // Suppression par noms uniques : description + famille créées inline (#2117).
+      await data.deleteDataDescriptionByName(uniqueName);
+      await data.deleteDataFamilyByPath(newFamilyPath);
       await data.removeApplication(app.id);
     }
   });
@@ -306,7 +307,7 @@ test.describe("Détail d'une donnée applicative", () => {
     test.skip(!family, "Aucune famille métier dans le référentiel");
 
     // Application dédiée et jetable (cf. commentaire DAT-07).
-    const { applicationId, dataApplicationId } =
+    const { applicationId, dataApplicationId, descriptionId } =
       await data.provisionAttachedData();
 
     const fiche = new ApplicationPage(page);
@@ -327,6 +328,7 @@ test.describe("Détail d'une donnée applicative", () => {
       await fiche.expectDataRowNotContains(dataApplicationId, family!.path);
     } finally {
       await data.detachDataFromApplication(applicationId, dataApplicationId);
+      await data.deleteDataDescription(descriptionId); // sinon la description resterait orpheline (#2117)
       await data.removeApplication(applicationId);
     }
   });
@@ -367,6 +369,7 @@ test.describe("Détail d'une donnée applicative", () => {
       if (dataApplicationId) {
         await data.detachDataFromApplication(consumerApp.id, dataApplicationId);
       }
+      await data.deleteDataDescriptionByName(uniqueName); // description créée via l'UI (#2117)
       await data.removeApplication(consumerApp.id);
       await data.removeApplication(sourceApp.id);
     }
