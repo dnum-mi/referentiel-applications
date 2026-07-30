@@ -24,7 +24,15 @@ const emit = defineEmits<{
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
-const canEditUser = computed(() => userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]));
+const canEditUser = computed(() => {
+  if (!userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) return false;
+
+  const requestorScopePath = userStore.user?.scopeOrganization?.path;
+  if (!requestorScopePath) return true;
+
+  const targetOrganizationPath = props.user.organization?.path;
+  return !targetOrganizationPath || targetOrganizationPath.startsWith(requestorScopePath);
+});
 
 // On peut impersonner tout utilisateur humain, sauf soi-même.
 const canImpersonate = computed(() => props.user.type !== "bot" && props.user.id !== userStore.user?.id);

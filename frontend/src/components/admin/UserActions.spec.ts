@@ -1,8 +1,14 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/vue";
-import { Permission, Roles, type UserEntity } from "@/client/types.gen";
+import { Permission, Roles, type OrganizationDto, type UserEntity } from "@/client/types.gen";
 import UserActions from "./UserActions.vue";
 
-const { hasPermissionsMock, syncOrganizationMock } = vi.hoisted(() => ({
+const { currentUserMock, hasPermissionsMock, syncOrganizationMock } = vi.hoisted(() => ({
+  currentUserMock: {
+    user: {
+      id: "current-user",
+      scopeOrganization: null as { path: string } | null,
+    },
+  },
   hasPermissionsMock: vi.fn(),
   syncOrganizationMock: vi.fn(),
 }));
@@ -24,7 +30,9 @@ vi.mock("@/stores/toasterStore", () => ({
 
 vi.mock("@/stores/userStore", () => ({
   useUserStore: () => ({
-    user: { id: "current-user" },
+    get user() {
+      return currentUserMock.user;
+    },
     hasPermissions: hasPermissionsMock,
     startImpersonation: vi.fn(),
   }),
@@ -43,6 +51,26 @@ const targetUser = {
   organizationId: null,
   scopeOrganizationId: null,
 } satisfies Required<UserEntity>;
+
+function createOrganization(path: string): OrganizationDto {
+  return {
+    id: path,
+    path,
+    url: null,
+    sigle: null,
+    parentId: null,
+    businessDivisionId: null,
+    maiaReferences: [],
+  };
+}
+
+function createTargetUser(organizationPath: string): Required<UserEntity> {
+  return {
+    ...targetUser,
+    organization: createOrganization(organizationPath),
+    organizationId: organizationPath,
+  };
+}
 
 const global = {
   stubs: {
@@ -70,6 +98,7 @@ describe("UserActions", () => {
   beforeEach(() => {
     hasPermissionsMock.mockReset();
     syncOrganizationMock.mockReset();
+    currentUserMock.user.scopeOrganization = null;
     syncOrganizationMock.mockResolvedValue({
       response: { ok: true },
       data: null,
@@ -96,11 +125,11 @@ describe("UserActions", () => {
     expect(hasPermissionsMock).toHaveBeenCalledWith([Permission.ADMIN_PANEL_MANAGE]);
   });
 
-  it("opens user edition with the administration permission", async () => {
+  it("allows a global administrator to edit any user", async () => {
     hasPermissionsMock.mockReturnValue(true);
 
     render(UserActions, {
-      props: { user: targetUser },
+      props: { user: createTargetUser("/HORS-PERIMETRE") },
       global,
     });
 
@@ -113,5 +142,40 @@ describe("UserActions", () => {
     expect(syncOrganizationMock).toHaveBeenCalledWith({
       path: { email: targetUser.email },
     });
+  });
+
+  it("allows a scoped administrator to edit a user within their scope", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.scopeOrganization = createOrganization("/MININT/DTNUM");
+
+    render(UserActions, {
+      props: { user: createTargetUser("/MININT/DTNUM/SDAN") },
+      global,
+    });
+
+    const editButton = screen.getByTestId("admin-user-edit-btn");
+    expect(editButton).toBeEnabled();
+
+    await fireEvent.click(editButton);
+
+    await waitFor(() => expect(screen.getByTestId("admin-edit-user-modal")).toBeInTheDocument());
+  });
+
+  it("blocks a scoped administrator from editing a user outside their scope", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.scopeOrganization = createOrganization("/MININT/DTNUM");
+
+    render(UserActions, {
+      props: { user: createTargetUser("/MININT/DGPN") },
+      global,
+    });
+
+    const editButton = screen.getByTestId("admin-user-edit-btn");
+    expect(editButton).toBeDisabled();
+
+    await fireEvent.click(editButton);
+
+    expect(screen.queryByTestId("admin-edit-user-modal")).not.toBeInTheDocument();
+    expect(syncOrganizationMock).not.toHaveBeenCalled();
   });
 });
