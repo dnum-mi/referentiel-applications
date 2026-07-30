@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.86.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.86.0...v1.86.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **migration:** make add_never_update_frequency idempotent ([#2156](https://github.com/dnum-mi/referentiel-applications/issues/2156)) ([960d35c](https://github.com/dnum-mi/referentiel-applications/commit/960d35c880ad17f2660740dd998d13ce1fc3a44f)), closes [#2055](https://github.com/dnum-mi/referentiel-applications/issues/2055)
+* restore rgaa accessibility score ([#2181](https://github.com/dnum-mi/referentiel-applications/issues/2181)) ([e763770](https://github.com/dnum-mi/referentiel-applications/commit/e763770bfd88acf6d870a24dae7d823c4d5c1bd4))
+
 ## [1.86.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.85.0...v1.86.0) (2026-07-29)
 
 
