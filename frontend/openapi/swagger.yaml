@@ -6994,7 +6994,7 @@ components:
           type: string
           minLength: 2
           maxLength: 100
-          description: Nom unique du tag
+          description: Nom unique du tag (converti en minuscules)
           example: securite
       required:
         - name
@@ -7041,7 +7041,7 @@ components:
           type: string
           minLength: 2
           maxLength: 100
-          description: Nom unique du tag
+          description: Nom unique du tag (converti en minuscules)
           example: securite
     PaginatedBusinessDivisionDTO:
       type: object
@@ -7191,7 +7191,6 @@ components:
         - MONTHLY
         - YEARLY
         - ON_DEMAND
-        - NEVER
     DataExposureDto:
       type: object
       properties:
