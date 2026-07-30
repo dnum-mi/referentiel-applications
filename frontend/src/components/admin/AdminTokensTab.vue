@@ -51,7 +51,11 @@ const newlyCreatedToken = ref<ExposedTokenDto | null>(null);
 const showRevokeConfirmation = ref(false);
 const tokenToRevoke = ref<string | null>(null);
 
-const newToken = ref<CreateServiceTokenDto>({
+type ServiceTokenForm = Omit<CreateServiceTokenDto, "scopeOrganizationId"> & {
+  scopeOrganizationId?: string;
+};
+
+const newToken = ref<ServiceTokenForm>({
   name: "",
   description: "",
   expiresAt: "",

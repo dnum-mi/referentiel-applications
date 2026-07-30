@@ -209,7 +209,7 @@ const form = ref<FormState>({
   status: toStatusDto(props.initialData?.status),
   purposes: props.initialData?.purposes ?? [],
   targetPopulations: props.initialData?.targetPopulations ?? [],
-  priorityRestart: props.initialData?.priorityRestart,
+  priorityRestart: props.initialData?.priorityRestart ?? undefined,
   type: props.initialData?.type,
   tags: props.initialData?.tags ?? [],
   businessDivisionIds: props?.initialData?.businessDivisions?.map((bd) => bd.id) ?? [],
@@ -554,8 +554,8 @@ async function createActors(applicationId: string) {
     isGroup: moaActor.value.isGroup,
     organizationId: moaActor.value.organizationId || undefined,
     email: moaActor.value.email || undefined,
-    firstname: isMoaGroup.value ? null : moaActor.value.firstname || undefined,
-    lastname: isMoaGroup.value ? null : moaActor.value.lastname || undefined,
+    firstname: isMoaGroup.value ? undefined : moaActor.value.firstname || undefined,
+    lastname: isMoaGroup.value ? undefined : moaActor.value.lastname || undefined,
     applicationId,
   };
 
@@ -569,8 +569,8 @@ async function createActors(applicationId: string) {
     isGroup: moeActor.value.isGroup,
     organizationId: moeActor.value.organizationId || undefined,
     email: moeActor.value.email || undefined,
-    firstname: isMoeGroup.value ? null : moeActor.value.firstname || undefined,
-    lastname: isMoeGroup.value ? null : moeActor.value.lastname || undefined,
+    firstname: isMoeGroup.value ? undefined : moeActor.value.firstname || undefined,
+    lastname: isMoeGroup.value ? undefined : moeActor.value.lastname || undefined,
     applicationId,
   };
 
