@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { Transform } from "class-transformer";
 import {
   IsDateString,
   IsOptional,
@@ -11,10 +12,13 @@ import { PaginationDto } from "src/common/dto";
 
 export class CreateTagDto {
   @ApiProperty({
-    description: "Nom unique du tag",
+    description: "Nom unique du tag (converti en minuscules)",
     example: "securite",
     required: true,
   })
+  @Transform(({ value }) =>
+    typeof value === "string" ? value.trim().toLowerCase() : value,
+  )
   @MinLength(2, {
     message: "Le nom du tag doit contenir au moins 2 caractères.",
   })

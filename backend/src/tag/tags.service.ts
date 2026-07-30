@@ -28,13 +28,16 @@ export class TagsService extends BaseService<Tag> {
   }
 
   async findByNames(tagNames: string[]): Promise<{ name: string }[]> {
+    const normalizedNames = tagNames?.map((name) => name.trim().toLowerCase());
     const existingTags = await this.prisma.tag.findMany({
-      where: tagNames ? { name: { in: tagNames } } : undefined,
+      where: normalizedNames ? { name: { in: normalizedNames } } : undefined,
     });
 
-    if (existingTags.length !== tagNames.length) {
+    if (existingTags.length !== normalizedNames.length) {
       const existingNames = new Set(existingTags.map((tag) => tag.name));
-      const missingNames = tagNames.filter((name) => !existingNames.has(name));
+      const missingNames = normalizedNames.filter(
+        (name) => !existingNames.has(name),
+      );
 
       throw new BadRequestException({
         message: "Certains tags n’existent pas.",
