@@ -24,6 +24,7 @@ const emit = defineEmits<{
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
+const canEditUser = computed(() => userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]));
 
 // On peut impersonner tout utilisateur humain, sauf soi-même.
 const canImpersonate = computed(() => props.user.type !== "bot" && props.user.id !== userStore.user?.id);
@@ -56,6 +57,8 @@ const maiaSuggestion = ref<MaiaOrganizationSuggestionDto | null>(null);
 const isFetchingMaiaSuggestion = ref(false);
 
 async function openEditModal() {
+  if (!canEditUser.value) return;
+
   editingUser.value = props.user;
   editingUserRole.value = props.user.role;
   editingOrganizationId.value = props.user.organizationId || "";
@@ -212,6 +215,7 @@ const isScopeDisabled = computed(() => {
         label="Modifier"
         size="sm"
         secondary
+        :disabled="!canEditUser"
         data-testid="admin-user-edit-btn"
         title="Modifier les permissions de l'utilisateur"
         aria-label="Modifier les permissions de l'utilisateur"
