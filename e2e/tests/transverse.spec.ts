@@ -51,6 +51,7 @@ test.describe("Pages transverses", () => {
         const accessibility = new AccessibilityPage(page);
         await accessibility.open();
         await accessibility.expectSections();
+        await accessibility.expectInitialAuditResults();
       },
     );
   });

@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { accessibilityDeclaration } from "@/constants/accessibility-declaration";
+</script>
+
 <template>
   <div class="fr-container fr-my-2w" data-testid="accessibility-page">
     <h1 class="fr-h1" data-testid="accessibility-page-title">Accessibilité</h1>
@@ -12,19 +16,23 @@
     <h2 class="fr-h2">État de conformité</h2>
     <p>
       Le référentiel des applications est
-      <strong>partiellement conforme</strong>
-      au RGAA 4.1.2 (Référentiel Général d'Amélioration de l'Accessibilité) en raison des non-conformités énumérées ci-dessous.
+      <strong>{{ accessibilityDeclaration.complianceStatus }}</strong>
+      au {{ accessibilityDeclaration.rgaaVersion }} (Référentiel Général d'Amélioration de l'Accessibilité) en raison des non-conformités
+      énumérées ci-dessous.
     </p>
 
     <h2 class="fr-h2">Résultats des tests</h2>
     <p>
-      L'audit de conformité réalisé en 2026 révèle 28 critères non conformes. Le taux de conformité global au RGAA 4.1.2 est de
-      <strong>73,6&nbsp;%</strong>
-      (78 critères conformes sur les 106 critères du RGAA 4.1.2).
+      L'audit de conformité initial réalisé par le BPSA révèle
+      {{ accessibilityDeclaration.nonCompliantCriteria }} critères non conformes et {{ accessibilityDeclaration.issueCount }} problèmes
+      d'accessibilité. Le taux de conformité au {{ accessibilityDeclaration.rgaaVersion }} mesuré sur l'échantillon est de
+      <strong>{{ accessibilityDeclaration.score }}</strong>
+      ({{ accessibilityDeclaration.compliantCriteria }} critères conformes, {{ accessibilityDeclaration.nonCompliantCriteria }} critères non
+      conformes et {{ accessibilityDeclaration.nonApplicableCriteria }} critères non applicables).
     </p>
 
     <h2 class="fr-h2">Établissement de cette déclaration</h2>
-    <p>Cette déclaration a été établie le 02/07/2026.</p>
+    <p>Cette déclaration a été établie le {{ accessibilityDeclaration.establishedAt }}.</p>
 
     <h2 class="fr-h2">Retour d'information et contact</h2>
     <p>

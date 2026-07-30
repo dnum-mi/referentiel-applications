@@ -33,6 +33,7 @@ export class SiteMapPage extends BasePage {
 
 /** Page Object — Page Accessibilité (`/accessibilite`, `AccessibilityPage`). */
 export class AccessibilityPage extends BasePage {
+  private container = () => this.byTestId("accessibility-page");
   private title = () => this.byTestId("accessibility-page-title");
 
   async open(): Promise<void> {
@@ -52,6 +53,14 @@ export class AccessibilityPage extends BasePage {
     await expect(
       this.page.getByRole("heading", { name: "État de conformité" }),
     ).toBeVisible();
+  }
+
+  /** Les valeurs de déclaration restent alignées sur l'audit RGAA initial. */
+  async expectInitialAuditResults(): Promise<void> {
+    await expect(this.container()).toContainText("52,54 %");
+    await expect(this.container()).toContainText("31 critères conformes");
+    await expect(this.container()).toContainText("28 critères non conformes");
+    await expect(this.container()).toContainText("partiellement conforme");
   }
 }
 
