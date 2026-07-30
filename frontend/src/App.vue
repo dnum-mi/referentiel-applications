@@ -13,6 +13,7 @@ import ImpersonationBanner from "./components/ImpersonationBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
+import { accessibilityDeclaration } from "./constants/accessibility-declaration";
 
 const route = useRoute();
 const router = useRouter();
@@ -157,7 +158,7 @@ const ecosystemLinks = computed(() => {
   }));
 });
 const mandatoryLinks = computed(() => [
-  { label: "Accessibilité : Partiellement conforme", title: "Aller à la page d'accessibilité", to: "accessibilite" },
+  { label: accessibilityDeclaration.complianceMention, title: "Aller à la page d'accessibilité", to: "accessibilite" },
   { label: "Plan du site", title: "Aller au plan du site", to: "plan-du-site" },
   {
     // RGAA-015 : ouverture dans un nouvel onglet mentionnée dans l'intitulé.
