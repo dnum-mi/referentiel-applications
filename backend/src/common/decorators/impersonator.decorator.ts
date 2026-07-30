@@ -7,7 +7,6 @@ import { createParamDecorator } from "@nestjs/common";
 /// Retourne `undefined` en l'absence d'impersonation.
 export const Impersonator = createParamDecorator<
   unknown,
-  ExecutionContext,
   Requestor | undefined
 >((_data: unknown, ctx: ExecutionContext): Requestor | undefined => {
   const request = ctx.switchToHttp().getRequest<Request>();

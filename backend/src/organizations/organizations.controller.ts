@@ -69,7 +69,6 @@ Vous devez fournir les informations suivantes :
     `,
   })
   @ApiCreatedResponse({
-    status: 201,
     description: "Organisation Créée avec succes",
     type: OrganizationDto,
   })
@@ -101,7 +100,6 @@ Vous devez fournir les informations suivantes :
       "Ce endpoint permet de récupérer les détails complets d'une organisation en fonction de son identifiant unique.",
   })
   @ApiOkResponse({
-    status: 200,
     description: "Organisation trouvée",
     type: OrganizationDto,
   })
@@ -145,7 +143,6 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({ summary: "Supprimer une organisation" })
   @HttpCode(204)
   @ApiNoContentResponse({
-    status: 204,
     description: "Organisation supprimée",
   })
   public async delete(@Param("id") id: string) {

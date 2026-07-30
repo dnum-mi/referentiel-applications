@@ -87,9 +87,12 @@ import { ImportModule } from "./import/import.module";
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    // Syntaxe path-to-regexp v8 (Express 5 / Nest 11) : le wildcard doit être NOMMÉ —
+    // `{*splat}` matche tout y compris la racine ; l'ancien `*` nu et le glob `**`
+    // ne sont plus des motifs valides.
     consumer
       .apply(AuthMiddleware)
-      .exclude("/health-check", "/swagger/**", "", "/config")
-      .forRoutes("*");
+      .exclude("/health-check", "/swagger/{*splat}", "", "/config")
+      .forRoutes("{*splat}");
   }
 }
