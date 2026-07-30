@@ -37,6 +37,8 @@ import { DataFamilyModule } from "./data-catalog/data-family/data-family.module"
 import { DataSensibilityModule } from "./data-catalog/data-sensibility/data-sensibility.module";
 import { OrganizationMaiaReferencesModule } from "./organization-maia-references/organization-maia-references.module";
 import { ImportModule } from "./import/import.module";
+import { MaintenanceModule } from "./maintenance/maintenance.module";
+import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
 
 @Module({
   imports: [
@@ -49,6 +51,7 @@ import { ImportModule } from "./import/import.module";
     }),
     ConfigModule,
     PrismaModule,
+    MaintenanceModule,
     LoggerModule,
     TokenModule,
     MetadatasModule,
@@ -90,9 +93,21 @@ export class AppModule implements NestModule {
     // Syntaxe path-to-regexp v8 (Express 5 / Nest 11) : le wildcard doit être NOMMÉ —
     // `{*splat}` matche tout y compris la racine ; l'ancien `*` nu et le glob `**`
     // ne sont plus des motifs valides.
+    const unauthenticatedRoutes = [
+      "/health-check",
+      "/swagger/{*splat}",
+      "",
+      "/config",
+    ];
+
+    consumer
+      .apply(MaintenanceMiddleware)
+      .exclude(...unauthenticatedRoutes)
+      .forRoutes("{*splat}");
+
     consumer
       .apply(AuthMiddleware)
-      .exclude("/health-check", "/swagger/{*splat}", "", "/config")
+      .exclude(...unauthenticatedRoutes)
       .forRoutes("{*splat}");
   }
 }

@@ -66,6 +66,7 @@ En développement, les variables nécessaires au backend sont **déjà fournies*
 - **Authentification OIDC** : `OIDC_CONFIG_URL`, `OIDC_JWKS_URL`, `OIDC_CLIENT_ID`.
 - **CORS / réseau** : `ALLOWED_ORIGINS`, `PORT`, `HOST`.
 - **Messagerie (SMTP)** : `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, `SMTP_ENABLED` (pointés vers Mailpit en local).
+- **Maintenance** : `MAINTENANCE_MODE` force le mode lecture seule ; `MAINTENANCE_CACHE_TTL_MS` règle la durée de cache de la détection PostgreSQL.
 - **Divers** : `LOG_LEVEL`, `ENV_LABEL`, `FOOTER_LINKS`, `MOCK_MAIA_SERVICE`, `MOCK_MAIA_ORGANIZATION`, `NON_ACTOR_PERMISSIONS`.
 
 > Aucune valeur secrète n'est requise en développement (les identifiants par défaut sont ceux du `docker-compose.yml`). Le détail des variables, leur signification et leur gestion en environnement déployé (Vault/SOPS) relèvent de la page d'exploitation.

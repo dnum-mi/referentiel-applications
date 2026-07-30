@@ -30,16 +30,23 @@ Le point d'entrée est `backend/src/main.ts`. La fonction `bootstrap()` crée l'
 
 Le module racine `AppModule` (`backend/src/app.module.ts`) agrège l'ensemble des modules métier et transverses. Il charge la configuration globale (`@nestjs/config`, `isGlobal: true`, fichiers chargés via `configs`, `backend/src/app.module.ts:39-44`) et le planificateur `ScheduleModule.forRoot()` (`:38`).
 
-L'**authentification** repose sur un middleware appliqué dans `AppModule.configure()` (`backend/src/app.module.ts:79-84`) :
+Le **mode maintenance** et l'authentification reposent sur deux middlewares ordonnés dans `AppModule.configure()`. Le premier détecte une base PostgreSQL en réplication, bloque les méthodes d'écriture et transmet l'état au middleware d'authentification :
 
 ```ts
 consumer
+  .apply(MaintenanceMiddleware)
+  .exclude(...unauthenticatedRoutes)
+  .forRoutes("{*splat}");
+
+consumer
   .apply(AuthMiddleware)
-  .exclude("/health-check", "/swagger/**", "", "/config")
-  .forRoutes("*");
+  .exclude(...unauthenticatedRoutes)
+  .forRoutes("{*splat}");
 ```
 
-`AuthMiddleware` (`backend/src/middlewares/auth.middleware.ts`) accepte deux modes d'authentification : un en-tête de clé d'API (résolu via `TokenService`, `:47-48`) ou un jeton JWT OIDC porté par l'en-tête `Authorization` (`:49-56`). Le JWT est vérifié contre le JWKS distant (`jose`, `:37`, `:52`) — sauf si `DISABLE_JWT_VALIDATION` est positionné, auquel cas le jeton est seulement décodé (`:50-52`). En cas de succès, le middleware enrichit `req.user` avec les permissions calculées depuis le rôle (`roleToPermissions`, `:63-66`) et journalise la connexion (`:68`). En cas d'échec, une `UnauthorizedException` est levée (`:71-75`). Le détail de l'authentification et du modèle de permissions est traité dans [Permissions et sécurité](./06-permissions-et-securite.md).
+`MaintenanceMiddleware` s'appuie sur `pg_is_in_recovery()` avec un cache configurable. Pendant la maintenance, les méthodes `GET`, `HEAD` et `OPTIONS` restent autorisées ; les autres reçoivent `503 Service Unavailable`.
+
+`AuthMiddleware` (`backend/src/middlewares/auth.middleware.ts`) accepte deux modes d'authentification : un en-tête de clé d'API résolu via `TokenService`, ou un jeton JWT OIDC porté par l'en-tête `Authorization`. Le JWT est vérifié contre le JWKS distant (`jose`) — sauf si `DISABLE_JWT_VALIDATION` est positionné, auquel cas le jeton est seulement décodé. En maintenance, seuls les utilisateurs existants sont chargés et le journal de connexion n'est pas écrit. En cas de succès, le middleware enrichit `req.user` avec les permissions calculées depuis le rôle (`roleToPermissions`). En cas d'échec, une `UnauthorizedException` est levée. Le détail de l'authentification et du modèle de permissions est traité dans [Permissions et sécurité](./06-permissions-et-securite.md).
 
 ## Anatomie d'un module
 

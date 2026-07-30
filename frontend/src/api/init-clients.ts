@@ -2,6 +2,7 @@ import axios from "axios";
 import { client } from "@/client/client.gen";
 import { USER_MANAGER } from "@/services/authentication";
 import { IMPERSONATE_HEADER, getImpersonatedUserId } from "@/services/impersonation";
+import { isMaintenanceResponse, setMaintenanceMode } from "@/composables/use-maintenance-mode";
 
 axios.defaults.baseURL = "/api/v2";
 axios.defaults.withCredentials = true;
@@ -54,6 +55,18 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
     // 403 → l'utilisateur est connecté mais non autorisé : on le notifie.
     if (response.status === 403) {
       toaster.addErrorMessage("Permission refusée : Vous n'avez pas la permission d'effectuer cette action.");
+      return response;
+    }
+
+    if (response.status === 503) {
+      const payload: unknown = await response
+        .clone()
+        .json()
+        .catch(() => undefined);
+      if (isMaintenanceResponse(payload) && payload.maintenance) {
+        setMaintenanceMode(true);
+        toaster.addErrorMessage("Maintenance en cours : les données restent disponibles en lecture seule.");
+      }
       return response;
     }
 

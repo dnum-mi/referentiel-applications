@@ -18,6 +18,7 @@ import { UserConnexionLogService } from "src/user/user-connexion-log.service";
 import { UserService } from "src/user/user.service";
 import { API_KEY_HEADER, IMPERSONATE_HEADER } from "src/utils/constants.util";
 import { LoggerService } from "src/logger/logger.service";
+import { MaintenanceService } from "src/maintenance/maintenance.service";
 
 declare module "express" {
   export interface Request {
@@ -38,26 +39,32 @@ export class AuthMiddleware implements NestMiddleware {
     private readonly tokenService: TokenService,
     private readonly userConnexionLogService: UserConnexionLogService,
     private readonly logger: LoggerService,
+    private readonly maintenanceService: MaintenanceService,
   ) {
     this.jwks = createRemoteJWKSet(new URL(this.oidc.jwksUrl));
   }
 
   async use(req: Request, res: Response, next: NextFunction) {
     try {
+      const maintenanceMode =
+        req.maintenanceMode ?? (await this.maintenanceService.isActive());
       const authorization = req.headers.authorization?.split(" ")[1];
       const token = req.headers[API_KEY_HEADER] as string | undefined;
 
       let user: UserEntity | null = null;
 
       if (token) {
-        user = await this.tokenService.findUserByToken(token);
+        user = await this.tokenService.findUserByToken(token, {
+          readOnly: maintenanceMode,
+        });
       } else if (authorization) {
         const payload = process.env.DISABLE_JWT_VALIDATION
           ? decodeJwt(authorization)
           : (await jwtVerify(authorization, this.jwks)).payload;
-        user = await this.userService.findOrCreateByEmail(
-          payload.email as string,
-        );
+        const email = payload.email as string;
+        user = maintenanceMode
+          ? await this.userService.findByEmailWithRelations(email)
+          : await this.userService.findOrCreateByEmail(email);
       }
 
       if (!user) {
@@ -89,7 +96,9 @@ export class AuthMiddleware implements NestMiddleware {
 
       // On journalise toujours la connexion de l'utilisateur réellement
       // authentifié, jamais celle de la cible impersonnée.
-      await this.userConnexionLogService.log(authenticatedUser.id);
+      if (!maintenanceMode) {
+        await this.userConnexionLogService.log(authenticatedUser.id);
+      }
 
       next();
     } catch (error) {
