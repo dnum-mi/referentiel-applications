@@ -36,6 +36,7 @@ import { MaiaOrganizationSuggestionDto } from "./dto/maia-organization-suggestio
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
 import { SyncOrganizationsResponseDto } from "./dto/sync-organizations-response.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
+import { UserPermissionLogDto } from "./dto/user-permission-log.dto";
 import { ScopePermissionsErrorDto } from "./dto/user.error.dto";
 import {
   Requestor,
@@ -245,6 +246,28 @@ export class UserController {
     @User() requestor: Requestor,
   ) {
     return this.userService.update(id, updateUserDto, requestor);
+  }
+
+  @Get(":id/permission-logs")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary:
+      "Récupérer l'historique des modifications de droits d'un utilisateur",
+    description:
+      "Retourne l'historique des changements de rôle et de permissions d'un utilisateur, avec la date et l'email de l'auteur de chaque modification. Accès limité aux administrateurs.",
+  })
+  @ApiParam({ name: "id", description: "ID de l'utilisateur" })
+  @ApiOkResponse({
+    description: "Historique des modifications de droits",
+    type: [UserPermissionLogDto],
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  async findPermissionLogs(
+    @Param("id") id: string,
+  ): Promise<UserPermissionLogDto[]> {
+    return this.userService.findPermissionLogs(id);
   }
 
   @Get()

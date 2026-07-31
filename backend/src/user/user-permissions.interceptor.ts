@@ -12,23 +12,21 @@ import { PaginatedResponseDto } from "src/common/dto";
 
 // TODO we should add verification
 @Injectable()
-export class UserPermissionsInterceptor
-  implements
-    NestInterceptor<
-      UserWithPermissions,
-      UserWithPermissions | PaginatedResponseDto<UserWithPermissions>
-    >
-{
+export class UserPermissionsInterceptor implements NestInterceptor {
   intercept(
     _context: ExecutionContext,
     next: CallHandler,
-  ): Observable<
-    UserWithPermissions | PaginatedResponseDto<UserWithPermissions>
-  > {
+  ): Observable<unknown> {
     return next.handle().pipe(
-      map((data: UserEntity | PaginatedResponseDto<UserEntity>) => {
-        if ("results" in data) return this.mapPaginated(data);
-        return this.addPermissionsFromRole(data);
+      map((data: unknown) => {
+        // Certaines routes du contrôleur ne renvoient pas un UserEntity (ex: un
+        // tableau, comme l'historique des permissions) : on les laisse passer
+        // inchangées, seul un User(s) doit voir ses permissions dérivées du rôle.
+        if (Array.isArray(data)) return data;
+        if (data && typeof data === "object" && "results" in data) {
+          return this.mapPaginated(data as PaginatedResponseDto<UserEntity>);
+        }
+        return this.addPermissionsFromRole(data as UserEntity);
       }),
     );
   }

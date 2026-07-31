@@ -5,10 +5,9 @@ import { createParamDecorator } from "@nestjs/common";
 
 /// Récupère l'administrateur réel lorsqu'une impersonation est en cours.
 /// Retourne `undefined` en l'absence d'impersonation.
-export const Impersonator = createParamDecorator<
-  unknown,
-  Requestor | undefined
->((_data: unknown, ctx: ExecutionContext): Requestor | undefined => {
-  const request = ctx.switchToHttp().getRequest<Request>();
-  return request.impersonator ?? undefined;
-});
+export const Impersonator = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): Requestor | undefined => {
+    const request = ctx.switchToHttp().getRequest<Request>();
+    return request.impersonator ?? undefined;
+  },
+);

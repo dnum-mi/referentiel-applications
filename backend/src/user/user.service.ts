@@ -158,6 +158,22 @@ export class UserService {
       });
     }
 
+    const roleChanged = previousUser?.role !== user.role;
+    const permissionsChanged =
+      JSON.stringify(
+        [...(previousUser?.additionalPermissions ?? [])].sort(),
+      ) !== JSON.stringify([...user.additionalPermissions].sort());
+
+    if ((roleChanged || permissionsChanged) && user.email) {
+      await this.emailService.sendUserPermissionsChangedNotification({
+        to: user.email,
+        userEmail: user.email,
+        role: user.role,
+        additionalPermissions: user.additionalPermissions,
+        changedByEmail: requestor.email ?? null,
+      });
+    }
+
     return user;
   }
 
@@ -230,6 +246,10 @@ export class UserService {
 
   getCurrentUser(requestor: UserEntity): UserEntity {
     return requestor;
+  }
+
+  findPermissionLogs(userId: string) {
+    return this.userPermissionLogService.findAllForUser(userId);
   }
 
   findByIdWithRelations(id: string): Promise<UserEntity | null> {

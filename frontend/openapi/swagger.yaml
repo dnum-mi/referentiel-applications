@@ -424,6 +424,32 @@ paths:
           description: Utilisateur non trouvé
       summary: Mettre à jour les permissions d'un utilisateur
       tags: *a2
+  /api/v2/users/{id}/permission-logs:
+    get:
+      description: Retourne l'historique des changements de rôle et de permissions
+        d'un utilisateur, avec la date et l'email de l'auteur de chaque
+        modification. Accès limité aux administrateurs.
+      operationId: UserController_findPermissionLogs
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Historique des modifications de droits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserPermissionLogDto"
+        "403":
+          description: Accès refusé - Privilège admin requis
+      summary: Récupérer l'historique des modifications de droits d'un utilisateur
+      tags: *a2
   /api/v2/users:
     get:
       description: Récupère la liste de tous les utilisateurs avec leurs permissions.
@@ -6366,6 +6392,36 @@ components:
       required:
         - additionalPermissions
         - scopeOrganizationId
+    UserPermissionLogDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unique de l'entrée d'historique
+        createdAt:
+          format: date-time
+          type: string
+          description: Date de la modification
+        role:
+          nullable: true
+          description: Rôle de l'utilisateur après la modification
+          allOf:
+            - $ref: "#/components/schemas/Roles"
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+          description: Permissions supplémentaires de l'utilisateur après la modification
+        changedByEmail:
+          type: string
+          nullable: true
+          description: Email de la personne ayant effectué la modification. Null si la
+            modification est automatique (création de compte) ou si l'auteur a
+            depuis été supprimé.
+      required:
+        - id
+        - createdAt
+        - additionalPermissions
     PaginatedUserWithPermissions:
       type: object
       properties:
