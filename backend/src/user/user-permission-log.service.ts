@@ -11,13 +11,25 @@ export class UserPermissionLogService extends BaseService<UserPermissionLog> {
     super(prisma.userPermissionLog, prisma);
   }
 
-  public log(user: User, requestor?: Requestor) {
-    return this.create({
-      userId: user.id,
-      changedById: requestor?.id ?? null,
-      role: user.role,
-      additionalPermissions: user.additionalPermissions ?? [],
-    });
+  public async log(user: User, requestor?: Requestor) {
+    const [log] = await this.prisma.$transaction([
+      this.model.create({
+        data: {
+          userId: user.id,
+          changedById: requestor?.id ?? null,
+          role: user.role,
+          additionalPermissions: user.additionalPermissions ?? [],
+        },
+      }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          lastPermissionChangeAt: new Date(),
+          lastPermissionChangedById: requestor?.id ?? null,
+        },
+      }),
+    ]);
+    return log;
   }
 
   public async findAllForUser(userId: string): Promise<UserPermissionLogDto[]> {

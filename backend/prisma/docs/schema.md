@@ -851,6 +851,8 @@ erDiagram
   UserType type
   Boolean emailNotificationsEnabled
   Permission additionalPermissions
+  DateTime lastPermissionChangeAt "nullable"
+  String lastPermissionChangedById "nullable"
 }
 "Actor" {
   String id PK
@@ -943,6 +945,12 @@ Properties as follows:
 - `type`: Type de compte utilisateur (humain ou bot)
 - `emailNotificationsEnabled`: Si les notifications par email sont activées
 - `additionalPermissions`: Permissions supplémentaire (ancien capabilities)
+- `lastPermissionChangeAt`
+  > Date de la dernière modification des droits (rôle/permissions) de cet utilisateur.
+  > Dénormalisé depuis UserPermissionLog pour permettre le tri côté base (liste admin).
+- `lastPermissionChangedById`
+  > Utilisateur ayant effectué cette dernière modification. Pas de jointure explicite
+  > (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
 
 ### `Actor`
 

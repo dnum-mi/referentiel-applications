@@ -2,6 +2,7 @@
 import api from "@/api/index";
 import type { PaginatedUserWithPermissions } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
+import { formatDateFR } from "@/composables/use-date";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
@@ -37,6 +38,11 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     key: "permissions",
     label: "Permissions",
     isSortable: false,
+  },
+  {
+    key: "lastPermissionChangeAt",
+    label: "Dernière modification",
+    isSortable: true,
   },
   {
     key: "actions",
@@ -127,6 +133,10 @@ const tableRows = computed(() =>
       label: RolesWording[user.role],
       badgeClass: RolesWordingBadgeClass[user.role],
     },
+    lastPermissionChangeAt: {
+      date: user.lastPermissionChangeAt ?? null,
+      email: user.lastPermissionChangedByEmail ?? null,
+    },
     actions: user,
   })),
 );
@@ -195,6 +205,17 @@ onMounted(fetchUsers);
       >
         <template #body-role="{ data }">
           <span class="fr-badge justify-center" :class="data.role.badgeClass">{{ data.role.label }}</span>
+        </template>
+
+        <template #body-lastPermissionChangeAt="{ data }">
+          <template v-if="data.lastPermissionChangeAt.date">
+            <span>{{ formatDateFR(data.lastPermissionChangeAt.date) }}</span>
+            <br />
+            <span class="fr-text--sm fr-text-mention--grey"
+              >Par : {{ data.lastPermissionChangeAt.email ?? "Système / utilisateur supprimé" }}</span
+            >
+          </template>
+          <span v-else class="fr-text-mention--grey">Jamais modifié</span>
         </template>
 
         <template #body-additionalPermissions="{ data }">

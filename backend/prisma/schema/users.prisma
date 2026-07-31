@@ -37,8 +37,14 @@ model User {
   applicationViews          ApplicationView[]
   /// Si les notifications par email sont activées
   emailNotificationsEnabled Boolean             @default(true)
-  /// Permissions supplémentaire (ancien capabilities) 
+  /// Permissions supplémentaire (ancien capabilities)
   additionalPermissions     Permission[]
+  /// Date de la dernière modification des droits (rôle/permissions) de cet utilisateur.
+  /// Dénormalisé depuis UserPermissionLog pour permettre le tri côté base (liste admin).
+  lastPermissionChangeAt    DateTime?
+  /// Utilisateur ayant effectué cette dernière modification. Pas de jointure explicite
+  /// (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
+  lastPermissionChangedById String?
   userPermissionLog         UserPermissionLog[]
   userConnexionLog          UserConnexionLog[]
   /// Sessions d'impersonation initiées par cet utilisateur (en tant qu'admin)

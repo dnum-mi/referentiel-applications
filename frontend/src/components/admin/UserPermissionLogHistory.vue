@@ -76,6 +76,8 @@ onMounted(() => {
         v-else
         :items="rows"
         :columns="headers"
+        sort-field="Date"
+        :sort-order="-1"
         empty-message="Aucune modification enregistrée."
         data-testid="permission-log-history-table"
       >

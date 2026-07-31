@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma, Roles, User, UserType } from "@prisma/client";
+import { Prisma, Roles, UserType } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
 import { OrganizationMaiaReferencesService } from "src/organization-maia-references/organization-maia-references.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -193,7 +193,7 @@ export class UserService {
   async findAll(
     filters: UserFilterDto,
     _requestor: Requestor,
-  ): Promise<PaginatedResponseDto<User>> {
+  ): Promise<PaginatedResponseDto<UserEntity>> {
     const where: Prisma.UserWhereInput = {};
 
     where.type = { in: filters.type };
@@ -227,12 +227,16 @@ export class UserService {
       };
     } else {
       const sortField = filters.sortBy || "email";
-      orderBy = {
-        [sortField]: filters.order ?? "asc",
-      };
+      const order = filters.order ?? "asc";
+      // lastPermissionChangeAt est nullable (jamais modifié) : Prisma n'accepte la forme
+      // { sort, nulls } que pour les champs nullables, d'où le cas particulier ici.
+      orderBy =
+        sortField === "lastPermissionChangeAt"
+          ? { [sortField]: { sort: order, nulls: "last" } }
+          : { [sortField]: order };
     }
 
-    return this.prisma.user.paginate({
+    const paginated = await this.prisma.user.paginate({
       where,
       include: {
         organization: true,
@@ -242,6 +246,33 @@ export class UserService {
       page: filters.page,
       pageSize: filters.pageSize,
     });
+
+    const lastChangedByIds = [
+      ...new Set(
+        paginated.results
+          .map((user) => user.lastPermissionChangedById)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const lastChangedByUsers = lastChangedByIds.length
+      ? await this.prisma.user.findMany({
+          where: { id: { in: lastChangedByIds } },
+          select: { id: true, email: true },
+        })
+      : [];
+    const emailById = new Map(
+      lastChangedByUsers.map((user) => [user.id, user.email]),
+    );
+
+    return {
+      ...paginated,
+      results: paginated.results.map((user) => ({
+        ...user,
+        lastPermissionChangedByEmail: user.lastPermissionChangedById
+          ? (emailById.get(user.lastPermissionChangedById) ?? null)
+          : null,
+      })),
+    };
   }
 
   getCurrentUser(requestor: UserEntity): UserEntity {
