@@ -5727,17 +5727,14 @@ paths:
           content:
             application/json:
               schema:
-                example:
-                  status: ok
-        "500":
+                $ref: "#/components/schemas/HealthCheckDto"
+        "503":
           description: Le service n'est pas disponible en raison d'une erreur lors de la
             connexion à la base de données.
           content:
             application/json:
               schema:
-                example:
-                  status: error
-                  message: Détail de l'erreur
+                $ref: "#/components/schemas/HealthCheckErrorDto"
       summary: Vérification de la santé de l'application
       tags:
         - Health Check
@@ -5815,6 +5812,55 @@ components:
         - oidcClientId
         - version
         - footerLinks
+    HealthCheckDto:
+      type: object
+      properties:
+        maintenance:
+          type: boolean
+          description: Indique si l'API est en mode maintenance lecture seule
+          example: true
+        version:
+          type: string
+          description: Version du backend
+          example: v1.86.0
+        etat:
+          type: string
+          description: État de la connexion à la base de données
+          enum:
+            - OK
+            - KO
+          example: OK
+      required:
+        - maintenance
+        - version
+        - etat
+    HealthCheckErrorDto:
+      type: object
+      properties:
+        maintenance:
+          type: boolean
+          description: Indique si l'API est en mode maintenance lecture seule
+          example: true
+        version:
+          type: string
+          description: Version du backend
+          example: v1.86.0
+        etat:
+          type: string
+          description: État de la connexion à la base de données
+          enum:
+            - OK
+            - KO
+          example: OK
+        message:
+          type: string
+          description: Détail de l'indisponibilité
+          example: La base de données est indisponible
+      required:
+        - maintenance
+        - version
+        - etat
+        - message
     Roles:
       type: string
       enum:

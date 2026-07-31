@@ -103,11 +103,11 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 ### Application & supervision
 
-| Verbe & chemin      | Rôle                              |
-| ------------------- | --------------------------------- |
-| `GET /`             | Message d'accueil                 |
-| `GET /config`       | Configuration exposée au frontend |
-| `GET /health-check` | Sonde de santé                    |
+| Verbe & chemin      | Rôle                               |
+| ------------------- | ---------------------------------- |
+| `GET /`             | Message d'accueil                  |
+| `GET /config`       | Configuration exposée au frontend  |
+| `GET /health-check` | Santé, version et mode maintenance |
 
 ### Applications
 
@@ -238,19 +238,21 @@ Ces variables pilotent un OIDC **agnostique du fournisseur** : Keycloak local en
 
 ### Application & exécution
 
-| Nom                     | Rôle                                                      |
-| ----------------------- | --------------------------------------------------------- |
-| `NODE_ENV`              | Environnement d'exécution (`development` / `production`). |
-| `PORT`                  | Port d'écoute du backend.                                 |
-| `HOST`                  | Adresse d'écoute du backend.                              |
-| `ALLOWED_ORIGINS`       | Origines CORS autorisées (liste CSV), avec credentials.   |
-| `LOG_LEVEL`             | Niveau de log Pino.                                       |
-| `VERSION`               | Version applicative exposée au frontend et à Swagger.     |
-| `ENV_LABEL`             | Libellé d'environnement affiché côté frontend.            |
-| `FOOTER_LINKS`          | Liens de pied de page (JSON).                             |
-| `NON_ACTOR_PERMISSIONS` | Permissions accordées hors rôle d'acteur (liste CSV).     |
-| `WRITE_SWAGGER_YAML`    | Écrit `frontend/openapi/swagger.yaml` (sauf si `false`).  |
-| `ONLY_WRITE_SWAGGER`    | Génère le Swagger puis arrête le processus (build).       |
+| Nom                        | Rôle                                                                                      |
+| -------------------------- | ----------------------------------------------------------------------------------------- |
+| `NODE_ENV`                 | Environnement d'exécution (`development` / `production`).                                 |
+| `PORT`                     | Port d'écoute du backend.                                                                 |
+| `HOST`                     | Adresse d'écoute du backend.                                                              |
+| `ALLOWED_ORIGINS`          | Origines CORS autorisées (liste CSV), avec credentials.                                   |
+| `LOG_LEVEL`                | Niveau de log Pino.                                                                       |
+| `VERSION`                  | Version applicative exposée au frontend et au healthcheck.                                |
+| `ENV_LABEL`                | Libellé d'environnement affiché côté frontend.                                            |
+| `MAINTENANCE_MODE`         | Force le mode maintenance lecture seule (`true`, `1` ou `yes`).                           |
+| `MAINTENANCE_CACHE_TTL_MS` | Durée de cache de la détection `pg_is_in_recovery()` en millisecondes (défaut : `30000`). |
+| `FOOTER_LINKS`             | Liens de pied de page (JSON).                                                             |
+| `NON_ACTOR_PERMISSIONS`    | Permissions accordées hors rôle d'acteur (liste CSV).                                     |
+| `WRITE_SWAGGER_YAML`       | Écrit `frontend/openapi/swagger.yaml` (sauf si `false`).                                  |
+| `ONLY_WRITE_SWAGGER`       | Génère le Swagger puis arrête le processus (build).                                       |
 
 ### MAIA (référentiel d'organisations)
 

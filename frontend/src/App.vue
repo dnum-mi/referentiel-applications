@@ -14,6 +14,8 @@ import AppToaster from "./components/AppToaster.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
 import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 import { accessibilityDeclaration } from "./constants/accessibility-declaration";
+import MaintenanceBanner from "./components/MaintenanceBanner.vue";
+import { useMaintenanceMode } from "./composables/use-maintenance-mode";
 
 const route = useRoute();
 const router = useRouter();
@@ -34,6 +36,7 @@ router.afterEach(async (to, from) => {
 const userStore = useUserStore();
 const appConfig = ref<ConfigDto>();
 const toaster = useToasterStore();
+const { maintenanceMode } = useMaintenanceMode();
 
 configureClients(toaster);
 
@@ -221,6 +224,7 @@ useAppUpdate();
     ]"
   />
   <ImpersonationBanner />
+  <MaintenanceBanner :active="maintenanceMode" />
   <DsfrHeader
     :service-description="serviceDescription"
     :service-title="serviceTitle"

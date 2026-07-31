@@ -32,7 +32,17 @@ export class UserService {
   ) {}
 
   async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
-    const existingUser = await this.prisma.user.findUnique({
+    const existingUser = await this.findByEmailWithRelations(email);
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    return this.createUser(email);
+  }
+
+  findByEmailWithRelations(email: string): Promise<UserEntity | null> {
+    return this.prisma.user.findUnique({
       where: { email },
       include: {
         organization: true,
@@ -40,12 +50,6 @@ export class UserService {
         scopeOrganization: true,
       },
     });
-
-    if (existingUser) {
-      return existingUser;
-    }
-
-    return this.createUser(email);
   }
 
   async createUser(email: string) {

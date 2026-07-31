@@ -46,7 +46,7 @@ export type ApplicationFormInitialData = {
   status?: CreateApplicationStatusDto | ApplicationStatus;
   purposes?: string[];
   targetPopulations?: string[];
-  priorityRestart?: ApplicationPriorityRestart;
+  priorityRestart?: ApplicationPriorityRestart | null;
   type?: ApplicationType;
   tags?: string[];
   businessDivisions?: BusinessDivisionDto[];

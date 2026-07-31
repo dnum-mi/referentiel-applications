@@ -45,6 +45,8 @@ services:
       - SMTP_FROM=noreply@example.local
       - SMTP_ENABLED=true
       - ENV_LABEL=developpement
+      - MAINTENANCE_MODE=${MAINTENANCE_MODE:-false}
+      - MAINTENANCE_CACHE_TTL_MS=${MAINTENANCE_CACHE_TTL_MS:-30000}
       - MOCK_MAIA_SERVICE=true
       - MOCK_MAIA_ORGANIZATION=departements/77 SEINE-ET-MARNE/SGC/DIRECTION
       - FOOTER_LINKS=[{"label":"Documentation","title":"Aller à la documentation","href":"#"},{"label":"Snapvisu","title":"Aller à Snapvisu","href":"#"},{"label":"CSU","title":"Aller au CSU","href":"#"},{"label":"Portail SH24","title":"Aller au Portail SH24","href":"#"}]

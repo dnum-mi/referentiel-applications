@@ -44,6 +44,27 @@ const showEcoIndexUrlWarning = computed(
 const canEdit = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.application.myPerms)));
 
 const toOptionalNumber = (value: unknown): number | undefined => (value == null || value === "" ? undefined : Number(value));
+type DimaDurationHours = NonNullable<ComplianceDto["dima_duration_hours"]>;
+type PdmaDurationHours = NonNullable<ComplianceDto["pdma_duration_hours"]>;
+
+function isDimaDurationHours(value: number): value is DimaDurationHours {
+  return dimaDurationHoursOptions.some((option) => option.value === value);
+}
+
+function isPdmaDurationHours(value: number): value is PdmaDurationHours {
+  return pdmaDurationHoursOptions.some((option) => option.value === value);
+}
+
+function toOptionalDimaDuration(value: unknown): DimaDurationHours | undefined {
+  const duration = toOptionalNumber(value);
+  return duration !== undefined && isDimaDurationHours(duration) ? duration : undefined;
+}
+
+function toOptionalPdmaDuration(value: unknown): PdmaDurationHours | undefined {
+  const duration = toOptionalNumber(value);
+  return duration !== undefined && isPdmaDurationHours(duration) ? duration : undefined;
+}
+
 onMounted(() => {
   if (!props.initialData) {
     form.value = {};
@@ -66,7 +87,7 @@ async function save() {
 
   submitting.value = true;
   const payload = {
-    dima_duration_hours: toOptionalNumber(form.value?.dima_duration_hours),
+    dima_duration_hours: toOptionalDimaDuration(form.value?.dima_duration_hours),
     dima_is_hno: form.value?.dima_is_hno,
     dima_business_impact: form.value?.dima_business_impact,
     dima_recovery_plan: form.value?.dima_recovery_plan,
@@ -74,7 +95,7 @@ async function save() {
     dima_recovery_manager: form.value?.dima_recovery_manager,
     dima_last_test_date: toISODateTime(form.value?.dima_last_test_date),
     dima_test_result: form.value?.dima_test_result,
-    pdma_duration_hours: toOptionalNumber(form.value?.pdma_duration_hours),
+    pdma_duration_hours: toOptionalPdmaDuration(form.value?.pdma_duration_hours),
     pdma_data_types: form.value?.pdma_data_types,
     pdma_backup_frequency: form.value?.pdma_backup_frequency,
     pdma_backup_storage: form.value?.pdma_backup_storage,
@@ -123,7 +144,7 @@ async function save() {
       <template v-if="type === 'dima'">
         <DsfrSelect
           :model-value="form.dima_duration_hours"
-          @update:model-value="($event) => (form.dima_duration_hours = toOptionalNumber($event))"
+          @update:model-value="($event) => (form.dima_duration_hours = toOptionalDimaDuration($event))"
           :options="dimaDurationHoursOptions"
           label="Durée d'interruption maximale"
           label-visible
@@ -194,7 +215,7 @@ async function save() {
       <template v-else-if="type === 'pdma'">
         <DsfrSelect
           :model-value="form.pdma_duration_hours"
-          @update:model-value="($event) => (form.pdma_duration_hours = toOptionalNumber($event))"
+          @update:model-value="($event) => (form.pdma_duration_hours = toOptionalPdmaDuration($event))"
           :options="pdmaDurationHoursOptions"
           :label="complianceFieldLabels.duration_hours"
           label-visible

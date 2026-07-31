@@ -14,6 +14,8 @@ export interface AppConfig {
   version: string;
   footerLinks: FooterLink[];
   nonActorPermissions: APP_PERMISSIONS[];
+  maintenanceMode: boolean;
+  maintenanceCacheTtlMs: number;
 }
 export default registerAs("app", (): AppConfig => {
   let footerLinks: FooterLink[] = [];
@@ -25,6 +27,10 @@ export default registerAs("app", (): AppConfig => {
   const nonActorPermissions = (process.env.NON_ACTOR_PERMISSIONS ?? "")
     .split(",")
     .filter((perm) => perm in AppPermissionsRecord) as APP_PERMISSIONS[];
+  const configuredMaintenanceCacheTtl = Number.parseInt(
+    process.env.MAINTENANCE_CACHE_TTL_MS ?? "",
+    10,
+  );
 
   return {
     env: process.env.NODE_ENV ?? "development",
@@ -37,5 +43,13 @@ export default registerAs("app", (): AppConfig => {
     environmentLabel: process.env.ENV_LABEL,
     footerLinks,
     nonActorPermissions,
+    maintenanceMode: ["1", "true", "yes"].includes(
+      (process.env.MAINTENANCE_MODE ?? "").toLowerCase(),
+    ),
+    maintenanceCacheTtlMs:
+      Number.isFinite(configuredMaintenanceCacheTtl) &&
+      configuredMaintenanceCacheTtl > 0
+        ? configuredMaintenanceCacheTtl
+        : 30_000,
   };
 });

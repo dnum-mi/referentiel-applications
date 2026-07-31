@@ -196,7 +196,10 @@ export class TokenService {
     });
   };
 
-  async findUserByToken(tokenHeader: string): Promise<UserEntity | null> {
+  async findUserByToken(
+    tokenHeader: string,
+    options: { readOnly?: boolean } = {},
+  ): Promise<UserEntity | null> {
     const hash = this.generateHash(tokenHeader);
     const token = await this.prisma.token.findUnique({
       where: { hash },
@@ -206,7 +209,7 @@ export class TokenService {
 
     const userImpersonate = token?.userImpersonate ?? null;
     const isInvalid = isTokenInvalid(token);
-    if (isInvalid === "undetectedExpired") {
+    if (isInvalid === "undetectedExpired" && !options.readOnly) {
       // Handle undetected expired token case
       await this.prisma.token.update({
         where: { id: token.id },

@@ -33,8 +33,8 @@ function getBadgeLabel(value: number | null): string {
   return value == null ? NOT_RATED_LABEL : `${value}/5 - ${getMaturityLabel(value)}`;
 }
 
-function getMaturityBadgeType(value: number | null): "error" | "warning" | "info" | "success" | "none" {
-  if (value == null) return "none";
+function getMaturityBadgeType(value: number | null): "error" | "warning" | "info" | "success" | undefined {
+  if (value == null) return undefined;
   if (value <= 1) return "error";
   if (value <= 2) return "warning";
   if (value <= 3) return "info";
