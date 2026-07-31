@@ -274,6 +274,16 @@ async function seed({
     adminUser,
     regularUser,
   );
+
+  // Application dédiée à la démo de l'onboarding tour : garantit un résultat
+  // trouvable quand le tour fait taper "refapp" dans la recherche.
+  applications.push(
+    await ApplicationFaker.create(adminUser, {
+      label: "RefApp",
+      shortName: "RefApp",
+    }),
+  );
+
   const app1 = applications[0];
   const app2 = applications[1];
 

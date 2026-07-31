@@ -16,6 +16,7 @@ import "@gouvfr/dsfr/dist/utility/utility.main.min.css";
 import "@gouvminint/vue-dsfr/styles";
 import "@gouvfr/dsfr/dist/scheme/scheme.min.css";
 import "@gouvfr/dsfr/dist/utility/icons/icons.min.css";
+import "driver.js/dist/driver.css";
 import "./main.css";
 
 logDsfrVersion();

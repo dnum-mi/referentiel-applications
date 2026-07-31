@@ -29,6 +29,7 @@
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
     "dompurify": "^3.4.11",
+    "driver.js": "^1.8.0",
     "marked": "^16.4.2",
     "mermaid": "^11.15.0",
     "oidc-client-ts": "^3.5.0",
