@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, unref } from "vue";
+import { computed, onMounted, ref, unref } from "vue";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import type { AppPermsDto } from "@/client/types.gen";
 import PermissionWritePriorityRestart from "../PermissionWritePriorityRestart.vue";
@@ -38,6 +38,15 @@ const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissi
 const gridKeys = permissionKeys.filter((k) => k !== "Metadata");
 
 const updatedMatrix = ref<AppPermsDto[]>(unref(props.appPermsMatrix));
+
+// Lignes triées par ordre alphabétique du type d'acteur, comme dans la modale create/edit acteur.
+const sortedMatrix = computed(() =>
+  [...updatedMatrix.value].sort((a, b) => {
+    const labelA = actorTypeStore.actorTypes.find((at) => at.id === a.actorTypeId)?.label ?? "";
+    const labelB = actorTypeStore.actorTypes.find((at) => at.id === b.actorTypeId)?.label ?? "";
+    return labelA.localeCompare(labelB, "fr");
+  }),
+);
 
 type PermissionValue = "none" | "Read" | "Write";
 function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSuffixes, value: PermissionValue) {
@@ -94,7 +103,7 @@ function saveAppPermsMatrix() {
         <th scope="col" style="min-width: 6rem" title="Modifications">Modifications</th>
       </tr>
     </template>
-    <tr v-for="perms in updatedMatrix as AppPermsDto[]" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
+    <tr v-for="perms in sortedMatrix" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
       <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
       <td v-for="perm in gridKeys" :key="perm">
         <PermissionSelect
