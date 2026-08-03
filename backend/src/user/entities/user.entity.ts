@@ -85,6 +85,25 @@ export class UserEntity {
     description: "Liste des permissions supplémentaire accordé a un user",
   })
   additionalPermissions: (keyof typeof Permission)[];
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description:
+      "Date de la dernière modification des droits (rôle/permissions) de cet utilisateur",
+  })
+  @IsOptional()
+  lastPermissionChangeAt?: Date | null;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description:
+      "Email de l'auteur de la dernière modification des droits. Null si jamais modifié ou si l'auteur a depuis été supprimé.",
+  })
+  @IsOptional()
+  @IsString()
+  lastPermissionChangedByEmail?: string | null;
 }
 
 export class UserWithPermissions extends UserEntity {

@@ -424,6 +424,32 @@ paths:
           description: Utilisateur non trouvé
       summary: Mettre à jour les permissions d'un utilisateur
       tags: *a2
+  /api/v2/users/{id}/permission-logs:
+    get:
+      description: Retourne l'historique des changements de rôle et de permissions
+        d'un utilisateur, avec la date et l'email de l'auteur de chaque
+        modification. Accès limité aux administrateurs.
+      operationId: UserController_findPermissionLogs
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Historique des modifications de droits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserPermissionLogDto"
+        "403":
+          description: Accès refusé - Privilège admin requis
+      summary: Récupérer l'historique des modifications de droits d'un utilisateur
+      tags: *a2
   /api/v2/users:
     get:
       description: Récupère la liste de tous les utilisateurs avec leurs permissions.
@@ -5812,55 +5838,6 @@ components:
         - oidcClientId
         - version
         - footerLinks
-    HealthCheckDto:
-      type: object
-      properties:
-        maintenance:
-          type: boolean
-          description: Indique si l'API est en mode maintenance lecture seule
-          example: true
-        version:
-          type: string
-          description: Version du backend
-          example: v1.86.0
-        etat:
-          type: string
-          description: État de la connexion à la base de données
-          enum:
-            - OK
-            - KO
-          example: OK
-      required:
-        - maintenance
-        - version
-        - etat
-    HealthCheckErrorDto:
-      type: object
-      properties:
-        maintenance:
-          type: boolean
-          description: Indique si l'API est en mode maintenance lecture seule
-          example: true
-        version:
-          type: string
-          description: Version du backend
-          example: v1.86.0
-        etat:
-          type: string
-          description: État de la connexion à la base de données
-          enum:
-            - OK
-            - KO
-          example: OK
-        message:
-          type: string
-          description: Détail de l'indisponibilité
-          example: La base de données est indisponible
-      required:
-        - maintenance
-        - version
-        - etat
-        - message
     Roles:
       type: string
       enum:
@@ -6248,6 +6225,17 @@ components:
           items:
             $ref: "#/components/schemas/Permission"
           description: Liste des permissions supplémentaire accordé a un user
+        lastPermissionChangeAt:
+          format: date-time
+          type: string
+          nullable: true
+          description: Date de la dernière modification des droits (rôle/permissions) de
+            cet utilisateur
+        lastPermissionChangedByEmail:
+          type: string
+          nullable: true
+          description: Email de l'auteur de la dernière modification des droits. Null si
+            jamais modifié ou si l'auteur a depuis été supprimé.
         permissions:
           type: array
           items:
@@ -6366,6 +6354,36 @@ components:
       required:
         - additionalPermissions
         - scopeOrganizationId
+    UserPermissionLogDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unique de l'entrée d'historique
+        createdAt:
+          format: date-time
+          type: string
+          description: Date de la modification
+        role:
+          nullable: true
+          description: Rôle de l'utilisateur après la modification
+          allOf:
+            - $ref: "#/components/schemas/Roles"
+        additionalPermissions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+          description: Permissions supplémentaires de l'utilisateur après la modification
+        changedByEmail:
+          type: string
+          nullable: true
+          description: Email de la personne ayant effectué la modification. Null si la
+            modification est automatique (création de compte) ou si l'auteur a
+            depuis été supprimé.
+      required:
+        - id
+        - createdAt
+        - additionalPermissions
     PaginatedUserWithPermissions:
       type: object
       properties:
@@ -6462,6 +6480,17 @@ components:
           items:
             $ref: "#/components/schemas/Permission"
           description: Liste des permissions supplémentaire accordé a un user
+        lastPermissionChangeAt:
+          format: date-time
+          type: string
+          nullable: true
+          description: Date de la dernière modification des droits (rôle/permissions) de
+            cet utilisateur
+        lastPermissionChangedByEmail:
+          type: string
+          nullable: true
+          description: Email de l'auteur de la dernière modification des droits. Null si
+            jamais modifié ou si l'auteur a depuis été supprimé.
         id:
           type: string
         email:
@@ -7237,6 +7266,7 @@ components:
         - MONTHLY
         - YEARLY
         - ON_DEMAND
+        - NEVER
     DataExposureDto:
       type: object
       properties:
@@ -9150,6 +9180,53 @@ components:
         notes:
           type: string
           description: La note du signalement
+    HealthCheckDto:
+      type: object
+      properties:
+        maintenance:
+          type: boolean
+          description: Indique si l'API est en mode maintenance lecture seule
+          example: true
+        version:
+          type: string
+          description: Version du backend
+          example: v1.86.0
+        etat:
+          enum: &a44
+            - OK
+            - KO
+          type: string
+          description: État de la connexion à la base de données
+          example: OK
+      required:
+        - maintenance
+        - version
+        - etat
+    HealthCheckErrorDto:
+      type: object
+      properties:
+        maintenance:
+          type: boolean
+          description: Indique si l'API est en mode maintenance lecture seule
+          example: true
+        version:
+          type: string
+          description: Version du backend
+          example: v1.86.0
+        etat:
+          enum: *a44
+          type: string
+          description: État de la connexion à la base de données
+          example: OK
+        message:
+          type: string
+          description: Détail de l'indisponibilité
+          example: La base de données est indisponible
+      required:
+        - maintenance
+        - version
+        - etat
+        - message
 security:
   - oauth2: []
   - api_key: []

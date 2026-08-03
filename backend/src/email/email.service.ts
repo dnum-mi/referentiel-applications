@@ -366,6 +366,71 @@ export class EmailService {
     }
   }
 
+  async sendUserPermissionsChangedNotification({
+    to,
+    userEmail,
+    role,
+    additionalPermissions,
+    changedByEmail,
+  }: {
+    to: string;
+    userEmail: string;
+    role: string;
+    additionalPermissions: string[];
+    changedByEmail: string | null;
+  }): Promise<void> {
+    if (!this.enabled) {
+      this.logger.log(
+        `Email sending disabled. Would have sent permissions change notification to ${to}`,
+      );
+      return;
+    }
+
+    if (!to) {
+      this.logger.warn(
+        "Cannot send permissions change notification: recipient address is empty",
+      );
+      return;
+    }
+
+    const subject = "Vos droits ont été modifiés";
+
+    const html = this.templateService.render("user-permissions-changed", {
+      title: subject,
+      headerTitle: "Référentiel des Applications",
+      userEmail,
+      role,
+      additionalPermissions: additionalPermissions.length
+        ? additionalPermissions.join(", ")
+        : "Aucune",
+      changedByEmail: changedByEmail ?? "un administrateur",
+      changeDate: new Date().toLocaleString("fr-FR"),
+    });
+
+    const text = this.templateService.htmlToText(html);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.from,
+        to,
+        subject,
+        text,
+        html,
+      });
+      this.logger.log(
+        `Permissions change notification sent successfully to ${to}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to send permissions change notification to ${to}:`,
+        error,
+      );
+      this.logger.warn(
+        `Email delivery failed for ${to} but was ignored due to configuration.`,
+      );
+    }
+  }
+
   async sendSignalementUpdateEmail({
     recipientEmail,
     description,
