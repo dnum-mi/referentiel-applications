@@ -226,7 +226,7 @@ Dans `getUserRolePermissions` (`check-permissions.service.ts:85-126`) :
 - **Sans scope** (`scopeOrganization.path` absent) → l'utilisateur est traité comme administrateur global et obtient toutes les permissions applicatives de son rôle.
 - **Avec scope** → les permissions de rôle ne sont projetées sur l'application que si celle-ci relève du périmètre, c'est-à-dire :
   - s'il existe un acteur de l'application dont l'organisation contient le chemin de scope (`contains`, insensible à la casse), **ou**
-  - si la `businessDivision` de l'application correspond au chemin de scope.
+  - si l'application a une `businessDivision` dont l'une des organisations rattachées (`BusinessDivision.organizations`) a un `path` qui contient le chemin de scope (même logique `contains`, insensible à la casse, portée par `hasBusinessDivisionScope`).
   - Sinon, **aucune** permission de rôle applicative n'est accordée (`return []`).
 
 ### 6.2. Effet sur l'administration des utilisateurs
