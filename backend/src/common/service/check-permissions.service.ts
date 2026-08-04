@@ -106,24 +106,41 @@ export class CheckPermissions {
       return roleToAppPermissions(user.role);
     }
 
-    const businessDivisionFromScope = await this.prisma.application.findFirst({
+    const hasMatchingBusinessDivision = await this.hasBusinessDivisionScope(
+      applicationId,
+      scopedPermissions,
+    );
+
+    if (hasMatchingBusinessDivision) {
+      return roleToAppPermissions(user.role);
+    }
+
+    return [];
+  }
+
+  private async hasBusinessDivisionScope(
+    applicationId: string,
+    scopedPermissions: string,
+  ): Promise<boolean> {
+    const businessDivision = await this.prisma.businessDivision.findFirst({
       where: {
-        id: applicationId,
-        businessDivisions: {
+        applications: {
+          some: { id: applicationId },
+        },
+        organizations: {
           some: {
-            label: {
+            path: {
               contains: scopedPermissions,
               mode: "insensitive" as const,
             },
           },
         },
       },
+      include: {
+        organizations: true,
+      },
     });
 
-    if (businessDivisionFromScope) {
-      return roleToAppPermissions(user.role);
-    }
-
-    return [];
+    return !!businessDivision;
   }
 }
