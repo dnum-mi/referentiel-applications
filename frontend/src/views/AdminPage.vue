@@ -9,6 +9,7 @@ import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
 import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
+import AdminBusinessDivisionsTab from "@/components/admin/AdminBusinessDivisionsTab.vue";
 
 interface DsfrTab {
   title: string;
@@ -40,6 +41,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-actors",
     panelId: "panel-actors",
     component: markRaw(AdminActorsTab),
+  },
+  {
+    title: "Directions métier",
+    icon: "ri-organization-chart",
+    tabId: "tab-business-divisions",
+    panelId: "panel-business-divisions",
+    component: markRaw(AdminBusinessDivisionsTab),
   },
   {
     title: "Gestions des tags",

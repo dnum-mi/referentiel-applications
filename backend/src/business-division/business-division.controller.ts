@@ -1,5 +1,20 @@
-import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
+import {
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -14,6 +29,8 @@ import { BusinessDivisionService } from "./business-division.service";
 import {
   BusinessDivisionDTO,
   BusinessDivisionFiltersDto,
+  CreateBusinessDivisionDto,
+  UpdateBusinessDivisionDto,
 } from "./dto/business-division.dto";
 
 @ApiTags("Business Division")
@@ -44,6 +61,78 @@ export class BusinessDivisionController {
   })
   async findAll(@Query() filters: BusinessDivisionFiltersDto) {
     return await this.businessDivisionService.search(filters);
+  }
+
+  @Post()
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Créer une direction métier.",
+    description: `
+Ce endpoint permet de créer une nouvelle direction métier (business division).
+
+Information requise :
+- **label** : nom unique de la direction métier
+    `,
+  })
+  @HttpCode(201)
+  @ApiCreatedResponse({
+    description: "Direction métier créée avec succès",
+    type: BusinessDivisionDTO,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @ApiConflictResponse({
+    description: "Une direction métier existe déjà avec ce nom",
+  })
+  async create(@Body() createBusinessDivisionDto: CreateBusinessDivisionDto) {
+    return await this.businessDivisionService.createDivision(
+      createBusinessDivisionDto,
+    );
+  }
+
+  @Patch(":id")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({ summary: "Modifier une direction métier" })
+  @ApiOkResponse({
+    description: "Direction métier mise à jour avec succès",
+    type: BusinessDivisionDTO,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @ApiNotFoundResponse({ description: "Direction métier non trouvée" })
+  @ApiConflictResponse({
+    description: "Une direction métier existe déjà avec ce nom",
+  })
+  @ApiParam({ name: "id", description: "ID de la direction métier à modifier" })
+  async update(
+    @Param("id") id: string,
+    @Body() updateBusinessDivisionDto: UpdateBusinessDivisionDto,
+  ) {
+    return await this.businessDivisionService.updateDivision(
+      id,
+      updateBusinessDivisionDto,
+    );
+  }
+
+  @Delete(":id")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({ summary: "Supprimer une direction métier" })
+  @HttpCode(204)
+  @ApiNoContentResponse({
+    description: "Direction métier supprimée avec succès",
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @ApiNotFoundResponse({ description: "Direction métier non trouvée" })
+  @ApiParam({
+    name: "id",
+    description: "ID de la direction métier à supprimer",
+  })
+  async remove(@Param("id") id: string) {
+    return await this.businessDivisionService.delete(id);
   }
 
   @Get(":id")

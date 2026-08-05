@@ -22,7 +22,8 @@ export class PrismaQueryBuilder {
     let orderBy: Prisma.BusinessDivisionOrderByWithRelationInput = {};
 
     if (filters.sortBy) {
-      const sortField = filters.sortBy === "createdAt" ? "createdAt" : "label";
+      // BusinessDivision n'a pas de createdAt : label est le seul champ triable.
+      const sortField = "label";
       const sortOrder: Prisma.SortOrder =
         filters.order === "desc" ? "desc" : "asc";
 

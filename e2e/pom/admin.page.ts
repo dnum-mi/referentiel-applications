@@ -545,6 +545,99 @@ export class AdminPage extends BasePage {
     await this.expectToaster(/Campagne supprimée avec succès/i);
   }
 
+  // --- Onglet « Directions métier » (ADM-22, ADM-23) ---
+
+  private businessDivisionsTable = () =>
+    this.byTestId("admin-business-divisions-table");
+
+  async openBusinessDivisionsTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: /directions métier/i })
+      .click();
+    await expect(this.businessDivisionsTable()).toBeVisible();
+  }
+
+  async searchBusinessDivision(value: string): Promise<void> {
+    const refetch = this.page
+      .waitForResponse(
+        (r) =>
+          /\/business-division\?/.test(r.url()) &&
+          r.request().method() === "GET",
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
+    await this.byTestId("admin-business-division-search")
+      .locator("input")
+      .fill(value);
+    await refetch;
+  }
+
+  async createBusinessDivision(label: string): Promise<void> {
+    await this.byTestId("admin-create-business-division-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Nom de la direction métier/i).fill(label);
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/Direction métier créée avec succès/i);
+  }
+
+  async expectBusinessDivisionRow(label: string): Promise<void> {
+    await this.searchBusinessDivision(label);
+    await expect(this.businessDivisionsTable()).toContainText(label);
+  }
+
+  async editBusinessDivision(label: string, newLabel: string): Promise<void> {
+    await this.searchBusinessDivision(label);
+    const row = this.businessDivisionsTable().locator("tr", {
+      hasText: label,
+    });
+    await row.getByTestId("admin-business-division-edit-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel(/Nom de la direction métier/i).fill(newLabel);
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/Direction métier mise à jour avec succès/i);
+  }
+
+  async deleteBusinessDivision(label: string): Promise<void> {
+    await this.searchBusinessDivision(label);
+    const row = this.businessDivisionsTable().locator("tr", {
+      hasText: label,
+    });
+    await row.getByTestId("admin-business-division-delete-btn").click();
+    await expect(
+      this.byTestId("admin-business-division-delete-confirm-btn"),
+    ).toBeVisible();
+    await this.byTestId("admin-business-division-delete-confirm-btn").click();
+    await this.expectToaster(/Direction métier supprimée avec succès/i);
+  }
+
+  /** Rattache (ou détache avec un libellé vide) une direction métier via la modale d'édition d'organisation. */
+  async attachBusinessDivisionToOrganization(
+    orgPath: string,
+    divisionLabel: string,
+  ): Promise<void> {
+    await this.searchOrganization(orgPath);
+    const row = this.orgsTable().locator("tr", { hasText: orgPath });
+    await row.getByTestId("admin-organization-edit-btn").click();
+    const dialog = this.visibleDialog();
+    await expect(dialog).toBeVisible();
+    await dialog
+      .getByTestId("organization-business-division-select")
+      .selectOption({ label: divisionLabel || "Aucune direction métier" });
+    await dialog.getByRole("button", { name: /Enregistrer/i }).click();
+    await this.expectToaster(/mise à jour avec succès/i);
+  }
+
+  async expectOrganizationBusinessDivision(
+    orgPath: string,
+    divisionLabel: string,
+  ): Promise<void> {
+    await this.searchOrganization(orgPath);
+    const row = this.orgsTable().locator("tr", { hasText: orgPath });
+    await expect(row).toContainText(divisionLabel);
+  }
+
   // --- Onglet « Batch de données » : synchronisation MAIA (#1825, MAI-04) ---
   async openBatchDataTab(): Promise<void> {
     await this.adminTabs()

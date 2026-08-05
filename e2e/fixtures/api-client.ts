@@ -156,6 +156,15 @@ export class ApiClient {
     if (found) await this.del(`/mdit-campaigns/${found.id}`);
   }
 
+  /** Supprime la direction métier du libellé donné si elle existe (idempotence des tests). */
+  async deleteBusinessDivisionByLabel(label: string): Promise<void> {
+    const list = await this.get<Paginated<{ id: string; label: string }>>(
+      `/business-division?label=${encodeURIComponent(label)}&pageSize=100&page=0`,
+    );
+    const found = list?.results?.find((d) => d.label === label);
+    if (found) await this.del(`/business-division/${found.id}`);
+  }
+
   /** Évaluations de dette technique d'une application (plus récente d'abord), paginées. */
   applicationTechnicalDebtInfo(
     appId: string,

@@ -50,6 +50,8 @@ const targetUser = {
   email: "target@example.gouv.fr",
   organizationId: null,
   scopeOrganizationId: null,
+  lastPermissionChangeAt: null,
+  lastPermissionChangedByEmail: null,
 } satisfies Required<UserEntity>;
 
 function createOrganization(path: string): OrganizationDto {

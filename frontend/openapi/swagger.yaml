@@ -2230,7 +2230,88 @@ paths:
       summary: Rechercher des Business division.
       tags: &a9
         - Business Division
+    post:
+      description: "
+
+        Ce endpoint permet de créer une nouvelle direction métier (business
+        division).
+
+
+        Information requise :
+
+        - **label** : nom unique de la direction métier
+
+        \    "
+      operationId: BusinessDivisionController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBusinessDivisionDto"
+      responses:
+        "201":
+          description: Direction métier créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessDivisionDTO"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "409":
+          description: Une direction métier existe déjà avec ce nom
+      summary: Créer une direction métier.
+      tags: *a9
   /api/v2/business-division/{id}:
+    patch:
+      operationId: BusinessDivisionController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de la direction métier à modifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBusinessDivisionDto"
+      responses:
+        "200":
+          description: Direction métier mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessDivisionDTO"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Direction métier non trouvée
+        "409":
+          description: Une direction métier existe déjà avec ce nom
+      summary: Modifier une direction métier
+      tags: *a9
+    delete:
+      operationId: BusinessDivisionController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de la direction métier à supprimer
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Direction métier supprimée avec succès
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Direction métier non trouvée
+      summary: Supprimer une direction métier
+      tags: *a9
     get:
       operationId: BusinessDivisionController_findById
       parameters:
@@ -5867,6 +5948,20 @@ components:
       required:
         - id
         - email
+    BusinessDivisionDTO:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 255
+          description: Nom unique du business division
+          example: farm
+        id:
+          type: string
+          description: Identifiant unique de la division DTO
+      required:
+        - label
+        - id
     OrganizationMaiaReferenceDto:
       type: object
       properties:
@@ -5927,6 +6022,12 @@ components:
           nullable: true
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de la direction métier associée
+        businessDivision:
+          nullable: true
+          description: Direction métier associée à l'organisation
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/BusinessDivisionDTO"
         maiaReferences:
           description: Références MAIA associées à l'organisation
           type: array
@@ -6802,19 +6903,6 @@ components:
       required:
         - id
         - applicationId
-    BusinessDivisionDTO:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Identifiant unique de la division DTO
-        label:
-          type: string
-          description: Nom unique du business division
-          example: farm
-      required:
-        - id
-        - label
     ApplicationDto:
       type: object
       properties:
@@ -7133,6 +7221,24 @@ components:
       required:
         - results
         - total
+    CreateBusinessDivisionDto:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 255
+          description: Nom unique du business division
+          example: farm
+      required:
+        - label
+    UpdateBusinessDivisionDto:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 255
+          description: Nom unique du business division
+          example: farm
     CreateDataDescriptionDto:
       type: object
       properties:
@@ -7636,6 +7742,11 @@ components:
           type: string
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
+        businessDivisionId:
+          type: string
+          nullable: true
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de la direction métier associée (null pour détacher)
       required:
         - path
     PaginatedOrganizationDto:
@@ -7672,6 +7783,11 @@ components:
           type: string
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
+        businessDivisionId:
+          type: string
+          nullable: true
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de la direction métier associée (null pour détacher)
     CreateActorDto:
       type: object
       properties:
