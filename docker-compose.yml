@@ -44,6 +44,8 @@ services:
       - SMTP_SECURE=false
       - SMTP_FROM=noreply@example.local
       - SMTP_ENABLED=true
+      # Crons d'envoi automatique (digest quotidien + relances de validation) — off par défaut
+      - EMAIL_CRON_ENABLED=false
       - ENV_LABEL=developpement
       - MAINTENANCE_MODE=${MAINTENANCE_MODE:-false}
       - MAINTENANCE_CACHE_TTL_MS=${MAINTENANCE_CACHE_TTL_MS:-30000}

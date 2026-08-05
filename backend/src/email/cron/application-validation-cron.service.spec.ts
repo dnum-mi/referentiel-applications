@@ -1,6 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { Status } from "@prisma/client";
+import { ConfigService } from "@nestjs/config";
 import { ApplicationValidationCronService } from "./application-validation-cron.service";
 import { EmailService } from "../email.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -33,6 +34,10 @@ describe("ApplicationValidationCronService", () => {
     debug: jest.fn(),
   };
 
+  const mockConfigService = {
+    get: jest.fn().mockReturnValue(false),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -42,6 +47,7 @@ describe("ApplicationValidationCronService", () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: EmailService, useValue: mockEmailService },
         { provide: LoggerService, useValue: mockLoggerService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
