@@ -9,4 +9,5 @@ export const emailConfig = registerAs("email", () => ({
     process.env.SMTP_ENABLED === "true" &&
     Boolean(process.env.SMTP_HOST) &&
     Boolean(process.env.SMTP_PORT),
+  cronEnabled: process.env.EMAIL_CRON_ENABLED === "true",
 }));
