@@ -1,4 +1,5 @@
 import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { Status } from "@prisma/client";
 import { LoggerService } from "src/logger/logger.service";
@@ -18,13 +19,27 @@ function subtractMonths(baseDate: Date, monthsAmount: number): Date {
 export class ApplicationValidationCronService
   implements OnApplicationBootstrap
 {
+  private readonly cronEnabled: boolean;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
     private readonly logger: LoggerService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.cronEnabled = this.configService.get<boolean>(
+      "email.cronEnabled",
+      false,
+    );
+  }
 
   async onApplicationBootstrap() {
+    if (!this.cronEnabled) {
+      this.logger.log(
+        "Relances de validation désactivées (EMAIL_CRON_ENABLED) : vérification au démarrage ignorée.",
+      );
+      return;
+    }
     this.logger.log(
       "Bootstrap : Vérification initiale des applications à relancer...",
     );
@@ -33,6 +48,12 @@ export class ApplicationValidationCronService
 
   @Cron("30 9 1 * *", { timeZone: "Europe/Paris" })
   async handleMonthlyCron() {
+    if (!this.cronEnabled) {
+      this.logger.log(
+        "Relances de validation désactivées (EMAIL_CRON_ENABLED) : exécution mensuelle ignorée.",
+      );
+      return;
+    }
     this.logger.log("Exécution mensuelle programmée du rappel de validation.");
     await this.sendValidationReminders();
   }
