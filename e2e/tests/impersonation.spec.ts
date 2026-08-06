@@ -1,6 +1,6 @@
 import { test, expect } from "../fixtures/test";
 import { DataFeature } from "../fixtures/datafeature";
-import { AdminPage, ApplicationPage, loginAs } from "../pom";
+import { AdminPage, ApplicationPage, loginAs, switchTo } from "../pom";
 import { captureStepScreenshot } from "../support/screenshots";
 
 const ADMIN_EMAIL = "admin@example.com";
@@ -192,5 +192,35 @@ test.describe("Impersonation", () => {
       await data.setUserRole("qa-target@example.com", "READER").catch(() => {});
       await data.removeApplication(appRef.id).catch(() => {});
     }
+  });
+
+  test("IMP-08 - un admin scopé ne peut impersonner que dans son périmètre (#2217)", async ({
+    page,
+    data,
+  }) => {
+    // Cibles du seed QA : `qa-target` (org TOTO/TUTU, dans le périmètre TOTO de
+    // `scope-admin`) et `qa-outside` (org ABCD, hors périmètre).
+    const outside = await data.getUser("qa-outside@example.com");
+    const inScope = await data.getUser("qa-target@example.com");
+    test.skip(
+      !outside || !inScope,
+      "Fixture QA absente — `pnpm db:seed:qa` requis.",
+    );
+
+    // `switchTo` (pas `loginAs`) : la fixture `data` a déjà connecté `page` en `admin`.
+    await switchTo(page, "scope-admin");
+    const admin = new AdminPage(page);
+    await admin.open();
+
+    // Hors périmètre : le bouton « Se connecter en tant que » n'est pas proposé.
+    // (Le refus 403 côté API — endpoint ET header direct — est couvert par
+    // backend/tests/impersonation.e2e-spec.ts.)
+    await admin.expectImpersonateUnavailable("qa-outside@example.com");
+
+    // Dans le périmètre : l'impersonation complète fonctionne.
+    await admin.impersonateUser("qa-target@example.com");
+    await admin.expectImpersonationBanner("qa-target@example.com");
+    await admin.stopImpersonation();
+    await admin.expectNotImpersonating();
   });
 });

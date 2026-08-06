@@ -389,6 +389,9 @@ export class UserService {
       );
     }
 
+    // Un admin scopé ne peut impersonner que dans son périmètre (#2217).
+    await this.scopedPermissionService.assertCanImpersonate(targetId, admin);
+
     await this.prisma.impersonationLog.create({
       data: { adminId: admin.id, targetId },
     });

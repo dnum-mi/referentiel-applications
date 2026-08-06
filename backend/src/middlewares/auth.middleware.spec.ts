@@ -4,6 +4,7 @@ import { Roles, UserType } from "@prisma/client";
 import type { LoggerService } from "src/logger/logger.service";
 import type { MaintenanceService } from "src/maintenance/maintenance.service";
 import type { TokenService } from "src/token/token.service";
+import type { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
 import type { UserConnexionLogService } from "src/user/user-connexion-log.service";
 import type { UserService } from "src/user/user.service";
 import type { OidcConfig } from "src/config/configs/oidc.config";
@@ -23,6 +24,9 @@ jest.mock("src/user/user-connexion-log.service", () => ({
 }));
 jest.mock("src/user/user.service", () => ({
   UserService: class UserService {},
+}));
+jest.mock("src/user/scope-permission/scoped-permission.service", () => ({
+  ScopedPermissionService: class ScopedPermissionService {},
 }));
 
 const oidcConfig = {
@@ -69,6 +73,9 @@ describe("AuthMiddleware maintenance mode", () => {
     const middleware = new AuthMiddleware(
       oidcConfig,
       userService as unknown as UserService,
+      {
+        assertCanImpersonate: jest.fn(),
+      } as unknown as ScopedPermissionService,
       tokenService as unknown as TokenService,
       userConnexionLogService as unknown as UserConnexionLogService,
       logger as unknown as LoggerService,
@@ -116,6 +123,9 @@ describe("AuthMiddleware maintenance mode", () => {
     const middleware = new AuthMiddleware(
       oidcConfig,
       userService as unknown as UserService,
+      {
+        assertCanImpersonate: jest.fn(),
+      } as unknown as ScopedPermissionService,
       tokenService as unknown as TokenService,
       userConnexionLogService as unknown as UserConnexionLogService,
       { error: jest.fn() } as unknown as LoggerService,

@@ -209,7 +209,8 @@ export class UserController {
     type: UserWithPermissions,
   })
   @ApiForbiddenResponse({
-    description: "Accès refusé - Privilège admin requis",
+    description:
+      "Accès refusé - Privilège admin requis, ou utilisateur hors du périmètre de l'administrateur",
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
   async impersonate(

@@ -34,8 +34,17 @@ const canEditUser = computed(() => {
   return !targetOrganizationPath || targetOrganizationPath.startsWith(requestorScopePath);
 });
 
-// On peut impersonner tout utilisateur humain, sauf soi-même.
-const canImpersonate = computed(() => props.user.type !== "bot" && props.user.id !== userStore.user?.id);
+// On peut impersonner tout utilisateur humain, sauf soi-même — et pour un
+// admin scopé, seulement dans son périmètre (même règle que canEditUser, #2217).
+const canImpersonate = computed(() => {
+  if (props.user.type === "bot" || props.user.id === userStore.user?.id) return false;
+
+  const requestorScopePath = userStore.user?.scopeOrganization?.path;
+  if (!requestorScopePath) return true;
+
+  const targetOrganizationPath = props.user.organization?.path;
+  return !targetOrganizationPath || targetOrganizationPath.startsWith(requestorScopePath);
+});
 const isImpersonating = ref(false);
 
 // On ne peut pas bloquer son propre accès (cf. UserService.block côté back).

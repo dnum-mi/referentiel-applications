@@ -237,6 +237,15 @@ Dans `getUserRolePermissions` (`check-permissions.service.ts:85-126`) :
 - Sinon, toute cible et toute organisation manipulée doivent être **dans le périmètre** : `targetPath.startsWith(requestorScopePath)` (`assertWithinScope:125-133`).
 - Règle dédiée : **seul un administrateur global peut supprimer le périmètre d'un utilisateur** (`assertScopeOrganizationAction`, action `REMOVE` → exception).
 
+### 6.3. Effet sur l'impersonation
+
+La même règle de périmètre s'applique à l'impersonation (#2217, `assertCanImpersonate`) : un admin scopé ne peut se faire passer que pour un utilisateur dont l'organisation est dans son périmètre (un utilisateur sans organisation reste impersonnable, comme pour l'édition). Le contrôle est appliqué à **deux niveaux** :
+
+- `UserService.startImpersonation` (endpoint `POST /users/:id/impersonate`) ;
+- `AuthMiddleware.resolveImpersonatedUser` — indispensable car c'est le middleware qui applique l'identité à chaque requête via le header `x-impersonate-user-id`, qui peut être posé sans passer par l'endpoint.
+
+Côté interface, le bouton « Se connecter en tant que » n'est pas proposé hors périmètre (`UserActions.vue`, `canImpersonate`, alignée sur `canEditUser`).
+
 ## 7. Mise en œuvre côté code
 
 ### 7.1. Backend — garde et décorateur
