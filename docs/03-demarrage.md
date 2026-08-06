@@ -65,7 +65,7 @@ En développement, les variables nécessaires au backend sont **déjà fournies*
 - **Base de données** : `DATABASE_URL` (chaîne de connexion PostgreSQL).
 - **Authentification OIDC** : `OIDC_CONFIG_URL`, `OIDC_JWKS_URL`, `OIDC_CLIENT_ID`.
 - **CORS / réseau** : `ALLOWED_ORIGINS`, `PORT`, `HOST`.
-- **Messagerie (SMTP)** : `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, `SMTP_ENABLED` (pointés vers Mailpit en local).
+- **Messagerie (SMTP)** : `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, `SMTP_ENABLED` (pointés vers Mailpit en local) ; `EMAIL_CRON_ENABLED` active les envois automatiques (digest quotidien, relances de validation), désactivés par défaut.
 - **Maintenance** : `MAINTENANCE_MODE` force le mode lecture seule ; `MAINTENANCE_CACHE_TTL_MS` règle la durée de cache de la détection PostgreSQL.
 - **Divers** : `LOG_LEVEL`, `ENV_LABEL`, `FOOTER_LINKS`, `MOCK_MAIA_SERVICE`, `MOCK_MAIA_ORGANIZATION`, `NON_ACTOR_PERMISSIONS`.
 

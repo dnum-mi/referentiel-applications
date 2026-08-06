@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
 import { PrismaService } from "src/prisma/prisma.service";
 import { EmailService } from "../email.service";
@@ -22,12 +23,31 @@ interface UserDigestMap {
 
 @Injectable()
 export class EmailDigestCronService {
+  private readonly cronEnabled: boolean;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.cronEnabled = this.configService.get<boolean>(
+      "email.cronEnabled",
+      false,
+    );
+  }
 
   @Cron("0 0 * * *", { timeZone: "Europe/Paris" })
+  async handleDailyCron() {
+    if (!this.cronEnabled) {
+      Logger.log(
+        "Digest quotidien désactivé (EMAIL_CRON_ENABLED) : exécution nocturne ignorée.",
+      );
+      return;
+    }
+    await this.sendDailyDigest();
+  }
+
+  // Envoi effectif, aussi déclenchable manuellement via POST /email/digest (admin).
   async sendDailyDigest(targetDate?: Date) {
     Logger.log("Starting daily email digest job at midnight");
 
