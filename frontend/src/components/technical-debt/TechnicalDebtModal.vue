@@ -132,70 +132,40 @@ async function handleSubmit() {
         />
         <DsfrInput
           v-model="form.technicalMaturity"
+          label="Maturité technique"
           label-visible
           type="number"
           min="1"
           max="5"
           step=".01"
           hint="Entre 1 et 5 (laisser vide si non noté)"
-          aria-describedby="technical-maturity-tooltip-desc"
           class="fr-mb-3w"
           data-testid="technical-maturity-select"
-        >
-          <template #label>
-            <span class="tooltip-label">
-              Maturité technique
-              <DsfrTooltip
-                id="technical-maturity-tooltip-desc"
-                content="Évalue la qualité de l'architecture, la maintenabilité et la santé technologique de l'application : dette technique, obsolescence, sécurité, fiabilité, conformité aux standards."
-              />
-            </span>
-          </template>
-        </DsfrInput>
+        />
         <DsfrInput
           v-model="form.businessMaturity"
+          label="Maturité métier"
           label-visible
           type="number"
           min="1"
           max="5"
           step=".01"
           hint="Entre 1 et 5 (laisser vide si non noté)"
-          aria-describedby="business-maturity-tooltip-desc"
           class="fr-mb-3w"
           data-testid="business-maturity-select"
-        >
-          <template #label>
-            <span class="tooltip-label">
-              Maturité métier
-              <DsfrTooltip
-                id="business-maturity-tooltip-desc"
-                content="Évalue dans quelle mesure l'application répond aux besoins métier et soutient les objectifs stratégiques et opérationnels : couverture fonctionnelle, satisfaction des utilisateurs, criticité."
-              />
-            </span>
-          </template>
-        </DsfrInput>
+        />
         <DsfrInput
           v-model="form.costContainment"
+          label="Maîtrise des coûts"
           label-visible
           type="number"
           min="1"
           max="5"
           step=".01"
           hint="Entre 1 et 5 (laisser vide si non noté)"
-          aria-describedby="cost-containment-tooltip-desc"
           class="fr-mb-3w"
           data-testid="cost-containment-select"
-        >
-          <template #label>
-            <span class="tooltip-label">
-              Maîtrise des coûts
-              <DsfrTooltip
-                id="cost-containment-tooltip-desc"
-                content="Évalue le niveau de visibilité et de maîtrise du coût total de possession (TCO) de l'application : licences, maintenance, hébergement, support interne et externe."
-              />
-            </span>
-          </template>
-        </DsfrInput>
+        />
       </div>
       <div class="fr-btns-group fr-btns-group--right fr-mt-4w">
         <DsfrButton type="button" secondary label="Annuler" data-testid="technical-debt-cancel-btn" @click="$emit('close')" />
@@ -215,21 +185,3 @@ async function handleSubmit() {
     </form>
   </DsfrModal>
 </template>
-
-<style scoped>
-.tooltip-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  position: relative;
-}
-
-:deep(.fr-tooltip) {
-  position: absolute !important;
-  top: 100% !important;
-  left: 0 !important;
-  transform: none !important;
-  margin-top: 0.25rem;
-  max-width: 220px;
-}
-</style>
