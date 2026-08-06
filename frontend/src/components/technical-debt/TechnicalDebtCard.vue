@@ -42,27 +42,9 @@ function getMaturityBadgeType(value: number | null): "error" | "warning" | "info
 }
 
 const maturityFields = computed(() => [
-  {
-    key: "technicalMaturity",
-    label: "Maturité technique",
-    value: props.technicalDebtInfo?.technicalMaturity ?? null,
-    tooltip:
-      "Évalue la qualité de l'architecture, la maintenabilité et la santé technologique de l'application : dette technique, obsolescence, sécurité, fiabilité, conformité aux standards.",
-  },
-  {
-    key: "businessMaturity",
-    label: "Maturité métier",
-    value: props.technicalDebtInfo?.businessMaturity ?? null,
-    tooltip:
-      "Évalue dans quelle mesure l'application répond aux besoins métier et soutient les objectifs stratégiques et opérationnels : couverture fonctionnelle, satisfaction des utilisateurs, criticité.",
-  },
-  {
-    key: "costContainment",
-    label: "Maîtrise des coûts MCO",
-    value: props.technicalDebtInfo?.costContainment ?? null,
-    tooltip:
-      "Évalue le niveau de visibilité et de maîtrise du coût total de possession (TCO) de l'application : licences, maintenance, hébergement, support interne et externe.",
-  },
+  { key: "technicalMaturity", label: "Maturité technique", value: props.technicalDebtInfo?.technicalMaturity ?? null },
+  { key: "businessMaturity", label: "Maturité métier", value: props.technicalDebtInfo?.businessMaturity ?? null },
+  { key: "costContainment", label: "Maîtrise des coûts MCO", value: props.technicalDebtInfo?.costContainment ?? null },
 ]);
 </script>
 
@@ -100,15 +82,13 @@ const maturityFields = computed(() => [
         <template v-if="technicalDebtInfo">
           <div class="fr-grid-row fr-grid-row--gutters">
             <div v-for="field in maturityFields" :key="field.key" class="fr-col-12 fr-col-md-4">
-              <p class="fr-text--bold fr-mb-1v tooltip-label">
+              <p class="fr-text--bold fr-mb-1v">
                 {{ field.label }}
-                <DsfrTooltip :id="`${field.key}-tooltip-desc`" :content="field.tooltip" />
               </p>
               <DsfrBadge
                 :label="getBadgeLabel(field.value)"
                 :type="getMaturityBadgeType(field.value)"
                 :small="small"
-                :aria-describedby="`${field.key}-tooltip-desc`"
                 :data-testid="`${field.key}-badge`"
               />
             </div>
@@ -121,11 +101,3 @@ const maturityFields = computed(() => [
     </div>
   </div>
 </template>
-
-<style scoped>
-.tooltip-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-</style>
