@@ -8,13 +8,23 @@ import api from "@/api";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 
-const data = ref<{ results: BusinessDivisionDto[]; total: number }>({ results: [], total: 0 });
+// L'API renvoie le décompte des liaisons, non déclaré dans BusinessDivisionDto.
+type BusinessDivisionRow = BusinessDivisionDto & { _count?: { organizations: number; applications: number } };
+const data = ref<{ results: BusinessDivisionRow[]; total: number }>({ results: [], total: 0 });
 
 const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
   {
     key: "label",
     label: "Nom",
     isSortable: true,
+  },
+  {
+    key: "organizationsCount",
+    label: "Organisations liées",
+  },
+  {
+    key: "applicationsCount",
+    label: "Applications liées",
   },
   {
     key: "actions",
@@ -85,6 +95,8 @@ watch([sortColumn, isSortDescending], () => {
 const tableRows = computed(() =>
   data.value.results.map((businessDivision) => ({
     label: businessDivision.label,
+    organizationsCount: businessDivision._count?.organizations ?? 0,
+    applicationsCount: businessDivision._count?.applications ?? 0,
     actions: businessDivision,
   })),
 );

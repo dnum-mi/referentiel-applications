@@ -78,6 +78,12 @@ describe("BusinessDivision", () => {
       (d: { label: string }) => d.label,
     );
     expect(labels).toContain(LABEL_A);
+
+    // Le décompte des liaisons est exposé pour l'onglet admin (0 pour une division neuve).
+    const created = list.body.results.find(
+      (d: { label: string }) => d.label === LABEL_A,
+    );
+    expect(created._count).toEqual({ organizations: 0, applications: 0 });
   });
 
   it("/PATCH business-division/:id - should update a division as admin", async () => {

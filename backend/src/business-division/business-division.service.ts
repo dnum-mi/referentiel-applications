@@ -57,6 +57,9 @@ export class BusinessDivisionService extends BaseService<
       orderBy,
       page: searchParams.page,
       pageSize: searchParams.pageSize,
+      include: {
+        _count: { select: { organizations: true, applications: true } },
+      },
     });
   }
 }
