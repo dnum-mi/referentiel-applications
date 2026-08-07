@@ -230,7 +230,13 @@ onMounted(() => {
     </div>
 
     <div class="fr-mb-3w">
-      <DsfrButton v-if="!showCreateForm" icon="ri-add-line" :disabled="maxTokensReached" @click="toggleCreateForm">
+      <DsfrButton
+        v-if="!showCreateForm"
+        data-testid="token-create-btn"
+        icon="ri-add-line"
+        :disabled="maxTokensReached"
+        @click="toggleCreateForm"
+      >
         Créer un nouveau token
       </DsfrButton>
       <span v-if="maxTokensReached" class="fr-ml-2w fr-text--sm fr-text--bold"> Limite de 5 tokens atteinte </span>

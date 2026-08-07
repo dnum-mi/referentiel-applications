@@ -16,7 +16,7 @@ import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 import { accessibilityDeclaration } from "./constants/accessibility-declaration";
 import MaintenanceBanner from "./components/MaintenanceBanner.vue";
 import { useMaintenanceMode } from "./composables/use-maintenance-mode";
-import { useOnboardingTour } from "./composables/use-onboarding-tour";
+import OnboardingDebugPanel from "./components/OnboardingDebugPanel.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -210,14 +210,11 @@ useRgaaGlobalA11y();
 
 useAppUpdate();
 
-const { startTour } = useOnboardingTour();
 const isDev = import.meta.env.DEV;
 </script>
 
 <template>
-  <button v-if="isDev" type="button" class="dev-onboarding-btn" data-testid="dev-start-onboarding-btn" @click="startTour">
-    [DEV] Start Onboarding
-  </button>
+  <OnboardingDebugPanel v-if="isDev" />
 
   <h1 ref="pageTitleAnnouncer" class="fr-sr-only" tabindex="-1" data-testid="page-title-announcer">
     {{ currentPageTitle }}
@@ -276,21 +273,4 @@ const isDev = import.meta.env.DEV;
 
 <style>
 @import "./main.css";
-</style>
-
-<style scoped>
-.dev-onboarding-btn {
-  position: fixed;
-  top: 0.5rem;
-  right: 0.5rem;
-  z-index: 3000;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: #fff;
-  background-color: #e1000f;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
 </style>

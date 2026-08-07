@@ -1,20 +1,22 @@
 <template>
   <div class="fr-container">
-    <div class="fr-grid-row fr-py-2w">
-      <div class="fr-col">
-        <h1 data-testid="home-title">Le référentiel des applications</h1>
+    <div data-testid="home-intro">
+      <div class="fr-grid-row fr-py-2w">
+        <div class="fr-col">
+          <h1 data-testid="home-title">Le référentiel des applications</h1>
+        </div>
+      </div>
+      <div class="fr-grid-row--gutters">
+        <p class="fr-col-md-9">
+          Le référentiel des applications recense l’ensemble des produits numériques et logiciels développés et hébergés au sein du système
+          d’information du ministère. Il assure la centralisation, la structuration et la gestion efficace de ces applications, afin d’en
+          optimiser l’accès et l’usage partagé. Il contribue également à la sécurité, à la protection et à la résilience du système
+          d’information.
+        </p>
       </div>
     </div>
-    <div class="fr-grid-row--gutters">
-      <p class="fr-col-md-9">
-        Le référentiel des applications recense l’ensemble des produits numériques et logiciels développés et hébergés au sein du système
-        d’information du ministère. Il assure la centralisation, la structuration et la gestion efficace de ces applications, afin d’en
-        optimiser l’accès et l’usage partagé. Il contribue également à la sécurité, à la protection et à la résilience du système
-        d’information.
-      </p>
-    </div>
 
-    <section class="fr-py-3w">
+    <section class="fr-py-3w" data-testid="home-objectives-section">
       <div class="fr-grid-row">
         <div class="fr-col">
           <h2 data-testid="home-objectives-title">Objectifs du référentiel</h2>
