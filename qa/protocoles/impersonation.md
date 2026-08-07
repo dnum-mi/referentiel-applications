@@ -63,3 +63,14 @@
   `POST /users/{adminId}/impersonate`.
 - **Résultat attendu** : `403 Forbidden` — l'identité effective (lecteur) n'a pas le droit
   d'administration, donc aucune impersonation imbriquée n'est possible.
+
+### IMP-09 — Les modifications sous impersonification affichent l'admin réel (#2226) ✅
+
+- **Datafeature** : seed QA (`qa-target@example.com`, promu CONTRIBUTOR le temps du test) ; une
+  application de test créée via l'API (supprimée en fin de test).
+- **Action** : en `admin`, impersonner `qa-target` → modifier la description de l'application →
+  ouvrir l'onglet « Modifications » de la fiche.
+- **Résultat attendu** : la ligne d'historique affiche « `qa-target@example.com`
+  (via `admin@example.com`) » — l'action est attribuée à l'identité effective ET l'administrateur
+  réel est visible. Même affichage sur la page globale Modifications et le détail d'une metadata.
+  Hors impersonification, aucun « (via …) » n'apparaît.

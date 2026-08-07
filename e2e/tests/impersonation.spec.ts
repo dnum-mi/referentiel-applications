@@ -1,6 +1,6 @@
 import { test, expect } from "../fixtures/test";
 import { DataFeature } from "../fixtures/datafeature";
-import { AdminPage, loginAs } from "../pom";
+import { AdminPage, ApplicationPage, loginAs } from "../pom";
 import { captureStepScreenshot } from "../support/screenshots";
 
 const ADMIN_EMAIL = "admin@example.com";
@@ -149,5 +149,48 @@ test.describe("Impersonation", () => {
         impersonateUserId: reader!.id,
       }),
     ).toBe(403);
+  });
+
+  test("IMP-09 - les modifications sous impersonation affichent l'admin réel (#2226)", async ({
+    page,
+    data,
+  }) => {
+    const inScope = await data.getUser("qa-target@example.com");
+    test.skip(!inScope, "Fixture QA absente — `pnpm db:seed:qa` requis.");
+
+    const ts = Date.now();
+    const label = `E2E-IMP09-${ts}`;
+    const appRef = await data.createTestApplication(label);
+    // La cible doit pouvoir modifier l'application : promue CONTRIBUTOR le temps du test.
+    await data.setUserRole("qa-target@example.com", "CONTRIBUTOR");
+
+    try {
+      await loginAs(page, "admin");
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.impersonateUser("qa-target@example.com");
+      await admin.expectImpersonationBanner("qa-target@example.com");
+
+      // Modification faite SOUS l'identité de qa-target.
+      const fiche = new ApplicationPage(page);
+      await fiche.open(appRef.id);
+      await fiche.editInfos(
+        label,
+        `Description sous impersonation ${ts}`,
+        "R1",
+      );
+
+      // L'historique attribue la modification à la cible ET affiche l'admin réel.
+      await fiche.openTab("tab-modifications");
+      const table = page.getByTestId("modifications-table");
+      await expect(table).toContainText("qa-target@example.com");
+      await expect(table).toContainText("(via admin@example.com)");
+
+      await admin.stopImpersonation();
+      await admin.expectNotImpersonating();
+    } finally {
+      await data.setUserRole("qa-target@example.com", "READER").catch(() => {});
+      await data.removeApplication(appRef.id).catch(() => {});
+    }
   });
 });
