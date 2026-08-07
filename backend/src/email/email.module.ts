@@ -5,6 +5,7 @@ import { LoggerModule } from "src/logger/logger.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { ApplicationValidationCronService } from "./cron/application-validation-cron.service";
 import { EmailDigestCronService } from "./cron/email-cron.service";
+import { EmailLogService } from "./email-log.service";
 import { EmailTemplateService } from "./email-templates.services";
 import { EmailService } from "./email.service";
 import { EmailController } from "./email.controller";
@@ -15,6 +16,7 @@ import { EmailController } from "./email.controller";
   providers: [
     EmailService,
     EmailTemplateService,
+    EmailLogService,
     EmailDigestCronService,
     ApplicationValidationCronService,
   ],
