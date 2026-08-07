@@ -46,6 +46,8 @@ consumer
 
 `MaintenanceMiddleware` s'appuie sur `pg_is_in_recovery()` avec un cache configurable. Pendant la maintenance, les méthodes `GET`, `HEAD` et `OPTIONS` restent autorisées ; les autres reçoivent `503 Service Unavailable`.
 
+Un troisième middleware, `ActionLogMiddleware` (`backend/src/middlewares/action-log.middleware.ts`, #2224), est appliqué **après** `AuthMiddleware` : il journalise chaque requête **mutante** (POST/PATCH/PUT/DELETE) dans le modèle `ActionLog` — méthode, chemin, code de statut final (y compris les refus 4xx), identité effective, et, si la requête est faite sous impersonation, l'administrateur réel avec rattachement à la session `ImpersonationLog` ouverte. L'écriture se fait sur l'évènement `finish` de la réponse, en fire-and-forget : elle ne ralentit ni ne fait jamais échouer la requête.
+
 `AuthMiddleware` (`backend/src/middlewares/auth.middleware.ts`) accepte deux modes d'authentification : un en-tête de clé d'API résolu via `TokenService`, ou un jeton JWT OIDC porté par l'en-tête `Authorization`. Le JWT est vérifié contre le JWKS distant (`jose`) — sauf si `DISABLE_JWT_VALIDATION` est positionné, auquel cas le jeton est seulement décodé. En maintenance, seuls les utilisateurs existants sont chargés et le journal de connexion n'est pas écrit. En cas de succès, le middleware enrichit `req.user` avec les permissions calculées depuis le rôle (`roleToPermissions`). En cas d'échec, une `UnauthorizedException` est levée. Le détail de l'authentification et du modèle de permissions est traité dans [Permissions et sécurité](./06-permissions-et-securite.md).
 
 ## Anatomie d'un module

@@ -60,6 +60,11 @@ model User {
   /// Administrateur ayant bloqué cet utilisateur. Pas de jointure explicite
   /// (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
   blockedById                String?
+
+  /// Actions journalisées sous cette identité (effective)
+  actionLogs                ActionLog[]         @relation("ActionLogUser")
+  /// Actions réellement effectuées par cet utilisateur sous une identité empruntée
+  actionLogsAsImpersonator  ActionLog[]         @relation("ActionLogImpersonator")
 }
 
 /// @namespace Roles

@@ -41,7 +41,7 @@ Les domaines sont les suivants :
 - **Catalogue de données** : familles, descriptions génériques, usages applicatifs, expositions et niveaux de sensibilité (`data.prisma`).
 - **Utilisateurs et acteurs** : comptes utilisateurs, acteurs métier/techniques et leurs types (`users.prisma`).
 - **Organisations** : arborescence des structures et table d'override MAIA (`organization.prisma`), directions métier MOA (`business-division.prisma`).
-- **Audit** : journal transverse des modifications (`metadata.prisma`).
+- **Audit** : journal transverse des modifications (`metadata.prisma`) et journal centralisé des actions HTTP mutantes (`action-log.prisma`, écrit par l'`ActionLogMiddleware` avec l'identité effective, l'éventuel impersonator réel et la session `ImpersonationLog` associée).
 - **Labels et tags** : étiquetage et catégorisation (`labels.prisma`, `tag.prisma`).
 - **Ressources externes** (`externals.prisma`), **dette technique** (`technical-debt-info.prisma`), **signalements** (`report.prisma`), **journaux de notification** (`notification-log.prisma`), **permissions** (`permissions.prisma`), **tokens** (`token.prisma`), **journaux utilisateur** (`user-log.prisma`) et **statistiques** (`stats.prisma`).
 
