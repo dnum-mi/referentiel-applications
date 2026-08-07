@@ -3,6 +3,7 @@ import { LoggerService } from "src/logger/logger.service";
 import { ConfigService } from "@nestjs/config";
 import type { Transporter } from "nodemailer";
 import * as nodemailer from "nodemailer";
+import { EmailLogService } from "./email-log.service";
 import { EmailTemplateService } from "./email-templates.services";
 import { MailSendException } from "./error/mail-send.exception";
 import { ReportStatus } from "@prisma/client";
@@ -18,6 +19,7 @@ export class EmailService {
   constructor(
     private readonly configService: ConfigService,
     private readonly templateService: EmailTemplateService,
+    private readonly emailLogService: EmailLogService,
     private readonly logger: LoggerService,
   ) {
     const host = this.configService.get<string>("email.host");
@@ -43,6 +45,28 @@ export class EmailService {
     });
 
     this.logger.log(`Email service initialized (enabled: ${this.enabled})`);
+  }
+
+  /** Envoie l'e-mail puis historise l'envoi effectif (#2209). Ne journalise pas les envois en échec. */
+  private async deliver({
+    to,
+    subject,
+    text,
+    html,
+  }: {
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
+  }): Promise<void> {
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject,
+      text,
+      html,
+    });
+    await this.emailLogService.log({ to, subject, html, text });
   }
 
   async sendActorAddedNotification(
@@ -72,13 +96,7 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to,
-        subject,
-        text,
-        html,
-      });
+      await this.deliver({ to, subject, text, html });
       this.logger.log(
         `Actor added notification email sent successfully to ${to}`,
       );
@@ -124,13 +142,7 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to,
-        subject,
-        text,
-        html,
-      });
+      await this.deliver({ to, subject, text, html });
       this.logger.log(
         `Actor modified notification email sent successfully to ${to}. Changed fields: ${changedFields ? "included" : "not available"}`,
       );
@@ -231,13 +243,7 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to: recipient,
-        subject,
-        text,
-        html,
-      });
+      await this.deliver({ to: recipient, subject, text, html });
       this.logger.log(
         `Daily digest email sent successfully to ${recipient} (${totalChanges} changes)`,
       );
@@ -288,13 +294,7 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to: recipientEmail,
-        subject,
-        text,
-        html,
-      });
+      await this.deliver({ to: recipientEmail, subject, text, html });
       this.logger.log(
         `Application validation reminder sent successfully to ${recipientEmail} for application ${applicationId}`,
       );
@@ -345,13 +345,7 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to,
-        subject,
-        text,
-        html,
-      });
+      await this.deliver({ to, subject, text, html });
       this.logger.log(
         `Organization change notification sent successfully to ${to}`,
       );
@@ -410,13 +404,7 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to,
-        subject,
-        text,
-        html,
-      });
+      await this.deliver({ to, subject, text, html });
       this.logger.log(
         `Permissions change notification sent successfully to ${to}`,
       );
@@ -457,13 +445,7 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.transporter.sendMail({
-        from: this.from,
-        to: recipientEmail,
-        subject,
-        text,
-        html,
-      });
+      await this.deliver({ to: recipientEmail, subject, text, html });
     } catch (error) {
       this.logger.error(
         `Failed to send report status update email to ${recipientEmail}:`,

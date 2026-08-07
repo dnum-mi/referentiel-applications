@@ -1,0 +1,17 @@
+/// Historique des e-mails effectivement envoyés par le système, consultable par les administrateurs.
+model EmailLog {
+  /// Identifiant unique
+  id      String   @id @default(cuid())
+  /// Destinataire(s) de l'e-mail
+  to      String
+  /// Objet de l'e-mail
+  subject String
+  /// Contenu HTML complet de l'e-mail envoyé
+  html    String
+  /// Contenu texte de l'e-mail envoyé
+  text    String
+  /// Date et heure d'envoi
+  sentAt  DateTime @default(now())
+
+  @@index([sentAt])
+}
