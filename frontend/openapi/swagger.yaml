@@ -6863,6 +6863,18 @@ components:
           description: Utilisateur qui a créé la metadata
           allOf:
             - $ref: "#/components/schemas/UserEntity"
+        impersonatorId:
+          type: string
+          nullable: true
+          description: ID de l'administrateur réel si la metadata a été créée sous
+            impersonation
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        impersonator:
+          nullable: true
+          description: Administrateur réel si la metadata a été créée sous impersonation
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/UserEntity"
       required:
         - id
         - applicationId

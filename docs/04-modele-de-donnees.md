@@ -256,7 +256,7 @@ erDiagram
 
 `Metadata` (`backend/prisma/schema/metadata.prisma`) est le **journal d'audit transverse**. Chaque entrée enregistre `createdAt`, une `description` optionnelle et une `action` (`MetadataAction` : `add`, `update`, `delete`, `export`).
 
-Le modèle est **polymorphe** : il porte des clés étrangères **nullables** vers les entités auditées — `application`, `compliance`, `label`, `actor`, `externalRessource`, `hosting`, `technicalDebtInfo`, `rgaaCompliance`, `dataApplication`, `dataDescription`. Deux liens vers `User` complètent l'audit : `createdBy` (`createdById`, **obligatoire**, `onDelete: Restrict`) et `dataOwner` (`dataOwnerId`, optionnel).
+Le modèle est **polymorphe** : il porte des clés étrangères **nullables** vers les entités auditées — `application`, `compliance`, `label`, `actor`, `externalRessource`, `hosting`, `technicalDebtInfo`, `rgaaCompliance`, `dataApplication`, `dataDescription`. Trois liens vers `User` complètent l'audit : `createdBy` (`createdById`, **obligatoire**, `onDelete: Restrict` — l'identité **effective** de la requête), `dataOwner` (`dataOwnerId`, optionnel) et `impersonator` (`impersonatorId`, optionnel, #2226 — l'**administrateur réel** quand le changement a été fait sous impersonation ; renseigné automatiquement par l'extension Prisma `metadata-impersonator` à partir du contexte de requête, sans intervention des services).
 
 ## 13. Organisations
 

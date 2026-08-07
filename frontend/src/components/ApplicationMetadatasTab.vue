@@ -59,10 +59,16 @@ function getTitle(meta: MetadataDto): string {
   return (meta.description || "").split("\n")[0];
 }
 
+function formatAuthor(metadata: MetadataDto): string {
+  const author = metadata.createdBy?.email || "Inconnu";
+  // Modification faite sous impersonation : afficher aussi l'admin réel (#2226).
+  return metadata.impersonator?.email ? `${author} (via ${metadata.impersonator.email})` : author;
+}
+
 const metadataRows = computed(() => {
   return (metadataStore.metadatas || []).map((metadata: MetadataDto) => ({
     Date: new Date(metadata.createdAt).toLocaleDateString("fr-FR"),
-    Auteur: metadata.createdBy?.email || "Inconnu",
+    Auteur: formatAuthor(metadata),
     Titre: getTitle(metadata),
     Actions: {
       id: metadata.id,
