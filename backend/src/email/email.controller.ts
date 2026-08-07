@@ -1,16 +1,25 @@
 import {
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
   Query,
   UseGuards,
 } from "@nestjs/common";
-import { ApiNoContentResponse, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from "@nestjs/swagger";
 import { Permission } from "@prisma/client";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
+import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
 import { EmailDigestCronService } from "./cron/email-cron.service";
+import { EmailLogService } from "./email-log.service";
+import { EmailLogDto } from "./dto/email-log.dto";
 
 @ApiTags("email")
 @UseGuards(PermissionGuard)
@@ -18,7 +27,24 @@ import { EmailDigestCronService } from "./cron/email-cron.service";
 export class EmailController {
   constructor(
     private readonly emailDigestCronService: EmailDigestCronService,
+    private readonly emailLogService: EmailLogService,
   ) {}
+
+  /** Historique des e-mails effectivement envoyés par le système. Admin uniquement. */
+  @Get("logs")
+  @ApiOperation({
+    summary: "Liste l'historique des e-mails envoyés (admin)",
+  })
+  @ApiOkResponse({
+    description: "Liste paginée de l'historique des e-mails envoyés",
+    type: PaginatedResponseDto.of(EmailLogDto),
+  })
+  @RequiredPermissions([Permission.AdminPanelManage])
+  async findLogs(
+    @Query() filters: PaginationDto,
+  ): Promise<PaginatedResponseDto<EmailLogDto>> {
+    return this.emailLogService.findAllPaginated(filters);
+  }
 
   /** Déclenche manuellement le digest des abonnés (ops + tests e2e). Admin uniquement. */
   @Post("digest")

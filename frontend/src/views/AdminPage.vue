@@ -9,6 +9,7 @@ import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
 import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
+import AdminEmailLogsTab from "@/components/admin/AdminEmailLogsTab.vue";
 
 interface DsfrTab {
   title: string;
@@ -82,6 +83,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-tokens",
     panelId: "panel-tokens",
     component: markRaw(AdminTokensTab),
+  },
+  {
+    title: "Historique des e-mails",
+    icon: "ri-mail-line",
+    tabId: "tab-email-logs",
+    panelId: "panel-email-logs",
+    component: markRaw(AdminEmailLogsTab),
   },
 ]);
 

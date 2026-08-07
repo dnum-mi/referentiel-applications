@@ -1122,6 +1122,14 @@ Properties as follows:
 
 ```mermaid
 erDiagram
+"EmailLog" {
+  String id PK
+  String to
+  String subject
+  String html
+  String text
+  DateTime sentAt
+}
 "UserPermissionLog" {
   String id PK
   String userId FK
@@ -1144,6 +1152,19 @@ erDiagram
   DateTime endedAt "nullable"
 }
 ```
+
+### `EmailLog`
+
+Historique des e-mails effectivement envoyés par le système, consultable par les administrateurs.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `to`: Destinataire(s) de l'e-mail
+- `subject`: Objet de l'e-mail
+- `html`: Contenu HTML complet de l'e-mail envoyé
+- `text`: Contenu texte de l'e-mail envoyé
+- `sentAt`: Date et heure d'envoi
 
 ### `UserPermissionLog`
 
