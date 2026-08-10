@@ -25,6 +25,12 @@ model TechnologyStack {
   eolDate       DateTime?
   /// Date de dernière vérification du statut de fin de vie
   eolCheckedAt  DateTime?
+  /// Slug produit endoflife.date résolu (null + eolCheckedAt renseigné = produit non suivi)
+  eolProduct    String?   @db.VarChar(100)
+  /// Date de fin de support actif de la version (renseignée via endoflife.date)
+  eoasDate      DateTime?
+  /// Dernière version publiée du cycle correspondant (renseignée via endoflife.date)
+  latestVersion String?   @db.VarChar(50)
 
   metadatas Metadata[] @relation()
 
