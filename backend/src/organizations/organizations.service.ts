@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Organization, Prisma } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
 import { PaginatedResponseDto } from "src/common/dto";
@@ -23,6 +23,7 @@ export class OrganizationsService extends BaseService<
   }
 
   async create(data: CreateOrganizationDto): Promise<Organization> {
+    await this.assertBusinessDivisionExists(data.businessDivisionId);
     const newOrg = await super.create(data);
     return newOrg;
   }
@@ -38,6 +39,7 @@ export class OrganizationsService extends BaseService<
       pageSize,
       include: {
         maiaReferences: true,
+        businessDivision: true,
       },
     });
   }
@@ -45,6 +47,7 @@ export class OrganizationsService extends BaseService<
   async findOneWithReferences(id: string) {
     return this.findOne(id, {
       maiaReferences: true,
+      businessDivision: true,
     });
   }
 
@@ -52,8 +55,23 @@ export class OrganizationsService extends BaseService<
     id: string,
     data: Partial<CreateOrganizationDto>,
   ): Promise<Organization> {
+    await this.assertBusinessDivisionExists(data.businessDivisionId);
     const patchedOrg = await super.update(id, data);
     return patchedOrg;
+  }
+
+  private async assertBusinessDivisionExists(
+    businessDivisionId?: string | null,
+  ) {
+    if (!businessDivisionId) {
+      return;
+    }
+    const division = await this.prisma.businessDivision.findUnique({
+      where: { id: businessDivisionId },
+    });
+    if (!division) {
+      throw new NotFoundException("Direction métier non trouvée");
+    }
   }
 
   async deleteSafe(id: string, force = false): Promise<void> {

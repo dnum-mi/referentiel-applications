@@ -242,7 +242,8 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé en onglets, réservés aux administrateurs (`AdminPanelManage`).
 
 - **Gestion des utilisateurs** (`admin/AdminUsersTab.vue`) : liste des utilisateurs (humains et comptes techniques), modification du rôle (Visiteur, Lecteur, Contributeur, Administrateur), rattachement à une organisation, et attribution de **permissions individuelles** complémentaires (couche 2). Module back `backend/src/user/`.
-- **Gestion des organisations** (`admin/AdminOrganizationsTab.vue`) : création/modification/suppression. Permission `OrganizationManage`. Modules `backend/src/organizations/`, `backend/src/organization-maia-references/`.
+- **Gestion des organisations** (`admin/AdminOrganizationsTab.vue`) : création/modification/suppression, rattachement d'une **direction métier** à l'organisation. Permission `OrganizationManage`. Modules `backend/src/organizations/`, `backend/src/organization-maia-references/`.
+- **Directions métier** (`admin/AdminBusinessDivisionsTab.vue`) : création/modification/suppression des directions métier (nom unique) rattachables aux organisations et aux applications. Écritures sous `AdminPanelManage`. Module `backend/src/business-division/`.
 - **Gestion des tags** (`admin/AdminTagsTab.vue`) : tags libres attachables aux applications. Module `backend/src/tag/`.
 - **Gestion des sources** (`admin/AdminLabelSourcesTab.vue`) : sources contextualisant les noms alternatifs (labels). Modules `backend/src/labels/`, `backend/src/label-source/`.
 - **Indice de qualité** (`admin/AdminQualityTab.vue`) : recalcul global de l'IQ (voir [section 3](#3-indice-de-qualité-iq)).

@@ -31,6 +31,11 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     isSortable: true,
   },
   {
+    key: "businessDivision",
+    label: "Direction métier",
+    isSortable: false,
+  },
+  {
     key: "url",
     label: "URL",
     isSortable: false,
@@ -109,6 +114,7 @@ const tableRows = computed(() =>
       path: organization.path,
       maiaReferences,
       sigle: organization.sigle || "-",
+      businessDivision: organization.businessDivision?.label || "-",
       url: organization.url || "-",
       actions: organization,
     };

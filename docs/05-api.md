@@ -166,7 +166,7 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `POST /tags` · `GET /tags` · `GET /tags/:id` · `PATCH /tags/:id` · `DELETE /tags/:id` | Tags                                 |
 | `POST /label-sources` · `GET` · `PATCH :id` · `DELETE :id`                            | Sources de labels                    |
 | `GET /metadatas` · `GET /metadatas/:id`                                               | Métadonnées (lecture globale)        |
-| `GET /business-division` · `GET /business-division/:id`                               | Divisions métier                     |
+| `GET /business-division` · `GET :id` · `POST` · `PATCH :id` · `DELETE :id`            | Divisions métier (écritures admin)   |
 | `GET /data-catalog/descriptions` (+ `POST`, `PATCH :id`, `DELETE :id`)                | Descriptions du catalogue de données |
 | `GET /data-catalog/applications/:applicationId` · `.../:dataApplicationId`            | Données rattachées aux applications  |
 
