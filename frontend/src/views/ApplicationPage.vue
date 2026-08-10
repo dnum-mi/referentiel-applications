@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ApplicationWithPerms } from "@/models/Application";
+import { hasFullReadAppPermissions, type ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref, watch, nextTick } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { setPageTitle } from "@/router";
 import { formatDateFR } from "@/composables/use-date";
 import { statusApplicationDictionary, typeApplicationDictionary } from "@/constants/dictionary";
@@ -17,10 +17,16 @@ const applicationStore = useApplicationStore();
 const metadataStore = useMetadataStore();
 const toaster = useToasterStore();
 const route = useRoute();
+const router = useRouter();
 const id = route.params.id as string;
 const application = computed<ApplicationWithPerms>(() => applicationStore.applicationsById[id]);
 const isLoading = ref(false);
 const errorMessage = ref("");
+
+// Affiché uniquement juste après la création (redirection depuis CreateApplicationPage), tant
+// que l'utilisateur n'a pas au moins la lecture totale sur la fiche qu'il vient de créer (#2212).
+const showMissingRightsAlert = ref(route.query.justCreated === "true");
+const hasFullReadRights = computed(() => hasFullReadAppPermissions(application.value?.myPerms));
 
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
@@ -95,8 +101,11 @@ async function copyToClipboard() {
   }
 }
 
-onMounted(() => {
-  loadApplication();
+onMounted(async () => {
+  await loadApplication();
+  if (route.query.justCreated) {
+    router.replace({ query: { ...route.query, justCreated: undefined } });
+  }
 });
 
 function resetModal() {
@@ -137,6 +146,18 @@ const actions = computed(() => [
       <h1 id="application-title" data-testid="application-title" class="application-title">
         {{ application.label }}
       </h1>
+
+      <DsfrAlert
+        v-if="showMissingRightsAlert && !hasFullReadRights"
+        id="application-missing-rights-alert"
+        title="Vous n’avez pas encore les droits complets sur cette application"
+        description="Cette application vient d’être créée, mais vous ne disposez pas des droits en lecture totale sur sa fiche. Ajoutez-vous comme acteur ou demandez à un administrateur de vous accorder ces droits pour continuer à y accéder."
+        type="warning"
+        class="fr-mb-3w"
+        closeable
+        data-testid="application-missing-rights-alert"
+        @close="showMissingRightsAlert = false"
+      ></DsfrAlert>
 
       <DsfrHighlight
         v-if="metadataStore.firstMetadata || metadataStore.lastMetadata"

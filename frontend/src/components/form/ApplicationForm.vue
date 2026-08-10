@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from "vue";
-import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
@@ -54,7 +53,6 @@ const toaster = useToasterStore();
 const applicationStore = useApplicationStore();
 const actorTypeStore = useActorTypeStore();
 const organizationStore = useOrganizationStore();
-const router = useRouter();
 const isSyncingFromMaiaMoa = ref(false);
 const isSyncingFromMaiaMoe = ref(false);
 const initialMoaOrganization = ref<OrganizationDto | null>(null);
@@ -541,7 +539,6 @@ async function handleCreate() {
 
     toaster.addSuccessMessage("Application créée avec succès !");
     emit("success", application);
-    router.push({ name: "application", params: { id: application.id } });
   } catch (error: any) {
     const message = error.message?.join?.(", ") || "Une erreur est survenue";
     toaster.addErrorMessage(message);
