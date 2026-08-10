@@ -52,3 +52,46 @@ sont décrits dans le guide **[Contribuer](./docs/11-contribution.md)**.
 ## 📄 Licence
 
 Ce projet est distribué sous licence **MIT**. Voir le fichier [LICENSE](./LICENSE).
+
+## Commandes utiles
+
+Exécutez ces commandes pour préparer la base de données et le client Prisma :
+
+```bash
+docker compose exec backend npx prisma generate
+docker compose exec backend npx prisma migrate deploy
+docker compose exec backend pnpm prisma db seed
+docker compose exec backend pnpm cmd user create -e admin@example.com -a 30 # Permet de créer un utilisateur administrateur, pas nécessaire si seed utilisé.
+```
+
+For stress seeding use `docker compose exec backend pnpm prisma db seed -- --environment stress`
+
+Si votre projet inclut un frontend, cette commande génère le code nécessaire pour communiquer avec l'API backend :
+
+```bash
+docker compose exec client bash pnpm api:generate
+```
+
+## 🛠️ Accès Administrateur en Mode Développement
+
+Pour obtenir les droits administrateur en local:
+
+1. Rendez-vous sur [http://localhost:5555](http://localhost:5555)
+2. Trouvez l’utilisateur à modifier dans l’interface dédiée
+3. Ajustez le champ `level` pour lui donner le rôle admin (un niveau élevé correspond à l’admin)
+
+## Commandes Utiles
+
+### Voir les logs en direct
+
+Pour suivre les logs de tous les services (backend, bdd, etc.) :
+
+```bash
+docker compose logs -f
+```
+
+Pour voir les logs d'un service spécifique (ex: `backend`) :
+
+```bash
+docker compose logs -f backend
+```
