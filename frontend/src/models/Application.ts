@@ -63,3 +63,22 @@ export type Relation = RelationDto & {
 
 // refer directly to columns in database
 export type APP_PERMISSIONS = Exclude<keyof AppPermsDto, "actorTypeId">;
+
+// Permissions de lecture composant la "lecture totale" d'une application, en miroir de
+// READ_APP_PERMISSIONS (backend/src/permissions/role-to-permissions.ts) : un utilisateur qui ne
+// les détient pas toutes n'a qu'un accès partiel (ou nul) à la fiche.
+export const FULL_READ_APP_PERMISSIONS: APP_PERMISSIONS[] = [
+  "ActorRead",
+  "ComplianceRead",
+  "HostingRead",
+  "RelationRead",
+  "LinkRead",
+  "MetadataRead",
+  "DataRead",
+  "TechnologyRead",
+];
+
+export function hasFullReadAppPermissions(myPerms: Set<APP_PERMISSIONS> | undefined): boolean {
+  if (!myPerms) return false;
+  return FULL_READ_APP_PERMISSIONS.every((permission) => myPerms.has(permission));
+}

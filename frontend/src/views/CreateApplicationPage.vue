@@ -21,7 +21,7 @@ const emptyApplication = ref<ApplicationFormInitialData>({
 });
 
 function handleSuccess(application: ApplicationDto) {
-  router.push({ name: routeNames.PROFILEAPP, params: { id: application.id } });
+  router.push({ name: routeNames.PROFILEAPP, params: { id: application.id }, query: { justCreated: "true" } });
 }
 
 function handleCancel() {
