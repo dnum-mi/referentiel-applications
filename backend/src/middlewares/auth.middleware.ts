@@ -73,6 +73,19 @@ export class AuthMiddleware implements NestMiddleware {
         return;
       }
 
+      if (user.isBlocked) {
+        // 403 (et non 401) : la session SSO est valide, mais l'accès a été explicitement
+        // bloqué par un administrateur. Un 401 déclencherait une boucle de ré-authentification
+        // côté front (cf. init-clients.ts), inutile puisque Keycloak laisserait passer à nouveau.
+        res.status(403);
+        res.json({
+          statusCode: 403,
+          blocked: true,
+          message: "Votre accès a été bloqué. Contactez un administrateur.",
+        });
+        return;
+      }
+
       // L'utilisateur réellement authentifié (avant toute impersonation).
       const authenticatedUser: Requestor = {
         ...user,
@@ -128,6 +141,11 @@ export class AuthMiddleware implements NestMiddleware {
     const target = await this.userService.findByIdWithRelations(targetUserId);
     if (!target || target.type === UserType.bot) {
       throw new NotFoundException("Utilisateur à impersonner introuvable");
+    }
+    if (target.isBlocked) {
+      throw new ForbiddenException(
+        "Impossible d'impersonner un utilisateur bloqué",
+      );
     }
 
     return {

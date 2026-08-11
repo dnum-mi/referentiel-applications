@@ -38,6 +38,44 @@ const canEditUser = computed(() => {
 const canImpersonate = computed(() => props.user.type !== "bot" && props.user.id !== userStore.user?.id);
 const isImpersonating = ref(false);
 
+// On ne peut pas bloquer son propre accès (cf. UserService.block côté back).
+const canToggleBlock = computed(() => canEditUser.value && props.user.id !== userStore.user?.id);
+const isBlockModalOpen = ref(false);
+const isTogglingBlock = ref(false);
+
+function openBlockModal() {
+  if (!canToggleBlock.value) return;
+  isBlockModalOpen.value = true;
+}
+
+function closeBlockModal() {
+  isBlockModalOpen.value = false;
+}
+
+async function toggleBlock() {
+  isTogglingBlock.value = true;
+  try {
+    const response = props.user.isBlocked
+      ? await api.userControllerUnblock({ path: { id: props.user.id } })
+      : await api.userControllerBlock({ path: { id: props.user.id } });
+
+    if (!response.error && response.data) {
+      toaster.addSuccessMessage(props.user.isBlocked ? "Accès de l'utilisateur rétabli" : "Accès de l'utilisateur bloqué");
+      closeBlockModal();
+      emit("userUpdated", response.data);
+    } else {
+      const errorMessage = (response.error as { message: string })?.message ?? "Une erreur est survenue";
+      toaster.addErrorMessage(errorMessage);
+      console.error(response.error);
+    }
+  } catch (err) {
+    toaster.addErrorMessage("Une erreur est survenue");
+    console.error(err);
+  } finally {
+    isTogglingBlock.value = false;
+  }
+}
+
 async function impersonate() {
   isImpersonating.value = true;
   try {
@@ -244,7 +282,60 @@ const isScopeDisabled = computed(() => {
         aria-label="Se connecter en tant que cet utilisateur"
         @click="impersonate"
       />
+      <DsfrButton
+        v-if="canToggleBlock"
+        :label="user.isBlocked ? 'Débloquer' : 'Bloquer'"
+        size="sm"
+        :secondary="user.isBlocked"
+        :danger="!user.isBlocked"
+        data-testid="admin-user-block-btn"
+        :title="user.isBlocked ? `Rétablir l'accès de cet utilisateur` : `Bloquer l'accès de cet utilisateur`"
+        :aria-label="user.isBlocked ? `Rétablir l'accès de cet utilisateur` : `Bloquer l'accès de cet utilisateur`"
+        @click="openBlockModal"
+      />
     </div>
+
+    <DsfrModal
+      :opened="isBlockModalOpen"
+      :title="user.isBlocked ? `Rétablir l'accès de l'utilisateur` : `Bloquer l'accès de l'utilisateur`"
+      data-testid="admin-block-user-modal"
+      @close="closeBlockModal"
+    >
+      <DsfrAlert
+        v-if="!user.isBlocked"
+        title="Cette action empêchera toute connexion"
+        :description="`Êtes-vous sûr de vouloir bloquer l'accès de ${user.email} ? Cet utilisateur ne pourra plus se connecter tant que son accès n'aura pas été rétabli.`"
+        type="warning"
+        small
+        class="fr-mb-3w alert-multiline"
+        data-testid="user-block-alert"
+      />
+      <p v-else class="alert-multiline" data-testid="user-unblock-confirm-text">
+        Rétablir l'accès de <strong>{{ user.email }}</strong> ?
+      </p>
+
+      <template #footer>
+        <DsfrButtonGroup :inline-layout-when="true" :reverse="true">
+          <DsfrButton
+            label="Annuler"
+            secondary
+            data-testid="admin-block-user-cancel-btn"
+            title="Annuler"
+            aria-label="Annuler"
+            @click="closeBlockModal"
+          />
+          <DsfrButton
+            :label="user.isBlocked ? 'Rétablir' : 'Bloquer'"
+            :danger="!user.isBlocked"
+            :disabled="isTogglingBlock"
+            data-testid="admin-block-user-confirm-btn"
+            title="Confirmer"
+            aria-label="Confirmer"
+            @click="toggleBlock"
+          />
+        </DsfrButtonGroup>
+      </template>
+    </DsfrModal>
 
     <DsfrModal :opened="isEditModalOpen" title="Modifier l'utilisateur" data-testid="admin-edit-user-modal" @close="closeEditModal">
       <p><strong>Utilisateur :</strong> {{ editingUser?.email ?? user.email }}</p>
@@ -321,3 +412,10 @@ const isScopeDisabled = computed(() => {
     </DsfrModal>
   </div>
 </template>
+
+<style scoped>
+.alert-multiline {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+</style>

@@ -16,6 +16,8 @@ import { useRgaaGlobalA11y } from "./composables/use-rgaa-a11y";
 import { accessibilityDeclaration } from "./constants/accessibility-declaration";
 import MaintenanceBanner from "./components/MaintenanceBanner.vue";
 import { useMaintenanceMode } from "./composables/use-maintenance-mode";
+import BlockedAccessScreen from "./components/BlockedAccessScreen.vue";
+import { blockedAccessState } from "./composables/use-blocked-access";
 
 const route = useRoute();
 const router = useRouter();
@@ -225,6 +227,7 @@ useAppUpdate();
   />
   <ImpersonationBanner />
   <MaintenanceBanner :active="maintenanceMode" />
+  <BlockedAccessScreen :active="blockedAccessState" />
   <DsfrHeader
     :service-description="serviceDescription"
     :service-title="serviceTitle"
