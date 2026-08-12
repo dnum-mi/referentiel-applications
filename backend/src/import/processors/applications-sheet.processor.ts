@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Permission, Status, priorityRestart } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
 import { ApplicationService } from "src/applications/application.service";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
@@ -22,6 +21,7 @@ import {
   buildHeaderIndex,
   insufficientRightsMessage,
   makeCellReader,
+  validateImportDto,
 } from "../utils/excel.utils";
 
 /** En-têtes (libellés) attendus dans l'onglet « Applications », alignés sur l'export. */
@@ -185,7 +185,7 @@ export class ApplicationsSheetProcessor {
       }
 
       const dto = plainToInstance(PatchApplicationDto, baseFields);
-      await this.validateDto(dto);
+      await validateImportDto(dto);
       await this.applicationService.update({
         applicationId: data.id,
         data: dto,
@@ -210,7 +210,7 @@ export class ApplicationsSheetProcessor {
       tags: baseFields.tags ?? [],
       status: { status: DEFAULT_CREATE_STATUS },
     });
-    await this.validateDto(dto);
+    await validateImportDto(dto);
     await this.applicationService.createApplication(requestor.id, dto);
     return { sheet: this.sheetName, row, status: "created", identifier };
   }
@@ -227,21 +227,5 @@ export class ApplicationsSheetProcessor {
     return Object.fromEntries(
       Object.entries(obj).filter(([, v]) => v !== undefined),
     ) as Partial<T>;
-  }
-
-  private async validateDto(
-    dto: CreateApplicationDto | PatchApplicationDto,
-  ): Promise<void> {
-    const errors = await validate(dto, {
-      whitelist: true,
-      forbidNonWhitelisted: false,
-    });
-    if (errors.length > 0) {
-      const details = errors
-        .map((e) => Object.values(e.constraints ?? {}).join(", "))
-        .filter(Boolean)
-        .join(" ; ");
-      throw new Error(`Validation échouée : ${details}`);
-    }
   }
 }

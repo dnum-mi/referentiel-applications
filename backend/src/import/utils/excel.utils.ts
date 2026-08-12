@@ -1,3 +1,4 @@
+import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
 
 /** Convertit une valeur de cellule exceljs en chaîne nettoyée (gère hyperliens, richText, formules). */
@@ -92,4 +93,23 @@ export function insufficientRightsMessage(
 ): string {
   const scope = applicationId ? ` sur l'application ${applicationId}` : "";
   return `Droits insuffisants : permission « ${permission} » requise${scope}.`;
+}
+
+/**
+ * Valide un DTO d'import avec la politique commune des feuilles Excel :
+ * propriétés inconnues ignorées (whitelist sans rejet strict), erreurs agrégées
+ * en un message lisible consigné dans le rapport d'import (#2250).
+ */
+export async function validateImportDto(dto: object): Promise<void> {
+  const errors = await validate(dto, {
+    whitelist: true,
+    forbidNonWhitelisted: false,
+  });
+  if (errors.length > 0) {
+    const details = errors
+      .map((e) => Object.values(e.constraints ?? {}).join(", "))
+      .filter(Boolean)
+      .join(" ; ");
+    throw new Error(`Validation échouée : ${details}`);
+  }
 }

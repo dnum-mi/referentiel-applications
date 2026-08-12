@@ -18,6 +18,7 @@ import {
 } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
+import { StatusesService } from "src/statuses/statuses.service";
 import { ApplicationRepository } from "./infrastructure/repository/application.repository";
 import { ApplicationSearchService } from "./search/application-search.service";
 import { ApplicationViewService } from "./view.service";
@@ -39,6 +40,7 @@ export class ApplicationService {
     private readonly prismaQueryBuilder: PrismaQueryBuilder,
     private readonly checkPermissions: CheckPermissions,
     private readonly applicationSearchService: ApplicationSearchService,
+    private readonly statusesService: StatusesService,
   ) {}
 
   public async createApplication(
@@ -72,17 +74,16 @@ export class ApplicationService {
         },
       });
 
-      const status = await tx.applicationStatus.create({
+      await tx.applicationStatus.create({
         data: {
           status: createApplicationDto.status.status,
           applicationId: app.id,
         },
       });
 
-      await tx.application.update({
-        where: { id: app.id },
-        data: { currentStatusId: status.id },
-      });
+      // La règle « statut courant = plus récent » vit dans StatusesService (#2250) ;
+      // on lui passe la transaction pour rester atomique.
+      await this.statusesService.updateCurrentStatus(app.id, tx);
 
       return app;
     });
@@ -188,18 +189,6 @@ export class ApplicationService {
       applications.map((app) => this.updateApplicationQuality(app.id)),
     );
     Logger.log(`${applications.length} applications mises à jour.`);
-  }
-
-  getEmptyCountRange(n: number): Record<string, number> {
-    const now = new Date();
-    const range: Record<string, number> = {};
-    for (let i = 0; i < n; i++) {
-      const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      // use MM-YYYY format
-      const monthKey = month.toISOString().slice(0, 7);
-      range[monthKey] = 0; // Initialize with 0
-    }
-    return range;
   }
 
   async getApplicationsCountByMonth(
