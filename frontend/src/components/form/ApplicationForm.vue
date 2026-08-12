@@ -20,7 +20,7 @@ import {
   Permission,
 } from "@/client/types.gen";
 import type { ApplicationFormInitialData } from "@/models/Application";
-import { useUserStore } from "@/stores/userStore";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 interface Props {
   mode?: "create" | "edit";
@@ -155,14 +155,11 @@ async function syncMoeFromMaia() {
 }
 
 const isCreateMode = computed(() => props.mode === "create");
-const userStore = useUserStore();
 
-const canEditBase = computed(
-  () => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE], Array.from(props.initialData?.myPerms ?? [])),
-);
-const canEditPriorityRestart = computed(
-  () => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE_PRIORITY], Array.from(props.initialData?.myPerms ?? [])),
-);
+const hasAppWrite = useAppPermission(() => props.initialData?.myPerms, [Permission.APP_WRITE]);
+const hasAppWritePriority = useAppPermission(() => props.initialData?.myPerms, [Permission.APP_WRITE_PRIORITY]);
+const canEditBase = computed(() => isCreateMode.value || hasAppWrite.value);
+const canEditPriorityRestart = computed(() => isCreateMode.value || hasAppWritePriority.value);
 
 const moaOrganizationId = computed({
   get: () => moaActor.value.organizationId ?? undefined,

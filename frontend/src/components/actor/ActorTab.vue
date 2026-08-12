@@ -7,12 +7,12 @@ import type { APP_PERMISSIONS, Application } from "@/models/Application";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
 import { computed, nextTick, onBeforeMount, ref } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import ActorForm from "./ActorForm.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
@@ -21,7 +21,6 @@ const props = defineProps<{
   isMobile?: boolean;
 }>();
 
-const userStore = useUserStore();
 const actorTypeStore = useActorTypeStore();
 const orgStore = useOrganizationStore();
 const toaster = useToasterStore();
@@ -32,7 +31,7 @@ const selectedActorIds = ref<string[]>([]);
 const currentPage = ref(0);
 const showDeleteConfirmation = ref(false);
 const loading = ref(false);
-const canEdit = computed(() => userStore.hasPermissions([Permission.ACTOR_WRITE], Array.from(props.application.myPerms)));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.ACTOR_WRITE]);
 
 const columns: TableColumn[] = [
   { field: "Sélection", header: "Sélection", sortable: false },

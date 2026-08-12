@@ -4,11 +4,11 @@ import { type EolProductDto, type TechnologyDto, Permission } from "@/client/typ
 import useModal from "@/composables/use-modal";
 import type { APP_PERMISSIONS, Application } from "@/models/Application";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import { computed, nextTick, onBeforeMount, ref } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import TechnologyForm from "./TechnologyForm.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
@@ -17,7 +17,6 @@ const props = defineProps<{
   isMobile?: boolean;
 }>();
 
-const userStore = useUserStore();
 const toaster = useToasterStore();
 const technologyModal = useModal<TechnologyDto>();
 
@@ -29,7 +28,7 @@ const technologyToDelete = ref<TechnologyDto | null>(null);
 const statusMessage = ref("");
 const lastTrigger = ref<HTMLElement | null>(null);
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.TECHNOLOGY_WRITE], Array.from(props.application.myPerms)));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.TECHNOLOGY_WRITE]);
 
 const columns: TableColumn[] = [
   { field: "Technologie", header: "Technologie", sortable: true },

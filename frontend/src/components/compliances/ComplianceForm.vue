@@ -10,11 +10,11 @@ import {
   type ComplianceType,
 } from "@/constants/dictionary";
 import { toDateInputValue, toISODateTime } from "@/composables/use-date";
-import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
 import { Permission, type ComplianceDto } from "@/client/types.gen";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 const props = defineProps<{
   applicationId: string;
@@ -28,7 +28,6 @@ const emit = defineEmits<{
   (e: "saved", compliance: ComplianceDto): void;
 }>();
 
-const userStore = useUserStore();
 const toaster = useToasterStore();
 const form = ref<Partial<ComplianceDto>>({});
 const submitting = ref(false);
@@ -41,7 +40,7 @@ const showEcoIndexUrlWarning = computed(
   () => Boolean(props.initialData?.eco_index_target_url) && form.value.eco_index_target_url !== props.initialData?.eco_index_target_url,
 );
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.application.myPerms)));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.COMPLIANCE_WRITE]);
 
 const toOptionalNumber = (value: unknown): number | undefined => (value == null || value === "" ? undefined : Number(value));
 type DimaDurationHours = NonNullable<ComplianceDto["dima_duration_hours"]>;

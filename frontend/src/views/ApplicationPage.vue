@@ -11,6 +11,7 @@ import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { Permission } from "@/client";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
@@ -63,9 +64,8 @@ watch(
   { immediate: true },
 );
 
-const canReadMetadata = computed(() => {
-  return userStore.hasPermissions([Permission.METADATA_READ], Array.from(application.value.myPerms));
-});
+const canReadMetadata = useAppPermission(() => application.value?.myPerms, [Permission.METADATA_READ]);
+const canDeleteApplication = useAppPermission(() => application.value?.myPerms, [Permission.DELETE_APPLICATION]);
 
 async function fetchApplicationMetadata() {
   await applicationStore.fetchApplication(id);
@@ -228,7 +228,7 @@ const actions = computed(() => [
       <ApplicationOverview :application="application" data-testid="application-overview" @update:application="fetchApplicationMetadata" />
 
       <DsfrButton
-        v-if="userStore.hasPermissions([Permission.DELETE_APPLICATION], Array.from(application.myPerms))"
+        v-if="canDeleteApplication"
         class="application-delete-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         data-testid="application-delete-btn"
         title="Supprimer définitivement cette application"

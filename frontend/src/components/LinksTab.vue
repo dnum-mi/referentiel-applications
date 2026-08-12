@@ -5,12 +5,12 @@ import useModal from "@/composables/use-modal";
 import type { ApplicationWithPerms } from "@/models/Application";
 import api from "@/api/index.js";
 import { useToasterStore } from "@/stores/toasterStore.js";
-import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
 import { computed, onMounted, ref, type ButtonHTMLAttributes } from "vue";
 import LinkForm from "./form/LinkForm.vue";
 import RefAppTable from "./RefAppTable.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
@@ -24,8 +24,6 @@ const props = withDefaults(
   },
 );
 
-const userStore = useUserStore();
-
 const linkModal = useModal<LinkDto>();
 const links = ref<LinkDto[]>([]);
 const total = ref(0);
@@ -35,7 +33,7 @@ const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const linkToDelete = ref<string | null>(null);
 const showDeleteConfirmation = ref(false);
-const canEdit = computed(() => userStore.hasPermissions([Permission.LINK_WRITE], Array.from(props.application.myPerms)));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.LINK_WRITE]);
 
 const currentPage = ref(0);
 const pageSize = ref(15);
