@@ -322,6 +322,16 @@ export class ApplicationSearchDto extends PaginationDto {
   iqLte?: number = 100;
 
   @ApiPropertyOptional({
+    description:
+      "Inclure les applications sans IQ (décommissionnées ou supprimées) en plus de celles dans la plage iqGte/iqLte",
+    example: true,
+  })
+  @IsOptional()
+  @Transform(({ value }) => stringToBoolean(value))
+  @IsBoolean()
+  iq__isNull?: boolean;
+
+  @ApiPropertyOptional({
     description: "Colonnes à inclure dans l'export",
     example: "id,label,shortName,description",
     type: "string",

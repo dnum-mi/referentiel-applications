@@ -1,7 +1,11 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { Application, Permission, Prisma } from "@prisma/client";
+import { Application, Permission, Prisma, Status } from "@prisma/client";
 import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
+import {
+  isDimaFilled,
+  isPdmaFilled,
+} from "src/common/utils/compliance-presence.utils";
 import { calculateIQ } from "src/common/utils/quality.utils";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -235,9 +239,7 @@ export class ApplicationService {
     const result = await this.prisma.application.groupBy({
       by: ["quality"],
       where: {
-        currentStatus: {
-          status: { not: "deleted" },
-        },
+        quality: { not: null },
       },
       _count: { _all: true },
     });
@@ -325,8 +327,12 @@ export class ApplicationService {
       const matching =
         await this.applicationRepository.findMatchingApplications(where);
       const total = matching.length;
-      const averageIq = total
-        ? matching.reduce((sum, app) => sum + app.quality, 0) / total
+      const qualities = matching
+        .map((app) => app.quality)
+        .filter((quality): quality is number => quality !== null);
+      const averageIq = qualities.length
+        ? qualities.reduce((sum, quality) => sum + quality, 0) /
+          qualities.length
         : 0;
 
       let orderedIds: string[];
@@ -505,7 +511,20 @@ export class ApplicationService {
   }
 
   async updateApplicationQuality(applicationId: string) {
-    const iq = await calculateIQ(applicationId, this.prisma);
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { currentStatus: true },
+    });
+
+    const currentStatus = application?.currentStatus?.status;
+    const isExcludedFromQuality =
+      currentStatus === Status.decommissioned ||
+      currentStatus === Status.deleted;
+
+    const iq = isExcludedFromQuality
+      ? null
+      : await calculateIQ(applicationId, this.prisma);
+
     return await this.prisma.application.update({
       where: { id: applicationId },
       data: { quality: iq },
@@ -538,13 +557,8 @@ export class ApplicationService {
         REP: actors.some((a) => a.actorType?.code === "REP"),
       },
       compliances: {
-        DIMA: Boolean(
-          compliance?.dima_duration_hours || compliance?.dima_recovery_manager,
-        ),
-        PDMA: Boolean(
-          compliance?.pdma_duration_hours ||
-            compliance?.pdma_restoration_manager,
-        ),
+        DIMA: isDimaFilled(compliance),
+        PDMA: isPdmaFilled(compliance),
         HOMOLOGATION: Boolean(compliance?.homologation_date_end),
         RGAA: rgaaCompliances.length > 0,
         DSFR: compliance?.dsfr_implemented ?? null,

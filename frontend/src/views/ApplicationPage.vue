@@ -6,6 +6,7 @@ import { useRoute, useRouter } from "vue-router";
 import { setPageTitle } from "@/router";
 import { formatDateFR } from "@/composables/use-date";
 import { statusApplicationDictionary, typeApplicationDictionary } from "@/constants/dictionary";
+import { hasQualityIndex } from "@/utils/quality";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
@@ -215,7 +216,12 @@ const actions = computed(() => [
           data-testid="application-status-tag"
         />
 
-        <DsfrTag class="fr-mr-1v" :label="`IQ: ${application.quality ?? 'non renseigné'}%`" data-testid="application-iq-tag" />
+        <DsfrTag
+          v-if="hasQualityIndex(application)"
+          class="fr-mr-1v"
+          :label="`IQ: ${application.quality}%`"
+          data-testid="application-iq-tag"
+        />
 
         <DsfrTag
           v-if="application.type"

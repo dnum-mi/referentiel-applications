@@ -5,7 +5,12 @@ jest.mock("src/metadatas/metadatas.service", () => ({
   MetadatasService: class {},
 }));
 
+jest.mock("src/common/utils/quality.utils", () => ({
+  calculateIQ: jest.fn().mockResolvedValue(75),
+}));
+
 import type { Prisma } from "@prisma/client";
+import { calculateIQ } from "src/common/utils/quality.utils";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
@@ -21,7 +26,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
 
   const setup = (
     fullTextIds: string[] = ["app-x"],
-    matching: { id: string; quality: number }[] = [],
+    matching: { id: string; quality: number | null }[] = [],
   ) => {
     const applicationRepository = {
       findApplications: jest.fn().mockResolvedValue(emptyResult),
@@ -241,5 +246,94 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
     expect(
       applicationRepository.findMatchingApplications,
     ).not.toHaveBeenCalled();
+  });
+
+  it("avec q : ignore les applications sans IQ (statut exclu) dans le calcul de l'IQ moyen", async () => {
+    const { service } = setup(
+      ["app-x", "app-y", "app-z"],
+      [
+        { id: "app-x", quality: 80 },
+        { id: "app-y", quality: null },
+        { id: "app-z", quality: 40 },
+      ],
+    );
+
+    const result = await service.search(
+      { q: "gestion" } as ApplicationSearchDto,
+      requestor,
+    );
+
+    expect(result.total).toBe(3);
+    expect(result.averageIq).toBe(60);
+  });
+});
+
+describe("ApplicationService.updateApplicationQuality", () => {
+  const mockedCalculateIQ = calculateIQ as jest.Mock;
+
+  beforeEach(() => {
+    mockedCalculateIQ.mockClear();
+  });
+
+  const setup = (currentStatus: { status: string } | null) => {
+    const prisma = {
+      application: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue(
+            currentStatus ? { id: "app-1", currentStatus } : { id: "app-1" },
+          ),
+        update: jest.fn().mockResolvedValue({}),
+      },
+    };
+
+    const service = new ApplicationService(
+      prisma as unknown as PrismaService,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+
+    return { service, prisma };
+  };
+
+  it("statut decommissioned : réinitialise l'IQ à null sans recalculer", async () => {
+    const { service, prisma } = setup({ status: "decommissioned" });
+
+    await service.updateApplicationQuality("app-1");
+
+    expect(mockedCalculateIQ).not.toHaveBeenCalled();
+    expect(prisma.application.update).toHaveBeenCalledWith({
+      where: { id: "app-1" },
+      data: { quality: null },
+    });
+  });
+
+  it("statut deleted : réinitialise l'IQ à null sans recalculer", async () => {
+    const { service, prisma } = setup({ status: "deleted" });
+
+    await service.updateApplicationQuality("app-1");
+
+    expect(mockedCalculateIQ).not.toHaveBeenCalled();
+    expect(prisma.application.update).toHaveBeenCalledWith({
+      where: { id: "app-1" },
+      data: { quality: null },
+    });
+  });
+
+  it("autre statut : recalcule l'IQ normalement", async () => {
+    const { service, prisma } = setup({ status: "in_production" });
+
+    await service.updateApplicationQuality("app-1");
+
+    expect(mockedCalculateIQ).toHaveBeenCalledWith("app-1", prisma);
+    expect(prisma.application.update).toHaveBeenCalledWith({
+      where: { id: "app-1" },
+      data: { quality: 75 },
+    });
   });
 });

@@ -20,6 +20,7 @@ import StatusTab from "./StatusTab.vue";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import { useUserStore } from "@/stores/userStore";
 import type { Tab } from "@/utils/types";
+import { hasQualityIndex } from "@/utils/quality";
 import { Permission } from "@/client";
 import DataApplicationTab from "./data-application/DataApplicationTab.vue";
 
@@ -146,6 +147,11 @@ onBeforeMount(async () => {
   tabs.value = tabs.value.filter((tab) => {
     return userStore.hasPermissions(tab.requiredPerms, Array.from(props.application.myPerms));
   });
+
+  // no IQ (application décommissionnée/supprimée) : l'onglet Qualité n'a pas de sens
+  if (!hasQualityIndex(props.application)) {
+    tabs.value = tabs.value.filter((tab) => tab.tabId !== "tab-quality");
+  }
 
   // Read requested tab from URL params after filtering
   const raw = Array.isArray(route.params.tab) ? route.params.tab[0] : route.params.tab;

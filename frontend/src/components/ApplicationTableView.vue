@@ -62,7 +62,7 @@ const applications = computed(() =>
   results.value.map((app: any) => {
     return {
       ...app,
-      qualityDisplay: `${app.quality}%`,
+      qualityDisplay: formatPercent(app.quality),
       hostingDisplay: app.hostings.map((h: any) => h.hostingOption?.site || h.site).join(", "),
       tagsDisplay: app.tags.map((tag: any) => tag.name).join(", "),
       hostingProviderDisplay: app.hostings.map((h: any) => formatHostingsProvider(h.hostingOption)).join(", "),

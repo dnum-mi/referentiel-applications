@@ -1,4 +1,8 @@
 import type { PrismaService } from "src/prisma/prisma.service";
+import {
+  isDimaFilled,
+  isPdmaFilled,
+} from "src/common/utils/compliance-presence.utils";
 
 export async function calculateIQ(
   applicationId: string,
@@ -24,19 +28,11 @@ export async function calculateIQ(
     { value: actors.some((a) => a.actorType?.code === "HEB"), importance: 3 },
     { value: actors.some((a) => a.actorType?.code === "REP"), importance: 3 },
     {
-      value: Boolean(
-        compliance?.pdma_duration_hours ||
-          compliance?.pdma_data_types ||
-          compliance?.pdma_backup_frequency,
-      ),
+      value: isPdmaFilled(compliance),
       importance: 3,
     },
     {
-      value: Boolean(
-        compliance?.dima_duration_hours ||
-          compliance?.dima_business_impact ||
-          compliance?.dima_recovery_plan,
-      ),
+      value: isDimaFilled(compliance),
       importance: 3,
     },
     {

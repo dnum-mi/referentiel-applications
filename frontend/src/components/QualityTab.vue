@@ -3,6 +3,7 @@ import type { QualitySummaryDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
+import { hasQualityIndex } from "@/utils/quality";
 import { onMounted, ref } from "vue";
 
 defineOptions({ inheritAttrs: false });
@@ -132,5 +133,7 @@ onMounted(fetchQuality);
     </div>
   </div>
 
-  <DsfrHighlight :large="true" data-testid="quality-index"> INDICE QUALITE: {{ props.application.quality ?? 0 }}% </DsfrHighlight>
+  <DsfrHighlight v-if="hasQualityIndex(props.application)" :large="true" data-testid="quality-index">
+    INDICE QUALITE: {{ props.application.quality }}%
+  </DsfrHighlight>
 </template>

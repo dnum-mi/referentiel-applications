@@ -1242,6 +1242,14 @@ paths:
             maximum: 100
             default: 100
             type: number
+        - name: iq__isNull
+          required: false
+          in: query
+          description: Inclure les applications sans IQ (décommissionnées ou supprimées)
+            en plus de celles dans la plage iqGte/iqLte
+          schema:
+            example: true
+            type: boolean
         - name: columns
           required: false
           in: query
@@ -1756,6 +1764,14 @@ paths:
             maximum: 100
             default: 100
             type: number
+        - name: iq__isNull
+          required: false
+          in: query
+          description: Inclure les applications sans IQ (décommissionnées ou supprimées)
+            en plus de celles dans la plage iqGte/iqLte
+          schema:
+            example: true
+            type: boolean
         - name: columns
           required: false
           in: query
@@ -5262,6 +5278,14 @@ paths:
             maximum: 100
             default: 100
             type: number
+        - name: iq__isNull
+          required: false
+          in: query
+          description: Inclure les applications sans IQ (décommissionnées ou supprimées)
+            en plus de celles dans la plage iqGte/iqLte
+          schema:
+            example: true
+            type: boolean
         - name: columns
           required: false
           in: query
