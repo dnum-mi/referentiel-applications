@@ -419,6 +419,98 @@ export class EmailService {
     }
   }
 
+  async sendUserBlockedNotification({
+    to,
+    userEmail,
+    changedByEmail,
+  }: {
+    to: string;
+    userEmail: string;
+    changedByEmail: string | null;
+  }): Promise<void> {
+    if (!this.enabled) {
+      this.logger.log(
+        `Email sending disabled. Would have sent block notification to ${to}`,
+      );
+      return;
+    }
+
+    if (!to) {
+      this.logger.warn(
+        "Cannot send block notification: recipient address is empty",
+      );
+      return;
+    }
+
+    const subject = "Votre accès a été bloqué";
+
+    const html = this.templateService.render("user-blocked", {
+      title: subject,
+      headerTitle: "Référentiel des Applications",
+      userEmail,
+      changedByEmail: changedByEmail ?? "un administrateur",
+      changeDate: new Date().toLocaleString("fr-FR"),
+    });
+
+    const text = this.templateService.htmlToText(html);
+
+    try {
+      await this.deliver({ to, subject, text, html });
+      this.logger.log(`Block notification sent successfully to ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send block notification to ${to}:`, error);
+      this.logger.warn(
+        `Email delivery failed for ${to} but was ignored due to configuration.`,
+      );
+    }
+  }
+
+  async sendUserUnblockedNotification({
+    to,
+    userEmail,
+    changedByEmail,
+  }: {
+    to: string;
+    userEmail: string;
+    changedByEmail: string | null;
+  }): Promise<void> {
+    if (!this.enabled) {
+      this.logger.log(
+        `Email sending disabled. Would have sent unblock notification to ${to}`,
+      );
+      return;
+    }
+
+    if (!to) {
+      this.logger.warn(
+        "Cannot send unblock notification: recipient address is empty",
+      );
+      return;
+    }
+
+    const subject = "Votre accès a été rétabli";
+
+    const html = this.templateService.render("user-unblocked", {
+      title: subject,
+      headerTitle: "Référentiel des Applications",
+      userEmail,
+      changedByEmail: changedByEmail ?? "un administrateur",
+      changeDate: new Date().toLocaleString("fr-FR"),
+    });
+
+    const text = this.templateService.htmlToText(html);
+
+    try {
+      await this.deliver({ to, subject, text, html });
+      this.logger.log(`Unblock notification sent successfully to ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send unblock notification to ${to}:`, error);
+      this.logger.warn(
+        `Email delivery failed for ${to} but was ignored due to configuration.`,
+      );
+    }
+  }
+
   async sendSignalementUpdateEmail({
     recipientEmail,
     description,

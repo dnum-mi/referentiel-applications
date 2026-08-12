@@ -390,6 +390,57 @@ paths:
           description: Utilisateur non trouvé
       summary: Impersonner un utilisateur
       tags: *a2
+  /api/v2/users/{id}/block:
+    post:
+      description: "Empêche un utilisateur de s'authentifier (ex : a quitté
+        l'organisation). Rejeté à l'authentification quel que soit le moyen
+        d'accès (SSO ou token API). Accès limité aux administrateurs."
+      operationId: UserController_block
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur à bloquer
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Utilisateur bloqué avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      summary: Bloquer l'accès d'un utilisateur
+      tags: *a2
+  /api/v2/users/{id}/unblock:
+    post:
+      description: Rétablit l'accès d'un utilisateur précédemment bloqué. Accès limité
+        aux administrateurs.
+      operationId: UserController_unblock
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur à débloquer
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Utilisateur débloqué avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      summary: Débloquer l'accès d'un utilisateur
+      tags: *a2
   /api/v2/users/{id}:
     patch:
       description: Permet de modifier les permissions d'un utilisateur. Accès limité
@@ -6385,6 +6436,16 @@ components:
           nullable: true
           description: Email de l'auteur de la dernière modification des droits. Null si
             jamais modifié ou si l'auteur a depuis été supprimé.
+        isBlocked:
+          type: boolean
+          description: Si l'accès de l'utilisateur est bloqué. Un utilisateur bloqué est
+            rejeté à l'authentification.
+          default: false
+        blockedAt:
+          format: date-time
+          type: string
+          nullable: true
+          description: Date à laquelle l'utilisateur a été bloqué
         permissions:
           type: array
           items:
@@ -6404,6 +6465,7 @@ components:
         - role
         - type
         - additionalPermissions
+        - isBlocked
         - id
         - email
         - organizationId
@@ -6684,6 +6746,16 @@ components:
           nullable: true
           description: Email de l'auteur de la dernière modification des droits. Null si
             jamais modifié ou si l'auteur a depuis été supprimé.
+        isBlocked:
+          type: boolean
+          description: Si l'accès de l'utilisateur est bloqué. Un utilisateur bloqué est
+            rejeté à l'authentification.
+          default: false
+        blockedAt:
+          format: date-time
+          type: string
+          nullable: true
+          description: Date à laquelle l'utilisateur a été bloqué
         id:
           type: string
         email:
@@ -6698,6 +6770,7 @@ components:
         - role
         - type
         - additionalPermissions
+        - isBlocked
         - id
         - email
         - organizationId

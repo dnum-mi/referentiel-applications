@@ -853,6 +853,9 @@ erDiagram
   Permission additionalPermissions
   DateTime lastPermissionChangeAt "nullable"
   String lastPermissionChangedById "nullable"
+  Boolean isBlocked
+  DateTime blockedAt "nullable"
+  String blockedById "nullable"
 }
 "Actor" {
   String id PK
@@ -950,6 +953,13 @@ Properties as follows:
   > Dénormalisé depuis UserPermissionLog pour permettre le tri côté base (liste admin).
 - `lastPermissionChangedById`
   > Utilisateur ayant effectué cette dernière modification. Pas de jointure explicite
+  > (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
+- `isBlocked`
+  > Si l'accès de cet utilisateur est bloqué (ex : a quitté l'organisation). Un utilisateur
+  > bloqué est rejeté par le SSO à l'authentification, quel que soit son moyen d'accès (JWT ou token API).
+- `blockedAt`: Date à laquelle l'utilisateur a été bloqué
+- `blockedById`
+  > Administrateur ayant bloqué cet utilisateur. Pas de jointure explicite
   > (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
 
 ### `Actor`

@@ -139,6 +139,34 @@ export class ScopedPermissionService {
     );
   }
 
+  /**
+   * Vérifie que le requestor a le droit de bloquer/débloquer l'accès du
+   * `targetUserId` (même règle de périmètre que pour les autres actions
+   * d'administration : il doit être dans le scope de l'organisation de la cible).
+   */
+  async assertCanBlock(
+    targetUserId: string,
+    requestor: Requestor,
+  ): Promise<void> {
+    const requestorScopePath = requestor?.scopeOrganization?.path;
+    if (!requestorScopePath) return;
+
+    const currentUser = await this.prisma.user.findFirst({
+      where: { id: targetUserId },
+      include: { organization: true },
+    });
+
+    if (!currentUser) {
+      throw new HttpException("Utilisateur introuvable", HttpStatus.NOT_FOUND);
+    }
+
+    this.assertWithinScope(
+      currentUser.organization?.path,
+      requestorScopePath,
+      "Vous n'avez pas les permissions pour modifier cet utilisateur",
+    );
+  }
+
   private async fetchOrganization(id: string) {
     const org = await this.prisma.organization.findUnique({ where: { id } });
     if (!org)

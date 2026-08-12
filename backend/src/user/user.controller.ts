@@ -219,6 +219,48 @@ export class UserController {
     return this.userService.startImpersonation(requestor, id);
   }
 
+  @Post(":id/block")
+  @HttpCode(HttpStatus.OK)
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Bloquer l'accès d'un utilisateur",
+    description:
+      "Empêche un utilisateur de s'authentifier (ex : a quitté l'organisation). Rejeté à l'authentification quel que soit le moyen d'accès (SSO ou token API). Accès limité aux administrateurs.",
+  })
+  @ApiParam({ name: "id", description: "ID de l'utilisateur à bloquer" })
+  @ApiOkResponse({
+    description: "Utilisateur bloqué avec succès",
+    type: UserWithPermissions,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
+  async block(@Param("id") id: string, @User() requestor: Requestor) {
+    return this.userService.block(id, requestor);
+  }
+
+  @Post(":id/unblock")
+  @HttpCode(HttpStatus.OK)
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary: "Débloquer l'accès d'un utilisateur",
+    description:
+      "Rétablit l'accès d'un utilisateur précédemment bloqué. Accès limité aux administrateurs.",
+  })
+  @ApiParam({ name: "id", description: "ID de l'utilisateur à débloquer" })
+  @ApiOkResponse({
+    description: "Utilisateur débloqué avec succès",
+    type: UserWithPermissions,
+  })
+  @ApiForbiddenResponse({
+    description: "Accès refusé - Privilège admin requis",
+  })
+  @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
+  async unblock(@Param("id") id: string, @User() requestor: Requestor) {
+    return this.userService.unblock(id, requestor);
+  }
+
   @Patch(":id")
   @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({

@@ -13,11 +13,18 @@ const { currentUserMock, hasPermissionsMock, syncOrganizationMock } = vi.hoisted
   syncOrganizationMock: vi.fn(),
 }));
 
+const { blockMock, unblockMock } = vi.hoisted(() => ({
+  blockMock: vi.fn(),
+  unblockMock: vi.fn(),
+}));
+
 vi.mock("@/api/index", () => ({
   default: {
     userControllerSyncOrganizationFromMaiaByEmail: (...args: unknown[]) => syncOrganizationMock(...args),
     userControllerSyncOrganizationFromMaia: vi.fn(),
     userControllerUpdate: vi.fn(),
+    userControllerBlock: (...args: unknown[]) => blockMock(...args),
+    userControllerUnblock: (...args: unknown[]) => unblockMock(...args),
   },
 }));
 
@@ -52,6 +59,8 @@ const targetUser = {
   scopeOrganizationId: null,
   lastPermissionChangeAt: null,
   lastPermissionChangedByEmail: null,
+  isBlocked: false,
+  blockedAt: null,
 } satisfies Required<UserEntity>;
 
 function createOrganization(path: string): OrganizationDto {
@@ -179,5 +188,38 @@ describe("UserActions", () => {
 
     expect(screen.queryByTestId("admin-edit-user-modal")).not.toBeInTheDocument();
     expect(syncOrganizationMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks the access of a user after confirmation", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    blockMock.mockResolvedValue({
+      error: undefined,
+      data: { ...targetUser, isBlocked: true },
+    });
+
+    render(UserActions, {
+      props: { user: targetUser },
+      global,
+    });
+
+    await fireEvent.click(screen.getByTestId("admin-user-block-btn"));
+    await waitFor(() => expect(screen.getByTestId("admin-block-user-modal")).toBeInTheDocument());
+
+    await fireEvent.click(screen.getByTestId("admin-block-user-confirm-btn"));
+
+    await waitFor(() => expect(blockMock).toHaveBeenCalledWith({ path: { id: targetUser.id } }));
+  });
+
+  it("does not show the block button for the requestor's own account", () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.id = targetUser.id;
+
+    render(UserActions, {
+      props: { user: targetUser },
+      global,
+    });
+
+    expect(screen.queryByTestId("admin-user-block-btn")).not.toBeInTheDocument();
+    currentUserMock.user.id = "current-user";
   });
 });

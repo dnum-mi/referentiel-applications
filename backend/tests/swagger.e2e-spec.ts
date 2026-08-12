@@ -43,6 +43,8 @@ describe("Test Swagger documentation", () => {
       "/users/{id}/sync-organization-from-maia",
       "/users/{id}/impersonate",
       "/users/impersonate/stop",
+      "/users/{id}/block",
+      "/users/{id}/unblock",
       "/actors/sync-maia",
       "/email/digest",
     ];

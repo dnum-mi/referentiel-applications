@@ -192,6 +192,7 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `POST /users/me/subscribe/:appId` · `DELETE /users/me/subscribe/:appId`                    | Abonnement / désabonnement à une application                     |
 | `POST /users/:id/sync-organization-from-maia` · `POST /users/sync-organizations-from-maia` | Synchronisation des organisations depuis MAIA (unitaire / batch) |
 | `PATCH /users/:id`                                                                         | Mise à jour (dont permissions)                                   |
+| `POST /users/:id/block` · `POST /users/:id/unblock`                                        | Bloquer / débloquer l'accès d'un utilisateur                     |
 | `GET /users`                                                                               | Liste des utilisateurs                                           |
 
 ### Tokens (clés d'API)

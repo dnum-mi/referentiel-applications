@@ -35,6 +35,11 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     isSortable: true,
   },
   {
+    key: "isBlocked",
+    label: "Statut",
+    isSortable: true,
+  },
+  {
     key: "permissions",
     label: "Permissions",
     isSortable: false,
@@ -133,6 +138,7 @@ const tableRows = computed(() =>
       label: RolesWording[user.role],
       badgeClass: RolesWordingBadgeClass[user.role],
     },
+    isBlocked: user.isBlocked,
     lastPermissionChangeAt: {
       date: user.lastPermissionChangeAt ?? null,
       email: user.lastPermissionChangedByEmail ?? null,
@@ -205,6 +211,16 @@ onMounted(fetchUsers);
       >
         <template #body-role="{ data }">
           <span class="fr-badge justify-center" :class="data.role.badgeClass">{{ data.role.label }}</span>
+        </template>
+
+        <template #body-isBlocked="{ data }">
+          <span
+            class="fr-badge justify-center"
+            :class="data.isBlocked ? 'fr-badge--error' : 'fr-badge--success'"
+            data-testid="admin-user-status-badge"
+          >
+            {{ data.isBlocked ? "Bloqué" : "Actif" }}
+          </span>
         </template>
 
         <template #body-lastPermissionChangeAt="{ data }">

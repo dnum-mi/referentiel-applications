@@ -177,6 +177,78 @@ export class UserService {
     return user;
   }
 
+  async block(id: string, requestor: Requestor) {
+    if (id === requestor.id) {
+      throw new BadRequestException(
+        "Vous ne pouvez pas bloquer votre propre accès.",
+      );
+    }
+
+    await this.scopedPermissionService.assertCanBlock(id, requestor);
+
+    const target = await this.prisma.user.findUnique({ where: { id } });
+    if (!target) {
+      throw new NotFoundException("Utilisateur introuvable");
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: {
+        isBlocked: true,
+        blockedAt: new Date(),
+        blockedById: requestor.id,
+      },
+      include: { organization: true },
+    });
+
+    this.logger.warn(
+      `[AdminPanel] Utilisateur ${id} bloqué par ${requestor.id}`,
+    );
+
+    if (user.email) {
+      await this.emailService.sendUserBlockedNotification({
+        to: user.email,
+        userEmail: user.email,
+        changedByEmail: requestor.email ?? null,
+      });
+    }
+
+    return user;
+  }
+
+  async unblock(id: string, requestor: Requestor) {
+    await this.scopedPermissionService.assertCanBlock(id, requestor);
+
+    const target = await this.prisma.user.findUnique({ where: { id } });
+    if (!target) {
+      throw new NotFoundException("Utilisateur introuvable");
+    }
+
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: {
+        isBlocked: false,
+        blockedAt: null,
+        blockedById: null,
+      },
+      include: { organization: true },
+    });
+
+    this.logger.warn(
+      `[AdminPanel] Utilisateur ${id} débloqué par ${requestor.id}`,
+    );
+
+    if (user.email) {
+      await this.emailService.sendUserUnblockedNotification({
+        to: user.email,
+        userEmail: user.email,
+        changedByEmail: requestor.email ?? null,
+      });
+    }
+
+    return user;
+  }
+
   async updateOwnPreferences(
     id: string,
     updateUserPreferencesDto: UpdateUserPreferencesDto,
@@ -309,6 +381,11 @@ export class UserService {
     if (target.type === UserType.bot) {
       throw new BadRequestException(
         "Impossible d'impersonner un compte de service.",
+      );
+    }
+    if (target.isBlocked) {
+      throw new BadRequestException(
+        "Impossible d'impersonner un utilisateur bloqué.",
       );
     }
 
