@@ -41,6 +41,12 @@ vi.mock("@/stores/userStore", () => ({
       return currentUserMock.user;
     },
     hasPermissions: hasPermissionsMock,
+    // Même règle que le vrai store : sans scope tout est permis, sinon préfixe de chemin.
+    isWithinScope: (targetOrganizationPath?: string | null) => {
+      const scopePath = currentUserMock.user.scopeOrganization?.path;
+      if (!scopePath) return true;
+      return !targetOrganizationPath || targetOrganizationPath.startsWith(scopePath);
+    },
     startImpersonation: vi.fn(),
   }),
 }));
