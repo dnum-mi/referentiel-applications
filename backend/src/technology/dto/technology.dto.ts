@@ -84,6 +84,77 @@ export class TechnologyDto extends CreateTechnologyDto {
   @IsOptional()
   @IsDateString()
   eolCheckedAt?: string | null;
+
+  @ApiProperty({
+    example: "postgresql",
+    description:
+      "Slug produit endoflife.date résolu (null + eolCheckedAt renseigné = produit non suivi par endoflife.date)",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  eolProduct?: string | null;
+
+  @ApiProperty({
+    type: String,
+    format: "date-time",
+    example: "2026-10-20",
+    description:
+      "Date de fin de support actif de la version (source endoflife.date)",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsDateString()
+  eoasDate?: string | null;
+
+  @ApiProperty({
+    example: "20.19.5",
+    description:
+      "Dernière version publiée du cycle correspondant (source endoflife.date)",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  latestVersion?: string | null;
+}
+
+export class EolProductDto {
+  @ApiProperty({
+    example: "nodejs",
+    description: "Slug produit endoflife.date",
+  })
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    example: "Node.js",
+    description: "Libellé d'affichage du produit",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  label?: string | null;
+
+  @ApiProperty({
+    example: "database",
+    description: "Catégorie du produit",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  category?: string | null;
+
+  @ApiProperty({
+    example: ["node"],
+    description: "Alias reconnus pour ce produit",
+    type: [String],
+  })
+  aliases: string[];
 }
 
 export class TechnologyErrorResponseDto {

@@ -1107,6 +1107,9 @@ erDiagram
   String(2048) docUrl "nullable"
   DateTime eolDate "nullable"
   DateTime eolCheckedAt "nullable"
+  String(100) eolProduct "nullable"
+  DateTime eoasDate "nullable"
+  String(50) latestVersion "nullable"
 }
 ```
 
@@ -1127,6 +1130,9 @@ Properties as follows:
 - `docUrl`: Lien documentaire (URL) associé au produit
 - `eolDate`: Date de fin de support/vie de la version (renseignée via endoflife.date)
 - `eolCheckedAt`: Date de dernière vérification du statut de fin de vie
+- `eolProduct`: Slug produit endoflife.date résolu (null + eolCheckedAt renseigné = produit non suivi)
+- `eoasDate`: Date de fin de support actif de la version (renseignée via endoflife.date)
+- `latestVersion`: Dernière version publiée du cycle correspondant (renseignée via endoflife.date)
 
 ## default
 

@@ -5521,6 +5521,28 @@ paths:
                 $ref: "#/components/schemas/TechnologyErrorResponseDto"
       summary: Ajouter une technologie à la stack d'une application
       tags: *a32
+  /api/v2/applications/{applicationId}/technologies/eol-products:
+    get:
+      operationId: TechnologyController_listEolProducts
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
+      responses:
+        "200":
+          description: Catalogue des produits endoflife.date (vide si le catalogue est
+            indisponible)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EolProductDto"
+      summary: Lister les produits suivis par endoflife.date (autocomplétion de la
+        saisie produit)
+      tags: *a32
   /api/v2/applications/{applicationId}/technologies/{id}:
     patch:
       operationId: TechnologyController_update
@@ -9303,11 +9325,56 @@ components:
           format: date-time
           example: 2026-07-03T10:00:00.000Z
           description: Date de dernière vérification du statut de fin de vie
+        eolProduct:
+          type: string
+          nullable: true
+          example: postgresql
+          description: Slug produit endoflife.date résolu (null + eolCheckedAt renseigné =
+            produit non suivi par endoflife.date)
+        eoasDate:
+          type: string
+          nullable: true
+          format: date-time
+          example: 2026-10-20
+          description: Date de fin de support actif de la version (source endoflife.date)
+        latestVersion:
+          type: string
+          nullable: true
+          example: 20.19.5
+          description: Dernière version publiée du cycle correspondant (source
+            endoflife.date)
       required:
         - technology
         - product
         - id
         - applicationId
+    EolProductDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: nodejs
+          description: Slug produit endoflife.date
+        label:
+          type: string
+          nullable: true
+          example: Node.js
+          description: Libellé d'affichage du produit
+        category:
+          type: string
+          nullable: true
+          example: database
+          description: Catégorie du produit
+        aliases:
+          example:
+            - node
+          description: Alias reconnus pour ce produit
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - aliases
     CreateTechnologyDto:
       type: object
       properties:

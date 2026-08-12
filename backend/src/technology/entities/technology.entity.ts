@@ -7,4 +7,7 @@ export class TechnologyStack {
   docUrl?: string;
   eolDate?: Date;
   eolCheckedAt?: Date;
+  eolProduct?: string;
+  eoasDate?: Date;
+  latestVersion?: string;
 }
