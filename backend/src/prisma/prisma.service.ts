@@ -9,12 +9,16 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import databaseConfig from "src/config/configs/database.config";
 import { LoggerService } from "src/logger/logger.service";
 import { decimalToNumberExtension } from "./extensions/decimal-to-number.extension";
+import { metadataImpersonatorExtension } from "./extensions/metadata-impersonator.extension";
 import { paginationExtension } from "./extensions/pagination.extension";
 
 export type { PrismaPaginationArgs } from "./extensions/pagination.extension";
 
 const withExtensions = (client: PrismaClient) =>
-  client.$extends(decimalToNumberExtension).$extends(paginationExtension);
+  client
+    .$extends(decimalToNumberExtension)
+    .$extends(metadataImpersonatorExtension)
+    .$extends(paginationExtension);
 
 const ExtendedPrismaClient = PrismaClient as unknown as new (
   options: Prisma.PrismaClientOptions,

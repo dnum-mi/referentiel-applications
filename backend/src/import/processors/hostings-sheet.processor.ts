@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Permission } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
@@ -22,6 +21,7 @@ import {
   buildHeaderIndex,
   insufficientRightsMessage,
   makeCellReader,
+  validateImportDto,
 } from "../utils/excel.utils";
 
 /** En-têtes (libellés) attendus dans l'onglet « Hébergements », alignés sur l'export. */
@@ -165,7 +165,7 @@ export class HostingsSheetProcessor {
         applicationId: data.applicationId,
         ...(hostingOptionId && { hostingOptionId }),
       });
-      await this.validateDto(dto);
+      await validateImportDto(dto);
       await this.hostingsService.updateHosting(data.id, dto, requestor.id);
       return { sheet: this.sheetName, row, status: "updated", identifier };
     }
@@ -176,7 +176,7 @@ export class HostingsSheetProcessor {
       ...(hostingOptionId && { hostingOptionId }),
       isActive: null,
     });
-    await this.validateDto(dto);
+    await validateImportDto(dto);
     await this.hostingsService.createHosting(dto, requestor.id);
     return { sheet: this.sheetName, row, status: "created", identifier };
   }
@@ -217,7 +217,7 @@ export class HostingsSheetProcessor {
       ...(building && { building }),
       ...(room && { room }),
     });
-    await this.validateDto(optionDto);
+    await validateImportDto(optionDto);
     const created = await this.prisma.hostingOption.create({
       data: { provider, site, platform, building, room },
       select: { id: true },
@@ -234,21 +234,5 @@ export class HostingsSheetProcessor {
     if (data.label) return data.label;
     if (data.provider && data.site) return `${data.provider} (${data.site})`;
     return data.provider || data.site || data.id || undefined;
-  }
-
-  private async validateDto(
-    dto: CreateHostingDto | UpdateHostingDto | CreateHostingOptionDto,
-  ): Promise<void> {
-    const errors = await validate(dto, {
-      whitelist: true,
-      forbidNonWhitelisted: false,
-    });
-    if (errors.length > 0) {
-      const details = errors
-        .map((e) => Object.values(e.constraints ?? {}).join(", "))
-        .filter(Boolean)
-        .join(" ; ");
-      throw new Error(`Validation échouée : ${details}`);
-    }
   }
 }

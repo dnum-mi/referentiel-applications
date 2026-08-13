@@ -677,6 +677,7 @@ erDiagram
   MetadataAction action
   String applicationId FK "nullable"
   String createdById FK
+  String impersonatorId FK "nullable"
   String dataOwnerId FK "nullable"
   String complianceId FK "nullable"
   String labelId FK "nullable"
@@ -704,6 +705,7 @@ Properties as follows:
 - `action`: Type d'action (ajout, mise à jour, suppression)
 - `applicationId`:
 - `createdById`:
+- `impersonatorId`:
 - `dataOwnerId`:
 - `complianceId`:
 - `labelId`:
@@ -1138,6 +1140,16 @@ Properties as follows:
 
 ```mermaid
 erDiagram
+"ActionLog" {
+  String id PK
+  DateTime createdAt
+  String method
+  String path
+  Int statusCode
+  String userId FK
+  String impersonatorId FK "nullable"
+  String impersonationLogId FK "nullable"
+}
 "EmailLog" {
   String id PK
   String to
@@ -1167,7 +1179,27 @@ erDiagram
   DateTime startedAt
   DateTime endedAt "nullable"
 }
+"ActionLog" }o--o| "ImpersonationLog" : impersonationLog
 ```
+
+### `ActionLog`
+
+Journal centralisé des actions (#2224) : une entrée par requête HTTP
+mutante (POST/PATCH/PUT/DELETE), écrite automatiquement par
+l'ActionLogMiddleware, sans intervention des services métier.
+Trace l'identité effective ET l'administrateur réel lorsque l'action est
+faite sous impersonation, avec rattachement à la session.
+
+Properties as follows:
+
+- `id`:
+- `createdAt`:
+- `method`: Méthode HTTP de la requête
+- `path`: Chemin de la requête (sans query string)
+- `statusCode`: Code de statut HTTP renvoyé (y compris les refus 4xx)
+- `userId`: Identité effective de la requête (la cible en cas d'impersonation)
+- `impersonatorId`: Administrateur réel lorsque l'action a été faite sous impersonation
+- `impersonationLogId`: Session d'impersonation à laquelle l'action se rattache
 
 ### `EmailLog`
 

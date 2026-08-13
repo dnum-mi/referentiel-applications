@@ -21,6 +21,8 @@ model User {
   createdSet                Metadata[]          @relation("MetadataCreatedBy")
   /// Entrées de métadonnées où cet utilisateur est le propriétaire des données
   dataOwners                Metadata[]          @relation("MetadataDataOwnerBy")
+  /// Entrées de métadonnées créées sous une identité empruntée par cet admin (#2226)
+  metadataAsImpersonator    Metadata[]          @relation("MetadataImpersonator")
   /// Signalements créés par cet utilisateur
   reports                   Report[]
   /// Groupement de permissions par defaut
@@ -60,6 +62,11 @@ model User {
   /// Administrateur ayant bloqué cet utilisateur. Pas de jointure explicite
   /// (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
   blockedById                String?
+
+  /// Actions journalisées sous cette identité (effective)
+  actionLogs                ActionLog[]         @relation("ActionLogUser")
+  /// Actions réellement effectuées par cet utilisateur sous une identité empruntée
+  actionLogsAsImpersonator  ActionLog[]         @relation("ActionLogImpersonator")
 }
 
 /// @namespace Roles

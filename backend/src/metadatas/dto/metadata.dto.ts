@@ -124,6 +124,24 @@ export class MetadataDto {
     type: UserEntity,
   })
   createdBy: UserEntity;
+
+  @ApiProperty({
+    description:
+      "ID de l'administrateur réel si la metadata a été créée sous impersonation",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+    required: false,
+  })
+  impersonatorId?: string | null;
+
+  @ApiProperty({
+    description:
+      "Administrateur réel si la metadata a été créée sous impersonation",
+    type: UserEntity,
+    nullable: true,
+    required: false,
+  })
+  impersonator?: UserEntity | null;
 }
 
 export class FirstLastMetadataDto {

@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Permission } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
 import { columnLabels } from "src/applications/columnLabels/application-export.columnLabels";
 import { sheetLabels } from "src/applications/constants/application-export.sheet-labels";
@@ -23,6 +22,7 @@ import {
   coerceOuiNon,
   insufficientRightsMessage,
   makeCellReader,
+  validateImportDto,
 } from "../utils/excel.utils";
 
 type Coercion = "string" | "number" | "boolean" | "date";
@@ -176,7 +176,7 @@ export class CompliancesSheetProcessor {
     }
 
     const dto = plainToInstance(CreateComplianceDto, values);
-    await this.validateDto(dto);
+    await validateImportDto(dto);
 
     const existing =
       await this.compliancesService.findByApplicationId(applicationId);
@@ -205,19 +205,5 @@ export class CompliancesSheetProcessor {
       status: existing ? "updated" : "created",
       identifier: applicationId,
     };
-  }
-
-  private async validateDto(dto: CreateComplianceDto): Promise<void> {
-    const errors = await validate(dto, {
-      whitelist: true,
-      forbidNonWhitelisted: false,
-    });
-    if (errors.length > 0) {
-      const details = errors
-        .map((e) => Object.values(e.constraints ?? {}).join(", "))
-        .filter(Boolean)
-        .join(" ; ");
-      throw new Error(`Validation échouée : ${details}`);
-    }
   }
 }

@@ -15,7 +15,9 @@ import { LabelsModule } from "./labels/labels.module";
 import { LinksModule } from "./links/links.module";
 import { LoggerModule } from "./logger/logger.module";
 import { MetadatasModule } from "./metadatas/metadatas.module";
+import { ActionLogMiddleware } from "./middlewares/action-log.middleware";
 import { AuthMiddleware } from "./middlewares/auth.middleware";
+import { RequestContextMiddleware } from "./middlewares/request-context.middleware";
 import { ReportModule } from "./report/report.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { PrismaModule } from "./prisma/prisma.module";
@@ -85,7 +87,13 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
     HealthCheckModule,
   ],
   controllers: [AppController],
-  providers: [AppService, LoggingService, AuthMiddleware],
+  providers: [
+    AppService,
+    LoggingService,
+    AuthMiddleware,
+    RequestContextMiddleware,
+    ActionLogMiddleware,
+  ],
   exports: [LoggingService],
 })
 export class AppModule implements NestModule {
@@ -107,6 +115,20 @@ export class AppModule implements NestModule {
 
     consumer
       .apply(AuthMiddleware)
+      .exclude(...unauthenticatedRoutes)
+      .forRoutes("{*splat}");
+
+    // Après AuthMiddleware : propage l'impersonator dans l'AsyncLocalStorage
+    // pour les couches basses (ex. extension Prisma metadata-impersonator, #2226).
+    consumer
+      .apply(RequestContextMiddleware)
+      .exclude(...unauthenticatedRoutes)
+      .forRoutes("{*splat}");
+
+    // Après AuthMiddleware : journalise les requêtes mutantes avec l'identité
+    // effective et l'éventuel impersonator posés par celui-ci (#2224).
+    consumer
+      .apply(ActionLogMiddleware)
       .exclude(...unauthenticatedRoutes)
       .forRoutes("{*splat}");
   }

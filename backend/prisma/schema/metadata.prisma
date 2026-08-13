@@ -21,6 +21,11 @@ model Metadata {
   /// Utilisateur qui a créé cette entrée de métadonnée
   createdBy   User   @relation("MetadataCreatedBy", fields: [createdById], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  impersonatorId String?
+  /// Administrateur réel lorsque le changement a été fait sous impersonation (#2226).
+  /// Renseigné automatiquement par l'extension Prisma metadata-impersonator.
+  impersonator   User?   @relation("MetadataImpersonator", fields: [impersonatorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
   dataOwnerId String?
   /// Propriétaire des données pour ce changement
   dataOwner   User?   @relation("MetadataDataOwnerBy", fields: [dataOwnerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
