@@ -172,6 +172,9 @@ describe("AuthMiddleware blocked user", () => {
     const middleware = new AuthMiddleware(
       oidcConfig,
       userService as unknown as UserService,
+      {
+        assertCanImpersonate: jest.fn(),
+      } as unknown as ScopedPermissionService,
       tokenService as unknown as TokenService,
       userConnexionLogService as unknown as UserConnexionLogService,
       { error: jest.fn() } as unknown as LoggerService,
