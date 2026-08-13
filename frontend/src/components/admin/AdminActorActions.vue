@@ -20,6 +20,8 @@ const emit = defineEmits<{
 const toaster = useToasterStore();
 const organizationStore = useOrganizationStore();
 
+// Le type d'acteur système (isDefault) n'a pas à être filtré ici : l'API `GET /actorTypes`
+// l'exclut déjà par défaut (non assignable à un acteur réel).
 const actorTypeOptions = computed(() =>
   props.actorTypes.map((type) => ({ text: type.label, value: type.id })).sort((a, b) => b.text.localeCompare(a.text, "fr")),
 );

@@ -8,11 +8,14 @@ export const useActorTypeStore = defineStore("actorTypeStore", () => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 
-  async function fetchAll() {
+  // `includeSystem` : inclut le type d'acteur système (droits par défaut d'un non-acteur),
+  // exclu par défaut par l'API. Nécessaire uniquement pour la matrice des permissions, qui doit
+  // résoudre le libellé de toutes les lignes, système comprise.
+  async function fetchAll(includeSystem = false) {
     try {
       isLoading.value = true;
       const response = await api.actorTypeControllerFindAll({
-        query: { pageSize: 0 },
+        query: { pageSize: 0, includeSystem },
       });
       if (!response.response.ok) {
         throw new Error("Erreur lors de la récupération des types d'acteurs");

@@ -104,7 +104,7 @@ describe("CheckPermissions.getUserAppPermissions", () => {
     );
   });
 
-  it("droits bornés à l'application concernée (aucun acteur sur l'app cible → aucun droit applicatif)", async () => {
+  it("droits bornés à l'application concernée (aucun acteur sur l'app cible, pas de type d'acteur par défaut → aucun droit applicatif)", async () => {
     // La requête d'acteurs est filtrée par applicationId : ici aucun acteur trouvé
     // pour l'app cible → aucun droit applicatif, même si l'utilisateur est acteur
     // d'une AUTRE application.
@@ -119,6 +119,15 @@ describe("CheckPermissions.getUserAppPermissions", () => {
         where: expect.objectContaining({ applicationId: "other-app" }),
       }),
     );
+  });
+
+  it("aucun acteur trouvé : hérite des droits du type d'acteur par défaut (isDefault)", async () => {
+    const { service } = makeService([], READ_ONLY_MATRIX);
+    const user = baseUser();
+
+    // Le fallback applique la matrice du type d'acteur par défaut, comme un acteur normal.
+    expect(await service.can([Permission.AppRead], user, "app-1")).toBe(true);
+    expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(false);
   });
 
   it("rôle ADMIN global : projette le niveau écriture (CONTRIBUTOR), pas la gestion des signalements", async () => {

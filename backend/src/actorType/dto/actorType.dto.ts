@@ -1,5 +1,5 @@
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class CreateActorTypeDto {
   @ApiProperty({
@@ -39,4 +39,12 @@ export class ActorTypeDto extends CreateActorTypeDto {
   })
   @IsString()
   id: string;
+
+  @ApiProperty({
+    example: false,
+    description:
+      "Type d'acteur système représentant les droits par défaut d'un utilisateur non-acteur. Non assignable à un acteur réel : à exclure des sélecteurs de création/édition d'acteur.",
+  })
+  @IsBoolean()
+  isDefault: boolean;
 }

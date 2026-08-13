@@ -141,6 +141,14 @@ model ActorType {
   /// Description des responsabilités de ce rôle
   description String?
 
+  /// Type d'acteur système représentant les droits par défaut d'un utilisateur qui n'est
+  /// acteur d'aucune application (fallback dans CheckPermissions.getUserAppPermissions).
+  /// Non assignable à un Actor réel : exclu du select de création/édition d'acteur côté front,
+  /// mais ses droits restent 100% pilotés par la matrice AppPermissions comme tout autre type.
+  /// Un seul type d'acteur doit porter `isDefault: true` (garanti par le seed, pas par une
+  /// contrainte DB).
+  isDefault Boolean @default(false)
+
   /// Acteurs avec ce type
   actors         Actor[]
   /// Permissions associées à ce type d'acteur

@@ -874,6 +874,7 @@ erDiagram
   String(50) code UK "nullable"
   String(255) label
   String description "nullable"
+  Boolean isDefault
 }
 "_ApplicationToUser" {
   String A FK
@@ -1009,6 +1010,13 @@ Properties as follows:
 - `code`: Code court pour le rôle
 - `label`: Nom d'affichage du rôle
 - `description`: Description des responsabilités de ce rôle
+- `isDefault`
+  > Type d'acteur système représentant les droits par défaut d'un utilisateur qui n'est
+  > acteur d'aucune application (fallback dans CheckPermissions.getUserAppPermissions).
+  > Non assignable à un Actor réel : exclu du select de création/édition d'acteur côté front,
+  > mais ses droits restent 100% pilotés par la matrice AppPermissions comme tout autre type.
+  > Un seul type d'acteur doit porter `isDefault: true` (garanti par le seed, pas par une
+  > contrainte DB).
 
 ### `_ApplicationToUser`
 
