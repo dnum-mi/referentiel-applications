@@ -1,0 +1,31 @@
+/// Journal centralisé des actions (#2224) : une entrée par requête HTTP
+/// mutante (POST/PATCH/PUT/DELETE), écrite automatiquement par
+/// l'ActionLogMiddleware, sans intervention des services métier.
+/// Trace l'identité effective ET l'administrateur réel lorsque l'action est
+/// faite sous impersonation, avec rattachement à la session.
+model ActionLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  /// Méthode HTTP de la requête
+  method     String
+  /// Chemin de la requête (sans query string)
+  path       String
+  /// Code de statut HTTP renvoyé (y compris les refus 4xx)
+  statusCode Int
+
+  /// Identité effective de la requête (la cible en cas d'impersonation)
+  userId String
+  user   User   @relation("ActionLogUser", fields: [userId], references: [id], onDelete: Restrict)
+
+  /// Administrateur réel lorsque l'action a été faite sous impersonation
+  impersonatorId String?
+  impersonator   User?   @relation("ActionLogImpersonator", fields: [impersonatorId], references: [id], onDelete: Restrict)
+
+  /// Session d'impersonation à laquelle l'action se rattache
+  impersonationLogId String?
+  impersonationLog   ImpersonationLog? @relation(fields: [impersonationLogId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([impersonatorId, createdAt])
+}

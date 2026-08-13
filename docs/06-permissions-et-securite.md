@@ -283,7 +283,7 @@ Les composants passent en second argument les permissions applicatives obtenues 
 - **Contexte HTTPS obligatoire.** Le flux OIDC navigateur exige TLS ; en HTTP, attendre des boucles 302 et des 401 intermittents.
 - **Validation du jeton dans le backend.** La validation du JWT (signature via JWKS du fournisseur) est faite par l'`AuthMiddleware` du backend, seul garant de la vérification.
 - **Validation stricte des entrées.** Les DTO NestJS (class-validator) et le typage Prisma encadrent les données ; conserver une validation stricte sur tout nouvel endpoint.
-- **Audit.** Les changements de permissions (`UserPermissionLog`) et les connexions (`UserConnexionLog`) sont journalisés ; préserver ces traces.
+- **Audit.** Les changements de permissions (`UserPermissionLog`) et les connexions (`UserConnexionLog`) sont journalisés ; préserver ces traces. Depuis #2224, toute requête **mutante** est en outre journalisée dans `ActionLog` par l'`ActionLogMiddleware` (méthode, chemin, code de statut, identité effective) ; sous impersonation, l'**administrateur réel** est enregistré (`impersonatorId`) et l'action rattachée à sa session `ImpersonationLog` — on peut ainsi reconstituer tout ce qu'un admin a fait sous une identité empruntée.
 - **Respect du périmètre.** Toujours nommer `applicationId` le paramètre de route contextuel pour activer le contrôle par application, et respecter le scope organisationnel pour l'administration des utilisateurs.
 
 ---

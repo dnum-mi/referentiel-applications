@@ -35,5 +35,8 @@ model ImpersonationLog {
   /// Fin de la session d'impersonation (null tant qu'elle est active)
   endedAt   DateTime?
 
+  /// Actions journalisées pendant cette session (#2224)
+  actions   ActionLog[]
+
   @@index([adminId, startedAt])
 }
