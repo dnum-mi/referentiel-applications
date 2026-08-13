@@ -6,7 +6,6 @@ import { Permission, type DataApplicationDto, type DataExposureDto } from "@/cli
 import type { APP_PERMISSIONS } from "@/models/Application";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import { routeNames } from "@/router/route-names";
 import {
   OPEN_DATA_STATUS_LABELS,
@@ -20,6 +19,7 @@ import RefAppTable from "@/components/RefAppTable.vue";
 import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
 import DataApplicationModal from "./DataApplicationModal.vue";
 import DataExposureModal from "./DataExposureModal.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 const props = defineProps<{
   applicationId: string;
@@ -29,13 +29,12 @@ const props = defineProps<{
 const router = useRouter();
 const toaster = useToasterStore();
 const applicationStore = useApplicationStore();
-const userStore = useUserStore();
 
 const item = ref<DataApplicationDto | null>(null);
 const isLoading = ref(false);
 const myPerms = ref<Set<APP_PERMISSIONS>>(new Set());
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.DATA_WRITE], Array.from(myPerms.value)));
+const canEdit = useAppPermission(myPerms, [Permission.DATA_WRITE]);
 
 const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);

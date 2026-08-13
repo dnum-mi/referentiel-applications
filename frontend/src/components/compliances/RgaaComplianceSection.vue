@@ -3,17 +3,16 @@ import { ref, onMounted, computed, nextTick, watch } from "vue";
 import { rgaaControllerFindAll, rgaaControllerCreate, rgaaControllerUpdate, rgaaControllerDelete } from "@/client/sdk.gen";
 import type { CreateRgaaComplianceDto, RgaaComplianceDto } from "@/client/types.gen";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import { Permission } from "@/client/types.gen";
 import { formatDateFR, toDateInputValue, toISODateTime } from "@/composables/use-date";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 import type { ApplicationWithPerms } from "@/models/Application";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 const props = defineProps<{ applicationId: string; appPerms: ApplicationWithPerms["myPerms"] }>();
 
 const toaster = useToasterStore();
-const userStore = useUserStore();
 
 const items = ref<RgaaComplianceDto[]>([]);
 const isLoading = ref(false);
@@ -34,7 +33,7 @@ function focusAddButton() {
   });
 }
 
-const canWrite = computed(() => userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.appPerms)));
+const canWrite = useAppPermission(() => props.appPerms, [Permission.COMPLIANCE_WRITE]);
 
 // 12.8 : à l'ouverture de la modale, porter le focus sur son premier élément interactif (bouton « Fermer »).
 watch(showModal, async (isOpen) => {

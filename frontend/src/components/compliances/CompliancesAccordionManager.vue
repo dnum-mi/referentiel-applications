@@ -17,10 +17,10 @@ import { useMediaQuery } from "@vueuse/core";
 import { BREAKPOINTS } from "@/constants/breakpoint";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
-import { useUserStore } from "@/stores/userStore";
 import type { ApplicationWithPerms } from "@/models/Application";
 import RgaaComplianceSection from "./RgaaComplianceSection.vue";
 import { getEcoIndexGrade } from "@/utils/get-ecoindex-grade.js";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
@@ -28,7 +28,6 @@ const props = defineProps<{ application: ApplicationWithPerms }>();
 const applicationId = props.application.id;
 
 const toaster = useToasterStore();
-const userStore = useUserStore();
 // « rgaa » a sa propre section dédiée ; « pra » est un critère booléen sans
 // formulaire détaillé : ni l'un ni l'autre n'est géré dans cet accordéon.
 type ManagedComplianceType = Exclude<ComplianceType, "rgaa" | "pra">;
@@ -277,12 +276,7 @@ function closeDetails() {
   detailsTitle.value = "";
 }
 
-const hasComplianceEditPermission = computed(() => {
-  const hasGlobalComplianceWritePermission = userStore.hasPermissions([Permission.COMPLIANCE_WRITE], Array.from(props.application.myPerms));
-  const hasApplicationComplianceWritePermission = props.application.myPerms?.has(Permission.COMPLIANCE_WRITE) ?? false;
-
-  return hasGlobalComplianceWritePermission || hasApplicationComplianceWritePermission;
-});
+const hasComplianceEditPermission = useAppPermission(() => props.application.myPerms, [Permission.COMPLIANCE_WRITE]);
 </script>
 
 <template>

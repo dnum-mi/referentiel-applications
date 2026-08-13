@@ -3,20 +3,19 @@ import { useRelationManager, type RelationRow } from "@/composables/use-relation
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import { computed, ref } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import RelationshipGraph from "./RelationShipGraph.vue";
 import { Permission, type RelationDto } from "@/client";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{ application: ApplicationWithPerms; isMobile?: boolean }>();
 
 const isLoading = ref(false);
-const userStore = useUserStore();
-const canEdit = computed(() => userStore.hasPermissions([Permission.RELATION_WRITE], Array.from(props.application.myPerms)));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.RELATION_WRITE]);
 const toaster = useToasterStore();
 
 const relationManager = useRelationManager(props.application.id);
