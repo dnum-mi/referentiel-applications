@@ -113,6 +113,15 @@ export const useUserStore = defineStore("userStore", () => {
     }
   }
 
+  // Un admin scopé n'agit que dans son périmètre : cible sans organisation, ou
+  // organisation dont le chemin est porté par celui du scope. Sans scope
+  // (admin global), tout est permis. Règle unique pour édition, impersonation…
+  function isWithinScope(targetOrganizationPath?: string | null) {
+    const scopePath = user.value?.scopeOrganization?.path;
+    if (!scopePath) return true;
+    return !targetOrganizationPath || targetOrganizationPath.startsWith(scopePath);
+  }
+
   function hasPermissions(permissions: Permission[], userApplicationPerms?: APP_PERMISSIONS[]) {
     if (permissions.length === 0) return true;
     const userPermissions = new Set([
@@ -134,6 +143,7 @@ export const useUserStore = defineStore("userStore", () => {
     unsubscribeFromApp,
     getBusinessDivisionId,
     hasPermissions,
+    isWithinScope,
     impersonation,
     isImpersonating,
     startImpersonation,

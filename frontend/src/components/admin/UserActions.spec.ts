@@ -41,6 +41,12 @@ vi.mock("@/stores/userStore", () => ({
       return currentUserMock.user;
     },
     hasPermissions: hasPermissionsMock,
+    // Même règle que le vrai store : sans scope tout est permis, sinon préfixe de chemin.
+    isWithinScope: (targetOrganizationPath?: string | null) => {
+      const scopePath = currentUserMock.user.scopeOrganization?.path;
+      if (!scopePath) return true;
+      return !targetOrganizationPath || targetOrganizationPath.startsWith(scopePath);
+    },
     startImpersonation: vi.fn(),
   }),
 }));
@@ -221,5 +227,40 @@ describe("UserActions", () => {
 
     expect(screen.queryByTestId("admin-user-block-btn")).not.toBeInTheDocument();
     currentUserMock.user.id = "current-user";
+  });
+
+  it("shows the impersonate button to a global administrator for any user", () => {
+    hasPermissionsMock.mockReturnValue(true);
+
+    render(UserActions, {
+      props: { user: createTargetUser("/HORS-PERIMETRE") },
+      global,
+    });
+
+    expect(screen.getByTestId("admin-user-impersonate-btn")).toBeInTheDocument();
+  });
+
+  it("shows the impersonate button to a scoped administrator within their scope", () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.scopeOrganization = createOrganization("/MININT/DTNUM");
+
+    render(UserActions, {
+      props: { user: createTargetUser("/MININT/DTNUM/SDAN") },
+      global,
+    });
+
+    expect(screen.getByTestId("admin-user-impersonate-btn")).toBeInTheDocument();
+  });
+
+  it("hides the impersonate button from a scoped administrator outside their scope", () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.scopeOrganization = createOrganization("/MININT/DTNUM");
+
+    render(UserActions, {
+      props: { user: createTargetUser("/MININT/DGPN") },
+      global,
+    });
+
+    expect(screen.queryByTestId("admin-user-impersonate-btn")).not.toBeInTheDocument();
   });
 });

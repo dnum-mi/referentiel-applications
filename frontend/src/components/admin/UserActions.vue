@@ -24,18 +24,15 @@ const emit = defineEmits<{
 
 const toaster = useToasterStore();
 const userStore = useUserStore();
-const canEditUser = computed(() => {
-  if (!userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) return false;
+const canEditUser = computed(
+  () => userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]) && userStore.isWithinScope(props.user.organization?.path),
+);
 
-  const requestorScopePath = userStore.user?.scopeOrganization?.path;
-  if (!requestorScopePath) return true;
-
-  const targetOrganizationPath = props.user.organization?.path;
-  return !targetOrganizationPath || targetOrganizationPath.startsWith(requestorScopePath);
-});
-
-// On peut impersonner tout utilisateur humain, sauf soi-même.
-const canImpersonate = computed(() => props.user.type !== "bot" && props.user.id !== userStore.user?.id);
+// On peut impersonner tout utilisateur humain, sauf soi-même — et pour un
+// admin scopé, seulement dans son périmètre (même règle que canEditUser, #2217).
+const canImpersonate = computed(
+  () => props.user.type !== "bot" && props.user.id !== userStore.user?.id && userStore.isWithinScope(props.user.organization?.path),
+);
 const isImpersonating = ref(false);
 
 // On ne peut pas bloquer son propre accès (cf. UserService.block côté back).

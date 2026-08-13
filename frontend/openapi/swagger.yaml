@@ -385,7 +385,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserWithPermissions"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - Privilège admin requis, ou utilisateur hors du
+            périmètre de l'administrateur
         "404":
           description: Utilisateur non trouvé
       summary: Impersonner un utilisateur
