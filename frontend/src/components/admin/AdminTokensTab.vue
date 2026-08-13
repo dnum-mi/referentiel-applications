@@ -2,6 +2,7 @@
 import type { CreateServiceTokenDto, ExposedTokenDto, TokenDto } from "@/client/types.gen";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import type { DataTablePageEvent } from "primevue/datatable";
 import api from "@/api";
 import RefAppTable from "@/components/RefAppTable.vue";
 import OrganizationSearchSelect from "@/components/common/OrganizationSearchSelect.vue";
@@ -111,13 +112,13 @@ async function fetchPersonalTokens() {
   isPersonalLoading.value = false;
 }
 
-function onServiceTokenPage(event: any) {
+function onServiceTokenPage(event: DataTablePageEvent) {
   currentServiceTokenPage.value = event.page;
   serviceTokenPageSize.value = event.rows;
   fetchServiceTokens();
 }
 
-function onPersonalTokenPage(event: any) {
+function onPersonalTokenPage(event: DataTablePageEvent) {
   currentPersonalTokenPage.value = event.page;
   personalTokenPageSize.value = event.rows;
   fetchPersonalTokens();

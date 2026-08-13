@@ -149,7 +149,7 @@ function closeModal() {
         placeholder="Tapez au moins 3 caractères"
         data-testid="relation-suggestions-input"
       >
-        <template v-slot:application-label>
+        <template #application-label>
           <DsfrTag v-if="selectedApplication?.label" :label="selectedApplication.label" :small="false" style="margin-top: 15px" />
         </template>
       </SuggestionsInput>
@@ -160,7 +160,7 @@ function closeModal() {
         placeholder="Tapez au moins 3 caractères"
         data-testid="relation-suggestions-mediation-service-input"
       >
-        <template v-slot:application-label>
+        <template #application-label>
           <DsfrTag
             v-if="selectedMediationService?.label"
             :label="selectedMediationService.label"

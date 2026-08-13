@@ -4,7 +4,7 @@ import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminBatchData from "@/components/admin/AdminBatchData.vue";
 import AdminOrganizationsTab from "@/components/admin/AdminOrganizationsTab.vue";
 import AdminActorsTab from "@/components/admin/AdminActorsTab.vue";
-import { markRaw, ref } from "vue";
+import { markRaw, ref, type Component } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
@@ -17,7 +17,7 @@ interface DsfrTab {
   icon?: string;
   tabId: string;
   panelId: string;
-  component: any;
+  component: Component;
 }
 
 const activeTab = ref(0);

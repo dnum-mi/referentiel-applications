@@ -177,6 +177,7 @@ const renderedHtml = computed(() => DOMPurify.sanitize(marked.parse(localValue.v
           @input="emitChange"
           @keydown="handleKeydown"
         />
+        <!-- eslint-disable-next-line vue/no-v-html -- renderedHtml est sanitizé par DOMPurify ci-dessus -->
         <div v-else v-use-mermaid class="preview" data-testid="markdown-preview" v-html="renderedHtml" />
       </div>
 

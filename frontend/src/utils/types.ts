@@ -6,7 +6,7 @@ export type Tab<E extends Record<string, string>> = {
   disabled?: boolean;
 } & (
   | {
-      loadFn: () => Promise<any>;
+      loadFn: () => Promise<unknown>;
       errorKey: keyof E;
     }
   | {
@@ -20,4 +20,4 @@ type GenericHeaders = {
   label: string;
 }[];
 
-export type GenericRow<H extends GenericHeaders> = Record<H[number]["key"], any> & { id: string };
+export type GenericRow<H extends GenericHeaders> = Record<H[number]["key"], unknown> & { id: string };

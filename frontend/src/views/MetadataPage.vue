@@ -9,7 +9,7 @@ import PaginationFooter from "@/components/PaginationFooter.vue";
 import { setPageTitle } from "@/router";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
-import type { PaginatedMetadataDto } from "@/client/types.gen";
+import type { MetadataDto, PaginatedMetadataDto } from "@/client/types.gen";
 
 const columns: TableColumn[] = [
   { field: "Application", header: "Application", sortable: true },
@@ -61,7 +61,7 @@ function convertLocalToUTC(localDateTimeString: string): string {
 }
 
 function fetchData() {
-  const filters: any = {
+  const filters: Parameters<typeof metadataStore.fetchMetadatasGlobal>[0] = {
     page: currentPage.value,
     pageSize: pageSize.value,
     sortBy: columnToFieldKeyMap[sortField.value],
@@ -134,7 +134,7 @@ onMounted(async () => {
   await fetchData();
 });
 
-function getDescriptionSummary(meta: any): string {
+function getDescriptionSummary(meta: MetadataDto): string {
   return (meta.description || "").split("\n")[0];
 }
 
@@ -150,7 +150,7 @@ const metadataTableRows = computed(() =>
       Auteur: meta.impersonator?.email
         ? `${meta.createdBy?.email ?? "Inconnu"} (via ${meta.impersonator.email})`
         : (meta.createdBy?.email ?? "Inconnu"),
-      Organisation: (meta.createdBy as any)?.organization?.path ?? "-",
+      Organisation: meta.createdBy?.organization?.path ?? "-",
       Type: {
         id: meta.id,
         component: "DsfrTag",
@@ -243,9 +243,9 @@ const metadataTableRows = computed(() =>
         empty-message="Aucune donnée recensée."
         @sort="onSort"
       >
-        <template #body-Actions="{ data }">
+        <template #body-Actions="{ data: row }">
           <router-link
-            :to="{ name: 'metadata-detail', params: { id: data.Actions.id }, query: { from: route.fullPath } }"
+            :to="{ name: 'metadata-detail', params: { id: row.Actions.id }, query: { from: route.fullPath } }"
             class="fr-btn fr-btn--secondary fr-btn--sm"
             data-testid="history-see-more-button"
           >
@@ -253,19 +253,19 @@ const metadataTableRows = computed(() =>
           </router-link>
         </template>
 
-        <template #body-Application="{ data }">
-          <template v-if="data.Application && data.Application.to">
-            <router-link :to="data.Application.to" :data-testid="`history-row-${data.Application.id}-application`">
-              {{ data.Application.label }}
+        <template #body-Application="{ data: row }">
+          <template v-if="row.Application && row.Application.to">
+            <router-link :to="row.Application.to" :data-testid="`history-row-${row.Application.id}-application`">
+              {{ row.Application.label }}
             </router-link>
           </template>
           <template v-else>
-            <span :data-testid="`history-row-${data.Application.id}-application`">{{ data.Application.label }}</span>
+            <span :data-testid="`history-row-${row.Application.id}-application`">{{ row.Application.label }}</span>
           </template>
         </template>
 
-        <template #body-Type="{ data }">
-          <DsfrTag :class="data.Type.class" :label="data.Type.label" :data-testid="`history-row-${data.Type.id}-type`" />
+        <template #body-Type="{ data: row }">
+          <DsfrTag :class="row.Type.class" :label="row.Type.label" :data-testid="`history-row-${row.Type.id}-type`" />
         </template>
       </RefAppTable>
 

@@ -92,8 +92,10 @@ const FILLED_STATUS_LABEL = "Renseignée";
 const EMPTY_STATUS_LABEL = "Non renseignée";
 const NO_ECOINDEX_LABEL = "Non calculé";
 
-function getFieldValue(type: ManagedComplianceType, key: string) {
-  return (compliance.value as any)?.[`${type}_${key}`];
+function getFieldValue(type: ManagedComplianceType, key: string): unknown {
+  // Accès par clé composée (`dima_duration_hours`…) : lecture indexée du DTO.
+  const record: Record<string, unknown> | null = compliance.value;
+  return record?.[`${type}_${key}`];
 }
 
 function hasComplianceInfo(type: ManagedComplianceType): boolean {

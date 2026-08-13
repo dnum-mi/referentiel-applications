@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import api from "@/api";
-import { Permission, type PaginatedReportDto } from "@/client/types.gen";
+import { Permission, type PaginatedReportDto, type ReportDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import { formatDate } from "@/composables/use-date";
 import { watchDebounced } from "@vueuse/core";
@@ -10,7 +10,11 @@ import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { GenericRow } from "@/utils/types";
 import type { DsfrDataTableHeaderCell } from "@gouvminint/vue-dsfr";
 import { DsfrSearchBar } from "@gouvminint/vue-dsfr";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { computed, ref, watch } from "vue";
+
+// L'API renvoie aussi les notes du signalement, non déclarées dans ReportDto.
+type ReportRow = ReportDto & { notes?: string };
 
 const props = defineProps<{
   isActive: boolean;
@@ -48,7 +52,7 @@ const sortedDesc = ref<boolean>(true);
 
 const rows = computed(() =>
   (data.value.results || []).map(
-    (report: any): GenericRow<typeof headers> => ({
+    (report: ReportRow): GenericRow<typeof headers> => ({
       id: report.id,
       application: {
         label: report.application?.label,
@@ -57,7 +61,8 @@ const rows = computed(() =>
       notifier: report.notifier?.email || "Inconnu",
       description: report.description,
       notes: report.notes,
-      date: formatDate(report.updatedAt),
+      // updatedAt arrive en chaîne ISO au runtime (typé Date dans le client généré).
+      date: formatDate(String(report.updatedAt)),
       status: {
         report,
         isEditing: isEditing.value,
@@ -104,7 +109,7 @@ function onSort(event: TableSortEvent) {
   sortedDesc.value = event.sortOrder === -1;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   itemsPerPage.value = event.rows;
 }
@@ -159,34 +164,34 @@ watch(
       @sort="onSort"
       @page="onPage"
     >
-      <template #body-application="{ data }">
-        <router-link v-if="data.application.to" :to="data.application.to" :data-testid="`issues-row-${data.id}-application`">
-          {{ data.application.label || "Voir l'application" }}
+      <template #body-application="{ data: row }">
+        <router-link v-if="row.application.to" :to="row.application.to" :data-testid="`issues-row-${row.id}-application`">
+          {{ row.application.label || "Voir l'application" }}
         </router-link>
-        <span v-else :data-testid="`issues-row-${data.id}-application`">{{ data.application.label || "Signalement global" }}</span>
+        <span v-else :data-testid="`issues-row-${row.id}-application`">{{ row.application.label || "Signalement global" }}</span>
       </template>
 
-      <template #body-description="{ data }">
+      <template #body-description="{ data: row }">
         <p class="text-wrap">
-          {{ data.description }}
+          {{ row.description }}
         </p>
       </template>
 
-      <template #body-notes="{ data }">
+      <template #body-notes="{ data: row }">
         <p class="text-wrap">
           <Notes
-            :notes="data.notes"
-            :report-id="data.status.report.id"
-            :is-editing="data.status.isEditing"
+            :notes="row.notes"
+            :report-id="row.status.report.id"
+            :is-editing="row.status.isEditing"
             @refresh="fetchAllReportsDirect()"
           />
         </p>
       </template>
 
-      <template #body-status="{ data }">
+      <template #body-status="{ data: row }">
         <ReportStatusTag
-          :report="data.status.report"
-          :is-editing="data.status.isEditing"
+          :report="row.status.report"
+          :is-editing="row.status.isEditing"
           class="select-status"
           @refresh="fetchAllReportsDirect()"
         />

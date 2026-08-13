@@ -1,12 +1,12 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import { ref, nextTick, watch } from "vue";
 import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Skeleton from "primevue/skeleton";
 import type { TableColumn, TableSortEvent } from "@/types/table";
-import type { DataTableSortEvent, DataTablePageEvent } from "primevue/datatable";
+import type { DataTableSortEvent, DataTablePageEvent, DataTableColumnResizeEndEvent } from "primevue/datatable";
 
-export interface Props<T extends Record<string, any> = Record<string, any>> {
+export interface Props<T> {
   items: T[];
   columns: TableColumn[];
   /**
@@ -28,7 +28,7 @@ export interface Props<T extends Record<string, any> = Record<string, any>> {
   emptyMessage?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props<T>>(), {
   dataKey: undefined,
   loading: false,
   totalRecords: 0,
@@ -101,7 +101,7 @@ function sortTitle(column: TableColumn): string {
   return internalSortOrder.value === -1 ? `${column.header} - Tri descendant` : `${column.header} - Tri ascendant`;
 }
 
-function onColumnResize(event: any) {
+function onColumnResize(event: DataTableColumnResizeEndEvent) {
   if (event.element && event.element.style) {
     const field = event.element.dataset.pColumnField || event.element.getAttribute("aria-label");
     const width = event.element.style.width;

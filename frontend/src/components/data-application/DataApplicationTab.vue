@@ -5,6 +5,7 @@ import api from "@/api/index";
 import { Permission, type ApplicationRefDto, type DataApplicationDto, type DataFamilyDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import type { TableSortEvent } from "@/types/table";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { useToasterStore } from "@/stores/toasterStore";
 import { routeNames } from "@/router/route-names";
 import RefAppTable from "@/components/RefAppTable.vue";
@@ -110,7 +111,7 @@ function onSort(event: TableSortEvent) {
   fetchByApplication(props.application.id);
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
   fetchByApplication(props.application.id);

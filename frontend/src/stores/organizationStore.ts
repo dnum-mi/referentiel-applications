@@ -52,9 +52,9 @@ export const useOrganizationStore = defineStore("organizationStore", () => {
           delete resolvers[org.id];
         });
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("❌ Erreur lors de la récupération des organisations", err);
-      error.value = err.message ?? "Erreur inconnue";
+      error.value = err instanceof Error ? err.message : "Erreur inconnue";
     }
   }, 10);
 

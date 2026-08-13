@@ -9,6 +9,7 @@ import { useOrganizationStore } from "@/stores/organizationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { computed, nextTick, onBeforeMount, ref } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import ActorForm from "./ActorForm.vue";
@@ -179,7 +180,7 @@ function cancelDelete() {
   showDeleteConfirmation.value = false;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
 }

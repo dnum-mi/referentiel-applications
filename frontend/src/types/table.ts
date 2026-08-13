@@ -5,7 +5,7 @@ export interface TableColumn {
   width?: string;
 }
 
-export interface RefAppTableProps<T = Record<string, any>> {
+export interface RefAppTableProps<T = Record<string, unknown>> {
   items: T[];
   columns: TableColumn[];
   loading?: boolean;

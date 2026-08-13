@@ -17,9 +17,11 @@ import {
   PatchApplicationDto,
 } from "./dto/create-application.dto";
 import {
+  ApplicationDto,
   ApplicationSearchResultDto,
   QualitySummaryDto,
 } from "./dto/get-application.dto";
+import { ApplicationWithAllRelations } from "src/applications/types/application.type";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
 import { TechnicalDebtPointDto } from "./dto/technical-debt-point.dto";
 import { StatusesService } from "src/statuses/statuses.service";
@@ -441,14 +443,16 @@ export class ApplicationService {
       );
     }
 
-    const dataWithViews = paginatedResult.results.map((app: any) => {
-      const { _count, ...rest } = app;
+    const dataWithViews = paginatedResult.results.map(
+      (app: ApplicationDto & { _count?: { applicationViews: number } }) => {
+        const { _count, ...rest } = app;
 
-      return {
-        ...rest,
-        applicationViews: _count?.applicationViews ?? 0,
-      };
-    });
+        return {
+          ...rest,
+          applicationViews: _count?.applicationViews ?? 0,
+        };
+      },
+    );
 
     return {
       ...paginatedResult,
@@ -524,7 +528,7 @@ export class ApplicationService {
     return this.applicationRepository.findDistinctMillesimes();
   }
 
-  public async exportApplications(): Promise<any[]> {
+  public async exportApplications(): Promise<ApplicationWithAllRelations[]> {
     return this.applicationRepository.findAllWithFullRelations();
   }
 

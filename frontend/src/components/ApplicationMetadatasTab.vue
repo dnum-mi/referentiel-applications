@@ -5,6 +5,7 @@ import { useMetadataStore } from "@/stores/metadataStore";
 import { useRoute } from "vue-router";
 import type { MetadataDto } from "@/client/types.gen";
 import type { TableColumn, TableSortEvent } from "@/types/table";
+import type { DataTablePageEvent } from "primevue/datatable";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
@@ -50,7 +51,7 @@ function onSort(event: TableSortEvent) {
   fetchMetadatas();
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
 }

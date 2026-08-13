@@ -151,13 +151,13 @@ export class ActorService {
     requestorId: string,
   ): Promise<ActorWithRelations> {
     const actor = await this.baseService.findOne(id, this.actorInclude);
-    const applicationId = (actor as any).applicationId;
+    const applicationId = actor.applicationId;
     return this.update(id, data, applicationId, requestorId);
   }
 
   public async deleteGlobal(id: string, requestorId: string) {
     const actor = await this.baseService.findOne(id, this.actorInclude);
-    const applicationId = (actor as any).applicationId;
+    const applicationId = actor.applicationId;
     return this.delete(id, applicationId, requestorId);
   }
 
@@ -417,7 +417,10 @@ export class ActorService {
   }
 
   private async sendActorNotificationIfEnabled(
-    actor: any,
+    actor: Pick<
+      ActorWithRelations,
+      "email" | "firstname" | "lastname" | "applicationId"
+    >,
     event: "created" | "updated" = "created",
     changedFieldsHtml?: string,
   ): Promise<void> {
