@@ -677,6 +677,7 @@ erDiagram
   MetadataAction action
   String applicationId FK "nullable"
   String createdById FK
+  String impersonatorId FK "nullable"
   String dataOwnerId FK "nullable"
   String complianceId FK "nullable"
   String labelId FK "nullable"
@@ -704,6 +705,7 @@ Properties as follows:
 - `action`: Type d'action (ajout, mise à jour, suppression)
 - `applicationId`:
 - `createdById`:
+- `impersonatorId`:
 - `dataOwnerId`:
 - `complianceId`:
 - `labelId`:

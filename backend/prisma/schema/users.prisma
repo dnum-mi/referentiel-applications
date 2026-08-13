@@ -21,6 +21,8 @@ model User {
   createdSet                Metadata[]          @relation("MetadataCreatedBy")
   /// Entrées de métadonnées où cet utilisateur est le propriétaire des données
   dataOwners                Metadata[]          @relation("MetadataDataOwnerBy")
+  /// Entrées de métadonnées créées sous une identité empruntée par cet admin (#2226)
+  metadataAsImpersonator    Metadata[]          @relation("MetadataImpersonator")
   /// Signalements créés par cet utilisateur
   reports                   Report[]
   /// Groupement de permissions par defaut

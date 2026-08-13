@@ -144,7 +144,10 @@ onMounted(() => {
 
       <div class="fr-mb-3w">
         <h2 class="fr-h6">Auteur</h2>
-        <p data-testid="metadata-author">{{ metadata.createdBy?.email ?? "Inconnu" }}</p>
+        <p data-testid="metadata-author">
+          {{ metadata.createdBy?.email ?? "Inconnu" }}
+          <template v-if="metadata.impersonator?.email"> (via {{ metadata.impersonator.email }})</template>
+        </p>
       </div>
 
       <div class="fr-mb-3w">

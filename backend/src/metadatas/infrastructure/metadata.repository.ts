@@ -67,6 +67,7 @@ export class MetadataRepository implements IMetadataRepository {
             organization: true,
           },
         },
+        impersonator: true,
         application: {
           select: { id: true, label: true },
         },
@@ -112,6 +113,7 @@ export class MetadataRepository implements IMetadataRepository {
             organization: true,
           },
         },
+        impersonator: true,
         application: {
           select: { id: true, label: true },
         },
