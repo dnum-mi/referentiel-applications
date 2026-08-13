@@ -74,7 +74,6 @@
   (via `admin@example.com`) » — l'action est attribuée à l'identité effective ET l'administrateur
   réel est visible. Même affichage sur la page globale Modifications et le détail d'une metadata.
   Hors impersonification, aucun « (via …) » n'apparaît.
-  =======
 
 ### IMP-08 — Un admin scopé ne peut impersonner que dans son périmètre (#2217) ✅
 
@@ -88,4 +87,3 @@
 - **Résultat attendu** : bouton absent hors périmètre ; `403 Forbidden` sur l'endpoint ET sur le
   header direct (contrôle dans le middleware, non contournable) ; impersonation normale dans le
   périmètre. Un admin sans périmètre (global) reste libre d'impersonner tout utilisateur humain.
-  > > > > > > > b2aa798c (feat: restrict impersonation to the local admin's organization scope)
