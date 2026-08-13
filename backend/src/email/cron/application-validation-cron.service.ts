@@ -1,7 +1,7 @@
 import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
-import { Status } from "@prisma/client";
+import { RETIRED_STATUSES } from "src/applications/constants/status-groups";
 import { LoggerService } from "src/logger/logger.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { EmailService } from "../email.service";
@@ -79,7 +79,7 @@ export class ApplicationValidationCronService
             { currentStatusId: null },
             {
               currentStatus: {
-                status: { notIn: [Status.decommissioned, Status.deleted] },
+                status: { notIn: [...RETIRED_STATUSES] },
               },
             },
           ],

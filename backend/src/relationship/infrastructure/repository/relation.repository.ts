@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Status } from "@prisma/client";
+import { isDeleted } from "src/applications/constants/status-groups";
 import { PrismaService } from "../../../prisma/prisma.service";
 import {
   GraphEdgeDto,
@@ -142,7 +143,10 @@ export class RelationRepository implements IRelationRepository {
         return;
       }
 
-      if (app.currentStatus?.status === Status.deleted) {
+      // Le graphe n'exclut que les supprimées : les décommissionnées restent
+      // visibles (écart avec RETIRED_STATUSES relevé par l'audit dédup — à
+      // arbitrer métier avant tout changement, cf. #2250).
+      if (isDeleted(app.currentStatus?.status)) {
         return;
       }
 
@@ -240,8 +244,8 @@ export class RelationRepository implements IRelationRepository {
     edgesMap: Map<string, GraphEdgeDto>,
   ): string | null {
     if (
-      rel.sourceApplication.currentStatus?.status === Status.deleted ||
-      rel.targetApplication.currentStatus?.status === Status.deleted
+      isDeleted(rel.sourceApplication.currentStatus?.status) ||
+      isDeleted(rel.targetApplication.currentStatus?.status)
     ) {
       return null;
     }

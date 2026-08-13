@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Permission } from "@prisma/client";
 import { plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
 import * as ExcelJS from "exceljs";
 import { ActorService } from "src/actor/actor.service";
 import { CreateActorDto, UpdateActorDto } from "src/actor/dto/actor.dto";
@@ -18,6 +17,7 @@ import {
   buildHeaderIndex,
   insufficientRightsMessage,
   makeCellReader,
+  validateImportDto,
 } from "../utils/excel.utils";
 
 /** En-têtes (libellés) attendus dans l'onglet « Acteurs », alignés sur l'export. */
@@ -163,7 +163,7 @@ export class ActorsSheetProcessor {
       }
 
       const dto = plainToInstance(UpdateActorDto, baseFields);
-      await this.validateDto(dto);
+      await validateImportDto(dto);
       await this.actorService.update(
         data.id,
         dto,
@@ -178,7 +178,7 @@ export class ActorsSheetProcessor {
       ...baseFields,
       isGroup: false,
     });
-    await this.validateDto(dto);
+    await validateImportDto(dto);
     await this.actorService.create(dto, data.applicationId, requestor.id);
 
     return { sheet: this.sheetName, row, status: "created", identifier };
@@ -204,21 +204,5 @@ export class ActorsSheetProcessor {
       if (byLabel) return byLabel.id;
     }
     return null;
-  }
-
-  private async validateDto(
-    dto: CreateActorDto | UpdateActorDto,
-  ): Promise<void> {
-    const errors = await validate(dto, {
-      whitelist: true,
-      forbidNonWhitelisted: false,
-    });
-    if (errors.length > 0) {
-      const details = errors
-        .map((e) => Object.values(e.constraints ?? {}).join(", "))
-        .filter(Boolean)
-        .join(" ; ");
-      throw new Error(`Validation échouée : ${details}`);
-    }
   }
 }

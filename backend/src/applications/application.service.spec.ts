@@ -62,6 +62,7 @@ describe("ApplicationService.search — recherche full-text (param q)", () => {
       prismaQueryBuilder as unknown as PrismaQueryBuilder,
       checkPermissions as unknown as CheckPermissions,
       applicationSearchService as unknown as ApplicationSearchService,
+      {} as never,
     );
 
     return {
