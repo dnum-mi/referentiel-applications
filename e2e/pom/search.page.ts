@@ -3,6 +3,8 @@ import { BasePage } from "./base.page";
 import { parseFirstNumber, waitForSearchParams } from "../support/helpers";
 
 const SEARCH_PATH = "/recherche-application";
+// Miroir de `frontend/src/constants/dictionary.ts` (statusApplicationDictionary,
+// #2246) : toute évolution des libellés côté front doit être répercutée ici.
 const STATUS_LABELS: Record<string, string> = {
   under_construction: "En construction",
   to_validate: "A valider",
@@ -10,8 +12,8 @@ const STATUS_LABELS: Record<string, string> = {
   in_production_mvp: "MVP en production",
   in_production: "En production",
   in_production_decommissioning: "À décommissionner",
-  decommissioned: "Décommissionné",
-  deleted: "Supprimé",
+  decommissioned: "Décommissionnée",
+  deleted: "Supprimée",
 };
 
 /** Page Object — Catalogue & recherche (`/recherche-application`). */
