@@ -42,12 +42,15 @@ type MakeServiceOptions = {
   scopeActors?: unknown[];
   /** Direction métier retournée par `hasBusinessDivisionScope`. */
   businessDivision?: unknown | null;
+  /** Matrice du type d'acteur par défaut (`getDefaultActorTypePermissions`). */
+  defaultActorTypePermissions?: unknown | null;
 };
 
 const makeService = ({
   emailActors = [],
   scopeActors = [],
   businessDivision = null,
+  defaultActorTypePermissions = null,
 }: MakeServiceOptions = {}) => {
   const prisma = {
     actor: {
@@ -60,6 +63,9 @@ const makeService = ({
         ),
     },
     actorType: { findMany: jest.fn().mockResolvedValue([]) },
+    appPermissions: {
+      findFirst: jest.fn().mockResolvedValue(defaultActorTypePermissions),
+    },
     businessDivision: {
       findFirst: jest.fn().mockResolvedValue(businessDivision),
     },
@@ -122,7 +128,9 @@ describe("CheckPermissions.getUserAppPermissions", () => {
   });
 
   it("aucun acteur trouvé : hérite des droits du type d'acteur par défaut (isDefault)", async () => {
-    const { service } = makeService([], READ_ONLY_MATRIX);
+    const { service } = makeService({
+      defaultActorTypePermissions: READ_ONLY_MATRIX,
+    });
     const user = baseUser();
 
     // Le fallback applique la matrice du type d'acteur par défaut, comme un acteur normal.
