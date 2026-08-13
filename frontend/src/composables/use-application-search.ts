@@ -7,6 +7,7 @@ import type {
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
+import { APPLICATION_STATUSES } from "@/constants/dictionary";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 
@@ -19,15 +20,9 @@ const DEFAULT_FILTERS: Filters = {
   tag: [],
   link: undefined,
   priorityRestart: undefined,
-  currentStatus__in: [
-    "under_construction",
-    "to_validate",
-    "poc",
-    "in_production_mvp",
-    "in_production",
-    "in_production_decommissioning",
-    "decommissioned",
-  ],
+  // Tous les statuts sauf « supprimée » — dérivé de l'enum généré pour qu'un
+  // nouveau statut apparaisse automatiquement dans la recherche par défaut (#2246).
+  currentStatus__in: APPLICATION_STATUSES.filter((status) => status !== "deleted"),
   currentStatus__isNull: true,
   subscribersEmail: false,
   myApplications: false,
