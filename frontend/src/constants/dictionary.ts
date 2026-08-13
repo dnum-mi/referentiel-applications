@@ -86,16 +86,6 @@ export const linkTypesDict = {
   main_service: "Service principal",
 };
 
-export const eventTypesArray = [
-  { value: "under_construction", text: "En construction" },
-  { value: "in_production", text: "En production" },
-  { value: "decommissioned", text: "Décommissionnée" },
-  { value: "decommissioning", text: "En décommissionnement" },
-  { value: "highlight", text: "Événement" },
-];
-
-export const eventTypesDict = Object.fromEntries(eventTypesArray.map(({ value, text }) => [value, text]));
-
 export const restartPrioritiesConfig = {
   R0: {
     type: "error",
@@ -130,6 +120,8 @@ export const restartPrioritiesConfig = {
   },
 } as const satisfies Record<ApplicationPriorityRestart, { type: string; label: string; shortLabel: string; tooltip: string }>;
 
+// Wording aligné sur les exports backend (ApplicationStatusLabels, #2246) :
+// un même statut doit s'afficher pareil à l'écran et dans les exports CSV/XLSX.
 export const statusApplicationDictionary: Record<ApplicationStatus, string> = {
   under_construction: "En construction",
   to_validate: "A valider",
@@ -137,9 +129,14 @@ export const statusApplicationDictionary: Record<ApplicationStatus, string> = {
   in_production_mvp: "MVP en production",
   in_production: "En production",
   in_production_decommissioning: "À décommissionner",
-  decommissioned: "Décommissionné",
-  deleted: "Supprimé",
+  decommissioned: "Décommissionnée",
+  deleted: "Supprimée",
 };
+
+// Liste exhaustive des statuts, dérivée du dictionnaire ci-dessus (lui-même
+// contraint par l'enum généré) : un nouveau statut backend casse la compilation
+// ici au lieu de disparaître silencieusement des filtres (#2246).
+export const APPLICATION_STATUSES = Object.keys(statusApplicationDictionary) as ApplicationStatus[];
 
 export const priorityRestartLabelsOptions = Object.entries(restartPrioritiesConfig).map(([key, value]) => ({
   value: key as ApplicationPriorityRestart,

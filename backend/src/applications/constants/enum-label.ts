@@ -1,15 +1,21 @@
+import { RelationType, Status } from "@prisma/client";
+import { RelationTypeLabelsBidirectional } from "./relation-type-labels";
+
 export const ReportStatusLabels: Record<string, string> = {
   in_pending: "En attente",
   in_progress: "En cours",
   done: "Terminée",
 };
 
-export const RelationTypeLabels: Record<string, string> = {
-  is_part_of: "Fait partie de",
-  in_replacement_of: "En remplacement de",
-  is_service_user_of: "Utilise le service de",
-  is_data_user_of: "Utilise des données de",
-};
+/// Libellés « direction source », dérivés de la source unique bidirectionnelle
+/// (#2246) — plus de deuxième map à maintenir à la main.
+export const RelationTypeLabels: Record<RelationType, string> =
+  Object.fromEntries(
+    Object.entries(RelationTypeLabelsBidirectional).map(([type, labels]) => [
+      type,
+      labels.source,
+    ]),
+  ) as Record<RelationType, string>;
 
 export const PriorityRestartLabels: Record<string, string> = {
   R0: "R0 - Immédiat (H24)",
@@ -17,14 +23,6 @@ export const PriorityRestartLabels: Record<string, string> = {
   R1_STAR: "R1* - Selon période d'activité",
   R2: "R2 - Dès que possible (H24)",
   R3: "R3 - Quand le plus urgent est réalisé (H0)",
-};
-
-export const EventTypeLabels: Record<string, string> = {
-  under_construction: "En construction",
-  in_production: "En production",
-  decommissioned: "Décommissionnée",
-  decommissioning: "En décommissionnement",
-  highlight: "Événement",
 };
 
 export const ExternalRessourceTypeLabels: Record<string, string> = {
@@ -43,22 +41,23 @@ export const NatureLabels: Record<string, string> = {
   BARRE_METAL: "Bare metal",
 };
 
-export const ApplicationStatusLabels: Record<string, string> = {
+/// Wording aligné sur l'écran (frontend statusApplicationDictionary, #2246) :
+/// exports et UI doivent afficher le même libellé pour un même statut.
+export const ApplicationStatusLabels = {
   under_construction: "En construction",
   to_validate: "A valider",
-  poc: "POC",
-  in_production_mvp: "En production (MVP)",
+  poc: "POC (Preuve de concept)",
+  in_production_mvp: "MVP en production",
   in_production: "En production",
-  in_production_decommissioning: "En décommissionnement",
+  in_production_decommissioning: "À décommissionner",
   decommissioned: "Décommissionnée",
   deleted: "Supprimée",
-};
+} satisfies Record<Status, string>;
 
 export const ALL_ENUM_LABELS: Record<string, string> = {
   ...ReportStatusLabels,
   ...RelationTypeLabels,
   ...PriorityRestartLabels,
-  ...EventTypeLabels,
   ...ExternalRessourceTypeLabels,
   ...NatureLabels,
   ...ApplicationStatusLabels,
