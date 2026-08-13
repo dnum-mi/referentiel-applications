@@ -3744,7 +3744,9 @@ paths:
         - actorTypes
     get:
       description: Ce endpoint permet de récupérer la liste de tous les types
-        d’acteurs disponibles.
+        d’acteurs disponibles. Le type d'acteur système (droits par défaut d'un
+        non-acteur) est exclu par défaut ; utiliser `includeSystem=true` pour
+        l'inclure (ex. matrice des permissions).
       operationId: ActorTypeController_findAll
       parameters:
         - name: page
@@ -3782,6 +3784,15 @@ paths:
             enum:
               - asc
               - desc
+        - name: includeSystem
+          required: false
+          in: query
+          description: "Inclure le(s) type(s) d'acteur système (isDefault) dans la liste.
+            Exclu par défaut : ces types ne sont pas assignables à un acteur
+            réel (cf. matrice des permissions pour les manipuler)."
+          schema:
+            default: false
+            type: boolean
       responses:
         "200":
           description: Liste les types d’acteurs
@@ -3832,6 +3843,24 @@ paths:
                 items:
                   $ref: "#/components/schemas/AppPermsDto"
       summary: Mettre à jour la matrice des permissions
+      tags: *a21
+  /api/v2/actorTypes/perms-matrix/history:
+    get:
+      description: Retourne l'historique des modifications apportées à la matrice des
+        droits par type d'acteur, avec la date et l'email de l'auteur de chaque
+        modification.
+      operationId: ActorTypeController_getMatrixHistory
+      parameters: []
+      responses:
+        "200":
+          description: Historique des modifications de la matrice des permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppPermsMatrixHistoryDto"
+      summary: Récupérer l'historique des modifications de la matrice des permissions
       tags: *a21
   /api/v2/actorTypes/{id}:
     get:
@@ -8218,10 +8247,17 @@ components:
           type: string
           example: 12345678-1234-1234-1234-123456789012
           description: Identifiant unique du type d'acteur
+        isDefault:
+          type: boolean
+          example: false
+          description: "Type d'acteur système représentant les droits par défaut d'un
+            utilisateur non-acteur. Non assignable à un acteur réel : à exclure
+            des sélecteurs de création/édition d'acteur."
       required:
         - code
         - label
         - id
+        - isDefault
     AppPermsDto:
       type: object
       properties:
@@ -8292,6 +8328,29 @@ components:
         - ReportRead
         - ReportPost
         - ReportManage
+    AppPermsMatrixHistoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unique de l'entrée d'historique
+        createdAt:
+          format: date-time
+          type: string
+          description: Date de la modification
+        description:
+          type: string
+          description: Détail des changements de droits appliqués à la matrice, par type
+            d'acteur
+        changedByEmail:
+          type: string
+          nullable: true
+          description: Email de la personne ayant effectué la modification. Null si
+            l'auteur a depuis été supprimé.
+      required:
+        - id
+        - createdAt
+        - description
     PaginatedActorTypeDto:
       type: object
       properties:

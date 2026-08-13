@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref, unref } from "vue";
+import { computed, onMounted, ref, unref } from "vue";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
-import type { AppPermsDto } from "@/client/types.gen";
+import { useToasterStore } from "@/stores/toasterStore";
+import api from "@/api/index";
+import type { AppPermsDto, CreateActorTypeDto } from "@/client/types.gen";
+import AppPermsMatrixHistory from "./AppPermsMatrixHistory.vue";
 import PermissionWritePriorityRestart from "../PermissionWritePriorityRestart.vue";
 
 const props = defineProps<{
@@ -13,9 +16,12 @@ const emits = defineEmits<{
   (e: "reload"): void;
 }>();
 const actorTypeStore = useActorTypeStore();
+const toaster = useToasterStore();
 
 onMounted(async () => {
-  await actorTypeStore.fetchAll();
+  // `includeSystem: true` : la matrice doit résoudre le libellé de TOUTES les lignes,
+  // y compris le type d'acteur système (exclu par défaut de la liste des types assignables).
+  await actorTypeStore.fetchAll(true);
 });
 
 // Colonnes dans l'ordre des onglets de la fiche application (#2083) — « Priorit. Redémarr. »
@@ -38,6 +44,15 @@ const permissionKeys = Object.keys(permissionSuffixes) as (keyof typeof permissi
 const gridKeys = permissionKeys.filter((k) => k !== "Metadata");
 
 const updatedMatrix = ref<AppPermsDto[]>(unref(props.appPermsMatrix));
+
+// Lignes triées par ordre alphabétique du type d'acteur, comme dans la modale create/edit acteur.
+const sortedMatrix = computed(() =>
+  [...updatedMatrix.value].sort((a, b) => {
+    const labelA = actorTypeStore.actorTypes.find((at) => at.id === a.actorTypeId)?.label ?? "";
+    const labelB = actorTypeStore.actorTypes.find((at) => at.id === b.actorTypeId)?.label ?? "";
+    return labelA.localeCompare(labelB, "fr");
+  }),
+);
 
 type PermissionValue = "none" | "Read" | "Write";
 function updateMatrix(actorTypeId: string, permission: keyof typeof permissionSuffixes, value: PermissionValue) {
@@ -76,6 +91,53 @@ function saveAppPermsMatrix() {
 
   emits("update:appPermsMatrix", updatedMatrix.value);
 }
+
+const isHistoryModalOpen = ref(false);
+
+const isCreateActorTypeModalOpen = ref(false);
+const isCreatingActorType = ref(false);
+const newActorTypeForm = ref<CreateActorTypeDto>({ code: "", label: "", description: "" });
+
+function openCreateActorTypeModal() {
+  newActorTypeForm.value = { code: "", label: "", description: "" };
+  isCreateActorTypeModalOpen.value = true;
+}
+
+function closeCreateActorTypeModal() {
+  isCreateActorTypeModalOpen.value = false;
+}
+
+const isNewActorTypeFormValid = computed(() => newActorTypeForm.value.code.trim() !== "" && newActorTypeForm.value.label.trim() !== "");
+
+async function createActorType() {
+  isCreatingActorType.value = true;
+  try {
+    const response = await api.actorTypeControllerCreate({
+      body: {
+        code: newActorTypeForm.value.code.trim(),
+        label: newActorTypeForm.value.label.trim(),
+        description: newActorTypeForm.value.description?.trim() || undefined,
+      },
+    });
+    if (response.response.ok) {
+      toaster.addSuccessMessage("Type d'acteur créé avec succès");
+      closeCreateActorTypeModal();
+      // Rafraîchit le store partagé (liste utilisée par la matrice ET par le select de
+      // type d'acteur des modales create/edit acteur, qui refera son propre fetch sans
+      // `includeSystem` à sa prochaine ouverture) et la matrice elle-même (nouvelle ligne
+      // créée côté back avec des droits à zéro, cf. DEFAULT_APP_PERMISSIONS).
+      await actorTypeStore.fetchAll(true);
+      emits("reload");
+    } else {
+      toaster.addErrorMessage("Erreur lors de la création du type d'acteur");
+    }
+  } catch (error) {
+    console.error("Error creating actor type:", error);
+    toaster.addErrorMessage("Erreur lors de la création du type d'acteur");
+  } finally {
+    isCreatingActorType.value = false;
+  }
+}
 </script>
 
 <template>
@@ -83,6 +145,18 @@ function saveAppPermsMatrix() {
     Légende : <strong>-</strong> aucun droit · <strong>RO</strong> lecture seule (Read Only) · <strong>RW</strong> lecture et écriture
     (Read/Write).
   </p>
+  <div class="fr-mb-2w fr-text-right">
+    <DsfrButton
+      secondary
+      size="sm"
+      data-testid="app-perms-create-actor-type-btn"
+      title="Ajouter un type d'acteur"
+      aria-label="Ajouter un type d'acteur"
+      @click="openCreateActorTypeModal"
+    >
+      Ajouter un type d'acteur
+    </DsfrButton>
+  </div>
   <DsfrTable title="Tableau des permissions des applications" data-testid="app-perms-table">
     <template #header>
       <tr>
@@ -94,7 +168,7 @@ function saveAppPermsMatrix() {
         <th scope="col" style="min-width: 6rem" title="Modifications">Modifications</th>
       </tr>
     </template>
-    <tr v-for="perms in updatedMatrix as AppPermsDto[]" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
+    <tr v-for="perms in sortedMatrix" :key="perms.actorTypeId" :data-testid="`app-perms-row-${perms.actorTypeId}`">
       <td>{{ actorTypeStore.actorTypes.find((at) => at.id === perms.actorTypeId)?.label ?? perms.actorTypeId }}</td>
       <td v-for="perm in gridKeys" :key="perm">
         <PermissionSelect
@@ -176,7 +250,76 @@ function saveAppPermsMatrix() {
     >
       Recharger les permissions
     </DsfrButton>
+    <DsfrButton
+      class="fr-mt-2w fr-ml-2w"
+      secondary
+      data-testid="app-perms-history-btn"
+      title="Voir l'historique des modifications de la matrice des permissions"
+      aria-label="Voir l'historique des modifications de la matrice des permissions"
+      @click="isHistoryModalOpen = true"
+    >
+      Voir l'historique
+    </DsfrButton>
   </div>
+
+  <DsfrModal
+    :opened="isHistoryModalOpen"
+    size="xl"
+    title="Historique des modifications de la matrice des permissions"
+    data-testid="app-perms-history-modal"
+    @close="isHistoryModalOpen = false"
+  >
+    <AppPermsMatrixHistory v-if="isHistoryModalOpen" />
+  </DsfrModal>
+
+  <DsfrModal
+    :opened="isCreateActorTypeModalOpen"
+    title="Ajouter un type d'acteur"
+    data-testid="create-actor-type-modal"
+    @close="closeCreateActorTypeModal"
+  >
+    <DsfrInput
+      v-model="newActorTypeForm.code"
+      label="Code"
+      label-visible
+      required
+      placeholder="MOA"
+      data-testid="create-actor-type-code-input"
+      class="fr-mb-3w"
+    />
+    <DsfrInput
+      v-model="newActorTypeForm.label"
+      label="Libellé"
+      label-visible
+      required
+      placeholder="Maîtrise d'Ouvrage"
+      data-testid="create-actor-type-label-input"
+      class="fr-mb-3w"
+    />
+    <DsfrInput
+      v-model="newActorTypeForm.description"
+      label="Description"
+      label-visible
+      is-textarea
+      placeholder="Description du rôle de ce type d'acteur"
+      data-testid="create-actor-type-description-input"
+      class="fr-mb-3w"
+    />
+    <DsfrAlert
+      type="info"
+      description="Le nouveau type d'acteur est créé sans aucun droit : ouvrez-les depuis la matrice une fois la création effectuée."
+      class="fr-mb-3w alert-wrap"
+    />
+    <template #footer>
+      <DsfrButton label="Annuler" secondary data-testid="create-actor-type-cancel-btn" @click="closeCreateActorTypeModal" />
+      <DsfrButton
+        label="Créer"
+        :disabled="isCreatingActorType || !isNewActorTypeFormValid"
+        data-testid="create-actor-type-submit-btn"
+        @click="createActorType"
+      />
+    </template>
+  </DsfrModal>
 </template>
 
 <style scoped>
@@ -186,4 +329,8 @@ function saveAppPermsMatrix() {
 
 /* En-tête sticky : porté par la règle GLOBALE de main.css (#2112), qui couvre toutes les
    tables DSFR legacy (`.fr-table > table`), celle-ci comprise. */
+
+.alert-wrap {
+  text-wrap: auto;
+}
 </style>
