@@ -65,8 +65,8 @@ model Application {
   sourceDataDescriptions DataDescription[]
   /// Niveau de priorité pour les opérations de redémarrage
   priorityRestart priorityRestart?
-  /// Score de qualité de la fiche de l' application
-  quality         Int
+  /// Score de qualité de la fiche de l'application (null si l'application est décommissionnée ou supprimée)
+  quality         Int?
 
   /// Directions metier MOA de l'application
   businessDivisions BusinessDivision[]

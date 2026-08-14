@@ -5,7 +5,7 @@ import { useColumnPreferences } from "@/composables/use-column-preferences";
 import { formatDateFR } from "@/composables/use-date";
 import { homologationStatusDict, restartPrioritiesConfig, statusApplicationDictionary } from "@/constants/dictionary";
 import type { TableSortEvent } from "@/types/table";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 
 const { filters, results, total, page, pageSize, setFilter, isLoading } = useApplicationSearch();
@@ -14,8 +14,14 @@ const { tableColumns, setColumnWidth } = useColumnPreferences();
 // Calcul essentiel pour PrimeVue : (Page 0 -> 0, Page 1 -> 15, Page 2 -> 30...)
 const firstIndex = computed(() => page.value * pageSize.value);
 
-const sortField = ref(filters.value.sortBy || "label");
-const sortOrder = ref(filters.value.order === "desc" ? -1 : 1);
+// Dérivés de `filters` (source de vérité) plutôt que des refs initialisées une
+// seule fois : au premier rendu, `route.query` peut ne pas encore être résolu
+// (pas d'attente de `router.isReady()` avant le mount), donc `filters.value`
+// se met à jour de façon asynchrone après le setup de ce composant. Des refs
+// figées au montage restaient alors désynchronisées du tri réellement actif
+// (ex. après un rechargement de page avec `sortBy` dans l'URL).
+const sortField = computed(() => filters.value.sortBy || "label");
+const sortOrder = computed(() => (filters.value.order === "desc" ? -1 : 1));
 
 const formatActors = (actors: any[], actorTypeCode: string): string => {
   const filteredActors = actors.filter((actor) => actor.actorType?.code === actorTypeCode);
@@ -62,7 +68,7 @@ const applications = computed(() =>
   results.value.map((app: any) => {
     return {
       ...app,
-      qualityDisplay: `${app.quality}%`,
+      qualityDisplay: formatPercent(app.quality),
       hostingDisplay: app.hostings.map((h: any) => h.hostingOption?.site || h.site).join(", "),
       tagsDisplay: app.tags.map((tag: any) => tag.name).join(", "),
       hostingProviderDisplay: app.hostings.map((h: any) => formatHostingsProvider(h.hostingOption)).join(", "),
@@ -90,12 +96,9 @@ const applications = computed(() =>
 );
 
 function onSort(event: TableSortEvent) {
-  sortField.value = event.sortField || "label";
-  sortOrder.value = event.sortOrder || 1;
-
   setFilter({
-    sortBy: sortField.value,
-    order: sortOrder.value === -1 ? "desc" : "asc",
+    sortBy: event.sortField || "label",
+    order: (event.sortOrder || 1) === -1 ? "desc" : "asc",
     page: 0,
   });
 }

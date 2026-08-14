@@ -4,6 +4,7 @@ import type {
   ApplicationDto,
   TechnicalDebtControllerGetTechnicalDebtPointsResponses,
 } from "@/client/types.gen";
+import type { Ref } from "vue";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index.js";
@@ -43,6 +44,7 @@ const DEFAULT_FILTERS: Filters = {
   actorEmail: undefined,
   iqGte: 0,
   iqLte: 100,
+  iq__isNull: false,
   search: undefined,
   missingMoa: undefined,
   missingMoe: undefined,
@@ -74,6 +76,16 @@ const total = ref(0);
 const averageIq = ref<number>(0);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
+
+// `filters` doit aussi être partagé : chaque composant de filtre (StatusFilter,
+// QualityFilter, …) appelle son propre `useApplicationSearch()`, et un `ref`
+// recréé à chaque appel donnait à chacun sa propre copie des filtres. Au moindre
+// changement, `setFilter` réécrivait l'intégralité de la query d'URL depuis SA
+// copie — potentiellement périmée vis-à-vis d'un changement fait entre-temps par
+// un autre filtre — écrasant ce changement. D'où des cases à cocher qui semblaient
+// nécessiter deux clics pour « prendre ». Initialisé au premier appel (a besoin de
+// `route`, disponible uniquement depuis un composant), puis réutilisé tel quel.
+let sharedFilters: Ref<Filters> | undefined;
 
 // Filtres saisis au clavier (texte, curseurs) : la recherche est débouncée pour
 // ne pas interroger l'API à chaque frappe. Les autres filtres (cases à cocher,
@@ -201,6 +213,7 @@ function queryToFilters(query: Record<string, LocationQueryValue | LocationQuery
     actorEmail: parseQueryParam(query.actorEmail),
     iqGte: parseQueryParamNumber(query.iqGte) ?? 0,
     iqLte: parseQueryParamNumber(query.iqLte) ?? 100,
+    iq__isNull: parseQueryParamBoolean(query.iq__isNull) ?? DEFAULT_FILTERS.iq__isNull,
     search: parseQueryParam(query.search),
     missingMoa: parseQueryParamBoolean(query.missingMoa),
     missingMoe: parseQueryParamBoolean(query.missingMoe),
@@ -248,10 +261,10 @@ export function useApplicationSearch() {
     );
   }
 
-  const filters = ref<Filters>({
+  const filters = (sharedFilters ??= ref<Filters>({
     ...DEFAULT_FILTERS,
     ...queryToFilters(route.query),
-  });
+  }));
 
   const page = computed({
     get: () => filters.value.page!,

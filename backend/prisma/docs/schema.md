@@ -32,7 +32,7 @@ erDiagram
   ApplicationType type "nullable"
   String currentStatusId FK "nullable"
   priorityRestart priorityRestart "nullable"
-  Int quality
+  Int quality "nullable"
 }
 "ApplicationStatus" {
   String id PK
@@ -148,7 +148,7 @@ Properties as follows:
 - `type`: Type/catégorie de l'application (métier, service, etc.)
 - `currentStatusId`:
 - `priorityRestart`: Niveau de priorité pour les opérations de redémarrage
-- `quality`: Score de qualité de la fiche de l' application
+- `quality`: Score de qualité de la fiche de l'application (null si l'application est décommissionnée ou supprimée)
 
 ### `ApplicationStatus`
 

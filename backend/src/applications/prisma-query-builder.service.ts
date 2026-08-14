@@ -6,6 +6,10 @@ import { ApplicationSearchFilters } from "src/applications/infrastructure/reposi
 import { Requestor } from "src/user/entities/user.entity";
 import { PrismaService } from "src/prisma/prisma.service";
 import { QueryBuilderGroupActor } from "src/common/service/prisma-query-builder.service";
+import {
+  dimaFilledWhereClause,
+  pdmaFilledWhereClause,
+} from "src/common/utils/compliance-presence.utils";
 
 /**
  * Clauses Prisma par critère de conformité et par état de filtre :
@@ -42,12 +46,8 @@ const COMPLIANCE_FILTERS: Record<string, ComplianceFilterClauses> = {
     compliance: { homologation_status: { not: null } },
   }),
   rgaa: presenceComplianceClauses({ rgaaCompliances: { some: {} } }),
-  pdma: presenceComplianceClauses({
-    compliance: { pdma_duration_hours: { not: null } },
-  }),
-  dima: presenceComplianceClauses({
-    compliance: { dima_duration_hours: { not: null } },
-  }),
+  pdma: presenceComplianceClauses({ compliance: pdmaFilledWhereClause() }),
+  dima: presenceComplianceClauses({ compliance: dimaFilledWhereClause() }),
   rgpd: presenceComplianceClauses({
     compliance: {
       OR: [{ rgpd_has_aipd: { not: null } }, { rgpd_dpo_name: { not: null } }],
@@ -507,12 +507,18 @@ export class PrismaQueryBuilder {
       }
     });
 
-    // Always add quality filter
+    // Filtre IQ : la plage iqGte/iqLte s'applique aux applications notées ;
+    // iq__isNull ajoute (ou non) les applications sans IQ (décommissionnées/supprimées).
     where.AND.push({
-      quality: {
-        gte: filters.iqGte,
-        lte: filters.iqLte,
-      },
+      OR: [
+        {
+          quality: {
+            gte: filters.iqGte,
+            lte: filters.iqLte,
+          },
+        },
+        ...(filters.iq__isNull === true ? [{ quality: null }] : []),
+      ],
     });
 
     where.AND.push(this.buildRelationsQuery(filters));
