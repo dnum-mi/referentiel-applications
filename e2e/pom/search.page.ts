@@ -10,8 +10,8 @@ const STATUS_LABELS: Record<string, string> = {
   in_production_mvp: "MVP en production",
   in_production: "En production",
   in_production_decommissioning: "À décommissionner",
-  decommissioned: "Décommissionné",
-  deleted: "Supprimé",
+  decommissioned: "Décommissionnée",
+  deleted: "Supprimée",
 };
 
 /** Page Object — Catalogue & recherche (`/recherche-application`). */
