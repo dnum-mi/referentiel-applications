@@ -5,6 +5,7 @@ import {
   CreateDataApplicationDto,
   CreateDataExposureDto,
 } from "../dto/create-data-application.dto";
+import { CreateDataDescriptionDto } from "../dto/create-data-description.dto";
 import { IDataCatalogRepository } from "./data-catalog.repository.interface";
 
 function buildDataApplicationOrderBy(
@@ -44,7 +45,7 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
   // DATA DESCRIPTION
   // =====================================================
 
-  async createDescription(dto: any) {
+  async createDescription(dto: CreateDataDescriptionDto) {
     return this.prisma.dataDescription.create({
       data: {
         name: dto.name,
@@ -100,7 +101,7 @@ export class DataCatalogPrismaRepository implements IDataCatalogRepository {
     });
   }
 
-  async updateDescription(id: string, dto: any) {
+  async updateDescription(id: string, dto: Partial<CreateDataDescriptionDto>) {
     return this.prisma.dataDescription.update({
       where: { id },
       data: {

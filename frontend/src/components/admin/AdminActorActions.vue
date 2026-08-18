@@ -186,7 +186,7 @@ async function saveAllByEmail() {
       },
     });
     if (response.response.ok) {
-      const count = (response.data as any)?.count ?? 0;
+      const count = response.data?.count ?? 0;
       toaster.addSuccessMessage(`${count} acteur(s) mis à jour avec succès`);
       closeEditAllModal();
       emit("updated");
@@ -257,7 +257,7 @@ async function confirmDeleteAll() {
       },
     });
     if (response.response.ok) {
-      const count = (response.data as any)?.count ?? 0;
+      const count = response.data?.count ?? 0;
       toaster.addSuccessMessage(`${count} acteur(s) supprimé(s) avec succès`);
       closeDeleteAllModal();
       emit("updated");

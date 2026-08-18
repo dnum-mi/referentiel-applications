@@ -4,7 +4,7 @@ import * as ExcelJS from "exceljs";
 export interface ExcelSheetConfig {
   name: string;
   columns: { header: string; key: string; width?: number }[];
-  rows: Record<string, any>[];
+  rows: Record<string, unknown>[];
 }
 
 @Injectable()

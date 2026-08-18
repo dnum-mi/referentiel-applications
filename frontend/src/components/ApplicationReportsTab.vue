@@ -4,6 +4,7 @@ import { Permission, type PaginatedReportDto, type ReportDto } from "@/client/ty
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { computed, onMounted, ref } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import { useAppPermission } from "@/composables/use-app-permission";
@@ -56,7 +57,7 @@ function onSort(event: TableSortEvent) {
   sortOrder.value = event.sortOrder;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
 }

@@ -4,6 +4,7 @@ import type { ApplicationWithPerms } from "@/models/Application";
 import { useRelationStore } from "@/stores/relationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { TableColumn } from "@/types/table";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { computed, ref } from "vue";
 import RefAppTable from "./RefAppTable.vue";
 import RelationshipGraph from "./RelationShipGraph.vue";
@@ -131,7 +132,7 @@ function onAddRelation(relation: Pick<RelationDto, "type" | "mediationServiceId"
   });
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
 }

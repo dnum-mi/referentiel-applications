@@ -24,7 +24,6 @@ export const vUseMermaid: Directive = {
 };
 
 async function renderMermaid(el: HTMLElement) {
-  console.log("Rendering mermaid diagrams...");
   const codeBlocks = el.querySelectorAll("code.language-mermaid, pre > code.language-mermaid");
 
   for (let i = 0; i < codeBlocks.length; i++) {

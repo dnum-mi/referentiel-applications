@@ -4,6 +4,8 @@ import { statusApplicationDictionary } from "../constants/dictionary";
 import { useGraphStyles } from "./use-graph-style";
 import { sanitizeLabel } from "./use-sanitize-utils";
 
+type GraphStyles = ReturnType<ReturnType<typeof useGraphStyles>["getGraphStyles"]>;
+
 export interface D3Node extends d3.SimulationNodeDatum {
   id: string;
   label: string;
@@ -165,7 +167,7 @@ export function useD3Graph() {
       label: string,
       isRoot: boolean,
       status: string | undefined,
-      styles: any,
+      styles: GraphStyles,
       textElem: SVGTextElement,
     ): { lines: string[]; fontSize: number; totalHeight: number } {
       const cacheKey = JSON.stringify([label, isRoot, status]);

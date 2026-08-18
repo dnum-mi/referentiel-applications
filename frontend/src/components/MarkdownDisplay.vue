@@ -14,6 +14,7 @@ const renderedHtml = computed(() => {
 </script>
 
 <template>
+  <!-- eslint-disable-next-line vue/no-v-html -- renderedHtml est sanitizé par DOMPurify ci-dessus -->
   <div class="markdown-preview" data-testid="markdown-display" v-html="renderedHtml" />
 </template>
 

@@ -32,7 +32,7 @@ function getSwaggerPublicUrl(
 
 // Configuration de Swagger
 export function setupSwagger(
-  app: INestApplication<any>,
+  app: INestApplication,
   options: Pick<
     AppConfig,
     "host" | "port" | "swaggerPublicUrl" | "writeYaml" | "onlyWriteSwagger"

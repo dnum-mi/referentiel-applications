@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { ApplicationStatus, BusinessDivisionDto, HostingOptionDto } from "@/client/types.gen.js";
+import type { ApplicationDto, ApplicationStatus, BusinessDivisionDto, ComplianceDto, HostingOptionDto } from "@/client/types.gen.js";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import { useColumnPreferences } from "@/composables/use-column-preferences";
 import { formatDateFR } from "@/composables/use-date";
@@ -23,7 +24,27 @@ const firstIndex = computed(() => page.value * pageSize.value);
 const sortField = computed(() => filters.value.sortBy || "label");
 const sortOrder = computed(() => (filters.value.order === "desc" ? -1 : 1));
 
-const formatActors = (actors: any[], actorTypeCode: string): string => {
+// Acteur tel que renvoyé par la recherche : relations `actorType`/`organization` incluses
+// à l'exécution mais absentes du swagger généré (périmé) — typé localement.
+interface SearchActor {
+  email?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
+  actorType?: { code?: string } | null;
+  organization?: { sigle?: string | null; path?: string | null } | null;
+}
+
+// Résultat de recherche enrichi côté backend (hostings, tags, acteurs, conformité)
+// non décrit par `ApplicationDto` généré.
+type SearchApplication = ApplicationDto & {
+  hostings: Array<{ site?: string; hostingOption?: HostingOptionDto }>;
+  tags: Array<{ name: string }>;
+  actors: SearchActor[];
+  // `rgaa_score_percentage` est renvoyé par l'API mais absent du DTO généré (swagger périmé).
+  compliance?: (ComplianceDto & { rgaa_score_percentage?: number | null }) | null;
+};
+
+const formatActors = (actors: SearchActor[], actorTypeCode: string): string => {
   const filteredActors = actors.filter((actor) => actor.actorType?.code === actorTypeCode);
 
   if (filteredActors.length === 0) return "";
@@ -65,14 +86,14 @@ const formatHostingsProvider = (value: HostingOptionDto | undefined): string => 
 const formatHostingsPlatform = (value: HostingOptionDto | undefined): string => (value ? value.platform : "");
 
 const applications = computed(() =>
-  results.value.map((app: any) => {
+  (results.value as SearchApplication[]).map((app) => {
     return {
       ...app,
       qualityDisplay: formatPercent(app.quality),
-      hostingDisplay: app.hostings.map((h: any) => h.hostingOption?.site || h.site).join(", "),
-      tagsDisplay: app.tags.map((tag: any) => tag.name).join(", "),
-      hostingProviderDisplay: app.hostings.map((h: any) => formatHostingsProvider(h.hostingOption)).join(", "),
-      hostingPlatformDisplay: app.hostings.map((h: any) => formatHostingsPlatform(h.hostingOption)).join(", "),
+      hostingDisplay: app.hostings.map((h) => h.hostingOption?.site || h.site).join(", "),
+      tagsDisplay: app.tags.map((tag) => tag.name).join(", "),
+      hostingProviderDisplay: app.hostings.map((h) => formatHostingsProvider(h.hostingOption)).join(", "),
+      hostingPlatformDisplay: app.hostings.map((h) => formatHostingsPlatform(h.hostingOption)).join(", "),
       priorityConfig: app.priorityRestart ? restartPrioritiesConfig[app.priorityRestart as keyof typeof restartPrioritiesConfig] : null,
       moaDisplay: formatActors(app.actors, "MOA"),
       moeDisplay: formatActors(app.actors, "MOE"),
@@ -103,7 +124,7 @@ function onSort(event: TableSortEvent) {
   });
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   setFilter({
     page: event.page,
     pageSize: event.rows,

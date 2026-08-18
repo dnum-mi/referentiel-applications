@@ -1,14 +1,19 @@
+import type { Prisma } from "@prisma/client";
 import type { UserFakerReturnType } from "./user.faker";
 import { faker } from "@faker-js/faker";
 import { getPrismaClient } from "./prisma";
 
 export class HostingFaker {
-  static async create(override: {
-    hostingOption: { id: string };
-    application: { id: string };
-    user: UserFakerReturnType;
-    [key: string]: any;
-  }) {
+  static async create(
+    override: {
+      hostingOption: { id: string };
+      application: { id: string };
+      user: UserFakerReturnType;
+    } & Omit<
+      Partial<Prisma.HostingCreateInput>,
+      "hostingOption" | "application" | "metadatas"
+    >,
+  ) {
     const prisma = getPrismaClient();
 
     const { hostingOption, application, user, ...restOverride } = override;

@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { watchDebounced } from "@vueuse/core";
-import type { LabelSourceDto } from "@/client/types.gen";
+import type { LabelSourceControllerFindAllData, LabelSourceDto } from "@/client/types.gen";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
+import type { DataTablePageEvent } from "primevue/datatable";
 import LabelSourceActions from "./LabelSourceActions.vue";
 import api from "@/api";
 import RefAppTable from "@/components/RefAppTable.vue";
@@ -57,7 +58,7 @@ const statusMessage = computed(() => {
 async function fetchLabelSources() {
   isLoading.value = true;
 
-  const query: Record<string, any> = {
+  const query: NonNullable<LabelSourceControllerFindAllData["query"]> = {
     source: searchQuery.value || undefined,
     page: currentPage.value,
     pageSize: itemsPerPage.value,
@@ -101,7 +102,7 @@ function onSort(event: TableSortEvent) {
   isSortDescending.value = event.sortOrder === -1;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   itemsPerPage.value = event.rows;
   fetchLabelSources();
@@ -114,7 +115,7 @@ onMounted(fetchLabelSources);
   <div class="header-row">
     <h1 class="fr-h1" data-testid="admin-label-sources-title">Gestion des sources de noms alternatifs</h1>
 
-    <LabelSourceActions @fetch-tags="fetchLabelSources" :isCreating="true" />
+    <LabelSourceActions @fetch-tags="fetchLabelSources" :is-creating="true" />
   </div>
 
   <div class="fr-mb-4w">
@@ -151,8 +152,8 @@ onMounted(fetchLabelSources);
       @sort="onSort"
       @page="onPage"
     >
-      <template #body-actions="{ data }">
-        <LabelSourceActions :label-source="data.actions" @fetch-label-sources="fetchLabelSources" />
+      <template #body-actions="{ data: row }">
+        <LabelSourceActions :label-source="row.actions" @fetch-label-sources="fetchLabelSources" />
       </template>
     </RefAppTable>
   </div>

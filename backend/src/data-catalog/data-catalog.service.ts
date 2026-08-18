@@ -9,6 +9,7 @@ import {
   CreateDataApplicationDto,
   CreateDataExposureDto,
 } from "./dto/create-data-application.dto";
+import { CreateDataDescriptionDto } from "./dto/create-data-description.dto";
 
 @Injectable()
 export class DataCatalogService {
@@ -22,7 +23,7 @@ export class DataCatalogService {
   // DATA DESCRIPTION
   // =====================================================
 
-  async createDescription(dto: any, userId: string) {
+  async createDescription(dto: CreateDataDescriptionDto, userId: string) {
     const description = await this.repository.createDescription(dto);
 
     await this.metadataService.create({
@@ -43,7 +44,11 @@ export class DataCatalogService {
     return this.repository.findDescriptionById(id);
   }
 
-  async updateDescription(id: string, dto: any, userId: string) {
+  async updateDescription(
+    id: string,
+    dto: Partial<CreateDataDescriptionDto>,
+    userId: string,
+  ) {
     const updated = await this.repository.updateDescription(id, dto);
 
     await this.metadataService.create({

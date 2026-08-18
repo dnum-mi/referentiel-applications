@@ -19,7 +19,7 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
-import { Permission } from "@prisma/client";
+import { Permission, type Prisma } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "../common/decorators/user-id.decorator";
@@ -113,7 +113,7 @@ Le paramètre **applicationId** doit être fourni dans l'URL.
     @Param("id") id: string,
     @Body() updateLabelDto: CreateLabelDto,
   ) {
-    const updateLabel: any = {
+    const updateLabel: Prisma.LabelUpdateInput = {
       value: updateLabelDto.value,
     };
 

@@ -536,8 +536,10 @@ async function handleCreate() {
 
     toaster.addSuccessMessage("Application créée avec succès !");
     emit("success", application);
-  } catch (error: any) {
-    const message = error.message?.join?.(", ") || "Une erreur est survenue";
+  } catch (error) {
+    // Erreur de validation NestJS : `message` est un tableau de messages.
+    const messages = error && typeof error === "object" && "message" in error ? error.message : undefined;
+    const message = (Array.isArray(messages) ? messages.join(", ") : "") || "Une erreur est survenue";
     toaster.addErrorMessage(message);
   }
 }

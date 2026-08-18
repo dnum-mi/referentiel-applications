@@ -1,4 +1,4 @@
-function normalize(value: any) {
+function normalize(value: unknown) {
   if (value === null) return "";
   if (value === undefined) return "";
   return value;

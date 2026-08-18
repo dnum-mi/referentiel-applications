@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { TagDto } from "@/client/types.gen";
+import type { TagDto, TagsControllerFindAllData } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
 import TagActions from "./TagActions.vue";
@@ -63,7 +64,7 @@ const statusMessage = computed(() => {
 async function fetchTags() {
   isLoading.value = true;
 
-  const query: Record<string, any> = {
+  const query: NonNullable<TagsControllerFindAllData["query"]> = {
     name: searchQuery.value || undefined,
     page: currentPage.value,
     pageSize: itemsPerPage.value,
@@ -109,7 +110,7 @@ function onSort(event: TableSortEvent) {
   isSortDescending.value = event.sortOrder === -1;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   itemsPerPage.value = event.rows;
   fetchTags();
@@ -122,7 +123,7 @@ onMounted(fetchTags);
   <div class="header-row">
     <h1 class="fr-h1" data-testid="admin-tags-title">Gestion des tags</h1>
 
-    <TagActions @fetch-tags="fetchTags" :isCreating="true" />
+    <TagActions @fetch-tags="fetchTags" :is-creating="true" />
   </div>
 
   <div class="fr-mb-4w">
@@ -159,8 +160,8 @@ onMounted(fetchTags);
       @sort="onSort"
       @page="onPage"
     >
-      <template #body-actions="{ data }">
-        <TagActions :tag="data.actions" @fetch-tags="fetchTags" />
+      <template #body-actions="{ data: row }">
+        <TagActions :tag="row.actions" @fetch-tags="fetchTags" />
       </template>
     </RefAppTable>
   </div>

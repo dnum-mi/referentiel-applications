@@ -25,9 +25,9 @@ export const useActorTypeStore = defineStore("actorTypeStore", () => {
       }
       const responseData = response.data;
       actorTypes.value = responseData.results;
-    } catch (err: any) {
+    } catch (err) {
       console.error("❌ Erreur lors du chargement des types d'acteurs :", err);
-      error.value = err.message ?? "Erreur inconnue";
+      error.value = err instanceof Error ? err.message : "Erreur inconnue";
     } finally {
       isLoading.value = false;
     }

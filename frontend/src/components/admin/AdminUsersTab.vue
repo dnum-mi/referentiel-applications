@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import api from "@/api/index";
-import type { PaginatedUserWithPermissions } from "@/client/types.gen";
+import type { PaginatedUserWithPermissions, UserControllerFindAllData } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import { formatDateFR } from "@/composables/use-date";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import { RolesWording, RolesWordingBadgeClass } from "@/utils/roles-utils";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
 import UserActions from "./UserActions.vue";
@@ -91,7 +92,7 @@ async function fetchUsers() {
   try {
     isLoading.value = true;
 
-    const query: Record<string, any> = {
+    const query: NonNullable<UserControllerFindAllData["query"]> = {
       search: searchQuery.value || undefined,
       page: currentPage.value,
       pageSize: itemsPerPage.value,
@@ -152,7 +153,7 @@ function onSort(event: TableSortEvent) {
   isSortDescending.value = event.sortOrder === -1;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   itemsPerPage.value = event.rows;
   fetchUsers();
@@ -209,43 +210,43 @@ onMounted(fetchUsers);
         @sort="onSort"
         @page="onPage"
       >
-        <template #body-role="{ data }">
-          <span class="fr-badge justify-center" :class="data.role.badgeClass">{{ data.role.label }}</span>
+        <template #body-role="{ data: row }">
+          <span class="fr-badge justify-center" :class="row.role.badgeClass">{{ row.role.label }}</span>
         </template>
 
-        <template #body-isBlocked="{ data }">
+        <template #body-isBlocked="{ data: row }">
           <span
             class="fr-badge justify-center"
-            :class="data.isBlocked ? 'fr-badge--error' : 'fr-badge--success'"
+            :class="row.isBlocked ? 'fr-badge--error' : 'fr-badge--success'"
             data-testid="admin-user-status-badge"
           >
-            {{ data.isBlocked ? "Bloqué" : "Actif" }}
+            {{ row.isBlocked ? "Bloqué" : "Actif" }}
           </span>
         </template>
 
-        <template #body-lastPermissionChangeAt="{ data }">
-          <template v-if="data.lastPermissionChangeAt.date">
-            <span>{{ formatDateFR(data.lastPermissionChangeAt.date) }}</span>
+        <template #body-lastPermissionChangeAt="{ data: row }">
+          <template v-if="row.lastPermissionChangeAt.date">
+            <span>{{ formatDateFR(row.lastPermissionChangeAt.date) }}</span>
             <br />
             <span class="fr-text--sm fr-text-mention--grey"
-              >Par : {{ data.lastPermissionChangeAt.email ?? "Système / utilisateur supprimé" }}</span
+              >Par : {{ row.lastPermissionChangeAt.email ?? "Système / utilisateur supprimé" }}</span
             >
           </template>
           <span v-else class="fr-text-mention--grey">Jamais modifié</span>
         </template>
 
-        <template #body-additionalPermissions="{ data }">
-          <span v-show="data.additionalPermissions.length" class="fr-badge ml-2" :title="data.additionalPermissions.join(', ')">{{
-            data.additionalPermissions.length
+        <template #body-additionalPermissions="{ data: row }">
+          <span v-show="row.additionalPermissions.length" class="fr-badge ml-2" :title="row.additionalPermissions.join(', ')">{{
+            row.additionalPermissions.length
           }}</span>
         </template>
 
-        <template #body-actions="{ data }">
-          <UserActions :user="data.actions" @user-updated="fetchUsers" />
+        <template #body-actions="{ data: row }">
+          <UserActions :user="row.actions" @user-updated="fetchUsers" />
         </template>
 
-        <template #body-permissions="{ data }">
-          <UserPermissionsModal :user="data.actions" />
+        <template #body-permissions="{ data: row }">
+          <UserPermissionsModal :user="row.actions" />
         </template>
       </RefAppTable>
     </div>
