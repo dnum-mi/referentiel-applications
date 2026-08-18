@@ -452,6 +452,74 @@ describe("Applications — recherche full-text (q / qPrefix)", () => {
   });
 });
 
+describe("Applications — recherche full-text sur la stack technique (#2310)", () => {
+  const app = setupTestSuite();
+  let user: UserFakerReturnType;
+  let TOKEN: string;
+  let appWithStack: AsyncReturnType<typeof ApplicationFaker.create>;
+  // Produit unique à cette exécution : la base de test est partagée entre les
+  // fichiers de test, un nom en dur fausserait les correspondances.
+  const product = `grumpf${faker.string.alpha({ length: 8, casing: "lower" })}`;
+
+  const searchIds = async (q: string): Promise<string[]> => {
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ q, pageSize: 0 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+    return response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+  };
+
+  beforeAll(async () => {
+    user = await UserFaker.create({ role: Roles.READER });
+    TOKEN = await getToken(user);
+
+    const prisma = getPrismaClient();
+    appWithStack = await ApplicationFaker.create(user);
+    await prisma.technologyStack.create({
+      data: {
+        applicationId: appWithStack.id,
+        technology: "Base de données",
+        product,
+        version: "15.5",
+      },
+    });
+
+    await prisma.$executeRawUnsafe(
+      "REFRESH MATERIALIZED VIEW application_search_index",
+    );
+  });
+
+  it("q= : le nom d'un produit de la stack remonte la fiche", async () => {
+    expect(await searchIds(product)).toContain(appWithStack.id);
+  });
+
+  it("q= : un préfixe de segments de la version matche (« 15 » → 15.5)", async () => {
+    expect(await searchIds(`${product} 15`)).toContain(appWithStack.id);
+    expect(await searchIds(`${product} 15.5`)).toContain(appWithStack.id);
+  });
+
+  it("q= : ni « 150 » ni « 1.5 » ne matchent la version 15.5", async () => {
+    expect(await searchIds(`${product} 150`)).toHaveLength(0);
+    expect(await searchIds(`${product} 1.5`)).toHaveLength(0);
+  });
+
+  it("qPrefix= : le produit est trouvé dès les premières lettres", async () => {
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ qPrefix: product.slice(0, -3), pageSize: 8 })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    const resultIds = response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+    expect(resultIds).toContain(appWithStack.id);
+  });
+});
+
 describe("application guard", () => {
   const app = setupTestSuite();
   let appOwner: UserFakerReturnType;
