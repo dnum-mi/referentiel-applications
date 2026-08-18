@@ -33,6 +33,38 @@ export function objectEntries<Obj extends Record<string, unknown>>(
   return Object.entries(obj) as [keyof Obj, Obj[keyof Obj]][];
 }
 
+// Code du type d'acteur système "Créateur", assigné automatiquement à l'utilisateur qui crée une
+// application (cf. createApplication). Créé par la migration 20260814090000_add_createur_actor_type.
+const CREATOR_ACTOR_TYPE_CODE = "CREATEUR";
+
+// Sous-ensemble minimal du client Prisma transactionnel utilisé par assignCreatorActor : les
+// types générés du client étendu (PrismaService) et du client `tx` ne sont pas mutuellement
+// assignables à cause des extensions ($extends), d'où ce typage structurel (cf. CurrentStatusClient
+// dans statuses.service.ts, même contrainte).
+interface AssignCreatorActorClient {
+  user: {
+    findUnique(args: {
+      where: { id: string };
+    }): Promise<{ email: string; organizationId: string | null } | null>;
+  };
+  actorType: {
+    findFirst(args: { where: { code: string } }): Promise<{
+      id: string;
+    } | null>;
+  };
+  actor: {
+    create(args: {
+      data: {
+        email: string;
+        organizationId: string | null;
+        applicationId: string;
+        actorTypeId: string;
+        isGroup: boolean;
+      };
+    }): Promise<{ id: string; email: string | null }>;
+  };
+}
+
 @Injectable()
 export class ApplicationService {
   constructor(
@@ -55,42 +87,50 @@ export class ApplicationService {
       createApplicationDto.tags,
     );
 
-    const application = await this.prisma.$transaction(async (tx) => {
-      const app = await tx.application.create({
-        data: {
-          label: createApplicationDto.label,
-          shortName: createApplicationDto.shortName ?? null,
-          logo: createApplicationDto.logo ?? null,
-          description: createApplicationDto.description,
-          targetPopulations: createApplicationDto.targetPopulations ?? [],
-          purposes: createApplicationDto.purposes ?? [],
-          type: createApplicationDto.type ?? null,
-          tags: {
-            connect: existingTags,
+    const { application, creatorActor } = await this.prisma.$transaction(
+      async (tx) => {
+        const app = await tx.application.create({
+          data: {
+            label: createApplicationDto.label,
+            shortName: createApplicationDto.shortName ?? null,
+            logo: createApplicationDto.logo ?? null,
+            description: createApplicationDto.description,
+            targetPopulations: createApplicationDto.targetPopulations ?? [],
+            purposes: createApplicationDto.purposes ?? [],
+            type: createApplicationDto.type ?? null,
+            tags: {
+              connect: existingTags,
+            },
+            priorityRestart: createApplicationDto.priorityRestart ?? null,
+            quality: 0,
+            businessDivisions: {
+              connect: (createApplicationDto.businessDivisionIds ?? []).map(
+                (id) => ({ id }),
+              ),
+            },
           },
-          priorityRestart: createApplicationDto.priorityRestart ?? null,
-          quality: 0,
-          businessDivisions: {
-            connect: (createApplicationDto.businessDivisionIds ?? []).map(
-              (id) => ({ id }),
-            ),
+        });
+
+        await tx.applicationStatus.create({
+          data: {
+            status: createApplicationDto.status.status,
+            applicationId: app.id,
           },
-        },
-      });
+        });
 
-      await tx.applicationStatus.create({
-        data: {
-          status: createApplicationDto.status.status,
-          applicationId: app.id,
-        },
-      });
+        // La règle « statut courant = plus récent » vit dans StatusesService (#2250) ;
+        // on lui passe la transaction pour rester atomique.
+        await this.statusesService.updateCurrentStatus(app.id, tx);
 
-      // La règle « statut courant = plus récent » vit dans StatusesService (#2250) ;
-      // on lui passe la transaction pour rester atomique.
-      await this.statusesService.updateCurrentStatus(app.id, tx);
+        const creatorActor = await this.assignCreatorActor(
+          tx,
+          app.id,
+          requestorId,
+        );
 
-      return app;
-    });
+        return { application: app, creatorActor };
+      },
+    );
 
     await this.updateApplicationQuality(application.id);
     await this.metadataService.createMetadata({
@@ -99,8 +139,44 @@ export class ApplicationService {
       title: `de l'application`,
       type: "add",
     });
+    if (creatorActor) {
+      await this.metadataService.createMetadata({
+        applicationId: application.id,
+        createdById: requestorId,
+        title: `de l'acteur : ${CREATOR_ACTOR_TYPE_CODE} : ${creatorActor.email}`,
+        type: "add",
+        entity: "actorId",
+        entityId: creatorActor.id,
+      });
+    }
     this.applicationSearchService.scheduleRefresh();
     return application;
+  }
+
+  // Assigne automatiquement le créateur de l'application comme acteur de type "Créateur"
+  // (cf. CREATOR_ACTOR_TYPE_CODE), pour qu'il ait immédiatement les droits associés sans
+  // intervention manuelle. Exécuté dans la même transaction que la création de l'application.
+  private async assignCreatorActor(
+    tx: AssignCreatorActorClient,
+    applicationId: string,
+    requestorId: string,
+  ) {
+    const [requestor, creatorActorType] = await Promise.all([
+      tx.user.findUnique({ where: { id: requestorId } }),
+      tx.actorType.findFirst({ where: { code: CREATOR_ACTOR_TYPE_CODE } }),
+    ]);
+
+    if (!requestor || !creatorActorType) return null;
+
+    return tx.actor.create({
+      data: {
+        email: requestor.email,
+        organizationId: requestor.organizationId,
+        applicationId,
+        actorTypeId: creatorActorType.id,
+        isGroup: false,
+      },
+    });
   }
 
   public async update(params: {

@@ -130,6 +130,7 @@ model Actor {
 /// | **ProductManager** | Product Manager (PM) |
 /// | **Hebergement** | Responsable de l'hébergement |
 /// | **Autre** | Autre |
+/// | **Createur** | Utilisateur ayant créé l'application, assigné automatiquement |
 /// @namespace Users
 model ActorType {
   /// Identifiant unique
