@@ -135,16 +135,19 @@ export class ApplicationSearchService implements ApplicationSearchEngine {
    * absent de l'index : l'application devenait alors introuvable en tapant son
    * propre nom. Le découpage garantit qu'un nom se retrouve toujours lui-même.
    *
+   * Exception : les suites de nombres reliés par des points (« 15.5 »,
+   * « 1.2.3 ») restent entières. Le parseur PG en fait un lexème unique (token
+   * float/version) — les découper (« 15 », « 5 ») produirait un motif `5:*`
+   * qui ne matche aucun lexème de l'index et ferait échouer la recherche d'une
+   * version de la stack technique.
+   *
    * Résultats plafonnés à {@link PREFIX_RESULT_LIMIT} : un préfixe très court
    * matcherait toute la base, or l'autocomplétion n'en affiche qu'une poignée.
    */
   public async fullTextSearchPrefix(
     query: string,
   ): Promise<RankedApplication[]> {
-    const tokens = query
-      ?.trim()
-      .split(/[^\p{L}\p{N}]+/u)
-      .filter(Boolean);
+    const tokens = query?.match(/\p{N}+(?:\.\p{N}+)+|[\p{L}\p{N}]+/gu);
 
     if (!tokens?.length) return [];
 

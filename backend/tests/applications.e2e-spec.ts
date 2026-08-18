@@ -452,6 +452,100 @@ describe("Applications — recherche full-text (q / qPrefix)", () => {
   });
 });
 
+describe("Applications — recherche full-text sur la stack technique", () => {
+  const app = setupTestSuite();
+  let user: UserFakerReturnType;
+  let TOKEN: string;
+  let appV155: AsyncReturnType<typeof ApplicationFaker.create>;
+  let appV15: AsyncReturnType<typeof ApplicationFaker.create>;
+  let appV150: AsyncReturnType<typeof ApplicationFaker.create>;
+  let appV1dot5: AsyncReturnType<typeof ApplicationFaker.create>;
+  // Produit unique à cette exécution (base de test partagée entre workers) :
+  // il scope les correspondances, les mots de la requête étant combinés en ET.
+  const product = `PgFts${faker.string.alpha({ length: 8, casing: "lower" })}`;
+
+  const searchIds = async (
+    params: Record<string, string | number>,
+  ): Promise<string[]> => {
+    const response = await request(app().getHttpServer())
+      .get("/applications")
+      .query({ pageSize: 0, ...params })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+    return response.body.results.map(
+      (application: { id: string }) => application.id,
+    );
+  };
+
+  beforeAll(async () => {
+    user = await UserFaker.create({ role: Roles.READER });
+    TOKEN = await getToken(user);
+
+    const prisma = getPrismaClient();
+    [appV155, appV15, appV150, appV1dot5] = await Promise.all([
+      ApplicationFaker.create(user),
+      ApplicationFaker.create(user),
+      ApplicationFaker.create(user),
+      ApplicationFaker.create(user),
+    ]);
+
+    // Même produit, versions choisies pour vérifier la correspondance par
+    // préfixe de segments : « 15 » doit matcher 15 et 15.5, pas 150 ni 1.5.
+    await prisma.technologyStack.createMany({
+      data: [
+        { applicationId: appV155.id, version: "15.5" },
+        { applicationId: appV15.id, version: "15" },
+        { applicationId: appV150.id, version: "150" },
+        { applicationId: appV1dot5.id, version: "1.5" },
+      ].map((row) => ({
+        ...row,
+        technology: "Base de données",
+        product,
+      })),
+    });
+
+    // L'index full-text est une vue matérialisée : on la rafraîchit
+    // explicitement plutôt que d'attendre le rafraîchissement différé.
+    await prisma.$executeRawUnsafe(
+      "REFRESH MATERIALIZED VIEW application_search_index",
+    );
+  });
+
+  it("q= : le nom d'un produit de la stack remonte les fiches, sans tenir compte de la casse", async () => {
+    const ids = await searchIds({ q: product.toUpperCase() });
+
+    expect(ids).toHaveLength(4);
+    expect(ids).toEqual(
+      expect.arrayContaining([appV155.id, appV15.id, appV150.id, appV1dot5.id]),
+    );
+  });
+
+  it("q= : « produit 15 » matche les versions 15 et 15.5, mais ni 150 ni 1.5", async () => {
+    const ids = await searchIds({ q: `${product.toUpperCase()} 15` });
+
+    expect(ids).toHaveLength(2);
+    expect(ids).toEqual(expect.arrayContaining([appV155.id, appV15.id]));
+  });
+
+  it("q= : « produit 15.5 » ne matche que la version 15.5", async () => {
+    expect(await searchIds({ q: `${product} 15.5` })).toEqual([appV155.id]);
+  });
+
+  it("q= : « produit 1.5 » ne matche que la version 1.5 (pas 15 ni 15.5)", async () => {
+    expect(await searchIds({ q: `${product} 1.5` })).toEqual([appV1dot5.id]);
+  });
+
+  it("qPrefix= : le produit se trouve dès les premières lettres, la version à segments reste entière", async () => {
+    const idsByPrefix = await searchIds({ qPrefix: product.slice(0, -2) });
+    expect(idsByPrefix).toHaveLength(4);
+
+    // « 15.5 » ne doit pas être découpé en « 15:* & 5:* » (aucun lexème `5…`).
+    expect(await searchIds({ qPrefix: `${product} 15.5` })).toEqual([
+      appV155.id,
+    ]);
+  });
+});
+
 describe("application guard", () => {
   const app = setupTestSuite();
   let appOwner: UserFakerReturnType;

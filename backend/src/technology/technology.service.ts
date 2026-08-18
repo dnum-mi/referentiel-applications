@@ -10,6 +10,7 @@ import { CreateTechnologyDto } from "./dto/technology.dto";
 import { TechnologyStack } from "./entities/technology.entity";
 import { ServiceOptions } from "src/common/utils/types";
 import { ApplicationService } from "src/applications/application.service";
+import { ApplicationSearchService } from "src/applications/search/application-search.service";
 import {
   fetchProductCatalog,
   normalizeProductKey,
@@ -28,6 +29,7 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     readonly prisma: PrismaService,
     metadataService: MetadatasService,
     applicationService: ApplicationService,
+    private readonly applicationSearchService: ApplicationSearchService,
   ) {
     super(prisma.technologyStack, prisma, metadataService, applicationService);
   }
@@ -173,7 +175,13 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     }
 
     const eol = await this.resolveEol(dto.product, dto.version);
-    return super.create({ ...dto, ...eol, applicationId }, options);
+    const created = await super.create(
+      { ...dto, ...eol, applicationId },
+      options,
+    );
+    // La stack technique fait partie du document de recherche des fiches.
+    this.applicationSearchService.scheduleRefresh();
+    return created;
   }
 
   async updateTechnology(
@@ -217,7 +225,9 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       ? await this.resolveEol(newProduct, dto.version ?? existing.version)
       : {};
 
-    return super.update(id, { ...dto, ...eol }, options);
+    const updated = await super.update(id, { ...dto, ...eol }, options);
+    this.applicationSearchService.scheduleRefresh();
+    return updated;
   }
 
   async deleteTechnology(
@@ -232,5 +242,6 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       throw new NotFoundException("Technologie introuvable");
     }
     await super.delete(id, options);
+    this.applicationSearchService.scheduleRefresh();
   }
 }

@@ -38,6 +38,9 @@ import { ApplicationViewService } from "./view.service";
     ApplicationExportService,
     ApplicationRepository,
     ApplicationService,
+    // Consommé par les modules qui modifient des données présentes dans le
+    // document de recherche (ex. stack technique) pour rafraîchir l'index.
+    ApplicationSearchService,
   ],
 })
 export class ApplicationModule {}

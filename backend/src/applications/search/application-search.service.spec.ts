@@ -79,6 +79,34 @@ describe("ApplicationSearchService", () => {
       );
     });
 
+    it("garde entiers les numéros de version à segments au lieu de les découper", async () => {
+      // Le parseur PG indexe « 15.5 » comme lexème UNIQUE (token float/version).
+      // Découper sur le point (« 15:* & 5:* ») produirait un motif `5:*` qui ne
+      // matche aucun lexème : la recherche d'une version de la stack technique
+      // échouerait alors systématiquement.
+      const { service, prisma } = makeService([
+        { applicationId: "app-1", rank: 1 },
+      ]);
+
+      await service.fullTextSearchPrefix("PostgreSQL 15.5");
+      await service.fullTextSearchPrefix("nginx 1.25.3");
+
+      expect(prisma.$queryRaw.mock.calls[0][1]).toBe("PostgreSQL:* & 15.5:*");
+      expect(prisma.$queryRaw.mock.calls[1][1]).toBe("nginx:* & 1.25.3:*");
+    });
+
+    it("ne garde entières que les suites de nombres : « Node.js » reste découpé", async () => {
+      // « node.js » est indexé aussi sous les lexèmes `node` et `js` (variante
+      // sans point dans l'index) : le découpage reste correct pour les noms.
+      const { service, prisma } = makeService([
+        { applicationId: "app-1", rank: 1 },
+      ]);
+
+      await service.fullTextSearchPrefix("Node.js 20.11");
+
+      expect(prisma.$queryRaw.mock.calls[0][1]).toBe("Node:* & js:* & 20.11:*");
+    });
+
     it("retourne [] sans interroger la base pour une requête vide ou ponctuation seule", async () => {
       const { service, prisma } = makeService();
 
