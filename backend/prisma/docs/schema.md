@@ -859,6 +859,13 @@ erDiagram
   DateTime blockedAt "nullable"
   String blockedById "nullable"
 }
+"SavedFilter" {
+  String id PK
+  String(100) name
+  Json filters
+  String userId FK
+  DateTime createdAt
+}
 "Actor" {
   String id PK
   String(100) firstname "nullable"
@@ -883,6 +890,7 @@ erDiagram
 "AppPermissions" |o--|| "ActorType" : actorType
 "Token" }o--|| "User" : userImpersonate
 "Token" }o--|| "User" : createdBy
+"SavedFilter" }o--|| "User" : user
 "Actor" }o--o| "ActorType" : actorType
 "_ApplicationToUser" }o--|| "User" : User
 ```
@@ -964,6 +972,19 @@ Properties as follows:
 - `blockedById`
   > Administrateur ayant bloqué cet utilisateur. Pas de jointure explicite
   > (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
+
+### `SavedFilter`
+
+Filtre de recherche d'applications sauvegardé par un utilisateur, pour être réappliqué
+plus tard depuis l'onglet applications sans ressaisir chaque critère (#2279).
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `name`: Nom donné par l'utilisateur à ce filtre, unique parmi ses propres filtres
+- `filters`: Filtres sérialisés (mêmes clés que la query de recherche d'applications)
+- `userId`: Utilisateur propriétaire de ce filtre
+- `createdAt`: Date de création
 
 ### `Actor`
 

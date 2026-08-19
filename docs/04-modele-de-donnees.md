@@ -54,7 +54,7 @@ Les domaines sont les suivants :
 | `rgaa-compliance.prisma`     | `RgaaCompliance`                                                                      | —                                                              |
 | `hosting.prisma`             | `HostingOption`, `Hosting`                                                            | `Nature`                                                       |
 | `data.prisma`                | `DataFamily`, `DataSensibility`, `DataDescription`, `DataApplication`, `DataExposure` | `DataUpdateFrequency`, `OpenDataStatus`                        |
-| `users.prisma`               | `User`, `Actor`, `ActorType`                                                          | `Roles`, `UserType`, `CapabilityNames`                         |
+| `users.prisma`               | `User`, `Actor`, `ActorType`, `SavedFilter`                                           | `Roles`, `UserType`, `CapabilityNames`                         |
 | `organization.prisma`        | `Organization`, `OrganizationMaiaReference`                                           | —                                                              |
 | `business-division.prisma`   | `BusinessDivision`                                                                    | —                                                              |
 | `metadata.prisma`            | `Metadata`                                                                            | `MetadataAction`                                               |
