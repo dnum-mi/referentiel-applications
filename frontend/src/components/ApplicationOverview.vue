@@ -185,6 +185,18 @@ watch(
     }
   },
 );
+
+watch(
+  () => route.params.tab,
+  (raw) => {
+    const tabId = Array.isArray(raw) ? raw[0] : raw;
+    if (!tabId) return;
+    const idx = tabs.value.findIndex((t) => t.tabId === tabId);
+    if (idx !== -1 && idx !== activeTab.value) {
+      activeTab.value = idx;
+    }
+  },
+);
 </script>
 
 <template>
