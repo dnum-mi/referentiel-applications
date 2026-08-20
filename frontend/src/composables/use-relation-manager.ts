@@ -45,6 +45,7 @@ export function useRelationManager(applicationId: string) {
     [RelationType.IS_SERVICE_USER_OF]: { source: "Utilise le service de", target: "Fournit le service à" },
     [RelationType.IS_DATA_USER_OF]: { source: "Utilise la donnée de", target: "Fournit la donnée à" },
     [RelationType.USE_SSO_OF]: { source: "Utilise le SSO de", target: "Fournit le SSO à" },
+    [RelationType.IS_CORRELATED_WITH]: { source: "Est corrélée à", target: "Est corrélée à" },
   };
 
   function getRelationLabelForSide(type: RelationType, isSource: boolean): string {
