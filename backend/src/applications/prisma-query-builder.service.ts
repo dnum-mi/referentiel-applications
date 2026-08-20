@@ -583,6 +583,42 @@ export class PrismaQueryBuilder {
       }
     };
 
+    /**
+     * Relation symétrique (#2287) : la direction source/cible n'a pas de sens
+     * métier, on matche donc la relation dans les deux sens.
+     */
+    const buildSymmetricRelationQuery = (
+      type: RelationType,
+      value?: RelationTypeFilter,
+      relationAppId?: string,
+    ) => {
+      const query: Prisma.ApplicationWhereInput = {
+        OR: [
+          {
+            relationsAsSource: {
+              some: { applicationTargetId: relationAppId, type },
+            },
+          },
+          {
+            relationsAsTarget: {
+              some: { applicationSourceId: relationAppId, type },
+            },
+          },
+        ],
+      };
+      switch (value) {
+        case "INCLUDE":
+          includeQueries.push(query);
+          return;
+        case "EXCLUDE":
+          excludeQueries.push({ NOT: query });
+          return;
+        case "NEUTRAL":
+        default:
+          return;
+      }
+    };
+
     const buildMediationServiceQuery = (
       value?: RelationTypeFilter,
       relationAppId?: string,
@@ -632,6 +668,12 @@ export class PrismaQueryBuilder {
       filters.relationAppId,
     );
     buildRelationQuery("use_sso_of", filters.use_sso_of, filters.relationAppId);
+    // corrélation (#2287) : relation symétrique, les deux sens comptent
+    buildSymmetricRelationQuery(
+      "is_correlated_with",
+      filters.is_correlated_with,
+      filters.relationAppId,
+    );
     buildMediationServiceQuery(
       filters.is_mediation_service,
       filters.relationAppId,

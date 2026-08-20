@@ -1,5 +1,17 @@
 import type { RelationType } from "@/client";
 
+/**
+ * Types de relation dont la direction ne porte aucun sens métier : la paire
+ * est stockée en ordre canonique (ordre des identifiants), donc afficher une
+ * flèche laisserait croire à une orientation qui n'existe pas.
+ */
+export const SYMMETRIC_RELATION_TYPES: ReadonlySet<string> = new Set<string>(["is_correlated_with"]);
+
+/** Une arête de ce type doit-elle être fléchée ? */
+export function isDirectedRelation(type: string): boolean {
+  return !SYMMETRIC_RELATION_TYPES.has(type);
+}
+
 export function useGraphStyles() {
   const getGraphStyles = () => {
     const root = {

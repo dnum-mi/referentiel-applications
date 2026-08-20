@@ -34,6 +34,7 @@ async function performSearch(query: string) {
           is_service_user_of: RELATION_TYPE_FILTERS.neutral,
           in_replacement_of: RELATION_TYPE_FILTERS.neutral,
           use_sso_of: RELATION_TYPE_FILTERS.neutral,
+          is_correlated_with: RELATION_TYPE_FILTERS.neutral,
           is_mediation_service: RELATION_TYPE_FILTERS.neutral,
           relationAppId: undefined,
         },
@@ -101,6 +102,13 @@ const relationFields: { field: RelationField; label: string; testId: string; too
     testId: "relation-use_sso_of-select",
     tooltip:
       "Applications qui utilisent l’authentification unique (SSO) de l’application sélectionnée ci-dessus. Inclure pour ne garder que celles-ci, Exclure pour les retirer, Neutre pour ignorer ce critère.",
+  },
+  {
+    field: RelationType.IS_CORRELATED_WITH,
+    label: "Est corrélée à",
+    testId: "relation-is_correlated_with-select",
+    tooltip:
+      "Applications corrélées à l’application sélectionnée ci-dessus (doublons potentiels, périmètres proches). La relation est symétrique : les deux directions sont considérées. Inclure pour ne garder que celles-ci, Exclure pour les retirer, Neutre pour ignorer ce critère.",
   },
   {
     field: IS_MEDIATION_SERVICE,

@@ -46,6 +46,7 @@ const relationTypesForSelect = [
   { value: RelationType.IS_SERVICE_USER_OF, text: "Utilise le service de" },
   { value: RelationType.IS_DATA_USER_OF, text: "Utilise la donnée de" },
   { value: RelationType.USE_SSO_OF, text: "Utilise le SSO de" },
+  { value: RelationType.IS_CORRELATED_WITH, text: "Est corrélée à" },
 ];
 const errorMessage = ref<string>("");
 
