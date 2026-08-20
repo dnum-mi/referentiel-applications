@@ -1,4 +1,5 @@
 import { ConflictException, NotFoundException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { RelationService } from "../relation.service";
 import { CorrelationSuggestionService } from "./correlation-suggestion.service";
 import { CorrelationDetectionService } from "./correlation-detection.service";
@@ -148,6 +149,46 @@ describe("CorrelationSuggestionService (#2285)", () => {
         ConflictException,
       );
       expect(relationService.create).not.toHaveBeenCalled();
+    });
+
+    it("termine la revue quand la relation existe déjà (reprise, concurrence ou saisie manuelle)", async () => {
+      const { service, relationService, repository } = makeService({
+        suggestion: suggestionRow(),
+      });
+      // La contrainte @@unique a déjà la paire : une acceptation précédente
+      // s'est interrompue après la création de la relation, ou un autre
+      // administrateur est passé en même temps.
+      relationService.create.mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+          code: "P2002",
+          clientVersion: "6.3.0",
+        }),
+      );
+
+      const result = await service.accept("sug-1", "user-1");
+
+      // La relation attendue existe : la suggestion est close plutôt que 500
+      expect(repository.updateStatus).toHaveBeenCalledWith(
+        "sug-1",
+        "ACCEPTED",
+        "user-1",
+      );
+      expect(result.status).toBe("ACCEPTED");
+    });
+
+    it("laisse remonter une erreur de création qui n'est pas un conflit d'unicité", async () => {
+      const { service, relationService, repository } = makeService({
+        suggestion: suggestionRow(),
+      });
+      relationService.create.mockRejectedValueOnce(
+        new Error("base injoignable"),
+      );
+
+      await expect(service.accept("sug-1", "user-1")).rejects.toThrow(
+        "base injoignable",
+      );
+      // Surtout pas de suggestion marquée ACCEPTED sans relation
+      expect(repository.updateStatus).not.toHaveBeenCalled();
     });
   });
 
