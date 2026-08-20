@@ -47,6 +47,12 @@ describe("Test Swagger documentation", () => {
       "/users/{id}/unblock",
       "/actors/sync-maia",
       "/email/digest",
+      // Revue des corrélations (#2281) : ces trois actions n'ont pas de
+      // charge utile — la suggestion est identifiée par son id dans l'URL,
+      // et la détection se lance sans paramètre.
+      "/correlation-suggestions/run",
+      "/correlation-suggestions/{id}/accept",
+      "/correlation-suggestions/{id}/reject",
     ];
     for (const [path, pathObject] of Object.entries(openapiSpec.paths)) {
       for (const method of methods) {
