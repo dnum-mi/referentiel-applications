@@ -46,7 +46,7 @@ describe("CorrelationDetectionService (#2284)", () => {
   describe("computeScore", () => {
     it("pondère les trois signaux avec les poids configurés", () => {
       const { service } = makeService();
-      // 0.5 * 1 + 0.3 * (3/3) + 0.2 * (2/2) = 1
+      // 0.6 * 1 + 0.25 * (3/3) + 0.15 * (2/2) = 1
       expect(
         service.computeScore({
           nameSimilarity: 1,
@@ -54,14 +54,48 @@ describe("CorrelationDetectionService (#2284)", () => {
           sharedActorCount: 2,
         }),
       ).toBeCloseTo(1);
-      // Nom seul : 0.5 * 0.8
+      // Nom seul : 0.6 * 0.8
       expect(
         service.computeScore({
           nameSimilarity: 0.8,
           sharedDataCount: 0,
           sharedActorCount: 0,
         }),
-      ).toBeCloseTo(0.4);
+      ).toBeCloseTo(0.48);
+    });
+
+    it("rend le même nom officiel suffisant, et le même nom d'usage insuffisant", () => {
+      const { service } = makeService();
+      const seuil = 0.6;
+
+      // Deux applications au libellé strictement identique : le doublon le
+      // plus courant, qui doit toujours arriver en revue sans autre signal.
+      expect(
+        service.computeScore({
+          nameSimilarity: 1,
+          sharedDataCount: 0,
+          sharedActorCount: 0,
+        }),
+      ).toBeGreaterThanOrEqual(seuil);
+
+      // Deux noms courts identiques valent 0.8 après minoration (cf.
+      // SHORT_NAME_TRUST) : un terme d'organisation partagé ne suffit pas.
+      expect(
+        service.computeScore({
+          nameSimilarity: 0.8,
+          sharedDataCount: 0,
+          sharedActorCount: 0,
+        }),
+      ).toBeLessThan(seuil);
+
+      // ... mais un second signal les fait passer.
+      expect(
+        service.computeScore({
+          nameSimilarity: 0.8,
+          sharedDataCount: 3,
+          sharedActorCount: 0,
+        }),
+      ).toBeGreaterThanOrEqual(seuil);
     });
 
     it("sature les compteurs : plus de données/acteurs partagés n'augmente plus le score", () => {
@@ -85,7 +119,7 @@ describe("CorrelationDetectionService (#2284)", () => {
       const { service, prisma } = makeService({
         candidates: [
           candidate({ nameSimilarity: 0.9, sharedDataCount: 2 }),
-          // 0.5 * 0.2 = 0.1 : sous le seuil, ignorée
+          // 0.6 * 0.2 = 0.12 : sous le seuil, ignorée
           candidate({
             applicationSourceId: "app-c",
             applicationTargetId: "app-d",
@@ -109,7 +143,7 @@ describe("CorrelationDetectionService (#2284)", () => {
       };
       // skipDuplicates : ne jamais écraser une paire déjà revue entre-temps
       expect(createArgs.skipDuplicates).toBe(true);
-      expect(createArgs.data[0].score).toBeCloseTo(0.5 * 0.9 + 0.3 * (2 / 3));
+      expect(createArgs.data[0].score).toBeCloseTo(0.6 * 0.9 + 0.25 * (2 / 3));
       expect(createArgs.data[0].signals).toEqual({
         nameSimilarity: 0.9,
         sharedDataCount: 2,

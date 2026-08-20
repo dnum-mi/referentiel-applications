@@ -44,6 +44,14 @@ export interface CorrelationDetectionResult {
 const SHARED_DATA_SATURATION = 3;
 /** Idem pour les acteurs communs : deux acteurs partagés saturent le signal. */
 const SHARED_ACTOR_SATURATION = 2;
+/**
+ * Crédit accordé à la similarité des noms courts, face au libellé officiel.
+ * Minoré à dessein : deux noms courts partageant un terme d'organisation se
+ * ressemblent fortement sans que les applications soient des doublons. Avec
+ * les poids par défaut, deux noms courts identiques atteignent 0,48 — sous le
+ * seuil — quand deux libellés identiques atteignent 0,6.
+ */
+const SHORT_NAME_TRUST = 0.8;
 
 /**
  * Moteur de détection des corrélations entre applications (#2281, #2284).
@@ -82,7 +90,7 @@ export class CorrelationDetectionService {
     );
     this.weights = this.configService.get<CorrelationWeights>(
       "correlation.weights",
-      { nameSimilarity: 0.5, sharedData: 0.3, sharedActors: 0.2 },
+      { nameSimilarity: 0.6, sharedData: 0.25, sharedActors: 0.15 },
     );
   }
 
@@ -184,13 +192,12 @@ export class CorrelationDetectionService {
    * normalisés en [0..1] avec saturation pour rester comparables à la
    * similarité de nom.
    *
-   * Conséquence des poids par défaut, à garder en tête avant de régler le
-   * seuil : le nom pesant 0,5, deux applications au libellé identique
-   * plafonnent à 0,50 et restent sous un seuil de 0,6 — un second signal est
-   * toujours nécessaire. C'est voulu (deux instances régionales d'un même
-   * produit portent le même nom sans être des doublons), mais cela écarte
-   * aussi le doublon le plus évident. La marche à suivre pour calibrer sur les
-   * données d'un environnement est dans docs/12-exploitation-deploiement.md.
+   * Les poids par défaut sont calés sur le seuil : un libellé strictement
+   * identique vaut 0,6 et suffit donc à lui seul, un nom court identique vaut
+   * 0,48 et demande un second signal. Autrement dit, porter le même nom
+   * officiel justifie toujours une revue, porter le même nom d'usage non.
+   * La marche à suivre pour calibrer sur les données d'un environnement est
+   * dans docs/12-exploitation-deploiement.md.
    */
   computeScore(signals: CorrelationSignals): number {
     const dataSignal = Math.min(
@@ -238,11 +245,15 @@ export class CorrelationDetectionService {
           AND a."shortName" % b."shortName"
       ),
       candidate_names AS (
+        -- Le libellé est le nom officiel et fait foi ; le nom court n'est
+        -- qu'un usage, souvent porteur d'un terme d'organisation partagé
+        -- (« SI Paie DGFiP » et « SI RH DGFiP »). Il est donc minoré : il
+        -- renforce un rapprochement, mais ne peut pas l'emporter seul.
         SELECT p.id_a,
                p.id_b,
                GREATEST(
                  similarity(a.label, b.label),
-                 COALESCE(similarity(a."shortName", b."shortName"), 0)
+                 ${SHORT_NAME_TRUST} * COALESCE(similarity(a."shortName", b."shortName"), 0)
                )::float8 AS name_similarity
         FROM name_pairs p
         JOIN "Application" a ON a.id = p.id_a

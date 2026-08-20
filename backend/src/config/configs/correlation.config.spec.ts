@@ -34,9 +34,9 @@ describe("correlationConfig", () => {
     expect(config.cronEnabled).toBe(false);
     expect(config.scoreThreshold).toBe(0.6);
     expect(config.weights).toEqual({
-      nameSimilarity: 0.5,
-      sharedData: 0.3,
-      sharedActors: 0.2,
+      nameSimilarity: 0.6,
+      sharedData: 0.25,
+      sharedActors: 0.15,
     });
   });
 
@@ -58,14 +58,14 @@ describe("correlationConfig", () => {
     process.env.CORRELATION_WEIGHT_DATA = "-0.2";
 
     const { weights } = correlationConfig();
-    expect(weights.nameSimilarity).toBe(0.5);
-    expect(weights.sharedData).toBe(0.3);
+    expect(weights.nameSimilarity).toBe(0.6);
+    expect(weights.sharedData).toBe(0.25);
   });
 
   it("ignore une valeur non numérique", () => {
     process.env.CORRELATION_WEIGHT_ACTORS = "beaucoup";
 
-    expect(correlationConfig().weights.sharedActors).toBe(0.2);
+    expect(correlationConfig().weights.sharedActors).toBe(0.15);
   });
 
   it("accepte les bornes 0 et 1", () => {
