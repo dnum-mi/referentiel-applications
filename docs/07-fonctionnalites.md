@@ -54,6 +54,12 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
 
 **Permission.** `AppList` + `AppRead` (socle Visiteur). Le filtre « Mes applications » repose sur le rattachement de l'utilisateur comme acteur (couche 3).
 
+**Filtres sauvegardés.** Chaque utilisateur peut sauvegarder sa combinaison de filtres courante sous un nom, pour la réappliquer plus tard sans ressaisir chaque critère. Sauvegarder sous un nom déjà utilisé remplace le filtre existant (upsert). Les filtres sont personnels : un utilisateur ne voit et ne peut supprimer que les siens.
+
+- Front : `frontend/src/components/search/SavedFiltersPanel.vue` (intégré dans `SidebarFilter.vue`), store `frontend/src/stores/savedFilterStore.ts`.
+- Back : `GET/POST /saved-filters`, `DELETE /saved-filters/:id` (`backend/src/saved-filter/`) ; modèle `SavedFilter` (`backend/prisma/schema/users.prisma`), unique par `(userId, name)`.
+- **Permission.** Aucune permission dédiée : accessible à tout utilisateur authentifié, scopé à son propre `userId`.
+
 ## 2. Fiche application
 
 La fiche regroupe toutes les informations d'une application sous forme d'onglets. La page de fiche (`ApplicationPage.vue`) délègue au composant `ApplicationOverview.vue`, qui assemble les onglets suivants : **Informations générales**, **Sources de données**, **Liens**, **Conformités**, **Acteurs**, **Relations**, **Statuts**, **Signalements**, **Modifications** (historique) et **Qualité**. L'affichage de chaque onglet dépend des droits renvoyés par `GET /applications/:applicationId/my-perms`.
@@ -256,6 +262,7 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 | Fonctionnalité                   | Emplacement principal (code)                                                | Permission requise                                                                 |
 | :------------------------------- | :-------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
 | Catalogue et recherche           | `ApplicationSearchPage.vue` · `GET /applications`                           | `AppList` + `AppRead`                                                              |
+| Filtres sauvegardés              | `SavedFiltersPanel.vue` · `backend/src/saved-filter`                        | utilisateur connecté                                                               |
 | Fiche – Informations générales   | `InformationsGenerales.vue`                                                 | Lecture `AppRead` · Écriture `AppWrite` / `AppWritePriority`                       |
 | Fiche – Acteurs                  | `actor/ActorTab.vue` · `backend/src/actor`                                  | `ActorRead` / `ActorWrite`                                                         |
 | Fiche – Statuts                  | `StatusTab.vue` · `backend/src/statuses`                                    | `AppRead` / `AppWrite`                                                             |

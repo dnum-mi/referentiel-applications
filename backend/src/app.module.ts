@@ -19,6 +19,7 @@ import { ActionLogMiddleware } from "./middlewares/action-log.middleware";
 import { AuthMiddleware } from "./middlewares/auth.middleware";
 import { RequestContextMiddleware } from "./middlewares/request-context.middleware";
 import { ReportModule } from "./report/report.module";
+import { SavedFilterModule } from "./saved-filter/saved-filter.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ApplicationModule } from "./applications/application.module";
@@ -84,6 +85,7 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
     StatusesModule,
     StatsModule,
     ReportModule,
+    SavedFilterModule,
     HealthCheckModule,
   ],
   controllers: [AppController],
