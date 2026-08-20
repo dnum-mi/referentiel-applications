@@ -195,6 +195,17 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `POST /users/:id/block` · `POST /users/:id/unblock`                                        | Bloquer / débloquer l'accès d'un utilisateur                     |
 | `GET /users`                                                                               | Liste des utilisateurs                                           |
 
+### Revue des corrélations
+
+| Verbe & chemin                             | Rôle                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------- |
+| `GET /correlation-suggestions`             | Suggestions de corrélation, filtrables par statut, triées par score |
+| `POST /correlation-suggestions/run`        | Lance la détection (409 si une exécution est déjà en cours)         |
+| `POST /correlation-suggestions/:id/accept` | Crée la relation `is_correlated_with` et clôt la suggestion         |
+| `POST /correlation-suggestions/:id/reject` | Écarte la paire, qui ne sera plus proposée                          |
+
+> Ces quatre routes exigent la permission `AdminPanelManage` et n'attendent aucun corps de requête.
+
 ### Filtres sauvegardés
 
 | Verbe & chemin                               | Rôle                                                                        |
