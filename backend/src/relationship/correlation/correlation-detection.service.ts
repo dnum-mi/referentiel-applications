@@ -183,6 +183,14 @@ export class CorrelationDetectionService {
    * Score pondéré d'une paire candidate. Les compteurs (données, acteurs) sont
    * normalisés en [0..1] avec saturation pour rester comparables à la
    * similarité de nom.
+   *
+   * Conséquence des poids par défaut, à garder en tête avant de régler le
+   * seuil : le nom pesant 0,5, deux applications au libellé identique
+   * plafonnent à 0,50 et restent sous un seuil de 0,6 — un second signal est
+   * toujours nécessaire. C'est voulu (deux instances régionales d'un même
+   * produit portent le même nom sans être des doublons), mais cela écarte
+   * aussi le doublon le plus évident. La marche à suivre pour calibrer sur les
+   * données d'un environnement est dans docs/12-exploitation-deploiement.md.
    */
   computeScore(signals: CorrelationSignals): number {
     const dataSignal = Math.min(
