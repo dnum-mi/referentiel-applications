@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
 import { RelationService } from "../relation.service";
 import {
@@ -17,6 +18,14 @@ import {
   CorrelationSuggestionWithApplications,
   ICorrelationSuggestionRepository,
 } from "./infrastructure/repository/correlation-suggestion.repository.interface";
+
+/** Violation de contrainte d'unicité Prisma : la ligne existe déjà. */
+function isUniqueConstraintViolation(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  );
+}
 
 @Injectable()
 export class CorrelationSuggestionService {
@@ -47,15 +56,25 @@ export class CorrelationSuggestionService {
   async accept(id: string, userId: string): Promise<CorrelationSuggestionDto> {
     const suggestion = await this.findPendingOrThrow(id);
 
-    await this.relationService.create(
-      suggestion.applicationSourceId,
-      {
-        applicationTargetId: suggestion.applicationTargetId,
-        type: "is_correlated_with",
-        mediationServiceId: null,
-      },
-      userId,
-    );
+    try {
+      await this.relationService.create(
+        suggestion.applicationSourceId,
+        {
+          applicationTargetId: suggestion.applicationTargetId,
+          type: "is_correlated_with",
+          mediationServiceId: null,
+        },
+        userId,
+      );
+    } catch (error) {
+      // La création de la relation et le passage en ACCEPTED ne partagent pas
+      // de transaction : si la seconde échoue, la relation reste. Une reprise
+      // de l'acceptation bute alors sur la contrainte d'unicité — de même que
+      // deux acceptations concurrentes, ou une relation déjà saisie à la main.
+      // Dans tous ces cas la relation attendue existe : poursuivre la revue
+      // vaut mieux qu'un 500 sur une suggestion devenue inacceptable.
+      if (!isUniqueConstraintViolation(error)) throw error;
+    }
 
     const updated = await this.correlationSuggestionRepository.updateStatus(
       id,
