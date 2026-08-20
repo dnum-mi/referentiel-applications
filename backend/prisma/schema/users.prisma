@@ -69,6 +69,8 @@ model User {
   actionLogsAsImpersonator  ActionLog[]         @relation("ActionLogImpersonator")
   /// Filtres de recherche d'applications sauvegardés par cet utilisateur (#2279)
   savedFilters              SavedFilter[]
+  /// Suggestions de corrélation revues par cet utilisateur (#2281)
+  reviewedCorrelationSuggestions CorrelationSuggestion[] @relation("CorrelationSuggestionReviewer")
 }
 
 /// Filtre de recherche d'applications sauvegardé par un utilisateur, pour être réappliqué
