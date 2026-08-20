@@ -13,6 +13,7 @@ import DataFilter from "@/components/search/DataFilter.vue";
 import { useAccordionManager } from "@/composables/use-accordion-manager";
 import { useStatisticsStore } from "@/stores/statisticsStore";
 import { useUserStore } from "@/stores/userStore";
+import SavedFiltersPanel from "./SavedFiltersPanel.vue";
 import StatusFilter from "./StatusFilter.vue";
 import { DsfrButton, DsfrToggleSwitch } from "@gouvminint/vue-dsfr";
 
@@ -42,7 +43,7 @@ function handleReset() {
 const statsStore = useStatisticsStore();
 const userStore = useUserStore();
 
-const { openAccordions, toggle } = useAccordionManager(9, true);
+const { openAccordions, toggle } = useAccordionManager(10, true);
 
 const isMyAppsFilterActive = computed(() => {
   return !!(userStore.user?.email && filters.value.myApplications);
@@ -73,6 +74,17 @@ const total = computed(() => {
         </DsfrButton>
 
         <h2 class="fr-h6">Filtres</h2>
+
+        <DsfrAccordion
+          v-if="userStore.user?.email"
+          :selected="openAccordions.includes(9)"
+          title="Filtres sauvegardés"
+          data-testid="sidebar-accordion-saved-filters"
+          @click="toggle(9)"
+        >
+          <SavedFiltersPanel />
+        </DsfrAccordion>
+
         <p class="total-count" data-testid="sidebar-total-count">
           {{ total }} application(s) trouvée(s) sur {{ statsStore.totalApplications }}
         </p>

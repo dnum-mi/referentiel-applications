@@ -67,6 +67,28 @@ model User {
   actionLogs                ActionLog[]         @relation("ActionLogUser")
   /// Actions réellement effectuées par cet utilisateur sous une identité empruntée
   actionLogsAsImpersonator  ActionLog[]         @relation("ActionLogImpersonator")
+  /// Filtres de recherche d'applications sauvegardés par cet utilisateur (#2279)
+  savedFilters              SavedFilter[]
+}
+
+/// Filtre de recherche d'applications sauvegardé par un utilisateur, pour être réappliqué
+/// plus tard depuis l'onglet applications sans ressaisir chaque critère (#2279).
+///
+/// @namespace Users
+model SavedFilter {
+  /// Identifiant unique
+  id        String   @id @default(uuid())
+  /// Nom donné par l'utilisateur à ce filtre, unique parmi ses propres filtres
+  name      String   @db.VarChar(100)
+  /// Filtres sérialisés (mêmes clés que la query de recherche d'applications)
+  filters   Json
+  /// Utilisateur propriétaire de ce filtre
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Date de création
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
 }
 
 /// @namespace Roles
