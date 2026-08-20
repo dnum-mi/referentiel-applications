@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
-import { CorrelationSuggestionStatus } from "@/client/types.gen";
+import { CorrelationSuggestionStatus, type CorrelationSuggestionDto } from "@/client/types.gen";
 import {
   correlationSignalBadges,
   correlationStatusBadgeType,
@@ -14,13 +14,13 @@ import { useCorrelationStore } from "@/stores/correlationStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 
 /**
- * Écran de revue des suggestions de corrélation (#2281, #2286). Lecture seule :
- * les actions Accepter/Rejeter et le lancement manuel de la détection arrivent
- * dans un second temps. La visibilité est portée par la garde de la page admin
+ * Écran de revue des suggestions de corrélation (#2281, #2286). Accepter crée
+ * la relation is_correlated_with sur les deux fiches ; rejeter écarte la paire
+ * définitivement. La visibilité est portée par la garde de la page admin
  * (ADMIN_PANEL_MANAGE), alignée sur la permission des endpoints.
  */
 const correlationStore = useCorrelationStore();
-const { suggestions, total, isLoading } = storeToRefs(correlationStore);
+const { suggestions, total, isLoading, isDetectionRunning } = storeToRefs(correlationStore);
 
 const statusOptions = [
   { value: "", text: "Tous les statuts" },
@@ -39,6 +39,7 @@ const columns: TableColumn[] = [
   { field: "signals", header: "Signaux", sortable: false },
   { field: "status", header: "Statut", sortable: false },
   { field: "createdAt", header: "Détectée le", sortable: true },
+  { field: "actions", header: "Actions", sortable: false },
 ];
 
 const sortColumn = ref<string>("score");
@@ -92,11 +93,67 @@ const tableRows = computed(() =>
     signals: suggestion,
     status: suggestion.status,
     createdAt: formatDate(suggestion.createdAt),
+    actions: suggestion,
   })),
 );
 
 function formatDate(date: Date | string): string {
   return new Date(date).toLocaleDateString("fr-FR");
+}
+
+/** Action en attente de confirmation (accepter ou rejeter une suggestion). */
+const pendingAction = ref<{ type: "accept" | "reject"; suggestion: CorrelationSuggestionDto } | null>(null);
+
+const confirmationTitle = computed(() =>
+  pendingAction.value?.type === "accept" ? "Accepter la suggestion de corrélation" : "Rejeter la suggestion de corrélation",
+);
+
+const confirmationMessage = computed(() => {
+  if (!pendingAction.value) return "";
+  const { type, suggestion } = pendingAction.value;
+  const pair = `« ${suggestion.sourceApplication.label} » et « ${suggestion.targetApplication.label} »`;
+  return type === "accept"
+    ? `Une relation « Est corrélée à » sera créée entre ${pair} et visible sur les deux fiches.`
+    : `La suggestion entre ${pair} sera écartée et ne sera plus jamais proposée.`;
+});
+
+function askToAccept(suggestion: CorrelationSuggestionDto) {
+  pendingAction.value = { type: "accept", suggestion };
+}
+
+function askToReject(suggestion: CorrelationSuggestionDto) {
+  pendingAction.value = { type: "reject", suggestion };
+}
+
+function cancelAction() {
+  pendingAction.value = null;
+}
+
+// Suggestion dont l'action est en cours : ses boutons sont neutralisés le
+// temps de l'aller-retour, pour ne pas déclencher deux revues d'un double clic.
+const actionInProgressId = ref<string | null>(null);
+
+async function confirmAction() {
+  if (!pendingAction.value) return;
+  const { type, suggestion } = pendingAction.value;
+  pendingAction.value = null;
+  actionInProgressId.value = suggestion.id;
+  try {
+    const result =
+      type === "accept" ? await correlationStore.acceptSuggestion(suggestion.id) : await correlationStore.rejectSuggestion(suggestion.id);
+    // Un échec de conflit (suggestion revue ailleurs) a déjà été expliqué par
+    // un toast : la liste est rafraîchie dans tous les cas pour retomber sur
+    // l'état réel.
+    await fetchSuggestions();
+    return result;
+  } finally {
+    actionInProgressId.value = null;
+  }
+}
+
+async function launchDetection() {
+  const result = await correlationStore.runDetection();
+  if (result) await fetchSuggestions();
 }
 
 onMounted(fetchSuggestions);
@@ -105,6 +162,17 @@ onMounted(fetchSuggestions);
 <template>
   <div class="header-row">
     <h1 class="fr-h1" data-testid="admin-correlations-title">Revue des corrélations</h1>
+
+    <DsfrButton
+      type="button"
+      secondary
+      icon="ri-radar-line"
+      :disabled="isDetectionRunning"
+      data-testid="run-detection-button"
+      @click="launchDetection"
+    >
+      {{ isDetectionRunning ? "Détection en cours…" : "Lancer la détection" }}
+    </DsfrButton>
   </div>
 
   <p class="fr-text--sm fr-mb-2w">
@@ -175,8 +243,49 @@ onMounted(fetchSuggestions);
           small
         />
       </template>
+
+      <template #body-actions="{ data: row }">
+        <div v-if="row.actions.status === 'PENDING'" class="actions-cell">
+          <DsfrButton
+            type="button"
+            size="sm"
+            icon="ri-check-line"
+            :disabled="actionInProgressId === row.id"
+            :data-testid="`accept-suggestion-${row.id}`"
+            @click="askToAccept(row.actions)"
+          >
+            Accepter
+          </DsfrButton>
+          <DsfrButton
+            type="button"
+            size="sm"
+            secondary
+            icon="ri-close-line"
+            :disabled="actionInProgressId === row.id"
+            :data-testid="`reject-suggestion-${row.id}`"
+            @click="askToReject(row.actions)"
+          >
+            Rejeter
+          </DsfrButton>
+        </div>
+        <span v-else aria-hidden="true">—</span>
+      </template>
     </RefAppTable>
   </div>
+
+  <DsfrModal
+    :opened="pendingAction !== null"
+    :title="confirmationTitle"
+    size="sm"
+    data-testid="correlation-confirm-modal"
+    @close="cancelAction"
+  >
+    <p>{{ confirmationMessage }}</p>
+    <div class="actions-cell">
+      <DsfrButton type="button" tertiary data-testid="correlation-cancel-btn" @click="cancelAction"> Annuler </DsfrButton>
+      <DsfrButton type="button" primary data-testid="correlation-confirm-btn" @click="confirmAction"> Confirmer </DsfrButton>
+    </div>
+  </DsfrModal>
 </template>
 
 <style scoped>
@@ -193,6 +302,12 @@ onMounted(fetchSuggestions);
 .pair-cell {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.actions-cell {
+  display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
