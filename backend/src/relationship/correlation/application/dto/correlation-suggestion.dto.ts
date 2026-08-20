@@ -71,6 +71,25 @@ export class CorrelationSuggestionDto {
   reviewedAt: Date | null;
 }
 
+/** Résumé d'une exécution manuelle de la détection (#2284). */
+export class RunCorrelationDetectionResultDto {
+  @ApiProperty({
+    description: "Paires candidates remontées par la détection (avant seuil)",
+  })
+  @IsNumber()
+  candidateCount: number;
+
+  @ApiProperty({ description: "Suggestions PENDING créées" })
+  @IsNumber()
+  createdCount: number;
+
+  @ApiProperty({
+    description: "Suggestions PENDING dont le score a été rafraîchi",
+  })
+  @IsNumber()
+  updatedCount: number;
+}
+
 export class CorrelationSuggestionFilterDto extends PaginationDto {
   @ApiPropertyOptional({
     enum: CorrelationSuggestionStatus,

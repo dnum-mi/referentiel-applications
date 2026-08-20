@@ -22,4 +22,9 @@ export interface ICorrelationSuggestionRepository {
     total: number;
   }>;
   findOne(id: string): Promise<CorrelationSuggestionWithApplications | null>;
+  updateStatus(
+    id: string,
+    status: CorrelationSuggestionStatus,
+    reviewedById: string,
+  ): Promise<CorrelationSuggestionWithApplications>;
 }
