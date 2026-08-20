@@ -46,6 +46,8 @@ services:
       - SMTP_ENABLED=true
       # Crons d'envoi automatique (digest quotidien + relances de validation) — off par défaut
       - EMAIL_CRON_ENABLED=false
+      # Détection planifiée des corrélations entre applications — off par défaut
+      - CORRELATION_CRON_ENABLED=false
       - ENV_LABEL=developpement
       - MAINTENANCE_MODE=${MAINTENANCE_MODE:-false}
       - MAINTENANCE_CACHE_TTL_MS=${MAINTENANCE_CACHE_TTL_MS:-30000}
