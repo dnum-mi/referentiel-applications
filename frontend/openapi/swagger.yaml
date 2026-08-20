@@ -5997,6 +5997,61 @@ paths:
           description: Signalement supprimé avec succès
       summary: Supprimer un signalement
       tags: *a34
+  /api/v2/saved-filters:
+    get:
+      description: Renvoie les filtres de recherche d'applications sauvegardés par
+        l'utilisateur courant.
+      operationId: SavedFilterController_findAll
+      parameters: []
+      responses:
+        "200":
+          description: Liste des filtres sauvegardés
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedFilterDto"
+      summary: Lister ses filtres sauvegardés
+      tags: &a35
+        - SavedFilters
+    post:
+      description: Sauvegarde les filtres courants sous un nom. Si un filtre du même
+        nom existe déjà pour l'utilisateur, il est remplacé.
+      operationId: SavedFilterController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSavedFilterDto"
+      responses:
+        "201":
+          description: Filtre sauvegardé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedFilterDto"
+      summary: Sauvegarder un filtre
+      tags: *a35
+  /api/v2/saved-filters/{id}:
+    delete:
+      operationId: SavedFilterController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID du filtre sauvegardé
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Filtre supprimé
+        "404":
+          description: Filtre sauvegardé non trouvé
+      summary: Supprimer un filtre sauvegardé
+      tags: *a35
   /api/v2/health-check:
     get:
       description: Exécute une requête basique vers la base de données pour vérifier
@@ -6240,7 +6295,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: &a35
+          enum: &a36
             - active
             - expired
             - revoked
@@ -6345,7 +6400,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: *a35
+          enum: *a36
           type: string
           example: active
           description: Statut du token
@@ -7044,7 +7099,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a36
+          example: &a37
             - population 1
             - population 2
           description: population associated with the application
@@ -7055,7 +7110,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a37
+          example: &a38
             - finance
             - HR
           description: Purposes of the application
@@ -7068,7 +7123,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a38
+          example: &a39
             - tag1
             - tag2
           type: array
@@ -7358,7 +7413,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a36
+          example: *a37
           description: population associated with the application
           type: array
           items:
@@ -7367,7 +7422,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a37
+          example: *a38
           description: Purposes of the application
           type: array
           items:
@@ -7378,7 +7433,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a38
+          example: *a39
           type: array
           items:
             type: string
@@ -8411,7 +8466,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a39
+          enum: &a40
             - 96
             - 72
             - 48
@@ -8442,7 +8497,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a40
+          enum: &a41
             - OK
             - KO
           type: string
@@ -8453,7 +8508,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a41
+          enum: &a42
             - 48
             - 24
             - 2
@@ -8473,7 +8528,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a42
+          enum: &a43
             - S3
             - LOCAL
             - EXTERNE
@@ -8484,7 +8539,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a43
+          enum: &a44
             - OK
             - KO
           type: string
@@ -8494,7 +8549,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a44
+          enum: &a45
             - homologuee
             - en_cours
             - dispensee
@@ -8535,7 +8590,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a39
+          enum: *a40
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -8559,7 +8614,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a40
+          enum: *a41
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -8568,7 +8623,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a41
+          enum: *a42
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -8584,7 +8639,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a42
+          enum: *a43
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -8592,7 +8647,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a43
+          enum: *a44
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -8600,7 +8655,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a44
+          enum: *a45
           type: string
           description: Homologation status
         homologation_date_end:
@@ -8659,7 +8714,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a39
+          enum: *a40
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -8683,7 +8738,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a40
+          enum: *a41
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -8692,7 +8747,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a41
+          enum: *a42
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -8708,7 +8763,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a42
+          enum: *a43
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -8716,7 +8771,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a43
+          enum: *a44
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -8724,7 +8779,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a44
+          enum: *a45
           type: string
           description: Homologation status
         homologation_date_end:
@@ -9624,6 +9679,41 @@ components:
         notes:
           type: string
           description: La note du signalement
+    SavedFilterDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications sauvegardés
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - name
+        - filters
+        - createdAt
+    CreateSavedFilterDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Nom donné au filtre sauvegardé
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications à sauvegarder (mêmes clés que
+            la query de GET /applications)
+      required:
+        - name
+        - filters
     HealthCheckDto:
       type: object
       properties:
@@ -9636,7 +9726,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a45
+          enum: &a46
             - OK
             - KO
           type: string
@@ -9658,7 +9748,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a45
+          enum: *a46
           type: string
           description: État de la connexion à la base de données
           example: OK
