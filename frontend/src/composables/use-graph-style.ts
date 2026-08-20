@@ -26,6 +26,7 @@ export function useGraphStyles() {
       is_service_user_of: { color: "var(--green-600, #00A97E)", style: "solid", width: 2 },
       is_data_user_of: { color: "var(--red-marianne-600, #DB2777)", style: "dotted", width: 2 },
       use_sso_of: { color: "var(--purple-glycine-600, #7C3AED)", style: "solid", width: 2 },
+      is_correlated_with: { color: "var(--orange-terre-battue-600, #E4794A)", style: "dashed", width: 2 },
     } as const satisfies {
       [key in RelationType]: { color: string; style: "solid" | "dotted" | "dashed"; width: number };
     };
