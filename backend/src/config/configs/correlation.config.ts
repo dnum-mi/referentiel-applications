@@ -36,6 +36,13 @@ function parseRatio(
  * - `scoreThreshold` : score pondéré minimal pour créer une suggestion
  * - `weights` : pondération de chaque signal (similarité de nom, données
  *   partagées, acteurs communs)
+ *
+ * Les valeurs par défaut sont calées pour qu'un libellé strictement identique
+ * atteigne le seuil à lui seul (0,6 × 1 = 0,6) : deux applications portant le
+ * même nom officiel méritent toujours un regard, c'est le doublon le plus
+ * courant. Les autres combinaisons demandent au moins deux signaux. Le
+ * calibrage sur les données d'un environnement est décrit dans
+ * docs/12-exploitation-deploiement.md.
  */
 export const correlationConfig = registerAs("correlation", () => ({
   cronEnabled: process.env.CORRELATION_CRON_ENABLED === "true",
@@ -48,17 +55,17 @@ export const correlationConfig = registerAs("correlation", () => ({
     nameSimilarity: parseRatio(
       "CORRELATION_WEIGHT_NAME",
       process.env.CORRELATION_WEIGHT_NAME,
-      0.5,
+      0.6,
     ),
     sharedData: parseRatio(
       "CORRELATION_WEIGHT_DATA",
       process.env.CORRELATION_WEIGHT_DATA,
-      0.3,
+      0.25,
     ),
     sharedActors: parseRatio(
       "CORRELATION_WEIGHT_ACTORS",
       process.env.CORRELATION_WEIGHT_ACTORS,
-      0.2,
+      0.15,
     ),
   },
 }));
