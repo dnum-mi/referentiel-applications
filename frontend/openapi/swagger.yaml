@@ -3193,6 +3193,64 @@ paths:
           description: Relation supprimée avec succès
       summary: Supprimer une relation
       tags: *a17
+  /api/v2/correlation-suggestions:
+    get:
+      description: Liste paginée des suggestions de corrélation entre applications,
+        filtrable par statut (PENDING/ACCEPTED/REJECTED) et triée par score
+        décroissant par défaut.
+      operationId: CorrelationSuggestionController_findAll
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: status
+          required: false
+          in: query
+          description: Filtre par statut de revue
+          schema:
+            $ref: "#/components/schemas/CorrelationSuggestionStatus"
+      responses:
+        "200":
+          description: Liste paginée des suggestions de corrélation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedCorrelationSuggestionDto"
+      summary: Lister les suggestions de corrélation
+      tags:
+        - correlation-suggestions
   /api/v2/organizations:
     post:
       description: "
@@ -8032,6 +8090,86 @@ components:
         - nodes
         - edges
         - rootId
+    CorrelationSuggestionStatus:
+      type: string
+      enum:
+        - PENDING
+        - ACCEPTED
+        - REJECTED
+    CorrelationSignalsDto:
+      type: object
+      properties:
+        nameSimilarity:
+          type: number
+          description: Similarité trigramme maximale entre les label/shortName [0..1]
+        sharedDataCount:
+          type: number
+          description: Nombre de DataDescription partagées
+        sharedActorCount:
+          type: number
+          description: Nombre d'acteurs communs (même email) aux deux applications
+      required:
+        - nameSimilarity
+        - sharedDataCount
+        - sharedActorCount
+    CorrelationSuggestionDto:
+      type: object
+      properties:
+        id:
+          type: string
+        applicationSourceId:
+          type: string
+        applicationTargetId:
+          type: string
+        sourceApplication:
+          $ref: "#/components/schemas/ApplicationMinimalDto"
+        targetApplication:
+          $ref: "#/components/schemas/ApplicationMinimalDto"
+        score:
+          type: number
+          description: Score pondéré de la suggestion (plus élevé = plus probable)
+        signals:
+          $ref: "#/components/schemas/CorrelationSignalsDto"
+        status:
+          allOf:
+            - $ref: "#/components/schemas/CorrelationSuggestionStatus"
+        createdAt:
+          format: date-time
+          type: string
+        reviewedById:
+          type: string
+          nullable: true
+        reviewedAt:
+          format: date-time
+          type: string
+          nullable: true
+      required:
+        - id
+        - applicationSourceId
+        - applicationTargetId
+        - sourceApplication
+        - targetApplication
+        - score
+        - signals
+        - status
+        - createdAt
+        - reviewedById
+        - reviewedAt
+    PaginatedCorrelationSuggestionDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/CorrelationSuggestionDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     CreateOrganizationDto:
       type: object
       properties:
