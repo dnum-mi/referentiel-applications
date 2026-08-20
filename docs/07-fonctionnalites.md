@@ -120,7 +120,9 @@ Un onglet dédié **RGAA** (accessibilité) permet d'enregistrer plusieurs audit
 
 ### 2.6 Relations entre applications
 
-**Ce que ça fait.** Déclare des relations typées entre deux applications (enum `RelationType`) : « fait partie de » (`is_part_of`), « remplace » (`in_replacement_of`), « utilise le service de » (`is_service_user_of`), « utilise les données de » (`is_data_user_of`), « utilise le SSO de » (`use_sso_of`). Les relations sont consultables en liste ou via un **graphe interactif**.
+**Ce que ça fait.** Déclare des relations typées entre deux applications (enum `RelationType`) : « fait partie de » (`is_part_of`), « remplace » (`in_replacement_of`), « utilise le service de » (`is_service_user_of`), « utilise les données de » (`is_data_user_of`), « utilise le SSO de » (`use_sso_of`), « est corrélée à » (`is_correlated_with`). Les relations sont consultables en liste ou via un **graphe interactif**.
+
+La corrélation (« est corrélée à ») signale un **doublon potentiel** ou un **périmètre proche** entre deux applications. Contrairement aux cinq autres types, elle est **symétrique** : elle se lit à l'identique dans les deux sens, et le libellé affiché est le même côté source et côté cible.
 
 **Où c'est dans le code.** Onglet `tab-relations` → `frontend/src/components/RelationshipsTab.vue` ; graphe `RelationShipGraph.vue` reposant sur le composable `use-d3-graph` (rendu **D3**) ; édition `EditRelationModal.vue` ; module back `backend/src/relationship/`.
 

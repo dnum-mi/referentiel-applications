@@ -2,7 +2,7 @@
 CREATE TYPE "CorrelationSuggestionStatus" AS ENUM ('PENDING', 'ACCEPTED', 'REJECTED');
 
 -- AlterEnum
-ALTER TYPE "RelationType" ADD VALUE 'is_correlated_with';
+ALTER TYPE "RelationType" ADD VALUE IF NOT EXISTS 'is_correlated_with';
 
 -- CreateTable
 CREATE TABLE "CorrelationSuggestion" (
