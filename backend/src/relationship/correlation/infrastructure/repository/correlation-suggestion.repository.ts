@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { CorrelationSuggestionStatus, Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import {
   CorrelationSuggestionWithApplications,
@@ -65,6 +65,18 @@ export class CorrelationSuggestionRepository
   ): Promise<CorrelationSuggestionWithApplications | null> {
     return await this.prisma.correlationSuggestion.findUnique({
       where: { id },
+      include: APPLICATION_INCLUDE,
+    });
+  }
+
+  public async updateStatus(
+    id: string,
+    status: CorrelationSuggestionStatus,
+    reviewedById: string,
+  ): Promise<CorrelationSuggestionWithApplications> {
+    return await this.prisma.correlationSuggestion.update({
+      where: { id },
+      data: { status, reviewedById, reviewedAt: new Date() },
       include: APPLICATION_INCLUDE,
     });
   }
