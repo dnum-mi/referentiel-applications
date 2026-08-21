@@ -264,11 +264,18 @@ export class UserService {
 
   async findAll(
     filters: UserFilterDto,
-    _requestor: Requestor,
+    requestor: Requestor,
   ): Promise<PaginatedResponseDto<UserEntity>> {
     const where: Prisma.UserWhereInput = {};
 
     where.type = { in: filters.type };
+
+    const requestorScopePath = requestor.scopeOrganization?.path;
+    if (requestorScopePath) {
+      where.organization = {
+        path: { startsWith: requestorScopePath },
+      };
+    }
 
     if (filters.search) {
       where.OR = [
