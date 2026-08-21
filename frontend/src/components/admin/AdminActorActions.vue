@@ -20,6 +20,8 @@ const emit = defineEmits<{
 const toaster = useToasterStore();
 const organizationStore = useOrganizationStore();
 
+// Le type d'acteur système (isDefault) n'a pas à être filtré ici : l'API `GET /actorTypes`
+// l'exclut déjà par défaut (non assignable à un acteur réel).
 const actorTypeOptions = computed(() =>
   props.actorTypes.map((type) => ({ text: type.label, value: type.id })).sort((a, b) => b.text.localeCompare(a.text, "fr")),
 );
@@ -184,7 +186,7 @@ async function saveAllByEmail() {
       },
     });
     if (response.response.ok) {
-      const count = (response.data as any)?.count ?? 0;
+      const count = response.data?.count ?? 0;
       toaster.addSuccessMessage(`${count} acteur(s) mis à jour avec succès`);
       closeEditAllModal();
       emit("updated");
@@ -255,7 +257,7 @@ async function confirmDeleteAll() {
       },
     });
     if (response.response.ok) {
-      const count = (response.data as any)?.count ?? 0;
+      const count = response.data?.count ?? 0;
       toaster.addSuccessMessage(`${count} acteur(s) supprimé(s) avec succès`);
       closeDeleteAllModal();
       emit("updated");

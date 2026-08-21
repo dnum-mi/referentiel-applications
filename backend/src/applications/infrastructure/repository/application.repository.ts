@@ -149,7 +149,7 @@ export class ApplicationRepository implements IApplicationRepository {
    */
   public async findMatchingApplications(
     where: Prisma.ApplicationWhereInput,
-  ): Promise<{ id: string; quality: number }[]> {
+  ): Promise<{ id: string; quality: number | null }[]> {
     return this.prisma.application.findMany({
       where,
       select: { id: true, quality: true },

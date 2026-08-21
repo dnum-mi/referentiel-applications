@@ -7,7 +7,6 @@ import type { ApplicationWithPerms } from "@/models/Application";
 import { routeNames } from "@/router/route-names";
 import { useHostingStore } from "@/stores/hostingStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import type { DsfrAlertType } from "@gouvminint/vue-dsfr";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -16,6 +15,7 @@ import HostingList from "./hosting/HostingList.vue";
 import HostingModal from "./hosting/HostingModal.vue";
 import TechnicalDebtCard from "./technical-debt/TechnicalDebtCard.vue";
 import TechnicalDebtModal from "./technical-debt/TechnicalDebtModal.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
@@ -42,13 +42,10 @@ const labelToDelete = ref<LabelDto | null>(null);
 const isDeleteModalOpen = ref(false);
 const isDeleteLabelModalOpen = ref(false);
 const hostingStore = useHostingStore();
-const userStore = useUserStore();
 const labels = ref<LabelDto[]>([]);
-const canEditBase = computed(() =>
-  userStore.hasPermissions([Permission.APP_WRITE, Permission.APP_WRITE_PRIORITY], Array.from(props.application.myPerms)),
-);
-const canViewHostings = computed(() => userStore.hasPermissions([Permission.HOSTING_READ], Array.from(props.application.myPerms)));
-const canEditHostings = computed(() => userStore.hasPermissions([Permission.HOSTING_WRITE], Array.from(props.application.myPerms)));
+const canEditBase = useAppPermission(() => props.application.myPerms, [Permission.APP_WRITE, Permission.APP_WRITE_PRIORITY]);
+const canViewHostings = useAppPermission(() => props.application.myPerms, [Permission.HOSTING_READ]);
+const canEditHostings = useAppPermission(() => props.application.myPerms, [Permission.HOSTING_WRITE]);
 
 const isTechnicalDebtModalOpen = ref(false);
 const technicalDebtInfo = ref<TechnicalDebtInfoDto | null>(null);
@@ -103,7 +100,7 @@ onMounted(async () => {
   try {
     const promises = [fetchLabels(application.value.id), fetchTechnicalDebtInfo()];
     // fetch hostings if allowed
-    if (userStore.hasPermissions([Permission.HOSTING_READ], Array.from(props.application.myPerms))) {
+    if (canViewHostings.value) {
       promises.push(hostingStore.fetchHostings(application.value.id));
     }
     await Promise.all(promises);

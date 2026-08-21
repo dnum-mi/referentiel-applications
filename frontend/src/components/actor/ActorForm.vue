@@ -68,12 +68,19 @@ const form = ref<CreateActorDto>({
   applicationId: props.application.id,
 });
 
-const actorTypeOptions = [...props.actorTypes]
-  .sort((a, b) => a.label.localeCompare(b.label, "fr"))
-  .map((type) => ({
-    text: type.label,
-    value: type.id,
-  }));
+// `computed` (et non une valeur figée) : la modale reste montée entre deux ouvertures (DsfrModal
+// ne fait que masquer son contenu), il faut donc réagir si `actorTypes` change pendant ce temps
+// (ex. création d'un nouveau type d'acteur depuis la matrice des permissions).
+// Le type d'acteur système (isDefault) n'a pas à être filtré ici : l'API `GET /actorTypes`
+// l'exclut déjà par défaut (non assignable à un acteur réel).
+const actorTypeOptions = computed(() =>
+  [...props.actorTypes]
+    .sort((a, b) => a.label.localeCompare(b.label, "fr"))
+    .map((type) => ({
+      text: type.label,
+      value: type.id,
+    })),
+);
 
 // Handle organization ID with proper typing
 const organizationId = computed({

@@ -22,14 +22,16 @@ import {
 import { ActorType, Permission } from "@prisma/client";
 import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 import { UserId } from "src/common/decorators/user-id.decorator";
-import { PaginatedResponseDto, PaginationDto } from "src/common/dto";
+import { PaginatedResponseDto } from "src/common/dto";
 import { PermissionGuard } from "src/common/guards/permission.guard";
 import { ActorTypeService } from "./actorType.service";
+import { ActorTypeFiltersDto } from "./dto/actor-type-filters.dto";
 import {
   ActorTypeDto,
   CreateActorTypeDto,
   PatchActorTypeDto,
 } from "./dto/actorType.dto";
+import { AppPermsMatrixHistoryDto } from "./dto/app-perms-matrix-history.dto";
 import { AppPermsDto } from "./dto/app-perms-matrix.dto";
 
 /**
@@ -90,6 +92,23 @@ Vous devez fournir les informations suivantes :
     return this.actorTypeService.getPermsMatrix();
   }
 
+  @Get("/perms-matrix/history")
+  @RequiredPermissions([Permission.AdminPanelManage])
+  @ApiOperation({
+    summary:
+      "Récupérer l'historique des modifications de la matrice des permissions",
+    description:
+      "Retourne l'historique des modifications apportées à la matrice des droits par type d'acteur, avec la date et l'email de l'auteur de chaque modification.",
+  })
+  @ApiOkResponse({
+    type: AppPermsMatrixHistoryDto,
+    isArray: true,
+    description: "Historique des modifications de la matrice des permissions",
+  })
+  public async getMatrixHistory(): Promise<AppPermsMatrixHistoryDto[]> {
+    return this.actorTypeService.getPermsMatrixHistory();
+  }
+
   /**
    * Récupère un type d'acteur spécifique par son ID
    *
@@ -141,13 +160,13 @@ Vous devez fournir les informations suivantes :
   @ApiOperation({
     summary: "Récupérer tous les types d’acteurs",
     description:
-      "Ce endpoint permet de récupérer la liste de tous les types d’acteurs disponibles.",
+      "Ce endpoint permet de récupérer la liste de tous les types d’acteurs disponibles. Le type d'acteur système (droits par défaut d'un non-acteur) est exclu par défaut ; utiliser `includeSystem=true` pour l'inclure (ex. matrice des permissions).",
   })
   @ApiOkResponse({
     description: "Liste les types d’acteurs",
     type: PaginatedResponseDto.of(ActorTypeDto),
   })
-  public async findAll(@Query() filters: PaginationDto) {
+  public async findAll(@Query() filters: ActorTypeFiltersDto) {
     return this.actorTypeService.findAll(filters);
   }
 

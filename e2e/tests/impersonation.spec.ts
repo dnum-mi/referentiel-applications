@@ -1,6 +1,6 @@
 import { test, expect } from "../fixtures/test";
 import { DataFeature } from "../fixtures/datafeature";
-import { AdminPage, loginAs } from "../pom";
+import { AdminPage, ApplicationPage, loginAs, switchTo } from "../pom";
 import { captureStepScreenshot } from "../support/screenshots";
 
 const ADMIN_EMAIL = "admin@example.com";
@@ -149,5 +149,78 @@ test.describe("Impersonation", () => {
         impersonateUserId: reader!.id,
       }),
     ).toBe(403);
+  });
+
+  test("IMP-09 - les modifications sous impersonation affichent l'admin réel (#2226)", async ({
+    page,
+    data,
+  }) => {
+    const inScope = await data.getUser("qa-target@example.com");
+    test.skip(!inScope, "Fixture QA absente — `pnpm db:seed:qa` requis.");
+
+    const ts = Date.now();
+    const label = `E2E-IMP09-${ts}`;
+    const appRef = await data.createTestApplication(label);
+    // La cible doit pouvoir modifier l'application : promue CONTRIBUTOR le temps du test.
+    await data.setUserRole("qa-target@example.com", "CONTRIBUTOR");
+
+    try {
+      await loginAs(page, "admin");
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.impersonateUser("qa-target@example.com");
+      await admin.expectImpersonationBanner("qa-target@example.com");
+
+      // Modification faite SOUS l'identité de qa-target.
+      const fiche = new ApplicationPage(page);
+      await fiche.open(appRef.id);
+      await fiche.editInfos(
+        label,
+        `Description sous impersonation ${ts}`,
+        "R1",
+      );
+
+      // L'historique attribue la modification à la cible ET affiche l'admin réel.
+      await fiche.openTab("tab-modifications");
+      const table = page.getByTestId("modifications-table");
+      await expect(table).toContainText("qa-target@example.com");
+      await expect(table).toContainText("(via admin@example.com)");
+
+      await admin.stopImpersonation();
+      await admin.expectNotImpersonating();
+    } finally {
+      await data.setUserRole("qa-target@example.com", "READER").catch(() => {});
+      await data.removeApplication(appRef.id).catch(() => {});
+    }
+  });
+
+  test("IMP-08 - un admin scopé ne peut impersonner que dans son périmètre (#2217)", async ({
+    page,
+    data,
+  }) => {
+    // Cibles du seed QA : `qa-target` (org TOTO/TUTU, dans le périmètre TOTO de
+    // `scope-admin`) et `qa-outside` (org ABCD, hors périmètre).
+    const outside = await data.getUser("qa-outside@example.com");
+    const inScope = await data.getUser("qa-target@example.com");
+    test.skip(
+      !outside || !inScope,
+      "Fixture QA absente — `pnpm db:seed:qa` requis.",
+    );
+
+    // `switchTo` (pas `loginAs`) : la fixture `data` a déjà connecté `page` en `admin`.
+    await switchTo(page, "scope-admin");
+    const admin = new AdminPage(page);
+    await admin.open();
+
+    // Hors périmètre : le bouton « Se connecter en tant que » n'est pas proposé.
+    // (Le refus 403 côté API — endpoint ET header direct — est couvert par
+    // backend/tests/impersonation.e2e-spec.ts.)
+    await admin.expectImpersonateUnavailable("qa-outside@example.com");
+
+    // Dans le périmètre : l'impersonation complète fonctionne.
+    await admin.impersonateUser("qa-target@example.com");
+    await admin.expectImpersonationBanner("qa-target@example.com");
+    await admin.stopImpersonation();
+    await admin.expectNotImpersonating();
   });
 });

@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.87.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.86.1...v1.87.0) (2026-08-17)
+
+
+### Features
+
+* add default actor ([#2219](https://github.com/dnum-mi/referentiel-applications/issues/2219)) ([d5da745](https://github.com/dnum-mi/referentiel-applications/commit/d5da745ce24395e65bbe833d68f94ae1a8e3a7bc))
+* add historic and tracking for sending email ([#2223](https://github.com/dnum-mi/referentiel-applications/issues/2223)) ([f3695f0](https://github.com/dnum-mi/referentiel-applications/commit/f3695f09c3fc9eff3f06f7fac6e8cfc8a3a3bc68))
+* add historic for user permissions and role updating ([#2207](https://github.com/dnum-mi/referentiel-applications/issues/2207)) ([acf1521](https://github.com/dnum-mi/referentiel-applications/commit/acf15219856d8cbd4d8df58087c42ca014271997))
+* add label tooltip for technical debt card and modal ([#2220](https://github.com/dnum-mi/referentiel-applications/issues/2220)) ([4bbece3](https://github.com/dnum-mi/referentiel-applications/commit/4bbece3dcce51129e0061f56d70b730db49121ca))
+* add maintenance read-only mode ([#2201](https://github.com/dnum-mi/referentiel-applications/issues/2201)) ([629a495](https://github.com/dnum-mi/referentiel-applications/commit/629a4959b167863e883a2e61e5e0f7b9b87bf7e9))
+* add quality null for app decommissionned and deleted ([#2244](https://github.com/dnum-mi/referentiel-applications/issues/2244)) ([f0eebec](https://github.com/dnum-mi/referentiel-applications/commit/f0eebecdd7304b095bb60eb2272d748875214cb0))
+* add warning if user create app without any permissions read ([#2237](https://github.com/dnum-mi/referentiel-applications/issues/2237)) ([504c226](https://github.com/dnum-mi/referentiel-applications/commit/504c226e715e26ca5d1b238fede135f62ba9e534))
+* admin can ban user ([#2240](https://github.com/dnum-mi/referentiel-applications/issues/2240)) ([ea6eec9](https://github.com/dnum-mi/referentiel-applications/commit/ea6eec91ab183cb28c2063fe12afcc3546d134ac))
+* afficher l'admin réel sur les modifications faites sous impersonification ([#2227](https://github.com/dnum-mi/referentiel-applications/issues/2227)) ([03b93ac](https://github.com/dnum-mi/referentiel-applications/commit/03b93ac2102f3c3cb4e4bec4e18e06caf2e56e43))
+* centralized action log middleware with impersonation traceability ([#2225](https://github.com/dnum-mi/referentiel-applications/issues/2225)) ([60323d8](https://github.com/dnum-mi/referentiel-applications/commit/60323d82a480ed2b27014f10d105d521a8e990d2))
+* disable automatic email crons by default behind EMAIL_CRON_ENABLED ([#2216](https://github.com/dnum-mi/referentiel-applications/issues/2216)) ([417b149](https://github.com/dnum-mi/referentiel-applications/commit/417b149d1efccaf6cb77adbef10c976a39f64bda))
+* normalize all tag with lowecase ([#2202](https://github.com/dnum-mi/referentiel-applications/issues/2202)) ([41370be](https://github.com/dnum-mi/referentiel-applications/commit/41370bed9f4767479925c6763aacd21379896514))
+* panel admin directions métier + rattachement aux organisations ([#2218](https://github.com/dnum-mi/referentiel-applications/issues/2218)) ([68d627f](https://github.com/dnum-mi/referentiel-applications/commit/68d627fe74b03b53f6d37dfed269c81c209c0280))
+* restreindre l'impersonification au périmètre de l'admin local ([#2221](https://github.com/dnum-mi/referentiel-applications/issues/2221)) ([5cd2eb2](https://github.com/dnum-mi/referentiel-applications/commit/5cd2eb25a310de22eb3cc4968adc63fdd6f397cc))
+* **technology:** complete endoflife.date EOL verification ([#1789](https://github.com/dnum-mi/referentiel-applications/issues/1789)) ([#2234](https://github.com/dnum-mi/referentiel-applications/issues/2234)) ([540a119](https://github.com/dnum-mi/referentiel-applications/commit/540a119dc38d5876c34c3257f4557f3d785baefa))
+
+
+### Bug Fixes
+
+* add organization check all organisations from business id for admin scope ([#2214](https://github.com/dnum-mi/referentiel-applications/issues/2214)) ([ecd6369](https://github.com/dnum-mi/referentiel-applications/commit/ecd63694c11dd7f6e27a68e47a1a8c0bd49e69cd))
+* update reamde ([#2239](https://github.com/dnum-mi/referentiel-applications/issues/2239)) ([7f690de](https://github.com/dnum-mi/referentiel-applications/commit/7f690defcd43ec60ddd6ea3e8012ea109a4b7dba))
+* update status label for spec test ([#2304](https://github.com/dnum-mi/referentiel-applications/issues/2304)) ([f0f902d](https://github.com/dnum-mi/referentiel-applications/commit/f0f902dd3d244fba61be0b14d5db4835c5aa4f32))
+
 ## [1.86.1](https://github.com/dnum-mi/referentiel-applications/compare/v1.86.0...v1.86.1) (2026-07-30)
 
 

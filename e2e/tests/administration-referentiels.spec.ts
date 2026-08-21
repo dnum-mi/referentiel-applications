@@ -773,4 +773,55 @@ test.describe("Administration des référentiels", () => {
     );
     expect(rows[0]?.label).toBe(originalLabel);
   });
+
+  test("ADM-22 - cycle de vie d'une direction métier", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const label = `e2e-adm22-${ts}`;
+    const renamedLabel = `e2e-adm22-renamed-${ts}`;
+    // Idempotence : repartir d'un état propre si un run précédent a laissé la division.
+    await data.removeBusinessDivisionLabel(label);
+    await data.removeBusinessDivisionLabel(renamedLabel);
+
+    const admin = new AdminPage(page);
+    await admin.open();
+    await admin.openBusinessDivisionsTab();
+    await admin.createBusinessDivision(label);
+    await admin.expectBusinessDivisionRow(label);
+    await admin.editBusinessDivision(label, renamedLabel);
+    await admin.expectBusinessDivisionRow(renamedLabel);
+    await admin.deleteBusinessDivision(renamedLabel);
+  });
+
+  test("ADM-23 - rattacher une direction métier à une organisation", async ({
+    page,
+    data,
+  }) => {
+    const ts = Date.now();
+    const orgPath = `E2E/ADM23/${ts}`;
+    const divisionLabel = `e2e-adm23-${ts}`;
+    await data.removeBusinessDivisionLabel(divisionLabel);
+    const org = await data.createOrganization(orgPath);
+    test.skip(!org, "Impossible de créer l'organisation de test");
+
+    const admin = new AdminPage(page);
+    await admin.open();
+    try {
+      await admin.openBusinessDivisionsTab();
+      await admin.createBusinessDivision(divisionLabel);
+
+      await admin.openOrganizationsTab();
+      await admin.attachBusinessDivisionToOrganization(orgPath, divisionLabel);
+      await admin.expectOrganizationBusinessDivision(orgPath, divisionLabel);
+
+      // Détachement : la colonne repasse à « - ».
+      await admin.attachBusinessDivisionToOrganization(orgPath, "");
+      await admin.expectOrganizationBusinessDivision(orgPath, "-");
+    } finally {
+      if (org) await data.deleteOrganization(org.id).catch(() => {});
+      await data.removeBusinessDivisionLabel(divisionLabel).catch(() => {});
+    }
+  });
 });

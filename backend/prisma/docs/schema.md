@@ -32,7 +32,7 @@ erDiagram
   ApplicationType type "nullable"
   String currentStatusId FK "nullable"
   priorityRestart priorityRestart "nullable"
-  Int quality
+  Int quality "nullable"
 }
 "ApplicationStatus" {
   String id PK
@@ -148,7 +148,7 @@ Properties as follows:
 - `type`: Type/catégorie de l'application (métier, service, etc.)
 - `currentStatusId`:
 - `priorityRestart`: Niveau de priorité pour les opérations de redémarrage
-- `quality`: Score de qualité de la fiche de l' application
+- `quality`: Score de qualité de la fiche de l'application (null si l'application est décommissionnée ou supprimée)
 
 ### `ApplicationStatus`
 
@@ -677,6 +677,7 @@ erDiagram
   MetadataAction action
   String applicationId FK "nullable"
   String createdById FK
+  String impersonatorId FK "nullable"
   String dataOwnerId FK "nullable"
   String complianceId FK "nullable"
   String labelId FK "nullable"
@@ -704,6 +705,7 @@ Properties as follows:
 - `action`: Type d'action (ajout, mise à jour, suppression)
 - `applicationId`:
 - `createdById`:
+- `impersonatorId`:
 - `dataOwnerId`:
 - `complianceId`:
 - `labelId`:
@@ -853,6 +855,16 @@ erDiagram
   Permission additionalPermissions
   DateTime lastPermissionChangeAt "nullable"
   String lastPermissionChangedById "nullable"
+  Boolean isBlocked
+  DateTime blockedAt "nullable"
+  String blockedById "nullable"
+}
+"SavedFilter" {
+  String id PK
+  String(100) name
+  Json filters
+  String userId FK
+  DateTime createdAt
 }
 "Actor" {
   String id PK
@@ -869,6 +881,7 @@ erDiagram
   String(50) code UK "nullable"
   String(255) label
   String description "nullable"
+  Boolean isDefault
 }
 "_ApplicationToUser" {
   String A FK
@@ -877,6 +890,7 @@ erDiagram
 "AppPermissions" |o--|| "ActorType" : actorType
 "Token" }o--|| "User" : userImpersonate
 "Token" }o--|| "User" : createdBy
+"SavedFilter" }o--|| "User" : user
 "Actor" }o--o| "ActorType" : actorType
 "_ApplicationToUser" }o--|| "User" : User
 ```
@@ -951,6 +965,26 @@ Properties as follows:
 - `lastPermissionChangedById`
   > Utilisateur ayant effectué cette dernière modification. Pas de jointure explicite
   > (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
+- `isBlocked`
+  > Si l'accès de cet utilisateur est bloqué (ex : a quitté l'organisation). Un utilisateur
+  > bloqué est rejeté par le SSO à l'authentification, quel que soit son moyen d'accès (JWT ou token API).
+- `blockedAt`: Date à laquelle l'utilisateur a été bloqué
+- `blockedById`
+  > Administrateur ayant bloqué cet utilisateur. Pas de jointure explicite
+  > (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
+
+### `SavedFilter`
+
+Filtre de recherche d'applications sauvegardé par un utilisateur, pour être réappliqué
+plus tard depuis l'onglet applications sans ressaisir chaque critère (#2279).
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `name`: Nom donné par l'utilisateur à ce filtre, unique parmi ses propres filtres
+- `filters`: Filtres sérialisés (mêmes clés que la query de recherche d'applications)
+- `userId`: Utilisateur propriétaire de ce filtre
+- `createdAt`: Date de création
 
 ### `Actor`
 
@@ -974,22 +1008,23 @@ Définit les différents rôles que les acteurs peuvent avoir.
 
 ### Codes des acteurs possibles
 
-| Code                      | Rôle / Description                                           |
-| :------------------------ | :----------------------------------------------------------- |
-| **MOA**                   | Maîtrise d’Ouvrage (MOA)                                     |
-| **MOE**                   | Maîtrise d’Œuvre (MOE)                                       |
-| **RSSI**                  | Responsable de la Sécurité des Systèmes d’Information (RSSI) |
-| **ArchitecteApplicatif**  | Architecte applicatif                                        |
-| **ArchitecteTechnique**   | Architecte technique                                         |
-| **TMA**                   | Tierce Maintenance Applicative (TMA)                         |
-| **Exploitation**          | Responsable d'exploitation opérationnel                      |
-| **RSIMM**                 | Responsables des SI Métier et de la Modernisation (RSIMM)    |
-| **CPD**                   | Correspondant à la protection des données (CPD)              |
-| **OrganismeBeneficiaire** | Correspondant Stratégique Métier (CSM)                       |
-| **ProductOwner**          | Product Owner (PO)                                           |
-| **ProductManager**        | Product Manager (PM)                                         |
-| **Hebergement**           | Responsable de l'hébergement                                 |
-| **Autre**                 | Autre                                                        |
+| Code                      | Rôle / Description                                            |
+| :------------------------ | :------------------------------------------------------------ |
+| **MOA**                   | Maîtrise d’Ouvrage (MOA)                                      |
+| **MOE**                   | Maîtrise d’Œuvre (MOE)                                        |
+| **RSSI**                  | Responsable de la Sécurité des Systèmes d’Information (RSSI)  |
+| **ArchitecteApplicatif**  | Architecte applicatif                                         |
+| **ArchitecteTechnique**   | Architecte technique                                          |
+| **TMA**                   | Tierce Maintenance Applicative (TMA)                          |
+| **Exploitation**          | Responsable d'exploitation opérationnel                       |
+| **RSIMM**                 | Responsables des SI Métier et de la Modernisation (RSIMM)     |
+| **CPD**                   | Correspondant à la protection des données (CPD)               |
+| **OrganismeBeneficiaire** | Correspondant Stratégique Métier (CSM)                        |
+| **ProductOwner**          | Product Owner (PO)                                            |
+| **ProductManager**        | Product Manager (PM)                                          |
+| **Hebergement**           | Responsable de l'hébergement                                  |
+| **Autre**                 | Autre                                                         |
+| **Createur**              | Utilisateur ayant créé l'application, assigné automatiquement |
 
 Properties as follows:
 
@@ -997,6 +1032,13 @@ Properties as follows:
 - `code`: Code court pour le rôle
 - `label`: Nom d'affichage du rôle
 - `description`: Description des responsabilités de ce rôle
+- `isDefault`
+  > Type d'acteur système représentant les droits par défaut d'un utilisateur qui n'est
+  > acteur d'aucune application (fallback dans CheckPermissions.getUserAppPermissions).
+  > Non assignable à un Actor réel : exclu du select de création/édition d'acteur côté front,
+  > mais ses droits restent 100% pilotés par la matrice AppPermissions comme tout autre type.
+  > Un seul type d'acteur doit porter `isDefault: true` (garanti par le seed, pas par une
+  > contrainte DB).
 
 ### `_ApplicationToUser`
 
@@ -1097,6 +1139,9 @@ erDiagram
   String(2048) docUrl "nullable"
   DateTime eolDate "nullable"
   DateTime eolCheckedAt "nullable"
+  String(100) eolProduct "nullable"
+  DateTime eoasDate "nullable"
+  String(50) latestVersion "nullable"
 }
 ```
 
@@ -1117,11 +1162,24 @@ Properties as follows:
 - `docUrl`: Lien documentaire (URL) associé au produit
 - `eolDate`: Date de fin de support/vie de la version (renseignée via endoflife.date)
 - `eolCheckedAt`: Date de dernière vérification du statut de fin de vie
+- `eolProduct`: Slug produit endoflife.date résolu (null + eolCheckedAt renseigné = produit non suivi)
+- `eoasDate`: Date de fin de support actif de la version (renseignée via endoflife.date)
+- `latestVersion`: Dernière version publiée du cycle correspondant (renseignée via endoflife.date)
 
 ## default
 
 ```mermaid
 erDiagram
+"ActionLog" {
+  String id PK
+  DateTime createdAt
+  String method
+  String path
+  Int statusCode
+  String userId FK
+  String impersonatorId FK "nullable"
+  String impersonationLogId FK "nullable"
+}
 "EmailLog" {
   String id PK
   String to
@@ -1151,7 +1209,27 @@ erDiagram
   DateTime startedAt
   DateTime endedAt "nullable"
 }
+"ActionLog" }o--o| "ImpersonationLog" : impersonationLog
 ```
+
+### `ActionLog`
+
+Journal centralisé des actions (#2224) : une entrée par requête HTTP
+mutante (POST/PATCH/PUT/DELETE), écrite automatiquement par
+l'ActionLogMiddleware, sans intervention des services métier.
+Trace l'identité effective ET l'administrateur réel lorsque l'action est
+faite sous impersonation, avec rattachement à la session.
+
+Properties as follows:
+
+- `id`:
+- `createdAt`:
+- `method`: Méthode HTTP de la requête
+- `path`: Chemin de la requête (sans query string)
+- `statusCode`: Code de statut HTTP renvoyé (y compris les refus 4xx)
+- `userId`: Identité effective de la requête (la cible en cas d'impersonation)
+- `impersonatorId`: Administrateur réel lorsque l'action a été faite sous impersonation
+- `impersonationLogId`: Session d'impersonation à laquelle l'action se rattache
 
 ### `EmailLog`
 

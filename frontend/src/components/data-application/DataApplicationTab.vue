@@ -5,14 +5,15 @@ import api from "@/api/index";
 import { Permission, type ApplicationRefDto, type DataApplicationDto, type DataFamilyDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import type { TableSortEvent } from "@/types/table";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import { routeNames } from "@/router/route-names";
 import RefAppTable from "@/components/RefAppTable.vue";
 import DeleteConfirmationModal from "@/components/modal/DeleteConfirmationModal.vue";
 import { OPEN_DATA_BADGE_CLASS, OPEN_DATA_STATUS_LABELS } from "@/constants/data-catalog.constants";
 import type { OpenDataStatus } from "@/client/types.gen.js";
 import DataApplicationModal from "./DataApplicationModal.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 const props = defineProps<{
   application: ApplicationWithPerms;
@@ -20,9 +21,8 @@ const props = defineProps<{
 
 const router = useRouter();
 const toaster = useToasterStore();
-const userStore = useUserStore();
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.DATA_WRITE], Array.from(props.application.myPerms ?? [])));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.DATA_WRITE]);
 
 const isCreateModalOpen = ref(false);
 const itemToEdit = ref<DataApplicationDto | null>(null);
@@ -111,7 +111,7 @@ function onSort(event: TableSortEvent) {
   fetchByApplication(props.application.id);
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
   fetchByApplication(props.application.id);

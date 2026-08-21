@@ -14,6 +14,8 @@ import { oidcConfig } from "src/config/configs";
 import { roleToPermissions } from "src/permissions/role-to-permissions";
 import { TokenService } from "src/token/token.service";
 import { Requestor, UserEntity, UserType } from "src/user/entities/user.entity";
+import { ScopePermissionsException } from "src/user/errors/scope-permissions.exception";
+import { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
 import { UserConnexionLogService } from "src/user/user-connexion-log.service";
 import { UserService } from "src/user/user.service";
 import { API_KEY_HEADER, IMPERSONATE_HEADER } from "src/utils/constants.util";
@@ -36,6 +38,7 @@ export class AuthMiddleware implements NestMiddleware {
     @Inject(oidcConfig.KEY)
     private readonly oidc: ConfigType<typeof oidcConfig>,
     private readonly userService: UserService,
+    private readonly scopedPermissionService: ScopedPermissionService,
     private readonly tokenService: TokenService,
     private readonly userConnexionLogService: UserConnexionLogService,
     private readonly logger: LoggerService,
@@ -73,6 +76,19 @@ export class AuthMiddleware implements NestMiddleware {
         return;
       }
 
+      if (user.isBlocked) {
+        // 403 (et non 401) : la session SSO est valide, mais l'accès a été explicitement
+        // bloqué par un administrateur. Un 401 déclencherait une boucle de ré-authentification
+        // côté front (cf. init-clients.ts), inutile puisque Keycloak laisserait passer à nouveau.
+        res.status(403);
+        res.json({
+          statusCode: 403,
+          blocked: true,
+          message: "Votre accès a été bloqué. Contactez un administrateur.",
+        });
+        return;
+      }
+
       // L'utilisateur réellement authentifié (avant toute impersonation).
       const authenticatedUser: Requestor = {
         ...user,
@@ -106,7 +122,8 @@ export class AuthMiddleware implements NestMiddleware {
 
       if (
         error instanceof ForbiddenException ||
-        error instanceof NotFoundException
+        error instanceof NotFoundException ||
+        error instanceof ScopePermissionsException
       ) {
         throw error;
       }
@@ -129,6 +146,19 @@ export class AuthMiddleware implements NestMiddleware {
     if (!target || target.type === UserType.bot) {
       throw new NotFoundException("Utilisateur à impersonner introuvable");
     }
+    if (target.isBlocked) {
+      throw new ForbiddenException(
+        "Impossible d'impersonner un utilisateur bloqué",
+      );
+    }
+
+    // Contrôle de périmètre ICI et pas seulement dans startImpersonation :
+    // c'est ce middleware qui applique l'identité à chaque requête, et le
+    // header peut être posé sans jamais passer par l'endpoint dédié (#2217).
+    await this.scopedPermissionService.assertCanImpersonate(
+      targetUserId,
+      admin,
+    );
 
     return {
       ...target,

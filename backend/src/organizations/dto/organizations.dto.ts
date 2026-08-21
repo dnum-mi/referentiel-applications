@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
-import { IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString, ValidateIf } from "class-validator";
+import { BusinessDivisionDTO } from "src/business-division/dto/business-division.dto";
 import { OrganizationMaiaReferenceDto } from "src/organization-maia-references/dto/organization-maia-references.dto";
 
 export class CreateOrganizationDto {
@@ -37,6 +38,17 @@ export class CreateOrganizationDto {
   @IsString()
   @IsOptional()
   parentId: string;
+
+  @ApiPropertyOptional({
+    example: "f09ed26a-8415-476a-be3b-ada479291c34",
+    description:
+      "L'identifiant de la direction métier associée (null pour détacher)",
+    nullable: true,
+  })
+  @IsOptional()
+  @ValidateIf((_object, value) => value !== null)
+  @IsString()
+  businessDivisionId?: string | null;
 }
 
 export class PatchOrganizationDto extends PartialType(CreateOrganizationDto) {}
@@ -84,6 +96,13 @@ export class OrganizationDto {
   @IsString()
   @IsOptional()
   businessDivisionId: string | null;
+
+  @ApiPropertyOptional({
+    description: "Direction métier associée à l'organisation",
+    type: BusinessDivisionDTO,
+    nullable: true,
+  })
+  businessDivision?: BusinessDivisionDTO | null;
 
   @ApiPropertyOptional({
     description: "Références MAIA associées à l'organisation",

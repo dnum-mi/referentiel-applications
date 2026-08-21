@@ -166,7 +166,7 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `POST /tags` · `GET /tags` · `GET /tags/:id` · `PATCH /tags/:id` · `DELETE /tags/:id` | Tags                                 |
 | `POST /label-sources` · `GET` · `PATCH :id` · `DELETE :id`                            | Sources de labels                    |
 | `GET /metadatas` · `GET /metadatas/:id`                                               | Métadonnées (lecture globale)        |
-| `GET /business-division` · `GET /business-division/:id`                               | Divisions métier                     |
+| `GET /business-division` · `GET :id` · `POST` · `PATCH :id` · `DELETE :id`            | Divisions métier (écritures admin)   |
 | `GET /data-catalog/descriptions` (+ `POST`, `PATCH :id`, `DELETE :id`)                | Descriptions du catalogue de données |
 | `GET /data-catalog/applications/:applicationId` · `.../:dataApplicationId`            | Données rattachées aux applications  |
 
@@ -192,7 +192,14 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | `POST /users/me/subscribe/:appId` · `DELETE /users/me/subscribe/:appId`                    | Abonnement / désabonnement à une application                     |
 | `POST /users/:id/sync-organization-from-maia` · `POST /users/sync-organizations-from-maia` | Synchronisation des organisations depuis MAIA (unitaire / batch) |
 | `PATCH /users/:id`                                                                         | Mise à jour (dont permissions)                                   |
+| `POST /users/:id/block` · `POST /users/:id/unblock`                                        | Bloquer / débloquer l'accès d'un utilisateur                     |
 | `GET /users`                                                                               | Liste des utilisateurs                                           |
+
+### Filtres sauvegardés
+
+| Verbe & chemin                               | Rôle                                                                        |
+| -------------------------------------------- | --------------------------------------------------------------------------- |
+| `GET /saved-filters` · `POST` · `DELETE :id` | Filtres de recherche sauvegardés par l'utilisateur courant (upsert par nom) |
 
 ### Tokens (clés d'API)
 

@@ -4,6 +4,7 @@ import { Roles, UserType } from "@prisma/client";
 import type { LoggerService } from "src/logger/logger.service";
 import type { MaintenanceService } from "src/maintenance/maintenance.service";
 import type { TokenService } from "src/token/token.service";
+import type { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
 import type { UserConnexionLogService } from "src/user/user-connexion-log.service";
 import type { UserService } from "src/user/user.service";
 import type { OidcConfig } from "src/config/configs/oidc.config";
@@ -24,6 +25,9 @@ jest.mock("src/user/user-connexion-log.service", () => ({
 jest.mock("src/user/user.service", () => ({
   UserService: class UserService {},
 }));
+jest.mock("src/user/scope-permission/scoped-permission.service", () => ({
+  ScopedPermissionService: class ScopedPermissionService {},
+}));
 
 const oidcConfig = {
   jwksUrl: "https://example.test/.well-known/jwks.json",
@@ -43,6 +47,7 @@ const existingUser = {
   followedApplications: [],
   organization: null,
   scopeOrganization: null,
+  isBlocked: false,
 };
 
 describe("AuthMiddleware maintenance mode", () => {
@@ -68,6 +73,9 @@ describe("AuthMiddleware maintenance mode", () => {
     const middleware = new AuthMiddleware(
       oidcConfig,
       userService as unknown as UserService,
+      {
+        assertCanImpersonate: jest.fn(),
+      } as unknown as ScopedPermissionService,
       tokenService as unknown as TokenService,
       userConnexionLogService as unknown as UserConnexionLogService,
       logger as unknown as LoggerService,
@@ -115,6 +123,9 @@ describe("AuthMiddleware maintenance mode", () => {
     const middleware = new AuthMiddleware(
       oidcConfig,
       userService as unknown as UserService,
+      {
+        assertCanImpersonate: jest.fn(),
+      } as unknown as ScopedPermissionService,
       tokenService as unknown as TokenService,
       userConnexionLogService as unknown as UserConnexionLogService,
       { error: jest.fn() } as unknown as LoggerService,
@@ -134,6 +145,63 @@ describe("AuthMiddleware maintenance mode", () => {
     expect(tokenService.findUserByToken).toHaveBeenCalledWith("api-key", {
       readOnly: true,
     });
+    expect(userConnexionLogService.log).not.toHaveBeenCalled();
+  });
+});
+
+describe("AuthMiddleware blocked user", () => {
+  const previousDisableJwtValidation = process.env.DISABLE_JWT_VALIDATION;
+
+  beforeAll(() => {
+    process.env.DISABLE_JWT_VALIDATION = "true";
+  });
+
+  afterAll(() => {
+    process.env.DISABLE_JWT_VALIDATION = previousDisableJwtValidation;
+  });
+
+  it("rejects a blocked user with a 403 instead of setting req.user", async () => {
+    const blockedUser = { ...existingUser, isBlocked: true };
+    const userService = {
+      findByEmailWithRelations: jest.fn(),
+      findOrCreateByEmail: jest.fn().mockResolvedValue(blockedUser),
+    };
+    const tokenService = { findUserByToken: jest.fn() };
+    const userConnexionLogService = { log: jest.fn() };
+    const maintenanceService = { isActive: jest.fn().mockResolvedValue(false) };
+    const middleware = new AuthMiddleware(
+      oidcConfig,
+      userService as unknown as UserService,
+      {
+        assertCanImpersonate: jest.fn(),
+      } as unknown as ScopedPermissionService,
+      tokenService as unknown as TokenService,
+      userConnexionLogService as unknown as UserConnexionLogService,
+      { error: jest.fn() } as unknown as LoggerService,
+      maintenanceService as unknown as MaintenanceService,
+    );
+    const payload = Buffer.from(
+      JSON.stringify({ email: blockedUser.email }),
+    ).toString("base64url");
+    const request = {
+      headers: {
+        authorization: `Bearer eyJhbGciOiJub25lIn0.${payload}.signature`,
+      },
+    } as Request;
+    const response = {
+      status: jest.fn(),
+      json: jest.fn(),
+    } as unknown as Response;
+    const next = jest.fn() as NextFunction;
+
+    await middleware.use(request, response, next);
+
+    expect(response.status).toHaveBeenCalledWith(403);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ blocked: true }),
+    );
+    expect(request.user).toBeUndefined();
+    expect(next).not.toHaveBeenCalled();
     expect(userConnexionLogService.log).not.toHaveBeenCalled();
   });
 });

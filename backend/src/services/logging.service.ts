@@ -2,11 +2,17 @@ import { Injectable } from "@nestjs/common";
 import { decodeJwt } from "jose";
 import { LoggerService } from "src/logger/logger.service";
 
+export interface RequestLogContext {
+  correlationId: string;
+  headers: Record<string, string>;
+  [key: string]: unknown;
+}
+
 @Injectable()
 export class LoggingService {
   constructor(private readonly logger: LoggerService) {}
 
-  async logRequest(context: any) {
+  async logRequest(context: RequestLogContext) {
     const { correlationId, headers } = context;
 
     const userInfo = this.extractUserFromToken(

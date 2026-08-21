@@ -3,17 +3,17 @@ import api from "@/api";
 import { Permission, type PaginatedReportDto, type ReportDto } from "@/client/types.gen";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { computed, onMounted, ref } from "vue";
 import RefAppTable from "./RefAppTable.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
 const toaster = useToasterStore();
-const userStore = useUserStore();
 
 const issues = ref<PaginatedReportDto>({ results: [], total: 0 });
 const isLoading = ref(false);
@@ -28,9 +28,7 @@ const tableColumns: TableColumn[] = [
   { field: "Description", header: "Description", sortable: true },
 ];
 
-const canPost = computed(() => {
-  return userStore.hasPermissions([Permission.REPORT_POST], Array.from(props.application.myPerms));
-});
+const canPost = useAppPermission(() => props.application.myPerms, [Permission.REPORT_POST]);
 
 async function fetchIssues() {
   isLoading.value = true;
@@ -59,7 +57,7 @@ function onSort(event: TableSortEvent) {
   sortOrder.value = event.sortOrder;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
 }

@@ -113,6 +113,35 @@ export class ScopedPermissionService {
   }
 
   /**
+   * Vérifie qu'un administrateur peut impersonner l'utilisateur cible : un
+   * admin scopé ne peut impersonner que les utilisateurs dont l'organisation
+   * est dans son périmètre (même règle que l'édition, cf. `assertCanUpdate`).
+   */
+  async assertCanImpersonate(
+    targetUserId: string,
+    requestor: Requestor,
+  ): Promise<void> {
+    const requestorScopePath = requestor?.scopeOrganization?.path;
+    // Si le requestor n'a pas de scope, c'est qu'il est super admin et peut tout faire → PAS DE CHECK
+    if (!requestorScopePath) return;
+
+    const target = await this.prisma.user.findFirst({
+      where: { id: targetUserId },
+      include: { organization: true },
+    });
+
+    if (!target) {
+      throw new HttpException("Utilisateur introuvable", HttpStatus.NOT_FOUND);
+    }
+
+    this.assertWithinScope(
+      target.organization?.path,
+      requestorScopePath,
+      "Vous n'avez pas les permissions pour impersonner cet utilisateur",
+    );
+  }
+
+  /**
    * Valide l'assignation d'un périmètre à un nouveau principal (ex: le compte
    * de service créé pour un token applicatif), qui n'a donc pas d'état
    * précédent à comparer, contrairement à `assertCanUpdate`.
@@ -136,6 +165,34 @@ export class ScopedPermissionService {
       scopeOrg.path,
       requestorScopePath,
       "Vous ne pouvez pas assigner un périmètre hors de votre périmètre",
+    );
+  }
+
+  /**
+   * Vérifie que le requestor a le droit de bloquer/débloquer l'accès du
+   * `targetUserId` (même règle de périmètre que pour les autres actions
+   * d'administration : il doit être dans le scope de l'organisation de la cible).
+   */
+  async assertCanBlock(
+    targetUserId: string,
+    requestor: Requestor,
+  ): Promise<void> {
+    const requestorScopePath = requestor?.scopeOrganization?.path;
+    if (!requestorScopePath) return;
+
+    const currentUser = await this.prisma.user.findFirst({
+      where: { id: targetUserId },
+      include: { organization: true },
+    });
+
+    if (!currentUser) {
+      throw new HttpException("Utilisateur introuvable", HttpStatus.NOT_FOUND);
+    }
+
+    this.assertWithinScope(
+      currentUser.organization?.path,
+      requestorScopePath,
+      "Vous n'avez pas les permissions pour modifier cet utilisateur",
     );
   }
 

@@ -226,7 +226,9 @@ describe("DataCatalog", () => {
         .expect(200);
 
       expect(
-        response.body.results.map((r: any) => r.dataDescription.id),
+        response.body.results.map(
+          (r: { dataDescription: { id: string } }) => r.dataDescription.id,
+        ),
       ).toEqual([descNoFamily.id, descTwoFamilies.id]);
     });
 
@@ -271,7 +273,9 @@ describe("DataCatalog", () => {
         .expect(200);
 
       expect(
-        response.body.results.map((r: any) => r.sensibility.label),
+        response.body.results.map(
+          (r: { sensibility: { label: string } }) => r.sensibility.label,
+        ),
       ).toEqual(["AAA sort sensibility", "ZZZ sort sensibility"]);
     });
 
@@ -297,10 +301,11 @@ describe("DataCatalog", () => {
         .set("Authorization", `Bearer ${READER_TOKEN}`)
         .expect(200);
 
-      expect(response.body.results.map((r: any) => r.isReference)).toEqual([
-        false,
-        true,
-      ]);
+      expect(
+        response.body.results.map(
+          (r: { isReference: boolean }) => r.isReference,
+        ),
+      ).toEqual([false, true]);
     });
 
     it("sorts by tag count (sortBy=tags)", async () => {
@@ -330,7 +335,9 @@ describe("DataCatalog", () => {
         .expect(200);
 
       expect(
-        response.body.results.map((r: any) => r.dataDescription.id),
+        response.body.results.map(
+          (r: { dataDescription: { id: string } }) => r.dataDescription.id,
+        ),
       ).toEqual([descNoTags.id, descTwoTags.id]);
     });
   });

@@ -362,6 +362,11 @@ export class DataFeature {
     return this.api.deleteMditCampaignByYear(year);
   }
 
+  /** Supprime la direction métier d'un libellé si elle existe (idempotence des tests admin). */
+  removeBusinessDivisionLabel(label: string): Promise<void> {
+    return this.api.deleteBusinessDivisionByLabel(label);
+  }
+
   // --- Provisioning pour les tests de permissions (effectué avec le token admin) ---
 
   /** Récupère un utilisateur (admin) par email. */

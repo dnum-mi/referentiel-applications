@@ -5,6 +5,7 @@ import { useMetadataStore } from "@/stores/metadataStore";
 import { useRoute } from "vue-router";
 import type { MetadataDto } from "@/client/types.gen";
 import type { TableColumn, TableSortEvent } from "@/types/table";
+import type { DataTablePageEvent } from "primevue/datatable";
 
 const props = defineProps<{ application: ApplicationWithPerms }>();
 
@@ -50,7 +51,7 @@ function onSort(event: TableSortEvent) {
   fetchMetadatas();
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
 }
@@ -59,10 +60,16 @@ function getTitle(meta: MetadataDto): string {
   return (meta.description || "").split("\n")[0];
 }
 
+function formatAuthor(metadata: MetadataDto): string {
+  const author = metadata.createdBy?.email || "Inconnu";
+  // Modification faite sous impersonation : afficher aussi l'admin réel (#2226).
+  return metadata.impersonator?.email ? `${author} (via ${metadata.impersonator.email})` : author;
+}
+
 const metadataRows = computed(() => {
   return (metadataStore.metadatas || []).map((metadata: MetadataDto) => ({
     Date: new Date(metadata.createdAt).toLocaleDateString("fr-FR"),
-    Auteur: metadata.createdBy?.email || "Inconnu",
+    Auteur: formatAuthor(metadata),
     Titre: getTitle(metadata),
     Actions: {
       id: metadata.id,

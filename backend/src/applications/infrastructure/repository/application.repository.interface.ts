@@ -20,7 +20,7 @@ export interface IApplicationRepository {
   ) => Promise<ApplicationSearchResultDto>;
   findMatchingApplications: (
     where: Prisma.ApplicationWhereInput,
-  ) => Promise<{ id: string; quality: number }[]>;
+  ) => Promise<{ id: string; quality: number | null }[]>;
   findApplicationsPage: (
     filters: ApplicationSearchFilters,
     orderedIds: string[],

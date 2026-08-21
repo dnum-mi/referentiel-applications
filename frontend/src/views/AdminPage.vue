@@ -4,11 +4,12 @@ import AdminTagsTab from "@/components/admin/AdminTagsTab.vue";
 import AdminBatchData from "@/components/admin/AdminBatchData.vue";
 import AdminOrganizationsTab from "@/components/admin/AdminOrganizationsTab.vue";
 import AdminActorsTab from "@/components/admin/AdminActorsTab.vue";
-import { markRaw, ref } from "vue";
+import { markRaw, ref, type Component } from "vue";
 import AdminPermsMatrixTab from "@/components/admin/AdminPermsMatrixTab.vue";
 import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
 import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
+import AdminBusinessDivisionsTab from "@/components/admin/AdminBusinessDivisionsTab.vue";
 import AdminEmailLogsTab from "@/components/admin/AdminEmailLogsTab.vue";
 
 interface DsfrTab {
@@ -16,7 +17,7 @@ interface DsfrTab {
   icon?: string;
   tabId: string;
   panelId: string;
-  component: any;
+  component: Component;
 }
 
 const activeTab = ref(0);
@@ -41,6 +42,13 @@ const tabs = ref<DsfrTab[]>([
     tabId: "tab-actors",
     panelId: "panel-actors",
     component: markRaw(AdminActorsTab),
+  },
+  {
+    title: "Directions métier",
+    icon: "ri-organization-chart",
+    tabId: "tab-business-divisions",
+    panelId: "panel-business-divisions",
+    component: markRaw(AdminBusinessDivisionsTab),
   },
   {
     title: "Gestions des tags",

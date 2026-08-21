@@ -68,6 +68,13 @@ export class CheckPermissions {
           })
         : [];
 
+    // Aucun Actor ne correspond (ni par email, ni par groupe/organisation) : l'utilisateur
+    // hérite des droits du type d'acteur système par défaut (isDefault), pilotés comme tout
+    // autre type via la matrice AppPermissions éditable.
+    if (emailActors.length === 0 && groupActorTypes.length === 0) {
+      return this.getDefaultActorTypePermissions();
+    }
+
     return [
       ...emailActors.flatMap((actor) =>
         actor.actorType.appPermissions.flatMap((perm) =>
@@ -80,6 +87,15 @@ export class CheckPermissions {
         ),
       ),
     ];
+  }
+
+  private async getDefaultActorTypePermissions(): Promise<APP_PERMISSIONS[]> {
+    const defaultPermissions = await this.prisma.appPermissions.findFirst({
+      where: { actorType: { isDefault: true } },
+    });
+    return defaultPermissions
+      ? transformAppPermissionsObjectToArray(defaultPermissions)
+      : [];
   }
 
   private async getUserRolePermissions(

@@ -1,31 +1,26 @@
-# Overrides de sécurité (forçage de versions patchées pour les dépendances transitives
-# signalées par Dependabot). pnpm 10 lit les overrides depuis ce fichier et non plus
-# depuis le champ « pnpm » de package.json.
 overrides:
-  handlebars: 4.7.9
-  shell-quote: 1.9.0
-  tar: 7.5.18
-  form-data: 4.0.6
-  serialize-javascript: 7.0.5
-  fast-uri: 3.1.4
-  js-yaml: 4.3.0
-  js-cookie: 3.0.7
-  defu: 6.1.5
-  follow-redirects: 1.16.0
-  uuid: 11.1.1
-  postcss: 8.5.18
-  lodash: 4.18.1
-  lodash-es: 4.18.1
   "@babel/core": 7.29.6
   "@babel/plugin-transform-modules-systemjs": 7.29.4
-  # scopés : on ne touche que le major vulnérable
-  "brace-expansion@1": 1.1.16
-  "brace-expansion@2": 2.1.2
-  "brace-expansion@5": 5.0.8
-  "ws@8": 8.21.0
-  "picomatch@4": 4.0.4
-  "dompurify@3": 3.4.12
-  "esbuild@0.27": 0.28.1
-  # NON traité : @hey-api/openapi-ts (dev, codegen) — le patch 0.97.3 impose une migration
-  # de la config de génération (postProcess, résolution ESLint) et régénère un client
-  # différent : chantier dédié, hors vague d'overrides.
+  brace-expansion@1: 1.1.18
+  brace-expansion@2: 2.1.4
+  brace-expansion@5: 5.0.9
+  defu: 6.1.5
+  dompurify@3: 3.4.13
+  esbuild@0.27: 0.28.1
+  fast-uri: 3.1.5
+  follow-redirects: 1.16.0
+  form-data: 4.0.6
+  handlebars: 4.7.9
+  js-cookie: 3.0.7
+  js-yaml: 4.3.1
+  lodash: 4.18.1
+  lodash-es: 4.18.1
+  picomatch@4: 4.0.4
+  postcss: 8.5.23
+  serialize-javascript: 7.0.5
+  shell-quote: 1.9.0
+  tar: 7.5.18
+  tar@<=7.5.18: ">=7.5.19"
+  tar@<=7.5.20: ">=7.5.21"
+  uuid: 11.1.1
+  ws@8: 8.21.0

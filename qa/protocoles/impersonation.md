@@ -63,3 +63,27 @@
   `POST /users/{adminId}/impersonate`.
 - **Résultat attendu** : `403 Forbidden` — l'identité effective (lecteur) n'a pas le droit
   d'administration, donc aucune impersonation imbriquée n'est possible.
+
+### IMP-09 — Les modifications sous impersonification affichent l'admin réel (#2226) ✅
+
+- **Datafeature** : seed QA (`qa-target@example.com`, promu CONTRIBUTOR le temps du test) ; une
+  application de test créée via l'API (supprimée en fin de test).
+- **Action** : en `admin`, impersonner `qa-target` → modifier la description de l'application →
+  ouvrir l'onglet « Modifications » de la fiche.
+- **Résultat attendu** : la ligne d'historique affiche « `qa-target@example.com`
+  (via `admin@example.com`) » — l'action est attribuée à l'identité effective ET l'administrateur
+  réel est visible. Même affichage sur la page globale Modifications et le détail d'une metadata.
+  Hors impersonification, aucun « (via …) » n'apparaît.
+
+### IMP-08 — Un admin scopé ne peut impersonner que dans son périmètre (#2217) ✅
+
+- **Datafeature** : seed QA (`pnpm db:seed:qa`) — `scope-admin` (ADMIN, périmètre TOTO),
+  `qa-target@example.com` (org TOTO/TUTU, dans le périmètre), `qa-outside@example.com`
+  (org ABCD, hors périmètre).
+- **Action** : en `scope-admin`, administration → Gestion des utilisateurs → vérifier la ligne de
+  `qa-outside` (pas de bouton « Se connecter en tant que ») ; impersonner `qa-target` puis arrêter.
+  Côté API : `POST /users/{id}/impersonate` sur `qa-outside`, et n'importe quelle requête portant le
+  header `x-impersonate-user-id` avec son id.
+- **Résultat attendu** : bouton absent hors périmètre ; `403 Forbidden` sur l'endpoint ET sur le
+  header direct (contrôle dans le middleware, non contournable) ; impersonation normale dans le
+  périmètre. Un admin sans périmètre (global) reste libre d'impersonner tout utilisateur humain.

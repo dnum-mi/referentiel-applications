@@ -5,12 +5,13 @@ import useModal from "@/composables/use-modal";
 import type { ApplicationWithPerms } from "@/models/Application";
 import api from "@/api/index.js";
 import { useToasterStore } from "@/stores/toasterStore.js";
-import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import type { DsfrButtonProps } from "@gouvminint/vue-dsfr";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { computed, onMounted, ref, type ButtonHTMLAttributes } from "vue";
 import LinkForm from "./form/LinkForm.vue";
 import RefAppTable from "./RefAppTable.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
@@ -24,8 +25,6 @@ const props = withDefaults(
   },
 );
 
-const userStore = useUserStore();
-
 const linkModal = useModal<LinkDto>();
 const links = ref<LinkDto[]>([]);
 const total = ref(0);
@@ -35,7 +34,7 @@ const toaster = useToasterStore();
 const isSubmitting = ref(false);
 const linkToDelete = ref<string | null>(null);
 const showDeleteConfirmation = ref(false);
-const canEdit = computed(() => userStore.hasPermissions([Permission.LINK_WRITE], Array.from(props.application.myPerms)));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.LINK_WRITE]);
 
 const currentPage = ref(0);
 const pageSize = ref(15);
@@ -50,7 +49,7 @@ const tableColumns: TableColumn[] = [
   { field: "actions", header: "Actions", sortable: false },
 ];
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   pageSize.value = event.rows;
   fetchLinks({
@@ -62,17 +61,18 @@ function onPage(event: any) {
 async function fetchLinks(filters: { page?: number; pageSize?: number } = {}) {
   try {
     isLoading.value = true;
-    const cleanParams = Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== undefined));
+    const cleanParams: { page?: number; pageSize?: number } = Object.fromEntries(
+      Object.entries(filters).filter(([, value]) => value !== undefined),
+    );
     const response = await api.applicationLinksControllerFindAll({
       path: { applicationId: props.application.id },
-      query: cleanParams as any,
+      query: cleanParams,
     });
-    if (!response.response.ok) {
+    if (!response.response.ok || !response.data) {
       throw new Error("Erreur lors de la récupération des liens.");
     }
-    const responseData = response.data as any;
-    links.value = responseData.results ?? [];
-    total.value = responseData.total ?? 0;
+    links.value = response.data.results ?? [];
+    total.value = response.data.total ?? 0;
   } catch {
     toaster.addErrorMessage("Erreur lors de la récupération des liens.");
     throw new Error("Erreur lors de la récupération des liens.");
@@ -295,7 +295,7 @@ onMounted(async () => {
           :link="link.link"
           :buttons="getCardButtons(link)"
           size="sm"
-          :noArrow="true"
+          :no-arrow="true"
           data-testid="link-card"
         >
           <template #end-details>

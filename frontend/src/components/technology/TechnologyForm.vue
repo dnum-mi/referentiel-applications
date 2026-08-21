@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import type { TechnologyDto } from "@/client/types.gen";
+import type { EolProductDto, TechnologyDto } from "@/client/types.gen";
 import type { PropType } from "vue";
 import { computed, ref } from "vue";
 
 const props = defineProps({
   initialData: Object as PropType<TechnologyDto>,
   isSubmitting: Boolean,
+  eolProducts: {
+    type: Array as PropType<EolProductDto[]>,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(["submit", "cancel"]);
@@ -23,6 +27,36 @@ const form = ref<{
 });
 
 const isFormValid = computed(() => form.value.technology.trim() !== "" && form.value.product.trim() !== "");
+
+// Miroir de la normalisation backend (normalizeProductKey) : les alias avec
+// tirets/points du catalogue couvrent ainsi les saisies « SQL Server », etc.
+function normalizeProductKey(product: string): string {
+  return product
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+const productOptions = computed(() =>
+  [...new Set(props.eolProducts.map((product) => product.label || product.name))].sort((a, b) => a.localeCompare(b, "fr")),
+);
+
+const knownProductKeys = computed(() => {
+  const keys = new Set<string>();
+  for (const product of props.eolProducts) {
+    keys.add(normalizeProductKey(product.name));
+    if (product.label) keys.add(normalizeProductKey(product.label));
+    for (const alias of product.aliases ?? []) keys.add(normalizeProductKey(alias));
+  }
+  return keys;
+});
+
+// Avertissement non bloquant : le catalogue peut être indisponible (liste vide,
+// on ne sait pas) et la saisie d'un produit hors catalogue reste autorisée.
+const productUnknown = computed(() => {
+  const key = normalizeProductKey(form.value.product);
+  return key !== "" && knownProductKeys.value.size > 0 && !knownProductKeys.value.has(key);
+});
 
 function handleSubmit() {
   emit("submit", {
@@ -53,9 +87,17 @@ function handleSubmit() {
       label-visible
       required
       placeholder="ex : PostgreSQL, Node.js"
+      hint="La fin de vie est vérifiée automatiquement via endoflife.date"
+      list="technology-product-options"
       data-testid="technology-product-input"
-      class="fr-mb-3w"
+      :class="productUnknown ? 'fr-mb-1w' : 'fr-mb-3w'"
     />
+    <datalist id="technology-product-options">
+      <option v-for="option in productOptions" :key="option" :value="option"></option>
+    </datalist>
+    <p v-if="productUnknown" class="fr-hint-text fr-mb-3w" data-testid="technology-product-unknown-hint">
+      Produit non suivi par endoflife.date : la fin de vie ne pourra pas être vérifiée automatiquement.
+    </p>
 
     <DsfrInput
       v-model="form.version"

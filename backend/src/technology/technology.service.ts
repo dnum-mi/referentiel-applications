@@ -11,10 +11,12 @@ import { TechnologyStack } from "./entities/technology.entity";
 import { ServiceOptions } from "src/common/utils/types";
 import { ApplicationService } from "src/applications/application.service";
 import {
-  fetchProductReleases,
-  parseEolDate,
-  toEndoflifeProduct,
-  type EndoflifeRelease,
+  fetchProductCatalog,
+  normalizeProductKey,
+  parseEolInfo,
+  resolveProductReleases,
+  type EndoflifeProduct,
+  type EolResolution,
 } from "./utils/endoflife.utils";
 
 // Au-delà de ce délai, on rafraîchit paresseusement la fin de vie au GET.
@@ -39,20 +41,56 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     );
   }
 
-  // Résout la fin de vie à partir du PRODUIT (et de la version). En cas d'ÉCHEC réseau/HTTP
-  // (releases === null, distinct d'un produit connu sans EOL qui renvoie []), on ne renvoie
-  // RIEN : la valeur existante n'est ni écrasée ni son TTL réarmé (retentée au prochain GET).
+  // Traduit une résolution endoflife en champs à persister. Trois cas :
+  // - « unavailable » (réseau/API en échec) → AUCUN champ : la valeur existante n'est
+  //   ni écrasée ni son TTL réarmé (retentée au prochain GET) ;
+  // - « unknown-product » → eolProduct null + eolCheckedAt : le front peut signaler
+  //   « produit non suivi par endoflife.date » (distinct d'un produit sans EOL publiée) ;
+  // - « resolved » → slug + dates EOL/fin de support actif + dernière version du cycle.
+  private eolFieldsFrom(
+    resolution: EolResolution,
+    version?: string | null,
+  ): {
+    eolProduct?: string | null;
+    eolDate?: Date | null;
+    eoasDate?: Date | null;
+    latestVersion?: string | null;
+    eolCheckedAt?: Date | null;
+  } {
+    if (resolution.status === "unavailable") return {};
+    const eolCheckedAt = new Date();
+    if (resolution.status === "unknown-product") {
+      return {
+        eolProduct: null,
+        eolDate: null,
+        eoasDate: null,
+        latestVersion: null,
+        eolCheckedAt,
+      };
+    }
+    return {
+      eolProduct: resolution.slug,
+      ...parseEolInfo(resolution.releases, version ?? ""),
+      eolCheckedAt,
+    };
+  }
+
+  // Résout la fin de vie à partir du PRODUIT (et de la version, optionnelle : sans
+  // version on résout quand même le produit pour détecter les produits non suivis).
   private async resolveEol(
     product: string,
     version?: string | null,
-  ): Promise<{ eolDate?: Date | null; eolCheckedAt?: Date | null }> {
-    if (this.eolDisabled() || !product?.trim() || !version?.trim()) return {};
-    const releases = await fetchProductReleases(product);
-    if (releases === null) return {};
-    return {
-      eolDate: parseEolDate(releases, version),
-      eolCheckedAt: new Date(),
-    };
+  ): Promise<ReturnType<TechnologyService["eolFieldsFrom"]>> {
+    if (this.eolDisabled() || !product?.trim()) return {};
+    return this.eolFieldsFrom(await resolveProductReleases(product), version);
+  }
+
+  // Catalogue des produits suivis par endoflife.date (autocomplétion côté front).
+  // Best-effort : liste vide si le catalogue n'a jamais pu être récupéré (le front
+  // retombe alors sur la saisie libre).
+  async listEolProducts(): Promise<EndoflifeProduct[]> {
+    if (this.eolDisabled()) return [];
+    return (await fetchProductCatalog()) ?? [];
   }
 
   async findAllByApplicationId(
@@ -66,19 +104,16 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     if (this.eolDisabled()) return rows;
 
     // Rafraîchissement paresseux best-effort des lignes dont la fin de vie n'a jamais
-    // été calculée ou dépasse le TTL. Les cycles d'un produit ne sont récupérés qu'UNE
-    // fois par requête (mémoïsation par slug produit) puis appliqués à chaque version.
+    // été calculée ou dépasse le TTL. La résolution d'un produit n'est faite qu'UNE
+    // fois par requête (mémoïsation par clé produit) puis appliquée à chaque version.
     const now = Date.now();
-    const releasesBySlug = new Map<
-      string,
-      Promise<EndoflifeRelease[] | null>
-    >();
-    const getReleases = (product: string) => {
-      const slug = toEndoflifeProduct(product);
-      let pending = releasesBySlug.get(slug);
+    const resolutionsByKey = new Map<string, Promise<EolResolution>>();
+    const getResolution = (product: string) => {
+      const key = normalizeProductKey(product);
+      let pending = resolutionsByKey.get(key);
       if (!pending) {
-        pending = fetchProductReleases(product);
-        releasesBySlug.set(slug, pending);
+        pending = resolveProductReleases(product);
+        resolutionsByKey.set(key, pending);
       }
       return pending;
     };
@@ -88,20 +123,21 @@ export class TechnologyService extends BaseService<TechnologyStack> {
         const stale =
           !row.eolCheckedAt ||
           now - new Date(row.eolCheckedAt).getTime() > EOL_REFRESH_TTL_MS;
-        if (!stale || !row.version) return row;
+        if (!stale) return row;
 
-        const releases = await getReleases(row.product);
+        const fields = this.eolFieldsFrom(
+          await getResolution(row.product),
+          row.version,
+        );
         // Échec réseau/HTTP : on NE réécrit PAS — sinon on écraserait une date valide par
         // null et on figerait la ligne pour tout le TTL. On la laisse « périmée » : elle
         // sera retentée au prochain GET dès qu'endoflife.date répond de nouveau.
-        if (releases === null) return row;
-        const eolDate = parseEolDate(releases, row.version);
-        const eolCheckedAt = new Date();
+        if (!fields.eolCheckedAt) return row;
         // Persistance best-effort : un échec d'écriture ne doit pas casser la lecture.
         await this.prisma.technologyStack
-          .update({ where: { id: row.id }, data: { eolDate, eolCheckedAt } })
+          .update({ where: { id: row.id }, data: fields })
           .catch(() => undefined);
-        return { ...row, eolDate, eolCheckedAt };
+        return { ...row, ...fields };
       }),
     );
   }

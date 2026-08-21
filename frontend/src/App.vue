@@ -17,6 +17,8 @@ import { accessibilityDeclaration } from "./constants/accessibility-declaration"
 import MaintenanceBanner from "./components/MaintenanceBanner.vue";
 import { useMaintenanceMode } from "./composables/use-maintenance-mode";
 import OnboardingDebugPanel from "./components/OnboardingDebugPanel.vue";
+import BlockedAccessScreen from "./components/BlockedAccessScreen.vue";
+import { blockedAccessState } from "./composables/use-blocked-access";
 
 const route = useRoute();
 const router = useRouter();
@@ -230,6 +232,7 @@ const isDev = import.meta.env.DEV;
   />
   <ImpersonationBanner />
   <MaintenanceBanner :active="maintenanceMode" />
+  <BlockedAccessScreen :active="blockedAccessState" />
   <DsfrHeader
     :service-description="serviceDescription"
     :service-title="serviceTitle"

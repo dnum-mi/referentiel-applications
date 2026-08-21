@@ -181,4 +181,24 @@
   `admin-actor-delete-all-btn` → confirmer dans le modal de suppression bulk.
 - **Résultat attendu** : toast « N acteur(s) supprimé(s) avec succès » ; l'email disparaît de
   `admin-actors-table`.
-  > > > > > > > origin/main
+
+### ADM-22 — Cycle de vie d'une direction métier ✅
+
+- **Datafeature** : nettoyage préalable des libellés de test via l'API (idempotence).
+- **Action** : administration → onglet Directions métier → `admin-create-business-division-btn`
+  → saisir le nom → enregistrer → rechercher (`admin-business-division-search`) → modifier via
+  `admin-business-division-edit-btn` → supprimer via `admin-business-division-delete-btn` + confirmation.
+- **Résultat attendu** : toasts « Direction métier créée / mise à jour / supprimée avec succès » ;
+  la ligne apparaît puis disparaît de `admin-business-divisions-table`. Un doublon de nom est refusé
+  avec le message « Une direction métier existe déjà avec ce nom. ».
+
+### ADM-23 — Rattacher une direction métier à une organisation ✅
+
+- **Datafeature** : une organisation de test créée via l'API et une direction métier créée via l'onglet
+  (nettoyées en fin de test).
+- **Action** : administration → onglet Gestion des organisations → rechercher l'organisation →
+  `admin-organization-edit-btn` → choisir la direction métier dans
+  `organization-business-division-select` → enregistrer ; puis rouvrir et sélectionner
+  « Aucune direction métier » pour détacher.
+- **Résultat attendu** : toast « Organisation mise à jour avec succès » ; la colonne « Direction métier »
+  de `admin-organizations-table` affiche le nom de la direction, puis « - » après détachement.

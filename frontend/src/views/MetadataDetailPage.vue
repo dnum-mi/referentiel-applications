@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DOMPurify from "dompurify";
 import { onMounted, ref, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/index";
@@ -99,8 +100,11 @@ const formattedDescription = computed(() => {
   return { title, details };
 });
 
+// Le détail vient des métadonnées (saisie utilisateur) : seul <strong> issu du
+// motif **…** est autorisé, tout HTML embarqué est neutralisé (XSS).
 function formatBold(text: string): string {
-  return text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  const bold = text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  return DOMPurify.sanitize(bold, { ALLOWED_TAGS: ["strong"] });
 }
 
 onMounted(() => {
@@ -144,7 +148,10 @@ onMounted(() => {
 
       <div class="fr-mb-3w">
         <h2 class="fr-h6">Auteur</h2>
-        <p data-testid="metadata-author">{{ metadata.createdBy?.email ?? "Inconnu" }}</p>
+        <p data-testid="metadata-author">
+          {{ metadata.createdBy?.email ?? "Inconnu" }}
+          <template v-if="metadata.impersonator?.email"> (via {{ metadata.impersonator.email }})</template>
+        </p>
       </div>
 
       <div class="fr-mb-3w">
@@ -162,6 +169,7 @@ onMounted(() => {
         <div class="metadata-description" data-testid="metadata-description">
           <p class="fr-text--lg fr-text--bold fr-mb-2w">{{ formattedDescription.title }}</p>
           <div v-if="formattedDescription.details.length" class="description-details">
+            <!-- eslint-disable-next-line vue/no-v-html -- formatBold échappe tout HTML via DOMPurify (seul <strong> autorisé) -->
             <p v-for="(detail, index) in formattedDescription.details" :key="index" class="detail-line" v-html="formatBold(detail)" />
           </div>
         </div>

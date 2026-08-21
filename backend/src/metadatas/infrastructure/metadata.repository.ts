@@ -31,7 +31,9 @@ export class MetadataRepository implements IMetadataRepository {
     where.action = { not: "export" };
 
     // Handle sorting
-    let orderBy: any = { createdAt: "desc" }; // Default sort
+    let orderBy: Prisma.MetadataOrderByWithRelationInput = {
+      createdAt: "desc",
+    }; // Default sort
 
     if (filters?.sortBy) {
       const order = filters.order || "desc";
@@ -47,9 +49,13 @@ export class MetadataRepository implements IMetadataRepository {
           orderBy = { createdBy: { organization: { path: order } } };
           break;
         case "action":
+          orderBy = { action: order };
+          break;
         case "createdAt":
+          orderBy = { createdAt: order };
+          break;
         case "description":
-          orderBy = { [filters.sortBy]: order };
+          orderBy = { description: order };
           break;
         default:
           orderBy = { createdAt: order };
@@ -67,6 +73,7 @@ export class MetadataRepository implements IMetadataRepository {
             organization: true,
           },
         },
+        impersonator: true,
         application: {
           select: { id: true, label: true },
         },
@@ -112,6 +119,7 @@ export class MetadataRepository implements IMetadataRepository {
             organization: true,
           },
         },
+        impersonator: true,
         application: {
           select: { id: true, label: true },
         },

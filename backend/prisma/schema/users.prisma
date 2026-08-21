@@ -21,6 +21,8 @@ model User {
   createdSet                Metadata[]          @relation("MetadataCreatedBy")
   /// Entrées de métadonnées où cet utilisateur est le propriétaire des données
   dataOwners                Metadata[]          @relation("MetadataDataOwnerBy")
+  /// Entrées de métadonnées créées sous une identité empruntée par cet admin (#2226)
+  metadataAsImpersonator    Metadata[]          @relation("MetadataImpersonator")
   /// Signalements créés par cet utilisateur
   reports                   Report[]
   /// Groupement de permissions par defaut
@@ -51,6 +53,42 @@ model User {
   impersonationsAsAdmin     ImpersonationLog[]  @relation("ImpersonationAdmin")
   /// Sessions où cet utilisateur a été impersonné
   impersonationsAsTarget    ImpersonationLog[]  @relation("ImpersonationTarget")
+
+  /// Si l'accès de cet utilisateur est bloqué (ex : a quitté l'organisation). Un utilisateur
+  /// bloqué est rejeté par le SSO à l'authentification, quel que soit son moyen d'accès (JWT ou token API).
+  isBlocked                 Boolean             @default(false)
+  /// Date à laquelle l'utilisateur a été bloqué
+  blockedAt                 DateTime?
+  /// Administrateur ayant bloqué cet utilisateur. Pas de jointure explicite
+  /// (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
+  blockedById                String?
+
+  /// Actions journalisées sous cette identité (effective)
+  actionLogs                ActionLog[]         @relation("ActionLogUser")
+  /// Actions réellement effectuées par cet utilisateur sous une identité empruntée
+  actionLogsAsImpersonator  ActionLog[]         @relation("ActionLogImpersonator")
+  /// Filtres de recherche d'applications sauvegardés par cet utilisateur (#2279)
+  savedFilters              SavedFilter[]
+}
+
+/// Filtre de recherche d'applications sauvegardé par un utilisateur, pour être réappliqué
+/// plus tard depuis l'onglet applications sans ressaisir chaque critère (#2279).
+///
+/// @namespace Users
+model SavedFilter {
+  /// Identifiant unique
+  id        String   @id @default(uuid())
+  /// Nom donné par l'utilisateur à ce filtre, unique parmi ses propres filtres
+  name      String   @db.VarChar(100)
+  /// Filtres sérialisés (mêmes clés que la query de recherche d'applications)
+  filters   Json
+  /// Utilisateur propriétaire de ce filtre
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Date de création
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name])
 }
 
 /// @namespace Roles
@@ -114,6 +152,7 @@ model Actor {
 /// | **ProductManager** | Product Manager (PM) |
 /// | **Hebergement** | Responsable de l'hébergement |
 /// | **Autre** | Autre |
+/// | **Createur** | Utilisateur ayant créé l'application, assigné automatiquement |
 /// @namespace Users
 model ActorType {
   /// Identifiant unique
@@ -124,6 +163,14 @@ model ActorType {
   label       String  @db.VarChar(255)
   /// Description des responsabilités de ce rôle
   description String?
+
+  /// Type d'acteur système représentant les droits par défaut d'un utilisateur qui n'est
+  /// acteur d'aucune application (fallback dans CheckPermissions.getUserAppPermissions).
+  /// Non assignable à un Actor réel : exclu du select de création/édition d'acteur côté front,
+  /// mais ses droits restent 100% pilotés par la matrice AppPermissions comme tout autre type.
+  /// Un seul type d'acteur doit porter `isDefault: true` (garanti par le seed, pas par une
+  /// contrainte DB).
+  isDefault Boolean @default(false)
 
   /// Acteurs avec ce type
   actors         Actor[]

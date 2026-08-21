@@ -3,6 +3,7 @@ import { ApplicationSearchFilters } from "src/applications/infrastructure/reposi
 import { PrismaService } from "src/prisma/prisma.service";
 import { QueryBuilderGroupActor } from "src/common/service/prisma-query-builder.service";
 import { Requestor } from "src/user/entities/user.entity";
+import { DIMA_FILLED_FIELDS } from "src/common/utils/compliance-presence.utils";
 
 describe("PrismaQueryBuilder — filtres de conformité", () => {
   const prisma = {
@@ -43,17 +44,21 @@ describe("PrismaQueryBuilder — filtres de conformité", () => {
   });
 
   describe("critère de présence (dima)", () => {
-    it("présent → dima_duration_hours renseigné", async () => {
+    const dimaFilledOr = DIMA_FILLED_FIELDS.map((field) => ({
+      [field]: { not: null },
+    }));
+
+    it("présent → au moins un champ DIMA renseigné (durée, impact métier ou PRA)", async () => {
       const and = await buildAnd({ compliancePresent__in: ["dima"] });
       expect(and).toContainEqual({
-        compliance: { dima_duration_hours: { not: null } },
+        compliance: { OR: dimaFilledOr },
       });
     });
 
-    it("absent → négation (non renseigné)", async () => {
+    it("absent → négation (aucun champ DIMA renseigné)", async () => {
       const and = await buildAnd({ complianceAbsent__in: ["dima"] });
       expect(and).toContainEqual({
-        NOT: { compliance: { dima_duration_hours: { not: null } } },
+        NOT: { compliance: { OR: dimaFilledOr } },
       });
     });
 
@@ -75,5 +80,19 @@ describe("PrismaQueryBuilder — filtres de conformité", () => {
     expect(and).not.toContainEqual(
       expect.objectContaining({ compliance: expect.anything() }),
     );
+  });
+
+  it("filtre IQ : iq__isNull=true ajoute les applications sans IQ à la plage", async () => {
+    const and = await buildAnd({ iqGte: 50, iqLte: 80, iq__isNull: true });
+    expect(and).toContainEqual({
+      OR: [{ quality: { gte: 50, lte: 80 } }, { quality: null }],
+    });
+  });
+
+  it("filtre IQ : sans iq__isNull, seule la plage s'applique (applications sans IQ exclues)", async () => {
+    const and = await buildAnd({ iqGte: 50, iqLte: 80 });
+    expect(and).toContainEqual({
+      OR: [{ quality: { gte: 50, lte: 80 } }],
+    });
   });
 });

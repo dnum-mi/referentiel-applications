@@ -385,10 +385,62 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserWithPermissions"
         "403":
-          description: Accès refusé - Privilège admin requis
+          description: Accès refusé - Privilège admin requis, ou utilisateur hors du
+            périmètre de l'administrateur
         "404":
           description: Utilisateur non trouvé
       summary: Impersonner un utilisateur
+      tags: *a2
+  /api/v2/users/{id}/block:
+    post:
+      description: "Empêche un utilisateur de s'authentifier (ex : a quitté
+        l'organisation). Rejeté à l'authentification quel que soit le moyen
+        d'accès (SSO ou token API). Accès limité aux administrateurs."
+      operationId: UserController_block
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur à bloquer
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Utilisateur bloqué avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      summary: Bloquer l'accès d'un utilisateur
+      tags: *a2
+  /api/v2/users/{id}/unblock:
+    post:
+      description: Rétablit l'accès d'un utilisateur précédemment bloqué. Accès limité
+        aux administrateurs.
+      operationId: UserController_unblock
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de l'utilisateur à débloquer
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Utilisateur débloqué avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserWithPermissions"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Utilisateur non trouvé
+      summary: Débloquer l'accès d'un utilisateur
       tags: *a2
   /api/v2/users/{id}:
     patch:
@@ -1190,6 +1242,14 @@ paths:
             maximum: 100
             default: 100
             type: number
+        - name: iq__isNull
+          required: false
+          in: query
+          description: Inclure les applications sans IQ (décommissionnées ou supprimées)
+            en plus de celles dans la plage iqGte/iqLte
+          schema:
+            example: true
+            type: boolean
         - name: columns
           required: false
           in: query
@@ -1704,6 +1764,14 @@ paths:
             maximum: 100
             default: 100
             type: number
+        - name: iq__isNull
+          required: false
+          in: query
+          description: Inclure les applications sans IQ (décommissionnées ou supprimées)
+            en plus de celles dans la plage iqGte/iqLte
+          schema:
+            example: true
+            type: boolean
         - name: columns
           required: false
           in: query
@@ -2278,7 +2346,88 @@ paths:
       summary: Rechercher des Business division.
       tags: &a10
         - Business Division
+    post:
+      description: "
+
+        Ce endpoint permet de créer une nouvelle direction métier (business
+        division).
+
+
+        Information requise :
+
+        - **label** : nom unique de la direction métier
+
+        \    "
+      operationId: BusinessDivisionController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBusinessDivisionDto"
+      responses:
+        "201":
+          description: Direction métier créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessDivisionDTO"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "409":
+          description: Une direction métier existe déjà avec ce nom
+      summary: Créer une direction métier.
+      tags: *a10
   /api/v2/business-division/{id}:
+    patch:
+      operationId: BusinessDivisionController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de la direction métier à modifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBusinessDivisionDto"
+      responses:
+        "200":
+          description: Direction métier mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessDivisionDTO"
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Direction métier non trouvée
+        "409":
+          description: Une direction métier existe déjà avec ce nom
+      summary: Modifier une direction métier
+      tags: *a10
+    delete:
+      operationId: BusinessDivisionController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de la direction métier à supprimer
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Direction métier supprimée avec succès
+        "403":
+          description: Accès refusé - Privilège admin requis
+        "404":
+          description: Direction métier non trouvée
+      summary: Supprimer une direction métier
+      tags: *a10
     get:
       operationId: BusinessDivisionController_findById
       parameters:
@@ -3611,7 +3760,9 @@ paths:
         - actorTypes
     get:
       description: Ce endpoint permet de récupérer la liste de tous les types
-        d’acteurs disponibles.
+        d’acteurs disponibles. Le type d'acteur système (droits par défaut d'un
+        non-acteur) est exclu par défaut ; utiliser `includeSystem=true` pour
+        l'inclure (ex. matrice des permissions).
       operationId: ActorTypeController_findAll
       parameters:
         - name: page
@@ -3649,6 +3800,15 @@ paths:
             enum:
               - asc
               - desc
+        - name: includeSystem
+          required: false
+          in: query
+          description: "Inclure le(s) type(s) d'acteur système (isDefault) dans la liste.
+            Exclu par défaut : ces types ne sont pas assignables à un acteur
+            réel (cf. matrice des permissions pour les manipuler)."
+          schema:
+            default: false
+            type: boolean
       responses:
         "200":
           description: Liste les types d’acteurs
@@ -3699,6 +3859,24 @@ paths:
                 items:
                   $ref: "#/components/schemas/AppPermsDto"
       summary: Mettre à jour la matrice des permissions
+      tags: *a21
+  /api/v2/actorTypes/perms-matrix/history:
+    get:
+      description: Retourne l'historique des modifications apportées à la matrice des
+        droits par type d'acteur, avec la date et l'email de l'auteur de chaque
+        modification.
+      operationId: ActorTypeController_getMatrixHistory
+      parameters: []
+      responses:
+        "200":
+          description: Historique des modifications de la matrice des permissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AppPermsMatrixHistoryDto"
+      summary: Récupérer l'historique des modifications de la matrice des permissions
       tags: *a21
   /api/v2/actorTypes/{id}:
     get:
@@ -5100,6 +5278,14 @@ paths:
             maximum: 100
             default: 100
             type: number
+        - name: iq__isNull
+          required: false
+          in: query
+          description: Inclure les applications sans IQ (décommissionnées ou supprimées)
+            en plus de celles dans la plage iqGte/iqLte
+          schema:
+            example: true
+            type: boolean
         - name: columns
           required: false
           in: query
@@ -5388,6 +5574,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/TechnologyErrorResponseDto"
       summary: Ajouter une technologie à la stack d'une application
+      tags: *a32
+  /api/v2/applications/{applicationId}/technologies/eol-products:
+    get:
+      operationId: TechnologyController_listEolProducts
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema: {}
+      responses:
+        "200":
+          description: Catalogue des produits endoflife.date (vide si le catalogue est
+            indisponible)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EolProductDto"
+      summary: Lister les produits suivis par endoflife.date (autocomplétion de la
+        saisie produit)
       tags: *a32
   /api/v2/applications/{applicationId}/technologies/{id}:
     patch:
@@ -5789,6 +5997,61 @@ paths:
           description: Signalement supprimé avec succès
       summary: Supprimer un signalement
       tags: *a34
+  /api/v2/saved-filters:
+    get:
+      description: Renvoie les filtres de recherche d'applications sauvegardés par
+        l'utilisateur courant.
+      operationId: SavedFilterController_findAll
+      parameters: []
+      responses:
+        "200":
+          description: Liste des filtres sauvegardés
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedFilterDto"
+      summary: Lister ses filtres sauvegardés
+      tags: &a35
+        - SavedFilters
+    post:
+      description: Sauvegarde les filtres courants sous un nom. Si un filtre du même
+        nom existe déjà pour l'utilisateur, il est remplacé.
+      operationId: SavedFilterController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSavedFilterDto"
+      responses:
+        "201":
+          description: Filtre sauvegardé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedFilterDto"
+      summary: Sauvegarder un filtre
+      tags: *a35
+  /api/v2/saved-filters/{id}:
+    delete:
+      operationId: SavedFilterController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID du filtre sauvegardé
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Filtre supprimé
+        "404":
+          description: Filtre sauvegardé non trouvé
+      summary: Supprimer un filtre sauvegardé
+      tags: *a35
   /api/v2/health-check:
     get:
       description: Exécute une requête basique vers la base de données pour vérifier
@@ -5915,6 +6178,20 @@ components:
       required:
         - id
         - email
+    BusinessDivisionDTO:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 255
+          description: Nom unique du business division
+          example: farm
+        id:
+          type: string
+          description: Identifiant unique de la division DTO
+      required:
+        - label
+        - id
     OrganizationMaiaReferenceDto:
       type: object
       properties:
@@ -5975,6 +6252,12 @@ components:
           nullable: true
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de la direction métier associée
+        businessDivision:
+          nullable: true
+          description: Direction métier associée à l'organisation
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/BusinessDivisionDTO"
         maiaReferences:
           description: Références MAIA associées à l'organisation
           type: array
@@ -6012,7 +6295,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: &a35
+          enum: &a36
             - active
             - expired
             - revoked
@@ -6117,7 +6400,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: *a35
+          enum: *a36
           type: string
           example: active
           description: Statut du token
@@ -6284,6 +6567,16 @@ components:
           nullable: true
           description: Email de l'auteur de la dernière modification des droits. Null si
             jamais modifié ou si l'auteur a depuis été supprimé.
+        isBlocked:
+          type: boolean
+          description: Si l'accès de l'utilisateur est bloqué. Un utilisateur bloqué est
+            rejeté à l'authentification.
+          default: false
+        blockedAt:
+          format: date-time
+          type: string
+          nullable: true
+          description: Date à laquelle l'utilisateur a été bloqué
         permissions:
           type: array
           items:
@@ -6303,6 +6596,7 @@ components:
         - role
         - type
         - additionalPermissions
+        - isBlocked
         - id
         - email
         - organizationId
@@ -6583,6 +6877,16 @@ components:
           nullable: true
           description: Email de l'auteur de la dernière modification des droits. Null si
             jamais modifié ou si l'auteur a depuis été supprimé.
+        isBlocked:
+          type: boolean
+          description: Si l'accès de l'utilisateur est bloqué. Un utilisateur bloqué est
+            rejeté à l'authentification.
+          default: false
+        blockedAt:
+          format: date-time
+          type: string
+          nullable: true
+          description: Date à laquelle l'utilisateur a été bloqué
         id:
           type: string
         email:
@@ -6597,6 +6901,7 @@ components:
         - role
         - type
         - additionalPermissions
+        - isBlocked
         - id
         - email
         - organizationId
@@ -6665,6 +6970,18 @@ components:
           $ref: "#/components/schemas/ApplicationLightDto"
         createdBy:
           description: Utilisateur qui a créé la metadata
+          allOf:
+            - $ref: "#/components/schemas/UserEntity"
+        impersonatorId:
+          type: string
+          nullable: true
+          description: ID de l'administrateur réel si la metadata a été créée sous
+            impersonation
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        impersonator:
+          nullable: true
+          description: Administrateur réel si la metadata a été créée sous impersonation
+          type: object
           allOf:
             - $ref: "#/components/schemas/UserEntity"
       required:
@@ -6782,7 +7099,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a36
+          example: &a37
             - population 1
             - population 2
           description: population associated with the application
@@ -6793,7 +7110,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a37
+          example: &a38
             - finance
             - HR
           description: Purposes of the application
@@ -6806,7 +7123,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a38
+          example: &a39
             - tag1
             - tag2
           type: array
@@ -6894,19 +7211,6 @@ components:
       required:
         - id
         - applicationId
-    BusinessDivisionDTO:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Identifiant unique de la division DTO
-        label:
-          type: string
-          description: Nom unique du business division
-          example: farm
-      required:
-        - id
-        - label
     ApplicationDto:
       type: object
       properties:
@@ -7109,7 +7413,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a36
+          example: *a37
           description: population associated with the application
           type: array
           items:
@@ -7118,7 +7422,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a37
+          example: *a38
           description: Purposes of the application
           type: array
           items:
@@ -7129,7 +7433,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a38
+          example: *a39
           type: array
           items:
             type: string
@@ -7225,6 +7529,24 @@ components:
       required:
         - results
         - total
+    CreateBusinessDivisionDto:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 255
+          description: Nom unique du business division
+          example: farm
+      required:
+        - label
+    UpdateBusinessDivisionDto:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 255
+          description: Nom unique du business division
+          example: farm
     CreateDataDescriptionDto:
       type: object
       properties:
@@ -7728,6 +8050,11 @@ components:
           type: string
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
+        businessDivisionId:
+          type: string
+          nullable: true
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de la direction métier associée (null pour détacher)
       required:
         - path
     PaginatedOrganizationDto:
@@ -7764,6 +8091,11 @@ components:
           type: string
           example: f09ed26a-8415-476a-be3b-ada479291c34
           description: L'identifiant de l'organisation parente
+        businessDivisionId:
+          type: string
+          nullable: true
+          example: f09ed26a-8415-476a-be3b-ada479291c34
+          description: L'identifiant de la direction métier associée (null pour détacher)
     CreateActorDto:
       type: object
       properties:
@@ -7994,10 +8326,17 @@ components:
           type: string
           example: 12345678-1234-1234-1234-123456789012
           description: Identifiant unique du type d'acteur
+        isDefault:
+          type: boolean
+          example: false
+          description: "Type d'acteur système représentant les droits par défaut d'un
+            utilisateur non-acteur. Non assignable à un acteur réel : à exclure
+            des sélecteurs de création/édition d'acteur."
       required:
         - code
         - label
         - id
+        - isDefault
     AppPermsDto:
       type: object
       properties:
@@ -8068,6 +8407,29 @@ components:
         - ReportRead
         - ReportPost
         - ReportManage
+    AppPermsMatrixHistoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unique de l'entrée d'historique
+        createdAt:
+          format: date-time
+          type: string
+          description: Date de la modification
+        description:
+          type: string
+          description: Détail des changements de droits appliqués à la matrice, par type
+            d'acteur
+        changedByEmail:
+          type: string
+          nullable: true
+          description: Email de la personne ayant effectué la modification. Null si
+            l'auteur a depuis été supprimé.
+      required:
+        - id
+        - createdAt
+        - description
     PaginatedActorTypeDto:
       type: object
       properties:
@@ -8104,7 +8466,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a39
+          enum: &a40
             - 96
             - 72
             - 48
@@ -8135,7 +8497,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a40
+          enum: &a41
             - OK
             - KO
           type: string
@@ -8146,7 +8508,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a41
+          enum: &a42
             - 48
             - 24
             - 2
@@ -8166,7 +8528,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a42
+          enum: &a43
             - S3
             - LOCAL
             - EXTERNE
@@ -8177,7 +8539,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a43
+          enum: &a44
             - OK
             - KO
           type: string
@@ -8187,7 +8549,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a44
+          enum: &a45
             - homologuee
             - en_cours
             - dispensee
@@ -8228,7 +8590,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a39
+          enum: *a40
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -8252,7 +8614,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a40
+          enum: *a41
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -8261,7 +8623,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a41
+          enum: *a42
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -8277,7 +8639,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a42
+          enum: *a43
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -8285,7 +8647,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a43
+          enum: *a44
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -8293,7 +8655,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a44
+          enum: *a45
           type: string
           description: Homologation status
         homologation_date_end:
@@ -8352,7 +8714,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a39
+          enum: *a40
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -8376,7 +8738,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a40
+          enum: *a41
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -8385,7 +8747,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a41
+          enum: *a42
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -8401,7 +8763,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a42
+          enum: *a43
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -8409,7 +8771,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a43
+          enum: *a44
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -8417,7 +8779,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a44
+          enum: *a45
           type: string
           description: Homologation status
         homologation_date_end:
@@ -9114,11 +9476,56 @@ components:
           format: date-time
           example: 2026-07-03T10:00:00.000Z
           description: Date de dernière vérification du statut de fin de vie
+        eolProduct:
+          type: string
+          nullable: true
+          example: postgresql
+          description: Slug produit endoflife.date résolu (null + eolCheckedAt renseigné =
+            produit non suivi par endoflife.date)
+        eoasDate:
+          type: string
+          nullable: true
+          format: date-time
+          example: 2026-10-20
+          description: Date de fin de support actif de la version (source endoflife.date)
+        latestVersion:
+          type: string
+          nullable: true
+          example: 20.19.5
+          description: Dernière version publiée du cycle correspondant (source
+            endoflife.date)
       required:
         - technology
         - product
         - id
         - applicationId
+    EolProductDto:
+      type: object
+      properties:
+        name:
+          type: string
+          example: nodejs
+          description: Slug produit endoflife.date
+        label:
+          type: string
+          nullable: true
+          example: Node.js
+          description: Libellé d'affichage du produit
+        category:
+          type: string
+          nullable: true
+          example: database
+          description: Catégorie du produit
+        aliases:
+          example:
+            - node
+          description: Alias reconnus pour ce produit
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - aliases
     CreateTechnologyDto:
       type: object
       properties:
@@ -9272,6 +9679,41 @@ components:
         notes:
           type: string
           description: La note du signalement
+    SavedFilterDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications sauvegardés
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - name
+        - filters
+        - createdAt
+    CreateSavedFilterDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Nom donné au filtre sauvegardé
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications à sauvegarder (mêmes clés que
+            la query de GET /applications)
+      required:
+        - name
+        - filters
     HealthCheckDto:
       type: object
       properties:
@@ -9284,7 +9726,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a45
+          enum: &a46
             - OK
             - KO
           type: string
@@ -9306,7 +9748,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a45
+          enum: *a46
           type: string
           description: État de la connexion à la base de données
           example: OK

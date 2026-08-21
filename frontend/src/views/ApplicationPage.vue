@@ -1,26 +1,34 @@
 <script setup lang="ts">
-import type { ApplicationWithPerms } from "@/models/Application";
+import { hasFullReadAppPermissions, type ApplicationWithPerms } from "@/models/Application";
 import ApplicationOverview from "@/components/ApplicationOverview.vue";
 import { computed, onMounted, ref, watch, nextTick } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { setPageTitle } from "@/router";
 import { formatDateFR } from "@/composables/use-date";
 import { statusApplicationDictionary, typeApplicationDictionary } from "@/constants/dictionary";
+import { hasQualityIndex } from "@/utils/quality";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { Permission } from "@/client";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 const metadataStore = useMetadataStore();
 const toaster = useToasterStore();
 const route = useRoute();
+const router = useRouter();
 const id = route.params.id as string;
 const application = computed<ApplicationWithPerms>(() => applicationStore.applicationsById[id]);
 const isLoading = ref(false);
 const errorMessage = ref("");
+
+// Affiché uniquement juste après la création (redirection depuis CreateApplicationPage), tant
+// que l'utilisateur n'a pas au moins la lecture totale sur la fiche qu'il vient de créer (#2212).
+const showMissingRightsAlert = ref(route.query.justCreated === "true");
+const hasFullReadRights = computed(() => hasFullReadAppPermissions(application.value?.myPerms));
 
 const isSubscriptionLoading = ref(false);
 const isSubscribed = computed(() => userStore.isSubscribed(id));
@@ -57,9 +65,8 @@ watch(
   { immediate: true },
 );
 
-const canReadMetadata = computed(() => {
-  return userStore.hasPermissions([Permission.METADATA_READ], Array.from(application.value.myPerms));
-});
+const canReadMetadata = useAppPermission(() => application.value?.myPerms, [Permission.METADATA_READ]);
+const canDeleteApplication = useAppPermission(() => application.value?.myPerms, [Permission.DELETE_APPLICATION]);
 
 async function fetchApplicationMetadata() {
   await applicationStore.fetchApplication(id);
@@ -95,8 +102,11 @@ async function copyToClipboard() {
   }
 }
 
-onMounted(() => {
-  loadApplication();
+onMounted(async () => {
+  await loadApplication();
+  if (route.query.justCreated) {
+    router.replace({ query: { ...route.query, justCreated: undefined } });
+  }
 });
 
 function resetModal() {
@@ -137,6 +147,18 @@ const actions = computed(() => [
       <h1 id="application-title" data-testid="application-title" class="application-title">
         {{ application.label }}
       </h1>
+
+      <DsfrAlert
+        v-if="showMissingRightsAlert && !hasFullReadRights"
+        id="application-missing-rights-alert"
+        title="Vous n’avez pas encore les droits complets sur cette application"
+        description="Cette application vient d’être créée, mais vous ne disposez pas des droits en lecture totale sur sa fiche. Ajoutez-vous comme acteur ou demandez à un administrateur de vous accorder ces droits pour continuer à y accéder."
+        type="warning"
+        class="fr-mb-3w"
+        closeable
+        data-testid="application-missing-rights-alert"
+        @close="showMissingRightsAlert = false"
+      ></DsfrAlert>
 
       <DsfrHighlight
         v-if="metadataStore.firstMetadata || metadataStore.lastMetadata"
@@ -195,7 +217,12 @@ const actions = computed(() => [
           data-testid="application-status-tag"
         />
 
-        <DsfrTag class="fr-mr-1v" :label="`IQ: ${application.quality ?? 'non renseigné'}%`" data-testid="application-iq-tag" />
+        <DsfrTag
+          v-if="hasQualityIndex(application)"
+          class="fr-mr-1v"
+          :label="`IQ: ${application.quality}%`"
+          data-testid="application-iq-tag"
+        />
 
         <DsfrTag
           v-if="application.type"
@@ -208,7 +235,7 @@ const actions = computed(() => [
       <ApplicationOverview :application="application" data-testid="application-overview" @update:application="fetchApplicationMetadata" />
 
       <DsfrButton
-        v-if="userStore.hasPermissions([Permission.DELETE_APPLICATION], Array.from(application.myPerms))"
+        v-if="canDeleteApplication"
         class="application-delete-btn fr-btn--secondary fr-btn--icon-left fr-icon-delete-line"
         data-testid="application-delete-btn"
         title="Supprimer définitivement cette application"

@@ -3,7 +3,9 @@ import type { QualitySummaryDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
-import { onMounted, ref } from "vue";
+import { hasQualityIndex } from "@/utils/quality";
+import { getQualityNextActions } from "@/utils/quality-next-actions";
+import { computed, onActivated, ref } from "vue";
 
 defineOptions({ inheritAttrs: false });
 
@@ -62,7 +64,13 @@ function getComplianceStatus(key: keyof QualitySummaryDto["compliances"]): strin
   }
 }
 
-onMounted(fetchQuality);
+const remainingActionsCount = computed(() => (summary.value ? getQualityNextActions(summary.value).length : 0));
+
+// L'onglet est mis en cache par le <KeepAlive> de ApplicationOverview.vue : `onMounted` ne se
+// déclenche qu'à la toute première ouverture, pas en revenant sur l'onglet après avoir modifié
+// des acteurs/hébergement/conformités ailleurs — d'où des données de qualité périmées. `onActivated`
+// se déclenche à chaque (ré)activation du composant caché, y compris le montage initial.
+onActivated(fetchQuality);
 </script>
 
 <template>
@@ -132,5 +140,15 @@ onMounted(fetchQuality);
     </div>
   </div>
 
-  <DsfrHighlight :large="true" data-testid="quality-index"> INDICE QUALITE: {{ props.application.quality ?? 0 }}% </DsfrHighlight>
+  <DsfrHighlight v-if="hasQualityIndex(props.application)" :large="true" data-testid="quality-index">
+    INDICE QUALITE: {{ props.application.quality }}%
+  </DsfrHighlight>
+
+  <QualityScoreBar
+    v-if="hasQualityIndex(props.application) && summary"
+    :score="props.application.quality!"
+    :remaining-count="remainingActionsCount"
+  />
+
+  <QualityNextActions v-if="summary" :application-id="props.application.id" :summary="summary" />
 </template>

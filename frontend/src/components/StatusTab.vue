@@ -8,13 +8,13 @@ import { statusApplicationDictionary } from "@/constants/dictionary";
 import type { ApplicationWithPerms } from "@/models/Application";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import { useMediaQuery } from "@vueuse/core";
 import { computed, onMounted, ref } from "vue";
 import AppLoader from "./AppLoader.vue";
 import StatusForm from "./form/StatusForm.vue";
 import RefAppTable from "./RefAppTable.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 interface StatusFormData {
   status: CreateApplicationStatusDto["status"];
@@ -29,7 +29,6 @@ const props = defineProps<{
 }>();
 
 const toaster = useToasterStore();
-const userStore = useUserStore();
 const applicationStore = useApplicationStore();
 
 const formModal = useModal<ApplicationStatusDto>();
@@ -43,7 +42,7 @@ const isLoading = ref(false);
 const isSubmitting = ref(false);
 const errorMessage = ref("");
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.APP_WRITE], Array.from(props.application.myPerms)));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.APP_WRITE]);
 const deleteModalActions = computed(() => [
   {
     label: "Annuler",

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import api from "@/api/index";
-import { type TechnologyDto, Permission } from "@/client/types.gen";
+import { type EolProductDto, type TechnologyDto, Permission } from "@/client/types.gen";
 import useModal from "@/composables/use-modal";
 import type { APP_PERMISSIONS, Application } from "@/models/Application";
 import { useToasterStore } from "@/stores/toasterStore";
-import { useUserStore } from "@/stores/userStore";
 import type { TableColumn } from "@/types/table";
 import { computed, nextTick, onBeforeMount, ref } from "vue";
 import RefAppTable from "../RefAppTable.vue";
 import TechnologyForm from "./TechnologyForm.vue";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 defineOptions({ inheritAttrs: false });
 
@@ -17,18 +17,18 @@ const props = defineProps<{
   isMobile?: boolean;
 }>();
 
-const userStore = useUserStore();
 const toaster = useToasterStore();
 const technologyModal = useModal<TechnologyDto>();
 
 const technologies = ref<TechnologyDto[]>([]);
+const eolProducts = ref<EolProductDto[]>([]);
 const loading = ref(false);
 const showDeleteConfirmation = ref(false);
 const technologyToDelete = ref<TechnologyDto | null>(null);
 const statusMessage = ref("");
 const lastTrigger = ref<HTMLElement | null>(null);
 
-const canEdit = computed(() => userStore.hasPermissions([Permission.TECHNOLOGY_WRITE], Array.from(props.application.myPerms)));
+const canEdit = useAppPermission(() => props.application.myPerms, [Permission.TECHNOLOGY_WRITE]);
 
 const columns: TableColumn[] = [
   { field: "Technologie", header: "Technologie", sortable: true },
@@ -44,9 +44,23 @@ function formatEol(value?: string | Date | null): string {
   return new Date(value).toLocaleDateString("fr-FR");
 }
 
+// Fin de vie « proche » : dans moins de 6 mois.
+const EOL_SOON_MS = 182 * 24 * 60 * 60 * 1000;
+
+type EolStatus = "eol" | "eol-soon" | "eoas-passed" | null;
+
+function computeEolStatus(techno: TechnologyDto): EolStatus {
+  const now = Date.now();
+  const eol = techno.eolDate ? new Date(techno.eolDate).getTime() : null;
+  const eoas = techno.eoasDate ? new Date(techno.eoasDate).getTime() : null;
+  if (eol !== null && eol < now) return "eol";
+  if (eol !== null && eol < now + EOL_SOON_MS) return "eol-soon";
+  if (eoas !== null && eoas < now) return "eoas-passed";
+  return null;
+}
+
 const tableRows = computed(() =>
   technologies.value.map((techno) => {
-    const eol = techno.eolDate ? new Date(techno.eolDate) : null;
     return {
       id: techno.id,
       Technologie: techno.technology,
@@ -54,7 +68,10 @@ const tableRows = computed(() =>
       Version: techno.version || "—",
       Documentation: techno.docUrl || "",
       FinDeVie: formatEol(techno.eolDate),
-      isEol: eol ? eol.getTime() < Date.now() : false,
+      eolStatus: computeEolStatus(techno),
+      // eolCheckedAt renseigné + eolProduct null = produit non suivi par endoflife.date
+      unknownProduct: Boolean(techno.eolCheckedAt) && !techno.eolProduct,
+      latestVersion: techno.version && techno.latestVersion && techno.latestVersion !== techno.version ? techno.latestVersion : null,
       Actions: {
         edit: () => technologyModal.openModal(techno),
         remove: () => askDelete(techno),
@@ -68,6 +85,17 @@ async function fetchTechnologies(applicationId: string) {
   technologies.value = response.data ?? [];
 }
 
+// Catalogue endoflife.date pour l'autocomplétion du produit (best-effort :
+// en cas d'échec, la saisie reste libre).
+async function fetchEolProducts(applicationId: string) {
+  try {
+    const response = await api.technologyControllerListEolProducts({ path: { applicationId } });
+    eolProducts.value = response.data ?? [];
+  } catch {
+    eolProducts.value = [];
+  }
+}
+
 function rememberTrigger(event: Event) {
   lastTrigger.value = (event.currentTarget as HTMLElement) ?? null;
 }
@@ -75,7 +103,7 @@ function rememberTrigger(event: Event) {
 onBeforeMount(async () => {
   loading.value = true;
   try {
-    await fetchTechnologies(props.application.id);
+    await Promise.all([fetchTechnologies(props.application.id), fetchEolProducts(props.application.id)]);
   } finally {
     loading.value = false;
   }
@@ -194,9 +222,52 @@ function cancelDelete() {
       <template v-else>—</template>
     </template>
 
+    <template #body-Version="{ data }">
+      <span>{{ data.Version }}</span>
+      <span v-if="data.latestVersion" class="fr-hint-text" :data-testid="`technology-latest-version-${data.id}`">
+        dernière du cycle : {{ data.latestVersion }}
+      </span>
+    </template>
+
     <template #body-FinDeVie="{ data }">
-      <DsfrBadge v-if="data.isEol" type="error" label="Fin de vie" small :data-testid="`technology-eol-badge-${data.id}`"></DsfrBadge>
+      <template v-if="data.eolStatus === 'eol'">
+        <DsfrBadge
+          type="error"
+          label="Fin de vie"
+          small
+          :title="data.FinDeVie ? `Fin de vie depuis le ${data.FinDeVie}` : undefined"
+          :data-testid="`technology-eol-badge-${data.id}`"
+        ></DsfrBadge>
+      </template>
+      <template v-else-if="data.eolStatus === 'eol-soon'">
+        <DsfrBadge
+          type="warning"
+          label="Fin de vie proche"
+          small
+          :title="`Fin de vie prévue le ${data.FinDeVie}`"
+          :data-testid="`technology-eol-soon-badge-${data.id}`"
+        ></DsfrBadge>
+        <span class="fr-hint-text">{{ data.FinDeVie }}</span>
+      </template>
+      <template v-else-if="data.eolStatus === 'eoas-passed'">
+        <DsfrBadge
+          type="info"
+          label="Support actif terminé"
+          small
+          :title="data.FinDeVie ? `Fin de vie prévue le ${data.FinDeVie}` : undefined"
+          :data-testid="`technology-eoas-badge-${data.id}`"
+        ></DsfrBadge>
+        <span v-if="data.FinDeVie" class="fr-hint-text">{{ data.FinDeVie }}</span>
+      </template>
       <span v-else-if="data.FinDeVie" :title="`Fin de support prévue le ${data.FinDeVie}`">{{ data.FinDeVie }}</span>
+      <span
+        v-else-if="data.unknownProduct"
+        class="fr-hint-text"
+        title="Produit non suivi par endoflife.date : la fin de vie ne peut pas être vérifiée automatiquement"
+        :data-testid="`technology-eol-unknown-${data.id}`"
+      >
+        Produit non suivi
+      </span>
       <template v-else>—</template>
     </template>
 
@@ -242,6 +313,7 @@ function cancelDelete() {
     <TechnologyForm
       :initial-data="technologyModal.selectedItem.value ?? undefined"
       :is-submitting="loading"
+      :eol-products="eolProducts"
       data-testid="technology-form-container"
       @submit="handleSave"
       @cancel="technologyModal.closeModal"

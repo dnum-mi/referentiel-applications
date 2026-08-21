@@ -25,6 +25,7 @@ import { PermissionGuard } from "src/common/guards/permission.guard";
 import { UserId } from "src/common/decorators/user-id.decorator";
 import {
   CreateTechnologyDto,
+  EolProductDto,
   TechnologyDto,
   TechnologyErrorResponseDto,
 } from "./dto/technology.dto";
@@ -56,6 +57,22 @@ export class TechnologyController {
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   async findAll(@Param("applicationId") applicationId: string) {
     return this.technologyService.findAllByApplicationId(applicationId);
+  }
+
+  @Get("eol-products")
+  @RequiredPermissions([Permission.TechnologyRead])
+  @ApiOperation({
+    summary:
+      "Lister les produits suivis par endoflife.date (autocomplétion de la saisie produit)",
+  })
+  @ApiOkResponse({
+    description:
+      "Catalogue des produits endoflife.date (vide si le catalogue est indisponible)",
+    type: [EolProductDto],
+  })
+  @ApiParam({ name: "applicationId", description: "ID de l'application" })
+  async listEolProducts() {
+    return this.technologyService.listEolProducts();
   }
 
   @Post()

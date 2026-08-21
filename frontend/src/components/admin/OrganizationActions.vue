@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import api from "@/api";
 import type {
+  BusinessDivisionDto,
   CreateOrganizationDto,
   CreateOrganizationMaiaReferenceDto,
   OrganizationDto,
@@ -39,6 +40,28 @@ const referencesErrorMessage = ref("");
 const maiaReferences = ref<OrganizationMaiaReferenceDto[]>([]);
 const newMaiaReference = ref("");
 
+// "" = aucune direction métier (détachement à l'enregistrement).
+const selectedBusinessDivisionId = ref("");
+const businessDivisions = ref<BusinessDivisionDto[]>([]);
+
+const businessDivisionOptions = computed(() => [
+  { value: "", text: "Aucune direction métier" },
+  ...businessDivisions.value.map((division) => ({
+    value: division.id,
+    text: division.label,
+  })),
+]);
+
+async function loadBusinessDivisions() {
+  const response = await api.businessDivisionControllerFindAll({
+    query: { pageSize: 0, sortBy: "label", order: "asc" },
+  });
+
+  if (response.response.ok && response.data) {
+    businessDivisions.value = response.data.results;
+  }
+}
+
 function getInitialForm(): CreateOrganizationDto {
   return {
     path: props.organization?.path || "",
@@ -72,8 +95,9 @@ function resetForm() {
 }
 
 async function openEditModal() {
-  await loadMaiaReferences();
+  await Promise.all([loadMaiaReferences(), loadBusinessDivisions()]);
   form.value = getInitialForm();
+  selectedBusinessDivisionId.value = props.organization?.businessDivisionId || "";
   errorMessage.value = "";
   isEditModalOpen.value = true;
 }
@@ -96,6 +120,7 @@ function toPayload(): CreateOrganizationDto | PatchOrganizationDto {
     path: form.value.path,
     sigle: form.value.sigle || undefined,
     url: form.value.url || undefined,
+    businessDivisionId: selectedBusinessDivisionId.value || null,
   };
 }
 
@@ -250,6 +275,16 @@ async function deleteOrganization() {
     <DsfrInputGroup v-model="form.sigle" class="fr-mb-2w" label="Sigle" hint="Optionnel" label-visible data-testid="organization-sigle" />
 
     <DsfrInputGroup v-model="form.url" class="fr-mb-2w" label="URL" hint="Optionnel" label-visible data-testid="organization-url" />
+
+    <DsfrSelect
+      v-model="selectedBusinessDivisionId"
+      class="fr-mb-2w"
+      :options="businessDivisionOptions"
+      label="Direction métier"
+      hint="Optionnel — direction métier rattachée à l'organisation"
+      label-visible
+      data-testid="organization-business-division-select"
+    />
 
     <div v-if="!isCreateMode" class="fr-mt-3w">
       <h5 class="fr-h6 fr-mb-2w">Références MAIA</h5>

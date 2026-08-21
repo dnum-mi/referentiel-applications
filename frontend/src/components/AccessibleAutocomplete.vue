@@ -1,25 +1,26 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import { onClickOutside, watchDebounced } from "@vueuse/core";
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, type Ref } from "vue";
 
-interface Props<T> {
+export interface Props<T> {
   id?: string;
   search: (query: string) => Promise<T[]>;
-  displayLabel: (item: T | null) => string;
+  displayLabel: (item: T) => string;
   placeholder?: string;
   displayNoResult?: boolean;
   /** Étiquette visible du champ (rendue en `title` — RGAA 11.1). */
   title?: string;
   /** Nom accessible de la liste de suggestions (`aria-label` du listbox — RGAA 7.1). */
   listLabel?: string;
-  onChange?: (item: T | null) => void;
+  onChange?: (item: T) => void;
 }
 
-const props = defineProps<Props<any>>();
+const props = defineProps<Props<T>>();
 const emit = defineEmits(["onChange", "onInputValueChange", "close"]);
 
 const inputValue = ref("");
-const results = ref<any[]>([]);
+// `ref([]) as Ref<T[]>` : contournement documenté de l'unwrap des refs avec un générique.
+const results = ref([]) as Ref<T[]>;
 const highlightedIndex = ref(-1);
 const loading = ref(false);
 const hasSearched = ref(false);
@@ -76,7 +77,7 @@ watchDebounced(
   { debounce: 300 },
 );
 
-function select(item: any) {
+function select(item: T) {
   // Affecter l'état AVANT les callbacks : si le consommateur vide le champ
   // (clear() depuis onChange), c'est son intention qui doit gagner en dernier.
   inputValue.value = props.displayLabel(item);

@@ -6,14 +6,46 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { ServiceOptions } from "./utils/types";
 import { PaginatedResponseDto, PaginationDto } from "./dto";
 
+/**
+ * Surface minimale d'un délégué de modèle Prisma utilisée par BaseService.
+ * Les signatures génériques des délégués générés ne sont pas exprimables
+ * structurellement sans un paramètre de type par modèle : les arguments
+ * restent volontairement larges, seuls les retours sont typés.
+ */
+export interface BaseModelDelegate<T> {
+  readonly name?: string;
+  findUnique(args: {
+    where: { id: string };
+    include?: Record<string, boolean | object>;
+  }): Prisma.PrismaPromise<T | null>;
+  findFirst(args?: unknown): Prisma.PrismaPromise<T | null>;
+  findMany(args?: unknown): Prisma.PrismaPromise<T[]>;
+  count(args?: unknown): Prisma.PrismaPromise<number>;
+  create(args: { data: unknown; include?: unknown }): Prisma.PrismaPromise<T>;
+  update(args: {
+    where: { id: string };
+    data: unknown;
+    include?: unknown;
+  }): Prisma.PrismaPromise<T>;
+  delete(args: { where: { id: string } }): Prisma.PrismaPromise<T>;
+  paginate(args?: unknown): Promise<PaginatedResponseDto<T>>;
+}
+
 @Injectable()
-export class BaseService<T, TDelegate = any> {
+export class BaseService<T, TDelegate = unknown> {
+  protected readonly model: BaseModelDelegate<T>;
+
   constructor(
-    protected readonly model: any,
+    model: object,
     protected readonly prisma: PrismaService,
     private readonly metadataService?: MetadatasService,
     private readonly applicationService?: ApplicationService,
-  ) {}
+  ) {
+    // Les délégués Prisma (étendus par les extensions du client) ne sont pas
+    // assignables structurellement à BaseModelDelegate : on ne conserve ici
+    // que la surface réellement utilisée par BaseService et ses sous-classes.
+    this.model = model as BaseModelDelegate<T>;
+  }
 
   async findOne(id: string, include = {}): Promise<T> {
     const object = await this.model.findUnique({ where: { id }, include });
@@ -34,18 +66,30 @@ export class BaseService<T, TDelegate = any> {
     return this.model.count();
   }
 
-  async create(data: any, options?: ServiceOptions<T>): Promise<T> {
+  async create(
+    data: Prisma.Args<TDelegate, "create">["data"],
+    options?: ServiceOptions<T>,
+  ): Promise<T> {
     const created = await this.model.create({
       data,
       include: options?.include,
     });
 
     if (options)
-      await this.handleMetadataAndQuality(created, "add", options, created.id);
+      await this.handleMetadataAndQuality(
+        created,
+        "add",
+        options,
+        (created as unknown as { id: string }).id,
+      );
     return created;
   }
 
-  async update(id: string, data: any, options?: ServiceOptions<T>): Promise<T> {
+  async update(
+    id: string,
+    data: Prisma.Args<TDelegate, "update">["data"],
+    options?: ServiceOptions<T>,
+  ): Promise<T> {
     const oldEntity =
       options?.existingEntity ?? (await this.findOne(id, options?.include));
     const updated = await this.model.update({

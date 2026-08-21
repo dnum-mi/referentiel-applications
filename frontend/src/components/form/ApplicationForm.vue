@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from "vue";
-import { useRouter } from "vue-router";
 import { useToasterStore } from "@/stores/toasterStore";
 import { useApplicationStore } from "@/stores/applicationStore";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
@@ -21,7 +20,7 @@ import {
   Permission,
 } from "@/client/types.gen";
 import type { ApplicationFormInitialData } from "@/models/Application";
-import { useUserStore } from "@/stores/userStore";
+import { useAppPermission } from "@/composables/use-app-permission";
 
 interface Props {
   mode?: "create" | "edit";
@@ -54,7 +53,6 @@ const toaster = useToasterStore();
 const applicationStore = useApplicationStore();
 const actorTypeStore = useActorTypeStore();
 const organizationStore = useOrganizationStore();
-const router = useRouter();
 const isSyncingFromMaiaMoa = ref(false);
 const isSyncingFromMaiaMoe = ref(false);
 const initialMoaOrganization = ref<OrganizationDto | null>(null);
@@ -157,14 +155,11 @@ async function syncMoeFromMaia() {
 }
 
 const isCreateMode = computed(() => props.mode === "create");
-const userStore = useUserStore();
 
-const canEditBase = computed(
-  () => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE], Array.from(props.initialData?.myPerms ?? [])),
-);
-const canEditPriorityRestart = computed(
-  () => isCreateMode.value || userStore.hasPermissions([Permission.APP_WRITE_PRIORITY], Array.from(props.initialData?.myPerms ?? [])),
-);
+const hasAppWrite = useAppPermission(() => props.initialData?.myPerms, [Permission.APP_WRITE]);
+const hasAppWritePriority = useAppPermission(() => props.initialData?.myPerms, [Permission.APP_WRITE_PRIORITY]);
+const canEditBase = computed(() => isCreateMode.value || hasAppWrite.value);
+const canEditPriorityRestart = computed(() => isCreateMode.value || hasAppWritePriority.value);
 
 const moaOrganizationId = computed({
   get: () => moaActor.value.organizationId ?? undefined,
@@ -541,9 +536,10 @@ async function handleCreate() {
 
     toaster.addSuccessMessage("Application créée avec succès !");
     emit("success", application);
-    router.push({ name: "application", params: { id: application.id } });
-  } catch (error: any) {
-    const message = error.message?.join?.(", ") || "Une erreur est survenue";
+  } catch (error) {
+    // Erreur de validation NestJS : `message` est un tableau de messages.
+    const messages = error && typeof error === "object" && "message" in error ? error.message : undefined;
+    const message = (Array.isArray(messages) ? messages.join(", ") : "") || "Une erreur est survenue";
     toaster.addErrorMessage(message);
   }
 }

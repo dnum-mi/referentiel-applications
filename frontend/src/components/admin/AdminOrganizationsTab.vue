@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { OrganizationDto, PaginatedOrganizationDto } from "@/client/types.gen";
+import type { OrganizationDto, OrganizationsControllerFindAllData, PaginatedOrganizationDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
 import OrganizationActions from "./OrganizationActions.vue";
@@ -29,6 +30,11 @@ const headers: (DsfrDataTableHeaderCellObject & { isSortable?: boolean })[] = [
     key: "sigle",
     label: "Sigle",
     isSortable: true,
+  },
+  {
+    key: "businessDivision",
+    label: "Direction métier",
+    isSortable: false,
   },
   {
     key: "url",
@@ -60,7 +66,7 @@ const firstIndex = computed(() => currentPage.value * itemsPerPage.value);
 async function fetchOrganizations() {
   isLoading.value = true;
 
-  const query: Record<string, any> = {
+  const query: NonNullable<OrganizationsControllerFindAllData["query"]> = {
     search: searchQuery.value || undefined,
     page: currentPage.value,
     pageSize: itemsPerPage.value,
@@ -109,6 +115,7 @@ const tableRows = computed(() =>
       path: organization.path,
       maiaReferences,
       sigle: organization.sigle || "-",
+      businessDivision: organization.businessDivision?.label || "-",
       url: organization.url || "-",
       actions: organization,
     };
@@ -120,7 +127,7 @@ function onSort(event: TableSortEvent) {
   isSortDescending.value = event.sortOrder === -1;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   itemsPerPage.value = event.rows;
   fetchOrganizations();
@@ -166,8 +173,8 @@ onMounted(refreshOrganizationsTab);
       @sort="onSort"
       @page="onPage"
     >
-      <template #body-actions="{ data }">
-        <OrganizationActions :organization="data.actions" @fetch-organizations="refreshOrganizationsTab" />
+      <template #body-actions="{ data: row }">
+        <OrganizationActions :organization="row.actions" @fetch-organizations="refreshOrganizationsTab" />
       </template>
     </RefAppTable>
   </div>

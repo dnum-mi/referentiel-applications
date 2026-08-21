@@ -13,11 +13,18 @@ const { currentUserMock, hasPermissionsMock, syncOrganizationMock } = vi.hoisted
   syncOrganizationMock: vi.fn(),
 }));
 
+const { blockMock, unblockMock } = vi.hoisted(() => ({
+  blockMock: vi.fn(),
+  unblockMock: vi.fn(),
+}));
+
 vi.mock("@/api/index", () => ({
   default: {
     userControllerSyncOrganizationFromMaiaByEmail: (...args: unknown[]) => syncOrganizationMock(...args),
     userControllerSyncOrganizationFromMaia: vi.fn(),
     userControllerUpdate: vi.fn(),
+    userControllerBlock: (...args: unknown[]) => blockMock(...args),
+    userControllerUnblock: (...args: unknown[]) => unblockMock(...args),
   },
 }));
 
@@ -34,6 +41,12 @@ vi.mock("@/stores/userStore", () => ({
       return currentUserMock.user;
     },
     hasPermissions: hasPermissionsMock,
+    // Même règle que le vrai store : sans scope tout est permis, sinon préfixe de chemin.
+    isWithinScope: (targetOrganizationPath?: string | null) => {
+      const scopePath = currentUserMock.user.scopeOrganization?.path;
+      if (!scopePath) return true;
+      return !targetOrganizationPath || targetOrganizationPath.startsWith(scopePath);
+    },
     startImpersonation: vi.fn(),
   }),
 }));
@@ -50,6 +63,10 @@ const targetUser = {
   email: "target@example.gouv.fr",
   organizationId: null,
   scopeOrganizationId: null,
+  lastPermissionChangeAt: null,
+  lastPermissionChangedByEmail: null,
+  isBlocked: false,
+  blockedAt: null,
 } satisfies Required<UserEntity>;
 
 function createOrganization(path: string): OrganizationDto {
@@ -177,5 +194,73 @@ describe("UserActions", () => {
 
     expect(screen.queryByTestId("admin-edit-user-modal")).not.toBeInTheDocument();
     expect(syncOrganizationMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks the access of a user after confirmation", async () => {
+    hasPermissionsMock.mockReturnValue(true);
+    blockMock.mockResolvedValue({
+      error: undefined,
+      data: { ...targetUser, isBlocked: true },
+    });
+
+    render(UserActions, {
+      props: { user: targetUser },
+      global,
+    });
+
+    await fireEvent.click(screen.getByTestId("admin-user-block-btn"));
+    await waitFor(() => expect(screen.getByTestId("admin-block-user-modal")).toBeInTheDocument());
+
+    await fireEvent.click(screen.getByTestId("admin-block-user-confirm-btn"));
+
+    await waitFor(() => expect(blockMock).toHaveBeenCalledWith({ path: { id: targetUser.id } }));
+  });
+
+  it("does not show the block button for the requestor's own account", () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.id = targetUser.id;
+
+    render(UserActions, {
+      props: { user: targetUser },
+      global,
+    });
+
+    expect(screen.queryByTestId("admin-user-block-btn")).not.toBeInTheDocument();
+    currentUserMock.user.id = "current-user";
+  });
+
+  it("shows the impersonate button to a global administrator for any user", () => {
+    hasPermissionsMock.mockReturnValue(true);
+
+    render(UserActions, {
+      props: { user: createTargetUser("/HORS-PERIMETRE") },
+      global,
+    });
+
+    expect(screen.getByTestId("admin-user-impersonate-btn")).toBeInTheDocument();
+  });
+
+  it("shows the impersonate button to a scoped administrator within their scope", () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.scopeOrganization = createOrganization("/MININT/DTNUM");
+
+    render(UserActions, {
+      props: { user: createTargetUser("/MININT/DTNUM/SDAN") },
+      global,
+    });
+
+    expect(screen.getByTestId("admin-user-impersonate-btn")).toBeInTheDocument();
+  });
+
+  it("hides the impersonate button from a scoped administrator outside their scope", () => {
+    hasPermissionsMock.mockReturnValue(true);
+    currentUserMock.user.scopeOrganization = createOrganization("/MININT/DTNUM");
+
+    render(UserActions, {
+      props: { user: createTargetUser("/MININT/DGPN") },
+      global,
+    });
+
+    expect(screen.queryByTestId("admin-user-impersonate-btn")).not.toBeInTheDocument();
   });
 });

@@ -5,6 +5,7 @@ import RefAppTable from "@/components/RefAppTable.vue";
 import type { TableColumn } from "@/types/table";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import type { DataTablePageEvent } from "primevue/datatable";
 import EmailLogContentModal from "./EmailLogContentModal.vue";
 
 const data = ref<PaginatedEmailLogDto>({ results: [], total: 0 });
@@ -54,7 +55,7 @@ const tableRows = computed(() =>
   })),
 );
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   itemsPerPage.value = event.rows;
   fetchLogs();

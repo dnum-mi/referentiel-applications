@@ -1,6 +1,7 @@
 import type { UserFakerReturnType } from "./fakers/user.faker";
 import { Roles } from "@prisma/client";
 import request from "supertest";
+import { BusinessDivisionFaker } from "./fakers/business-division.faker";
 import { OrganizationFaker } from "./fakers/organization.faker";
 import { UserFaker } from "./fakers/user.faker";
 import { getToken } from "./getToken";
@@ -59,6 +60,40 @@ describe("Organizations", () => {
       .delete(`/organizations/${organization.id}`)
       .set("Authorization", `Bearer ${TOKEN}`)
       .expect(204);
+  });
+
+  it("/PATCH organizations/:id - attaches then detaches a business division", async () => {
+    const organization = await OrganizationFaker.create();
+    const division = await BusinessDivisionFaker.create();
+
+    const attached = await request(app().getHttpServer())
+      .patch(`/organizations/${organization.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({ businessDivisionId: division.id })
+      .expect(200);
+    expect(attached.body.businessDivisionId).toEqual(division.id);
+
+    const fetched = await request(app().getHttpServer())
+      .get(`/organizations/${organization.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+    expect(fetched.body.businessDivision?.label).toEqual(division.label);
+
+    const detached = await request(app().getHttpServer())
+      .patch(`/organizations/${organization.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({ businessDivisionId: null })
+      .expect(200);
+    expect(detached.body.businessDivisionId).toBeNull();
+  });
+
+  it("/PATCH organizations/:id - rejects an unknown business division", async () => {
+    const organization = await OrganizationFaker.create();
+    await request(app().getHttpServer())
+      .patch(`/organizations/${organization.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .send({ businessDivisionId: "00000000-0000-0000-0000-000000000000" })
+      .expect(404);
   });
 });
 

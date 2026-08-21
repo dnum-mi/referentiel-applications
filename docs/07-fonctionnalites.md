@@ -54,6 +54,12 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
 
 **Permission.** `AppList` + `AppRead` (socle Visiteur). Le filtre « Mes applications » repose sur le rattachement de l'utilisateur comme acteur (couche 3).
 
+**Filtres sauvegardés.** Chaque utilisateur peut sauvegarder sa combinaison de filtres courante sous un nom, pour la réappliquer plus tard sans ressaisir chaque critère. Sauvegarder sous un nom déjà utilisé remplace le filtre existant (upsert). Les filtres sont personnels : un utilisateur ne voit et ne peut supprimer que les siens.
+
+- Front : `frontend/src/components/search/SavedFiltersPanel.vue` (intégré dans `SidebarFilter.vue`), store `frontend/src/stores/savedFilterStore.ts`.
+- Back : `GET/POST /saved-filters`, `DELETE /saved-filters/:id` (`backend/src/saved-filter/`) ; modèle `SavedFilter` (`backend/prisma/schema/users.prisma`), unique par `(userId, name)`.
+- **Permission.** Aucune permission dédiée : accessible à tout utilisateur authentifié, scopé à son propre `userId`.
+
 ## 2. Fiche application
 
 La fiche regroupe toutes les informations d'une application sous forme d'onglets. La page de fiche (`ApplicationPage.vue`) délègue au composant `ApplicationOverview.vue`, qui assemble les onglets suivants : **Informations générales**, **Sources de données**, **Liens**, **Conformités**, **Acteurs**, **Relations**, **Statuts**, **Signalements**, **Modifications** (historique) et **Qualité**. L'affichage de chaque onglet dépend des droits renvoyés par `GET /applications/:applicationId/my-perms`.
@@ -158,6 +164,10 @@ Chaque niveau dispose d'un barème dégressif selon le nombre de manques (par ex
 
 **Où c'est dans le code (recalcul global, front).** Onglet d'administration « Indice de qualité » : `frontend/src/components/admin/AdminQualityTab.vue` (bouton « Calculer l'indice de qualité de toutes les applications »).
 
+**Prochaines actions.** L'onglet Qualité affiche, sous le score, une barre de progression colorée (rouge / orange / vert selon le score) avec une phrase incitative (« Encore N actions pour progresser »), puis une checklist des critères IQ non satisfaits (issus de la même `quality-summary`), chacun avec un lien direct vers l'onglet à compléter (Informations générales, Acteurs, Conformités ou Liens). Comme le barème est dégressif par palier (et non additif — cf. ci-dessus), aucun delta de points n'est affiché par critère : seul un niveau d'impact qualitatif (fort / moyen / secondaire, dérivé du palier d'importance 1/2/3) est indiqué, pour rester honnête sur le fait que le gain réel dépend de ce qui est déjà renseigné.
+
+- Front : `frontend/src/components/QualityScoreBar.vue` (barre + phrase) et `frontend/src/components/QualityNextActions.vue` (checklist), logique pure partagée dans `frontend/src/utils/quality-next-actions.ts`, les deux intégrés à `QualityTab.vue`.
+
 **Permission.** Visible par tous (`AppRead`). Recalcul global : **administrateurs** (`AdminPanelManage`).
 
 ## 4. Signalements
@@ -241,8 +251,9 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 
 Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé en onglets, réservés aux administrateurs (`AdminPanelManage`).
 
-- **Gestion des utilisateurs** (`admin/AdminUsersTab.vue`) : liste des utilisateurs (humains et comptes techniques), modification du rôle (Visiteur, Lecteur, Contributeur, Administrateur), rattachement à une organisation, et attribution de **permissions individuelles** complémentaires (couche 2). Module back `backend/src/user/`.
-- **Gestion des organisations** (`admin/AdminOrganizationsTab.vue`) : création/modification/suppression. Permission `OrganizationManage`. Modules `backend/src/organizations/`, `backend/src/organization-maia-references/`.
+- **Gestion des utilisateurs** (`admin/AdminUsersTab.vue`) : liste des utilisateurs (humains et comptes techniques), modification du rôle (Visiteur, Lecteur, Contributeur, Administrateur), rattachement à une organisation, et attribution de **permissions individuelles** complémentaires (couche 2). Un utilisateur peut aussi être **bloqué** (ex : a quitté le ministère) via `POST /users/:id/block` / `POST /users/:id/unblock` : un utilisateur bloqué est rejeté par `AuthMiddleware` à l'authentification (JWT SSO ou token API), quel que soit son moyen d'accès ; un administrateur ne peut pas bloquer son propre compte, ni impersonner un utilisateur bloqué. Notification par email à chaque changement d'état. Module back `backend/src/user/`.
+- **Gestion des organisations** (`admin/AdminOrganizationsTab.vue`) : création/modification/suppression, rattachement d'une **direction métier** à l'organisation. Permission `OrganizationManage`. Modules `backend/src/organizations/`, `backend/src/organization-maia-references/`.
+- **Directions métier** (`admin/AdminBusinessDivisionsTab.vue`) : création/modification/suppression des directions métier (nom unique) rattachables aux organisations et aux applications. Écritures sous `AdminPanelManage`. Module `backend/src/business-division/`.
 - **Gestion des tags** (`admin/AdminTagsTab.vue`) : tags libres attachables aux applications. Module `backend/src/tag/`.
 - **Gestion des sources** (`admin/AdminLabelSourcesTab.vue`) : sources contextualisant les noms alternatifs (labels). Modules `backend/src/labels/`, `backend/src/label-source/`.
 - **Indice de qualité** (`admin/AdminQualityTab.vue`) : recalcul global de l'IQ (voir [section 3](#3-indice-de-qualité-iq)).
@@ -255,6 +266,7 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 | Fonctionnalité                   | Emplacement principal (code)                                                | Permission requise                                                                 |
 | :------------------------------- | :-------------------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
 | Catalogue et recherche           | `ApplicationSearchPage.vue` · `GET /applications`                           | `AppList` + `AppRead`                                                              |
+| Filtres sauvegardés              | `SavedFiltersPanel.vue` · `backend/src/saved-filter`                        | utilisateur connecté                                                               |
 | Fiche – Informations générales   | `InformationsGenerales.vue`                                                 | Lecture `AppRead` · Écriture `AppWrite` / `AppWritePriority`                       |
 | Fiche – Acteurs                  | `actor/ActorTab.vue` · `backend/src/actor`                                  | `ActorRead` / `ActorWrite`                                                         |
 | Fiche – Statuts                  | `StatusTab.vue` · `backend/src/statuses`                                    | `AppRead` / `AppWrite`                                                             |

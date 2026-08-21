@@ -65,3 +65,73 @@ describe("ScopedPermissionService — assertCanAssignScopeToNewPrincipal", () =>
     ).resolves.toBeUndefined();
   });
 });
+
+describe("ScopedPermissionService — assertCanImpersonate", () => {
+  function buildRequestor(scopePath?: string): Requestor {
+    return {
+      id: "requestor-1",
+      scopeOrganization: scopePath ? { path: scopePath } : null,
+    } as unknown as Requestor;
+  }
+
+  function buildService(
+    users: Record<
+      string,
+      { id: string; organization: { path: string } | null }
+    >,
+  ) {
+    const prisma = {
+      user: {
+        findFirst: jest.fn(({ where: { id } }: { where: { id: string } }) =>
+          Promise.resolve(users[id] ?? null),
+        ),
+      },
+    } as unknown as PrismaService;
+    return new ScopedPermissionService(prisma);
+  }
+
+  it("does nothing for a global admin (no scope)", async () => {
+    const service = buildService({});
+    await expect(
+      service.assertCanImpersonate("target-1", buildRequestor()),
+    ).resolves.toBeUndefined();
+  });
+
+  it("allows impersonating a user within the requestor's scope", async () => {
+    const service = buildService({
+      "target-1": {
+        id: "target-1",
+        organization: { path: "DTNUM/TOTO/SUB" },
+      },
+    });
+    await expect(
+      service.assertCanImpersonate("target-1", buildRequestor("DTNUM/TOTO")),
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects impersonating a user outside the requestor's scope", async () => {
+    const service = buildService({
+      "target-1": { id: "target-1", organization: { path: "DGPN" } },
+    });
+    await expect(
+      service.assertCanImpersonate("target-1", buildRequestor("DTNUM/TOTO")),
+    ).rejects.toBeInstanceOf(ScopePermissionsException);
+  });
+
+  it("allows impersonating a user with no organization", async () => {
+    // Cohérent avec l'édition (canEditUser) : sans organisation, pas de refus.
+    const service = buildService({
+      "target-1": { id: "target-1", organization: null },
+    });
+    await expect(
+      service.assertCanImpersonate("target-1", buildRequestor("DTNUM/TOTO")),
+    ).resolves.toBeUndefined();
+  });
+
+  it("throws 404 when the target user does not exist", async () => {
+    const service = buildService({});
+    await expect(
+      service.assertCanImpersonate("ghost", buildRequestor("DTNUM/TOTO")),
+    ).rejects.toMatchObject({ status: 404 });
+  });
+});

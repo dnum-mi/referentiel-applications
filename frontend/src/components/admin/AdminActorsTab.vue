@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import api from "@/api";
-import type { PaginatedActorDto } from "@/client/types.gen";
+import type { ActorControllerFindAllData, ActorDto, ApplicationRefDto, PaginatedActorDto } from "@/client/types.gen";
 import RefAppTable from "@/components/RefAppTable.vue";
 import OrgaLink from "@/components/organization/OgaLink.vue";
 import { useActorTypeStore } from "@/stores/actorTypeStore";
 import type { TableColumn, TableSortEvent } from "@/types/table";
 import type { DsfrDataTableHeaderCellObject } from "@gouvminint/vue-dsfr";
+import type { DataTablePageEvent } from "primevue/datatable";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref, watch } from "vue";
 import AdminActorActions from "./AdminActorActions.vue";
 
 const actorTypeStore = useActorTypeStore();
+
+// L'API renvoie l'application liée, non déclarée dans ActorDto.
+type ActorRow = ActorDto & { application?: ApplicationRefDto | null };
 
 const data = ref<PaginatedActorDto>({ results: [], total: 0 });
 
@@ -49,7 +53,7 @@ function getActorTypeLabel(actorTypeId: string): string {
 async function fetchActors() {
   isLoading.value = true;
 
-  const query: Record<string, any> = {
+  const query: NonNullable<ActorControllerFindAllData["query"]> = {
     search: searchQuery.value || undefined,
     page: currentPage.value,
     pageSize: itemsPerPage.value,
@@ -82,13 +86,13 @@ watch([sortColumn, isSortDescending], () => {
 });
 
 const tableRows = computed(() =>
-  data.value.results.map((actor) => ({
+  data.value.results.map((actor: ActorRow) => ({
     email: actor.email || "-",
     firstname: actor.firstname || "-",
     lastname: actor.lastname || "-",
     actorType: getActorTypeLabel(actor.actorTypeId),
     organization: actor.organizationId,
-    application: (actor as any).application || null,
+    application: actor.application || null,
     isGroup: actor.isGroup ? "Oui" : "Non",
     actions: actor,
   })),
@@ -99,7 +103,7 @@ function onSort(event: TableSortEvent) {
   isSortDescending.value = event.sortOrder === -1;
 }
 
-function onPage(event: any) {
+function onPage(event: DataTablePageEvent) {
   currentPage.value = event.page;
   itemsPerPage.value = event.rows;
   fetchActors();

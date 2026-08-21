@@ -104,6 +104,22 @@ export class UserEntity {
   @IsOptional()
   @IsString()
   lastPermissionChangedByEmail?: string | null;
+
+  @ApiProperty({
+    description:
+      "Si l'accès de l'utilisateur est bloqué. Un utilisateur bloqué est rejeté à l'authentification.",
+    default: false,
+  })
+  @IsBoolean()
+  isBlocked: boolean;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: "Date à laquelle l'utilisateur a été bloqué",
+  })
+  @IsOptional()
+  blockedAt?: Date | null;
 }
 
 export class UserWithPermissions extends UserEntity {
