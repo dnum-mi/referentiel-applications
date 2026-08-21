@@ -9,12 +9,13 @@ export default async function globalSetup(): Promise<void> {
 
   console.log("📦 Running Prisma migrations...");
   execSync("./node_modules/.bin/prisma migrate deploy", {
-    env: { DATABASE_URL: testDatabaseUrl },
+    env: { ...process.env, DATABASE_URL: testDatabaseUrl },
     stdio: "inherit",
   });
 
   console.log("🔨 Generating Prisma client...");
   execSync("./node_modules/.bin/prisma generate", {
+    env: process.env,
     stdio: "inherit",
   });
 
