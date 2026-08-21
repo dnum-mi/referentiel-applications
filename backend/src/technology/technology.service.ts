@@ -142,6 +142,22 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     );
   }
 
+  // Recherche la ligne de stack existante pour ce couple technologie/produit,
+  // sans tenir compte de la casse (« postgresql » ≡ « PostgreSQL »).
+  private async findExistingEntry(
+    applicationId: string,
+    technology: string,
+    product: string,
+  ) {
+    return this.prisma.technologyStack.findFirst({
+      where: {
+        applicationId,
+        technology: { equals: technology, mode: "insensitive" },
+        product: { equals: product, mode: "insensitive" },
+      },
+    });
+  }
+
   async createTechnology(
     applicationId: string,
     dto: CreateTechnologyDto,
@@ -157,18 +173,21 @@ export class TechnologyService extends BaseService<TechnologyStack> {
       );
     }
 
-    const existing = await this.prisma.technologyStack.findUnique({
-      where: {
-        applicationId_technology_product: {
-          applicationId,
-          technology: dto.technology,
-          product: dto.product,
-        },
-      },
-    });
+    const existing = await this.findExistingEntry(
+      applicationId,
+      dto.technology,
+      dto.product,
+    );
     if (existing) {
-      throw new ConflictException(
-        "Ce produit est déjà renseigné pour cette technologie et cette application",
+      // Le couple technologie/produit est déjà renseigné (à la casse près) :
+      // on met à jour la ligne existante au lieu de créer un doublon. La
+      // graphie déjà enregistrée est conservée ; le formulaire soumis fait
+      // foi pour la version et le lien documentaire.
+      const eol = await this.resolveEol(existing.product, dto.version);
+      return super.update(
+        existing.id,
+        { version: dto.version ?? null, docUrl: dto.docUrl ?? null, ...eol },
+        options,
       );
     }
 
@@ -191,18 +210,17 @@ export class TechnologyService extends BaseService<TechnologyStack> {
 
     const newTechnology = dto.technology ?? existing.technology;
     const newProduct = dto.product ?? existing.product;
+    // Comparaison insensible à la casse : ne changer que la graphie
+    // (« postgresql » → « PostgreSQL ») reste une mise à jour de la même ligne.
     const pairChanged =
-      newTechnology !== existing.technology || newProduct !== existing.product;
+      newTechnology.toLowerCase() !== existing.technology.toLowerCase() ||
+      newProduct.toLowerCase() !== existing.product.toLowerCase();
     if (pairChanged) {
-      const conflict = await this.prisma.technologyStack.findUnique({
-        where: {
-          applicationId_technology_product: {
-            applicationId,
-            technology: newTechnology,
-            product: newProduct,
-          },
-        },
-      });
+      const conflict = await this.findExistingEntry(
+        applicationId,
+        newTechnology,
+        newProduct,
+      );
       if (conflict && conflict.id !== id) {
         throw new ConflictException(
           "Ce produit est déjà renseigné pour cette technologie et cette application",

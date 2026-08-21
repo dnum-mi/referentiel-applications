@@ -67,8 +67,8 @@ describe("Technologies", () => {
     expect(response.body).toHaveLength(2);
   });
 
-  it("POST - rejette un doublon (même technologie + produit) avec un 409", async () => {
-    await request(app().getHttpServer())
+  it("POST - met à jour la ligne existante au lieu de créer un doublon (même technologie + produit)", async () => {
+    const response = await request(app().getHttpServer())
       .post(`/applications/${application.id}/technologies`)
       .send({
         technology: "Base de données",
@@ -76,7 +76,41 @@ describe("Technologies", () => {
         version: "15.0",
       })
       .set("Authorization", `Bearer ${TOKEN}`)
-      .expect(409);
+      .expect(201);
+
+    expect(response.body.product).toEqual("PostgreSQL");
+    expect(response.body.version).toEqual("15.0");
+
+    const list = await request(app().getHttpServer())
+      .get(`/applications/${application.id}/technologies`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(list.body).toHaveLength(2);
+  });
+
+  it("POST - rapproche le couple technologie/produit sans tenir compte de la casse", async () => {
+    const response = await request(app().getHttpServer())
+      .post(`/applications/${application.id}/technologies`)
+      .send({
+        technology: "base de données",
+        product: "postgresql",
+        version: "15.6",
+      })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(201);
+
+    // La graphie déjà enregistrée est conservée, la version est mise à jour.
+    expect(response.body.product).toEqual("PostgreSQL");
+    expect(response.body.technology).toEqual("Base de données");
+    expect(response.body.version).toEqual("15.6");
+
+    const list = await request(app().getHttpServer())
+      .get(`/applications/${application.id}/technologies`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(200);
+
+    expect(list.body).toHaveLength(2);
   });
 
   it("POST - rejette une entrée sans produit (produit requis) avec un 400", async () => {

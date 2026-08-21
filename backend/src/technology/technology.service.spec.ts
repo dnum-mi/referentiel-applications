@@ -1,0 +1,130 @@
+// Neutralise une dépendance circulaire préexistante du graphe d'import
+// (base.service <-> metadatas.service) qui casse à l'évaluation sous ts-jest.
+// Sans incidence ici : toutes les dépendances de TechnologyService sont mockées.
+jest.mock("src/metadatas/metadatas.service", () => ({
+  MetadatasService: class {},
+}));
+
+import { ConflictException } from "@nestjs/common";
+import { ApplicationService } from "src/applications/application.service";
+import { MetadatasService } from "src/metadatas/metadatas.service";
+import { PrismaService } from "src/prisma/prisma.service";
+import { TechnologyService } from "./technology.service";
+
+// Saisir une technologie dont le couple technologie/produit est déjà présent
+// dans la fiche doit mettre à jour la ligne existante (version, lien
+// documentaire), pas créer un doublon — et le rapprochement doit ignorer la
+// casse (« postgresql » ≡ « PostgreSQL »).
+describe("TechnologyService — upsert de la stack technique", () => {
+  const existing = {
+    id: "tech-1",
+    applicationId: "app-1",
+    technology: "Base de données",
+    product: "PostgreSQL",
+    version: "15.5",
+    docUrl: null,
+  };
+
+  const makeService = () => {
+    const technologyStack = {
+      findFirst: jest.fn(),
+      findUnique: jest.fn().mockResolvedValue(existing),
+      create: jest.fn().mockResolvedValue(existing),
+      update: jest.fn().mockResolvedValue(existing),
+    };
+    const prisma = {
+      technologyStack,
+      application: {
+        findUnique: jest.fn().mockResolvedValue({ id: "app-1" }),
+      },
+    };
+    const applicationService = { updateApplicationQuality: jest.fn() };
+    const service = new TechnologyService(
+      prisma as unknown as PrismaService,
+      {} as MetadatasService,
+      applicationService as unknown as ApplicationService,
+    );
+    return { service, prisma };
+  };
+
+  it("crée une nouvelle ligne quand le couple technologie/produit est absent", async () => {
+    const { service, prisma } = makeService();
+    prisma.technologyStack.findFirst.mockResolvedValue(null);
+
+    await service.createTechnology("app-1", {
+      technology: "Langage",
+      product: "Node.js",
+      version: "20.11",
+    });
+
+    expect(prisma.technologyStack.create).toHaveBeenCalledTimes(1);
+    expect(prisma.technologyStack.update).not.toHaveBeenCalled();
+  });
+
+  it("met à jour la ligne existante (pas de doublon) quand on saisit une nouvelle version d'un couple déjà présent", async () => {
+    const { service, prisma } = makeService();
+    prisma.technologyStack.findFirst.mockResolvedValue(existing);
+
+    await service.createTechnology("app-1", {
+      technology: "Base de données",
+      product: "PostgreSQL",
+      version: "15",
+    });
+
+    expect(prisma.technologyStack.create).not.toHaveBeenCalled();
+    expect(prisma.technologyStack.update).toHaveBeenCalledTimes(1);
+    const updateArgs = prisma.technologyStack.update.mock.calls[0][0];
+    expect(updateArgs.where).toEqual({ id: existing.id });
+    expect(updateArgs.data.version).toEqual("15");
+    // La graphie déjà enregistrée est conservée : l'upsert ne réécrit ni la
+    // technologie ni le produit de la ligne existante.
+    expect(updateArgs.data.technology).toBeUndefined();
+    expect(updateArgs.data.product).toBeUndefined();
+  });
+
+  it("rapproche le couple technologie/produit sans tenir compte de la casse", async () => {
+    const { service, prisma } = makeService();
+    prisma.technologyStack.findFirst.mockResolvedValue(existing);
+
+    await service.createTechnology("app-1", {
+      technology: "base de données",
+      product: "postgresql",
+      version: "15.6",
+    });
+
+    expect(prisma.technologyStack.findFirst).toHaveBeenCalledWith({
+      where: {
+        applicationId: "app-1",
+        technology: { equals: "base de données", mode: "insensitive" },
+        product: { equals: "postgresql", mode: "insensitive" },
+      },
+    });
+    expect(prisma.technologyStack.create).not.toHaveBeenCalled();
+    expect(prisma.technologyStack.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("PATCH : rejette en conflit un renommage vers un couple déjà présent, à la casse près", async () => {
+    const { service, prisma } = makeService();
+    const other = { ...existing, id: "tech-2", product: "MySQL" };
+    prisma.technologyStack.findUnique.mockResolvedValue(other);
+    prisma.technologyStack.findFirst.mockResolvedValue(existing);
+
+    await expect(
+      service.updateTechnology("tech-2", "app-1", { product: "postgresql" }),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.technologyStack.update).not.toHaveBeenCalled();
+  });
+
+  it("PATCH : changer uniquement la casse d'un produit sur la même ligne n'est pas un conflit", async () => {
+    const { service, prisma } = makeService();
+    prisma.technologyStack.findUnique.mockResolvedValue(existing);
+
+    await service.updateTechnology("tech-1", "app-1", {
+      product: "postgresql",
+    });
+
+    // Pas de recherche de conflit : le couple (à la casse près) est inchangé.
+    expect(prisma.technologyStack.findFirst).not.toHaveBeenCalled();
+    expect(prisma.technologyStack.update).toHaveBeenCalledTimes(1);
+  });
+});
