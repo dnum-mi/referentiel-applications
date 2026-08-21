@@ -57,6 +57,7 @@ describe("GET /users — filtrage de la liste par périmètre (#2230)", () => {
   it("a global admin sees every user, including those without an organization", async () => {
     const response = await request(app().getHttpServer())
       .get("/users")
+      .query({ page: 0, pageSize: 0 }) // Disable pagination to get all results
       .set("Authorization", `Bearer ${GLOBAL_ADMIN_TOKEN}`)
       .expect(200);
 
@@ -69,6 +70,7 @@ describe("GET /users — filtrage de la liste par périmètre (#2230)", () => {
   it("a scoped admin only sees users within their scope", async () => {
     const response = await request(app().getHttpServer())
       .get("/users")
+      .query({ page: 0, pageSize: 0 }) // Disable pagination to get all results
       .set("Authorization", `Bearer ${SCOPED_ADMIN_TOKEN}`)
       .expect(200);
 
@@ -80,6 +82,7 @@ describe("GET /users — filtrage de la liste par périmètre (#2230)", () => {
   it("a scoped admin does not see users without an organization", async () => {
     const response = await request(app().getHttpServer())
       .get("/users")
+      .query({ page: 0, pageSize: 0 }) // Disable pagination to get all results
       .set("Authorization", `Bearer ${SCOPED_ADMIN_TOKEN}`)
       .expect(200);
 
@@ -91,10 +94,12 @@ describe("GET /users — filtrage de la liste par périmètre (#2230)", () => {
     const [globalResponse, scopedResponse] = await Promise.all([
       request(app().getHttpServer())
         .get("/users")
+        .query({ page: 0, pageSize: 0 })
         .set("Authorization", `Bearer ${GLOBAL_ADMIN_TOKEN}`)
         .expect(200),
       request(app().getHttpServer())
         .get("/users")
+        .query({ page: 0, pageSize: 0 })
         .set("Authorization", `Bearer ${SCOPED_ADMIN_TOKEN}`)
         .expect(200),
     ]);
