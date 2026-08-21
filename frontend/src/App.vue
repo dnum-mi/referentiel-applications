@@ -7,8 +7,11 @@ import { routeNames } from "./router/route-names";
 import { getConfig } from "./services/config";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
+import NotificationBell from "./components/notification/NotificationBell.vue";
+import EmailPreviewModal from "./components/EmailPreviewModal.vue";
 import ImpersonationBanner from "./components/ImpersonationBanner.vue";
 import AppToaster from "./components/AppToaster.vue";
 import { useScheme } from "@gouvminint/vue-dsfr";
@@ -36,11 +39,19 @@ router.afterEach(async (to, from) => {
 });
 
 const userStore = useUserStore();
+const notificationStore = useNotificationStore();
 const appConfig = ref<ConfigDto>();
 const toaster = useToasterStore();
 const { maintenanceMode } = useMaintenanceMode();
 
 configureClients(toaster);
+
+// Pas de polling (#2280) : le compteur de notifications non lues se rafraîchit à la navigation.
+router.afterEach(() => {
+  if (userStore.authenticated) {
+    notificationStore.fetchUnreadCount();
+  }
+});
 
 const appVersion = __APP_VERSION__;
 const environmentLabel = computed(() => appConfig.value?.environmentLabel);
@@ -243,6 +254,17 @@ useAppUpdate();
       <DsfrBadge :label="environmentLabel" type="warning" data-testid="environment-badge" />
     </template>
 
+    <!-- DsfrHeaderMenuLinks (quick-links) rend son propre <ul class="fr-btns-group"> et ne
+         permet pas d'y injecter un <li> personnalisé : on reproduit la même classe ici pour
+         que la cloche s'aligne visuellement dans le même groupe qu'Admin/Mon profil/Déconnexion. -->
+    <template v-if="userStore.authenticated" #after-quick-links>
+      <ul class="fr-btns-group">
+        <li>
+          <NotificationBell />
+        </li>
+      </ul>
+    </template>
+
     <template #mainnav>
       <DsfrNavigation v-if="userStore.authenticated" :nav-items="navItemsComputed" id="header-nav" data-testid="main-navigation" />
       <p v-else class="fr-sr-only" id="header-nav">Navigation non disponible</p>
@@ -267,6 +289,14 @@ useAppUpdate();
   />
 
   <AppToaster :messages="toaster.messages" data-testid="app-toaster" @close-message="toaster.removeMessage($event)" />
+
+  <!-- Monté une seule fois ici : `emailPreview` est un état global du store, un montage par
+       page/composant (cloche + page notifications) ouvrirait deux modales superposées. -->
+  <EmailPreviewModal
+    :log="notificationStore.emailPreview"
+    :opened="!!notificationStore.emailPreview"
+    @close="notificationStore.closeEmailPreview()"
+  />
 </template>
 
 <style>

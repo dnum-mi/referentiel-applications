@@ -4,6 +4,7 @@ import { Status } from "@prisma/client";
 import { ConfigService } from "@nestjs/config";
 import { ApplicationValidationCronService } from "./application-validation-cron.service";
 import { EmailService } from "../email.service";
+import { NotificationService } from "src/notification/notification.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { LoggerService } from "src/logger/logger.service";
 
@@ -27,6 +28,11 @@ describe("ApplicationValidationCronService", () => {
     sendApplicationValidationReminderEmail: jest.fn(),
   };
 
+  const mockNotificationService = {
+    createForUsers: jest.fn(),
+    create: jest.fn(),
+  };
+
   const mockLoggerService = {
     log: jest.fn(),
     error: jest.fn(),
@@ -46,6 +52,7 @@ describe("ApplicationValidationCronService", () => {
         ApplicationValidationCronService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: EmailService, useValue: mockEmailService },
+        { provide: NotificationService, useValue: mockNotificationService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: ConfigService, useValue: mockConfigService },
       ],
@@ -283,6 +290,52 @@ describe("ApplicationValidationCronService", () => {
       );
       expect(statusCondition.currentStatus.status.notIn).toContain(
         Status.deleted,
+      );
+    });
+
+    it("links each in-app notification to the e-mail sent to the same recipient (#2280 — suite)", async () => {
+      const staleApplicationWithActors = {
+        id: "app-007",
+        label: "Application Eta",
+        metadatas: [],
+        actors: [
+          { email: "owner@example.com" },
+          { email: "opted-out@example.com" },
+        ],
+        notificationLogs: [],
+      };
+
+      mockPrismaService.application.count.mockResolvedValue(1);
+      mockPrismaService.application.findMany.mockResolvedValue([
+        staleApplicationWithActors,
+      ]);
+      mockPrismaService.user.findMany.mockImplementation(({ where }) => {
+        if (where.emailNotificationsEnabled === false) {
+          return Promise.resolve([{ email: "opted-out@example.com" }]);
+        }
+        return Promise.resolve([
+          { id: "user-owner", email: "owner@example.com" },
+          { id: "user-opted-out", email: "opted-out@example.com" },
+        ]);
+      });
+      mockEmailService.sendApplicationValidationReminderEmail.mockResolvedValue(
+        { id: "email-log-1", to: "owner@example.com" },
+      );
+      mockPrismaService.notificationLog.create.mockResolvedValue({});
+
+      await service.sendValidationReminders();
+
+      expect(mockNotificationService.create).toHaveBeenCalledWith(
+        "user-owner",
+        "application_validation_reminder",
+        expect.any(String),
+        expect.objectContaining({ emailLogId: "email-log-1" }),
+      );
+      expect(mockNotificationService.create).toHaveBeenCalledWith(
+        "user-opted-out",
+        "application_validation_reminder",
+        expect.any(String),
+        expect.objectContaining({ emailLogId: undefined }),
       );
     });
 

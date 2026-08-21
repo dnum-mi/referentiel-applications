@@ -63,6 +63,8 @@ model Application {
   technicalDebtInfo           TechnicalDebtInfo[]
   /// Journaux de notifications de validation envoyées
   notificationLogs            NotificationLog[]
+  /// Notifications in-app référençant cette application (#2280)
+  notifications                Notification[]
   /// Différents source de données associées à cette application
   dataApplications DataApplication[]
   /// Données du catalogue dont cette application est une source (voir `DataDescription.applicationsSource`)

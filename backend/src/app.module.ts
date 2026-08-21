@@ -18,6 +18,7 @@ import { MetadatasModule } from "./metadatas/metadatas.module";
 import { ActionLogMiddleware } from "./middlewares/action-log.middleware";
 import { AuthMiddleware } from "./middlewares/auth.middleware";
 import { RequestContextMiddleware } from "./middlewares/request-context.middleware";
+import { NotificationModule } from "./notification/notification.module";
 import { ReportModule } from "./report/report.module";
 import { SavedFilterModule } from "./saved-filter/saved-filter.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
@@ -86,6 +87,7 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
     StatsModule,
     ReportModule,
     SavedFilterModule,
+    NotificationModule,
     HealthCheckModule,
   ],
   controllers: [AppController],

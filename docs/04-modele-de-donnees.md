@@ -43,7 +43,7 @@ Les domaines sont les suivants :
 - **Organisations** : arborescence des structures et table d'override MAIA (`organization.prisma`), directions métier MOA (`business-division.prisma`).
 - **Audit** : journal transverse des modifications (`metadata.prisma`) et journal centralisé des actions HTTP mutantes (`action-log.prisma`, écrit par l'`ActionLogMiddleware` avec l'identité effective, l'éventuel impersonator réel et la session `ImpersonationLog` associée).
 - **Labels et tags** : étiquetage et catégorisation (`labels.prisma`, `tag.prisma`).
-- **Ressources externes** (`externals.prisma`), **dette technique** (`technical-debt-info.prisma`), **signalements** (`report.prisma`), **journaux de notification** (`notification-log.prisma`), **permissions** (`permissions.prisma`), **tokens** (`token.prisma`), **journaux utilisateur** (`user-log.prisma`) et **statistiques** (`stats.prisma`).
+- **Ressources externes** (`externals.prisma`), **dette technique** (`technical-debt-info.prisma`), **signalements** (`report.prisma`), **journaux de notification** (`notification-log.prisma`), **notifications in-app** (`notification.prisma`, cloche du header — #2280), **permissions** (`permissions.prisma`), **tokens** (`token.prisma`), **journaux utilisateur** (`user-log.prisma`) et **statistiques** (`stats.prisma`).
 
 ## 2. Cartographie fichier de schéma → entités
 
@@ -65,6 +65,7 @@ Les domaines sont les suivants :
 | `technical-debt-info.prisma` | `TechnicalDebtInfo`                                                                   | —                                                              |
 | `report.prisma`              | `Report`, `ReportHistory`                                                             | `ReportStatus`                                                 |
 | `notification-log.prisma`    | `NotificationLog`                                                                     | —                                                              |
+| `notification.prisma`        | `Notification`                                                                        | `NotificationType`                                             |
 | `permissions.prisma`         | `AppPermissions`                                                                      | `Permission`                                                   |
 | `schema.prisma`              | configuration (generators, datasource)                                                | —                                                              |
 

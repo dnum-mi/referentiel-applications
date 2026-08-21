@@ -1,0 +1,46 @@
+/// Type d'événement à l'origine d'une notification in-app (#2280).
+///
+/// @namespace Notifications
+enum NotificationType {
+  report_created
+  report_status_changed
+  actor_added
+  actor_modified
+  application_followed_changed
+  application_validation_reminder
+  user_organization_changed
+  user_permissions_changed
+  user_blocked
+  user_unblocked
+}
+
+/// Notification in-app persistée pour un utilisateur (cloche du header), en complément
+/// du canal email existant (#2280).
+///
+/// @namespace Notifications
+model Notification {
+  /// Identifiant unique
+  id            String            @id @default(uuid())
+  /// Utilisateur destinataire de la notification
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Type d'événement à l'origine de la notification
+  type          NotificationType
+  /// Message affiché à l'utilisateur
+  message       String
+  /// Lien frontend vers la ressource concernée (ex. fiche application, signalement)
+  link          String?
+  /// Application concernée, si applicable (permet de retrouver le contexte même après suppression du lien)
+  applicationId String?
+  application   Application?      @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  /// E-mail effectivement envoyé pour ce même événement, si applicable : cliquer sur la
+  /// notification affiche cet e-mail plutôt que de rediriger (#2280 — suite).
+  emailLogId    String?
+  emailLog      EmailLog?         @relation(fields: [emailLogId], references: [id], onDelete: SetNull)
+  /// Si la notification a été lue
+  isRead        Boolean           @default(false)
+  /// Date de création
+  createdAt     DateTime          @default(now())
+
+  @@index([userId, isRead, createdAt])
+}

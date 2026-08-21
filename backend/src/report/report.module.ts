@@ -8,10 +8,17 @@ import {
 } from "./report.controller";
 import { ReportsService } from "./report.service";
 import { EmailModule } from "src/email/email.module";
+import { NotificationModule } from "src/notification/notification.module";
 import { UserNotificationService } from "./user-notification.service";
 
 @Module({
-  imports: [PrismaModule, UserModule, EmailModule, CommonModule],
+  imports: [
+    PrismaModule,
+    UserModule,
+    EmailModule,
+    NotificationModule,
+    CommonModule,
+  ],
   controllers: [ReportsController, ApplicationReportsController],
   providers: [ReportsService, UserNotificationService],
   exports: [ReportsService],

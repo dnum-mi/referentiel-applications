@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { Prisma, type Metadata } from "@prisma/client";
+import { Injectable, Logger } from "@nestjs/common";
+import { NotificationType, Prisma, type Metadata } from "@prisma/client";
 import isEqual from "lodash/isEqual";
 import { BaseService } from "src/common/base.service";
+import { NotificationService } from "src/notification/notification.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { MetadataTypes } from "../utils/constants.util";
 import { MetadataDto, MetadataFiltersDto } from "./dto/metadata.dto";
@@ -17,6 +18,7 @@ export class MetadatasService extends BaseService<
   constructor(
     protected readonly prisma: PrismaService,
     private readonly metadataRepository: MetadataRepository,
+    private readonly notificationService: NotificationService,
   ) {
     super(prisma.metadata, prisma);
   }
@@ -98,6 +100,7 @@ export class MetadatasService extends BaseService<
     };
 
     const descriptionLines = [`${MetadataTypes[type].label} ${title}`];
+    let changedFieldLabels: string[] = [];
 
     if (type === "update") {
       const oldValues = oldData ? buildValueMap(oldData) : {};
@@ -116,6 +119,7 @@ export class MetadatasService extends BaseService<
       if (Object.keys(changedOldValues).length === 0) {
         return null;
       } else {
+        changedFieldLabels = Object.keys(changedNewValues);
         descriptionLines.push(
           `Ancienne(s) valeur(s): ${JSON.stringify(changedOldValues)}`,
           `Nouvelle(s) valeur(s): ${JSON.stringify(changedNewValues)}`,
@@ -133,6 +137,68 @@ export class MetadatasService extends BaseService<
     if (entity && entityId) {
       prismaData[entity] = entityId;
     }
-    return await this.metadataRepository.create(prismaData);
+    const created = await this.metadataRepository.create(prismaData);
+
+    if (applicationId) {
+      await this.notifyFollowedApplicationSubscribers(
+        applicationId,
+        createdById,
+        descriptionLines[0],
+        changedFieldLabels,
+      );
+    }
+
+    return created;
+  }
+
+  /**
+   * Notifie en temps réel les abonnés d'une application dès qu'une métadonnée la concernant
+   * est créée (mise à jour de la fiche, d'un acteur, d'une conformité, d'un statut, etc.) —
+   * c'est le même signal que celui agrégé par le digest email quotidien (#2280).
+   */
+  private async notifyFollowedApplicationSubscribers(
+    applicationId: string,
+    authorId: string,
+    changeSummary: string,
+    changedFieldLabels: string[],
+  ) {
+    try {
+      const application = await this.prisma.application.findUnique({
+        where: { id: applicationId },
+        select: {
+          label: true,
+          subscribers: { select: { id: true } },
+        },
+      });
+      if (!application) return;
+
+      const subscriberIds = application.subscribers
+        .map((subscriber) => subscriber.id)
+        .filter((id) => id !== authorId);
+      if (subscriberIds.length === 0) return;
+
+      const author = await this.prisma.user.findUnique({
+        where: { id: authorId },
+        select: { email: true },
+      });
+
+      const fieldsSuffix =
+        changedFieldLabels.length > 0
+          ? ` (${changedFieldLabels.join(", ")})`
+          : "";
+      const message = `${changeSummary}${fieldsSuffix} sur ${application.label}${author?.email ? ` par ${author.email}` : ""}.`;
+
+      await this.notificationService.createForUsers(
+        subscriberIds,
+        NotificationType.application_followed_changed,
+        message,
+        { link: `/applications/${applicationId}`, applicationId },
+      );
+    } catch (error) {
+      Logger.error(
+        `Échec de notification des abonnés de l'application ${applicationId}`,
+        error,
+      );
+    }
   }
 }

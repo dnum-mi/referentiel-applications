@@ -71,6 +71,8 @@ model User {
   savedFilters              SavedFilter[]
   /// Suggestions de corrélation revues par cet utilisateur (#2281)
   reviewedCorrelationSuggestions CorrelationSuggestion[] @relation("CorrelationSuggestionReviewer")
+  /// Notifications in-app reçues par cet utilisateur (#2280)
+  notifications              Notification[]
 }
 
 /// Filtre de recherche d'applications sauvegardé par un utilisateur, pour être réappliqué
