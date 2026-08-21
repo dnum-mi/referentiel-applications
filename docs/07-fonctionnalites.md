@@ -164,6 +164,10 @@ Chaque niveau dispose d'un barème dégressif selon le nombre de manques (par ex
 
 **Où c'est dans le code (recalcul global, front).** Onglet d'administration « Indice de qualité » : `frontend/src/components/admin/AdminQualityTab.vue` (bouton « Calculer l'indice de qualité de toutes les applications »).
 
+**Prochaines actions.** L'onglet Qualité affiche, sous le score, une barre de progression colorée (rouge / orange / vert selon le score) avec une phrase incitative (« Encore N actions pour progresser »), puis une checklist des critères IQ non satisfaits (issus de la même `quality-summary`), chacun avec un lien direct vers l'onglet à compléter (Informations générales, Acteurs, Conformités ou Liens). Comme le barème est dégressif par palier (et non additif — cf. ci-dessus), aucun delta de points n'est affiché par critère : seul un niveau d'impact qualitatif (fort / moyen / secondaire, dérivé du palier d'importance 1/2/3) est indiqué, pour rester honnête sur le fait que le gain réel dépend de ce qui est déjà renseigné.
+
+- Front : `frontend/src/components/QualityScoreBar.vue` (barre + phrase) et `frontend/src/components/QualityNextActions.vue` (checklist), logique pure partagée dans `frontend/src/utils/quality-next-actions.ts`, les deux intégrés à `QualityTab.vue`.
+
 **Permission.** Visible par tous (`AppRead`). Recalcul global : **administrateurs** (`AdminPanelManage`).
 
 ## 4. Signalements
