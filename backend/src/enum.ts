@@ -31,11 +31,3 @@ export enum ExternalRessourceType {
   AUDIENCE_METRICS = "Mesure d'audience",
   MAIN_SERVICE = "Service principal",
 }
-
-export enum RelationType {
-  is_part_of,
-  in_replacement_of,
-  is_service_user_of,
-  is_data_user_of,
-  use_sso_of,
-}

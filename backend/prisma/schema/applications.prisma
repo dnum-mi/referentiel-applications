@@ -49,6 +49,10 @@ model Application {
   relationsAsTarget           Relation[]          @relation("TargetHasSource")
   /// Relations où cette application est service de médiation
   relationsAsMediationService Relation[]          @relation("MediationService")
+  /// Suggestions de corrélation où cette application est la première de la paire
+  correlationSuggestionsAsSource CorrelationSuggestion[] @relation("CorrelationSuggestionSource")
+  /// Suggestions de corrélation où cette application est la seconde de la paire
+  correlationSuggestionsAsTarget CorrelationSuggestion[] @relation("CorrelationSuggestionTarget")
   /// Différents labels associés à cette application
   labels                      Label[]
   /// Tags pour la catégorisation
@@ -144,6 +148,13 @@ enum RelationType {
   is_data_user_of
   /// L'application utilise le SSO d'une autre application
   use_sso_of
+  /// Les deux applications sont corrélées (doublons potentiels, périmètres proches).
+  /// Relation symétrique : la direction source/cible n'a pas de sens métier.
+  /// Convention d'ordre canonique (applicationSourceId < applicationTargetId, ordre
+  /// lexicographique) à respecter à la création pour que
+  /// @@unique([applicationSourceId, applicationTargetId, type]) empêche bien le
+  /// doublon A→B / B→A (cf. normalizeCorrelationPair, correlation-pair.util.ts).
+  is_correlated_with
 }
 
 /// Niveaux de priorité pour le redémarrage des applications
