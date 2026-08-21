@@ -54,6 +54,17 @@ erDiagram
   String userId FK
   String applicationId FK
 }
+"CorrelationSuggestion" {
+  String id PK
+  String applicationSourceId FK
+  String applicationTargetId FK
+  Float score
+  Json signals
+  CorrelationSuggestionStatus status
+  DateTime createdAt
+  String reviewedById FK "nullable"
+  DateTime reviewedAt "nullable"
+}
 "ExternalRessource" {
   String id PK
   String link
@@ -118,6 +129,8 @@ erDiagram
 "Relation" }o--|| "Application" : targetApplication
 "Relation" }o--o| "Application" : mediationService
 "ApplicationView" }o--|| "Application" : application
+"CorrelationSuggestion" }o--|| "Application" : sourceApplication
+"CorrelationSuggestion" }o--|| "Application" : targetApplication
 "ExternalRessource" }o--|| "Application" : application
 "Label" }o--|| "Application" : application
 "TechnicalDebtInfo" }o--|| "Application" : application
@@ -186,6 +199,29 @@ Properties as follows:
 - `createdAt`: Quand ce log a été créé
 - `userId`: Identifiant de l'utilisateur qui a consulté dans ce log
 - `applicationId`: Identifiant de l'application consultée
+
+### `CorrelationSuggestion`
+
+Suggestion de corrélation entre deux applications, produite par le moteur
+de détection automatique (#2281). Une suggestion attend une revue humaine :
+aucune relation n'est créée tant qu'elle n'est pas acceptée.
+
+La paire (source, cible) est symétrique : elle est stockée en ordre
+canonique (applicationSourceId < applicationTargetId, ordre lexicographique,
+cf. normalizeCorrelationPair) pour que la contrainte d'unicité empêche le
+doublon A→B / B→A.
+
+Properties as follows:
+
+- `id`: Identifiant unique de la suggestion
+- `applicationSourceId`: Identifiant de la première application de la paire (ordre canonique)
+- `applicationTargetId`: Identifiant de la seconde application de la paire (ordre canonique)
+- `score`: Score pondéré de la suggestion (plus il est élevé, plus la corrélation est probable)
+- `signals`: Détail des signaux ayant matché (similarité de nom, données partagées, acteurs communs)
+- `status`: Statut du cycle de revue de la suggestion
+- `createdAt`: Quand la suggestion a été créée par le moteur
+- `reviewedById`: Identifiant de l'utilisateur ayant revu la suggestion (null tant que PENDING)
+- `reviewedAt`: Quand la suggestion a été revue (null tant que PENDING)
 
 ### `ExternalRessource`
 

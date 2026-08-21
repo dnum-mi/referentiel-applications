@@ -50,6 +50,7 @@ Les domaines sont les suivants :
 | Fichier de schéma            | Entités principales (modèles / vues)                                                  | Énumérations                                                   |
 | :--------------------------- | :------------------------------------------------------------------------------------ | :------------------------------------------------------------- |
 | `applications.prisma`        | `Application`, `ApplicationStatus`, `Relation`, `ApplicationView`                     | `RelationType`, `priorityRestart`, `Status`, `ApplicationType` |
+| `correlation.prisma`         | `CorrelationSuggestion`                                                               | `CorrelationSuggestionStatus`                                  |
 | `compliance.prisma`          | `Compliance`                                                                          | `TestResult`, `BackupStorage`, `HomologationStatus`            |
 | `rgaa-compliance.prisma`     | `RgaaCompliance`                                                                      | —                                                              |
 | `hosting.prisma`             | `HostingOption`, `Hosting`                                                            | `Nature`                                                       |
@@ -168,6 +169,9 @@ L'énumération `RelationType` :
 | `is_service_user_of` | utilise les services d'une autre application |
 | `is_data_user_of`    | utilise les données d'une autre application  |
 | `use_sso_of`         | utilise le SSO d'une autre application       |
+| `is_correlated_with` | est corrélée à une autre application         |
+
+Le type `is_correlated_with` signale un **doublon potentiel** ou un **périmètre proche** entre deux applications. Il est **symétrique** : la direction source/cible n'a pas de sens métier. La paire est donc stockée en **ordre canonique** (`applicationSourceId` < `applicationTargetId`, ordre lexicographique), aussi bien pour `Relation` que pour `CorrelationSuggestion` (`correlation.prisma`). Sans cette convention, la même paire saisie dans l'autre sens échapperait aux contraintes d'unicité et produirait un doublon A→B / B→A. La normalisation est fournie par `normalizeCorrelationPair` (`backend/src/relationship/correlation/correlation-pair.util.ts`), qui rejette également la corrélation d'une application avec elle-même.
 
 ```mermaid
 erDiagram
@@ -289,5 +293,5 @@ erDiagram
 - **Énumérations clés** :
   - `ApplicationType` : `business`, `core_service`, `intranet_citizen`, `intranet_staff`, `data_hub`.
   - `Status` : du `under_construction` au `deleted` (8 états du cycle de vie).
-  - `RelationType` : `is_part_of`, `in_replacement_of`, `is_service_user_of`, `is_data_user_of`, `use_sso_of`.
+  - `RelationType` : `is_part_of`, `in_replacement_of`, `is_service_user_of`, `is_data_user_of`, `use_sso_of`, `is_correlated_with`.
   - `priorityRestart` : `R0`, `R1`, `R1_STAR`, `R2`, `R3`.

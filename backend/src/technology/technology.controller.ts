@@ -78,15 +78,12 @@ export class TechnologyController {
   @Post()
   @RequiredPermissions([Permission.TechnologyWrite])
   @ApiOperation({
-    summary: "Ajouter une technologie à la stack d'une application",
+    summary:
+      "Ajouter une technologie à la stack d'une application (met à jour la ligne existante si le couple technologie/produit est déjà renseigné, sans tenir compte de la casse)",
   })
   @ApiCreatedResponse({
-    description: "Technologie ajoutée avec succès",
+    description: "Technologie ajoutée ou mise à jour avec succès",
     type: TechnologyDto,
-  })
-  @ApiConflictResponse({
-    description: "Cette technologie est déjà renseignée pour cette application",
-    type: TechnologyErrorResponseDto,
   })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   async create(
@@ -115,6 +112,10 @@ export class TechnologyController {
   @ApiOkResponse({
     description: "Technologie mise à jour avec succès",
     type: TechnologyDto,
+  })
+  @ApiConflictResponse({
+    description: "Cette technologie est déjà renseignée pour cette application",
+    type: TechnologyErrorResponseDto,
   })
   @ApiParam({ name: "applicationId", description: "ID de l'application" })
   @ApiParam({ name: "id", description: "ID de la technologie" })

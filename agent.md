@@ -48,7 +48,7 @@ Ce projet est un référentiel centralisé des applications logicielles du minis
 - **Actor** — Personne ou entité rattachée à une application. Types : MOA, MOE, RSSI, ArchitecteApplicatif, ArchitecteTechnique, TMA, Exploitation, ProductOwner, ProductManager, etc.
 - **Compliance** — Conformité réglementaire par application : DIMA, PDMA, Homologation (statuts : `homologuee`, `en_cours`, `dispensee`), DSFR, RGPD, EcoIndex.
 - **Hosting** — Configuration d'hébergement liée à une application.
-- **Relation** — Lien entre applications : `is_part_of`, `in_replacement_of`, `is_service_user_of`, `is_data_user_of`, `use_sso_of`.
+- **Relation** — Lien entre applications : `is_part_of`, `in_replacement_of`, `is_service_user_of`, `is_data_user_of`, `use_sso_of`, `is_correlated_with` (symétrique, paire stockée en ordre canonique).
 - **Report** — Signalement sur une application, avec statuts `in_pending`, `in_progress`, `done`.
 - **User** — Compte utilisateur (humain ou bot) avec rôle (`VISITOR`, `READER`, `CONTRIBUTOR`, `ADMIN`) et permissions additionnelles.
 - **Organization / BusinessDivision** — Structures organisationnelles rattachées aux acteurs et applications.

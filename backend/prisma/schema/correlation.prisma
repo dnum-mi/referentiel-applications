@@ -1,0 +1,52 @@
+/// Suggestion de corrélation entre deux applications, produite par le moteur
+/// de détection automatique (#2281). Une suggestion attend une revue humaine :
+/// aucune relation n'est créée tant qu'elle n'est pas acceptée.
+///
+/// La paire (source, cible) est symétrique : elle est stockée en ordre
+/// canonique (applicationSourceId < applicationTargetId, ordre lexicographique,
+/// cf. normalizeCorrelationPair) pour que la contrainte d'unicité empêche le
+/// doublon A→B / B→A.
+///
+/// @namespace Applications
+model CorrelationSuggestion {
+  /// Identifiant unique de la suggestion
+  id                  String                      @id @default(uuid())
+  /// Identifiant de la première application de la paire (ordre canonique)
+  applicationSourceId String
+  /// Identifiant de la seconde application de la paire (ordre canonique)
+  applicationTargetId String
+  /// Première application de la paire
+  sourceApplication   Application                 @relation("CorrelationSuggestionSource", fields: [applicationSourceId], references: [id], onDelete: Cascade)
+  /// Seconde application de la paire
+  targetApplication   Application                 @relation("CorrelationSuggestionTarget", fields: [applicationTargetId], references: [id], onDelete: Cascade)
+  /// Score pondéré de la suggestion (plus il est élevé, plus la corrélation est probable)
+  score               Float
+  /// Détail des signaux ayant matché (similarité de nom, données partagées, acteurs communs)
+  signals             Json
+  /// Statut du cycle de revue de la suggestion
+  status              CorrelationSuggestionStatus @default(PENDING)
+  /// Quand la suggestion a été créée par le moteur
+  createdAt           DateTime                    @default(now())
+  /// Identifiant de l'utilisateur ayant revu la suggestion (null tant que PENDING)
+  reviewedById        String?
+  /// Utilisateur ayant revu la suggestion
+  reviewedBy          User?                       @relation("CorrelationSuggestionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  /// Quand la suggestion a été revue (null tant que PENDING)
+  reviewedAt          DateTime?
+
+  @@unique([applicationSourceId, applicationTargetId])
+  @@index([status, score])
+  @@index([applicationTargetId])
+}
+
+/// Cycle de vie d'une suggestion de corrélation
+///
+/// @namespace Applications
+enum CorrelationSuggestionStatus {
+  /// En attente de revue humaine
+  PENDING
+  /// Acceptée : une Relation is_correlated_with a été créée
+  ACCEPTED
+  /// Rejetée : la paire ne sera plus re-proposée par le moteur
+  REJECTED
+}

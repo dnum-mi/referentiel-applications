@@ -25,4 +25,9 @@ export const RelationTypeLabelsBidirectional = {
     source: "Utilise le SSO de",
     target: "Fournit le SSO à",
   },
+  // Relation symétrique (#2281) : même libellé quelle que soit la direction.
+  is_correlated_with: {
+    source: "Est corrélée à",
+    target: "Est corrélée à",
+  },
 } satisfies Record<RelationType, { source: string; target: string }>;
