@@ -6,6 +6,8 @@ import {
 } from "./application/dto/relation-application.dto";
 import { IRelationRepository } from "./infrastructure/repository/relation.repository.interface";
 import { MetadatasService } from "src/metadatas/metadatas.service";
+import { RelationType } from "@prisma/client";
+import { normalizeCorrelationPair } from "./correlation/correlation-pair.util";
 
 @Injectable()
 export class RelationService {
@@ -20,9 +22,22 @@ export class RelationService {
     dto: RelationApplicationDto,
     requestorId: string,
   ): Promise<RelationDto> {
+    // La corrélation est symétrique (#2281) : sans ordre canonique, la même
+    // paire créée à la main dans l'autre sens échapperait au @@unique et
+    // produirait un doublon A→B / B→A. La détection normalise déjà ses paires.
+    let sourceId = applicationSourceId;
+    let relationDto = dto;
+    if (dto.type === RelationType.is_correlated_with) {
+      const pair = normalizeCorrelationPair(
+        applicationSourceId,
+        dto.applicationTargetId,
+      );
+      sourceId = pair.applicationSourceId;
+      relationDto = { ...dto, applicationTargetId: pair.applicationTargetId };
+    }
     const createdRelation = await this.relationRepository.create(
-      applicationSourceId,
-      dto,
+      sourceId,
+      relationDto,
     );
     await this.metadataService.createMetadata({
       applicationId: createdRelation.sourceApplication.id,

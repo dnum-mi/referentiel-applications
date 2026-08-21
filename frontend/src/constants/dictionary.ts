@@ -188,6 +188,7 @@ export const relationTypeLabels: Record<RelationType, string> = {
   is_service_user_of: "utilise le service de",
   is_data_user_of: "utilise les données de",
   use_sso_of: "utilise le SSO de",
+  is_correlated_with: "est corrélée à",
 };
 export type ComplianceType = "dima" | "pdma" | "homologation" | "rgaa" | "dsfr" | "rgpd" | "eco_index" | "pra";
 
