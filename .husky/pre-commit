@@ -1,1 +1,15 @@
+# Le backend réécrit frontend/openapi/swagger.yaml à chaque démarrage, via le bind
+# mount de docker-compose.yml. Ce contrat est l'unique source du client TypeScript
+# du frontend : s'il part en retard sur le code, le client livré décrit une API qui
+# n'existe pas (cf. #2348). On l'embarque donc automatiquement plutôt que de compter
+# sur un `git add` manuel.
+#
+# Ce hook ne régénère rien : il ne fait qu'ajouter ce que le backend a déjà écrit.
+# Un contrat produit par un backend démarré sur une AUTRE branche passerait donc ici
+# sans être détecté — c'est le job « Swagger Freshness » qui l'attrape en CI.
+if ! git diff --quiet -- frontend/openapi/swagger.yaml; then
+  echo "openapi: contrat mis à jour par le backend, ajouté au commit"
+  git add frontend/openapi/swagger.yaml
+fi
+
 pnpm exec lint-staged

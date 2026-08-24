@@ -10,6 +10,7 @@
     "cmd": "ts-node src/cmd/index.ts",
     "gen": "npm run db:generate",
     "db:generate": "prisma generate",
+    "db:generate:client": "prisma generate --generator client",
     "db:reset": "prisma migrate reset",
     "db:dev": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
