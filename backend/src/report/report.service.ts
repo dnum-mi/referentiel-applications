@@ -61,6 +61,7 @@ export class ReportsService {
         },
         description: data.description,
       },
+      include: { application: true, notifier: true },
     });
   }
 

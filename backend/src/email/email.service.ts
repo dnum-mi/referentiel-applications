@@ -3,6 +3,7 @@ import { LoggerService } from "src/logger/logger.service";
 import { ConfigService } from "@nestjs/config";
 import type { Transporter } from "nodemailer";
 import * as nodemailer from "nodemailer";
+import type { EmailLog } from "@prisma/client";
 import { EmailLogService } from "./email-log.service";
 import { EmailTemplateService } from "./email-templates.services";
 import { MailSendException } from "./error/mail-send.exception";
@@ -47,7 +48,12 @@ export class EmailService {
     this.logger.log(`Email service initialized (enabled: ${this.enabled})`);
   }
 
-  /** Envoie l'e-mail puis historise l'envoi effectif (#2209). Ne journalise pas les envois en échec. */
+  /**
+   * Envoie l'e-mail puis historise l'envoi effectif (#2209). Ne journalise pas les envois en
+   * échec. Renvoie le `EmailLog` créé : les appelants s'en servent pour lier la notification
+   * in-app correspondante à cet e-mail (#2280 — suite), afin d'en afficher le contenu au clic
+   * plutôt que de rediriger.
+   */
   private async deliver({
     to,
     subject,
@@ -58,7 +64,7 @@ export class EmailService {
     subject: string;
     text: string;
     html: string;
-  }): Promise<void> {
+  }): Promise<EmailLog> {
     await this.transporter.sendMail({
       from: this.from,
       to,
@@ -66,22 +72,22 @@ export class EmailService {
       text,
       html,
     });
-    await this.emailLogService.log({ to, subject, html, text });
+    return this.emailLogService.log({ to, subject, html, text });
   }
 
   async sendActorAddedNotification(
     to: string,
     actorName: string,
     applicationName?: string,
-  ): Promise<void> {
+  ): Promise<EmailLog | null> {
     if (!this.enabled) {
       this.logger.log(`Email sending disabled. Would have sent to ${to}`);
-      return;
+      return null;
     }
 
     if (!to) {
       this.logger.warn("Cannot send email: recipient address is empty");
-      return;
+      return null;
     }
 
     const subject = "Vous avez été ajouté à une application";
@@ -96,16 +102,18 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.deliver({ to, subject, text, html });
+      const emailLog = await this.deliver({ to, subject, text, html });
       this.logger.log(
         `Actor added notification email sent successfully to ${to}`,
       );
+      return emailLog;
     } catch (error) {
       this.logger.error(`Failed to send actor added email to ${to}:`, error);
 
       this.logger.warn(
         `Email delivery failed for ${to} but was ignored due to configuration.`,
       );
+      return null;
     }
   }
 
@@ -114,19 +122,19 @@ export class EmailService {
     actorName: string,
     applicationName?: string,
     changedFields?: string,
-  ): Promise<void> {
+  ): Promise<EmailLog | null> {
     if (!this.enabled) {
       this.logger.log(
         `Email sending disabled. Would have sent modification email to ${to}`,
       );
-      return;
+      return null;
     }
 
     if (!to) {
       this.logger.warn(
         "Cannot send modification email: recipient address is empty",
       );
-      return;
+      return null;
     }
 
     const subject = "Vos informations d'acteur ont été modifiées";
@@ -142,15 +150,17 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.deliver({ to, subject, text, html });
+      const emailLog = await this.deliver({ to, subject, text, html });
       this.logger.log(
         `Actor modified notification email sent successfully to ${to}. Changed fields: ${changedFields ? "included" : "not available"}`,
       );
+      return emailLog;
     } catch (error) {
       this.logger.error(`Failed to send actor modified email to ${to}:`, error);
       this.logger.warn(
         `Email delivery failed for ${to} but was ignored due to configuration.`,
       );
+      return null;
     }
   }
 
@@ -263,19 +273,19 @@ export class EmailService {
     applicationId: string;
     applicationLabel: string;
     lastModifiedDate: Date;
-  }): Promise<void> {
+  }): Promise<EmailLog | null> {
     if (!this.enabled) {
       this.logger.log(
         `Email sending disabled. Would have sent validation reminder to ${recipientEmail}`,
       );
-      return;
+      return null;
     }
 
     if (!recipientEmail) {
       this.logger.warn(
         "Cannot send validation reminder: recipient address is empty",
       );
-      return;
+      return null;
     }
 
     const subject = `Rappel : veuillez vérifier la fiche de l'application "${applicationLabel}"`;
@@ -294,10 +304,16 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.deliver({ to: recipientEmail, subject, text, html });
+      const emailLog = await this.deliver({
+        to: recipientEmail,
+        subject,
+        text,
+        html,
+      });
       this.logger.log(
         `Application validation reminder sent successfully to ${recipientEmail} for application ${applicationId}`,
       );
+      return emailLog;
     } catch (error) {
       this.logger.error(
         `Failed to send validation reminder to ${recipientEmail}:`,
@@ -317,19 +333,19 @@ export class EmailService {
     userEmail: string;
     oldOrganization: string | null;
     newOrganization: string | null;
-  }): Promise<void> {
+  }): Promise<EmailLog | null> {
     if (!this.enabled) {
       this.logger.log(
         `Email sending disabled. Would have sent organization change notification to ${to}`,
       );
-      return;
+      return null;
     }
 
     if (!to) {
       this.logger.warn(
         "Cannot send organization change notification: recipient address is empty",
       );
-      return;
+      return null;
     }
 
     const subject = "Votre organisation a été modifiée";
@@ -345,10 +361,11 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.deliver({ to, subject, text, html });
+      const emailLog = await this.deliver({ to, subject, text, html });
       this.logger.log(
         `Organization change notification sent successfully to ${to}`,
       );
+      return emailLog;
     } catch (error) {
       this.logger.error(
         `Failed to send organization change notification to ${to}:`,
@@ -357,6 +374,7 @@ export class EmailService {
       this.logger.warn(
         `Email delivery failed for ${to} but was ignored due to configuration.`,
       );
+      return null;
     }
   }
 
@@ -372,19 +390,19 @@ export class EmailService {
     role: string;
     additionalPermissions: string[];
     changedByEmail: string | null;
-  }): Promise<void> {
+  }): Promise<EmailLog | null> {
     if (!this.enabled) {
       this.logger.log(
         `Email sending disabled. Would have sent permissions change notification to ${to}`,
       );
-      return;
+      return null;
     }
 
     if (!to) {
       this.logger.warn(
         "Cannot send permissions change notification: recipient address is empty",
       );
-      return;
+      return null;
     }
 
     const subject = "Vos droits ont été modifiés";
@@ -404,10 +422,11 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.deliver({ to, subject, text, html });
+      const emailLog = await this.deliver({ to, subject, text, html });
       this.logger.log(
         `Permissions change notification sent successfully to ${to}`,
       );
+      return emailLog;
     } catch (error) {
       this.logger.error(
         `Failed to send permissions change notification to ${to}:`,
@@ -416,6 +435,7 @@ export class EmailService {
       this.logger.warn(
         `Email delivery failed for ${to} but was ignored due to configuration.`,
       );
+      return null;
     }
   }
 
@@ -427,19 +447,19 @@ export class EmailService {
     to: string;
     userEmail: string;
     changedByEmail: string | null;
-  }): Promise<void> {
+  }): Promise<EmailLog | null> {
     if (!this.enabled) {
       this.logger.log(
         `Email sending disabled. Would have sent block notification to ${to}`,
       );
-      return;
+      return null;
     }
 
     if (!to) {
       this.logger.warn(
         "Cannot send block notification: recipient address is empty",
       );
-      return;
+      return null;
     }
 
     const subject = "Votre accès a été bloqué";
@@ -455,13 +475,15 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.deliver({ to, subject, text, html });
+      const emailLog = await this.deliver({ to, subject, text, html });
       this.logger.log(`Block notification sent successfully to ${to}`);
+      return emailLog;
     } catch (error) {
       this.logger.error(`Failed to send block notification to ${to}:`, error);
       this.logger.warn(
         `Email delivery failed for ${to} but was ignored due to configuration.`,
       );
+      return null;
     }
   }
 
@@ -473,19 +495,19 @@ export class EmailService {
     to: string;
     userEmail: string;
     changedByEmail: string | null;
-  }): Promise<void> {
+  }): Promise<EmailLog | null> {
     if (!this.enabled) {
       this.logger.log(
         `Email sending disabled. Would have sent unblock notification to ${to}`,
       );
-      return;
+      return null;
     }
 
     if (!to) {
       this.logger.warn(
         "Cannot send unblock notification: recipient address is empty",
       );
-      return;
+      return null;
     }
 
     const subject = "Votre accès a été rétabli";
@@ -501,13 +523,15 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.deliver({ to, subject, text, html });
+      const emailLog = await this.deliver({ to, subject, text, html });
       this.logger.log(`Unblock notification sent successfully to ${to}`);
+      return emailLog;
     } catch (error) {
       this.logger.error(`Failed to send unblock notification to ${to}:`, error);
       this.logger.warn(
         `Email delivery failed for ${to} but was ignored due to configuration.`,
       );
+      return null;
     }
   }
 
@@ -523,7 +547,7 @@ export class EmailService {
     status: ReportStatus;
     applicationName?: string;
     notes: string;
-  }) {
+  }): Promise<EmailLog> {
     const subject = "Anomalie notification update";
     const html = this.templateService.render("report-status-update", {
       title: subject,
@@ -537,7 +561,7 @@ export class EmailService {
     const text = this.templateService.htmlToText(html);
 
     try {
-      await this.deliver({ to: recipientEmail, subject, text, html });
+      return await this.deliver({ to: recipientEmail, subject, text, html });
     } catch (error) {
       this.logger.error(
         `Failed to send report status update email to ${recipientEmail}:`,

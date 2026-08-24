@@ -694,6 +694,151 @@ paths:
           description: Digest déclenché
       summary: Exécute le digest email des abonnés (admin)
       tags: *a4
+  /api/v2/notifications:
+    get:
+      description: Renvoie la liste paginée des notifications in-app de l'utilisateur
+        courant, les plus récentes en premier.
+      operationId: NotificationController_findAll
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: Liste paginée des notifications
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedNotificationDto"
+      summary: Lister ses notifications
+      tags: &a5
+        - Notifications
+  /api/v2/notifications/unread-count:
+    get:
+      operationId: NotificationController_countUnread
+      parameters: []
+      responses:
+        "200":
+          description: Nombre de notifications non lues
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCountDto"
+      summary: Compter ses notifications non lues
+      tags: *a5
+  /api/v2/notifications/{id}/email:
+    get:
+      description: Renvoie l'e-mail effectivement envoyé pour le même événement que
+        cette notification, à afficher au clic plutôt que de rediriger.
+      operationId: NotificationController_findEmail
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de la notification
+          schema:
+            type: string
+      responses:
+        "200":
+          description: E-mail associé à la notification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailLogDto"
+        "404":
+          description: Notification non trouvée ou sans e-mail associé
+      summary: Voir l'e-mail associé à une notification
+      tags: *a5
+  /api/v2/notifications/{id}/read:
+    patch:
+      operationId: NotificationController_markAsRead
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de la notification
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Notification marquée comme lue
+        "404":
+          description: Notification non trouvée
+      summary: Marquer une notification comme lue
+      tags: *a5
+  /api/v2/notifications/read-all:
+    patch:
+      operationId: NotificationController_markAllAsRead
+      parameters: []
+      responses:
+        "204":
+          description: Notifications marquées comme lues
+      summary: Marquer toutes ses notifications comme lues
+      tags: *a5
+  /api/v2/notifications/bulk:
+    delete:
+      operationId: NotificationController_deleteMany
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteNotificationsDto"
+      responses:
+        "204":
+          description: Notifications supprimées
+      summary: Supprimer plusieurs notifications
+      tags: *a5
+  /api/v2/notifications/{id}:
+    delete:
+      operationId: NotificationController_delete
+      parameters:
+        - name: id
+          required: true
+          in: path
+          description: ID de la notification
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Notification supprimée
+        "404":
+          description: Notification non trouvée
+      summary: Supprimer une notification
+      tags: *a5
   /api/v2/applications/{applicationId}/metadatas:
     get:
       operationId: ApplicationMetadatasController_find
@@ -761,7 +906,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedMetadataDto"
       summary: Récupérer toutes les metadatas d'une application
-      tags: &a5
+      tags: &a6
         - Metadatas
   /api/v2/applications/{applicationId}/metadatas/first-last:
     get:
@@ -781,7 +926,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FirstLastMetadataDto"
       summary: Retourne la première et la dernière metadata d'une application
-      tags: *a5
+      tags: *a6
   /api/v2/metadatas:
     get:
       operationId: MetadatasController_find
@@ -843,7 +988,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedMetadataDto"
       summary: Récupérer toutes les metadatas
-      tags: &a6
+      tags: &a7
         - Metadatas
   /api/v2/metadatas/{id}:
     get:
@@ -863,7 +1008,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/MetadataDto"
       summary: Récupérer une metadata par son ID
-      tags: *a6
+      tags: *a7
   /api/v2/applications:
     post:
       description: "
@@ -915,7 +1060,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
       summary: Créer une nouvelle application
-      tags: &a7
+      tags: &a8
         - applications
     get:
       description: >-
@@ -1364,7 +1509,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApplicationSearchResultDto"
       summary: Rechercher et filtrer les applications
-      tags: *a7
+      tags: *a8
   /api/v2/applications/count-by-month:
     get:
       operationId: ApplicationController_countByMonth
@@ -1379,7 +1524,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/CountByMonthDto"
       summary: Liste le nombre d'applications sur les 6 derniers mois
-      tags: *a7
+      tags: *a8
   /api/v2/applications/count-by-iq:
     get:
       operationId: ApplicationController_countByIq
@@ -1394,7 +1539,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/CountByIqDto"
       summary: Liste le nombre d'applications par indice de qualité (de 0% à 100%)
-      tags: *a7
+      tags: *a8
   /api/v2/applications/{applicationId}/my-perms:
     get:
       operationId: ApplicationController_getMyPerms
@@ -1436,7 +1581,7 @@ paths:
                     - ReportPost
                     - AppWritePriority
       summary: Lister les droits de l'utilisateur sur l'application
-      tags: *a7
+      tags: *a8
   /api/v2/applications/export/excel:
     get:
       description: >-
@@ -1888,7 +2033,7 @@ paths:
         "403":
           description: Accès refusé - Privilège admin requis
       summary: Exporter les applications en Excel
-      tags: *a7
+      tags: *a8
   /api/v2/applications/{applicationId}:
     get:
       description: "
@@ -1915,7 +2060,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
       summary: Récupérer une application spécifique par ID
-      tags: *a7
+      tags: *a8
     patch:
       description: " Ce endpoint permet de mettre à jour une application existante.\ 
 
@@ -1945,7 +2090,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApplicationDto"
       summary: Mettre à jour une application
-      tags: *a7
+      tags: *a8
     delete:
       description: Supprime une application par son ID.
       operationId: ApplicationController_remove
@@ -1961,7 +2106,7 @@ paths:
         "404":
           description: Application non trouvée.
       summary: Supprimer une application
-      tags: *a7
+      tags: *a8
   /api/v2/applications/{applicationId}/quality-summary:
     get:
       description: Retourne les indicateurs OUI/NON pour l'indice de qualité.
@@ -1981,7 +2126,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/QualitySummaryDto"
       summary: Récupérer le résumé qualité d'une application
-      tags: *a7
+      tags: *a8
   /api/v2/applications/data-quality/update:
     get:
       description: " Ce endpoint permet de mettre à jour l'indice de qualité des
@@ -2002,7 +2147,7 @@ paths:
         "403":
           description: Accès refusé - Privilège admin requis
       summary: Mettre à jour l'indice de qualité de toutes les applications
-      tags: *a7
+      tags: *a8
   /api/v2/applications/{applicationId}/statuses:
     post:
       operationId: StatusesController_create
@@ -2027,7 +2172,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApplicationStatusDto"
       summary: Créer un nouveau statut pour une application
-      tags: &a8
+      tags: &a9
         - statuses
     get:
       operationId: StatusesController_find
@@ -2047,7 +2192,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/ApplicationStatusDto"
       summary: Récupérer l'historique des statuts d'une application
-      tags: *a8
+      tags: *a9
   /api/v2/applications/{applicationId}/statuses/{statusId}:
     patch:
       operationId: StatusesController_update
@@ -2078,7 +2223,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApplicationStatusDto"
       summary: Modifier un statut existant
-      tags: *a8
+      tags: *a9
     delete:
       operationId: StatusesController_delete
       parameters:
@@ -2098,7 +2243,7 @@ paths:
         "204":
           description: Statut supprimé avec succès
       summary: Supprimer un statut
-      tags: *a8
+      tags: *a9
   /api/v2/tags:
     post:
       description: "
@@ -2129,7 +2274,7 @@ paths:
         "403":
           description: Accès refusé - Privilège admin requis
       summary: Créer un nouveau tag.
-      tags: &a9
+      tags: &a10
         - Tags
     get:
       description: "
@@ -2205,7 +2350,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedTagDto"
       summary: Rechercher des tags.
-      tags: *a9
+      tags: *a10
   /api/v2/tags/{id}:
     get:
       operationId: TagsController_findOne
@@ -2226,7 +2371,7 @@ paths:
         "404":
           description: Tag non trouvé
       summary: Rechercher un tag par id.
-      tags: *a9
+      tags: *a10
     patch:
       operationId: TagsController_update
       parameters:
@@ -2254,7 +2399,7 @@ paths:
         "404":
           description: Tag non trouvé
       summary: Modifier un tag.
-      tags: *a9
+      tags: *a10
     delete:
       operationId: TagsController_delete
       parameters:
@@ -2272,7 +2417,7 @@ paths:
         "404":
           description: Tag non trouvé
       summary: Supprimer un tag.
-      tags: *a9
+      tags: *a10
   /api/v2/business-division:
     get:
       description: "
@@ -2344,7 +2489,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/PaginatedBusinessDivisionDTO"
       summary: Rechercher des Business division.
-      tags: &a10
+      tags: &a11
         - Business Division
     post:
       description: "
@@ -2378,7 +2523,7 @@ paths:
         "409":
           description: Une direction métier existe déjà avec ce nom
       summary: Créer une direction métier.
-      tags: *a10
+      tags: *a11
   /api/v2/business-division/{id}:
     patch:
       operationId: BusinessDivisionController_update
@@ -2409,7 +2554,7 @@ paths:
         "409":
           description: Une direction métier existe déjà avec ce nom
       summary: Modifier une direction métier
-      tags: *a10
+      tags: *a11
     delete:
       operationId: BusinessDivisionController_remove
       parameters:
@@ -2427,7 +2572,7 @@ paths:
         "404":
           description: Direction métier non trouvée
       summary: Supprimer une direction métier
-      tags: *a10
+      tags: *a11
     get:
       operationId: BusinessDivisionController_findById
       parameters:
@@ -2447,7 +2592,7 @@ paths:
         "404":
           description: Business Division non trouvé
       summary: Rechercher un Business division par id.
-      tags: *a10
+      tags: *a11
   /api/v2/data-catalog/descriptions:
     post:
       operationId: DataCatalogController_createDescription
@@ -2465,10 +2610,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataDescriptionDto"
-      security: &a11
+      security: &a12
         - bearer: []
       summary: Créer une data description
-      tags: &a12
+      tags: &a13
         - Data Catalog
     get:
       operationId: DataCatalogController_findAllDescriptions
@@ -2523,9 +2668,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/DataDescriptionDto"
-      security: *a11
+      security: *a12
       summary: Lister les data descriptions
-      tags: *a12
+      tags: *a13
   /api/v2/data-catalog/descriptions/{id}:
     patch:
       operationId: DataCatalogController_updateDescription
@@ -2548,9 +2693,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataDescriptionDto"
-      security: *a11
+      security: *a12
       summary: Mettre à jour une data description
-      tags: *a12
+      tags: *a13
     delete:
       operationId: DataCatalogController_deleteDescription
       parameters:
@@ -2562,9 +2707,9 @@ paths:
       responses:
         "204":
           description: Data description deleted successfully
-      security: *a11
+      security: *a12
       summary: Supprimer une data description
-      tags: *a12
+      tags: *a13
   /api/v2/data-catalog/applications/{applicationId}/{dataApplicationId}:
     get:
       operationId: DataCatalogController_findOneApplicationData
@@ -2586,9 +2731,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataApplicationDto"
-      security: *a11
+      security: *a12
       summary: Détail d'une donnée dans une application
-      tags: *a12
+      tags: *a13
     patch:
       operationId: DataCatalogController_updateApplicationData
       parameters:
@@ -2615,9 +2760,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataApplicationDto"
-      security: *a11
+      security: *a12
       summary: Mettre à jour une donnée applicative
-      tags: *a12
+      tags: *a13
     delete:
       operationId: DataCatalogController_deleteApplicationData
       parameters:
@@ -2634,9 +2779,9 @@ paths:
       responses:
         "204":
           description: Data application deleted successfully
-      security: *a11
+      security: *a12
       summary: Détacher une donnée d'une application
-      tags: *a12
+      tags: *a13
   /api/v2/data-catalog/applications/{applicationId}:
     get:
       operationId: DataCatalogController_findByApplication
@@ -2688,9 +2833,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedDataApplicationDto"
-      security: *a11
+      security: *a12
       summary: Lister les données d'une application
-      tags: *a12
+      tags: *a13
     post:
       operationId: DataCatalogController_createApplicationData
       parameters:
@@ -2712,9 +2857,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataApplicationDto"
-      security: *a11
+      security: *a12
       summary: Rattacher une donnée à une application
-      tags: *a12
+      tags: *a13
   /api/v2/data-catalog/applications/{applicationId}/{dataApplicationId}/exposures:
     post:
       operationId: DataCatalogController_createExposure
@@ -2742,9 +2887,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataExposureDto"
-      security: *a11
+      security: *a12
       summary: Ajouter une exposition à une donnée applicative
-      tags: *a12
+      tags: *a13
   /api/v2/data-catalog/applications/{applicationId}/{dataApplicationId}/exposures/{exposureId}:
     patch:
       operationId: DataCatalogController_updateExposure
@@ -2777,9 +2922,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataExposureDto"
-      security: *a11
+      security: *a12
       summary: Mettre à jour une exposition
-      tags: *a12
+      tags: *a13
     delete:
       operationId: DataCatalogController_deleteExposure
       parameters:
@@ -2801,9 +2946,9 @@ paths:
       responses:
         "204":
           description: Exposure deleted successfully
-      security: *a11
+      security: *a12
       summary: Supprimer une exposition
-      tags: *a12
+      tags: *a13
   /api/v2/data-catalog/families:
     post:
       operationId: DataFamilyController_create
@@ -2821,10 +2966,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataFamilyDto"
-      security: &a13
+      security: &a14
         - bearer: []
       summary: Créer une famille de données
-      tags: &a14
+      tags: &a15
         - Data Catalog
     get:
       operationId: DataFamilyController_findAll
@@ -2877,9 +3022,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedDataFamilyDto"
-      security: *a13
+      security: *a14
       summary: Lister les familles de données
-      tags: *a14
+      tags: *a15
   /api/v2/data-catalog/families/{id}:
     patch:
       operationId: DataFamilyController_update
@@ -2904,9 +3049,9 @@ paths:
                 $ref: "#/components/schemas/DataFamilyDto"
         "404":
           description: Famille non trouvée
-      security: *a13
+      security: *a14
       summary: Mettre à jour une famille de données
-      tags: *a14
+      tags: *a15
     delete:
       operationId: DataFamilyController_remove
       parameters:
@@ -2920,9 +3065,9 @@ paths:
           description: Famille supprimée avec succès
         "404":
           description: Famille non trouvée
-      security: *a13
+      security: *a14
       summary: Supprimer une famille de données
-      tags: *a14
+      tags: *a15
   /api/v2/data-catalog/sensibilities:
     post:
       operationId: DataSensibilityController_create
@@ -2940,10 +3085,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataSensibilityDto"
-      security: &a15
+      security: &a16
         - bearer: []
       summary: Créer un niveau de sensibilité
-      tags: &a16
+      tags: &a17
         - Data Catalog
     get:
       operationId: DataSensibilityController_findAll
@@ -2996,9 +3141,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedDataSensibilityDto"
-      security: *a15
+      security: *a16
       summary: Lister les niveaux de sensibilité
-      tags: *a16
+      tags: *a17
   /api/v2/data-catalog/sensibilities/{id}:
     patch:
       operationId: DataSensibilityController_update
@@ -3023,9 +3168,9 @@ paths:
                 $ref: "#/components/schemas/DataSensibilityDto"
         "404":
           description: Niveau de sensibilité non trouvé
-      security: *a15
+      security: *a16
       summary: Mettre à jour un niveau de sensibilité
-      tags: *a16
+      tags: *a17
     delete:
       operationId: DataSensibilityController_remove
       parameters:
@@ -3039,9 +3184,9 @@ paths:
           description: Niveau de sensibilité supprimé avec succès
         "404":
           description: Niveau de sensibilité non trouvé
-      security: *a15
+      security: *a16
       summary: Supprimer un niveau de sensibilité
-      tags: *a16
+      tags: *a17
   /api/v2/applications/{applicationId}/relations:
     post:
       description: Permet de créer une relation entre deux applications.
@@ -3067,7 +3212,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RelationDto"
       summary: Créer une nouvelle relation
-      tags: &a17
+      tags: &a18
         - relation
     get:
       description: Renvoie la liste de toutes les relations d'une application donnée.
@@ -3089,7 +3234,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/RelationDto"
       summary: Récupérer toutes les relations d'une application
-      tags: *a17
+      tags: *a18
   /api/v2/applications/{applicationId}/relations/graph:
     get:
       description: Renvoie un graphe des relations de l'application avec possibilité
@@ -3117,7 +3262,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RelationGraphDto"
       summary: Récupérer le graphe des relations d'une application
-      tags: *a17
+      tags: *a18
   /api/v2/applications/{applicationId}/relations/{id}:
     get:
       operationId: RelationController_findOne
@@ -3142,7 +3287,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RelationDto"
       summary: Récupérer une relation par son identifiant unique
-      tags: *a17
+      tags: *a18
     patch:
       operationId: RelationController_update
       parameters:
@@ -3172,7 +3317,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/RelationDto"
       summary: Mettre à jour une relation
-      tags: *a17
+      tags: *a18
     delete:
       operationId: RelationController_delete
       parameters:
@@ -3192,133 +3337,6 @@ paths:
         "204":
           description: Relation supprimée avec succès
       summary: Supprimer une relation
-      tags: *a17
-  /api/v2/correlation-suggestions:
-    get:
-      description: Liste paginée des suggestions de corrélation entre applications,
-        filtrable par statut (PENDING/ACCEPTED/REJECTED) et triée par score
-        décroissant par défaut.
-      operationId: CorrelationSuggestionController_findAll
-      parameters:
-        - name: page
-          required: false
-          in: query
-          description: Numéro de page
-          schema:
-            minimum: 0
-            example: 0
-            type: number
-        - name: pageSize
-          required: false
-          in: query
-          description: Nombre de résultats par page, 0 pour supprimer la pagination
-          schema:
-            minimum: 0
-            maximum: 100
-            default: 15
-            example: 15
-            type: number
-        - name: sortBy
-          required: false
-          in: query
-          description: Champ utilisé pour le tri
-          schema:
-            example: label
-            type: string
-        - name: order
-          required: false
-          in: query
-          description: Ordre de tri
-          schema:
-            example: asc
-            type: string
-            enum:
-              - asc
-              - desc
-        - name: status
-          required: false
-          in: query
-          description: Filtre par statut de revue
-          schema:
-            $ref: "#/components/schemas/CorrelationSuggestionStatus"
-      responses:
-        "200":
-          description: Liste paginée des suggestions de corrélation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedCorrelationSuggestionDto"
-      summary: Lister les suggestions de corrélation
-      tags: &a18
-        - correlation-suggestions
-  /api/v2/correlation-suggestions/run:
-    post:
-      description: "Déclenche manuellement le moteur de détection (sinon exécuté par
-        le job planifié). Les exécutions sont sérialisées : 409 si une détection
-        est déjà en cours."
-      operationId: CorrelationSuggestionController_run
-      parameters: []
-      responses:
-        "200":
-          description: Détection exécutée
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RunCorrelationDetectionResultDto"
-        "409":
-          description: Une détection est déjà en cours
-      summary: Lancer la détection des corrélations
-      tags: *a18
-  /api/v2/correlation-suggestions/{id}/accept:
-    post:
-      description: Crée la relation is_correlated_with entre les deux applications
-        (avec traçabilité Metadata sur les deux fiches) et passe la suggestion
-        en ACCEPTED.
-      operationId: CorrelationSuggestionController_accept
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: Identifiant de la suggestion
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Suggestion acceptée, relation créée
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CorrelationSuggestionDto"
-        "404":
-          description: Suggestion non trouvée
-        "409":
-          description: Suggestion déjà revue
-      summary: Accepter une suggestion de corrélation
-      tags: *a18
-  /api/v2/correlation-suggestions/{id}/reject:
-    post:
-      description: Passe la suggestion en REJECTED sans créer de relation ; la paire
-        ne sera plus re-proposée par le moteur.
-      operationId: CorrelationSuggestionController_reject
-      parameters:
-        - name: id
-          required: true
-          in: path
-          description: Identifiant de la suggestion
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Suggestion rejetée
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CorrelationSuggestionDto"
-        "404":
-          description: Suggestion non trouvée
-        "409":
-          description: Suggestion déjà revue
-      summary: Rejeter une suggestion de corrélation
       tags: *a18
   /api/v2/organizations:
     post:
@@ -6179,6 +6197,196 @@ paths:
           description: Filtre sauvegardé non trouvé
       summary: Supprimer un filtre sauvegardé
       tags: *a36
+  /api/v2/quality-campaigns:
+    post:
+      operationId: QualityCampaignController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQualityCampaignDto"
+      responses:
+        "201":
+          description: Campagne créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+      summary: Créer une campagne de mise en qualité
+      tags: &a37
+        - Quality Campaigns
+    get:
+      operationId: QualityCampaignController_findAll
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: Liste des campagnes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedQualityCampaignDto"
+      summary: Lister les campagnes de mise en qualité
+      tags: *a37
+  /api/v2/quality-campaigns/{id}:
+    get:
+      operationId: QualityCampaignController_findOne
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Campagne
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Détail d'une campagne de mise en qualité, avec son impact
+      tags: *a37
+    patch:
+      operationId: QualityCampaignController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQualityCampaignDto"
+      responses:
+        "200":
+          description: Campagne mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Modifier une campagne de mise en qualité
+      tags: *a37
+    delete:
+      operationId: QualityCampaignController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Campagne supprimée
+        "404":
+          description: Campagne non trouvée
+      summary: Supprimer une campagne de mise en qualité
+      tags: *a37
+  /api/v2/quality-campaigns/{id}/preview:
+    get:
+      operationId: QualityCampaignController_preview
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Aperçu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignPreviewDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Aperçu à la volée des applications actuellement matchées par le filtre
+        de la campagne
+      tags: *a37
+  /api/v2/quality-campaigns/{id}/send:
+    post:
+      operationId: QualityCampaignController_send
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Campagne envoyée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Déclencher immédiatement l'envoi de la campagne aux acteurs des
+        applications ciblées
+      tags: *a37
+  /api/v2/quality-campaigns/{id}/send-sponsor-report:
+    post:
+      operationId: QualityCampaignController_sendSponsorReport
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Rapport envoyé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Envoyer au sponsor de la campagne un email récapitulatif de l'impact
+        courant
+      tags: *a37
   /api/v2/health-check:
     get:
       description: Exécute une requête basique vers la base de données pour vérifier
@@ -6422,7 +6630,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: &a37
+          enum: &a38
             - active
             - expired
             - revoked
@@ -6527,7 +6735,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: *a37
+          enum: *a38
           type: string
           example: active
           description: Statut du token
@@ -6941,6 +7149,87 @@ components:
       required:
         - results
         - total
+    NotificationType:
+      type: string
+      enum:
+        - report_created
+        - report_status_changed
+        - actor_added
+        - actor_modified
+        - application_followed_changed
+        - application_validation_reminder
+        - user_organization_changed
+        - user_permissions_changed
+        - user_blocked
+        - user_unblocked
+        - campaign_quality_reminder
+    NotificationDto:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          allOf:
+            - $ref: "#/components/schemas/NotificationType"
+        message:
+          type: string
+        link:
+          type: string
+          nullable: true
+        applicationId:
+          type: string
+          nullable: true
+        emailLogId:
+          type: string
+          nullable: true
+          description: "ID de l'e-mail envoyé pour ce même événement, si applicable :
+            cliquer sur la notification affiche son contenu plutôt que de
+            rediriger"
+        isRead:
+          type: boolean
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - type
+        - message
+        - isRead
+        - createdAt
+    PaginatedNotificationDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    UnreadCountDto:
+      type: object
+      properties:
+        count:
+          type: number
+          example: 3
+      required:
+        - count
+    DeleteNotificationsDto:
+      type: object
+      properties:
+        ids:
+          minItems: 1
+          description: IDs des notifications à supprimer
+          type: array
+          items:
+            type: string
+      required:
+        - ids
     MetadataAction:
       type: string
       enum:
@@ -7226,7 +7515,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a38
+          example: &a39
             - population 1
             - population 2
           description: population associated with the application
@@ -7237,7 +7526,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a39
+          example: &a40
             - finance
             - HR
           description: Purposes of the application
@@ -7250,7 +7539,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a40
+          example: &a41
             - tag1
             - tag2
           type: array
@@ -7540,7 +7829,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a38
+          example: *a39
           description: population associated with the application
           type: array
           items:
@@ -7549,7 +7838,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a39
+          example: *a40
           description: Purposes of the application
           type: array
           items:
@@ -7560,7 +7849,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a40
+          example: *a41
           type: array
           items:
             type: string
@@ -8033,7 +8322,6 @@ components:
         - is_service_user_of
         - is_data_user_of
         - use_sso_of
-        - is_correlated_with
     RelationApplicationDto:
       type: object
       properties:
@@ -8159,102 +8447,6 @@ components:
         - nodes
         - edges
         - rootId
-    CorrelationSuggestionStatus:
-      type: string
-      enum:
-        - PENDING
-        - ACCEPTED
-        - REJECTED
-    CorrelationSignalsDto:
-      type: object
-      properties:
-        nameSimilarity:
-          type: number
-          description: Similarité trigramme maximale entre les label/shortName [0..1]
-        sharedDataCount:
-          type: number
-          description: Nombre de DataDescription partagées
-        sharedActorCount:
-          type: number
-          description: Nombre d'acteurs communs (même email) aux deux applications
-      required:
-        - nameSimilarity
-        - sharedDataCount
-        - sharedActorCount
-    CorrelationSuggestionDto:
-      type: object
-      properties:
-        id:
-          type: string
-        applicationSourceId:
-          type: string
-        applicationTargetId:
-          type: string
-        sourceApplication:
-          $ref: "#/components/schemas/ApplicationMinimalDto"
-        targetApplication:
-          $ref: "#/components/schemas/ApplicationMinimalDto"
-        score:
-          type: number
-          description: Score pondéré de la suggestion (plus élevé = plus probable)
-        signals:
-          $ref: "#/components/schemas/CorrelationSignalsDto"
-        status:
-          allOf:
-            - $ref: "#/components/schemas/CorrelationSuggestionStatus"
-        createdAt:
-          format: date-time
-          type: string
-        reviewedById:
-          type: string
-          nullable: true
-        reviewedAt:
-          format: date-time
-          type: string
-          nullable: true
-      required:
-        - id
-        - applicationSourceId
-        - applicationTargetId
-        - sourceApplication
-        - targetApplication
-        - score
-        - signals
-        - status
-        - createdAt
-        - reviewedById
-        - reviewedAt
-    PaginatedCorrelationSuggestionDto:
-      type: object
-      properties:
-        results:
-          description: Array of results
-          type: array
-          items:
-            $ref: "#/components/schemas/CorrelationSuggestionDto"
-        total:
-          type: number
-          description: Total number of items
-          example: 100
-      required:
-        - results
-        - total
-    RunCorrelationDetectionResultDto:
-      type: object
-      properties:
-        candidateCount:
-          type: number
-          description: Paires candidates remontées par la détection (avant seuil)
-        createdCount:
-          type: number
-          description: Suggestions PENDING créées
-        updatedCount:
-          type: number
-          description: Suggestions PENDING dont le score a été rafraîchi
-      required:
-        - candidateCount
-        - createdCount
-        - updatedCount
     CreateOrganizationDto:
       type: object
       properties:
@@ -8690,7 +8882,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a41
+          enum: &a42
             - 96
             - 72
             - 48
@@ -8721,7 +8913,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a42
+          enum: &a43
             - OK
             - KO
           type: string
@@ -8732,7 +8924,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a43
+          enum: &a44
             - 48
             - 24
             - 2
@@ -8752,7 +8944,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a44
+          enum: &a45
             - S3
             - LOCAL
             - EXTERNE
@@ -8763,7 +8955,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a45
+          enum: &a46
             - OK
             - KO
           type: string
@@ -8773,7 +8965,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a46
+          enum: &a47
             - homologuee
             - en_cours
             - dispensee
@@ -8814,7 +9006,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a41
+          enum: *a42
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -8838,7 +9030,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a42
+          enum: *a43
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -8847,7 +9039,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a43
+          enum: *a44
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -8863,7 +9055,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a44
+          enum: *a45
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -8871,7 +9063,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a45
+          enum: *a46
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -8879,7 +9071,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a46
+          enum: *a47
           type: string
           description: Homologation status
         homologation_date_end:
@@ -8938,7 +9130,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a41
+          enum: *a42
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -8962,7 +9154,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a42
+          enum: *a43
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -8971,7 +9163,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a43
+          enum: *a44
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -8987,7 +9179,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a44
+          enum: *a45
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -8995,7 +9187,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a45
+          enum: *a46
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -9003,7 +9195,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a46
+          enum: *a47
           type: string
           description: Homologation status
         homologation_date_end:
@@ -9938,6 +10130,163 @@ components:
       required:
         - name
         - filters
+    CreateQualityCampaignDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: Nom donné à la campagne
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications définissant les cibles de la
+            campagne (mêmes clés que la query de GET /applications)
+        message:
+          type: string
+          maxLength: 2000
+          description: Message incitatif inclus dans l'email de relance envoyé aux acteurs
+            des applications ciblées
+        sponsorEmail:
+          type: string
+          format: email
+          description: Email du sponsor (porteur) de la campagne, destinataire des
+            rapports de résultats
+        startDate:
+          format: date-time
+          type: string
+          description: "Date de démarrage de la campagne : déclenche l'envoi automatique
+            aux acteurs"
+        endDate:
+          format: date-time
+          type: string
+          description: Date de fin indicative de la campagne (affichage uniquement)
+      required:
+        - name
+        - filters
+        - startDate
+    QualityCampaignDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications définissant les cibles
+        message:
+          type: string
+          nullable: true
+        sponsorEmail:
+          type: string
+          nullable: true
+        startDate:
+          format: date-time
+          type: string
+        endDate:
+          format: date-time
+          type: string
+          nullable: true
+        sentAt:
+          format: date-time
+          type: string
+          nullable: true
+        createdAt:
+          format: date-time
+          type: string
+        status:
+          enum:
+            - scheduled
+            - sent
+          type: string
+          description: « scheduled » tant que la campagne n'a pas été envoyée (date de
+            début non atteinte, ou envoi manuel pas encore déclenché), « sent »
+            une fois envoyée
+        targetCount:
+          type: number
+          description: Nombre d'applications ciblées par la campagne
+        averageIqAtStart:
+          type: number
+          nullable: true
+          description: IQ moyen des applications ciblées au moment de l'envoi
+        averageIqCurrent:
+          type: number
+          nullable: true
+          description: IQ moyen actuel des applications ciblées
+        averageDelta:
+          type: number
+          nullable: true
+          description: Évolution moyenne de l'IQ depuis l'envoi de la campagne
+      required:
+        - id
+        - name
+        - filters
+        - startDate
+        - createdAt
+        - status
+        - targetCount
+    PaginatedQualityCampaignDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/QualityCampaignDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    QualityCampaignPreviewDto:
+      type: object
+      properties:
+        matchedCount:
+          type: number
+          description: Nombre d'applications actuellement matchées par le filtre
+        averageIq:
+          type: number
+          description: IQ moyen actuel des applications matchées par le filtre
+      required:
+        - matchedCount
+        - averageIq
+    UpdateQualityCampaignDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: Nom donné à la campagne
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications définissant les cibles de la
+            campagne (mêmes clés que la query de GET /applications)
+        message:
+          type: string
+          maxLength: 2000
+          description: Message incitatif inclus dans l'email de relance envoyé aux acteurs
+            des applications ciblées
+        sponsorEmail:
+          type: string
+          format: email
+          description: Email du sponsor (porteur) de la campagne, destinataire des
+            rapports de résultats
+        startDate:
+          format: date-time
+          type: string
+          description: "Date de démarrage de la campagne : déclenche l'envoi automatique
+            aux acteurs"
+        endDate:
+          format: date-time
+          type: string
+          description: Date de fin indicative de la campagne (affichage uniquement)
     HealthCheckDto:
       type: object
       properties:
@@ -9950,7 +10299,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a47
+          enum: &a48
             - OK
             - KO
           type: string
@@ -9972,7 +10321,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a47
+          enum: *a48
           type: string
           description: État de la connexion à la base de données
           example: OK

@@ -20,7 +20,7 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
   - [2.8 Sources de données](#28-sources-de-données)
 - [3. Indice de Qualité (IQ)](#3-indice-de-qualité-iq)
 - [4. Signalements](#4-signalements)
-- [5. Abonnements et notifications email](#5-abonnements-et-notifications-email)
+- [5. Abonnements et notifications](#5-abonnements-et-notifications)
 - [6. Historique global des modifications](#6-historique-global-des-modifications)
 - [7. Tableaux de bord](#7-tableaux-de-bord)
   - [7.1 Qualité générale](#71-qualité-générale)
@@ -193,7 +193,7 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 - Signalement **global** : `CreateGlobalReport` (Contributeur+).
 - Gestion (changement de statut, notes, suppression) : `ReportManage` (Contributeur+).
 
-## 5. Abonnements et notifications email
+## 5. Abonnements et notifications
 
 **Ce que ça fait.** Depuis une fiche, l'utilisateur **s'abonne** pour être notifié par email à chaque modification, et se désabonne à tout moment. La liste des applications suivies est consultable dans le profil (onglet « Mes abonnements »), et le catalogue peut être filtré sur les applications suivies.
 
@@ -205,6 +205,17 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 **Permission.** Tous les utilisateurs connectés (action sur son propre compte).
 
 > **Note de terminologie.** Le commit `569430a8` parle de « favoris », mais l'implémentation effective repose sur le mécanisme d'**abonnement** (`subscribe`/`unsubscribe`) ci-dessus ; il n'existe pas d'entité « favori » distincte dans le code.
+
+### 5.1 Centre de notifications in-app (#2280)
+
+**Ce que ça fait.** En complément de l'email (canal principal), une cloche dans l'en-tête affiche un badge du nombre de notifications non lues. Un clic ouvre un panneau listant les événements récents pertinents pour l'utilisateur connecté (lu/non-lu distingués visuellement), avec une action « Tout marquer comme lu » et un lien vers l'historique complet (`/notifications`). Événements couverts : signalement créé (aux gestionnaires `ReportManage`) ou traité (à son auteur), acteur ajouté/modifié, application suivie modifiée, rappel de validation de fiche, organisation/permissions changées, compte bloqué/débloqué. Pas de rafraîchissement en tâche de fond : le compteur se met à jour à chaque navigation.
+
+**Où c'est dans le code.**
+
+- Back : module `backend/src/notification/` (`notification.controller.ts`, `notification.service.ts` — persistance, pagination, `findUsersWithReportManagePermission`) ; déclenché en complément de chaque email existant (`report/user-notification.service.ts`, `actor/actor.service.ts`, `user/user.service.ts`, `email/cron/email-cron.service.ts`, `email/cron/application-validation-cron.service.ts`). Schéma `notification.prisma` (`Notification`, `NotificationType`).
+- Front : `frontend/src/stores/notificationStore.ts` ; cloche `frontend/src/components/notification/NotificationBell.vue` (slot `#after-quick-links` de `App.vue`) ; historique `frontend/src/views/NotificationsPage.vue`.
+
+**Permission.** Tous les utilisateurs connectés (notifications scopées à l'utilisateur courant).
 
 ## 6. Historique global des modifications
 

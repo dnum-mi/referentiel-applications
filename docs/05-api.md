@@ -212,6 +212,14 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 | -------------------------------------------- | --------------------------------------------------------------------------- |
 | `GET /saved-filters` · `POST` · `DELETE :id` | Filtres de recherche sauvegardés par l'utilisateur courant (upsert par nom) |
 
+### Notifications in-app (#2280)
+
+| Verbe & chemin                                                    | Rôle                                                                                |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `GET /notifications`                                              | Liste paginée des notifications de l'utilisateur courant (plus récentes en premier) |
+| `GET /notifications/unread-count`                                 | Nombre de notifications non lues                                                    |
+| `PATCH /notifications/:id/read` · `PATCH /notifications/read-all` | Marquer une notification (ou toutes) comme lue(s)                                   |
+
 ### Tokens (clés d'API)
 
 | Verbe & chemin                                       | Rôle               |

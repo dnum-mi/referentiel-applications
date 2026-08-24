@@ -26,6 +26,8 @@ export interface Props<T> {
   paginator?: boolean;
   dataTestId?: string;
   emptyMessage?: string;
+  /** Affiche une colonne de sélection multiple (cases à cocher) — nécessite `dataKey`. */
+  selectable?: boolean;
 }
 
 const props = withDefaults(defineProps<Props<T>>(), {
@@ -40,6 +42,7 @@ const props = withDefaults(defineProps<Props<T>>(), {
   paginator: false,
   dataTestId: "ref-app-table",
   emptyMessage: "Aucune donnée ne correspond à votre recherche.",
+  selectable: false,
 });
 
 const emit = defineEmits<{
@@ -47,6 +50,8 @@ const emit = defineEmits<{
   page: [event: DataTablePageEvent];
   columnResize: [event: { field: string; width: string }];
 }>();
+
+const selection = defineModel<T[]>("selection", { default: () => [] });
 
 const internalSortField = ref(props.sortField);
 const internalSortOrder = ref(props.sortOrder);
@@ -127,6 +132,7 @@ watch(
 <template>
   <section class="fr-table" :aria-label="`Tableau de ${totalRecords} éléments`">
     <DataTable
+      v-model:selection="selection"
       :value="items"
       :data-key="dataKey"
       :lazy="lazy"
@@ -156,6 +162,8 @@ watch(
       <template #empty>
         <output class="fr-py-2w fr-text--center" aria-live="polite" style="display: block">{{ emptyMessage }}</output>
       </template>
+
+      <Column v-if="selectable" selection-mode="multiple" header-style="width: 3rem" :exportable="false" />
 
       <Column
         v-for="column in columns"
@@ -296,5 +304,39 @@ watch(
 :deep(.p-skeleton) {
   background-color: var(--background-alt-grey);
   border-radius: 4px;
+}
+
+/* Cases à cocher de sélection : bleu DSFR de l'appli plutôt que le vert par défaut du thème
+   PrimeVue Aura — fond bleu clair (action-low) + bordure/coche bleu France (action-high), plus
+   doux qu'un aplat bleu plein. Le style de PrimeVue est injecté dynamiquement en JS (useStyle) :
+   comme pour les icônes de tri ci-dessus, seul `!important` le bat de façon fiable. */
+:deep(.p-checkbox-box) {
+  border-color: var(--border-default-grey) !important;
+}
+
+:deep(.p-checkbox-box:hover) {
+  border-color: var(--background-action-high-blue-france) !important;
+}
+
+:deep(.p-checkbox-box[data-p="checked"]),
+:deep(.p-checkbox-box.p-highlight) {
+  background: var(--background-action-low-blue-france) !important;
+  border-color: var(--background-action-high-blue-france) !important;
+}
+
+:deep(.p-checkbox:not(.p-disabled) .p-checkbox-box[data-p="checked"]:hover),
+:deep(.p-checkbox:not(.p-disabled) .p-checkbox-box.p-highlight:hover) {
+  background: var(--background-action-low-blue-france-hover) !important;
+  border-color: var(--background-action-high-blue-france-hover) !important;
+}
+
+:deep(.p-checkbox-box[data-p="checked"] .p-checkbox-icon),
+:deep(.p-checkbox-box.p-highlight .p-checkbox-icon) {
+  color: var(--background-action-high-blue-france) !important;
+}
+
+:deep(.p-checkbox.p-focus .p-checkbox-box) {
+  outline-color: var(--background-action-high-blue-france) !important;
+  box-shadow: 0 0 0 2px var(--background-action-high-blue-france) !important;
 }
 </style>

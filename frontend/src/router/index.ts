@@ -80,6 +80,12 @@ const routes = [
     meta: { requiresAuth: true, title: "Profil d'application - Référentiel des applications" },
   },
   {
+    name: routeNames.NOTIFICATIONS,
+    path: "/notifications",
+    component: () => import("@/views/NotificationsPage.vue"),
+    meta: { requiresAuth: true, title: "Notifications - Référentiel des applications" },
+  },
+  {
     name: routeNames.PROFILE,
     path: "/profil",
     component: () => import("@/views/UserProfilePage.vue"),

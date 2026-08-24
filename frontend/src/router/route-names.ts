@@ -10,6 +10,7 @@ export const routeNames = {
   CREATEAPP: "creer-application",
 
   REPORTS: "signalements",
+  NOTIFICATIONS: "notifications",
   QUALITYPAGE: "qualite-generale",
   TIMEPAGE: "time",
   HISTORY: "historique",

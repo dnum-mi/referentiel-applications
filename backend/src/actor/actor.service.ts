@@ -1,11 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { NotificationType, Prisma } from "@prisma/client";
 
 type ActorWithRelations = Prisma.ActorGetPayload<{
   include: { actorType: true; organization: true; application: true };
 }>;
 import { BaseService } from "src/common/base.service";
 import { EmailService } from "src/email/email.service";
+import { NotificationService } from "src/notification/notification.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ApplicationService } from "src/applications/application.service";
 import {
@@ -38,6 +39,7 @@ export class ActorService {
     private readonly applicationService: ApplicationService,
     metadataService: MetadatasService,
     private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
     private readonly prisma: PrismaService,
     private readonly organizationMaiaReferencesService: OrganizationMaiaReferencesService,
   ) {
@@ -269,23 +271,23 @@ export class ActorService {
       },
     );
 
-    const changedFields = oldActor
-      ? this.getChangedFieldsHtml(oldActor, updatedActor)
-      : "";
+    const changedFieldLabels = oldActor
+      ? this.getChangedFieldLabels(oldActor, updatedActor)
+      : [];
 
     await this.sendActorNotificationIfEnabled(
       updatedActor,
       "updated",
-      changedFields,
+      changedFieldLabels,
     );
 
     return updatedActor;
   }
 
-  private getChangedFieldsHtml(
+  private getChangedFieldLabels(
     oldActor: Prisma.ActorGetPayload<{ include: { actorType: true } }>,
     newActor: Prisma.ActorGetPayload<{ include: { actorType: true } }>,
-  ): string {
+  ): string[] {
     const changes: string[] = [];
 
     const fieldLabels = {
@@ -300,9 +302,7 @@ export class ActorService {
     for (const field of fields) {
       const label = fieldLabels[field];
       if (oldActor[field] !== newActor[field]) {
-        changes.push(
-          `<p style="margin: 5px 0; font-size: 14px; color: #161616;">• <strong>${label}</strong></p>`,
-        );
+        changes.push(label);
       }
     }
 
@@ -316,13 +316,20 @@ export class ActorService {
     for (const field of fieldsActor) {
       const label = fieldActorLabels[field];
       if (oldActor.actorType[field] !== newActor.actorType[field]) {
-        changes.push(
-          `<p style="margin: 5px 0; font-size: 14px; color: #161616;">• <strong>${label}</strong></p>`,
-        );
+        changes.push(label);
       }
     }
 
-    return changes.length > 0 ? changes.join("") : "";
+    return changes;
+  }
+
+  private static changedFieldLabelsToHtml(labels: string[]): string {
+    return labels
+      .map(
+        (label) =>
+          `<p style="margin: 5px 0; font-size: 14px; color: #161616;">• <strong>${label}</strong></p>`,
+      )
+      .join("");
   }
 
   public async delete(id: string, applicationId: string, requestorId: string) {
@@ -422,7 +429,7 @@ export class ActorService {
       "email" | "firstname" | "lastname" | "applicationId"
     >,
     event: "created" | "updated" = "created",
-    changedFieldsHtml?: string,
+    changedFieldLabels: string[] = [],
   ): Promise<void> {
     if (!actor.email) {
       return;
@@ -430,17 +437,8 @@ export class ActorService {
 
     const user = await this.prisma.user.findUnique({
       where: { email: actor.email },
-      select: { emailNotificationsEnabled: true },
+      select: { id: true, emailNotificationsEnabled: true },
     });
-
-    const emailNotificationsEnabled = user?.emailNotificationsEnabled ?? true;
-
-    if (!emailNotificationsEnabled) {
-      Logger.log(
-        `Email notifications disabled for user ${actor.email}. Skipping notification.`,
-      );
-      return;
-    }
 
     const actorName =
       [actor.firstname, actor.lastname].filter(Boolean).join(" ") ||
@@ -462,18 +460,50 @@ export class ActorService {
       }
     }
 
-    if (event === "created") {
-      await this.emailService.sendActorAddedNotification(
+    const emailNotificationsEnabled = user?.emailNotificationsEnabled ?? true;
+    let emailLog = null;
+
+    if (!emailNotificationsEnabled) {
+      Logger.log(
+        `Email notifications disabled for user ${actor.email}. Skipping notification.`,
+      );
+    } else if (event === "created") {
+      emailLog = await this.emailService.sendActorAddedNotification(
         actor.email,
         actorName,
         applicationName,
       );
     } else {
-      await this.emailService.sendActorModifiedNotification(
+      emailLog = await this.emailService.sendActorModifiedNotification(
         actor.email,
         actorName,
         applicationName,
-        changedFieldsHtml || "",
+        ActorService.changedFieldLabelsToHtml(changedFieldLabels),
+      );
+    }
+
+    if (user) {
+      const changedFieldsSuffix =
+        changedFieldLabels.length > 0
+          ? ` (${changedFieldLabels.join(", ")})`
+          : "";
+      const message =
+        event === "created"
+          ? `Vous avez été ajouté comme acteur${applicationName ? ` sur ${applicationName}` : ""}.`
+          : `Vos informations d'acteur${applicationName ? ` sur ${applicationName}` : ""} ont été modifiées${changedFieldsSuffix}.`;
+      await this.notificationService.create(
+        user.id,
+        event === "created"
+          ? NotificationType.actor_added
+          : NotificationType.actor_modified,
+        message,
+        {
+          link: actor.applicationId
+            ? `/applications/${actor.applicationId}`
+            : undefined,
+          applicationId: actor.applicationId ?? undefined,
+          emailLogId: emailLog?.id,
+        },
       );
     }
   }

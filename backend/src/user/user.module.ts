@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { CommonModule } from "src/common/common.module";
 import { EmailModule } from "src/email/email.module";
 import { LoggerService } from "src/logger/logger.service";
+import { NotificationModule } from "src/notification/notification.module";
 import { OrganizationMaiaReferencesModule } from "src/organization-maia-references/organization-maia-references.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { UserController } from "./user.controller";
@@ -16,6 +17,7 @@ import { ScopedPermissionService } from "./scope-permission/scoped-permission.se
     CommonModule,
     OrganizationMaiaReferencesModule,
     EmailModule,
+    NotificationModule,
   ],
   controllers: [UserController],
   providers: [

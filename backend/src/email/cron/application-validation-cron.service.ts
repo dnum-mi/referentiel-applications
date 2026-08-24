@@ -1,8 +1,10 @@
 import { Injectable, OnApplicationBootstrap } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Cron } from "@nestjs/schedule";
+import { NotificationType } from "@prisma/client";
 import { RETIRED_STATUSES } from "src/applications/constants/status-groups";
 import { LoggerService } from "src/logger/logger.service";
+import { NotificationService } from "src/notification/notification.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { EmailService } from "../email.service";
 
@@ -24,6 +26,7 @@ export class ApplicationValidationCronService
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
     private readonly logger: LoggerService,
     private readonly configService: ConfigService,
   ) {
@@ -155,33 +158,64 @@ export class ApplicationValidationCronService
           ? new Date(application.metadatas[0].createdAt)
           : sixMonthsThresholdDate;
 
+        // Notification in-app : complément persistant, indépendant de l'opt-out email. Résolue
+        // en amont pour lier chaque notification à l'e-mail effectivement envoyé au même
+        // utilisateur (#2280 — suite), quand un tel e-mail existe.
+        const recipientUsers = await this.prisma.user.findMany({
+          where: { email: { in: recipientEmailsList } },
+          select: { id: true, email: true },
+        });
+
         const eligibleEmailsList =
           await this.getEmailsWithNotificationsEnabled(recipientEmailsList);
 
+        const emailLogIdByEmail = new Map<string, string>();
         if (eligibleEmailsList.length === 0) {
           this.logger.debug(
             `App [${application.label}] : alertes désactivées par les utilisateurs.`,
           );
-          continue;
+        } else {
+          for (const emailAddress of eligibleEmailsList) {
+            try {
+              const emailLog =
+                await this.emailService.sendApplicationValidationReminderEmail({
+                  recipientEmail: emailAddress,
+                  applicationId: application.id,
+                  applicationLabel: application.label,
+                  lastModifiedDate,
+                });
+              if (emailLog) {
+                emailLogIdByEmail.set(emailAddress, emailLog.id);
+              }
+              this.logger.log(
+                `Email envoyé à ${emailAddress} pour [${application.label}]`,
+              );
+            } catch (error) {
+              this.logger.error(
+                `Erreur mail (${emailAddress}) sur ${application.id}:`,
+                error,
+              );
+            }
+          }
         }
 
-        for (const emailAddress of eligibleEmailsList) {
-          try {
-            await this.emailService.sendApplicationValidationReminderEmail({
-              recipientEmail: emailAddress,
-              applicationId: application.id,
-              applicationLabel: application.label,
-              lastModifiedDate,
-            });
-            this.logger.log(
-              `Email envoyé à ${emailAddress} pour [${application.label}]`,
-            );
-          } catch (error) {
-            this.logger.error(
-              `Erreur mail (${emailAddress}) sur ${application.id}:`,
-              error,
-            );
-          }
+        await Promise.all(
+          recipientUsers.map((user) =>
+            this.notificationService.create(
+              user.id,
+              NotificationType.application_validation_reminder,
+              `La fiche de l'application ${application.label} n'a pas été mise à jour depuis plus de 6 mois.`,
+              {
+                link: `/applications/${application.id}`,
+                applicationId: application.id,
+                emailLogId: emailLogIdByEmail.get(user.email),
+              },
+            ),
+          ),
+        );
+
+        if (eligibleEmailsList.length === 0) {
+          continue;
         }
 
         await this.prisma.notificationLog.create({

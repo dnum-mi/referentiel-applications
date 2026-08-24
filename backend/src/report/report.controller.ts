@@ -84,11 +84,13 @@ export class ReportsController {
     @User() requestor: Requestor,
     @Body() requestData: CreateReportRequestDto,
   ) {
-    return this.service.create(
+    const report = await this.service.create(
       requestData,
       requestor,
       requestData.applicationId,
     );
+    await this.notifyUserService.notifyManagersOnReportCreated(report);
+    return report;
   }
 
   /**
@@ -163,7 +165,13 @@ export class ApplicationReportsController {
     @Body() requestData: CreateReportRequestDto,
     @Param("applicationId") applicationId: string,
   ) {
-    return this.service.create(requestData, requestor, applicationId);
+    const report = await this.service.create(
+      requestData,
+      requestor,
+      applicationId,
+    );
+    await this.notifyUserService.notifyManagersOnReportCreated(report);
+    return report;
   }
 
   /**

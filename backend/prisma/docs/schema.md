@@ -764,6 +764,17 @@ erDiagram
   DateTime sentAt
   String(100) type
 }
+"Notification" {
+  String id PK
+  String userId FK
+  NotificationType type
+  String message
+  String link "nullable"
+  String applicationId FK "nullable"
+  String emailLogId FK "nullable"
+  Boolean isRead
+  DateTime createdAt
+}
 ```
 
 ### `NotificationLog`
@@ -777,6 +788,25 @@ Properties as follows:
 - `applicationId`: Identifiant de l'application concernée
 - `sentAt`: Date d'envoi de la notification
 - `type`: Type de notification envoyée
+
+### `Notification`
+
+Notification in-app persistée pour un utilisateur (cloche du header), en complément
+du canal email existant (#2280).
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `userId`: Utilisateur destinataire de la notification
+- `type`: Type d'événement à l'origine de la notification
+- `message`: Message affiché à l'utilisateur
+- `link`: Lien frontend vers la ressource concernée (ex. fiche application, signalement)
+- `applicationId`: Application concernée, si applicable (permet de retrouver le contexte même après suppression du lien)
+- `emailLogId`
+  > E-mail effectivement envoyé pour ce même événement, si applicable : cliquer sur la
+  > notification affiche cet e-mail plutôt que de rediriger (#2280 — suite).
+- `isRead`: Si la notification a été lue
+- `createdAt`: Date de création
 
 ## Organizations
 

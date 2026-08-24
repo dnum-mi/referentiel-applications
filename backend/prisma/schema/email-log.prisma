@@ -12,6 +12,8 @@ model EmailLog {
   text    String
   /// Date et heure d'envoi
   sentAt  DateTime @default(now())
+  /// Notifications in-app pointant vers cet e-mail (#2280 — suite)
+  notifications Notification[]
 
   @@index([sentAt])
 }

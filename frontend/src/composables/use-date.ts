@@ -1,4 +1,5 @@
-import { format, parseISO } from "date-fns";
+import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export function formatDate(isoDate: string): string {
   const date = new Date(isoDate);
@@ -9,6 +10,14 @@ export function formatDate(isoDate: string): string {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
+}
+
+/**
+ * Formats a date as a relative duration ("il y a 2 heures"), for notification feeds.
+ */
+export function formatRelativeDate(isoDate: string | Date): string {
+  const d = typeof isoDate === "string" ? parseISO(isoDate) : isoDate;
+  return formatDistanceToNow(d, { addSuffix: true, locale: fr });
 }
 
 export function formatDateFR(isoDate: string | Date): string {

@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { CommonModule } from "src/common/common.module";
 import { EmailModule } from "src/email/email.module";
 import { MetadatasModule } from "src/metadatas/metadatas.module";
+import { NotificationModule } from "src/notification/notification.module";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { ApplicationModule } from "src/applications/application.module";
 import { OrganizationMaiaReferencesModule } from "src/organization-maia-references/organization-maia-references.module";
@@ -17,6 +18,7 @@ import { ActorService } from "./actor.service";
     ApplicationModule,
     MetadatasModule,
     EmailModule,
+    NotificationModule,
     CommonModule,
     OrganizationMaiaReferencesModule,
   ],

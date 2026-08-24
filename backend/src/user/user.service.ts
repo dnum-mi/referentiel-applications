@@ -3,8 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma, Roles, UserType } from "@prisma/client";
+import { NotificationType, Prisma, Roles, UserType } from "@prisma/client";
 import { PaginatedResponseDto } from "src/common/dto";
+import { NotificationService } from "src/notification/notification.service";
 import { OrganizationMaiaReferencesService } from "src/organization-maia-references/organization-maia-references.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
@@ -29,6 +30,7 @@ export class UserService {
     private readonly scopedPermissionService: ScopedPermissionService,
     private readonly logger: LoggerService,
     private readonly emailService: EmailService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async findOrCreateByEmail(email: string): Promise<UserEntity | null> {
@@ -150,12 +152,19 @@ export class UserService {
 
     if (organizationChanged && user.email) {
       const newOrg = user.organization;
-      await this.emailService.sendUserOrganizationChangedNotification({
-        to: user.email,
-        userEmail: user.email,
-        oldOrganization: previousUser?.organization?.path ?? null,
-        newOrganization: newOrg?.path ?? null,
-      });
+      const emailLog =
+        await this.emailService.sendUserOrganizationChangedNotification({
+          to: user.email,
+          userEmail: user.email,
+          oldOrganization: previousUser?.organization?.path ?? null,
+          newOrganization: newOrg?.path ?? null,
+        });
+      await this.notificationService.create(
+        user.id,
+        NotificationType.user_organization_changed,
+        `Votre organisation a été mise à jour${newOrg?.path ? ` : ${newOrg.path}` : ""}.`,
+        { link: "/profil", emailLogId: emailLog?.id },
+      );
     }
 
     const roleChanged = previousUser?.role !== user.role;
@@ -165,13 +174,28 @@ export class UserService {
       ) !== JSON.stringify([...user.additionalPermissions].sort());
 
     if ((roleChanged || permissionsChanged) && user.email) {
-      await this.emailService.sendUserPermissionsChangedNotification({
-        to: user.email,
-        userEmail: user.email,
-        role: user.role,
-        additionalPermissions: user.additionalPermissions,
-        changedByEmail: requestor.email ?? null,
-      });
+      const emailLog =
+        await this.emailService.sendUserPermissionsChangedNotification({
+          to: user.email,
+          userEmail: user.email,
+          role: user.role,
+          additionalPermissions: user.additionalPermissions,
+          changedByEmail: requestor.email ?? null,
+        });
+      const changeDetails = [
+        roleChanged ? `rôle : ${previousUser?.role} → ${user.role}` : null,
+        permissionsChanged
+          ? `permissions supplémentaires : ${user.additionalPermissions.length ? user.additionalPermissions.join(", ") : "aucune"}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" ; ");
+      await this.notificationService.create(
+        user.id,
+        NotificationType.user_permissions_changed,
+        `Vos droits d'accès ont été modifiés (${changeDetails}).`,
+        { link: "/profil", emailLogId: emailLog?.id },
+      );
     }
 
     return user;
@@ -205,13 +229,20 @@ export class UserService {
       `[AdminPanel] Utilisateur ${id} bloqué par ${requestor.id}`,
     );
 
+    let blockedEmailLog = null;
     if (user.email) {
-      await this.emailService.sendUserBlockedNotification({
+      blockedEmailLog = await this.emailService.sendUserBlockedNotification({
         to: user.email,
         userEmail: user.email,
         changedByEmail: requestor.email ?? null,
       });
     }
+    await this.notificationService.create(
+      user.id,
+      NotificationType.user_blocked,
+      `Votre compte a été bloqué${requestor.email ? ` par ${requestor.email}` : ""}.`,
+      { emailLogId: blockedEmailLog?.id },
+    );
 
     return user;
   }
@@ -238,13 +269,22 @@ export class UserService {
       `[AdminPanel] Utilisateur ${id} débloqué par ${requestor.id}`,
     );
 
+    let unblockedEmailLog = null;
     if (user.email) {
-      await this.emailService.sendUserUnblockedNotification({
-        to: user.email,
-        userEmail: user.email,
-        changedByEmail: requestor.email ?? null,
-      });
+      unblockedEmailLog = await this.emailService.sendUserUnblockedNotification(
+        {
+          to: user.email,
+          userEmail: user.email,
+          changedByEmail: requestor.email ?? null,
+        },
+      );
     }
+    await this.notificationService.create(
+      user.id,
+      NotificationType.user_unblocked,
+      `Votre compte a été débloqué${requestor.email ? ` par ${requestor.email}` : ""}.`,
+      { emailLogId: unblockedEmailLog?.id },
+    );
 
     return user;
   }
