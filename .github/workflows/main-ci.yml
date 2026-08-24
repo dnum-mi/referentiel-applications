@@ -37,19 +37,81 @@ jobs:
   test-lint-format:
     name: Test Linting & Formatting
     runs-on: ubuntu-latest
-    continue-on-error: true
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.14.0
       - name: Install dependencies
-        run: |
-          npm install -g pnpm
-          pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Run ESLint
         run: pnpm run lint
       - name: Run Prettier
         run: pnpm exec prettier . --check
+
+  test-frontend-unit:
+    name: Frontend Unit Tests & Type Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.14.0
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: pnpm install --frozen-lockfile
+      - name: Generate API client
+        working-directory: ./frontend
+        run: pnpm api:generate
+      - name: Run unit tests
+        working-directory: ./frontend
+        run: pnpm test:unit
+      - name: Run type check
+        working-directory: ./frontend
+        run: pnpm type-check
+
+  swagger-freshness:
+    name: Swagger Freshness
+    needs: [build-backend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      # Keycloak n'est pas demarre: jose.createRemoteJWKSet est paresseux, le
+      # backend boote sans lui. Postgres, lui, est indispensable (PrismaService
+      # se connecte dans onModuleInit).
+      - name: Start backend stack
+        run: IMAGE_TAG=${{ needs.build-backend.outputs.image_tag }} docker compose -f docker-compose.yml -f docker-compose.ci.yml up backend postgres -d
+      - name: Wait for backend to be ready
+        run: |
+          IMG=${{ needs.build-backend.outputs.image_tag }}
+          for i in $(seq 1 60); do
+            if IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml exec -T backend \
+                 node -e "require('http').get('http://localhost:3500/api/v2/health-check', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" 2>/dev/null; then
+              echo "✅ Backend ready after ~$((i * 3))s"
+              exit 0
+            fi
+            echo "⏳ Waiting for backend to be ready ($i/60)..."
+            sleep 3
+          done
+          echo "❌ Backend never became ready within 180s — diagnostics below:"
+          IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml ps
+          IMAGE_TAG=$IMG docker compose -f docker-compose.yml -f docker-compose.ci.yml logs backend
+          exit 1
+      - name: Check the committed swagger against the running API
+        run: |
+          IMG=${{ needs.build-backend.outputs.image_tag }}
+          COMPOSE="docker compose -f docker-compose.yml -f docker-compose.ci.yml"
+          IMAGE_TAG=$IMG $COMPOSE cp frontend/openapi/swagger.yaml backend:/app/committed.yaml
+          IMAGE_TAG=$IMG $COMPOSE cp .github/scripts/check-swagger-drift.mjs backend:/app/check-swagger-drift.mjs
+          IMAGE_TAG=$IMG $COMPOSE exec -T backend node /app/check-swagger-drift.mjs
 
   unit-tests:
     name: Unit Tests
