@@ -1,0 +1,61 @@
+<table
+  role="presentation"
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+>
+  <tr>
+    <td style="padding-bottom: 20px">
+      <p style="margin: 0; font-size: 16px; color: #161616">Bonjour,</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom: 20px">
+      <p style="margin: 0; font-size: 16px; color: #161616; line-height: 1.5">
+        Voici les résultats actuels de la campagne de mise en qualité
+        <strong>« {{campaignName}} »</strong>, portant sur
+        <strong>{{targetCount}}</strong> application(s).
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom: 20px">
+      <p style="margin: 0; font-size: 16px; color: #161616; line-height: 1.5">
+        IQ moyen au démarrage : <strong>{{averageIqAtStart}}</strong><br />
+        IQ moyen actuel : <strong>{{averageIqCurrent}}</strong><br />
+        Évolution moyenne : <strong>{{averageDelta}}</strong>
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-bottom: 20px">
+      <table
+        role="presentation"
+        width="100%"
+        cellpadding="8"
+        cellspacing="0"
+        border="0"
+        style="border-collapse: collapse; font-size: 14px"
+      >
+        <tr style="background-color: #f6f6f6; text-align: left">
+          <th style="border-bottom: 1px solid #dddddd">Application</th>
+          <th style="border-bottom: 1px solid #dddddd">IQ au démarrage</th>
+          <th style="border-bottom: 1px solid #dddddd">IQ actuel</th>
+          <th style="border-bottom: 1px solid #dddddd">Progression</th>
+        </tr>
+        {{targetsRows}}
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding-top: 20px">
+      <p style="margin: 0; font-size: 16px; color: #161616">
+        Cordialement,<br />
+        <strong style="color: #000091"
+          >L'équipe Référentiel des Applications</strong
+        >
+      </p>
+    </td>
+  </tr>
+</table>
