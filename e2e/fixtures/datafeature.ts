@@ -572,7 +572,7 @@ export class DataFeature {
     const list = await this.api.applications(`pageSize=${probe}&page=0`);
     for (const app of list?.results ?? []) {
       const actors = await this.api.actors(app.id);
-      if (actors && actors.length > 0) return app;
+      if ((actors?.results?.length ?? 0) > 0) return app;
     }
     return null;
   }
@@ -583,12 +583,19 @@ export class DataFeature {
     return page?.results ?? null;
   }
 
-  actors(appId: string) {
-    return this.api.actors(appId);
+  async actors(appId: string) {
+    const page = await this.api.actors(appId);
+    return page?.results ?? null;
   }
 
+  /**
+   * `isGroup` est OBLIGATOIRE côté `CreateActorDto` (booléen, sans `@IsOptional`) : l'omettre vaut
+   * un `400 « isGroup must be a boolean value »` que `post()` transforme en `null` silencieux —
+   * c'est ce qui faisait échouer CRU-02 vingt secondes plus tard, sur une ligne de tableau absente.
+   * On fournit donc `false` par défaut, que le body peut toujours surcharger.
+   */
   createActor(appId: string, body: Record<string, unknown>) {
-    return this.api.createActor(appId, body);
+    return this.api.createActor(appId, { isGroup: false, ...body });
   }
 
   deleteActor(appId: string, actorId: string) {
@@ -671,8 +678,9 @@ export class DataFeature {
     return this.api.application(id);
   }
 
-  applicationActors(appId: string) {
-    return this.api.actors(appId);
+  async applicationActors(appId: string) {
+    const page = await this.api.actors(appId);
+    return page?.results ?? null;
   }
 
   // --- Admin CRUD resolvers (ADM-* tests) ---

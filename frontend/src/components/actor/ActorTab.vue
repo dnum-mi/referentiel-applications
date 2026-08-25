@@ -244,7 +244,7 @@ function getCardButtons(actor: ActorDto): DsfrButtonProps[] {
     <p>Aucun acteur enregistré.</p>
   </div>
 
-  <div v-else>
+  <div v-else data-testid="actor-table">
     <div v-if="!props.isMobile" class="global-delete">
       <DsfrButton
         type="button"

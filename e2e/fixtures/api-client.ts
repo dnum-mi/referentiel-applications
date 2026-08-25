@@ -281,6 +281,26 @@ export class ApiClient {
     return { ok: res.ok(), status: res.status(), body: text };
   }
 
+  /** Comme `createActor` mais renvoie le statut HTTP brut + corps pour diagnostic. */
+  async createActorVerbose(
+    appId: string,
+    body: Record<string, unknown>,
+  ): Promise<{ ok: boolean; status: number; body: string }> {
+    const res = await this.page.request.post(
+      `/api/v2/applications/${appId}/actors`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        data: body,
+      },
+    );
+    const text = await res.text().catch(() => "");
+    return { ok: res.ok(), status: res.status(), body: text };
+  }
+
   private async post<T>(path: string, body: unknown = {}): Promise<T | null> {
     const res = await this.page.request.post(`/api/v2${path}`, {
       headers: {
@@ -372,14 +392,26 @@ export class ApiClient {
     return this.patch(`/applications/${appId}/actors/${actorId}`, body);
   }
 
-  actors(
-    appId: string,
-  ): Promise<
-    | { id: string; firstname?: string; lastname?: string; isGroup?: boolean }[]
-    | null
-  > {
+  /**
+   * `GET /applications/:id/actors` répond un `PaginatedResponseDto`, pas un tableau — même piège
+   * que `/organizations` et `/actorTypes`. Lu comme un tableau, `.length` valait `undefined` et
+   * toute application passait pour dépourvue d'acteurs.
+   */
+  actors(appId: string): Promise<Paginated<{
+    id: string;
+    firstname?: string | null;
+    lastname?: string | null;
+    email?: string | null;
+    isGroup?: boolean;
+  }> | null> {
     return this.get<
-      { id: string; firstname?: string; lastname?: string; isGroup?: boolean }[]
+      Paginated<{
+        id: string;
+        firstname?: string | null;
+        lastname?: string | null;
+        email?: string | null;
+        isGroup?: boolean;
+      }>
     >(`/applications/${appId}/actors`);
   }
 
