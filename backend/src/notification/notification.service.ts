@@ -137,6 +137,37 @@ export class NotificationService {
    * Hors scope : le canal "acteur groupe" (organisation entière via QueryBuilderGroupActor)
    * n'est pas reproduit ici, le rôle global CONTRIBUTOR+ couvrant déjà la majorité des cas.
    */
+  /**
+   * Utilisateurs à prévenir d'une fin de vie sur une application (#2236) : les acteurs qui peuvent
+   * agir sur sa stack technique, c'est-à-dire ceux dont le type d'acteur porte `TechnologyWrite`.
+   *
+   * Volontairement PAS de repli sur les rôles globaux, contrairement aux signalements : une fin de
+   * vie appelle une action sur une application précise, et prévenir tous les administrateurs à
+   * chaque technologie périmée du référentiel noierait le signal.
+   */
+  async findUsersToNotifyForTechnology(
+    applicationId: string,
+  ): Promise<string[]> {
+    const actors = await this.prisma.actor.findMany({
+      where: {
+        applicationId,
+        isGroup: false,
+        email: { not: null },
+        actorType: { appPermissions: { some: { TechnologyWrite: true } } },
+      },
+      select: { email: true },
+    });
+    const emails = actors
+      .map((actor) => actor.email)
+      .filter((email): email is string => Boolean(email));
+    if (emails.length === 0) return [];
+    const users = await this.prisma.user.findMany({
+      where: { email: { in: emails } },
+      select: { id: true },
+    });
+    return [...new Set(users.map((user) => user.id))];
+  }
+
   async findUsersWithReportManagePermission(
     applicationId?: string,
   ): Promise<string[]> {

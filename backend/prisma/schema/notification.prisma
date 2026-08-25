@@ -14,6 +14,8 @@ enum NotificationType {
   user_unblocked
   campaign_quality_reminder
   campaign_quality_sponsor_report
+  /// Une technologie de l'application entre en fin de vie, s'en approche, ou sort du support actif (#2236)
+  technology_end_of_life
 }
 
 /// Notification in-app persistée pour un utilisateur (cloche du header), en complément

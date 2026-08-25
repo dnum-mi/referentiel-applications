@@ -7,6 +7,7 @@ import api from "@/api/index";
 const actorsNb = ref(0);
 const compliancesNb = ref(0);
 const hostingsNb = ref(0);
+const endOfLifeAppsNb = ref(0);
 const isLoading = ref(false);
 const errorMessage = ref("");
 
@@ -18,6 +19,7 @@ const datasGroup = computed(() => [
   `Nombre d'acteurs : ${actorsNb.value}`,
   `Nombre de conformités : ${compliancesNb.value}`,
   `Nombre d'hébergements : ${hostingsNb.value}`,
+  `Applications concernées par une fin de vie : ${endOfLifeAppsNb.value}`,
 ]);
 
 async function loadStats() {
@@ -29,6 +31,13 @@ async function loadStats() {
     actorsNb.value = actorsResponse.data ?? 0;
     compliancesNb.value = await statisticStore.countCompliances();
     hostingsNb.value = await hostingStore.countHostings();
+    // On réutilise la vue transverse en ne demandant qu'une ligne : c'est son
+    // `total` qui nous intéresse, pas les résultats. Un endpoint de comptage
+    // dédié ferait doublon avec un filtre déjà écrit et testé.
+    const endOfLifeResponse = await api.endOfLifeControllerFindEndOfLifeApplications({
+      query: { page: 0, pageSize: 1 },
+    });
+    endOfLifeAppsNb.value = endOfLifeResponse.data?.total ?? 0;
   } catch (error) {
     errorMessage.value = `Erreur lors du chargement des données : ${error}`;
   } finally {

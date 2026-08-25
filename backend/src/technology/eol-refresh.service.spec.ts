@@ -8,6 +8,7 @@ jest.mock("./utils/endoflife.utils", () => ({
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "src/prisma/prisma.service";
 import { EolRefreshService } from "./eol-refresh.service";
+import { EolNotificationService } from "./eol-notification.service";
 
 const releases = [
   { cycle: "13", eol: "2025-11-13", support: "2024-11-14", latest: "13.16" },
@@ -25,7 +26,17 @@ const makeService = (
     get: (key: string, fallback: unknown) =>
       key === "technology.eolBatchSize" ? 2 : fallback,
   } as unknown as ConfigService;
-  return { service: new EolRefreshService(prisma, config), findMany, update };
+  // Le service de notification est mocké : ce spec porte sur le rafraîchissement,
+  // les alertes ont le leur.
+  const notifications = {
+    notifyPendingEndOfLife: jest.fn().mockResolvedValue(null),
+  } as unknown as EolNotificationService;
+  return {
+    service: new EolRefreshService(prisma, config, notifications),
+    findMany,
+    update,
+    notifications,
+  };
 };
 
 beforeEach(() => {

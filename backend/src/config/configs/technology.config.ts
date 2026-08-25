@@ -27,14 +27,17 @@ function parseBatchSize(value: string | undefined, fallback: number): number {
  * Configuration du suivi des fins de vie (#2236).
  *
  * - `eolCronEnabled` : active le recalcul global planifié (TECHNOLOGY_EOL_CRON_ENABLED)
+ * - `eolNotifyEnabled` : active les alertes aux gestionnaires (TECHNOLOGY_EOL_NOTIFY_ENABLED)
  * - `eolBatchSize` : nombre de lignes de stack traitées par lot
  *
- * Le cron est **désactivé par défaut**, comme les autres jobs sortants du
- * projet : il appelle un service tiers, et une activation implicite sur un
- * environnement de développement ou de test enverrait du trafic non voulu.
+ * Les deux interrupteurs sont **désactivés par défaut** et volontairement
+ * distincts : recalculer est une opération interne, prévenir des utilisateurs
+ * est visible. On peut vouloir rafraîchir les données bien avant d'accepter
+ * d'alerter qui que ce soit.
  */
 export const technologyConfig = registerAs("technology", () => ({
   eolCronEnabled: process.env.TECHNOLOGY_EOL_CRON_ENABLED === "true",
+  eolNotifyEnabled: process.env.TECHNOLOGY_EOL_NOTIFY_ENABLED === "true",
   eolBatchSize: parseBatchSize(process.env.TECHNOLOGY_EOL_BATCH_SIZE, 50),
 }));
 

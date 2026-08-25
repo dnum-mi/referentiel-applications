@@ -18,6 +18,17 @@ describe("technologyConfig", () => {
     expect(technologyConfig().eolCronEnabled).toBe(true);
   });
 
+  // Interrupteur distinct de celui du cron : recalculer est interne, alerter est
+  // visible — on peut vouloir l'un longtemps avant l'autre.
+  it("laisse les notifications désactivées tant qu'elles ne sont pas explicitement activées", () => {
+    delete process.env.TECHNOLOGY_EOL_NOTIFY_ENABLED;
+    expect(technologyConfig().eolNotifyEnabled).toBe(false);
+    process.env.TECHNOLOGY_EOL_CRON_ENABLED = "true";
+    expect(technologyConfig().eolNotifyEnabled).toBe(false);
+    process.env.TECHNOLOGY_EOL_NOTIFY_ENABLED = "true";
+    expect(technologyConfig().eolNotifyEnabled).toBe(true);
+  });
+
   it("retient une taille de lot valide", () => {
     process.env.TECHNOLOGY_EOL_BATCH_SIZE = "20";
     expect(technologyConfig().eolBatchSize).toBe(20);
