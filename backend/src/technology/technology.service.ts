@@ -18,9 +18,9 @@ import {
   type EndoflifeProduct,
   type EolResolution,
 } from "./utils/endoflife.utils";
+import { EOL_REFRESH_TTL_MS } from "./utils/eol-status";
 
 // Au-delà de ce délai, on rafraîchit paresseusement la fin de vie au GET.
-const EOL_REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
 @Injectable()
 export class TechnologyService extends BaseService<TechnologyStack> {

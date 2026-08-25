@@ -104,6 +104,12 @@ const routes = [
     meta: { requiresAuth: true, title: "Qualité générale - Référentiel des applications" },
   },
   {
+    name: routeNames.ENDOFLIFE,
+    path: "/fins-de-vie",
+    component: () => import("@/views/EndOfLifePage.vue"),
+    meta: { requiresAuth: true, title: "Suivi des fins de vie - Référentiel des applications" },
+  },
+  {
     name: routeNames.TIMEPAGE,
     path: "/time",
     component: () => import("@/views/TimePage.vue"),

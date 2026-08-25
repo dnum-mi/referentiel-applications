@@ -12,6 +12,7 @@ export const routeNames = {
   REPORTS: "signalements",
   NOTIFICATIONS: "notifications",
   QUALITYPAGE: "qualite-generale",
+  ENDOFLIFE: "fins-de-vie",
   TIMEPAGE: "time",
   HISTORY: "historique",
   METADATADETAIL: "metadata-detail",

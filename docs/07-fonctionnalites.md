@@ -25,6 +25,7 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
 - [7. Tableaux de bord](#7-tableaux-de-bord)
   - [7.1 Qualité générale](#71-qualité-générale)
   - [7.2 Dette technique (Time)](#72-dette-technique-time)
+  - [7.3 Suivi des fins de vie](#73-suivi-des-fins-de-vie)
 - [8. Export Excel](#8-export-excel)
 - [9. Administration](#9-administration)
 - [10. Récapitulatif des fonctionnalités et permissions](#10-récapitulatif-des-fonctionnalités-et-permissions)
@@ -251,6 +252,28 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 - Back : `backend/src/technical-debt-info/` ; endpoint des points de dette `GET /technical-debts` (`technical-debt.controller.ts`).
 
 **Permission.** `MDITList` (« Voir la liste des MDIT »), incluse dans le socle Lecteur et pouvant être configurée selon un périmètre organisationnel.
+
+### 7.3 Suivi des fins de vie
+
+**Ce que ça fait.** Vue transverse répondant à « quelles applications utilisent une technologie en fin de vie ? ». Elle liste les applications dont au moins une technologie est **en fin de vie**, le sera **dans moins de 6 mois**, ou est **sortie du support actif** — l'information n'existait jusque-là que fiche par fiche, dans l'onglet Stack technique. Filtres par statut, par organisation (chemin ou sigle d'un acteur, en correspondance partielle : un chemin de direction ramène ses organisations filles) et par recherche libre sur le libellé d'application ou le produit.
+
+Les trois statuts **partitionnent** la liste : une technologie déjà en fin de vie n'apparaît pas aussi sous « fin de support actif ». Le classement est calculé côté serveur, pour que la vue transverse et la fiche s'accordent sur le statut d'une même technologie.
+
+**Fraîcheur des données.** La résolution endoflife.date est écrite sur `TechnologyStack` puis rafraîchie de deux façons :
+
+- **paresseusement**, au GET d'une fiche, pour les technologies de cette fiche (TTL 7 jours) ;
+- **globalement**, par le cron `EolRefreshService` (3 h du matin, `TECHNOLOGY_EOL_CRON_ENABLED`). Sans lui, une application que personne ne consulte ne serait jamais recalculée — précisément celle qu'une vue transverse doit signaler.
+
+Le cron ne résout qu'**une fois par produit distinct** pour tout le run, et n'écrit rien lorsqu'endoflife.date ne répond pas : écraser une date valide par `null` et réarmer le TTL figerait la ligne une semaine sur une donnée non vérifiée.
+
+**Où c'est dans le code.**
+
+- Front : `frontend/src/views/EndOfLifePage.vue` (route `/fins-de-vie`), store `frontend/src/stores/endOfLifeStore.ts`.
+- Back : `GET /technologies/end-of-life` (`backend/src/technology/end-of-life.controller.ts`), service `end-of-life.service.ts`, règles de classement `utils/eol-status.ts`, recalcul planifié `eol-refresh.service.ts`.
+
+**Tri.** Par libellé d'application. Trier par gravité supposerait d'ordonner sur un agrégat de la relation (la fin de vie la plus proche), ce que Prisma ne sait pas faire : un tri appliqué après pagination ne classerait que la page affichée et donnerait l'illusion d'un classement global. Pour cibler l'urgent, c'est le filtre de statut qui répond.
+
+**Permission.** Tous les utilisateurs connectés, comme l'historique global. `TechnologyRead` n'existe qu'à l'échelle d'une application et ne peut pas garder une route sans `:applicationId` ; l'ajouter au socle global la donnerait à un lecteur scopé sur les applications **hors** de son périmètre. Si la donnée devait être restreinte, il faudrait une permission dédiée plutôt que le détournement d'une permission existante.
 
 ## 8. Export Excel
 

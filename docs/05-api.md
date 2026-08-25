@@ -206,6 +206,20 @@ Inventaire **par module / ressource** (résumé : verbes et chemins principaux, 
 
 > Ces quatre routes exigent la permission `AdminPanelManage` et n'attendent aucun corps de requête.
 
+### Suivi des fins de vie
+
+| Verbe & chemin                  | Rôle                                                                             |
+| ------------------------------- | -------------------------------------------------------------------------------- |
+| `GET /technologies/end-of-life` | Applications portant une technologie en fin de vie, proche ou hors support actif |
+
+Filtres : `status` (`eol`, `eol-soon`, `eoas-passed` — les trois partitionnent la liste),
+`organization` (chemin ou sigle d'un acteur, correspondance partielle), `search` (libellé
+d'application ou produit), plus la pagination et le tri usuels (`sortBy` : `label` ou `shortName`).
+Seules les technologies retenues par le filtre sont restituées, triées par gravité décroissante.
+
+> Route accessible à tout utilisateur authentifié, comme `GET /metadatas` : `TechnologyRead`
+> n'existe qu'à l'échelle d'une application et ne peut pas garder une route sans `:applicationId`.
+
 ### Filtres sauvegardés
 
 | Verbe & chemin                               | Rôle                                                                        |

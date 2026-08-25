@@ -1,6 +1,11 @@
 import { test as base } from "@playwright/test";
 import { test } from "../fixtures/test";
-import { AccessibilityPage, NotFoundPage, SiteMapPage } from "../pom";
+import {
+  AccessibilityPage,
+  EndOfLifePage,
+  NotFoundPage,
+  SiteMapPage,
+} from "../pom";
 import { captureStepScreenshot } from "../support/screenshots";
 
 /**
@@ -76,5 +81,31 @@ test.describe("Pages transverses", () => {
     await notFound.openUnknownRoute();
     await notFound.expectNotFound();
     await notFound.clickHomeAndExpectCatalogue();
+  });
+
+  test("TRV-08 - la page Fins de vie liste les applications concernées (#2236)", async ({
+    page,
+    data,
+  }) => {
+    void data;
+    // `QA-EOL` porte trois technologies couvrant les trois statuts (seed QA).
+    const endOfLife = new EndOfLifePage(page);
+    await endOfLife.open();
+    await endOfLife.expectLoaded();
+    await endOfLife.expectResultsAnnounced();
+    await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
+
+    // Les statuts PARTITIONNENT la liste : filtrer sur « fin de support actif »
+    // ne doit pas ramener la technologie déjà en fin de vie, sans quoi les trois
+    // filtres se chevaucheraient au lieu de découper la liste.
+    await endOfLife.filterByStatus("eoas-passed");
+    await endOfLife.expectApplicationListed("QA-EOL", "Fin de support actif");
+
+    await endOfLife.filterByStatus("eol");
+    await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
+
+    // Le trajet qui donne son intérêt à la vue : de la liste vers l'onglet Stack
+    // technique de la fiche.
+    await endOfLife.openApplicationTechnologyTab("QA-EOL");
   });
 });
