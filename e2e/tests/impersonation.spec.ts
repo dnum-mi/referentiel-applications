@@ -199,7 +199,7 @@ test.describe("Impersonation", () => {
     data,
   }) => {
     // Cibles du seed QA : `qa-target` (org TOTO/TUTU, dans le périmètre TOTO de
-    // `scope-admin`) et `qa-outside` (org ABCD, hors périmètre).
+    // `scope-admin`) et `qa-outside` (org ABCD, hors périmètre — donc hors liste).
     const outside = await data.getUser("qa-outside@example.com");
     const inScope = await data.getUser("qa-target@example.com");
     test.skip(
@@ -212,10 +212,13 @@ test.describe("Impersonation", () => {
     const admin = new AdminPage(page);
     await admin.open();
 
-    // Hors périmètre : le bouton « Se connecter en tant que » n'est pas proposé.
-    // (Le refus 403 côté API — endpoint ET header direct — est couvert par
-    // backend/tests/impersonation.e2e-spec.ts.)
-    await admin.expectImpersonateUnavailable("qa-outside@example.com");
+    // Hors périmètre : la cible n'est même plus listée. Depuis #2230/#2327 `findAll` filtre la
+    // liste sur le périmètre du requêteur (minimisation), ce qui rend l'ancienne attente — « la
+    // ligne est affichée, sans bouton d'impersonation » — obsolète : le bouton reste inatteignable,
+    // par absence de la ligne. Le refus 403 côté API — endpoint ET header direct — est couvert par
+    // backend/tests/impersonation.e2e-spec.ts, et le filtrage lui-même par
+    // backend/tests/user-list-scope.e2e-spec.ts.
+    await admin.expectUserAbsent("qa-outside@example.com");
 
     // Dans le périmètre : l'impersonation complète fonctionne.
     await admin.impersonateUser("qa-target@example.com");
