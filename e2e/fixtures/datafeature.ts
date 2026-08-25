@@ -552,25 +552,50 @@ export class DataFeature {
     return this.api.deleteApplication(id);
   }
 
+  /**
+   * Une application ayant au moins un acteur.
+   * On interroge d'abord `/actors` (liste globale paginée) pour remonter directement une
+   * application concernée : sonder les `probe` premières applications ne suffit pas — sur une base
+   * réaliste seules ~14 % en ont, et les premières de la liste n'en ont aucune, ce qui faisait
+   * sauter CRU-01 et FIC-17 sous un motif faux (« aucune application avec acteur »).
+   * La sonde reste en repli si l'endpoint admin n'est pas accessible.
+   */
   async applicationWithActors(probe = 15): Promise<AppRef | null> {
+    const anyActor = await this.api.anyActor();
+    const appId = anyActor?.results?.[0]?.applicationId;
+    if (appId) {
+      const app = await this.api.application(appId);
+      const label = app?.label;
+      if (typeof label === "string") return { id: appId, label };
+    }
+
     const list = await this.api.applications(`pageSize=${probe}&page=0`);
     for (const app of list?.results ?? []) {
       const actors = await this.api.actors(app.id);
-      if (actors && actors.length > 0) return app;
+      if ((actors?.results?.length ?? 0) > 0) return app;
     }
     return null;
   }
 
-  actorTypes() {
-    return this.api.actorTypes();
+  /** Les types d'acteur, aplatis : l'endpoint est paginé, les tests attendent un tableau. */
+  async actorTypes() {
+    const page = await this.api.actorTypes();
+    return page?.results ?? null;
   }
 
-  actors(appId: string) {
-    return this.api.actors(appId);
+  async actors(appId: string) {
+    const page = await this.api.actors(appId);
+    return page?.results ?? null;
   }
 
+  /**
+   * `isGroup` est OBLIGATOIRE côté `CreateActorDto` (booléen, sans `@IsOptional`) : l'omettre vaut
+   * un `400 « isGroup must be a boolean value »` que `post()` transforme en `null` silencieux —
+   * c'est ce qui faisait échouer CRU-02 vingt secondes plus tard, sur une ligne de tableau absente.
+   * On fournit donc `false` par défaut, que le body peut toujours surcharger.
+   */
   createActor(appId: string, body: Record<string, unknown>) {
-    return this.api.createActor(appId, body);
+    return this.api.createActor(appId, { isGroup: false, ...body });
   }
 
   deleteActor(appId: string, actorId: string) {
@@ -653,8 +678,9 @@ export class DataFeature {
     return this.api.application(id);
   }
 
-  applicationActors(appId: string) {
-    return this.api.actors(appId);
+  async applicationActors(appId: string) {
+    const page = await this.api.actors(appId);
+    return page?.results ?? null;
   }
 
   // --- Admin CRUD resolvers (ADM-* tests) ---
@@ -683,11 +709,17 @@ export class DataFeature {
     return this.api.deleteLabelSource(id);
   }
 
+  /**
+   * `GET /organizations` répond `{ results, total }` : lire `.results` et non le corps comme un
+   * tableau — le `.length` sur l'objet valait `undefined`, la liste passait pour vide et CRU-08,
+   * CRU-09 et CRU-16 sautaient sous un motif faux (« aucune organisation dans le jeu de données »).
+   */
   async anyOrganizationPath(): Promise<string | null> {
-    const orgs = await this.api.organizations("a");
-    if (orgs && orgs.length > 0) return orgs[0].path;
-    const orgs2 = await this.api.organizations("direction");
-    if (orgs2 && orgs2.length > 0) return orgs2[0].path;
+    for (const query of ["a", "direction"]) {
+      const page = await this.api.organizations(query);
+      const first = page?.results?.[0];
+      if (first) return first.path;
+    }
     return null;
   }
 
