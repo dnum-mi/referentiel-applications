@@ -535,6 +535,188 @@ export class EmailService {
     }
   }
 
+  async sendQualityCampaignReminderEmail({
+    recipientEmail,
+    applicationId,
+    applicationLabel,
+    currentIq,
+    campaignName,
+    message,
+  }: {
+    recipientEmail: string;
+    applicationId: string;
+    applicationLabel: string;
+    currentIq: number | null;
+    campaignName: string;
+    message: string | null;
+  }): Promise<EmailLog | null> {
+    if (!this.enabled) {
+      this.logger.log(
+        `Email sending disabled. Would have sent quality campaign reminder to ${recipientEmail}`,
+      );
+      return null;
+    }
+
+    if (!recipientEmail) {
+      this.logger.warn(
+        "Cannot send quality campaign reminder: recipient address is empty",
+      );
+      return null;
+    }
+
+    const subject = `Campagne qualité « ${campaignName} » : améliorez l'IQ de "${applicationLabel}"`;
+
+    const messageBlock = message
+      ? `<tr><td style="padding-bottom: 20px"><p style="margin: 0; font-size: 16px; color: #161616; line-height: 1.5">${message}</p></td></tr>`
+      : "";
+
+    const html = this.templateService.render(
+      "quality-campaign-actor-reminder",
+      {
+        title: subject,
+        headerTitle: "Référentiel des Applications",
+        applicationLabel,
+        campaignName,
+        currentIq: currentIq != null ? currentIq.toString() : "non calculé",
+        messageBlock,
+        applicationUrl: `${this.appUrl}/applications/${applicationId}`,
+      },
+    );
+
+    const text = this.templateService.htmlToText(html);
+
+    try {
+      const emailLog = await this.deliver({
+        to: recipientEmail,
+        subject,
+        text,
+        html,
+      });
+      this.logger.log(
+        `Quality campaign reminder sent successfully to ${recipientEmail} for application ${applicationId}`,
+      );
+      return emailLog;
+    } catch (error) {
+      this.logger.error(
+        `Failed to send quality campaign reminder to ${recipientEmail}:`,
+        error,
+      );
+      this.logger.warn(
+        `Email delivery failed for ${recipientEmail} but was ignored due to configuration.`,
+      );
+      return null;
+    }
+  }
+
+  async sendQualityCampaignSponsorReportEmail({
+    recipientEmails,
+    campaignName,
+    targets,
+    averageIqAtStart,
+    averageIqCurrent,
+    averageDelta,
+  }: {
+    recipientEmails: string[];
+    campaignName: string;
+    targets: Array<{
+      applicationId: string;
+      applicationLabel: string;
+      iqAtStart: number | null;
+      iqCurrent: number | null;
+    }>;
+    averageIqAtStart: number | null;
+    averageIqCurrent: number | null;
+    averageDelta: number | null;
+  }): Promise<EmailLog | null> {
+    // Un seul e-mail avec tous les sponsors en destinataires (le champ `to` d'EmailLog supporte
+    // déjà une liste — cf. sa description "Destinataire(s)"), plutôt qu'un envoi par sponsor.
+    const recipientEmail = recipientEmails.join(", ");
+
+    if (!this.enabled) {
+      this.logger.log(
+        `Email sending disabled. Would have sent quality campaign sponsor report to ${recipientEmail}`,
+      );
+      return null;
+    }
+
+    if (recipientEmails.length === 0) {
+      this.logger.warn(
+        "Cannot send quality campaign sponsor report: no recipient address",
+      );
+      return null;
+    }
+
+    const subject = `Résultats de la campagne qualité « ${campaignName} »`;
+
+    const formatIq = (iq: number | null) => (iq != null ? iq.toString() : "—");
+    const formatAverage = (iq: number | null) =>
+      iq != null ? iq.toFixed(1) : "—";
+    const formatDelta = (delta: number | null) =>
+      delta != null ? `${delta > 0 ? "+" : ""}${delta.toFixed(1)}` : "—";
+    // Delta en points d'IQ, pas en pourcentage relatif : l'IQ étant déjà une échelle 0-100, un
+    // delta relatif explose de façon trompeuse pour les applications ciblées par la campagne —
+    // justement celles parties d'un IQ bas (ex. 5 → 50 donnerait "+900%" pour un gain réel de 45
+    // points).
+    const formatProgress = (
+      iqAtStart: number | null,
+      iqCurrent: number | null,
+    ) => {
+      if (iqAtStart == null || iqCurrent == null) return "—";
+      const progress = iqCurrent - iqAtStart;
+      return `${progress > 0 ? "+" : ""}${progress} pts`;
+    };
+
+    const targetsRows = targets
+      .map(
+        (target) => `
+          <tr>
+            <td style="border-bottom: 1px solid #eeeeee">${target.applicationLabel}</td>
+            <td style="border-bottom: 1px solid #eeeeee">${formatIq(target.iqAtStart)}</td>
+            <td style="border-bottom: 1px solid #eeeeee">${formatIq(target.iqCurrent)}</td>
+            <td style="border-bottom: 1px solid #eeeeee">${formatProgress(target.iqAtStart, target.iqCurrent)}</td>
+          </tr>`,
+      )
+      .join("");
+
+    const html = this.templateService.render(
+      "quality-campaign-sponsor-report",
+      {
+        title: subject,
+        headerTitle: "Référentiel des Applications",
+        campaignName,
+        targetCount: targets.length.toString(),
+        averageIqAtStart: formatAverage(averageIqAtStart),
+        averageIqCurrent: formatAverage(averageIqCurrent),
+        averageDelta: formatDelta(averageDelta),
+        targetsRows,
+      },
+    );
+
+    const text = this.templateService.htmlToText(html);
+
+    try {
+      const emailLog = await this.deliver({
+        to: recipientEmail,
+        subject,
+        text,
+        html,
+      });
+      this.logger.log(
+        `Quality campaign sponsor report sent successfully to ${recipientEmail}`,
+      );
+      return emailLog;
+    } catch (error) {
+      this.logger.error(
+        `Failed to send quality campaign sponsor report to ${recipientEmail}:`,
+        error,
+      );
+      this.logger.warn(
+        `Email delivery failed for ${recipientEmail} but was ignored due to configuration.`,
+      );
+      return null;
+    }
+  }
+
   async sendSignalementUpdateEmail({
     recipientEmail,
     description,

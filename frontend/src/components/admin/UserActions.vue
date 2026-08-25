@@ -224,6 +224,11 @@ const additionalPermissionsOptions: Omit<DsfrCheckboxProps, "modelValue">[] = [
     value: Permission.MDIT_LIST,
     name: "capability-mdit-view",
   },
+  {
+    label: "Gérer les campagnes de mise en qualité",
+    value: Permission.QUALITY_CAMPAIGN_MANAGE,
+    name: "capability-quality-campaign-manage",
+  },
 ];
 
 const isNotValidated = computed(() => {

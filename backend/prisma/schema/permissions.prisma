@@ -87,10 +87,12 @@ enum Permission {
   ActorTypeManage
   /// Supprimer un nouveau type d'acteur 
   ActorTypeDelete
-  /// Gérer les organizations (créer, modifier, supprimer) 
+  /// Gérer les organizations (créer, modifier, supprimer)
   OrganizationManage
   /// Afficher toutes les colonnes des applications
   ColumnRead
+  /// Gérer les campagnes de mise en qualité (créer, modifier, supprimer, envoyer) (#2282)
+  QualityCampaignManage
 
   // --- Permissions applicatives (par app) ---
   // Couple read/write classique
