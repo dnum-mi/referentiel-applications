@@ -80,10 +80,13 @@
 - **Datafeature** : seed QA (`pnpm db:seed:qa`) — `scope-admin` (ADMIN, périmètre TOTO),
   `qa-target@example.com` (org TOTO/TUTU, dans le périmètre), `qa-outside@example.com`
   (org ABCD, hors périmètre).
-- **Action** : en `scope-admin`, administration → Gestion des utilisateurs → vérifier la ligne de
-  `qa-outside` (pas de bouton « Se connecter en tant que ») ; impersonner `qa-target` puis arrêter.
-  Côté API : `POST /users/{id}/impersonate` sur `qa-outside`, et n'importe quelle requête portant le
+- **Action** : en `scope-admin`, administration → Gestion des utilisateurs → **rechercher**
+  `qa-outside@example.com` ; impersonner `qa-target` puis arrêter. Côté API :
+  `POST /users/{id}/impersonate` sur `qa-outside`, et n'importe quelle requête portant le
   header `x-impersonate-user-id` avec son id.
-- **Résultat attendu** : bouton absent hors périmètre ; `403 Forbidden` sur l'endpoint ET sur le
-  header direct (contrôle dans le middleware, non contournable) ; impersonation normale dans le
-  périmètre. Un admin sans périmètre (global) reste libre d'impersonner tout utilisateur humain.
+- **Résultat attendu** : `qa-outside` **n'apparaît pas dans la liste** — depuis #2230/#2327 un admin
+  scopé ne liste que les utilisateurs de son périmètre (minimisation), la recherche affiche donc
+  « Aucune donnée ne correspond à votre recherche » ; le bouton « Se connecter en tant que » est de
+  ce fait inatteignable. `403 Forbidden` sur l'endpoint ET sur le header direct (contrôle dans le
+  middleware, non contournable) ; impersonation normale dans le périmètre. Un admin sans périmètre
+  (global) reste libre d'impersonner tout utilisateur humain — et voit toute la liste.

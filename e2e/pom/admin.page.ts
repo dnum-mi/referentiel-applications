@@ -279,6 +279,23 @@ export class AdminPage extends BasePage {
     await expect(row.getByTestId("admin-user-impersonate-btn")).toHaveCount(0);
   }
 
+  /**
+   * Vérifie que `email` est INTROUVABLE dans la liste, recherche à l'appui.
+   * Depuis #2230/#2327 un admin scopé ne liste que les utilisateurs de son périmètre : une cible
+   * hors périmètre n'est plus « affichée sans bouton », elle n'est plus listée du tout.
+   *
+   * L'assertion porte d'abord sur le message de statut : sans lui le test serait satisfait d'avance
+   * (la table ne contient déjà pas la cible AVANT la recherche), et un filtre resté sans effet
+   * passerait inaperçu. « Aucune donnée ne correspond » prouve que la requête a abouti à 0 résultat.
+   */
+  async expectUserAbsent(email: string): Promise<void> {
+    await this.searchUser(email);
+    await expect(this.byTestId("admin-users-status")).toContainText(
+      /aucune donnée ne correspond/i,
+    );
+    await expect(this.usersTable()).not.toContainText(email);
+  }
+
   /** Recharge la page et vérifie que l'impersonation de `email` est toujours active. */
   async expectImpersonationPersistsAfterReload(email: string): Promise<void> {
     await this.page.reload();

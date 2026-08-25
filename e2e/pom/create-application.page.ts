@@ -29,38 +29,17 @@ export class CreateApplicationPage extends BasePage {
       .fill(description);
   }
 
-  private async searchAndSelectOrg(
-    labelText: RegExp,
-    orgPath: string,
-  ): Promise<void> {
-    const input = this.page.getByLabel(labelText, { exact: false }).first();
-    await input.fill(orgPath.slice(0, 10));
-    const selectLabel = this.page.getByLabel(/Choisir une organisation/i);
-    const allSelects = await selectLabel.all();
-    const sel =
-      allSelects.length > 0
-        ? allSelects[allSelects.length - 1]
-        : selectLabel.first();
-    await expect
-      .poll(async () => (await sel.locator("option").count()) > 1, {
-        timeout: 10000,
-      })
-      .toBeTruthy();
-    const options = sel.locator("option");
-    for (let i = 1; i < (await options.count()); i++) {
-      const text = await options.nth(i).textContent();
-      if (text?.includes(orgPath.slice(0, 5))) {
-        const val = await options.nth(i).getAttribute("value");
-        if (val) {
-          await sel.selectOption(val);
-          return;
-        }
-      }
-    }
-    const val = await options.nth(1).getAttribute("value");
-    if (val) await sel.selectOption(val);
-  }
-
+  /**
+   * Renseigne un `OrganizationSearchSelect` : saisie de la recherche puis choix dans le select.
+   *
+   * On scope sur le `data-testid` du composant (son `div[role="group"]` racine) plutôt que sur un
+   * `getByLabel` global. Deux raisons, toutes deux constatées :
+   * - `getByLabel(/Organisation MOA/i).first()` résolvait le bouton « Synchroniser l'organisation
+   *   MOA depuis MAIA », ajouté depuis, dont l'`aria-label` contient le même texte ;
+   * - le libellé du select (« Choisir une organisation… ») est identique côté MOA et MOE, ce que
+   *   l'ancien code contournait en prenant le DERNIER select de la page — fragile dès qu'un
+   *   troisième apparaît.
+   */
   async fillMoaStep(
     email: string,
     firstname: string,
@@ -68,18 +47,21 @@ export class CreateApplicationPage extends BasePage {
     orgPath: string,
   ): Promise<void> {
     await this.byTestId("application-moa-email").fill(email);
-    await this.searchAndSelectOrg(/Organisation MOA/i, orgPath);
+    await this.selectOrganization("application-moa-organization", orgPath);
     await this.byTestId("application-moa-firstname").fill(firstname);
     await this.byTestId("application-moa-lastname").fill(lastname);
   }
 
   async fillMoaStepAsGroup(email: string, orgPath: string): Promise<void> {
     await this.byTestId("application-moa-email").fill(email);
-    await this.searchAndSelectOrg(/Organisation MOA/i, orgPath);
-    await this.byTestId("application-moa-is-group")
-      .locator("..")
-      .getByText(/entité/i)
-      .click();
+    await this.selectOrganization("application-moa-organization", orgPath);
+    // Ciblage par `name` et non par testid : `DsfrCheckbox` écrase le `data-testid` reçu par le
+    // sien (`input-checkbox-{id}`, id aléatoire), donc `application-moa-is-group` n'existe
+    // dans aucun élément du DOM. Le libellé, lui, a déjà changé de « groupe » à « entité » et il
+    // est porté par deux éléments : le viser par le texte serait ambigu autant que fragile.
+    await this.checkDsfrCheckbox(
+      this.page.locator('input[type=checkbox][name="moaIsGroup"]'),
+    );
   }
 
   async fillMoeStep(
@@ -89,22 +71,36 @@ export class CreateApplicationPage extends BasePage {
     orgPath: string,
   ): Promise<void> {
     await this.byTestId("application-moe-email").fill(email);
-    await this.searchAndSelectOrg(/Organisation MOE/i, orgPath);
+    await this.selectOrganization("application-moe-organization", orgPath);
     await this.byTestId("application-moe-firstname").fill(firstname);
     await this.byTestId("application-moe-lastname").fill(lastname);
   }
 
   async fillMoeStepAsGroup(email: string, orgPath: string): Promise<void> {
     await this.byTestId("application-moe-email").fill(email);
-    await this.searchAndSelectOrg(/Organisation MOE/i, orgPath);
-    await this.byTestId("application-moe-is-group")
-      .locator("..")
-      .getByText(/entité/i)
-      .click();
+    await this.selectOrganization("application-moe-organization", orgPath);
+    // Ciblage par `name` et non par testid : `DsfrCheckbox` écrase le `data-testid` reçu par le
+    // sien (`input-checkbox-{id}`, id aléatoire), donc `application-moe-is-group` n'existe
+    // dans aucun élément du DOM. Le libellé, lui, a déjà changé de « groupe » à « entité » et il
+    // est porté par deux éléments : le viser par le texte serait ambigu autant que fragile.
+    await this.checkDsfrCheckbox(
+      this.page.locator('input[type=checkbox][name="moeIsGroup"]'),
+    );
   }
 
-  async nextStep(): Promise<void> {
+  /**
+   * Passe à l'étape `expected` du formulaire de création (4 étapes : infos, détails, MOA, MOE).
+   *
+   * L'assertion sur le titre d'étape est indispensable : `nextStep()` côté applicatif ne fait RIEN
+   * quand `validateCurrentStep()` échoue, sans lever d'erreur. Sans elle, un champ requis oublié se
+   * manifeste vingt secondes plus tard par un timeout sur un champ de l'étape suivante — diagnostic
+   * illisible. Ici l'échec pointe l'étape qui n'a pas été franchie.
+   */
+  async nextStep(expected: 2 | 3 | 4): Promise<void> {
     await this.byTestId("application-next-btn").click();
+    await expect(
+      this.byTestId(`application-step-title-${expected}`),
+    ).toBeVisible();
   }
 
   async submit(): Promise<void> {
