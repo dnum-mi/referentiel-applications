@@ -13,6 +13,9 @@ const iconByType: Record<NotificationType, string> = {
   [NotificationType.USER_UNBLOCKED]: "fr-icon-checkbox-circle-line",
   [NotificationType.CAMPAIGN_QUALITY_REMINDER]: "ri-line-chart-line",
   [NotificationType.CAMPAIGN_QUALITY_SPONSOR_REPORT]: "ri-mail-send-line",
+  // Fin de vie d'une technologie (#2236) : le sablier dit l'échéance, là où un
+  // pictogramme d'alerte se confondrait avec les signalements.
+  [NotificationType.TECHNOLOGY_END_OF_LIFE]: "fr-icon-hourglass-line",
 };
 
 export function getNotificationIcon(type: NotificationType): string {
