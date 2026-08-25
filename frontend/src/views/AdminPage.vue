@@ -10,6 +10,7 @@ import AdminLabelSourcesTab from "@/components/admin/AdminLabelSourcesTab.vue";
 import AdminMditCampaignsTab from "@/components/admin/AdminMditCampaignsTab.vue";
 import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
 import AdminBusinessDivisionsTab from "@/components/admin/AdminBusinessDivisionsTab.vue";
+import AdminCorrelationsTab from "@/components/admin/AdminCorrelationsTab.vue";
 import AdminEmailLogsTab from "@/components/admin/AdminEmailLogsTab.vue";
 import AdminQualityCampaignsTab from "@/components/admin/AdminQualityCampaignsTab.vue";
 import { computed } from "vue";
@@ -114,6 +115,15 @@ const allTabs: DsfrTab[] = [
     component: markRaw(AdminQualityCampaignsTab),
     // Délégable à un non-admin (#2282) : seul onglet accessible sans AdminPanelManage.
     permissions: [Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE],
+  },
+  {
+    title: "Revue des corrélations",
+    icon: "ri-git-merge-line",
+    tabId: "tab-correlations",
+    panelId: "panel-correlations",
+    component: markRaw(AdminCorrelationsTab),
+    // Pas de `permissions` : le défaut du filtre ci-dessous est AdminPanelManage,
+    // qui est exactement ce qu'exigent les endpoints de revue des corrélations.
   },
 ];
 
