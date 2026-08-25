@@ -96,3 +96,70 @@ describe("PrismaQueryBuilder — filtres de conformité", () => {
     });
   });
 });
+
+describe("PrismaQueryBuilder — filtre de corrélation (#2287)", () => {
+  const prisma = {
+    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+  } as unknown as PrismaService;
+  const groupActor = {
+    build: jest.fn().mockReturnValue(""),
+  } as unknown as QueryBuilderGroupActor;
+  const requestor = { email: "user@example.com" } as unknown as Requestor;
+
+  const builder = new PrismaQueryBuilder(prisma, groupActor);
+
+  const buildRelationAnd = async (
+    filters: Partial<ApplicationSearchFilters>,
+  ) => {
+    const where = await builder.buildSearchWhere(
+      filters as ApplicationSearchFilters,
+      requestor,
+    );
+    // la requête de relations est le dernier bloc empilé dans le AND
+    return where.AND[where.AND.length - 1];
+  };
+
+  // La corrélation est symétrique : la direction de stockage ne doit pas
+  // influer sur le résultat de la recherche.
+  const symmetricQuery = {
+    OR: [
+      {
+        relationsAsSource: {
+          some: { applicationTargetId: "app-a", type: "is_correlated_with" },
+        },
+      },
+      {
+        relationsAsTarget: {
+          some: { applicationSourceId: "app-a", type: "is_correlated_with" },
+        },
+      },
+    ],
+  };
+
+  it("INCLUDE : retient les applications corrélées dans un sens comme dans l'autre", async () => {
+    const relationAnd = await buildRelationAnd({
+      is_correlated_with: "INCLUDE",
+      relationAppId: "app-a",
+    });
+
+    expect(relationAnd).toEqual({ AND: [{ OR: [symmetricQuery] }] });
+  });
+
+  it("EXCLUDE : écarte les deux directions", async () => {
+    const relationAnd = await buildRelationAnd({
+      is_correlated_with: "EXCLUDE",
+      relationAppId: "app-a",
+    });
+
+    expect(relationAnd).toEqual({ AND: [{ NOT: symmetricQuery }] });
+  });
+
+  it("NEUTRAL : n'ajoute aucune contrainte", async () => {
+    const relationAnd = await buildRelationAnd({
+      is_correlated_with: "NEUTRAL",
+      relationAppId: "app-a",
+    });
+
+    expect(relationAnd).toEqual({ AND: [] });
+  });
+});

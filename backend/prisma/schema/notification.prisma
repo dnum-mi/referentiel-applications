@@ -12,6 +12,8 @@ enum NotificationType {
   user_permissions_changed
   user_blocked
   user_unblocked
+  campaign_quality_reminder
+  campaign_quality_sponsor_report
 }
 
 /// Notification in-app persistée pour un utilisateur (cloche du header), en complément

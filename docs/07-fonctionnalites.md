@@ -19,12 +19,14 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
   - [2.7 Liens externes](#27-liens-externes)
   - [2.8 Sources de données](#28-sources-de-données)
 - [3. Indice de Qualité (IQ)](#3-indice-de-qualité-iq)
+  - [3.1 Campagnes de mise en qualité](#31-campagnes-de-mise-en-qualité)
 - [4. Signalements](#4-signalements)
 - [5. Abonnements et notifications](#5-abonnements-et-notifications)
 - [6. Historique global des modifications](#6-historique-global-des-modifications)
 - [7. Tableaux de bord](#7-tableaux-de-bord)
   - [7.1 Qualité générale](#71-qualité-générale)
   - [7.2 Dette technique (Time)](#72-dette-technique-time)
+  - [7.3 Suivi des fins de vie](#73-suivi-des-fins-de-vie)
 - [8. Export Excel](#8-export-excel)
 - [9. Administration](#9-administration)
 - [10. Récapitulatif des fonctionnalités et permissions](#10-récapitulatif-des-fonctionnalités-et-permissions)
@@ -42,7 +44,7 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
 - **hébergement** : recherche libre, site, plateforme, fournisseur, bâtiment, salle, absence d'hébergement (`missingHosting`) ;
 - **statut** : un ou plusieurs statuts courants, absence de statut ;
 - **conformités** : présence sur les axes `dima`, `pdma`, `homologation`, `rgaa`, `dsfr`, `rgpd` ;
-- **relations** typées (`is_part_of`, `in_replacement_of`, `is_service_user_of`, `is_data_user_of`, `use_sso_of`) en mode `INCLUDE` / `EXCLUDE` / `NEUTRAL`, et filtrage par application liée ;
+- **relations** typées (`is_part_of`, `in_replacement_of`, `is_service_user_of`, `is_data_user_of`, `use_sso_of`, `is_correlated_with`) en mode `INCLUDE` / `EXCLUDE` / `NEUTRAL`, et filtrage par application liée — la corrélation étant symétrique, les deux directions sont considérées ;
 - **indice de qualité** : bornes minimale et maximale (`iqGte`, `iqLte`) ;
 - **liens** externes (`link`).
 
@@ -172,6 +174,17 @@ Chaque niveau dispose d'un barème dégressif selon le nombre de manques (par ex
 
 **Permission.** Visible par tous (`AppRead`). Recalcul global : **administrateurs** (`AdminPanelManage`).
 
+### 3.1 Campagnes de mise en qualité (#2282)
+
+**Ce que ça fait.** Un administrateur cible un sous-ensemble d'applications via les **mêmes filtres que la recherche du catalogue**, puis crée une campagne (nom, message incitatif optionnel, **liste d'emails sponsors** optionnelle, date de début, date de fin indicative optionnelle). À la date de début — automatiquement via un cron quotidien, ou immédiatement via un déclenchement manuel — la campagne résout les applications correspondant au filtre, **fige leur IQ courant** (`iqAtStart`) par application ciblée, puis relance par email les acteurs **MOA/MOE** de chacune pour les inciter à compléter leur fiche. L'impact de la campagne (IQ moyen au départ vs IQ moyen actuel) est ensuite consultable en continu dans l'onglet admin, sans attendre la date de fin. Les sponsors de la campagne (un ou plusieurs) peuvent à tout moment recevoir un email récapitulatif de cet impact ; ceux disposant d'un compte reçoivent en complément une notification in-app.
+
+**Où c'est dans le code.**
+
+- Back : module `backend/src/quality-campaign/` (`quality-campaign.controller.ts`, `quality-campaign.service.ts` — résolution des cibles via `ApplicationService.search`, snapshot IQ, calcul d'impact), cron `cron/quality-campaign-cron.service.ts` (déclenchement quotidien à la date de début, gated par `EMAIL_CRON_ENABLED`). Schéma `quality-campaign.prisma` (`QualityCampaign.sponsorEmails: String[]`, `QualityCampaignTarget`). Emails : `EmailService.sendQualityCampaignReminderEmail` / `sendQualityCampaignSponsorReportEmail` (un seul email combiné, tous les sponsors en destinataires), templates `email/templates/quality-campaign-*.template.html`. Notifications in-app : `NotificationType.campaign_quality_reminder` (acteurs) et `NotificationType.campaign_quality_sponsor_report` (sponsors ayant un compte `User`).
+- Front : point d'entrée `frontend/src/components/modal/CreateQualityCampaignModal.vue` (bouton « Créer une campagne qualité » dans `ApplicationSearchActions.vue`, pré-rempli avec le filtre courant de la recherche) ; gestion `frontend/src/components/admin/AdminQualityCampaignsTab.vue` + `QualityCampaignActions.vue` (onglet admin « Campagnes de mise en qualité ») ; saisie de la liste de sponsors via `frontend/src/components/form/SponsorEmailsInput.vue` (partagé entre création et édition) ; store `frontend/src/stores/qualityCampaignStore.ts`.
+
+**Permission.** Création, gestion, déclenchement manuel : **administrateurs** (`AdminPanelManage`).
+
 ## 4. Signalements
 
 **Ce que ça fait.** Permet de signaler une erreur ou une information manquante. Deux natures :
@@ -208,7 +221,7 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 
 ### 5.1 Centre de notifications in-app (#2280)
 
-**Ce que ça fait.** En complément de l'email (canal principal), une cloche dans l'en-tête affiche un badge du nombre de notifications non lues. Un clic ouvre un panneau listant les événements récents pertinents pour l'utilisateur connecté (lu/non-lu distingués visuellement), avec une action « Tout marquer comme lu » et un lien vers l'historique complet (`/notifications`). Événements couverts : signalement créé (aux gestionnaires `ReportManage`) ou traité (à son auteur), acteur ajouté/modifié, application suivie modifiée, rappel de validation de fiche, organisation/permissions changées, compte bloqué/débloqué. Pas de rafraîchissement en tâche de fond : le compteur se met à jour à chaque navigation.
+**Ce que ça fait.** En complément de l'email (canal principal), une cloche dans l'en-tête affiche un badge du nombre de notifications non lues. Un clic ouvre un panneau listant les événements récents pertinents pour l'utilisateur connecté (lu/non-lu distingués visuellement), avec une action « Tout marquer comme lu » et un lien vers l'historique complet (`/notifications`). Événements couverts : signalement créé (aux gestionnaires `ReportManage`) ou traité (à son auteur), acteur ajouté/modifié, application suivie modifiée, rappel de validation de fiche, organisation/permissions changées, compte bloqué/débloqué, campagne qualité (relance envoyée à l'acteur ciblé, rapport de résultats envoyé au sponsor — voir [3.1](#31-campagnes-de-mise-en-qualité)). Pas de rafraîchissement en tâche de fond : le compteur se met à jour à chaque navigation.
 
 **Où c'est dans le code.**
 
@@ -252,6 +265,28 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 
 **Permission.** `MDITList` (« Voir la liste des MDIT »), incluse dans le socle Lecteur et pouvant être configurée selon un périmètre organisationnel.
 
+### 7.3 Suivi des fins de vie
+
+**Ce que ça fait.** Vue transverse répondant à « quelles applications utilisent une technologie en fin de vie ? ». Elle liste les applications dont au moins une technologie est **en fin de vie**, le sera **dans moins de 6 mois**, ou est **sortie du support actif** — l'information n'existait jusque-là que fiche par fiche, dans l'onglet Stack technique. Filtres par statut, par organisation (chemin ou sigle d'un acteur, en correspondance partielle : un chemin de direction ramène ses organisations filles) et par recherche libre sur le libellé d'application ou le produit.
+
+Les trois statuts **partitionnent** la liste : une technologie déjà en fin de vie n'apparaît pas aussi sous « fin de support actif ». Le classement est calculé côté serveur, pour que la vue transverse et la fiche s'accordent sur le statut d'une même technologie.
+
+**Fraîcheur des données.** La résolution endoflife.date est écrite sur `TechnologyStack` puis rafraîchie de deux façons :
+
+- **paresseusement**, au GET d'une fiche, pour les technologies de cette fiche (TTL 7 jours) ;
+- **globalement**, par le cron `EolRefreshService` (3 h du matin, `TECHNOLOGY_EOL_CRON_ENABLED`). Sans lui, une application que personne ne consulte ne serait jamais recalculée — précisément celle qu'une vue transverse doit signaler.
+
+Le cron ne résout qu'**une fois par produit distinct** pour tout le run, et n'écrit rien lorsqu'endoflife.date ne répond pas : écraser une date valide par `null` et réarmer le TTL figerait la ligne une semaine sur une donnée non vérifiée.
+
+**Où c'est dans le code.**
+
+- Front : `frontend/src/views/EndOfLifePage.vue` (route `/fins-de-vie`), store `frontend/src/stores/endOfLifeStore.ts`.
+- Back : `GET /technologies/end-of-life` (`backend/src/technology/end-of-life.controller.ts`), service `end-of-life.service.ts`, règles de classement `utils/eol-status.ts`, recalcul planifié `eol-refresh.service.ts`.
+
+**Tri.** Par libellé d'application. Trier par gravité supposerait d'ordonner sur un agrégat de la relation (la fin de vie la plus proche), ce que Prisma ne sait pas faire : un tri appliqué après pagination ne classerait que la page affichée et donnerait l'illusion d'un classement global. Pour cibler l'urgent, c'est le filtre de statut qui répond.
+
+**Permission.** Tous les utilisateurs connectés, comme l'historique global. `TechnologyRead` n'existe qu'à l'échelle d'une application et ne peut pas garder une route sans `:applicationId` ; l'ajouter au socle global la donnerait à un lecteur scopé sur les applications **hors** de son périmètre. Si la donnée devait être restreinte, il faudrait une permission dédiée plutôt que le détournement d'une permission existante.
+
 ## 8. Export Excel
 
 **Ce que ça fait.** Export au format Excel des résultats de recherche (avec les filtres en cours) ou de l'intégralité du référentiel.
@@ -270,6 +305,7 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 - **Gestion des tags** (`admin/AdminTagsTab.vue`) : tags libres attachables aux applications. Module `backend/src/tag/`.
 - **Gestion des sources** (`admin/AdminLabelSourcesTab.vue`) : sources contextualisant les noms alternatifs (labels). Modules `backend/src/labels/`, `backend/src/label-source/`.
 - **Indice de qualité** (`admin/AdminQualityTab.vue`) : recalcul global de l'IQ (voir [section 3](#3-indice-de-qualité-iq)).
+- **Revue des corrélations** (`admin/AdminCorrelationsTab.vue`) : suggestions de rapprochement entre applications proches (doublons potentiels), détectées automatiquement à partir de la similarité des noms, des données partagées et des acteurs communs. Chaque suggestion affiche la paire, le score et le détail des signaux ; l'administrateur accepte (la relation `is_correlated_with` apparaît alors sur les deux fiches) ou rejette (la paire n'est plus proposée). La détection peut aussi être lancée à la demande. Permission `AdminPanelManage`. Module `backend/src/relationship/correlation/`.
 - **Matrice des permissions** (`admin/AdminPermsMatrixTab.vue`) : pour chaque **type d'acteur** (MOA, MOE, TMA, RSSI, etc.), définition des droits de lecture/écriture conférés sur la fiche (informations générales, hébergements, conformités, acteurs, relations, liens, historique, priorité de redémarrage). C'est la **couche 3** du système de permissions ; voir [Permissions et sécurité](./06-permissions-et-securite.md).
 
 **Permission.** L'ensemble du panneau requiert `AdminPanelManage`. La suppression d'application (`DELETE /applications/:applicationId`) et certaines actions (création de type d'acteur) relèvent également de droits administrateurs.
@@ -290,6 +326,7 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 | Fiche – Liens externes           | `LinksTab.vue` · `backend/src/links`                                        | `LinkRead` / `LinkWrite`                                                           |
 | Fiche – Sources de données       | `data-application/DataApplicationTab.vue`                                   | `AppWrite` (Contributeur+)                                                         |
 | Indice de Qualité                | `quality.utils.ts` · `QualityTab.vue`                                       | Lecture `AppRead` · Recalcul global `AdminPanelManage`                             |
+| Campagnes de mise en qualité     | `backend/src/quality-campaign` · `AdminQualityCampaignsTab.vue`             | `AdminPanelManage`                                                                 |
 | Signalements                     | `ReportsPage.vue` · `backend/src/report`                                    | `ReportRead` / `ReportPost` · gestion `ReportManage` · global `CreateGlobalReport` |
 | Abonnements / notifications      | `UserProfilePage.vue` · `POST /users/me/subscribe/:appId`                   | utilisateur connecté                                                               |
 | Historique global                | `MetadataPage.vue` · `backend/src/metadatas`                                | `MetadataRead`                                                                     |

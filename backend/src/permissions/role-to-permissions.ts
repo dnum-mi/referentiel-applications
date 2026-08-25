@@ -36,6 +36,10 @@ const ADMIN_PERMISSIONS = new Set([
   Permission.DataExport,
   Permission.DeleteApplication,
   Permission.ActorTypePost,
+  // Par défaut pour les administrateurs, mais aussi accordable individuellement (couche 2,
+  // additionalPermissions) à un utilisateur non-admin pour lui déléguer uniquement la gestion
+  // des campagnes qualité (#2282).
+  Permission.QualityCampaignManage,
 ]);
 
 export const roleToPermissions = (role: Roles) => {

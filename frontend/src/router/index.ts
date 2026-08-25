@@ -104,6 +104,12 @@ const routes = [
     meta: { requiresAuth: true, title: "Qualité générale - Référentiel des applications" },
   },
   {
+    name: routeNames.ENDOFLIFE,
+    path: "/fins-de-vie",
+    component: () => import("@/views/EndOfLifePage.vue"),
+    meta: { requiresAuth: true, title: "Suivi des fins de vie - Référentiel des applications" },
+  },
+  {
     name: routeNames.TIMEPAGE,
     path: "/time",
     component: () => import("@/views/TimePage.vue"),
@@ -162,7 +168,10 @@ router.beforeEach(async (to) => {
     }
 
     if (to.meta.requiresAdmin) {
-      if (!userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
+      // QualityCampaignManage peut être délégué à un non-admin (#2282) pour lui donner accès à
+      // l'unique onglet "Campagnes de mise en qualité" de /administration, sans le reste du
+      // panneau (filtré par tab dans AdminPage.vue).
+      if (!userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE])) {
         return { path: "/" };
       }
     }

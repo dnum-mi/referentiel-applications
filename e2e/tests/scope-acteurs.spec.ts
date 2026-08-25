@@ -1,6 +1,6 @@
 import { test, expect } from "../fixtures/test";
 import type { Page } from "@playwright/test";
-import { AdminPage, ApplicationPage, loginAs } from "../pom";
+import { AdminPage, ApplicationPage, loginAs, switchTo } from "../pom";
 import { ApiClient } from "../fixtures/api-client";
 import { DataFeature } from "../fixtures/datafeature";
 
@@ -84,19 +84,28 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
   // Le volet « autorisé » se joue via l'UI réelle (modal d'édition + recherche d'organisation),
   // réactivé après le fix #1830 (le modal ne se ferme plus au rafraîchissement de la liste et le
   // POM absorbe le focus initial différé de DsfrModal). Le volet « refusé » reste au niveau de
-  // l'autorisation API : c'est le garde-fou serveur qu'on veut verrouiller (le trajet UI existe —
-  // la liste n'est pas filtrée par périmètre — mais aboutirait au même contrôle serveur).
+  // l'autorisation API : c'est le garde-fou serveur qu'on veut verrouiller. Depuis #2230/#2327 le
+  // trajet UI n'existe même plus (la liste est filtrée par périmètre, cf. IMP-08), mais le garde-fou
+  // serveur reste la couche à vérifier — c'est lui qui tient si le filtre de liste est contourné.
   // Cible du changement : TOTO (≠ TOTO/TUTU, l'org du seed) — l'option n'est PAS pré-alimentée
   // par `initial-organization`, la sélection prouve donc que la recherche a réellement abouti,
   // et l'assertion finale n'est pas satisfaite d'avance. Restauration en `finally`.
   test("SCP-04 - changer l'organisation dans le périmètre est autorisé, éditer un user hors périmètre est refusé", async ({
     page,
+    data,
   }) => {
-    await loginAs(page, "scope-admin");
-    const api = await ApiClient.fromPage(page);
-    const target = await api.userByEmail("qa-target@example.com");
-    const outside = await api.userByEmail("qa-outside@example.com");
+    // Les deux cibles sont résolues avec le token ADMIN GLOBAL (fixture `data`) AVANT de basculer
+    // en `scope-admin` : depuis #2230/#2327 `GET /users?search=` est filtré par le périmètre du
+    // requêteur, donc `qa-outside` est introuvable pour un admin scopé. Le résoudre après le
+    // `loginAs("scope-admin")` renvoyait `null` et faisait sauter tout le test via `test.skip`,
+    // sous un motif trompeur (« fixture absente ») alors que le seed était bien en place.
+    const target = await data.getUser("qa-target@example.com");
+    const outside = await data.getUser("qa-outside@example.com");
     test.skip(!target || !outside, SEED_HINT);
+
+    // `switchTo` (pas `loginAs`) : la fixture `data` a déjà connecté `page` en `admin`.
+    await switchTo(page, "scope-admin");
+    const api = await ApiClient.fromPage(page);
 
     // Affecter une AUTRE organisation du périmètre (TOTO) via le MODAL → autorisé (toast succès).
     const admin = new AdminPage(page);

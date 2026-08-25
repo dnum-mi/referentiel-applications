@@ -65,6 +65,8 @@ model Application {
   notificationLogs            NotificationLog[]
   /// Notifications in-app référençant cette application (#2280)
   notifications                Notification[]
+  /// Ciblages par des campagnes de mise en qualité (#2282)
+  qualityCampaignTargets QualityCampaignTarget[]
   /// Différents source de données associées à cette application
   dataApplications DataApplication[]
   /// Données du catalogue dont cette application est une source (voir `DataDescription.applicationsSource`)
