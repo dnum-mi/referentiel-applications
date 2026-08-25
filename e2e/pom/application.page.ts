@@ -80,8 +80,22 @@ export class ApplicationPage extends BasePage {
    * (pas de `data-testid` standard sur la `<DataTable>` — cf. `data-test-id` avec tiret).
    * On localise le `columnheader` dans le scope du wrapper.
    */
+  /**
+   * Le tableau des acteurs effectivement affiché.
+   *
+   * Deux précautions, chacune constatée à l'usage :
+   * - `actor-tab` ne porte QUE le bandeau de titre de l'onglet — le template d'`ActorTab` a
+   *   plusieurs racines et la table est un frère, sous `actor-table` ; viser `actor-tab` revenait
+   *   à chercher lignes et colonnes dans un conteneur qui n'en a aucune ;
+   * - la fiche monte les rendus desktop et mobile, donc `actor-table` résout deux nœuds : on
+   *   retient le visible, celui que l'utilisateur manipule.
+   */
+  private actorTable() {
+    return this.byTestId("actor-table").filter({ visible: true }).first();
+  }
+
   async sortActorColumn(headerName: string): Promise<void> {
-    const wrapper = this.byTestId("actor-tab");
+    const wrapper = this.actorTable();
     await expect(wrapper).toBeVisible();
     await wrapper
       .getByRole("columnheader", { name: headerName, exact: true })
@@ -117,7 +131,7 @@ export class ApplicationPage extends BasePage {
   // on évite ainsi la violation du mode strict quand les deux nœuds coexistent.
   async expectActorsTabLoaded(): Promise<void> {
     await expect(
-      this.byTestId("actor-tab").or(this.byTestId("actor-empty-state")).first(),
+      this.actorTable().or(this.byTestId("actor-empty-state")).first(),
     ).toBeVisible();
   }
 
@@ -455,12 +469,12 @@ export class ApplicationPage extends BasePage {
 
   async expectActorRowContains(text: string): Promise<void> {
     await expect(
-      this.byTestId("actor-tab").locator("tr", { hasText: text }).first(),
+      this.actorTable().locator("tr", { hasText: text }).first(),
     ).toBeVisible();
   }
 
   async bulkDeleteActors(count: number): Promise<void> {
-    const rows = this.byTestId("actor-tab").locator("tbody tr");
+    const rows = this.actorTable().locator("tbody tr");
     for (let i = 0; i < count; i++) {
       await rows.nth(i).locator("input[type=checkbox]").check();
     }
@@ -477,15 +491,18 @@ export class ApplicationPage extends BasePage {
   async addGroupActor(actorType: string, organization: string): Promise<void> {
     await this.byTestId("actor-add-btn").click();
     await expect(this.byTestId("actor-form-container")).toBeVisible();
-    const checkbox = this.byTestId("actor-is-group-checkbox");
-    await checkbox
-      .locator("..")
-      .getByText(/groupe/i)
-      .click();
+    // Ciblage par `name` : `DsfrCheckbox` écrase le `data-testid` reçu par le sien
+    // (`input-checkbox-{id}`), donc `actor-is-group-checkbox` n'existe dans aucun élément. Et le
+    // libellé ne dit plus « groupe » mais « Cet acteur est rattaché(e) à une entité ».
+    await this.checkDsfrCheckbox(
+      this.byTestId("actor-form-container").locator(
+        'input[type=checkbox][name="isGroup"]',
+      ),
+    );
     await this.byTestId("actor-type-select").selectOption({
       label: actorType,
     });
-    await this.byTestId("actor-organization").fill(organization);
+    await this.selectOrganization("actor-organization", organization);
     await this.byTestId("actor-submit-btn").click();
     await this.expectToaster(/sauvegardé avec succès|enregistré/i);
   }

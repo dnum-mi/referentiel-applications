@@ -45,6 +45,11 @@ test.describe("Actions CRUD de base", () => {
     });
 
     try {
+      // Sans cette garde, une création refusée par l'API passe inaperçue et l'échec se déplace
+      // vingt secondes plus tard sur une ligne de tableau absente.
+      expect(a1, "acteur de test 1 non créé").not.toBeNull();
+      expect(a2, "acteur de test 2 non créé").not.toBeNull();
+
       const fiche = new ApplicationPage(page);
       await fiche.open(app!.id, "tab-actors");
       await fiche.expectActorsTabLoaded();
@@ -62,9 +67,14 @@ test.describe("Actions CRUD de base", () => {
     const actorTypes = await data.actorTypes();
     test.skip(!actorTypes?.length, "Aucun type d'acteur disponible");
 
+    // Une organisation EXISTANTE : le champ est un sélecteur (`OrganizationSearchSelect`), pas une
+    // saisie libre — un libellé inventé ne remonte aucun résultat et ne peut pas être choisi.
+    const orgPath = await data.anyOrganizationPath();
+    test.skip(!orgPath, "Aucune organisation dans le jeu de données");
+
     const fiche = new ApplicationPage(page);
     await fiche.open(app!.id, "tab-actors");
-    await fiche.addGroupActor(actorTypes![0].label, `E2E-Org-${Date.now()}`);
+    await fiche.addGroupActor(actorTypes![0].label, orgPath!);
   });
 
   test("CRU-04 - droits d'écriture sur les acteurs (lecteur)", async ({
@@ -157,15 +167,15 @@ test.describe("Actions CRUD de base", () => {
     const createPage = new CreateApplicationPage(page);
     await createPage.open();
     await createPage.fillStep1(label, "Test app created by CRU-08");
-    await createPage.nextStep();
-    await createPage.nextStep();
+    await createPage.nextStep(2);
+    await createPage.nextStep(3);
     await createPage.fillMoaStep(
       `moa-${ts}@test.example.com`,
       "E2E-MOA",
       "Test",
       orgPath!,
     );
-    await createPage.nextStep();
+    await createPage.nextStep(4);
     await createPage.fillMoeStep(
       `moe-${ts}@test.example.com`,
       "E2E-MOE",
@@ -202,13 +212,13 @@ test.describe("Actions CRUD de base", () => {
       label,
       "Test app created by CRU-16 with group actors",
     );
-    await createPage.nextStep();
-    await createPage.nextStep();
+    await createPage.nextStep(2);
+    await createPage.nextStep(3);
     await createPage.fillMoaStepAsGroup(
       `moa-group-${ts}@test.example.com`,
       orgPath!,
     );
-    await createPage.nextStep();
+    await createPage.nextStep(4);
     await createPage.fillMoeStepAsGroup(
       `moe-group-${ts}@test.example.com`,
       orgPath!,
@@ -221,7 +231,18 @@ test.describe("Actions CRUD de base", () => {
       expect(created).not.toBeNull();
       const actors = await data.applicationActors(created!.id);
       expect(actors?.length).toBeGreaterThanOrEqual(2);
-      expect(actors?.every((a) => a.isGroup === true)).toBe(true);
+
+      // On cible les DEUX acteurs créés par ce test, et pas l'ensemble : depuis #2303 le créateur
+      // de l'application est ajouté automatiquement comme acteur, et il n'est évidemment pas un
+      // groupe — un `every()` sur toute la liste ne peut plus être vrai.
+      const mine = (actors ?? []).filter((a) =>
+        [
+          `moa-group-${ts}@test.example.com`,
+          `moe-group-${ts}@test.example.com`,
+        ].includes(a.email ?? ""),
+      );
+      expect(mine).toHaveLength(2);
+      expect(mine.every((a) => a.isGroup === true)).toBe(true);
     } finally {
       if (created) await data.removeApplication(created!.id);
     }
@@ -237,15 +258,15 @@ test.describe("Actions CRUD de base", () => {
     const createPage = new CreateApplicationPage(page);
     await createPage.open();
     await createPage.fillStep1(label, "App to delete CRU-09");
-    await createPage.nextStep();
-    await createPage.nextStep();
+    await createPage.nextStep(2);
+    await createPage.nextStep(3);
     await createPage.fillMoaStep(
       `moa-${ts}@test.example.com`,
       "E2E-MOA",
       "Del",
       orgPath!,
     );
-    await createPage.nextStep();
+    await createPage.nextStep(4);
     await createPage.fillMoeStep(
       `moe-${ts}@test.example.com`,
       "E2E-MOE",
