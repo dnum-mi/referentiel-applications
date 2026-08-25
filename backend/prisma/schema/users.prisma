@@ -73,6 +73,8 @@ model User {
   reviewedCorrelationSuggestions CorrelationSuggestion[] @relation("CorrelationSuggestionReviewer")
   /// Notifications in-app reçues par cet utilisateur (#2280)
   notifications              Notification[]
+  /// Campagnes de mise en qualité créées par cet utilisateur (#2282)
+  qualityCampaigns          QualityCampaign[]
 }
 
 /// Filtre de recherche d'applications sauvegardé par un utilisateur, pour être réappliqué

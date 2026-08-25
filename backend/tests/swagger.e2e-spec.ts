@@ -55,6 +55,8 @@ describe("Test Swagger documentation", () => {
       "/correlation-suggestions/{id}/reject",
       "/notifications/{id}/read",
       "/notifications/read-all",
+      "/quality-campaigns/{id}/send",
+      "/quality-campaigns/{id}/send-sponsor-report",
     ];
     for (const [path, pathObject] of Object.entries(openapiSpec.paths)) {
       for (const method of methods) {
