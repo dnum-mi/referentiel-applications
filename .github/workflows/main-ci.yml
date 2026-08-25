@@ -6,10 +6,16 @@ on:
     branches:
       - main
       - dev
+  # Volontairement SANS filtre `branches` : ce filtre porte sur la BASE de la pull
+  # request, si bien qu'une PR empilée sur une autre branche que `main` ou `dev`
+  # ne déclenchait ni tests, ni build, ni contrôle de fraîcheur du swagger — seuls
+  # les deux jobs de lint, qui n'ont jamais eu ce filtre, s'exécutaient. Une pile
+  # de PR se présentait donc en vert sans avoir rien vérifié.
+  #
+  # Piège associé : une PR poussée alors que sa base était encore `main`, puis
+  # repointée, CONSERVE les checks du run initial et paraît validée. C'est ainsi
+  # que le trou est passé inaperçu.
   pull_request:
-    branches:
-      - main
-      - dev
 
 jobs:
   build-backend:
