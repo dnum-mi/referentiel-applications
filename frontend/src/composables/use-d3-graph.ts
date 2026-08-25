@@ -1,7 +1,7 @@
 import type { GraphEdgeDto, GraphNodeDto } from "@/client";
 import * as d3 from "d3";
 import { statusApplicationDictionary } from "../constants/dictionary";
-import { useGraphStyles } from "./use-graph-style";
+import { useGraphStyles, isDirectedRelation } from "./use-graph-style";
 import { sanitizeLabel } from "./use-sanitize-utils";
 
 type GraphStyles = ReturnType<ReturnType<typeof useGraphStyles>["getGraphStyles"]>;
@@ -125,6 +125,9 @@ export function useD3Graph() {
         return "0";
       })
       .attr("marker-end", (d) => {
+        // Une relation symétrique (corrélation) n'a pas de direction : la
+        // flèche suivrait l'ordre des identifiants, pas le métier.
+        if (!isDirectedRelation(d.type || "")) return null;
         const safeType = (d.type || "").replace(/[^\w-]/g, "_");
         return `url(#arrow-${safeType})`;
       });

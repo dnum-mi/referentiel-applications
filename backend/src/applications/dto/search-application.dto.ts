@@ -404,6 +404,15 @@ export class ApplicationSearchDto extends PaginationDto {
   use_sso_of?: RelationTypeFilter;
 
   @ApiPropertyOptional({
+    description:
+      "Filtrée sur la relation de type Est corrélée à (symétrique : les deux directions sont considérées)",
+    enum: ["NEUTRAL", "INCLUDE", "EXCLUDE"],
+  })
+  @IsOptional()
+  @IsEnum(["NEUTRAL", "INCLUDE", "EXCLUDE"])
+  is_correlated_with?: RelationTypeFilter;
+
+  @ApiPropertyOptional({
     description: "Filtrage des relations sur cette app",
   })
   @IsOptional()
