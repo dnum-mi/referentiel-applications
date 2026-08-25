@@ -43,7 +43,7 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
 - **hébergement** : recherche libre, site, plateforme, fournisseur, bâtiment, salle, absence d'hébergement (`missingHosting`) ;
 - **statut** : un ou plusieurs statuts courants, absence de statut ;
 - **conformités** : présence sur les axes `dima`, `pdma`, `homologation`, `rgaa`, `dsfr`, `rgpd` ;
-- **relations** typées (`is_part_of`, `in_replacement_of`, `is_service_user_of`, `is_data_user_of`, `use_sso_of`) en mode `INCLUDE` / `EXCLUDE` / `NEUTRAL`, et filtrage par application liée ;
+- **relations** typées (`is_part_of`, `in_replacement_of`, `is_service_user_of`, `is_data_user_of`, `use_sso_of`, `is_correlated_with`) en mode `INCLUDE` / `EXCLUDE` / `NEUTRAL`, et filtrage par application liée — la corrélation étant symétrique, les deux directions sont considérées ;
 - **indice de qualité** : bornes minimale et maximale (`iqGte`, `iqLte`) ;
 - **liens** externes (`link`).
 

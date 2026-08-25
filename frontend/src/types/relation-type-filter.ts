@@ -11,5 +11,6 @@ export const IS_MEDIATION_SERVICE = "is_mediation_service";
 export type MediationServiceField = keyof NonNullable<ApplicationControllerSearchData["query"]> & typeof IS_MEDIATION_SERVICE;
 
 /// Types de relation réellement exposés comme filtres par l'API de recherche.
-/// `is_correlated_with` existe côté RelationType mais n'a pas de filtre associé.
+/// Le `Extract` suit le contrat : un type de relation n'apparaît ici que si la recherche
+/// expose le filtre correspondant. `is_correlated_with` en fait partie depuis #2287.
 export type FilterableRelationField = Extract<RelationType, keyof NonNullable<ApplicationControllerSearchData["query"]>>;

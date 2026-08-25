@@ -1460,6 +1460,17 @@ paths:
               - NEUTRAL
               - INCLUDE
               - EXCLUDE
+        - name: is_correlated_with
+          required: false
+          in: query
+          description: "Filtrée sur la relation de type Est corrélée à (symétrique : les
+            deux directions sont considérées)"
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
         - name: relationAppId
           required: false
           in: query
@@ -1976,6 +1987,17 @@ paths:
           required: false
           in: query
           description: Filtrée sur la relation de type Utilise le SSO de
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: is_correlated_with
+          required: false
+          in: query
+          description: "Filtrée sur la relation de type Est corrélée à (symétrique : les
+            deux directions sont considérées)"
           schema:
             type: string
             enum:
@@ -5617,6 +5639,17 @@ paths:
           required: false
           in: query
           description: Filtrée sur la relation de type Utilise le SSO de
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: is_correlated_with
+          required: false
+          in: query
+          description: "Filtrée sur la relation de type Est corrélée à (symétrique : les
+            deux directions sont considérées)"
           schema:
             type: string
             enum:
