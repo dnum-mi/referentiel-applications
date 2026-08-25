@@ -12,6 +12,7 @@
 - [Notifications](#notifications)
 - [Organizations](#organizations)
 - [Users](#users)
+- [QualityCampaigns](#qualitycampaigns)
 - [Signalements](#signalements)
 - [Statistics](#statistics)
 - [Technology](#technology)
@@ -1114,6 +1115,71 @@ Properties as follows:
 
 - `A`:
 - `B`:
+
+## QualityCampaigns
+
+```mermaid
+erDiagram
+"QualityCampaign" {
+  String id PK
+  String(150) name
+  Json filters
+  String message "nullable"
+  String sponsorEmails
+  DateTime startDate
+  DateTime endDate "nullable"
+  DateTime sentAt "nullable"
+  String createdById FK
+  DateTime createdAt
+}
+"QualityCampaignTarget" {
+  String id PK
+  String campaignId FK
+  String applicationId FK
+  Int iqAtStart "nullable"
+  DateTime createdAt
+}
+"QualityCampaignTarget" }o--|| "QualityCampaign" : campaign
+```
+
+### `QualityCampaign`
+
+Campagne de mise en qualité : cible un sous-ensemble d'applications via les mêmes filtres
+que la recherche du catalogue, pour relancer par email les acteurs (MOA/MOE) de ces
+applications et les inciter à améliorer leur indice de qualité (IQ) (#2282).
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `name`: Nom donné à la campagne
+- `filters`
+  > Filtres sérialisés (mêmes clés que la query de recherche d'applications) définissant les
+  > applications ciblées par la campagne
+- `message`: Message incitatif optionnel inclus dans l'email de relance envoyé aux acteurs
+- `sponsorEmails`: Emails des "sponsors" (porteurs) de la campagne, destinataires des rapports de résultats
+- `startDate`
+  > Date de démarrage : déclenche l'envoi automatique (cron) si la campagne n'a pas déjà
+  > été envoyée manuellement
+- `endDate`: Date de fin indicative de la campagne (affichage uniquement, aucun traitement automatique)
+- `sentAt`
+  > Date à laquelle la campagne a effectivement été envoyée aux acteurs (null tant qu'elle
+  > est planifiée). Les cibles et leur IQ de départ sont figés à cet instant.
+- `createdById`: Utilisateur ayant créé la campagne
+- `createdAt`: Date de création
+
+### `QualityCampaignTarget`
+
+Application ciblée par une campagne de mise en qualité, avec son IQ figé au moment de
+l'envoi de la campagne (#2282). Permet de mesurer l'impact de la campagne en comparant
+`iqAtStart` à l'IQ courant de l'application.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `campaignId`: Campagne concernée
+- `applicationId`: Application ciblée
+- `iqAtStart`: IQ de l'application au moment de l'envoi de la campagne (null si non calculable)
+- `createdAt`: Date de création (= date d'envoi de la campagne)
 
 ## Signalements
 
