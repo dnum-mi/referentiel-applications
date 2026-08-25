@@ -53,3 +53,13 @@
 - **Action** : ouvrir `/accessibilite`.
 - **Résultat attendu** : les sections « Déclaration d'accessibilité » et « État de conformité » sont
   visibles.
+
+### TRV-08 — La page « Fins de vie » liste les applications concernées ✅
+
+- **Datafeature** : session `admin`, seed QA (`pnpm db:seed:qa`) — au moins une application porte une
+  technologie dont la fin de vie est dépassée.
+- **Action** : ouvrir `/fins-de-vie` depuis le menu « Fins de vie » ; filtrer sur « Fin de vie
+  dépassée » ; cliquer le nom d'une application de la liste.
+- **Résultat attendu** : le tableau liste les applications concernées, chacune avec ses technologies
+  en fin de vie (badge de statut, produit, version, date) ; le filtre de statut restreint la liste et
+  le compteur de résultats est annoncé ; le lien ouvre l'onglet Stack technique de la fiche.

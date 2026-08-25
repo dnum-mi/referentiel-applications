@@ -5955,6 +5955,89 @@ paths:
           description: Technologie supprimée
       summary: Supprimer une technologie
       tags: *a34
+  /api/v2/technologies/end-of-life:
+    get:
+      description: "Vue transverse des fins de vie (#2236) : liste paginée des
+        applications dont au moins une technologie est en fin de vie, proche de
+        sa fin de vie (moins de 6 mois) ou sortie du support actif. Filtrable
+        par statut, par organisation et par recherche libre. Seules les
+        technologies retenues par le filtre sont restituées, triées par gravité
+        décroissante."
+      operationId: EndOfLifeController_findEndOfLifeApplications
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: status
+          required: false
+          in: query
+          description: "Ne retenir que les technologies portant ce statut de fin de vie.
+            Les trois valeurs partitionnent la liste : une technologie déjà en
+            fin de vie n'apparaît pas sous « fin de support actif »."
+          schema:
+            type: string
+            enum:
+              - eol
+              - eol-soon
+              - eoas-passed
+        - name: organization
+          required: false
+          in: query
+          description: "Filtre sur l'organisation d'un acteur de l'application : chemin ou
+            sigle, en correspondance partielle et insensible à la casse. Un
+            chemin de direction ramène donc aussi ses organisations filles."
+          schema:
+            example: MI/DNUM
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Recherche libre sur le libellé de l'application ou le produit
+            concerné (ex. « PostgreSQL »)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste paginée des applications concernées
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedEndOfLifeApplicationDto"
+      summary: Applications concernées par une technologie en fin de vie
+      tags:
+        - Technologies
   /api/v2/stats/iq-avg/period:
     get:
       description: "
@@ -10230,6 +10313,101 @@ components:
       required:
         - technology
         - product
+    EndOfLifeTechnologyDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+        technology:
+          type: string
+          example: Base de données
+        product:
+          type: string
+          example: PostgreSQL
+        version:
+          type: string
+          nullable: true
+          example: "13"
+        eolDate:
+          type: string
+          nullable: true
+          format: date-time
+        eoasDate:
+          type: string
+          nullable: true
+          format: date-time
+        latestVersion:
+          type: string
+          nullable: true
+          example: "15.5"
+        status:
+          enum: &a48
+            - eol
+            - eol-soon
+            - eoas-passed
+          type: string
+          description: Statut calculé côté serveur, pour que la fiche et la vue transverse
+            classent une technologie de la même façon.
+      required:
+        - id
+        - technology
+        - product
+        - status
+    EndOfLifeApplicationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+        label:
+          type: string
+          example: Référentiel des applications
+        shortName:
+          type: string
+          nullable: true
+          example: REFAPP
+        organizationPaths:
+          description: Organisations des acteurs de l'application, dédoublonnées et triées
+            — le rattachement d'une application se lit par ses acteurs, elle
+            n'en porte pas en propre.
+          example:
+            - MI/DNUM/SDIT
+          type: array
+          items:
+            type: string
+        technologies:
+          description: Uniquement les technologies retenues par le filtre, triées par
+            gravité décroissante.
+          type: array
+          items:
+            $ref: "#/components/schemas/EndOfLifeTechnologyDto"
+        worstStatus:
+          enum: *a48
+          type: string
+          description: Statut le plus grave parmi les technologies retenues — sert au tri
+            et à la pastille de synthèse.
+      required:
+        - id
+        - label
+        - organizationPaths
+        - technologies
+        - worstStatus
+    PaginatedEndOfLifeApplicationDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/EndOfLifeApplicationDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     GetIqAvgGroupedDto:
       type: object
       properties:

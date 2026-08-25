@@ -51,6 +51,10 @@ const APP = {
     id: "a0000000-0000-4000-8000-0000000000b4",
     label: "QA-GROUP-CHILD",
   },
+  endOfLife: {
+    id: "a0000000-0000-4000-8000-0000000000b5",
+    label: "QA-EOL",
+  },
 };
 
 async function ensureOrganization(org: {
@@ -250,7 +254,76 @@ async function seedQa() {
     null,
   );
 
+  console.log("🕰️  QA — stack technique en fin de vie…");
+  const appEndOfLife = await ensureApplication(APP.endOfLife, scopeAdmin.id);
+  await ensureEndOfLifeStack(appEndOfLife.id);
+
   console.log("✅ Seed QA terminé.");
+}
+
+/**
+ * Trois lignes de stack couvrant les trois statuts de la vue transverse (#2236) : fin de vie
+ * dépassée, proche (moins de 6 mois), et sortie du seul support actif.
+ *
+ * Les dates sont RELATIVES à l'exécution du seed, pour que les fixtures gardent leur statut au fil
+ * du temps — des dates en dur finiraient toutes « dépassées » et le cas « proche » ne serait plus
+ * jamais couvert.
+ *
+ * `eolCheckedAt` est daté de maintenant à dessein : le rafraîchissement paresseux ne réécrit une
+ * ligne qu'au-delà du TTL de 7 jours, ce qui protège ces valeurs d'un appel réel à endoflife.date
+ * lors de la consultation de la fiche.
+ */
+async function ensureEndOfLifeStack(applicationId: string) {
+  const day = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const at = (offsetDays: number) => new Date(now + offsetDays * day);
+
+  const entries = [
+    {
+      technology: "Base de données",
+      product: "PostgreSQL",
+      version: "13",
+      eolDate: at(-120),
+      eoasDate: at(-400),
+      latestVersion: "15.5",
+    },
+    {
+      technology: "Langage",
+      product: "Python",
+      version: "3.9",
+      eolDate: at(60),
+      eoasDate: null,
+      latestVersion: "3.13",
+    },
+    {
+      technology: "Runtime",
+      product: "Node.js",
+      version: "20",
+      eolDate: at(400),
+      eoasDate: at(-30),
+      latestVersion: "20.19.5",
+    },
+  ];
+
+  for (const entry of entries) {
+    const data = {
+      applicationId,
+      ...entry,
+      eolProduct: entry.product.toLowerCase(),
+      eolCheckedAt: new Date(now),
+    };
+    await prisma.technologyStack.upsert({
+      where: {
+        applicationId_technology_product: {
+          applicationId,
+          technology: entry.technology,
+          product: entry.product,
+        },
+      },
+      create: data,
+      update: data,
+    });
+  }
 }
 
 seedQa()
