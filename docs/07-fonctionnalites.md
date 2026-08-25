@@ -19,6 +19,7 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
   - [2.7 Liens externes](#27-liens-externes)
   - [2.8 Sources de données](#28-sources-de-données)
 - [3. Indice de Qualité (IQ)](#3-indice-de-qualité-iq)
+  - [3.1 Campagnes de mise en qualité](#31-campagnes-de-mise-en-qualité)
 - [4. Signalements](#4-signalements)
 - [5. Abonnements et notifications](#5-abonnements-et-notifications)
 - [6. Historique global des modifications](#6-historique-global-des-modifications)
@@ -172,6 +173,17 @@ Chaque niveau dispose d'un barème dégressif selon le nombre de manques (par ex
 
 **Permission.** Visible par tous (`AppRead`). Recalcul global : **administrateurs** (`AdminPanelManage`).
 
+### 3.1 Campagnes de mise en qualité (#2282)
+
+**Ce que ça fait.** Un administrateur cible un sous-ensemble d'applications via les **mêmes filtres que la recherche du catalogue**, puis crée une campagne (nom, message incitatif optionnel, **liste d'emails sponsors** optionnelle, date de début, date de fin indicative optionnelle). À la date de début — automatiquement via un cron quotidien, ou immédiatement via un déclenchement manuel — la campagne résout les applications correspondant au filtre, **fige leur IQ courant** (`iqAtStart`) par application ciblée, puis relance par email les acteurs **MOA/MOE** de chacune pour les inciter à compléter leur fiche. L'impact de la campagne (IQ moyen au départ vs IQ moyen actuel) est ensuite consultable en continu dans l'onglet admin, sans attendre la date de fin. Les sponsors de la campagne (un ou plusieurs) peuvent à tout moment recevoir un email récapitulatif de cet impact ; ceux disposant d'un compte reçoivent en complément une notification in-app.
+
+**Où c'est dans le code.**
+
+- Back : module `backend/src/quality-campaign/` (`quality-campaign.controller.ts`, `quality-campaign.service.ts` — résolution des cibles via `ApplicationService.search`, snapshot IQ, calcul d'impact), cron `cron/quality-campaign-cron.service.ts` (déclenchement quotidien à la date de début, gated par `EMAIL_CRON_ENABLED`). Schéma `quality-campaign.prisma` (`QualityCampaign.sponsorEmails: String[]`, `QualityCampaignTarget`). Emails : `EmailService.sendQualityCampaignReminderEmail` / `sendQualityCampaignSponsorReportEmail` (un seul email combiné, tous les sponsors en destinataires), templates `email/templates/quality-campaign-*.template.html`. Notifications in-app : `NotificationType.campaign_quality_reminder` (acteurs) et `NotificationType.campaign_quality_sponsor_report` (sponsors ayant un compte `User`).
+- Front : point d'entrée `frontend/src/components/modal/CreateQualityCampaignModal.vue` (bouton « Créer une campagne qualité » dans `ApplicationSearchActions.vue`, pré-rempli avec le filtre courant de la recherche) ; gestion `frontend/src/components/admin/AdminQualityCampaignsTab.vue` + `QualityCampaignActions.vue` (onglet admin « Campagnes de mise en qualité ») ; saisie de la liste de sponsors via `frontend/src/components/form/SponsorEmailsInput.vue` (partagé entre création et édition) ; store `frontend/src/stores/qualityCampaignStore.ts`.
+
+**Permission.** Création, gestion, déclenchement manuel : **administrateurs** (`AdminPanelManage`).
+
 ## 4. Signalements
 
 **Ce que ça fait.** Permet de signaler une erreur ou une information manquante. Deux natures :
@@ -208,7 +220,7 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 
 ### 5.1 Centre de notifications in-app (#2280)
 
-**Ce que ça fait.** En complément de l'email (canal principal), une cloche dans l'en-tête affiche un badge du nombre de notifications non lues. Un clic ouvre un panneau listant les événements récents pertinents pour l'utilisateur connecté (lu/non-lu distingués visuellement), avec une action « Tout marquer comme lu » et un lien vers l'historique complet (`/notifications`). Événements couverts : signalement créé (aux gestionnaires `ReportManage`) ou traité (à son auteur), acteur ajouté/modifié, application suivie modifiée, rappel de validation de fiche, organisation/permissions changées, compte bloqué/débloqué. Pas de rafraîchissement en tâche de fond : le compteur se met à jour à chaque navigation.
+**Ce que ça fait.** En complément de l'email (canal principal), une cloche dans l'en-tête affiche un badge du nombre de notifications non lues. Un clic ouvre un panneau listant les événements récents pertinents pour l'utilisateur connecté (lu/non-lu distingués visuellement), avec une action « Tout marquer comme lu » et un lien vers l'historique complet (`/notifications`). Événements couverts : signalement créé (aux gestionnaires `ReportManage`) ou traité (à son auteur), acteur ajouté/modifié, application suivie modifiée, rappel de validation de fiche, organisation/permissions changées, compte bloqué/débloqué, campagne qualité (relance envoyée à l'acteur ciblé, rapport de résultats envoyé au sponsor — voir [3.1](#31-campagnes-de-mise-en-qualité)). Pas de rafraîchissement en tâche de fond : le compteur se met à jour à chaque navigation.
 
 **Où c'est dans le code.**
 
@@ -291,6 +303,7 @@ Le panneau d'administration (`frontend/src/views/AdminPage.vue`) est organisé e
 | Fiche – Liens externes           | `LinksTab.vue` · `backend/src/links`                                        | `LinkRead` / `LinkWrite`                                                           |
 | Fiche – Sources de données       | `data-application/DataApplicationTab.vue`                                   | `AppWrite` (Contributeur+)                                                         |
 | Indice de Qualité                | `quality.utils.ts` · `QualityTab.vue`                                       | Lecture `AppRead` · Recalcul global `AdminPanelManage`                             |
+| Campagnes de mise en qualité     | `backend/src/quality-campaign` · `AdminQualityCampaignsTab.vue`             | `AdminPanelManage`                                                                 |
 | Signalements                     | `ReportsPage.vue` · `backend/src/report`                                    | `ReportRead` / `ReportPost` · gestion `ReportManage` · global `CreateGlobalReport` |
 | Abonnements / notifications      | `UserProfilePage.vue` · `POST /users/me/subscribe/:appId`                   | utilisateur connecté                                                               |
 | Historique global                | `MetadataPage.vue` · `backend/src/metadatas`                                | `MetadataRead`                                                                     |

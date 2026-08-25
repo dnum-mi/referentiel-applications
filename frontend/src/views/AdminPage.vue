@@ -12,6 +12,10 @@ import AdminTokensTab from "@/components/admin/AdminTokensTab.vue";
 import AdminBusinessDivisionsTab from "@/components/admin/AdminBusinessDivisionsTab.vue";
 import AdminCorrelationsTab from "@/components/admin/AdminCorrelationsTab.vue";
 import AdminEmailLogsTab from "@/components/admin/AdminEmailLogsTab.vue";
+import AdminQualityCampaignsTab from "@/components/admin/AdminQualityCampaignsTab.vue";
+import { computed } from "vue";
+import { Permission } from "@/client";
+import { useUserStore } from "@/stores/userStore";
 
 interface DsfrTab {
   title: string;
@@ -19,10 +23,13 @@ interface DsfrTab {
   tabId: string;
   panelId: string;
   component: Component;
+  /** Permissions autorisant l'accès à l'onglet (OR) — par défaut `AdminPanelManage` seul. */
+  permissions?: Permission[];
 }
 
+const userStore = useUserStore();
 const activeTab = ref(0);
-const tabs = ref<DsfrTab[]>([
+const allTabs: DsfrTab[] = [
   {
     title: "Gestion des utilisateurs",
     icon: "ri-user-settings-line",
@@ -101,13 +108,28 @@ const tabs = ref<DsfrTab[]>([
     component: markRaw(AdminEmailLogsTab),
   },
   {
+    title: "Campagnes de mise en qualité",
+    icon: "ri-mail-send-line",
+    tabId: "tab-quality-campaigns",
+    panelId: "panel-quality-campaigns",
+    component: markRaw(AdminQualityCampaignsTab),
+    // Délégable à un non-admin (#2282) : seul onglet accessible sans AdminPanelManage.
+    permissions: [Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE],
+  },
+  {
     title: "Revue des corrélations",
     icon: "ri-git-merge-line",
     tabId: "tab-correlations",
     panelId: "panel-correlations",
     component: markRaw(AdminCorrelationsTab),
+    // Pas de `permissions` : le défaut du filtre ci-dessous est AdminPanelManage,
+    // qui est exactement ce qu'exigent les endpoints de revue des corrélations.
   },
-]);
+];
+
+// Un utilisateur délégué uniquement QualityCampaignManage atteint /administration (cf. router)
+// mais ne doit voir que l'onglet couvert par cette permission, pas le reste du panneau admin.
+const tabs = computed(() => allTabs.filter((tab) => userStore.hasPermissions(tab.permissions ?? [Permission.ADMIN_PANEL_MANAGE])));
 
 const tabsStyle = ref({ "--tabs-height": "auto" });
 </script>
