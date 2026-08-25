@@ -8,6 +8,7 @@ import { useApplicationSearch } from "@/composables/use-application-search";
 import { useToasterStore } from "@/stores/toasterStore";
 import { routeNames } from "@/router/route-names";
 import ReportModal from "@/components/modal/ReportModal.vue";
+import CreateQualityCampaignModal from "@/components/modal/CreateQualityCampaignModal.vue";
 import ColumnCustomization from "@/components/ColumnCustomization.vue";
 import { Permission } from "@/client";
 
@@ -18,6 +19,7 @@ const { filters } = useApplicationSearch();
 const toaster = useToasterStore();
 
 const isReportMissingOpen = ref(false);
+const isCreateCampaignOpen = ref(false);
 
 const reportStatusMessage = ref("");
 
@@ -38,6 +40,7 @@ function createModalHandlers(isOpen: Ref<boolean>) {
 }
 
 const { open: openReport, close: closeReport } = createModalHandlers(isReportMissingOpen);
+const { open: openCreateCampaign, close: closeCreateCampaign } = createModalHandlers(isCreateCampaignOpen);
 
 async function exportToExcel() {
   try {
@@ -58,6 +61,10 @@ const hasCreateApplicationsPermissions = computed(() => {
 
 const hasCreateGlobalReport = computed(() => {
   return userStore.hasPermissions([Permission.CREATE_GLOBAL_REPORT]);
+});
+
+const hasQualityCampaignPermissions = computed(() => {
+  return userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE]);
 });
 </script>
 
@@ -120,6 +127,18 @@ const hasCreateGlobalReport = computed(() => {
         title="Exporter en excel les applications correspondant aux filtres actuels"
       ></DsfrButton>
 
+      <DsfrButton
+        v-if="hasQualityCampaignPermissions"
+        label="Créer une campagne qualité"
+        icon="ri-mail-send-line"
+        secondary
+        data-testid="create-quality-campaign-btn"
+        class="action-btn icon-left"
+        @click="openCreateCampaign"
+        title="Créer une campagne de mise en qualité à partir des filtres actuels"
+        aria-label="Créer une campagne de mise en qualité à partir des filtres actuels"
+      ></DsfrButton>
+
       <ColumnCustomization data-testid="column-customization" />
     </div>
   </div>
@@ -132,6 +151,8 @@ const hasCreateGlobalReport = computed(() => {
     @status="(s: string) => (reportStatusMessage = s)"
     @busy="(b: boolean) => (reportStatusMessage = b ? 'En cours...' : '')"
   ></ReportModal>
+
+  <CreateQualityCampaignModal :opened="isCreateCampaignOpen" @close="closeCreateCampaign" />
 </template>
 
 <style scoped>

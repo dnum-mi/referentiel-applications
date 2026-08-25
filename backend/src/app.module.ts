@@ -34,6 +34,7 @@ import { TokenModule } from "./token/token.module";
 import { UserModule } from "./user/user.module";
 import { LabelSourceModule } from "./label-source/label-source.module";
 import { MditCampaignModule } from "./mdit-campaign/mdit-campaign.module";
+import { QualityCampaignModule } from "./quality-campaign/quality-campaign.module";
 import { RgaaModule } from "./rgaa/rgaa.module";
 import { TechnologyModule } from "./technology/technology.module";
 import { DataCatalogModule } from "./data-catalog/data-catalogue.module";
@@ -88,6 +89,7 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
     ReportModule,
     SavedFilterModule,
     NotificationModule,
+    QualityCampaignModule,
     HealthCheckModule,
   ],
   controllers: [AppController],

@@ -11,6 +11,8 @@ const iconByType: Record<NotificationType, string> = {
   [NotificationType.USER_PERMISSIONS_CHANGED]: "fr-icon-lock-line",
   [NotificationType.USER_BLOCKED]: "fr-icon-forbid-line",
   [NotificationType.USER_UNBLOCKED]: "fr-icon-checkbox-circle-line",
+  [NotificationType.CAMPAIGN_QUALITY_REMINDER]: "ri-line-chart-line",
+  [NotificationType.CAMPAIGN_QUALITY_SPONSOR_REPORT]: "ri-mail-send-line",
 };
 
 export function getNotificationIcon(type: NotificationType): string {
