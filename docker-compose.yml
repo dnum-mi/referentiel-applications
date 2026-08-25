@@ -30,7 +30,12 @@ services:
       target: dev
       args:
         VERSION: ${VERSION:-development}
-    command: pnpm start:dev
+    # Client Prisma regenere a chaque demarrage, et pas seulement au build de
+    # l'image : les DTO exposent les enums Prisma via @ApiProperty({ enum: ... }),
+    # donc un client perime suffit a faire ecrire au backend un swagger.yaml faux.
+    # Seul le generator `client` est cible : `markdown` reecrirait prisma/docs/schema.md
+    # a chaque demarrage, en markdown brut la ou la version commitee passe par Prettier.
+    command: sh -c "pnpm db:generate:client && pnpm start:dev"
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/postgres
       - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080,http://krakend:8080

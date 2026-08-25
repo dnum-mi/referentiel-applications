@@ -7,6 +7,7 @@ import {
   IS_MEDIATION_SERVICE,
   RELATION_TYPE_FILTERS,
   RELATION_TYPE_FILTERS_ARRAY,
+  type FilterableRelationField,
   type MediationServiceField,
   type RelationTypeFilter,
 } from "@/types/relation-type-filter";
@@ -63,7 +64,7 @@ watch([() => filters.value.relationAppId], ([relationAppId]) => {
   }
 });
 
-type RelationField = RelationType | MediationServiceField;
+type RelationField = FilterableRelationField | MediationServiceField;
 
 const relationFields: { field: RelationField; label: string; testId: string; tooltip: string }[] = [
   {
