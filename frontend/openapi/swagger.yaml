@@ -7410,6 +7410,7 @@ components:
         - user_unblocked
         - campaign_quality_reminder
         - campaign_quality_sponsor_report
+        - technology_end_of_life
     NotificationDto:
       type: object
       properties:

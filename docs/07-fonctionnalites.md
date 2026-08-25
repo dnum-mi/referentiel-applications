@@ -285,6 +285,29 @@ Le cron ne résout qu'**une fois par produit distinct** pour tout le run, et n'�
 
 **Tri.** Par libellé d'application. Trier par gravité supposerait d'ordonner sur un agrégat de la relation (la fin de vie la plus proche), ce que Prisma ne sait pas faire : un tri appliqué après pagination ne classerait que la page affichée et donnerait l'illusion d'un classement global. Pour cibler l'urgent, c'est le filtre de statut qui répond.
 
+**Alertes aux gestionnaires.** `EolNotificationService` prévient, via le centre de notifications
+in-app, les acteurs dont le type porte `TechnologyWrite` — ceux qui peuvent agir sur la stack. Une
+entrée de `NotificationLog` par technologie **et par statut** garantit une alerte par palier franchi,
+jamais une par exécution. La passe est séparée du rafraîchissement : un statut change aussi par
+simple **écoulement du temps**, sans que la ligne soit réécrite, et c'est le cas le plus courant —
+une échéance connue de longue date qui arrive à terme. Interrupteur dédié
+`TECHNOLOGY_EOL_NOTIFY_ENABLED`, distinct de celui du recalcul : recalculer est interne, prévenir des
+utilisateurs est visible.
+
+**Pourquoi les fins de vie n'entrent PAS dans l'IQ ni dans la maturité technique.** La question était
+posée par #2236 ; la réponse est non, dans les deux cas.
+
+- L'**IQ** mesure la complétude documentaire d'une fiche. Y injecter la fin de vie ferait baisser le
+  score d'une fiche parfaitement remplie au motif qu'elle **déclare honnêtement** une technologie
+  périmée : cela reviendrait à récompenser l'omission de sa stack technique. L'effet pervers est
+  direct et contraire au but du référentiel.
+- La **maturité technique** (`TechnicalDebtInfo`) est une **note humaine de 1 à 5**, saisie lors de
+  la campagne annuelle « dette IT ». La dériver d'un calcul écraserait l'évaluation des métiers.
+
+L'exposition aux fins de vie est donc restituée **à côté** des indicateurs, jamais dedans : par cette
+vue, et par un compteur « Applications concernées par une fin de vie » dans les statistiques
+globales. Un constat, pas une note.
+
 **Permission.** Tous les utilisateurs connectés, comme l'historique global. `TechnologyRead` n'existe qu'à l'échelle d'une application et ne peut pas garder une route sans `:applicationId` ; l'ajouter au socle global la donnerait à un lecteur scopé sur les applications **hors** de son périmètre. Si la donnée devait être restreinte, il faudrait une permission dédiée plutôt que le détournement d'une permission existante.
 
 ## 8. Export Excel

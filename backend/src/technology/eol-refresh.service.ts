@@ -9,6 +9,7 @@ import {
   type EolResolution,
 } from "./utils/endoflife.utils";
 import { EOL_REFRESH_TTL_MS } from "./utils/eol-status";
+import { EolNotificationService } from "./eol-notification.service";
 
 export interface EolRefreshResult {
   /** Lignes de stack périmées au démarrage du run. */
@@ -44,6 +45,7 @@ export class EolRefreshService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
+    private readonly eolNotificationService: EolNotificationService,
   ) {
     this.cronEnabled = this.configService.get<boolean>(
       "technology.eolCronEnabled",
@@ -65,6 +67,17 @@ export class EolRefreshService {
       return;
     }
     await this.runRefreshSafely();
+    // Les alertes viennent APRÈS le rafraîchissement, pour porter sur les dates du
+    // jour et non sur celles de la veille. Leur échec ne doit pas faire échouer le
+    // recalcul, qui est le cœur du job.
+    await this.eolNotificationService
+      .notifyPendingEndOfLife()
+      .catch((error) => {
+        this.logger.error(
+          "Échec des notifications de fin de vie",
+          error instanceof Error ? error.stack : String(error),
+        );
+      });
   }
 
   /**
