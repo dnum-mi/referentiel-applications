@@ -1460,6 +1460,17 @@ paths:
               - NEUTRAL
               - INCLUDE
               - EXCLUDE
+        - name: is_correlated_with
+          required: false
+          in: query
+          description: "Filtrée sur la relation de type Est corrélée à (symétrique : les
+            deux directions sont considérées)"
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
         - name: relationAppId
           required: false
           in: query
@@ -1976,6 +1987,17 @@ paths:
           required: false
           in: query
           description: Filtrée sur la relation de type Utilise le SSO de
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
+        - name: is_correlated_with
+          required: false
+          in: query
+          description: "Filtrée sur la relation de type Est corrélée à (symétrique : les
+            deux directions sont considérées)"
           schema:
             type: string
             enum:
@@ -5623,6 +5645,17 @@ paths:
               - NEUTRAL
               - INCLUDE
               - EXCLUDE
+        - name: is_correlated_with
+          required: false
+          in: query
+          description: "Filtrée sur la relation de type Est corrélée à (symétrique : les
+            deux directions sont considérées)"
+          schema:
+            type: string
+            enum:
+              - NEUTRAL
+              - INCLUDE
+              - EXCLUDE
         - name: relationAppId
           required: false
           in: query
@@ -5922,6 +5955,89 @@ paths:
           description: Technologie supprimée
       summary: Supprimer une technologie
       tags: *a34
+  /api/v2/technologies/end-of-life:
+    get:
+      description: "Vue transverse des fins de vie (#2236) : liste paginée des
+        applications dont au moins une technologie est en fin de vie, proche de
+        sa fin de vie (moins de 6 mois) ou sortie du support actif. Filtrable
+        par statut, par organisation et par recherche libre. Seules les
+        technologies retenues par le filtre sont restituées, triées par gravité
+        décroissante."
+      operationId: EndOfLifeController_findEndOfLifeApplications
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: status
+          required: false
+          in: query
+          description: "Ne retenir que les technologies portant ce statut de fin de vie.
+            Les trois valeurs partitionnent la liste : une technologie déjà en
+            fin de vie n'apparaît pas sous « fin de support actif »."
+          schema:
+            type: string
+            enum:
+              - eol
+              - eol-soon
+              - eoas-passed
+        - name: organization
+          required: false
+          in: query
+          description: "Filtre sur l'organisation d'un acteur de l'application : chemin ou
+            sigle, en correspondance partielle et insensible à la casse. Un
+            chemin de direction ramène donc aussi ses organisations filles."
+          schema:
+            example: MI/DNUM
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Recherche libre sur le libellé de l'application ou le produit
+            concerné (ex. « PostgreSQL »)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste paginée des applications concernées
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedEndOfLifeApplicationDto"
+      summary: Applications concernées par une technologie en fin de vie
+      tags:
+        - Technologies
   /api/v2/stats/iq-avg/period:
     get:
       description: "
@@ -6326,6 +6442,196 @@ paths:
           description: Filtre sauvegardé non trouvé
       summary: Supprimer un filtre sauvegardé
       tags: *a37
+  /api/v2/quality-campaigns:
+    post:
+      operationId: QualityCampaignController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQualityCampaignDto"
+      responses:
+        "201":
+          description: Campagne créée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+      summary: Créer une campagne de mise en qualité
+      tags: &a38
+        - Quality Campaigns
+    get:
+      operationId: QualityCampaignController_findAll
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: Liste des campagnes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedQualityCampaignDto"
+      summary: Lister les campagnes de mise en qualité
+      tags: *a38
+  /api/v2/quality-campaigns/{id}:
+    get:
+      operationId: QualityCampaignController_findOne
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Campagne
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Détail d'une campagne de mise en qualité, avec son impact
+      tags: *a38
+    patch:
+      operationId: QualityCampaignController_update
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQualityCampaignDto"
+      responses:
+        "200":
+          description: Campagne mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Modifier une campagne de mise en qualité
+      tags: *a38
+    delete:
+      operationId: QualityCampaignController_remove
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Campagne supprimée
+        "404":
+          description: Campagne non trouvée
+      summary: Supprimer une campagne de mise en qualité
+      tags: *a38
+  /api/v2/quality-campaigns/{id}/preview:
+    get:
+      operationId: QualityCampaignController_preview
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Aperçu
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignPreviewDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Aperçu à la volée des applications actuellement matchées par le filtre
+        de la campagne
+      tags: *a38
+  /api/v2/quality-campaigns/{id}/send:
+    post:
+      operationId: QualityCampaignController_send
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Campagne envoyée
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Déclencher immédiatement l'envoi de la campagne aux acteurs des
+        applications ciblées
+      tags: *a38
+  /api/v2/quality-campaigns/{id}/send-sponsor-report:
+    post:
+      operationId: QualityCampaignController_sendSponsorReport
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Rapport envoyé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Envoyer au sponsor de la campagne un email récapitulatif de l'impact
+        courant
+      tags: *a38
   /api/v2/health-check:
     get:
       description: Exécute une requête basique vers la base de données pour vérifier
@@ -6569,7 +6875,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: &a38
+          enum: &a39
             - active
             - expired
             - revoked
@@ -6674,7 +6980,7 @@ components:
           description: Date d'expiration du token, au format ISO 8601, maximum 1 an dans
             le futur
         status:
-          enum: *a38
+          enum: *a39
           type: string
           example: active
           description: Statut du token
@@ -7104,6 +7410,7 @@ components:
         - user_unblocked
         - campaign_quality_reminder
         - campaign_quality_sponsor_report
+        - technology_end_of_life
     NotificationDto:
       type: object
       properties:
@@ -7456,7 +7763,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: &a39
+          example: &a40
             - population 1
             - population 2
           description: population associated with the application
@@ -7467,7 +7774,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: &a40
+          example: &a41
             - finance
             - HR
           description: Purposes of the application
@@ -7480,7 +7787,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: &a41
+          example: &a42
             - tag1
             - tag2
           type: array
@@ -7770,7 +8077,7 @@ components:
           example: An amazing application
           description: Description of the application
         targetPopulations:
-          example: *a39
+          example: *a40
           description: population associated with the application
           type: array
           items:
@@ -7779,7 +8086,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationPriorityRestart"
         purposes:
-          example: *a40
+          example: *a41
           description: Purposes of the application
           type: array
           items:
@@ -7790,7 +8097,7 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApplicationType"
         tags:
-          example: *a41
+          example: *a42
           type: array
           items:
             type: string
@@ -8920,7 +9227,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: &a42
+          enum: &a43
             - 96
             - 72
             - 48
@@ -8951,7 +9258,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: &a43
+          enum: &a44
             - OK
             - KO
           type: string
@@ -8962,7 +9269,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: &a44
+          enum: &a45
             - 48
             - 24
             - 2
@@ -8982,7 +9289,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: &a45
+          enum: &a46
             - S3
             - LOCAL
             - EXTERNE
@@ -8993,7 +9300,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: &a46
+          enum: &a47
             - OK
             - KO
           type: string
@@ -9003,7 +9310,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: &a47
+          enum: &a48
             - homologuee
             - en_cours
             - dispensee
@@ -9044,7 +9351,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a42
+          enum: *a43
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -9068,7 +9375,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a43
+          enum: *a44
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -9077,7 +9384,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a44
+          enum: *a45
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -9093,7 +9400,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a45
+          enum: *a46
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -9101,7 +9408,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a46
+          enum: *a47
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -9109,7 +9416,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a47
+          enum: *a48
           type: string
           description: Homologation status
         homologation_date_end:
@@ -9168,7 +9475,7 @@ components:
       properties:
         dima_duration_hours:
           type: number
-          enum: *a42
+          enum: *a43
           example: 4
           description: DIMA duration in hours (one of 96, 72, 48, 24, 4, 1, 0)
         dima_is_hno:
@@ -9192,7 +9499,7 @@ components:
           example: 2023-01-01
           description: DIMA last test date
         dima_test_result:
-          enum: *a43
+          enum: *a44
           type: string
           description: DIMA test result
         dima_recovery_manager:
@@ -9201,7 +9508,7 @@ components:
           description: DIMA recovery manager
         pdma_duration_hours:
           type: number
-          enum: *a44
+          enum: *a45
           example: 24
           description: PDMA duration in hours (one of 48, 24, 2, 0)
         pdma_data_types:
@@ -9217,7 +9524,7 @@ components:
           example: Snapshot, backup incrémental
           description: PDMA backup method used
         pdma_backup_storage:
-          enum: *a45
+          enum: *a46
           type: string
           description: PDMA backup storage
         pdma_last_test_date:
@@ -9225,7 +9532,7 @@ components:
           example: 2023-01-01
           description: PDMA last test date
         pdma_test_result:
-          enum: *a46
+          enum: *a47
           type: string
           description: PDMA test result
         pdma_restoration_manager:
@@ -9233,7 +9540,7 @@ components:
           example: Marie Martin
           description: PDMA restoration manager
         homologation_status:
-          enum: *a47
+          enum: *a48
           type: string
           description: Homologation status
         homologation_date_end:
@@ -10007,6 +10314,101 @@ components:
       required:
         - technology
         - product
+    EndOfLifeTechnologyDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+        technology:
+          type: string
+          example: Base de données
+        product:
+          type: string
+          example: PostgreSQL
+        version:
+          type: string
+          nullable: true
+          example: "13"
+        eolDate:
+          type: string
+          nullable: true
+          format: date-time
+        eoasDate:
+          type: string
+          nullable: true
+          format: date-time
+        latestVersion:
+          type: string
+          nullable: true
+          example: "15.5"
+        status:
+          enum: &a49
+            - eol
+            - eol-soon
+            - eoas-passed
+          type: string
+          description: Statut calculé côté serveur, pour que la fiche et la vue transverse
+            classent une technologie de la même façon.
+      required:
+        - id
+        - technology
+        - product
+        - status
+    EndOfLifeApplicationDto:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 12345678-1234-1234-1234-123456789012
+        label:
+          type: string
+          example: Référentiel des applications
+        shortName:
+          type: string
+          nullable: true
+          example: REFAPP
+        organizationPaths:
+          description: Organisations des acteurs de l'application, dédoublonnées et triées
+            — le rattachement d'une application se lit par ses acteurs, elle
+            n'en porte pas en propre.
+          example:
+            - MI/DNUM/SDIT
+          type: array
+          items:
+            type: string
+        technologies:
+          description: Uniquement les technologies retenues par le filtre, triées par
+            gravité décroissante.
+          type: array
+          items:
+            $ref: "#/components/schemas/EndOfLifeTechnologyDto"
+        worstStatus:
+          enum: *a49
+          type: string
+          description: Statut le plus grave parmi les technologies retenues — sert au tri
+            et à la pastille de synthèse.
+      required:
+        - id
+        - label
+        - organizationPaths
+        - technologies
+        - worstStatus
+    PaginatedEndOfLifeApplicationDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/EndOfLifeApplicationDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
     GetIqAvgGroupedDto:
       type: object
       properties:
@@ -10168,6 +10570,172 @@ components:
       required:
         - name
         - filters
+    CreateQualityCampaignDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: Nom donné à la campagne
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications définissant les cibles de la
+            campagne (mêmes clés que la query de GET /applications)
+        message:
+          type: string
+          maxLength: 2000
+          description: Message incitatif inclus dans l'email de relance envoyé aux acteurs
+            des applications ciblées
+        sponsorEmails:
+          maxItems: 20
+          description: Emails des sponsors (porteurs) de la campagne, destinataires des
+            rapports de résultats
+          type: array
+          items:
+            type: string
+            format: email
+        startDate:
+          format: date-time
+          type: string
+          description: "Date de démarrage de la campagne : déclenche l'envoi automatique
+            aux acteurs"
+        endDate:
+          format: date-time
+          type: string
+          description: Date de fin indicative de la campagne (affichage uniquement)
+      required:
+        - name
+        - filters
+        - startDate
+    QualityCampaignDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications définissant les cibles
+        message:
+          type: string
+          nullable: true
+        sponsorEmails:
+          description: Emails des sponsors (porteurs) de la campagne
+          type: array
+          items:
+            type: string
+        startDate:
+          format: date-time
+          type: string
+        endDate:
+          format: date-time
+          type: string
+          nullable: true
+        sentAt:
+          format: date-time
+          type: string
+          nullable: true
+        createdAt:
+          format: date-time
+          type: string
+        status:
+          enum:
+            - scheduled
+            - sent
+          type: string
+          description: « scheduled » tant que la campagne n'a pas été envoyée (date de
+            début non atteinte, ou envoi manuel pas encore déclenché), « sent »
+            une fois envoyée
+        targetCount:
+          type: number
+          description: Nombre d'applications ciblées par la campagne
+        averageIqAtStart:
+          type: number
+          nullable: true
+          description: IQ moyen des applications ciblées au moment de l'envoi
+        averageIqCurrent:
+          type: number
+          nullable: true
+          description: IQ moyen actuel des applications ciblées
+        averageDelta:
+          type: number
+          nullable: true
+          description: Évolution moyenne de l'IQ depuis l'envoi de la campagne
+      required:
+        - id
+        - name
+        - filters
+        - sponsorEmails
+        - startDate
+        - createdAt
+        - status
+        - targetCount
+    PaginatedQualityCampaignDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/QualityCampaignDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
+    QualityCampaignPreviewDto:
+      type: object
+      properties:
+        matchedCount:
+          type: number
+          description: Nombre d'applications actuellement matchées par le filtre
+        averageIq:
+          type: number
+          description: IQ moyen actuel des applications matchées par le filtre
+      required:
+        - matchedCount
+        - averageIq
+    UpdateQualityCampaignDto:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+          description: Nom donné à la campagne
+        filters:
+          type: object
+          additionalProperties: true
+          description: Filtres de recherche d'applications définissant les cibles de la
+            campagne (mêmes clés que la query de GET /applications)
+        message:
+          type: string
+          maxLength: 2000
+          description: Message incitatif inclus dans l'email de relance envoyé aux acteurs
+            des applications ciblées
+        sponsorEmails:
+          maxItems: 20
+          description: Emails des sponsors (porteurs) de la campagne, destinataires des
+            rapports de résultats
+          type: array
+          items:
+            type: string
+            format: email
+        startDate:
+          format: date-time
+          type: string
+          description: "Date de démarrage de la campagne : déclenche l'envoi automatique
+            aux acteurs"
+        endDate:
+          format: date-time
+          type: string
+          description: Date de fin indicative de la campagne (affichage uniquement)
     HealthCheckDto:
       type: object
       properties:
@@ -10180,7 +10748,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a48
+          enum: &a50
             - OK
             - KO
           type: string
@@ -10202,7 +10770,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a48
+          enum: *a50
           type: string
           description: État de la connexion à la base de données
           example: OK
