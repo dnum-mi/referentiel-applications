@@ -7,18 +7,42 @@ test.describe("Actions CRUD de base", () => {
     page,
     data,
   }) => {
-    const app = await data.applicationWithActors();
-    test.skip(!app, "Aucune application avec acteur dans le jeu de données");
+    const app = await data.firstApplication();
+    test.skip(!app, "Aucune application dans le jeu de données");
 
-    const fiche = new ApplicationPage(page);
-    await fiche.open(app!.id, "tab-actors");
-    await fiche.expectActorsTabLoaded();
+    const actorTypes = await data.actorTypes();
+    const typeId = actorTypes?.[0]?.id;
+    test.skip(!typeId, "Aucun type d'acteur disponible");
 
-    const newFirstname = `E2E-${Date.now()}`;
-    const newLastname = "ModifTest";
-    await fiche.editFirstActor(newFirstname, newLastname);
-    await fiche.expectActorRowContains(newFirstname);
-    await fiche.expectActorRowContains(newLastname);
+    // L'acteur édité est créé PAR le test, AVEC une organisation : le formulaire
+    // d'édition exige une organisation pour enregistrer, et un acteur pris « au
+    // hasard » peut ne pas en avoir — notamment ceux créés sans organisation par
+    // les tests ADM tournant en parallèle (échec de campagne du 26/08).
+    const organization = await data.anyOrganization();
+    test.skip(!organization, "Aucune organisation dans le jeu de données");
+
+    const ts = Date.now();
+    const seeded = await data.createActor(app!.id, {
+      firstname: `E2E-CRU01-${ts}`,
+      lastname: "Cible",
+      actorTypeId: typeId,
+      organizationId: organization!.id,
+    });
+    test.skip(!seeded, "Impossible de créer l'acteur de test");
+
+    try {
+      const fiche = new ApplicationPage(page);
+      await fiche.open(app!.id, "tab-actors");
+      await fiche.expectActorsTabLoaded();
+
+      const newFirstname = `E2E-${ts}`;
+      const newLastname = "ModifTest";
+      await fiche.editActorByName(`E2E-CRU01-${ts}`, newFirstname, newLastname);
+      await fiche.expectActorRowContains(newFirstname);
+      await fiche.expectActorRowContains(newLastname);
+    } finally {
+      if (seeded) await data.deleteActor(app!.id, seeded.id).catch(() => {});
+    }
   });
 
   test("CRU-02 - supprimer un acteur par sélection multiple", async ({
@@ -53,7 +77,7 @@ test.describe("Actions CRUD de base", () => {
       const fiche = new ApplicationPage(page);
       await fiche.open(app!.id, "tab-actors");
       await fiche.expectActorsTabLoaded();
-      await fiche.bulkDeleteActors(2);
+      await fiche.bulkDeleteActors([`E2E-A-${ts}`, `E2E-B-${ts}`]);
     } finally {
       if (a1) await data.deleteActor(app!.id, a1.id).catch(() => {});
       if (a2) await data.deleteActor(app!.id, a2.id).catch(() => {});

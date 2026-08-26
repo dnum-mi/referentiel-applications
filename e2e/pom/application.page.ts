@@ -458,8 +458,23 @@ export class ApplicationPage extends BasePage {
 
   // --- CRU: Actors CRUD (CRU-01 to CRU-04) ---
 
-  async editFirstActor(firstname: string, lastname: string): Promise<void> {
-    await this.byTestId("actor-edit-btn").first().click();
+  /**
+   * Édite l'acteur dont la ligne contient `match` — jamais « le premier » : l'ordre
+   * des lignes n'est pas déterministe (le endpoint acteurs ne trie pas sans `sortBy`),
+   * et en exécution parallèle la première ligne peut être un acteur créé par un autre
+   * test SANS organisation — le formulaire exige une organisation, son bouton
+   * Enregistrer resterait désactivé (échec de campagne du 26/08 sur CRU-01).
+   */
+  async editActorByName(
+    match: string,
+    firstname: string,
+    lastname: string,
+  ): Promise<void> {
+    await this.actorTable()
+      .locator("tbody tr", { hasText: match })
+      .first()
+      .getByTestId("actor-edit-btn")
+      .click();
     await expect(this.byTestId("actor-form-container")).toBeVisible();
     await this.byTestId("actor-firstname-input").fill(firstname);
     await this.byTestId("actor-lastname-input").fill(lastname);
@@ -473,10 +488,19 @@ export class ApplicationPage extends BasePage {
     ).toBeVisible();
   }
 
-  async bulkDeleteActors(count: number): Promise<void> {
-    const rows = this.actorTable().locator("tbody tr");
-    for (let i = 0; i < count; i++) {
-      await rows.nth(i).locator("input[type=checkbox]").check();
+  /**
+   * Supprime par sélection multiple les acteurs dont les lignes contiennent `matches` —
+   * jamais « les N premières lignes » : l'ordre n'est pas déterministe, et en parallèle
+   * les premières lignes peuvent être des acteurs du seed ou d'autres tests, que la
+   * suppression casserait.
+   */
+  async bulkDeleteActors(matches: string[]): Promise<void> {
+    for (const match of matches) {
+      await this.actorTable()
+        .locator("tbody tr", { hasText: match })
+        .first()
+        .locator("input[type=checkbox]")
+        .check();
     }
     await this.byTestId("actor-bulk-delete-btn").click();
     await expect(async () => {
