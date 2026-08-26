@@ -10343,7 +10343,7 @@ components:
           nullable: true
           example: "15.5"
         status:
-          enum: &a48
+          enum: &a49
             - eol
             - eol-soon
             - eoas-passed
@@ -10384,7 +10384,7 @@ components:
           items:
             $ref: "#/components/schemas/EndOfLifeTechnologyDto"
         worstStatus:
-          enum: *a48
+          enum: *a49
           type: string
           description: Statut le plus grave parmi les technologies retenues — sert au tri
             et à la pastille de synthèse.
@@ -10748,7 +10748,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: &a49
+          enum: &a50
             - OK
             - KO
           type: string
@@ -10770,7 +10770,7 @@ components:
           description: Version du backend
           example: v1.86.0
         etat:
-          enum: *a49
+          enum: *a50
           type: string
           description: État de la connexion à la base de données
           example: OK

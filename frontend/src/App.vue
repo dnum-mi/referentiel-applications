@@ -8,6 +8,7 @@ import { getConfig } from "./services/config";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/userStore";
 import { useNotificationStore } from "@/stores/notificationStore";
+import { useNotificationPolling } from "./composables/use-notification-polling";
 import { configureClients } from "./api/init-clients";
 import SearchHeader from "./components/search/SearchHeader.vue";
 import NotificationBell from "./components/notification/NotificationBell.vue";
@@ -46,12 +47,7 @@ const { maintenanceMode } = useMaintenanceMode();
 
 configureClients(toaster);
 
-// Pas de polling (#2280) : le compteur de notifications non lues se rafraîchit à la navigation.
-router.afterEach(() => {
-  if (userStore.authenticated) {
-    notificationStore.fetchUnreadCount();
-  }
-});
+useNotificationPolling();
 
 const appVersion = __APP_VERSION__;
 const environmentLabel = computed(() => appConfig.value?.environmentLabel);
