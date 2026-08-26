@@ -714,6 +714,16 @@ export class DataFeature {
    * tableau — le `.length` sur l'objet valait `undefined`, la liste passait pour vide et CRU-08,
    * CRU-09 et CRU-16 sautaient sous un motif faux (« aucune organisation dans le jeu de données »).
    */
+  /** Une organisation quelconque (id + chemin) — pour créer des fixtures qui en exigent une. */
+  async anyOrganization(): Promise<{ id: string; path: string } | null> {
+    for (const query of ["a", "direction"]) {
+      const page = await this.api.organizations(query);
+      const first = page?.results?.[0];
+      if (first) return { id: first.id, path: first.path };
+    }
+    return null;
+  }
+
   async anyOrganizationPath(): Promise<string | null> {
     for (const query of ["a", "direction"]) {
       const page = await this.api.organizations(query);
