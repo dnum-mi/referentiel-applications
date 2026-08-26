@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.88.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.87.0...v1.88.0) (2026-08-26)
+
+
+### Features
+
+* add correlation detection engine with signals, scoring and scheduled job ([#2324](https://github.com/dnum-mi/referentiel-applications/issues/2324)) ([3637d56](https://github.com/dnum-mi/referentiel-applications/commit/3637d5654cc1b3271423381ff5540b9c9345fb26))
+* add correlation suggestion accept, reject and run endpoints ([#2319](https://github.com/dnum-mi/referentiel-applications/issues/2319)) ([b0cd58b](https://github.com/dnum-mi/referentiel-applications/commit/b0cd58bf1bede322338424108c204c7e09afcfc3))
+* add correlation suggestions list endpoint ([#2318](https://github.com/dnum-mi/referentiel-applications/issues/2318)) ([0a52d1c](https://github.com/dnum-mi/referentiel-applications/commit/0a52d1c8cd283444ed1d511878fa4b02a1050f8d))
+* add creator for actor type ([#2303](https://github.com/dnum-mi/referentiel-applications/issues/2303)) ([eca0cd8](https://github.com/dnum-mi/referentiel-applications/commit/eca0cd800b7914f68a18fe56d779f65748b93dab))
+* add iq action cta ([#2325](https://github.com/dnum-mi/referentiel-applications/issues/2325)) ([b2522b9](https://github.com/dnum-mi/referentiel-applications/commit/b2522b92eaa26b50f590459f237b0b9b42bc6090))
+* add IQ campaign ([#2350](https://github.com/dnum-mi/referentiel-applications/issues/2350)) ([ae7fd00](https://github.com/dnum-mi/referentiel-applications/commit/ae7fd00282447f1d96f92a20a8b161791d022380))
+* add is_correlated_with relation type and CorrelationSuggestion model ([#2323](https://github.com/dnum-mi/referentiel-applications/issues/2323)) ([d8fc50a](https://github.com/dnum-mi/referentiel-applications/commit/d8fc50a602ee50ab8d7c7db8bda31102c211ae70))
+* add notifications center ([#2328](https://github.com/dnum-mi/referentiel-applications/issues/2328)) ([474c3d9](https://github.com/dnum-mi/referentiel-applications/commit/474c3d928d026f1b862d2d7ad5466e0334d2117c))
+* add polling for notification center ([#2360](https://github.com/dnum-mi/referentiel-applications/issues/2360)) ([91b2a06](https://github.com/dnum-mi/referentiel-applications/commit/91b2a066737ea880bda7ee788621b0d03fecfc0b))
+* add saved filter for app ([#2309](https://github.com/dnum-mi/referentiel-applications/issues/2309)) ([7c2bd39](https://github.com/dnum-mi/referentiel-applications/commit/7c2bd39bd563860035ec99dcd7286975a7912c89))
+* add the correlation review tab to the admin panel ([#2351](https://github.com/dnum-mi/referentiel-applications/issues/2351)) ([25a9d06](https://github.com/dnum-mi/referentiel-applications/commit/25a9d0620d5c3b9d2a0d36725469c9cf35ba1231))
+* add the cross-cutting end-of-life overview ([#2356](https://github.com/dnum-mi/referentiel-applications/issues/2356)) ([505ecf7](https://github.com/dnum-mi/referentiel-applications/commit/505ecf7cf8a4f74103029807938d288edf93ff8d))
+* alert application owners when a technology reaches end of life ([#2357](https://github.com/dnum-mi/referentiel-applications/issues/2357)) ([72d46c2](https://github.com/dnum-mi/referentiel-applications/commit/72d46c20f5f475b482ece507e6a45945f9dc71a4))
+* display and filter the correlation relation ([#2352](https://github.com/dnum-mi/referentiel-applications/issues/2352)) ([78cb132](https://github.com/dnum-mi/referentiel-applications/commit/78cb132adae9002f810565cad035a9e609865347))
+
+
+### Bug Fixes
+
+* filter admin user list by requestor scope ([#2327](https://github.com/dnum-mi/referentiel-applications/issues/2327)) ([07c3d7f](https://github.com/dnum-mi/referentiel-applications/commit/07c3d7f368e415e58794fc9060d65785ff572f65))
+* **frontend:** force reload of pre-v1.86 clients on service worker update ([#2306](https://github.com/dnum-mi/referentiel-applications/issues/2306)) ([#2307](https://github.com/dnum-mi/referentiel-applications/issues/2307)) ([58da275](https://github.com/dnum-mi/referentiel-applications/commit/58da27535af487a68c714f1a652a2a3cc875e02f))
+* realign the committed OpenAPI contract with the backend and gate it in CI ([#2349](https://github.com/dnum-mi/referentiel-applications/issues/2349)) ([ee0b4e9](https://github.com/dnum-mi/referentiel-applications/commit/ee0b4e9ae087a6671b12101bfd89cbb77606fc0a))
+* resync actor edit form when the modal reopens with a different actor ([#2361](https://github.com/dnum-mi/referentiel-applications/issues/2361)) ([9501966](https://github.com/dnum-mi/referentiel-applications/commit/9501966bfb971adb42c561201c6bca26d611b7f6))
+* upsert technology stack entries case-insensitively ([#2317](https://github.com/dnum-mi/referentiel-applications/issues/2317)) ([4f2af54](https://github.com/dnum-mi/referentiel-applications/commit/4f2af54d1977b74bcc390518b91b07c60986aa41))
+
 ## [1.87.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.86.1...v1.87.0) (2026-08-17)
 
 
