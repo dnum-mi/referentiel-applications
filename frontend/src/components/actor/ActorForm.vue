@@ -5,7 +5,7 @@ import type { Application } from "@/models/Application";
 import { useOrganizationStore } from "@/stores/organizationStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import type { PropType } from "vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import OrganizationSearchSelect from "../common/OrganizationSearchSelect.vue";
 
 const props = defineProps({
@@ -64,7 +64,6 @@ async function syncFromMaiaByEmail() {
 const form = ref<CreateActorDto>({
   actorTypeId: "",
   isGroup: false,
-  ...props.initialData,
   applicationId: props.application.id,
 });
 
@@ -90,19 +89,32 @@ const organizationId = computed({
   },
 });
 
-// Load initial organization if actor has one
-onMounted(async () => {
-  if (props.initialData?.organizationId) {
-    try {
-      const org = await organizationStore.getById(props.initialData.organizationId);
-      if (org) {
-        initialOrganization.value = org;
+// La modale reste montée entre deux ouvertures (cf. commentaire sur `actorTypeOptions`) : on
+// resynchronise le formulaire et l'organisation initiale à chaque changement d'acteur édité
+// (ou passage édition -> création), plutôt qu'une seule fois au montage.
+watch(
+  () => props.initialData,
+  async (initialData) => {
+    form.value = {
+      actorTypeId: "",
+      isGroup: false,
+      ...initialData,
+      applicationId: props.application.id,
+    };
+    initialOrganization.value = null;
+    if (initialData?.organizationId) {
+      try {
+        const org = await organizationStore.getById(initialData.organizationId);
+        if (org) {
+          initialOrganization.value = org;
+        }
+      } catch (error) {
+        console.error("Error loading initial organization:", error);
       }
-    } catch (error) {
-      console.error("Error loading initial organization:", error);
     }
-  }
-});
+  },
+  { immediate: true },
+);
 
 const isFormValid = computed(() => {
   return form.value.actorTypeId && form.value.actorTypeId !== "" && organizationId.value && organizationId.value !== "";
