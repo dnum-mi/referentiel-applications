@@ -193,7 +193,7 @@ describe("ApplicationValidationCronService", () => {
       ]);
       mockPrismaService.user.findMany.mockResolvedValue([]);
       mockEmailService.sendApplicationValidationReminderEmail.mockResolvedValue(
-        undefined,
+        { id: "email-log-gamma" },
       );
       mockPrismaService.notificationLog.create.mockResolvedValue({});
 
@@ -373,6 +373,77 @@ describe("ApplicationValidationCronService", () => {
         expect.any(String),
         expect.objectContaining({ emailLogId: undefined }),
       );
+    });
+
+    it("ne pose pas l'anti-spam quand tous les envois email échouent (#2378 bug 1)", async () => {
+      const staleApplication = {
+        id: "app-008",
+        label: "Application Theta",
+        metadatas: [],
+        actors: [{ email: "owner@example.com" }],
+        notificationLogs: [],
+      };
+
+      mockPrismaService.application.count.mockResolvedValue(1);
+      mockPrismaService.application.findMany.mockResolvedValue([
+        staleApplication,
+      ]);
+      mockPrismaService.user.findMany.mockResolvedValue([
+        {
+          id: "u-owner",
+          email: "owner@example.com",
+          emailNotificationsEnabled: true,
+        },
+      ]);
+      // SMTP en panne : chaque envoi rejette (avalé par le try/catch par destinataire).
+      mockEmailService.sendApplicationValidationReminderEmail.mockRejectedValue(
+        new Error("SMTP down"),
+      );
+
+      await service.sendValidationReminders();
+
+      // Aucun canal n'a abouti : ni anti-spam, ni notification in-app (renvoi complet au prochain
+      // passage sans doublon).
+      expect(mockPrismaService.notificationLog.create).not.toHaveBeenCalled();
+      expect(mockNotificationService.create).not.toHaveBeenCalled();
+    });
+
+    it("pose l'anti-spam quand seule une notification in-app est créée (tous opt-out) (#2378 bug 2)", async () => {
+      const staleApplication = {
+        id: "app-009",
+        label: "Application Iota",
+        metadatas: [],
+        actors: [{ email: "owner@example.com" }],
+        notificationLogs: [],
+      };
+
+      mockPrismaService.application.count.mockResolvedValue(1);
+      mockPrismaService.application.findMany.mockResolvedValue([
+        staleApplication,
+      ]);
+      // L'unique acteur a un compte avec les emails désactivés → aucun email à envoyer.
+      mockPrismaService.user.findMany.mockResolvedValue([
+        {
+          id: "u-owner",
+          email: "owner@example.com",
+          emailNotificationsEnabled: false,
+        },
+      ]);
+      mockPrismaService.notificationLog.create.mockResolvedValue({});
+
+      await service.sendValidationReminders();
+
+      expect(
+        mockEmailService.sendApplicationValidationReminderEmail,
+      ).not.toHaveBeenCalled();
+      // Notification in-app créée UNE fois + anti-spam posé pour éviter les doublons au redémarrage.
+      expect(mockNotificationService.create).toHaveBeenCalledTimes(1);
+      expect(mockPrismaService.notificationLog.create).toHaveBeenCalledWith({
+        data: {
+          applicationId: "app-009",
+          type: "application_validation_reminder",
+        },
+      });
     });
 
     it("should use the last metadata date as lastModifiedDate when available", async () => {
