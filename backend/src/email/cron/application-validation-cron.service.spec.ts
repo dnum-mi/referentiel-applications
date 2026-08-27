@@ -261,7 +261,40 @@ describe("ApplicationValidationCronService", () => {
         staleApplicationWithOptedOutUser,
       ]);
       mockPrismaService.user.findMany.mockResolvedValue([
-        { email: "opted-out@example.com" },
+        {
+          id: "u1",
+          email: "opted-out@example.com",
+          emailNotificationsEnabled: false,
+        },
+      ]);
+
+      await service.sendValidationReminders();
+
+      expect(
+        mockEmailService.sendApplicationValidationReminderEmail,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("respecte l'opt-out même si la casse de l'email diffère (#2381)", async () => {
+      const staleApplication = {
+        id: "app-006",
+        label: "Application Zeta",
+        metadatas: [],
+        actors: [{ email: "Jean.Dupont@example.com" }],
+        notificationLogs: [],
+      };
+
+      mockPrismaService.application.count.mockResolvedValue(1);
+      mockPrismaService.application.findMany.mockResolvedValue([
+        staleApplication,
+      ]);
+      // Compte enregistré en minuscules, opt-out actif.
+      mockPrismaService.user.findMany.mockResolvedValue([
+        {
+          id: "u2",
+          email: "jean.dupont@example.com",
+          emailNotificationsEnabled: false,
+        },
       ]);
 
       await service.sendValidationReminders();
@@ -309,15 +342,18 @@ describe("ApplicationValidationCronService", () => {
       mockPrismaService.application.findMany.mockResolvedValue([
         staleApplicationWithActors,
       ]);
-      mockPrismaService.user.findMany.mockImplementation(({ where }) => {
-        if (where.emailNotificationsEnabled === false) {
-          return Promise.resolve([{ email: "opted-out@example.com" }]);
-        }
-        return Promise.resolve([
-          { id: "user-owner", email: "owner@example.com" },
-          { id: "user-opted-out", email: "opted-out@example.com" },
-        ]);
-      });
+      mockPrismaService.user.findMany.mockResolvedValue([
+        {
+          id: "user-owner",
+          email: "owner@example.com",
+          emailNotificationsEnabled: true,
+        },
+        {
+          id: "user-opted-out",
+          email: "opted-out@example.com",
+          emailNotificationsEnabled: false,
+        },
+      ]);
       mockEmailService.sendApplicationValidationReminderEmail.mockResolvedValue(
         { id: "email-log-1", to: "owner@example.com" },
       );
