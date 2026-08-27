@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -494,7 +495,12 @@ export class UserService {
     return { organizationId, organizationPath, lastName, firstName, fullName };
   }
 
-  async syncOrganizationFromMaia(userId: string) {
+  async syncOrganizationFromMaia(userId: string, requestor: Requestor) {
+    // #2374 : un admin scopé ne peut re-synchroniser que les utilisateurs de son périmètre (même
+    // règle de périmètre que le blocage). La valeur écrite vient de MAIA, mais déclencher la
+    // réécriture d'une organisation choisie manuellement doit rester dans le périmètre.
+    await this.scopedPermissionService.assertCanBlock(userId, requestor);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, email: true },
@@ -557,7 +563,17 @@ export class UserService {
     }
   }
 
-  startSyncOrganizationsFromMaiaInBackground(dto: SyncOrganizationsDto) {
+  startSyncOrganizationsFromMaiaInBackground(
+    dto: SyncOrganizationsDto,
+    requestor: Requestor,
+  ) {
+    // #2374 : la synchronisation batch réécrit potentiellement TOUS les utilisateurs — elle est
+    // réservée aux administrateurs globaux (non scopés).
+    if (requestor.scopeOrganization) {
+      throw new ForbiddenException(
+        "La synchronisation globale depuis MAIA est réservée aux administrateurs sans périmètre",
+      );
+    }
     const onlyMissing = dto.onlyMissing ?? true;
 
     void this.syncOrganizationsFromMaia({ onlyMissing }).catch(() => undefined);
