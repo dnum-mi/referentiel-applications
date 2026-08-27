@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { NotificationType, Prisma } from "@prisma/client";
 
 type ActorWithRelations = Prisma.ActorGetPayload<{
@@ -89,8 +89,15 @@ export class ActorService {
     return this.baseService.countAll();
   }
 
-  public async findOne(id: string) {
-    return this.baseService.findOne(id, this.actorInclude);
+  public async findOne(id: string, applicationId?: string) {
+    const actor = await this.baseService.findOne(id, this.actorInclude);
+    // Scoping (#2367) : sur une route `/applications/:applicationId/actors`, l'acteur doit
+    // appartenir à cette application. Sinon un droit ActorRead sur A donnait accès à l'acteur
+    // (email, nom) de n'importe quelle autre application par son id.
+    if (applicationId && actor.applicationId !== applicationId) {
+      throw new NotFoundException("Acteur introuvable");
+    }
+    return actor;
   }
 
   public async findAll(
@@ -235,8 +242,21 @@ export class ActorService {
     requestorId: string,
   ): Promise<ActorWithRelations> {
     const oldActor = await this.baseService.findOne(id, this.actorInclude);
+    // Scoping (#2367) : l'acteur doit appartenir à l'application de la route.
+    if (oldActor.applicationId !== applicationId) {
+      throw new NotFoundException("Acteur introuvable");
+    }
 
-    const { organizationId, actorTypeId, ...rest } = data;
+    // `applicationId` est retiré du body (#2368) : le laisser dans `...rest` permettait de
+    // reparenter son propre acteur vers une AUTRE application et d'y hériter des droits de son
+    // type d'acteur (les AppPermissions sont liées globalement au type). Le rattachement ne se
+    // change que par les routes d'administration dédiées.
+    const {
+      organizationId,
+      actorTypeId,
+      applicationId: _ignoredApplicationId,
+      ...rest
+    } = data;
 
     const updatedActor = await this.baseService.update(
       id,
@@ -333,6 +353,11 @@ export class ActorService {
   }
 
   public async delete(id: string, applicationId: string, requestorId: string) {
+    // Scoping (#2367) : ne supprimer que si l'acteur appartient à l'application de la route.
+    const actor = await this.baseService.findOne(id, this.actorInclude);
+    if (actor.applicationId !== applicationId) {
+      throw new NotFoundException("Acteur introuvable");
+    }
     return this.baseService.delete(id, {
       applicationId,
       include: this.actorInclude,

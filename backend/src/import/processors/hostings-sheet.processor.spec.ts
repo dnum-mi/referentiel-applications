@@ -121,6 +121,7 @@ describe("HostingsSheetProcessor", () => {
     expect(report.summary.updated).toBe(1);
     expect(hostingsService.updateHosting).toHaveBeenCalledWith(
       "host-1",
+      APP_UUID,
       expect.objectContaining({ applicationId: APP_UUID }),
       "user-1",
     );

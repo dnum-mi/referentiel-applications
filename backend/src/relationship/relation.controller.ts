@@ -114,8 +114,11 @@ export class RelationController {
     description: "Relation trouvée avec succès",
   })
   @ApiParam({ name: "id", description: "Identifiant unique de la relation" })
-  async findOne(@Param("id") id: string): Promise<RelationDto> {
-    return this.relationService.findOne(id);
+  async findOne(
+    @Param("id") id: string,
+    @Param("applicationId") applicationId: string,
+  ): Promise<RelationDto> {
+    return this.relationService.findOne(id, applicationId);
   }
 
   @Patch(":id")
@@ -132,10 +135,10 @@ export class RelationController {
   update(
     @UserId() userId: string,
     @Param("id") id: string,
-    @Param("applicationId") _applicationId: string,
+    @Param("applicationId") applicationId: string,
     @Body() dto: RelationApplicationDto,
   ): Promise<RelationDto> {
-    return this.relationService.update(id, dto, userId);
+    return this.relationService.update(id, applicationId, dto, userId);
   }
 
   @Delete(":id")
@@ -152,7 +155,8 @@ export class RelationController {
   async delete(
     @UserId() userId: string,
     @Param("id") id: string,
+    @Param("applicationId") applicationId: string,
   ): Promise<void> {
-    return this.relationService.delete(id, userId);
+    return this.relationService.delete(id, applicationId, userId);
   }
 }
