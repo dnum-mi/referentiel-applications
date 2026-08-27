@@ -195,6 +195,20 @@ export class QualityCampaignService {
       throw new BadRequestException("Cette campagne a déjà été envoyée.");
     }
 
+    // Verrou optimiste (#2376) : on pose `sentAt` de façon ATOMIQUE avant tout envoi. Deux
+    // déclencheurs concurrents (double-clic, cron + manuel, deux réplicas) lisaient auparavant
+    // `sentAt = null` avant que l'un pose la date, et envoyaient donc la campagne en double. Ici,
+    // seule l'exécution dont l'`updateMany` affecte 1 ligne poursuit ; l'autre s'arrête. Poser la
+    // date AVANT l'envoi garantit « au plus une fois » (pas de doublon massif d'emails), au prix
+    // d'un envoi potentiellement partiel si le process meurt en cours — compromis assumé.
+    const claimed = await this.prisma.qualityCampaign.updateMany({
+      where: { id, sentAt: null },
+      data: { sentAt: new Date() },
+    });
+    if (claimed.count === 0) {
+      throw new BadRequestException("Cette campagne a déjà été envoyée.");
+    }
+
     const { results: applications } = await this.searchTargets(
       campaign,
       requestor ?? SYSTEM_REQUESTOR,
@@ -214,11 +228,6 @@ export class QualityCampaignService {
         await this.notifyApplicationActors(campaign, application);
       }
     }
-
-    await this.prisma.qualityCampaign.update({
-      where: { id },
-      data: { sentAt: new Date() },
-    });
 
     return this.findOne(id);
   }
