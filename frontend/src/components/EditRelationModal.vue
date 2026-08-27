@@ -3,15 +3,17 @@ import type { ApplicationDto, RelationDto } from "@/client/types.gen";
 import { RelationType } from "@/client/types.gen";
 import { useApplicationSearch } from "@/composables/use-application-search";
 import type { RelationUpdate } from "@/models/relations";
+import { buildRelationUpdate } from "@/utils/relation-update";
 import { MIN_CHAR_FOR_SEARCH } from "@/constants/min-char-for-search";
 import { RELATION_TYPE_FILTERS } from "@/types/relation-type-filter";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = withDefaults(
   defineProps<{
     opened?: boolean;
     title: string;
     relation: RelationDto | null;
+    currentApplicationId: string;
   }>(),
   {
     opened: false,
@@ -28,11 +30,18 @@ const selectedApplication = ref<Required<Pick<ApplicationDto, "id" | "label">> |
 const relationTypeSelected = ref<RelationType>(RelationType.IS_PART_OF);
 const selectedMediationService = ref<Required<Pick<ApplicationDto, "id" | "label">> | null>(null);
 
+// #2385 : l'app courante est-elle la source de la relation ? Si non (relation entrante), c'est la
+// cible, et la contre-partie éditable est la SOURCE — pas la cible.
+const isEditingFromSource = computed(() => props.relation?.applicationSourceId === props.currentApplicationId);
+
 watch(
   () => props.relation,
   (newRelation) => {
     if (newRelation) {
-      selectedApplication.value = newRelation.targetApplication ?? null;
+      // La contre-partie affichée est l'autre bout de la relation, selon le sens de stockage.
+      const counterpart =
+        newRelation.applicationSourceId === props.currentApplicationId ? newRelation.targetApplication : newRelation.sourceApplication;
+      selectedApplication.value = counterpart ?? null;
       relationTypeSelected.value = newRelation.type ?? RelationType.IS_PART_OF;
       selectedMediationService.value = newRelation.mediationService ?? null;
     }
@@ -106,13 +115,14 @@ function submitRelationUpdate() {
     return;
   }
 
-  emit("updateRelation", {
-    id: props.relation.id,
-    applicationSourceId: props.relation.applicationSourceId,
-    type: relationTypeSelected.value,
-    mediationServiceId: selectedMediationService.value?.id || null,
-    applicationTargetId: selectedApplication.value.id,
-  });
+  emit(
+    "updateRelation",
+    buildRelationUpdate(props.relation, props.currentApplicationId, {
+      type: relationTypeSelected.value,
+      mediationServiceId: selectedMediationService.value?.id || null,
+      counterpartId: selectedApplication.value.id,
+    }),
+  );
   closeModal();
 }
 
@@ -143,7 +153,11 @@ function closeModal() {
           data-testid="edit-relation-type-select"
         />
       </div>
+      <!-- #2385 : depuis la fiche source, on peut choisir l'application cible ; depuis la fiche cible,
+           l'application source liée est affichée en lecture seule (la modifier détacherait
+           silencieusement l'application courante). -->
       <SuggestionsInput
+        v-if="isEditingFromSource"
         @update:selected-value="selectApplication"
         :search-data-function="performSearch"
         label="Rechercher une application"
@@ -154,6 +168,13 @@ function closeModal() {
           <DsfrTag v-if="selectedApplication?.label" :label="selectedApplication.label" :small="false" style="margin-top: 15px" />
         </template>
       </SuggestionsInput>
+      <div v-else class="linked-application" data-testid="relation-linked-application">
+        <p class="fr-label">Application source liée</p>
+        <DsfrTag v-if="selectedApplication?.label" :label="selectedApplication.label" :small="false" />
+        <p class="fr-hint-text fr-mt-1w">
+          Cette relation part de l'application ci-dessus. Depuis la fiche cible, seuls le type et le service de médiation sont modifiables.
+        </p>
+      </div>
       <SuggestionsInput
         @update:selected-value="($event) => updateMediationServiceId($event ?? null)"
         :search-data-function="performSearch"

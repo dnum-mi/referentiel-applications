@@ -44,9 +44,13 @@ export const useRelationStore = defineStore("relationStore", () => {
     await fetchRelationsByApplication(createRelation.applicationSourceId);
   }
 
-  async function updateRelation(updated: RelationUpdate) {
+  async function updateRelation(updated: RelationUpdate, currentApplicationId: string) {
+    // #2385 : le référentiel de contrôle et de rafraîchissement est TOUJOURS l'application de la
+    // fiche courante — jamais `applicationSourceId`, qui peut désigner une autre application quand
+    // la relation est entrante (l'app courante en est la cible). Sinon on évaluerait la permission
+    // sur l'autre application et on écraserait la liste par ses relations.
     const response = await api.relationControllerUpdate({
-      path: { applicationId: updated.applicationSourceId, id: updated.id },
+      path: { applicationId: currentApplicationId, id: updated.id },
       body: {
         applicationTargetId: updated.applicationTargetId,
         type: updated.type,
@@ -56,17 +60,19 @@ export const useRelationStore = defineStore("relationStore", () => {
     if (!response.response.ok) {
       throw new Error("Failed to update relation");
     }
-    return fetchRelationsByApplication(updated.applicationSourceId);
+    return fetchRelationsByApplication(currentApplicationId);
   }
 
-  async function deleteRelation(deleted: RelationDelete) {
+  async function deleteRelation(deleted: RelationDelete, currentApplicationId: string) {
+    // #2385 : `id` doit être l'identifiant de la relation, pas `applicationTargetId`. Le
+    // référentiel de contrôle/refetch est l'application de la fiche courante.
     const response = await api.relationControllerDelete({
-      path: { applicationId: deleted.applicationSourceId, id: deleted.applicationTargetId },
+      path: { applicationId: currentApplicationId, id: deleted.id },
     });
     if (!response.response.ok) {
       throw new Error("Failed to delete relation");
     }
-    return fetchRelationsByApplication(deleted.applicationSourceId);
+    return fetchRelationsByApplication(currentApplicationId);
   }
 
   return {
