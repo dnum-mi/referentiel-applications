@@ -286,14 +286,12 @@ describe("QualityCampaignService", () => {
       sentAt: null,
       targets: [],
     });
-    const update = jest
-      .fn()
-      .mockResolvedValue({
-        ...baseCampaign,
-        message: null,
-        endDate: null,
-        targets: [],
-      });
+    const update = jest.fn().mockResolvedValue({
+      ...baseCampaign,
+      message: null,
+      endDate: null,
+      targets: [],
+    });
     const service = buildService({
       prisma: {
         qualityCampaign: { findUnique, update },
