@@ -279,4 +279,34 @@ describe("QualityCampaignService", () => {
       }),
     );
   });
+
+  it("écrit NULL en base quand message et endDate sont explicitement vidés (#2387)", async () => {
+    const findUnique = jest.fn().mockResolvedValue({
+      ...baseCampaign,
+      sentAt: null,
+      targets: [],
+    });
+    const update = jest
+      .fn()
+      .mockResolvedValue({
+        ...baseCampaign,
+        message: null,
+        endDate: null,
+        targets: [],
+      });
+    const service = buildService({
+      prisma: {
+        qualityCampaign: { findUnique, update },
+      } as never,
+    });
+
+    await service.update("campaign-1", { message: null, endDate: null });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "campaign-1" },
+        data: expect.objectContaining({ message: null, endDate: null }),
+      }),
+    );
+  });
 });

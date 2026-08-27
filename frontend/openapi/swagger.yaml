@@ -10585,6 +10585,7 @@ components:
             campagne (mêmes clés que la query de GET /applications)
         message:
           type: string
+          nullable: true
           maxLength: 2000
           description: Message incitatif inclus dans l'email de relance envoyé aux acteurs
             des applications ciblées
@@ -10604,6 +10605,7 @@ components:
         endDate:
           format: date-time
           type: string
+          nullable: true
           description: Date de fin indicative de la campagne (affichage uniquement)
       required:
         - name
@@ -10716,6 +10718,7 @@ components:
             campagne (mêmes clés que la query de GET /applications)
         message:
           type: string
+          nullable: true
           maxLength: 2000
           description: Message incitatif inclus dans l'email de relance envoyé aux acteurs
             des applications ciblées
@@ -10735,6 +10738,7 @@ components:
         endDate:
           format: date-time
           type: string
+          nullable: true
           description: Date de fin indicative de la campagne (affichage uniquement)
     HealthCheckDto:
       type: object
