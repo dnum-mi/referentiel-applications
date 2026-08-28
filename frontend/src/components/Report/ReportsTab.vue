@@ -58,7 +58,10 @@ const rows = computed(() =>
         label: report.application?.label,
         to: report.application?.id ? { name: routeNames.PROFILEAPP, params: { id: report.application.id } } : undefined,
       },
-      notifier: report.notifier?.email || "Inconnu",
+      // Signalement créé sous impersonation : afficher aussi l'admin réel (#2061).
+      notifier: report.impersonator?.email
+        ? `${report.notifier?.email || "Inconnu"} (via ${report.impersonator.email})`
+        : report.notifier?.email || "Inconnu",
       description: report.description,
       notes: report.notes,
       // updatedAt arrive en chaîne ISO au runtime (typé Date dans le client généré).

@@ -26,6 +26,24 @@ export class ReportDto {
   })
   notifier: Notifier;
 
+  @ApiProperty({
+    description:
+      "ID de l'administrateur réel si le signalement a été créé sous impersonation",
+    example: "5708d232-8338-4abf-8f38-8370acc89497",
+    nullable: true,
+    required: false,
+  })
+  impersonatorId?: string | null;
+
+  @ApiProperty({
+    type: Notifier,
+    description:
+      "Administrateur réel si le signalement a été créé sous impersonation",
+    nullable: true,
+    required: false,
+  })
+  impersonator?: Notifier | null;
+
   @IsString()
   description: string;
 

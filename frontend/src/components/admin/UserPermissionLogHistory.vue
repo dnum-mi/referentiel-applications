@@ -31,7 +31,10 @@ const rows = computed(() =>
     "Permissions supplémentaires": log.additionalPermissions.length
       ? log.additionalPermissions.map((perm) => PERMISSIONS_LABELS[perm]).join(", ")
       : "Aucune",
-    "Modifié par": log.changedByEmail ?? "Système / utilisateur supprimé",
+    // Modification faite sous impersonation : afficher aussi l'admin réel (#2061).
+    "Modifié par": log.impersonatorEmail
+      ? `${log.changedByEmail ?? "Système / utilisateur supprimé"} (via ${log.impersonatorEmail})`
+      : (log.changedByEmail ?? "Système / utilisateur supprimé"),
   })),
 );
 
