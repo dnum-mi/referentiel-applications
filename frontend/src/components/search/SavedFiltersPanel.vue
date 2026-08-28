@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useApplicationSearch, type Filters } from "@/composables/use-application-search";
+import { DEFAULT_FILTERS, useApplicationSearch, type Filters } from "@/composables/use-application-search";
 import { useSavedFilterStore } from "@/stores/savedFilterStore";
 
 const { filters, setFilter } = useApplicationSearch();
@@ -27,13 +27,15 @@ async function confirmSave() {
   }
 }
 
-// Un filtre sauvegardé contient une copie complète des filtres (toutes les clés,
-// pas seulement celles non-défaut) : l'appliquer via setFilter remplace donc
-// intégralement l'état courant, sans avoir à réinitialiser au préalable.
+// #2386 : un filtre sauvegardé ne contient QUE les clés renseignées (les valeurs par défaut
+// `undefined` disparaissent du JSON). `setFilter` fait un merge : appliquer directement
+// `saved.filters` laisserait les clés absentes (texte, millésime, compliance…) à leur valeur
+// courante. On réinitialise donc d'abord à `DEFAULT_FILTERS` pour obtenir un vrai remplacement.
+// `structuredClone` évite de partager les tableaux par défaut (tag, currentStatus__in…).
 function applyFilter(id: string) {
   const saved = savedFilterStore.savedFilters.find((f) => f.id === id);
   if (!saved) return;
-  setFilter({ ...(saved.filters as Filters), page: 0 });
+  setFilter({ ...structuredClone(DEFAULT_FILTERS), ...(saved.filters as Filters), page: 0 });
 }
 
 function removeFilter(id: string, event: Event) {
