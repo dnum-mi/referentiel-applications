@@ -6655,6 +6655,76 @@ paths:
       summary: Vérification de la santé de l'application
       tags:
         - Health Check
+  /api/v2/action-logs:
+    get:
+      operationId: ActionLogController_findAll
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: Numéro de page
+          schema:
+            minimum: 0
+            example: 0
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: Nombre de résultats par page, 0 pour supprimer la pagination
+          schema:
+            minimum: 0
+            maximum: 100
+            default: 15
+            example: 15
+            type: number
+        - name: sortBy
+          required: false
+          in: query
+          description: Champ utilisé pour le tri
+          schema:
+            example: label
+            type: string
+        - name: order
+          required: false
+          in: query
+          description: Ordre de tri
+          schema:
+            example: asc
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: createdAtGte
+          required: false
+          in: query
+          description: Date minimum (inclusive)
+          schema:
+            example: 2023-01-01T00:00:00.000Z
+            type: string
+        - name: createdAtLte
+          required: false
+          in: query
+          description: Date maximum (inclusive)
+          schema:
+            example: 2023-12-31T23:59:59.999Z
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Recherche libre sur le chemin de la requête ou l'email de
+            l'identité effective / de l'administrateur réel
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Liste paginée du journal des actions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedActionLogDto"
+      summary: Liste le journal des actions mutantes (admin)
+      tags:
+        - ActionLogs
 info:
   title: API Référentiel Applications
   description: API pour la gestion des applications
@@ -7148,6 +7218,11 @@ components:
           nullable: true
           description: Email de l'auteur de la dernière modification des droits. Null si
             jamais modifié ou si l'auteur a depuis été supprimé.
+        lastPermissionChangedByImpersonatorEmail:
+          type: string
+          nullable: true
+          description: Email de l'administrateur réel si la dernière modification des
+            droits a été faite sous impersonation (#2061).
         isBlocked:
           type: boolean
           description: Si l'accès de l'utilisateur est bloqué. Un utilisateur bloqué est
@@ -7303,6 +7378,11 @@ components:
           description: Email de la personne ayant effectué la modification. Null si la
             modification est automatique (création de compte) ou si l'auteur a
             depuis été supprimé.
+        impersonatorEmail:
+          type: string
+          nullable: true
+          description: Email de l'administrateur réel si la modification a été faite sous
+            impersonation (#2061).
       required:
         - id
         - createdAt
@@ -7541,6 +7621,11 @@ components:
           nullable: true
           description: Email de l'auteur de la dernière modification des droits. Null si
             jamais modifié ou si l'auteur a depuis été supprimé.
+        lastPermissionChangedByImpersonatorEmail:
+          type: string
+          nullable: true
+          description: Email de l'administrateur réel si la dernière modification des
+            droits a été faite sous impersonation (#2061).
         isBlocked:
           type: boolean
           description: Si l'accès de l'utilisateur est bloqué. Un utilisateur bloqué est
@@ -10457,6 +10542,18 @@ components:
           description: The user who reported the issue
           allOf:
             - $ref: "#/components/schemas/Notifier"
+        impersonatorId:
+          type: string
+          nullable: true
+          description: ID de l'administrateur réel si le signalement a été créé sous
+            impersonation
+          example: 5708d232-8338-4abf-8f38-8370acc89497
+        impersonator:
+          nullable: true
+          description: Administrateur réel si le signalement a été créé sous impersonation
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/Notifier"
         status:
           description: Le statut du signalement
           allOf:
@@ -10783,6 +10880,72 @@ components:
         - version
         - etat
         - message
+    ActionLogUserDto:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - email
+    ActionLogDto:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID unique de l'entrée du journal
+        createdAt:
+          format: date-time
+          type: string
+          description: Date de la requête
+        method:
+          type: string
+          description: Méthode HTTP de la requête
+        path:
+          type: string
+          description: Chemin de la requête (sans query string)
+        statusCode:
+          type: number
+          description: Code de statut HTTP renvoyé
+        user:
+          description: Identité effective de la requête (la cible en cas d'impersonation)
+          allOf:
+            - $ref: "#/components/schemas/ActionLogUserDto"
+        impersonatorId:
+          type: string
+          nullable: true
+          description: ID de l'administrateur réel si l'action a été faite sous
+            impersonation
+        impersonator:
+          nullable: true
+          description: Administrateur réel si l'action a été faite sous impersonation
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ActionLogUserDto"
+      required:
+        - id
+        - createdAt
+        - method
+        - path
+        - statusCode
+        - user
+    PaginatedActionLogDto:
+      type: object
+      properties:
+        results:
+          description: Array of results
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionLogDto"
+        total:
+          type: number
+          description: Total number of items
+          example: 100
+      required:
+        - results
+        - total
 security:
   - oauth2: []
   - api_key: []
