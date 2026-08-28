@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule as NestConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
+import { ActionLogModule } from "./action-log/action-log.module";
 import { ActorModule } from "./actor/actor.module";
 import { ActorTypeModule } from "./actorType/actorType.module";
 import { AppController } from "./app.controller";
@@ -91,6 +92,7 @@ import { MaintenanceMiddleware } from "./maintenance/maintenance.middleware";
     NotificationModule,
     QualityCampaignModule,
     HealthCheckModule,
+    ActionLogModule,
   ],
   controllers: [AppController],
   providers: [
