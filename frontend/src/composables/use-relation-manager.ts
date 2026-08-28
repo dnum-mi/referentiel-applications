@@ -135,15 +135,25 @@ export function useRelationManager(applicationId: string) {
   }
 
   async function handleUpdateRelation(updated: RelationUpdate) {
-    await store.updateRelation(updated);
-    toaster.addSuccessMessage("Relation mise à jour avec succès!");
-    closeEditRelationModal();
+    try {
+      await store.updateRelation(updated);
+      toaster.addSuccessMessage("Relation mise à jour avec succès!");
+      closeEditRelationModal();
+    } catch {
+      // On garde la modale ouverte : l'utilisateur peut corriger et réessayer (#2383).
+      toaster.addErrorMessage("Erreur lors de la mise à jour de la relation.");
+    }
   }
 
   async function handleCreateRelation(created: RelationCreate) {
-    await store.createRelation(created);
-    toaster.addSuccessMessage("Relation créée avec succès!");
-    closeAddRelationModal();
+    try {
+      await store.createRelation(created);
+      toaster.addSuccessMessage("Relation créée avec succès!");
+      closeAddRelationModal();
+    } catch {
+      // On garde la modale ouverte : l'utilisateur peut corriger et réessayer (#2383).
+      toaster.addErrorMessage("Erreur lors de la création de la relation.");
+    }
   }
 
   return {
