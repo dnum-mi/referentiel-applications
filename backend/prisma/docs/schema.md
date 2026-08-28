@@ -922,6 +922,7 @@ erDiagram
   Permission additionalPermissions
   DateTime lastPermissionChangeAt "nullable"
   String lastPermissionChangedById "nullable"
+  String lastPermissionChangedByImpersonatorId "nullable"
   Boolean isBlocked
   DateTime blockedAt "nullable"
   String blockedById "nullable"
@@ -1032,6 +1033,9 @@ Properties as follows:
 - `lastPermissionChangedById`
   > Utilisateur ayant effectué cette dernière modification. Pas de jointure explicite
   > (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
+- `lastPermissionChangedByImpersonatorId`
+  > Administrateur réel si cette dernière modification a été faite sous impersonation (#2061).
+  > Même absence de jointure explicite, pour la même raison.
 - `isBlocked`
   > Si l'accès de cet utilisateur est bloqué (ex : a quitté l'organisation). Un utilisateur
   > bloqué est rejeté par le SSO à l'authentification, quel que soit son moyen d'accès (JWT ou token API).
@@ -1194,6 +1198,7 @@ erDiagram
   ReportStatus status
   DateTime createdAt
   DateTime updatedAt
+  String impersonatorId FK "nullable"
 }
 "ReportHistory" {
   String id PK
@@ -1220,6 +1225,7 @@ Properties as follows:
 - `status`: Statut actuel du signalement
 - `createdAt`: Quand le signalement a été créé
 - `updatedAt`: Quand le signalement a été mis à jour pour la dernière fois
+- `impersonatorId`:
 
 ### `ReportHistory`
 
@@ -1325,6 +1331,7 @@ erDiagram
   String userId FK
   DateTime createdAt
   String changedById "nullable"
+  String impersonatorId "nullable"
   Roles role "nullable"
   Permission additionalPermissions
 }
@@ -1386,6 +1393,9 @@ Properties as follows:
 - `userId`:
 - `createdAt`:
 - `changedById`: Pas de jointure explicite pour éviter les problèmes de suppression en cascade, on stocke juste l'ID de l'utilisateur qui a effectué le changement
+- `impersonatorId`
+  > Administrateur réel lorsque le changement a été fait sous impersonation (#2061). Même
+  > absence de jointure explicite que `changedById`, pour la même raison.
 - `role`:
 - `additionalPermissions`:
 
