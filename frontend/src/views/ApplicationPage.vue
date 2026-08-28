@@ -12,6 +12,7 @@ import { useMetadataStore } from "@/stores/metadataStore";
 import { useUserStore } from "@/stores/userStore";
 import { useToasterStore } from "@/stores/toasterStore";
 import { Permission } from "@/client";
+import type { MetadataDto } from "@/client/types.gen";
 import { useAppPermission } from "@/composables/use-app-permission";
 
 const userStore = useUserStore();
@@ -131,6 +132,13 @@ const actions = computed(() => [
     },
   },
 ]);
+
+// Modification faite sous impersonation : afficher aussi l'admin réel (#2226/#2061), comme dans
+// les onglets Modifications.
+function formatMetadataAuthor(metadata: MetadataDto): string {
+  const author = metadata.createdBy?.email ?? "inconnu";
+  return metadata.impersonator?.email ? `${author} (via ${metadata.impersonator.email})` : author;
+}
 </script>
 
 <template>
@@ -170,13 +178,13 @@ const actions = computed(() => [
             <p v-if="metadataStore.firstMetadata" class="subtitle" data-testid="application-created-at">
               Date de création de la fiche :
               {{ formatDateFR(metadataStore.firstMetadata.createdAt) || "inconnue" }}
-              ({{ metadataStore.firstMetadata.createdBy?.email ?? "inconnu" }})
+              ({{ formatMetadataAuthor(metadataStore.firstMetadata) }})
             </p>
 
             <p v-if="metadataStore.lastMetadata" class="subtitle" data-testid="application-updated-at">
               Dernière modification de la fiche :
               {{ formatDateFR(metadataStore.lastMetadata.createdAt) || "inconnue" }}
-              ({{ metadataStore.lastMetadata.createdBy?.email ?? "inconnu" }})
+              ({{ formatMetadataAuthor(metadataStore.lastMetadata) }})
             </p>
           </div>
         </template>
