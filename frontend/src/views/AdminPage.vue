@@ -13,6 +13,7 @@ import AdminBusinessDivisionsTab from "@/components/admin/AdminBusinessDivisions
 import AdminCorrelationsTab from "@/components/admin/AdminCorrelationsTab.vue";
 import AdminEmailLogsTab from "@/components/admin/AdminEmailLogsTab.vue";
 import AdminQualityCampaignsTab from "@/components/admin/AdminQualityCampaignsTab.vue";
+import AdminActionLogsTab from "@/components/admin/AdminActionLogsTab.vue";
 import { computed } from "vue";
 import { Permission } from "@/client";
 import { useUserStore } from "@/stores/userStore";
@@ -124,6 +125,15 @@ const allTabs: DsfrTab[] = [
     component: markRaw(AdminCorrelationsTab),
     // Pas de `permissions` : le défaut du filtre ci-dessous est AdminPanelManage,
     // qui est exactement ce qu'exigent les endpoints de revue des corrélations.
+  },
+  {
+    title: "Journal des actions",
+    icon: "ri-history-line",
+    tabId: "tab-action-logs",
+    panelId: "panel-action-logs",
+    component: markRaw(AdminActionLogsTab),
+    // Pas de `permissions` : couvre TOUTES les routes mutantes (acteurs, utilisateurs,
+    // permissions…), plus sensible que les autres onglets — réservé à AdminPanelManage.
   },
 ];
 

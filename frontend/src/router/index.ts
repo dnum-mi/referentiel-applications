@@ -19,6 +19,18 @@ const oidcRoutes = [
     meta: { requiresAuth: false, title: "Authentification - Référentiel des applications" },
   },
   {
+    name: routeNames.AUTH_SILENT_CALLBACK,
+    path: "silent-callback",
+    // #2382 : cible du renew silencieux OIDC (iframe caché). En pratique, `main.ts` traite déjà
+    // le callback sans monter l'application quand la page est chargée dans l'iframe ; cette route
+    // n'est là que comme filet de sécurité si l'app venait à se monter.
+    beforeEnter: async () => {
+      await USER_MANAGER.signinSilentCallback().catch(() => undefined);
+      return false;
+    },
+    meta: { requiresAuth: false, title: "Renouvellement de session" },
+  },
+  {
     name: routeNames.SIGNIN,
     path: "login",
     beforeEnter: async () => USER_MANAGER.signinRedirect(),

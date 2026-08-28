@@ -85,4 +85,23 @@ describe("Metadata — impersonator (#2226)", () => {
     expect(withImpersonator.impersonator.email).toBe(admin.email);
     expect(withImpersonator.createdBy.email).toBe(target.email);
   });
+
+  it("expose l'impersonator sur le résumé première/dernière metadata (bandeau de la fiche)", async () => {
+    const application = await ApplicationFaker.create(target);
+
+    await request(app().getHttpServer())
+      .patch(`/applications/${application.id}`)
+      .send({ description: "Dernière modification sous impersonation" })
+      .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+      .set(IMPERSONATE_HEADER, target.id)
+      .expect(200);
+
+    const response = await request(app().getHttpServer())
+      .get(`/applications/${application.id}/metadatas/first-last`)
+      .set("Authorization", `Bearer ${ADMIN_TOKEN}`)
+      .expect(200);
+
+    expect(response.body.last.impersonator?.email).toBe(admin.email);
+    expect(response.body.last.createdBy.email).toBe(target.email);
+  });
 });
