@@ -1,3 +1,4 @@
+import { NotificationType } from "@prisma/client";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import type { ApplicationService } from "src/applications/application.service";
 import type { EmailService } from "src/email/email.service";
@@ -277,6 +278,70 @@ describe("QualityCampaignService", () => {
         link: "/administration",
         emailLogId: "email-log-1",
       }),
+    );
+  });
+
+  it("respecte l'opt-out email même si la casse diffère entre acteur et compte (#2381)", async () => {
+    const actorFindMany = jest
+      .fn()
+      .mockResolvedValue([
+        { email: "Jean.Dupont@example.com" },
+        { email: "Alice@example.com" },
+      ]);
+    // Le compte de Jean est en minuscules et a désactivé les emails ; celui d'Alice les accepte.
+    const userFindMany = jest.fn().mockResolvedValue([
+      {
+        id: "u-jean",
+        email: "jean.dupont@example.com",
+        emailNotificationsEnabled: false,
+      },
+      {
+        id: "u-alice",
+        email: "alice@example.com",
+        emailNotificationsEnabled: true,
+      },
+    ]);
+    const sendReminder = jest.fn().mockResolvedValue({ id: "log-alice" });
+    const createNotif = jest.fn().mockResolvedValue(undefined);
+
+    const service = buildService({
+      prisma: {
+        actor: { findMany: actorFindMany },
+        user: { findMany: userFindMany },
+      } as never,
+      emailService: {
+        sendQualityCampaignReminderEmail: sendReminder,
+      } as never,
+      notificationService: { create: createNotif } as never,
+    });
+
+    await (
+      service as unknown as {
+        notifyApplicationActors: (c: unknown, a: unknown) => Promise<void>;
+      }
+    ).notifyApplicationActors(baseCampaign, {
+      id: "app-1",
+      label: "App 1",
+      quality: 42,
+    });
+
+    // Jean (opt-out, casse différente) ne reçoit pas d'email ; Alice oui.
+    expect(sendReminder).toHaveBeenCalledTimes(1);
+    expect(sendReminder).toHaveBeenCalledWith(
+      expect.objectContaining({ recipientEmail: "Alice@example.com" }),
+    );
+    // Les deux ont une notification in-app ; seule celle d'Alice porte l'emailLogId.
+    expect(createNotif).toHaveBeenCalledWith(
+      "u-alice",
+      NotificationType.campaign_quality_reminder,
+      expect.any(String),
+      expect.objectContaining({ emailLogId: "log-alice" }),
+    );
+    expect(createNotif).toHaveBeenCalledWith(
+      "u-jean",
+      NotificationType.campaign_quality_reminder,
+      expect.any(String),
+      expect.objectContaining({ emailLogId: undefined }),
     );
   });
 });
