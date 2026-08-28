@@ -86,7 +86,11 @@ export class EmailTemplateService {
 
     for (const [key, value] of Object.entries(variables)) {
       const regex = new RegExp(`{{${key}}}`, "g");
-      result = result.replace(regex, value ?? "");
+      // Fonction de remplacement (et non chaîne) : neutralise les motifs spéciaux de String.replace
+      // ($&, $', $`, $1…) qu'une valeur utilisateur pouvait sinon exploiter pour dupliquer ou
+      // décaler le contenu du template (#2380).
+      const replacement = value ?? "";
+      result = result.replace(regex, () => replacement);
     }
 
     const unreplacedVariables = result.match(/\{\{[^}]+\}\}/g);
