@@ -11,6 +11,8 @@ import { LoggerService } from "src/logger/logger.service";
 import { decimalToNumberExtension } from "./extensions/decimal-to-number.extension";
 import { metadataImpersonatorExtension } from "./extensions/metadata-impersonator.extension";
 import { paginationExtension } from "./extensions/pagination.extension";
+import { reportImpersonatorExtension } from "./extensions/report-impersonator.extension";
+import { userPermissionLogImpersonatorExtension } from "./extensions/user-permission-log-impersonator.extension";
 
 export type { PrismaPaginationArgs } from "./extensions/pagination.extension";
 
@@ -18,6 +20,8 @@ const withExtensions = (client: PrismaClient) =>
   client
     .$extends(decimalToNumberExtension)
     .$extends(metadataImpersonatorExtension)
+    .$extends(reportImpersonatorExtension)
+    .$extends(userPermissionLogImpersonatorExtension)
     .$extends(paginationExtension);
 
 const ExtendedPrismaClient = PrismaClient as unknown as new (

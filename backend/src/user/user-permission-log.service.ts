@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { User, UserPermissionLog } from "@prisma/client";
 import { BaseService } from "src/common/base.service";
+import { requestContext } from "src/common/request-context";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "./entities/user.entity";
 import { UserPermissionLogDto } from "./dto/user-permission-log.dto";
@@ -12,6 +13,10 @@ export class UserPermissionLogService extends BaseService<UserPermissionLog> {
   }
 
   public async log(user: User, requestor?: Requestor) {
+    // `user.update` n'est pas couvert par l'extension Prisma d'impersonation (trop large :
+    // elle toucherait toute mise à jour de User, y compris hors contexte de permissions) —
+    // on lit donc directement le contexte de requête ici, comme le fait l'extension elle-même.
+    const impersonatorId = requestContext.getStore()?.impersonatorId ?? null;
     const [log] = await this.prisma.$transaction([
       this.model.create({
         data: {
@@ -26,6 +31,7 @@ export class UserPermissionLogService extends BaseService<UserPermissionLog> {
         data: {
           lastPermissionChangeAt: new Date(),
           lastPermissionChangedById: requestor?.id ?? null,
+          lastPermissionChangedByImpersonatorId: impersonatorId,
         },
       }),
     ]);
@@ -38,22 +44,22 @@ export class UserPermissionLogService extends BaseService<UserPermissionLog> {
       orderBy: { createdAt: "desc" },
     });
 
-    const changedByIds = [
+    const referencedIds = [
       ...new Set(
         logs
-          .map((log) => log.changedById)
+          .flatMap((log) => [log.changedById, log.impersonatorId])
           .filter((id): id is string => id !== null),
       ),
     ];
 
-    const changedByUsers = changedByIds.length
+    const referencedUsers = referencedIds.length
       ? await this.prisma.user.findMany({
-          where: { id: { in: changedByIds } },
+          where: { id: { in: referencedIds } },
           select: { id: true, email: true },
         })
       : [];
     const emailById = new Map(
-      changedByUsers.map((user) => [user.id, user.email]),
+      referencedUsers.map((user) => [user.id, user.email]),
     );
 
     return logs.map((log) => ({
@@ -63,6 +69,10 @@ export class UserPermissionLogService extends BaseService<UserPermissionLog> {
       additionalPermissions: log.additionalPermissions,
       changedByEmail: log.changedById
         ? (emailById.get(log.changedById) ?? null)
+        : null,
+      // Administrateur réel si la modification a été faite sous impersonation (#2061).
+      impersonatorEmail: log.impersonatorId
+        ? (emailById.get(log.impersonatorId) ?? null)
         : null,
     }));
   }

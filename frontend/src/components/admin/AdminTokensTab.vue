@@ -10,25 +10,29 @@ import type { TableColumn } from "@/types/table";
 import { RolesOptions, RolesScopes, RolesWording } from "@/utils/roles-utils";
 import { TokenKindWording } from "@/utils/token-utils";
 
+// #2384 : ces tables sont en mode lazy sans handler `@sort`, et la route `GET /tokens` ne trie pas
+// côté serveur (le service ignore sortBy/order, orderBy figé à createdAt desc). Un en-tête triable
+// armait alors des squelettes de chargement jamais résolus, figeant l'onglet. Tant que le tri
+// serveur n'est pas implémenté pour cette route, on désactive le tri sur toutes les colonnes.
 const serviceTokenHeaders = [
   { key: "kind", label: "Type", isSortable: false },
-  { key: "name", label: "Nom", isSortable: true },
-  { key: "description", label: "Description", isSortable: true },
-  { key: "role", label: "Rôle", isSortable: true },
-  { key: "scopeOrganization", label: "Périmètre", isSortable: true },
-  { key: "createdBy", label: "Créé par", isSortable: true },
-  { key: "expiresAt", label: "Date d'expiration", isSortable: true },
-  { key: "status", label: "Statut", isSortable: true },
+  { key: "name", label: "Nom", isSortable: false },
+  { key: "description", label: "Description", isSortable: false },
+  { key: "role", label: "Rôle", isSortable: false },
+  { key: "scopeOrganization", label: "Périmètre", isSortable: false },
+  { key: "createdBy", label: "Créé par", isSortable: false },
+  { key: "expiresAt", label: "Date d'expiration", isSortable: false },
+  { key: "status", label: "Statut", isSortable: false },
   { key: "actions", label: "Actions", isSortable: false },
 ] as const;
 
 const personalTokenHeaders = [
   { key: "kind", label: "Type", isSortable: false },
-  { key: "user", label: "Utilisateur", isSortable: true },
-  { key: "name", label: "Nom", isSortable: true },
-  { key: "description", label: "Description", isSortable: true },
-  { key: "expiresAt", label: "Date d'expiration", isSortable: true },
-  { key: "status", label: "Statut", isSortable: true },
+  { key: "user", label: "Utilisateur", isSortable: false },
+  { key: "name", label: "Nom", isSortable: false },
+  { key: "description", label: "Description", isSortable: false },
+  { key: "expiresAt", label: "Date d'expiration", isSortable: false },
+  { key: "status", label: "Statut", isSortable: false },
   { key: "actions", label: "Actions", isSortable: false },
 ] as const;
 

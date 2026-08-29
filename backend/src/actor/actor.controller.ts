@@ -255,8 +255,11 @@ Informations requises :
     name: "id",
     description: "ID de l'acteur",
   })
-  public async findOne(@Param("id") id: string): Promise<Actor> {
-    return this.actorService.findOne(id);
+  public async findOne(
+    @Param("id") id: string,
+    @Param("applicationId") applicationId: string,
+  ): Promise<Actor> {
+    return this.actorService.findOne(id, applicationId);
   }
 
   @Get()

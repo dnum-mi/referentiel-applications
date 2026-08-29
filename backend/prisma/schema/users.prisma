@@ -24,7 +24,9 @@ model User {
   /// Entrées de métadonnées créées sous une identité empruntée par cet admin (#2226)
   metadataAsImpersonator    Metadata[]          @relation("MetadataImpersonator")
   /// Signalements créés par cet utilisateur
-  reports                   Report[]
+  reports                   Report[]            @relation("ReportNotifier")
+  /// Signalements créés sous une identité empruntée par cet admin (#2061)
+  reportsAsImpersonator     Report[]            @relation("ReportImpersonator")
   /// Groupement de permissions par defaut
   role                      Roles               @default(VISITOR)
   /// Tokens API qui se font passer pour cet utilisateur
@@ -47,6 +49,9 @@ model User {
   /// Utilisateur ayant effectué cette dernière modification. Pas de jointure explicite
   /// (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
   lastPermissionChangedById String?
+  /// Administrateur réel si cette dernière modification a été faite sous impersonation (#2061).
+  /// Même absence de jointure explicite, pour la même raison.
+  lastPermissionChangedByImpersonatorId String?
   userPermissionLog         UserPermissionLog[]
   userConnexionLog          UserConnexionLog[]
   /// Sessions d'impersonation initiées par cet utilisateur (en tant qu'admin)
