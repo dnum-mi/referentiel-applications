@@ -231,8 +231,14 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     // Recalcule la fin de vie si le produit ou la version change.
     const eolInputChanged =
       dto.product !== undefined || dto.version !== undefined;
+    // #2379 : distinguer « version omise » (garder l'existante) de « version effacée » (null).
+    // `dto.version ?? existing.version` traitait null comme absent → l'EOL était recalculée avec
+    // l'ANCIENNE version pendant que la version était mise à null, laissant un badge « fin de vie »
+    // erroné pendant tout le TTL.
+    const newVersion =
+      dto.version === undefined ? existing.version : dto.version;
     const eol = eolInputChanged
-      ? await this.resolveEol(newProduct, dto.version ?? existing.version)
+      ? await this.resolveEol(newProduct, newVersion)
       : {};
 
     return super.update(id, { ...dto, ...eol }, options);

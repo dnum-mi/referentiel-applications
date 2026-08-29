@@ -127,4 +127,41 @@ describe("TechnologyService — upsert de la stack technique", () => {
     expect(prisma.technologyStack.findFirst).not.toHaveBeenCalled();
     expect(prisma.technologyStack.update).toHaveBeenCalledTimes(1);
   });
+
+  // #2379 : effacer la version (null) ne doit pas recalculer l'EOL avec l'ancienne version.
+  it("recalcule l'EOL avec version=null quand la version est effacée", async () => {
+    const { service } = makeService();
+    const resolveEol = jest
+      .spyOn(
+        service as unknown as {
+          resolveEol: (...args: unknown[]) => Promise<unknown>;
+        },
+        "resolveEol",
+      )
+      .mockResolvedValue({});
+
+    await service.updateTechnology("tech-1", "app-1", {
+      version: null,
+    } as never);
+
+    expect(resolveEol).toHaveBeenCalledWith("PostgreSQL", null);
+  });
+
+  it("garde la version existante quand la version est omise du dto", async () => {
+    const { service } = makeService();
+    const resolveEol = jest
+      .spyOn(
+        service as unknown as {
+          resolveEol: (...args: unknown[]) => Promise<unknown>;
+        },
+        "resolveEol",
+      )
+      .mockResolvedValue({});
+
+    await service.updateTechnology("tech-1", "app-1", {
+      product: "PostgreSQL",
+    });
+
+    expect(resolveEol).toHaveBeenCalledWith("PostgreSQL", "15.5");
+  });
 });
