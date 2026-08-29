@@ -72,8 +72,32 @@
   ouvrir l'onglet « Modifications » de la fiche.
 - **Résultat attendu** : la ligne d'historique affiche « `qa-target@example.com`
   (via `admin@example.com`) » — l'action est attribuée à l'identité effective ET l'administrateur
-  réel est visible. Même affichage sur la page globale Modifications et le détail d'une metadata.
+  réel est visible. Même affichage sur la page globale Modifications, le détail d'une metadata, ET
+  le bandeau « Dernière modification de la fiche » de l'aperçu de l'application (`application-metadata-highlight`,
+  #2061 — ce bandeau utilisait un chemin de requête séparé qui n'incluait pas l'impersonator).
   Hors impersonification, aucun « (via …) » n'apparaît.
+
+### IMP-10 — Les signalements créés sous impersonification affichent l'admin réel (#2061) ✅
+
+- **Datafeature** : seed QA (`qa-target@example.com`) ; une application de test créée via l'API
+  (supprimée en fin de test).
+- **Action** : en `admin`, impersonner `qa-target` → onglet « Signalements » de la fiche → proposer
+  un signalement → ouvrir la page globale Signalements (ou l'onglet de la fiche).
+- **Résultat attendu** : la ligne du signalement affiche « `qa-target@example.com`
+  (via `admin@example.com`) » — l'action est attribuée à l'identité effective ET l'administrateur
+  réel est visible. Hors impersonification, aucun « (via …) » n'apparaît.
+
+### IMP-11 — Le journal des actions admin attribue les actions sous impersonification à l'admin réel (#2061) ✅
+
+- **Datafeature** : seed QA (`qa-target@example.com`) ; une application de test créée via l'API
+  (supprimée en fin de test).
+- **Action** : en `admin`, impersonner `qa-target` → proposer un signalement (n'importe quelle
+  action mutante) → arrêter l'impersonation → administration → onglet « Journal des actions »
+  (`AdminPanelManage` requis) → rechercher `qa-target@example.com`.
+- **Résultat attendu** : la ligne du journal affiche « `qa-target@example.com`
+  (via `admin@example.com`) ». Ce journal couvre TOUTES les routes mutantes (y compris acteurs et
+  utilisateurs), contrairement à `Metadata`/`Report` limités à leurs propres entités — il reste
+  réservé aux administrateurs, plus sensible que les autres historiques ouverts à tous.
 
 ### IMP-08 — Un admin scopé ne peut impersonner que dans son périmètre (#2217) ✅
 
