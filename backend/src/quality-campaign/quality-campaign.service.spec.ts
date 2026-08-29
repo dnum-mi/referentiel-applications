@@ -170,7 +170,7 @@ describe("QualityCampaignService", () => {
         ],
       }); // getRaw in findOne (via the final return)
     const createMany = jest.fn().mockResolvedValue({ count: 1 });
-    const update = jest.fn().mockResolvedValue({});
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
     const search = jest.fn().mockResolvedValue({
       results: [{ id: "app-1", label: "App A", quality: 55 }],
       total: 1,
@@ -180,7 +180,7 @@ describe("QualityCampaignService", () => {
 
     const service = buildService({
       prisma: {
-        qualityCampaign: { findUnique, update },
+        qualityCampaign: { findUnique, updateMany },
         qualityCampaignTarget: { createMany },
         actor: { findMany: actorFindMany },
       } as never,
@@ -189,18 +189,40 @@ describe("QualityCampaignService", () => {
 
     await service.sendCampaign("campaign-1");
 
+    // Le verrou atomique est posé sur `sentAt: null` AVANT l'envoi (#2376).
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "campaign-1", sentAt: null },
+      data: { sentAt: expect.any(Date) },
+    });
     expect(createMany).toHaveBeenCalledWith({
       data: [
         { campaignId: "campaign-1", applicationId: "app-1", iqAtStart: 55 },
       ],
       skipDuplicates: true,
     });
-    expect(update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "campaign-1" },
-        data: { sentAt: expect.any(Date) },
-      }),
+  });
+
+  it("n'envoie pas quand le verrou est déjà pris par une exécution concurrente (#2376)", async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue({ ...baseCampaign, targets: [] }); // getRaw voit sentAt null…
+    const updateMany = jest.fn().mockResolvedValue({ count: 0 }); // …mais le verrou a déjà été pris
+    const createMany = jest.fn();
+    const search = jest.fn();
+
+    const service = buildService({
+      prisma: {
+        qualityCampaign: { findUnique, updateMany },
+        qualityCampaignTarget: { createMany },
+      } as never,
+      applicationService: { search } as never,
+    });
+
+    await expect(service.sendCampaign("campaign-1")).rejects.toThrow(
+      BadRequestException,
     );
+    expect(search).not.toHaveBeenCalled();
+    expect(createMany).not.toHaveBeenCalled();
   });
 
   it("rejects sending a sponsor report for a campaign not yet sent", async () => {
@@ -277,6 +299,34 @@ describe("QualityCampaignService", () => {
       expect.objectContaining({
         link: "/administration",
         emailLogId: "email-log-1",
+      }),
+    );
+  });
+
+  it("écrit NULL en base quand message et endDate sont explicitement vidés (#2387)", async () => {
+    const findUnique = jest.fn().mockResolvedValue({
+      ...baseCampaign,
+      sentAt: null,
+      targets: [],
+    });
+    const update = jest.fn().mockResolvedValue({
+      ...baseCampaign,
+      message: null,
+      endDate: null,
+      targets: [],
+    });
+    const service = buildService({
+      prisma: {
+        qualityCampaign: { findUnique, update },
+      } as never,
+    });
+
+    await service.update("campaign-1", { message: null, endDate: null });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "campaign-1" },
+        data: expect.objectContaining({ message: null, endDate: null }),
       }),
     );
   });

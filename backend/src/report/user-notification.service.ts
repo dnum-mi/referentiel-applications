@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { NotificationType, ReportStatus, Prisma } from "@prisma/client";
 import { EmailService } from "src/email/email.service";
 import { NotificationService } from "src/notification/notification.service";
@@ -22,13 +22,26 @@ export class UserNotificationService {
       shouldNotify &&
       typeguardIncludes(status, [ReportStatus.done, ReportStatus.in_progress]);
     if (needNotify) {
-      const emailLog = await this.emailService.sendSignalementUpdateEmail({
-        recipientEmail: report.notifier.email,
-        description: report.description,
-        status: report.status,
-        applicationName: report.application?.shortName,
-        notes: report.notes,
-      });
+      // #2377 : l'email est un COMPLÉMENT à la notification in-app. Son échec (SMTP indisponible)
+      // ne doit ni faire échouer la mise à jour du statut du signalement (500 à l'admin), ni
+      // empêcher la notification in-app — seul canal qui prévient réellement le déclarant. On
+      // isole donc l'envoi et on crée la notification quel que soit son sort.
+      let emailLogId: string | undefined;
+      try {
+        const emailLog = await this.emailService.sendSignalementUpdateEmail({
+          recipientEmail: report.notifier.email,
+          description: report.description,
+          status: report.status,
+          applicationName: report.application?.shortName,
+          notes: report.notes,
+        });
+        emailLogId = emailLog?.id;
+      } catch (error) {
+        Logger.error(
+          `Échec de l'email de mise à jour du signalement ${report.id} : notification in-app conservée`,
+          error instanceof Error ? error.stack : String(error),
+        );
+      }
 
       const statusLabel =
         status === ReportStatus.done ? "traité" : "pris en compte";
@@ -39,7 +52,7 @@ export class UserNotificationService {
         {
           link: "/signalements",
           applicationId: report.applicationId ?? undefined,
-          emailLogId: emailLog.id,
+          emailLogId,
         },
       );
     }

@@ -1,0 +1,54 @@
+import { Prisma } from "@prisma/client";
+import { Requestor } from "src/user/entities/user.entity";
+import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
+
+/**
+ * #2366 — Ces requêtes étaient construites par interpolation de chaîne et exécutées via
+ * `$queryRawUnsafe`, ce qui permettait une injection SQL par le paramètre d'URL `applicationId`
+ * (et, dans une moindre mesure, par le path d'organisation). On vérifie ici que la valeur
+ * dangereuse voyage désormais comme PARAMÈTRE (`Prisma.Sql.values`) et n'apparaît jamais dans le
+ * texte SQL (`Prisma.Sql.strings`) — la garantie que Prisma la liera, sans jamais l'interpréter.
+ */
+describe("QueryBuilderGroupActor — requêtes paramétrées (#2366)", () => {
+  const builder = new QueryBuilderGroupActor();
+
+  const INJECTION = "x' OR '1'='1"; // apostrophe qui casserait toute interpolation naïve
+
+  const userIn = (path: string | null): Requestor =>
+    ({
+      email: "user@example.com",
+      organization: path ? { path } : null,
+    }) as unknown as Requestor;
+
+  const assertNoInterpolation = (sql: Prisma.Sql, danger: string) => {
+    // Le texte assemblé ne contient jamais la valeur dangereuse…
+    expect(sql.strings.join("")).not.toContain(danger);
+    // …elle est présente uniquement comme paramètre lié.
+    expect(sql.values).toContain(danger);
+  };
+
+  it("buildByApplication lie applicationId comme paramètre, pas comme texte SQL", () => {
+    const sql = builder.buildByApplication(INJECTION, userIn("MI/DNUM"));
+    assertNoInterpolation(sql, INJECTION);
+    // Le texte reste un placeholder Postgres ($1/$2), jamais l'apostrophe injectée.
+    expect(sql.strings.join("")).not.toContain("'x'");
+  });
+
+  it("buildByApplication lie aussi le path d'organisation comme paramètre", () => {
+    const sql = builder.buildByApplication("app-1", userIn(INJECTION));
+    assertNoInterpolation(sql, INJECTION);
+  });
+
+  it("build lie le path d'organisation comme paramètre", () => {
+    const sql = builder.build(userIn(INJECTION));
+    assertNoInterpolation(sql, INJECTION);
+  });
+
+  // Un path nul devient un paramètre NULL (et non la chaîne "null" interpolée) : le LIKE
+  // n'apparie alors rien, comme attendu.
+  it("gère un path d'organisation nul sans interpolation", () => {
+    const sql = builder.build(userIn(null));
+    expect(sql.values).toContain(null);
+    expect(sql.strings.join("")).not.toContain("null");
+  });
+});
