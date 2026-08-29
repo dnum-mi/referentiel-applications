@@ -75,9 +75,10 @@ async function saveCampaign() {
   const updated = await store.updateCampaign(props.campaign.id, {
     name: editingName.value.trim(),
     sponsorEmails: editingSponsorEmails.value.map((email) => email.trim()).filter(Boolean),
-    message: editingMessage.value.trim() || undefined,
+    // #2387 : `null` (et non `undefined`) pour vider effectivement le champ côté back.
+    message: editingMessage.value.trim() || null,
     startDate: props.campaign.status === "sent" ? undefined : new Date(editingStartDate.value),
-    endDate: editingEndDate.value ? new Date(editingEndDate.value) : undefined,
+    endDate: editingEndDate.value ? new Date(editingEndDate.value) : null,
   });
 
   if (updated) {

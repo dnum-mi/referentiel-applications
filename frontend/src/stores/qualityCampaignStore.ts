@@ -4,6 +4,15 @@ import { ref } from "vue";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
 
+/**
+ * Corps de mise à jour d'une campagne. `message` et `endDate` acceptent `null` explicite pour
+ * vider le champ (le client généré ne l'exprime pas encore, cf. #2387/#2349).
+ */
+type UpdateQualityCampaignBody = Partial<Omit<CreateQualityCampaignDto, "message" | "endDate">> & {
+  message?: string | null;
+  endDate?: Date | null;
+};
+
 export const useQualityCampaignStore = defineStore("qualityCampaignStore", () => {
   const campaigns = ref<QualityCampaignDto[]>([]);
   const total = ref(0);
@@ -37,10 +46,16 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
     }
   }
 
-  async function updateCampaign(id: string, body: Partial<CreateQualityCampaignDto>) {
+  async function updateCampaign(id: string, body: UpdateQualityCampaignBody) {
     const toaster = useToasterStore();
     try {
-      const response = await api.qualityCampaignControllerUpdate({ path: { id }, body });
+      // #2387 : message/endDate peuvent être `null` pour vider le champ. Le contrat back accepte
+      // `null` (écrit NULL en base), mais le client OpenAPI committé ne le reflète pas encore
+      // (dérive suivie dans #2349) — d'où ce cast localisé.
+      const response = await api.qualityCampaignControllerUpdate({
+        path: { id },
+        body: body as Partial<CreateQualityCampaignDto>,
+      });
       if (!response.response.ok || !response.data) {
         throw new Error("Erreur lors de la mise à jour de la campagne");
       }

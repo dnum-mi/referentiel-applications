@@ -180,6 +180,11 @@ test.describe("Impersonation", () => {
         "R1",
       );
 
+      // Le bandeau « Dernière modification de la fiche » de l'aperçu affiche aussi l'admin réel.
+      const banner = page.getByTestId("application-metadata-highlight");
+      await expect(banner).toContainText("qa-target@example.com");
+      await expect(banner).toContainText("(via admin@example.com)");
+
       // L'historique attribue la modification à la cible ET affiche l'admin réel.
       await fiche.openTab("tab-modifications");
       const table = page.getByTestId("modifications-table");
@@ -190,6 +195,83 @@ test.describe("Impersonation", () => {
       await admin.expectNotImpersonating();
     } finally {
       await data.setUserRole("qa-target@example.com", "READER").catch(() => {});
+      await data.removeApplication(appRef.id).catch(() => {});
+    }
+  });
+
+  test("IMP-10 - les signalements créés sous impersonation affichent l'admin réel (#2061)", async ({
+    page,
+    data,
+  }) => {
+    const inScope = await data.getUser("qa-target@example.com");
+    test.skip(!inScope, "Fixture QA absente — `pnpm db:seed:qa` requis.");
+
+    const ts = Date.now();
+    const label = `E2E-IMP10-${ts}`;
+    const appRef = await data.createTestApplication(label);
+
+    try {
+      await loginAs(page, "admin");
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.impersonateUser("qa-target@example.com");
+      await admin.expectImpersonationBanner("qa-target@example.com");
+
+      // Signalement soumis SOUS l'identité de qa-target.
+      const fiche = new ApplicationPage(page);
+      await fiche.open(appRef.id);
+      await fiche.openTab("tab-reports");
+      await fiche.expectReportsTabLoaded();
+      await fiche.submitReportFromApp(`Signalement sous impersonation ${ts}`);
+
+      // Le tableau attribue le signalement à la cible ET affiche l'admin réel.
+      const table = page.getByTestId("reports-table");
+      await expect(table).toContainText("qa-target@example.com");
+      await expect(table).toContainText("(via admin@example.com)");
+
+      await admin.stopImpersonation();
+      await admin.expectNotImpersonating();
+    } finally {
+      await data.removeApplication(appRef.id).catch(() => {});
+    }
+  });
+
+  test("IMP-11 - le journal des actions admin attribue les actions sous impersonation à l'admin réel (#2061)", async ({
+    page,
+    data,
+  }) => {
+    const inScope = await data.getUser("qa-target@example.com");
+    test.skip(!inScope, "Fixture QA absente — `pnpm db:seed:qa` requis.");
+
+    const ts = Date.now();
+    const label = `E2E-IMP11-${ts}`;
+    const appRef = await data.createTestApplication(label);
+
+    try {
+      await loginAs(page, "admin");
+      const admin = new AdminPage(page);
+      await admin.open();
+      await admin.impersonateUser("qa-target@example.com");
+      await admin.expectImpersonationBanner("qa-target@example.com");
+
+      // Action mutante SOUS l'identité de qa-target (soumission d'un signalement).
+      const fiche = new ApplicationPage(page);
+      await fiche.open(appRef.id);
+      await fiche.openTab("tab-reports");
+      await fiche.expectReportsTabLoaded();
+      await fiche.submitReportFromApp(`Journal d'audit ${ts}`);
+
+      await admin.stopImpersonation();
+      await admin.expectNotImpersonating();
+
+      // Le journal d'audit (réservé aux admins) attribue l'action à qa-target ET affiche l'admin réel.
+      await admin.open();
+      await admin.openActionLogsTab();
+      await admin.searchActionLogs("qa-target@example.com");
+      const table = page.getByTestId("admin-action-logs-table");
+      await expect(table).toContainText("qa-target@example.com");
+      await expect(table).toContainText("(via admin@example.com)");
+    } finally {
       await data.removeApplication(appRef.id).catch(() => {});
     }
   });

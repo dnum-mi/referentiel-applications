@@ -1,6 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 import { HttpException, HttpStatus } from "@nestjs/common";
+import { Roles } from "@prisma/client";
 import { ScopedPermissionService } from "src/user/scope-permission/scoped-permission.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ScopePermissionsException } from "src/user/errors/scope-permissions.exception";
@@ -9,11 +10,11 @@ import type { UpdateUserDto } from "src/user/dto/update-user.dto";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
 
-const ADMIN_SCOPE_PATH = "ROOT.ORG_A";
+const ADMIN_SCOPE_PATH = "ROOT/ORG_A";
 
-const orgInScope = { id: "org-in-scope", path: "ROOT.ORG_A.DEPT" };
-const orgInScope2 = { id: "org-in-scope-2", path: "ROOT.ORG_A.DEPT2" };
-const orgOutScope = { id: "org-out-scope", path: "ROOT.ORG_B.DEPT" };
+const orgInScope = { id: "org-in-scope", path: "ROOT/ORG_A/DEPT" };
+const orgInScope2 = { id: "org-in-scope-2", path: "ROOT/ORG_A/DEPT2" };
+const orgOutScope = { id: "org-out-scope", path: "ROOT/ORG_B/DEPT" };
 
 const orgMap: Record<string, typeof orgInScope> = {
   [orgInScope.id]: orgInScope,
@@ -195,7 +196,7 @@ describe("ScopedPermissionService", () => {
         ).rejects.toThrow(ScopePermissionsException);
       });
 
-      it("allows managing a user with no organization", async () => {
+      it("throws when the target user has no organization (#2371 — an orphan is out of any scoped admin's reach)", async () => {
         mockPrismaService.user.findFirst.mockResolvedValue(
           makeUser(null, null),
         );
@@ -208,7 +209,7 @@ describe("ScopedPermissionService", () => {
             } as UpdateUserDto,
             scopedAdmin,
           ),
-        ).resolves.toBeUndefined();
+        ).rejects.toThrow(ScopePermissionsException);
       });
 
       it("allows managing a user whose organization is within the admin's scope", async () => {
@@ -229,13 +230,94 @@ describe("ScopedPermissionService", () => {
       });
     });
 
+    // ── Escalade de privilèges (#2371) ────────────────────────────────────
+    describe("privilege escalation", () => {
+      const manageableTarget = (
+        role: Roles = Roles.VISITOR,
+        additionalPermissions: string[] = [],
+      ) => ({
+        ...makeUser(orgInScope.id, orgInScope.id),
+        role,
+        additionalPermissions,
+      });
+
+      it("refuse à un admin scopé de promouvoir une cible en ADMIN", async () => {
+        mockPrismaService.user.findFirst.mockResolvedValue(manageableTarget());
+        setupOrgMock();
+        await expect(
+          service.assertCanUpdate(
+            "target-1",
+            { role: Roles.ADMIN } as UpdateUserDto,
+            scopedAdmin,
+          ),
+        ).rejects.toBeInstanceOf(ScopePermissionsException);
+      });
+
+      it("autorise un admin scopé à changer le rôle vers un rôle non-ADMIN", async () => {
+        mockPrismaService.user.findFirst.mockResolvedValue(manageableTarget());
+        setupOrgMock();
+        await expect(
+          service.assertCanUpdate(
+            "target-1",
+            { role: Roles.CONTRIBUTOR } as UpdateUserDto,
+            scopedAdmin,
+          ),
+        ).resolves.toBeUndefined();
+      });
+
+      it("n'entrave pas une cible déjà ADMIN qui reste ADMIN", async () => {
+        mockPrismaService.user.findFirst.mockResolvedValue(
+          manageableTarget(Roles.ADMIN),
+        );
+        setupOrgMock();
+        await expect(
+          service.assertCanUpdate(
+            "target-1",
+            { role: Roles.ADMIN } as UpdateUserDto,
+            scopedAdmin,
+          ),
+        ).resolves.toBeUndefined();
+      });
+
+      it("refuse à un admin scopé d'accorder des permissions additionnelles", async () => {
+        mockPrismaService.user.findFirst.mockResolvedValue(manageableTarget());
+        setupOrgMock();
+        await expect(
+          service.assertCanUpdate(
+            "target-1",
+            {
+              additionalPermissions: ["AdminPanelManage"],
+            } as unknown as UpdateUserDto,
+            scopedAdmin,
+          ),
+        ).rejects.toBeInstanceOf(ScopePermissionsException);
+      });
+
+      it("autorise quand les permissions additionnelles sont inchangées", async () => {
+        mockPrismaService.user.findFirst.mockResolvedValue(
+          manageableTarget(Roles.VISITOR, ["DataExport"]),
+        );
+        setupOrgMock();
+        await expect(
+          service.assertCanUpdate(
+            "target-1",
+            {
+              additionalPermissions: ["DataExport"],
+            } as unknown as UpdateUserDto,
+            scopedAdmin,
+          ),
+        ).resolves.toBeUndefined();
+      });
+    });
+
     // ── scopeOrganizationId ───────────────────────────────────────────────
-    // Target user has no organization so the initial management check always passes.
+    // La cible a une organisation DANS le périmètre : le contrôle initial de gestion passe
+    // (#2371 — un compte sans organisation ne serait plus gérable par un admin scopé).
 
     describe("scopeOrganizationId", () => {
       beforeEach(() => {
         mockPrismaService.user.findFirst.mockResolvedValue(
-          makeUser(null, null),
+          makeUser(orgInScope.id, null),
         );
         setupOrgMock();
       });
@@ -268,7 +350,7 @@ describe("ScopedPermissionService", () => {
 
         it("always throws when the current scope organization is within the admin's scope", async () => {
           mockPrismaService.user.findFirst.mockResolvedValue(
-            makeUser(null, orgInScope.id),
+            makeUser(orgInScope.id, orgInScope.id),
           );
           const dto = {
             organizationId: null,
@@ -281,7 +363,7 @@ describe("ScopedPermissionService", () => {
 
         it("always throws when the current scope organization is outside the admin's scope", async () => {
           mockPrismaService.user.findFirst.mockResolvedValue(
-            makeUser(null, orgOutScope.id),
+            makeUser(orgInScope.id, orgOutScope.id),
           );
           const dto = {
             organizationId: null,
@@ -296,7 +378,7 @@ describe("ScopedPermissionService", () => {
       describe("UPDATE: organization → another organization", () => {
         beforeEach(() => {
           mockPrismaService.user.findFirst.mockResolvedValue(
-            makeUser(null, orgInScope.id),
+            makeUser(orgInScope.id, orgInScope.id),
           );
         });
 
@@ -323,7 +405,7 @@ describe("ScopedPermissionService", () => {
         it("allows when the target (to) scope organization is within the admin's scope, even if the source (from) is outside", async () => {
           // Only the 'to' organization is checked for an UPDATE, not the 'from'
           mockPrismaService.user.findFirst.mockResolvedValue(
-            makeUser(null, orgOutScope.id),
+            makeUser(orgInScope.id, orgOutScope.id),
           );
           const dto = {
             organizationId: null,
@@ -341,11 +423,12 @@ describe("ScopedPermissionService", () => {
     describe("omitted fields (undefined) should be treated as UNCHANGED", () => {
       it("does not crash when scopeOrganizationId is omitted from the dto", async () => {
         mockPrismaService.user.findFirst.mockResolvedValue(
-          makeUser(null, orgInScope.id),
+          makeUser(orgInScope.id, orgInScope.id),
         );
         setupOrgMock();
+        // organizationId inchangé (même valeur que la cible) → UNCHANGED, aucun lookup d'organisation.
         const dto = {
-          organizationId: null,
+          organizationId: orgInScope.id,
         } as UpdateUserDto;
         await expect(
           service.assertCanUpdate("target-1", dto, scopedAdmin),
@@ -392,24 +475,26 @@ describe("ScopedPermissionService", () => {
         setupOrgMock();
       });
 
-      describe("SET: none → organization", () => {
+      // #2371 : une cible sans organisation n'est dans le périmètre d'aucun admin scopé — il ne
+      // peut donc pas l'« adopter » en lui assignant une organisation, même dans son périmètre.
+      describe("SET: none → organization (cible orpheline)", () => {
         beforeEach(() => {
           mockPrismaService.user.findFirst.mockResolvedValue(
             makeUser(null, null),
           );
         });
 
-        it("allows when the new organization is within the admin's scope", async () => {
+        it("refuse d'assigner une organisation à une cible orpheline, même dans le périmètre", async () => {
           const dto = {
             organizationId: orgInScope.id,
             scopeOrganizationId: null,
           } as UpdateUserDto;
           await expect(
             service.assertCanUpdate("target-1", dto, scopedAdmin),
-          ).resolves.toBeUndefined();
+          ).rejects.toThrow(ScopePermissionsException);
         });
 
-        it("throws when the new organization is outside the admin's scope", async () => {
+        it("refuse aussi quand l'organisation cible est hors périmètre", async () => {
           const dto = {
             organizationId: orgOutScope.id,
             scopeOrganizationId: null,
