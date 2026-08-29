@@ -16,7 +16,7 @@ export type TechnicalDebtPoint = TechnicalDebtControllerGetTechnicalDebtPointsRe
 
 export type Filters = NonNullable<ApplicationControllerSearchData["query"]>;
 
-const DEFAULT_FILTERS: Filters = {
+export const DEFAULT_FILTERS: Filters = {
   label: undefined,
   tag: [],
   link: undefined,

@@ -33,4 +33,12 @@ export class UserPermissionLogDto {
       "Email de la personne ayant effectué la modification. Null si la modification est automatique (création de compte) ou si l'auteur a depuis été supprimé.",
   })
   changedByEmail: string | null;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description:
+      "Email de l'administrateur réel si la modification a été faite sous impersonation (#2061).",
+  })
+  impersonatorEmail: string | null;
 }

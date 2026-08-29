@@ -9,6 +9,7 @@ import { EmailTemplateService } from "./email-templates.services";
 import { MailSendException } from "./error/mail-send.exception";
 import { ReportStatus } from "@prisma/client";
 import { ReportStatusLabels } from "src/applications/constants/enum-label";
+import { escapeHtml } from "src/utils/escape-html.util";
 
 @Injectable()
 export class EmailService {
@@ -566,8 +567,11 @@ export class EmailService {
 
     const subject = `Campagne qualité « ${campaignName} » : améliorez l'IQ de "${applicationLabel}"`;
 
+    // #2380 : le message vient d'un utilisateur (QualityCampaignManage, délégable à des non-admins).
+    // Non échappé, il permettait d'injecter du HTML arbitraire dans l'email (phishing sous
+    // l'identité officielle).
     const messageBlock = message
-      ? `<tr><td style="padding-bottom: 20px"><p style="margin: 0; font-size: 16px; color: #161616; line-height: 1.5">${message}</p></td></tr>`
+      ? `<tr><td style="padding-bottom: 20px"><p style="margin: 0; font-size: 16px; color: #161616; line-height: 1.5">${escapeHtml(message)}</p></td></tr>`
       : "";
 
     const html = this.templateService.render(
