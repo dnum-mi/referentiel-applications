@@ -34,11 +34,12 @@ export class CreateQualityCampaignDto {
     description:
       "Message incitatif inclus dans l'email de relance envoyé aux acteurs des applications ciblées",
     maxLength: 2000,
+    nullable: true,
   })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
-  message?: string;
+  message?: string | null;
 
   @ApiPropertyOptional({
     description:
@@ -61,11 +62,12 @@ export class CreateQualityCampaignDto {
 
   @ApiPropertyOptional({
     description: "Date de fin indicative de la campagne (affichage uniquement)",
+    nullable: true,
   })
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  endDate?: Date;
+  endDate?: Date | null;
 }
 
 export class UpdateQualityCampaignDto extends PartialType(

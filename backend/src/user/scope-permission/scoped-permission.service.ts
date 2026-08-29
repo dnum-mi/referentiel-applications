@@ -1,4 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
+import { Roles } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UpdateUserDto } from "../dto/update-user.dto";
 import { Requestor } from "../entities/user.entity";
@@ -63,6 +64,35 @@ export class ScopedPermissionService {
       actions.scopeOrganizationId,
       requestorScopePath,
     );
+
+    this.assertNoPrivilegeEscalation(currentUser, dto);
+  }
+
+  /**
+   * #2371 — Ni le rôle ni les permissions additionnelles n'étaient contrôlés : un admin scopé
+   * pouvait promouvoir sa cible ADMIN (droits globaux) ou lui accorder des permissions comme
+   * AdminPanelManage/DataExport. L'attribution du rôle Administrateur et toute modification des
+   * permissions additionnelles relèvent d'un administrateur global.
+   */
+  private assertNoPrivilegeEscalation(
+    currentUser: { role: Roles; additionalPermissions: string[] },
+    dto: UpdateUserDto,
+  ): void {
+    if (dto.role === Roles.ADMIN && currentUser.role !== Roles.ADMIN) {
+      throw new ScopePermissionsException(
+        "Seul un administrateur global peut attribuer le rôle Administrateur",
+      );
+    }
+
+    if (dto.additionalPermissions !== undefined) {
+      const current = [...currentUser.additionalPermissions].sort();
+      const requested = [...new Set(dto.additionalPermissions)].sort();
+      if (JSON.stringify(current) !== JSON.stringify(requested)) {
+        throw new ScopePermissionsException(
+          "Seul un administrateur global peut modifier les permissions additionnelles",
+        );
+      }
+    }
   }
 
   private async assertOrganizationAction(
@@ -211,7 +241,16 @@ export class ScopedPermissionService {
     requestorScopePath: string,
     message: string,
   ): void {
-    if (targetPath && !targetPath.startsWith(requestorScopePath)) {
+    // #2371 : un chemin absent ou vide n'est dans le périmètre d'AUCUN administrateur scopé — un
+    // utilisateur sans organisation ne doit pas devenir modifiable/bloquable/impersonnable par un
+    // admin scopé (l'ancien `if (targetPath && …)` laissait passer ce cas en silence).
+    // L'appartenance est ancrée à la frontière de segment (`scope` lui-même ou un descendant
+    // `scope + "/"`), et non un simple préfixe de chaîne (`/SG` ne matche pas `/SGAMI`).
+    const withinScope =
+      !!targetPath &&
+      (targetPath === requestorScopePath ||
+        targetPath.startsWith(`${requestorScopePath}/`));
+    if (!withinScope) {
       throw new ScopePermissionsException(message);
     }
   }

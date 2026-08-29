@@ -137,14 +137,20 @@ export class ApplicationValidationCronService
           continue;
         }
 
+        // #2381 : la casse des emails d'acteurs peut différer de celle des comptes.
+        // Déduplication insensible à la casse (garde la 1re casse rencontrée).
         const recipientEmailsList = [
-          ...new Set(
+          ...new Map(
             application.actors
               .map((actor) => actor.email)
               .filter((emailAddress): emailAddress is string =>
                 Boolean(emailAddress),
+              )
+              .map(
+                (emailAddress) =>
+                  [emailAddress.toLowerCase(), emailAddress] as const,
               ),
-          ),
+          ).values(),
         ];
 
         if (recipientEmailsList.length === 0) {
@@ -161,13 +167,24 @@ export class ApplicationValidationCronService
         // Notification in-app : complément persistant, indépendant de l'opt-out email. Résolue
         // en amont pour lier chaque notification à l'e-mail effectivement envoyé au même
         // utilisateur (#2280 — suite), quand un tel e-mail existe.
+        // `in` est sensible à la casse en base : on croise via des `equals` insensibles.
         const recipientUsers = await this.prisma.user.findMany({
-          where: { email: { in: recipientEmailsList } },
-          select: { id: true, email: true },
+          where: {
+            OR: recipientEmailsList.map((emailAddress) => ({
+              email: { equals: emailAddress, mode: "insensitive" as const },
+            })),
+          },
+          select: { id: true, email: true, emailNotificationsEnabled: true },
         });
 
-        const eligibleEmailsList =
-          await this.getEmailsWithNotificationsEnabled(recipientEmailsList);
+        const optedOutEmails = new Set(
+          recipientUsers
+            .filter((user) => user.emailNotificationsEnabled === false)
+            .map((user) => user.email.toLowerCase()),
+        );
+        const eligibleEmailsList = recipientEmailsList.filter(
+          (emailAddress) => !optedOutEmails.has(emailAddress.toLowerCase()),
+        );
 
         const emailLogIdByEmail = new Map<string, string>();
         if (eligibleEmailsList.length === 0) {
@@ -185,7 +202,7 @@ export class ApplicationValidationCronService
                   lastModifiedDate,
                 });
               if (emailLog) {
-                emailLogIdByEmail.set(emailAddress, emailLog.id);
+                emailLogIdByEmail.set(emailAddress.toLowerCase(), emailLog.id);
               }
               this.logger.log(
                 `Email envoyé à ${emailAddress} pour [${application.label}]`,
@@ -208,7 +225,7 @@ export class ApplicationValidationCronService
               {
                 link: `/applications/${application.id}`,
                 applicationId: application.id,
-                emailLogId: emailLogIdByEmail.get(user.email),
+                emailLogId: emailLogIdByEmail.get(user.email.toLowerCase()),
               },
             ),
           ),
@@ -234,24 +251,5 @@ export class ApplicationValidationCronService
     } catch (error) {
       this.logger.error("Erreur critique durant le job de validation:", error);
     }
-  }
-
-  private async getEmailsWithNotificationsEnabled(
-    emailsList: string[],
-  ): Promise<string[]> {
-    const disabledUsersList = await this.prisma.user.findMany({
-      where: {
-        email: { in: emailsList },
-        emailNotificationsEnabled: false,
-      },
-      select: { email: true },
-    });
-
-    const disabledEmailsSet = new Set(
-      disabledUsersList.map((user) => user.email),
-    );
-    return emailsList.filter(
-      (emailAddress) => !disabledEmailsSet.has(emailAddress),
-    );
   }
 }

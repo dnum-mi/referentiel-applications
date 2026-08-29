@@ -65,6 +65,7 @@ const targetUser = {
   scopeOrganizationId: null,
   lastPermissionChangeAt: null,
   lastPermissionChangedByEmail: null,
+  lastPermissionChangedByImpersonatorEmail: null,
   isBlocked: false,
   blockedAt: null,
 } satisfies Required<UserEntity>;

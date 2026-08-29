@@ -5,6 +5,9 @@ model UserPermissionLog {
   user                  User         @relation(fields: [userId], references: [id], onDelete: Restrict)
   createdAt             DateTime     @default(now())
   changedById           String? /// Pas de jointure explicite pour éviter les problèmes de suppression en cascade, on stocke juste l'ID de l'utilisateur qui a effectué le changement
+  /// Administrateur réel lorsque le changement a été fait sous impersonation (#2061). Même
+  /// absence de jointure explicite que `changedById`, pour la même raison.
+  impersonatorId        String?
   role                  Roles?
   additionalPermissions Permission[]
 }

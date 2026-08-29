@@ -8,10 +8,12 @@ import { setupTestSuite } from "./setup";
 
 describe("HostingOptions", () => {
   const app = setupTestSuite();
-  let user: UserFakerReturnType;
+  let user: UserFakerReturnType; // CONTRIBUTOR : lecture du catalogue
+  let admin: UserFakerReturnType; // ADMIN : écriture du catalogue (#2369)
 
   beforeAll(async () => {
     user = await UserFaker.create({ role: Roles.CONTRIBUTOR });
+    admin = await UserFaker.create({ role: Roles.ADMIN });
   });
 
   it("/GET hosting-options", async () => {
@@ -22,8 +24,8 @@ describe("HostingOptions", () => {
       .expect(200);
   });
 
-  it("/POST hosting-options", async () => {
-    const TOKEN = await getToken(user);
+  it("/POST hosting-options (admin)", async () => {
+    const TOKEN = await getToken(admin);
     const newHostingOption = {
       site: "CER(RENNES)",
       platform: "VIRTUALISATION",
@@ -45,8 +47,8 @@ describe("HostingOptions", () => {
     expect(response.body.room).toBe(newHostingOption.room);
   });
 
-  it("/PATCH hosting-options/:id", async () => {
-    const TOKEN = await getToken(user);
+  it("/PATCH hosting-options/:id (admin)", async () => {
+    const TOKEN = await getToken(admin);
     const hostingOption = await HostingOptionFaker.create();
     const updateData = {
       site: "LOGNES(SIL)",
@@ -67,6 +69,22 @@ describe("HostingOptions", () => {
     expect(response.body.provider).toBe(updateData.provider);
     expect(response.body.building).toBe(updateData.building);
     expect(response.body.room).toBe(updateData.room);
+  });
+
+  // #2369 : les écritures du catalogue partagé sont réservées aux administrateurs.
+  it("refuse l'écriture du catalogue à un contributeur (403)", async () => {
+    const TOKEN = await getToken(user);
+    const option = await HostingOptionFaker.create();
+
+    await request(app().getHttpServer())
+      .post("/hosting-options")
+      .send({ site: "X", platform: "Y", provider: "Z" })
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(403);
+    await request(app().getHttpServer())
+      .delete(`/hosting-options/${option.id}`)
+      .set("Authorization", `Bearer ${TOKEN}`)
+      .expect(403);
   });
 
   it("filters hosting-options by site", async () => {

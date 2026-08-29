@@ -369,7 +369,10 @@ export class UserService {
     const lastChangedByIds = [
       ...new Set(
         paginated.results
-          .map((user) => user.lastPermissionChangedById)
+          .flatMap((user) => [
+            user.lastPermissionChangedById,
+            user.lastPermissionChangedByImpersonatorId,
+          ])
           .filter((id): id is string => id !== null),
       ),
     ];
@@ -390,6 +393,12 @@ export class UserService {
         lastPermissionChangedByEmail: user.lastPermissionChangedById
           ? (emailById.get(user.lastPermissionChangedById) ?? null)
           : null,
+        // Administrateur réel si la dernière modification a été faite sous impersonation (#2061).
+        lastPermissionChangedByImpersonatorEmail:
+          user.lastPermissionChangedByImpersonatorId
+            ? (emailById.get(user.lastPermissionChangedByImpersonatorId) ??
+              null)
+            : null,
       })),
     };
   }
