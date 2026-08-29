@@ -63,9 +63,20 @@ export class RelationService {
     );
   }
 
-  async findOne(id: string): Promise<RelationDto> {
+  async findOne(id: string, applicationId?: string): Promise<RelationDto> {
     const relation = await this.relationRepository.findOne(id);
     if (!relation) {
+      throw new NotFoundException("Relation not found");
+    }
+    // Scoping (#2367) : quand l'appel vient d'une route `/applications/:applicationId/relations`,
+    // la relation doit impliquer cette application (comme source OU cible). Sans ce contrôle, un
+    // utilisateur autorisé sur A pouvait lire/modifier/supprimer une relation entre X et Y par son
+    // seul id. On répond 404 (et non 403) pour ne pas divulguer l'existence de la relation.
+    if (
+      applicationId &&
+      relation.sourceApplication.id !== applicationId &&
+      relation.targetApplication.id !== applicationId
+    ) {
       throw new NotFoundException("Relation not found");
     }
     return relation;
@@ -73,10 +84,11 @@ export class RelationService {
 
   async update(
     id: string,
+    applicationId: string,
     dto: RelationApplicationDto,
     requestorId: string,
   ): Promise<RelationDto> {
-    const oldRelation = await this.findOne(id);
+    const oldRelation = await this.findOne(id, applicationId);
     const updated = await this.relationRepository.update(id, dto);
 
     await this.metadataService.createMetadata({
@@ -108,8 +120,12 @@ export class RelationService {
     return updated;
   }
 
-  async delete(id: string, requestorId: string): Promise<void> {
-    const deletedRelation = await this.findOne(id);
+  async delete(
+    id: string,
+    applicationId: string,
+    requestorId: string,
+  ): Promise<void> {
+    const deletedRelation = await this.findOne(id, applicationId);
 
     await this.metadataService.createMetadata({
       applicationId: deletedRelation.sourceApplication.id,

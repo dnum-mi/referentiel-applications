@@ -98,8 +98,11 @@ export class ApplicationHostingsController {
     description: "Hébergement trouvé",
     type: HostingDto,
   })
-  findOne(@Param("id") id: string) {
-    return this.hostingService.findOneHosting(id);
+  findOne(
+    @Param("id") id: string,
+    @Param("applicationId") applicationId: string,
+  ) {
+    return this.hostingService.findOneHosting(id, applicationId);
   }
 
   @Patch(":id")
@@ -117,11 +120,7 @@ export class ApplicationHostingsController {
     @Param("applicationId") applicationId: string,
     @Body() dto: UpdateHostingDto,
   ) {
-    return this.hostingService.updateHosting(
-      id,
-      { ...dto, applicationId },
-      userId,
-    );
+    return this.hostingService.updateHosting(id, applicationId, dto, userId);
   }
 
   @Delete(":id")
@@ -129,7 +128,11 @@ export class ApplicationHostingsController {
   @ApiOperation({ summary: "Supprimer un hébergement pour une application" })
   @ApiNoContentResponse({ description: "Hébergement supprimé" })
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@UserId() userId: string, @Param("id") id: string) {
-    await this.hostingService.remove(id, userId);
+  async remove(
+    @UserId() userId: string,
+    @Param("id") id: string,
+    @Param("applicationId") applicationId: string,
+  ) {
+    await this.hostingService.remove(id, applicationId, userId);
   }
 }
