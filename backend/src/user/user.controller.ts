@@ -117,8 +117,11 @@ export class UserController {
     return this.userService.unsubscribe(user.id, appId);
   }
 
+  // #2365 : route de LECTURE (interroge MAIA sans rien modifier), utilisée pour préremplir le
+  // formulaire acteur. `AdminPanelManage` était trop haut — un contributeur habilité à saisir un
+  // acteur doit pouvoir l'utiliser. Restreinte à AppList (Lecteur et au-delà), pas aux VISITEURS.
   @Get("by-email/:email/sync-organization-from-maia")
-  @RequiredPermissions([Permission.AdminPanelManage])
+  @RequiredPermissions([Permission.AppList])
   @ApiOperation({
     summary: "Récupérer les informations MAIA d'un utilisateur par email",
     description:
@@ -154,8 +157,11 @@ export class UserController {
     description: "Accès refusé - Privilège admin requis",
   })
   @ApiNotFoundResponse({ description: "Utilisateur non trouvé" })
-  async syncOrganizationFromMaia(@Param("id") id: string) {
-    return this.userService.syncOrganizationFromMaia(id);
+  async syncOrganizationFromMaia(
+    @Param("id") id: string,
+    @User() requestor: Requestor,
+  ) {
+    return this.userService.syncOrganizationFromMaia(id, requestor);
   }
 
   @Post("sync-organizations-from-maia")
@@ -173,8 +179,14 @@ export class UserController {
   @ApiForbiddenResponse({
     description: "Accès refusé - Privilège admin requis",
   })
-  async syncOrganizationsFromMaia(@Body() body: SyncOrganizationsDto) {
-    return this.userService.startSyncOrganizationsFromMaiaInBackground(body);
+  async syncOrganizationsFromMaia(
+    @Body() body: SyncOrganizationsDto,
+    @User() requestor: Requestor,
+  ) {
+    return this.userService.startSyncOrganizationsFromMaiaInBackground(
+      body,
+      requestor,
+    );
   }
 
   @Post("impersonate/stop")
