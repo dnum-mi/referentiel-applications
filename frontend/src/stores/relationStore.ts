@@ -28,7 +28,9 @@ export const useRelationStore = defineStore("relationStore", () => {
   }
 
   async function createRelation(createRelation: RelationCreate) {
-    await api.relationControllerCreate({
+    // #2383 : le client généré ne lève pas sur les réponses non-2xx — on vérifie le statut
+    // explicitement pour ne pas laisser l'appelant afficher un faux succès.
+    const response = await api.relationControllerCreate({
       path: { applicationId: createRelation.applicationSourceId },
       body: {
         applicationTargetId: createRelation.applicationTargetId,
@@ -36,11 +38,14 @@ export const useRelationStore = defineStore("relationStore", () => {
         mediationServiceId: createRelation.mediationServiceId,
       },
     });
+    if (!response.response.ok) {
+      throw new Error("Failed to create relation");
+    }
     await fetchRelationsByApplication(createRelation.applicationSourceId);
   }
 
   async function updateRelation(updated: RelationUpdate) {
-    await api.relationControllerUpdate({
+    const response = await api.relationControllerUpdate({
       path: { applicationId: updated.applicationSourceId, id: updated.id },
       body: {
         applicationTargetId: updated.applicationTargetId,
@@ -48,13 +53,19 @@ export const useRelationStore = defineStore("relationStore", () => {
         mediationServiceId: updated.mediationServiceId,
       },
     });
+    if (!response.response.ok) {
+      throw new Error("Failed to update relation");
+    }
     return fetchRelationsByApplication(updated.applicationSourceId);
   }
 
   async function deleteRelation(deleted: RelationDelete) {
-    await api.relationControllerDelete({
+    const response = await api.relationControllerDelete({
       path: { applicationId: deleted.applicationSourceId, id: deleted.applicationTargetId },
     });
+    if (!response.response.ok) {
+      throw new Error("Failed to delete relation");
+    }
     return fetchRelationsByApplication(deleted.applicationSourceId);
   }
 

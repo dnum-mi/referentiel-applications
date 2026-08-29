@@ -89,7 +89,10 @@ const reportRows = computed(() => {
   return issues.value.results.map((report: ReportDto) => ({
     Date: report.createdAt,
     dateDisplay: new Date(report.createdAt).toLocaleDateString("fr-FR"),
-    Auteur: report.notifier?.email || "Inconnu",
+    // Signalement créé sous impersonation : afficher aussi l'admin réel (#2061).
+    Auteur: report.impersonator?.email
+      ? `${report.notifier?.email || "Inconnu"} (via ${report.impersonator.email})`
+      : report.notifier?.email || "Inconnu",
     Titre: title,
     Description: report.description,
   }));
