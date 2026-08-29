@@ -37,17 +37,28 @@ export function configureClients(toaster: { addErrorMessage: (message: string) =
       return response;
     }
 
-    // 401 → session invalide : on ré-authentifie l'utilisateur. Si la session SSO
-    // Keycloak est encore valide, le retour est transparent ; sinon il voit le
-    // formulaire de connexion. (On ne fait pas un logout dur, qui forcerait une
-    // reconnexion complète même pour une simple expiration de token.)
+    // 401 → token expiré/invalide : on ré-authentifie SANS logout dur. Si la session SSO
+    // Keycloak est encore valide (cas normal d'un simple token expiré), on tente d'abord un
+    // renouvellement silencieux ; à défaut, une redirection de connexion — qui, session SSO
+    // valide, revient sans ressaisie. La route courante est mémorisée pour y revenir ensuite,
+    // au lieu de repartir de l'accueil. (#2382)
     if (response.status === 401) {
       if (!isReauthenticating) {
         isReauthenticating = true;
+        const currentPath = `${globalThis.location.pathname}${globalThis.location.search}`;
+        if (!currentPath.startsWith("/oidc/")) {
+          sessionStorage.setItem("redirectAfterLogin", currentPath);
+        }
         try {
-          await USER_MANAGER.signoutRedirect();
-        } catch {
+          // Renouvellement silencieux (iframe caché) : transparent si la session SSO est valide.
+          await USER_MANAGER.signinSilent();
           isReauthenticating = false;
+        } catch {
+          try {
+            await USER_MANAGER.signinRedirect();
+          } catch {
+            isReauthenticating = false;
+          }
         }
       }
       return response;

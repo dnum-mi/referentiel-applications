@@ -106,6 +106,16 @@ export class UserEntity {
   lastPermissionChangedByEmail?: string | null;
 
   @ApiProperty({
+    required: false,
+    nullable: true,
+    description:
+      "Email de l'administrateur réel si la dernière modification des droits a été faite sous impersonation (#2061).",
+  })
+  @IsOptional()
+  @IsString()
+  lastPermissionChangedByImpersonatorEmail?: string | null;
+
+  @ApiProperty({
     description:
       "Si l'accès de l'utilisateur est bloqué. Un utilisateur bloqué est rejeté à l'authentification.",
     default: false,

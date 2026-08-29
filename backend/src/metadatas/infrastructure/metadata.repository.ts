@@ -92,6 +92,7 @@ export class MetadataRepository implements IMetadataRepository {
               organization: true,
             },
           },
+          impersonator: true,
         },
       }),
       this.prisma.metadata.findFirst({
@@ -103,6 +104,7 @@ export class MetadataRepository implements IMetadataRepository {
               organization: true,
             },
           },
+          impersonator: true,
         },
       }),
     ]);

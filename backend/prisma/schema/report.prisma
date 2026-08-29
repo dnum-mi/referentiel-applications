@@ -10,7 +10,7 @@ model Report {
   /// Identifiant de l'utilisateur qui a fait le signalement
   notifierId    String
   /// Utilisateur qui a fait le signalement
-  notifier      User         @relation(fields: [notifierId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  notifier      User         @relation("ReportNotifier", fields: [notifierId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   /// Description du problème signalé
   description   String
   notes         String       @default("")
@@ -20,6 +20,11 @@ model Report {
   createdAt     DateTime     @default(now())
   /// Quand le signalement a été mis à jour pour la dernière fois
   updatedAt     DateTime     @updatedAt
+
+  impersonatorId String?
+  /// Administrateur réel lorsque le signalement a été fait sous impersonation (#2061).
+  /// Renseigné automatiquement par l'extension Prisma report-impersonator.
+  impersonator   User?   @relation("ReportImpersonator", fields: [impersonatorId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   /// Historique des changements de statut et actions
   history     ReportHistory[]

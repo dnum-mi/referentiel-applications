@@ -96,7 +96,7 @@ test.describe("Reports flow", () => {
     await createGlobalReport(page, "RI03-global-report");
   });
 
-  test("RI-04 — Déconnecte l'utilisateur quand la session est invalide (401)", async ({ page }) => {
+  test("RI-04 — Se ré-authentifie sans déconnexion quand la session est invalide (401)", async ({ page }) => {
     await openSearchAndOpenGlobalReportModal(page);
     const description = uniqueText("RI04-global-report-401");
 
@@ -119,10 +119,37 @@ test.describe("Reports flow", () => {
     const failedCreate = await submitGlobalReport(page, description);
     expect(failedCreate.status()).toBe(401);
 
-    // Le 401 déclenche une déconnexion (signoutRedirect) : l'app repasse par Keycloak
-    // (transitoire) puis revient sur l'accueil, désormais déconnectée.
-    await page.waitForURL(`${BASE_URL}/`, { timeout: 15000 });
-    await expect(page.getByRole("banner").getByRole("link", { name: /Se connecter|Sign in/i })).toBeVisible();
+    // #2382 : le 401 ne déconnecte plus l'utilisateur. La session SSO Keycloak étant valide, l'app
+    // se ré-authentifie de façon transparente (renew silencieux, ou redirection qui rebondit sans
+    // ressaisie) et récupère un nouveau token — l'utilisateur ne voit jamais l'écran « Se connecter ».
+    await expect
+      .poll(
+        () =>
+          page
+            .evaluate(() => {
+              for (const storage of [localStorage, sessionStorage]) {
+                for (const key of Object.keys(storage)) {
+                  if (!key.startsWith("oidc.user:")) continue;
+                  const parsed = JSON.parse(storage.getItem(key) ?? "{}") as {
+                    access_token?: string;
+                  };
+                  if (parsed.access_token) return true;
+                }
+              }
+              return false;
+            })
+            .catch(() => false),
+        { timeout: 20000 },
+      )
+      .toBe(true);
+
+    // L'utilisateur reste authentifié : le lien profil/déconnexion est présent, pas « Se connecter ».
+    await expect(
+      page
+        .getByRole("banner")
+        .getByRole("link", { name: /Mon profil|Profile|Déconnexion|Logout/i })
+        .first(),
+    ).toBeVisible({ timeout: 15000 });
   });
 
   test("RI-05 — Signaler depuis une fiche application", async ({ page }) => {

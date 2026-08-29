@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { ApplicationService } from "src/applications/application.service";
 import { BaseService } from "src/common/base.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -46,8 +46,14 @@ export class HostingsService extends BaseService<Hosting> {
     });
   }
 
-  async findOneHosting(id: string): Promise<Hosting> {
-    return this.findOne(id, { hostingOption: true });
+  async findOneHosting(id: string, applicationId?: string): Promise<Hosting> {
+    const hosting = await this.findOne(id, { hostingOption: true });
+    // Scoping (#2367) : sur une route `/applications/:applicationId/hostings`, l'hébergement doit
+    // appartenir à cette application.
+    if (applicationId && hosting.applicationId !== applicationId) {
+      throw new NotFoundException("Hébergement introuvable");
+    }
+    return hosting;
   }
 
   async findDistinctSites(): Promise<string[]> {
@@ -62,23 +68,33 @@ export class HostingsService extends BaseService<Hosting> {
 
   async updateHosting(
     id: string,
+    applicationId: string,
     dto: UpdateHostingDto,
     requestorId: string,
   ): Promise<Hosting> {
-    const { applicationId, hostingOptionId, ...rest } = dto;
+    // Scoping (#2367) : l'hébergement doit déjà appartenir à l'application de la route. On ne
+    // reparente jamais un hébergement (le `connect` d'application inconditionnel du contrôleur
+    // permettait de rattacher l'hébergement d'une autre application à celle-ci).
+    await this.findOneHosting(id, applicationId);
+
+    // `applicationId` est écarté du body : l'hébergement ne change jamais d'application ici (le
+    // reparentage était le vecteur de fuite #2367), et le passer en scalaire à Prisma lèverait de
+    // toute façon (`application` est une relation, pas un champ scalaire en update).
+    const {
+      hostingOptionId,
+      applicationId: _ignoredApplicationId,
+      ...rest
+    } = dto;
 
     const data = {
       ...rest,
-      ...(applicationId && {
-        application: { connect: { id: applicationId } },
-      }),
       ...(hostingOptionId && {
         hostingOption: { connect: { id: hostingOptionId } },
       }),
     };
 
     return super.update(id, data, {
-      applicationId: dto.applicationId,
+      applicationId,
       include: { hostingOption: true },
       metadata: {
         userId: requestorId,
@@ -97,7 +113,13 @@ export class HostingsService extends BaseService<Hosting> {
     });
   }
 
-  async remove(id: string, requestorId?: string): Promise<void> {
+  async remove(
+    id: string,
+    applicationId: string,
+    requestorId?: string,
+  ): Promise<void> {
+    // Scoping (#2367).
+    await this.findOneHosting(id, applicationId);
     await super.delete(id, {
       metadata: {
         userId: requestorId,
