@@ -71,7 +71,7 @@ export class CheckPermissions {
       }),
       userOrganization === null
         ? Promise.resolve([])
-        : this.prisma.$queryRawUnsafe<{ actorTypeId: string }[]>(
+        : this.prisma.$queryRaw<{ actorTypeId: string }[]>(
             this.queryBuilderGroupActor.buildByApplication(applicationId, user),
           ),
     ]);

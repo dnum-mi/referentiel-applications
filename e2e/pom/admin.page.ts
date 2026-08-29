@@ -324,6 +324,27 @@ export class AdminPage extends BasePage {
     await expect(this.orgsTable()).toBeVisible();
   }
 
+  // --- Onglet « Journal des actions » (#2061) ---
+
+  private actionLogsTable = () => this.byTestId("admin-action-logs-table");
+  private actionLogsSearch = () => this.byTestId("admin-action-logs-search");
+
+  async openActionLogsTab(): Promise<void> {
+    await this.adminTabs()
+      .getByRole("tab", { name: /journal des actions/i })
+      .click();
+    await expect(
+      this.actionLogsTable().or(this.byTestId("admin-action-logs-loading")),
+    ).toBeVisible();
+  }
+
+  async searchActionLogs(value: string): Promise<void> {
+    await this.actionLogsSearch().locator("input").fill(value);
+    await this.actionLogsSearch()
+      .getByRole("button", { name: /rechercher/i })
+      .click();
+  }
+
   async searchOrganization(value: string): Promise<void> {
     const refetch = this.page
       .waitForResponse(

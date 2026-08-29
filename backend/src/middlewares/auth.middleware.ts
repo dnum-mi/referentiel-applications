@@ -99,10 +99,17 @@ export class AuthMiddleware implements NestMiddleware {
       // Impersonation : un administrateur peut se faire passer pour un autre
       // utilisateur en fournissant son identifiant via un header dédié. Seule
       // l'authentification humaine (JWT) y donne droit, pas les tokens API.
+      //
+      // #2372 : on teste la MÉTHODE d'authentification réellement employée
+      // (`!token`), et non la simple présence du header `Authorization`. Un
+      // porteur de token API pouvait sinon ajouter un `Authorization` bidon
+      // (jamais décodé, car la branche token gagne l'authentification) pour
+      // satisfaire la condition et impersonner malgré l'interdiction.
+      const authenticatedByJwt = !token && !!authorization;
       const impersonateUserId = req.headers[IMPERSONATE_HEADER] as
         | string
         | undefined;
-      if (impersonateUserId && authorization) {
+      if (impersonateUserId && authenticatedByJwt) {
         req.user = await this.resolveImpersonatedUser(
           authenticatedUser,
           impersonateUserId,

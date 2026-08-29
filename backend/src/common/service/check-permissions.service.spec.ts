@@ -69,10 +69,10 @@ const makeService = ({
     businessDivision: {
       findFirst: jest.fn().mockResolvedValue(businessDivision),
     },
-    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+    $queryRaw: jest.fn().mockResolvedValue([]),
   };
   const queryBuilder = {
-    buildByApplication: jest.fn().mockReturnValue(""),
+    buildByApplication: jest.fn().mockReturnValue([] as unknown),
   };
   const service = new CheckPermissions(
     prisma as unknown as PrismaService,

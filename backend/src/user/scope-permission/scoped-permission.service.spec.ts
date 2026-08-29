@@ -118,14 +118,15 @@ describe("ScopedPermissionService — assertCanImpersonate", () => {
     ).rejects.toBeInstanceOf(ScopePermissionsException);
   });
 
-  it("allows impersonating a user with no organization", async () => {
-    // Cohérent avec l'édition (canEditUser) : sans organisation, pas de refus.
+  it("refuse d'impersonner un utilisateur sans organisation (#2371)", async () => {
+    // Un compte sans organisation (ex. un super-administrateur global) n'est dans le périmètre
+    // d'aucun admin scopé : il ne doit pas être impersonnable par ce dernier.
     const service = buildService({
       "target-1": { id: "target-1", organization: null },
     });
     await expect(
       service.assertCanImpersonate("target-1", buildRequestor("DTNUM/TOTO")),
-    ).resolves.toBeUndefined();
+    ).rejects.toBeInstanceOf(ScopePermissionsException);
   });
 
   it("throws 404 when the target user does not exist", async () => {

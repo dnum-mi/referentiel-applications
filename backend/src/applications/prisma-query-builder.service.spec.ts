@@ -7,7 +7,7 @@ import { DIMA_FILLED_FIELDS } from "src/common/utils/compliance-presence.utils";
 
 describe("PrismaQueryBuilder — filtres de conformité", () => {
   const prisma = {
-    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+    $queryRaw: jest.fn().mockResolvedValue([]),
   } as unknown as PrismaService;
   const groupActor = {
     build: jest.fn().mockReturnValue(""),
@@ -99,7 +99,7 @@ describe("PrismaQueryBuilder — filtres de conformité", () => {
 
 describe("PrismaQueryBuilder — filtre de corrélation (#2287)", () => {
   const prisma = {
-    $queryRawUnsafe: jest.fn().mockResolvedValue([]),
+    $queryRaw: jest.fn().mockResolvedValue([]),
   } as unknown as PrismaService;
   const groupActor = {
     build: jest.fn().mockReturnValue(""),

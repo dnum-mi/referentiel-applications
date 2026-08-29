@@ -195,6 +195,20 @@ export class QualityCampaignService {
       throw new BadRequestException("Cette campagne a déjà été envoyée.");
     }
 
+    // Verrou optimiste (#2376) : on pose `sentAt` de façon ATOMIQUE avant tout envoi. Deux
+    // déclencheurs concurrents (double-clic, cron + manuel, deux réplicas) lisaient auparavant
+    // `sentAt = null` avant que l'un pose la date, et envoyaient donc la campagne en double. Ici,
+    // seule l'exécution dont l'`updateMany` affecte 1 ligne poursuit ; l'autre s'arrête. Poser la
+    // date AVANT l'envoi garantit « au plus une fois » (pas de doublon massif d'emails), au prix
+    // d'un envoi potentiellement partiel si le process meurt en cours — compromis assumé.
+    const claimed = await this.prisma.qualityCampaign.updateMany({
+      where: { id, sentAt: null },
+      data: { sentAt: new Date() },
+    });
+    if (claimed.count === 0) {
+      throw new BadRequestException("Cette campagne a déjà été envoyée.");
+    }
+
     const { results: applications } = await this.searchTargets(
       campaign,
       requestor ?? SYSTEM_REQUESTOR,
@@ -214,11 +228,6 @@ export class QualityCampaignService {
         await this.notifyApplicationActors(campaign, application);
       }
     }
-
-    await this.prisma.qualityCampaign.update({
-      where: { id },
-      data: { sentAt: new Date() },
-    });
 
     return this.findOne(id);
   }
@@ -298,32 +307,37 @@ export class QualityCampaignService {
       select: { email: true },
     });
 
+    // #2381 : la casse des emails d'acteurs peut différer de celle des comptes utilisateur.
+    // On déduplique et on croise en insensible à la casse pour ne pas ignorer un opt-out.
     const recipientEmails = [
-      ...new Set(
+      ...new Map(
         actors
           .map((actor) => actor.email)
-          .filter((email): email is string => Boolean(email)),
-      ),
+          .filter((email): email is string => Boolean(email))
+          .map((email) => [email.toLowerCase(), email] as const),
+      ).values(),
     ];
     if (recipientEmails.length === 0) return;
 
     // Notification in-app créée pour tout utilisateur correspondant, indépendamment de sa
     // préférence email (canal séparé) — même logique que application-validation-cron.service.ts.
+    // `in` est sensible à la casse en base : on requête via des `equals` insensibles.
     const recipientUsers = await this.prisma.user.findMany({
-      where: { email: { in: recipientEmails } },
-      select: { id: true, email: true },
+      where: {
+        OR: recipientEmails.map((email) => ({
+          email: { equals: email, mode: "insensitive" as const },
+        })),
+      },
+      select: { id: true, email: true, emailNotificationsEnabled: true },
     });
 
-    const optedOutUsers = await this.prisma.user.findMany({
-      where: {
-        email: { in: recipientEmails },
-        emailNotificationsEnabled: false,
-      },
-      select: { email: true },
-    });
-    const optedOutEmails = new Set(optedOutUsers.map((user) => user.email));
+    const optedOutEmails = new Set(
+      recipientUsers
+        .filter((user) => user.emailNotificationsEnabled === false)
+        .map((user) => user.email.toLowerCase()),
+    );
     const eligibleEmails = recipientEmails.filter(
-      (email) => !optedOutEmails.has(email),
+      (email) => !optedOutEmails.has(email.toLowerCase()),
     );
 
     const emailLogIdByEmail = new Map<string, string>();
@@ -339,7 +353,7 @@ export class QualityCampaignService {
             message: campaign.message,
           });
         if (emailLog) {
-          emailLogIdByEmail.set(recipientEmail, emailLog.id);
+          emailLogIdByEmail.set(recipientEmail.toLowerCase(), emailLog.id);
         }
       } catch (error) {
         this.logger.error(
@@ -358,7 +372,7 @@ export class QualityCampaignService {
           {
             link: `/applications/${application.id}`,
             applicationId: application.id,
-            emailLogId: emailLogIdByEmail.get(user.email),
+            emailLogId: emailLogIdByEmail.get(user.email.toLowerCase()),
           },
         ),
       ),
