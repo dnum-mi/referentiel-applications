@@ -77,7 +77,7 @@ export class PrismaQueryBuilder {
     const groupActorTypeIds: string[] =
       filters.myApplications && requestor?.organization?.path
         ? (
-            await this.prisma.$queryRawUnsafe<{ actorTypeId: string }[]>(
+            await this.prisma.$queryRaw<{ actorTypeId: string }[]>(
               this.queryBuilderGroupActor.build(requestor),
             )
           ).map((a) => a.actorTypeId)

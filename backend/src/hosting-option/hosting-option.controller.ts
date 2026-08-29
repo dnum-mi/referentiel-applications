@@ -8,7 +8,9 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from "@nestjs/common";
+import { Permission } from "@prisma/client";
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -25,13 +27,23 @@ import {
   UpdateHostingOptionDto,
 } from "./dto/hosting-option.dto";
 import { HostingOptionService } from "./hosting-option.service";
+import { PermissionGuard } from "src/common/guards/permission.guard";
+import { RequiredPermissions } from "src/common/decorators/required-permissions.decorator";
 
 @ApiTags("HostingOptions")
+// #2369 : ce catalogue d'options d'hébergement est PARTAGÉ (aucun `:applicationId` dans les
+// routes). La lecture reste ouverte à tout utilisateur authentifié (le catalogue est consommé à la
+// saisie d'un hébergement sur une fiche), mais les écritures sont réservées aux administrateurs :
+// supprimer une option référencée met son `hostingOptionId` à NULL sur TOUS les hébergements de
+// TOUTES les applications (FK `SET NULL`). `AdminPanelManage` est une permission globale, donc
+// résoluble sur une route sans `:applicationId`, contrairement à `HostingWrite` (par application).
+@UseGuards(PermissionGuard)
 @Controller("hosting-options")
 export class HostingOptionController {
   constructor(private readonly hostingOptionService: HostingOptionService) {}
 
   @Post()
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Create a new hosting option" })
   @HttpCode(201)
   @ApiCreatedResponse({
@@ -53,6 +65,7 @@ export class HostingOptionController {
   }
 
   @Patch(":id")
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Update hosting option by ID" })
   @ApiOkResponse({
     description: "Hosting option updated successfully",
@@ -67,6 +80,7 @@ export class HostingOptionController {
   }
 
   @Delete(":id")
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Delete hosting option by ID" })
   @HttpCode(204)
   @ApiNoContentResponse({

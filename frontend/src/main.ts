@@ -28,43 +28,55 @@ window.addEventListener("vite:preloadError", (event) => {
   }
 });
 
-const app = createApp(App);
+// #2382 : le renew silencieux OIDC charge `silent_redirect_uri` dans un iframe caché. Dans ce
+// contexte, on traite uniquement le callback (nouveau token) sans monter l'application, ce qui
+// éviterait de dupliquer stores et requêtes dans l'iframe.
+const isSilentRenewFrame = window.parent !== window && window.location.pathname === "/oidc/silent-callback";
 
-const isProd = import.meta.env.MODE === "production";
-
-const MATOMO_URL = isProd
-  ? (import.meta.env.VITE_MATOMO_URL ?? "VITE_RDA_MATOMO_URL")
-  : import.meta.env.VITE_MATOMO_URL || import.meta.env.VITE_RDA_MATOMO_URL;
-
-const MATOMO_SITE_ID = isProd
-  ? Number(import.meta.env.VITE_MATOMO_SITE_ID ?? "VITE_RDA_MATOMO_SITE_ID")
-  : Number(import.meta.env.VITE_MATOMO_SITE_ID || import.meta.env.VITE_RDA_MATOMO_SITE_ID);
-
-app.use(createPinia());
-app.use(router);
-
-// N'active Matomo que s'il est réellement configuré : en production, ou en
-// développement quand on l'a explicitement demandé via VITE_ENABLE_MATOMO.
-// Évite l'erreur réseau « matomo.js ERR_CONNECTION_REFUSED » quand le service
-// Matomo local (docker-compose.matomo.yml) n'est pas démarré.
-const matomoEnabled = Boolean(MATOMO_URL) && Number.isFinite(MATOMO_SITE_ID) && (isProd || import.meta.env.VITE_ENABLE_MATOMO === "true");
-
-if (matomoEnabled) {
-  app.use(VueMatomo, {
-    host: MATOMO_URL,
-    siteId: MATOMO_SITE_ID,
-    router,
-    enableLinkTracking: true,
-    enableHeartBeatTimer: true,
+if (isSilentRenewFrame) {
+  const { USER_MANAGER } = await import("@/services/authentication");
+  await USER_MANAGER.signinSilentCallback().catch(() => {
+    // L'échec est remonté au parent via l'événement silentRenewError du UserManager.
   });
+} else {
+  const app = createApp(App);
+
+  const isProd = import.meta.env.MODE === "production";
+
+  const MATOMO_URL = isProd
+    ? (import.meta.env.VITE_MATOMO_URL ?? "VITE_RDA_MATOMO_URL")
+    : import.meta.env.VITE_MATOMO_URL || import.meta.env.VITE_RDA_MATOMO_URL;
+
+  const MATOMO_SITE_ID = isProd
+    ? Number(import.meta.env.VITE_MATOMO_SITE_ID ?? "VITE_RDA_MATOMO_SITE_ID")
+    : Number(import.meta.env.VITE_MATOMO_SITE_ID || import.meta.env.VITE_RDA_MATOMO_SITE_ID);
+
+  app.use(createPinia());
+  app.use(router);
+
+  // N'active Matomo que s'il est réellement configuré : en production, ou en
+  // développement quand on l'a explicitement demandé via VITE_ENABLE_MATOMO.
+  // Évite l'erreur réseau « matomo.js ERR_CONNECTION_REFUSED » quand le service
+  // Matomo local (docker-compose.matomo.yml) n'est pas démarré.
+  const matomoEnabled = Boolean(MATOMO_URL) && Number.isFinite(MATOMO_SITE_ID) && (isProd || import.meta.env.VITE_ENABLE_MATOMO === "true");
+
+  if (matomoEnabled) {
+    app.use(VueMatomo, {
+      host: MATOMO_URL,
+      siteId: MATOMO_SITE_ID,
+      router,
+      enableLinkTracking: true,
+      enableHeartBeatTimer: true,
+    });
+  }
+  app.use(PrimeVue, {
+    theme: {
+      preset: Aura,
+    },
+  });
+
+  app.component("VIcon", VIcon);
+  app.directive("use-mermaid", vUseMermaid);
+
+  app.mount("#app");
 }
-app.use(PrimeVue, {
-  theme: {
-    preset: Aura,
-  },
-});
-
-app.component("VIcon", VIcon);
-app.directive("use-mermaid", vUseMermaid);
-
-app.mount("#app");
