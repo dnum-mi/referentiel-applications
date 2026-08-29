@@ -166,7 +166,12 @@ export class HostingsSheetProcessor {
         ...(hostingOptionId && { hostingOptionId }),
       });
       await validateImportDto(dto);
-      await this.hostingsService.updateHosting(data.id, dto, requestor.id);
+      await this.hostingsService.updateHosting(
+        data.id,
+        data.applicationId,
+        dto,
+        requestor.id,
+      );
       return { sheet: this.sheetName, row, status: "updated", identifier };
     }
 

@@ -61,7 +61,7 @@ export class ReportsService {
         },
         description: data.description,
       },
-      include: { application: true, notifier: true },
+      include: { application: true, notifier: true, impersonator: true },
     });
   }
 
@@ -161,7 +161,12 @@ export class ReportsService {
       orderBy,
       page,
       pageSize: limit,
-      include: { history: true, application: true, notifier: true },
+      include: {
+        history: true,
+        application: true,
+        notifier: true,
+        impersonator: true,
+      },
     });
   }
 
@@ -184,7 +189,12 @@ export class ReportsService {
 
     const report = await this.prisma.report.findUnique({
       where,
-      include: { history: true, application: true },
+      include: {
+        history: true,
+        application: true,
+        notifier: true,
+        impersonator: true,
+      },
     });
     if (!report) {
       throw new NotFoundException(`Signalement avec l'id ${id} non trouvé`);
@@ -207,6 +217,7 @@ export class ReportsService {
       include: {
         notifier: true,
         application: true,
+        impersonator: true,
       },
     });
   }

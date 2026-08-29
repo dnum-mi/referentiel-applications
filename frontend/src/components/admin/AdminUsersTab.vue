@@ -143,6 +143,8 @@ const tableRows = computed(() =>
     lastPermissionChangeAt: {
       date: user.lastPermissionChangeAt ?? null,
       email: user.lastPermissionChangedByEmail ?? null,
+      // Modification faite sous impersonation : afficher aussi l'admin réel (#2061).
+      impersonatorEmail: user.lastPermissionChangedByImpersonatorEmail ?? null,
     },
     actions: user,
   })),
@@ -228,9 +230,10 @@ onMounted(fetchUsers);
           <template v-if="row.lastPermissionChangeAt.date">
             <span>{{ formatDateFR(row.lastPermissionChangeAt.date) }}</span>
             <br />
-            <span class="fr-text--sm fr-text-mention--grey"
-              >Par : {{ row.lastPermissionChangeAt.email ?? "Système / utilisateur supprimé" }}</span
-            >
+            <span class="fr-text--sm fr-text-mention--grey">
+              Par : {{ row.lastPermissionChangeAt.email ?? "Système / utilisateur supprimé"
+              }}{{ row.lastPermissionChangeAt.impersonatorEmail ? ` (via ${row.lastPermissionChangeAt.impersonatorEmail})` : "" }}
+            </span>
           </template>
           <span v-else class="fr-text-mention--grey">Jamais modifié</span>
         </template>
