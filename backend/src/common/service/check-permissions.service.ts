@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Permission, Prisma } from "@prisma/client";
+import { Permission } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Requestor } from "src/user/entities/user.entity";
 import {
@@ -8,22 +8,7 @@ import {
 } from "../utils/types";
 import { roleToAppPermissions } from "src/permissions/role-to-permissions";
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
-
-/**
- * #2370 — Une organisation est DANS le périmètre `scope` si son path est le scope lui-même, ou un
- * de ses descendants à une frontière de segment (`scope + "/"`). L'ancien `contains` faisait un
- * match sous-chaîne : un scope `/SG` accordait les droits sur les organisations `/MI/DNUM/SG`,
- * `/SGAMI` ou `/AUTRE/SG-BIS` — bien au-delà du périmètre réel. Le `startsWith` ancré au séparateur
- * évite ces faux positifs. Insensible à la casse, comme avant.
- */
-function organizationWithinScope(scope: string): Prisma.OrganizationWhereInput {
-  return {
-    OR: [
-      { path: { equals: scope, mode: "insensitive" } },
-      { path: { startsWith: `${scope}/`, mode: "insensitive" } },
-    ],
-  };
-}
+import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
 
 @Injectable()
 export class CheckPermissions {
