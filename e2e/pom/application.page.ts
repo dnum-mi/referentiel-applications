@@ -1091,4 +1091,25 @@ export class ApplicationPage extends BasePage {
       new RegExp(`/applications/${applicationId}(?:/|$)`),
     );
   }
+
+  // --- Bloc « Date de création / Dernière modification de la fiche » (#2415) ---
+
+  /**
+   * Le bloc n'est rendu que si l'utilisateur a METADATA_READ SUR CETTE FICHE. Son absence
+   * est donc un état légitime, pas un échec de chargement : on assert sur le compte.
+   */
+  async expectFicheMetadataVisible(): Promise<void> {
+    await expect(this.byTestId("application-metadata-highlight")).toBeVisible();
+  }
+
+  async expectFicheMetadataAbsent(): Promise<void> {
+    await expect(this.byTestId("application-metadata-highlight")).toHaveCount(
+      0,
+    );
+  }
+
+  /** Texte de la ligne « Date de création de la fiche » (date + auteur). */
+  async ficheCreatedAtText(): Promise<string> {
+    return (await this.byTestId("application-created-at").innerText()).trim();
+  }
 }

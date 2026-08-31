@@ -10,6 +10,7 @@ import { NotificationService } from "src/notification/notification.service";
 import { OrganizationMaiaReferencesService } from "src/organization-maia-references/organization-maia-references.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UserFilterDto } from "./dto/filters.dto";
+import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
 import { SyncOrganizationsDto } from "./dto/sync-organizations.dto";
 import { UpdateUserDto, UpdateUserPreferencesDto } from "./dto/update-user.dto";
 import { Requestor, UserEntity } from "./entities/user.entity";
@@ -313,9 +314,11 @@ export class UserService {
 
     const requestorScopePath = requestor.scopeOrganization?.path;
     if (requestorScopePath) {
-      where.organization = {
-        path: { startsWith: requestorScopePath },
-      };
+      // #2370 : un `startsWith` nu laissait un admin scopé `/SG` lister les utilisateurs
+      // de `/SGAMI` — qu'il ne peut ni modifier, ni bloquer, ni impersonnifier
+      // (ScopedPermissionService ancre bien, lui, sa comparaison), mais qui n'avaient pas
+      // à lui être exposés.
+      where.organization = organizationWithinScope(requestorScopePath);
     }
 
     if (filters.search) {

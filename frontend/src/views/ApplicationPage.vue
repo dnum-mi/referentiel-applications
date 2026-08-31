@@ -69,10 +69,23 @@ watch(
 const canReadMetadata = useAppPermission(() => application.value?.myPerms, [Permission.METADATA_READ]);
 const canDeleteApplication = useAppPermission(() => application.value?.myPerms, [Permission.DELETE_APPLICATION]);
 
+// Les metadatas de fiche ne s'affichent que si le store porte bien CELLES de
+// l'application affichée. Le store survit à la navigation : sans ce garde-fou,
+// une fiche hors périmètre réafficherait l'auteur et les dates de la
+// précédente, faisant passer un utilisateur pour l'auteur d'une application
+// qui ne le concerne pas.
+const firstMetadata = computed(() => (metadataStore.metadataApplicationId === id ? metadataStore.firstMetadata : null));
+const lastMetadata = computed(() => (metadataStore.metadataApplicationId === id ? metadataStore.lastMetadata : null));
+
 async function fetchApplicationMetadata() {
   await applicationStore.fetchApplication(id);
   if (canReadMetadata.value) {
     await metadataStore.getFirstAndLastMetadataByApplication(id);
+  } else {
+    // Sans METADATA_READ sur CETTE fiche, on ne charge rien : il faut donc
+    // purger explicitement le store, sinon la fiche affiche les dates et
+    // l'auteur de la dernière application où l'utilisateur avait le droit.
+    metadataStore.resetFirstAndLastMetadata();
   }
 }
 
@@ -168,23 +181,19 @@ function formatMetadataAuthor(metadata: MetadataDto): string {
         @close="showMissingRightsAlert = false"
       ></DsfrAlert>
 
-      <DsfrHighlight
-        v-if="metadataStore.firstMetadata || metadataStore.lastMetadata"
-        class="metadata-highlight"
-        data-testid="application-metadata-highlight"
-      >
+      <DsfrHighlight v-if="firstMetadata || lastMetadata" class="metadata-highlight" data-testid="application-metadata-highlight">
         <template #default>
           <div class="metadata-content">
-            <p v-if="metadataStore.firstMetadata" class="subtitle" data-testid="application-created-at">
+            <p v-if="firstMetadata" class="subtitle" data-testid="application-created-at">
               Date de création de la fiche :
-              {{ formatDateFR(metadataStore.firstMetadata.createdAt) || "inconnue" }}
-              ({{ formatMetadataAuthor(metadataStore.firstMetadata) }})
+              {{ formatDateFR(firstMetadata.createdAt) || "inconnue" }}
+              ({{ formatMetadataAuthor(firstMetadata) }})
             </p>
 
-            <p v-if="metadataStore.lastMetadata" class="subtitle" data-testid="application-updated-at">
+            <p v-if="lastMetadata" class="subtitle" data-testid="application-updated-at">
               Dernière modification de la fiche :
-              {{ formatDateFR(metadataStore.lastMetadata.createdAt) || "inconnue" }}
-              ({{ formatMetadataAuthor(metadataStore.lastMetadata) }})
+              {{ formatDateFR(lastMetadata.createdAt) || "inconnue" }}
+              ({{ formatMetadataAuthor(lastMetadata) }})
             </p>
           </div>
         </template>

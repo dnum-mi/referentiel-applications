@@ -39,16 +39,65 @@ describe("QueryBuilderGroupActor — requêtes paramétrées (#2366)", () => {
     assertNoInterpolation(sql, INJECTION);
   });
 
-  it("build lie le path d'organisation comme paramètre", () => {
-    const sql = builder.build(userIn(INJECTION));
+  it("buildApplicationIds lie le path d'organisation comme paramètre", () => {
+    const sql = builder.buildApplicationIds(userIn(INJECTION));
     assertNoInterpolation(sql, INJECTION);
   });
 
   // Un path nul devient un paramètre NULL (et non la chaîne "null" interpolée) : le LIKE
   // n'apparie alors rien, comme attendu.
   it("gère un path d'organisation nul sans interpolation", () => {
-    const sql = builder.build(userIn(null));
+    const sql = builder.buildApplicationIds(userIn(null));
     expect(sql.values).toContain(null);
     expect(sql.strings.join("")).not.toContain("null");
+  });
+});
+
+/**
+ * #2416 — Le filtre « Mes applications » résolvait les acteurs groupe en ne remontant que
+ * leur `actorTypeId`. `ActorType` étant une table de référence GLOBALE (MOA, MOE…), le
+ * rattachement à l'organisation était perdu : toute application portant un acteur groupe du
+ * même type devenait « mienne », quelle que soit son organisation.
+ */
+describe("QueryBuilderGroupActor — cloisonnement par organisation (#2416)", () => {
+  const builder = new QueryBuilderGroupActor();
+  const userIn = (path: string | null): Requestor =>
+    ({
+      email: "user@example.com",
+      organization: path ? { path } : null,
+    }) as unknown as Requestor;
+
+  const sqlTextOf = (sql: Prisma.Sql) => sql.strings.join("?");
+
+  it("buildApplicationIds sélectionne des applicationId, jamais des actorTypeId", () => {
+    const text = sqlTextOf(builder.buildApplicationIds(userIn("TOTO")));
+
+    expect(text).toContain('a."applicationId"');
+    expect(text).not.toContain('SELECT DISTINCT a."actorTypeId"');
+  });
+
+  it("ancre la filiation sur le séparateur de segment, pas sur une sous-chaîne", () => {
+    const text = sqlTextOf(builder.buildApplicationIds(userIn("SGAMI/SUD")));
+
+    // Un préfixe nu apparierait /SGAMI/SU avec /SGAMI/SUD.
+    expect(text).toContain("|| '/%'");
+    expect(text).not.toMatch(/LIKE lower\(o\.path\) \|\| '%'/);
+    // L'égalité stricte couvre l'organisation elle-même.
+    expect(text).toContain("= lower(o.path)");
+  });
+
+  it("buildByApplication ancre lui aussi la filiation", () => {
+    const text = sqlTextOf(
+      builder.buildByApplication("app-1", userIn("SGAMI/SUD")),
+    );
+
+    expect(text).toContain("|| '/%'");
+    expect(text).not.toMatch(/LIKE lower\(o\.path\) \|\| '%'/);
+  });
+
+  it("écarte les acteurs groupe non rattachés à une application", () => {
+    const text = sqlTextOf(builder.buildApplicationIds(userIn("TOTO")));
+
+    expect(text).toContain('a."applicationId" IS NOT NULL');
   });
 });
