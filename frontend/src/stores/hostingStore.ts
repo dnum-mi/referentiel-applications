@@ -14,6 +14,8 @@ type HostingOptionFiltersDto = HostingOptionControllerFindAllData["query"];
 export const useHostingStore = defineStore("hostingStore", () => {
   const hostingOptions = ref<HostingOptionDto[]>([]);
   const hostings = ref<HostingDto[]>([]);
+  /// Application à laquelle se rapportent `hostings`.
+  const hostingsApplicationId = ref<string | null>(null);
   const isLoading = ref(false);
   const toaster = useToasterStore();
 
@@ -29,7 +31,20 @@ export const useHostingStore = defineStore("hostingStore", () => {
     return response.data ?? 0;
   }
 
+  /**
+   * Vide les hébergements. Le store survit à la navigation : sans purge, une fiche dont le
+   * chargement échoue afficherait ceux de la fiche précédente. Le cas des droits manquants
+   * est déjà couvert — le bloc est masqué par la même permission qui conditionne l'appel —
+   * mais le chemin d'erreur, lui, ne l'était pas.
+   */
+  function resetHostings() {
+    hostingsApplicationId.value = null;
+    hostings.value = [];
+  }
+
   const fetchHostings = async (applicationId: string) => {
+    resetHostings();
+    hostingsApplicationId.value = applicationId;
     isLoading.value = true;
     const response = await api.applicationHostingsControllerFindAll({
       path: { applicationId },
@@ -40,6 +55,8 @@ export const useHostingStore = defineStore("hostingStore", () => {
       console.error("Error fetching hostings:", response.error);
       throw new Error(`Failed to fetch hostings: ${response.response.statusText}`);
     }
+    // Navigation rapide : une réponse tardive ne doit pas écraser la fiche courante.
+    if (hostingsApplicationId.value !== applicationId) return;
     hostings.value = response.data ?? [];
   };
 
@@ -101,6 +118,8 @@ export const useHostingStore = defineStore("hostingStore", () => {
 
   return {
     hostings,
+    hostingsApplicationId,
+    resetHostings,
     hostingOptions,
     isLoading,
     countHostings,
