@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.89.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.88.0...v1.89.0) (2026-08-31)
+
+
+### Features
+
+* add metadata when impersonition ([#2409](https://github.com/dnum-mi/referentiel-applications/issues/2409)) ([df31c4a](https://github.com/dnum-mi/referentiel-applications/commit/df31c4a507be2c26bc86d7efe60245f07f36a9f4))
+
+
+### Bug Fixes
+
+* allow clearing campaign message and end date ([#2387](https://github.com/dnum-mi/referentiel-applications/issues/2387)) ([#2403](https://github.com/dnum-mi/referentiel-applications/issues/2403)) ([5ae443f](https://github.com/dnum-mi/referentiel-applications/commit/5ae443f6361991d1c7482024bf6c6eff6d8a1210))
+* **application:** stop a fiche from showing another application's data ([#2415](https://github.com/dnum-mi/referentiel-applications/issues/2415)) ([3ae0907](https://github.com/dnum-mi/referentiel-applications/commit/3ae09076277191b73eba3d6da6d4008aee881cc3))
+* applying a saved filter replaces the active filters ([#2386](https://github.com/dnum-mi/referentiel-applications/issues/2386)) ([#2407](https://github.com/dnum-mi/referentiel-applications/issues/2407)) ([fe3b403](https://github.com/dnum-mi/referentiel-applications/commit/fe3b403fcd9237dea08bfc252e57bae67c91a331))
+* escape user message in campaign email ([#2380](https://github.com/dnum-mi/referentiel-applications/issues/2380)) ([#2400](https://github.com/dnum-mi/referentiel-applications/issues/2400)) ([88df9d9](https://github.com/dnum-mi/referentiel-applications/commit/88df9d980e62da2a33ca5faf9bd5982dafb39c3a))
+* honor email opt-out regardless of email case ([#2381](https://github.com/dnum-mi/referentiel-applications/issues/2381)) ([#2401](https://github.com/dnum-mi/referentiel-applications/issues/2401)) ([1e28758](https://github.com/dnum-mi/referentiel-applications/commit/1e287585b909bf33605c6efb1876c0062e00e046))
+* **quality-campaign:** make sending idempotent with an optimistic lock ([#2376](https://github.com/dnum-mi/referentiel-applications/issues/2376)) ([#2397](https://github.com/dnum-mi/referentiel-applications/issues/2397)) ([d160d88](https://github.com/dnum-mi/referentiel-applications/commit/d160d886357432efbfdf48022fc1665daa1f8f6c))
+* reauthenticate on 401 instead of hard logout, restore silent renew ([#2382](https://github.com/dnum-mi/referentiel-applications/issues/2382)) ([#2408](https://github.com/dnum-mi/referentiel-applications/issues/2408)) ([c92c49d](https://github.com/dnum-mi/referentiel-applications/commit/c92c49d9c2d092f3e00a1da5d0b0becfcfe114c8))
+* **report:** the status-update email failure must not drop the in-app notification ([#2377](https://github.com/dnum-mi/referentiel-applications/issues/2377)) ([#2398](https://github.com/dnum-mi/referentiel-applications/issues/2398)) ([455936f](https://github.com/dnum-mi/referentiel-applications/commit/455936fe95b0cb7f3ecf8e91a88591bd36aa77b9))
+* **search:** scope "my applications" to the user's own organizations ([#2416](https://github.com/dnum-mi/referentiel-applications/issues/2416)) ([#2417](https://github.com/dnum-mi/referentiel-applications/issues/2417)) ([279f95e](https://github.com/dnum-mi/referentiel-applications/commit/279f95e72bf468358f26d047f9f5494a72d2626f))
+* **security:** anchor the permission scope match to a path prefix, not a substring ([#2370](https://github.com/dnum-mi/referentiel-applications/issues/2370)) ([#2392](https://github.com/dnum-mi/referentiel-applications/issues/2392)) ([d55222f](https://github.com/dnum-mi/referentiel-applications/commit/d55222f24345da440d2008aea1b03162820a1413))
+* **security:** forbid impersonation for API-token requests, not just header-less ones ([#2372](https://github.com/dnum-mi/referentiel-applications/issues/2372)) ([#2394](https://github.com/dnum-mi/referentiel-applications/issues/2394)) ([a6bed01](https://github.com/dnum-mi/referentiel-applications/commit/a6bed014bad9cad00d9f514fd726770ee4c8669e))
+* **security:** guard the shared hosting-options catalogue behind AdminPanelManage ([#2369](https://github.com/dnum-mi/referentiel-applications/issues/2369)) ([#2391](https://github.com/dnum-mi/referentiel-applications/issues/2391)) ([cf18fde](https://github.com/dnum-mi/referentiel-applications/commit/cf18fde0726bca50d146a1176e624b858d886c7f))
+* **security:** parameterize the permission guard's raw SQL to close an injection ([#2366](https://github.com/dnum-mi/referentiel-applications/issues/2366)) ([#2389](https://github.com/dnum-mi/referentiel-applications/issues/2389)) ([2061509](https://github.com/dnum-mi/referentiel-applications/commit/206150925a051461f0323f93663cc9e17f5431e6))
+* **security:** scope MAIA sync routes and lower the read-only one's permission ([#2374](https://github.com/dnum-mi/referentiel-applications/issues/2374), [#2365](https://github.com/dnum-mi/referentiel-applications/issues/2365)) ([#2396](https://github.com/dnum-mi/referentiel-applications/issues/2396)) ([85b4c13](https://github.com/dnum-mi/referentiel-applications/commit/85b4c1369246c1a32d50bcc9fbafa0ef7c85333f))
+* **security:** scope relations, actors and hostings to their application ([#2367](https://github.com/dnum-mi/referentiel-applications/issues/2367), [#2368](https://github.com/dnum-mi/referentiel-applications/issues/2368)) ([#2390](https://github.com/dnum-mi/referentiel-applications/issues/2390)) ([98cc512](https://github.com/dnum-mi/referentiel-applications/commit/98cc5125753956672f9967a7f4980d2b8a8af20e))
+* **security:** stop a scoped admin from minting a global admin or reaching org-less users ([#2371](https://github.com/dnum-mi/referentiel-applications/issues/2371)) ([#2393](https://github.com/dnum-mi/referentiel-applications/issues/2393)) ([8d8b36d](https://github.com/dnum-mi/referentiel-applications/commit/8d8b36d8db7d719c35059941c9cba9722a28a4f8))
+* **security:** validate the EcoIndex scan URL against SSRF ([#2373](https://github.com/dnum-mi/referentiel-applications/issues/2373)) ([#2395](https://github.com/dnum-mi/referentiel-applications/issues/2395)) ([2e826a4](https://github.com/dnum-mi/referentiel-applications/commit/2e826a4351b8cb8321159cab809afcd309e638f7))
+* stop showing false success toast on relation errors ([#2383](https://github.com/dnum-mi/referentiel-applications/issues/2383)) ([#2404](https://github.com/dnum-mi/referentiel-applications/issues/2404)) ([ac72a38](https://github.com/dnum-mi/referentiel-applications/commit/ac72a38bb82776c6d3b019277b1406759fb2b56a))
+* stop the Tokens tab from freezing on header sort ([#2384](https://github.com/dnum-mi/referentiel-applications/issues/2384)) ([#2406](https://github.com/dnum-mi/referentiel-applications/issues/2406)) ([e439a17](https://github.com/dnum-mi/referentiel-applications/commit/e439a17d990dd5c9c7ffdeec95e40ca2bb13d33f))
+* **technology:** clearing a version must not keep the old version's end-of-life dates ([#2379](https://github.com/dnum-mi/referentiel-applications/issues/2379)) ([#2399](https://github.com/dnum-mi/referentiel-applications/issues/2399)) ([f9bc9ea](https://github.com/dnum-mi/referentiel-applications/commit/f9bc9eac5780f7671337a89a88bb80339e844422))
+
 ## [1.88.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.87.0...v1.88.0) (2026-08-26)
 
 
