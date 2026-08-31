@@ -5,16 +5,16 @@
 /// @namespace QualityCampaigns
 model QualityCampaign {
   /// Identifiant unique
-  id            String    @id @default(uuid())
+  id            String                @id @default(uuid())
   /// Nom donné à la campagne
-  name          String    @db.VarChar(150)
+  name          String                @db.VarChar(150)
   /// Filtres sérialisés (mêmes clés que la query de recherche d'applications) définissant les
   /// applications ciblées par la campagne
   filters       Json
   /// Message incitatif optionnel inclus dans l'email de relance envoyé aux acteurs
-  message       String?   @db.Text
+  message       String?               @db.Text
   /// Emails des "sponsors" (porteurs) de la campagne, destinataires des rapports de résultats
-  sponsorEmails String[]  @default([])
+  sponsorEmails String[]              @default([])
   /// Date de démarrage : déclenche l'envoi automatique (cron) si la campagne n'a pas déjà
   /// été envoyée manuellement
   startDate     DateTime
@@ -23,14 +23,32 @@ model QualityCampaign {
   /// Date à laquelle la campagne a effectivement été envoyée aux acteurs (null tant qu'elle
   /// est planifiée). Les cibles et leur IQ de départ sont figés à cet instant.
   sentAt        DateTime?
+  /// Statut de la campagne, librement modifiable par l'admin (dans n'importe quel sens) : ne
+  /// dérive plus uniquement de `sentAt`, qui reste la trace factuelle de l'envoi de la relance.
+  status        QualityCampaignStatus @default(scheduled)
   /// Utilisateur ayant créé la campagne
   createdById   String
-  createdBy     User      @relation(fields: [createdById], references: [id])
+  createdBy     User                  @relation(fields: [createdById], references: [id])
   /// Date de création
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime              @default(now())
 
   /// Applications ciblées par la campagne, résolues et figées à l'envoi
-  targets QualityCampaignTarget[]
+  targets    QualityCampaignTarget[]
+  /// Actions de mise en qualité (acteurs/conformités renseignés) réalisées sur les applications
+  /// ciblées pendant que cette campagne était en cours
+  actionLogs QualityCampaignActionLog[]
+}
+
+/// Statut d'une campagne de mise en qualité, librement modifiable par l'admin.
+///
+/// @namespace QualityCampaigns
+enum QualityCampaignStatus {
+  /// Pas encore démarrée
+  scheduled
+  /// En cours
+  in_progress
+  /// Terminée
+  done
 }
 
 /// Application ciblée par une campagne de mise en qualité, avec son IQ figé au moment de
@@ -53,4 +71,31 @@ model QualityCampaignTarget {
   createdAt     DateTime        @default(now())
 
   @@unique([campaignId, applicationId])
+}
+
+/// Action de mise en qualité (acteur ou conformité renseigné) constatée sur une application
+/// ciblée pendant qu'une campagne était en cours. Une entrée par (campagne, application, action),
+/// écrite une seule fois grâce à la contrainte d'unicité : sert à afficher en temps réel les
+/// actions réalisées dans l'onglet Qualité de la fiche application, et à les reprendre dans le
+/// mail de rapport envoyé aux sponsors de la campagne.
+///
+/// @namespace QualityCampaigns
+model QualityCampaignActionLog {
+  /// Identifiant unique
+  id            String          @id @default(uuid())
+  /// Campagne pendant laquelle l'action a été constatée
+  campaignId    String
+  campaign      QualityCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  /// Application concernée
+  applicationId String
+  application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  /// Clé de l'action réalisée (ex. "moa", "hosting", "dima" — cf. le catalogue des actions IQ)
+  actionKey     String
+  /// Utilisateur à l'origine de la modification ayant complété l'action, si connu
+  completedById String?
+  completedBy   User?           @relation(fields: [completedById], references: [id], onDelete: SetNull)
+  /// Date à laquelle l'action a été constatée comme complétée
+  completedAt   DateTime        @default(now())
+
+  @@unique([campaignId, applicationId, actionKey])
 }

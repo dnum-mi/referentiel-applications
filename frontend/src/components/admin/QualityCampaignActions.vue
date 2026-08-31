@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import type { QualityCampaignDto } from "@/client/types.gen";
+import type { QualityCampaignDto, UpdateQualityCampaignStatusDto } from "@/client/types.gen";
 import { useQualityCampaignStore } from "@/stores/qualityCampaignStore";
 import SponsorEmailsInput from "@/components/form/SponsorEmailsInput.vue";
 
@@ -18,9 +18,16 @@ const isEditModalOpen = ref(false);
 const isDeleteModalOpen = ref(false);
 const isSaving = ref(false);
 const isDeleting = ref(false);
-const isSending = ref(false);
 const isSendingReport = ref(false);
+const isChangingStatus = ref(false);
 const errorMessage = ref<string>("");
+const areSponsorEmailsValid = ref(true);
+
+const statusOptions = [
+  { text: "Planifiée", value: "scheduled" },
+  { text: "En cours", value: "in_progress" },
+  { text: "Terminée", value: "done" },
+];
 
 const editingName = ref("");
 const editingSponsorEmails = ref<string[]>([]);
@@ -40,6 +47,7 @@ function openEditModal() {
   editingStartDate.value = toDateInputValue(props.campaign.startDate);
   editingEndDate.value = toDateInputValue(props.campaign.endDate);
   errorMessage.value = "";
+  areSponsorEmailsValid.value = true;
   isEditModalOpen.value = true;
 }
 
@@ -65,19 +73,19 @@ async function saveCampaign() {
     errorMessage.value = "La date de début est requise.";
     return;
   }
+  if (!areSponsorEmailsValid.value) {
+    errorMessage.value = "Un ou plusieurs emails sponsors sont invalides.";
+    return;
+  }
 
   isSaving.value = true;
   errorMessage.value = "";
 
-  // Une fois la campagne envoyée, le backend rejette toute modification de la date de début
-  // (cf. quality-campaign.service.ts#update) : on l'omet du payload plutôt que de renvoyer sa
-  // valeur inchangée, qui déclencherait quand même le refus.
   const updated = await store.updateCampaign(props.campaign.id, {
     name: editingName.value.trim(),
     sponsorEmails: editingSponsorEmails.value.map((email) => email.trim()).filter(Boolean),
-    // #2387 : `null` (et non `undefined`) pour vider effectivement le champ côté back.
     message: editingMessage.value.trim() || null,
-    startDate: props.campaign.status === "sent" ? undefined : new Date(editingStartDate.value),
+    startDate: new Date(editingStartDate.value),
     endDate: editingEndDate.value ? new Date(editingEndDate.value) : null,
   });
 
@@ -98,19 +106,20 @@ async function deleteCampaign() {
   isDeleting.value = false;
 }
 
-async function sendCampaign() {
-  isSending.value = true;
-  const sent = await store.sendCampaign(props.campaign.id);
-  if (sent) {
-    emit("fetchCampaigns");
-  }
-  isSending.value = false;
-}
-
 async function sendSponsorReport() {
   isSendingReport.value = true;
   await store.sendSponsorReport(props.campaign.id);
   isSendingReport.value = false;
+}
+
+async function changeStatus(status: UpdateQualityCampaignStatusDto["status"]) {
+  if (status === props.campaign.status) return;
+  isChangingStatus.value = true;
+  const updated = await store.updateCampaignStatus(props.campaign.id, status);
+  if (updated) {
+    emit("fetchCampaigns");
+  }
+  isChangingStatus.value = false;
 }
 </script>
 
@@ -126,18 +135,7 @@ async function sendSponsorReport() {
       @click="openEditModal"
     />
     <DsfrButton
-      v-if="campaign.status === 'scheduled'"
-      :label="isSending ? 'Envoi…' : 'Envoyer maintenant'"
-      size="sm"
-      secondary
-      :disabled="isSending"
-      data-testid="admin-quality-campaign-send-btn"
-      title="Déclencher immédiatement l'envoi de la campagne aux acteurs"
-      aria-label="Envoyer maintenant la campagne aux acteurs"
-      @click="sendCampaign"
-    />
-    <DsfrButton
-      v-if="campaign.status === 'sent' && campaign.sponsorEmails.length > 0"
+      v-if="campaign.sponsorEmails.length > 0"
       :label="isSendingReport ? 'Envoi…' : 'Envoyer le rapport au sponsor'"
       size="sm"
       secondary
@@ -147,6 +145,18 @@ async function sendSponsorReport() {
       aria-label="Envoyer le rapport de résultats au sponsor"
       @click="sendSponsorReport"
     />
+    <div class="status-select-wrapper">
+      <DsfrSelect
+        :model-value="campaign.status"
+        label="Statut"
+        :options="statusOptions"
+        :disabled="isChangingStatus"
+        data-testid="admin-quality-campaign-status-select"
+        title="Changer librement le statut de la campagne"
+        aria-label="Changer le statut de la campagne"
+        @update:model-value="(value) => changeStatus(value as UpdateQualityCampaignStatusDto['status'])"
+      />
+    </div>
     <DsfrButton
       label="Supprimer"
       size="sm"
@@ -164,10 +174,6 @@ async function sendSponsorReport() {
     data-testid="admin-edit-quality-campaign-modal"
     @close="closeEditModal"
   >
-    <p v-if="campaign.status === 'sent'" class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
-      Cette campagne a déjà été envoyée : le filtre et la date de début ne peuvent plus être modifiés.
-    </p>
-
     <DsfrAlert
       v-if="errorMessage"
       type="error"
@@ -188,7 +194,11 @@ async function sendSponsorReport() {
 
     <p class="fr-text--sm fr-mb-1w">Sponsors (optionnel)</p>
     <p class="fr-text--sm fr-hint-text fr-mb-1w">Destinataires des rapports de résultats de la campagne</p>
-    <SponsorEmailsInput v-model="editingSponsorEmails" testid-prefix="quality-campaign-sponsor-email" />
+    <SponsorEmailsInput
+      v-model="editingSponsorEmails"
+      testid-prefix="quality-campaign-sponsor-email"
+      @update:valid="(valid) => (areSponsorEmailsValid = valid)"
+    />
 
     <DsfrInputGroup
       v-model="editingMessage"
@@ -205,10 +215,9 @@ async function sendSponsorReport() {
       class="fr-mb-3w"
       type="date"
       label="Date de début"
-      hint="Déclenche l'envoi automatique aux acteurs"
+      hint="Déclenche l'envoi automatique aux acteurs (tant que la campagne n'a pas déjà été envoyée)"
       label-visible
       required
-      :disabled="campaign.status === 'sent'"
       data-testid="quality-campaign-start-date"
     />
 
@@ -266,8 +275,15 @@ async function sendSponsorReport() {
 <style scoped>
 .button-row {
   display: flex;
+  align-items: flex-end;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+.status-select-wrapper {
+  min-width: 10rem;
+}
+.status-select-wrapper :deep(.fr-select-group) {
+  margin-bottom: 0 !important;
 }
 .alert-multiline {
   white-space: normal;

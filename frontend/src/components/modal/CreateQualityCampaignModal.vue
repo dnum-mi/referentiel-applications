@@ -22,6 +22,7 @@ const startDate = ref("");
 const endDate = ref("");
 const errorMessage = ref("");
 const isSaving = ref(false);
+const areSponsorEmailsValid = ref(true);
 
 function reset() {
   name.value = "";
@@ -30,6 +31,7 @@ function reset() {
   startDate.value = "";
   endDate.value = "";
   errorMessage.value = "";
+  areSponsorEmailsValid.value = true;
 }
 
 function close() {
@@ -44,6 +46,10 @@ async function confirmCreate() {
   }
   if (!startDate.value) {
     errorMessage.value = "La date de début est requise.";
+    return;
+  }
+  if (!areSponsorEmailsValid.value) {
+    errorMessage.value = "Un ou plusieurs emails sponsors sont invalides.";
     return;
   }
 
@@ -104,7 +110,11 @@ async function confirmCreate() {
 
       <p class="fr-text--sm fr-mb-1w">Sponsors (optionnel)</p>
       <p class="fr-text--sm fr-hint-text fr-mb-1w">Destinataires des rapports de résultats de la campagne</p>
-      <SponsorEmailsInput v-model="sponsorEmails" testid-prefix="create-quality-campaign-sponsor-email" />
+      <SponsorEmailsInput
+        v-model="sponsorEmails"
+        testid-prefix="create-quality-campaign-sponsor-email"
+        @update:valid="(valid) => (areSponsorEmailsValid = valid)"
+      />
 
       <DsfrInputGroup
         v-model="message"

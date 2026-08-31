@@ -1,5 +1,11 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { Application, Permission, Prisma, Status } from "@prisma/client";
+import {
+  Application,
+  Permission,
+  Prisma,
+  QualityCampaignStatus,
+  Status,
+} from "@prisma/client";
 import { PrismaQueryBuilder } from "src/applications/prisma-query-builder.service";
 import { CheckPermissions } from "src/common/service/check-permissions.service";
 import {
@@ -7,6 +13,10 @@ import {
   isPdmaFilled,
 } from "src/common/utils/compliance-presence.utils";
 import { calculateIQ } from "src/common/utils/quality.utils";
+import {
+  getCompletedQualityActionKeys,
+  getQualityActionLabel,
+} from "src/common/utils/quality-actions.utils";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { TagsService } from "src/tag/tags.service";
@@ -19,6 +29,7 @@ import {
 import {
   ApplicationDto,
   ApplicationSearchResultDto,
+  QualityCampaignActionDto,
   QualitySummaryDto,
 } from "./dto/get-application.dto";
 import { ApplicationWithAllRelations } from "src/applications/types/application.type";
@@ -230,6 +241,10 @@ export class ApplicationService {
       });
 
       await this.updateApplicationQuality(updatedApplication.id);
+      await this.recordQualityCampaignActions(
+        updatedApplication.id,
+        requestor.id,
+      );
 
       await this.metadataService.createMetadata({
         applicationId: updatedApplication.id,
@@ -645,5 +660,64 @@ export class ApplicationService {
         RGPD: compliance?.rgpd_has_aipd ?? null,
       },
     };
+  }
+
+  /**
+   * Constate les actions de mise en qualité (acteurs/conformités renseignés) complétées sur
+   * cette application pendant qu'une campagne qualité la ciblant est en cours, pour les afficher
+   * en temps réel dans l'onglet Qualité et les reprendre dans le mail de rapport sponsor (#2282
+   * amélioration). Best-effort : ne doit jamais faire échouer l'écriture qui l'a déclenché.
+   */
+  async recordQualityCampaignActions(applicationId: string, userId?: string) {
+    try {
+      const activeTargets = await this.prisma.qualityCampaignTarget.findMany({
+        where: {
+          applicationId,
+          campaign: { status: QualityCampaignStatus.in_progress },
+        },
+        select: { campaignId: true },
+      });
+      if (activeTargets.length === 0) return;
+
+      const summary = await this.getQualitySummary(applicationId);
+      const completedKeys = getCompletedQualityActionKeys(summary);
+      if (completedKeys.length === 0) return;
+
+      await this.prisma.qualityCampaignActionLog.createMany({
+        data: activeTargets.flatMap(({ campaignId }) =>
+          completedKeys.map((actionKey) => ({
+            campaignId,
+            applicationId,
+            actionKey,
+            completedById: userId,
+          })),
+        ),
+        skipDuplicates: true,
+      });
+    } catch (error) {
+      Logger.error(
+        `Échec de l'enregistrement des actions IQ de campagne pour l'application ${applicationId}:`,
+        error,
+      );
+    }
+  }
+
+  async getQualityCampaignActions(
+    applicationId: string,
+  ): Promise<QualityCampaignActionDto[]> {
+    const logs = await this.prisma.qualityCampaignActionLog.findMany({
+      where: { applicationId },
+      include: { campaign: { select: { name: true } }, completedBy: true },
+      orderBy: { completedAt: "desc" },
+    });
+
+    return logs.map((log) => ({
+      campaignId: log.campaignId,
+      campaignName: log.campaign.name,
+      actionKey: log.actionKey,
+      actionLabel: getQualityActionLabel(log.actionKey),
+      completedAt: log.completedAt,
+      completedByEmail: log.completedBy?.email ?? null,
+    }));
   }
 }

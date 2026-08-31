@@ -44,6 +44,12 @@ function formatIq(value?: number | null) {
   return value != null ? Math.round(value).toString() : "—";
 }
 
+const STATUS_LABELS: Record<QualityCampaignDto["status"], string> = {
+  scheduled: "Planifiée",
+  in_progress: "En cours",
+  done: "Terminée",
+};
+
 async function fetchCampaigns() {
   await store.fetchCampaigns(currentPage.value, itemsPerPage.value, sortColumn.value, isSortDescending.value ? "desc" : "asc");
 }
@@ -54,7 +60,7 @@ const tableRows = computed(() =>
     sponsorEmails: campaign.sponsorEmails,
     startDate: formatDate(campaign.startDate),
     endDate: formatDate(campaign.endDate),
-    status: campaign.status === "sent" ? "Envoyée" : "Planifiée",
+    status: STATUS_LABELS[campaign.status],
     targetCount: campaign.targetCount,
     impact: `${formatIq(campaign.averageIqAtStart)} → ${formatIq(campaign.averageIqCurrent)}`,
     actions: campaign,
@@ -92,7 +98,8 @@ onMounted(fetchCampaigns);
   <p class="fr-text--sm fr-hint-text fr-mb-3w" style="white-space: normal">
     Une campagne cible un sous-ensemble d'applications via un filtre et relance par email les acteurs (MOA/MOE) de ces applications pour les
     inciter à améliorer leur indice de qualité. Elle se crée depuis le catalogue, via le bouton « Créer une campagne qualité » une fois vos
-    filtres appliqués. L'envoi se déclenche automatiquement à la date de début, ou immédiatement via « Envoyer maintenant ».
+    filtres appliqués. L'envoi se déclenche automatiquement à la date de début. Le rapport de résultats peut être envoyé au sponsor à tout
+    moment.
   </p>
 
   <div v-if="store.isLoading" class="fr-alert fr-alert--info" data-testid="admin-quality-campaigns-loading">

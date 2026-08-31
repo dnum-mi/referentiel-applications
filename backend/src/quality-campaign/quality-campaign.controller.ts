@@ -28,6 +28,7 @@ import type { Requestor } from "src/user/entities/user.entity";
 import {
   CreateQualityCampaignDto,
   UpdateQualityCampaignDto,
+  UpdateQualityCampaignStatusDto,
 } from "./dto/create-quality-campaign.dto";
 import {
   QualityCampaignDto,
@@ -50,7 +51,7 @@ export class QualityCampaignController {
     type: QualityCampaignDto,
   })
   create(@User() user: Requestor, @Body() body: CreateQualityCampaignDto) {
-    return this.service.create(user.id, body);
+    return this.service.create(user.id, body, user);
   }
 
   @Get()
@@ -60,8 +61,8 @@ export class QualityCampaignController {
     description: "Liste des campagnes",
     type: PaginatedResponseDto.of(QualityCampaignDto),
   })
-  findAll(@Query() filters: PaginationDto) {
-    return this.service.findAll(filters);
+  findAll(@User() user: Requestor, @Query() filters: PaginationDto) {
+    return this.service.findAll(filters, user);
   }
 
   @Get(":id")
@@ -71,8 +72,8 @@ export class QualityCampaignController {
   })
   @ApiOkResponse({ description: "Campagne", type: QualityCampaignDto })
   @ApiNotFoundResponse({ description: "Campagne non trouvée" })
-  findOne(@Param("id") id: string) {
-    return this.service.findOne(id);
+  findOne(@User() user: Requestor, @Param("id") id: string) {
+    return this.service.findOne(id, user);
   }
 
   @Get(":id/preview")
@@ -97,6 +98,25 @@ export class QualityCampaignController {
   @ApiNotFoundResponse({ description: "Campagne non trouvée" })
   update(@Param("id") id: string, @Body() body: UpdateQualityCampaignDto) {
     return this.service.update(id, body);
+  }
+
+  @Patch(":id/status")
+  @RequiredPermissions([Permission.QualityCampaignManage])
+  @ApiOperation({
+    summary:
+      "Changer librement le statut de la campagne (planifiée / en cours / terminée), dans n'importe quel sens",
+  })
+  @ApiOkResponse({
+    description: "Campagne mise à jour",
+    type: QualityCampaignDto,
+  })
+  @ApiNotFoundResponse({ description: "Campagne non trouvée" })
+  updateStatus(
+    @User() user: Requestor,
+    @Param("id") id: string,
+    @Body() body: UpdateQualityCampaignStatusDto,
+  ) {
+    return this.service.updateStatus(id, body.status, user);
   }
 
   @Delete(":id")

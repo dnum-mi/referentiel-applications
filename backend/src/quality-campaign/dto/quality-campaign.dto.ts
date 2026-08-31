@@ -35,13 +35,16 @@ export class QualityCampaignDto {
   createdAt: Date;
 
   @ApiProperty({
-    enum: ["scheduled", "sent"],
+    enum: ["scheduled", "in_progress", "done"],
     description:
-      "« scheduled » tant que la campagne n'a pas été envoyée (date de début non atteinte, ou envoi manuel pas encore déclenché), « sent » une fois envoyée",
+      "Statut librement modifiable par l'admin : « scheduled » (planifiée), « in_progress » (en cours), « done » (terminée). Avance automatiquement de « scheduled » à « in_progress » à l'envoi de la relance, mais reste corrigible manuellement dans n'importe quel sens.",
   })
-  status: "scheduled" | "sent";
+  status: "scheduled" | "in_progress" | "done";
 
-  @ApiProperty({ description: "Nombre d'applications ciblées par la campagne" })
+  @ApiProperty({
+    description:
+      "Nombre d'applications ciblées par la campagne. Avant l'envoi, calculé en direct depuis le filtre (la liste n'est figée qu'à l'envoi, pour capturer un IQ de départ fiable) ; après l'envoi, nombre d'applications réellement ciblées.",
+  })
   targetCount: number;
 
   @ApiProperty({
