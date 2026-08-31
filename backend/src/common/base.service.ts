@@ -125,6 +125,7 @@ export class BaseService<T, TDelegate = unknown> {
     await this.model.delete({ where: { id } });
 
     await this.updateApplicationQualitySafely(applicationId);
+    await this.recordQualityCampaignActionsSafely(applicationId);
 
     return deleted;
   }
@@ -137,6 +138,10 @@ export class BaseService<T, TDelegate = unknown> {
     oldEntity?: T,
   ) {
     await this.updateApplicationQuality(options.applicationId);
+    await this.recordQualityCampaignActionsSafely(
+      options.applicationId,
+      options.metadata?.userId,
+    );
 
     await this.createMetadataEntry({
       applicationId: options.applicationId,
@@ -204,5 +209,18 @@ export class BaseService<T, TDelegate = unknown> {
     } catch {
       // Mise à jour best-effort : on ignore volontairement les erreurs.
     }
+  }
+
+  // recordQualityCampaignActions est déjà best-effort en interne (cf. ApplicationService), ce
+  // wrapper protège seulement contre son absence (applicationService non fourni au constructeur).
+  private async recordQualityCampaignActionsSafely(
+    applicationId?: string,
+    userId?: string,
+  ) {
+    if (!applicationId) return;
+    await this.applicationService?.recordQualityCampaignActions(
+      applicationId,
+      userId,
+    );
   }
 }

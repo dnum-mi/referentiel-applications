@@ -44,37 +44,39 @@ model Application {
   statuses          ApplicationStatus[] @relation("ApplicationStatuses")
 
   /// Applications dont cette application dépend
-  relationsAsSource           Relation[]          @relation("SourceHasTarget")
+  relationsAsSource              Relation[]                 @relation("SourceHasTarget")
   /// Applications qui dépendent de cette application
-  relationsAsTarget           Relation[]          @relation("TargetHasSource")
+  relationsAsTarget              Relation[]                 @relation("TargetHasSource")
   /// Relations où cette application est service de médiation
-  relationsAsMediationService Relation[]          @relation("MediationService")
+  relationsAsMediationService    Relation[]                 @relation("MediationService")
   /// Suggestions de corrélation où cette application est la première de la paire
-  correlationSuggestionsAsSource CorrelationSuggestion[] @relation("CorrelationSuggestionSource")
+  correlationSuggestionsAsSource CorrelationSuggestion[]    @relation("CorrelationSuggestionSource")
   /// Suggestions de corrélation où cette application est la seconde de la paire
-  correlationSuggestionsAsTarget CorrelationSuggestion[] @relation("CorrelationSuggestionTarget")
+  correlationSuggestionsAsTarget CorrelationSuggestion[]    @relation("CorrelationSuggestionTarget")
   /// Différents labels associés à cette application
-  labels                      Label[]
+  labels                         Label[]
   /// Tags pour la catégorisation
-  tags                        Tag[]
+  tags                           Tag[]
   /// Consultations de l'application
-  applicationViews            ApplicationView[]
+  applicationViews               ApplicationView[]
   /// Informations sur la dette technique
-  technicalDebtInfo           TechnicalDebtInfo[]
+  technicalDebtInfo              TechnicalDebtInfo[]
   /// Journaux de notifications de validation envoyées
-  notificationLogs            NotificationLog[]
+  notificationLogs               NotificationLog[]
   /// Notifications in-app référençant cette application (#2280)
-  notifications                Notification[]
+  notifications                  Notification[]
   /// Ciblages par des campagnes de mise en qualité (#2282)
-  qualityCampaignTargets QualityCampaignTarget[]
+  qualityCampaignTargets         QualityCampaignTarget[]
+  /// Actions de mise en qualité constatées pendant une campagne
+  qualityCampaignActionLogs      QualityCampaignActionLog[]
   /// Différents source de données associées à cette application
-  dataApplications DataApplication[]
+  dataApplications               DataApplication[]
   /// Données du catalogue dont cette application est une source (voir `DataDescription.applicationsSource`)
-  sourceDataDescriptions DataDescription[]
+  sourceDataDescriptions         DataDescription[]
   /// Niveau de priorité pour les opérations de redémarrage
-  priorityRestart priorityRestart?
+  priorityRestart                priorityRestart?
   /// Score de qualité de la fiche de l'application (null si l'application est décommissionnée ou supprimée)
-  quality         Int?
+  quality                        Int?
 
   /// Directions metier MOA de l'application
   businessDivisions BusinessDivision[]

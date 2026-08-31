@@ -45,6 +45,7 @@ import {
   ApplicationSearchResultDto,
   CountByIqDto,
   CountByMonthDto,
+  QualityCampaignActionDto,
   QualitySummaryDto,
 } from "./dto/get-application.dto";
 import { ApplicationSearchDto } from "./dto/search-application.dto";
@@ -262,6 +263,21 @@ Le paramètre **id** doit être fourni dans l'URL.
     @Param("applicationId") id: string,
   ): Promise<QualitySummaryDto> {
     return this.applicationService.getQualitySummary(id);
+  }
+
+  @Get(":applicationId/quality-campaign-actions")
+  @UseGuards(PermissionGuard)
+  @RequiredPermissions([Permission.AppRead])
+  @ApiOperation({
+    summary:
+      "Récupérer les actions de mise en qualité complétées sur cette application pendant une campagne",
+  })
+  @ApiOkResponse({ type: [QualityCampaignActionDto] })
+  @ApiParam({ name: "applicationId", type: String })
+  async getQualityCampaignActions(
+    @Param("applicationId") id: string,
+  ): Promise<QualityCampaignActionDto[]> {
+    return this.applicationService.getQualityCampaignActions(id);
   }
 
   @Get("data-quality/update")

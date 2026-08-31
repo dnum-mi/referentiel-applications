@@ -2149,6 +2149,27 @@ paths:
                 $ref: "#/components/schemas/QualitySummaryDto"
       summary: Récupérer le résumé qualité d'une application
       tags: *a8
+  /api/v2/applications/{applicationId}/quality-campaign-actions:
+    get:
+      operationId: ApplicationController_getQualityCampaignActions
+      parameters:
+        - name: applicationId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QualityCampaignActionDto"
+      summary: Récupérer les actions de mise en qualité complétées sur cette
+        application pendant une campagne
+      tags: *a8
   /api/v2/applications/data-quality/update:
     get:
       description: " Ce endpoint permet de mettre à jour l'indice de qualité des
@@ -6590,6 +6611,33 @@ paths:
       summary: Aperçu à la volée des applications actuellement matchées par le filtre
         de la campagne
       tags: *a38
+  /api/v2/quality-campaigns/{id}/status:
+    patch:
+      operationId: QualityCampaignController_updateStatus
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQualityCampaignStatusDto"
+      responses:
+        "200":
+          description: Campagne mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualityCampaignDto"
+        "404":
+          description: Campagne non trouvée
+      summary: Changer librement le statut de la campagne (planifiée / en cours /
+        terminée), dans n'importe quel sens
+      tags: *a38
   /api/v2/quality-campaigns/{id}/send:
     post:
       operationId: QualityCampaignController_send
@@ -8141,6 +8189,36 @@ components:
         - hasSnapvisu
         - actors
         - compliances
+    QualityCampaignActionDto:
+      type: object
+      properties:
+        campaignId:
+          type: string
+          description: Identifiant de la campagne concernée
+        campaignName:
+          type: string
+          description: Nom de la campagne concernée
+        actionKey:
+          type: string
+          description: Clé de l'action complétée (ex. « moa », « hosting » — cf. le
+            catalogue des actions IQ)
+        actionLabel:
+          type: string
+          description: Libellé lisible de l'action complétée
+        completedAt:
+          format: date-time
+          type: string
+          description: Date à laquelle l'action a été complétée
+        completedByEmail:
+          type: string
+          nullable: true
+          description: Email de l'utilisateur à l'origine de l'action, si connu
+      required:
+        - campaignId
+        - campaignName
+        - actionKey
+        - actionLabel
+        - completedAt
     PatchApplicationDto:
       type: object
       properties:
@@ -10744,14 +10822,20 @@ components:
         status:
           enum:
             - scheduled
-            - sent
+            - in_progress
+            - done
           type: string
-          description: « scheduled » tant que la campagne n'a pas été envoyée (date de
-            début non atteinte, ou envoi manuel pas encore déclenché), « sent »
-            une fois envoyée
+          description: "Statut librement modifiable par l'admin : « scheduled »
+            (planifiée), « in_progress » (en cours), « done » (terminée). Avance
+            automatiquement de « scheduled » à « in_progress » à l'envoi de la
+            relance, mais reste corrigible manuellement dans n'importe quel
+            sens."
         targetCount:
           type: number
-          description: Nombre d'applications ciblées par la campagne
+          description: Nombre d'applications ciblées par la campagne. Avant l'envoi,
+            calculé en direct depuis le filtre (la liste n'est figée qu'à
+            l'envoi, pour capturer un IQ de départ fiable) ; après l'envoi,
+            nombre d'applications réellement ciblées.
         averageIqAtStart:
           type: number
           nullable: true
@@ -10837,6 +10921,19 @@ components:
           type: string
           nullable: true
           description: Date de fin indicative de la campagne (affichage uniquement)
+    UpdateQualityCampaignStatusDto:
+      type: object
+      properties:
+        status:
+          enum:
+            - scheduled
+            - in_progress
+            - done
+          type: string
+          description: Nouveau statut de la campagne, librement modifiable dans n'importe
+            quel sens
+      required:
+        - status
     HealthCheckDto:
       type: object
       properties:
