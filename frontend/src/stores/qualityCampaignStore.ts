@@ -1,4 +1,4 @@
-import type { CreateQualityCampaignDto, QualityCampaignDto } from "@/client/types.gen";
+import type { CreateQualityCampaignDto, QualityCampaignDto, UpdateQualityCampaignStatusDto } from "@/client/types.gen";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import api from "@/api/index";
@@ -67,6 +67,21 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
     }
   }
 
+  async function updateCampaignStatus(id: string, status: UpdateQualityCampaignStatusDto["status"]) {
+    const toaster = useToasterStore();
+    try {
+      const response = await api.qualityCampaignControllerUpdateStatus({ path: { id }, body: { status } });
+      if (!response.response.ok || !response.data) {
+        throw new Error("Erreur lors du changement de statut de la campagne");
+      }
+      toaster.addSuccessMessage("Statut de la campagne mis à jour.");
+      return response.data;
+    } catch {
+      toaster.addErrorMessage("Erreur lors du changement de statut de la campagne.");
+      return undefined;
+    }
+  }
+
   async function deleteCampaign(id: string) {
     const toaster = useToasterStore();
     try {
@@ -77,21 +92,6 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
       campaigns.value = campaigns.value.filter((c) => c.id !== id);
     } catch {
       toaster.addErrorMessage("Erreur lors de la suppression de la campagne.");
-    }
-  }
-
-  async function sendCampaign(id: string) {
-    const toaster = useToasterStore();
-    try {
-      const response = await api.qualityCampaignControllerSend({ path: { id } });
-      if (!response.response.ok || !response.data) {
-        throw new Error("Erreur lors de l'envoi de la campagne");
-      }
-      toaster.addSuccessMessage("Campagne envoyée aux acteurs des applications ciblées.");
-      return response.data;
-    } catch {
-      toaster.addErrorMessage("Erreur lors de l'envoi de la campagne.");
-      return undefined;
     }
   }
 
@@ -131,8 +131,8 @@ export const useQualityCampaignStore = defineStore("qualityCampaignStore", () =>
     fetchCampaigns,
     createCampaign,
     updateCampaign,
+    updateCampaignStatus,
     deleteCampaign,
-    sendCampaign,
     sendSponsorReport,
     previewCampaign,
   };

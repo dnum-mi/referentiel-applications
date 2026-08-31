@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed, watch } from "vue";
+import { isEmailValid } from "@/utils/email";
+
 withDefaults(
   defineProps<{
     testidPrefix?: string;
@@ -6,7 +9,22 @@ withDefaults(
   { testidPrefix: "sponsor-email" },
 );
 
+const emit = defineEmits<{
+  "update:valid": [boolean];
+}>();
+
 const sponsorEmails = defineModel<string[]>({ default: () => [] });
+
+// Un champ vide n'est pas une erreur (les sponsors sont optionnels, et une ligne vide peut être en
+// cours de saisie) : seule une valeur non vide et mal formée est signalée.
+function errorFor(email: string): string | undefined {
+  if (!email.trim() || isEmailValid(email)) return undefined;
+  return "Email invalide. Format attendu – ex : exemple@mail.fr";
+}
+
+const isValid = computed(() => sponsorEmails.value.every((email) => !errorFor(email)));
+
+watch(isValid, (value) => emit("update:valid", value), { immediate: true });
 
 function addSponsor() {
   sponsorEmails.value = [...sponsorEmails.value, ""];
@@ -31,6 +49,7 @@ function updateSponsor(index: number, value: string | number | undefined) {
         type="email"
         :label="`Email du sponsor ${index + 1}`"
         label-visible
+        :error-message="errorFor(sponsorEmail)"
         :data-testid="`${testidPrefix}-${index}`"
         @update:model-value="(value) => updateSponsor(index, value)"
       />

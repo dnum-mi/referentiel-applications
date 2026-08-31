@@ -29,6 +29,7 @@ const baseCampaign = {
   startDate: new Date("2026-01-01"),
   endDate: null,
   sentAt: null,
+  status: "scheduled" as const,
   createdById: "user-1",
   createdAt: new Date("2025-12-01"),
 };
@@ -38,15 +39,23 @@ describe("QualityCampaignService", () => {
     const create = jest
       .fn()
       .mockResolvedValue({ ...baseCampaign, targets: [] });
+    const search = jest
+      .fn()
+      .mockResolvedValue({ results: [], total: 0, averageIq: null });
     const service = buildService({
       prisma: { qualityCampaign: { create } } as never,
+      applicationService: { search } as never,
     });
 
-    await service.create("user-1", {
-      name: "Campagne test",
-      filters: { iqLte: 50 },
-      startDate: new Date("2026-01-01"),
-    });
+    await service.create(
+      "user-1",
+      {
+        name: "Campagne test",
+        filters: { iqLte: 50 },
+        startDate: new Date("2026-01-01"),
+      },
+      {} as never,
+    );
 
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -62,16 +71,24 @@ describe("QualityCampaignService", () => {
     const create = jest
       .fn()
       .mockResolvedValue({ ...baseCampaign, targets: [] });
+    const search = jest
+      .fn()
+      .mockResolvedValue({ results: [], total: 0, averageIq: null });
     const service = buildService({
       prisma: { qualityCampaign: { create } } as never,
+      applicationService: { search } as never,
     });
 
-    await service.create("user-1", {
-      name: "Campagne test",
-      filters: { iqLte: 50 },
-      startDate: new Date("2026-01-01"),
-      sponsorEmails: ["sponsor-a@example.com", "sponsor-b@example.com"],
-    });
+    await service.create(
+      "user-1",
+      {
+        name: "Campagne test",
+        filters: { iqLte: 50 },
+        startDate: new Date("2026-01-01"),
+        sponsorEmails: ["sponsor-a@example.com", "sponsor-b@example.com"],
+      },
+      {} as never,
+    );
 
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -86,6 +103,7 @@ describe("QualityCampaignService", () => {
     const findUnique = jest.fn().mockResolvedValue({
       ...baseCampaign,
       sentAt: new Date("2026-01-05"),
+      status: "in_progress",
       targets: [
         { iqAtStart: 40, application: { label: "App A", quality: 60 } },
         { iqAtStart: 20, application: { label: "App B", quality: 30 } },
@@ -101,15 +119,21 @@ describe("QualityCampaignService", () => {
     expect(dto.averageIqAtStart).toBe(30);
     expect(dto.averageIqCurrent).toBe(45);
     expect(dto.averageDelta).toBe(15);
-    expect(dto.status).toBe("sent");
+    expect(dto.status).toBe("in_progress");
   });
 
   it("marks a campaign without any sent date as scheduled", async () => {
     const findUnique = jest
       .fn()
       .mockResolvedValue({ ...baseCampaign, targets: [] });
+    // Campagne jamais envoyée : `targetCount` est calculé en direct depuis le filtre plutôt que
+    // depuis `targets` (vide tant que non envoyée) — cf. toDtoWithLiveTargetCount.
+    const search = jest
+      .fn()
+      .mockResolvedValue({ results: [], total: 0, averageIq: null });
     const service = buildService({
       prisma: { qualityCampaign: { findUnique } } as never,
+      applicationService: { search } as never,
     });
 
     const dto = await service.findOne("campaign-1");
@@ -117,6 +141,24 @@ describe("QualityCampaignService", () => {
     expect(dto.status).toBe("scheduled");
     expect(dto.targetCount).toBe(0);
     expect(dto.averageIqAtStart).toBeNull();
+  });
+
+  it("computes targetCount live from the current filter match while a campaign is still unsent", async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValue({ ...baseCampaign, targets: [] });
+    const search = jest
+      .fn()
+      .mockResolvedValue({ results: [], total: 42, averageIq: 12 });
+    const service = buildService({
+      prisma: { qualityCampaign: { findUnique } } as never,
+      applicationService: { search } as never,
+    });
+
+    const dto = await service.findOne("campaign-1");
+
+    expect(search).toHaveBeenCalled();
+    expect(dto.targetCount).toBe(42);
   });
 
   it("throws NotFoundException when the campaign does not exist", async () => {
@@ -128,10 +170,11 @@ describe("QualityCampaignService", () => {
     await expect(service.findOne("missing")).rejects.toThrow(NotFoundException);
   });
 
-  it("rejects updating the filters or the start date of an already-sent campaign", async () => {
+  it("rejects updating the filters of a campaign that is no longer scheduled", async () => {
     const findUnique = jest.fn().mockResolvedValue({
       ...baseCampaign,
       sentAt: new Date("2026-01-05"),
+      status: "in_progress",
       targets: [],
     });
     const service = buildService({
@@ -141,6 +184,30 @@ describe("QualityCampaignService", () => {
     await expect(
       service.update("campaign-1", { filters: { iqLte: 10 } }),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it("still allows updating the start date of a campaign that is no longer scheduled", async () => {
+    const findUnique = jest.fn().mockResolvedValue({
+      ...baseCampaign,
+      sentAt: new Date("2026-01-05"),
+      status: "in_progress",
+      targets: [],
+    });
+    const update = jest
+      .fn()
+      .mockResolvedValue({ ...baseCampaign, targets: [] });
+    const service = buildService({
+      prisma: { qualityCampaign: { findUnique, update } } as never,
+    });
+
+    const newStartDate = new Date("2026-02-01");
+    await service.update("campaign-1", { startDate: newStartDate });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ startDate: newStartDate }),
+      }),
+    );
   });
 
   it("rejects sending a campaign that was already sent", async () => {
@@ -171,6 +238,7 @@ describe("QualityCampaignService", () => {
       }); // getRaw in findOne (via the final return)
     const createMany = jest.fn().mockResolvedValue({ count: 1 });
     const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const update = jest.fn().mockResolvedValue({});
     const search = jest.fn().mockResolvedValue({
       results: [{ id: "app-1", label: "App A", quality: 55 }],
       total: 1,
@@ -180,7 +248,7 @@ describe("QualityCampaignService", () => {
 
     const service = buildService({
       prisma: {
-        qualityCampaign: { findUnique, updateMany },
+        qualityCampaign: { findUnique, updateMany, update },
         qualityCampaignTarget: { createMany },
         actor: { findMany: actorFindMany },
       } as never,
@@ -199,6 +267,11 @@ describe("QualityCampaignService", () => {
         { campaignId: "campaign-1", applicationId: "app-1", iqAtStart: 55 },
       ],
       skipDuplicates: true,
+    });
+    // La campagne était encore "scheduled" : le statut avance à "in_progress" séparément.
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "campaign-1" },
+      data: { status: "in_progress" },
     });
   });
 
@@ -225,23 +298,171 @@ describe("QualityCampaignService", () => {
     expect(createMany).not.toHaveBeenCalled();
   });
 
-  it("rejects sending a sponsor report for a campaign not yet sent", async () => {
+  it("does not override a status manually corrected away from scheduled when sending a campaign", async () => {
     const findUnique = jest
       .fn()
-      .mockResolvedValue({ ...baseCampaign, targets: [] });
-    const service = buildService({
-      prisma: { qualityCampaign: { findUnique } } as never,
+      .mockResolvedValueOnce({
+        ...baseCampaign,
+        status: "done",
+        targets: [],
+      }) // getRaw in sendCampaign
+      .mockResolvedValueOnce({
+        ...baseCampaign,
+        status: "done",
+        sentAt: new Date(),
+        targets: [],
+      }); // getRaw in findOne (via the final return)
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const update = jest.fn().mockResolvedValue({});
+    const search = jest.fn().mockResolvedValue({
+      results: [],
+      total: 0,
+      averageIq: null,
     });
 
-    await expect(service.sendSponsorReport("campaign-1")).rejects.toThrow(
-      BadRequestException,
+    const service = buildService({
+      prisma: {
+        qualityCampaign: { findUnique, updateMany, update },
+      } as never,
+      applicationService: { search } as never,
+    });
+
+    await service.sendCampaign("campaign-1");
+
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "campaign-1", sentAt: null },
+      data: { sentAt: expect.any(Date) },
+    });
+    // Le statut était déjà "done" : pas de retour en arrière vers "in_progress".
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("lets the status of an already-sent campaign be changed freely to any value, without re-resolving targets", async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ...baseCampaign,
+        status: "in_progress",
+        sentAt: new Date(),
+        targets: [],
+      }) // getRaw
+      .mockResolvedValueOnce({
+        ...baseCampaign,
+        status: "done",
+        sentAt: new Date(),
+        targets: [],
+      }); // getRaw in findOne
+    const update = jest.fn().mockResolvedValue({});
+    const search = jest.fn();
+    const service = buildService({
+      prisma: { qualityCampaign: { findUnique, update } } as never,
+      applicationService: { search } as never,
+    });
+
+    const dto = await service.updateStatus("campaign-1", "done" as never);
+
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "campaign-1" },
+      data: { status: "done" },
+    });
+    expect(search).not.toHaveBeenCalled();
+    expect(dto.status).toBe("done");
+  });
+
+  it("resolves targets and notifies actors when a never-sent scheduled campaign moves to another status", async () => {
+    const findUnique = jest
+      .fn()
+      .mockResolvedValueOnce({ ...baseCampaign, targets: [] }) // getRaw
+      .mockResolvedValueOnce({
+        ...baseCampaign,
+        status: "in_progress",
+        sentAt: new Date(),
+        targets: [
+          { iqAtStart: 40, application: { label: "App A", quality: 40 } },
+        ],
+      }); // getRaw in findOne
+    const updateMany = jest.fn().mockResolvedValue({ count: 1 });
+    const update = jest.fn().mockResolvedValue({});
+    const createMany = jest.fn().mockResolvedValue({ count: 1 });
+    const search = jest.fn().mockResolvedValue({
+      results: [{ id: "app-1", label: "App A", quality: 40 }],
+      total: 1,
+      averageIq: 40,
+    });
+    const actorFindMany = jest.fn().mockResolvedValue([]);
+
+    const service = buildService({
+      prisma: {
+        qualityCampaign: { findUnique, updateMany, update },
+        qualityCampaignTarget: { createMany },
+        actor: { findMany: actorFindMany },
+      } as never,
+      applicationService: { search } as never,
+    });
+
+    const dto = await service.updateStatus(
+      "campaign-1",
+      "in_progress" as never,
     );
+
+    expect(search).toHaveBeenCalled();
+    expect(createMany).toHaveBeenCalledWith({
+      data: [
+        { campaignId: "campaign-1", applicationId: "app-1", iqAtStart: 40 },
+      ],
+      skipDuplicates: true,
+    });
+    // Le verrou atomique (#2376) pose `sentAt` avant la résolution des cibles...
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: "campaign-1", sentAt: null },
+      data: { sentAt: expect.any(Date) },
+    });
+    // ...puis le statut demandé est posé séparément.
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "campaign-1" },
+      data: { status: "in_progress" },
+    });
+    expect(dto.targetCount).toBe(1);
+  });
+
+  it("allows sending a sponsor report regardless of the campaign's status (still scheduled)", async () => {
+    const findUnique = jest.fn().mockResolvedValue({
+      ...baseCampaign,
+      status: "scheduled",
+      sponsorEmails: ["sponsor-a@example.com"],
+      targets: [],
+    });
+    const actionLogFindMany = jest.fn().mockResolvedValue([]);
+    const sendQualityCampaignSponsorReportEmail = jest
+      .fn()
+      .mockResolvedValue({ id: "email-log-1" });
+    const userFindMany = jest.fn().mockResolvedValue([]);
+    const createForUsers = jest.fn().mockResolvedValue(undefined);
+    const search = jest
+      .fn()
+      .mockResolvedValue({ results: [], total: 0, averageIq: null });
+    const service = buildService({
+      prisma: {
+        qualityCampaign: { findUnique },
+        user: { findMany: userFindMany },
+        qualityCampaignActionLog: { findMany: actionLogFindMany },
+      } as never,
+      emailService: { sendQualityCampaignSponsorReportEmail } as never,
+      notificationService: { createForUsers } as never,
+      applicationService: { search } as never,
+    });
+
+    await expect(
+      service.sendSponsorReport("campaign-1"),
+    ).resolves.toBeDefined();
+    expect(sendQualityCampaignSponsorReportEmail).toHaveBeenCalled();
   });
 
   it("rejects sending a sponsor report when no sponsor email is configured", async () => {
     const findUnique = jest.fn().mockResolvedValue({
       ...baseCampaign,
       sentAt: new Date(),
+      status: "in_progress",
       sponsorEmails: [],
       targets: [],
     });
@@ -258,6 +479,7 @@ describe("QualityCampaignService", () => {
     const findUnique = jest.fn().mockResolvedValue({
       ...baseCampaign,
       sentAt: new Date("2026-01-05"),
+      status: "in_progress",
       sponsorEmails: ["sponsor-a@example.com", "sponsor-b@example.com"],
       targets: [
         { iqAtStart: 40, application: { label: "App A", quality: 60 } },
@@ -270,10 +492,12 @@ describe("QualityCampaignService", () => {
       .fn()
       .mockResolvedValue([{ id: "user-sponsor-a" }, { id: "user-sponsor-b" }]);
     const createForUsers = jest.fn().mockResolvedValue(undefined);
+    const actionLogFindMany = jest.fn().mockResolvedValue([]);
     const service = buildService({
       prisma: {
         qualityCampaign: { findUnique },
         user: { findMany: userFindMany },
+        qualityCampaignActionLog: { findMany: actionLogFindMany },
       } as never,
       emailService: { sendQualityCampaignSponsorReportEmail } as never,
       notificationService: { createForUsers } as never,
