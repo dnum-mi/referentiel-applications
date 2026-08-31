@@ -10,7 +10,7 @@ describe("PrismaQueryBuilder — filtres de conformité", () => {
     $queryRaw: jest.fn().mockResolvedValue([]),
   } as unknown as PrismaService;
   const groupActor = {
-    build: jest.fn().mockReturnValue(""),
+    buildApplicationIds: jest.fn().mockReturnValue(""),
   } as unknown as QueryBuilderGroupActor;
   const requestor = { email: "user@example.com" } as unknown as Requestor;
 
@@ -102,7 +102,7 @@ describe("PrismaQueryBuilder — filtre de corrélation (#2287)", () => {
     $queryRaw: jest.fn().mockResolvedValue([]),
   } as unknown as PrismaService;
   const groupActor = {
-    build: jest.fn().mockReturnValue(""),
+    buildApplicationIds: jest.fn().mockReturnValue(""),
   } as unknown as QueryBuilderGroupActor;
   const requestor = { email: "user@example.com" } as unknown as Requestor;
 
@@ -161,5 +161,63 @@ describe("PrismaQueryBuilder — filtre de corrélation (#2287)", () => {
     });
 
     expect(relationAnd).toEqual({ AND: [] });
+  });
+});
+
+/**
+ * #2416 — « Mes applications » doit rester cloisonné à l'organisation. Le filtre appariait
+ * les acteurs groupe sur leur seul `actorTypeId`, un identifiant de table de référence
+ * GLOBALE : toute application portant un acteur groupe du même type remontait comme
+ * « mienne », même si son acteur groupe appartenait à une autre organisation.
+ */
+describe("PrismaQueryBuilder — filtre « Mes applications » (#2416)", () => {
+  const requestor = {
+    email: "user@example.com",
+    organization: { path: "TOTO" },
+  } as unknown as Requestor;
+
+  const buildMyApplicationsClause = async (coveredApplicationIds: string[]) => {
+    const prisma = {
+      $queryRaw: jest
+        .fn()
+        .mockResolvedValue(
+          coveredApplicationIds.map((applicationId) => ({ applicationId })),
+        ),
+    } as unknown as PrismaService;
+    const groupActor = {
+      buildApplicationIds: jest.fn().mockReturnValue(""),
+    } as unknown as QueryBuilderGroupActor;
+
+    const where = await new PrismaQueryBuilder(
+      prisma,
+      groupActor,
+    ).buildSearchWhere(
+      { myApplications: true } as ApplicationSearchFilters,
+      requestor,
+    );
+    return where.AND.find((clause) => "OR" in clause) as { OR: unknown[] };
+  };
+
+  it("restreint aux applications réellement couvertes, jamais à un type d'acteur", async () => {
+    const clause = await buildMyApplicationsClause(["app-couverte"]);
+
+    expect(clause.OR).toContainEqual({ id: { in: ["app-couverte"] } });
+    expect(JSON.stringify(clause)).not.toContain("actorTypeId");
+  });
+
+  it("conserve l'appariement de l'utilisateur par email", async () => {
+    const clause = await buildMyApplicationsClause([]);
+
+    expect(clause.OR).toContainEqual({
+      actors: {
+        some: { email: { equals: "user@example.com", mode: "insensitive" } },
+      },
+    });
+  });
+
+  it("n'élargit à aucune application quand aucun acteur groupe ne couvre l'utilisateur", async () => {
+    const clause = await buildMyApplicationsClause([]);
+
+    expect(clause.OR).toHaveLength(1);
   });
 });

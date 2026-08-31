@@ -72,6 +72,40 @@ test.describe("Périmètres admin & groupes d'acteurs", () => {
     await fiche.expectInfoEditDisabled();
   });
 
+  /**
+   * Non-régression #2415 — Le store Pinia des metadatas survit à la navigation. La fiche ne
+   * le remplissait que si l'utilisateur a METADATA_READ SUR ELLE, sans jamais le purger
+   * sinon : une fiche hors périmètre réaffichait alors les dates et l'auteur de la dernière
+   * fiche consultée avec ce droit, faisant passer l'utilisateur pour l'auteur d'une
+   * application qui ne le concerne pas.
+   *
+   * METADATA_READ ne vient QUE de la projection par application (il n'est dans aucun socle
+   * global), alors qu'AppRead est global : tout le monde peut ouvrir n'importe quelle fiche,
+   * mais seuls les acteurs en voient le bloc de metadatas. D'où ce scénario en deux temps.
+   */
+  test("SCP-07 - une fiche hors périmètre n'hérite pas des metadatas de la précédente", async ({
+    page,
+  }) => {
+    await loginAs(page, "member-toto");
+
+    const covered = await appByLabel(page, "QA-GROUP-PARENT");
+    const foreign = await appByLabel(page, "QA-SCOPE-ABCD");
+    test.skip(!covered || !foreign, SEED_HINT);
+
+    const fiche = new ApplicationPage(page);
+
+    // Couverte par le groupe QA_GROUP porté par TOTO : le bloc est là.
+    await fiche.open(covered!.id);
+    await fiche.expectFicheMetadataVisible();
+    const coveredMetadata = await fiche.ficheCreatedAtText();
+    expect(coveredMetadata).not.toEqual("");
+
+    // Hors périmètre : aucun droit sur les metadatas, donc AUCUN bloc — et surtout pas
+    // celui de la fiche précédente.
+    await fiche.open(foreign!.id);
+    await fiche.expectFicheMetadataAbsent();
+  });
+
   test("SCP-03 - éditer le rôle d'un utilisateur dans mon périmètre", async ({
     page,
   }) => {

@@ -74,13 +74,15 @@ export class PrismaQueryBuilder {
     // Build a single comprehensive where clause with all filters
     const where: { AND: Prisma.ApplicationWhereInput[] } = { AND: [] };
 
-    const groupActorTypeIds: string[] =
+    // Applications couvertes par un acteur groupe d'une organisation ancêtre. On résout
+    // des applicationId, et non des types d'acteur : cf. QueryBuilderGroupActor.
+    const groupApplicationIds: string[] =
       filters.myApplications && requestor?.organization?.path
         ? (
-            await this.prisma.$queryRaw<{ actorTypeId: string }[]>(
-              this.queryBuilderGroupActor.build(requestor),
+            await this.prisma.$queryRaw<{ applicationId: string }[]>(
+              this.queryBuilderGroupActor.buildApplicationIds(requestor),
             )
-          ).map((a) => a.actorTypeId)
+          ).map((a) => a.applicationId)
         : [];
 
     if (restrictedFilter?.actorEmail || restrictedFilter?.businessDivisionId) {
@@ -334,21 +336,21 @@ export class PrismaQueryBuilder {
       {
         condition: filters.myApplications,
         whereClause: {
-          actors: {
-            some: {
-              OR: [
-                {
+          OR: [
+            {
+              actors: {
+                some: {
                   email: {
                     equals: requestor.email,
                     mode: "insensitive" as const,
                   },
                 },
-                ...(groupActorTypeIds.length > 0
-                  ? [{ actorTypeId: { in: groupActorTypeIds }, isGroup: true }]
-                  : []),
-              ],
+              },
             },
-          },
+            ...(groupApplicationIds.length > 0
+              ? [{ id: { in: groupApplicationIds } }]
+              : []),
+          ],
         },
       },
       {

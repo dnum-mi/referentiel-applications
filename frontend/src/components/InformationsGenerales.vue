@@ -102,6 +102,10 @@ onMounted(async () => {
     // fetch hostings if allowed
     if (canViewHostings.value) {
       promises.push(hostingStore.fetchHostings(application.value.id));
+    } else {
+      // Sans le droit sur CETTE fiche, on ne charge rien : purge explicite, sinon le store —
+      // qui survit à la navigation — garde ceux de la fiche précédente.
+      hostingStore.resetHostings();
     }
     await Promise.all(promises);
   } catch {
