@@ -159,7 +159,7 @@ describe("CheckPermissions.getUserRolePermissions (scope administratif)", () => 
       scopeOrganization: { path },
     }) as unknown as Requestor;
 
-  it("scope qui matche un acteur de l'application (organisation contient le scope) : rôle projeté accordé sans consulter la direction métier", async () => {
+  it("scope qui matche un acteur de l'application : rôle projeté accordé, et le prédicat d'organisation est ancré (préfixe, pas sous-chaîne — #2370)", async () => {
     const { service, prisma } = makeService({
       scopeActors: [{ actorTypeId: "at-1" }],
     });
@@ -167,6 +167,21 @@ describe("CheckPermissions.getUserRolePermissions (scope administratif)", () => 
 
     expect(await service.can([Permission.AppWrite], user, "app-1")).toBe(true);
     expect(prisma.businessDivision.findFirst).not.toHaveBeenCalled();
+    // La recherche d'acteur dans le périmètre borne l'organisation au scope exact ou à un de ses
+    // descendants (`scope + "/"`), jamais à une organisation qui contient seulement le scope en
+    // sous-chaîne (`TOTO/TUTU-BIS`, `AUTRE/TOTO/TUTU`).
+    expect(prisma.actor.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          organization: {
+            OR: [
+              { path: { equals: "TOTO/TUTU", mode: "insensitive" } },
+              { path: { startsWith: "TOTO/TUTU/", mode: "insensitive" } },
+            ],
+          },
+        }),
+      }),
+    );
   });
 
   it("aucun acteur dans le scope, mais une organisation de la direction métier de l'application matche : rôle projeté accordé", async () => {
@@ -186,7 +201,12 @@ describe("CheckPermissions.getUserRolePermissions (scope administratif)", () => 
           applications: { some: { id: "app-1" } },
           organizations: {
             some: {
-              path: { contains: "TOTO/TUTU/TITI", mode: "insensitive" },
+              OR: [
+                { path: { equals: "TOTO/TUTU/TITI", mode: "insensitive" } },
+                {
+                  path: { startsWith: "TOTO/TUTU/TITI/", mode: "insensitive" },
+                },
+              ],
             },
           },
         }),
