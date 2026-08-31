@@ -8,6 +8,7 @@ import {
 } from "../utils/types";
 import { roleToAppPermissions } from "src/permissions/role-to-permissions";
 import { QueryBuilderGroupActor } from "./prisma-query-builder.service";
+import { organizationWithinScope } from "src/common/utils/organization-scope.utils";
 
 @Injectable()
 export class CheckPermissions {
@@ -108,12 +109,7 @@ export class CheckPermissions {
     const actorsFromScope = await this.prisma.actor.findMany({
       where: {
         applicationId,
-        organization: {
-          path: {
-            contains: scopedPermissions,
-            mode: "insensitive" as const,
-          },
-        },
+        organization: organizationWithinScope(scopedPermissions),
       },
       distinct: ["actorTypeId"],
     });
@@ -144,12 +140,7 @@ export class CheckPermissions {
           some: { id: applicationId },
         },
         organizations: {
-          some: {
-            path: {
-              contains: scopedPermissions,
-              mode: "insensitive" as const,
-            },
-          },
+          some: organizationWithinScope(scopedPermissions),
         },
       },
       include: {
