@@ -186,3 +186,36 @@ export class QualitySummaryDto {
   @Type(() => QualitySummaryCompliancesDto)
   compliances: QualitySummaryCompliancesDto;
 }
+
+export class QualityCampaignActionDto {
+  @ApiProperty({ description: "Identifiant de la campagne concernée" })
+  @IsString()
+  campaignId: string;
+
+  @ApiProperty({ description: "Nom de la campagne concernée" })
+  @IsString()
+  campaignName: string;
+
+  @ApiProperty({
+    description:
+      "Clé de l'action complétée (ex. « moa », « hosting » — cf. le catalogue des actions IQ)",
+  })
+  @IsString()
+  actionKey: string;
+
+  @ApiProperty({ description: "Libellé lisible de l'action complétée" })
+  @IsString()
+  actionLabel: string;
+
+  @ApiProperty({ description: "Date à laquelle l'action a été complétée" })
+  completedAt: Date;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: "Email de l'utilisateur à l'origine de l'action, si connu",
+  })
+  @IsOptional()
+  @IsString()
+  completedByEmail: string | null;
+}

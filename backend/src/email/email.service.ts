@@ -627,6 +627,7 @@ export class EmailService {
       applicationLabel: string;
       iqAtStart: number | null;
       iqCurrent: number | null;
+      completedActions: string[];
     }>;
     averageIqAtStart: number | null;
     averageIqCurrent: number | null;
@@ -670,6 +671,9 @@ export class EmailService {
       return `${progress > 0 ? "+" : ""}${progress} pts`;
     };
 
+    const formatCompletedActions = (completedActions: string[]) =>
+      completedActions.length > 0 ? completedActions.join(", ") : "—";
+
     const targetsRows = targets
       .map(
         (target) => `
@@ -678,6 +682,7 @@ export class EmailService {
             <td style="border-bottom: 1px solid #eeeeee">${formatIq(target.iqAtStart)}</td>
             <td style="border-bottom: 1px solid #eeeeee">${formatIq(target.iqCurrent)}</td>
             <td style="border-bottom: 1px solid #eeeeee">${formatProgress(target.iqAtStart, target.iqCurrent)}</td>
+            <td style="border-bottom: 1px solid #eeeeee">${formatCompletedActions(target.completedActions)}</td>
           </tr>`,
       )
       .join("");

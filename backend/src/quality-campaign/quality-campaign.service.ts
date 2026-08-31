@@ -8,12 +8,14 @@ import {
   NotificationType,
   Prisma,
   QualityCampaign,
+  QualityCampaignStatus,
   QualityCampaignTarget,
   Roles,
 } from "@prisma/client";
 import type { Application } from "@prisma/client";
 import { ApplicationSearchDto } from "src/applications/dto/search-application.dto";
 import { ApplicationService } from "src/applications/application.service";
+import { getQualityActionLabel } from "src/common/utils/quality-actions.utils";
 import { EmailService } from "src/email/email.service";
 import { NotificationService } from "src/notification/notification.service";
 import { roleToPermissions } from "src/permissions/role-to-permissions";
@@ -71,9 +73,8 @@ function average(values: number[]): number | null {
 
 /**
  * Traduit le tri demandé par l'admin (colonnes de l'onglet) vers l'`orderBy` Prisma
- * correspondant. `status` et `targetCount` ne sont pas des colonnes réelles : le premier se
- * déduit de `sentAt` (scheduled = null, sent = renseigné), le second du comptage de la relation
- * `targets`.
+ * correspondant. `targetCount` n'est pas une colonne réelle : elle se déduit du comptage de la
+ * relation `targets`.
  */
 function buildOrderBy(
   sortBy: string | undefined,
@@ -85,7 +86,7 @@ function buildOrderBy(
     case "endDate":
       return { endDate: order };
     case "status":
-      return { sentAt: order };
+      return { status: order };
     case "targetCount":
       return { targets: { _count: order } };
     case "startDate":
@@ -105,7 +106,11 @@ export class QualityCampaignService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  async create(userId: string, dto: CreateQualityCampaignDto) {
+  async create(
+    userId: string,
+    dto: CreateQualityCampaignDto,
+    requestor: Requestor,
+  ) {
     const campaign = await this.prisma.qualityCampaign.create({
       data: {
         name: dto.name,
@@ -118,10 +123,10 @@ export class QualityCampaignService {
       },
       include: TARGETS_INCLUDE,
     });
-    return this.toDto(campaign);
+    return this.toDtoWithLiveTargetCount(campaign, requestor);
   }
 
-  async findAll(filters: PaginationDto) {
+  async findAll(filters: PaginationDto, requestor: Requestor) {
     const paginated = await this.prisma.qualityCampaign.paginate({
       orderBy: buildOrderBy(filters.sortBy, filters.order),
       page: filters.page,
@@ -132,26 +137,32 @@ export class QualityCampaignService {
         },
       },
     });
-    return {
-      ...paginated,
-      results: paginated.results.map((campaign) =>
-        this.toDto(campaign as QualityCampaignWithTargets),
+    const results = await Promise.all(
+      paginated.results.map((campaign) =>
+        this.toDtoWithLiveTargetCount(
+          campaign as QualityCampaignWithTargets,
+          requestor,
+        ),
       ),
-    };
+    );
+    return { ...paginated, results };
   }
 
-  async findOne(id: string): Promise<QualityCampaignDto> {
-    return this.toDto(await this.getRaw(id));
+  async findOne(
+    id: string,
+    requestor: Requestor = SYSTEM_REQUESTOR,
+  ): Promise<QualityCampaignDto> {
+    return this.toDtoWithLiveTargetCount(await this.getRaw(id), requestor);
   }
 
   async update(id: string, dto: UpdateQualityCampaignDto) {
     const campaign = await this.getRaw(id);
     if (
-      campaign.sentAt &&
-      (dto.filters !== undefined || dto.startDate !== undefined)
+      campaign.status !== QualityCampaignStatus.scheduled &&
+      dto.filters !== undefined
     ) {
       throw new BadRequestException(
-        "Impossible de modifier le filtre ou la date de début d'une campagne déjà envoyée.",
+        "Impossible de modifier le filtre d'une campagne qui n'est plus planifiée.",
       );
     }
     const updated = await this.prisma.qualityCampaign.update({
@@ -182,25 +193,24 @@ export class QualityCampaignService {
 
   /**
    * Résout les applications ciblées par la campagne, snapshot leur IQ courant comme
-   * `iqAtStart`, puis relance par email les acteurs MOA/MOE de chacune. Appelable
-   * manuellement (admin, avec le `requestor` réel) ou automatiquement par le cron à la date de
-   * début (sans `requestor` : utilise SYSTEM_REQUESTOR).
+   * `iqAtStart`, relance par email les acteurs MOA/MOE de chacune, puis pose `sentAt`. Étape
+   * commune à l'envoi explicite (`sendCampaign`) et au passage manuel du statut hors
+   * « planifiée » d'une campagne jamais envoyée (`updateStatus`) : dans les deux cas la campagne
+   * doit avoir réellement ciblé des applications, pas juste changé d'étiquette.
+   *
+   * Verrou optimiste (#2376) : `sentAt` est posé de façon ATOMIQUE avant tout envoi, via un
+   * `updateMany` conditionné sur `sentAt: null`. Deux déclencheurs concurrents (double-clic, cron
+   * + changement de statut manuel, deux réplicas) liraient sinon `sentAt = null` avant que l'un
+   * pose la date, et enverraient donc la campagne en double. Ici, seule l'exécution dont
+   * l'`updateMany` affecte 1 ligne poursuit ; l'autre lève une erreur. Poser la date AVANT
+   * l'envoi garantit « au plus une fois » (pas de doublon massif d'emails), au prix d'un envoi
+   * potentiellement partiel si le process meurt en cours — compromis assumé.
    */
-  async sendCampaign(
+  private async resolveAndNotifyTargets(
     id: string,
+    campaign: QualityCampaign,
     requestor?: Requestor,
-  ): Promise<QualityCampaignDto> {
-    const campaign = await this.getRaw(id);
-    if (campaign.sentAt) {
-      throw new BadRequestException("Cette campagne a déjà été envoyée.");
-    }
-
-    // Verrou optimiste (#2376) : on pose `sentAt` de façon ATOMIQUE avant tout envoi. Deux
-    // déclencheurs concurrents (double-clic, cron + manuel, deux réplicas) lisaient auparavant
-    // `sentAt = null` avant que l'un pose la date, et envoyaient donc la campagne en double. Ici,
-    // seule l'exécution dont l'`updateMany` affecte 1 ligne poursuit ; l'autre s'arrête. Poser la
-    // date AVANT l'envoi garantit « au plus une fois » (pas de doublon massif d'emails), au prix
-    // d'un envoi potentiellement partiel si le process meurt en cours — compromis assumé.
+  ): Promise<void> {
     const claimed = await this.prisma.qualityCampaign.updateMany({
       where: { id, sentAt: null },
       data: { sentAt: new Date() },
@@ -228,22 +238,71 @@ export class QualityCampaignService {
         await this.notifyApplicationActors(campaign, application);
       }
     }
+  }
 
-    return this.findOne(id);
+  /**
+   * Déclenche immédiatement la résolution des cibles et la relance des acteurs. Appelable
+   * manuellement (admin, avec le `requestor` réel) ou automatiquement par le cron à la date de
+   * début (sans `requestor` : utilise SYSTEM_REQUESTOR).
+   */
+  async sendCampaign(
+    id: string,
+    requestor?: Requestor,
+  ): Promise<QualityCampaignDto> {
+    const campaign = await this.getRaw(id);
+    if (campaign.sentAt) {
+      throw new BadRequestException("Cette campagne a déjà été envoyée.");
+    }
+
+    await this.resolveAndNotifyTargets(id, campaign, requestor);
+
+    // N'avance le statut que s'il est encore à sa valeur par défaut : si l'admin l'a déjà corrigé
+    // manuellement (ex. repassé à `done`), on ne l'écrase pas. `sentAt` est déjà posé par
+    // resolveAndNotifyTargets (verrou atomique #2376).
+    if (campaign.status === QualityCampaignStatus.scheduled) {
+      await this.prisma.qualityCampaign.update({
+        where: { id },
+        data: { status: QualityCampaignStatus.in_progress },
+      });
+    }
+
+    return this.findOne(id, requestor);
+  }
+
+  /**
+   * Change librement le statut de la campagne, dans n'importe quel sens (#2282 amélioration) :
+   * aucune restriction de transition, c'est un statut manuel dont l'admin garde le contrôle. Si
+   * la campagne est encore « planifiée » (jamais envoyée) et qu'on la fait sortir de cet état,
+   * on résout d'abord ses cibles et relance ses acteurs — sinon elle passerait « en cours » ou
+   * « terminée » sans avoir jamais réellement ciblé la moindre application.
+   */
+  async updateStatus(
+    id: string,
+    status: QualityCampaignStatus,
+    requestor?: Requestor,
+  ) {
+    const campaign = await this.getRaw(id);
+
+    if (status !== QualityCampaignStatus.scheduled && !campaign.sentAt) {
+      await this.resolveAndNotifyTargets(id, campaign, requestor);
+    }
+
+    await this.prisma.qualityCampaign.update({
+      where: { id },
+      data: { status },
+    });
+
+    return this.findOne(id, requestor);
   }
 
   /**
    * Envoie au sponsor un email récapitulatif de l'impact courant de la campagne (IQ de départ
    * vs IQ actuel des applications ciblées). Répétable, indépendant de l'envoi initial aux
-   * acteurs : c'est le mécanisme dédié « pouvoir leur envoyer le résultat » (#2282).
+   * acteurs, et disponible quel que soit le statut de la campagne : c'est le mécanisme dédié
+   * « pouvoir leur envoyer le résultat » (#2282).
    */
   async sendSponsorReport(id: string) {
     const campaign = await this.getRaw(id);
-    if (!campaign.sentAt) {
-      throw new BadRequestException(
-        "La campagne doit avoir été envoyée avant de pouvoir en rapporter les résultats.",
-      );
-    }
     if (campaign.sponsorEmails.length === 0) {
       throw new BadRequestException(
         "Aucun email sponsor n'est renseigné pour cette campagne.",
@@ -251,6 +310,17 @@ export class QualityCampaignService {
     }
 
     const impact = this.computeImpact(campaign);
+    const actionLogs = await this.prisma.qualityCampaignActionLog.findMany({
+      where: { campaignId: id },
+      select: { applicationId: true, actionKey: true },
+    });
+    const actionLabelsByApplicationId = new Map<string, string[]>();
+    for (const log of actionLogs) {
+      const labels = actionLabelsByApplicationId.get(log.applicationId) ?? [];
+      labels.push(getQualityActionLabel(log.actionKey));
+      actionLabelsByApplicationId.set(log.applicationId, labels);
+    }
+
     const emailLog =
       await this.emailService.sendQualityCampaignSponsorReportEmail({
         recipientEmails: campaign.sponsorEmails,
@@ -260,6 +330,8 @@ export class QualityCampaignService {
           applicationLabel: target.application.label,
           iqAtStart: target.iqAtStart,
           iqCurrent: target.application.quality,
+          completedActions:
+            actionLabelsByApplicationId.get(target.applicationId) ?? [],
         })),
         averageIqAtStart: impact.averageIqAtStart,
         averageIqCurrent: impact.averageIqCurrent,
@@ -417,9 +489,27 @@ export class QualityCampaignService {
       endDate: campaign.endDate,
       sentAt: campaign.sentAt,
       createdAt: campaign.createdAt,
-      status: campaign.sentAt ? "sent" : "scheduled",
+      status: campaign.status,
       ...impact,
     };
+  }
+
+  /**
+   * `targets` n'est résolu (et figé) qu'à l'envoi — nécessaire pour capturer un `iqAtStart`
+   * fiable (#2282). Tant que la campagne n'a pas été envoyée, `targetCount` refléterait donc 0
+   * application, ce qui est trompeur : l'admin doit voir immédiatement ce que son filtre cible.
+   * On calcule alors un compte LIVE (même recherche que l'aperçu de création) en remplacement.
+   */
+  private async toDtoWithLiveTargetCount(
+    campaign: QualityCampaignWithTargets,
+    requestor: Requestor,
+  ): Promise<QualityCampaignDto> {
+    const dto = this.toDto(campaign);
+    if (!campaign.sentAt) {
+      const { total } = await this.searchTargets(campaign, requestor);
+      dto.targetCount = total;
+    }
+    return dto;
   }
 
   private async getRaw(id: string): Promise<QualityCampaignWithTargets> {
