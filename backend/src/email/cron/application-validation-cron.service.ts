@@ -216,6 +216,28 @@ export class ApplicationValidationCronService
           }
         }
 
+        // #2378 : ne considérer l'application « relancée » ce cycle (et poser l'anti-spam) que si
+        // un canal a effectivement abouti.
+        // - Des emails étaient à envoyer : traité seulement si au moins un a réussi. Si tous ont
+        //   échoué (SMTP en panne), on retente au prochain passage plutôt que de sauter l'app un
+        //   ou deux mois.
+        // - Aucun email à envoyer (tous opt-out) : traité dès qu'il y a des destinataires in-app,
+        //   afin de poser l'anti-spam et d'éviter de recréer les mêmes notifications à chaque
+        //   redémarrage.
+        const emailAttempted = eligibleEmailsList.length > 0;
+        const anyEmailSent = emailLogIdByEmail.size > 0;
+        const applicationNotified = emailAttempted
+          ? anyEmailSent
+          : recipientUsers.length > 0;
+
+        if (!applicationNotified) {
+          // Rien n'a abouti : on n'écrit ni notification in-app ni anti-spam pour tout renvoyer
+          // ensemble au prochain passage (évite un doublon in-app quand l'email repartira).
+          continue;
+        }
+
+        // Notifications in-app : complément persistant, créé une seule fois grâce à l'anti-spam
+        // ci-dessous.
         await Promise.all(
           recipientUsers.map((user) =>
             this.notificationService.create(
@@ -230,10 +252,6 @@ export class ApplicationValidationCronService
             ),
           ),
         );
-
-        if (eligibleEmailsList.length === 0) {
-          continue;
-        }
 
         await this.prisma.notificationLog.create({
           data: {
