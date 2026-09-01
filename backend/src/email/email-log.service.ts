@@ -12,13 +12,17 @@ export class EmailLogService {
     subject,
     html,
     text,
+    wasSent,
   }: {
     to: string;
     subject: string;
     html: string;
     text: string;
+    wasSent: boolean;
   }): Promise<EmailLog> {
-    return this.prisma.emailLog.create({ data: { to, subject, html, text } });
+    return this.prisma.emailLog.create({
+      data: { to, subject, html, text, wasSent },
+    });
   }
 
   public async findAllPaginated(

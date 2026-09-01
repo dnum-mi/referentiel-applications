@@ -7501,6 +7501,10 @@ components:
           format: date-time
           type: string
           description: Date et heure d'envoi
+        wasSent:
+          type: boolean
+          description: Faux si l'e-mail a été journalisé sans envoi réel car les envois
+            SMTP étaient désactivés
       required:
         - id
         - to
@@ -7508,6 +7512,7 @@ components:
         - html
         - text
         - sentAt
+        - wasSent
     PaginatedEmailLogDto:
       type: object
       properties:
