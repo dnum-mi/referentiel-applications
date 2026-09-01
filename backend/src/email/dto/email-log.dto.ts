@@ -18,4 +18,10 @@ export class EmailLogDto {
 
   @ApiProperty({ description: "Date et heure d'envoi" })
   sentAt: Date;
+
+  @ApiProperty({
+    description:
+      "Faux si l'e-mail a été journalisé sans envoi réel car les envois SMTP étaient désactivés",
+  })
+  wasSent: boolean;
 }

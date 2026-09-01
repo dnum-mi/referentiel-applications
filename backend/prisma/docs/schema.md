@@ -1355,6 +1355,7 @@ erDiagram
   String html
   String text
   DateTime sentAt
+  Boolean wasSent
 }
 "UserPermissionLog" {
   String id PK
@@ -1412,6 +1413,9 @@ Properties as follows:
 - `html`: Contenu HTML complet de l'e-mail envoyé
 - `text`: Contenu texte de l'e-mail envoyé
 - `sentAt`: Date et heure d'envoi
+- `wasSent`
+  > Faux si généré alors que les envois SMTP étaient désactivés : le contenu reste consultable
+  > (notification in-app, historique admin) mais aucun e-mail réel n'est parti (#2411).
 
 ### `UserPermissionLog`
 

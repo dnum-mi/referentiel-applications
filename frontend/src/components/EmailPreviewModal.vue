@@ -28,8 +28,9 @@ const sentAtLabel = computed(() => (props.log ? format(new Date(props.log.sentAt
   <Teleport to="body">
     <DsfrModal :opened="opened" size="lg" :title="log?.subject ?? ''" data-testid="email-preview-modal" @close="emit('close')">
       <template v-if="log">
+        <DsfrBadge v-if="!log.wasSent" class="fr-mb-3w" label="Non envoyé (e-mails désactivés)" type="warning" small />
         <dl class="email-preview-meta fr-mb-3w">
-          <dt>Envoyé le</dt>
+          <dt>{{ log.wasSent ? "Envoyé le" : "Généré le" }}</dt>
           <dd>{{ sentAtLabel }}</dd>
           <dt>Destinataire(s)</dt>
           <dd>{{ log.to }}</dd>

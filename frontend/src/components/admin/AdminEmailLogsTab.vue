@@ -17,6 +17,7 @@ const columns: TableColumn[] = [
   { field: "sentAt", header: "Date d'envoi", sortable: false },
   { field: "to", header: "Destinataire(s)", sortable: false },
   { field: "subject", header: "Objet", sortable: false },
+  { field: "wasSent", header: "Statut", sortable: false },
   { field: "actions", header: "Actions", sortable: false },
 ];
 
@@ -51,6 +52,7 @@ const tableRows = computed(() =>
     sentAt: format(new Date(log.sentAt), "dd/MM/yyyy HH:mm", { locale: fr }),
     to: log.to,
     subject: log.subject,
+    wasSent: log.wasSent,
     actions: log,
   })),
 );
@@ -99,6 +101,11 @@ onActivated(fetchLogs);
         data-testid="admin-email-logs-table"
         @page="onPage"
       >
+        <template #body-wasSent="{ data: row }">
+          <DsfrBadge v-if="row.wasSent" label="Envoyé" type="success" small />
+          <DsfrBadge v-else label="Non envoyé" type="warning" small />
+        </template>
+
         <template #body-actions="{ data: row }">
           <EmailLogContentModal :log="row.actions" />
         </template>
