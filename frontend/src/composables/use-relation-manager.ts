@@ -136,7 +136,7 @@ export function useRelationManager(applicationId: string) {
 
   async function handleUpdateRelation(updated: RelationUpdate) {
     try {
-      await store.updateRelation(updated);
+      await store.updateRelation(updated, applicationId);
       toaster.addSuccessMessage("Relation mise à jour avec succès!");
       closeEditRelationModal();
     } catch {

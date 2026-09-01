@@ -333,6 +333,7 @@ onMounted(async () => {
     :opened="isEditRelationModalOpen"
     title="Modifier une relation"
     :relation="relationToEdit"
+    :current-application-id="props.application.id"
     data-testid="relation-edit-modal"
     @close="closeEditRelationModal"
     @update-relation="handleUpdateRelation"
