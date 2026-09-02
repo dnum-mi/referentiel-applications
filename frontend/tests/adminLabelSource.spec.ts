@@ -8,6 +8,9 @@ test.describe("Admin - Label Sources", () => {
     await login(page);
     await page.goto(`${BASE_URL}/administration`);
 
+    // Onglets regroupés par thème (#2419) : « Gestions des sources » vit sous la tuile « Gestion ».
+    await page.getByTestId("admin-theme-tile-management").click();
+
     const labelSourceTab = page.getByRole("tab", { name: "Gestions des sources" });
     await expect(labelSourceTab).toBeVisible();
     await labelSourceTab.click();

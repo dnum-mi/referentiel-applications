@@ -161,7 +161,7 @@ onMounted(fetchSuggestions);
 
 <template>
   <div class="header-row">
-    <h1 class="fr-h1" data-testid="admin-correlations-title">Revue des corrélations</h1>
+    <h1 class="fr-h1" data-testid="admin-correlations-title">Revue datasteward</h1>
 
     <DsfrButton
       type="button"

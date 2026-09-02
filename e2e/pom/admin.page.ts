@@ -24,6 +24,15 @@ export class AdminPage extends BasePage {
     await expect(this.usersTable()).toBeVisible();
   }
 
+  // --- Tuiles thématiques (#2419) : chaque thème donne accès à un sous-ensemble d'onglets. ---
+
+  private themeTile = (id: string) => this.byTestId(`admin-theme-tile-${id}`);
+
+  /** Sélectionne le thème `id` (idempotent : sans effet néfaste si déjà actif). */
+  private async switchToTheme(id: string): Promise<void> {
+    await this.themeTile(id).click();
+  }
+
   private editModal = () => this.byTestId("admin-edit-user-modal");
 
   async searchUser(value: string): Promise<void> {
@@ -161,6 +170,7 @@ export class AdminPage extends BasePage {
 
   /** Ouvre l'onglet « Matrice des permissions » et attend le panneau + la table. */
   async openPermsMatrixTab(): Promise<void> {
+    await this.switchToTheme("users-rights");
     await this.adminTabs()
       .getByRole("tab", { name: "Matrice des permissions" })
       .click();
@@ -318,6 +328,7 @@ export class AdminPage extends BasePage {
   private orgsSearch = () => this.byTestId("admin-organizations-search");
 
   async openOrganizationsTab(): Promise<void> {
+    await this.switchToTheme("users-rights");
     await this.adminTabs()
       .getByRole("tab", { name: /organisations/i })
       .click();
@@ -330,6 +341,7 @@ export class AdminPage extends BasePage {
   private actionLogsSearch = () => this.byTestId("admin-action-logs-search");
 
   async openActionLogsTab(): Promise<void> {
+    await this.switchToTheme("management");
     await this.adminTabs()
       .getByRole("tab", { name: /journal des actions/i })
       .click();
@@ -434,6 +446,7 @@ export class AdminPage extends BasePage {
   private tagsTable = () => this.byTestId("admin-tags-table");
 
   async openTagsTab(): Promise<void> {
+    await this.switchToTheme("management");
     await this.adminTabs().getByRole("tab", { name: /tags/i }).click();
     await expect(this.tagsTable()).toBeVisible();
   }
@@ -488,6 +501,7 @@ export class AdminPage extends BasePage {
   private labelSourcesTable = () => this.byTestId("admin-label-sources-table");
 
   async openLabelSourcesTab(): Promise<void> {
+    await this.switchToTheme("management");
     await this.adminTabs()
       .getByRole("tab", { name: /sources/i })
       .click();
@@ -551,6 +565,7 @@ export class AdminPage extends BasePage {
   private campaignsTable = () => this.byTestId("admin-campaigns-table");
 
   async openCampaignsTab(): Promise<void> {
+    await this.switchToTheme("campaigns");
     await this.adminTabs()
       .getByRole("tab", { name: /campagnes dette/i })
       .click();
@@ -589,6 +604,7 @@ export class AdminPage extends BasePage {
     this.byTestId("admin-business-divisions-table");
 
   async openBusinessDivisionsTab(): Promise<void> {
+    await this.switchToTheme("users-rights");
     await this.adminTabs()
       .getByRole("tab", { name: /directions métier/i })
       .click();
@@ -678,6 +694,7 @@ export class AdminPage extends BasePage {
 
   // --- Onglet « Batch de données » : synchronisation MAIA (#1825, MAI-04) ---
   async openBatchDataTab(): Promise<void> {
+    await this.switchToTheme("management");
     await this.adminTabs()
       .getByRole("tab", { name: "Batch de données" })
       .click();
@@ -713,6 +730,7 @@ export class AdminPage extends BasePage {
   private actorSearch = () => this.byTestId("admin-actor-search");
 
   async openActorsTab(): Promise<void> {
+    await this.switchToTheme("users-rights");
     await this.adminTabs()
       .getByRole("tab", { name: /gestion des acteurs/i })
       .click();
