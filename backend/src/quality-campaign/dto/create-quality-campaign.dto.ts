@@ -1,10 +1,12 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { QualityCampaignStatus } from "@prisma/client";
 import { Type } from "class-transformer";
 import {
   ArrayMaxSize,
   IsArray,
   IsDate,
   IsEmail,
+  IsEnum,
   IsObject,
   IsOptional,
   IsString,
@@ -73,3 +75,13 @@ export class CreateQualityCampaignDto {
 export class UpdateQualityCampaignDto extends PartialType(
   CreateQualityCampaignDto,
 ) {}
+
+export class UpdateQualityCampaignStatusDto {
+  @ApiProperty({
+    enum: QualityCampaignStatus,
+    description:
+      "Nouveau statut de la campagne, librement modifiable dans n'importe quel sens",
+  })
+  @IsEnum(QualityCampaignStatus)
+  status: QualityCampaignStatus;
+}

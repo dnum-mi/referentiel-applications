@@ -1133,6 +1133,7 @@ erDiagram
   DateTime startDate
   DateTime endDate "nullable"
   DateTime sentAt "nullable"
+  QualityCampaignStatus status
   String createdById FK
   DateTime createdAt
 }
@@ -1143,7 +1144,16 @@ erDiagram
   Int iqAtStart "nullable"
   DateTime createdAt
 }
+"QualityCampaignActionLog" {
+  String id PK
+  String campaignId FK
+  String applicationId FK
+  String actionKey
+  String completedById FK "nullable"
+  DateTime completedAt
+}
 "QualityCampaignTarget" }o--|| "QualityCampaign" : campaign
+"QualityCampaignActionLog" }o--|| "QualityCampaign" : campaign
 ```
 
 ### `QualityCampaign`
@@ -1168,6 +1178,9 @@ Properties as follows:
 - `sentAt`
   > Date à laquelle la campagne a effectivement été envoyée aux acteurs (null tant qu'elle
   > est planifiée). Les cibles et leur IQ de départ sont figés à cet instant.
+- `status`
+  > Statut de la campagne, librement modifiable par l'admin (dans n'importe quel sens) : ne
+  > dérive plus uniquement de `sentAt`, qui reste la trace factuelle de l'envoi de la relance.
 - `createdById`: Utilisateur ayant créé la campagne
 - `createdAt`: Date de création
 
@@ -1184,6 +1197,23 @@ Properties as follows:
 - `applicationId`: Application ciblée
 - `iqAtStart`: IQ de l'application au moment de l'envoi de la campagne (null si non calculable)
 - `createdAt`: Date de création (= date d'envoi de la campagne)
+
+### `QualityCampaignActionLog`
+
+Action de mise en qualité (acteur ou conformité renseigné) constatée sur une application
+ciblée pendant qu'une campagne était en cours. Une entrée par (campagne, application, action),
+écrite une seule fois grâce à la contrainte d'unicité : sert à afficher en temps réel les
+actions réalisées dans l'onglet Qualité de la fiche application, et à les reprendre dans le
+mail de rapport envoyé aux sponsors de la campagne.
+
+Properties as follows:
+
+- `id`: Identifiant unique
+- `campaignId`: Campagne pendant laquelle l'action a été constatée
+- `applicationId`: Application concernée
+- `actionKey`: Clé de l'action réalisée (ex. "moa", "hosting", "dima" — cf. le catalogue des actions IQ)
+- `completedById`: Utilisateur à l'origine de la modification ayant complété l'action, si connu
+- `completedAt`: Date à laquelle l'action a été constatée comme complétée
 
 ## Signalements
 
@@ -1325,6 +1355,7 @@ erDiagram
   String html
   String text
   DateTime sentAt
+  Boolean wasSent
 }
 "UserPermissionLog" {
   String id PK
@@ -1382,6 +1413,9 @@ Properties as follows:
 - `html`: Contenu HTML complet de l'e-mail envoyé
 - `text`: Contenu texte de l'e-mail envoyé
 - `sentAt`: Date et heure d'envoi
+- `wasSent`
+  > Faux si généré alors que les envois SMTP étaient désactivés : le contenu reste consultable
+  > (notification in-app, historique admin) mais aucun e-mail réel n'est parti (#2411).
 
 ### `UserPermissionLog`
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { QualitySummaryDto } from "@/client/types.gen";
+import type { QualityCampaignActionDto, QualitySummaryDto } from "@/client/types.gen";
 import type { Application } from "@/models/Application";
 import api from "@/api/index";
 import { useToasterStore } from "@/stores/toasterStore";
@@ -15,19 +15,30 @@ const toaster = useToasterStore();
 
 const isLoading = ref(false);
 const summary = ref<QualitySummaryDto | null>(null);
+const campaignActions = ref<QualityCampaignActionDto[]>([]);
 
 async function fetchQuality() {
   isLoading.value = true;
   try {
-    const response = await api.applicationControllerGetQualitySummary({
-      path: { applicationId: props.application.id },
-    });
-    summary.value = response.data ?? null;
+    const [summaryResponse, campaignActionsResponse] = await Promise.all([
+      api.applicationControllerGetQualitySummary({
+        path: { applicationId: props.application.id },
+      }),
+      api.applicationControllerGetQualityCampaignActions({
+        path: { applicationId: props.application.id },
+      }),
+    ]);
+    summary.value = summaryResponse.data ?? null;
+    campaignActions.value = campaignActionsResponse.data ?? [];
   } catch {
     toaster.addErrorMessage("Erreur lors du chargement des informations de qualité.");
   } finally {
     isLoading.value = false;
   }
+}
+
+function formatCompletedAt(value: string | Date) {
+  return new Date(value).toLocaleDateString("fr-FR");
 }
 
 function getComplianceColor(key: keyof QualitySummaryDto["compliances"]): string {
@@ -138,6 +149,15 @@ onActivated(fetchQuality);
         RGPD : {{ getComplianceStatus("RGPD") }}
       </DsfrHighlight>
     </div>
+  </div>
+
+  <div v-if="campaignActions.length > 0" class="fr-mb-3w" data-testid="quality-campaign-actions">
+    <h4>Actions réalisées pendant une campagne qualité</h4>
+    <ul>
+      <li v-for="action in campaignActions" :key="`${action.campaignId}-${action.actionKey}`">
+        {{ action.actionLabel }} — campagne « {{ action.campaignName }} », le {{ formatCompletedAt(action.completedAt) }}
+      </li>
+    </ul>
   </div>
 
   <DsfrHighlight v-if="hasQualityIndex(props.application)" :large="true" data-testid="quality-index">

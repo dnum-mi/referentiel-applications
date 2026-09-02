@@ -4,18 +4,18 @@
 /// @namespace Users
 model User {
   /// Identifiant unique
-  id                        String              @id @default(uuid())
+  id             String        @id @default(uuid())
   /// Adresse email de l'utilisateur
-  email                     String              @unique @db.VarChar(255)
+  email          String        @unique @db.VarChar(255)
   /// Id de l'organisation à laquelle l'utilisateur appartient
-  organizationId            String?
+  organizationId String?
   /// Organisation à laquelle l'utilisateur appartient
-  organization              Organization?       @relation("UserOrganization", fields: [organizationId], references: [id])
+  organization   Organization? @relation("UserOrganization", fields: [organizationId], references: [id])
 
   /// Id de l'organisation de scope de l'utilisateur (pour les permissions basées sur le scope organisationnel) 
-  scopeOrganizationId            String?
+  scopeOrganizationId String?
   /// Organisation de scope de l'utilisateur
-  scopeOrganization              Organization?       @relation("UserScopeOrganization", fields: [scopeOrganizationId], references: [id])
+  scopeOrganization   Organization? @relation("UserScopeOrganization", fields: [scopeOrganizationId], references: [id])
 
   /// Entrées de métadonnées créées par cet utilisateur
   createdSet                Metadata[]          @relation("MetadataCreatedBy")
@@ -61,25 +61,27 @@ model User {
 
   /// Si l'accès de cet utilisateur est bloqué (ex : a quitté l'organisation). Un utilisateur
   /// bloqué est rejeté par le SSO à l'authentification, quel que soit son moyen d'accès (JWT ou token API).
-  isBlocked                 Boolean             @default(false)
+  isBlocked   Boolean   @default(false)
   /// Date à laquelle l'utilisateur a été bloqué
-  blockedAt                 DateTime?
+  blockedAt   DateTime?
   /// Administrateur ayant bloqué cet utilisateur. Pas de jointure explicite
   /// (mêmes raisons que UserPermissionLog.changedById : éviter les soucis de cascade).
-  blockedById                String?
+  blockedById String?
 
   /// Actions journalisées sous cette identité (effective)
-  actionLogs                ActionLog[]         @relation("ActionLogUser")
+  actionLogs                     ActionLog[]                @relation("ActionLogUser")
   /// Actions réellement effectuées par cet utilisateur sous une identité empruntée
-  actionLogsAsImpersonator  ActionLog[]         @relation("ActionLogImpersonator")
+  actionLogsAsImpersonator       ActionLog[]                @relation("ActionLogImpersonator")
   /// Filtres de recherche d'applications sauvegardés par cet utilisateur (#2279)
-  savedFilters              SavedFilter[]
+  savedFilters                   SavedFilter[]
   /// Suggestions de corrélation revues par cet utilisateur (#2281)
-  reviewedCorrelationSuggestions CorrelationSuggestion[] @relation("CorrelationSuggestionReviewer")
+  reviewedCorrelationSuggestions CorrelationSuggestion[]    @relation("CorrelationSuggestionReviewer")
   /// Notifications in-app reçues par cet utilisateur (#2280)
-  notifications              Notification[]
+  notifications                  Notification[]
   /// Campagnes de mise en qualité créées par cet utilisateur (#2282)
-  qualityCampaigns          QualityCampaign[]
+  qualityCampaigns               QualityCampaign[]
+  /// Actions de mise en qualité complétées par cet utilisateur pendant une campagne
+  qualityCampaignActionLogs      QualityCampaignActionLog[]
 }
 
 /// Filtre de recherche d'applications sauvegardé par un utilisateur, pour être réappliqué
@@ -140,7 +142,7 @@ model Actor {
   /// Enregistrements de conformité
   compliances    Compliance[]
   /// Indique si l'acteur est un groupe ou une personne physique
-  isGroup         Boolean       @default(false)
+  isGroup        Boolean       @default(false)
 
   @@index([applicationId, actorTypeId])
 }
