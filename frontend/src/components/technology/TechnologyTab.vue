@@ -71,6 +71,11 @@ const tableRows = computed(() =>
       eolStatus: computeEolStatus(techno),
       // eolCheckedAt renseigné + eolProduct null = produit non suivi par endoflife.date
       unknownProduct: Boolean(techno.eolCheckedAt) && !techno.eolProduct,
+      // eolCheckedAt null = la fin de vie n'a jamais pu être vérifiée (endoflife.date
+      // injoignable ou ligne jamais résolue). Le backend n'écrit rien dans ce cas pour ne
+      // pas écraser une donnée valide : sans ce drapeau, la cellule affichait « — » comme
+      // pour une technologie sans échéance publiée, et l'absence passait pour un bug.
+      unchecked: !techno.eolCheckedAt,
       latestVersion: techno.version && techno.latestVersion && techno.latestVersion !== techno.version ? techno.latestVersion : null,
       Actions: {
         edit: () => technologyModal.openModal(techno),
@@ -179,7 +184,7 @@ function cancelDelete() {
   <p class="fr-sr-only" aria-live="polite" aria-atomic="true" data-testid="technology-status">{{ statusMessage }}</p>
   <div class="fr-grid-row fr-grid-row--middle fr-mb-3w" v-bind="$attrs" data-testid="technology-tab">
     <div class="fr-col">
-      <h3 class="fr-mb-0">Technologie</h3>
+      <h3 class="fr-mb-0">Technologies</h3>
     </div>
     <div class="fr-col-auto">
       <DsfrButton
@@ -260,13 +265,29 @@ function cancelDelete() {
         <span v-if="data.FinDeVie" class="fr-hint-text">{{ data.FinDeVie }}</span>
       </template>
       <span v-else-if="data.FinDeVie" :title="`Fin de support prévue le ${data.FinDeVie}`">{{ data.FinDeVie }}</span>
+      <!--
+        Le complément d'explication est porté par un texte sr-only et non par le seul
+        attribut title : un span n'est pas focusable, l'infobulle est donc inaccessible
+        au clavier et ignorée par les lecteurs d'écran (RGAA). Le title reste pour la souris.
+      -->
       <span
         v-else-if="data.unknownProduct"
         class="fr-hint-text"
         title="Produit non suivi par endoflife.date : la fin de vie ne peut pas être vérifiée automatiquement"
         :data-testid="`technology-eol-unknown-${data.id}`"
       >
-        Produit non suivi
+        Produit non suivi<span class="fr-sr-only"> par endoflife.date : la fin de vie ne peut pas être vérifiée automatiquement</span>
+      </span>
+      <span
+        v-else-if="data.unchecked"
+        class="fr-hint-text"
+        title="La fin de vie n’a pas encore pu être vérifiée auprès d’endoflife.date (service injoignable ou vérification désactivée). Elle sera retentée automatiquement dès que possible."
+        :data-testid="`technology-eol-unchecked-${data.id}`"
+      >
+        Non vérifiée<span class="fr-sr-only">
+          : la fin de vie n’a pas encore pu être vérifiée auprès d’endoflife.date (service injoignable ou vérification désactivée), elle
+          sera retentée automatiquement dès que possible</span
+        >
       </span>
       <template v-else>—</template>
     </template>
