@@ -72,6 +72,11 @@ export interface EolInfo {
   eolDate: Date | null;
   eoasDate: Date | null;
   latestVersion: string | null;
+  /// Nom du cycle apparié à la version, null si aucun cycle ne correspond. Persisté
+  /// pour que le front distingue « version non reconnue » (cycle null) de « cycle
+  /// connu sans échéance publiée » (cycle renseigné, dates nulles) : les dates
+  /// seules sont nulles dans les deux cas (#2449).
+  cycle: string | null;
 }
 
 export type EolResolution =
@@ -230,6 +235,7 @@ export function parseEolInfo(
     eolDate: toDate(release?.eolFrom),
     eoasDate: toDate(release?.eoasFrom),
     latestVersion: release?.latest?.name ?? null,
+    cycle: release?.name ?? null,
   };
 }
 

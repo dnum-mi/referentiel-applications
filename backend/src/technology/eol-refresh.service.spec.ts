@@ -10,8 +10,14 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { EolRefreshService } from "./eol-refresh.service";
 import { EolNotificationService } from "./eol-notification.service";
 
+// Forme de l'API v1 (cf. EndoflifeRelease) : c'est celle que parseEolInfo lit.
 const releases = [
-  { cycle: "13", eol: "2025-11-13", support: "2024-11-14", latest: "13.16" },
+  {
+    name: "13",
+    eolFrom: "2025-11-13",
+    eoasFrom: "2024-11-14",
+    latest: { name: "13.16" },
+  },
 ];
 
 const makeService = (
@@ -103,7 +109,42 @@ describe("EolRefreshService", () => {
     const { data } = update.mock.calls[0][0];
     expect(data.eolProduct).toBeNull();
     expect(data.eolDate).toBeNull();
+    expect(data.eolCycle).toBeNull();
     expect(data.eolCheckedAt).toBeInstanceOf(Date);
+  });
+
+  it("persiste le cycle apparié avec les dates d'une version reconnue", async () => {
+    const { service, update } = makeService([
+      { id: "a", product: "PostgreSQL", version: "13.4" },
+    ]);
+    await service.runRefreshSafely();
+    const { data } = update.mock.calls[0][0];
+    expect(data).toEqual({
+      eolProduct: "postgresql",
+      eolDate: new Date("2025-11-13"),
+      eoasDate: new Date("2024-11-14"),
+      latestVersion: "13.16",
+      eolCycle: "13",
+      eolCheckedAt: expect.any(Date),
+    });
+  });
+
+  // #2449 : produit suivi mais version qui ne désigne aucun cycle → dates nulles ET
+  // cycle null, pour que la fiche affiche « Version non reconnue » et non « — ».
+  it("écrit eolCycle null et des dates nulles quand la version ne désigne aucun cycle", async () => {
+    const { service, update } = makeService([
+      { id: "a", product: "PostgreSQL", version: "12" },
+    ]);
+    await service.runRefreshSafely();
+    const { data } = update.mock.calls[0][0];
+    expect(data).toEqual({
+      eolProduct: "postgresql",
+      eolDate: null,
+      eoasDate: null,
+      latestVersion: null,
+      eolCycle: null,
+      eolCheckedAt: expect.any(Date),
+    });
   });
 
   it("poursuit le run malgré une écriture en échec", async () => {

@@ -44,7 +44,10 @@ export class TechnologyService extends BaseService<TechnologyStack> {
   //   ni écrasée ni son TTL réarmé (retentée au prochain GET) ;
   // - « unknown-product » → eolProduct null + eolCheckedAt : le front peut signaler
   //   « produit non suivi par endoflife.date » (distinct d'un produit sans EOL publiée) ;
-  // - « resolved » → slug + dates EOL/fin de support actif + dernière version du cycle.
+  // - « resolved » → slug + cycle apparié + dates EOL/fin de support actif + dernière
+  //   version du cycle. Le cycle est persisté (#2449) : produit suivi mais cycle null =
+  //   version non reconnue (« MySQL 8 »), à distinguer d'un cycle connu sans échéance
+  //   publiée (Apache 2.4) — les dates nulles seules ne le disent pas.
   private eolFieldsFrom(
     resolution: EolResolution,
     version?: string | null,
@@ -53,6 +56,7 @@ export class TechnologyService extends BaseService<TechnologyStack> {
     eolDate?: Date | null;
     eoasDate?: Date | null;
     latestVersion?: string | null;
+    eolCycle?: string | null;
     eolCheckedAt?: Date | null;
   } {
     if (resolution.status === "unavailable") return {};
@@ -63,12 +67,15 @@ export class TechnologyService extends BaseService<TechnologyStack> {
         eolDate: null,
         eoasDate: null,
         latestVersion: null,
+        eolCycle: null,
         eolCheckedAt,
       };
     }
+    const { cycle, ...info } = parseEolInfo(resolution.releases, version ?? "");
     return {
       eolProduct: resolution.slug,
-      ...parseEolInfo(resolution.releases, version ?? ""),
+      ...info,
+      eolCycle: cycle,
       eolCheckedAt,
     };
   }

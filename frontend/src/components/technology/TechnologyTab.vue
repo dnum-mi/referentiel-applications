@@ -76,6 +76,12 @@ const tableRows = computed(() =>
       // pas écraser une donnée valide : sans ce drapeau, la cellule affichait « — » comme
       // pour une technologie sans échéance publiée, et l'absence passait pour un bug.
       unchecked: !techno.eolCheckedAt,
+      // Vérifiée, produit suivi, version saisie, mais aucun cycle apparié (#2449) : la
+      // version est trop imprécise pour endoflife.date (« 8 » quand les cycles sont 8.0
+      // et 8.4). Sans ce drapeau la ligne affichait « — », comme un cycle connu qui ne
+      // publie aucune échéance (Apache 2.4), et l'absence de date passait pour normale.
+      // Sans version saisie, il n'y a rien à reconnaître : la ligne reste « — ».
+      unrecognizedVersion: Boolean(techno.eolCheckedAt) && Boolean(techno.eolProduct) && Boolean(techno.version) && !techno.eolCycle,
       latestVersion: techno.version && techno.latestVersion && techno.latestVersion !== techno.version ? techno.latestVersion : null,
       Actions: {
         edit: () => technologyModal.openModal(techno),
@@ -289,7 +295,18 @@ function cancelDelete() {
           sera retentée automatiquement dès que possible</span
         >
       </span>
-      <template v-else>—</template>
+      <span
+        v-else-if="data.unrecognizedVersion"
+        class="fr-hint-text"
+        title="La version saisie ne correspond à aucun cycle de release connu d’endoflife.date pour ce produit : précisez-la (par exemple « 8.0 » plutôt que « 8 »)."
+        :data-testid="`technology-eol-unrecognized-${data.id}`"
+      >
+        Version non reconnue<span class="fr-sr-only">
+          : la version saisie ne correspond à aucun cycle de release connu d’endoflife.date pour ce produit, précisez-la (par exemple « 8.0
+          » plutôt que « 8 »)</span
+        >
+      </span>
+      <span v-else :data-testid="`technology-eol-none-${data.id}`">—</span>
     </template>
 
     <template #body-Actions="{ data }">

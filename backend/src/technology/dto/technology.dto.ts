@@ -119,6 +119,17 @@ export class TechnologyDto extends CreateTechnologyDto {
   @IsOptional()
   @IsString()
   latestVersion?: string | null;
+
+  @ApiProperty({
+    example: "20",
+    description:
+      "Nom du cycle endoflife.date apparié à la version (null si le produit n'est pas suivi, si la version ne désigne aucun cycle connu, ou si la ligne n'a jamais été vérifiée)",
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  eolCycle?: string | null;
 }
 
 export class EolProductDto {

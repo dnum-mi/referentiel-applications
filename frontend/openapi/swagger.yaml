@@ -10423,6 +10423,13 @@ components:
           example: 20.19.5
           description: Dernière version publiée du cycle correspondant (source
             endoflife.date)
+        eolCycle:
+          type: string
+          nullable: true
+          example: "20"
+          description: Nom du cycle endoflife.date apparié à la version (null si le
+            produit n'est pas suivi, si la version ne désigne aucun cycle connu,
+            ou si la ligne n'a jamais été vérifiée)
       required:
         - technology
         - product

@@ -280,12 +280,15 @@ async function ensureEndOfLifeStack(applicationId: string) {
 
   // `eolProduct` porte le slug endoflife.date tel que la résolution réelle l'écrirait
   // (« nodejs », pas « node.js ») : la fixture doit ressembler à une ligne résolue.
+  // `eolCycle` (#2449) est le cycle apparié par cette même résolution : sans lui, la
+  // fiche prendrait ces lignes pour des versions non reconnues.
   const entries = [
     {
       technology: "Base de données",
       product: "PostgreSQL",
       eolProduct: "postgresql",
       version: "13",
+      eolCycle: "13",
       eolDate: at(-120),
       eoasDate: at(-400),
       latestVersion: "15.5",
@@ -295,6 +298,7 @@ async function ensureEndOfLifeStack(applicationId: string) {
       product: "Python",
       eolProduct: "python",
       version: "3.9",
+      eolCycle: "3.9",
       eolDate: at(60),
       eoasDate: null,
       latestVersion: "3.13",
@@ -304,6 +308,7 @@ async function ensureEndOfLifeStack(applicationId: string) {
       product: "Node.js",
       eolProduct: "nodejs",
       version: "20",
+      eolCycle: "20",
       eolDate: at(400),
       eoasDate: at(-30),
       latestVersion: "20.19.5",

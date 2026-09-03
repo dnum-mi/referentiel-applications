@@ -10,4 +10,5 @@ export class TechnologyStack {
   eolProduct?: string;
   eoasDate?: Date;
   latestVersion?: string;
+  eolCycle?: string;
 }
