@@ -1310,6 +1310,7 @@ erDiagram
   String(100) eolProduct "nullable"
   DateTime eoasDate "nullable"
   String(50) latestVersion "nullable"
+  String(50) eolCycle "nullable"
 }
 ```
 
@@ -1333,6 +1334,12 @@ Properties as follows:
 - `eolProduct`: Slug produit endoflife.date résolu (null + eolCheckedAt renseigné = produit non suivi)
 - `eoasDate`: Date de fin de support actif de la version (renseignée via endoflife.date)
 - `latestVersion`: Dernière version publiée du cycle correspondant (renseignée via endoflife.date)
+- `eolCycle`
+  > Nom du cycle endoflife.date apparié à la version (ex. « 20 », « 3.11 ») ;
+  > null si le produit n'est pas suivi, si la version ne désigne aucun cycle,
+  > ou si la ligne n'a jamais été vérifiée. Permet de distinguer « version non
+  > reconnue » (produit suivi, aucun cycle) de « aucune échéance publiée »
+  > (cycle apparié, dates absentes), que des dates nulles seules confondent.
 
 ## default
 

@@ -7,10 +7,29 @@ import {
   normalizeProductKey,
   parseEolInfo,
   resolveProductReleases,
+  type EndoflifeRelease,
   type EolResolution,
 } from "./utils/endoflife.utils";
 import { EOL_REFRESH_TTL_MS } from "./utils/eol-status";
 import { EolNotificationService } from "./eol-notification.service";
+
+/// Champs à écrire pour un produit résolu. Le cycle apparié est persisté sous
+/// `eolCycle` (#2449) : avec des dates nulles seules, la fiche ne distinguerait
+/// pas une version non reconnue (« MySQL 8 ») d'un cycle connu qui ne publie
+/// aucune échéance (Apache 2.4).
+function resolvedEolData(
+  slug: string,
+  releases: EndoflifeRelease[],
+  version: string | null,
+) {
+  const { cycle, ...info } = parseEolInfo(releases, version ?? "");
+  return {
+    eolProduct: slug,
+    ...info,
+    eolCycle: cycle,
+    eolCheckedAt: new Date(),
+  };
+}
 
 export interface EolRefreshResult {
   /** Lignes de stack périmées au démarrage du run. */
@@ -166,13 +185,14 @@ export class EolRefreshService {
                   eolDate: null,
                   eoasDate: null,
                   latestVersion: null,
+                  eolCycle: null,
                   eolCheckedAt: new Date(),
                 }
-              : {
-                  eolProduct: resolution.slug,
-                  ...parseEolInfo(resolution.releases, row.version ?? ""),
-                  eolCheckedAt: new Date(),
-                };
+              : resolvedEolData(
+                  resolution.slug,
+                  resolution.releases,
+                  row.version,
+                );
           // Best-effort ligne à ligne : une écriture en échec — ligne supprimée
           // entre-temps, par exemple — ne doit pas interrompre le run.
           const written = await this.prisma.technologyStack

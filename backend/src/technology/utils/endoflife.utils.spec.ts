@@ -195,11 +195,12 @@ describe("endoflife.utils", () => {
   });
 
   describe("parseEolInfo", () => {
-    it("extrait EOL, fin de support actif et dernière version du cycle", () => {
+    it("extrait EOL, fin de support actif, dernière version et cycle apparié", () => {
       expect(parseEolInfo(RELEASES, "24.1")).toEqual({
         eolDate: new Date("2028-04-30"),
         eoasDate: new Date("2026-10-20"),
         latestVersion: "24.5.0",
+        cycle: "24",
       });
     });
 
@@ -208,19 +209,33 @@ describe("endoflife.utils", () => {
         eolDate: new Date("2026-04-30"),
         eoasDate: null,
         latestVersion: null,
+        cycle: "20",
       });
     });
 
-    it("renvoie tout à null si la version ne correspond à aucun cycle", () => {
+    // #2449 : un cycle reconnu qui ne publie aucune échéance (Apache 2.4) garde son
+    // nom de cycle, seule trace qui le distingue d'une version non reconnue.
+    it("renvoie le cycle apparié même quand il ne publie aucune échéance", () => {
+      expect(parseEolInfo([{ name: "2.4" }], "2.4.58")).toEqual({
+        eolDate: null,
+        eoasDate: null,
+        latestVersion: null,
+        cycle: "2.4",
+      });
+    });
+
+    it("renvoie tout à null, cycle compris, si la version ne correspond à aucun cycle", () => {
       expect(parseEolInfo(RELEASES, "12.0")).toEqual({
         eolDate: null,
         eoasDate: null,
         latestVersion: null,
+        cycle: null,
       });
       expect(parseEolInfo(RELEASES, "")).toEqual({
         eolDate: null,
         eoasDate: null,
         latestVersion: null,
+        cycle: null,
       });
     });
   });

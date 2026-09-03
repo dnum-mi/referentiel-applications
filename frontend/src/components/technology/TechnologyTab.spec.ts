@@ -49,8 +49,23 @@ function makeTechnology(overrides: Partial<TechnologyDto> & Pick<TechnologyDto, 
     eolCheckedAt: null,
     eolProduct: null,
     latestVersion: null,
+    eolCycle: null,
     ...overrides,
   };
+}
+
+// Ligne vérifiée et résolue sur endoflife.date, sans échéance. Le « — » de la colonne
+// « Fin de vie » porte son propre data-testid : la colonne « Version » affiche le même
+// tiret quand la version manque, une assertion sur toute la ligne ne prouverait rien.
+function makeResolvedTechnology(overrides: Partial<TechnologyDto> & Pick<TechnologyDto, "id">): TechnologyDto {
+  return makeTechnology({
+    product: "MySQL",
+    version: "8",
+    docUrl: "https://dev.mysql.com/doc/",
+    eolCheckedAt: new Date("2026-09-01T00:00:00Z"),
+    eolProduct: "mysql",
+    ...overrides,
+  });
 }
 
 function renderWithTechnologies(technologies: TechnologyDto[]) {
@@ -113,6 +128,67 @@ describe("technologyTab — colonne « Fin de vie »", () => {
     expect(badge).toHaveTextContent("Fin de vie");
     expect(screen.queryByTestId("technology-eol-unchecked-t-eol")).not.toBeInTheDocument();
     expect(screen.queryByTestId("technology-eol-unknown-t-eol")).not.toBeInTheDocument();
+  });
+
+  // #2449 : produit suivi, version saisie, mais aucun cycle apparié (« MySQL 8 » : 8.0 ou 8.4 ?).
+  // Le backend n'écrit aucune date ; sans eolCycle la cellule affichait « — », comme un cycle
+  // connu sans échéance publiée, et rien n'invitait à préciser la saisie.
+  it("signale « Version non reconnue » quand le produit est suivi mais qu'aucun cycle n'est apparié", async () => {
+    renderWithTechnologies([makeResolvedTechnology({ id: "t-unrecognized", eolCycle: null })]);
+
+    const cell = await screen.findByTestId("technology-eol-unrecognized-t-unrecognized");
+
+    expect(cell).toBeVisible();
+    expect(cell).toHaveTextContent("Version non reconnue");
+    expect(cell).toHaveAttribute("title", expect.stringContaining("précisez-la"));
+    // Le complément est restitué hors title, pour le clavier et les lecteurs d'écran.
+    expect(cell).toHaveTextContent("précisez-la");
+    expect(screen.queryByTestId("technology-eol-unknown-t-unrecognized")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-unchecked-t-unrecognized")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-badge-t-unrecognized")).not.toBeInTheDocument();
+  });
+
+  it("affiche « — » quand le cycle est apparié mais ne publie aucune échéance", async () => {
+    renderWithTechnologies([
+      makeResolvedTechnology({
+        id: "t-nodate",
+        product: "Apache HTTP Server",
+        version: "2.4",
+        eolProduct: "apache-http-server",
+        eolCycle: "2.4",
+      }),
+    ]);
+
+    await screen.findByTestId("technology-table");
+
+    expect(screen.queryByTestId("technology-eol-unrecognized-t-nodate")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-unknown-t-nodate")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-unchecked-t-nodate")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-badge-t-nodate")).not.toBeInTheDocument();
+    expect(screen.getByTestId("technology-eol-none-t-nodate")).toHaveTextContent("—");
+  });
+
+  it("affiche « — » pour une ligne sans version, même sans cycle apparié", async () => {
+    renderWithTechnologies([makeResolvedTechnology({ id: "t-noversion", version: null, eolCycle: null })]);
+
+    await screen.findByTestId("technology-table");
+
+    expect(screen.queryByTestId("technology-eol-unrecognized-t-noversion")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-unknown-t-noversion")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-unchecked-t-noversion")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("technology-eol-badge-t-noversion")).not.toBeInTheDocument();
+    expect(screen.getByTestId("technology-eol-none-t-noversion")).toHaveTextContent("—");
+  });
+
+  // Ordre des conditions : une ligne qui porte un statut ou une date garde son badge, quel que
+  // soit eolCycle — c'est aussi le cas des lignes antérieures à la colonne, jamais recalculées.
+  it("garde le badge « Fin de vie » même sans cycle apparié quand une date est connue", async () => {
+    renderWithTechnologies([makeResolvedTechnology({ id: "t-legacy", eolCycle: null, eolDate: new Date("2020-01-01T00:00:00Z") })]);
+
+    const badge = await screen.findByTestId("technology-eol-badge-t-legacy");
+
+    expect(badge).toBeVisible();
+    expect(screen.queryByTestId("technology-eol-unrecognized-t-legacy")).not.toBeInTheDocument();
   });
 });
 
