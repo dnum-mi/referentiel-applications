@@ -83,7 +83,7 @@ test.describe("Pages transverses", () => {
     await notFound.clickHomeAndExpectCatalogue();
   });
 
-  test("TRV-08 - la page Fins de vie liste les applications concernées (#2236)", async ({
+  test("TRV-08 - la page Technologies liste les applications concernées (#2236)", async ({
     page,
     data,
   }) => {
@@ -104,8 +104,8 @@ test.describe("Pages transverses", () => {
     await endOfLife.filterByStatus("eol");
     await endOfLife.expectApplicationListed("QA-EOL", "Fin de vie");
 
-    // Le trajet qui donne son intérêt à la vue : de la liste vers l'onglet Stack
-    // technique de la fiche.
+    // Le trajet qui donne son intérêt à la vue : de la liste vers l'onglet
+    // Technologies de la fiche.
     await endOfLife.openApplicationTechnologyTab("QA-EOL");
   });
 });

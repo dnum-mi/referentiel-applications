@@ -129,7 +129,8 @@ const baseNavItems = [
   { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
   { to: { name: routeNames.TIMEPAGE }, text: "Time" },
   { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
-  { to: { name: routeNames.ENDOFLIFE }, text: "Fins de vie" },
+  // #2413 : l'entrée s'intitule « Technologies » (demande PO) ; la route reste `/fins-de-vie`.
+  { to: { name: routeNames.ENDOFLIFE }, text: "Technologies" },
   { to: { name: routeNames.REPORTS }, text: "Signalements" },
   { to: { name: routeNames.HISTORY }, text: "Modifications" },
 ];

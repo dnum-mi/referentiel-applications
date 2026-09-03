@@ -109,13 +109,13 @@
   recherche ; ce cas vérifie uniquement le trajet clic (fiche) → navigation (URL avec le bon
   paramètre tag).
 
-### FIC-22 — Onglet Technologie masqué sans droits Technologie ✅
+### FIC-22 — Onglet Technologies masqué sans droits Technologie ✅
 
 - **Datafeature** : application de test jetable (l'utilisateur `user` n'y est pas acteur : ni
   matrice ni rôle projeté, seul le socle global s'applique) ; rôle de `user` posé à Visiteur,
   restauré Lecteur en fin de test.
 - **Action** : connecté en `user` (Visiteur), ouvrir la fiche ; puis repasser Lecteur et recharger.
-- **Résultat attendu** : en Visiteur, l'onglet **Technologie** n'est pas rendu du tout (le
+- **Résultat attendu** : en Visiteur, l'onglet **Technologies** n'est pas rendu du tout (le
   bouton d'onglet est absent) alors que « Informations générales » reste visible ; en Lecteur,
   l'onglet réapparaît via la projection de rôle par application. Défait la « lecture pour tous »
   de #2027 — l'onglet suit désormais les droits comme les autres onglets (cf. #2088).

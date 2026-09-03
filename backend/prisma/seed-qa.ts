@@ -278,10 +278,13 @@ async function ensureEndOfLifeStack(applicationId: string) {
   const now = Date.now();
   const at = (offsetDays: number) => new Date(now + offsetDays * day);
 
+  // `eolProduct` porte le slug endoflife.date tel que la résolution réelle l'écrirait
+  // (« nodejs », pas « node.js ») : la fixture doit ressembler à une ligne résolue.
   const entries = [
     {
       technology: "Base de données",
       product: "PostgreSQL",
+      eolProduct: "postgresql",
       version: "13",
       eolDate: at(-120),
       eoasDate: at(-400),
@@ -290,6 +293,7 @@ async function ensureEndOfLifeStack(applicationId: string) {
     {
       technology: "Langage",
       product: "Python",
+      eolProduct: "python",
       version: "3.9",
       eolDate: at(60),
       eoasDate: null,
@@ -298,6 +302,7 @@ async function ensureEndOfLifeStack(applicationId: string) {
     {
       technology: "Runtime",
       product: "Node.js",
+      eolProduct: "nodejs",
       version: "20",
       eolDate: at(400),
       eoasDate: at(-30),
@@ -309,7 +314,6 @@ async function ensureEndOfLifeStack(applicationId: string) {
     const data = {
       applicationId,
       ...entry,
-      eolProduct: entry.product.toLowerCase(),
       eolCheckedAt: new Date(now),
     };
     await prisma.technologyStack.upsert({

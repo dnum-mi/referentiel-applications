@@ -119,7 +119,8 @@ const routes = [
     name: routeNames.ENDOFLIFE,
     path: "/fins-de-vie",
     component: () => import("@/views/EndOfLifePage.vue"),
-    meta: { requiresAuth: true, title: "Suivi des fins de vie - Référentiel des applications" },
+    // #2413 : titre aligné sur l'entrée de menu « Technologies » ; le plan du site en dérive son libellé.
+    meta: { requiresAuth: true, title: "Technologies - Référentiel des applications" },
   },
   {
     name: routeNames.TIMEPAGE,

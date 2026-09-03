@@ -93,6 +93,12 @@ describe("EndOfLifePage", () => {
     });
   });
 
+  // #2413 : le titre de la page reprend l'entrée de menu « Technologies ».
+  it("s'intitule « Technologies », comme l'entrée de menu", () => {
+    render_();
+    expect(screen.getByTestId("end-of-life-page-title")).toHaveTextContent("Technologies");
+  });
+
   it("affiche l'application, ses organisations et sa technologie concernée", async () => {
     storeMock.applications.value = [applicationFixture()];
     storeMock.total.value = 1;
@@ -109,7 +115,7 @@ describe("EndOfLifePage", () => {
     expect(screen.getByTestId("end-of-life-badge-tech-1")).toHaveTextContent("Fin de vie");
   });
 
-  it("renvoie vers l'onglet Stack technique de la fiche", async () => {
+  it("renvoie vers l'onglet Technologies de la fiche", async () => {
     storeMock.applications.value = [applicationFixture()];
     storeMock.total.value = 1;
 
