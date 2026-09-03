@@ -39,9 +39,12 @@ const columns: TableColumn[] = [
   { field: "Actions", header: "Actions", sortable: false },
 ];
 
+// Date calendaire sans heure, stockée à minuit UTC (endoflife.date comme saisie
+// manuelle) : formatée en UTC, sinon un navigateur à l'ouest de Greenwich (Antilles,
+// Guyane) afficherait la veille de la date saisie.
 function formatEol(value?: string | Date | null): string {
   if (!value) return "";
-  return new Date(value).toLocaleDateString("fr-FR");
+  return new Date(value).toLocaleDateString("fr-FR", { timeZone: "UTC" });
 }
 
 // Fin de vie « proche » : dans moins de 6 mois.
@@ -61,6 +64,11 @@ function computeEolStatus(techno: TechnologyDto): EolStatus {
 
 const tableRows = computed(() =>
   technologies.value.map((techno) => {
+    // Date saisie à la main (#2454) : elle porte eolProduct null et eolCheckedAt renseigné,
+    // exactement comme un produit non suivi. Sans cette garde, une ligne manuelle privée
+    // de date (état théorique) tomberait dans « Produit non suivi » ; avec elle, aucun des
+    // trois états d'erreur d'endoflife.date ne s'applique à une saisie humaine.
+    const manualEol = techno.eolSource === "manual";
     return {
       id: techno.id,
       Technologie: techno.technology,
@@ -69,19 +77,21 @@ const tableRows = computed(() =>
       Documentation: techno.docUrl || "",
       FinDeVie: formatEol(techno.eolDate),
       eolStatus: computeEolStatus(techno),
+      manualEol,
       // eolCheckedAt renseigné + eolProduct null = produit non suivi par endoflife.date
-      unknownProduct: Boolean(techno.eolCheckedAt) && !techno.eolProduct,
+      unknownProduct: !manualEol && Boolean(techno.eolCheckedAt) && !techno.eolProduct,
       // eolCheckedAt null = la fin de vie n'a jamais pu être vérifiée (endoflife.date
       // injoignable ou ligne jamais résolue). Le backend n'écrit rien dans ce cas pour ne
       // pas écraser une donnée valide : sans ce drapeau, la cellule affichait « — » comme
       // pour une technologie sans échéance publiée, et l'absence passait pour un bug.
-      unchecked: !techno.eolCheckedAt,
+      unchecked: !manualEol && !techno.eolCheckedAt,
       // Vérifiée, produit suivi, version saisie, mais aucun cycle apparié (#2449) : la
       // version est trop imprécise pour endoflife.date (« 8 » quand les cycles sont 8.0
       // et 8.4). Sans ce drapeau la ligne affichait « — », comme un cycle connu qui ne
       // publie aucune échéance (Apache 2.4), et l'absence de date passait pour normale.
       // Sans version saisie, il n'y a rien à reconnaître : la ligne reste « — ».
-      unrecognizedVersion: Boolean(techno.eolCheckedAt) && Boolean(techno.eolProduct) && Boolean(techno.version) && !techno.eolCycle,
+      unrecognizedVersion:
+        !manualEol && Boolean(techno.eolCheckedAt) && Boolean(techno.eolProduct) && Boolean(techno.version) && !techno.eolCycle,
       latestVersion: techno.version && techno.latestVersion && techno.latestVersion !== techno.version ? techno.latestVersion : null,
       Actions: {
         edit: () => technologyModal.openModal(techno),
@@ -126,6 +136,7 @@ async function handleSave(technology: {
   product: string;
   version?: string | null;
   docUrl?: string | null;
+  manualEolDate?: string | null;
 }) {
   loading.value = true;
   technologyModal.closeModal();
@@ -134,6 +145,9 @@ async function handleSave(technology: {
     product: technology.product,
     version: technology.version,
     docUrl: technology.docUrl,
+    // Transmis seulement quand le formulaire a proposé le champ (#2454) : absent, le
+    // backend ne touche pas à la fin de vie ; `null` efface une saisie manuelle.
+    ...(technology.manualEolDate !== undefined ? { manualEolDate: technology.manualEolDate } : {}),
   };
   try {
     if (technology.id) {
@@ -307,6 +321,18 @@ function cancelDelete() {
         >
       </span>
       <span v-else :data-testid="`technology-eol-none-${data.id}`">—</span>
+      <!--
+        Date saisie à la main (#2454) : la ligne garde son badge et sa date, seule l'origine
+        est signalée — même complément sr-only que ci-dessus, le title n'étant pas restitué.
+      -->
+      <span
+        v-if="data.manualEol"
+        class="fr-hint-text"
+        title="Date renseignée à la main, non vérifiée auprès d’endoflife.date"
+        :data-testid="`technology-eol-manual-${data.id}`"
+      >
+        saisie manuelle<span class="fr-sr-only"> : date renseignée à la main, non vérifiée auprès d’endoflife.date</span>
+      </span>
     </template>
 
     <template #body-Actions="{ data }">

@@ -284,4 +284,45 @@ test.describe("Fiche application", () => {
       await data.resetUser(USER_EMAIL);
     }
   });
+
+  // FIC-23 (#2454) — fin de vie saisie à la main quand endoflife.date ne peut pas répondre : le
+  // champ n'apparaît que pour un produit hors catalogue (ou catalogue indisponible), et la ligne
+  // créée garde son badge en signalant « saisie manuelle », sans état d'erreur. Application
+  // jetable + suppression de la ligne en `finally` : rien ne doit rester, même en cas d'échec.
+  test("FIC-23 - onglet Technologies : fin de vie saisie à la main pour un produit inconnu d'endoflife.date", async ({
+    page,
+    data,
+  }) => {
+    // `admin` (datafeature) porte TechnologyWrite sur toute fiche.
+    const app = await data.createTestApplication(`E2E-FIC23-${Date.now()}`);
+    // Horodaté : aucun risque de rencontrer un produit du catalogue endoflife.date.
+    const product = `Outil-E2E-${Date.now()}`;
+    // J+30 → « Fin de vie proche », quel que soit le jour d'exécution.
+    const eolDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+
+    const fiche = new ApplicationPage(page);
+    let created = false;
+    try {
+      await fiche.open(app.id, "tab-technologies");
+      await fiche.expectTechnologiesTabLoaded();
+      await fiche.addTechnologyWithManualEol(
+        "Logiciel interne",
+        product,
+        "2",
+        eolDate,
+      );
+      created = true;
+      await fiche.expectTechnologyManualEol(product, "Fin de vie proche");
+    } finally {
+      try {
+        // Suppression par l'IHM dès que la ligne existe, même si une assertion a échoué.
+        if (created) await fiche.deleteTechnology(product);
+      } finally {
+        // L'application jetable emporte en cascade ce qui aurait pu rester.
+        await data.removeApplication(app.id);
+      }
+    }
+  });
 });

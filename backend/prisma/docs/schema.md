@@ -1311,6 +1311,7 @@ erDiagram
   DateTime eoasDate "nullable"
   String(50) latestVersion "nullable"
   String(50) eolCycle "nullable"
+  TechnologyEolSource eolSource
 }
 ```
 
@@ -1340,6 +1341,9 @@ Properties as follows:
   > ou si la ligne n'a jamais été vérifiée. Permet de distinguer « version non
   > reconnue » (produit suivi, aucun cycle) de « aucune échéance publiée »
   > (cycle apparié, dates absentes), que des dates nulles seules confondent.
+- `eolSource`
+  > Origine de la fin de vie (#2454) : `manual` protège la ligne de tout recalcul automatique
+  > (lecture paresseuse et cron l'ignorent) ; ses champs endoflife.date sont alors nuls.
 
 ## default
 

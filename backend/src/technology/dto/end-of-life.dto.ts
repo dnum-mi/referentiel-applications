@@ -1,5 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsDateString, IsIn, IsOptional, IsString } from "class-validator";
+import { TechnologyEolSource } from "@prisma/client";
+import {
+  IsDateString,
+  IsEnum,
+  IsIn,
+  IsOptional,
+  IsString,
+} from "class-validator";
 import { PaginationDto } from "src/common/dto";
 import { EOL_STATUSES, type EolStatus } from "../utils/eol-status";
 
@@ -75,6 +82,15 @@ export class EndOfLifeTechnologyDto {
   @IsOptional()
   @IsString()
   latestVersion?: string | null;
+
+  @ApiProperty({
+    description:
+      "Origine de la date : calculée via endoflife.date, ou saisie à la main quand endoflife.date ne pouvait pas répondre (#2454).",
+    enum: TechnologyEolSource,
+    enumName: "TechnologyEolSource",
+  })
+  @IsEnum(TechnologyEolSource)
+  eolSource: TechnologyEolSource;
 
   @ApiProperty({
     description:

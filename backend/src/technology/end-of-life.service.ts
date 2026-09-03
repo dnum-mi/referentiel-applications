@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { Prisma, type TechnologyEolSource } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { PaginatedResponseDto } from "src/common/dto";
 import {
@@ -134,6 +134,7 @@ export class EndOfLifeService {
         eolDate: Date | null;
         eoasDate: Date | null;
         latestVersion: string | null;
+        eolSource: TechnologyEolSource;
       }[];
       actors: { organization: { path: string } | null }[];
     },
@@ -152,6 +153,9 @@ export class EndOfLifeService {
           eolDate: technology.eolDate?.toISOString() ?? null,
           eoasDate: technology.eoasDate?.toISOString() ?? null,
           latestVersion: technology.latestVersion,
+          // L'origine est restituée telle quelle : la vue signale « saisie manuelle »
+          // sans changer le classement, une date manuelle valant une date calculée.
+          eolSource: technology.eolSource,
           status,
         } satisfies EndOfLifeTechnologyDto;
       })

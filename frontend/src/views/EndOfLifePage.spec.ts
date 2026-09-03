@@ -58,6 +58,7 @@ function applicationFixture(overrides: Partial<EndOfLifeApplicationDto> = {}): E
         eolDate: new Date(Date.now() - 10 * day) as unknown as Date,
         eoasDate: null,
         latestVersion: "15.5",
+        eolSource: "endoflife",
         status: "eol",
       },
     ],
@@ -113,6 +114,38 @@ describe("EndOfLifePage", () => {
     expect(table).toHaveTextContent("MI/DNUM");
     expect(table).toHaveTextContent("PostgreSQL 13");
     expect(screen.getByTestId("end-of-life-badge-tech-1")).toHaveTextContent("Fin de vie");
+  });
+
+  // #2454 : une date saisie à la main est classée comme une date calculée ; la vue signale
+  // seulement son origine, complément sr-only compris (le title n'est pas restitué au clavier).
+  it("signale « saisie manuelle » à côté d'une date renseignée à la main", async () => {
+    storeMock.applications.value = [
+      applicationFixture({
+        worstStatus: "eol-soon",
+        technologies: [
+          {
+            id: "tech-manual",
+            technology: "Logiciel interne",
+            product: "Outil maison",
+            version: "2",
+            eolDate: new Date(Date.now() + 30 * day) as unknown as Date,
+            eoasDate: null,
+            latestVersion: null,
+            eolSource: "manual",
+            status: "eol-soon",
+          },
+        ],
+      }),
+    ];
+    storeMock.total.value = 1;
+
+    render_();
+
+    expect(await screen.findByTestId("end-of-life-badge-tech-manual")).toHaveTextContent("Fin de vie proche");
+    const mention = screen.getByTestId("end-of-life-manual-tech-manual");
+    expect(mention).toHaveTextContent("saisie manuelle");
+    expect(mention).toHaveTextContent("renseignée à la main");
+    expect(screen.queryByTestId("end-of-life-manual-tech-1")).not.toBeInTheDocument();
   });
 
   it("renvoie vers l'onglet Technologies de la fiche", async () => {
@@ -200,6 +233,7 @@ describe("EndOfLifePage", () => {
             eolDate: new Date(Date.now() + 400 * day) as unknown as Date,
             eoasDate: new Date(Date.now() - day) as unknown as Date,
             latestVersion: "20.19.5",
+            eolSource: "endoflife",
             status: "eoas-passed",
           },
         ],

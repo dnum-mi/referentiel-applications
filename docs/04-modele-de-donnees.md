@@ -63,6 +63,7 @@ Les domaines sont les suivants :
 | `tag.prisma`                 | `Tag`                                                                                 | —                                                              |
 | `externals.prisma`           | `ExternalRessource`                                                                   | `ExternalRessourceType`                                        |
 | `technical-debt-info.prisma` | `TechnicalDebtInfo`                                                                   | —                                                              |
+| `technology.prisma`          | `TechnologyStack`                                                                     | `TechnologyEolSource`                                          |
 | `report.prisma`              | `Report`, `ReportHistory`                                                             | `ReportStatus`                                                 |
 | `notification-log.prisma`    | `NotificationLog`                                                                     | —                                                              |
 | `notification.prisma`        | `Notification`                                                                        | `NotificationType`                                             |

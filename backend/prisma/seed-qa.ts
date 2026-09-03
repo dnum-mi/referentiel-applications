@@ -1,4 +1,9 @@
-import { PrismaClient, Roles, priorityRestart } from "@prisma/client";
+import {
+  PrismaClient,
+  Roles,
+  TechnologyEolSource,
+  priorityRestart,
+} from "@prisma/client";
 
 /**
  * Seed QA — fixtures déterministes et idempotentes pour la non-régression e2e (#1825, Lot 2 :
@@ -263,7 +268,9 @@ async function seedQa() {
 
 /**
  * Trois lignes de stack couvrant les trois statuts de la vue transverse (#2236) : fin de vie
- * dépassée, proche (moins de 6 mois), et sortie du seul support actif.
+ * dépassée, proche (moins de 6 mois), et sortie du seul support actif — plus une quatrième dont
+ * la fin de vie a été saisie à la main (#2454), pour que la fiche, la vue transverse et les e2e
+ * voient la mention « saisie manuelle ».
  *
  * Les dates sont RELATIVES à l'exécution du seed, pour que les fixtures gardent leur statut au fil
  * du temps — des dates en dur finiraient toutes « dépassées » et le cas « proche » ne serait plus
@@ -313,11 +320,28 @@ async function ensureEndOfLifeStack(applicationId: string) {
       eoasDate: at(-30),
       latestVersion: "20.19.5",
     },
+    // Fin de vie saisie à la main (#2454) pour un logiciel interne inconnu d'endoflife.date,
+    // telle que le service la persiste : `eolProduct` et `eolCycle` nuls, `eolSource` manuel —
+    // c'est cette origine, et non le TTL, qui la soustrait au rafraîchissement paresseux et au cron.
+    {
+      technology: "Logiciel interne",
+      product: "Outil maison",
+      eolProduct: null,
+      version: "2",
+      eolCycle: null,
+      eolDate: at(30),
+      eoasDate: null,
+      latestVersion: null,
+      eolSource: TechnologyEolSource.manual,
+    },
   ];
 
   for (const entry of entries) {
     const data = {
       applicationId,
+      // Les trois lignes automatiques repassent explicitement à `endoflife` : le seed est
+      // idempotent et doit défaire une saisie manuelle faite à la main sur la fixture.
+      eolSource: TechnologyEolSource.endoflife,
       ...entry,
       eolCheckedAt: new Date(now),
     };

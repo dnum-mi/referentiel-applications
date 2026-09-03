@@ -10361,6 +10361,14 @@ components:
           description: Message d'erreur en cas de conflit
       required:
         - message
+    TechnologyEolSource:
+      type: string
+      enum:
+        - endoflife
+        - manual
+      description: "Origine de la fin de vie : `endoflife` = calculée via
+        endoflife.date (rafraîchie par TTL et par le cron), `manual` = saisie à
+        la main, jamais recalculée automatiquement"
     TechnologyDto:
       type: object
       properties:
@@ -10430,11 +10438,19 @@ components:
           description: Nom du cycle endoflife.date apparié à la version (null si le
             produit n'est pas suivi, si la version ne désigne aucun cycle connu,
             ou si la ligne n'a jamais été vérifiée)
+        eolSource:
+          example: endoflife
+          description: "Origine de la fin de vie : `endoflife` = calculée via
+            endoflife.date (rafraîchie par TTL et par le cron), `manual` =
+            saisie à la main, jamais recalculée automatiquement"
+          allOf:
+            - $ref: "#/components/schemas/TechnologyEolSource"
       required:
         - technology
         - product
         - id
         - applicationId
+        - eolSource
     EolProductDto:
       type: object
       properties:
@@ -10486,6 +10502,16 @@ components:
           format: uri
           example: https://www.postgresql.org/docs/
           description: Lien documentaire (URL) associé au produit
+        manualEolDate:
+          type: string
+          nullable: true
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          example: 2027-06-30
+          description: Date de fin de vie saisie à la main (AAAA-MM-JJ), réservée aux cas
+            où endoflife.date ne peut pas répondre (produit non suivi, service
+            injoignable). Elle prime sur le calcul automatique, qui ne l'écrase
+            jamais. `null` efface la saisie et rend la main à l'automatique ;
+            absent = fin de vie inchangée.
       required:
         - technology
         - product
@@ -10517,6 +10543,11 @@ components:
           type: string
           nullable: true
           example: "15.5"
+        eolSource:
+          description: "Origine de la date : calculée via endoflife.date, ou saisie à la
+            main quand endoflife.date ne pouvait pas répondre (#2454)."
+          allOf:
+            - $ref: "#/components/schemas/TechnologyEolSource"
         status:
           enum: &a49
             - eol
@@ -10529,6 +10560,7 @@ components:
         - id
         - technology
         - product
+        - eolSource
         - status
     EndOfLifeApplicationDto:
       type: object

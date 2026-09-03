@@ -64,7 +64,7 @@ Le présent document a été rédigé en confrontant la vue produit aux sources 
 
 ## 2. Fiche application
 
-La fiche regroupe toutes les informations d'une application sous forme d'onglets. La page de fiche (`ApplicationPage.vue`) délègue au composant `ApplicationOverview.vue`, qui assemble les onglets suivants : **Informations générales**, **Sources de données**, **Liens**, **Conformités**, **Acteurs**, **Relations**, **Statuts**, **Signalements**, **Modifications** (historique) et **Qualité**. L'affichage de chaque onglet dépend des droits renvoyés par `GET /applications/:applicationId/my-perms`.
+La fiche regroupe toutes les informations d'une application sous forme d'onglets. La page de fiche (`ApplicationPage.vue`) délègue au composant `ApplicationOverview.vue`, qui assemble les onglets suivants : **Informations générales**, **Sources de données**, **Liens**, **Conformités**, **Acteurs**, **Technologies**, **Relations**, **Statuts**, **Signalements**, **Modifications** (historique) et **Qualité**. L'affichage de chaque onglet dépend des droits renvoyés par `GET /applications/:applicationId/my-perms`.
 
 La création d'une fiche se fait via `CreateApplicationPage.vue` (`POST /applications`, permission `CreateApplication`). La modification passe par `PATCH /applications/:applicationId` (permissions `AppWrite` ou `AppWritePriority`).
 
@@ -147,6 +147,16 @@ La corrélation (« est corrélée à ») signale un **doublon potentiel** ou un
 **Où c'est dans le code.** Onglet `tab-data` → `frontend/src/components/data-application/DataApplicationTab.vue` ; module back `backend/src/data-catalog/` (schéma `data.prisma`).
 
 **Permission.** Gestion réservée aux contributeurs et administrateurs (`AppWrite`).
+
+### 2.9 Technologies
+
+**Ce que ça fait.** Déclare la stack technique d'une application : une ligne par couple technologie/produit (famille, produit, version, lien documentaire). La fin de vie de chaque ligne est calculée automatiquement via endoflife.date (cf. [7.3](#73-suivi-des-fins-de-vie)) : badges « Fin de vie », « Fin de vie proche », « Support actif terminé », et états explicites quand le calcul ne peut pas répondre (« Produit non suivi », « Non vérifiée », « Version non reconnue »).
+
+**Saisie manuelle de la fin de vie (#2454).** Quand endoflife.date ne suit pas le produit (logiciel interne, éditeur absent du catalogue) ou est injoignable, le formulaire propose un champ « Fin de vie (saisie manuelle) ». Il n'apparaît que dans ces cas — catalogue indisponible, produit hors catalogue, ligne déjà manuelle, ou ligne existante sans échéance automatique (vérifiée sans résultat ou jamais vérifiée, état « Non vérifiée ») ; sinon la date calculée est seulement rappelée en lecture seule. La date saisie est persistée avec son origine (`eolSource = manual`) et **prime sur l'automatique** : ni le rafraîchissement paresseux ni le recalcul planifié ne la réécrivent, et un changement de produit ou de version ne la détruit pas. Effacer le champ rend la main au calcul, relancé aussitôt. La fiche et la vue transverse signalent l'origine (« saisie manuelle ») ; statuts et alertes s'appliquent à l'identique. Saisie et effacement sont journalisés dans l'onglet Modifications (« fin de vie », « origine de la fin de vie »).
+
+**Où c'est dans le code.** Onglet `tab-technologies` → `frontend/src/components/technology/TechnologyTab.vue` et `TechnologyForm.vue` ; module back `backend/src/technology/` (schéma `technology.prisma`, énumération `TechnologyEolSource`).
+
+**Permission.** Lecture : `TechnologyRead`. Écriture : `TechnologyWrite`.
 
 ## 3. Indice de Qualité (IQ)
 
@@ -277,6 +287,8 @@ Les trois statuts **partitionnent** la liste : une technologie déjà en fin de 
 - **globalement**, par le cron `EolRefreshService` (3 h du matin, `TECHNOLOGY_EOL_CRON_ENABLED`). Sans lui, une application que personne ne consulte ne serait jamais recalculée — précisément celle qu'une vue transverse doit signaler.
 
 Le cron ne résout qu'**une fois par produit distinct** pour tout le run, et n'écrit rien lorsqu'endoflife.date ne répond pas : écraser une date valide par `null` et réarmer le TTL figerait la ligne une semaine sur une donnée non vérifiée.
+
+Les lignes dont la fin de vie a été **saisie à la main** (`eolSource = manual`, #2454, cf. [2.9](#29-technologies)) sont exclues des deux rafraîchissements : la date d'un humain prime sur le calcul et n'est jamais réécrite ; seul l'effacement de la saisie rend la main à l'automatique. La vue les classe comme les autres et signale leur origine (« saisie manuelle »).
 
 **Résolution du produit et de la version.** Le produit saisi librement est rapporté à un slug endoflife.date via le catalogue (noms, libellés, alias officiels), complété d'alias internes pour les saisies courantes que le catalogue ne couvre pas (« SQL Server », « .NET », « Postgres », « Java » → Oracle JDK, « OpenJDK » → Eclipse Temurin). La version est ensuite rapportée à un cycle de release, dans l'ordre : nom de cycle exact ou préfixe (« 20.11 » → 20), major seul si un unique cycle le porte (« 9 » → Tomcat 9.0), libellé commercial (« 2019 » → SQL Server 15.0), nom de code (« bookworm » → Debian 12). Un préfixe « v » est ignoré. Une version trop imprécise pour désigner un cycle (« Python 3 », « MySQL 8 » dont 8.0 et 8.4 n'ont pas la même échéance) ne reçoit **aucune date** : mieux vaut rien qu'une échéance empruntée à un autre cycle. Le cycle apparié est persisté (`eolCycle`, #2449) : produit suivi, version saisie mais aucun cycle apparié, la fiche affiche **« Version non reconnue »** et invite à préciser la saisie, là où un cycle connu sans échéance publiée (Apache 2.4) reste à « — » — des dates nulles seules ne distinguaient pas les deux.
 

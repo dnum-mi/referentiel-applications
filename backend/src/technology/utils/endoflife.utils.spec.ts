@@ -8,6 +8,7 @@ import {
   parseEolDate,
   parseEolInfo,
   toEndoflifeProduct,
+  withInternalAliases,
 } from "./endoflife.utils";
 
 const RELEASES: EndoflifeRelease[] = [
@@ -106,6 +107,39 @@ describe("endoflife.utils", () => {
     it("renvoie null pour un produit absent du catalogue", () => {
       expect(lookupProductSlug(index, "Logiciel Interne Maison")).toBeNull();
       expect(lookupProductSlug(index, "")).toBeNull();
+    });
+  });
+
+  describe("withInternalAliases", () => {
+    it("ajoute les alias internes au produit cible, sans doublon ni mutation", () => {
+      const catalog: EndoflifeProduct[] = [
+        {
+          name: "oracle-jdk",
+          label: "Oracle JDK",
+          category: "lang",
+          aliases: ["oracle-java"],
+        },
+        {
+          name: "postgresql",
+          label: "PostgreSQL",
+          category: "db",
+          aliases: ["postgres"],
+        },
+        { name: "nodejs", label: "Node.js", category: "lang", aliases: [] },
+      ];
+      const served = withInternalAliases(catalog);
+      // « Java » et « JDK » deviennent connus du formulaire, comme du backend.
+      expect(served[0].aliases).toEqual(["oracle-java", "java", "jdk"]);
+      // « postgres » figure déjà dans le catalogue : pas de doublon.
+      expect(served[1].aliases).toEqual(["postgres"]);
+      // Produit sans alias interne : même objet, non copié.
+      expect(served[2]).toBe(catalog[2]);
+      // Le catalogue d'origine (mis en cache) n'est pas modifié.
+      expect(catalog[0].aliases).toEqual(["oracle-java"]);
+    });
+
+    it("ignore un alias dont le produit cible est absent du catalogue", () => {
+      expect(withInternalAliases([])).toEqual([]);
     });
   });
 

@@ -88,6 +88,7 @@ describe("EndOfLifeService — restitution", () => {
         eolDate: far,
         eoasDate: past,
         latestVersion: "20.19.5",
+        eolSource: "endoflife",
       },
       {
         id: "t-eol",
@@ -97,15 +98,17 @@ describe("EndOfLifeService — restitution", () => {
         eolDate: past,
         eoasDate: null,
         latestVersion: "15.5",
+        eolSource: "endoflife",
       },
       {
         id: "t-soon",
-        technology: "Langage",
-        product: "Python",
-        version: "3.9",
+        technology: "Logiciel interne",
+        product: "Outil maison",
+        version: "2",
         eolDate: soon,
         eoasDate: null,
-        latestVersion: "3.13",
+        latestVersion: null,
+        eolSource: "manual",
       },
     ],
     actors: [
@@ -139,6 +142,17 @@ describe("EndOfLifeService — restitution", () => {
 
   it("expose le statut le plus grave comme synthèse", async () => {
     expect((await run()).worstStatus).toBe("eol");
+  });
+
+  // #2454 : une date saisie à la main est classée comme une date calculée ; seule son
+  // origine est restituée, pour que la vue puisse la signaler.
+  it("restitue l'origine de chaque date sans changer le classement", async () => {
+    const result = await run();
+    expect(result.technologies.map((t) => t.eolSource)).toEqual([
+      "endoflife",
+      "manual",
+      "endoflife",
+    ]);
   });
 
   // Les organisations viennent des acteurs : plusieurs acteurs partagent

@@ -118,9 +118,11 @@ function clearFilters() {
   searchFilter.value = "";
 }
 
+// Date calendaire stockée à minuit UTC : formatée en UTC pour afficher le même jour
+// que la fiche, quel que soit le fuseau du navigateur.
 function formatDate(value?: string | Date | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString("fr-FR");
+  return new Date(value).toLocaleDateString("fr-FR", { timeZone: "UTC" });
 }
 
 /** Résumé lisible d'une technologie : « PostgreSQL 13 » plutôt que deux colonnes. */
@@ -150,7 +152,7 @@ onMounted(fetchApplications);
     <h1 data-testid="end-of-life-page-title">Technologies</h1>
     <p class="fr-text--sm fr-mb-3w">
       Suivi des fins de vie des technologies : applications dont au moins une technologie est en fin de vie, le sera dans moins de 6 mois,
-      ou n'est plus couverte par le support actif. Les dates proviennent d'endoflife.date.
+      ou n'est plus couverte par le support actif. Les dates proviennent d'endoflife.date, sauf mention « saisie manuelle ».
     </p>
 
     <form class="fr-mb-3w" @submit.prevent="onFilterChange">
@@ -248,6 +250,15 @@ onMounted(fetchApplications);
                 </template>
                 <template v-else>fin de vie le {{ formatDate(technology.eolDate) }}</template>
                 <template v-if="technology.latestVersion"> — dernière version : {{ technology.latestVersion }} </template>
+              </span>
+              <!-- #2454 : l'origine est signalée, le classement reste celui d'une date calculée. -->
+              <span
+                v-if="technology.eolSource === 'manual'"
+                class="fr-text--xs fr-ml-1w"
+                title="Date renseignée à la main, non vérifiée auprès d’endoflife.date"
+                :data-testid="`end-of-life-manual-${technology.id}`"
+              >
+                (saisie manuelle<span class="fr-sr-only"> : date renseignée à la main, non vérifiée auprès d’endoflife.date</span>)
               </span>
             </li>
           </ul>
