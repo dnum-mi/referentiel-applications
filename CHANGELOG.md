@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.90.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.89.0...v1.90.0) (2026-09-03)
+
+
+### Features
+
+* refacto admin panel view ([#2444](https://github.com/dnum-mi/referentiel-applications/issues/2444)) ([ca96150](https://github.com/dnum-mi/referentiel-applications/commit/ca9615027859541c27d7b59240954457ebc57aa0))
+* send notification even if email are disabled ([#2443](https://github.com/dnum-mi/referentiel-applications/issues/2443)) ([2f0d039](https://github.com/dnum-mi/referentiel-applications/commit/2f0d0397b1d7e43d63cc496ea66b2d29393ebb4b))
+* **technology:** flag versions endoflife.date does not recognise on the stack tab ([#2451](https://github.com/dnum-mi/referentiel-applications/issues/2451)) ([2d877d6](https://github.com/dnum-mi/referentiel-applications/commit/2d877d6fc35e00bf8e7bc4c8dfdc1def39f7506b))
+* **technology:** let managers set the end of life by hand when endoflife.date cannot ([#2455](https://github.com/dnum-mi/referentiel-applications/issues/2455)) ([b9e918e](https://github.com/dnum-mi/referentiel-applications/commit/b9e918e373a261ee349ba16db4996ce6bc4db1c1))
+* upgrade campagn of iq ([#2439](https://github.com/dnum-mi/referentiel-applications/issues/2439)) ([01729d8](https://github.com/dnum-mi/referentiel-applications/commit/01729d8b83e812e54a4cca5f1c0c6ef549bba9fb))
+
+
+### Bug Fixes
+
+* **compliances:** route the EcoIndex scan through the enterprise proxy ([#2450](https://github.com/dnum-mi/referentiel-applications/issues/2450)) ([86711e3](https://github.com/dnum-mi/referentiel-applications/commit/86711e3a9c8790a9ec4ada5a239fd60b7b1d34c3))
+* correct relation editing from the target application's page ([#2385](https://github.com/dnum-mi/referentiel-applications/issues/2385)) ([#2405](https://github.com/dnum-mi/referentiel-applications/issues/2405)) ([9487861](https://github.com/dnum-mi/referentiel-applications/commit/9487861796abd5fee55e0bae93ef528ee0e0fd75))
+* post validation anti-spam only when a channel actually notified ([#2378](https://github.com/dnum-mi/referentiel-applications/issues/2378)) ([#2402](https://github.com/dnum-mi/referentiel-applications/issues/2402)) ([dcbdaae](https://github.com/dnum-mi/referentiel-applications/commit/dcbdaae54ae10113bc9492200f5736b68c89faf8))
+* regenerate OpenAPI contract with action-logs and impersonation fields ([#2414](https://github.com/dnum-mi/referentiel-applications/issues/2414)) ([5166d3c](https://github.com/dnum-mi/referentiel-applications/commit/5166d3cb5d1d2170bf96d9807e02edd5e82b4590))
+* **technology:** end-of-life resolution behind the proxy, strict matching, "Technologies" ([#2413](https://github.com/dnum-mi/referentiel-applications/issues/2413)) ([#2448](https://github.com/dnum-mi/referentiel-applications/issues/2448)) ([287f061](https://github.com/dnum-mi/referentiel-applications/commit/287f061ac18c6e178e11c9c26c1e892ec797b3f0))
+
 ## [1.89.0](https://github.com/dnum-mi/referentiel-applications/compare/v1.88.0...v1.89.0) (2026-08-31)
 
 
