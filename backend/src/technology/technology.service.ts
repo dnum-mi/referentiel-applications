@@ -12,6 +12,7 @@ import { ServiceOptions } from "src/common/utils/types";
 import { ApplicationService } from "src/applications/application.service";
 import {
   fetchProductCatalog,
+  isEndoflifeDisabled,
   normalizeProductKey,
   parseEolInfo,
   resolveProductReleases,
@@ -33,12 +34,9 @@ export class TechnologyService extends BaseService<TechnologyStack> {
   }
 
   // Appels réseau endoflife.date désactivés en test et via ENDOFLIFE_ENABLED=false,
-  // pour éviter tout appel non déterministe.
+  // pour éviter tout appel non déterministe (même interrupteur que le cron).
   private eolDisabled(): boolean {
-    return (
-      process.env.NODE_ENV === "test" ||
-      process.env.ENDOFLIFE_ENABLED === "false"
-    );
+    return isEndoflifeDisabled();
   }
 
   // Traduit une résolution endoflife en champs à persister. Trois cas :

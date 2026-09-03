@@ -16,6 +16,7 @@ const releases = [
 
 const makeService = (
   rows: { id: string; product: string; version: string }[],
+  options: { cronEnabled?: boolean } = {},
 ) => {
   const findMany = jest.fn().mockResolvedValue(rows);
   const update = jest.fn().mockResolvedValue({});
@@ -23,8 +24,13 @@ const makeService = (
     technologyStack: { findMany, update },
   } as unknown as PrismaService;
   const config = {
-    get: (key: string, fallback: unknown) =>
-      key === "technology.eolBatchSize" ? 2 : fallback,
+    get: (key: string, fallback: unknown) => {
+      if (key === "technology.eolBatchSize") return 2;
+      if (key === "technology.eolCronEnabled") {
+        return options.cronEnabled ?? fallback;
+      }
+      return fallback;
+    },
   } as unknown as ConfigService;
   // Le service de notification est mocké : ce spec porte sur le rafraîchissement,
   // les alertes ont le leur.
@@ -133,5 +139,27 @@ describe("EolRefreshService", () => {
     const { service, findMany } = makeService([]);
     await service.handleScheduledRefresh();
     expect(findMany).not.toHaveBeenCalled();
+  });
+
+  it("recalcule quand le cron est activé", async () => {
+    const { service, findMany } = makeService([], { cronEnabled: true });
+    await service.handleScheduledRefresh();
+    expect(findMany).toHaveBeenCalledTimes(1);
+  });
+
+  // L'interrupteur général doit couper le cron aussi : sinon ENDOFLIFE_ENABLED=false
+  // laisserait le recalcul planifié appeler endoflife.date chaque nuit.
+  it("n'appelle pas endoflife.date quand ENDOFLIFE_ENABLED=false, même cron activé", async () => {
+    const previous = process.env.ENDOFLIFE_ENABLED;
+    process.env.ENDOFLIFE_ENABLED = "false";
+    try {
+      const { service, findMany } = makeService([], { cronEnabled: true });
+      await service.handleScheduledRefresh();
+      expect(findMany).not.toHaveBeenCalled();
+      expect(resolveProductReleases).not.toHaveBeenCalled();
+    } finally {
+      if (previous === undefined) delete process.env.ENDOFLIFE_ENABLED;
+      else process.env.ENDOFLIFE_ENABLED = previous;
+    }
   });
 });

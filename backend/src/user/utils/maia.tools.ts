@@ -63,6 +63,8 @@ async function callMaia(email: string): Promise<MaiaFinderResponse> {
     "Content-Type": "application/json",
   };
 
+  // `fetch` global à dessein : MAIA est interne au SI et ne doit pas passer par le
+  // proxy sortant (cf. src/common/http/outbound-dispatcher.ts).
   const response = await fetch(maiaUrl, {
     method: "POST",
     headers,
