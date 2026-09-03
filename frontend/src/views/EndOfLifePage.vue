@@ -17,6 +17,10 @@ type EolStatus = EndOfLifeTechnologyDto["status"];
  * Le suivi n'existait que fiche par fiche : impossible de répondre à « quelles
  * applications de ma direction utilisent une technologie en fin de vie ? » sans
  * ouvrir chaque fiche une à une.
+ *
+ * Le h1 reprend l'entrée de menu « Technologies » (#2413) : RGAA, le titre d'une
+ * page doit correspondre à sa navigation. L'objet de la page, le suivi des fins
+ * de vie, est dit par le paragraphe d'introduction.
  */
 const store = useEndOfLifeStore();
 const { applications, total, isLoading } = storeToRefs(store);
@@ -143,10 +147,10 @@ onMounted(fetchApplications);
 
 <template>
   <div class="fr-container--fluid fr-px-2w" data-testid="end-of-life-page">
-    <h1 data-testid="end-of-life-page-title">Suivi des fins de vie</h1>
+    <h1 data-testid="end-of-life-page-title">Technologies</h1>
     <p class="fr-text--sm fr-mb-3w">
-      Applications dont au moins une technologie est en fin de vie, le sera dans moins de 6 mois, ou n'est plus couverte par le support
-      actif. Les dates proviennent d'endoflife.date.
+      Suivi des fins de vie des technologies : applications dont au moins une technologie est en fin de vie, le sera dans moins de 6 mois,
+      ou n'est plus couverte par le support actif. Les dates proviennent d'endoflife.date.
     </p>
 
     <form class="fr-mb-3w" @submit.prevent="onFilterChange">

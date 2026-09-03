@@ -2,7 +2,7 @@ import { expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
- * Page Object — Suivi des fins de vie (`/fins-de-vie`, #2236).
+ * Page Object — Technologies, suivi des fins de vie (`/fins-de-vie`, #2236 ; intitulé #2413).
  *
  * La page est alimentée par les dates endoflife.date déjà persistées : elle n'affiche donc rien
  * tant qu'aucune technologie du jeu de données n'est concernée. Les assertions distinguent ce cas
@@ -19,6 +19,9 @@ export class EndOfLifePage extends BasePage {
   async open(): Promise<void> {
     await this.goto("/fins-de-vie");
     await expect(this.title()).toBeVisible();
+    // #2413 : le h1 reprend l'entrée de menu ; sans cette attente, un retour à
+    // l'ancien intitulé laisserait TRV-08 vert alors que le protocole QA l'annonce.
+    await expect(this.title()).toHaveText("Technologies");
   }
 
   /** La page a chargé : soit un tableau, soit l'état vide explicite — jamais ni l'un ni l'autre. */
@@ -68,8 +71,8 @@ export class EndOfLifePage extends BasePage {
   }
 
   /**
-   * Ouvre la fiche de l'application `label` et vérifie qu'on arrive sur son onglet Stack
-   * technique — le trajet qui donne son intérêt à la vue : de la liste vers l'action.
+   * Ouvre la fiche de l'application `label` et vérifie qu'on arrive sur son onglet
+   * Technologies — le trajet qui donne son intérêt à la vue : de la liste vers l'action.
    */
   async openApplicationTechnologyTab(label: string): Promise<void> {
     await this.table()

@@ -267,7 +267,7 @@ Les contributeurs et administrateurs consultent l'ensemble des signalements, les
 
 ### 7.3 Suivi des fins de vie
 
-**Ce que ça fait.** Vue transverse répondant à « quelles applications utilisent une technologie en fin de vie ? ». Elle liste les applications dont au moins une technologie est **en fin de vie**, le sera **dans moins de 6 mois**, ou est **sortie du support actif** — l'information n'existait jusque-là que fiche par fiche, dans l'onglet Stack technique. Filtres par statut, par organisation (chemin ou sigle d'un acteur, en correspondance partielle : un chemin de direction ramène ses organisations filles) et par recherche libre sur le libellé d'application ou le produit.
+**Ce que ça fait.** Vue transverse répondant à « quelles applications utilisent une technologie en fin de vie ? ». Elle liste les applications dont au moins une technologie est **en fin de vie**, le sera **dans moins de 6 mois**, ou est **sortie du support actif** — l'information n'existait jusque-là que fiche par fiche, dans l'onglet « Technologies » de la fiche application. La vue est servie par l'entrée de menu « Technologies » (#2413, à la demande du PO ; le titre de page et l'onglet de la fiche suivent le même intitulé). Filtres par statut, par organisation (chemin ou sigle d'un acteur, en correspondance partielle : un chemin de direction ramène ses organisations filles) et par recherche libre sur le libellé d'application ou le produit.
 
 Les trois statuts **partitionnent** la liste : une technologie déjà en fin de vie n'apparaît pas aussi sous « fin de support actif ». Le classement est calculé côté serveur, pour que la vue transverse et la fiche s'accordent sur le statut d'une même technologie.
 

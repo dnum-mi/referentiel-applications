@@ -83,7 +83,8 @@ const tabs = ref<
     requiredPerms: [Permission.ACTOR_READ],
   },
   {
-    title: "Technologie",
+    // #2413 : au pluriel, comme l'entrée de menu du même nom.
+    title: "Technologies",
     icon: "ri-stack-line",
     tabId: "tab-technologies",
     panelId: "panel-technologies",
