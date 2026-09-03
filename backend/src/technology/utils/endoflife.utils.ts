@@ -8,9 +8,17 @@
 /// (statut `unknown-product`, persisté) d'une simple indisponibilité réseau
 /// (statut `unavailable`, aucune écriture).
 
+import { Logger } from "@nestjs/common";
+import { EnvHttpProxyAgent, type Response, fetch } from "undici";
+
 const ENDOFLIFE_BASE_URL = "https://endoflife.date/api/v1/products";
 const FETCH_TIMEOUT_MS = 5000;
 const CATALOG_TTL_MS = 24 * 60 * 60 * 1000; // 24 h
+/// Silence entre deux avertissements pour une même URL en échec.
+const FAILURE_WARN_WINDOW_MS = 60 * 1000;
+
+/// Contexte de log à chercher pour diagnostiquer les appels sortants.
+const logger = new Logger("Endoflife");
 
 export interface EndoflifeRelease {
   /// Nom du cycle de release (généralement le major, ex. « 20 », ou « 3.11 »)
@@ -61,7 +69,25 @@ const PRODUCT_ALIASES: Record<string, string> = {
   net: "dotnet",
   netcore: "dotnet",
   postgres: "postgresql",
+  // Le catalogue ne connaît « Java » que par distribution (Oracle JDK, Temurin,
+  // Corretto…). Une saisie générique « Java » / « JDK » est rapportée à Oracle JDK,
+  // la distribution de référence (endoflife.date lui réserve l'alias « oracle-java ») ;
+  // « OpenJDK » à Eclipse Temurin, la build communautaire LTS la plus répandue, dont
+  // le calendrier de support est celui des builds OpenJDK libres (les « OpenJDK
+  // builds from Oracle » n'ont que six mois de vie par cycle, LTS compris, et
+  // signaleraient à tort toute version comme périmée).
+  java: "oracle-jdk",
+  jdk: "oracle-jdk",
+  openjdk: "eclipse-temurin",
+  apachehttpd: "apache-http-server",
+  docker: "docker-engine",
 };
+
+/// Normalise une version saisie librement : espaces superflus et préfixe « v »
+/// (« v20.11 » → « 20.11 »), fréquent pour Node.js et les outils publiés sur GitHub.
+function normalizeVersion(version: string): string {
+  return version.trim().replace(/^v(?=\d)/i, "");
+}
 
 /// Normalise un nom libre en clé de comparaison (ex. « Node.js » → « nodejs »).
 export function normalizeProductKey(product: string): string {
@@ -108,13 +134,18 @@ export function lookupProductSlug(
 
 /// Sélectionne le cycle de release correspondant à une version : correspondance
 /// exacte sur le nom de cycle, version préfixée par le cycle (« 20.11 » → « 20 »),
-/// puis repli sur le libellé commercial (« 2019 » → SQL Server « 15.0 », dont le
-/// label est « 2019 'Aris/Seattle' ») ou le nom de code (« bookworm » → Debian 12).
+/// major seul désignant un unique cycle (« 9 » → Tomcat « 9.0 »), puis repli sur
+/// le libellé commercial (« 2019 » → SQL Server « 15.0 », dont le label est
+/// « 2019 'Aris/Seattle' ») ou le nom de code (« bookworm » → Debian 12).
+///
+/// Une version trop imprécise pour désigner un cycle (« 3 » pour Python, « 8 »
+/// pour MySQL, dont les cycles 8.0 et 8.4 n'ont pas la même fin de vie) ne
+/// renvoie rien : mieux vaut aucune date qu'une date d'un autre cycle.
 export function matchRelease(
   releases: EndoflifeRelease[],
   version: string,
 ): EndoflifeRelease | null {
-  const v = version.trim();
+  const v = normalizeVersion(version);
   if (!v) return null;
 
   const byName = releases.find(
@@ -124,15 +155,24 @@ export function matchRelease(
   );
   if (byName) return byName;
 
+  // « 9 » saisi pour des cycles nommés « 9.0 », « 10.1 »… : un seul cycle porte ce
+  // major, l'ambiguïté est levée. Plusieurs (MySQL « 8.0 » / « 8.4 ») : on renonce.
+  const byMajor = releases.filter((release) =>
+    release.name?.startsWith(`${v}.`),
+  );
+  if (byMajor.length === 1) return byMajor[0];
+
   return (
     releases.find((release) => {
       const label = release.label?.trim();
       // Préfixe à frontière non alphanumérique : « 2019 » matche « 2019 'Aris/Seattle' »
-      // mais pas « 20191 ».
+      // mais pas « 20191 ». Le point n'est pas une frontière : « 3 » ne doit pas
+      // matcher le label « 3.14 » (ce serait la fin de vie du dernier cycle Python,
+      // pas celle de la version réellement déployée).
       if (
         label &&
         (label === v ||
-          (label.startsWith(v) && !/[a-z0-9]/i.test(label.charAt(v.length))))
+          (label.startsWith(v) && !/[a-z0-9.]/i.test(label.charAt(v.length))))
       ) {
         return true;
       }
@@ -178,15 +218,168 @@ type FetchResult =
   | { kind: "not-found" }
   | { kind: "error" };
 
-async function fetchJson(url: string): Promise<FetchResult> {
+/// Masque une URL de proxy pour les logs : hôte et port seulement, sans les
+/// identifiants qu'elle peut embarquer (`http://user:secret@proxy:3128`).
+export function maskProxyUrl(proxyUrl: string): string {
+  try {
+    return new URL(proxyUrl).host || "(URL de proxy invalide)";
+  } catch {
+    return "(URL de proxy invalide)";
+  }
+}
+
+/// Résume la configuration proxy que suivra `EnvHttpProxyAgent`, avec la même
+/// précédence que lui : minuscules avant majuscules, variable vide = absente,
+/// HTTPS avant HTTP (endoflife.date est en HTTPS ; sans HTTPS_PROXY, undici
+/// retombe sur HTTP_PROXY). Fonction pure (testable sans réseau), identifiants masqués.
+export function describeProxyConfig(env: NodeJS.ProcessEnv): string {
+  const httpProxy = env.http_proxy ?? env.HTTP_PROXY;
+  const httpsProxy = env.https_proxy ?? env.HTTPS_PROXY;
+  const proxy = httpsProxy || httpProxy;
+  if (!proxy) {
+    return "Appels sortants vers endoflife.date en accès direct (aucune variable HTTPS_PROXY/HTTP_PROXY définie)";
+  }
+  const noProxy = env.no_proxy ?? env.NO_PROXY;
+  const exclusions = noProxy ? `, exclusions NO_PROXY « ${noProxy} »` : "";
+  return `Appels sortants vers endoflife.date via le proxy ${maskProxyUrl(proxy)}${exclusions}`;
+}
+
+/// Lecture tolérante d'une erreur : `fetch` peut rejeter avec une DOMException,
+/// une erreur Node porteuse d'un `code`, ou n'importe quelle valeur.
+interface ErrorLike {
+  name?: string;
+  message?: string;
+  code?: string;
+  cause?: unknown;
+}
+
+function asErrorLike(value: unknown): ErrorLike | null {
+  return typeof value === "object" && value !== null
+    ? (value as ErrorLike)
+    : null;
+}
+
+/// Décrit un échec d'appel pour le log : délai dépassé, erreur réseau (undici
+/// enveloppe la cause — ECONNREFUSED, ENOTFOUND, UND_ERR_CONNECT_TIMEOUT… — dans
+/// un `TypeError: fetch failed`) ou autre exception (corps JSON invalide…).
+/// Fonction pure (testable sans réseau).
+export function describeFetchError(error: unknown): string {
+  const failure = asErrorLike(error);
+  if (!failure) return `erreur inattendue (${String(error)})`;
+  if (failure.name === "TimeoutError") return "délai dépassé";
+  if (failure.name === "AbortError") return "appel interrompu";
+  const cause = asErrorLike(failure.cause);
+  if (cause) {
+    return `erreur réseau ${cause.code ?? cause.name ?? "inconnue"} (${cause.message ?? ""})`;
+  }
+  // Sans cause enveloppée, le code de l'erreur (ERR_INVALID_URL, UND_ERR_INVALID_ARG…)
+  // est plus parlant que son nom générique.
+  return `${failure.code ?? failure.name ?? "Error"} : ${failure.message ?? ""}`;
+}
+
+/// Fabrique un limiteur « au plus un avertissement par clé et par fenêtre » :
+/// les résolutions ont lieu à chaque consultation de fiche, un endoflife.date
+/// injoignable inonderait sinon les logs d'un warn par produit et par requête.
+/// Sans effet de bord hors de sa propre mémoire (testable sans réseau ni horloge).
+export function createWarnThrottle(
+  windowMs: number,
+): (key: string, now?: number) => boolean {
+  const lastWarnAt = new Map<string, number>();
+  return (key, now = Date.now()) => {
+    // Purge des entrées expirées : en mode dégradé (catalogue jamais récupéré),
+    // les URL dérivent de saisies libres et ne sont pas bornées.
+    for (const [seenKey, at] of lastWarnAt) {
+      if (now - at >= windowMs) lastWarnAt.delete(seenKey);
+    }
+    if (lastWarnAt.has(key)) return false;
+    lastWarnAt.set(key, now);
+    return true;
+  };
+}
+
+const shouldWarn = createWarnThrottle(FAILURE_WARN_WINDOW_MS);
+
+function warnFailure(url: string, reason: string, startedAt: number): void {
+  if (!shouldWarn(url)) return;
+  logger.warn(
+    `Échec GET ${url} : ${reason} (${Date.now() - startedAt} ms) — prochain avertissement pour cette URL dans ${FAILURE_WARN_WINDOW_MS / 1000} s au plus tôt`,
+  );
+}
+
+// Pourquoi le `fetch` d'undici et non le `fetch` global de Node : ce dernier
+// ignore HTTP_PROXY/HTTPS_PROXY tant que NODE_USE_ENV_PROXY=1 n'est pas posé, et
+// le chart Helm de qualification (qualifr2) définit le proxy sans ce flag — le
+// catalogue n'a jamais pu être récupéré, toutes les résolutions finissaient
+// « unavailable » et rien ne l'expliquait. `EnvHttpProxyAgent` honore
+// HTTP_PROXY/HTTPS_PROXY/NO_PROXY (majuscules comme minuscules) et se comporte
+// en accès direct quand rien n'est défini (dev local).
+//
+// Pourquoi pas `setGlobalDispatcher` : les autres appels sortants du backend
+// (MAIA, JWKS Keycloak via jose) sont internes au SI et ne doivent pas être
+// routés vers le proxy ; le dispatcher est donc passé appel par appel, créé
+// paresseusement et une seule fois pour le processus (pool de connexions).
+let dispatcher: EnvHttpProxyAgent | null = null;
+let proxyAnnounced = false;
+
+function getDispatcher(): EnvHttpProxyAgent {
+  if (dispatcher) return dispatcher;
+  // Annonce AVANT la construction : une URL de proxy malformée (« proxy:3128 »
+  // sans schéma) fait lever le constructeur, et l'exploitant doit lire la
+  // configuration retenue plutôt qu'un échec imputé à endoflife.date.
+  if (!proxyAnnounced) {
+    proxyAnnounced = true;
+    logger.log(describeProxyConfig(process.env));
+  }
+  try {
+    dispatcher = new EnvHttpProxyAgent();
+  } catch (error) {
+    logger.error(
+      `Proxy sortant inutilisable (HTTPS_PROXY/HTTP_PROXY) : ${describeFetchError(error)}`,
+    );
+    throw error;
+  }
+  return dispatcher;
+}
+
+/// Libère la connexion d'une réponse dont le corps ne sera pas lu : undici ne
+/// rend le socket au pool qu'une fois le corps consommé ou annulé.
+async function discardBody(response: Response): Promise<void> {
+  await response.body?.cancel().catch(() => undefined);
+}
+
+/// `notFoundIsFailure` : un 404 est le cas nominal d'un produit inconnu, mais
+/// jamais celui de l'URL du catalogue — là, il trahit un proxy ou un filtrage
+/// d'URL qui répond à la place d'endoflife.date, ou une API déplacée. Le taire
+/// reproduirait exactement la panne muette de qualification.
+async function fetchJson(
+  url: string,
+  { notFoundIsFailure = false }: { notFoundIsFailure?: boolean } = {},
+): Promise<FetchResult> {
+  const startedAt = Date.now();
   try {
     const response = await fetch(url, {
+      dispatcher: getDispatcher(),
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
-    if (response.status === 404) return { kind: "not-found" };
-    if (!response.ok) return { kind: "error" };
+    if (response.status === 404) {
+      await discardBody(response);
+      if (notFoundIsFailure) {
+        warnFailure(
+          url,
+          "statut HTTP 404 sur le catalogue (proxy ou filtrage d'URL qui répond à la place d'endoflife.date, ou API déplacée)",
+          startedAt,
+        );
+      }
+      return { kind: "not-found" };
+    }
+    if (!response.ok) {
+      await discardBody(response);
+      warnFailure(url, `statut HTTP ${response.status}`, startedAt);
+      return { kind: "error" };
+    }
     return { kind: "ok", data: await response.json() };
-  } catch {
+  } catch (error) {
+    warnFailure(url, describeFetchError(error), startedAt);
     return { kind: "error" };
   }
 }
@@ -210,7 +403,9 @@ export async function fetchProductCatalog(): Promise<
     return catalogCache.products;
   }
 
-  const payload = await fetchJson(ENDOFLIFE_BASE_URL);
+  const payload = await fetchJson(ENDOFLIFE_BASE_URL, {
+    notFoundIsFailure: true,
+  });
   const raw =
     payload.kind === "ok"
       ? (

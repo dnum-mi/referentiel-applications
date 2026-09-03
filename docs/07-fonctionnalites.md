@@ -278,9 +278,11 @@ Les trois statuts **partitionnent** la liste : une technologie déjà en fin de 
 
 Le cron ne résout qu'**une fois par produit distinct** pour tout le run, et n'écrit rien lorsqu'endoflife.date ne répond pas : écraser une date valide par `null` et réarmer le TTL figerait la ligne une semaine sur une donnée non vérifiée.
 
+**Résolution du produit et de la version.** Le produit saisi librement est rapporté à un slug endoflife.date via le catalogue (noms, libellés, alias officiels), complété d'alias internes pour les saisies courantes que le catalogue ne couvre pas (« SQL Server », « .NET », « Postgres », « Java » → Oracle JDK, « OpenJDK » → Eclipse Temurin). La version est ensuite rapportée à un cycle de release, dans l'ordre : nom de cycle exact ou préfixe (« 20.11 » → 20), major seul si un unique cycle le porte (« 9 » → Tomcat 9.0), libellé commercial (« 2019 » → SQL Server 15.0), nom de code (« bookworm » → Debian 12). Un préfixe « v » est ignoré. Une version trop imprécise pour désigner un cycle (« Python 3 », « MySQL 8 » dont 8.0 et 8.4 n'ont pas la même échéance) ne reçoit **aucune date** : mieux vaut rien qu'une échéance empruntée à un autre cycle.
+
 **Où c'est dans le code.**
 
-- Front : `frontend/src/views/EndOfLifePage.vue` (route `/fins-de-vie`), store `frontend/src/stores/endOfLifeStore.ts`.
+- Front : `frontend/src/views/EndOfLifePage.vue` (route `/fins-de-vie`, inchangée par #2413 : seul l'intitulé a bougé), store `frontend/src/stores/endOfLifeStore.ts`.
 - Back : `GET /technologies/end-of-life` (`backend/src/technology/end-of-life.controller.ts`), service `end-of-life.service.ts`, règles de classement `utils/eol-status.ts`, recalcul planifié `eol-refresh.service.ts`.
 
 **Tri.** Par libellé d'application. Trier par gravité supposerait d'ordonner sur un agrégat de la relation (la fin de vie la plus proche), ce que Prisma ne sait pas faire : un tri appliqué après pagination ne classerait que la page affichée et donnerait l'illusion d'un classement global. Pour cibler l'urgent, c'est le filtre de statut qui répond.
