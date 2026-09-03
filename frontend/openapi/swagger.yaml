@@ -6361,6 +6361,12 @@ paths:
           in: path
           schema:
             type: string
+        - name: applicationId
+          required: true
+          in: path
+          description: ID de l'application
+          schema:
+            type: string
         - name: notify
           required: true
           in: query
@@ -6368,12 +6374,6 @@ paths:
           schema:
             example: "true"
             type: boolean
-        - name: applicationId
-          required: true
-          in: path
-          description: ID de l'application
-          schema:
-            type: string
       requestBody:
         required: true
         content:

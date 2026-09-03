@@ -52,6 +52,9 @@ export const useReportStore = defineStore("reportStore", () => {
       return true;
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des modifications : ", error);
+      // Relancée : les appelants (ex. ReportStatusTag) comptent sur ce rejet pour revenir sur
+      // l'état affiché et signaler l'échec, au lieu de laisser croire que tout s'est bien passé.
+      throw error;
     }
   };
 
@@ -61,6 +64,7 @@ export const useReportStore = defineStore("reportStore", () => {
       return true;
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des modifications : ", error);
+      throw error;
     }
   };
 

@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -101,6 +102,11 @@ export class StatusesController {
     @User() requestor: Requestor,
   ) {
     const oldData = await this.statusesService.findOne(statusId);
+    // Scoping (#2367) : le statut doit appartenir à l'application de la route, sinon un
+    // AppWrite sur A permettrait de réécrire le statut de n'importe quelle autre application.
+    if (oldData.applicationId !== applicationId) {
+      throw new NotFoundException("Statut introuvable");
+    }
 
     const updatedStatus = await this.statusesService.update(
       statusId,

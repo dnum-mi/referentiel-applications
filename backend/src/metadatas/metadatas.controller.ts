@@ -16,12 +16,19 @@ import {
 import { MetadatasService } from "./metadatas.service";
 import { PaginatedResponseDto } from "src/common/dto/paginated-response.dto";
 
+// #2440 : cette route n'est PAS scopée par application (contrairement à
+// ApplicationMetadatasController ci-dessous) — chaque entrée expose en clair les
+// anciennes/nouvelles valeurs des champs modifiés (emails d'acteurs, dates de conformité…).
+// Réservée aux administrateurs, seuls habilités à voir l'historique complet toutes
+// applications confondues, y compris celles où ils n'ont par ailleurs aucun droit de lecture.
 @ApiTags("Metadatas")
+@UseGuards(PermissionGuard)
 @Controller("metadatas")
 export class MetadatasController {
   constructor(private readonly metadataService: MetadatasService) {}
 
   @Get()
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Récupérer toutes les metadatas" })
   @ApiOkResponse({
     description: "Récupérer toutes les metadatas",
@@ -32,6 +39,7 @@ export class MetadatasController {
   }
 
   @Get(":id")
+  @RequiredPermissions([Permission.AdminPanelManage])
   @ApiOperation({ summary: "Récupérer une metadata par son ID" })
   @ApiParam({ name: "id", description: "ID de la metadata" })
   @ApiOkResponse({

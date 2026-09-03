@@ -124,23 +124,25 @@ const quickLinks = computed<QuickLink[]>(() => {
   return authenticatedQuickLinks.value;
 });
 
-const baseNavItems = [
+const baseNavItems = computed(() => [
   { to: { name: routeNames.ACCUEIL }, text: "Accueil" },
   { to: { name: routeNames.SEARCHAPP }, text: "Applications" },
   { to: { name: routeNames.TIMEPAGE }, text: "Time" },
   { to: { name: routeNames.QUALITYPAGE }, text: "Qualité Générale" },
-  // #2413 : l'entrée s'intitule « Technologies » (demande PO) ; la route reste `/fins-de-vie`.
-  { to: { name: routeNames.ENDOFLIFE }, text: "Technologies" },
+  { to: { name: routeNames.ENDOFLIFE }, text: "Fin de vie" },
   { to: { name: routeNames.REPORTS }, text: "Signalements" },
-  { to: { name: routeNames.HISTORY }, text: "Modifications" },
-];
+  // #2440 : l'historique global expose les valeurs de champs (emails d'acteurs, dates de
+  // conformité…) de toutes les applications, réservé aux administrateurs (cf. router meta
+  // `requiresGlobalAdmin`).
+  ...(userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE]) ? [{ to: { name: routeNames.HISTORY }, text: "Modifications" }] : []),
+]);
 
 const publicNavItems = computed(() => {
   return [{ to: { name: routeNames.ACCUEIL }, text: "Accueil" }];
 });
 
 const navItemsComputed = computed(() => {
-  return userStore.authenticated ? baseNavItems : publicNavItems.value;
+  return userStore.authenticated ? baseNavItems.value : publicNavItems.value;
 });
 
 const logoText = ["Ministère", "de l'intérieur"];

@@ -9,8 +9,8 @@ export class ApplicationViewService {
     const since = new Date();
     since.setMinutes(since.getMinutes() - 15);
 
-    return this.prisma.$transaction(async (_tx) => {
-      const existingView = await this.prisma.applicationView.findFirst({
+    return this.prisma.$transaction(async (tx) => {
+      const existingView = await tx.applicationView.findFirst({
         where: {
           applicationId,
           userId,
@@ -22,7 +22,7 @@ export class ApplicationViewService {
 
       if (existingView) return;
 
-      return this.prisma.applicationView.create({
+      return tx.applicationView.create({
         data: {
           userId,
           applicationId,

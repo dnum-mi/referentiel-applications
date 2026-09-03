@@ -132,13 +132,13 @@ const routes = [
     name: routeNames.HISTORY,
     path: "/historique",
     component: () => import("@/views/MetadataPage.vue"),
-    meta: { requiresAuth: true, title: "Historique global - Référentiel des applications" },
+    meta: { requiresAuth: true, requiresGlobalAdmin: true, title: "Historique global - Référentiel des applications" },
   },
   {
     name: routeNames.METADATADETAIL,
     path: "/metadatas/:id",
     component: () => import("@/views/MetadataDetailPage.vue"),
-    meta: { requiresAuth: true, title: "Détails de la modification - Référentiel des applications" },
+    meta: { requiresAuth: true, requiresGlobalAdmin: true, title: "Détails de la modification - Référentiel des applications" },
   },
 
   {
@@ -187,6 +187,13 @@ router.beforeEach(async (to) => {
       if (!userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE, Permission.QUALITY_CAMPAIGN_MANAGE])) {
         return { path: "/" };
       }
+    }
+
+    // #2440 : contrairement à `requiresAdmin`, pas de délégation possible via
+    // QualityCampaignManage — l'historique global expose les valeurs de champs (emails
+    // d'acteurs, dates de conformité…) de toutes les applications, réservé aux administrateurs.
+    if (to.meta.requiresGlobalAdmin && !userStore.hasPermissions([Permission.ADMIN_PANEL_MANAGE])) {
+      return { path: "/" };
     }
   }
 });

@@ -1,5 +1,5 @@
 import type { Prisma } from "@prisma/client";
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PaginatedResponseDto } from "src/common/dto";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -69,12 +69,23 @@ export class LinksService extends BaseService<Link> {
     );
   }
 
+  // Scoping (#2367) : le lien doit appartenir à l'application de la route, sinon un LinkWrite
+  // sur A donnait accès en écriture au lien (et à sa suppression) de n'importe quelle autre
+  // application dont on connaît l'id.
+  private async assertBelongsToApplication(id: string, applicationId: string) {
+    const link = await this.findOne(id);
+    if (link.applicationId !== applicationId) {
+      throw new NotFoundException("Lien introuvable");
+    }
+  }
+
   async updateLink(
     id: string,
     applicationId: string,
     updateLinkDto: UpdateLinkDto,
     requestorId: string,
   ) {
+    await this.assertBelongsToApplication(id, applicationId);
     return this.update(id, updateLinkDto, {
       applicationId,
       metadata: {
@@ -92,6 +103,7 @@ export class LinksService extends BaseService<Link> {
   }
 
   async deleteLink(id: string, applicationId: string, requestorId: string) {
+    await this.assertBelongsToApplication(id, applicationId);
     return this.delete(id, {
       applicationId,
       metadata: {

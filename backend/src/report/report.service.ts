@@ -210,7 +210,25 @@ export class ReportsService {
    * @returns Le signalement mis à jour.
    * @throws NotFoundException Si le signalement n'est pas trouvé.
    */
-  async update(id: string, data: UpdateReportDto) {
+  // Scoping (#2367) : sur la route `/applications/:applicationId/reports`, le signalement doit
+  // appartenir à cette application — sinon un ReportManage accordé sur A (via la matrice des
+  // droits d'un type d'acteur) permettait de modifier/supprimer le signalement de n'importe
+  // quelle autre application. `applicationId` est omis par le contrôleur global `/reports`, où
+  // ReportManage est un droit de rôle global (CONTRIBUTOR+) couvrant volontairement tous les
+  // signalements.
+  private async assertBelongsToApplication(id: string, applicationId?: string) {
+    if (!applicationId) return;
+    const report = await this.prisma.report.findUnique({
+      where: { id },
+      select: { applicationId: true },
+    });
+    if (!report || report.applicationId !== applicationId) {
+      throw new NotFoundException("Signalement introuvable");
+    }
+  }
+
+  async update(id: string, data: UpdateReportDto, applicationId?: string) {
+    await this.assertBelongsToApplication(id, applicationId);
     return this.prisma.report.update({
       where: { id },
       data,
@@ -222,7 +240,8 @@ export class ReportsService {
     });
   }
 
-  async delete(id: string) {
+  async delete(id: string, applicationId?: string) {
+    await this.assertBelongsToApplication(id, applicationId);
     return this.prisma.report.delete({
       where: { id },
     });

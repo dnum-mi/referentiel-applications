@@ -5,6 +5,7 @@ import SidebarFilters from "@/components/search/SidebarFilter.vue";
 import TechnicalDebtChart from "@/components/technical-debt/TechnicalDebtChart.vue";
 import { useApplicationSearch, type TechnicalDebtPoint } from "@/composables/use-application-search";
 import { useMditCampaigns } from "@/composables/use-mdit-campaigns";
+import { useToasterStore } from "@/stores/toasterStore";
 import { useUserStore } from "@/stores/userStore";
 import { watchDebounced } from "@vueuse/core";
 import { computed, onMounted, ref } from "vue";
@@ -12,6 +13,7 @@ import { computed, onMounted, ref } from "vue";
 const { searchApplications, setFilter, filters, technicalDebtPoints: applications } = useApplicationSearch();
 const { loadActiveCampaigns, latestYear } = useMditCampaigns();
 const userStore = useUserStore();
+const toaster = useToasterStore();
 
 const technicalDebtPoints = ref<TechnicalDebtPoint[]>([]);
 const isTechnicalDebtLoading = ref(false);
@@ -21,7 +23,15 @@ onMounted(async () => {
   if (!hasMDITReadPermission.value) {
     setFilter({ myApplications: true });
   }
-  await loadActiveCampaigns();
+  try {
+    // `loadActiveCampaigns` est appelé avec `throwOnError: true` : sans ce try/catch, un échec
+    // réseau laissait une exception non gérée et bloquait `loadTechnicalDebtPoints()` juste après,
+    // avec la page silencieusement vide (pas d'erreur affichée, pas de fin de chargement).
+    await loadActiveCampaigns();
+  } catch (error) {
+    console.error("Erreur lors du chargement des campagnes de dette technique :", error);
+    toaster.addErrorMessage("Erreur lors du chargement des campagnes.");
+  }
   loadTechnicalDebtPoints();
 });
 

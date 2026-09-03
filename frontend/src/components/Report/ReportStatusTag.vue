@@ -2,6 +2,7 @@
 import type { ReportDto, ReportStatus } from "@/client/types.gen.js";
 import { statusDictionary, statusIconClasses } from "@/constants/dictionary";
 import { useReportStore } from "@/stores/reportStore";
+import { useToasterStore } from "@/stores/toasterStore";
 import { watch, ref } from "vue";
 
 const props = defineProps<{
@@ -31,6 +32,7 @@ const options: { value: ReportStatus; text: (typeof statusDictionary)[ReportStat
 ];
 
 const reportStore = useReportStore();
+const toaster = useToasterStore();
 
 async function updateStatus(newValue: ReportStatus) {
   try {
@@ -42,6 +44,7 @@ async function updateStatus(newValue: ReportStatus) {
   } catch (err) {
     console.error("Erreur lors de la mise à jour du statut :", err);
     statusValue.value = props.report.status;
+    toaster.addErrorMessage("Erreur lors de la mise à jour du statut du signalement.");
   }
   emit("refresh");
 }

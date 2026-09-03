@@ -1,13 +1,42 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
 import { MetadatasService } from "src/metadatas/metadatas.service";
 import { PrismaService } from "src/prisma/prisma.service";
 import { BaseService } from "../common/base.service";
+import { ServiceOptions } from "../common/utils/types";
 import { Label } from "./entities/label.entity";
 
 @Injectable()
 export class LabelsService extends BaseService<Label> {
   constructor(prisma: PrismaService, metadataService: MetadatasService) {
     super(prisma.label, prisma, metadataService);
+  }
+
+  // Scoping (#2367) : le nom alternatif doit appartenir à l'application de la route, sinon un
+  // AppWrite sur A donnait accès en écriture au label (et à sa suppression) de n'importe quelle
+  // autre application dont on connaît l'id.
+  private async assertBelongsToApplication(id: string, applicationId: string) {
+    const label = await this.findOne(id);
+    if (label.applicationId !== applicationId) {
+      throw new NotFoundException("Nom alternatif introuvable");
+    }
+  }
+
+  async update(
+    id: string,
+    data: Prisma.LabelUpdateInput,
+    options: ServiceOptions<Label> & { applicationId: string },
+  ) {
+    await this.assertBelongsToApplication(id, options.applicationId);
+    return super.update(id, data, options);
+  }
+
+  async delete(
+    id: string,
+    options: ServiceOptions<Label> & { applicationId: string },
+  ) {
+    await this.assertBelongsToApplication(id, options.applicationId);
+    return super.delete(id, options);
   }
 
   /**

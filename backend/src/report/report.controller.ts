@@ -229,10 +229,11 @@ export class ApplicationReportsController {
   })
   async update(
     @Param("id") id: string,
+    @Param("applicationId") applicationId: string,
     @Body() updateDto: UpdateReportDto,
     @Query() query: UpdateReportNotifyQuery,
   ) {
-    const report = await this.service.update(id, updateDto);
+    const report = await this.service.update(id, updateDto, applicationId);
     await this.notifyUserService.notifyUserOnStatusChange(query.notify, report);
     return report;
   }
@@ -251,7 +252,10 @@ export class ApplicationReportsController {
     description: "Signalement supprimé avec succès",
   })
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param("id") id: string) {
-    return this.service.delete(id);
+  remove(
+    @Param("id") id: string,
+    @Param("applicationId") applicationId: string,
+  ) {
+    return this.service.delete(id, applicationId);
   }
 }
